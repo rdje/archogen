@@ -234,7 +234,10 @@ $ bash scripts/check_task_history.sh --self-test      # its RED arms, on scratch
 
 `--census` requires a successful tree listing and a readable blob for every selected tree. A failed selected read
 names its commit and path, exits 1 and produces no final aggregate; earlier per-tree rows do not make it a successful
-measurement. A genuinely empty selected tree remains valid and contributes zero bytes.
+measurement. A genuinely empty selected tree remains valid and contributes zero bytes. Paths come from a
+NUL-delimited UTF-8 listing, so Unicode, tabs, backslashes and quotes cannot disappear through Git's display quoting;
+invalid encodings and missing terminators refuse. Leaf spans count only their actual source bytes, including real
+line-feed separators and preserving whether the end of the file has a final line feed (`PROGRAM.69`, review round 36).
 
 The decisions folder is kept the same way. A numbered section of a decision record that is settled, such as a
 finding the director has ruled on, moves byte for byte into `docs/decision-history/`. Its heading stays in the

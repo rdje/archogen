@@ -23,6 +23,7 @@
 #                                                         # in the closed subtrees below them a seal would take (PROGRAM.69)
 # Census requires a successful listing and every selected tree blob; a failed read is not an empty tree. On a
 # failed selected read it names the commit/path and exits 1 without a final aggregate, even after per-tree rows.
+# It consumes NUL-delimited UTF-8 paths and counts actual span bytes, including real LFs and physical EOF (R36).
 #
 # A LEAF is its `- ID: `…`` line and every line up to the next `- ID:` line or `## ` heading, TASK-ACCEPTANCE's own
 # slicing. Its BODY is that span without its trailing blank lines, which stay in the tree after the stub. Every line of
@@ -497,11 +498,14 @@ def gate():
 def census(commit):
     """Per tree file at `commit`: the bytes of live `done` leaves under top-level subtrees still open, and of those in
     the closed subtrees below them that a seal would take — each leaf's span sliced as `leaves` slices it (PROGRAM.69)."""
-    names = git("ls-tree", "--name-only", commit, TASKS + "/")
+    names = git("ls-tree", "-z", "--name-only", commit, TASKS + "/")
     if names is None:
         sys.exit("task-history: `git ls-tree %s %s/` failed" % (commit, TASKS))
+    if names and not names.endswith(b"\0"):
+        raise Unreadable("census tree listing is not NUL-terminated")
+    paths = decode(names, "census tree listing").split("\0")
     total, in_closed, count = 0, 0, 0
-    for path in sorted(names.decode().split("\n")):
+    for path in sorted(paths):
         name = os.path.basename(path)
         if not name.endswith(".md") or name == "TEMPLATE.md":
             continue
@@ -516,7 +520,11 @@ def census(commit):
                 if subtree(lid, tname) in open_tops and status(lines, f) == "done" and not is_stub(lines, f)]
         if not live:
             continue
-        size = lambda f, e: len(("\n".join(lines[f:e]) + "\n").encode("utf-8"))
+        # Split lines retain every real LF between them; physical EOF contributes no invented final byte.
+        offsets = [0]
+        for n, line in enumerate(lines):
+            offsets.append(offsets[-1] + len(line.encode("utf-8")) + (1 if n + 1 < len(lines) else 0))
+        size = lambda f, e: offsets[e] - offsets[f]
         tree_total = sum(size(f, e) for _, f, e in live)
         tree_closed = sum(size(f, e) for lid, f, e in live if lid in unit)
         keys = {unit[lid] for lid, _, _ in live if lid in unit}
@@ -931,66 +939,97 @@ PY
   arm "the census counts bytes of closed subtrees below an open one" 0 "census: HEAD — 1181 byte(s) of \`done\` leaves under open top-level subtrees, 1062 of them in 7 closed subtree(s) below the top level" --census HEAD
   arm "the census of a commit git does not know is refused" 1 "failed" --census no-such-commit
   # R35 D1: finite Git responses distinguish absent evidence from an empty selected tree, including partial reads.
-  local census_work="$SCRATCH/census-fixture" census_mode census_want census_must census_bytes
+  # Finite Git producer: literal child bytes are the oracle, including physical EOF and Git's path-output modes.
+  local census_work="$SCRATCH/census-fixture" census_mode census_want census_must
   rm -rf "$census_work"; mkdir -p "$census_work/bin"
-  python3 - "$census_work" <<'PY'
+  python3 - "$census_work" <<'PYFIX'
 from pathlib import Path
-import sys
+import json, sys
 work = Path(sys.argv[1])
 child = '- ID: `T.1.1`\n  Status: `done`\n  Goal: café, a completed child\n  Commit: `ARCHOGEN-T-0001`\n\n'
-tree = '# T\n\n- ID: `T.1`\n  Status: `active`\n\n' + child + '## End\n'
-(work / 'T.md').write_text(tree, encoding='utf-8')
-(work / 'U.md').write_text(tree.replace('`T.', '`U.'), encoding='utf-8')
-(work / 'bytes').write_text(str(len(child.encode('utf-8'))))
-PY
-  cat > "$census_work/bin/git" <<'PY'
+head = '# T\n\n- ID: `T.1`\n  Status: `active`\n\n'
+tree = head + child + '## End\n'
+normal = {'docs/tasks/T.md': tree}
+cases = {}
+def case(mode, blobs, byte_count=0, units=0, error=None, **extra):
+    must = error or ('census: SYNTH — %d byte(s) of `done` leaves under open top-level subtrees, '
+                     '%d of them in %d closed subtree(s) below the top level' % (byte_count, byte_count, units))
+    cases[mode] = dict(blobs=blobs, want=1 if error else 0, must=must, **extra)
+size = len(child.encode('utf-8'))
+case('one', normal, size, 1)
+case('two', dict(normal, **{'docs/tasks/U.md': tree.replace('`T.', '`U.')}), size * 2, 2)
+case('empty', {'docs/tasks/T.md': ''})
+case('one-error', normal, error='cannot read selected tree SYNTH:docs/tasks/T.md', fail='docs/tasks/T.md')
+pair = dict(normal, **{'docs/tasks/U.md': tree.replace('`T.', '`U.')})
+case('first-error', pair, error='cannot read selected tree SYNTH:docs/tasks/T.md', fail='docs/tasks/T.md')
+case('last-error', pair, error='cannot read selected tree SYNTH:docs/tasks/U.md', fail='docs/tasks/U.md')
+case('listing-error', normal, error='git ls-tree SYNTH docs/tasks/', listing_error=True)
+case('invalid-utf8', normal, error='SYNTH:docs/tasks/T.md is not UTF-8', invalid_blob=True)
+for count in range(3):
+    literal = child.rstrip('\n') + '\n' * count
+    case('eof-' + str(count), {'docs/tasks/T.md': head + literal}, len(literal.encode('utf-8')), 1)
+case('internal-span', normal, size, 1)
+for label, name in [('unicode', 'é'), ('tab', 'T\t'), ('backslash', 'T\\'), ('quote', 'T"')]:
+    path = 'docs/tasks/' + name + '.md'
+    literal = child.replace('`T.', '`' + name + '.')
+    blob = head.replace('`T.', '`' + name + '.') + literal + '## End\n'
+    case('path-' + label, {path: blob}, len(literal.encode('utf-8')), 1)
+    case('partial-' + label, dict(normal, **{path: blob}), size + len(literal.encode('utf-8')), 2)
+case('invalid-listing-utf8', normal, error='census tree listing is not UTF-8', invalid_listing=True)
+case('unterminated-listing', normal, error='census tree listing is not NUL-terminated', unterminated=True)
+(work / 'cases.json').write_text(json.dumps(cases), encoding='utf-8')
+(work / 'cases.tsv').write_text(''.join('%s\t%d\t%s\n' % (name, item['want'], item['must'])
+                                     for name, item in cases.items()), encoding='utf-8')
+PYFIX
+  cat > "$census_work/bin/git" <<'PYFIX'
 #!/usr/bin/env python3
-import os, pathlib, sys
-root, mode = pathlib.Path(os.environ['CENSUS_FIXTURE']), os.environ['CENSUS_MODE']
+import json, os, pathlib, sys
+root = pathlib.Path(os.environ['CENSUS_FIXTURE'])
+case = json.loads((root / 'cases.json').read_text())[os.environ['CENSUS_MODE']]
 args = sys.argv[1:]
+def quoted(path):
+    data = path.encode('utf-8')
+    if all(32 <= byte < 127 and byte not in (34, 92) for byte in data):
+        return data
+    escapes = {9: b'\\t', 34: b'\\"', 92: b'\\\\'}
+    return b'"' + b''.join(escapes.get(byte, ('\\%03o' % byte).encode())
+                           if byte < 32 or byte >= 127 or byte in (34, 92) else bytes([byte])
+                           for byte in data) + b'"'
 if args == ['rev-parse', '--show-toplevel']:
     print(root)
-elif args == ['ls-tree', '--name-only', 'SYNTH', 'docs/tasks/']:
-    if mode == 'listing-error':
+elif args in [['ls-tree', '--name-only', 'SYNTH', 'docs/tasks/'],
+              ['ls-tree', '-z', '--name-only', 'SYNTH', 'docs/tasks/']]:
+    if case.get('listing_error'):
         sys.exit(128)
-    print('docs/tasks/T.md')
-    if mode in ('two', 'first-error', 'last-error'):
-        print('docs/tasks/U.md')
-elif args in [['show', 'SYNTH:docs/tasks/T.md'], ['show', 'SYNTH:docs/tasks/U.md']]:
-    name = args[1].rsplit('/', 1)[-1]
-    if (name == 'T.md' and mode in ('one-error', 'first-error')) or (name == 'U.md' and mode == 'last-error'):
+    nul = '-z' in args
+    paths = [b'docs/tasks/\xff.md'] if case.get('invalid_listing') else [p.encode() for p in case['blobs']]
+    if nul:
+        result = b'\0'.join(paths) + (b'' if case.get('unterminated') else b'\0')
+    else:
+        result = b'\n'.join(quoted(p.decode()) for p in paths) + b'\n' if not case.get('invalid_listing') else paths[0] + b'\n'
+    sys.stdout.buffer.write(result)
+elif len(args) == 2 and args[0] == 'show' and args[1].startswith('SYNTH:') and args[1][6:] in case['blobs']:
+    path = args[1][6:]
+    if path == case.get('fail'):
         sys.exit(128)
-    if mode == 'invalid-utf8':
-        sys.stdout.buffer.write(b'\xff')
-    elif mode != 'empty':
-        sys.stdout.buffer.write((root / name).read_bytes())
+    sys.stdout.buffer.write(b'\xff' if case.get('invalid_blob') else case['blobs'][path].encode('utf-8'))
 else:
     print('finite census shim: unexpected command', file=sys.stderr)
     sys.exit(97)
-PY
-  chmod +x "$census_work/bin/git"; census_bytes="$(cat "$census_work/bytes")"
-  for census_mode in one two empty one-error first-error last-error listing-error invalid-utf8; do
-    census_want=1
-    case "$census_mode" in
-      one) census_want=0; census_must="census: SYNTH — $census_bytes byte(s)" ;;
-      two) census_want=0; census_must="census: SYNTH — $((census_bytes * 2)) byte(s)" ;;
-      empty) census_want=0; census_must="census: SYNTH — 0 byte(s)" ;;
-      one-error|first-error) census_must="cannot read selected tree SYNTH:docs/tasks/T.md" ;;
-      last-error) census_must="cannot read selected tree SYNTH:docs/tasks/U.md" ;;
-      listing-error) census_must='git ls-tree SYNTH docs/tasks/' ;;
-      invalid-utf8) census_must='SYNTH:docs/tasks/T.md is not UTF-8' ;;
-    esac
+PYFIX
+  chmod +x "$census_work/bin/git"
+  while IFS=$'\t' read -r census_mode census_want census_must; do
     arms=$((arms + 1))
     out="$(CENSUS_FIXTURE="$census_work" CENSUS_MODE="$census_mode" PATH="$census_work/bin:$PATH" bash "$SELF" --census SYNTH 2>&1)"; rc=$?
     if [ "$rc" -eq "$census_want" ] && printf '%s' "$out" | grep -qF -- "$census_must" &&
        ! printf '%s' "$out" | grep -qE 'Traceback|finite census shim:' &&
        { [ "$census_want" -eq 0 ] || ! printf '%s' "$out" | grep -q '^census: SYNTH —'; }; then
-      ok=$((ok + 1)); echo "  ✅ selected-tree census $census_mode (R35 D1)"
+      ok=$((ok + 1)); echo "  ✅ selected-tree census $census_mode (R35 D1 / R36)"
     else
       echo "SELF-TEST: selected-tree census $census_mode — rc $rc:" >&2
       printf '%s\n' "$out" | head -3 | sed 's/^/    /' >&2
     fi
-  done
+  done < "$census_work/cases.tsv"
   rm -rf "$census_work"
   arm "the seal of a tree that does not exist is refused" 1 "does not exist" --seal NOPE
   arm "the seal proves its reconstruction" 0 "the reconstruction is byte for byte" --seal T

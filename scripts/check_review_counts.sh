@@ -44,6 +44,7 @@
 #
 # All three tables split cells on unescaped pipes; a Markdown-escaped pipe is part of its cell, including in a
 # summary's defects cell, so it cannot hide a later count (round 30).
+# Empty pipe rows receive the named malformed-row refusal, including zero-cell rows; no traceback substitutes (R36).
 #
 # THE RULE: every round of a listed review has one line, one well-formed findings table and one summary row; every row
 # under a summary header names a round by a number, of the digits 0 to 9; a summary row for a round with no line is
@@ -113,7 +114,7 @@ def rounds(text, hist):
                     cells = cells_of(lines[k])
                     if SEPARATOR.match(lines[k].strip()):
                         bad.append("%s: round %d's findings table holds a row of dashes" % (hist, n))
-                    elif not cells[0]:
+                    elif not cells or not cells[0]:
                         bad.append("%s: round %d's findings table holds a row with no id" % (hist, n))
                     elif len(cells) < 2 or not cells[1]:
                         bad.append("%s: round %d's findings table holds a row with no kind" % (hist, n))
@@ -142,7 +143,7 @@ def summary(text, rec, quiet=False):
             continue
         cells = cells_of(l)
         if len(cells) < 3 or not NUMBER.fullmatch(cells[0]):
-            note("%s: a row under its summary header names no round by a number: %r" % (rec, cells[0][:20]))
+            note("%s: a row under its summary header names no round by a number: %r" % (rec, cells[0][:20] if cells else ""))
             continue
         n = int(cells[0])
         if n in out:
@@ -348,11 +349,35 @@ self_test() {
   arm() { # $1 = name, $2 = expected rc, $3 = text the output must carry
     local out rc; arms=$((arms + 1))
     out="$(cd "$work" && bash "$SELF" 2>&1)"; rc=$?
-    if [ "$rc" -eq "$2" ] && printf '%s' "$out" | grep -qF -- "$3"; then ok=$((ok + 1)); echo "  ✅ $1"
+    if [ "$rc" -eq "$2" ] && printf '%s' "$out" | grep -qF -- "$3" &&
+       ! printf '%s' "$out" | grep -qF 'Traceback'; then ok=$((ok + 1)); echo "  ✅ $1"
     else echo "SELF-TEST: $1 — rc $rc:" >&2; printf '%s\n' "$out" | head -3 | sed 's/^/    /' >&2; fi
   }
   GOOD_A='| 2 | 6 | 1, and 2 arm gaps (x), and 1 pre-existing arm gap (y) | v |'
   GOOD_B='| 1 | `2026-10-10` | 2, and 1 remark, and 0 pre-existing arm gaps | o |'
+  # R36 R1: a zero-cell row and its empty-first-cell counterpart need a named refusal, never a traceback.
+  local empty_row empty_file empty_marker empty_must
+  for empty_row in '|' '| |'; do
+    for empty_file in docs/reviews/a-reviews.md docs/decisions/a.md docs/decisions/b.md; do
+      world "$GOOD_A" "$GOOD_B"
+      case "$empty_file" in
+        docs/reviews/*) empty_marker='| R2-D1 |'; empty_must='findings table holds a row with no id' ;;
+        docs/decisions/a.md) empty_marker='| 2 |'; empty_must='a row under its summary header names no round by a number' ;;
+        docs/decisions/b.md) empty_marker='| 1 |'; empty_must='a row under its summary header names no round by a number' ;;
+      esac
+      python3 - "$work/$empty_file" "$empty_marker" "$empty_row" <<'PY'
+from pathlib import Path
+import sys
+p, marker, row = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+lines = p.read_text().splitlines(keepends=True)
+at = next(i for i, line in enumerate(lines) if line.startswith(marker))
+lines.insert(at + 1, row + '\n')
+p.write_text(''.join(lines))
+PY
+      git -C "$work" add -A
+      arm "empty pipe row $empty_row in $empty_file is diagnosed (R36 R1)" 1 "$empty_must"
+    done
+  done
   # R35 R1: every recognized header needs its next separator, even after an already complete summary.
   local summary_head summary_tail
   for summary_head in '| Round | Findings | Defects | Verdict |' '| Round | Date | Defects | Outcome |'; do

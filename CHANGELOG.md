@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — census spans and unusual paths are measured exactly
+
+`ARCHOGEN-PROGRAM-0622` (leaf `PROGRAM.69`), `2026-10-11`.
+
+- Round 36's two census defects are repaired: source-byte boundaries preserve physical EOF, and NUL-delimited UTF-8
+  paths retain Unicode/control-character names instead of filtering Git's quoted display text. Invalid listing
+  encoding/terminators refuse. Empty pipe rows in review tables now produce named refusals instead of tracebacks.
+- Validation: fourteen census and six count controls; unchanged readers give 133/13 of 146 and 153/3 of 156,
+  then repaired complete suites pass 146/0 and 156/0. Independent literal spans and single/partial path counterparts
+  distinguish exact totals. Reviewer evidence is untracked; maintained regression controls are tracked. Syntax,
+  book and final staged gates before commit; no Rust changed or new historical aggregate claimed. Round 37 next.
+
 ## archogen — loop-position mutations gain compiled semantic controls
 
 `ARCHOGEN-M3-0621` (leaf `M3.6.9.2.2.1`), `2026-10-11`.

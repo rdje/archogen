@@ -469,7 +469,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 - **UART** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where generated systems
   run](targets.md)
-- **UTF-8** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
+- **UTF-8** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Annex B: The
+  checks that keep the repository honest](annex-repository.md)
 
 ## V
 

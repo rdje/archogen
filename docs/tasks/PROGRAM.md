@@ -664,6 +664,30 @@ mdBook that is the director's window into the project.
   before any secondary link can substitute. Round 34 answered: unconditional file-cell grammar and parentheses
   inside angle destinations are held by tracked controls. Both established mutants passed all 126 previous arms;
   they now fail three and eight arms respectively. All 138 arms pass; production reader unchanged.
+  Round 36 answered, `2026-10-11`: report `target/review-p69-r36/report.txt` read in full, two P2 census defects,
+  no additional actionable arm gaps and one fail-closed diagnostic remark. Both census repairs and the diagnostic
+  are held by maintained controls; independent round 37 next. No particular real historical aggregate alleged wrong.
+  **Acceptance checklist, round 36:**
+  - [x] **REPRODUCE / ISSUE** — unchanged production readers with new controls give history `133 pass / 13 fail
+    (146 arms)` and counts `153 pass / 3 fail (156 arms)`, retained in `target/p69r36/`. The independent review's
+    98 invocations and 2 187 unit comparisons are separately scoped, not a replay of the complete native suites.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `census()` always appends LF to a leaf span, including physical EOF, and
+    filters suffixes on non-z Git display names, silently dropping quoted paths. New EOF and single/partial filename
+    controls exit code 0 with wrong totals: `133 pass / 13 fail (146 arms)`. Both count parsers access `cells[0]`
+    when an empty pipe row has no cells: `153 pass / 3 fail (156 arms)`; the new arms explicitly exclude tracebacks.
+  - [x] **FIX** — derive source-byte boundaries from real line separators; consume NUL-delimited Git paths with
+    explicit UTF-8 decoding and terminator validation; guard zero-cell rows with existing named diagnostics.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_task_history.sh --self-test` → `146 pass / 0 fail (146 arms)`;
+    `bash scripts/check_review_counts.sh --self-test` → `156 pass / 0 fail (156 arms)`. Fourteen new census controls
+    hold zero/one/two final LFs and an internal boundary, Unicode/tab/backslash/quote names singly and in partial
+    totals, invalid listing UTF-8 and absent NUL terminator. Six count controls hold empty/zero-cell rows in findings
+    and both summary shapes. Literal fixture UTF-8 byte lengths are the independent oracle, not the span algorithm.
+  - [x] **NO REGRESSION** — complete suites above; `bash -n scripts/check_task_history.sh` and
+    `bash -n scripts/check_review_counts.sh` → exit code 0. Staged count/history, book and doctrine gates before
+    commit. No Rust changed; no new Rust-suite or real historical byte aggregate claimed.
+  - [x] **LOCKSTEP** — script contracts, review record/history/index, book annex, owning leaf/logs and resume pointers.
+    Compact four older design-summary verdicts to keep the decisions byte cap, preserving counts/key results;
+    full review rounds remain unchanged. No real sealed evaluation text or external repository writes.
   Round 35 answered: one production defect, no additional actionable arm gaps and one remark; report read in full at
   `target/review-p69-r35/report.txt` (untracked). Answer: census converts a failed selected-tree
   blob read into an empty tree, so a successful zero/partial aggregate can omit completed work; a recognized summary
@@ -954,7 +978,7 @@ mdBook that is the director's window into the project.
     2 reviews / 32 rounds before appending this answer; final staged count → OK, 2 reviews / 33 rounds; history gate
     → OK, 175 files; book anchors/glossary/index → OK. Final doctrines run in the commit hook. Checker contract, record/history/index, book annex, this leaf and logs,
     changelog and resume/frontier snapshots agree. No Rust changed; no full-suite or final-tree Rust claim is made.
-  Verification: `2026-10-11` — the Verification Log's round-29 to round-35 rows
+  Verification: `2026-10-11` — the Verification Log's round-29 to round-36 rows
   Commit: `ARCHOGEN-PROGRAM-0510 (leaf PROGRAM.69)`, the review reopened; `ARCHOGEN-PROGRAM-0511 (leaf PROGRAM.69)`;
   `ARCHOGEN-PROGRAM-0514 (leaf PROGRAM.69)`, round 7 answered; `ARCHOGEN-PROGRAM-0517 (leaf PROGRAM.69)`, round 8;
   `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)`, round 9; `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)`, round 10;
@@ -972,7 +996,7 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0602 (leaf PROGRAM.69)`, round 28; `ARCHOGEN-PROGRAM-0605 (leaf PROGRAM.69)`, round 29;
   `ARCHOGEN-PROGRAM-0606 (leaf PROGRAM.69)`, round 30; `ARCHOGEN-PROGRAM-0608 (leaf PROGRAM.69)`, round 31;
   `ARCHOGEN-PROGRAM-0612 (leaf PROGRAM.69)`, round 32; `ARCHOGEN-PROGRAM-0615 (leaf PROGRAM.69)`, round 33; `ARCHOGEN-PROGRAM-0618 (leaf PROGRAM.69)`, round 34;
-  `ARCHOGEN-PROGRAM-0620 (leaf PROGRAM.69)`, round 35
+  `ARCHOGEN-PROGRAM-0620 (leaf PROGRAM.69)`, round 35; `ARCHOGEN-PROGRAM-0622 (leaf PROGRAM.69)`, round 36
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1586,7 +1610,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | round 35 answered; independent round 36 next |
+| 1 | `PROGRAM.69` | `active` | round 36 answered; independent round 37 next |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The second row waits on the director's yes. The pending leaves beside them —
@@ -1804,6 +1828,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 
 | `2026-10-11` | `PROGRAM.69` (round 34) | native old/new mutation replays, full count self-test, syntax, book and final staged gates | both mutants 126/0 before; validation removal 135/3 and angle restriction 130/8 of 138 after; unchanged production reader 138/0; book anchors 30/4, glossary 67/25, index 316; staged counts 1 review / 34 rounds, history 175 files / 335 stubs; acceptance/order/figure gates OK, final doctrines in hook |
 | `2026-10-11` | `PROGRAM.69` (round 35) | new census and summary-boundary controls before/after repair; both full self-tests, syntax, book and final staged gates | history 129/3 of 132 and counts 140/10 of 150 before; repaired 132/0 and 150/0; finite selected-read failures never print a final aggregate, empty counterparts pass; staged counts 1 review / 35 rounds, history 175 files / 335 stubs; book 30/4, 67/25, 316, syntax and final doctrine gates |
+| `2026-10-11` | `PROGRAM.69` (round 36) | EOF/path/diagnostic controls before repair, then both complete self-tests; syntax, book and staged gates | history 133/13 of 146 and counts 153/3 of 156 before; repaired 146/0 and 156/0; literal byte and unusual-path counterparts, named no-traceback row refusals; independent round 37 next |
 
 ## Commit Log
 
@@ -2016,6 +2041,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0618 (leaf PROGRAM.69)` | **review round 34 arm gaps answered**: unconditional listed/closed file-cell grammar and parenthesized angle destinations held; both mutants survived 126 old arms, now fail three/eight of 138; production core unchanged |
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0620 (leaf PROGRAM.69)` | **round 35 answered**: selected census reads refuse on failure rather than report successful zero/partial totals; every recognized summary header requires its next separator at all boundaries; eight census and twelve summary controls fail first, then complete suites pass 132/0 and 150/0; independent round 36 next |
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0622 (leaf PROGRAM.69)` | **round 36 answered**: exact source-byte boundaries at EOF, NUL-delimited UTF-8 tree paths and named empty-row diagnostics; fourteen census and six count controls fail first; complete suites pass 146/0 and 156/0; independent round 37 next |
 
 ## Changelog
 

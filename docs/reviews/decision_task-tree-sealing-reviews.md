@@ -747,6 +747,36 @@ their next separator at end of input, newline, blank, prose, another header and 
 | R35-D1 | defect | census uses a failed selected-tree read as empty content, reporting successful zero or partial aggregates | require every selected blob read, naming commit/path on failure; eight tracked successful/empty/first-error/last-error/listing/UTF-8 controls; no failed run prints a final aggregate |
 | R35-R1 | remark | a recognized summary header at end of input or a table-ending non-row bypasses its required separator; no lost count established | check pending headers before every next line and at end of input; twelve controls cover both shapes at six boundaries |
 
+
+**Round 36**, `2026-10-11`, of committed `d1a2283`, an independent read-only context new to the answer. Two P2
+census defects, no additional actionable arm gaps established, and one nonblocking diagnostic remark. The R35
+selected-read and pending-header repairs pass fresh probes. A final completed leaf at physical EOF is one byte
+larger than its literal UTF-8 span; non-z Git listings quote unusual paths, which the suffix filter silently skips.
+No particular real historical aggregate is alleged wrong; the reviewer reads no real sealed body or evaluation case.
+
+The retained run has 98 checker invocations: 69 extracted-core and 29 full pinned-shell, comprising 82 pinned-reader
+and 16 valid local-mutant evaluations. Of the pinned results, 67 give expected normal outcomes, 11 give erroneous
+census totals, and four fail closed with an empty-row traceback. Separately, 2 187 finite unit/oracle comparisons
+agree. These denominators exclude syntax checks and producer-development repeats. The reviewer uses official Git
+output documentation and a finite shim, not a native unusual-filename Git fixture; it does not replay the complete
+132/150-arm suites or claim native index, seal transaction or signal coverage. Report/producers under
+`target/review-p69-r36/` are untracked. All subprocesses finish; two authorized OS snapshots find no review jobs.
+
+The answer uses source-byte boundaries at EOF and NUL-delimited, explicitly UTF-8-decoded tree paths. Its finite
+producer retains the eight selected-read cases and adds fourteen EOF/path/error counterparts. A final done child
+with zero, one or two LF bytes is measured literally; an internal span retains its real boundary LF. Unicode, tab,
+backslash and quote paths each have single-tree and partial-total cases. Invalid listing UTF-8 and a missing NUL
+terminator refuse without a final aggregate. Six count controls cover zero-cell and empty-first-cell rows in findings
+and both summary shapes; all count arms now exclude tracebacks. New controls run on unchanged production cores:
+history 133/13 of 146, counts 153/3 of 156. Repaired complete suites pass history 146/0 and counts 156/0. Root logs
+under `target/p69r36/` are untracked; distinguishing regression producers/controls are maintained in the scripts.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R36-D1 | defect | the census invents one LF byte for a final completed leaf at EOF, for zero/one/two real ending LFs | derive byte offsets from actual source lines and real separators; EOF and internal-span controls distinguish the boundary |
+| R36-D2 | defect | non-z Git display quoting makes legitimate Unicode/control-character paths fail the suffix filter, yielding successful zero/partial totals | consume NUL-delimited raw paths and decode UTF-8 explicitly; four unusual-name families have single/partial counterparts; malformed encodings/terminators refuse |
+| R36-R1 | remark | an empty pipe row indexes a nonexistent first cell in findings or summaries, failing closed with a traceback | guard zero cells and emit the existing named malformed-row diagnostic; both summary shapes and an empty-first-cell counterpart held |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.
