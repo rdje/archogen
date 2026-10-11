@@ -4391,3 +4391,36 @@ from
 to
         masked = mask_rust(source)
 end
+
+mutation sweep-guard-literal-extent-truncated
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.2.2.2: a masked trailing literal or comment cannot shorten the original condition used by a compiled guard candidate.
+from
+                    targets.append((line, (match.start(2), end)))
+to
+                    targets.append((line, match.span(2)))
+end
+
+mutation sweep-guard-end-flags-swapped
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.2.2.2: actual owned and borrowed guard candidates distinguish first and last branch positions while preserving the rest of the body.
+from
+                        rewritten_condition = "(%s) && %s" % (condition, position)
+to
+                        rewritten_condition = "(%s) && %s" % (condition, positions[1] if position == positions[0] else positions[0] if position == positions[1] else position)
+end
+
+mutation sweep-guard-condition-evaluation-skipped
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.2.2.2: the original condition is evaluated before its position gate, including iterations whose branch is disabled.
+from
+                        rewritten_condition = "(%s) && %s" % (condition, position)
+to
+                        rewritten_condition = "%s && (%s)" % (position, condition)
+end

@@ -23,6 +23,8 @@
 #            its last character dropped and its first   chr      `'\n'` ⇄ `'\r'` in a comparison
 #   iter     a one-line `for P in E {` narrowed to its first, last or two end elements, for owned/borrowed E;
 #            a lexical mask excludes headers inside comments and Rust literals, preserving bindings and labels
+#   guard    the same loop rewrite without skipping elements; one `if C {` or `} else if C {` in its body,
+#            outside nested loops/closures, becomes `(C) && first`, last or ends; C is still evaluated first
 #
 # HOW IT RUNS, so the working tree is never touched: the tracked files as they stand in the working tree are copied to
 # `target/mutation-sweep/tree/` (no gitlink), built there with `target/mutation-sweep/target/` as the target directory,
@@ -295,7 +297,9 @@ def guard_targets(n):
         if match and not match.group(2).startswith("let "):
             position = starts[line] + len(match.group(1))
             if not any(a <= position < b for a, b in excluded):
-                targets.append((line, match.span(2)))
+                # Mask spaces at a literal's end are still source characters, including its closing quote.
+                end = len(lines[line][:masked_lines[line].rfind("{")].rstrip())
+                targets.append((line, (match.start(2), end)))
     return targets
 
 def loop_header(n, masked):
@@ -447,6 +451,13 @@ def mutants():
             rewritten, tail, positions = header
             for position in positions:
                 add(n, "iter", rewritten + " if !%s { continue; }" % position + tail)
+            for target, (begin, end) in guard_targets(n):
+                condition = lines[target][begin:end]
+                for position in positions:
+                    rewritten_condition = "(%s) && %s" % (condition, position)
+                    branch = lines[target][:begin] + rewritten_condition + lines[target][end:]
+                    replacement = [rewritten + tail] + lines[n + 1:target] + [branch]
+                    add(n, "guard", "\n".join(replacement), stop=target + 1)
     return out
 
 ms = [m for m in mutants() if not a.op or m[2] in a.op]

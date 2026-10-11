@@ -254,8 +254,30 @@ bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --op iter --li
 This lists candidates for exploration. It proves neither viability nor adequacy. The rewrite peeks at the next
 element before running the body, so its lookahead is part of the mutation being judged. Compiled synthetic controls
 hold position selection for vectors, sets, arrays, borrowed forms, binding patterns and labelled continuation.
-Structural loop/closure scope support is built (`M3.6.9.2.2.2.1`); guarded candidates, the remaining operators
-and actual production measurements remain pending.
+The `guard` operator (`M3.6.9.2.2.2.2`) uses that loop rewrite while retaining every element's body work. It changes
+one one-line `if C {` or `} else if C {` branch to `(C) && first`, `last` or `(first || last)`. The original condition
+still runs before its position gate, including its side effects. Other body statements stay in order; disabling an
+if branch may allow its existing else branch to run. For example, inside the rewritten loop:
+
+```rust
+// Original branch header: if judged(item) {
+if (judged(item)) && first {
+    record(item);
+}
+```
+
+The generated flag names are fresh; `first` above is shortened for readability. Plain nested if scopes are eligible,
+but branches inside a nested loop or closure are excluded from the outer loop's candidates. An inner loop may have
+its own candidates. If-let headers and multiline conditions are outside this operator's spelling. Rust literals and
+comments retain their complete source characters when conditions are wrapped, including final quotes and comments.
+
+```sh
+bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --op guard --list
+```
+
+Compiled synthetic controls check actual guard candidates over owned and borrowed vectors, sets and arrays,
+patterns, labels, literals and condition side effects; real CLI controls check multiline landing and restoration.
+The remaining chain, membership and closure operators and actual production measurements remain pending.
 
 An entry can also break without anyone running it: the code it names moves, and its text is no longer there.
 One entry went that way when an import line gained a name, and the whole catalog then refused to run, unseen,

@@ -1,4 +1,4 @@
-"""Real sweep CLI probes and compiled iterator candidates; no fixture Git/Cargo build."""
+"""Real sweep CLI probes and compiled iterator/guard candidates; no fixture Git/Cargo build."""
 import ast
 import json
 import os
@@ -133,14 +133,14 @@ class SpanTests(SweepFixture):
 
 
 class DiscoveryFixture(SweepFixture):
-    def discovery(self, source):
+    def discovery(self, source, operator="iter"):
         # Load the actual discovery/replacement functions without invoking the CLI or copying its algorithm.
         python = SCRIPT.read_text().split("<<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
         functions = [node for node in ast.parse(python).body if isinstance(node, ast.FunctionDef)]
         lines = source.split("\n")
         namespace = dict(re=re, json=json, lines=lines, first=0, last=lines.index("#[cfg(test)]"))
         exec(compile(ast.Module(body=functions, type_ignores=[]), str(SCRIPT), "exec"), namespace)
-        candidates = [m for m in namespace["mutants"]() if m[2] == "iter"]
+        candidates = [m for m in namespace["mutants"]() if m[2] == operator]
         return namespace, candidates
 
     def bounded(self, command):
@@ -152,7 +152,7 @@ class DiscoveryFixture(SweepFixture):
         except subprocess.TimeoutExpired:
             os.killpg(process.pid, signal.SIGKILL)
             process.communicate()
-            self.fail("iterator probe command timed out: " + repr(command))
+            self.fail("compiled sweep probe command timed out: " + repr(command))
         self.assertEqual(process.returncode, 0, stdout + stderr)
         return stdout
 
@@ -358,6 +358,10 @@ mod tests {}
         inner = next(i for i, line in enumerate(lines) if "for y in { values }" in line)
         self.assertEqual({lines[n].split("// ", 1)[1] for n, _ in namespace["guard_targets"](inner)},
                          {"inner_for_block_operand"})
+        _, guards = self.discovery(source, "guard")
+        outer_guards = [m for m in guards if m[0] == outer]
+        self.assertEqual(len(outer_guards), 3 * len(targets))
+        self.assertEqual({lines[m[1] - 1].split("// ", 1)[1] for m in outer_guards}, actual)
         # The source is real stable Rust, not just a token-shaped fixture. Empty input makes runtime finite.
         program = self.base / "scopes.rs"
         program.write_text("#![allow(unused_variables, unused_braces, irrefutable_let_patterns)]\n"
@@ -365,6 +369,133 @@ mod tests {}
         binary = self.base / "scopes"
         self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
         self.bounded([str(binary)])
+
+
+class GuardTests(DiscoveryFixture):
+    def test_complete_literal_conditions_compile_without_truncated_quotes_or_comments(self):
+        conditions = [
+            'x.to_string() != "7"',
+            'x.to_string() != r#"7"#',
+            'x.to_string().as_bytes() != b"7"',
+            'x.to_string().as_bytes() != br#"7"#',
+            "char::from_digit(x as u32, 10).unwrap_or('x') != '7'",
+            "x as u8 + b'0' != b'7'",
+            'x != 7 /* trailing { } comment */',
+            'x.to_string() != "brace {"',
+            'x.to_string() != r##"end \" {"##',
+            'x.to_string().as_bytes() != c"7".to_bytes()',
+        ]
+        programs, assertions = [], []
+        for number, condition in enumerate(conditions):
+            source = ("fn sample(values: &[i32]) -> Vec<i32> {\n    let mut out = Vec::new();\n"
+                      "    for &x in values {\n        if " + condition + " { // branch comment\n"
+                      "            out.push(x);\n        }\n    }\n    out\n}\n#[cfg(test)]\nmod tests {}\n")
+            namespace, candidates = self.discovery(source, "guard")
+            targets = namespace["guard_targets"](2)
+            self.assertEqual(len(targets), 1)
+            line, (first, last) = targets[0]
+            self.assertEqual(source.split("\n")[line][first:last], condition)
+            self.assertEqual(len(candidates), 3)
+            for position, mutant in enumerate([None] + candidates):
+                function = f"literal_{number}_{position}"
+                text = source if mutant is None else namespace["apply_mutant"](mutant)
+                self.assertIn("// branch comment", text)
+                programs.append(text.split("#[cfg(test)]", 1)[0].replace("fn sample", "fn " + function, 1))
+                for values in [[], [7], [2, 7, 9, 13]]:
+                    expected = [x for i, x in enumerate(values)
+                                if (number in (7, 8) or x != 7)
+                                and (position == 0 or position == 1 and i == 0
+                                     or position == 2 and i == len(values) - 1
+                                     or position == 3 and i in (0, len(values) - 1))]
+                    assertions.append(f'assert_eq!({function}(&{values}), vec!{expected}, "{function}");')
+        program = self.base / "literal_guards.rs"
+        program.write_text("\n".join(programs) + "\nfn main() {\n" + "\n".join(assertions) + "\n}\n")
+        binary = self.base / "literal_guards"
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.bounded([str(binary)])
+
+    def test_owned_borrowed_guards_preserve_body_work_and_condition_evaluation(self):
+        forms = [
+            ("vec", "", "x", "values"),
+            ("vec_ref", "", "&x", "&values"),
+            ("vec_iter", "", "&x", "values.iter()"),
+            ("vec_into_iter", "", "x", "values.into_iter()"),
+            ("slice", "", "&x", "values.as_slice()"),
+            ("set", "    let values: std::collections::BTreeSet<_> = values.into_iter().collect();\n", "x", "values"),
+            ("set_ref", "    let values: std::collections::BTreeSet<_> = values.into_iter().collect();\n", "&x", "&values"),
+            ("tuple", "", "(_, x)", "values.into_iter().enumerate()"),
+            ("label", "", "x", "values"),
+            ("collision", "    let __archogen_sweep_4_first = 0;\n", "x", "values"),
+            ("array", "", "x", "values"),
+            ("array_ref", "", "&x", "&values"),
+        ]
+        programs, assertions = [], []
+        for name, setup, pattern, expression in forms:
+            array = name.startswith("array")
+            signature = "fn sample<const N: usize>(values: [i32; N])" if array else "fn sample(values: Vec<i32>)"
+            label = "'items: " if name == "label" else ""
+            extra = "        if x == 7 { continue 'items; }\n" if name == "label" else ""
+            if name == "collision":
+                extra = "        let x = x + __archogen_sweep_4_first;\n"
+            source = (signature + " -> (Vec<i32>, Vec<i32>, usize) {\n"
+                      "    let (mut seen, mut out, mut checks) = (Vec::new(), Vec::new(), 0);\n" + setup
+                      + f"    {label}for {pattern} in {expression} {{ // preserve header\n" + extra
+                      + "        seen.push(x);\n"
+                      "        if { checks += 1; x != 7 } { // first branch\n"
+                      "            out.push(x);\n        } else if x == 7 { // second branch\n"
+                      "            out.push(-x);\n        }\n    }\n    (seen, out, checks)\n}\n"
+                      "#[cfg(test)]\nmod tests {}\n")
+            namespace, candidates = self.discovery(source, "guard")
+            self.assertEqual(len(candidates), 6, name)
+            first_branch = next(i for i, line in enumerate(source.split("\n")) if "// first branch" in line)
+            for number, mutant in enumerate([None] + candidates):
+                function = f"{name}_{number}"
+                text = source if mutant is None else namespace["apply_mutant"](mutant)
+                self.assertIn("// preserve header", text)
+                programs.append(text.split("#[cfg(test)]", 1)[0].replace("fn sample", "fn " + function, 1))
+                for values in [[], [7], [2, 7, 9, 13]]:
+                    reached = [x for x in values if name != "label" or x != 7]
+                    selected = []
+                    for i, x in enumerate(values):
+                        if name == "label" and x == 7:
+                            continue
+                        # Independent branch/position oracle; every condition is evaluated before its gate.
+                        permitted = (mutant is None or (number - 1) % 3 == 0 and i == 0
+                                     or (number - 1) % 3 == 1 and i == len(values) - 1
+                                     or (number - 1) % 3 == 2 and i in (0, len(values) - 1))
+                        primary = x != 7 and (mutant is None or mutant[1] - 1 != first_branch or permitted)
+                        secondary = x == 7 and (mutant is None or mutant[1] - 1 == first_branch or permitted)
+                        if primary:
+                            selected.append(x)
+                        elif secondary:
+                            selected.append(-x)
+                    argument = str(values) if array else "vec!" + str(values)
+                    assertions.append(f'assert_eq!({function}({argument}), (vec!{reached}, vec!{selected}, '
+                                      f'{len(reached)}), "{function}");')
+        program = self.base / "guards.rs"
+        program.write_text("#![allow(unused_variables, unused_braces)]\n" + "\n".join(programs)
+                           + "\nfn main() {\n" + "\n".join(assertions)
+                           + f'\nprintln!("guard probes: {len(assertions)} observations");\n}}\n')
+        binary = self.base / "guards"
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.assertEqual(self.bounded([str(binary)]).strip(), "guard probes: 252 observations")
+
+    def test_real_guard_candidates_land_and_restore_copied_source(self):
+        source = ("fn sample(values: &[i32]) -> i32 {\n    let mut out = 0;\n"
+                  "    for &x in values {\n        if x > 0 {\n            out += x;\n        }\n"
+                  "        if x < 0 {\n            out -= x;\n        }\n    }\n    out\n}\n"
+                  "#[cfg(test)]\nmod tests {}\n")
+        namespace, candidates = self.discovery(source, "guard")
+        self.assertEqual(len(candidates), 6)
+        for mutant in (candidates[0], candidates[-1]):
+            before, after = namespace["mutation_key"](mutant)
+            record = "from-json " + json.dumps(before) + "\nto-json " + json.dumps(after) + "\nwhy fixture\n"
+            for equivalent in (False, True):
+                with self.subTest(stop=mutant[1], equivalent=equivalent):
+                    result = self.run_sweep(record if equivalent else "", original=source,
+                                            mutated=namespace["apply_mutant"](mutant), candidate=mutant)
+                    self.assert_exit(result, 0 if equivalent else 1)
+                    self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
 
 
 if __name__ == "__main__":

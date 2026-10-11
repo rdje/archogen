@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — actual guarded-branch candidates preserve complete conditions and body work
+
+`ARCHOGEN-M3-0627` (leaf `M3.6.9.2.2.2.2`), `2026-10-11`.
+
+- Guard candidates pair a rewritten loop header with one eligible branch gated to first/last/ends; all other body
+  work stays, and the original condition evaluates before the flag. Nested loop/closure branches are excluded from
+  an outer loop's candidates. Encountered literal-span defect repaired: final quotes/comments stay in the condition.
+- Validation: four methods fail before repair/emission; nine Python methods pass afterwards. 102 emitted guards
+  and 22 baselines compile with 372 semantic observations, plus four actual-candidate CLI landing/restoration cases.
+  Three strict catalogue controls are killed by named tests; 15 tool tests pass. An initial catalogue usage error
+  is not counted. Four complete old-operator projections, including iter, remain byte-identical; new guard-only
+  lists are planning, with no production viability or adequacy claim. Syntax, book and staged doctrines before commit.
+- Book examples, accepted design status, toolbox, leaf/parent closures, logs and resume pointers agree; chain,
+  membership, closure operators and production measurement remain pending.
+
 ## archogen — committed closed units and completed reviews are archived
 
 `ARCHOGEN-PROGRAM-0626` (leaf `PROGRAM.83.2`), `2026-10-11`.
