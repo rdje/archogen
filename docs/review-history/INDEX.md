@@ -24,3 +24,5 @@ To prove a file, compare `sha256sum docs/review-history/<FILE>` with its row.
 | `decision_trust-inventory-reviews.md` | 311 | 38300 | `23b043196156b3db33ed0a726a5646343926f7c0a3152257b47a62ccf8f0e764` | `2026-10-10` |
 | `decision_trust-generated-sources-reviews.md` | 438 | 55702 | `047051cb5759a5fc084e6fd70704909e2c75e98745ff8549720ddfa9b598716e` | `2026-10-10` |
 | `decision_trust-generated-refusals-reviews.md` | 402 | 42568 | `4d3db586e1b1ee54582596622bc757187a0d5d2fc122fb8810b2d6f8593316fb` | `2026-10-10` |
+| `decision_task-tree-sealing-reviews.md` | 811 | 98522 | `cd1cc1848fc647e53181223329ff87937d884cc9169f53eaafc926d17d5beb6d` | `2026-10-11` |
+| `decision_trust-generated-adequacy-reviews.md` | 77 | 9565 | `c73b4efcce7966c892052418c205ed52127dd891b838670f4aeb6638247a9b8e` | `2026-10-11` |

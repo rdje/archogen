@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — committed closed units and completed reviews are archived
+
+`ARCHOGEN-PROGRAM-0626` (leaf `PROGRAM.83.2`), `2026-10-11`.
+
+- Published seals move 15 PROGRAM subtrees (17 leaves) and four M3 slices (four leaves), reconstructing both trees
+  byte for byte. The closed sealing and adequacy reviews move unchanged behind their original citation paths;
+  copies read back exactly 98 522 and 9 565 bytes. Open implementation and other pending work stay live.
+- Validation: both archive tools prove source/copy identity and their provenance gates; final staged task/review
+  histories, review counts, size, book and doctrine gates before commit. Existing PROGRAM.70 parent commit warning
+  retained explicitly, never replaced by an invented reference. Two frozen task copies retain original EOF blank
+  lines; exact provenance passes and only those copies are excluded from the remaining whitespace check.
+  No implementation behavior or new suite claim.
+
 ## archogen — completed-history archival is prepared
 
 `ARCHOGEN-PROGRAM-0625` (leaf `PROGRAM.83.1`), `2026-10-11`.

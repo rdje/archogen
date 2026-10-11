@@ -269,6 +269,8 @@ review's row in `docs/reviews/INDEX.md` to `closed`, the history to what it was 
 at that path to the stub, so a round merged in afterwards cannot be lost. It reads the staged copies, so a file left out
 of the commit is refused before it lands. Every closed history it accepts is archived (`PROGRAM.55`, `PROGRAM.70.1`); a
 stub is no history, so the folder's file ceiling skips it, not its bytes (`PROGRAM.70.2`).
+For example, the accepted M3 generated-adequacy design review is archived behind its original review path, while
+its ongoing implementation remains live in `docs/tasks/M3.md`; closing a review does not close that implementation.
 
 ```console
 $ bash scripts/check_review_history.sh                     # the gate
