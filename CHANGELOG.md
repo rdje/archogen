@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — membership candidates are held by concrete compiler types and receiver semantics
+
+`ARCHOGEN-M3-0629` (leaf `M3.6.9.2.3.2`), `2026-10-11`.
+
+- Contains candidates compare first/last against Some(Y), direct and copied-element forms, retaining complete
+  postfix receivers and multiline arguments. Parenthesized comparisons preserve surrounding negation; original
+  comment newlines remain. Compiler outcomes decide which spellings are viable, without claiming all types work.
+- Validation: initial three methods fail across 13 subcases; repaired 15 tool tests pass with 15 Python methods.
+  The tracked compiler census holds 16 type candidates (six viable, ten refused; 120 observations) and 32 receiver
+  candidates (16 viable, 16 refused; 288 observations), plus twelve compiled baselines. Vector/slice direct and
+  borrowed-string-set copied forms work; owned-String set forms remain unviable and prove no coverage. Four real
+  CLI cases hold multiline landing/restoration; four named strict kills and earlier-list projections before commit.
+  Syntax, book and staged doctrines required. No production viability/adequacy claim; closure logic/counts next.
+
 ## archogen — iterator-chain candidates preserve multiline call structure and ordering
 
 `ARCHOGEN-M3-0628` (leaf `M3.6.9.2.3.1`), `2026-10-11`.

@@ -27,6 +27,8 @@
 #            outside nested loops/closures, becomes `(C) && first`, last or ends; C is still evaluated first
 #   chain    `.iter()`/`.into_iter()` and `.filter(...)` followed by `.take(1)` or `.rev().take(1)`;
 #            a filter or chain call dropped, with balanced multiline arguments and lexical exclusions
+#   contains `X.contains(Y)` narrowed to a first/last comparison with `Some(Y)`, direct and copied-element forms;
+#            grouped postfix receivers and multiline arguments retained; compilation decides type viability
 #
 # HOW IT RUNS, so the working tree is never touched: the tracked files as they stand in the working tree are copied to
 # `target/mutation-sweep/tree/` (no gitlink), built there with `target/mutation-sweep/target/` as the target directory,
@@ -341,6 +343,80 @@ def method_calls(names):
             opening = match.end() - 1
             yield match.group(1), match.start(), opening, pairs[opening] + 1
 
+def receiver_start(masked, offset):
+    """Start of a postfix receiver: paths, fields, grouped operands, calls, indices, macros and generics."""
+    tokens = list(re.finditer(r"r#\w+|'\w+|\w+|::|[^\s]", masked))
+    words = [token.group() for token in tokens]
+    pairs, stack = {}, []
+    for i, word in enumerate(words):
+        if word in ("(", "[", "{"):
+            stack.append(i)
+        elif word in (")", "]", "}"):
+            if not stack or words[stack[-1]] != {")": "(", "]": "[", "}": "{"}[word]:
+                raise ValueError("unbalanced Rust receiver groups")
+            pairs[i] = stack.pop()
+    if stack:
+        raise ValueError("unbalanced Rust receiver groups")
+    forbidden = {"return", "if", "else", "while", "for", "in", "let", "match", "break", "continue",
+                 "fn", "pub", "impl", "where", "as", "move", "async", "unsafe", "const", "static",
+                 "type", "struct", "enum", "use", "mod"}
+
+    def primary(i):
+        if i < 0:
+            return None
+        word = words[i]
+        if word == "?":
+            return primary(i - 1)
+        if i in pairs:
+            # A preceding atom is the callee/indexed value; otherwise this group is the receiver itself.
+            begin = pairs[i]
+            previous = begin - 1
+            if previous >= 0 and words[previous] == "!":
+                head = primary(previous - 1)
+            else:
+                head = primary(previous)
+            if head is not None:
+                begin = head
+        elif word == ">":
+            # Walk generic arguments backwards, skipping balanced groups inside their type expressions.
+            depth, j = 1, i - 1
+            while j >= 0:
+                if j in pairs:
+                    j = pairs[j] - 1
+                    continue
+                if words[j] == ">":
+                    depth += 1
+                elif words[j] == "<":
+                    depth -= 1
+                    if depth == 0:
+                        break
+                j -= 1
+            if j < 0:
+                return None
+            begin = j
+            if j > 0 and words[j - 1] == "::":
+                head = primary(j - 2)
+                if head is None:
+                    return None
+                begin = head
+        elif re.fullmatch(r"(?:r#)?\w+", word) and word not in forbidden:
+            begin = i
+        else:
+            return None
+        if begin > 0 and words[begin - 1] in (".", "::"):
+            head = primary(begin - 2)
+            if head is not None:
+                begin = head
+            elif words[begin - 1] == "::":
+                begin -= 1
+            else:
+                return None
+        return begin
+
+    last_token = bisect.bisect_left([token.start() for token in tokens], offset) - 1
+    begin = primary(last_token)
+    return tokens[begin].start() if begin is not None else None
+
 def apply_mutant(m):
     n, stop, _, new = m
     mutated = lines[:]
@@ -481,10 +557,25 @@ def mutants():
                     replacement = [rewritten + tail] + lines[n + 1:target] + [branch]
                     add(n, "guard", "\n".join(replacement), stop=target + 1)
     masked_source = "\n".join(masked)
-    for method, begin, opening, end in method_calls({"iter", "into_iter", "filter", "chain"}):
+    marked_source = mask_rust(source, literal_marks=True)
+    for method, begin, opening, end in method_calls({"iter", "into_iter", "filter", "chain", "contains"}):
         n = bisect.bisect_right(starts, begin) - 1
         final = bisect.bisect_right(starts, end - 1) - 1
         if not first <= n <= final < last:
+            continue
+        if method == "contains":
+            receiver = receiver_start(marked_source, begin)
+            if receiver is None or not marked_source[opening + 1:end - 1].strip():
+                continue
+            n = bisect.bisect_right(starts, receiver) - 1
+            if n < first:
+                continue
+            for endpoint in ("first", "last"):
+                for copied in ("", ".copied()"):
+                    replacement = "((%s).%s()%s == Some(%s))" % (
+                        source[receiver:begin], endpoint, copied, source[opening + 1:end - 1])
+                    text = lines[n][:receiver - starts[n]] + replacement + lines[final][end - starts[final]:]
+                    add(n, "contains", text, stop=final + 1)
             continue
         if method in {"iter", "into_iter"} and masked_source[opening + 1:end - 1].strip():
             continue

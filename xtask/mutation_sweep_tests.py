@@ -144,7 +144,7 @@ class DiscoveryFixture(SweepFixture):
         candidates = [m for m in namespace["mutants"]() if m[2] == operator]
         return namespace, candidates
 
-    def bounded(self, command):
+    def bounded(self, command, *, expect_type_error=False):
         env = dict(os.environ, TMPDIR=str(self.base), CARGO_HOME=str(ROOT / "target/cargo-home"))
         process = subprocess.Popen(command, cwd=self.base, env=env, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, text=True, start_new_session=True)
@@ -154,7 +154,10 @@ class DiscoveryFixture(SweepFixture):
             os.killpg(process.pid, signal.SIGKILL)
             process.communicate()
             self.fail("compiled sweep probe command timed out: " + repr(command))
-        self.assertEqual(process.returncode, 0, stdout + stderr)
+        self.assertEqual(process.returncode, 1 if expect_type_error else 0, stdout + stderr)
+        if expect_type_error:
+            self.assertEqual(command[0], "rustc")
+            self.assertRegex(stderr, r"error\[E(?:0308|0277)\]")
         return stdout
 
 
@@ -592,6 +595,104 @@ mod tests { fn fixture() { let _: Vec<_> = [7].iter().collect(); } }
         for mutant in candidates:
             self.assertEqual(mutant[1], 5)
             before, after = namespace["mutation_key"](mutant)
+            record = "from-json " + json.dumps(before) + "\nto-json " + json.dumps(after) + "\nwhy fixture\n"
+            result = self.run_sweep(record, original=source, mutated=namespace["apply_mutant"](mutant), candidate=mutant)
+            self.assert_exit(result, 0)
+            self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
+
+
+class ContainsTests(DiscoveryFixture):
+    def compile_membership_case(self, source, argument, cases, *, copied, negate=False):
+        namespace, candidates = self.discovery(source, "contains")
+        self.assertEqual(len(candidates), 4)
+        compiled, refused, observations = 0, 0, 0
+        for number, mutant in enumerate([None] + candidates):
+            viable = mutant is None or copied is not None and ((number - 1) % 2 == 1) == copied
+            text = source if mutant is None else namespace["apply_mutant"](mutant)
+            assertions = []
+            for values, needle in cases:
+                if mutant is None:
+                    expected = needle in values
+                else:
+                    endpoint = values[:1] if number in (1, 2) else values[-1:]
+                    expected = bool(endpoint) and needle == endpoint[0]
+                expected = expected != negate
+                assertions.append(f'assert_eq!(sample({argument(values)}, {json.dumps(needle)}), '
+                                  f'{str(expected).lower()});')
+            program = self.base / f"membership_{number}.rs"
+            program.write_text(text.split("#[cfg(test)]", 1)[0] + "\nfn main() {\n"
+                               + "\n".join(assertions) + "\n}\n")
+            binary = self.base / f"membership_{number}"
+            self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)], expect_type_error=not viable)
+            if viable:
+                self.bounded([str(binary)])
+                observations += len(cases)
+                compiled += mutant is not None
+            else:
+                refused += 1
+        return len(candidates), compiled, refused, observations
+
+    def test_direct_vectors_copied_borrowed_sets_and_unviable_types(self):
+        numeric = [(values, needle) for values in [[], [7], [2, 7, 9, 13]] for needle in [0, 2, 7, 13]]
+        strings = [(values, needle) for values in [[], ["m"], ["a", "m", "z"]]
+                   for needle in ["none", "a", "m", "z"]]
+        cases = [
+            ("Vec<i32>", "i32", "&needle", lambda values: "vec!" + str(values), numeric, False),
+            ("&[i32]", "i32", "&needle", lambda values: "&" + str(values), numeric, False),
+            ("std::collections::BTreeSet<&'static str>", "&str", "needle",
+             lambda values: "std::collections::BTreeSet::from_iter(" + json.dumps(values) + ")", strings, True),
+            ("std::collections::BTreeSet<String>", "&str", "needle",
+             lambda values: "std::collections::BTreeSet::from_iter(" + json.dumps(values)
+             + ".into_iter().map(str::to_owned))", strings, None),
+        ]
+        results = []
+        for collection, needle, query, argument, observations, copied in cases:
+            with self.subTest(collection=collection):
+                source = (f"fn sample(values: {collection}, needle: {needle}) -> bool {{\n"
+                          "    let _ghost = r#\".contains(42)\"#; /* .contains(99) */\n"
+                          f"    values.contains({query})\n}}\n#[cfg(test)]\n"
+                          "mod tests { fn fixture() { let _ = [7].contains(&7); } }\n")
+                results.append(self.compile_membership_case(source, argument, observations, copied=copied))
+        totals = tuple(sum(result[n] for result in results) for n in range(4))
+        self.assertEqual(totals, (16, 6, 10, 120))
+        print("contains type probes: 16 candidates, 6 viable, 10 type refusals; 120 observations")
+
+    def test_receiver_boundaries_preserve_fields_groups_calls_generics_and_negation(self):
+        forms = [
+            ("holder.values", "    let holder = Holder { values };\n", False),
+            ("(&values)", "", False),
+            ("values.as_slice()", "", False),
+            ("Some(values).unwrap()", "", False),
+            ("(values, ()).0", "", False),
+            ("make::<i32>(values)", "", False),
+            ("std::convert::identity::<Vec<i32>>(values)", "", False),
+            ("reads[&0]", "    let reads = std::collections::BTreeMap::from([(0, values)]);\n", True),
+        ]
+        observations = [(values, needle) for values in [[], [7], [2, 7, 9, 13]] for needle in [0, 2, 7, 13]]
+        results = []
+        for receiver, setup, negate in forms:
+            with self.subTest(receiver=receiver):
+                source = ("struct Holder { values: Vec<i32> }\n"
+                          "fn make<T>(values: Vec<T>) -> Vec<T> { values }\n"
+                          "fn sample(values: Vec<i32>, needle: i32) -> bool {\n" + setup
+                          + "    " + ("!" if negate else "") + receiver
+                          + ".contains(&needle)\n}\n#[cfg(test)]\nmod tests {}\n")
+                results.append(self.compile_membership_case(source, lambda values: "vec!" + str(values), observations,
+                                                            copied=False, negate=negate))
+        totals = tuple(sum(result[n] for result in results) for n in range(4))
+        self.assertEqual(totals, (32, 16, 16, 288))
+        print("contains receiver probes: 32 candidates, 16 viable, 16 type refusals; 288 observations")
+
+    def test_multiline_receiver_and_argument_land_and_restore(self):
+        source = ("fn sample(values: Vec<i32>, needle: i32) -> bool {\n"
+                  "    !std::convert::identity::<Vec<i32>>(\n        values,\n    ).contains(\n"
+                  "        &needle, // retain this argument comment\n    )\n}\n#[cfg(test)]\nmod tests {}\n")
+        namespace, candidates = self.discovery(source, "contains")
+        self.assertEqual(len(candidates), 4)
+        for mutant in candidates:
+            self.assertEqual((mutant[0], mutant[1]), (1, 6))
+            before, after = namespace["mutation_key"](mutant)
+            self.assertIn("// retain this argument comment\n", after)
             record = "from-json " + json.dumps(before) + "\nto-json " + json.dumps(after) + "\nwhy fixture\n"
             result = self.run_sweep(record, original=source, mutated=namespace["apply_mutant"](mutant), candidate=mutant)
             self.assert_exit(result, 0)

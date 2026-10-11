@@ -294,8 +294,36 @@ An inert comment marks a dropped call so a standalone multiline removal still ha
 strict equivalence records. Empty-argument detection ignores comments, and raw method identifiers are supported.
 Each candidate must compile for its concrete iterator type; reverse narrowing requires a reversible iterator.
 Compiled synthetic controls hold ordering and filtering over owned/borrowed vectors, slices, arrays and sets, and
-real CLI controls hold multiline equivalents and restoration. Membership, closure operators, per-operator unviable
-counts and actual production measurements remain pending.
+real CLI controls hold multiline equivalents and restoration.
+
+The `contains` operator (`M3.6.9.2.3.2`) replaces `X.contains(Y)` with first/last comparisons to `Some(Y)`, each
+with a direct and a copied-element form. For a vector of integers, the direct form keeps the borrowed query:
+
+```rust
+numbers.contains(&needle)             // original
+numbers.first() == Some(&needle)      // first-element candidate
+numbers.last() == Some(&needle)       // last-element candidate
+```
+
+For a set of borrowed strings, copying the returned reference makes the candidate type match the query:
+
+```rust
+words.contains(needle)                        // needle: &str; words: BTreeSet<&str>
+words.first().copied() == Some(needle)         // first-element candidate
+words.last().copied() == Some(needle)          // last-element candidate
+```
+
+All four spellings are candidates; compilation decides viability. The copied integer-vector form and direct
+borrowed-string-set form need not compile. The tested owned-String set has no viable spelling here, and contributes
+no coverage. Empty collections compare false; an element found only in the middle is missed by both end variants.
+The emitted comparison is parenthesized so surrounding negation still applies to a boolean. Receiver spans retain
+fields, indices, grouped values, calls and generics; multiline arguments preserve their original comments/newlines.
+Compiler controls distinguish these type outcomes, and real CLI controls hold multiline landing and restoration.
+Closure logic, per-operator unviable counts and actual production measurements remain pending.
+
+```sh
+bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --op contains --list
+```
 
 ```sh
 bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --op chain --list

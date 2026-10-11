@@ -4461,3 +4461,47 @@ to
         """Dot-method spans through their closing parenthesis, excluding comments and literal contents."""
         masked = "\n".join(lines)
 end
+
+mutation sweep-contains-first-last-swapped
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.3.2: viable direct and copied membership candidates distinguish the first and last elements, including empty and middle-only membership.
+from
+                for endpoint in ("first", "last"):
+to
+                for endpoint in ("last", "first"):
+end
+
+mutation sweep-contains-copied-form-borrowed-again
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.3.2: the copied-element variant is viable for borrowed-string sets and has a different concrete type from the direct vector form.
+from
+                    for copied in ("", ".copied()"):
+to
+                    for copied in ("", ".copied().as_ref()"):
+end
+
+mutation sweep-contains-negation-unwrapped
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.3.2: surrounding negation applies to the complete membership comparison rather than its Option-valued left operand.
+from
+                        replacement = "((%s).%s()%s == Some(%s))" % (
+to
+                        replacement = "(%s).%s()%s == Some(%s)" % (
+end
+
+mutation sweep-contains-argument-newline-trimmed
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.3.2: a multiline argument retains the newline that terminates its trailing line comment before Some closes.
+from
+                            source[receiver:begin], endpoint, copied, source[opening + 1:end - 1])
+to
+                            source[receiver:begin], endpoint, copied, source[opening + 1:end - 1].strip())
+end

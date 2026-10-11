@@ -79,7 +79,11 @@ sweep as it stands (round 19). This record decides a criterion, and states how f
    The runner stores source-line intervals and replacement text so `guard` changes header and branch together.
    `M3.6.9.2.1` builds this and JSON multiline equivalents (`from-json`, `to-json`); raw fields stay literal.
    Each record is validated at separators and EOF; missing/duplicate/unknown/empty fields or duplicate entries refuse.
-   `M3.6.9.2.2.1` builds `iter` with literal/comment masking and compiled synthetic controls; production reach is unmeasured. Guard scope support and emission: `.2.2.2.1`/`.2.2.2.2`; actual compiled synthetic controls hold condition spans, evaluation order and body work. Production reach remains unmeasured. Chain call spans and emitted variants: `.2.3.1`, held by compiled owned/borrowed order controls and multiline CLI restoration; dropped calls retain inert comments for strict nonempty equivalent fields.
+   `M3.6.9.2.2.1` builds `iter` with lexical/compiled controls; guard scope and emission are `.2.2.2.1`/`.2.2.2.2`,
+   holding complete conditions, evaluation order and body work. Chain call spans/variants are `.2.3.1`, with compiled
+   ordering and multiline CLI controls; dropped calls retain inert comments for nonempty equivalent fields.
+   Membership variants are `.2.3.2`: concrete compiler controls distinguish direct/copy viability and type refusals,
+   with complete receiver/argument spans and preserved negation. Production reach remains unmeasured.
    A mutant that does not compile is unviable, as every other, and the sweep reports each operator's count of them.
    The operators are held by measurement, not by `--list`: after the new route controls and before the parent gains
    a test, the build runs every candidate they make on each census entry's replacement span against both test
