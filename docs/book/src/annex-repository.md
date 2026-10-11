@@ -292,6 +292,20 @@ CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" \
 This closes the scoped restoration durability repair. Complete current-source mutation adequacy remains open;
 these native boundary regressions do not close additional rows of the initial `trust.rs` survivor census.
 
+A subsequent bounded `split_command` measurement at `5d51a17` selected every current helper edit: 29 attempts,
+13 named finishing kills and 16 survivors, with no unviable, timeout or unjudged results. Its strict exit was one;
+complete measurement is not adequacy success. The maintained input census verified all 1003 captured regular
+inputs restored and unchanged gitlink metadata; the copied source also matched. The task record preserves
+source-bound initial/current edit bindings and the native reproduction command. No survivor closes from this run.
+
+A separate real Cargo verbose-output probe found a checkout-path defect. Ordinary and space-bearing output
+paths parse correctly; with a literal apostrophe, Cargo prints a close-quote/escaped-quote/reopen-quote sequence.
+The current helper toggles at the escaped quote and retains its backslash, folding following flags into the
+output-directory token. Cargo builds successfully, but inventory collection can then seek dependency files in
+a nonexistent directory. This is a collection failure, without an authenticity-bypass claim. The exploratory
+probe producer is untracked; `M3.6.9.6.3.2.2.10.2` owns a permanent public reproduction and repair before
+further helper survivor judgments. No general shell-conformance guarantee follows from the finite probe.
+
 ## Historical effects and current self-tests
 
 The effects diagnostic keeps the [initial semantic witness review](trust-adequacy.md#semantic-witnesses-in-the-initial-cohort)

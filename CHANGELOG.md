@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — bounded command-helper measurement owns an actual Cargo quote defect
+
+`ARCHOGEN-M3-0683` (leaf `M3.6.9.6.3.2.2.10.1`), `2026-10-12`.
+
+- Measure all 29 current helper edits: 13 named finishing kills, 16 survivors, no unviable/timeouts/unjudged,
+  strict exit 1. Bind exact initial/current edits; retain every initial survivor obligation.
+- Maintained census verifies all 1003 original inputs and gitlink metadata restored; copied source matches.
+  Native outcomes and audit scope remain distinct from restoration and semantic adequacy.
+- Real Cargo builds ordinary/space/apostrophe paths successfully, but the unchanged parser corrupts apostrophe
+  escapes and its output-directory token. Own permanent public reproduction and repair next; the exploratory
+  probe producer is untracked and explicitly qualified. Book/live records align; full adequacy remains open.
+
 ## archogen — current JSON and inventory reversals replay with durable restoration evidence
 
 `ARCHOGEN-M3-0682` (leaf `M3.6.9.6.3.2.2.9.7.2`), `2026-10-12`.
