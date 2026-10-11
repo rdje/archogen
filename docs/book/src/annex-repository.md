@@ -212,6 +212,18 @@ This closes the caller-byte assessment before `.9.4` integration. It establishes
 without demonstrating an artifact-hash bypass or authenticity. Encoding follows [RFC 8259](ledger.md#rfc-8259)
 §8.1's interchange context; these local checks are not a complete conformance claim.
 
+## Configuration checkpoint integration
+
+The local integration checkpoint passed on `2026-10-12` at commit
+`1cf0aafb9f134fb108852f6b91984f99d0550188`, after the configuration identity, JSON boundary and effects
+self-test repairs. Every required step passed, including the complete contract suite, doctrine self-tests,
+pinned book build, bare-metal and browser builds, browser binding, emulator check and architecture spike.
+The integration stamp identifies that committed tree; later checkpoint documentation is recorded separately.
+
+This is local integration evidence. Complete current-source mutation adequacy and runner-baseline compatibility
+remain open. Supplemental restoration counts at this checkpoint used an ignored one-off helper; the task tree
+owns its maintained replacement and a fresh native replay before further survivor assessments.
+
 ## Historical effects and current self-tests
 
 The effects diagnostic keeps the [initial semantic witness review](trust-adequacy.md#semantic-witnesses-in-the-initial-cohort)

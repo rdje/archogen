@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — configuration checkpoint passes full local integration
+
+`ARCHOGEN-M3-0680` (leaf `M3.6.9.6.3.2.2.9.4`), `2026-10-12`.
+
+- Full integration passes at committed 1cf0aaf after key/API/JSON and effects self-test repairs:
+  12 passed, zero failures or unavailable/not-built/quarantined steps; exact committed-tree stamp confirmed.
+- All 1003 captured regular inputs restore under Python/system hashes, gitlink metadata unchanged. This
+  supplemental producer is untracked; .9.7 owns the maintained census and fresh native repair replay.
+- JSON repair container closes. Book and live frontier align; current complete mutation adequacy and
+  runner-baseline compatibility remain open. Closure documentation follows the tested production commit.
+
 ## archogen — effects self-tests keep initial semantic traces source-bound
 
 `ARCHOGEN-M3-0679` (leaf `M3.6.9.6.3.2.2.9.4.1`), `2026-10-12`.

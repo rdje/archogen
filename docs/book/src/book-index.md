@@ -84,6 +84,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Codes — [Matching an offer to a requirement](matching.md#codes)
 - Comments survive — [Reading a description](reading.md#comments-survive)
 - **composite input** — [definition](glossary.md), [What the scheduling checker establishes](analysis.md)
+- Configuration checkpoint integration — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#configuration-checkpoint-integration)
 - Content hashes — [What a report may claim](evidence.md#content-hashes)
 - Contradictions are rejected, never resolved — [Presence, absence, and
   relevance](presence.md#contradictions-are-rejected-never-resolved)
