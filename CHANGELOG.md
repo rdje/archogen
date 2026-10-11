@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — every generator position held by parent controls
+
+`ARCHOGEN-M3-0653` (leaf `M3.6.9.6.2.2`), `2026-10-11`.
+
+- Add complete-position parent controls for script membership, foreign program targets, lone Rust files and
+  allowed target builds/sites. Neutral and own-role scripts pass; foreign targets refuse before compilation;
+  every allowed target's unadmitted site refuses, then all admissions are used and all sites counted.
+- All nine owned exact parent regressions now have named finishing kills, strict exit 0. Four controls pass;
+  exact parent baseline 98 / 0 failed. Audit complete IDs/commands/names, original/restored/system hashes
+  for five source files and unchanged production prefixes. Production rules, route tests and expected verdicts unchanged.
+- Focused tier (format, strict Clippy, whole suite) and pinned book pass; final staged stamp required. Correct the stale toolbox stage,
+  record actual repairs apart from initial outcomes and advance live pointers to the ten reader/role cases.
+
 ## archogen — bounded mutation measurements and parent repair groups
 
 `ARCHOGEN-M3-0652` (leaf `M3.6.9.6.2.1`), `2026-10-11`.

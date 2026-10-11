@@ -555,7 +555,7 @@ No spelling repair is needed in this cohort. The semantic table's absent role pr
 if-let shapes, and two-ends chain variant remain explicit limits rather than missing promised loop spellings.
 The initial-measurement stage is complete; all parent expected-killed repairs and full production sweeps remain.
 
-## Parent source and provenance repairs
+## Parent repairs
 
 Verified `2026-10-11`, `M3.6.9.6.1`: the eight owned source/blob/chain/provenance parent entries now have
 named finishing kills in one strict native run, exit 0. `xtask/src/trust_generated_adequacy_tests.rs` adds parent
@@ -569,8 +569,20 @@ cargo test -p xtask trust_generated::adequacy_tests
 cargo xtask mutate --timeouts-fail --only parent-a-middle-generator-never-reached
 ```
 
+Verified `2026-10-11`, `M3.6.9.6.2.2`: all nine generator-position parent entries now have named finishing
+kills, strict exit 0. `xtask/src/trust_adequacy_parent_tests.rs` compares complete refusal sets for three scripts,
+foreign target entry points and lone Rust files. Neutral/own-role scripts pass; foreign targets contain invalid
+code and must refuse before compilation. All three allowed targets build: each unadmitted source site refuses
+with its identity/hash, then separate admissions are all used and the inventory counts every site. The parent
+baseline passes 98 / 0 failed; source/system digests agree after restoration. Production code is unchanged.
+
+```bash
+cargo test -p xtask trust::adequacy_tests
+cargo xtask mutate --timeouts-fail --only parent-a-program-target-built-when-first-alone
+```
+
 The initial tables remain historical measurements of the earlier parent population. Production judgments and
-route controls are unchanged. Role/reader/build repairs and the final exact census/full sweeps remain open.
+route controls are unchanged. Reader/role/build repairs and the final exact census/full sweeps remain open.
 
 ## Remaining measurements
 

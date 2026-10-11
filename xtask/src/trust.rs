@@ -4288,3 +4288,7 @@ pub(crate) mod tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "trust_adequacy_parent_tests.rs"]
+mod adequacy_tests;
