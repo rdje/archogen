@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — every compiled environment value and record boundary has a public control
+
+`ARCHOGEN-M3-0671` (leaf `M3.6.9.6.3.2.2.9.1`), `2026-10-11`.
+
+- Resolve four fresh actual unit-configuration survivors with bounded public inventory controls: changes to
+  each of three compiled environment values affect the shared configuration; one value containing another
+  variable's name stays distinct from two records. Assert actual environment lists and unchanged raw flags.
+- Native before: four survivors/strict 1; after: four finishing named kills/strict 0. Restore all 990 captured
+  original/copied inputs under Python/system hashes; production and all old tests remain unchanged. Evidence
+  falsifications and focused tier pass; exact staged stamp required. Book/live pointers align. A compiled
+  actual-helper marker collision is owned in .9.2 for immediate public reproduction/repair; no gate bypass
+  claimed. Final current-source exact/full adequacy and independent review remain open.
+
 ## archogen — fixed two-reference pair loop has a reviewed ends equivalence
 
 `ARCHOGEN-M3-0670` (leaf `M3.6.9.6.3.2.2.8.2`), `2026-10-11`.

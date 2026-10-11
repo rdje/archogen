@@ -131,7 +131,7 @@ A form whose file no program reads any more is stale on the baseline's host, and
 read again is reviewed again.
 
 For each pair of roots it then lists what they share, each item with the sha256 of its **content**, its
-**configuration** (features, `cfg`, edition, as each root's own build sets them), its **edges** (who depends on it)
+**configuration** (features, `cfg`, edition and compiled `env!` values, as each root's build sets them), its **edges** (who depends on it)
 and, for a package's files, its **readers**. A new consumer of a package already shared is a change, though nothing in
 the package moved.
 
@@ -543,10 +543,7 @@ Exact guard reversal bypasses a one-second limit; reapplication times out near o
 cargo test -p xtask mutation::tests::an_exited_command -- --nocapture
 ```
 
-On `2026-10-11`, all 103 original parent names and bodies are retained apart from the guards; the baseline passes
-in 13.46s, with its longest child at 6.230s against a 30s limit. The workers have their own process groups and bounds;
-the outer native command must allow successive waves to finish. The selected native regression command used 600s
-per candidate on this host. Those budgets are observed execution margins, not a relaxation of strict timeout rules.
+All 103 original parent names/bodies remain apart from the guards (`2026-10-11`). Workers have 30s bounds in their own groups. The selected native regressions use 600s per candidate on this host to allow successive waves; observed budgets do not relax strict timeout rules.
 
 ```bash
 cargo test -p xtask trust_test_process::tests
@@ -554,12 +551,7 @@ ARCHOGEN_PARENT_TEST_TIMINGS=1 cargo test -q -p xtask -- \
   trust:: trust_generated:: trust_gate:: --skip route_tests --nocapture
 ```
 
-On `2026-10-11`, the five actual non-progress mutations each produce finishing named parent kills, strict exit 0;
-all captured original/copied inputs restore.
-On `2026-10-11`, the complete exact catalogue run again kills all 32 entries and retains every previous killing-name set.
-That exact run's trust production prefixes are byte-identical to the pre-repair commit.
-The child-protocol controls and focused format/lint/whole-suite gate pass. These are repair regressions, separate
-from the complete production measurement that follows.
+Measured `2026-10-11`: the five non-progress mutations gain named finishing kills, strict 0; all 32 exact entries retain their killing-name sets. Inputs restore, production prefixes stay unchanged and focused gates pass. These repair regressions precede the complete measurement below.
 
 Measured `2026-10-11` at source 36154d6: the complete `trust.rs` retry attempts all 1,420 production candidates with every operator, the original 103-name parent population and no equivalents file. Its native baseline passes in 17s. Results are 802 finishing named kills, 540 survivors and 78 compiler refusals, with no timeout or unjudged result. The native strict exit is 1: this is a complete measurement, not an adequacy pass (`M3.6.9.6.3.2.1.3`).
 
@@ -571,11 +563,15 @@ bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask \
 
 Measured `2026-10-11`: actual identities, replacements, killing names and counts agree; altered evidence refuses. The first attempt's measured prefix is retained, except its five non-finishing cases now have named kills. Compiler refusals prove no coverage. All 540 initial survivors are owned in `docs/tasks/M3.md`; each needs a repair or justified per-file equivalence before the final strict sweep.
 
-Measured `2026-10-11`, `M3.6.9.6.3.2.2.1`–`.4`: thirteen reader-error, clause-position, role-package and admission-reason survivors gain named kills (strict 1 before, 0 after); production and old tests stay unchanged within these test-only slices. `.5` repairs twelve malformed-name cases; eight valid names and an unnamed admission pass. Exact reversal fails (101), reapplication passes (0). `.6` refuses absent, empty and ambiguous placeholder leaves; a valid placeholder creates no program. Native field-check deletion gains a named kill. `.7` gains seven pair-validation kills; controls hold distinctness, both members and root identity across harness positions, production unchanged.
+Initial assessments (`2026-10-11`, `M3.6.9.6.3.2.2`): `.1`–`.4` repair thirteen test gaps; `.5`–`.6` repair malformed names and placeholder leaves; `.7` repairs seven pair-validation gaps. Native coverage repairs finish with named kills, strict 0. Old bodies remain unchanged; production stays unchanged within test-only slices. Detailed before/after shapes and outcomes live in those committed leaves.
 
 Measured `2026-10-11`, `.8.2`: the actual pair-loop ends rewrite survives unclassified (strict 1), then finishes equivalent with `--equivalents xtask/trust.equivalents` (strict 0). The record applies only to `[a,b]`, two borrowed String references: both are ends, visited in order with identical early returns. Peeking moves references without user callbacks or destructor effects. Compiled actual-candidate controls hold aliases, equal-value distinct references and order; first/last-only and wider-array equivalence claims fail. Both wrong trace oracles fail as intended. Production stays unchanged; classification adds no killing test.
 
 Selected runs restore all 988 captured original/copied inputs under Python/system hashes; the new record is separately hashed. Old bodies stay unchanged; falsifications and focused gates pass. Exact IDs, hashes and commands live in committed leaves; producer/auditor tracked, orchestration ignored. Fresh listing: 1,421 candidates, production lines 144–2499, not full outcomes. Historical IDs require their recorded source or fresh `--list` discovery. Final exact/full current-source measurements remain open.
+Measured `2026-10-11`, `.9.1`: four environment-configuration survivors gain named kills, strict 0. Bounded public controls hold each of three compiled values and distinguish one `CARGO_PKG_DESCRIPTION` containing another variable's name from two records; changing `env!("CARGO_PKG_DESCRIPTION")` changes the shared configuration. Production/old bodies stay unchanged; all 990 captured inputs restore and focused gates pass.
+
+Measured `2026-10-11`: a compiled actual-helper diagnostic collapses a separator-bearing value with two records. Public-inventory reproduction and repair are owned next in `.9.2`; impact on the public path remains under assessment.
+
 Timeout and unjudged results remain failures. Full adequacy and independent review stay open.
 Recorded native killing names remain accessible through the original `docs/tasks/M3.md` leaf stubs, which now
 route completed evidence to sealed task-history records. The stubs retain commit identities; the archive index

@@ -4119,6 +4119,148 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn a_shared_package_item_holds_every_compiled_environment_value() {
+        crate::trust_test_process::bounded!(
+            a_shared_package_item_holds_every_compiled_environment_value
+        );
+        let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
+        let common_manifest = |values: [&str; 3]| {
+            manifest(
+                "common",
+                &format!(
+                    "authors = [\"{}\"]\ndescription = \"{}\"\nhomepage = \"{}\"\n",
+                    values[0], values[1], values[2]
+                ),
+            )
+        };
+        let original = ["alpha", "beta", "gamma"];
+        let f = two_roots(
+            "every-compiled-env-value",
+            "fn main() { let _ = common::VALUES; }\n",
+            "pub fn f() { let _ = common::VALUES; }\n",
+            &[
+                ("crates/common/Cargo.toml", common_manifest(original)),
+                (
+                    "crates/common/src/lib.rs",
+                    "pub const VALUES: [&str; 3] = [env!(\"CARGO_PKG_AUTHORS\"), env!(\"CARGO_PKG_DESCRIPTION\"), env!(\"CARGO_PKG_HOMEPAGE\")];\n".to_owned(),
+                ),
+                ("crates/a/Cargo.toml", manifest("a", dep)),
+                ("crates/b/Cargo.toml", manifest("b", dep)),
+            ],
+        );
+        let before = written(f.run());
+        let before_config = package_item(&items(&before), "crates/common")
+            .get("configuration")
+            .unwrap()
+            .clone();
+        for changed in 0..3 {
+            let mut values = original;
+            values[changed] = "changed";
+            f.commit(&[("crates/common/Cargo.toml", common_manifest(values))]);
+            let after = written(f.run());
+            for (inventory, expected) in [(&before, original), (&after, values)] {
+                for root in ["gen", "chk"] {
+                    let unit = program(inventory, root)
+                        .get("units")
+                        .unwrap()
+                        .elements()
+                        .iter()
+                        .find(|u| u.get("package").and_then(Json::as_str) == Some("crates/common"))
+                        .unwrap();
+                    let mut actual = list(unit, "env");
+                    actual.sort();
+                    assert_eq!(
+                        actual,
+                        [
+                            "CARGO_PKG_AUTHORS",
+                            "CARGO_PKG_DESCRIPTION",
+                            "CARGO_PKG_HOMEPAGE"
+                        ]
+                        .into_iter()
+                        .zip(expected)
+                        .map(|(name, value)| format!("{name}={value}"))
+                        .collect::<Vec<_>>()
+                    );
+                }
+            }
+            assert_ne!(
+                before_config,
+                *package_item(&items(&after), "crates/common")
+                    .get("configuration")
+                    .unwrap(),
+                "compiled environment value {changed} changed without changing the shared configuration"
+            );
+        }
+    }
+
+    #[test]
+    fn shared_environment_records_keep_their_boundaries() {
+        crate::trust_test_process::bounded!(shared_environment_records_keep_their_boundaries);
+        let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
+        let f = two_roots(
+            "compiled-env-boundaries",
+            "fn main() { let _ = common::VALUES; }\n",
+            "pub fn f() { let _ = common::VALUES; }\n",
+            &[
+                (
+                    "crates/common/Cargo.toml",
+                    manifest(
+                        "common",
+                        "description = \"alphaCARGO_PKG_HOMEPAGE=omega\"\n",
+                    ),
+                ),
+                (
+                    "crates/common/src/lib.rs",
+                    "pub const VALUES: [&str; 1] = [env!(\"CARGO_PKG_DESCRIPTION\")];\n".to_owned(),
+                ),
+                ("crates/a/Cargo.toml", manifest("a", dep)),
+                ("crates/b/Cargo.toml", manifest("b", dep)),
+            ],
+        );
+        let before = written(f.run());
+        f.commit(&[
+            (
+                "crates/common/Cargo.toml",
+                manifest("common", "description = \"alpha\"\nhomepage = \"omega\"\n"),
+            ),
+            (
+                "crates/common/src/lib.rs",
+                "pub const VALUES: [&str; 2] = [env!(\"CARGO_PKG_DESCRIPTION\"), env!(\"CARGO_PKG_HOMEPAGE\")];\n".to_owned(),
+            ),
+        ]);
+        let after = written(f.run());
+        for root in ["gen", "chk"] {
+            let unit = |inventory| {
+                program(inventory, root)
+                    .get("units")
+                    .unwrap()
+                    .elements()
+                    .iter()
+                    .find(|u| u.get("package").and_then(Json::as_str) == Some("crates/common"))
+                    .unwrap()
+            };
+            assert_eq!(
+                list(unit(&before), "env"),
+                ["CARGO_PKG_DESCRIPTION=alphaCARGO_PKG_HOMEPAGE=omega"]
+            );
+            assert_eq!(
+                list(unit(&after), "env"),
+                ["CARGO_PKG_DESCRIPTION=alpha", "CARGO_PKG_HOMEPAGE=omega"]
+            );
+            assert_eq!(
+                unit(&before).get("configuration"),
+                unit(&after).get("configuration"),
+                "this control changes environment records alone"
+            );
+        }
+        assert_ne!(
+            package_item(&items(&before), "crates/common").get("configuration"),
+            package_item(&items(&after), "crates/common").get("configuration"),
+            "one value containing another name collapsed with two environment records"
+        );
+    }
+
+    #[test]
     fn a_shared_package_s_environment_is_in_its_item_and_a_foreign_variable_is_refused() {
         crate::trust_test_process::bounded!(
             a_shared_package_s_environment_is_in_its_item_and_a_foreign_variable_is_refused
