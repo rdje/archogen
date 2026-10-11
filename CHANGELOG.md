@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — JSON reader and writer have their own API documentation
+
+`ARCHOGEN-M3-0674` (leaf `M3.6.9.6.3.2.2.9.3`), `2026-10-11`.
+
+- Actual generated API pages show the parser label/Errors attached to the writer and absent from the parser.
+  Relocate that block and describe actual diagnostic offset limitations; preserve the deterministic writer
+  contract. Actual pages then pass association checks, with swapped pages refused and every non-doc byte unchanged.
+- Focused tier passes; final exact staged stamp required. Book guidance/live pointers align, historical prose
+  contained without dropping current contracts. No JSON behavior changes in this leaf.
+- Live-task route cap triggered; published sealing archives 12 committed closed subtrees/17 leaves, with
+  independent exact reconstruction, original-body/system-hash checks and changed-digest refusal. Route/history
+  gates pass after containment; the active work and new findings remain live.
+- Actual-module probe also confirms incomplete numbers, raw string controls and an invalid surrogate pair are
+  admitted. Own P2 repairs in .9.6.1–.3 before integration, with grammar/caller/boundary review. This establishes
+  API validation defects, without demonstrating a complete trust-gate bypass.
+
 ## archogen — focused evidence requires the staged tree's passing stamp
 
 `ARCHOGEN-M3-0673` (leaf `M3.6.9.6.3.2.2.9.5`), `2026-10-11`.

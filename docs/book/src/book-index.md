@@ -33,9 +33,10 @@ a change that leaves it stale, so it is never edited by hand.
 - **AI** — [definition](glossary.md), [The engine API](engine-api.md)
 - An example that runs — [The engine API](engine-api.md#an-example-that-runs)
 - analysis-model — [What is versioned, and what changing it costs](versions.md#analysis-model)
-- **API** — [definition](glossary.md), [Generated-sources test adequacy](trust-adequacy.md), [The runtime: decisions,
-  not actions](runtime.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying the
-  toolchain](verification.md), [What is versioned, and what changing it costs](versions.md)
+- **API** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md),
+  [Generated-sources test adequacy](trust-adequacy.md), [The runtime: decisions, not actions](runtime.md), [The archogen
+  command line](cli.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is
+  versioned, and what changing it costs](versions.md)
 - **assembly** — [definition](glossary.md), [Modules and composition](modules.md), [Where the engine's knowledge comes
   from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
   decisions, not actions](runtime.md), [Verifying the toolchain](verification.md), [What this project relies on from

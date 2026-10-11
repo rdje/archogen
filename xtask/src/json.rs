@@ -55,11 +55,6 @@ struct Parser<'a> {
     at: usize,
 }
 
-/// Parse one JSON document.
-///
-/// # Errors
-///
-/// The byte offset and what was expected there.
 /// Write `value` deterministically: object keys in order (a `BTreeMap`'s), no spaces, strings escaped as JSON
 /// requires — the form an inventory's hash is taken over (leaf `M3.6.2`).
 #[must_use]
@@ -114,6 +109,12 @@ fn write_into(value: &Json, out: &mut String) {
     }
 }
 
+/// Parse one JSON document.
+///
+/// # Errors
+///
+/// A diagnostic if the document cannot be parsed or has trailing non-whitespace bytes. Some diagnostics
+/// include a byte offset; unexpected end and unterminated string/escape errors do not.
 pub fn parse(text: &str) -> Result<Json, String> {
     let mut parser = Parser {
         bytes: text.as_bytes(),

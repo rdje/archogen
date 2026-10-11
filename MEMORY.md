@@ -16,7 +16,7 @@
 - **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.71` next; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.9.6.3.2.2.9.3` JSON API documentation placement; then `.9.4` integration.
+- **Next action:** `M3.6.9.6.3.2.2.9.6.1` JSON number grammar; `.9.6.2` raw controls and `.9.6.3` Unicode escapes follow, then `.9.4` integration.
   Rediscover current mutation IDs after the reader-shape repairs; initial IDs remain source-bound.
   Initial `.9.5` complete; remaining `.9.6` full sweeps/review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
