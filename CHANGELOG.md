@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a staged read failure cannot silently substitute disk evidence
+
+`ARCHOGEN-PROGRAM-0612` (leaf `PROGRAM.69`), `2026-10-11`.
+
+- REVIEW-COUNTS falls back to disk only after a successful index census and path-byte comparison prove absence. A present
+  unreadable staged entry or failed proof refuses with a reason; the shared reader covers index, history and record.
+- Validation: ten new controls, including inherited pathspec settings and complementary present/absent bracketed
+  filenames: 83 pass / 8 fail on the old reader, then 91 / 0; a glob-comparison mutation fails both filename
+  controls. Staged count/history gates, book checks, stated order and task acceptance pass; final doctrines run in
+  the commit hook. Record, history, book and resume pointers agree on round 32's answer and round 33 next.
+
 ## archogen — the doctrine registry's explanatory header stays literal
 
 `ARCHOGEN-PROGRAM-0611` (leaf `PROGRAM.82`), `2026-10-11`.

@@ -664,6 +664,20 @@ The tracked answer's three new arms first gave 79 pass / 2 fail, then 81 pass / 
 | --- | --- | --- | --- |
 | R31-D1 | defect | an unlisted open row's Design record cell traversed every link despite the first-link grammar, falsely requiring counting for an explanatory table or refusing a missing secondary link | use `linked` for that cell too; both false-refusal arms and a primary-table control; counted pairs remain their own authority |
 
+**Round 32**, `2026-10-11`, of committed `a9e8764`, an independent read-only context new to the answer, using
+synthetic inputs only and no new repository or shared compiler/test run. One defect: a failed staged read substituted
+the disk's passing evidence. The unchanged pinned shell and extracted core reproduced it; genuine index absence
+remained a passing control. R31's first-link matrix passed, as did 729 unit/oracle comparisons and five historical
+index controls. These probes and the report under `target/review-p69-r32/` are untracked, not durable enforcement.
+The tracked answer's ten new arms gave 83 pass / 8 fail (91 arms) on the prior reader, then 91 pass / 0 fail. A
+mutation replacing path-byte equality with glob matching gives 89 pass / 2 fail: both complementary filename controls.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R32-D1 | defect | every failed staged `git show` read fell back to disk, although only index absence permits fallback; a passing disk record could hide a bad staged count or an unlisted primary table | prove absence by a successful index census and byte-for-byte path comparison; refuse a present unreadable entry or failed proof before any disk fallback; tracked controls for all three read consumers, both proof-error states, true absence, the unlisted record and complementary present/absent filenames with glob characters, and inherited pathspec settings |
+| — | found while verifying | a present bracketed filename did not distinguish literal querying from Git's exact-spelling fallback | the mutation survived 89 arms; added an absent bracketed path beside a different staged glob match, so replacing the exact comparison with glob matching must fail that control |
+| — | found while verifying | `GIT_LITERAL_PATHSPECS=1` disabled the first draft's `:(literal)` magic and falsely proved a present path absent | the environment control failed first (90/1 of 91); list the index without a pathspec and compare complete path bytes |
+
 ## Why
 
 The record states the design as it stands, and this file keeps how it got there.

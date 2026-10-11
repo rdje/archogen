@@ -657,7 +657,9 @@ mdBook that is the director's window into the project.
   round 29 answered: the index table parsed whole, every stated count judged, a historical index read failure
   refused unless its path is proved absent, and this Status current. Round 30 answered: summary cells use the same
   escaped-pipe reader as index and findings cells, so later counts remain visible. Round 31 answered: an unlisted
-  row names its record by the first link; secondary explanations do not change its counting obligation. Round 32 next.
+  row names its record by the first link; secondary explanations do not change its counting obligation. Round 32
+  answered: failed staged reads require a successful index census and exact path comparison before any disk
+  fallback; a present unreadable entry or failed proof refuses. Ten new controls, all 91 arms pass; round 33 next.
   Goal: a closed subtree below an open top-level subtree is sealed too, so a tree whose top-level subtree stays open
   for long — on a blocked leaf, or a long feature — does not keep its finished leaves live.
   Reproduce / issue: `M3.6.6.2.1`'s commit was refused by `README-ROUTES`, *"docs/tasks/: 823457 bytes in total, over
@@ -856,7 +858,34 @@ mdBook that is the director's window into the project.
     regression; those probe measurements are untracked, not durable.
   - [x] **NO REGRESSION / LOCKSTEP** — shell syntax, real staged count/history gates, book gates and doctrines;
     record, history, index, book annex, this leaf and logs, changelog and resume snapshots. No Rust changed.
-  Verification: `2026-10-11` — the Verification Log's round-29 to round-31 rows
+  **Round 32 acceptance:**
+  - [x] **REPRODUCE / ISSUE** — `bash target/p69r32/baseline.sh --self-test` → `83 pass / 8 fail (91 arms)`, the
+    new tracked arms with `5d5daf1`'s unchanged reader; the baseline producer/output is untracked. Present staged
+    reads and failed proofs falsely pass with good disk copies, including a primary record hiding a round table.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `check_review_counts.sh`'s `read(path)` treated any nonzero `git show` as
+    index absence. The reviewer ran the unchanged pinned shell with a synthetic Git shim: normal bad staged record
+    → exit 1, the same present record's read returning 128 → exit 0 via its good disk copy. The eight tracked
+    counterexamples → exit 0 on the baseline, proving the shared fallback branch hides obligations.
+  - [x] **FIX** — after a failed staged read, a successful `git ls-files --full-name -z` census must prove the complete
+    path's bytes absent before the disk fallback. It passes no pathspec to Git, so inherited pathspec settings cannot
+    reinterpret the query. A failed proof or present unreadable entry exits 1 with a reason;
+    the successful staged-read path and genuine-absence fallback retain their meaning.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_review_counts.sh --self-test` → `91 pass / 0 fail (91 arms)`.
+    Index, history and record read faults are separate; absence-proof faults cover both present and absent paths;
+    genuine absence passes; an unreadable unlisted primary record refuses; bracket characters are compared literally.
+    An inherited `GIT_LITERAL_PATHSPECS=1` control also refuses a present unreadable entry.
+    The first nonliteral-query mutation passed 89 arms: Git also matches a present file's exact spelling. The new
+    genuine-absence control distinguishes another staged file matching that spelling as a glob. That first query draft also failed under `GIT_LITERAL_PATHSPECS=1`: the new environment arm
+    gave `90 pass / 1 fail (91 arms)` before the census repair. A read-only Git probe on a known tracked path gave
+    one entry normally, zero with that setting and the magic prefix. Census without a pathspec finds the same
+    945 entries under each of the four Git pathspec settings separately and all together. Final exact-comparison
+    mutation → `89 pass / 2 fail (91 arms)`: both complementary filename controls refuse glob comparison.
+    Probe/mutation logs are untracked; the filename/environment arms are durable.
+  - [x] **NO REGRESSION / LOCKSTEP** — `bash -n scripts/check_review_counts.sh` → exit 0; real count gate → OK,
+    2 reviews / 32 rounds before appending this answer; final staged count → OK, 2 reviews / 33 rounds; history gate
+    → OK, 175 files; book anchors/glossary/index → OK. Final doctrines run in the commit hook. Checker contract, record/history/index, book annex, this leaf and logs,
+    changelog and resume/frontier snapshots agree. No Rust changed; no full-suite or final-tree Rust claim is made.
+  Verification: `2026-10-11` — the Verification Log's round-29 to round-32 rows
   Commit: `ARCHOGEN-PROGRAM-0510 (leaf PROGRAM.69)`, the review reopened; `ARCHOGEN-PROGRAM-0511 (leaf PROGRAM.69)`;
   `ARCHOGEN-PROGRAM-0514 (leaf PROGRAM.69)`, round 7 answered; `ARCHOGEN-PROGRAM-0517 (leaf PROGRAM.69)`, round 8;
   `ARCHOGEN-PROGRAM-0521 (leaf PROGRAM.69)`, round 9; `ARCHOGEN-PROGRAM-0525 (leaf PROGRAM.69)`, round 10;
@@ -872,7 +901,8 @@ mdBook that is the director's window into the project.
   `ARCHOGEN-PROGRAM-0567 (leaf PROGRAM.69)`, round 22; `ARCHOGEN-PROGRAM-0576 (leaf PROGRAM.69)`, round 23; `ARCHOGEN-PROGRAM-0582 (leaf PROGRAM.69)`, round 24; `ARCHOGEN-PROGRAM-0586 (leaf PROGRAM.69)`, round 25; `ARCHOGEN-PROGRAM-0590 (leaf PROGRAM.69)`, round 26;
   `ARCHOGEN-PROGRAM-0598 (leaf PROGRAM.69)`, round 27; `ARCHOGEN-PROGRAM-0599 (leaf PROGRAM.69)`, the list in the index;
   `ARCHOGEN-PROGRAM-0602 (leaf PROGRAM.69)`, round 28; `ARCHOGEN-PROGRAM-0605 (leaf PROGRAM.69)`, round 29;
-  `ARCHOGEN-PROGRAM-0606 (leaf PROGRAM.69)`, round 30; `ARCHOGEN-PROGRAM-0608 (leaf PROGRAM.69)`, round 31
+  `ARCHOGEN-PROGRAM-0606 (leaf PROGRAM.69)`, round 30; `ARCHOGEN-PROGRAM-0608 (leaf PROGRAM.69)`, round 31;
+  `ARCHOGEN-PROGRAM-0612 (leaf PROGRAM.69)`, round 32
 
 - ID: `PROGRAM.70`
   Status: `done` — started `2026-10-10`, decomposed into `.1`, the bytes, and `.2`, the count, closed the same day with `.2`
@@ -1478,7 +1508,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 32 to answer, staged-read fallback defect |
+| 1 | `PROGRAM.69` | `active` | its review open: round 33 next, on the staged-read repair |
 | 2 | `PROGRAM.76` | `active` | round 15 found zero defects; durable closure next |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
@@ -1689,6 +1719,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 
 | `2026-10-11` | `PROGRAM.82` | exact registry initialization before and after; shell parse check; descriptor arity and held-driver diff; doctrine suite in the final staged hook | exit 0 with syntax diagnostics and lost header text, then exit 0 with empty stderr and complete description; all 29 entries have three fields; syntax clean, held drivers unchanged |
 
+| `2026-10-11` | `PROGRAM.69` (round 32) | ten staged-read controls on the prior reader, then repaired suite; exact-path comparison mutation; syntax, final staged real count/history gates, book gates and doctrines | 83 pass / 8 fail, then 91 pass / 0 fail; glob-comparison mutation 89 pass / 2 fail; final staged count OK (2 reviews / 33 rounds), history OK (175 files); book gates, stated-order and task-acceptance OK; final doctrines in the commit hook |
+
 ## Commit Log
 
 | Leaf | Commit subject or reference | Notes |
@@ -1891,6 +1923,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.81` | `ARCHOGEN-PROGRAM-0610 (leaf PROGRAM.81)` | **seventh artifact cleanup**: two main-repository incremental caches removed, 2 022 861 425 logical bytes / 18 540 files; cited evidence and read-only Git workspaces retained; residue, cold-cache focused and wasm verification pass |
 
 | `PROGRAM.82` | `ARCHOGEN-PROGRAM-0611 (leaf PROGRAM.82)` | **registry description made inert**: the explanatory header no longer executes a shell substitution; all 29 entries retain three fields, initialization leaves stderr empty; held doctrine drivers unchanged |
+
+| `PROGRAM.69` | `ARCHOGEN-PROGRAM-0612 (leaf PROGRAM.69)` | **review round 32 answered**: a failed staged read cannot substitute disk evidence unless independent index census and path-byte comparison prove absence; eight regressions failed first; ten new controls, including inherited Git settings and true absence beside a different glob match |
 
 ## Changelog
 

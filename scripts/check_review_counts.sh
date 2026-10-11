@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # scripts/check_review_counts.sh — REVIEW-COUNTS: for each design review the reviews index lists as counted, the
 # record's count of what each round found, and the index's count of rounds, are its review history's (leaf `PROGRAM.69`,
-# review rounds 23 to 31).
+# review rounds 23 to 32).
 #
 # ⭐ WHY. A design record keeps one summary row per review round, with the count of what the round found, and the
 # round's own table in its review history lists each finding. The count was copied by hand, and the task-tree sealing
@@ -21,7 +21,9 @@
 # history holds a round line or that table a row; refused too: such a row whose history cell links no file, whose
 # record link resolves to nothing, or whose history is missing. A record cell that links no file names no record.
 #
-# WHAT IT READS — the staged copy of each file (`git show :<path>`), the working tree's for one not in the index:
+# WHAT IT READS — the staged copy of each file (`git show :<path>`), the working tree's for one independently proved
+# absent from the index by a successful `git ls-files -z` census and a byte-for-byte path comparison. A failed proof
+# or an unreadable present staged entry refuses rather than substituting the disk copy (round 32):
 #   - in docs/reviews/INDEX.md, the counted list, and its four-column table headed Review history, Design record,
 #     Rounds, Status, through the first blank line; indentation and optional edge pipes accepted, escaped pipes kept
 #     inside a cell, every row required to have four cells, a cell's file named by its first link,
@@ -64,6 +66,11 @@ def read(path):
     r = subprocess.run(["git", "show", ":" + path], capture_output=True, text=True)
     if r.returncode == 0:
         return r.stdout
+    indexed = subprocess.run(["git", "ls-files", "--full-name", "-z"], capture_output=True)
+    if indexed.returncode != 0:
+        sys.exit("REVIEW-COUNTS: %s: index absence cannot be established after a failed staged read" % path)
+    if os.fsencode(path) in indexed.stdout.split(b"\0"):
+        sys.exit("REVIEW-COUNTS: %s: staged copy cannot be read; the path is present in the index" % path)
     return open(path, encoding="utf-8").read() if os.path.isfile(path) else None
 bad = []
 def cells_of(line):
@@ -479,6 +486,54 @@ self_test() {
   cp "$work/docs/decisions/b.md" "$work/docs/decisions/c.md"
   printf '# Explanation, no round table\n' > "$work/docs/decisions/explanation.md"; git -C "$work" add -A
   arm "the primary record's table is judged before secondary prose (R31 D1)" 1 "c-reviews.md: an open review whose record keeps a round table"
+  # Round 32: a failed staged read is no proof that a path is absent from the index.
+  local bin="$work/fault-bin" real_git
+  real_git="$(type -P git)"; mkdir -p "$bin"
+  cat > "$bin/git" <<'SH'
+#!/usr/bin/env bash
+if [ "${1:-}" = show ] && [ "${2:-}" = ":${REVIEW_COUNTS_FAULT_PATH:-}" ]; then exit 128; fi
+if [ "${1:-}" = ls-files ] && [ "${REVIEW_COUNTS_PROOF_FAIL:-}" = yes ]; then exit 128; fi
+exec "$REVIEW_COUNTS_REAL_GIT" "$@"
+SH
+  chmod +x "$bin/git"
+  local path
+  for path in docs/reviews/INDEX.md docs/reviews/b-reviews.md docs/decisions/b.md; do
+    world "$GOOD_A" "$GOOD_B"
+    PATH="$bin:$PATH" REVIEW_COUNTS_REAL_GIT="$real_git" REVIEW_COUNTS_FAULT_PATH="$path" \
+      arm "a failed read of a present staged $path refuses despite a good disk copy (R32 D1)" 1 "staged copy cannot be read"
+  done
+  world "$GOOD_A" "$GOOD_B"
+  PATH="$bin:$PATH" REVIEW_COUNTS_REAL_GIT="$real_git" REVIEW_COUNTS_FAULT_PATH=docs/decisions/b.md GIT_LITERAL_PATHSPECS=1 \
+    arm "inherited literal-pathspec settings cannot hide a present staged entry (R32 D1)" 1 "staged copy cannot be read"
+  world "$GOOD_A" "$GOOD_B"
+  PATH="$bin:$PATH" REVIEW_COUNTS_REAL_GIT="$real_git" REVIEW_COUNTS_FAULT_PATH=docs/decisions/b.md REVIEW_COUNTS_PROOF_FAIL=yes \
+    arm "a failed absence proof for a present staged path refuses (R32 D1)" 1 "index absence cannot be established"
+  world "$GOOD_A" "$GOOD_B"; git -C "$work" rm -q --cached docs/decisions/b.md
+  PATH="$bin:$PATH" REVIEW_COUNTS_REAL_GIT="$real_git" REVIEW_COUNTS_FAULT_PATH=docs/decisions/b.md REVIEW_COUNTS_PROOF_FAIL=yes \
+    arm "a failed absence proof for a genuinely absent path refuses (R32 D1)" 1 "index absence cannot be established"
+  PATH="$bin:$PATH" REVIEW_COUNTS_REAL_GIT="$real_git" REVIEW_COUNTS_FAULT_PATH=docs/decisions/b.md \
+    arm "proven index absence permits the good disk copy (R32 D1)" 0 "3 round(s) judged"
+  world "$GOOD_A" "$GOOD_B"; open_c
+  printf '# C, disk copy has no round table\n' > "$work/docs/decisions/c.md"
+  git -C "$work" add docs/reviews/INDEX.md
+  PATH="$bin:$PATH" REVIEW_COUNTS_REAL_GIT="$real_git" REVIEW_COUNTS_FAULT_PATH=docs/decisions/c.md \
+    arm "a failed primary-record read cannot hide an unlisted table (R32 D1)" 1 "staged copy cannot be read"
+  world "$GOOD_A" "$GOOD_B"
+  mv "$work/docs/decisions/b.md" "$work/docs/decisions/b[1].md"
+  sed -i.bak 's@../decisions/b.md@../decisions/b[1].md@g' "$work/docs/reviews/INDEX.md"
+  rm -f "$work/docs/reviews/INDEX.md.bak"; git -C "$work" add -A
+  PATH="$bin:$PATH" REVIEW_COUNTS_REAL_GIT="$real_git" REVIEW_COUNTS_FAULT_PATH='docs/decisions/b[1].md' \
+    arm "a present staged filename with glob characters still refuses on read failure (R32 D1)" 1 "staged copy cannot be read"
+  world "$GOOD_A" "$GOOD_B"
+  mv "$work/docs/decisions/b.md" "$work/docs/decisions/b[1].md"
+  cp "$work/docs/decisions/b[1].md" "$work/docs/decisions/b1.md"
+  sed -i.bak 's@../decisions/b.md@../decisions/b[1].md@g' "$work/docs/reviews/INDEX.md"
+  rm -f "$work/docs/reviews/INDEX.md.bak"
+  # world stages existing fixture extras too: remove the previous arm's bracketed entry explicitly.
+  git -C "$work" rm -q --cached -- docs/decisions/b.md ':(literal)docs/decisions/b[1].md'
+  git -C "$work" add docs/reviews/INDEX.md docs/decisions/b1.md
+  PATH="$bin:$PATH" REVIEW_COUNTS_REAL_GIT="$real_git" REVIEW_COUNTS_FAULT_PATH='docs/decisions/b[1].md' \
+    arm "an absent literal path is not confused with a different glob-matching entry (R32 D1)" 0 "3 round(s) judged"
   rm -rf "${work:?}"
   echo "review-counts self-test: $ok pass / $((arms - ok)) fail ($arms arms)"
   [ "$ok" -eq "$arms" ]
