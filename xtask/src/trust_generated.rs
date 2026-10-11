@@ -518,6 +518,7 @@ mod tests {
 
     #[test]
     fn a_well_formed_declaration_is_read_and_refuses_nothing() {
+        crate::trust_test_process::bounded!(a_well_formed_declaration_is_read_and_refuses_nothing);
         let roots = read_roots(GOOD).expect("reads");
         assert!(
             roots.generated_refused.is_empty(),
@@ -549,6 +550,7 @@ mod tests {
 
     #[test]
     fn every_departure_from_the_shape_is_a_coded_refusal() {
+        crate::trust_test_process::bounded!(every_departure_from_the_shape_is_a_coded_refusal);
         let rest = "(generator \"g.sh\") (command \"c\") (reason \"r\")";
         for (text, why) in [
             (
@@ -626,6 +628,7 @@ mod tests {
 
     #[test]
     fn every_text_only_construction_is_a_coded_refusal() {
+        crate::trust_test_process::bounded!(every_text_only_construction_is_a_coded_refusal);
         // A path two forms declare: each of them refused.
         let r = refusals_of(&format!("{GOOD}\n{GOOD}"));
         let twice: Vec<&String> = r
@@ -669,6 +672,9 @@ mod tests {
 
     #[test]
     fn the_parent_s_reader_stops_at_another_form_with_the_refusals_before_it_beside_it() {
+        crate::trust_test_process::bounded!(
+            the_parent_s_reader_stops_at_another_form_with_the_refusals_before_it_beside_it
+        );
         let text = "(defgenerated \"before.rs\" (generator \"g\") (command \"c\"))\n\
                     (defroot x (role generator) (package \"p\") (target lib) (colour \"red\"))\n\
                     (defgenerated \"after.rs\" (generator \"g\") (command \"c\"))\n";
@@ -689,6 +695,9 @@ mod tests {
 
     #[test]
     fn a_departure_found_once_the_file_is_read_has_every_refusal_beside_it() {
+        crate::trust_test_process::bounded!(
+            a_departure_found_once_the_file_is_read_has_every_refusal_beside_it
+        );
         let text = "(defgenerated \"before.rs\" (generator \"g\") (command \"c\"))\n\
                     (defharness h (pair a b) (package \"p\") (test t))\n\
                     (defgenerated \"after.rs\" (generator \"g\") (command \"c\"))\n";
@@ -706,6 +715,9 @@ mod tests {
 
     #[test]
     fn a_refusal_of_the_forms_text_ends_the_run_before_anything_is_written_or_built() {
+        crate::trust_test_process::bounded!(
+            a_refusal_of_the_forms_text_ends_the_run_before_anything_is_written_or_built
+        );
         let f = two_roots("gs-step-1", "fn main() {}\n", "pub fn f() {}\n", &[]);
         written(f.run());
         let out = f.base.join("out");
@@ -731,6 +743,7 @@ mod tests {
 
     #[test]
     fn a_refused_run_leaves_no_inventory_an_earlier_run_wrote() {
+        crate::trust_test_process::bounded!(a_refused_run_leaves_no_inventory_an_earlier_run_wrote);
         // The parent's own refusal before any build: a root naming a package the commit no longer has (its §6).
         let f = two_roots("gs-left-behind", "fn main() {}\n", "pub fn f() {}\n", &[]);
         written(f.run());
@@ -748,6 +761,9 @@ mod tests {
 
     #[test]
     fn a_build_failing_in_a_step_leaves_it_unable_to_judge_with_its_refusals_beside_it() {
+        crate::trust_test_process::bounded!(
+            a_build_failing_in_a_step_leaves_it_unable_to_judge_with_its_refusals_beside_it
+        );
         // Step 2 runs to its end: the other root is built and its sites judged, and the failure is reported with the
         // refusal that step found (§2).
         let f = two_roots(
@@ -893,6 +909,9 @@ mod provenance_tests {
 
     #[test]
     fn case_3_two_generated_sources_sharing_an_input_through_two_generators_share_it() {
+        crate::trust_test_process::bounded!(
+            case_3_two_generated_sources_sharing_an_input_through_two_generators_share_it
+        );
         // §14.4's case 3 (`TI-H22`, `GS-H5`): differently named generated sources, differing in bytes, made by two
         // generators from one input. The parent saw nothing shared but the build configuration; the input is shared.
         let forms = form(
@@ -944,6 +963,9 @@ mod provenance_tests {
 
     #[test]
     fn a_generator_shared_over_two_inputs_or_with_none_is_shared() {
+        crate::trust_test_process::bounded!(
+            a_generator_shared_over_two_inputs_or_with_none_is_shared
+        );
         let forms = form(
             "crates/a/src/gen_a.rs",
             &["scripts/gen.sh"],
@@ -977,6 +999,9 @@ mod provenance_tests {
 
     #[test]
     fn a_data_file_one_side_reads_and_a_copy_of_an_input_are_shared_and_a_plain_copy_is_not() {
+        crate::trust_test_process::bounded!(
+            a_data_file_one_side_reads_and_a_copy_of_an_input_are_shared_and_a_plain_copy_is_not
+        );
         // `chk` is handed `data/t.csv`, from which `gen`'s generated source was made; and `data/copy.csv`, a byte copy of
         // `gen`'s other input. Both handed `data/p1.txt` and `data/p2.txt`, copies of each other and no provenance.
         let forms = form(
@@ -1017,6 +1042,9 @@ mod provenance_tests {
 
     #[test]
     fn the_harness_reaches_provenance_through_the_units_beside_its_pair_alone() {
+        crate::trust_test_process::bounded!(
+            the_harness_reaches_provenance_through_the_units_beside_its_pair_alone
+        );
         // `diff`'s test target compiles `tests/table.rs`, generated by `scripts/gen.sh`; the reference model compiles
         // `src/gen_r.rs`, generated by `scripts/other.sh`, in its own build: the harness's item holds the first alone.
         let f = harness("gs-harness", "", "pub fn d() {}\n", "");
@@ -1055,6 +1083,9 @@ mod provenance_tests {
 
     #[test]
     fn a_third_program_reaching_the_same_provenance_makes_items_of_its_own_and_moves_none() {
+        crate::trust_test_process::bounded!(
+            a_third_program_reaching_the_same_provenance_makes_items_of_its_own_and_moves_none
+        );
         let forms = form("crates/a/src/gen_a.rs", &["scripts/gen.sh"], &[])
             + &form("crates/b/src/gen_b.rs", &["scripts/gen.sh"], &[]);
         let f = generated_pair("gs-third", &[("trust/roots.eadl", roots("", "", &forms))]);
@@ -1098,6 +1129,7 @@ mod provenance_tests {
     #[test]
     fn step_3_refuses_a_live_form_s_non_blob_and_its_chain_and_holds_a_form_no_program_reads_to_its_text(
     ) {
+        crate::trust_test_process::bounded!(step_3_refuses_a_live_form_s_non_blob_and_its_chain_and_holds_a_form_no_program_reads_to_its_text);
         let base = form("crates/b/src/gen_b.rs", &["scripts/gen_b.sh"], &[]);
         // A form no program reads, naming a generator the commit does not hold: its text alone is judged (step 1).
         let idle = form("crates/a/src/unused.rs", &["scripts/missing.sh"], &[]);
@@ -1256,6 +1288,9 @@ mod generator_tests {
 
     #[test]
     fn another_role_s_program_target_script_or_library_is_refused_as_a_generator() {
+        crate::trust_test_process::bounded!(
+            another_role_s_program_target_script_or_library_is_refused_as_a_generator
+        );
         // `chk`'s table written by the generator's own executable: the crate root of a root of another role, not built.
         let f = pair(
             "gs-gen-other-role",
@@ -1287,6 +1322,9 @@ mod generator_tests {
 
     #[test]
     fn a_crate_root_of_two_targets_is_judged_by_the_union_of_their_role_packages() {
+        crate::trust_test_process::bounded!(
+            a_crate_root_of_two_targets_is_judged_by_the_union_of_their_role_packages
+        );
         // `crates/u`'s executable alone compiles no role package, and is built; its example, rooted in the same file,
         // compiles the generator's package by a development edge: the union holds it, and `chk` may not read the table.
         let u = |extra: &str| {
@@ -1328,6 +1366,7 @@ mod generator_tests {
 
     #[test]
     fn the_harness_may_use_its_pair_s_roles_and_no_other() {
+        crate::trust_test_process::bounded!(the_harness_may_use_its_pair_s_roles_and_no_other);
         // `diff` reads `tests/table.rs`; a script in the reference model's package wrote it — its pair's role, allowed.
         let f = crate::trust::tests::harness("gs-gen-harness", "", "pub fn d() {}\n", "");
         let roots = |generator: &str| {
@@ -1363,6 +1402,9 @@ mod generator_tests {
 
     #[test]
     fn a_crate_root_that_is_not_rs_is_refused_before_its_build() {
+        crate::trust_test_process::bounded!(
+            a_crate_root_that_is_not_rs_is_refused_before_its_build
+        );
         let f = pair(
             "gs-gen-not-rs",
             &[
@@ -1388,6 +1430,7 @@ mod generator_tests {
     #[test]
     fn a_generator_that_is_a_root_is_its_own_build_and_one_a_live_form_s_refusal_names_is_never_built(
     ) {
+        crate::trust_test_process::bounded!(a_generator_that_is_a_root_is_its_own_build_and_one_a_live_form_s_refusal_names_is_never_built);
         // `gen2`, a second root of the generator's role, reads a table `gen`'s executable wrote: the same role, and the
         // root's build is the generator's, not built again.
         let table = "(defgenerated \"crates/c/src/table.rs\" (generator \"crates/a/src/main.rs\") (command \"run it\") \
@@ -1450,6 +1493,7 @@ mod generator_tests {
     #[test]
     fn an_allowed_generator_is_built_and_its_sites_judged_with_the_programs_a_shared_site_admitted_once(
     ) {
+        crate::trust_test_process::bounded!(an_allowed_generator_is_built_and_its_sites_judged_with_the_programs_a_shared_site_admitted_once);
         // `crates/g`, a tool of no role, writes `chk`'s table; it and `chk` both compile `crates/s`, which holds one
         // `#[no_mangle]` site; `g` holds one of its own.
         let site = "#[no_mangle]\npub extern \"C\" fn s() {}";
@@ -1505,6 +1549,9 @@ mod generator_tests {
 
     #[test]
     fn a_generator_build_failing_leaves_step_4_unable_to_judge_with_its_refusals_beside_it() {
+        crate::trust_test_process::bounded!(
+            a_generator_build_failing_leaves_step_4_unable_to_judge_with_its_refusals_beside_it
+        );
         let f = pair(
             "gs-gen-fails",
             &[
@@ -1583,6 +1630,7 @@ mod order_tests {
     #[test]
     fn step_5_refuses_a_chain_through_a_generator_build_and_an_undeclared_marked_file_one_message_a_file(
     ) {
+        crate::trust_test_process::bounded!(step_5_refuses_a_chain_through_a_generator_build_and_an_undeclared_marked_file_one_message_a_file);
         // `crates/g`, a tool of no role, writes `chk`'s table; its build compiles `helper.rs`, marked, and `crates/s`,
         // marked, which `chk` compiles too; `gen` compiles `table.rs`, marked and declared by no form.
         let f = pair(
@@ -1623,6 +1671,9 @@ mod order_tests {
 
     #[test]
     fn a_marked_file_no_form_can_declare_is_refused_when_a_program_reads_it() {
+        crate::trust_test_process::bounded!(
+            a_marked_file_no_form_can_declare_is_refused_when_a_program_reads_it
+        );
         // A file a tool writes outside any committed script — as cargo writes its lock — handed to `chk`, marked.
         let f = pair(
             "gs-no-form-can-declare",
@@ -1647,6 +1698,9 @@ mod order_tests {
 
     #[test]
     fn a_refusal_at_each_of_the_five_steps_ends_the_run_and_no_form_is_stale() {
+        crate::trust_test_process::bounded!(
+            a_refusal_at_each_of_the_five_steps_ends_the_run_and_no_form_is_stale
+        );
         // Each run holds a form no program reads, stale only over an inventory; each refuses, so none is written.
         let f = pair(
             "gs-order",
@@ -1725,6 +1779,9 @@ mod order_tests {
 
     #[test]
     fn a_form_no_program_reads_is_stale_on_the_baseline_s_host_alone() {
+        crate::trust_test_process::bounded!(
+            a_form_no_program_reads_is_stale_on_the_baseline_s_host_alone
+        );
         // `chk`'s table declared and read; `never.rs` declared and read by none.
         let live = "(defgenerated \"crates/b/src/gen_b.rs\" (generator \"scripts/gen.sh\") (command \"c\") (reason \"r\"))\n";
         let f = pair(
@@ -1814,6 +1871,7 @@ mod gate_tests {
     #[test]
     fn a_defgenerated_form_added_changed_or_removed_is_in_the_change_part_and_every_one_is_standing(
     ) {
+        crate::trust_test_process::bounded!(a_defgenerated_form_added_changed_or_removed_is_in_the_change_part_and_every_one_is_standing);
         let f = pair("gs-gate-forms", "");
         judge(&f, "first");
         f.commit(&[(
@@ -1868,6 +1926,9 @@ mod gate_tests {
 
     #[test]
     fn an_edit_to_a_declared_generator_is_reported_and_to_an_undeclared_script_is_unchanged() {
+        crate::trust_test_process::bounded!(
+            an_edit_to_a_declared_generator_is_reported_and_to_an_undeclared_script_is_unchanged
+        );
         // Both roots' tables written by `scripts/gen.sh`: a generated-provenance item, its form proposed and committed,
         // so every later commit is judged on the baseline's host.
         let forms = form("crates/a/src/gen_a.rs", "a's table")

@@ -1053,6 +1053,7 @@ mod tests {
 
     #[test]
     fn every_kind_of_item_has_its_identity_and_its_aspects() {
+        crate::trust_test_process::bounded!(every_kind_of_item_has_its_identity_and_its_aspects);
         let inv = json::parse(INVENTORY).expect("an inventory");
         let all = items(&inv).expect("items");
         let names: Vec<String> = all.keys().map(ItemId::name).collect();
@@ -1077,6 +1078,9 @@ mod tests {
 
     #[test]
     fn a_proposal_reads_back_to_the_inventory_s_items_and_proposes_no_acceptance() {
+        crate::trust_test_process::bounded!(
+            a_proposal_reads_back_to_the_inventory_s_items_and_proposes_no_acceptance
+        );
         let inv = json::parse(INVENTORY).expect("an inventory");
         let text = propose(&inv, None).expect("a proposal");
         let baseline = read_baseline(&text).expect("the proposal reads");
@@ -1111,6 +1115,9 @@ mod tests {
 
     #[test]
     fn a_regenerated_baseline_keeps_the_review_and_changes_nothing_on_an_unchanged_inventory() {
+        crate::trust_test_process::bounded!(
+            a_regenerated_baseline_keeps_the_review_and_changes_nothing_on_an_unchanged_inventory
+        );
         let inv = json::parse(INVENTORY).expect("an inventory");
         let first = propose(&inv, None).expect("a proposal");
         let reviewed = first.replacen(
@@ -1170,6 +1177,9 @@ mod tests {
 
     #[test]
     fn on_the_baseline_s_host_a_missing_form_and_a_stale_one_are_refused() {
+        crate::trust_test_process::bounded!(
+            on_the_baseline_s_host_a_missing_form_and_a_stale_one_are_refused
+        );
         // TI-H4: the commit's own `trust/` covers its inventory, and holds nothing the inventory no longer has.
         let roots = read_roots(ROOTS_TEXT).expect("roots");
         let own = baseline_of(&inv("h", &[CONFIG, FILE], &[], (&[], &[])));
@@ -1210,6 +1220,9 @@ mod tests {
 
     #[test]
     fn off_the_baseline_s_host_nothing_is_compared_and_only_the_host_free_refusals_apply() {
+        crate::trust_test_process::bounded!(
+            off_the_baseline_s_host_nothing_is_compared_and_only_the_host_free_refusals_apply
+        );
         // TI-H5: every item unreviewed, "not compared", neither `trust-form-missing` nor `trust-baseline-stale`.
         let roots = read_roots(ROOTS_TEXT).expect("roots");
         let elsewhere = baseline_of(&inv("other-host", &[CONFIG, FILE], &[], (&[], &[])));
@@ -1251,6 +1264,9 @@ mod tests {
 
     #[test]
     fn the_change_part_names_what_moved_and_says_unchanged_when_nothing_did() {
+        crate::trust_test_process::bounded!(
+            the_change_part_names_what_moved_and_says_unchanged_when_nothing_did
+        );
         let roots = read_roots(ROOTS_TEXT).expect("roots");
         let before = baseline_of(&inv("h", &[CONFIG, LIB], &[], (&[], &[])));
         let base = Base {
@@ -1287,6 +1303,9 @@ mod tests {
 
     #[test]
     fn a_root_form_added_changed_or_removed_is_in_the_change_part_and_a_comment_is_not() {
+        crate::trust_test_process::bounded!(
+            a_root_form_added_changed_or_removed_is_in_the_change_part_and_a_comment_is_not
+        );
         // The record's opening: the change holds a root form added, changed or removed against the base commit's
         // roots file, on any host (`M3.6.3.7`).
         let roots = read_roots(ROOTS_TEXT).expect("roots");
@@ -1343,6 +1362,9 @@ mod tests {
 
     #[test]
     fn a_classification_that_grew_is_reported_in_the_change_part_and_not_refused() {
+        crate::trust_test_process::bounded!(
+            a_classification_that_grew_is_reported_in_the_change_part_and_not_refused
+        );
         // The record's opening: the change holds a program target whose role packages grew (`M3.6.3.7`).
         let roots = read_roots(ROOTS_TEXT).expect("roots");
         let own = baseline_of(&inv("h", &[CONFIG], &[], (&[], &[])));
@@ -1472,6 +1494,9 @@ mod tests {
 
     #[test]
     fn every_code_of_the_gate_has_a_catalogued_mutation_that_removes_it() {
+        crate::trust_test_process::bounded!(
+            every_code_of_the_gate_has_a_catalogued_mutation_that_removes_it
+        );
         // TI-H9's mutation matrix, mechanized: each code of the record's §6 table is removed by an entry of
         // `xtask/mutations.txt` that names it and is expected killed — `cargo xtask mutate` runs each — so a code the
         // record gains with nothing removing it fails here.
@@ -1508,6 +1533,9 @@ mod tests {
 
     #[test]
     fn f30_case_1_a_package_both_roots_come_to_compile_is_new_shared() {
+        crate::trust_test_process::bounded!(
+            f30_case_1_a_package_both_roots_come_to_compile_is_new_shared
+        );
         let f = f30("f30-case-1");
         let dep2 =
             "[dependencies]\ncommon = { path = \"../common\" }\nmore = { path = \"../more\" }\n";
@@ -1550,6 +1578,9 @@ mod tests {
 
     #[test]
     fn f30_case_2_an_already_shared_package_changed_behind_its_name_is_shared_changed() {
+        crate::trust_test_process::bounded!(
+            f30_case_2_an_already_shared_package_changed_behind_its_name_is_shared_changed
+        );
         let f = f30("f30-case-2");
         // A source edited, the package's name and version unchanged.
         f.commit(&[(
@@ -1602,6 +1633,9 @@ mod tests {
 
     #[test]
     fn f30_case_3_data_both_roots_are_handed_is_new_shared_and_an_undeclared_input_is_refused() {
+        crate::trust_test_process::bounded!(
+            f30_case_3_data_both_roots_are_handed_is_new_shared_and_an_undeclared_input_is_refused
+        );
         let f = f30("f30-case-3");
         let roots = f30_roots(" (data \"docs/table.txt\")");
         f.commit(&[
@@ -1636,6 +1670,9 @@ mod tests {
 
     #[test]
     fn f30_case_4_a_package_whose_inventory_is_of_the_commit_before_is_stale() {
+        crate::trust_test_process::bounded!(
+            f30_case_4_a_package_whose_inventory_is_of_the_commit_before_is_stale
+        );
         let f = f30("f30-case-4");
         let out = f.base.join("proposed");
         let inventory =
@@ -1679,6 +1716,9 @@ mod tests {
 
     #[test]
     fn f30_case_5_an_unrelated_change_is_unchanged_and_warns_of_nothing() {
+        crate::trust_test_process::bounded!(
+            f30_case_5_an_unrelated_change_is_unchanged_and_warns_of_nothing
+        );
         // TI-H9: a README, a development profile, an override for a package no root compiles, a comment in the pin.
         let f = f30("f30-case-5");
         let ws = "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n";
@@ -1702,6 +1742,7 @@ mod tests {
 
     #[test]
     fn the_baseline_is_read_strictly() {
+        crate::trust_test_process::bounded!(the_baseline_is_read_strictly);
         let inv = json::parse(INVENTORY).expect("an inventory");
         let text = propose(&inv, None).expect("a proposal");
         for (mutated, why) in [

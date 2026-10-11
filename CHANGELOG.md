@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — bounded parent tests finish on reached non-progress
+
+`ARCHOGEN-M3-0658` (leaf `M3.6.9.6.3.2.1.2`), `2026-10-11`.
+
+- Run every original parent test body in a bounded child selected by its unchanged exact name. Require one actual
+  named success and a finishing single-test summary; escape failed child output and reuse safe process-group cleanup.
+  Controls refuse zero selection, assertion/abrupt exit and a stopped hanging child. Test-only worker, production unchanged.
+- All five actual non-progress mutations now have finishing native named kills, strict exit 0. Captured original/copied
+  inputs restore. All 32 ordinary exact mutations retain every previous complete killing-name set, strict exit 0;
+  five source/system hashes agree and all three production prefixes are byte-identical to HEAD.
+- Baseline 103 passed, maximum child 6.230s versus its 30s limit. Focused format/lint/whole-suite gate passes;
+  final staged stamp and pinned book checks required. Document the worker/outer lifetime boundary, retain historical
+  measurements and advance pointers to the complete full-file retry. No full production-sweep adequacy pass claimed.
+
 ## archogen — incomplete full trust sweep refused and owned
 
 `ARCHOGEN-M3-0657` (leaf `M3.6.9.6.3.2.1.1`), `2026-10-11`.

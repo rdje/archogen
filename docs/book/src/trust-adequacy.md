@@ -636,5 +636,5 @@ needed before parent strengthening; these initial results do not satisfy the fin
 Complete production sweeps of `trust.rs`, `trust_generated.rs` and `trust_gate.rs`, plus the shared operators'
 compatibility sweep of `generated_header.rs`, follow the final exact census. Every sweep survivor needs a
 justified equivalence record. Full adequacy also requires these sweeps and the independent implementation review.
-The first trust.rs attempt stopped unjudged; [the trust chapter](trust.md) records its incomplete outcomes and the
-owned bounded-test repair. No full-file criterion pass is claimed.
+The first trust.rs attempt stopped unjudged; [the trust chapter](trust.md) records its incomplete outcomes, the
+verified bounded-test repair and its regressions. The complete retry remains open; no full-file pass is claimed.

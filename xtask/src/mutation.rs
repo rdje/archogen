@@ -301,9 +301,9 @@ fn signal(pid: i32, sig: i32) -> bool {
 }
 
 /// Run `cmd` in a process group of its own, its output read as it comes; past `limit`, kill the whole group — the
-/// command and everything it started — and return no status. ⚠️ A process the command starts in a session of its own
-/// (`setsid`) leaves the group, and while it holds the output open the run waits on it; cargo, rustc and test
-/// binaries do not.
+/// command and descendants still in that group — and return no status. A descendant that creates its own group
+/// or session leaves it; while that descendant holds the output open, the run waits on it. Bounded parent-test
+/// workers have their own groups and limits, so an outer native limit must allow those workers to finish.
 fn run_bounded(cmd: &mut Command, limit: Duration) -> std::io::Result<Bounded> {
     #[cfg(unix)]
     {
@@ -341,6 +341,26 @@ fn run_bounded(cmd: &mut Command, limit: Duration) -> std::io::Result<Bounded> {
         status,
         stdout: out.join().unwrap_or_default(),
         stderr: err.join().unwrap_or_default(),
+    })
+}
+
+/// Test-only access to the same process-group lifetime used by the native mutation runner.
+#[cfg(test)]
+pub(crate) fn run_test_command(
+    cmd: &mut Command,
+    limit: Duration,
+) -> std::io::Result<std::process::Output> {
+    let result = run_bounded(cmd, limit)?;
+    let status = result.status.ok_or_else(|| {
+        std::io::Error::new(
+            std::io::ErrorKind::TimedOut,
+            "test process group exceeded its limit",
+        )
+    })?;
+    Ok(std::process::Output {
+        status,
+        stdout: result.stdout,
+        stderr: result.stderr,
     })
 }
 

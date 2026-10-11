@@ -44,6 +44,7 @@ fn exact_refusals(actual: Vec<String>, expected: Vec<String>) {
 
 #[test]
 fn every_script_position_is_judged_against_the_reading_role() {
+    crate::trust_test_process::bounded!(every_script_position_is_judged_against_the_reading_role);
     let neutral = ["scripts/first.sh", "scripts/middle.sh", "scripts/last.sh"];
     let foreign = [
         "crates/a/first.sh",
@@ -80,6 +81,9 @@ fn every_script_position_is_judged_against_the_reading_role() {
 
 #[test]
 fn every_program_target_position_is_refused_before_a_foreign_role_build() {
+    crate::trust_test_process::bounded!(
+        every_program_target_position_is_refused_before_a_foreign_role_build
+    );
     let generators = [
         "crates/a/src/first.rs",
         "crates/a/src/middle.rs",
@@ -114,6 +118,7 @@ fn every_program_target_position_is_refused_before_a_foreign_role_build() {
 
 #[test]
 fn every_unowned_rust_generator_position_has_its_own_refusal() {
+    crate::trust_test_process::bounded!(every_unowned_rust_generator_position_has_its_own_refusal);
     let generators = ["scripts/first.rs", "scripts/middle.rs", "scripts/last.rs"];
     let mut files = vec![declaration(&generators)];
     files.extend(generators.iter().map(|p| (*p, "fn main() {}\n".to_owned())));
@@ -131,6 +136,9 @@ fn every_unowned_rust_generator_position_has_its_own_refusal() {
 
 #[test]
 fn every_allowed_target_position_is_built_and_its_sites_are_judged() {
+    crate::trust_test_process::bounded!(
+        every_allowed_target_position_is_built_and_its_sites_are_judged
+    );
     let generators = [
         "crates/u/src/first.rs",
         "crates/u/src/middle.rs",
@@ -188,6 +196,9 @@ mod reader_role_tests {
 
     #[test]
     fn every_compiled_reader_is_judged_for_scripts_and_program_targets() {
+        crate::trust_test_process::bounded!(
+            every_compiled_reader_is_judged_for_scripts_and_program_targets
+        );
         let path = "crates/s/src/table.rs";
         let roots = format!(
             "{ROOTS}\
@@ -236,6 +247,9 @@ mod reader_role_tests {
 
     #[test]
     fn an_allowed_held_package_does_not_hide_a_later_foreign_package() {
+        crate::trust_test_process::bounded!(
+            an_allowed_held_package_does_not_hide_a_later_foreign_package
+        );
         let roots = "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\") (data \"data/table.csv\"))\n\
                      (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n";
         let table = form("data/table.csv", &["crates/u/src/main.rs"]);
@@ -283,6 +297,9 @@ mod reader_role_tests {
 
     #[test]
     fn the_harness_allows_both_pair_roles_and_refuses_each_foreign_generator_kind() {
+        crate::trust_test_process::bounded!(
+            the_harness_allows_both_pair_roles_and_refuses_each_foreign_generator_kind
+        );
         let f = harness(
             "adequacy-harness-generator-roles",
             "",
@@ -335,6 +352,9 @@ mod reader_role_tests {
 
     #[test]
     fn runtime_only_data_readers_judge_scripts_and_program_targets() {
+        crate::trust_test_process::bounded!(
+            runtime_only_data_readers_judge_scripts_and_program_targets
+        );
         let path = "data/table.csv";
         let roots = "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\") (data \"data/table.csv\"))\n\
                      (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n";
@@ -378,6 +398,9 @@ mod build_read_tests {
 
     #[test]
     fn every_generator_names_a_shared_transitive_marked_or_declared_build_read() {
+        crate::trust_test_process::bounded!(
+            every_generator_names_a_shared_transitive_marked_or_declared_build_read
+        );
         let targets = [
             "crates/u/src/main.rs",
             "crates/v/src/main.rs",

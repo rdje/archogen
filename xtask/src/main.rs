@@ -52,6 +52,8 @@ mod target;
 mod trust;
 mod trust_gate;
 mod trust_generated;
+#[cfg(test)]
+mod trust_test_process;
 mod trust_verify;
 
 use std::path::{Path, PathBuf};

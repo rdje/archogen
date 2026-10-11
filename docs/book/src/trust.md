@@ -492,8 +492,29 @@ bash scripts/trust_adequacy.sh --progress --output target/trust-progress.json
 bash scripts/trust_adequacy.sh --self-test
 ```
 
-`M3.6.9.6.3.2.1.2` owns bounded execution of the named parent tests, so reached hangs can become finishing named
-failures. The complete native sweep must then be retried; each survivor requires a behavioral repair or a justified
-per-file equivalence. Timeout and unjudged results remain failures. Full adequacy and independent review stay open.
+The parent tests now execute their unchanged bodies in bounded children selected by the same exact libtest names
+(`M3.6.9.6.3.2.1.2`). Each parent requires a successful child exit, one named passed test and a finishing single-test
+summary. Zero selected tests, assertions, abrupt exits and a child that exceeds its limit become parent failures.
+Child diagnostics are escaped so their failure lists cannot supply names to the outer native result. The test-only
+worker in `xtask/src/trust_test_process.rs` reuses the mutation runner's direct system-call group cleanup.
+
+On `2026-10-11`, all 103 original parent names and bodies are retained apart from the guards; the baseline passes
+in 13.46s, with its longest child at 6.230s against a 30s limit. The workers have their own process groups and bounds;
+the outer native command must allow successive waves to finish. The selected native regression command used 600s
+per candidate on this host. Those budgets are observed execution margins, not a relaxation of strict timeout rules.
+
+```bash
+cargo test -p xtask trust_test_process::tests
+ARCHOGEN_PARENT_TEST_TIMINGS=1 cargo test -q -p xtask -- \
+  trust:: trust_generated:: trust_gate:: --skip route_tests --nocapture
+```
+
+On `2026-10-11`, the five actual non-progress mutations each produce finishing named parent kills, strict exit 0;
+all captured original/copied inputs restore.
+On `2026-10-11`, the complete exact catalogue run again kills all 32 entries and retains every previous killing-name set.
+All production prefixes are byte-identical to the pre-repair commit.
+The child-protocol controls and focused format/lint/whole-suite gate pass. These are repair regressions; the complete
+production sweep must still be retried. Each survivor requires a behavioral repair or a justified per-file equivalence.
+Timeout and unjudged results remain failures. Full adequacy and independent review stay open.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

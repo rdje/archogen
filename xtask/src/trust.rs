@@ -2590,6 +2590,9 @@ pub(crate) mod tests {
 
     #[test]
     fn sweep_source_binding_accepts_unset_exact_and_canonical_aliases() {
+        crate::trust_test_process::bounded!(
+            sweep_source_binding_accepts_unset_exact_and_canonical_aliases
+        );
         let (base, source, copy) = binding_layout("source-binding-positive");
         for root in [real_root(), copy.clone()] {
             assert_eq!(
@@ -2621,6 +2624,9 @@ pub(crate) mod tests {
 
     #[test]
     fn sweep_source_binding_refuses_malformed_unrelated_and_merely_containing_roots() {
+        crate::trust_test_process::bounded!(
+            sweep_source_binding_refuses_malformed_unrelated_and_merely_containing_roots
+        );
         let (base, source, copy) = binding_layout("source-binding-negative");
         let other = base.join("other");
         std::fs::create_dir_all(&other).unwrap();
@@ -2670,6 +2676,9 @@ pub(crate) mod tests {
 
     #[test]
     fn sweep_source_environment_is_validated_before_fixture_inventory() {
+        crate::trust_test_process::bounded!(
+            sweep_source_environment_is_validated_before_fixture_inventory
+        );
         const CHILD: &str = "ARCHOGEN_SOURCE_BINDING_CHILD";
         if std::env::var_os(CHILD).is_some() {
             configuration_roots();
@@ -2897,6 +2906,9 @@ pub(crate) mod tests {
 
     #[test]
     fn every_program_target_is_a_root_or_classified_and_the_rest_is_reported() {
+        crate::trust_test_process::bounded!(
+            every_program_target_is_a_root_or_classified_and_the_rest_is_reported
+        );
         // Record §2, leaf `M3.6.3.1`: a binary `c` beside the two roots, then an example of `b` whose development edge
         // reaches the generator's package, which an example compiles (R5 remark 13).
         let f = two_roots(
@@ -2987,6 +2999,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_classification_is_read_strictly() {
+        crate::trust_test_process::bounded!(a_classification_is_read_strictly);
         for (text, why) in [
             (
                 "(defprogram x (package \"p\") (target test t) (reason \"r\"))",
@@ -3014,6 +3027,9 @@ pub(crate) mod tests {
 
     #[test]
     fn a_file_a_root_compiles_whose_header_marks_it_generated_is_refused_until_declared() {
+        crate::trust_test_process::bounded!(
+            a_file_a_root_compiles_whose_header_marks_it_generated_is_refused_until_declared
+        );
         // The generated-sources record §3: a marked file a program reads, no form declaring it, is refused (`GS-H2`,
         // `M3.6.6.2.4`); declared, it passes and is listed, so the record's census is the instrument's own output.
         let f = two_roots(
@@ -3054,6 +3070,9 @@ pub(crate) mod tests {
 
     #[test]
     fn the_roles_the_roots_file_names_are_the_evidence_vocabulary_s_roots() {
+        crate::trust_test_process::bounded!(
+            the_roles_the_roots_file_names_are_the_evidence_vocabulary_s_roots
+        );
         // `M3.6.3.6`: the vocabulary brought to the record's roles, and held there (§2).
         let slugs: Vec<&str> = archogen_evidence::TrustRoot::ALL
             .iter()
@@ -3064,6 +3083,9 @@ pub(crate) mod tests {
 
     #[test]
     fn a_cargo_configuration_on_the_build_s_path_is_a_refusal_and_not_an_error() {
+        crate::trust_test_process::bounded!(
+            a_cargo_configuration_on_the_build_s_path_is_a_refusal_and_not_an_error
+        );
         // The catalog's §3, adopted (R8 remark 16): the commit is refused, so the gate reports it, exit 1, rather than
         // saying it could not judge (`M3.6.3.4`).
         let f = two_roots("config-on-path", "fn main() {}\n", "pub fn f() {}\n", &[]);
@@ -3081,6 +3103,9 @@ pub(crate) mod tests {
 
     #[test]
     fn a_form_naming_a_package_or_a_target_the_commit_no_longer_has_is_stale() {
+        crate::trust_test_process::bounded!(
+            a_form_naming_a_package_or_a_target_the_commit_no_longer_has_is_stale
+        );
         // §6, R7 remark e: `trust-baseline-stale`, refused wherever the gate runs, since no inventory can be built
         // without what the form names (`M3.6.3.3`).
         for (name, roots, why) in [
@@ -3108,6 +3133,9 @@ pub(crate) mod tests {
 
     #[test]
     fn two_roots_sharing_nothing_share_only_the_build_configuration() {
+        crate::trust_test_process::bounded!(
+            two_roots_sharing_nothing_share_only_the_build_configuration
+        );
         let f = two_roots("clean", "fn main() {}\n", "pub fn f() -> u32 { 1 }\n", &[]);
         let inv = written(f.run());
         let shared = items(&inv);
@@ -3117,6 +3145,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_package_both_roots_compile_is_shared_case_1() {
+        crate::trust_test_process::bounded!(a_package_both_roots_compile_is_shared_case_1);
         let f = two_roots(
             "case1",
             "fn main() { common::c(); }\n",
@@ -3144,6 +3173,7 @@ pub(crate) mod tests {
 
     #[test]
     fn an_incbin_under_each_assembler_macro_is_refused() {
+        crate::trust_test_process::bounded!(an_incbin_under_each_assembler_macro_is_refused);
         for (name, mac) in [
             ("global-asm", "core::arch::global_asm!"),
             ("renamed-use", "g!"),
@@ -3172,6 +3202,7 @@ pub(crate) mod tests {
 
     #[test]
     fn an_include_and_a_path_module_are_refused() {
+        crate::trust_test_process::bounded!(an_include_and_a_path_module_are_refused);
         let f = two_roots(
             "include",
             "fn main() {}\n",
@@ -3190,12 +3221,16 @@ pub(crate) mod tests {
 
     #[test]
     fn a_macro_assembling_a_path_attribute_is_refused() {
+        crate::trust_test_process::bounded!(a_macro_assembling_a_path_attribute_is_refused);
         let f = two_roots("macro-path", "fn main() {}\n", "macro_rules! m { ($b:tt) => { # $b mod evil; } }\nm!([path = \"evil.txt\"]);\npub use evil::*;\n", &[("crates/b/src/evil.txt", "pub fn e() {}\n".to_owned())]);
         says(&refused(f.run()), "`macro_rules`, refused");
     }
 
     #[test]
     fn an_extern_block_calling_another_package_s_symbol_is_refused() {
+        crate::trust_test_process::bounded!(
+            an_extern_block_calling_another_package_s_symbol_is_refused
+        );
         let f = two_roots(
             "extern-binding",
             "#[no_mangle]\npub fn transition(x: u32) -> u32 { x + 1 }\nfn main() { let _ = b::r(1); }\n",
@@ -3250,6 +3285,9 @@ pub(crate) mod tests {
 
     #[test]
     fn the_harness_is_inventoried_and_its_development_edges_followed() {
+        crate::trust_test_process::bounded!(
+            the_harness_is_inventoried_and_its_development_edges_followed
+        );
         let f = harness("harness", "", "pub fn d() {}\n", "");
         let inv = written(f.run());
         assert!(items(&inv)
@@ -3273,6 +3311,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_build_script_is_refused_before_anything_runs() {
+        crate::trust_test_process::bounded!(a_build_script_is_refused_before_anything_runs);
         let f = two_roots(
             "build-script",
             "fn main() {}\n",
@@ -3291,6 +3330,7 @@ pub(crate) mod tests {
 
     #[test]
     fn an_admitted_site_passes_and_an_edited_one_is_refused() {
+        crate::trust_test_process::bounded!(an_admitted_site_passes_and_an_edited_one_is_refused);
         let line = "pub const T: &str = include_str!(\"t.txt\");";
         let f = two_roots(
             "admitted",
@@ -3342,6 +3382,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_new_consumer_of_a_shared_package_changes_its_edges() {
+        crate::trust_test_process::bounded!(a_new_consumer_of_a_shared_package_changes_its_edges);
         let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
         let f = two_roots(
             "new-consumer",
@@ -3389,6 +3430,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_profile_edit_changes_the_build_configuration() {
+        crate::trust_test_process::bounded!(a_profile_edit_changes_the_build_configuration);
         let f = two_roots("profile", "fn main() {}\n", "pub fn f() {}\n", &[]);
         let before = written(f.run());
         f.commit(&[(
@@ -3404,6 +3446,9 @@ pub(crate) mod tests {
 
     #[test]
     fn a_feature_another_manifest_enables_does_not_reach_a_root_s_build() {
+        crate::trust_test_process::bounded!(
+            a_feature_another_manifest_enables_does_not_reach_a_root_s_build
+        );
         // Default-deny closes the channel: the catalog's rules refuse `[features]` outright (R7) ...
         let common = manifest("common", "[features]\nx = []\n");
         let files = |roots: String| {
@@ -3456,6 +3501,7 @@ pub(crate) mod tests {
 
     #[test]
     fn naked_asm_is_refused() {
+        crate::trust_test_process::bounded!(naked_asm_is_refused);
         let f = two_roots(
             "naked-asm",
             "fn main() {}\n",
@@ -3467,6 +3513,9 @@ pub(crate) mod tests {
 
     #[test]
     fn a_new_reader_of_a_shared_package_s_file_changes_its_readers() {
+        crate::trust_test_process::bounded!(
+            a_new_reader_of_a_shared_package_s_file_changes_its_readers
+        );
         let common_line = "pub const T: &str = include_str!(\"t.txt\");";
         let b_line = "pub const U: &str = include_str!(\"../../common/src/t.txt\");";
         let roots = format!(
@@ -3524,6 +3573,9 @@ pub(crate) mod tests {
 
     #[test]
     fn the_configuration_is_the_same_from_two_directories_and_two_toolchains() {
+        crate::trust_test_process::bounded!(
+            the_configuration_is_the_same_from_two_directories_and_two_toolchains
+        );
         // Both roots share `common`, so a unit is compiled for each, and neither compiles the other's role.
         let shared = |name: &str| {
             two_roots(
@@ -3567,6 +3619,9 @@ pub(crate) mod tests {
 
     #[test]
     fn an_executable_compiling_another_role_s_package_is_refused() {
+        crate::trust_test_process::bounded!(
+            an_executable_compiling_another_role_s_package_is_refused
+        );
         let f = two_roots(
             "two-roles",
             "fn main() { b::f(); }\n",
@@ -3667,6 +3722,9 @@ pub(crate) mod tests {
 
     #[test]
     fn a_crate_root_that_is_not_a_rs_file_is_refused_before_any_build() {
+        crate::trust_test_process::bounded!(
+            a_crate_root_that_is_not_a_rs_file_is_refused_before_any_build
+        );
         // R8 1: rustc compiles `lib.txt` as Rust, and no token rule read it.
         let f = two_roots(
             "r8-1-crate-root",
@@ -3693,6 +3751,9 @@ pub(crate) mod tests {
 
     #[test]
     fn a_unit_belongs_to_the_package_whose_target_names_its_crate_root() {
+        crate::trust_test_process::bounded!(
+            a_unit_belongs_to_the_package_whose_target_names_its_crate_root
+        );
         // R8 2: `b`'s library lives in a nested package's directory; by path prefix it was that package's.
         let f = two_roots(
             "r8-2-nested",
@@ -3717,6 +3778,7 @@ pub(crate) mod tests {
 
     #[test]
     fn each_site_needs_an_admission_of_its_own() {
+        crate::trust_test_process::bounded!(each_site_needs_an_admission_of_its_own);
         // R8 3: two sites with one text need two admissions; a new `#[no_mangle]` beside an admitted one is refused.
         let item = "pub static X: &str = include_str!(\"../d.txt\");";
         let src = format!("pub mod m1 {{ {item} }}\npub mod m2 {{ {item} }}\n");
@@ -3763,6 +3825,7 @@ pub(crate) mod tests {
 
     #[test]
     fn an_admission_covers_its_site_s_whole_extent() {
+        crate::trust_test_process::bounded!(an_admission_covers_its_site_s_whole_extent);
         // R8 4: an `.incbin` added on the second line of an admitted `global_asm!`.
         let asm = "core::arch::global_asm!(\n    \".data\"\n);";
         let f = two_roots(
@@ -3790,6 +3853,9 @@ pub(crate) mod tests {
 
     #[test]
     fn a_shared_package_s_environment_is_in_its_item_and_a_foreign_variable_is_refused() {
+        crate::trust_test_process::bounded!(
+            a_shared_package_s_environment_is_in_its_item_and_a_foreign_variable_is_refused
+        );
         // R8 5: a value compiled in through `env!` changes; R8 remark 22: a variable from outside the commit.
         let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
         let common = "[package]\nname = \"common\"\nversion = \"0.1.0\"\nedition = \"2021\"\nlicense.workspace = true\n";
@@ -3833,6 +3899,9 @@ pub(crate) mod tests {
 
     #[test]
     fn an_edit_no_root_s_compilation_reads_leaves_the_build_configuration() {
+        crate::trust_test_process::bounded!(
+            an_edit_no_root_s_compilation_reads_leaves_the_build_configuration
+        );
         // R8 6: a development profile, an override for a package no root compiles, a comment in the pin.
         let f = two_roots("r8-6-unrelated", "fn main() {}\n", "pub fn f() {}\n", &[]);
         let v0 = written(f.run());
@@ -3859,6 +3928,9 @@ pub(crate) mod tests {
 
     #[test]
     fn the_harness_item_holds_what_it_compiles_beside_its_pair() {
+        crate::trust_test_process::bounded!(
+            the_harness_item_holds_what_it_compiles_beside_its_pair
+        );
         // R8 7: the adapter in a development dependency; a test named with a `-`.
         let f = three_roots(
             "r8-7-adapter",
@@ -3885,6 +3957,7 @@ pub(crate) mod tests {
 
     #[test]
     fn the_harness_is_paired_with_every_root_but_its_pair_s() {
+        crate::trust_test_process::bounded!(the_harness_is_paired_with_every_root_but_its_pair_s);
         // R8 8.
         let f = three_roots("r8-8-pairs", "diff", SAME, "", "");
         let p = pairs(&written(f.run()));
@@ -3897,6 +3970,7 @@ pub(crate) mod tests {
 
     #[test]
     fn each_root_records_its_artifact_and_its_packages() {
+        crate::trust_test_process::bounded!(each_root_records_its_artifact_and_its_packages);
         // R8 9: the artifact with its sha256; each package with its manifest's sha256 and the edges that reached it.
         let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
         let f = two_roots(
@@ -3935,6 +4009,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_rs_file_read_as_data_is_tokenised_too() {
+        crate::trust_test_process::bounded!(a_rs_file_read_as_data_is_tokenised_too);
         // R8 10: a `.rs` template read through an admitted `include_str!` is still Rust to the rules.
         let line = "pub const T: &str = include_str!(\"tpl.rs\");";
         let f = two_roots(
@@ -3960,6 +4035,7 @@ pub(crate) mod tests {
 
     #[test]
     fn the_roots_file_is_read_strictly() {
+        crate::trust_test_process::bounded!(the_roots_file_is_read_strictly);
         // R8 11: a name twice, a pair naming no root, a misspelt clause, a form no reader knows yet.
         let gen = "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n";
         for (text, why) in [
@@ -3987,6 +4063,9 @@ pub(crate) mod tests {
 
     #[test]
     fn a_harness_or_a_library_root_compiling_another_role_s_package_is_refused() {
+        crate::trust_test_process::bounded!(
+            a_harness_or_a_library_root_compiling_another_role_s_package_is_refused
+        );
         // R8 remarks 12, 13: the harness's exemption is its pair's two; a library root runs its role as an executable
         // would.
         let f = three_roots(
@@ -4015,6 +4094,7 @@ pub(crate) mod tests {
 
     #[test]
     fn an_incbin_under_asm_and_under_naked_asm_is_refused() {
+        crate::trust_test_process::bounded!(an_incbin_under_asm_and_under_naked_asm_is_refused);
         // R8 remark 21: the channel itself, not `nop` or `ret`.
         // `.previous`, not `.text`: on ELF a function has a section of its own, and a naked one's `.size` must
         // be measured in it (`PROGRAM.10.5.2`).
@@ -4040,6 +4120,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_no_mangle_memcmp_in_the_harness_is_refused() {
+        crate::trust_test_process::bounded!(a_no_mangle_memcmp_in_the_harness_is_refused);
         // R8 remark 21: the interposition R7 measured, in the harness's own test file.
         let f = three_roots(
             "r8-21-memcmp",
@@ -4053,6 +4134,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_second_run_writes_the_same_bytes() {
+        crate::trust_test_process::bounded!(a_second_run_writes_the_same_bytes);
         // R8 remark 18: units in a fixed order, not cargo's scheduling order.
         let f = three_roots(
             "r8-18-order",
@@ -4073,6 +4155,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_patch_in_the_workspace_manifest_is_refused() {
+        crate::trust_test_process::bounded!(a_patch_in_the_workspace_manifest_is_refused);
         // R8 remark 16: the catalog's workspace rules, adopted over the root manifest.
         let f = two_roots(
             "r8-16-patch",
@@ -4088,6 +4171,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_site_two_roots_compile_is_counted_once() {
+        crate::trust_test_process::bounded!(a_site_two_roots_compile_is_counted_once);
         // R8 remark 20: `refused-sites` counts sites, not compilations.
         let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
         let line = "pub const T: &str = include_str!(\"t.txt\");";
@@ -4120,6 +4204,9 @@ pub(crate) mod tests {
 
     #[test]
     fn an_incremental_profile_leaves_the_configuration_the_same_from_two_directories() {
+        crate::trust_test_process::bounded!(
+            an_incremental_profile_leaves_the_configuration_the_same_from_two_directories
+        );
         // R9 1: `-C incremental=` names the scratch build's own directory.
         let f = two_roots(
             "r9-1-incremental",
@@ -4137,6 +4224,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_root_s_role_is_one_the_record_names() {
+        crate::trust_test_process::bounded!(a_root_s_role_is_one_the_record_names);
         // R9 2: a root declared `(role harness)` escaped the two-roles rule.
         let text = "(defroot gen (role generator) (package \"crates/a\") (target bin a))\n\
                     (defroot chk (role harness) (package \"crates/b\") (target lib))\n";
@@ -4146,6 +4234,9 @@ pub(crate) mod tests {
 
     #[test]
     fn an_extent_runs_past_a_brace_delimited_const_generic_argument() {
+        crate::trust_test_process::bounded!(
+            an_extent_runs_past_a_brace_delimited_const_generic_argument
+        );
         // R9 3: the first brace group after an attribute was `{ 1 }` in `A<{ 1 }>`, not the item's body.
         let src = b"#[no_mangle]\npub extern \"C\" fn f() -> A<{ 1 }> { A }\n";
         let extent = site_extent(src, 1, 3).expect("an extent");
@@ -4157,6 +4248,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_role_package_that_names_no_package_is_refused() {
+        crate::trust_test_process::bounded!(a_role_package_that_names_no_package_is_refused);
         // R9 remark 5: a misspelt role package turned the two-roles rule off for the package it meant.
         let roots = "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n\
                      (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\" \"crates/cc\"))\n";
@@ -4176,6 +4268,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_root_s_run_time_data_is_hashed_and_shared() {
+        crate::trust_test_process::bounded!(a_root_s_run_time_data_is_hashed_and_shared);
         // R9 remark 6: §2's run-time data, declared by path in a root's form, read and hashed, and shared as a file.
         let roots = "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\") (data \"docs/table.txt\"))\n\
                      (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\") (data \"docs/table.txt\"))\n";
@@ -4205,6 +4298,7 @@ pub(crate) mod tests {
 
     #[test]
     fn an_admitted_include_or_path_names_a_rs_file() {
+        crate::trust_test_process::bounded!(an_admitted_include_or_path_names_a_rs_file);
         // R9 remark 7: an admitted `#[path]` onto a file that is not `.rs` compiled it and left it untokenised.
         let txt = "#[path = \"m.txt\"]\nmod m;";
         let f = two_roots(
@@ -4246,6 +4340,9 @@ pub(crate) mod tests {
 
     #[test]
     fn an_alias_or_a_wrapper_of_a_refused_construct_is_inadmissible() {
+        crate::trust_test_process::bounded!(
+            an_alias_or_a_wrapper_of_a_refused_construct_is_inadmissible
+        );
         // R10 1: admitting the `use … as` or the `macro_rules!` freed every invocation of it, which no rule names.
         let renamed_include = "use std::include as inc;";
         let renamed_asm = "use core::arch::global_asm as g;";

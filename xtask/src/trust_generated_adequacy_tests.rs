@@ -22,6 +22,9 @@ fn generated(path: &str, generators: &[&str], inputs: &[&str]) -> Generated {
 
 #[test]
 fn every_generator_and_input_position_is_checked_for_clause_overlap() {
+    crate::trust_test_process::bounded!(
+        every_generator_and_input_position_is_checked_for_clause_overlap
+    );
     let quoted = |entries: &[String]| {
         entries
             .iter()
@@ -57,6 +60,7 @@ fn every_generator_and_input_position_is_checked_for_clause_overlap() {
 
 #[test]
 fn every_clause_entry_has_its_own_blob_or_chain_refusal() {
+    crate::trust_test_process::bounded!(every_clause_entry_has_its_own_blob_or_chain_refusal);
     let definition = generated(
         "out.rs",
         &["ga.sh", "gb.sh", "gc.sh"],
@@ -122,6 +126,9 @@ fn every_clause_entry_has_its_own_blob_or_chain_refusal() {
 
 #[test]
 fn provenance_keeps_every_entry_role_hash_and_reached_declaration() {
+    crate::trust_test_process::bounded!(
+        provenance_keeps_every_entry_role_hash_and_reached_declaration
+    );
     let definitions = [
         generated(
             "first.rs",
