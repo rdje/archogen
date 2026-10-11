@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — sweep compiler refusals are reported per attempted operator
+
+`ARCHOGEN-M3-0633` (leaf `M3.6.9.2.3.4`), `2026-10-11`.
+
+- Terminal summaries report `unviable/attempted` per actual operator, including zero refusals and explicit
+  no-attempt runs. The passing baseline, list-only and filtered-out candidates do not count; existing strict
+  timeout, named-kill, equivalent, survivor and unjudged verdicts remain unchanged. Neither total is coverage.
+- Validation: four tracked reporting cases fail first. Actual CLI with native Rust compiler/libtest then holds
+  full bool 0/1 plus contains 2/4, selected bool 0/1, selected contains 1/1 and none attempted; exact restoration
+  after all runs and listing invokes no compiler. Eleven compiler invocations comprise four baselines/seven
+  attempts, with three genuine E0308 refusals and four finishing named test failures. Fifteen tool tests pass,
+  wrapping 22 Python methods; two strict named controls are killed. Syntax/book/staged doctrines required.
+- Five operator and count children complete, with book/design/toolbox and task/resume records aligned. The
+  bound configuration seam is next; dual-population production reach and full sweeps remain separately owned.
+
 ## archogen — one-line closure operand candidates preserve their lexical scope
 
 `ARCHOGEN-M3-0632` (leaf `M3.6.9.2.3.3.2.2`), `2026-10-11`.

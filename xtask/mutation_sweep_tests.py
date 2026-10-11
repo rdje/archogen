@@ -133,6 +133,66 @@ class SpanTests(SweepFixture):
                     self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
 
 
+class OperatorCountTests(SweepFixture):
+    def test_real_compiler_outcomes_count_only_attempted_operators(self):
+        original = ("fn sample(values: &[i32], needle: i32) -> bool {\n"
+                    "    let gate = true;\n    gate && values.contains(&needle)\n}\n"
+                    "#[cfg(test)]\nmod tests {\n    #[test]\n    fn middle() { assert!(super::sample(&[2, 7, 13], 7)); }\n}\n")
+        (self.base / "sample.rs").write_text(original)
+        cargo = self.base / "bin/cargo"
+        cargo.write_text('''#!/usr/bin/env python3
+import json, os, pathlib, subprocess, sys
+root = pathlib.Path(os.environ['PROBE_ROOT'])
+binary = root / 'probe-tests'
+compile = subprocess.run(['rustc', '--edition=2021', '--test', 'sample.rs', '-o', str(binary)], capture_output=True, text=True)
+record = {'compile': compile.returncode, 'stderr': compile.stderr}
+if compile.returncode:
+    print(compile.stderr, file=sys.stderr)
+    print('error: could not compile `synthetic`', file=sys.stderr)
+    code = compile.returncode
+else:
+    run = subprocess.run([str(binary)], capture_output=True, text=True)
+    print(run.stdout, end='')
+    print(run.stderr, end='', file=sys.stderr)
+    record['test'] = run.returncode
+    code = run.returncode
+with (root / 'outcomes').open('a') as out:
+    out.write(json.dumps(record) + '\\n')
+sys.exit(code)
+''')
+        cargo.chmod(0o755)
+        env = dict(os.environ, PROBE_ROOT=str(self.base), TMPDIR=str(self.base),
+                   CARGO_HOME=str(ROOT / "target/cargo-home"),
+                   PATH=str(self.base / "bin") + os.pathsep + os.environ["PATH"])
+        command = ["bash", str(SCRIPT), "sample.rs", "--package", "synthetic", "--op", "bool", "--op", "contains",
+                   "--timeouts-fail"]
+        listing = subprocess.run(command + ["--list"], env=env, capture_output=True, text=True, timeout=20)
+        self.assert_exit(listing, 0)
+        self.assertNotIn("unviable by operator", listing.stdout)
+        self.assertFalse((self.base / "outcomes").exists(), "listing invoked the compiler")
+        ids = re.findall(r"^(L\d+\.(?:bool|contains)\.\d+) ", listing.stdout, re.M)
+        self.assertEqual(len(ids), 5)
+        cases = [([], "bool=0/1, contains=2/4", (6, 2, 3)),
+                 (["--only", ids[0]], "bool=0/1", (2, 0, 1)),
+                 (["--only", ids[2]], "contains=1/1", (2, 1, 0)),
+                 (["--only", "not-a-candidate"], "none attempted", (1, 0, 0))]
+        for selection, summary, expected in cases:
+            with self.subTest(selection=selection):
+                (self.base / "outcomes").unlink(missing_ok=True)
+                result = subprocess.run(command + selection, env=env, capture_output=True, text=True, timeout=30)
+                self.assert_exit(result, 0)
+                self.assertIn("mutation-sweep: unviable by operator: " + summary + " (unviable/attempted)", result.stdout)
+                outcomes = [json.loads(line) for line in (self.base / "outcomes").read_text().splitlines()]
+                observed = (len(outcomes), sum(row["compile"] != 0 for row in outcomes),
+                            sum(row.get("test", 0) != 0 for row in outcomes))
+                self.assertEqual(observed, expected)
+                self.assertEqual(outcomes[0].get("test"), 0, "baseline must pass and stay outside counts")
+                self.assertTrue(all(row["compile"] == 1 and "error[E0308]" in row["stderr"]
+                                    for row in outcomes if row["compile"] != 0))
+                self.assertEqual((self.base / "sample.rs").read_bytes(), original.encode())
+                self.assertEqual((self.base / "target/mutation-sweep/tree/sample.rs").read_bytes(), original.encode())
+
+
 class DiscoveryFixture(SweepFixture):
     def discovery(self, source, operator="iter"):
         # Load the actual discovery/replacement functions without invoking the CLI or copying its algorithm.

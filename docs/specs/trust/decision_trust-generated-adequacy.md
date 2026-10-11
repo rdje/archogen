@@ -94,6 +94,9 @@ sweep as it stands (round 19). This record decides a criterion, and states how f
    complete literal text are retained, with native compiler/value-selection and real CLI restoration controls.
    Production reach remains unmeasured.
    A mutant that does not compile is unviable, as every other, and the sweep reports each operator's count of them.
+   `.2.3.4` builds terminal per-operator `unviable/attempted` totals, including zero refusals. Baseline, list-only
+   and filtered-out candidates do not count; real compiler/libtest CLI controls hold both zero/nonzero totals and
+   selected/no-attempt runs. The existing strict timeout and unjudged outcome rules remain unchanged.
    The operators are held by measurement, not by `--list`: after the new route controls and before the parent gains
    a test, the build runs every candidate they make on each census entry's replacement span against both test
    populations. It records each candidate's actual outcomes, including unviable and timed out, and distinguishes an

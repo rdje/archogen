@@ -4566,3 +4566,25 @@ from
 to
             finish = tokens[stop - 1].end()
 end
+
+mutation sweep-unviable-counts-kills-instead
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.3.4: real compiler refusals and finishing named libtest kills are distinct outcomes; zero refusal counts stay zero for killed candidates.
+from
+            operator_counts[m[2]] = (attempted + 1, unviable + (outcome == "unviable"))
+to
+            operator_counts[m[2]] = (attempted + 1, unviable + (outcome == "killed"))
+end
+
+mutation sweep-unviable-counts-listed-denominator
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.3.4: selected subsets count only actual attempts; a listed but filtered-out candidate cannot inflate the per-operator denominator.
+from
+            operator_counts[m[2]] = (attempted + 1, unviable + (outcome == "unviable"))
+to
+            operator_counts[m[2]] = (sum(x[2] == m[2] for x in ms), unviable + (outcome == "unviable"))
+end

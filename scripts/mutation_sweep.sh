@@ -56,6 +56,8 @@
 # instead fails with exit 1, even if an equivalents entry names it. Ordinary timeout handling is unchanged.
 # Writes only under `target/mutation-sweep/`.
 # `--list` prints the mutations without running them.
+# Completed runs also report per-operator `unviable/attempted` counts, including zero refusals. The baseline,
+# listed-only and filtered-out candidates are excluded; neither an attempted nor an unviable count is coverage.
 #
 # Usage: scripts/mutation_sweep.sh <file> --package <pkg> [--filter <test>]... [--equivalents <path>]
 #        [--timeout <seconds>] [--timeouts-fail] [--only <id>]... [--list]
@@ -778,7 +780,7 @@ if base != "survived":
     sys.exit(2)
 print("mutation-sweep: the unmutated copy passes (%.0fs); %d mutation(s) of %s, lines %d to %d" % (secs, len(ms), a.file, first + 1, last))
 
-counts, unlisted, seen_equiv = {}, [], set()
+counts, unlisted, seen_equiv, operator_counts = {}, [], set(), {}
 try:
     for i, m in zip(ids, ms):
         if a.only and i not in a.only:
@@ -797,6 +799,8 @@ try:
         if outcome == "survived" and key in equiv:
             outcome = "equivalent"; seen_equiv.add(key)
         counts[outcome] = counts.get(outcome, 0) + 1
+        attempted, unviable = operator_counts.get(m[2], (0, 0))
+        operator_counts[m[2]] = (attempted + 1, unviable + (outcome == "unviable"))
         mark = {"killed": "✓", "timeout": "✗" if a.timeouts_fail else "✓", "unviable": "·",
                 "equivalent": "=", "survived": "✗", "unjudged": "?"}[outcome]
         print("  %s %-18s %-10s %s ⟶ %s%s" % (mark, i, outcome, display(key[0]), display(key[1]),
@@ -810,6 +814,10 @@ except KeyboardInterrupt:
     open(target_file, "wb").write(original); raise
 stale = [k for k in equiv if k not in seen_equiv] if not a.only else []
 print("mutation-sweep: " + ", ".join("%d %s" % (v, k) for k, v in sorted(counts.items())))
+print("mutation-sweep: unviable by operator: " + (
+    ", ".join("%s=%d/%d" % (op, unviable, attempted)
+              for op, (attempted, unviable) in sorted(operator_counts.items())) or "none attempted")
+    + " (unviable/attempted)")
 for i, (f, t) in unlisted:
     print("  survivor %s: %s ⟶ %s" % (i, display(f), display(t)), file=sys.stderr)
 for f, t in stale:

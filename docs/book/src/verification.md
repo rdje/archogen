@@ -322,7 +322,7 @@ Function-type return arrows inside generic arguments remain part of the type, re
 `std::convert::identity::<Vec<fn() -> i32>>(values).contains(&needle)`. Compiled direct variants hold this boundary;
 a candidate count alone would not establish that any spelling is viable.
 Compiler controls distinguish these type outcomes, and real CLI controls hold multiline landing and restoration.
-Per-operator unviable counts and actual production measurements remain pending.
+Actual production measurements remain pending.
 
 The existing `logic` operator also drops top-level operands from one-line `if`/`while` conditions. A deletion
 removes exactly one separator: the following separator for the first operand, or the preceding one for any later
@@ -353,6 +353,14 @@ real CLI controls hold landing and exact restoration. Production reach remains a
 ```sh
 bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --op clogic --list
 ```
+
+Completed sweep runs also print compiler refusals per attempted operator, including zero counts. For example,
+`mutation-sweep: unviable by operator: bool=0/1, contains=2/4 (unviable/attempted)` means one bool candidate was
+attempted without a compiler refusal, while two of four attempted membership candidates did not compile. It says
+nothing about whether the viable candidates were killed, equivalent, survived or timed out; the outcome summary
+reports those separately. The passing baseline and candidates excluded by `--only` contribute no attempts.
+No attempted candidates prints `none attempted`; `--list` prints no outcome totals and runs no compiler.
+An unviable candidate proves no coverage, and attempted counts alone establish no adequacy result.
 
 ```sh
 bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --op contains --list
