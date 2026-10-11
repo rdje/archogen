@@ -239,7 +239,22 @@ outer whitespace of the whole source/replacement span, retaining internal indent
 have one source field, one replacement field and a nonempty reason. Unknown, duplicate, missing or empty fields,
 invalid/non-string JSON and duplicate entries refuse with exit 2 before test commands run. End of input validates the last
 entry exactly as a blank separator does. A listed equivalent still must be made and survive; these fields do not
-waive either requirement. The new loop and guard operators that need spans remain pending in `M3.6.9.2`.
+waive either requirement.
+
+The `iter` operator (`M3.6.9.2.2.1`) narrows a one-line `for P in E {` header to its first element, its last,
+or its two ends. It rewrites the header with `(E).into_iter().peekable()` and a `while let Some(P)` loop;
+first/last flags skip the other elements. Binding patterns, loop labels and trailing comments are preserved,
+and generated helper names cannot capture names already in the source. Headers inside Rust literals and comments
+produce no iterator candidates. Owned and borrowed collections are supported where the candidate compiles.
+
+```sh
+bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --op iter --list
+```
+
+This lists candidates for exploration. It proves neither viability nor adequacy. The rewrite peeks at the next
+element before running the body, so its lookahead is part of the mutation being judged. Compiled synthetic controls
+hold position selection for vectors, sets, arrays, borrowed forms, binding patterns and labelled continuation.
+The guarded-branch operator and the remaining operators, and actual production measurements, remain pending.
 
 An entry can also break without anyone running it: the code it names moves, and its text is no longer there.
 One entry went that way when an import line gained a name, and the whole catalog then refused to run, unseen,

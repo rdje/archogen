@@ -437,6 +437,7 @@ needs an equivalence reason, and timeouts fail both strict modes. The design rec
 the test copy to its source repository. Implementation begins with strict and attributed mutation outcomes: an
 invocation error without a failed test summary and failure-list name is unjudged, never a kill or equivalent.
 Those modes are built in `M3.6.9.1`; `M3.6.9.2.1` adds source-span replacements and validated multiline equivalents.
-The five operators, bound seam, exact pairs and adequacy measurements remain pending.
+`M3.6.9.2.2.1` builds the loop-position operator with compiled synthetic controls; guarded branches and the other
+operators, bound seam, exact pairs and production adequacy measurements remain pending.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

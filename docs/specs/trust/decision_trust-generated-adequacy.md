@@ -76,10 +76,10 @@ sweep as it stands (round 19). This record decides a criterion, and states how f
      form unviable: compilation, not listing or a universal spelling claim, decides each candidate;
    - `clogic`: an operand of a top-level `&&` or `||` inside a closure on one line dropped.
 
-   The runner represents a candidate as a source-line interval and replacement text, so `guard` can change a header
-   and later branch together. `M3.6.9.2.1` builds that support before the operators: multiline equivalence fields use
-   explicit JSON strings (`from-json`, `to-json`), while existing raw fields remain literal. Each record is validated
-   uniformly at a separator and EOF; missing/duplicate/unknown/empty fields or duplicate entries refuse.
+   The runner stores source-line intervals and replacement text so `guard` changes header and branch together.
+   `M3.6.9.2.1` builds this and JSON multiline equivalents (`from-json`, `to-json`); raw fields stay literal.
+   Each record is validated at separators and EOF; missing/duplicate/unknown/empty fields or duplicate entries refuse.
+   `M3.6.9.2.2.1` builds `iter` with literal/comment masking and compiled synthetic controls; production reach is unmeasured.
    A mutant that does not compile is unviable, as every other, and the sweep reports each operator's count of them.
    The operators are held by measurement, not by `--list`: after the new route controls and before the parent gains
    a test, the build runs every candidate they make on each census entry's replacement span against both test

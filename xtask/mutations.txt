@@ -4347,3 +4347,25 @@ from
 to
         mutated[n] = new
 end
+
+mutation sweep-a-loop-first-judged-as-last
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.2.1: actual compiled candidates must keep the first element in the first-position variant, not the last.
+from
+        return header, tail, (first_flag, last_flag, "(%s || %s)" % (first_flag, last_flag))
+to
+        return header, tail, (last_flag, last_flag, "(%s || %s)" % (first_flag, last_flag))
+end
+
+mutation sweep-literal-loop-headers-become-code
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.2.1: header-like lines inside multiline Rust literals and comments must supply no iterator candidates.
+from
+        masked = mask_rust("\n".join(lines)).split("\n")
+to
+        masked = lines
+end

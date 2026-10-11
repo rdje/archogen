@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — loop-position mutations gain compiled semantic controls
+
+`ARCHOGEN-M3-0621` (leaf `M3.6.9.2.2.1`), `2026-10-11`.
+
+- The sweep adds first/last/ends variants of one-line loop headers, preserving binding patterns, labels and comments
+  with fresh helper names. A linear Rust lexical mask excludes headers inside literals and nested comments.
+- Validation: old discovery fails both new methods; twelve forms compile baseline plus three actual candidates,
+  passing 144 semantic observations. Three further literal/comment candidates compile; 15 tool tests pass, and
+  two strict catalogue controls are killed by their named test. Old-operator projections remain byte-identical
+  across three criterion files and the recognizer. Syntax, book and staged doctrine checks before commit.
+  Guard scopes, remaining operators and production adequacy measurements are pending; no list is called coverage.
+
 ## archogen — failed census evidence and incomplete summary headers refuse
 
 `ARCHOGEN-PROGRAM-0620` (leaf `PROGRAM.69`), `2026-10-11`.

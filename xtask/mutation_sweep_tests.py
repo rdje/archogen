@@ -1,7 +1,10 @@
-"""Contract probes for the real sweep CLI; synthetic commands, no fixture Git/Cargo build."""
+"""Real sweep CLI probes and compiled iterator candidates; no fixture Git/Cargo build."""
+import ast
 import json
 import os
 from pathlib import Path
+import re
+import signal
 import subprocess
 import sys
 import tempfile
@@ -127,6 +130,113 @@ class SpanTests(SweepFixture):
                     self.assert_exit(result, 0 if equivalent else 1)
                     self.assertIn("1 equivalent" if equivalent else "1 survived", result.stdout)
                     self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
+
+
+class IteratorTests(SweepFixture):
+    def discovery(self, source):
+        # Load the actual discovery/replacement functions without invoking the CLI or copying its algorithm.
+        python = SCRIPT.read_text().split("<<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
+        functions = [node for node in ast.parse(python).body if isinstance(node, ast.FunctionDef)]
+        lines = source.split("\n")
+        namespace = dict(re=re, json=json, lines=lines, first=0, last=lines.index("#[cfg(test)]"))
+        exec(compile(ast.Module(body=functions, type_ignores=[]), str(SCRIPT), "exec"), namespace)
+        candidates = [m for m in namespace["mutants"]() if m[2] == "iter"]
+        return namespace, candidates
+
+    def bounded(self, command):
+        env = dict(os.environ, TMPDIR=str(self.base), CARGO_HOME=str(ROOT / "target/cargo-home"))
+        process = subprocess.Popen(command, cwd=self.base, env=env, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, text=True, start_new_session=True)
+        try:
+            stdout, stderr = process.communicate(timeout=60)
+        except subprocess.TimeoutExpired:
+            os.killpg(process.pid, signal.SIGKILL)
+            process.communicate()
+            self.fail("iterator probe command timed out: " + repr(command))
+        self.assertEqual(process.returncode, 0, stdout + stderr)
+        return stdout
+
+    def test_owned_borrowed_patterns_labels_and_fresh_names_compile_and_select_positions(self):
+        # Each input/output expectation is a semantic observation, independent of the replacement's spelling.
+        forms = [
+            ("vec", "", "x", "values", "out.push(x);"),
+            ("vec_ref", "", "&x", "&values", "out.push(x);"),
+            ("vec_iter", "", "&x", "values.iter()", "out.push(x);"),
+            ("vec_into_iter", "", "x", "values.into_iter()", "out.push(x);"),
+            ("slice", "", "&x", "values.as_slice()", "out.push(x);"),
+            ("set", "    let values: std::collections::BTreeSet<_> = values.into_iter().collect();\n",
+             "x", "values", "out.push(x);"),
+            ("set_ref", "    let values: std::collections::BTreeSet<_> = values.into_iter().collect();\n",
+             "&x", "&values", "out.push(x);"),
+            ("tuple", "", "(_, x)", "values.into_iter().enumerate()", "out.push(x);"),
+            ("label", "", "x", "values", "if x == 7 { continue 'items; } out.push(x);"),
+            # The header is line four: a source name equal to the first proposed helper prefix must stay bound.
+            ("collision", "    let __archogen_sweep_4_first = 0;\n", "x", "values",
+             "out.push(x + __archogen_sweep_4_first);"),
+            ("array", "", "x", "values", "out.push(x);"),
+            ("array_ref", "", "&x", "&values", "out.push(x);"),
+        ]
+        programs, assertions = [], []
+        for name, setup, pattern, expression, body in forms:
+            array = name.startswith("array")
+            signature = "fn sample<const N: usize>(values: [i32; N])" if array else "fn sample(values: Vec<i32>)"
+            label = "'items: " if name == "label" else ""
+            source = (signature + " -> Vec<i32> {\n    let mut out = Vec::new();\n" + setup
+                      + f"    {label}for {pattern} in {expression} {{ // trailing header comment\n"
+                      + "        " + body + "\n    }\n    out\n}\n#[cfg(test)]\nmod tests {}\n")
+            namespace, candidates = self.discovery(source)
+            self.assertEqual(len(candidates), 3, name)
+            # Baseline and all three real candidates go through the installed Rust compiler together.
+            for position, mutant in enumerate([None] + candidates):
+                function = name + "_" + str(position)
+                text = source if mutant is None else namespace["apply_mutant"](mutant)
+                self.assertIn("// trailing header comment", text)
+                programs.append(text.split("#[cfg(test)]", 1)[0].replace("fn sample", "fn " + function, 1))
+                inputs = ["[]", "[7]", "[2, 7, 9, 13]"]
+                outputs = [[], [] if name == "label" else [7],
+                           [[2, 7, 9, 13] if name != "label" else [2, 9, 13], [2], [13], [2, 13]][position]]
+                for argument, expected in zip(inputs, outputs):
+                    argument = argument if array else "vec!" + argument
+                    assertions.append(f'assert_eq!({function}({argument}), vec!{expected}, "{function}");')
+        program = self.base / "iterators.rs"
+        program.write_text("#![allow(unused_variables)]\n" + "\n".join(programs)
+                           + "\nfn main() {\n" + "\n".join(assertions)
+                           + f'\nprintln!("iterator probes: {len(assertions)} observations");\n}}\n')
+        binary = self.base / "iterators"
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.assertEqual(self.bounded([str(binary)]).strip(), "iterator probes: 144 observations")
+
+    def test_mask_excludes_literal_comment_headers_and_preserves_offsets_and_labels(self):
+        ghost = "\nfor fake in fake_values {\n}\n"
+        literals = ['"' + ghost + '"', 'b"' + ghost + '"', 'c"' + ghost + '"',
+                    'r##"' + ghost + '"##', 'br#"' + ghost + '"#', 'cr"' + ghost + '"',
+                    "/* outer\n/* nested */" + ghost + "*/"]
+        source = "fn sample<'a>(values: &'a [i32]) {\n"
+        source += "\n".join("    let _ghost = " + literal + ("();" if literal.startswith("/*") else ";")
+                            for literal in literals)
+        source += ("\n    let _chars = ('{', b'}', '\\'', '\\\\', '\\n', '\\x7f', '\\u{1f980}');\n"
+                   "    // for fake in values {\n"
+                   "    'items: for &x in values {\n        if x == 7 { continue 'items; }\n    }\n"
+                   "}\n#[cfg(test)]\nmod tests {}\n")
+        namespace, candidates = self.discovery(source)
+        self.assertEqual(len(candidates), 3)
+        self.assertTrue(all(source.split("\n")[m[0]].strip().startswith("'items: for") for m in candidates))
+        masked = namespace["mask_rust"](source)
+        self.assertEqual(len(masked), len(source))
+        self.assertEqual([i for i, c in enumerate(masked) if c == "\n"],
+                         [i for i, c in enumerate(source) if c == "\n"])
+        self.assertNotIn("fake_values", masked)
+        self.assertIn("<'a>(values: &'a [i32])", masked)
+        self.assertIn("'items: for &x in values", masked)
+        self.assertIn("continue 'items", masked)
+        programs = [namespace["apply_mutant"](m).split("#[cfg(test)]", 1)[0]
+                    .replace("fn sample", "fn sample_" + str(i), 1) for i, m in enumerate(candidates)]
+        program = self.base / "literals.rs"
+        program.write_text("#![allow(unused_variables)]\n" + "\n".join(programs)
+                           + "\nfn main() { sample_0(&[2, 7]); sample_1(&[2, 7]); sample_2(&[2, 7]); }\n")
+        binary = self.base / "literals"
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.bounded([str(binary)])
 
 
 if __name__ == "__main__":

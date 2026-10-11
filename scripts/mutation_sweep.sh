@@ -21,6 +21,8 @@
 #   dir      `rsplit` ⇄ `split`, `rsplit_once` ⇄ `split_once`, `starts_with` → `contains`
 #   lit      a string literal of two or more characters passed to `at`, `starts_with`, `strip_prefix` or `contains`,
 #            its last character dropped and its first   chr      `'\n'` ⇄ `'\r'` in a comparison
+#   iter     a one-line `for P in E {` narrowed to its first, last or two end elements, for owned/borrowed E;
+#            a lexical mask excludes headers inside comments and Rust literals, preserving bindings and labels
 #
 # HOW IT RUNS, so the working tree is never touched: the tracked files as they stand in the working tree are copied to
 # `target/mutation-sweep/tree/` (no gitlink), built there with `target/mutation-sweep/target/` as the target directory,
@@ -92,6 +94,72 @@ def operands(cond):
     spans.append((start, len(cond)))
     return spans if len(spans) > 1 else []
 
+def mask_rust(text):
+    """Hide comments/literals without changing offsets or newlines; lifetimes and loop labels remain code."""
+    masked, i = list(text), 0
+    raw_literal = re.compile(r'(?:br|cr|r)(#*)"')
+    char_literal = re.compile(r"(?:b)?'(?:\\(?:u\{[0-9a-fA-F_]+\}|x[0-9a-fA-F]{2}|.)|[^'\\\n])'")
+    def erase(start, stop):
+        for k in range(start, stop):
+            if text[k] != "\n":
+                masked[k] = " "
+    while i < len(text):
+        start = i
+        if text.startswith("//", i):
+            end = text.find("\n", i)
+            i = len(text) if end < 0 else end
+        elif text.startswith("/*", i):
+            depth, i = 1, i + 2
+            while i < len(text) and depth:
+                if text.startswith("/*", i):
+                    depth, i = depth + 1, i + 2
+                elif text.startswith("*/", i):
+                    depth, i = depth - 1, i + 2
+                else:
+                    i += 1
+        else:
+            raw = raw_literal.match(text, i) if i == 0 or not (text[i - 1].isalnum() or text[i - 1] == "_") else None
+            char = char_literal.match(text, i)
+            if raw:
+                end = text.find('"' + raw.group(1), raw.end())
+                i = len(text) if end < 0 else end + 1 + len(raw.group(1))
+            elif text[i] == '"':
+                i += 1
+                while i < len(text):
+                    if text[i] == "\\":
+                        i = min(i + 2, len(text))
+                    elif text[i] == '"':
+                        i += 1
+                        break
+                    else:
+                        i += 1
+            elif char:
+                i = char.end()
+            else:
+                i += 1
+                continue
+        erase(start, i)
+    return "".join(masked)
+
+def loop_header(n, masked):
+    match = re.match(r"^(?P<indent>[ \t]*)(?:(?P<label>'\w+:)\s+)?for\s+(?P<pattern>.+?)\s+in\s+(?P<expr>.+?)\s*\{\s*$", masked)
+    if not match:
+        return None
+    line = lines[n]
+    pattern = line[slice(*match.span("pattern"))].strip()
+    expression = line[slice(*match.span("expr"))].strip()
+    prefix = "__archogen_sweep_%d_" % (n + 1)
+    source = "\n".join(lines)
+    while prefix in source:
+        prefix += "_"
+    it, k, first_flag, last_flag = [prefix + name for name in ("it", "k", "first", "last")]
+    header = (match.group("indent") + "let mut %s = (%s).into_iter().peekable(); let mut %s = 0usize; " % (it, expression, k)
+              + ((match.group("label") + " ") if match.group("label") else "")
+              + "while let Some(%s) = %s.next() { let (%s, %s) = (%s == 0, %s.peek().is_none()); %s += 1;"
+              % (pattern, it, first_flag, last_flag, k, it, k))
+    tail = line[masked.rfind("{") + 1:]
+    return header, tail, (first_flag, last_flag, "(%s || %s)" % (first_flag, last_flag))
+
 def apply_mutant(m):
     n, stop, _, new = m
     mutated = lines[:]
@@ -145,6 +213,7 @@ def load_equivalents(path):
 def mutants():
     out = []
     seen = set()
+    masked = mask_rust("\n".join(lines)).split("\n")
     def add(n, op, new, stop=None):
         stop = n + 1 if stop is None else stop
         if not first <= n < stop <= last:
@@ -216,6 +285,11 @@ def mutants():
                     if k == 0:
                         new = lead + new.lstrip()
                     add(n, "alt", new + l[len(code):])
+        header = loop_header(n, masked[n])
+        if header:
+            rewritten, tail, positions = header
+            for position in positions:
+                add(n, "iter", rewritten + " if !%s { continue; }" % position + tail)
     return out
 
 ms = [m for m in mutants() if not a.op or m[2] in a.op]
