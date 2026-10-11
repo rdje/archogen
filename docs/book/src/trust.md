@@ -51,6 +51,9 @@ without a role-packages clause, its set still contains `crates/archogen-cli`. Ev
 
 `defroot`, `defharness`, `defprogram` and `defrole` place a symbol or string name immediately after the head.
 A missing name, integer or clause in that position refuses before a build. `defadmit` deliberately has no name.
+A role without a root names its future task: `(defrole configuration-checker (leaf "M3.5"))`.
+Its `leaf` clause requires one textual value; absent, empty or multiple-value clauses refuse.
+This placeholder creates no program.
 Clauses may appear in any order, but each clause is allowed only once and only if the form takes it.
 A misspelling such as `(role-pakages "crates/other")` refuses at the beginning, middle or end of a root.
 Two `(data …)` clauses also refuse wherever the second occurs: put several paths in one clause,
@@ -560,7 +563,8 @@ Measured `2026-10-11`: complete identity, actual replacement, original-parent ki
 
 Each survivor requires a behavioral repair or a justified per-file equivalence before the final strict sweep.
 Measured `2026-10-11`: `M3.6.9.6.3.2.2.1`–`.4` repair thirteen initial obligations: reader errors, seven clause-position cases, four role-package collections and admission reason cardinality. Each selected group survives before its new bounded parent controls (strict exit 1) and finishes with named kills afterward (strict exit 0). Every run restores all 988 original/copied tracked inputs under Python/system hashes; production and prior tests stay byte-identical within these four test-only slices. Missing-name/replacement/strict-exit evidence alterations refuse. Exact IDs, names, source hashes and reproduction commands live in the committed leaves; native producer/auditor are tracked, supplemental orchestration/audits ignored.
-Measured `2026-10-11`, `.3.2.2.5`: a public diagnostic finds all twelve missing/nontext-name cases accepted across the four named form types. The name-position repair refuses them; eight valid symbol/string counterparts and an unnamed admission pass. Reverting only the repair fails (exit 101), reapplying passes (exit 0). Fresh discovery lists 1,420 candidates over production lines 144–2496, with 1,396 moved IDs: this is a listing, not mutation outcomes. The earlier IDs belong to their recorded source versions. Reproduce an old selected run at its completed leaf's source, or rediscover its actual replacement with `--list` before selecting current IDs. Final exact/full adequacy evidence must use current source and remains open.
+Measured `2026-10-11`, `.3.2.2.5`: twelve missing/nontext-name cases are accepted before repair and refused afterward; eight valid symbol/string counterparts and an unnamed admission pass. Exact repair reversal fails (101), reapplication passes (0).
+Measured `2026-10-11`, `.3.2.2.6`: missing, empty and multiple-value placeholder leaves are accepted before repair and refused afterward. A valid placeholder still creates no program. Native deletion of the field check finishes with the new named kill (strict 0); all 988 original/copied inputs restore. Old test bodies are unchanged, evidence falsifications refuse and focused gates pass. Fresh discovery lists 1,421 candidates, production lines 144–2499; it establishes no full mutation outcomes. Historical IDs remain source-bound: reproduce at their recorded source or rediscover actual replacements with `--list`. Final exact/full measurements on current source remain open.
 Timeout and unjudged results remain failures. Full adequacy and independent review stay open.
 Recorded native killing names remain accessible through the original `docs/tasks/M3.md` leaf stubs, which now
 route completed evidence to sealed task-history records. The stubs retain commit identities; the archive index

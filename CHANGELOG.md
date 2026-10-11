@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — unrooted roles require their future leaf
+
+`ARCHOGEN-M3-0667` (leaf `M3.6.9.6.3.2.2.6`), `2026-10-11`.
+
+- Confirm that an unrooted role accepts an absent, empty or ambiguous future-leaf field contrary to the
+  inventory contract. Require one textual leaf value and retain a valid placeholder's non-program behavior.
+- Public regression fails before repair and passes afterward; native deletion of the exact guard finishes
+  with its named kill, strict exit 0. All 988 original/copied inputs restore under Python/system hashes;
+  all old test bodies remain unchanged. Evidence falsifications and focused tier pass; exact staged stamp
+  required. Fresh discovery lists 1,421 candidates; historical IDs remain source-bound. Book/live pointers
+  align; pair/harness assessment next, final current-source exact/full measurements and review still open.
+
 ## archogen — named trust forms refuse missing and nontext names
 
 `ARCHOGEN-M3-0666` (leaf `M3.6.9.6.3.2.2.5`), `2026-10-11`.

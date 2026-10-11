@@ -327,6 +327,9 @@ fn read_form(form: &Form, roots: &mut Roots, names: &mut BTreeSet<String>) -> Re
                 })
                 .or_default() += 1;
         }
+        "defrole" => {
+            one(form, "leaf", &name)?;
+        }
         _ => {}
     }
     Ok(())
@@ -2998,6 +3001,30 @@ pub(crate) mod tests {
             "crates/c example e".to_owned(),
             "classified demo".to_owned()
         )));
+    }
+
+    #[test]
+    fn an_unrooted_role_names_exactly_one_future_leaf() {
+        crate::trust_test_process::bounded!(an_unrooted_role_names_exactly_one_future_leaf);
+        let placeholder = |leaf: &str| format!("(defrole configuration-checker {leaf})");
+        let valid = read_roots(&placeholder("(leaf \"M3.5\")"))
+            .expect("the unrooted role names its future leaf");
+        assert!(valid.programs.is_empty(), "a placeholder is not a program");
+
+        let mut accepted = Vec::new();
+        for leaf in ["", "(leaf)", "(leaf \"M3.5\" \"M3.4\")"] {
+            match read_roots(&placeholder(leaf)) {
+                Ok(_) => accepted.push(leaf),
+                Err(error) => assert!(
+                    error.contains("`configuration-checker` needs exactly one `(leaf …)`"),
+                    "{leaf:?}: {error}"
+                ),
+            }
+        }
+        assert!(
+            accepted.is_empty(),
+            "accepted without one future leaf: {accepted:?}"
+        );
     }
 
     #[test]
