@@ -5350,3 +5350,34 @@ from
 
 to
 end
+
+mutation json-surrogate-low-half-unchecked
+file xtask/src/json.rs
+test -p xtask json::tests::unicode_surrogates_require_a_valid_low_half -- --exact
+expect killed
+why M3.6.9.6.3.2.2.9.6.3: The exact old join masks any second escape into a low half; scalar-string controls must refuse non-low-surrogate joins without rejecting valid pairs.
+from
+                                    if !(0xDC00..=0xDFFF).contains(&low) {
+                                        return Err(format!("a bad low surrogate at {}", self.at - 4));
+                                    }
+                                    let joined = 0x10000 + ((code - 0xD800) << 10) + (low - 0xDC00);
+
+to
+                                    let joined = 0x10000
+                                        + ((code - 0xD800) << 10)
+                                        + (low.wrapping_sub(0xDC00) & 0x3FF);
+
+end
+
+mutation json-unicode-escape-plus-admitted
+file xtask/src/json.rs
+test -p xtask json::tests::unicode_escapes_require_four_ascii_hex_digits -- --exact
+expect killed
+why M3.6.9.6.3.2.2.9.6.3: Unsigned radix parsing accepts a leading plus; removing only ASCII hexadecimal validation must fail the public Unicode escape grammar control.
+from
+            if !digits.iter().all(u8::is_ascii_hexdigit) {
+                return Err(format!("a bad `\\u` escape at {}", self.at));
+            }
+
+to
+end

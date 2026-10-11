@@ -19,6 +19,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
   engine API or its MCP server. See [The engine API](engine-api.md).
 - **API** — Application Programming Interface: the functions a program offers other programs. archogen's is the
   engine API. See [The engine API](engine-api.md).
+- **ASCII** — American Standard Code for Information Interchange: the character set used for JSON escape digits;
+  characters that look similar in another script are not substitutes. See [JSON used by the tooling](annex-repository.md#json-used-by-the-tooling).
 - **AUTOSAR** — AUTomotive Open System ARchitecture: the car industry's standard software architecture, whose
   operating-system part is quoted here as a precedent. See [its ledger entry](ledger.md#autosar-os).
 - **BSD** — Berkeley Software Distribution: here, the flavour of the standard command-line tools macOS ships, which

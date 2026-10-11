@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — Unicode escapes validate digits and surrogate halves
+
+`ARCHOGEN-M3-0677` (leaf `M3.6.9.6.3.2.2.9.6.3`), `2026-10-12`.
+
+- Require ASCII hexadecimal digits and a valid low-surrogate half before joining escaped scalar values.
+  Preserve valid BMP/pair boundaries, mixed case, noncharacters and the existing scalar-string policy.
+- Separate permanent public controls fail on the old decoder, pass after repair, and kill independent native
+  old-join/hex-guard reversals by name, strict 0. All 1002 original inputs restore per run under Python/system
+  hashes; old code/tests/catalog prefix preserved, altered evidence refuses. Focused passes; final exact staged
+  stamp required. Valid object keys, decoded values and writer round trips retained.
+- Book examples distinguish the scalar policy from the grammar, glossary explains ASCII, live pointers align.
+  Caller-byte assessment remains before integration; final complete production adequacy remains open.
+
 ## archogen — raw JSON string controls require escapes
 
 `ARCHOGEN-M3-0676` (leaf `M3.6.9.6.3.2.2.9.6.2`), `2026-10-11`.

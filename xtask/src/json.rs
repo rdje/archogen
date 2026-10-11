@@ -252,9 +252,10 @@ impl Parser<'_> {
                                 }
                                 self.at += 2;
                                 let low = self.hex4()?;
-                                let joined = 0x10000
-                                    + ((code - 0xD800) << 10)
-                                    + (low.wrapping_sub(0xDC00) & 0x3FF);
+                                if !(0xDC00..=0xDFFF).contains(&low) {
+                                    return Err(format!("a bad low surrogate at {}", self.at - 4));
+                                }
+                                let joined = 0x10000 + ((code - 0xD800) << 10) + (low - 0xDC00);
                                 char::from_u32(joined)
                             } else {
                                 char::from_u32(code)
@@ -295,6 +296,9 @@ impl Parser<'_> {
             .bytes
             .get(self.at..self.at + 4)
             .ok_or_else(|| format!("a short `\\u` escape at {}", self.at))?;
+        if !digits.iter().all(u8::is_ascii_hexdigit) {
+            return Err(format!("a bad `\\u` escape at {}", self.at));
+        }
         let text = std::str::from_utf8(digits).map_err(|_| "a bad `\\u` escape".to_owned())?;
         let code = u32::from_str_radix(text, 16)
             .map_err(|_| format!("a bad `\\u` escape at {}", self.at))?;
@@ -497,6 +501,96 @@ mod tests {
         ] {
             let value = format!("a{character}b");
             assert_eq!(parse(&format!("\"{value}\"")).unwrap(), Json::Str(value));
+        }
+    }
+
+    #[test]
+    fn unicode_surrogates_require_a_valid_low_half() {
+        for encoded in [
+            r#""\ud800\u0041""#,
+            r#""\ud800\ud7ff""#,
+            r#""\ud800\ud800""#,
+            r#""\udbff\udbff""#,
+            r#""\udbff\ue000""#,
+            r#""\udbff\uffff""#,
+            r#""\ud800""#,
+            r#""\udbffx""#,
+            r#""\ud800\n""#,
+            r#""\udc00""#,
+            r#""\udfff""#,
+        ] {
+            for document in [
+                encoded.to_owned(),
+                format!("[{encoded}]"),
+                format!("{{\"n\":{encoded}}}"),
+                format!("{{{encoded}:null}}"),
+            ] {
+                assert!(
+                    parse(&document).is_err(),
+                    "invalid scalar-string surrogate escape admitted: {document}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn unicode_escapes_require_four_ascii_hex_digits() {
+        for encoded in [
+            r#""\u+123""#,
+            r#""\ud800\u+123""#,
+            r#""\u-123""#,
+            r#""\u00g0""#,
+            r#""\u0 00""#,
+            r#""\u123""#,
+            r#""\u12""#,
+            r#""\u""#,
+            r#""\u１２３４""#,
+        ] {
+            for document in [
+                encoded.to_owned(),
+                format!("[{encoded}]"),
+                format!("{{\"n\":{encoded}}}"),
+                format!("{{{encoded}:null}}"),
+            ] {
+                assert!(
+                    parse(&document).is_err(),
+                    "non-hexadecimal Unicode escape admitted: {document}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn valid_unicode_escapes_preserve_scalar_boundaries_and_spelling() {
+        for (encoded, value) in [
+            (r#""\u0000""#, "\0"),
+            (r#""\uAbCd""#, "\u{abcd}"),
+            (r#""\ud7ff""#, "\u{d7ff}"),
+            (r#""\uE000""#, "\u{e000}"),
+            (r#""\uffff""#, "\u{ffff}"),
+            (r#""\ud800\udc00""#, "\u{10000}"),
+            (r#""\ud800\udfff""#, "\u{103ff}"),
+            (r#""\uDBFF\uDC00""#, "\u{10fc00}"),
+            (r#""\uDBFF\uDFFF""#, "\u{10ffff}"),
+            (r#""\ud83d\ude00""#, "😀"),
+            (r#""\u00410""#, "A0"),
+            (r#""\\u+123""#, r"\u+123"),
+        ] {
+            let expected = Json::Str(value.to_owned());
+            assert_eq!(parse(encoded).unwrap(), expected);
+            assert_eq!(
+                parse(&format!("[{encoded}]")).unwrap(),
+                Json::Array(vec![expected.clone()])
+            );
+            assert_eq!(
+                parse(&format!("{{\"n\":{encoded}}}")).unwrap().get("n"),
+                Some(&expected)
+            );
+            assert_eq!(
+                parse(&format!("{{{encoded}:null}}")).unwrap().get(value),
+                Some(&Json::Null)
+            );
+            assert_eq!(parse(&super::write(&expected)).unwrap(), expected);
         }
     }
 

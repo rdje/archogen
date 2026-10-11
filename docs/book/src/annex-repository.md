@@ -173,10 +173,29 @@ Offsets for unescaped-control errors count bytes in the UTF-8 input, including t
 hold the entire forbidden range, valid escaped forms, object-key decoding and permitted raw boundaries;
 deleting only the guard gives the named finishing kill (`M3.6.9.6.3.2.2.9.6.2`).
 
-An invalid surrogate-pair join is still admitted; `.9.6.3` owns its repair, with caller-byte assessment
-`.9.6.4` before integration. The reader's Rust scalar-string domain already refuses lone surrogates,
-a narrower policy than the RFC's §8.2 grammar; those checks are not a complete conformance claim.
-The demonstrated API defects do not establish a complete trust-gate bypass.
+Each `\u` escape consumes exactly four ASCII hexadecimal digits, as §7 requires. A leading plus or minus,
+non-hexadecimal text and a short escape are refused. An ordinary character following those digits remains
+part of the string: `"\u00410"` decodes to `A0`, while `"\\u+123"` decodes to the literal text `\u+123`.
+
+The reader stores Rust scalar strings. A high-surrogate escape must therefore be followed immediately by
+another `\u` escape in the low-surrogate range. The decoder validates that range before joining the pair:
+
+| Unicode escape input | Behavior |
+| --- | --- |
+| `"\uAbCd"`, `"\uE000"`, `"\uffff"` | accepted; mixed hexadecimal case and scalar boundaries preserved |
+| `"\ud800\udc00"`, `"\uDBFF\uDFFF"` | accepted; smallest and largest paired scalar values |
+| `"\ud83d\ude00"` | accepted as `😀` |
+| `"\u+123"`, `"\u00g0"`, `"\u123"` | refused; invalid escape digits |
+| `"\ud800\u0041"`, `"\udbff\ue000"` | refused; the second escape is not a low surrogate |
+| `"\ud800"`, `"\udc00"` | refused under the scalar-string policy |
+
+These checks apply in values and object keys. Permanent controls also hold decoded values and writer round
+trips; independently restoring the old surrogate join or deleting the hexadecimal guard gives the corresponding
+named finishing failure (`M3.6.9.6.3.2.2.9.6.3`). Lone-surrogate refusal is the reader's existing narrower policy:
+§8.2 permits unpaired surrogate spellings in the grammar. This is not a complete conformance claim.
+
+Caller-byte assessment `.9.6.4` remains before integration. The demonstrated API defects do not establish
+a complete trust-gate bypass.
 
 ## What is versioned is written down
 
