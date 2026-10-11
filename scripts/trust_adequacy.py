@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan complete census-span operator measurements, without claiming semantic reach (M3.6.9.5.1)."""
+"""Plan census-span measurements and compile bounded traces of actual non-progress edits."""
 import argparse
 import ast
 import bisect
@@ -13,6 +13,7 @@ import signal
 import subprocess
 import sys
 import time
+import tomllib
 import unittest
 
 DECISION = "docs/specs/trust/decision_trust-generated-adequacy.md"
@@ -248,6 +249,119 @@ def audit_measurement(log, file_plan, filename, exit_code):
         baseline_passed=True, raw_exit_code=exit_code)
 
 
+PROGRESS_CASES = [
+    ("            i += if *takes { 2 } else { 1 };", "            // i += if *takes { 2 } else { 1 };",
+     ["rustc", "--out-dir", "out"], None),
+    ("            i += 1;", "            i += 0;", ["rustc", "--error-format=json"], None),
+    ("            i += 1;", "            // i += 1;", ["rustc", "--error-format=json"], None),
+    ("                    i += 2;", "                    // i += 2;", ["rustc", "-C", "metadata=aaa"], None),
+    ("                i += 2;", "                // i += 2;", ["rustc", "-C", "opt-level=3"],
+     'out.push(format!("-C {v}"));'),
+]
+
+
+def progress_cases(source, candidates):
+    """Bind source/replacement pairs to actual discovery IDs, allowing unrelated line-number changes."""
+    first = source[:source.index("fn normalise(")].count("\n")
+    last = source[:source.index("/// `path` resolved")].count("\n")
+    lines = source.split("\n")
+    result = {}
+    for original, replacement, arguments, previous in PROGRESS_CASES:
+        matches = [candidate for candidate in candidates
+                   if first <= candidate["span"][0] < candidate["span"][1] <= last
+                   and (candidate["original"], candidate["replacement"]) == (original, replacement)
+                   and (previous is None or lines[candidate["span"][0] - 1].strip() == previous)]
+        if len(matches) != 1:
+            raise ValueError("progress candidate identities missing or ambiguous")
+        result[matches[0]["id"]] = arguments
+    return result
+
+
+def progress_program(source, candidates, false_positive=False, false_negative=False):
+    """Observe actual index edits, stopping before a fourth body evaluation can consume resources."""
+    by_id = {candidate["id"]: candidate for candidate in candidates}
+    cases = progress_cases(source, candidates)
+    lines = source.split("\n")
+    constants = source[source.index("const DROPPED:"):source.index("/// A unit's configuration, normalised")]
+
+    def traced(text, name):
+        body = text[text.index("fn normalise("):text.index("/// `path` resolved")]
+        signature = "-> Vec<String> {"
+        loop = "    while i < tokens.len() {\n"
+        tail = "    out\n}"
+        if any(body.count(part) != 1 for part in (signature, loop, tail)):
+            raise ValueError("normalise trace landmarks changed")
+        return body.replace("fn normalise(", "fn " + name + "(", 1).replace(
+            signature, "-> (Vec<String>, Vec<usize>) {", 1).replace(
+            loop, "    let mut visited = Vec::new();\n" + loop
+            + "        visited.push(i);\n        if visited.len() == 4 { return (out, visited); }\n", 1).replace(
+            tail, "    (out, visited)\n}", 1)
+
+    functions = [traced(source, "baseline")]
+    checks = []
+    for index, (identity, arguments) in enumerate(cases.items()):
+        candidate = by_id[identity]
+        lo, hi = candidate["span"]
+        if hi - lo != 1:
+            raise ValueError("progress candidate outside normalise")
+        if "\n".join(lines[lo:hi]) != candidate["original"]:
+            raise ValueError("progress candidate source drift")
+        mutated = "\n".join(lines[:lo] + [candidate["replacement"]] + lines[hi:])
+        name = "mutant_" + str(index)
+        functions.append(traced(source if false_positive and index == 0 else mutated, name))
+        args = ", ".join(json.dumps(arg) for arg in arguments)
+        expected = "vec![2; 4]" if false_negative and index == 0 else "vec![1; 4]"
+        checks.append('''let tokens = [%s].map(str::to_owned);
+let original = baseline(&tokens, "scratch/");
+let changed = %s(&tokens, "scratch/");
+assert_eq!(original.1, vec![1], "%s baseline");
+assert_eq!(changed.1, %s, "%s actual non-progress");
+println!("%s: baseline indices {:?}; mutant indices {:?}; mutant values {:?}", original.1, changed.1, changed.0);'''
+                      % (args, name, identity, expected, identity, identity))
+    return constants + "\n".join(functions) + "\nfn main() {\n" + "\n".join(checks) + "\n}\n"
+
+
+def progress_control(root, output):
+    filename = "xtask/src/trust.rs"
+    source = (root / filename).read_text()
+    candidates, listing, interval = discover((root / SWEEP).read_text(), source)
+    cases = progress_cases(source, candidates)
+    actual = subprocess.check_output(["bash", SWEEP, filename, "--package", "xtask", "--list"], cwd=root, text=True)
+    verify_listing(actual, listing, filename, interval)
+    edition = tomllib.loads((root / "Cargo.toml").read_text())["workspace"]["package"]["edition"]
+    directory = output.parent / (output.stem + "-controls")
+    directory.mkdir(parents=True, exist_ok=True)
+    env = dict(os.environ, CARGO_HOME=str(root / "target/cargo-home"), TMPDIR=str(root / "target/tmp"))
+    runs = []
+    for name, options, expected in (("actual", {}, 0), ("false-positive", dict(false_positive=True), 101),
+                                    ("false-negative", dict(false_negative=True), 101)):
+        code, binary = directory / (name + ".rs"), directory / name
+        code.write_text(progress_program(source, candidates, **options))
+        compiled = subprocess.run(["rustc", "--edition=" + edition, str(code), "-o", str(binary)],
+                                  cwd=root, env=env, text=True, capture_output=True, timeout=60)
+        if compiled.returncode:
+            raise ValueError("progress control did not compile: " + compiled.stderr)
+        run = subprocess.run([str(binary)], cwd=root, env=env, text=True, capture_output=True, timeout=5)
+        if run.returncode != expected:
+            raise ValueError("progress control exit disagrees: " + name)
+        if name != "actual" and next(iter(cases)) + " actual non-progress" not in run.stderr:
+            raise ValueError("wrong oracle did not fail at its intended assertion: " + name)
+        if name == "actual" and run.stdout.splitlines() != [
+                identity + ": baseline indices [1]; mutant indices [1, 1, 1, 1]; mutant values "
+                + ('["-C opt-level=3", "-C opt-level=3", "-C opt-level=3"]' if arguments[-1] == "opt-level=3" else "[]")
+                for identity, arguments in cases.items()]:
+            raise ValueError("actual progress traces differ")
+        runs.append(dict(name=name, source_sha256=digest(code.read_bytes()), exit_code=run.returncode,
+                         stdout=run.stdout, stderr=run.stderr))
+    result = dict(schema="archogen-trust-progress/1", cases=list(cases), runs=runs,
+                  scope="instrumented index traces of five actual edits; no OS crash classification",
+                  production_range=interval, listed_count=len(candidates), cli_listing_verified=True,
+                  input_sha256={path: digest((root / path).read_bytes()) for path in (filename, SWEEP, "Cargo.toml")},
+                  producer_sha256=digest(Path(__file__).read_bytes()))
+    output.write_text(json.dumps(result, indent=2) + "\n")
+    return result
+
+
 def local_output(root, path):
     output = Path(path)
     if output.is_absolute() or not (root / output).resolve().is_relative_to(root / "target"):
@@ -331,6 +445,31 @@ def measure(root, plan_path, filename, population, output):
 
 
 class Controls(unittest.TestCase):
+    def test_actual_progress_traces_and_both_wrong_oracles(self):
+        root = Path(__file__).resolve().parent.parent
+        result = progress_control(root, root / "target/trust-progress-selftest.json")
+        source = (root / "xtask/src/trust.rs").read_text()
+        candidates, _, _ = discover((root / SWEEP).read_text(), source)
+        self.assertEqual(result["cases"], list(progress_cases(source, candidates)))
+        self.assertEqual([run["exit_code"] for run in result["runs"]], [0, 101, 101])
+
+    def test_progress_refuses_missing_identity_and_wrong_source(self):
+        root = Path(__file__).resolve().parent.parent
+        source = (root / "xtask/src/trust.rs").read_text()
+        candidates, _, _ = discover((root / SWEEP).read_text(), source)
+        with self.assertRaisesRegex(ValueError, "identities missing"):
+            progress_program(source, [])
+        first_identity = next(iter(progress_cases(source, candidates)))
+        duplicate = next(candidate for candidate in candidates if candidate["id"] == first_identity)
+        with self.assertRaisesRegex(ValueError, "ambiguous"):
+            progress_program(source, candidates + [dict(duplicate, id="duplicate")])
+        changed = source.replace(PROGRESS_CASES[-1][0] + "\n", "                i += 3;\n", 1)
+        with self.assertRaisesRegex(ValueError, "source drift"):
+            progress_program(changed, candidates)
+        shifted = [dict(candidate, id="shifted-" + candidate["id"]) for candidate in candidates]
+        self.assertEqual(list(progress_cases(source, shifted)),
+                         ["shifted-" + identity for identity in progress_cases(source, candidates)])
+
     def test_manifest_paths_refuse_before_reading_any_unrecognized_input(self):
         paths = {DECISION, CATALOGUE, SWEEP, "xtask/src/trust.rs", "xtask/src/trust_generated.rs"}
         hashes = {path: "0" * 64 for path in paths}
@@ -437,6 +576,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", help="repository-relative JSON file under target/")
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--progress", action="store_true", help="compile bounded traces of five actual non-progress edits")
     parser.add_argument("--measure", choices=["xtask/src/trust_generated.rs", "xtask/src/trust.rs"])
     parser.add_argument("--population", choices=list(POPULATIONS))
     parser.add_argument("--plan", help="repository-relative candidate manifest")
@@ -448,6 +588,14 @@ def main():
         parser.error("--output or --self-test required")
     root = Path(__file__).resolve().parent.parent
     output = local_output(root, args.output)
+    if args.progress:
+        if args.measure or args.population or args.plan:
+            parser.error("--progress cannot be combined with measurement options")
+        output.parent.mkdir(parents=True, exist_ok=True)
+        result = progress_control(root, output)
+        print("trust-adequacy: %d actual non-progress edits; compiled traces and two rejecting oracles pass; no OS crash claim"
+              % len(result["cases"]))
+        return 0
     if args.measure:
         if not args.population or not args.plan:
             parser.error("--measure requires --population and --plan")

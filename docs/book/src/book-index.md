@@ -273,8 +273,9 @@ a change that leaves it stale, so it is never edited by hand.
 - One outcome per fact, then a verdict — [Matching an offer to a
   requirement](matching.md#one-outcome-per-fact-then-a-verdict)
 - One outcome vocabulary — [The engine API](engine-api.md#one-outcome-vocabulary)
-- **OS** — [definition](glossary.md), [The boundary: functionality versus implementation](boundary.md), [What this
-  project relies on from outside](ledger.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
+- **OS** — [definition](glossary.md), [The boundary: functionality versus implementation](boundary.md), [Checks that
+  must not share a mistake: the trust gate](trust.md), [What this project relies on from outside](ledger.md), [Annex B:
+  The checks that keep the repository honest](annex-repository.md)
 - **OSEK** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What this project relies on
   from outside](ledger.md)
 - osek-os — [What this project relies on from outside](ledger.md#osek-os)

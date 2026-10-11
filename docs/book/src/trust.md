@@ -471,9 +471,29 @@ cargo test -p xtask mutation::adequacy_tests
 
 This verifies the catalogue, not semantic adequacy. The full strict route run now has 32 named finishing kills
 and exact source restoration (`M3.6.9.4.2.2.1`); the [measurement chapter](trust-adequacy.md) records each actual
-killing test and the source hashes. The initial parent baseline passes 91 tests; 2 of the 32 exact mutations have
-named kills and 30 survive, raw strict exit 1 (`M3.6.9.4.2.2.2`). Each survivor has a P1 repair owner after the
-required operator measurements. Expected parent verdicts stay killed; parent semantic tests have not yet been
-strengthened, and full adequacy remains open.
+killing test and the source hashes. The initial parent baseline passed 91 tests; 2 of the 32 exact mutations had named
+kills and 30 survived (`M3.6.9.4.2.2.2`). After the required initial operator measurements, parent controls repaired
+those gaps. On `2026-10-11`, the combined final exact run kills all 32 entries with finishing named parent tests, strict exit 0
+(`M3.6.9.6.3.1`). These historical measurements remain separate from full production-sweep adequacy.
+
+The first complete-range `trust.rs` attempt listed 1,420 candidates across production lines 144–2493, with every
+operator and the required parent filters. Its unmutated copy passed. The runner stopped after 150 candidates:
+78 named kills, 62 survivors, five compiler refusals, four strict timeouts and one unjudged result, raw exit 2.
+The complete-result auditor refused the incomplete identities; every captured copied and original tracked input
+was verified restored before subsequent edits. No full measurement or adequacy pass follows from this attempt.
+
+The five non-finishing candidates remove index progress in configuration normalization. A compiler-backed diagnostic
+uses each actual edit with a trace that stops before a fourth loop-body evaluation: the baseline visits index 1 once,
+while each mutant revisits it; the final mutant also appends the same flag repeatedly. Both deliberately wrong trace
+oracles fail. This establishes non-progress, without assigning an OS crash cause to the unjudged command.
+
+```console
+bash scripts/trust_adequacy.sh --progress --output target/trust-progress.json
+bash scripts/trust_adequacy.sh --self-test
+```
+
+`M3.6.9.6.3.2.1.2` owns bounded execution of the named parent tests, so reached hangs can become finishing named
+failures. The complete native sweep must then be retried; each survivor requires a behavioral repair or a justified
+per-file equivalence. Timeout and unjudged results remain failures. Full adequacy and independent review stay open.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

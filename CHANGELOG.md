@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — incomplete full trust sweep refused and owned
+
+`ARCHOGEN-M3-0657` (leaf `M3.6.9.6.3.2.1.1`), `2026-10-11`.
+
+- Bind the complete native listing of 1,420 production candidates to the parent command and tracked input hashes.
+  The first attempt stops unjudged after 150 candidates: 78 named kills, 62 survivors, five unviable, four strict
+  timeouts and one unjudged, native exit 2. The complete-result auditor refuses it; no completed measurement or
+  adequacy pass. Original/copied tracked inputs restored; the process census reports no project job remaining.
+- Extend the tracked adequacy diagnostic with bounded compiled traces of the five actual non-progress edits.
+  Baseline advances; mutants revisit index 1, one repeating its output. Two wrong oracles fail, all nine self-tests
+  pass, and source/replacement/context binding avoids fixed line IDs. No invented OS crash cause.
+- Own bounded execution of every named parent test before the full retry, and individual assessment of all observed
+  survivors. Correct the main book's stale parent-strengthening sentence; preserve historical initial outcomes.
+  Diagnostic/book/live checks pass; Rust production, parent tests and operator producer unchanged.
+
 ## archogen — final exact parent mutation census passes
 
 `ARCHOGEN-M3-0656` (leaf `M3.6.9.6.3.1`), `2026-10-11`.
