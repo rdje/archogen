@@ -387,6 +387,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Scratch stays on this volume — [Annex B: The checks that keep the repository
   honest](annex-repository.md#scratch-stays-on-this-volume)
 - **SEI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
+- Semantic witnesses in the initial cohort — [Generated-sources test
+  adequacy](trust-adequacy.md#semantic-witnesses-in-the-initial-cohort)
 - semulith — [What this project relies on from outside](ledger.md#semulith)
 - Sets: what a part accepts — [Matching an offer to a requirement](matching.md#sets-what-a-part-accepts)
 - **SHA-256** — [definition](glossary.md), [What a report may claim](evidence.md), [Generated-sources test

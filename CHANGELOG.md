@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — actual semantic witnesses and bounded absences
+
+`ARCHOGEN-M3-0649` (leaf `M3.6.9.5.4.2`), `2026-10-11`.
+
+- Classify all 32 census rows against the unchanged initial measured span cohorts: 13 viable witnesses
+  (four syntax, nine effect), and 19 explicit missing-shape/predicate reasons. Every witness has native route
+  and parent outcomes: all routes killed, one parent killed and twelve survivors. No desired-verdict inference.
+- Retain reviewed assertions in a tracked diagnostic, bound to re-audited complete source/syntax/native evidence.
+  Compile actual-replacement selection traces and role/script/reader/dependency-depth distinctions. Positive
+  controls pass; seeded wrong-selection and inverted assertions compile but fail, exit 101. Three selected
+  self-test wrappers and three native census contracts pass; pinned book builds.
+- Book includes every row, the same-effect arguments, diagnostic attribution versus acceptance, bounded control
+  limits, concrete absent predicates/shapes and reproducer. Initially killed exact parents remain valid; all
+  exact expected-killed obligations remain. Promised-spelling verification precedes parent strengthening next.
+- No production, operator or parent semantic source changes. No completed adequacy or full integration claim.
+
 ## archogen — reproducible mutation syntax and source evidence
 
 `ARCHOGEN-M3-0648` (leaf `M3.6.9.5.4.1`), `2026-10-11`.

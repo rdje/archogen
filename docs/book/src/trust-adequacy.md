@@ -454,6 +454,107 @@ and refuse wrong original spans, replacement text, populations, selections, sour
 The diagnostic never changes production or fixture sources. Its recorded historical runner hashes are retained
 as provenance; re-auditing logs does not reconstruct or authenticate an earlier uncommitted runner version.
 
+## Semantic witnesses in the initial cohort
+
+Reviewed `2026-10-11`, `M3.6.9.5.4.2`: 13 rows have viable same-effect witnesses; 19 rows have none
+in their measured replacement-span cohorts. This is a bounded relation between the actual edits above,
+not a claim that another edit elsewhere could never express the defect. All initial candidate outcomes and
+killing-test names remain in the preceding tables, including different defects and type refusals.
+
+The classifications are explicit reviewed assertions in `scripts/trust_witness_effects.py`. The diagnostic
+re-audits the original source/syntax/native evidence, checks complete census membership, requires each witness
+to belong to its row's cohort and have viable outcomes in both populations, and retains those actual outcomes.
+It never selects a witness from a desired verdict pair. Its compiler controls use actual exact/operator
+replacement text in typed selection traces; these are bounded controls, separate from the native inventory runs.
+
+| Exact-entry suffix | Viable witness and initial route / parent, or scoped absence |
+| --- | --- |
+| `the-first-generator-alone` | `L1851.iter.740`; effect; killed / survived |
+| `the-last-generator-alone` | `L1851.iter.741`; effect; killed / survived |
+| `the-first-reader-alone` | `L1849.chain.1219`; syntax; killed / survived |
+| `the-last-reader-alone` | `L1849.chain.1220`; effect; killed / survived |
+| `a-program-target-judged-for-its-first-reader-alone` | none; reader-specific result filtering absent; guards change build continuation |
+| `a-program-target-judged-for-its-last-reader-alone` | none; reader-specific result filtering absent; guards change build continuation |
+| `chain-and-blob-rules-on-each-clause-s-first-entry-alone` | `L273.iter.106`; effect; killed / survived |
+| `chain-and-blob-rules-on-each-clause-s-last-entry-alone` | `L273.iter.107`; effect; killed / survived |
+| `both-clauses-the-first-input-alone` | `L192.contains.224`; effect; killed / survived |
+| `both-clauses-the-last-input-alone` | `L192.contains.226`; effect; killed / survived |
+| `both-clauses-the-last-generator-alone` | `L191.chain.220`; syntax; killed / survived |
+| `a-program-target-judged-when-first-alone` | none; if-let branch absent from one-line boolean guard shapes |
+| `a-program-target-judged-when-last-alone` | none; if-let branch absent from one-line boolean guard shapes |
+| `a-program-target-built-when-first-alone` | none; generator-file position gate absent; cohort narrows owned targets or build guards |
+| `a-program-target-built-when-last-alone` | none; generator-file position gate absent; cohort narrows owned targets or build guards |
+| `a-lone-rs-refused-when-first-alone` | none; multiline else-if guard absent; only extension equality changes |
+| `a-lone-rs-refused-when-last-alone` | none; multiline else-if guard absent; only extension equality changes |
+| `a-middle-script-never-judged` | none; script-specific position predicate absent; iterator ends also drop middle Rust targets |
+| `a-middle-reader-never-judged` | none; chain has first/last but no two-ends variant; other candidates change generators or membership |
+| `a-middle-input-never-reached` | none; input-only position predicate absent; iterator ends narrow both roles |
+| `an-implementation-reader-never-judged` | none; implementation-role predicate absent; iterator positions are role-independent |
+| `a-marked-build-read-dropped-beside-other-generators` | none; form-generator association predicate absent; guards narrow by build-read position |
+| `only-a-form-s-first-input-reached` | none; input-only first predicate absent; iterator first narrows both roles |
+| `an-input-reached-through-a-link` | none; input-only link predicate absent; guards/endpoints/constants also affect generator links |
+| `held-judged-for-the-first-alone` | `L1857.iter.749`; effect; killed / survived |
+| `a-harness-never-judged-against-a-program-target` | none; harness-reader predicate absent; cohort changes held packages or continuation |
+| `the-last-live-form-alone` | `L253.chain.244`; syntax; killed / killed |
+| `a-harness-judged-by-its-first-role-alone` | `L1838.clogic.1411`; syntax; killed / survived |
+| `a-data-reader-never-judged` | none; runtime-data reader predicate absent; chain/membership endpoints are role-independent |
+| `a-build-read-naming-its-first-generator-alone` | `L2014.iter.829`; effect; killed / survived |
+| `a-middle-generator-never-reached` | none; generator-only position predicate absent; iterator ends narrow inputs too |
+| `a-transitive-generator-build-read-dropped` | none; dependency-depth predicate absent; cohort narrows unit/file positions |
+
+The `syntax` rows have identical formatted full-source replacements and viable native outcomes. The `effect`
+rows have these additional source-level arguments:
+
+- The generator, clause-file, held-package and attribution loops iterate immutable borrowed vectors or sets.
+  Their iterator advancement and lookahead have no user code or observable item destruction. First/last flags
+  therefore run exactly the retained element's original body in the same order as the corresponding
+  `take(1)` or `rev().take(1)` edit. Helper names are fresh; every other body statement remains unchanged.
+  The attribution witness retains the first refusal while losing later generator names, the diagnostic effect
+  established by the native shared-read fixture. It does not demonstrate acceptance of that build read.
+- The last-reader chain reverses the filtered borrowed program vector directly; the exact entry first collects
+  that same filtered sequence and then reverses it. The predicate only reads membership in immutable sets.
+  Both choose the same last matching reader, with no predicate side effects or owned-item destruction.
+- The direct input-membership candidates compare the same first/last `String` value as the exact entries.
+  The `Some(g)` argument coerces to the same borrowed string as explicit `Some(*g)`; the actual native
+  candidates compile. The copied alternatives fail `String: Copy` and provide no witness evidence.
+
+Compiled selection controls exercise the actual loop edits over empty through five-element vectors/sets,
+reader masks and membership masks, including unmatched input endpoints and repeated input values.
+They also retain concrete distinctions behind the absence rows:
+
+- A middle `.rs` generator remains under the exact middle-script omission; a generic two-ends generator loop
+  drops it. A middle-reader omission retains both end readers; the two chain candidates retain one end each.
+- The exact middle-input, first-input and middle-generator provenance edits retain every entry of the other
+  role. The generic file loop narrows both roles. Distinct three-entry generator/input clauses expose the
+  difference for all three edits; the initially killed exact first-input parent remains valid evidence.
+- A depth gate retains own/direct units and drops transitive ones. Three units with one file each expose the
+  difference from each of the three unit-position and three file-position candidates in that cohort.
+
+The remaining absence reasons follow the actual changed conditions. Program-target reader edits change the
+refusal set, while the overlapping generator guard changes continuation after refusals have been recorded.
+A target-build gate tests the generator file's position, while the owned-target cohort tests target positions,
+deduplication or manifest refusal. Role/data/harness/link and form-association edits introduce predicates absent
+from their candidates; permuting positions cannot reproduce a predicate tied to that role or association.
+For example, a singleton linked input still reaches every first/last/ends guard, while the exact input-role edit
+skips its link diagnostic. A constant false link condition also loses generator-link diagnostics. Both still
+reach the no-blob refusal where applicable. The multiline lone-`.rs` branch only has an equality-flip candidate,
+which changes the file kind independently of its position. The `if let` branches are outside the promised
+one-line boolean guard shape. None of these reasons treats a type refusal or an overlapping kill as coverage.
+
+Reproduce against the unchanged initial sources and the preceding evidence artifact:
+
+```bash
+python3 scripts/trust_witness_effects.py \
+  --evidence target/trust-adequacy/witness-evidence.json \
+  --output target/trust-adequacy/witness-classification.json
+bash scripts/trust_witness_effects.sh --self-test
+```
+
+The controls compile and finish successfully; a substituted last-element candidate for a first-element
+claim, and an inverted equality assertion, each compile but fail their trace assertion. This holds the
+controls' sensitivity. It is not an exhaustive semantic prover. All exact parent expected-killed entries
+remain required, including those without operator witnesses, before the final complete production sweeps.
+
 ## Remaining measurements
 
 Use the same manifest for the two populations; each invocation re-derives the full plan and refuses stale
@@ -476,8 +577,8 @@ of this diagnostic reports whether measurement and audit completed; the JSON's `
 criterion status. A completed measurement with survivors remains an unmet adequacy criterion.
 
 Operator reach remains incomplete. All initial source/provenance and trust.rs populations are measured above;
-semantic witness classification remains pending, before adding parent semantic tests. An actual viable semantic witness, or an explicit absence
-with its reason, is required; a desired verdict pair alone does not establish the same effect.
+semantic witnesses and scoped absences are recorded above, before adding parent semantic tests. The remaining
+pre-strengthening obligation verifies promised narrowing spellings and repeats affected measurements if a repair is needed.
 
 The final stage strengthens parent tests and runs complete production sweeps of `trust.rs`, `trust_generated.rs`
 and `trust_gate.rs`, plus the shared operators' compatibility sweep of `generated_header.rs`. Every exact parent
