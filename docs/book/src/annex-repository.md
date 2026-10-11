@@ -224,6 +224,50 @@ This is local integration evidence. Complete current-source mutation adequacy an
 remain open. Supplemental restoration counts at this checkpoint used an ignored one-off helper; the task tree
 owns its maintained replacement and a fresh native replay before further survivor assessments.
 
+## Checking restored inputs
+
+The adequacy diagnostic can capture the inputs in the Git index, then check that a native run restored them:
+
+```sh
+bash scripts/trust_adequacy.sh --snapshot-inputs --output target/trust-inputs.json
+# Run the task's native command and consume its own verdict.
+bash scripts/trust_adequacy.sh --check-inputs target/trust-inputs.json --output target/trust-input-check.json
+```
+
+Snapshots use `archogen-tracked-inputs/1`; check receipts use `archogen-tracked-input-check/1`. A field's meaning
+or required shape changing requires a new schema identifier; the snapshot reader refuses unknown schemas,
+missing/extra fields and duplicate JSON keys. These formats do not accept the earlier one-off helper dictionaries.
+The snapshot records the commit, producer hash, indexed path/mode/blob identity, working file permissions,
+byte size and SHA-256. Every regular file's Python hash must agree with the system hash, using `sha256sum`
+or `shasum -a 256` on standard input. This avoids parsing filenames from hash-tool output: spaces,
+quotes, tabs, newlines, backslashes and Unicode stay exact. The Git index and commit must remain stable while
+the census runs. Gitlinks contribute their indexed object identities only; their directories and implementation
+are never read. Ignored and untracked files, including a sweep's copied workspace, are outside this population.
+
+Snapshot and result paths must be canonical repository-relative paths under `target/`, on the repository's
+volume. Symlink components, other volumes and nonregular evidence files refuse. Git, Python and an independent
+system hash executable are required runtime tools; those external executables are used read-only. Generated
+evidence and synthetic Git self-test workspaces remain project-local.
+
+Outputs cannot overwrite indexed inputs, enter a gitlink or cross a nested Git boundary. Snapshot aliases refuse.
+Result files are replaced atomically, so an existing hardlink cannot cause a tracked input to be truncated.
+
+Exit zero means capture or complete restoration succeeded. Changed bytes, permissions, index entries, commit,
+producer or gitlink identities refuse, as do malformed snapshots and unavailable tools. Refusal exits two and
+does not count as a partial pass. A started check writes a `pending` result and replaces it with `restored` or
+`refused`; an interruption can leave `pending`. Consume the exit status and the receipt's snapshot hash together.
+Verification cannot overwrite its snapshot. It compares boundaries, restores no files itself, and requires the
+caller to hold tracked inputs fixed throughout the run; it is not a continuous change monitor.
+
+`bash scripts/trust_adequacy.sh --self-test` exercises this interface on synthetic Git workspaces, including
+intentional byte/index/mode/pin changes, absent files/tools, malformed evidence, special filenames and storage
+refusals. The existing planning, progress traces, population measurements and equivalence checks retain their
+interfaces. Input restoration evidence establishes no mutation kill, semantic classification or complete
+production adequacy: retain the native command's actual finishing verdict separately.
+
+Earlier supplemental restoration counts used ignored one-off helpers, as their task records qualify. This
+maintained producer supports fresh measurements; it does not retroactively make those historical helpers durable.
+
 ## Historical effects and current self-tests
 
 The effects diagnostic keeps the [initial semantic witness review](trust-adequacy.md#semantic-witnesses-in-the-initial-cohort)

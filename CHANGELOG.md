@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — maintained input snapshots verify native restoration
+
+`ARCHOGEN-M3-0681` (leaf `M3.6.9.6.3.2.2.9.7.1`), `2026-10-12`.
+
+- Extend the existing adequacy diagnostic with strict indexed-input snapshot/check commands: working bytes,
+  permissions and index identities; independent Python/system SHA-256; gitlinks metadata only. Refuse unsafe
+  storage, tracked/nested-Git output writes, malformed evidence and stale started-check success; atomic outputs
+  preserve hardlinks. Existing planning/measurement interfaces stay intact.
+- Real CLI captures/restores all 1003 inputs and refuses an intentional byte change. Hash/compare/truncation
+  reversals fail permanent controls; restored suite passes 23 tests, native contracts pass and effects/planner
+  checks remain green. Fresh final staged capture/check required before commit.
+- Book/tool/live records align. Version-register prose now names its actual Rust enumeration; diagnostic schema
+  contracts are local to their readers. Historical one-off helper limits remain explicit; current native repair
+  replay follows, without a complete mutation-adequacy or runner-baseline compatibility claim.
+
 ## archogen — configuration checkpoint passes full local integration
 
 `ARCHOGEN-M3-0680` (leaf `M3.6.9.6.3.2.2.9.4`), `2026-10-12`.

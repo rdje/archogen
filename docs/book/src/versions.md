@@ -12,8 +12,8 @@ in the code, listed on this page, and held there by a check that fails when the 
 > **In one minute, for engineers.** `ROADMAP.md` §15 versions the language apart from the engine, catalog entries,
 > device and timing models and evidence formats, and requires a description to keep its meaning under its locked
 > semantic version. Each surface below gives its version, where it is declared, what forces a new one, what refuses
-> an unannounced change, and what it keeps. `VERSION-REGISTER` (`scripts/check_version_register.sh`) requires every
-> version the code declares to be registered here with the same value; frozen verdicts hold the engine to what
+> an unannounced change, and what it keeps. `VERSION-REGISTER` (`scripts/check_version_register.sh`) requires the
+> Rust declarations in its population to be registered here with the same value; frozen verdicts hold the engine to what
 > descriptions mean, and golden files that are never rewritten hold each format to its identifier.
 
 ## How it works
@@ -21,15 +21,17 @@ in the code, listed on this page, and held there by a check that fails when the 
 `ROADMAP.md` §15 separates the version of the language from the versions of the engine, catalog
 entries, device and timing models, and evidence formats. It also requires that "a source description
 retains its meaning under its locked semantic version". This page lists every versioned surface this
-repository has today. For each one it gives where the version is declared, what change forces a new
+repository registers from Rust declarations. For each one it gives where the version is declared, what change forces a new
 version, what refuses an unannounced change, and what a description or artifact written against it can
-rely on.
+rely on. Project-local diagnostic schemas are documented with their producers and readers, including
+[tracked-input snapshots and checks](annex-repository.md#checking-restored-inputs).
 
 `VERSION-REGISTER` (`scripts/check_version_register.sh`) keeps this page in step with the code. It reads
-every version the code declares: each format identifier, each version constant, each profile id, the
-engine API's version, and the engine version in the workspace's manifests. Each one must belong to an entry below with the same value,
+public Rust format/version constants, profile identifiers and API version declarations under `crates/*/src`,
+and the engine version in workspace-member manifests. Each one must belong to an entry below with the same value,
 and every entry's declaration must still exist. A new format, or a bump, therefore cannot land without
-this page changing too.
+this page changing too within that population. The checker does not enumerate Python diagnostic schema strings;
+their versioned readers and permanent refusal controls enforce their local contracts.
 
 ## `language`
 

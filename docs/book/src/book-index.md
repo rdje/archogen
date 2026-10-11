@@ -71,6 +71,8 @@ a change that leaves it stale, so it is never edited by hand.
 - catalog-s0 — [What is versioned, and what changing it costs](versions.md#catalog-s0)
 - **check-passing convention** — [definition](glossary.md), [Where the engine's knowledge comes from: the
   catalog](catalog.md)
+- Checking restored inputs — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#checking-restored-inputs)
 - chipdoc — [What this project relies on from outside](ledger.md#chipdoc)
 - **CI** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [The archogen
   command line](cli.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What this project
@@ -393,7 +395,8 @@ a change that leaves it stale, so it is never edited by hand.
   checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [Checks that
   must not share a mistake: the trust gate](trust.md), [The runtime: decisions, not actions](runtime.md), [Where
   generated systems run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the
+  repository honest](annex-repository.md)
 - rust-reference — [What this project relies on from outside](ledger.md#rust-reference)
 - rust-toolchain — [What this project relies on from outside](ledger.md#rust-toolchain)
 - **RV32IMAC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
@@ -409,7 +412,7 @@ a change that leaves it stale, so it is never edited by hand.
 - semulith — [What this project relies on from outside](ledger.md#semulith)
 - Sets: what a part accepts — [Matching an offer to a requirement](matching.md#sets-what-a-part-accepts)
 - **SHA-256** — [definition](glossary.md), [What a report may claim](evidence.md), [Generated-sources test
-  adequacy](trust-adequacy.md)
+  adequacy](trust-adequacy.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - **shared item** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
 - **SI** — [definition](glossary.md), [Quantities and units](quantities.md)
 - Silence is not admission — [The supported profile](profile.md#silence-is-not-admission)
