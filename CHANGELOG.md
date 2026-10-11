@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — complete transitive generator build-read attribution
+
+`ARCHOGEN-M3-0655` (leaf `M3.6.9.6.2.4`), `2026-10-11`.
+
+- Add a parent control in which three generator targets share a transitive dependency, beside a plain script.
+  The plain dependency passes; marked and declared variants require every generator's precise chain refusal.
+  Reading roots do not compile that dependency, isolating the generator-build rule and diagnostic attribution.
+- All three owned exact regressions now have named finishing parent kills, strict exit 0; control passes and
+  exact parent baseline 103 / 0 failed. Complete native IDs/commands/names and five source/system SHA-256
+  comparisons agree after restoration; production prefixes and route tests unchanged.
+- Focused tier (format, strict Clippy, whole suite) and pinned book pass; final staged stamp required.
+  Close the 22-gap trust repair group; all 30 initial survivors individually repaired. Own the combined
+  all-32 exact census and four sequential full-file measurements
+  before execution, update the book's completed-repair stage and advance current pointers to the final census.
+
 ## archogen — every reader and held role judged by parent controls
 
 `ARCHOGEN-M3-0654` (leaf `M3.6.9.6.2.3`), `2026-10-11`.

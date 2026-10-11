@@ -553,7 +553,7 @@ python3 scripts/trust_witness_effects.py --spellings \
 
 No spelling repair is needed in this cohort. The semantic table's absent role predicates, multiline and
 if-let shapes, and two-ends chain variant remain explicit limits rather than missing promised loop spellings.
-The initial-measurement stage is complete; all parent expected-killed repairs and full production sweeps remain.
+The initial measurements preceded the parent repairs below; final census and full production sweeps remain.
 
 ## Parent repairs
 
@@ -588,13 +588,19 @@ allowed and both third-role generator kinds refused; and runtime-only data reade
 Complete diagnostic sets hold attribution even when another refusal remains. The parent baseline passes
 102 / 0 failed, all source hashes restore and production judgments stay unchanged.
 
+Verified `2026-10-11`, `M3.6.9.6.2.4`: all three build-read entries have named finishing parent kills,
+strict exit 0. Three tools share a transitive dependency beside a plain script; the plain dependency passes.
+Marked and declared variants require every tool's exact chain refusal, while no reading root compiles that file.
+The parent baseline passes 103 / 0 failed; source/system digests agree after restoration. All initial survivor
+repairs are individually verified. The combined all-32 exact census is next; complete sweeps and review remain.
+
 The initial tables remain historical measurements of the earlier parent population. Production judgments and
-route controls are unchanged. Build-read repairs and the final exact census/full sweeps remain open.
+route controls are unchanged. The final exact census/full sweeps remain open.
 
 ## Remaining measurements
 
-Use the same manifest for the two populations; each invocation re-derives the full plan and refuses stale
-inputs or a changed selection before executing the actual sweep. For example:
+The span-cohort procedure uses the same manifest for both populations; each invocation re-derives the plan and
+refuses stale inputs or a changed selection before executing the actual sweep. For example:
 
 ```bash
 python3 scripts/trust_adequacy.py --plan target/trust-adequacy/plan.json \
@@ -616,7 +622,7 @@ Operator reach remains incomplete. All initial source/provenance and trust.rs po
 semantic witnesses, scoped absences and promised-spelling viability are recorded above. No operator repair was
 needed before parent strengthening; these initial results do not satisfy the final adequacy criterion.
 
-Parent strengthening continues before complete production sweeps of `trust.rs`, `trust_generated.rs`
-and `trust_gate.rs`, plus the shared operators' compatibility sweep of `generated_header.rs`. Every exact parent
+Parent repairs precede the final combined exact census and complete production sweeps of `trust.rs`,
+`trust_generated.rs` and `trust_gate.rs`, plus the shared operators' compatibility sweep of `generated_header.rs`. Every exact parent
 entry must have a finishing kill; every sweep survivor needs a justified equivalence record. These stages and
 the independent implementation review remain open. No completed catalogue subset establishes full adequacy.
