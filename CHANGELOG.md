@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — final exact parent mutation census passes
+
+`ARCHOGEN-M3-0656` (leaf `M3.6.9.6.3.1`), `2026-10-11`.
+
+- Run all 32 reviewed exact parent entries together against the final committed population: every entry
+  has a finishing named kill, strict exit 0. Baseline 103 / 0 failed; no timeout, unjudged or unviable result.
+- Audit complete census IDs, commands and native names; retain every actual killing name in the leaf.
+  Original/restored/committed/system SHA-256 values agree for five source files. Both initially killed
+  entries retain their original killing-name sets; independent book-selector parity passes.
+- Historical initial outcomes remain intact. Record the passed exact half of the criterion separately
+  from pending complete production sweeps, equivalent classifications and independent review. No Rust,
+  test, operator or production edit; pinned book/index/glossary/live pass. Complete trust.rs parent sweep next.
+
 ## archogen — complete transitive generator build-read attribution
 
 `ARCHOGEN-M3-0655` (leaf `M3.6.9.6.2.4`), `2026-10-11`.

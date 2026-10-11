@@ -553,7 +553,7 @@ python3 scripts/trust_witness_effects.py --spellings \
 
 No spelling repair is needed in this cohort. The semantic table's absent role predicates, multiline and
 if-let shapes, and two-ends chain variant remain explicit limits rather than missing promised loop spellings.
-The initial measurements preceded the parent repairs below; final census and full production sweeps remain.
+The initial measurements preceded the parent repairs and final exact census below; full production sweeps remain.
 
 ## Parent repairs
 
@@ -592,10 +592,21 @@ Verified `2026-10-11`, `M3.6.9.6.2.4`: all three build-read entries have named f
 strict exit 0. Three tools share a transitive dependency beside a plain script; the plain dependency passes.
 Marked and declared variants require every tool's exact chain refusal, while no reading root compiles that file.
 The parent baseline passes 103 / 0 failed; source/system digests agree after restoration. All initial survivor
-repairs are individually verified. The combined all-32 exact census is next; complete sweeps and review remain.
+repairs are individually verified. The combined exact census follows below; complete sweeps and review remain.
+
+Verified `2026-10-11`, `M3.6.9.6.3.1`: all 32 reviewed exact parent entries have named finishing kills in one
+strict native run, exit 0; baseline 103 / 0 failed, no timeout, unjudged or unviable outcome. Every identity and
+command agrees with the census. All five source files match original/restored/committed/system hashes at
+`22a0890`; the two initially killed entries retain their original killing names. `docs/tasks/M3.md` retains
+every final native name. Reproduce the complete exact parent population:
+
+```bash
+cargo xtask mutate --timeouts-fail --only \
+  $(rg '^mutation parent-' xtask/mutations.txt | cut -d ' ' -f 2)
+```
 
 The initial tables remain historical measurements of the earlier parent population. Production judgments and
-route controls are unchanged. The final exact census/full sweeps remain open.
+route controls are unchanged. Complete production sweeps and independent review remain open.
 
 ## Remaining measurements
 
@@ -622,7 +633,6 @@ Operator reach remains incomplete. All initial source/provenance and trust.rs po
 semantic witnesses, scoped absences and promised-spelling viability are recorded above. No operator repair was
 needed before parent strengthening; these initial results do not satisfy the final adequacy criterion.
 
-Parent repairs precede the final combined exact census and complete production sweeps of `trust.rs`,
-`trust_generated.rs` and `trust_gate.rs`, plus the shared operators' compatibility sweep of `generated_header.rs`. Every exact parent
-entry must have a finishing kill; every sweep survivor needs a justified equivalence record. These stages and
-the independent implementation review remain open. No completed catalogue subset establishes full adequacy.
+Complete production sweeps of `trust.rs`, `trust_generated.rs` and `trust_gate.rs`, plus the shared operators'
+compatibility sweep of `generated_header.rs`, follow the final exact census. Every sweep survivor needs a
+justified equivalence record. Full adequacy also requires these sweeps and the independent implementation review.
