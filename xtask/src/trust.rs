@@ -2498,6 +2498,7 @@ pub(crate) mod tests {
 
     use super::{inventory_with, read_roots, site_extent, Digest, Outcome};
     use crate::json::Json;
+    use std::ffi::OsStr;
     use std::path::{Path, PathBuf};
     use std::process::Command;
 
@@ -2506,6 +2507,194 @@ pub(crate) mod tests {
             .parent()
             .unwrap()
             .to_path_buf()
+    }
+
+    fn bound_configuration_roots(
+        real: &Path,
+        source: Option<&OsStr>,
+    ) -> Result<Vec<PathBuf>, String> {
+        let real = real
+            .canonicalize()
+            .map_err(|e| format!("cannot canonicalize the test root: {e}"))?;
+        let Some(source) = source else {
+            return Ok(vec![real]);
+        };
+        let source = Path::new(source);
+        if !source.is_absolute() {
+            return Err("the sweep source must name an absolute repository root".to_owned());
+        }
+        let source = source
+            .canonicalize()
+            .map_err(|e| format!("cannot canonicalize the sweep source: {e}"))?;
+        // Discover the directory's own repository, not a work tree selected by inherited GIT_* overrides.
+        let mut command = Command::new("git");
+        command
+            .args([
+                "-c",
+                "core.commitGraph=false",
+                "rev-parse",
+                "--show-toplevel",
+            ])
+            .current_dir(&source)
+            .env_clear()
+            .env("GIT_NO_REPLACE_OBJECTS", "1");
+        for key in ["PATH", "HOME"] {
+            if let Some(value) = std::env::var_os(key) {
+                command.env(key, value);
+            }
+        }
+        let output = command
+            .output()
+            .map_err(|e| format!("cannot discover the sweep source's Git root: {e}"))?;
+        if !output.status.success() {
+            return Err("the sweep source is not a Git working tree".to_owned());
+        }
+        let top = String::from_utf8(output.stdout)
+            .map_err(|_| "the sweep source's Git root is not UTF-8".to_owned())?;
+        let top = Path::new(top.strip_suffix('\n').unwrap_or(&top))
+            .canonicalize()
+            .map_err(|e| format!("cannot canonicalize the sweep source's Git root: {e}"))?;
+        if top != source {
+            return Err("the sweep source must be its Git top-level".to_owned());
+        }
+        if real != source.join("target/mutation-sweep/tree") {
+            return Err(
+                "the test root must be exactly the source's target/mutation-sweep/tree child"
+                    .to_owned(),
+            );
+        }
+        Ok(vec![real, source])
+    }
+
+    pub(crate) fn configuration_roots() -> Vec<PathBuf> {
+        bound_configuration_roots(
+            &real_root(),
+            std::env::var_os("ARCHOGEN_SWEEP_SOURCE").as_deref(),
+        )
+        .unwrap_or_else(|why| panic!("ARCHOGEN_SWEEP_SOURCE refused: {why}"))
+    }
+
+    fn binding_layout(name: &str) -> (PathBuf, PathBuf, PathBuf) {
+        let base = real_root().join("target/trust-tests").join(name);
+        let _ = std::fs::remove_dir_all(&base);
+        let source = base.join("source");
+        let copy = source.join("target/mutation-sweep/tree");
+        std::fs::create_dir_all(&copy).unwrap();
+        git(&source, &["init", "-q"]);
+        (
+            base,
+            source.canonicalize().unwrap(),
+            copy.canonicalize().unwrap(),
+        )
+    }
+
+    #[test]
+    fn sweep_source_binding_accepts_unset_exact_and_canonical_aliases() {
+        let (base, source, copy) = binding_layout("source-binding-positive");
+        for root in [real_root(), copy.clone()] {
+            assert_eq!(
+                bound_configuration_roots(&root, None).unwrap(),
+                [root.canonicalize().unwrap()]
+            );
+        }
+        let expected = vec![copy.clone(), source.clone()];
+        assert_eq!(
+            bound_configuration_roots(&copy, Some(source.as_os_str())).unwrap(),
+            expected
+        );
+        #[cfg(unix)]
+        {
+            let source_alias = base.join("source-alias");
+            let copy_alias = base.join("copy-alias");
+            std::os::unix::fs::symlink(&source, &source_alias).unwrap();
+            std::os::unix::fs::symlink(&copy, &copy_alias).unwrap();
+            assert_eq!(
+                bound_configuration_roots(&copy, Some(source_alias.as_os_str())).unwrap(),
+                expected
+            );
+            assert_eq!(
+                bound_configuration_roots(&copy_alias, Some(source.as_os_str())).unwrap(),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn sweep_source_binding_refuses_malformed_unrelated_and_merely_containing_roots() {
+        let (base, source, copy) = binding_layout("source-binding-negative");
+        let other = base.join("other");
+        std::fs::create_dir_all(&other).unwrap();
+        git(&other, &["init", "-q"]);
+        let nested = source.join("nested");
+        let nongit = base.join("not-a-git-root");
+        std::fs::create_dir_all(&nested).unwrap();
+        std::fs::create_dir_all(&nongit).unwrap();
+        for candidate in [
+            PathBuf::new(),
+            PathBuf::from("."),
+            base.join("nul\0"),
+            base.join("missing"),
+            nongit,
+            source.join("target"),
+            nested,
+            other,
+            real_root(),
+        ] {
+            assert!(
+                bound_configuration_roots(&copy, Some(candidate.as_os_str())).is_err(),
+                "unexpectedly admitted source {candidate:?}"
+            );
+        }
+        for wrong_copy in [copy.join("deeper"), base.join("beside")] {
+            std::fs::create_dir_all(&wrong_copy).unwrap();
+            assert!(bound_configuration_roots(&wrong_copy, Some(source.as_os_str())).is_err());
+        }
+        // Exact layout alone cannot authorize a directory nested inside a different Git root.
+        let intermediate = source.join("intermediate");
+        let intermediate_copy = intermediate.join("target/mutation-sweep/tree");
+        std::fs::create_dir_all(&intermediate_copy).unwrap();
+        assert!(
+            bound_configuration_roots(&intermediate_copy, Some(intermediate.as_os_str()))
+                .unwrap_err()
+                .contains("Git top-level")
+        );
+        #[cfg(unix)]
+        {
+            // Canonicalizing the expected child too would incorrectly admit this redirected physical location.
+            let escaped = base.join("redirected-copy");
+            std::fs::rename(&copy, &escaped).unwrap();
+            std::os::unix::fs::symlink(&escaped, &copy).unwrap();
+            assert!(bound_configuration_roots(&copy, Some(source.as_os_str())).is_err());
+        }
+    }
+
+    #[test]
+    fn sweep_source_environment_is_validated_before_fixture_inventory() {
+        const CHILD: &str = "ARCHOGEN_SOURCE_BINDING_CHILD";
+        if std::env::var_os(CHILD).is_some() {
+            configuration_roots();
+            return;
+        }
+        let output = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "trust::tests::sweep_source_environment_is_validated_before_fixture_inventory",
+                "--nocapture",
+            ])
+            .env(CHILD, "1")
+            .env("ARCHOGEN_SWEEP_SOURCE", real_root())
+            .output()
+            .unwrap();
+        assert_eq!(
+            output.status.code(),
+            Some(101),
+            "invalid source unexpectedly admitted"
+        );
+        let diagnostic = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            diagnostic.contains("ARCHOGEN_SWEEP_SOURCE refused:"),
+            "{diagnostic}"
+        );
     }
 
     pub(crate) fn git(dir: &Path, args: &[&str]) {
@@ -2609,7 +2798,13 @@ pub(crate) mod tests {
             git(&self.repo, &["commit", "-q", "-m", "change"]);
         }
         pub(crate) fn run_into(&self, out: &str) -> Outcome {
-            inventory_with(&self.repo, "HEAD", &self.base.join(out), &[real_root()]).unwrap()
+            inventory_with(
+                &self.repo,
+                "HEAD",
+                &self.base.join(out),
+                &configuration_roots(),
+            )
+            .unwrap()
         }
         pub(crate) fn run(&self) -> Outcome {
             self.run_into("out")

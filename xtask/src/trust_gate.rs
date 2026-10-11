@@ -1378,7 +1378,7 @@ mod tests {
 
     // ── F30: §14.4's five cases, each in a scratch workspace judged commit by commit (ledger `TI-H9`) ─────────────
 
-    use crate::trust::tests::{manifest, real_root, two_roots, Fixture};
+    use crate::trust::tests::{configuration_roots, manifest, real_root, two_roots, Fixture};
 
     const DEP: &str = "[dependencies]\ncommon = { path = \"../common\" }\n";
 
@@ -1448,8 +1448,14 @@ mod tests {
     }
 
     fn judge_head(f: &Fixture, out: &str) -> (super::Judgement, String) {
-        let (j, text) =
-            gate(&f.repo, "HEAD", None, &f.base.join(out), &[real_root()]).expect("judged");
+        let (j, text) = gate(
+            &f.repo,
+            "HEAD",
+            None,
+            &f.base.join(out),
+            &configuration_roots(),
+        )
+        .expect("judged");
         assert_eq!(
             std::fs::read_to_string(f.base.join(out).join(super::REPORT)).expect("written"),
             text

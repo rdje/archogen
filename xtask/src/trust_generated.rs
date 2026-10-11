@@ -494,7 +494,9 @@ mod tests {
     //! ending at a step that refuses, or unable to judge with that step's refusals beside a failed build.
 
     use super::Generated;
-    use crate::trust::tests::{real_root, refused, two_roots, written, ROOTS as TWO_ROOTS};
+    use crate::trust::tests::{
+        configuration_roots, refused, two_roots, written, ROOTS as TWO_ROOTS,
+    };
     use crate::trust::{inventory_with, read_roots};
 
     const GOOD: &str = "(defgenerated \"crates/a/src/table.rs\" (generator \"scripts/gen.sh\") (inputs \"data/t.csv\") \
@@ -754,7 +756,8 @@ mod tests {
             "#[no_mangle]\npub extern \"C\" fn f() {}\n",
             &[],
         );
-        let Err(err) = inventory_with(&f.repo, "HEAD", &f.base.join("out"), &[real_root()]) else {
+        let Err(err) = inventory_with(&f.repo, "HEAD", &f.base.join("out"), &configuration_roots())
+        else {
             panic!("a build failed and the run judged");
         };
         assert!(
@@ -1215,7 +1218,8 @@ mod generator_tests {
     //! programs', a site both compile admitted once; a generator that is a root its own build.
 
     use crate::trust::tests::{
-        admit, manifest, real_root, refused, says, two_roots, written, Fixture, ROOTS as TWO_ROOTS,
+        admit, configuration_roots, manifest, refused, says, two_roots, written, Fixture,
+        ROOTS as TWO_ROOTS,
     };
     use crate::trust::{inventory_with, Outcome};
 
@@ -1521,7 +1525,7 @@ mod generator_tests {
             ],
         );
         let out = f.base.join("out");
-        let err = match inventory_with(&f.repo, "HEAD", &out, &[real_root()]) {
+        let err = match inventory_with(&f.repo, "HEAD", &out, &configuration_roots()) {
             Err(e) => e,
             Ok(Outcome::Written(_)) => panic!("written"),
             Ok(Outcome::Refused(r)) => panic!("refused, where the gate could not judge: {r:#?}"),
@@ -1546,7 +1550,8 @@ mod order_tests {
     //! host alone.
 
     use crate::trust::tests::{
-        manifest, real_root, refused, says, two_roots, written, Fixture, ROOTS as TWO_ROOTS,
+        configuration_roots, manifest, refused, says, two_roots, written, Fixture,
+        ROOTS as TWO_ROOTS,
     };
     use crate::trust::{inventory_with, Outcome};
 
@@ -1572,7 +1577,7 @@ mod order_tests {
     }
 
     fn outcome(f: &Fixture) -> Result<Outcome, String> {
-        inventory_with(&f.repo, "HEAD", &f.base.join("out"), &[real_root()])
+        inventory_with(&f.repo, "HEAD", &f.base.join("out"), &configuration_roots())
     }
 
     #[test]
@@ -1745,15 +1750,15 @@ mod order_tests {
         assert_eq!(unread, ["crates/a/src/never.rs"]);
         // Off the baseline's host — no baseline yet — nothing is stale.
         let out = f.base.join("gate");
-        let (j, _) =
-            crate::trust_gate::gate(&f.repo, "HEAD", None, &out, &[real_root()]).expect("judged");
+        let (j, _) = crate::trust_gate::gate(&f.repo, "HEAD", None, &out, &configuration_roots())
+            .expect("judged");
         assert!(j.refused.is_empty(), "{:#?}", j.refused);
         // The proposed baseline committed, the gate is on its host: the unread form is stale, and it alone.
         let proposal =
             std::fs::read_to_string(out.join(crate::trust_gate::PROPOSAL)).expect("a proposal");
         f.commit(&[("trust/baseline.eadl", proposal)]);
-        let (j, _) =
-            crate::trust_gate::gate(&f.repo, "HEAD", None, &out, &[real_root()]).expect("judged");
+        let (j, _) = crate::trust_gate::gate(&f.repo, "HEAD", None, &out, &configuration_roots())
+            .expect("judged");
         assert_eq!(
             j.refused,
             ["trust-baseline-stale: trust/roots.eadl: `(defgenerated \"crates/a/src/never.rs\" …)` declares a file no program reads — remove it, so a generated source read again is reviewed again"]
@@ -1767,11 +1772,18 @@ mod gate_tests {
     //! form added, changed and removed in the change part and named in the standing list; an edit to a declared
     //! generator reported and to an undeclared script "unchanged"; the report stating what the inventory does not see.
 
-    use crate::trust::tests::{real_root, two_roots, Fixture, ROOTS as TWO_ROOTS};
+    use crate::trust::tests::{configuration_roots, two_roots, Fixture, ROOTS as TWO_ROOTS};
     use crate::trust_gate::{gate, Judgement, PROPOSAL};
 
     fn judge(f: &Fixture, out: &str) -> (Judgement, String) {
-        gate(&f.repo, "HEAD", None, &f.base.join(out), &[real_root()]).expect("judged")
+        gate(
+            &f.repo,
+            "HEAD",
+            None,
+            &f.base.join(out),
+            &configuration_roots(),
+        )
+        .expect("judged")
     }
 
     fn pair(name: &str, forms: &str) -> Fixture {

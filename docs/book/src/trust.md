@@ -441,7 +441,11 @@ Those modes are built in `M3.6.9.1`; `M3.6.9.2.1` adds source-span replacements 
 semantic and CLI restoration controls described in `docs/book/src/verification.md`. `M3.6.9.3.1` adds explicit
 configuration-root lists: each outer configuration belongs to its innermost supplied root and must still match
 the judged tree's tracked bytes and alias-only content rules. Intermediate target configurations and ancestors
-above all supplied roots remain refused. The production gate supplies its repository alone. Canonical source
-binding and copied-sweep integration, exact mutation pairs and production adequacy measurements remain pending.
+above all supplied roots remain refused. The production gate supplies its repository alone. The tests' seam
+(`M3.6.9.3.2`) admits `ARCHOGEN_SWEEP_SOURCE` only after canonicalizing it and the test root, verifying that the
+source is its own Git top-level, and requiring the test root to be exactly its `target/mutation-sweep/tree` child.
+Canonical aliases are accepted; unrelated roots, enclosing ancestors, deeper copies and redirected physical
+locations refuse before inventory. The source hint cannot change production's root list. Automatic sweep injection,
+exact mutation pairs and production adequacy measurements remain pending.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

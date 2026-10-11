@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — copied tests bind their configuration source to its own Git root
+
+`ARCHOGEN-M3-0635` (leaf `M3.6.9.3.2`), `2026-10-11`.
+
+- Test-only configuration roots now validate the optional source hint: canonical paths, the source's own Git
+  top-level and exactly its physical target/mutation-sweep/tree child. All fixture inventory/gate callers use the
+  validated wrapper. Unset hints keep one root; malformed/unrelated/enclosing/deeper/redirected locations refuse
+  before inventory. Production's sole root is unchanged; sweep overwrite/injection remains the next child.
+- Validation: after root-list support the explicitly hinted copied parent still fails; repaired fresh copied
+  baseline passes with zero attempted mutations. Three seam tests pass, including canonical aliases and invalid
+  child-process environment; four strict named controls are killed. Focused format/Clippy/all contracts pass;
+  final staged official run with Git access required for the stamp. Book/staged doctrines required.
+- Bindings/callers, controls, accepted design, book and task/resume records agree. A zero-attempt baseline
+  establishes copied-test integration only, never mutation adequacy; automatic source injection next.
+
 ## archogen — explicit configuration roots retain innermost ownership and content rules
 
 `ARCHOGEN-M3-0634` (leaf `M3.6.9.3.1`), `2026-10-11`.

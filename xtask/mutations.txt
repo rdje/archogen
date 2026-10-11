@@ -4621,3 +4621,47 @@ from
 to
                 Ok::<(), Failure>(())?;
 end
+
+mutation configuration-source-non-root-admitted
+file xtask/src/trust.rs
+test -p xtask trust::tests::sweep_source_binding_refuses_malformed_unrelated_and_merely_containing_roots
+expect killed
+why M3.6.9.3.2: an exact-looking copy layout under a directory inside another Git root cannot authorize that directory as the source.
+from
+            if top != source {
+to
+            if false {
+end
+
+mutation configuration-source-descendant-copy-admitted
+file xtask/src/trust.rs
+test -p xtask trust::tests::sweep_source_binding_refuses_malformed_unrelated_and_merely_containing_roots
+expect killed
+why M3.6.9.3.2: only the exact target/mutation-sweep/tree child is admitted, not a deeper or merely enclosed directory.
+from
+            if real != source.join("target/mutation-sweep/tree") {
+to
+            if !real.starts_with(source.join("target/mutation-sweep/tree")) {
+end
+
+mutation configuration-source-redirected-child-admitted
+file xtask/src/trust.rs
+test -p xtask trust::tests::sweep_source_binding_refuses_malformed_unrelated_and_merely_containing_roots
+expect killed
+why M3.6.9.3.2: canonical actual roots cannot follow a symlink that redirects the expected copy child to a different physical location.
+from
+            if real != source.join("target/mutation-sweep/tree") {
+to
+            if real != source.join("target/mutation-sweep/tree").canonicalize().unwrap_or_else(|_| source.join("target/mutation-sweep/tree")) {
+end
+
+mutation configuration-source-environment-ignored
+file xtask/src/trust.rs
+test -p xtask trust::tests::sweep_source_environment_is_validated_before_fixture_inventory
+expect killed
+why M3.6.9.3.2: the fixture wrapper must validate the supplied source before inventory; an invalid child-process hint cannot be silently ignored.
+from
+                std::env::var_os("ARCHOGEN_SWEEP_SOURCE").as_deref(),
+to
+                None,
+end

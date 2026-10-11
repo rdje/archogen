@@ -137,7 +137,9 @@ sweep as it stands (round 19). This record decides a criterion, and states how f
    `M3.6.9.3.1` builds explicit root-list support in the configuration checker and trust inventory/gate; the
    catalog's single-root entry point and production's sole repository root remain unchanged. Filesystem controls
    hold root-order independence and independent tracked-byte/content/symlink/target/ancestor refusals. Canonical
-   source binding and sweep injection are the next children, `.9.3.2` and `.9.3.3`; no copied-test pass is claimed yet.
+   source binding is built by `.9.3.2`: test wrappers validate canonical paths, the source's own Git top-level and
+   the exact physical copy child before inventory. Explicit source hints now let a real copied parent fixture pass;
+   zero mutations were attempted in that probe. Automatic overwrite/injection remains `.9.3.3`, before measurements.
 5. **The sweep takes each file's complete production range.** `trust.rs`, `trust_generated.rs` and `trust_gate.rs`
    each run from the first function or method to the first `#[cfg(test)]`, as the existing tool does. No function
    filter or extraction is needed. This includes the helpers and their callers: the reading order, read sets and
