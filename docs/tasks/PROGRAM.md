@@ -1341,6 +1341,58 @@ mdBook that is the director's window into the project.
   Verification: `2026-10-11` — the Verification Log's row
   Commit: `ARCHOGEN-PROGRAM-0607 (leaf PROGRAM.80)`
 
+
+- ID: `PROGRAM.81`
+  Status: `done` — filed, cleaned and verified `2026-10-11`, the seventh daily artifact cleanup
+  Goal: remove only proven regenerable project-owned artifacts, preserve cited evidence and other Git repositories,
+  and overwrite `docs/ARTIFACT_CLEANUP.md` with this run's date and result.
+  Acceptance: metadata census before deletion; exact deletion list with tracked regeneration path; no active compiler
+  or mutation job; residue census; cold focused validation; cleanup record, task logs and book kept aligned.
+  Inventory: before deletion, a metadata-only census of `target/`, excluding `.git` and links, measures 25 908 165 945
+  logical file bytes in 296 411 files. Most growth since the sixth run is retained historical review workspaces;
+  the twelve largest review/work directories each contain compiled products. No sealed case text was read.
+  Exact safe candidates: `target/debug/incremental` — 1 896 571 227 bytes, 17 811 files, 1 218 `.bin`, no `.log`;
+  `target/wasm32-unknown-unknown/debug/incremental` — 126 290 198 bytes, 729 files, 27 `.bin`, no `.log`.
+  Cargo regenerates both through the tracked focused and wasm build commands. `target/debug/deps` has 789 files,
+  no `.bin` or `.log`; `target/release` has 117 files, no `.bin` or `.log`, so neither needs stray-file deletion.
+  Direction: remove only those two main-repository incremental caches after a process census, then verify cold.
+  Retain historical review containers and their reports/probes/logs: they carry cited evidence and nested Git
+  repositories, whose read-only boundary this cleanup will not cross. Retain active round-15 and round-32 evidence,
+  CI tools, dependency products, Miri's sysroot and the other retained products of the sixth run.
+  Trigger: the sixth run's record is dated `2026-10-10`, committed at `2026-10-10 00:31:07 UTC`; this daily run is
+  started just before the next 24-hour boundary and will complete in this session. No off-volume data is touched.
+  Deleted: exactly those two incremental directories — 2 022 861 425 logical file bytes, 18 540 files, 1 245 `.bin`.
+  Residue census immediately after removal: both paths `gone`. The preceding OS-access handoff census printed
+  `handoff: OK`; the active independent reviewer uses synthetic Python probes and no compiler or shared fixtures.
+  Cold focused verification: `make focused` → `passed — 3 passed, 0 failed`, including all contract tests; no stamp
+  was written because the restricted process could not name the Git tree. Final staged-tree stamping follows after
+  the documentation is complete, with Git access; the hook requires its passing stamp.
+  `bash scripts/wasm_build.sh` → exit 0, all nine derived I/O-free crates built for `wasm32-unknown-unknown` after
+  removal of that target's incremental cache. Dependency products were retained, so these are cold-cache checks,
+  not claims of a from-source rebuild of all dependencies. Book anchors/glossary/index → OK (316 index entries).
+  Lockstep: the latest-only cleanup record, the book's maintenance procedure, this leaf and both logs, changelog;
+  MEMORY names the received review reports and the next owned repair. Product milestones unchanged. The first
+  commit attempt required the standard changelog rollover at 40 entries; `bash scripts/check_history_ledgers.sh
+  --seal` → segment `0022` sealed byte for byte, 20 live entries kept. It also exposed the registry initialization
+  defect, owned as `PROGRAM.82`, next; no repair to that code is mixed into this cleanup.
+  Verification: `2026-10-11` — the Verification Log's row
+  Commit: `ARCHOGEN-PROGRAM-0610 (leaf PROGRAM.81)`
+
+
+- ID: `PROGRAM.82`
+  Status: `pending` — filed `2026-10-11` during the seventh cleanup's commit gate; high priority, next
+  Goal: initialize the project doctrine registry without executing its explanatory text or truncating a description.
+  Reproduce / issue: the cleanup's commit hook emitted `syntax error near unexpected token` and a command
+  substitution containing `| Round |` from `scripts/check_doctrines.project.sh`, yet every individual project gate
+  otherwise ran. `bash -n scripts/check_doctrines.project.sh` exits 0: that syntax check does not execute the array.
+  Root location: the REVIEW-COUNTS entry is double-quoted and contains an unescaped backtick-wrapped table header;
+  Bash tries to execute the header. Its pipe characters are also the registry's field delimiter.
+  Direction: make this explanatory registry entry inert and delimiter-free; independently execute just the registry
+  initialization before/after, require empty diagnostics and the full description, then run the ordinary doctrines.
+  The project wrapper is editable; the held native doctrine driver remains untouched. No Rust source change.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1405,11 +1457,12 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.69` | `active` | its review open: round 32 next, on the committed tool |
-| 2 | `PROGRAM.76` | `active` | its review open: round 15 next, on the source-line-ending repair |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.82` | `pending` | high priority: inert doctrine-registry initialization, discovered during cleanup |
+| 2 | `PROGRAM.69` | `active` | its review open: round 32 to answer, staged-read fallback defect |
+| 3 | `PROGRAM.76` | `active` | round 15 found zero defects; durable closure next |
+| 4 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The third row waits on the director's yes. The pending leaves beside them —
+The fourth row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.71`, `.72`, `.73` and `.78` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
@@ -1612,6 +1665,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 
 | `2026-10-11` | `PROGRAM.76` (round 14) | six source-line-ending controls before repair, then the complete guard suite; real sealed-tree guard, syntax, review counts, book gates and doctrines | 141 pass / 2 fail, then 143 pass / 0 fail; real guard exit 0, syntax clean; review counts OK (2 reviews / 32 rounds); book gates OK, doctrines all green; filesystem case-distinction arm explicitly skipped |
 
+| `2026-10-11` | `PROGRAM.81` | metadata census, actual OS process census, exact cache removal and residue check; cold-cache focused and wasm builds; book checks; staged focused stamp required by the hook | 2 022 861 425 logical bytes / 18 540 files removed, 1 245 `.bin`; both paths gone; handoff OK; focused 3 passed / 0 failed, wasm exit 0; book gates OK |
+
 ## Commit Log
 
 | Leaf | Commit subject or reference | Notes |
@@ -1810,6 +1865,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.69` | `ARCHOGEN-PROGRAM-0608 (leaf PROGRAM.69)` | **review round 31 answered**: an unlisted index row names its record by the first link; secondary explanations neither force counting nor cause missing-record refusals; 81 arms |
 
 | `PROGRAM.76` | `ARCHOGEN-PROGRAM-0609 (leaf PROGRAM.76)` | **review round 14 answered**: source cases split at LF, CRLF and CR before line eligibility; six disk/index controls, the CR-only omissions failed first; quote thresholds and explicit partial-quote limits unchanged |
+
+| `PROGRAM.81` | `ARCHOGEN-PROGRAM-0610 (leaf PROGRAM.81)` | **seventh artifact cleanup**: two main-repository incremental caches removed, 2 022 861 425 logical bytes / 18 540 files; cited evidence and read-only Git workspaces retained; residue, cold-cache focused and wasm verification pass |
 
 ## Changelog
 

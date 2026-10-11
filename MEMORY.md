@@ -13,11 +13,12 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.69`'s review, round 32 next; `API` is
+- **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.82`, doctrine-registry initialization; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** receive `PROGRAM.69`'s round 32 (under review) and `PROGRAM.76`'s round 15 (to request);
-  answer `M3.6.9`'s round 2 (`target/review-m369-r2/report.txt`), awaiting its durable answer. Then `M3.3`.
+- **Next action:** fix `PROGRAM.82`'s doctrine-registry initialization, then answer `PROGRAM.69`'s round 32
+  (`target/review-p69-r32/report.txt`); close `PROGRAM.76` after its round 15 found zero defects
+  (`target/review-p76-r15/report.txt`). Answer `M3.6.9`'s round 2 (`target/review-m369-r2/report.txt`), then `M3.3`.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.
   `M3.6.3.2.1`'s baseline is committed, its "unchanged" the next cadence push's run to show. `M2`'s open leaves
   wait on the director: `M2.7.4.5` and `M2.7.6`'s review and hosting half. No branches.

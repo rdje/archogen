@@ -64,6 +64,12 @@ $ bash scripts/check_scratch_locality.sh              # the gate
 $ bash scripts/check_scratch_locality.sh --self-test  # its RED arms, on scratch repositories
 ```
 
+Daily artifact cleanup has a task-tree owner and a metadata inventory before deletion. The latest date and summary
+live in `docs/ARTIFACT_CLEANUP.md`; the owning leaf keeps the deletion list, regeneration commands, retained evidence
+and cold verification. Compiler caches may be regenerated; cited review evidence, tools and dependency stores are
+retained unless their removal is proven safe. Cleanup respects the same read-only boundary around other Git
+repositories. The record is overwritten after each run rather than growing into another history.
+
 ## Before handing the workspace over
 
 ```console
