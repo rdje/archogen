@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — reproducible mutation syntax and source evidence
+
+`ARCHOGEN-M3-0648` (leaf `M3.6.9.5.4.1`), `2026-10-11`.
+
+- Add a read-only diagnostic binding all four native operator logs/results to the actual complete manifest,
+  exact commands, inputs, identities, replacements, finishing names and counts; current/committed/restored
+  sources agree. Retain every full source diff, source/formatter digest, tool version, edition and paired outcome.
+- All 32 exact and 119 candidate sources parse through Rust's formatter; four exact entries have identical
+  formatted-source candidates. Keep these syntax matches separate from type viability and semantic witness
+  classification. Historical producer hashes remain recorded provenance, not reconstructed runner authentication.
+- Three meaningful red control methods pass; 119 source digests agree with the actual sweep applier; twenty
+  altered actual measurements refuse. Two diagnostic wrappers pass selected self-test discovery, three native
+  census contracts pass, pinned book builds. No product, operator or semantic parent tests changed.
+- Book method/results/reproducer, toolbox/figures/index and task/frontier snapshots agree. Continue with full
+  semantic witness/absence classification before parent strengthening; no completed adequacy/integration claim.
+
 ## archogen — matching role and build operator parent outcomes
 
 `ARCHOGEN-M3-0647` (leaf `M3.6.9.5.3.2`), `2026-10-11`.

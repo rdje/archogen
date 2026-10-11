@@ -404,6 +404,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Status is derived, never written — [Where the engine's knowledge comes from: the
   catalog](catalog.md#status-is-derived-never-written)
 - **STI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
+- Syntax evidence before semantic classification — [Generated-sources test
+  adequacy](trust-adequacy.md#syntax-evidence-before-semantic-classification)
 
 ## T
 

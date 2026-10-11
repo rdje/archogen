@@ -412,6 +412,48 @@ Killing-test labels reuse the earlier `gr` key. The identities come from the unf
 
 Parent killing-test labels reuse the earlier `gp` key.
 
+## Syntax evidence before semantic classification
+
+Measured `2026-10-11`, `M3.6.9.5.4.1`: `scripts/trust_witness.py` re-audits all four initial native
+logs against the complete plan, exact commands, source hashes, result identities, replacement text, finishing
+names and terminal counts. Current, recorded-commit and restored-copy bytes agree for all three population
+sources. Its output retains every exact-entry and operator source diff, mutated-source digest and paired outcome.
+It also records the formatter version, Cargo edition and toolchain-input digests.
+
+The diagnostic feeds each full mutated source to `rustfmt --emit stdout` on stdin, using the xtask crate's
+declared edition and `skip_children=true`. All 32 exact replacements and 119 selected candidates parse and
+format. This does not establish compilation: the previously measured type refusals still remain unviable.
+Four entries have a candidate with identical formatted full-source bytes:
+
+| Exact-entry suffix | Candidate | Initial route / parent |
+| --- | --- | --- |
+| `the-first-reader-alone` | `L1849.chain.1219` | killed / survived |
+| `both-clauses-the-last-generator-alone` | `L191.chain.220` | killed / survived |
+| `the-last-live-form-alone` | `L253.chain.244` | killed / killed |
+| `a-harness-judged-by-its-first-role-alone` | `L1838.clogic.1411` | killed / survived |
+
+These are syntax matches, not the completed semantic witness table. In particular, a loop rewritten with
+position flags can have the same judgment effect without the same formatted syntax. Conversely, changing
+another judgment inside an overlapping interval does not make a witness. Every row still needs the explicit
+effect comparison; a missing syntax match alone establishes no absence of a semantic witness.
+
+Reproduce after the four preceding native measurements, with their original production sources restored:
+
+```bash
+python3 scripts/trust_witness.py --plan target/trust-adequacy/plan.json \
+  --measurement target/trust-adequacy/generated-route.json \
+  --measurement target/trust-adequacy/generated-parent.json \
+  --measurement target/trust-adequacy/trust-route.json \
+  --measurement target/trust-adequacy/trust-parent.json \
+  --output target/trust-adequacy/witness-evidence.json
+bash scripts/trust_witness.sh --self-test
+```
+
+The controls distinguish layout from changed literal contents or conditions, reject parser errors as identity,
+and refuse wrong original spans, replacement text, populations, selections, source bindings or altered results.
+The diagnostic never changes production or fixture sources. Its recorded historical runner hashes are retained
+as provenance; re-auditing logs does not reconstruct or authenticate an earlier uncommitted runner version.
+
 ## Remaining measurements
 
 Use the same manifest for the two populations; each invocation re-derives the full plan and refuses stale
