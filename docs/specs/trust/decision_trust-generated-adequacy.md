@@ -85,6 +85,10 @@ sweep as it stands (round 19). This record decides a criterion, and states how f
    Membership variants are `.2.3.2`: concrete compiler controls distinguish direct/copy viability and type refusals,
    with complete receiver/argument spans and preserved negation. `.2.3.3.1` repairs function-type arrows in generic
    receivers, held by positive emitted-candidate compilation; counts alone had hidden the lost viable spellings.
+   `.2.3.3.2.1` repairs the existing condition deletion's middle-separator defect before closure reuse: remove the
+   first operand with its following separator, or a later operand with its preceding separator. Native compiler
+   truth tables and real CLI restoration hold homogeneous/mixed conditions; changed old logic candidates are
+   attributed explicitly rather than claimed byte-identical.
    Production reach remains unmeasured.
    A mutant that does not compile is unviable, as every other, and the sweep reports each operator's count of them.
    The operators are held by measurement, not by `--list`: after the new route controls and before the parent gains

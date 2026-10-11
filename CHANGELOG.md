@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — middle boolean operand deletions retain one connective
+
+`ARCHOGEN-M3-0631` (leaf `M3.6.9.2.3.3.2.1`), `2026-10-11`.
+
+- A native compiler probe establishes a viable lost witness: actual middle deletions retain both separators,
+  producing `a && && c`, while `a && c` compiles. Drop exactly one adjacent separator with each operand;
+  mixed operators use the following separator for the first operand and the preceding one for every later operand.
+- Validation: tracked compiler test fails first, then 12 actual deletions/four baselines compile with 128 truth-table
+  observations. Four real CLI cases land/restore exactly; 15 tool tests pass, wrapping 18 Python methods, and one
+  named strict regression mutation is killed. Seven malformed logic replacements change across four complete
+  production lists; totals and every other operator remain identical. Syntax, book and staged doctrines required.
+- Defect ownership, shared helper, controls, book/design and task/resume records agree. Closure emission and
+  production measurements remain pending; listed/unviable candidates establish no adequacy claim.
+
 ## archogen — function-type arrows preserve viable generic membership receivers
 
 `ARCHOGEN-M3-0630` (leaf `M3.6.9.2.3.3.1`), `2026-10-11`.

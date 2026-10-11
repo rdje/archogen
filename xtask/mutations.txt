@@ -4516,3 +4516,14 @@ from
 to
                     if words[j] == ">":
 end
+
+mutation sweep-logic-middle-separator-retained
+file scripts/mutation_sweep.sh
+test -p xtask mutation::tests::the_sweep_holds_source_spans_and_equivalence_records
+expect killed
+why M3.6.9.2.3.3.2.1: actual middle deletions must compile and match all truth-table cases for homogeneous and mixed boolean separators.
+from
+            yield cond[:spans[index - 1][1]] + cond[end:]
+to
+            yield cond[:start] + cond[end:]
+end

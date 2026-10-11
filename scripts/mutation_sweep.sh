@@ -100,6 +100,14 @@ def operands(cond):
     spans.append((start, len(cond)))
     return spans if len(spans) > 1 else []
 
+def operand_deletions(cond, spans):
+    """Drop the first operand with its following separator; otherwise drop its preceding separator."""
+    for index, (start, end) in enumerate(spans):
+        if index == 0:
+            yield cond[:start] + cond[spans[1][0]:]
+        else:
+            yield cond[:spans[index - 1][1]] + cond[end:]
+
 def mask_rust(text, literal_marks=False):
     """Hide comments/literals without changing offsets or newlines; lifetimes and loop labels remain code."""
     masked, i = list(text), 0
@@ -496,10 +504,7 @@ def mutants():
         cm = re.match(r"^(\s*(?:\} else )?(?:if|while) )(.*)( \{)\s*$", l)
         if cm and not cm.group(2).startswith("let "):
             head, cond, tail = cm.groups()
-            for s, e in operands(cond):
-                rest = (cond[:s] + cond[e:]).strip()
-                rest = re.sub(r"^(&&|\|\|) ", "", rest); rest = re.sub(r" (&&|\|\|)$", "", rest)
-                rest = rest.replace("  ", " ")
+            for rest in operand_deletions(cond, operands(cond)):
                 add(n, "logic", head + rest + tail)
             if "while" in head:
                 add(n, "cond", head + "false" + tail)

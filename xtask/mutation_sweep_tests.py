@@ -161,6 +161,58 @@ class DiscoveryFixture(SweepFixture):
         return stdout
 
 
+class LogicTests(DiscoveryFixture):
+    def test_each_operand_deletion_compiles_and_matches_its_boolean_truth_table(self):
+        cases = [
+            ("a && b && c", [lambda a, b, c: b and c, lambda a, b, c: a and c, lambda a, b, c: a and b],
+             lambda a, b, c: a and b and c),
+            ("a || b || c", [lambda a, b, c: b or c, lambda a, b, c: a or c, lambda a, b, c: a or b],
+             lambda a, b, c: a or b or c),
+            ("a && b || c", [lambda a, b, c: b or c, lambda a, b, c: a or c, lambda a, b, c: a and b],
+             lambda a, b, c: a and b or c),
+            ("a || b && c", [lambda a, b, c: b and c, lambda a, b, c: a and c, lambda a, b, c: a or b],
+             lambda a, b, c: a or b and c),
+        ]
+        programs, assertions = [], []
+        for case, (condition, expected, baseline) in enumerate(cases):
+            source = ("fn sample(a: bool, b: bool, c: bool) -> bool {\n"
+                      f"    if {condition} {{\n        true\n    }} else {{ false }}\n}}\n"
+                      "#[cfg(test)]\nmod tests {}\n")
+            namespace, candidates = self.discovery(source, "logic")
+            self.assertEqual(len(candidates), 5)  # Two connective flips precede the three operand deletions.
+            candidates = candidates[2:]
+            for number, (mutant, oracle) in enumerate(zip([None] + candidates, [baseline] + expected)):
+                name = f"logic_{case}_{number}"
+                text = source if mutant is None else namespace["apply_mutant"](mutant)
+                programs.append(text.split("#[cfg(test)]", 1)[0].replace("fn sample", "fn " + name, 1))
+                for a in [False, True]:
+                    for b in [False, True]:
+                        for c in [False, True]:
+                            values = ", ".join(str(x).lower() for x in [a, b, c])
+                            assertions.append(f'assert_eq!({name}({values}), {str(oracle(a, b, c)).lower()}, "{name}");')
+        program = self.base / "logic.rs"
+        program.write_text("#![allow(unused_variables)]\n" + "\n".join(programs)
+                           + "\nfn main() {\n" + "\n".join(assertions) + "\n}\n")
+        binary = self.base / "logic"
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.bounded([str(binary)])
+        self.assertEqual(len(assertions), 128)
+        print("logic probes: 12 actual candidates and four baselines compile; 128 truth-table observations")
+
+    def test_middle_deletions_land_and_restore_through_real_cli(self):
+        for condition in ["a && b && c", "a || b || c", "a && b || c", "a || b && c"]:
+            source = ("fn sample(a: bool, b: bool, c: bool) -> bool {\n"
+                      f"    if {condition} {{\n        true\n    }} else {{ false }}\n}}\n"
+                      "#[cfg(test)]\nmod tests {}\n")
+            namespace, candidates = self.discovery(source, "logic")
+            mutant = candidates[3]
+            before, after = namespace["mutation_key"](mutant)
+            record = "from-json " + json.dumps(before) + "\nto-json " + json.dumps(after) + "\nwhy fixture\n"
+            result = self.run_sweep(record, original=source, mutated=namespace["apply_mutant"](mutant), candidate=mutant)
+            self.assert_exit(result, 0)
+            self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
+
+
 class IteratorTests(DiscoveryFixture):
     def test_owned_borrowed_patterns_labels_and_fresh_names_compile_and_select_positions(self):
         # Each input/output expectation is a semantic observation, independent of the replacement's spelling.

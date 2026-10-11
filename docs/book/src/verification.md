@@ -324,6 +324,13 @@ a candidate count alone would not establish that any spelling is viable.
 Compiler controls distinguish these type outcomes, and real CLI controls hold multiline landing and restoration.
 Closure logic, per-operator unviable counts and actual production measurements remain pending.
 
+The existing `logic` operator also drops top-level operands from one-line `if`/`while` conditions. A deletion
+removes exactly one separator: the following separator for the first operand, or the preceding one for any later
+operand. For example, the three deletions of `a && b || c` are `b || c`, `a || c` and `a && b`. This is a textual
+mutation rule, with Rust retaining its normal operator precedence. Middle deletions retain a single connective;
+compiled controls hold all eight input truth assignments for homogeneous and mixed three-operand conditions.
+These controls repaired previously malformed middle candidates; they establish no production adequacy result.
+
 ```sh
 bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --op contains --list
 ```
