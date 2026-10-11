@@ -2998,6 +2998,71 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn a_root_retains_all_declared_role_packages_and_its_own_package() {
+        crate::trust_test_process::bounded!(
+            a_root_retains_all_declared_role_packages_and_its_own_package
+        );
+        let root = |packages: &str| {
+            read_roots(&format!(
+                "(defroot gen (role generator) (package \"crates/root\") (target bin gen) {packages})"
+            ))
+            .expect("valid root")
+        };
+        let implicit = root("");
+        assert_eq!(implicit.programs.len(), 1);
+        assert_eq!(
+            implicit.programs[0]
+                .role_packages
+                .iter()
+                .map(String::as_str)
+                .collect::<Vec<_>>(),
+            ["crates/root"]
+        );
+
+        let declared = root("(role-packages \"crates/first\" \"crates/middle\" \"crates/last\")");
+        assert_eq!(declared.programs.len(), 1);
+        assert_eq!(
+            declared.programs[0]
+                .role_packages
+                .iter()
+                .map(String::as_str)
+                .collect::<Vec<_>>(),
+            [
+                "crates/first",
+                "crates/last",
+                "crates/middle",
+                "crates/root"
+            ]
+        );
+    }
+
+    #[test]
+    fn a_classification_retains_all_declared_role_packages() {
+        crate::trust_test_process::bounded!(a_classification_retains_all_declared_role_packages);
+        let classification = |packages: &str| {
+            read_roots(&format!(
+                "(defprogram tool (package \"crates/tool\") (target bin tool) (reason \"a tool\") {packages})"
+            ))
+            .expect("valid classification")
+        };
+        let empty = classification("");
+        assert_eq!(empty.classified.len(), 1);
+        assert!(empty.classified[0].role_packages.is_empty());
+
+        let declared =
+            classification("(role-packages \"crates/first\" \"crates/middle\" \"crates/last\")");
+        assert_eq!(declared.classified.len(), 1);
+        assert_eq!(
+            declared.classified[0]
+                .role_packages
+                .iter()
+                .map(String::as_str)
+                .collect::<Vec<_>>(),
+            ["crates/first", "crates/last", "crates/middle"]
+        );
+    }
+
+    #[test]
     fn a_classification_is_read_strictly() {
         crate::trust_test_process::bounded!(a_classification_is_read_strictly);
         for (text, why) in [
