@@ -205,6 +205,10 @@ The nine additions have these exact intended narrowings; the catalogue's unique 
 unchanged context to select the named occurrence, and are checked against the committed production source:
 
 - `an-input-reached-through-a-link`: in `blobs_and_chains`, add `role != "input"` to the symbolic-link condition.
+  This is a diagnostic branch control, as R23-R2 records, not an acceptance-changing defect. Native original and
+  exact-mutant fixtures in `M3.6.9.4.1.1.1` both refuse the linked input: the original names a symbolic link,
+  while the mutant names no blob. The regular-file tree excludes symlinks, so the following blob check still
+  refuses it. Operator witnesses for this row must preserve that actual effect rather than infer admission.
 - `held-judged-for-the-first-alone`: in `inventory_with`'s `foreign` closure, replace `for pkg in held` with iteration
   over `held.iter().take(1)`.
 - `a-harness-never-judged-against-a-program-target`: filter `foreign(&held)`'s result in the program-target branch to

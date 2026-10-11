@@ -448,6 +448,12 @@ Canonical aliases are accepted; unrelated roots, enclosing ancestors, deeper cop
 locations refuse before inventory. The source hint cannot change production's root list. The sweep now supplies
 its canonical own source root for every test command, replacing any inherited hint (`M3.6.9.3.3`). All three parent
 populations pass in the actual unmutated copy with an invalid inherited hint; that zero-attempt baseline establishes
-copy integration, not mutation adequacy. Exact mutation pairs and production adequacy measurements remain pending.
+copy integration, not mutation adequacy. `M3.6.9.4.1.1.1` adds three source/provenance route controls: a live input
+link retains its specific refusal, every live form contributes provenance, and middle generators remain present
+beside their inputs. Each exact catalogue mutation compiles and is killed by a named finishing route test.
+The input-link mutation changes the diagnostic alone: the original refuses a symbolic link, while the mutant still
+refuses it as no blob because the regular-file tree excludes symlinks. It does not show changed link acceptance.
+Reader/build route controls, parent twins and production adequacy measurements remain pending; parent tests have
+not yet been strengthened.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

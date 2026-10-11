@@ -4676,3 +4676,44 @@ from
 to
     env = dict(os.environ, CARGO_TARGET_DIR=TARGET, ARCHOGEN_SWEEP_SOURCE=os.environ.get("ARCHOGEN_SWEEP_SOURCE", ROOT))
 end
+
+mutation route-an-input-reached-through-a-link
+file xtask/src/trust_generated.rs
+test -p xtask route_tests
+expect killed
+why M3.6.9.4.1.1: census R23-R2; a live input link keeps its specific symbolic-link refusal. Skipping this branch still refuses it as no blob, a diagnostic regression rather than changed acceptance.
+from
+                    if symlinks.contains(f) {
+to
+                    if role != "input" && symlinks.contains(f) {
+end
+
+mutation route-the-last-live-form-alone
+file xtask/src/trust_generated.rs
+test -p xtask route_tests
+expect killed
+why M3.6.9.4.1.1: census R14-D3; every live form contributes provenance, not only the last form whose declared file a program reads.
+from
+            .filter(|g| reads.values().any(|r| r.contains(&g.path)))
+            .collect()
+to
+            .filter(|g| reads.values().any(|r| r.contains(&g.path)))
+            .rev().take(1)
+            .collect()
+end
+
+mutation route-a-middle-generator-never-reached
+file xtask/src/trust_generated.rs
+test -p xtask route_tests
+expect killed
+why M3.6.9.4.1.1: census R13-D4; a middle generator is retained in provenance just like both endpoints, while input iteration is unchanged.
+from
+                for f in files {
+                    let p = out.entry(f.clone()).or_default();
+to
+                for (index, f) in files.iter().enumerate() {
+                    if role == "generator" && index != 0 && index != files.len() - 1 {
+                        continue;
+                    }
+                    let p = out.entry(f.clone()).or_default();
+end

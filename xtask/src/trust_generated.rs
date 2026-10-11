@@ -1983,6 +1983,81 @@ mod route_tests {
         )
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn route_a_live_input_link_keeps_its_symbolic_link_refusal() {
+        let f = chk(
+            "route-live-input-link",
+            &[
+                ("scripts/gen.sh", "echo generate\n".to_owned()),
+                ("data/plain.csv", "1,2\n".to_owned()),
+                roots(&form(
+                    "crates/b/src/gen_b.rs",
+                    &["scripts/gen.sh"],
+                    &["data/plain.csv"],
+                )),
+            ],
+        );
+        holds(
+            &reached(&written(f.run()), "chk"),
+            &["scripts/gen.sh", "data/plain.csv"],
+        );
+        std::os::unix::fs::symlink("plain.csv", f.repo.join("data/link.csv")).unwrap();
+        f.commit(&[roots(&form(
+            "crates/b/src/gen_b.rs",
+            &["scripts/gen.sh"],
+            &["data/link.csv"],
+        ))]);
+        let refusals = refused(f.run());
+        println!("linked-input refusals: {refusals:?}");
+        says(
+            &refusals,
+            "input `data/link.csv` is a symbolic link in the commit",
+        );
+    }
+
+    #[test]
+    fn route_every_live_form_contributes_its_generator_provenance() {
+        let f = two_roots(
+            "route-every-live-form",
+            "fn main() {}\n",
+            "mod left; mod right; pub fn f() -> u32 { left::L + right::R }\n",
+            &[
+                ("crates/b/src/left.rs", "pub const L: u32 = 1;\n".to_owned()),
+                (
+                    "crates/b/src/right.rs",
+                    "pub const R: u32 = 2;\n".to_owned(),
+                ),
+                ("scripts/left.sh", "echo left\n".to_owned()),
+                ("scripts/right.sh", "echo right\n".to_owned()),
+                roots(
+                    &(form("crates/b/src/left.rs", &["scripts/left.sh"], &[])
+                        + &form("crates/b/src/right.rs", &["scripts/right.sh"], &[])),
+                ),
+            ],
+        );
+        let provenance = reached(&written(f.run()), "chk");
+        holds(&provenance, &["scripts/left.sh", "scripts/right.sh"]);
+        assert_eq!(provenance.len(), 2);
+    }
+
+    #[test]
+    fn route_middle_generators_and_inputs_remain_in_provenance() {
+        let generators = ["scripts/first.sh", "scripts/middle.sh", "scripts/last.sh"];
+        let inputs = ["data/first.csv", "data/middle.csv", "data/last.csv"];
+        let mut files: Vec<_> = generators
+            .iter()
+            .map(|path| (*path, format!("echo {path}\n")))
+            .chain(inputs.iter().map(|path| (*path, format!("{path},1\n"))))
+            .collect();
+        files.push(roots(&form("crates/b/src/gen_b.rs", &generators, &inputs)));
+        let f = chk("route-middle-generator-provenance", &files);
+        let provenance = reached(&written(f.run()), "chk");
+        holds(&provenance, &generators);
+        holds(&provenance, &inputs);
+        assert_eq!(provenance.len(), generators.len() + inputs.len());
+    }
+
     #[test]
     fn route_a_chain_made_in_one_generation() {
         // §2. Control: the intermediate committed, declared, and read by the second step — a chain, refused.

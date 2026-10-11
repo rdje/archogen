@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — source and provenance route controls hold three exact catalogue entries
+
+`ARCHOGEN-M3-0637` (leaf `M3.6.9.4.1.1.1`), `2026-10-11`.
+
+- Add input-link, last-live-form and middle-generator route mutations with native fixtures. Two initially
+  survive; the middle-generator mutation already has a valid named kill. After the fixtures, all three exact
+  entries compile, land once, produce named finishing kills and restore source bytes exactly.
+- Native original/exact-mutant comparison resolves the link row's scope: both refuse the input, with symbolic-link
+  versus no-blob diagnostics. The regular-file tree excludes links. R23-R2 is diagnostic branch coverage, not an
+  acceptance failure; catalogue/design/book and future measurement instructions now state that effect explicitly.
+- Validation: three new native tests pass; strict catalogue reports three named kills. Census confirms 26 unique
+  specified route entries of 32, six pending. Focused format/Clippy/all tests, final same-tree stamp and book/staged
+  gates required. Product code and parent fixtures are unchanged; no parent/operator adequacy claim.
+- Source/provenance group complete; reader controls next. Task/logs, book and current resume/frontier agree.
+
 ## archogen — sweep commands overwrite inherited source hints with their canonical root
 
 `ARCHOGEN-M3-0636` (leaf `M3.6.9.3.3`), `2026-10-11`.
