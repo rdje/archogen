@@ -422,7 +422,7 @@ arguments across ordinary, line-break, backtick, fake-Running and combined apost
 Configurations/shared items match ordinary. Synthetic quote/canonical/malformed controls and exact reversals
 `trust-cargo-command-first-physical-line` and `trust-cargo-status-path-split` hold both boundaries; originals
 restore (`M3.6.9.6.3.2.2.10.3.3.3.2.3`). Delimiter proofs and their limits are
-[source-bound](ledger.md#rust-toolchain); bounded replay passes, integration remains open.
+[source-bound](ledger.md#rust-toolchain); bounded replay/integration pass; full-production adequacy remains open.
 
 ## Historical effects and current self-tests
 

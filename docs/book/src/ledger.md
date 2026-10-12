@@ -274,9 +274,20 @@ caller repairs; they do not retrospectively classify an edit in the earlier bugg
 
 All original/copy regular inputs restore with independent hashes, sizes and modes; the opaque submodule
 identity remains unchanged. Altered audit evidence refuses. Code, tests, catalogue and equivalent records stay
-exact. The original full-sweep counts remain historical. The helper integration checkpoint and final
+exact. The original full-sweep counts remain historical. Local helper integration passes below; final
 whole-production measurements/review remain open. The complete current identities, witnesses and original
-bindings are committed in `docs/tasks/M3.md`; re-discover them when production changes.
+bindings are sealed in `docs/task-history/M3/M3.6.9.6.3.2.2.10.3.md`, reached from
+`docs/tasks/M3.md`; re-discover them when production changes.
+
+The local helper integration checkpoint (`M3.6.9.6.3.2.2.10.4`, `2026-10-12`) runs `make integration`
+with pinned tools on `PATH` and repository-local stores. All twelve steps pass, with no failed or unavailable
+step, including all 52 gate self-tests. The first restricted run failed process-detection controls: the
+sandbox denied the required process snapshot. Direct OS probes and targeted passing controls isolate that
+boundary; the complete rerun with OS reads available retains the runner's bare-Git self-test environment.
+Both results stay recorded. All captured regular inputs restore with independent hashes/modes and the opaque
+pin is unchanged. The stamp names the activation/diagnosis tree; subsequent closure documentation has its own
+checks. This closes the bounded helper group. Dropped-flag obligations are next; complete production adequacy
+and runner-baseline compatibility remain open. No remote CI outcome follows from this local checkpoint.
 
 
 ## `rust-reference`

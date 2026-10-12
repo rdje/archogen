@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — helper integration checkpoint passes
+
+`ARCHOGEN-M3-0699` (leaf `M3.6.9.6.3.2.2.10.4`), `2026-10-12`.
+
+- Full local integration passes all twelve steps, with no failure or absence; all 52 gate self-tests run.
+  First restricted run's process-control failures remain recorded: denied/readable OS probes and targeted
+  passing controls isolate process visibility, then the complete bare-Git rerun confirms the diagnosis.
+- Maintained census verifies all 1010 captured inputs and the opaque pin restore before closure docs;
+  exact activation-tree stamp retained, code/tests/catalogue/E unchanged. Helper group closes.
+  Seal fifteen already committed helper records with exact reconstruction; preserve history and size ceilings.
+- Book, canonical inventory and live/frontier/resume sync; dropped-flag survivor measurement is owned next.
+  Final full mutation adequacy and runner compatibility remain separate; no remote CI claim.
+
 ## archogen — complete bounded helper replay passes
 
 `ARCHOGEN-M3-0698` (leaf `M3.6.9.6.3.2.2.10.3.4`), `2026-10-12`.

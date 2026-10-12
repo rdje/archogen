@@ -180,7 +180,7 @@ text cannot become a command. Empty/unclosed framing, unquoted breaks and traili
 requiring root/dependency units, source/data hashes, environment and retained dependency arguments across
 ordinary, line-break, backtick, fake-Running and combined quote/backslash paths; configurations/shared items
 remain stable. Synthetic malformed/canonical controls and exact native reversals hold both boundaries.
-This repairs the measured public multiline collection defects; final helper adequacy remains separately open.
+This repairs the measured public multiline collection defects; full-production adequacy remains separately open.
 
 The [source-bound delimiter equivalents](../../book/src/ledger.md#rust-toolchain) (`M3.6.9.6.3.2.2.10.3.3.3.2.4`)
 apply only to complete pinned Unix Cargo records with the fixed rustc program and exact outside separators.
@@ -191,7 +191,9 @@ No production collection behavior changes in this proof slice.
 Final bounded helper replay (`M3.6.9.6.3.2.2.10.3.4`) verifies every actual current helper edit with strict
 named-kill/scoped-equivalent outcomes and complete original/copy restoration. Original survivor obligations
 bind to these corrected-context outcomes; no retroactive equivalence or whole-production adequacy is inferred.
-The integration checkpoint and final full measurements/review remain separately owned.
+The local helper integration checkpoint (`M3.6.9.6.3.2.2.10.4`) passes every tier step after isolating
+process-read permissions; captured inputs restore and the helper group closes. Final full measurements/review
+and runner compatibility remain separately owned; this is no remote CI outcome.
 
 **What it records, for each root:**
 
