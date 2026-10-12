@@ -362,6 +362,20 @@ checks cover originals after each run and the copied sweep source matches. This 
 alongside the preserved quotation comparisons; the production helper is unchanged. Remaining survivors still
 need domain judgments, and the final all-helper sweep remains open.
 
+Producer-domain investigation then found a distinct boundary: the
+[pinned Cargo formatter](ledger.md#rust-toolchain) escapes arguments but prints the compiler program path
+without quoting it. A space in `RUSTUP_HOME` therefore makes the helper mistake part of that program path
+for a separate token. Cargo builds successfully, but collection skips the compiler invocation and the existing
+own-unit guard reports that neither root compiled anything of its own package. This is a collection failure;
+the guard prevents an accepted empty-root inventory in the measured fixture.
+`M3.6.9.6.3.2.2.10.3.3.2` owns the repair and a permanent isolated public regression next.
+
+An actual manifest `check-cfg = [""]` value also makes Cargo print an empty argument. Rustc rejects it,
+and the inventory returns the build failure before command decoding. Ordinary and `check-cfg = ["cfg()"]`
+controls compile successfully. These exploratory probes are qualified as untracked producers in the task
+record: they establish neither universal empty-argument absence nor an equivalent mutation. All remaining
+helper obligations stay open while the executable boundary is repaired.
+
 ## Historical effects and current self-tests
 
 The effects diagnostic keeps the [initial semantic witness review](trust-adequacy.md#semantic-witnesses-in-the-initial-cohort)

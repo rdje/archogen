@@ -166,6 +166,17 @@ The separate `a_root_s_configuration_retains_its_dependency_argument` control
 `common` dependency arguments, `libcommon.rlib` and `libcommon.rmeta` respectively. A final-token reversal
 must fail this independent expectation; no universal argv-shape claim follows.
 
+Producer-domain investigation (`M3.6.9.6.3.2.2.10.3.3.1`, `2026-10-12`) read Cargo's
+[ProcessBuilder formatter at its installed commit](https://github.com/rust-lang/cargo/blob/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/crates/cargo-util/src/process_builder.rs#L45-L68):
+the executable is unescaped, while each argument follows one separator and an escape operation.
+That commit's [lockfile](https://github.com/rust-lang/cargo/blob/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/Cargo.lock)
+selects shell-escape 0.1.5; its [Unix escape implementation](https://docs.rs/crate/shell-escape/0.1.5/source/src/lib.rs)
+quotes empty arguments. No downloaded source hash was captured. Actual public inventory reproduction with a
+spaced toolchain home fails collection after successful Cargo builds; an ordinary-home control passes.
+Exploratory check-cfg probes emit an empty argument only in a measured failing build. Their adapters are
+untracked and provide no universal absence proof. Revalidate formatting assumptions on a pin/producer change;
+the executable-boundary repair and permanent controls remain owned by `.10.3.3.2`.
+
 ## `rust-reference`
 
 | Field | Value |

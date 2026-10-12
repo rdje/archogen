@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — Cargo domain investigation owns unescaped compiler-path failure
+
+`ARCHOGEN-M3-0688` (leaf `M3.6.9.6.3.2.2.10.3.3.1`), `2026-10-12`.
+
+- Pinned public Cargo formatter escapes arguments but leaves the program path raw. Actual successful builds
+  under a spaced toolchain home fail the existing public inventory test, while the ordinary-home control passes.
+  The own-unit guard prevents the measured empty-root inventory from being accepted; collection repair is owned next.
+- Actual empty check-cfg argument reaches a failing build, alongside successful ordinary/nonempty controls.
+  Qualify exploratory producers and environment differences; infer no universal absence or equivalence.
+- Preserve production, tests, catalogue and all survivor obligations. Book, canonical inventory, source ledger
+  and live pointers align; focused documentation checks required before commit.
+
 ## archogen — eighth daily artifact cleanup preserves evidence and tracked inputs
 
 `ARCHOGEN-PROGRAM-0687` (leaf `PROGRAM.84`), `2026-10-12`.

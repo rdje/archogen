@@ -148,6 +148,12 @@ close-quote/escaped-apostrophe/reopen-quote path spelling. The public inventory 
 ordinary, space, apostrophe and literal-backslash output paths and a shared dependency; it is not a general
 shell-parser conformance claim.
 
+Producer investigation `M3.6.9.6.3.2.2.10.3.3.1` found that the executable itself is unescaped
+([pinned source and evidence](../../book/src/ledger.md#rust-toolchain)). A space in the toolchain home makes
+collection skip its actual compilation commands; the own-unit guard then refuses the measured two-root fixture.
+`.10.3.3.2` owns the executable-boundary repair and permanent public controls. Argument quoting evidence does
+not establish whole-command delimiter invariants or universal absence of empty arguments.
+
 **What it records, for each root:**
 
 - the packages its build compiled, from that build's units and not from workspace-wide metadata, each with its
