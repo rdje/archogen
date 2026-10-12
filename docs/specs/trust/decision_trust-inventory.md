@@ -158,6 +158,12 @@ the measured two-root fixture. `.10.3.3.2` repairs this with the fixed command a
 controls exercise ordinary, space, apostrophe, backslash and combined installation paths, requiring the exact
 compiled packages and dependency arguments. Argument quoting evidence does not prove empty-argument absence.
 
+Known collection limitation (`M3.6.9.6.3.2.2.10.3.3.3.2.1`, `2026-10-12`): actual successful Cargo builds
+with an LF in the output directory panic in the physical-line command reader. A diagnostic framing intervention
+in a copy exposes a distinct first-dependency-target omission, returning empty compiler-read file objects;
+unmodified production still panics. These qualified exploratory controls own dependency-reader repair in
+`.10.3.3.3.2.2` before command-framing repair/public controls in `.10.3.3.3.2.3`. Neither is closed yet.
+
 **What it records, for each root:**
 
 - the packages its build compiled, from that build's units and not from workspace-wide metadata, each with its

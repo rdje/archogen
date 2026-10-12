@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — multiline Cargo paths expose two distinct collection readers
+
+`ARCHOGEN-M3-0691` (leaf `M3.6.9.6.3.2.2.10.3.3.3.2.1`), `2026-10-12`.
+
+- Actual pinned Cargo succeeds with LF/CR/backtick/fake-Running output paths. Copied public control passes
+  ordinary then pinpoints a panic: physical-line command slicing loses the closing delimiter inside a quoted operand.
+- A diagnostic framing intervention exposes a separate dependency reader omission: inventory is written with
+  empty compiler-read file objects. Qualify this observation apart from unchanged production, which still panics.
+  Own immediate dependency-first and command-second repairs, followed by delimiter proofs.
+- Diagnostic adapters/tests are untracked and qualified, source copy restored exactly, permanent source/tests,
+  catalogue/equivalents unchanged. Canonical inventory, book, source ledger and live records align; docs gates required.
+
 ## archogen — real Cargo empty arguments have independent parent controls
 
 `ARCHOGEN-M3-0690` (leaf `M3.6.9.6.3.2.2.10.3.3.3.1`), `2026-10-12`.

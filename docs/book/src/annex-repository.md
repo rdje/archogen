@@ -398,6 +398,13 @@ survivors to named finishing kills by this test, strict exit zero. The exact cat
 after each run; copied source matches. Production and prior test bodies are unchanged. Earlier failing empty
 check-cfg probes established no absence premise. Delimiter proofs and final helper obligation closure remain open.
 
+Caller-framing diagnosis (`M3.6.9.6.3.2.2.10.3.3.3.2.1`, `2026-10-12`) finds a remaining limitation:
+Cargo builds successfully with a newline in the output directory, but inventory command collection panics
+because it splits the quoted command into physical lines. A diagnostic framing intervention in an isolated
+copy then exposes a separate dependency-reader omission: compiler-read file objects become empty when the
+first dependency target spans lines. Unmodified production still panics. Both defects are owned; the dependency
+reader is repaired first, then command framing and permanent public controls, before delimiter proofs.
+
 ## Historical effects and current self-tests
 
 The effects diagnostic keeps the [initial semantic witness review](trust-adequacy.md#semantic-witnesses-in-the-initial-cohort)

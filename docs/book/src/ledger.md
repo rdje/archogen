@@ -190,6 +190,12 @@ names warn; compilation succeeds. Independent expected middle/final tokens hold 
 without admitting extra flags to inventory builds. Exact native and actual systematic loss edits give named
 finishing failures. This permanent control refutes a generic absence premise; no universal shell guarantee follows.
 
+Multiline-path diagnosis (`M3.6.9.6.3.2.2.10.3.3.3.2.1`, `2026-10-12`) retains actual successful Cargo
+output with line feeds, carriage returns and backticks, plus losslessly decoded dependency bytes. Copied public inventory control exposes
+a physical-line command-slice panic. A diagnostic framing intervention exposes empty compiler-read file objects
+from the separate first-target reader. Adapters/tests are untracked and qualified, not permanent controls;
+unmodified production still panics. Dependency-first and command-second repairs are owned before further proofs.
+
 ## `rust-reference`
 
 | Field | Value |
