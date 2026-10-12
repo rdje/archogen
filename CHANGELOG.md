@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — eighth daily artifact cleanup preserves evidence and tracked inputs
+
+`ARCHOGEN-PROGRAM-0687` (leaf `PROGRAM.84`), `2026-10-12`.
+
+- Independent metadata/system census agrees on the explicitly owned Cargo incremental caches. Remove
+  610779360 logical bytes in 4867 files (300 bin), plus the empty wasm incremental directory; immediate residue
+  is gone. Release/deps have no bin/log strays. Preserve cited evidence, tools, stores and Git workspaces.
+- Maintained census verifies all 1003 tracked regular inputs restored after deletion and again after passing
+  focused and wasm checks. Existing compiled products remain; verification runs with incremental caches removed.
+  Auxiliary metadata producer limits remain explicit.
+- Latest-only cleanup record and book example align; root task-child range corrected. Live categories and M3
+  helper-domain resume action unchanged; no feature, full integration or adequacy claim.
+
 ## archogen — dependency arguments have independent inventory controls
 
 `ARCHOGEN-M3-0686` (leaf `M3.6.9.6.3.2.2.10.3.2`), `2026-10-12`.
