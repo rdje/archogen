@@ -4011,6 +4011,196 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn cargo_diagnostic_flags_do_not_enter_unit_configurations() {
+        crate::trust_test_process::bounded!(
+            cargo_diagnostic_flags_do_not_enter_unit_configurations
+        );
+        let cfg_operands = ["cfg(docsrs,test)", "cfg(feature, values())"];
+        let mut ordinary = None;
+        for level in ["ordinary", "allow", "warn", "deny", "forbid"] {
+            let lints = if level == "ordinary" {
+                String::new()
+            } else {
+                format!("[lints.rust]\nunused_variables = \"{level}\"\nunsafe_code = \"{level}\"\ndead_code = \"{level}\"\n")
+            };
+            let dependency = "[dependencies]\ncommon = { path = \"../common\" }\n";
+            let f = two_roots(
+                &format!("cargo-diagnostic-flags-{level}"),
+                "fn main() { common::c(); }\n",
+                "pub fn f() { common::c(); }\n",
+                &[
+                    ("crates/common/Cargo.toml", manifest("common", &lints)),
+                    ("crates/common/src/lib.rs", "pub fn c() {}\n".to_owned()),
+                    (
+                        "crates/a/Cargo.toml",
+                        manifest("a", &format!("{dependency}\n{lints}")),
+                    ),
+                    (
+                        "crates/b/Cargo.toml",
+                        manifest("b", &format!("{dependency}\n{lints}")),
+                    ),
+                ],
+            );
+            // Successful real producer evidence binds the operands; a synthetic argv is insufficient.
+            let env = super::environment(
+                "1.95.0",
+                &f.base.join("producer/cargo-home"),
+                &f.base.join("producer/target"),
+            )
+            .unwrap();
+            let (_, stderr) = super::run_cargo(
+                &[
+                    "build",
+                    "--bin",
+                    "a",
+                    "--release",
+                    "--locked",
+                    "--offline",
+                    "--no-default-features",
+                    "--message-format=json",
+                    "-v",
+                    "-p",
+                    "a",
+                ],
+                &env,
+                &f.repo,
+            )
+            .expect("actual Cargo diagnostic-flag producer must compile");
+            let scratch = format!("{}/", f.repo.display());
+            let canonical = format!("{}/", f.repo.canonicalize().unwrap().display());
+            let commands = super::cargo_commands(&stderr, &scratch, &canonical).unwrap();
+            assert_eq!(
+                commands.len(),
+                2,
+                "{level}: root and dependency must compile"
+            );
+            let mut compiled = std::collections::BTreeSet::new();
+            for command in commands {
+                let argv = super::split_command(command);
+                assert_eq!(argv[0], "rustc");
+                let name = argv
+                    .windows(2)
+                    .find(|pair| pair[0] == "--crate-name")
+                    .unwrap();
+                assert!(compiled.insert(name[1].clone()), "duplicate compiler unit");
+                let actual: Vec<_> = argv
+                    .windows(2)
+                    .filter(|pair| pair[0] == "--check-cfg")
+                    .map(|pair| pair[1].as_str())
+                    .collect();
+                assert_eq!(actual, cfg_operands, "{level}: actual producer operands");
+                let actual_lints: std::collections::BTreeSet<_> = argv
+                    .iter()
+                    .filter(|arg| {
+                        ["--allow=", "--warn=", "--deny=", "--forbid="]
+                            .iter()
+                            .any(|prefix| arg.starts_with(prefix))
+                    })
+                    .cloned()
+                    .collect();
+                let expected_lints = if level == "ordinary" {
+                    std::collections::BTreeSet::new()
+                } else {
+                    ["unused_variables", "unsafe_code", "dead_code"]
+                        .into_iter()
+                        .map(|lint| format!("--{level}={lint}"))
+                        .collect()
+                };
+                assert_eq!(
+                    actual_lints, expected_lints,
+                    "{level}: actual manifest lint flags"
+                );
+            }
+            assert_eq!(
+                compiled,
+                ["a".to_owned(), "common".to_owned()].into_iter().collect()
+            );
+
+            let inventory = written(f.run());
+            assert_eq!(inventory.get("programs").unwrap().elements().len(), 2);
+            for (root, own, role, dependency) in [
+                ("gen", "a", "generator", "--extern common=libcommon.rlib"),
+                (
+                    "chk",
+                    "b",
+                    "scheduling-checker",
+                    "--extern common=libcommon.rmeta",
+                ),
+            ] {
+                let p = program(&inventory, root);
+                assert_eq!(p.get("role").and_then(Json::as_str), Some(role));
+                let units = p.get("units").unwrap().elements();
+                assert_eq!(units.len(), 2);
+                let names: std::collections::BTreeSet<_> = units
+                    .iter()
+                    .map(|u| u.get("crate").unwrap().as_str().unwrap())
+                    .collect();
+                assert_eq!(names, [own, "common"].into_iter().collect());
+                for unit in units {
+                    let name = unit.get("crate").unwrap().as_str().unwrap();
+                    let package = format!("crates/{name}");
+                    assert_eq!(
+                        unit.get("package").and_then(Json::as_str),
+                        Some(package.as_str())
+                    );
+                    // Digests independently re-derived from literal fixture bytes with the system SHA-256 tool.
+                    let (path, digest) = match name {
+                        "a" => (
+                            "crates/a/src/main.rs",
+                            "354a2859cc377f4dc135ad8e3994aa7df352620a83186c45ce3427523c244c94",
+                        ),
+                        "b" => (
+                            "crates/b/src/lib.rs",
+                            "c8860bae75ba49f55cb4c79208938f9bf864bf0c804f3da3c4d918d899a75cb1",
+                        ),
+                        "common" => (
+                            "crates/common/src/lib.rs",
+                            "61d84a22ca31884e02beda52e98bac0f3388ac1015d3cbd1ec7eb90e3321e433",
+                        ),
+                        _ => unreachable!(),
+                    };
+                    let files = Json::Object(
+                        [(path.to_owned(), Json::Str(digest.to_owned()))]
+                            .into_iter()
+                            .collect(),
+                    );
+                    assert_eq!(unit.get("files"), Some(&files));
+                    assert_eq!(unit.get("env"), Some(&Json::Array(vec![])));
+                    let configuration: Vec<_> = unit
+                        .get("configuration")
+                        .unwrap()
+                        .elements()
+                        .iter()
+                        .map(|arg| arg.as_str().unwrap())
+                        .collect();
+                    assert!(configuration
+                        .windows(2)
+                        .any(|pair| pair == ["--crate-name", name]));
+                    assert!(configuration.contains(&path));
+                    if name == own {
+                        assert!(configuration.contains(&dependency));
+                    }
+                    for operand in cfg_operands {
+                        assert!(!configuration.contains(&operand), "{root}/{name}/{level} retained diagnostic operand {operand}: {configuration:?}");
+                    }
+                    assert!(!configuration
+                        .iter()
+                        .any(|arg| arg.starts_with("--check-cfg")
+                            || ["--allow=", "--warn=", "--deny=", "--forbid="]
+                                .iter()
+                                .any(|prefix| arg.starts_with(prefix))));
+                }
+            }
+            let actual = configurations(&inventory);
+            if let Some(expected) = &ordinary {
+                assert_eq!(&actual, expected, "{level}: lint-only configuration drift");
+            } else {
+                ordinary = Some(actual);
+            }
+        }
+    }
+
+    #[test]
     fn cargo_quoted_output_paths_preserve_inventory_units_and_configuration() {
         crate::trust_test_process::bounded!(
             cargo_quoted_output_paths_preserve_inventory_units_and_configuration

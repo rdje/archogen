@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — actual check-cfg operand exclusion regression
+
+`ARCHOGEN-M3-0702` (leaf `M3.6.9.6.3.2.2.11.2.2`), `2026-10-12`.
+
+- Permanent actual-Cargo/public parent checks diagnostic producer operands and lint settings, expected
+  programs/units/roles/packages, independent source hashes, environment and retained compilation arguments.
+- The actual operand-consumption switch changes from survivor to named finishing kill, native strict 0.
+  Exact candidate fails for retained cfg operand; restored parent passes. All 1011 original/copied regular
+  inputs and opaque pin restore, altered evidence refuses, original obligation independently re-bound.
+- Production/older tests/catalogue/E unchanged. Close only this adequacy gap; other table survivors remain.
+  Book/canonical/live/resume sync; final exact-staged focused required, source-bound flag assessment next.
+
 ## archogen — actual Cargo flag producer assessment
 
 `ARCHOGEN-M3-0701` (leaf `M3.6.9.6.3.2.2.11.2.1`), `2026-10-12`.

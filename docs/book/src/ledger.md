@@ -307,9 +307,14 @@ root/common commands pass `--check-cfg` followed by `cfg(docsrs,test)` and `cfg(
 manifest lint settings use single `--level=lint` tokens. Independent raw argv/artifact and public
 program/unit/package/source-hash/environment checks agree, and actual cfg operands are excluded from
 configurations. Wrong package, retained operand and missing-case records refuse; original/copy inputs restore.
-These finite observations establish no flag-absence or equivalence theorem. The permanent check-cfg parent
-regression is owned next, then pinned source/caller evidence and conditional precise proofs for other table
-survivors. Every survivor obligation remains open; production/tests/catalogue/E stay unchanged.
+These finite observations establish no flag-absence or equivalence theorem; every survivor remained open
+at assessment closure. The permanent parent `cargo_diagnostic_flags_do_not_enter_unit_configurations`
+(`M3.6.9.6.3.2.2.11.2.2`, `2026-10-12`) now requires the successful producer operands and independently
+expected inventory units/roles/packages/source hashes/environment/retained arguments across those lint levels.
+The actual check-cfg switch changes from survivor to named finishing kill, native strict 0; an exact-candidate
+run fails for the leaked cfg operand and the restored test passes. Original/copied inputs restore and older
+production/tests/catalogue/E stay exact. Only that original obligation closes. Pinned source/caller evidence
+and conditional precise proofs for the remaining table survivors are next; whole-production adequacy is open.
 
 
 ## `rust-reference`
