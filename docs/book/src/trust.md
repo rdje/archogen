@@ -201,6 +201,10 @@ gate) and `xtask/src/trust_verify.rs` (the verifier); committed generated source
 `docs/specs/trust/decision_trust-generated-sources.md`, `docs/specs/trust/decision_trust-generated-refusals.md` and
 `xtask/src/trust_generated.rs`.
 
+Known defect (`2026-10-12`): an exact manifest admission permits build-script execution and a
+written inventory, contrary to §3's prebuild prohibition. `M3.6.9.6.3.2.2.11.2.5.1` owns repair;
+reproduction and scope: `docs/specs/trust/flag-normalization-domain.md`.
+
 ### The run's order
 
 The inventory decides in steps, each running only when those before it refused nothing (the generated-sources record
@@ -567,7 +571,12 @@ Historical selected runs restore 988 captured inputs under Python/system hashes;
 
 Measured `2026-10-11`, `.9.1`: four environment survivors gain named kills, strict 0. Public controls hold three compiled values and record boundaries; production/old tests stay unchanged and all 990 captured inputs restore.
 
-Measured `2026-10-11`, `.9.2`: public inventory collapses a marker-bearing value with separate records before repair; the regression passes afterward. Comparison keys now contain deterministic JSON `[command_tokens, environment_records]`, e.g. `[["--crate-name","common"],["CARGO_PKG_DESCRIPTION=alpha env-dep:omega"]]`. Arrays/escaping preserve boundaries, order and empty values; per-program raw arrays retain their shapes. Native reversal of only the key body gains the named public kill and restores all 990 original inputs. Domain controls and focused gates pass. This changes configuration digests: Linux proposal compatibility is owned in `M3.6.3.2.1.1`, pending a runner whose base checker includes the repair and normal proposal review. The reproducer changes content too; it establishes a configuration-field defect, not a complete-gate bypass.
+Measured `2026-10-11`, `.9.2`: marker-bearing values exposed a configuration-key collision. Keys now use
+JSON `[command_tokens, environment_records]`, e.g. `[["--crate-name","common"],["CARGO_PKG_DESCRIPTION=alpha env-dep:omega"]]`,
+preserving boundaries/order/empty values and public raw-array shapes. The key-only native reversal gains a
+named public kill; all 990 inputs restore and domain/focused controls pass. Changed configuration digests
+require Linux proposal compatibility in `M3.6.3.2.1.1`, pending an authorized runner/base checker and review.
+The reproducer also changes content; it proves the field defect, not a complete-gate bypass.
 
 The [tooling JSON contracts](annex-repository.md#json-used-by-the-tooling) separate encoding from reader diagnostics. Number grammar, raw controls, Unicode escapes and inventory-byte admission are repaired; `.9.4` integration is next. These defects do not establish an artifact-hash bypass.
 

@@ -125,7 +125,13 @@ nothing but `[alias]` (`package::check_config`), which closes `build.rustc`, `bu
 `[env]` and `rustflags` (R1 A6; R3 C18). `CARGO_HOME` is removed and made anew on every run, since `environment` only
 creates it and a configuration left in it would reach every later build (R2 B12). Before any build, the packages'
 targets are read with `cargo metadata`, which runs no package's code, and a build script or procedural macro is
-refused there, as the catalog's `metadata` refuses them, so none runs (R2 B12). The comparison harness a pair's form
+refused there, as the catalog's `metadata` refuses them, so none runs (R2 B12).
+**Current implementation gap, `2026-10-12` (`M3.6.9.6.3.2.2.11.2.3`):** an exact manifest admission
+currently lets a build script execute and still return an inventory. The public sentinel reproduction is in
+`flag-normalization-domain.md`; immediate P1 repair `.11.2.5.1` restores this unconditional metadata
+boundary. The requirement above is unchanged; caller/equivalent premises are revalidated after repair.
+
+The comparison harness a pair's form
 names is built the same way, with `cargo test --release --no-run -p <package> --test <name>`, and recorded as a root
 is — its files, its configuration and its artifact — beside the pair's two libraries, in its own target directory,
 so the units it shares with them are compiled again with their configuration and recognised by package, crate and

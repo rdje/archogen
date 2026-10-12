@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — flag premises expose an admitted-script execution defect
+
+`ARCHOGEN-M3-0703` (leaf `M3.6.9.6.3.2.2.11.2.3`), `2026-10-12`.
+
+- Exact installed Cargo source/version and explicit-admission profile-flag diagnostics distinguish stable
+  feature rejection from successful production. Manifest default refusals alone are insufficient premises.
+- Confirmed public-entrypoint defect: exact manifest admission allows a build script to write its owned
+  sentinel and return an inventory, despite the canonical prebuild prohibition. Independent source/hash/
+  admission/unit/sentinel audit agrees and altered evidence refuses. Immediate P1 hard metadata repair owned.
+- All 1011 original/copied inputs and opaque pin restore; production/tests/catalogue/E unchanged. Book and
+  canonical source record disclose the gap. Premise/integration/source completion precede flag proofs;
+  no equivalence classification or whole-production adequacy claim. Live/resume select the repair next.
+
 ## archogen — actual check-cfg operand exclusion regression
 
 `ARCHOGEN-M3-0702` (leaf `M3.6.9.6.3.2.2.11.2.2`), `2026-10-12`.

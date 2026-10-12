@@ -149,7 +149,7 @@ the day a chapter or a decision relies on it, as Miri did.
 | Version | `1.95.0` — `rustc 1.95.0 (59807616e 2026-04-14)`, `cargo 1.95.0 (f2d3ce0bd 2026-03-21)` |
 | Pinned at | `toml:rust-toolchain.toml:channel` — with its components (`rustfmt`, `clippy`) and targets (`riscv64imac-unknown-none-elf`, `wasm32-unknown-unknown`); CI installs exactly that file (`rustup toolchain install`) |
 | Retrieved | `2026-09-29`; pinned `2026-09-30` (`PROGRAM.30`) |
-| Hash | not captured |
+| Hash | binary digests not captured; pinned Cargo source digests are in `docs/specs/trust/flag-normalization-domain.md` |
 | Scope | every build and test. Also Cargo's workspace discovery, which the root `Cargo.toml`'s `exclude` relies on: Cargo keeps walking up past a workspace that excludes a package. That was measured on Cargo 1.95.0 by the arms of `LS-001`'s re-measurement. The catalog gate (`decision_catalog-records.md` §3, leaf `M2.7.4`) rests on three claims about it: that `rustc`'s dependency information names every source file the compiler read, a file an assembler directive's `.incbin` reads apart (Known limitations), that `rustc --print sysroot` names the toolchain's own files, and that rustup and Cargo discover `rust-toolchain.toml` and `.cargo/config.toml` from the working directory upward and nowhere else but `CARGO_HOME`. Each was measured on the pin `2026-10-03` and is re-measured, with a control, on every integration run by `cargo xtask pin-premises` (`M2.7.4.1`). And how rustc reads a `#!` line, which the generated-sources record's §3 follows: re-measured by `the_shebang_rule_is_rustc_s`. |
 | Known limitations | the dependency information does not name a native library reached through `#[link]` or a linker argument, nor code a symbol reaches only at link time, nor a file an `.incbin` directive inside `global_asm!`, `asm!` or `naked_asm!` reads — measured on the pin `2026-10-03`, the file's bytes in the rlib and not in its `.d` — which is why the catalog and the trust gate refuse all three lexically, a refusal no toolchain bump needs re-measured. `rustfmt --check` reading stdin prints its diff and still exits 0 (measured on the pin `2026-10-03`), so `RUST-FORMAT` compares `--emit stdout` with its input instead. Not the newest release: on `2026-09-30` CI's former `@stable` would have taken a newer compiler than this machine's `stable`. `1.98.0` was measured passing the same `fmt`, `clippy -D warnings` and test suite that day, which is where a bump starts. On macOS Cargo's `unpacked` default keeps every object file built, 1 454 953 by `2026-10-06`: the dev profile sets `off` (`PROGRAM.58`) |
 | Revalidation trigger | the channel line changing; a toolchain release worth adopting |
@@ -300,21 +300,22 @@ restores with independent hashes/modes. Source, tests, catalogue and E records s
 measurement, separate from the completed helper group and pending whole-production adequacy.
 
 
-The producer assessment (`M3.6.9.6.3.2.2.11.2.1`, `2026-10-12`) uses ignored copied-code
-diagnostics and adapters, with unchanged tracked inventory and actual pinned Cargo as primary evidence.
-Ordinary and manifest allow/warn/deny/forbid cases build successfully and enter public inventory. Observed
-root/common commands pass `--check-cfg` followed by `cfg(docsrs,test)` and `cfg(feature, values())`;
-manifest lint settings use single `--level=lint` tokens. Independent raw argv/artifact and public
-program/unit/package/source-hash/environment checks agree, and actual cfg operands are excluded from
-configurations. Wrong package, retained operand and missing-case records refuse; original/copy inputs restore.
-These finite observations establish no flag-absence or equivalence theorem; every survivor remained open
-at assessment closure. The permanent parent `cargo_diagnostic_flags_do_not_enter_unit_configurations`
-(`M3.6.9.6.3.2.2.11.2.2`, `2026-10-12`) now requires the successful producer operands and independently
-expected inventory units/roles/packages/source hashes/environment/retained arguments across those lint levels.
-The actual check-cfg switch changes from survivor to named finishing kill, native strict 0; an exact-candidate
-run fails for the leaked cfg operand and the restored test passes. Original/copied inputs restore and older
-production/tests/catalogue/E stay exact. Only that original obligation closes. Pinned source/caller evidence
-and conditional precise proofs for the remaining table survivors are next; whole-production adequacy is open.
+The actual producer assessment (`M3.6.9.6.3.2.2.11.2.1`, `2026-10-12`) accepts ordinary and manifest
+allow/warn/deny/forbid cases: separate `--check-cfg` operands `cfg(docsrs,test)`/`cfg(feature, values())`,
+and single `--level=lint` tokens. Independent raw/public records agree; altered records refuse and inputs
+restore. Its copied diagnostics/adapters are ignored exploratory evidence, not maintained tests or an
+absence theorem. The permanent parent `cargo_diagnostic_flags_do_not_enter_unit_configurations`
+(`.11.2.2`, same date) requires actual producer operands and independently expected public identities,
+source hashes/environment/retained arguments. The actual check-cfg switch changes from survivor to named
+finishing kill/strict 0; exact operand-leak failure and restored pass agree. Only that original obligation closes.
+
+The source/caller assessment (`.11.2.3`, `2026-10-12`) records exact pinned source digests and channel/
+admission qualifications in `docs/specs/trust/flag-normalization-domain.md`. Explicitly admitted profile
+flags still fail stable Cargo before compilation. A separate public probe confirms a defect: exact manifest
+admission permits build-script execution and a written inventory despite §3's prebuild prohibition.
+Immediate P1 repair `.11.2.5.1`, then caller/E premise and integration revalidation, precede source completion
+and conditional flag proofs. All original/copied inputs restore; code/tests/catalogue/E are unchanged by
+this assessment. No new flag equivalence or final whole-production adequacy claim.
 
 
 ## `rust-reference`
