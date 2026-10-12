@@ -165,15 +165,16 @@ missing/empty targets refuse. Actual pinned producer controls require independen
 The separate synthetic colon-space target control is not successful Cargo evidence: this host's Cargo refuses
 colon output paths when joining its dynamic-library search path. No general Makefile grammar is admitted.
 
-Known public collection limitation: actual successful Cargo builds with LF output paths still panic in the
-physical-line command reader. After dependency repair, a qualified copied command-framing intervention also
-exposes scratch normalization missing rustc's escaped environment values. Environment repair `.10.3.3.3.2.5`
-precedes public command framing `.10.3.3.3.2.3`; unmodified public collection still panics. Both remain open.
+Environment normalization (`M3.6.9.6.3.2.2.10.3.3.3.2.5.2`, `2026-10-12`) encodes known scratch/canonical
+prefixes with the [pinned rustc writer's](../../book/src/ledger.md#rust-toolchain) LF/CR/backslash rules before
+replacement. Existing encoded record strings, unset spelling, validation and order remain. Actual Cargo controls
+require an independently expected relative manifest path and exact description/unset records across ordinary,
+line-break, backslash, literal-backslash-n and source-marker roots; a distinct canonical-prefix control passes.
+No general record decoder or path/host grammar is admitted.
 
-Producer-domain investigation `.10.3.3.3.2.5.1` binds the LF/CR/backslash environment encoding to actual
-Cargo/runtime controls and the [pinned rustc writer](../../book/src/ledger.md#rust-toolchain). `.2.5.2` will
-encode only the known scratch prefixes before replacement, preserving existing record strings and unset reads.
-Source-marker escaping and output-colon refusal are measured separately; no general path/host contract follows.
+Known public collection limitation: actual successful Cargo builds with LF output paths still panic in the
+physical-line command reader. Dependency-file and environment normalization repairs are verified;
+complete public command framing `.10.3.3.3.2.3` remains open. No complete multiline inventory claim yet.
 
 **What it records, for each root:**
 

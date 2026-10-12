@@ -5563,3 +5563,30 @@ to
     }
 
 end
+
+mutation trust-dependency-environment-prefix-unescaped
+file xtask/src/trust.rs
+test -p xtask trust::tests::cargo_dependency_environment_normalizes_escaped_scratch_paths -- --exact
+expect killed
+why M3.6.9.6.3.2.2.10.3.3.3.2.5.2: restore literal prefix replacement; real pinned rustc escapes line breaks and backslashes in environment records, so the independently expected manifest path must still normalize while encoded metadata values and unset records stay exact.
+from
+    fn normalise_dependency_environment(dep: &str, scratch: &str, canonical_scratch: &str) -> String {
+        let encode = |path: &str| {
+            path.replace('\\', "\\\\")
+                .replace('\n', "\\n")
+                .replace('\r', "\\r")
+        };
+        dep.replace(&encode(scratch), "")
+            .replace(&encode(canonical_scratch), "")
+    }
+
+to
+    fn normalise_dependency_environment(
+        dep: &str,
+        scratch: &str,
+        canonical_scratch: &str,
+    ) -> String {
+        dep.replace(scratch, "").replace(canonical_scratch, "")
+    }
+
+end

@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — encoded environment prefixes normalize without changing record strings
+
+`ARCHOGEN-M3-0694` (leaf `M3.6.9.6.3.2.2.10.3.3.3.2.5.2`), `2026-10-12`.
+
+- Encode scratch/canonical prefixes with pinned rustc's backslash and line-break rules before existing replacement.
+  Preserve record representation, validation, ordering and unset spelling; no general decoder or command-framing change.
+- Permanent actual Cargo control passes independently expected relative manifest path and exact encoded description/
+  unset records across ordinary, line-break, backslash, literal-backslash-n and source-marker roots. Distinct
+  canonical control passes. Exact old-normalization reversal gives a named finishing kill, strict 0.
+- All 1010 captured inputs restore; prior source/test bodies outside the helper/call/additions and catalogue prefix
+  remain exact. Book/canonical/source-ledger/live records align. Format/clippy pass; final exact-staged focused
+  required. Environment group closes; complete public Cargo command framing remains next, full adequacy open.
+
 ## archogen — environment producer grammar bounds the next normalization repair
 
 `ARCHOGEN-M3-0693` (leaf `M3.6.9.6.3.2.2.10.3.3.3.2.5.1`), `2026-10-12`.

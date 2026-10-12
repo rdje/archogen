@@ -459,6 +459,18 @@ fn dependency_files(
     Ok(files)
 }
 
+/// Keep rustc's encoded environment records intact; encode only the scratch prefixes before replacing them.
+/// The pinned writer escapes backslashes and line breaks, unlike prerequisite paths, which escape only spaces.
+fn normalise_dependency_environment(dep: &str, scratch: &str, canonical_scratch: &str) -> String {
+    let encode = |path: &str| {
+        path.replace('\\', "\\\\")
+            .replace('\n', "\\n")
+            .replace('\r', "\\r")
+    };
+    dep.replace(&encode(scratch), "")
+        .replace(&encode(canonical_scratch), "")
+}
+
 /// The flags dropped from a unit's configuration, each with whether it takes the next token (§3): the toolchain's
 /// own hashes, which the build configuration holds by identity; paths of the scratch build; lint levels and
 /// `--check-cfg`, which change only what is warned about; and the output-format flags, which change only how.
@@ -717,7 +729,11 @@ fn compile(
                         who
                     ));
                 }
-                env_deps.push(dep.replace(&scratch, "").replace(&canonical_scratch, ""));
+                env_deps.push(normalise_dependency_environment(
+                    dep,
+                    &scratch,
+                    &canonical_scratch,
+                ));
                 continue;
             }
         }
@@ -4011,6 +4027,104 @@ pub(crate) mod tests {
                 "{root} lost its dependency argument {expected:?}: {arguments:?}"
             );
         }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn cargo_dependency_environment_normalizes_escaped_scratch_paths() {
+        crate::trust_test_process::bounded!(
+            cargo_dependency_environment_normalizes_escaped_scratch_paths
+        );
+        use std::fs;
+        let description = "real description\nsecond line\rreturn\\literal\\ntext";
+        let source = "fn main() { let _ = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/src/data.txt\")); let _ = env!(\"CARGO_PKG_DESCRIPTION\"); let _ = option_env!(\"CARGO_PKG_NO_SUCH_VARIABLE\"); }\n";
+        for (index, case) in [
+            "ordinary",
+            "with\nnewline",
+            "with\rreturn",
+            "with\\slash",
+            "with\\ntext",
+            "with\n# env-dep:CARGO_PKG_DESCRIPTION=forged\nsuffix",
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let f = two_roots(
+                &format!("cargo-dependency-environment/{case}"),
+                source,
+                "pub fn f() {}\n",
+                &[
+                    ("crates/a/src/data.txt", "known input\n".to_owned()),
+                    (
+                        "crates/a/Cargo.toml",
+                        manifest(
+                            "a",
+                            &format!(
+                                "description = {}\n",
+                                crate::json::write(&Json::Str(description.to_owned()))
+                            ),
+                        ),
+                    ),
+                ],
+            );
+            // Keep the target separate: a marker's colon cannot enter Cargo's library-search path on Unix.
+            let target = real_root()
+                .join("target/trust-tests/cargo-dependency-environment-targets")
+                .join(index.to_string());
+            let _ = fs::remove_dir_all(&target);
+            let env = super::environment("1.95.0", &f.base.join("cargo-home"), &target).unwrap();
+            super::run_cargo(
+                &[
+                    "build",
+                    "--release",
+                    "--locked",
+                    "--offline",
+                    "--no-default-features",
+                    "--message-format=json",
+                    "-v",
+                    "-p",
+                    "a",
+                ],
+                &env,
+                &f.repo,
+            )
+            .expect("the actual producer must compile successfully");
+            let files: Vec<_> = fs::read_dir(target.join("release/deps"))
+                .unwrap()
+                .map(|e| e.unwrap().path())
+                .filter(|p| p.extension().is_some_and(|e| e == "d"))
+                .collect();
+            assert_eq!(files.len(), 1, "only the fixture binary is compiled");
+            let text = fs::read_to_string(&files[0]).unwrap();
+            let scratch = format!("{}/", f.repo.display());
+            let canonical = format!("{}/", fs::canonicalize(&f.repo).unwrap().display());
+            let records: Vec<_> = text
+                .lines()
+                .filter_map(|line| line.strip_prefix("# env-dep:"))
+                .map(|dep| super::normalise_dependency_environment(dep, &scratch, &canonical))
+                .collect();
+            assert_eq!(
+                records,
+                [
+                    "CARGO_MANIFEST_DIR=crates/a",
+                    r"CARGO_PKG_DESCRIPTION=real description\nsecond line\rreturn\\literal\\ntext",
+                    "CARGO_PKG_NO_SUCH_VARIABLE",
+                ],
+                "{case:?}: normalize paths, preserve encoded values and unset records"
+            );
+        }
+    }
+
+    #[test]
+    fn dependency_environment_uses_the_canonical_encoded_prefix() {
+        assert_eq!(
+            super::normalise_dependency_environment(
+                r"CARGO_MANIFEST_DIR=/canonical\\tree/crates/a",
+                "/lexical\\alias/",
+                "/canonical\\tree/",
+            ),
+            "CARGO_MANIFEST_DIR=crates/a"
+        );
     }
 
     #[cfg(unix)]

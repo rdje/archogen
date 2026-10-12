@@ -213,6 +213,13 @@ Encoding known scratch prefixes preserves the existing record representation. Ex
 untracked; no downloaded source hash was captured. Isolated Rust/native getenv controls also trace an
 equals-bearing name lookup to this host's boundary, without a universal name or host contract.
 
+`cargo_dependency_environment_normalizes_escaped_scratch_paths`
+(`M3.6.9.6.3.2.2.10.3.3.3.2.5.2`, `2026-10-12`) permanently holds encoded-prefix normalization against
+actual Cargo dependency output. Independent relative manifest, encoded package metadata and unset expectations
+cover line breaks, backslashes, literal backslash-n and a source-marker path, with a separate ordinary target.
+Distinct canonical-prefix control passes; exact old replacement gives the producer control's named failure.
+The existing record representation remains; public complete-command framing is still separately pending.
+
 ## `rust-reference`
 
 | Field | Value |

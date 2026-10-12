@@ -393,18 +393,29 @@ this host refuses colon output paths when joining its dynamic-library search pat
 reversal `trust-dependency-first-physical-line` gives the producer control's named failure; maintained census
 checks verify originals after the reversal (`M3.6.9.6.3.2.2.10.3.3.3.2.2`, `2026-10-12`).
 
-A remaining public collection limitation is separately owned: successful Cargo commands containing quoted
-newlines still panic in the physical-line command reader. A diagnostic command-framing intervention with the
-repaired dependency reader also exposes an escaped environment-value normalization mismatch. Rustc writes
-backslash-n in these records, while the current replacement searches literal newlines. The environment repair
-comes next, before complete command framing and permanent public controls. Unmodified public collection
-still panics on that fixture; the copied diagnostics are qualified in the task record.
+Environment records use a different encoding: pinned rustc escapes backslashes and line breaks. Inventory
+normalization now encodes only its known scratch/canonical prefixes before replacement, preserving the existing
+record strings. For example, a path containing a real newline has backslash-n in the dependency record, while
+a literal backslash-n path has an escaped backslash followed by n. Neither is decoded into the other.
 
-Producer-domain investigation (`M3.6.9.6.3.2.2.10.3.3.3.2.5.1`, `2026-10-12`) binds the environment
-encoding to [pinned rustc source](ledger.md#rust-toolchain), actual dependency bytes and compiled fixture values.
-The next repair will encode the known scratch prefixes before replacement, preserving genuine encoded values
-and unset records. A tested source path resembling a record marker remains escaped as a prerequisite; putting
-its colon in the output path makes Cargo refuse. These finite controls justify no general path or host guarantee.
+The permanent producer control requires the independently expected `CARGO_MANIFEST_DIR=crates/a`, exact
+encoded description and unset record across ordinary, line-break, backslash, literal-backslash-n and source-marker
+roots. A separate target permits the marker's colon in the source root; Cargo refuses it in an output target.
+A distinct canonical-prefix control holds the alternative path spelling. Run the producer control with local stores:
+
+```sh
+CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PWD/target/cache" \
+  cargo test -p xtask trust::tests::cargo_dependency_environment_normalizes_escaped_scratch_paths -- --exact
+```
+
+The exact literal-prefix reversal `trust-dependency-environment-prefix-unescaped` produces its named failure;
+maintained census verifies originals restored (`M3.6.9.6.3.2.2.10.3.3.3.2.5.2`, `2026-10-12`).
+These controls bind the [pinned writer](ledger.md#rust-toolchain), without a general path or host guarantee.
+
+A remaining public collection limitation is separately owned: successful Cargo commands containing quoted
+newlines still panic in the physical-line command reader. Dependency-file and environment normalization repairs
+are complete; whole-command framing and permanent public controls come next. The earlier copied diagnostics
+remain qualified in the task record; full multiline public collection and final helper adequacy are unclaimed.
 
 ## Historical effects and current self-tests
 
