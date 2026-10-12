@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — post-repair helper measurement preserves every survivor obligation
+
+`ARCHOGEN-M3-0685` (leaf `M3.6.9.6.3.2.2.10.3.1`), `2026-10-12`.
+
+- Measure all 24 current helper edits: 13 named finishing kills, 11 survivors, no unviable/timeouts/unjudged,
+  strict exit 1. Five prior survivor edits now fail the permanent quote control; retain exact initial/current
+  source-region and replacement bindings, without an equivalence or full adequacy claim.
+- Maintained census verifies all 1003 original inputs and opaque gitlink metadata restored; copied source matches.
+  Native listing/outcomes/audit scope stays distinct from restoration and semantic classification.
+- Own surviving final-token loss under the next retained-argument control leaf. Book/live/history records align;
+  final initial-obligation closure and full integration remain in their separate leaves.
+
 ## archogen — inventory preserves Cargo apostrophe escapes
 
 `ARCHOGEN-M3-0684` (leaf `M3.6.9.6.3.2.2.10.2`), `2026-10-12`.

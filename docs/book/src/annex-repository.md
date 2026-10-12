@@ -324,6 +324,16 @@ test produces a named finishing kill. Maintained census checks verify original i
 This makes the reproduction durable on the [pinned Cargo producer](ledger.md#rust-toolchain), without a general
 shell-conformance guarantee. Initial helper survivor classification and full current-source adequacy remain open.
 
+The post-repair bounded helper sweep at `cc5da9f` measured all 24 current edits: 13 named finishing kills and
+11 survivors, with no unviable, timeout or unjudged results; strict exit one. The quote control now kills five
+previously surviving edits. Every prior survivor retains an exact source-region/edit binding in the task record.
+All 1003 captured original inputs restored, gitlink metadata stayed fixed, and copied source matched.
+
+Deleting the final token or making its final push condition false still survives the parent population.
+`M3.6.9.6.3.2.2.10.3.2` owns an independent retained-argument control using real dependency-bearing Cargo
+builds; comparisons between configurations alone can miss a consistently omitted argument. Other survivors
+require producer-domain judgments. No equivalent is established by this measurement, and full adequacy remains open.
+
 ## Historical effects and current self-tests
 
 The effects diagnostic keeps the [initial semantic witness review](trust-adequacy.md#semantic-witnesses-in-the-initial-cohort)
