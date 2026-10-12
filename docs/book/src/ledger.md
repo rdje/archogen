@@ -184,6 +184,12 @@ Unix public control with isolated ordinary/space/quote/backslash/combined toolch
 and dependency expectations. Its exact selector reversal gives a named failure. The command-format assumptions
 still require revalidation on a producer change; finite controls do not prove universal empty-argument absence.
 
+`cargo_verbose_empty_arguments_keep_their_token_boundaries` (`M3.6.9.6.3.2.2.10.3.3.3.1`, `2026-10-12`)
+builds actual successful pinned Cargo rustc fixtures with nonempty and empty `-A`/`-W` operands. Empty lint
+names warn; compilation succeeds. Independent expected middle/final tokens hold the helper's format promise,
+without admitting extra flags to inventory builds. Exact native and actual systematic loss edits give named
+finishing failures. This permanent control refutes a generic absence premise; no universal shell guarantee follows.
+
 ## `rust-reference`
 
 | Field | Value |

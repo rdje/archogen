@@ -5487,3 +5487,14 @@ from
 to
         // c.env("RUSTC", "rustc");
 end
+
+mutation trust-cargo-empty-arguments-lost
+file xtask/src/trust.rs
+test -p xtask trust::tests::cargo_verbose_empty_arguments_keep_their_token_boundaries -- --exact
+expect killed
+why M3.6.9.6.3.2.2.10.3.3.3.1: actual successful Cargo rustc verbose output includes empty lint operands at middle and final positions; the helper's format promise must preserve both tokens independently of the inventory caller's admitted flags.
+from
+                    any = true;
+to
+                    any = false;
+end

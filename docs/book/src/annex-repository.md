@@ -330,15 +330,9 @@ test produces a named finishing kill. Maintained census checks verify original i
 This makes the reproduction durable on the [pinned Cargo producer](ledger.md#rust-toolchain), without a general
 shell-conformance guarantee. Initial helper survivor classification and full current-source adequacy remain open.
 
-The post-repair bounded helper sweep at `cc5da9f` measured all 24 current edits: 13 named finishing kills and
-11 survivors, with no unviable, timeout or unjudged results; strict exit one. The quote control now kills five
-previously surviving edits. Every prior survivor retains an exact source-region/edit binding in the task record.
-All 1003 captured original inputs restored, gitlink metadata stayed fixed, and copied source matched.
-
-Deleting the final token or making its final push condition false still survives the parent population.
-`M3.6.9.6.3.2.2.10.3.2` owns an independent retained-argument control using real dependency-bearing Cargo
-builds; comparisons between configurations alone can miss a consistently omitted argument. Other survivors
-require producer-domain judgments. No equivalent is established by this measurement, and full adequacy remains open.
+Historical helper measurements and exact initial/current edit bindings remain in `docs/tasks/M3.md` and its
+linked archives. Comparisons between configurations alone missed a consistently omitted dependency argument;
+the independent retained-argument control below supplies the missing expectation. Full adequacy remains open.
 
 The independent retained-argument control now builds two roots that call a shared `common` library and requires
 these arguments in each root's own normalized unit configuration on the pinned producer:
@@ -387,11 +381,22 @@ The exact compiler-selection reversal and the actual statement-deletion candidat
 named finishing failure, with strict exit zero. Maintained census checks verify original inputs after each;
 the copied sweep source matches. All older test bodies and catalogue entries are preserved.
 
-An actual manifest `check-cfg = [""]` value also makes Cargo print an empty argument. Rustc rejects it,
-and the inventory returns the build failure before command decoding. Ordinary and `check-cfg = ["cfg()"]`
-controls compile successfully. These exploratory probes are qualified as untracked producers in the task
-record: they establish neither universal empty-argument absence nor an equivalent mutation. All remaining
-helper obligations stay open for renewed domain judgments after the executable-boundary repair.
+Actual successful Cargo rustc builds can also print empty arguments: `-A "" -W ""` produces unknown-lint
+warnings but compilation succeeds on the pin. The permanent Unix parent control compares these empty operands
+with nonempty `dead_code` controls and requires the independent final sequence `[-A, operand, -W, operand]`,
+preserving both middle and final empty tokens. These extra diagnostic flags exercise the helper's documented
+Cargo-format promise; inventory builds do not admit caller-supplied rustc flags. Run it with local stores:
+
+```sh
+CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PWD/target/cache" \
+  cargo test -p xtask trust::tests::cargo_verbose_empty_arguments_keep_their_token_boundaries -- --exact
+```
+
+At `M3.6.9.6.3.2.2.10.3.3.3.1` (`2026-10-12`), all four actual empty-token-loss edits change from
+survivors to named finishing kills by this test, strict exit zero. The exact catalogue reversal
+`trust-cargo-empty-arguments-lost` also yields its named failure. Maintained census checks verify originals
+after each run; copied source matches. Production and prior test bodies are unchanged. Earlier failing empty
+check-cfg probes established no absence premise. Delimiter proofs and final helper obligation closure remain open.
 
 ## Historical effects and current self-tests
 

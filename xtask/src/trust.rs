@@ -3979,6 +3979,67 @@ pub(crate) mod tests {
 
     #[cfg(unix)]
     #[test]
+    fn cargo_verbose_empty_arguments_keep_their_token_boundaries() {
+        crate::trust_test_process::bounded!(
+            cargo_verbose_empty_arguments_keep_their_token_boundaries
+        );
+        let f = two_roots(
+            "cargo-empty-lint-arguments",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &[],
+        );
+        for (case, lint) in [("nonempty", "dead_code"), ("empty", "")] {
+            let env = super::environment(
+                "1.95.0",
+                &f.base.join(case).join("cargo-home"),
+                &f.base.join(case).join("target"),
+            )
+            .unwrap();
+            // These explicit diagnostic flags exercise the helper's Cargo-format promise. Inventory builds
+            // do not admit caller-supplied rustc flags. Empty lint names warn, but this real compilation succeeds.
+            let (_, stderr) = super::run_cargo(
+                &[
+                    "rustc",
+                    "--release",
+                    "--locked",
+                    "--offline",
+                    "--no-default-features",
+                    "--message-format=json",
+                    "-v",
+                    "-p",
+                    "a",
+                    "--",
+                    "-A",
+                    lint,
+                    "-W",
+                    lint,
+                ],
+                &env,
+                &f.repo,
+            )
+            .expect("the actual producer must compile successfully");
+            let commands: Vec<_> = stderr
+                .lines()
+                .filter_map(|line| line.trim().strip_prefix("Running `")?.strip_suffix('`'))
+                .collect();
+            assert_eq!(
+                commands.len(),
+                1,
+                "exactly the fixture's binary is compiled"
+            );
+            let tokens = super::split_command(commands[0]);
+            assert_eq!(tokens.first().map(String::as_str), Some("rustc"));
+            let expected = ["-A", lint, "-W", lint].map(str::to_owned);
+            assert!(
+                tokens.ends_with(&expected),
+                "{case}: actual verbose arguments lost boundaries: {tokens:?}"
+            );
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
     fn compiler_installation_paths_preserve_inventory_units_and_configuration() {
         use std::collections::BTreeSet;
         use std::fs;
