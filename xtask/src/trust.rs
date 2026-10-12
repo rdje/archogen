@@ -414,6 +414,80 @@ fn split_command(line: &str) -> Vec<String> {
     out
 }
 
+/// Frame Cargo's complete verbose records before decoding their arguments. The pinned Unix formatter can
+/// put literal line breaks and backticks inside single-quoted arguments. Only an unquoted, unescaped backtick
+/// ends a record; embedded Running lines stay inside it. Malformed records refuse rather than slicing blindly.
+fn cargo_commands<'a>(
+    mut stderr: &'a str,
+    scratch: &str,
+    canonical_scratch: &str,
+) -> Result<Vec<&'a str>, String> {
+    let mut commands = Vec::new();
+    while !stderr.is_empty() {
+        let line_end = stderr.find('\n').unwrap_or(stderr.len());
+        let line = &stderr[..line_end];
+        let Some(command) = line
+            .trim_start_matches([' ', '\t'])
+            .strip_prefix("Running `")
+        else {
+            // Cargo's Compiling/Checking status prints package paths without quoting. Consume any known raw
+            // scratch prefix on this non-command line intact, so its embedded Running line is not a record.
+            let prefix_end = [scratch, canonical_scratch]
+                .into_iter()
+                .filter(|prefix| !prefix.is_empty())
+                .filter_map(|prefix| {
+                    stderr
+                        .find(prefix)
+                        .filter(|start| *start < line_end)
+                        .map(|start| start + prefix.len())
+                })
+                .max()
+                .unwrap_or(line_end)
+                .max(line_end);
+            let skip = prefix_end
+                + stderr[prefix_end..]
+                    .find('\n')
+                    .unwrap_or(stderr.len() - prefix_end);
+            stderr = &stderr[(skip + 1).min(stderr.len())..];
+            continue;
+        };
+        let rest = &stderr[line.len() - command.len()..];
+        let mut quoted = false;
+        let mut escaped = false;
+        let mut end = None;
+        for (index, c) in rest.char_indices() {
+            if matches!(c, '\n' | '\r') && !quoted {
+                return Err("unquoted line break in Cargo Running command".to_owned());
+            }
+            if escaped {
+                escaped = false;
+                continue;
+            }
+            match c {
+                '\\' if !quoted => escaped = true,
+                '\'' => quoted = !quoted,
+                '`' if !quoted => {
+                    end = Some(index);
+                    break;
+                }
+                _ => {}
+            }
+        }
+        let end = end.ok_or_else(|| "unterminated Cargo Running command".to_owned())?;
+        if end == 0 {
+            return Err("empty Cargo Running command".to_owned());
+        }
+        let after = &rest[end + 1..];
+        let next = after.find('\n').unwrap_or(after.len());
+        if !after[..next].trim_matches([' ', '\t', '\r']).is_empty() {
+            return Err("trailing text after Cargo Running command".to_owned());
+        }
+        commands.push(&rest[..end]);
+        stderr = &after[(next + 1).min(after.len())..];
+    }
+    Ok(commands)
+}
+
 /// Read rustc's first dependency rule, matching its known raw output target before interpreting separators.
 /// A source path inside the written tree has the catalog's ASCII grammar; only its scratch prefix can contain
 /// spaces or line breaks. Rustc escapes spaces in prerequisites, but writes line breaks literally. Consume each
@@ -670,11 +744,7 @@ fn compile(
             .to_owned()
     };
     let mut units = Vec::new();
-    for line in stderr.lines() {
-        let Some(start) = line.find("Running `") else {
-            continue;
-        };
-        let cmd = &line[start + 9..line.rfind('`').unwrap_or(line.len())];
+    for cmd in cargo_commands(&stderr, &scratch, &canonical_scratch)? {
         let tokens = split_command(cmd);
         if !tokens.first().is_some_and(|p| p.ends_with("rustc")) {
             continue; // a build script's run, or a test binary: neither is a compilation
@@ -3980,6 +4050,175 @@ pub(crate) mod tests {
             let actual = written(f.run_into(out));
             assert_eq!(configurations(&actual), expected, "output path {out:?}");
             assert_eq!(items(&actual), items(&plain), "shared items for {out:?}");
+        }
+    }
+
+    #[test]
+    fn cargo_command_framing_preserves_quotes_and_refuses_malformed_records() {
+        let command = "rustc --out-dir 'with\n     Running `fake`\r\\path'\\''tail' --cfg ''";
+        let stderr = format!("warning: contains Running `ignored`\n     Running `{command}`\r\n     Running `rustc other.rs`\n    Finished\n");
+        assert_eq!(
+            super::cargo_commands(&stderr, "/scratch/", "/canonical/").unwrap(),
+            [command, "rustc other.rs"]
+        );
+        assert_eq!(
+            super::split_command(command),
+            [
+                "rustc",
+                "--out-dir",
+                "with\n     Running `fake`\r\\path'tail",
+                "--cfg",
+                ""
+            ]
+        );
+        assert!(
+            super::cargo_commands("warning: Running `unclosed\n", "/scratch/", "/canonical/")
+                .unwrap()
+                .is_empty()
+        );
+        let raw_prefix = "/written/with\n     Running `rustc --crate-name fake`\ntrailer/tree/";
+        let status = format!(
+            "   Compiling a v0.1.0 ({raw_prefix}crates/a)\n     Running `rustc actual.rs`\n"
+        );
+        for (scratch, canonical) in [(raw_prefix, "/other/"), ("/other/", raw_prefix)] {
+            assert_eq!(
+                super::cargo_commands(&status, scratch, canonical).unwrap(),
+                ["rustc actual.rs"]
+            );
+        }
+        for malformed in [
+            "     Running `rustc",
+            "     Running `rustc 'unclosed`\n",
+            "     Running `rustc\nother`\n",
+            "     Running `rustc\rother`\n",
+            "     Running `rustc` junk\n",
+            "     Running ``\n",
+            "     Running `rustc \\`\n",
+        ] {
+            assert!(
+                super::cargo_commands(malformed, "/scratch/", "/canonical/").is_err(),
+                "malformed record {malformed:?}"
+            );
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn cargo_multiline_output_paths_preserve_complete_inventory() {
+        crate::trust_test_process::bounded!(
+            cargo_multiline_output_paths_preserve_complete_inventory
+        );
+        let data = "independently expected compiler input\n";
+        let include = "const DATA: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/src/data.txt\"));";
+        let main = format!("{include}\nfn main() {{ common::c(); assert!(!DATA.is_empty()); }}\n");
+        let library = "pub fn f() { common::c(); }\n";
+        let common = "pub fn c() {}\n";
+        let f = two_roots(
+            "cargo-multiline-output-paths",
+            &main,
+            library,
+            &[
+                ("crates/a/src/data.txt", data.to_owned()),
+                ("crates/common/Cargo.toml", manifest("common", "")),
+                ("crates/common/src/lib.rs", common.to_owned()),
+                (
+                    "crates/a/Cargo.toml",
+                    manifest("a", "[dependencies]\ncommon = { path = \"../common\" }\n"),
+                ),
+                (
+                    "crates/b/Cargo.toml",
+                    manifest("b", "[dependencies]\ncommon = { path = \"../common\" }\n"),
+                ),
+                (
+                    "trust/roots.eadl",
+                    format!(
+                        "{ROOTS}{}",
+                        admit("crates/a/src/main.rs", "include_str", include)
+                    ),
+                ),
+            ],
+        );
+        let plain = written(f.run_into("ordinary"));
+        for out in [
+            "ordinary",
+            "with\nnewline",
+            "with\rreturn",
+            "with`tick",
+            "with\n     Running `rustc --crate-name fake`\ntrailer",
+            "with'\n\\`quote\rend",
+        ] {
+            // These are actual public builds: every unit, file and retained dependency is independently required.
+            let actual = if out == "ordinary" {
+                plain.clone()
+            } else {
+                written(f.run_into(out))
+            };
+            assert_eq!(actual.get("programs").unwrap().elements().len(), 2);
+            for (root, own, dependency) in [
+                ("gen", "crates/a", "--extern common=libcommon.rlib"),
+                ("chk", "crates/b", "--extern common=libcommon.rmeta"),
+            ] {
+                let units = program(&actual, root).get("units").unwrap().elements();
+                assert_eq!(units.len(), 2, "{root}: {out:?}");
+                let packages: std::collections::BTreeSet<_> = units
+                    .iter()
+                    .map(|u| u.get("package").unwrap().as_str().unwrap())
+                    .collect();
+                assert_eq!(
+                    packages,
+                    std::collections::BTreeSet::from([own, "crates/common"])
+                );
+                for unit in units {
+                    let package = unit.get("package").unwrap().as_str().unwrap();
+                    let (name, inputs, environment) = match package {
+                        "crates/a" => (
+                            "a",
+                            vec![
+                                ("crates/a/src/main.rs", main.as_str()),
+                                ("crates/a/src/data.txt", data),
+                            ],
+                            vec!["CARGO_MANIFEST_DIR=crates/a"],
+                        ),
+                        "crates/b" => ("b", vec![("crates/b/src/lib.rs", library)], vec![]),
+                        "crates/common" => {
+                            ("common", vec![("crates/common/src/lib.rs", common)], vec![])
+                        }
+                        _ => panic!("unexpected package {package}"),
+                    };
+                    assert_eq!(unit.get("crate").unwrap().as_str(), Some(name));
+                    let files = Json::Object(
+                        inputs
+                            .into_iter()
+                            .map(|(path, content)| {
+                                (
+                                    path.to_owned(),
+                                    Json::Str(Digest::of(content.as_bytes()).hex()),
+                                )
+                            })
+                            .collect(),
+                    );
+                    assert_eq!(unit.get("files"), Some(&files), "{root}/{package}: {out:?}");
+                    let env = Json::Array(
+                        environment
+                            .into_iter()
+                            .map(|e| Json::Str(e.to_owned()))
+                            .collect(),
+                    );
+                    assert_eq!(unit.get("env"), Some(&env), "{root}/{package}: {out:?}");
+                    if package == own {
+                        assert!(
+                            unit.get("configuration")
+                                .unwrap()
+                                .elements()
+                                .iter()
+                                .any(|arg| arg.as_str() == Some(dependency)),
+                            "{root} lost {dependency}: {out:?}"
+                        );
+                    }
+                }
+            }
+            assert_eq!(configurations(&actual), configurations(&plain), "{out:?}");
+            assert_eq!(items(&actual), items(&plain), "{out:?}");
         }
     }
 

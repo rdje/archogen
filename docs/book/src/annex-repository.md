@@ -374,48 +374,55 @@ The exact reversal `trust-cargo-empty-arguments-lost` and actual empty-token-los
 named failures. Earlier failing check-cfg probes established no absence premise. Delimiter proofs and final
 helper closure remain open.
 
-The dependency reader now matches the known first `.d` target before interpreting separators. Rustc writes
-that output target raw, and line breaks inside it do not end the rule. Its source prerequisites escape spaces;
-complete known scratch/canonical prefixes are consumed before splitting the catalog-grammar source suffixes.
-This preserves both relative source paths and absolute in-tree `include_str!` inputs. Missing or empty target
-rules refuse; this is a pinned-producer reader, without a general Makefile grammar claim.
-
-Run the permanent private-reader producer control with local stores:
+The dependency reader matches the known raw first `.d` target and consumes complete space-escaped scratch/
+canonical prefixes before splitting catalog-grammar suffixes. Relative sources and absolute in-tree
+`include_str!` inputs retain line breaks; missing/empty targets refuse. No general Makefile grammar is claimed.
+Run the permanent producer control:
 
 ```sh
 CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PWD/target/cache" \
   cargo test -p xtask trust::tests::cargo_dependency_information_retains_actual_source_paths -- --exact
 ```
 
-It requires independently expected source files across ordinary, line-break, space, backtick, tab, backslash
-and hash paths. A separate malformed-target control includes a synthetic colon-space target: actual Cargo on
-this host refuses colon output paths when joining its dynamic-library search path. The exact prior-reader
-reversal `trust-dependency-first-physical-line` gives the producer control's named failure; maintained census
-checks verify originals after the reversal (`M3.6.9.6.3.2.2.10.3.3.3.2.2`, `2026-10-12`).
+Independent source sets hold across ordinary, line-break, space, backtick, tab, backslash and hash paths.
+A synthetic malformed-target control includes colon-space: actual Cargo on this host refuses colon output paths
+when joining its dynamic-library search path. Exact reversal `trust-dependency-first-physical-line` gives the
+producer's named failure; maintained census verifies originals restored.
 
-Environment records use a different encoding: pinned rustc escapes backslashes and line breaks. Inventory
-normalization now encodes only its known scratch/canonical prefixes before replacement, preserving the existing
-record strings. For example, a path containing a real newline has backslash-n in the dependency record, while
-a literal backslash-n path has an escaped backslash followed by n. Neither is decoded into the other.
+Environment records escape backslashes and line breaks. Normalization encodes only known scratch/canonical
+prefixes before replacement. A real newline becomes backslash-n; literal backslash-n becomes escaped
+backslash followed by n. Neither is decoded into the other.
 
-The permanent producer control requires the independently expected `CARGO_MANIFEST_DIR=crates/a`, exact
-encoded description and unset record across ordinary, line-break, backslash, literal-backslash-n and source-marker
-roots. A separate target permits the marker's colon in the source root; Cargo refuses it in an output target.
-A distinct canonical-prefix control holds the alternative path spelling. Run the producer control with local stores:
+The permanent producer control requires relative `CARGO_MANIFEST_DIR=crates/a` and exact encoded description/
+unset records across ordinary, line-break, backslash, literal-backslash-n and source-marker roots.
+A separate target permits the marker's colon in the source root; a distinct canonical-prefix control also passes:
 
 ```sh
 CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PWD/target/cache" \
   cargo test -p xtask trust::tests::cargo_dependency_environment_normalizes_escaped_scratch_paths -- --exact
 ```
 
-The exact literal-prefix reversal `trust-dependency-environment-prefix-unescaped` produces its named failure;
-maintained census verifies originals restored (`M3.6.9.6.3.2.2.10.3.3.3.2.5.2`, `2026-10-12`).
-These controls bind the [pinned writer](ledger.md#rust-toolchain), without a general path or host guarantee.
+Exact reversal `trust-dependency-environment-prefix-unescaped` gives its named failure; originals restore.
+These controls bind the [pinned writer](ledger.md#rust-toolchain).
 
-A remaining public collection limitation is separately owned: successful Cargo commands containing quoted
-newlines still panic in the physical-line command reader. Dependency-file and environment normalization repairs
-are complete; whole-command framing and permanent public controls come next. The earlier copied diagnostics
-remain qualified in the task record; full multiline public collection and final helper adequacy are unclaimed.
+Complete Cargo commands are framed before token decoding. Quoted newlines, carriage returns and backticks
+stay inside arguments. Cargo's Compiling/Checking status prints package paths raw: complete known scratch/
+canonical prefixes there are consumed before physical line breaks, so path text resembling a Running command
+cannot create another unit. Empty/unclosed records, unquoted breaks and trailing junk refuse without panics.
+
+Run the public actual-producer control:
+
+```sh
+CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PWD/target/cache" \
+  cargo test -p xtask trust::tests::cargo_multiline_output_paths_preserve_complete_inventory -- --exact
+```
+
+It independently requires root/dependency units, source/data hashes, environment and retained dependency
+arguments across ordinary, line-break, backtick, fake-Running and combined apostrophe/backslash paths.
+Configurations/shared items match ordinary. Synthetic quote/canonical/malformed controls and exact reversals
+`trust-cargo-command-first-physical-line` and `trust-cargo-status-path-split` hold both boundaries; originals
+restore (`M3.6.9.6.3.2.2.10.3.3.3.2.3`). The measured public collection defects are repaired;
+delimiter proofs and final helper adequacy remain open.
 
 ## Historical effects and current self-tests
 

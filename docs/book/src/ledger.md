@@ -194,7 +194,7 @@ Multiline-path diagnosis (`M3.6.9.6.3.2.2.10.3.3.3.2.1`, `2026-10-12`) retains a
 output with line feeds, carriage returns and backticks, plus losslessly decoded dependency bytes. Copied public inventory control exposes
 a physical-line command-slice panic. A diagnostic framing intervention exposes empty compiler-read file objects
 from the separate first-target reader. Adapters/tests are untracked and qualified, not permanent controls;
-unmodified production still panics. Dependency-first and command-second repairs are owned before further proofs.
+then-unmodified production panicked. Dependency, environment and command repairs below precede further proofs.
 
 The private `cargo_dependency_information_retains_actual_source_paths` control
 (`M3.6.9.6.3.2.2.10.3.3.3.2.2`, `2026-10-12`) reads actual pinned rustc dependency output with relative and
@@ -202,7 +202,7 @@ absolute in-tree inputs, independently requiring their complete paths across ord
 backtick, tab, backslash and hash roots. Known-target/prefix framing repairs file collection; exact prior-reader
 reversal gives a named failure. Synthetic colon-space target parsing is separate from Cargo's measured host refusal.
 A qualified copied command-framing intervention then exposes escaped environment-value normalization; its repair
-is owned before public command framing. No complete multiline inventory or universal producer grammar claim.
+precedes public command framing below. This diagnostic establishes no universal producer grammar.
 
 Environment investigation (`M3.6.9.6.3.2.2.10.3.3.3.2.5.1`, `2026-10-12`) verifies rustc commit
 `59807616e1fa2540724bfbac14d7976d7e4a3860` against the installed pin and reads its
@@ -218,7 +218,16 @@ equals-bearing name lookup to this host's boundary, without a universal name or 
 actual Cargo dependency output. Independent relative manifest, encoded package metadata and unset expectations
 cover line breaks, backslashes, literal backslash-n and a source-marker path, with a separate ordinary target.
 Distinct canonical-prefix control passes; exact old replacement gives the producer control's named failure.
-The existing record representation remains; public complete-command framing is still separately pending.
+The existing record representation remains.
+
+`cargo_multiline_output_paths_preserve_complete_inventory`
+(`M3.6.9.6.3.2.2.10.3.3.3.2.3`, `2026-10-12`) permanently exercises actual public builds across
+line-break, backtick, fake-Running and combined apostrophe/backslash paths. Independent unit identities,
+source/data hashes, environment and dependency arguments hold; configurations/shared items remain stable.
+Raw pinned Cargo stderr and JSON artifacts also identify unquoted Compiling package paths as the source of
+a fake command under the first framing intervention. Complete quoted records and known raw status-prefix
+handling repair both boundaries; synthetic malformed/canonical controls and both exact native reversals hold.
+Exploratory raw status audit remains qualified; permanent public controls establish the repair, not full adequacy.
 
 ## `rust-reference`
 

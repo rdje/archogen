@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — complete Cargo command records preserve public inventory
+
+`ARCHOGEN-M3-0695` (leaf `M3.6.9.6.3.2.2.10.3.3.3.2.3`), `2026-10-12`.
+
+- Frame complete quoted commands across line breaks, retaining backticks and outside escapes. Consume known raw
+  scratch/canonical prefixes in non-command status paths so embedded Running text cannot become a fake unit.
+  Malformed framing refuses without the prior slice panic; token decoding and older bodies remain exact.
+- Actual public controls independently require units, source/data hashes, normalized environment and dependency
+  arguments, with stable configurations/shared items across ordinary and delimiter-like paths. Synthetic malformed/
+  quote/canonical controls pass. Both exact native reversals give named finishing kills, strict 0.
+- All 1010 captured inputs restore; prior catalogue prefix remains exact. Book/canonical/source-ledger/live sync,
+  format/strict clippy pass, final exact-staged focused required. Delimiter proofs next; final adequacy remains open.
+
 ## archogen — encoded environment prefixes normalize without changing record strings
 
 `ARCHOGEN-M3-0694` (leaf `M3.6.9.6.3.2.2.10.3.3.3.2.5.2`), `2026-10-12`.

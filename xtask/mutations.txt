@@ -5590,3 +5590,125 @@ to
     }
 
 end
+
+mutation trust-cargo-command-first-physical-line
+file xtask/src/trust.rs
+test -p xtask trust::tests::cargo_multiline_output_paths_preserve_complete_inventory -- --exact
+expect killed
+why Complete real public builds must retain multiline commands; factoring the exact prior reader must give the named panic control.
+from
+    fn cargo_commands<'a>(
+        mut stderr: &'a str,
+        scratch: &str,
+        canonical_scratch: &str,
+    ) -> Result<Vec<&'a str>, String> {
+        let mut commands = Vec::new();
+        while !stderr.is_empty() {
+            let line_end = stderr.find('\n').unwrap_or(stderr.len());
+            let line = &stderr[..line_end];
+            let Some(command) = line
+                .trim_start_matches([' ', '\t'])
+                .strip_prefix("Running `")
+            else {
+                // Cargo's Compiling/Checking status prints package paths without quoting. Consume any known raw
+                // scratch prefix on this non-command line intact, so its embedded Running line is not a record.
+                let prefix_end = [scratch, canonical_scratch]
+                    .into_iter()
+                    .filter(|prefix| !prefix.is_empty())
+                    .filter_map(|prefix| {
+                        stderr
+                            .find(prefix)
+                            .filter(|start| *start < line_end)
+                            .map(|start| start + prefix.len())
+                    })
+                    .max()
+                    .unwrap_or(line_end)
+                    .max(line_end);
+                let skip = prefix_end
+                    + stderr[prefix_end..]
+                        .find('\n')
+                        .unwrap_or(stderr.len() - prefix_end);
+                stderr = &stderr[(skip + 1).min(stderr.len())..];
+                continue;
+            };
+            let rest = &stderr[line.len() - command.len()..];
+            let mut quoted = false;
+            let mut escaped = false;
+            let mut end = None;
+            for (index, c) in rest.char_indices() {
+                if matches!(c, '\n' | '\r') && !quoted {
+                    return Err("unquoted line break in Cargo Running command".to_owned());
+                }
+                if escaped {
+                    escaped = false;
+                    continue;
+                }
+                match c {
+                    '\\' if !quoted => escaped = true,
+                    '\'' => quoted = !quoted,
+                    '`' if !quoted => {
+                        end = Some(index);
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+            let end = end.ok_or_else(|| "unterminated Cargo Running command".to_owned())?;
+            if end == 0 {
+                return Err("empty Cargo Running command".to_owned());
+            }
+            let after = &rest[end + 1..];
+            let next = after.find('\n').unwrap_or(after.len());
+            if !after[..next].trim_matches([' ', '\t', '\r']).is_empty() {
+                return Err("trailing text after Cargo Running command".to_owned());
+            }
+            commands.push(&rest[..end]);
+            stderr = &after[(next + 1).min(after.len())..];
+        }
+        Ok(commands)
+    }
+to
+    fn cargo_commands<'a>(
+        stderr: &'a str,
+        _scratch: &str,
+        _canonical_scratch: &str,
+    ) -> Result<Vec<&'a str>, String> {
+        let mut commands = Vec::new();
+        for line in stderr.lines() {
+            let Some(start) = line.find("Running `") else {
+                continue;
+            };
+            commands.push(&line[start + 9..line.rfind('`').unwrap_or(line.len())]);
+        }
+        Ok(commands)
+    }
+end
+
+mutation trust-cargo-status-path-split
+file xtask/src/trust.rs
+test -p xtask trust::tests::cargo_multiline_output_paths_preserve_complete_inventory -- --exact
+expect killed
+why Cargo prints raw package paths in status messages; splitting a known scratch prefix must expose the fake Running path as a named public failure.
+from
+                // Cargo's Compiling/Checking status prints package paths without quoting. Consume any known raw
+                // scratch prefix on this non-command line intact, so its embedded Running line is not a record.
+                let prefix_end = [scratch, canonical_scratch]
+                    .into_iter()
+                    .filter(|prefix| !prefix.is_empty())
+                    .filter_map(|prefix| {
+                        stderr
+                            .find(prefix)
+                            .filter(|start| *start < line_end)
+                            .map(|start| start + prefix.len())
+                    })
+                    .max()
+                    .unwrap_or(line_end)
+                    .max(line_end);
+                let skip = prefix_end
+                    + stderr[prefix_end..]
+                        .find('\n')
+                        .unwrap_or(stderr.len() - prefix_end);
+                stderr = &stderr[(skip + 1).min(stderr.len())..];
+to
+                stderr = &stderr[(line_end + 1).min(stderr.len())..];
+end

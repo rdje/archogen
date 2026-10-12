@@ -172,9 +172,15 @@ require an independently expected relative manifest path and exact description/u
 line-break, backslash, literal-backslash-n and source-marker roots; a distinct canonical-prefix control passes.
 No general record decoder or path/host grammar is admitted.
 
-Known public collection limitation: actual successful Cargo builds with LF output paths still panic in the
-physical-line command reader. Dependency-file and environment normalization repairs are verified;
-complete public command framing `.10.3.3.3.2.3` remains open. No complete multiline inventory claim yet.
+Complete-command framing (`M3.6.9.6.3.2.2.10.3.3.3.2.3`, `2026-10-12`) consumes quoted line breaks
+and backticks intact before token decoding. Cargo also prints package paths raw in Compiling/Checking status:
+known complete scratch/canonical prefixes there are consumed before physical line breaks, so embedded Running
+text cannot become a command. Empty/unclosed framing, unquoted breaks and trailing junk refuse without panics.
+`cargo_multiline_output_paths_preserve_complete_inventory` exercises actual public builds, independently
+requiring root/dependency units, source/data hashes, environment and retained dependency arguments across
+ordinary, line-break, backtick, fake-Running and combined quote/backslash paths; configurations/shared items
+remain stable. Synthetic malformed/canonical controls and exact native reversals hold both boundaries.
+This repairs the measured public multiline collection defects; final helper adequacy remains separately open.
 
 **What it records, for each root:**
 
