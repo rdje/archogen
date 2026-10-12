@@ -188,6 +188,11 @@ Encoded empty operands are included. Compiled actual variants, independent argv 
 outside-domain/wrong-oracle falsifiers support the reasons; selected strict native E is not full adequacy.
 No production collection behavior changes in this proof slice.
 
+Final bounded helper replay (`M3.6.9.6.3.2.2.10.3.4`) verifies every actual current helper edit with strict
+named-kill/scoped-equivalent outcomes and complete original/copy restoration. Original survivor obligations
+bind to these corrected-context outcomes; no retroactive equivalence or whole-production adequacy is inferred.
+The integration checkpoint and final full measurements/review remain separately owned.
+
 **What it records, for each root:**
 
 - the packages its build compiled, from that build's units and not from workspace-wide metadata, each with its

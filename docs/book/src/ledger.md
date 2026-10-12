@@ -263,8 +263,21 @@ CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PW
 
 The same selected actual edits survive unlisted, then finish equivalent with the recorded reasons under the
 parent population, strict exit 0. Both input captures and copied source restore; altered audit evidence refuses.
-Selected outcomes establish these bounded judgments. Final all-helper replay, initial obligation closure and
-whole-production adequacy remain separately open.
+Selected outcomes establish these bounded judgments.
+
+The final complete current helper replay (`M3.6.9.6.3.2.2.10.3.4`, `2026-10-12`) finishes with nineteen
+named kills and five scoped equivalents, strict exit 0, with no survivor, unviable, timeout or unjudged result.
+Every actual current helper edit is selected; whole-file adequacy is not inferred. Exact source/operator
+bindings, the owned quote repair and guard-body context independently connect the original sixteen survivor
+obligations to eleven current named kills and five current equivalents. These resolve the obligations after
+caller repairs; they do not retrospectively classify an edit in the earlier buggy caller domain.
+
+All original/copy regular inputs restore with independent hashes, sizes and modes; the opaque submodule
+identity remains unchanged. Altered audit evidence refuses. Code, tests, catalogue and equivalent records stay
+exact. The original full-sweep counts remain historical. The helper integration checkpoint and final
+whole-production measurements/review remain open. The complete current identities, witnesses and original
+bindings are committed in `docs/tasks/M3.md`; re-discover them when production changes.
+
 
 ## `rust-reference`
 

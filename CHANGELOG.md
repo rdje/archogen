@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — complete bounded helper replay passes
+
+`ARCHOGEN-M3-0698` (leaf `M3.6.9.6.3.2.2.10.3.4`), `2026-10-12`.
+
+- Fresh complete helper cohort finishes with 19 named kills and five precise equivalents, strict 0; no
+  survivor, unviable, timeout or unjudged outcome. Actual listing/identities/payloads/reasons bind through maintained audit.
+- Independently re-derive all sixteen original survivor bindings through unchanged producer, exact helper text,
+  owned catalogue repair and semantic guard context: eleven named kills/five scoped E. Preserve initial sweep counts.
+- All 1010 original and copied regular inputs restore with independent hashes/modes; opaque pin preserved.
+  Altered evidence refuses and production/tests/catalogue/E remain exact. Canonical/book/ledger/live sync;
+  helper integration checkpoint next, whole-production adequacy remains open.
+
 ## archogen — delimiter equivalents bind the pinned Cargo domain
 
 `ARCHOGEN-M3-0697` (leaf `M3.6.9.6.3.2.2.10.3.3.3.2.4`), `2026-10-12`.
