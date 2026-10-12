@@ -3929,6 +3929,52 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn a_root_s_configuration_retains_its_dependency_argument() {
+        crate::trust_test_process::bounded!(a_root_s_configuration_retains_its_dependency_argument);
+        let f = two_roots(
+            "retained-dependency-argument",
+            "fn main() { common::c(); }\n",
+            "pub fn f() { common::c(); }\n",
+            &[
+                ("crates/common/Cargo.toml", manifest("common", "")),
+                ("crates/common/src/lib.rs", "pub fn c() {}\n".to_owned()),
+                (
+                    "crates/a/Cargo.toml",
+                    manifest("a", "[dependencies]\ncommon = { path = \"../common\" }\n"),
+                ),
+                (
+                    "crates/b/Cargo.toml",
+                    manifest("b", "[dependencies]\ncommon = { path = \"../common\" }\n"),
+                ),
+            ],
+        );
+        let inventory = written(f.run());
+        for (root, package, expected) in [
+            ("gen", "crates/a", "--extern common=libcommon.rlib"),
+            ("chk", "crates/b", "--extern common=libcommon.rmeta"),
+        ] {
+            let unit = program(&inventory, root)
+                .get("units")
+                .unwrap()
+                .elements()
+                .iter()
+                .find(|u| u.get("package").and_then(Json::as_str) == Some(package))
+                .expect("the root's own unit is inventoried");
+            let arguments: Vec<_> = unit
+                .get("configuration")
+                .unwrap()
+                .elements()
+                .iter()
+                .map(|a| a.as_str().expect("a configuration argument is text"))
+                .collect();
+            assert!(
+                arguments.contains(&expected),
+                "{root} lost its dependency argument {expected:?}: {arguments:?}"
+            );
+        }
+    }
+
+    #[test]
     fn an_executable_compiling_another_role_s_package_is_refused() {
         crate::trust_test_process::bounded!(
             an_executable_compiling_another_role_s_package_is_refused

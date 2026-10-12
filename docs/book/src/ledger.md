@@ -161,6 +161,11 @@ The pinned Cargo producer's verbose path quoting is exercised by
 and literal-backslash output paths and a shared dependency, preserving normalized configuration and shared
 items. This is finite pinned-producer evidence, without a general shell grammar guarantee.
 
+The separate `a_root_s_configuration_retains_its_dependency_argument` control
+(`M3.6.9.6.3.2.2.10.3.2`) requires the fixture's binary and library units to retain their actual normalized
+`common` dependency arguments, `libcommon.rlib` and `libcommon.rmeta` respectively. A final-token reversal
+must fail this independent expectation; no universal argv-shape claim follows.
+
 ## `rust-reference`
 
 | Field | Value |

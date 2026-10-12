@@ -334,6 +334,28 @@ Deleting the final token or making its final push condition false still survives
 builds; comparisons between configurations alone can miss a consistently omitted argument. Other survivors
 require producer-domain judgments. No equivalent is established by this measurement, and full adequacy remains open.
 
+The independent retained-argument control now builds two roots that call a shared `common` library and requires
+these arguments in each root's own normalized unit configuration on the pinned producer:
+
+| Root | Required dependency argument |
+| --- | --- |
+| Binary `gen` | `--extern common=libcommon.rlib` |
+| Library `chk` | `--extern common=libcommon.rmeta` |
+
+Run the public control with the same repository-local stores shown above:
+
+```sh
+CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PWD/target/cache" \
+  cargo test -p xtask trust::tests::a_root_s_configuration_retains_its_dependency_argument -- --exact
+```
+
+The test passes on production. The tracked entry `trust-cargo-final-argument-dropped` reverses only the final
+push and produces its named finishing failure. Both actual final-token candidates, the false condition and
+deleted push, now yield named kills under the parent population with strict exit zero. Maintained restoration
+checks cover originals after each run and the copied sweep source matches. This adds independent expectations
+alongside the preserved quotation comparisons; the production helper is unchanged. Remaining survivors still
+need domain judgments, and the final all-helper sweep remains open.
+
 ## Historical effects and current self-tests
 
 The effects diagnostic keeps the [initial semantic witness review](trust-adequacy.md#semantic-witnesses-in-the-initial-cohort)

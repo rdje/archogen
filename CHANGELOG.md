@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — dependency arguments have independent inventory controls
+
+`ARCHOGEN-M3-0686` (leaf `M3.6.9.6.3.2.2.10.3.2`), `2026-10-12`.
+
+- Add a separate public inventory test requiring the binary and library roots' real common dependency arguments.
+  This closes the measured final-token omission gap that relational configuration controls missed.
+- Exact deleted-push reversal and both actual final-token candidates produce named finishing kills, strict 0.
+  Maintained census verifies all 1003 captured inputs restored after each run; copied source matches. Production,
+  every prior body and catalogue prefix remain unchanged.
+- Focused Rust tier passes all three steps; final exact-staged stamp required after closure documentation.
+  Book, pinned-producer ledger and live frontier align. Remaining domain judgments, final helper closure and
+  integration retain separate ownership; no complete adequacy or runner-baseline claim.
+
 ## archogen — post-repair helper measurement preserves every survivor obligation
 
 `ARCHOGEN-M3-0685` (leaf `M3.6.9.6.3.2.2.10.3.1`), `2026-10-12`.

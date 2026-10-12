@@ -5461,3 +5461,18 @@ to
     }
 
 end
+
+mutation trust-cargo-final-argument-dropped
+file xtask/src/trust.rs
+test -p xtask trust::tests::a_root_s_configuration_retains_its_dependency_argument -- --exact
+expect killed
+why M3.6.9.6.3.2.2.10.3.2: the final-token deletion survives relational configuration controls; a real dependency-bearing inventory must retain independently expected common library arguments for both roots.
+from
+        if any || !cur.is_empty() {
+            out.push(cur);
+        }
+to
+        if any || !cur.is_empty() {
+            // out.push(cur);
+        }
+end
