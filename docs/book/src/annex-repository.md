@@ -400,6 +400,12 @@ backslash-n in these records, while the current replacement searches literal new
 comes next, before complete command framing and permanent public controls. Unmodified public collection
 still panics on that fixture; the copied diagnostics are qualified in the task record.
 
+Producer-domain investigation (`M3.6.9.6.3.2.2.10.3.3.3.2.5.1`, `2026-10-12`) binds the environment
+encoding to [pinned rustc source](ledger.md#rust-toolchain), actual dependency bytes and compiled fixture values.
+The next repair will encode the known scratch prefixes before replacement, preserving genuine encoded values
+and unset records. A tested source path resembling a record marker remains escaped as a prerequisite; putting
+its colon in the output path makes Cargo refuse. These finite controls justify no general path or host guarantee.
+
 ## Historical effects and current self-tests
 
 The effects diagnostic keeps the [initial semantic witness review](trust-adequacy.md#semantic-witnesses-in-the-initial-cohort)

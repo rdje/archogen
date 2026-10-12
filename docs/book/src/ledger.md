@@ -204,6 +204,15 @@ reversal gives a named failure. Synthetic colon-space target parsing is separate
 A qualified copied command-framing intervention then exposes escaped environment-value normalization; its repair
 is owned before public command framing. No complete multiline inventory or universal producer grammar claim.
 
+Environment investigation (`M3.6.9.6.3.2.2.10.3.3.3.2.5.1`, `2026-10-12`) verifies rustc commit
+`59807616e1fa2540724bfbac14d7976d7e4a3860` against the installed pin and reads its
+[dependency encoding](https://github.com/rust-lang/rust/blob/59807616e1fa2540724bfbac14d7976d7e4a3860/compiler/rustc_interface/src/passes.rs#L513-L531)
+and [record writer](https://github.com/rust-lang/rust/blob/59807616e1fa2540724bfbac14d7976d7e4a3860/compiler/rustc_interface/src/passes.rs#L653-L686).
+Actual Cargo/runtime controls distinguish real line breaks from literal backslash-n and unset values.
+Encoding known scratch prefixes preserves the existing record representation. Exploratory adapters are
+untracked; no downloaded source hash was captured. Isolated Rust/native getenv controls also trace an
+equals-bearing name lookup to this host's boundary, without a universal name or host contract.
+
 ## `rust-reference`
 
 | Field | Value |

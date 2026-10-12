@@ -170,6 +170,11 @@ physical-line command reader. After dependency repair, a qualified copied comman
 exposes scratch normalization missing rustc's escaped environment values. Environment repair `.10.3.3.3.2.5`
 precedes public command framing `.10.3.3.3.2.3`; unmodified public collection still panics. Both remain open.
 
+Producer-domain investigation `.10.3.3.3.2.5.1` binds the LF/CR/backslash environment encoding to actual
+Cargo/runtime controls and the [pinned rustc writer](../../book/src/ledger.md#rust-toolchain). `.2.5.2` will
+encode only the known scratch prefixes before replacement, preserving existing record strings and unset reads.
+Source-marker escaping and output-colon refusal are measured separately; no general path/host contract follows.
+
 **What it records, for each root:**
 
 - the packages its build compiled, from that build's units and not from workspace-wide metadata, each with its
