@@ -5398,3 +5398,66 @@ to
         let Ok(inventory) = json::parse(&String::from_utf8_lossy(&inventory_bytes)) else {
 
 end
+
+mutation trust-cargo-apostrophe-escape-unhandled
+file xtask/src/trust.rs
+test -p xtask trust::tests::cargo_quoted_output_paths_preserve_inventory_units_and_configuration -- --exact
+expect killed
+why M3.6.9.6.3.2.2.10.2: exact old helper corrupts real Cargo apostrophe escapes and dependency-directory tokens; public inventory controls with shared dependencies and actual quoted paths must finish with a named failure.
+from
+    fn split_command(line: &str) -> Vec<String> {
+        let mut out = Vec::new();
+        let mut cur = String::new();
+        let mut quoted = false;
+        let mut any = false;
+        let mut chars = line.chars();
+        while let Some(c) = chars.next() {
+            match c {
+                '\\' if !quoted => cur.push(chars.next().unwrap_or('\\')),
+                '\'' => {
+                    quoted = !quoted;
+                    any = true;
+                }
+                ' ' if !quoted => {
+                    if any || !cur.is_empty() {
+                        out.push(std::mem::take(&mut cur));
+                    }
+                    any = false;
+                }
+                c => cur.push(c),
+            }
+        }
+        if any || !cur.is_empty() {
+            out.push(cur);
+        }
+        out
+    }
+
+to
+    fn split_command(line: &str) -> Vec<String> {
+        let mut out = Vec::new();
+        let mut cur = String::new();
+        let mut quoted = false;
+        let mut any = false;
+        for c in line.chars() {
+            match c {
+                '\'' => {
+                    quoted = !quoted;
+                    any = true;
+                }
+                ' ' if !quoted => {
+                    if any || !cur.is_empty() {
+                        out.push(std::mem::take(&mut cur));
+                    }
+                    any = false;
+                }
+                c => cur.push(c),
+            }
+        }
+        if any || !cur.is_empty() {
+            out.push(cur);
+        }
+        out
+    }
+
+end

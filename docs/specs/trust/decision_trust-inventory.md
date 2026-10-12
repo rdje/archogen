@@ -141,6 +141,13 @@ sysroot. The pin's bytes are in the build's identity, not in it, and the edition
 a package no root compiles changes no pair's item (R8 6). `Cargo.lock` is recorded and is not
 part of it: a package added elsewhere changes it and no root's compilation (case 5) (R1 A14; R4 7).
 
+Cargo's verbose command is decoded before arguments are identified: single-quoted spans retain literal
+backslashes, while a backslash outside them escapes the following character. This preserves Cargo's
+close-quote/escaped-apostrophe/reopen-quote path spelling. The public inventory control
+`cargo_quoted_output_paths_preserve_inventory_units_and_configuration` exercises the pinned producer with
+ordinary, space, apostrophe and literal-backslash output paths and a shared dependency; it is not a general
+shell-parser conformance claim.
+
 **What it records, for each root:**
 
 - the packages its build compiled, from that build's units and not from workspace-wide metadata, each with its

@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.71` next; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.9.6.3.2.2.10.2` permanent actual Cargo apostrophe-path reproduction and parser repair.
-  Preserve old tests and initial obligations; fresh helper survivor assessment follows in `.10.3`.
+- **Next action:** `M3.6.9.6.3.2.2.10.3` fresh helper survivor assessment after Cargo quote repair.
+  Rediscover current edits; retain initial bindings and prove valid Cargo domain cases before classifying.
   Initial `.9.5` complete; remaining `.9.6` full sweeps/review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.

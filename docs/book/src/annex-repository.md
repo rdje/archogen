@@ -298,13 +298,31 @@ complete measurement is not adequacy success. The maintained input census verifi
 inputs restored and unchanged gitlink metadata; the copied source also matched. The task record preserves
 source-bound initial/current edit bindings and the native reproduction command. No survivor closes from this run.
 
-A separate real Cargo verbose-output probe found a checkout-path defect. Ordinary and space-bearing output
-paths parse correctly; with a literal apostrophe, Cargo prints a close-quote/escaped-quote/reopen-quote sequence.
-The current helper toggles at the escaped quote and retains its backslash, folding following flags into the
-output-directory token. Cargo builds successfully, but inventory collection can then seek dependency files in
-a nonexistent directory. This is a collection failure, without an authenticity-bypass claim. The exploratory
-probe producer is untracked; `M3.6.9.6.3.2.2.10.2` owns a permanent public reproduction and repair before
-further helper survivor judgments. No general shell-conformance guarantee follows from the finite probe.
+A separate real Cargo verbose-output probe found a checkout-path defect. With a literal apostrophe, Cargo
+prints a close-quote/escaped-quote/reopen-quote sequence. The old helper toggled at the escaped quote and retained
+its backslash, folding following flags into the output-directory token. Cargo built successfully, but inventory
+collection sought dependency files in a nonexistent directory. This established a collection failure, without
+an authenticity-bypass claim. That exploratory probe producer remains qualified as untracked.
+
+The repair decodes backslash escapes outside single quotes and preserves literal backslashes inside them.
+For example, the quoted path fragment `'with'\''quote'` becomes `with'quote`; `'with\slash'` retains its
+backslash. Arguments following either path remain separate. The existing token-vector interface and
+configuration normalization rules are unchanged.
+
+A permanent public inventory test now builds two roots with a shared dependency using ordinary, space,
+apostrophe, space-plus-apostrophe, backslash and backslash-plus-apostrophe output directories. Every build must
+retain both units per root, identical normalized configurations and identical shared items. It failed with the
+old helper and passes with the repair. Run it with project-local stores:
+
+```sh
+CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PWD/target/cache" \
+  cargo test -p xtask trust::tests::cargo_quoted_output_paths_preserve_inventory_units_and_configuration -- --exact
+```
+
+The tracked native entry `trust-cargo-apostrophe-escape-unhandled` restores the exact old helper; the permanent
+test produces a named finishing kill. Maintained census checks verify original inputs after the reversal.
+This makes the reproduction durable on the [pinned Cargo producer](ledger.md#rust-toolchain), without a general
+shell-conformance guarantee. Initial helper survivor classification and full current-source adequacy remain open.
 
 ## Historical effects and current self-tests
 

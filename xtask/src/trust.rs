@@ -385,14 +385,16 @@ fn unit_configuration(u: &Unit) -> String {
     ]))
 }
 
-/// Split one `rustc` command line as cargo's `-v` prints it: on spaces outside single quotes.
+/// Split one `rustc` command line as cargo's `-v` prints it, decoding single-quoted spans and outside escapes.
 fn split_command(line: &str) -> Vec<String> {
     let mut out = Vec::new();
     let mut cur = String::new();
     let mut quoted = false;
     let mut any = false;
-    for c in line.chars() {
+    let mut chars = line.chars();
+    while let Some(c) = chars.next() {
         match c {
+            '\\' if !quoted => cur.push(chars.next().unwrap_or('\\')),
             '\'' => {
                 quoted = !quoted;
                 any = true;
@@ -3881,6 +3883,49 @@ pub(crate) mod tests {
             newer.get("build-configuration"),
             written(f.run()).get("build-configuration")
         );
+    }
+
+    #[test]
+    fn cargo_quoted_output_paths_preserve_inventory_units_and_configuration() {
+        crate::trust_test_process::bounded!(
+            cargo_quoted_output_paths_preserve_inventory_units_and_configuration
+        );
+        let f = two_roots(
+            "cargo-quoted-output-paths",
+            "fn main() { common::c(); }\n",
+            "pub fn f() { common::c(); }\n",
+            &[
+                ("crates/common/Cargo.toml", manifest("common", "")),
+                ("crates/common/src/lib.rs", "pub fn c() {}\n".to_owned()),
+                (
+                    "crates/a/Cargo.toml",
+                    manifest("a", "[dependencies]\ncommon = { path = \"../common\" }\n"),
+                ),
+                (
+                    "crates/b/Cargo.toml",
+                    manifest("b", "[dependencies]\ncommon = { path = \"../common\" }\n"),
+                ),
+            ],
+        );
+        let plain = written(f.run_into("plain"));
+        let expected = configurations(&plain);
+        assert_eq!(
+            expected.len(),
+            4,
+            "each root must retain both compiled units"
+        );
+        for out in [
+            "with space",
+            "with'quote",
+            "with space'quote",
+            "with\\slash",
+            "with\\slash'quote",
+        ] {
+            // Real Cargo builds and prints each invocation; no hand-written shell input stands in for it.
+            let actual = written(f.run_into(out));
+            assert_eq!(configurations(&actual), expected, "output path {out:?}");
+            assert_eq!(items(&actual), items(&plain), "shared items for {out:?}");
+        }
     }
 
     #[test]

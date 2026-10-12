@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — inventory preserves Cargo apostrophe escapes
+
+`ARCHOGEN-M3-0684` (leaf `M3.6.9.6.3.2.2.10.2`), `2026-10-12`.
+
+- Permanent public inventory reproduction fails with the old helper: Cargo succeeds, but escaped apostrophes
+  corrupt its output-directory token and dependency lookup. Decode outside-quote escapes, preserving literal
+  backslashes within quotes and the existing token/configuration interfaces.
+- Real Cargo controls retain four units, normalized configurations and shared items across ordinary, space,
+  apostrophe, combined and backslash output paths. Exact old-helper native reversal yields a named finishing kill;
+  maintained census verifies all 1003 captured inputs restored. Prior source/test bodies and catalogue prefix
+  remain exact outside the owned addition/repair.
+- Canonical inventory, book, pinned-producer ledger and live frontier align. Initial focused run exposes only
+  new-test formatting; corrected focused tier passes all three steps, final exact-staged stamp required before commit.
+  Helper survivor judgments and full integration follow in their owned leaves; no full adequacy claim.
+
 ## archogen — bounded command-helper measurement owns an actual Cargo quote defect
 
 `ARCHOGEN-M3-0683` (leaf `M3.6.9.6.3.2.2.10.1`), `2026-10-12`.
