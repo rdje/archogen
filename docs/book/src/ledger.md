@@ -300,6 +300,18 @@ restores with independent hashes/modes. Source, tests, catalogue and E records s
 measurement, separate from the completed helper group and pending whole-production adequacy.
 
 
+The producer assessment (`M3.6.9.6.3.2.2.11.2.1`, `2026-10-12`) uses ignored copied-code
+diagnostics and adapters, with unchanged tracked inventory and actual pinned Cargo as primary evidence.
+Ordinary and manifest allow/warn/deny/forbid cases build successfully and enter public inventory. Observed
+root/common commands pass `--check-cfg` followed by `cfg(docsrs,test)` and `cfg(feature, values())`;
+manifest lint settings use single `--level=lint` tokens. Independent raw argv/artifact and public
+program/unit/package/source-hash/environment checks agree, and actual cfg operands are excluded from
+configurations. Wrong package, retained operand and missing-case records refuse; original/copy inputs restore.
+These finite observations establish no flag-absence or equivalence theorem. The permanent check-cfg parent
+regression is owned next, then pinned source/caller evidence and conditional precise proofs for other table
+survivors. Every survivor obligation remains open; production/tests/catalogue/E stay unchanged.
+
+
 ## `rust-reference`
 
 | Field | Value |

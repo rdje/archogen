@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — actual Cargo flag producer assessment
+
+`ARCHOGEN-M3-0701` (leaf `M3.6.9.6.3.2.2.11.2.1`), `2026-10-12`.
+
+- Successful pinned Cargo and unchanged public inventory accept ordinary plus every manifest lint level.
+  Saved raw argv uses separate check-cfg operands and single-token lint settings; public fields/configurations
+  independently agree. Ignored copied diagnostics and adapters establish finite observations, not equivalence.
+- Independent raw token/artifact/source-hash checks pass; wrong package, retained operand and missing case
+  evidence refuse. All 1011 original/copied regular inputs and opaque pin restore before closure edits.
+- Production/tests/catalogue/E unchanged. Own the permanent check-cfg regression next, then source-bound
+  remaining-flag evidence and conditional precise proofs; all eleven obligations remain open. Book/live sync.
+
 ## archogen — complete dropped-flag table measurement
 
 `ARCHOGEN-M3-0700` (leaf `M3.6.9.6.3.2.2.11.1`), `2026-10-12`.
