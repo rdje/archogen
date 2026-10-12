@@ -298,17 +298,9 @@ CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" \
 This closes the scoped restoration durability repair. Complete current-source mutation adequacy remains open;
 these native boundary regressions do not close additional rows of the initial `trust.rs` survivor census.
 
-A subsequent bounded `split_command` measurement at `5d51a17` selected every current helper edit: 29 attempts,
-13 named finishing kills and 16 survivors, with no unviable, timeout or unjudged results. Its strict exit was one;
-complete measurement is not adequacy success. The maintained input census verified all 1003 captured regular
-inputs restored and unchanged gitlink metadata; the copied source also matched. The task record preserves
-source-bound initial/current edit bindings and the native reproduction command. No survivor closes from this run.
-
-A separate real Cargo verbose-output probe found a checkout-path defect. With a literal apostrophe, Cargo
-prints a close-quote/escaped-quote/reopen-quote sequence. The old helper toggled at the escaped quote and retained
-its backslash, folding following flags into the output-directory token. Cargo built successfully, but inventory
-collection sought dependency files in a nonexistent directory. This established a collection failure, without
-an authenticity-bypass claim. That exploratory probe producer remains qualified as untracked.
+The helper's historical measurements, exact initial/current edit bindings and restoration receipts remain
+in `docs/tasks/M3.md` and its linked archives. A real Cargo apostrophe path exposed a collection failure:
+the old helper mistook an escaped apostrophe for a quote delimiter and corrupted the output-directory token.
 
 The repair decodes backslash escapes outside single quotes and preserves literal backslashes inside them.
 For example, the quoted path fragment `'with'\''quote'` becomes `with'quote`; `'with\slash'` retains its
@@ -325,14 +317,10 @@ CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PW
   cargo test -p xtask trust::tests::cargo_quoted_output_paths_preserve_inventory_units_and_configuration -- --exact
 ```
 
-The tracked native entry `trust-cargo-apostrophe-escape-unhandled` restores the exact old helper; the permanent
-test produces a named finishing kill. Maintained census checks verify original inputs after the reversal.
-This makes the reproduction durable on the [pinned Cargo producer](ledger.md#rust-toolchain), without a general
-shell-conformance guarantee. Initial helper survivor classification and full current-source adequacy remain open.
-
-Historical helper measurements and exact initial/current edit bindings remain in `docs/tasks/M3.md` and its
-linked archives. Comparisons between configurations alone missed a consistently omitted dependency argument;
-the independent retained-argument control below supplies the missing expectation. Full adequacy remains open.
+The exact old-helper reversal `trust-cargo-apostrophe-escape-unhandled` gives the permanent test's named
+failure. This holds the [pinned producer](ledger.md#rust-toolchain), without a general shell guarantee.
+Configuration comparisons alone missed a consistently omitted dependency argument; independent expectations
+are therefore required alongside them. Full current-source adequacy remains open.
 
 The independent retained-argument control now builds two roots that call a shared `common` library and requires
 these arguments in each root's own normalized unit configuration on the pinned producer:
@@ -349,23 +337,14 @@ CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PW
   cargo test -p xtask trust::tests::a_root_s_configuration_retains_its_dependency_argument -- --exact
 ```
 
-The test passes on production. The tracked entry `trust-cargo-final-argument-dropped` reverses only the final
-push and produces its named finishing failure. Both actual final-token candidates, the false condition and
-deleted push, now yield named kills under the parent population with strict exit zero. Maintained restoration
-checks cover originals after each run and the copied sweep source matches. This adds independent expectations
-alongside the preserved quotation comparisons; the production helper is unchanged. Remaining survivors still
-need domain judgments, and the final all-helper sweep remains open.
+The exact final-push reversal `trust-cargo-final-argument-dropped` and both actual final-token candidates
+now yield named failures, with strict exit zero and maintained input restoration. Remaining survivors need
+precise domain judgments and a final all-helper replay.
 
-Producer-domain investigation then found a distinct boundary: the
-[pinned Cargo formatter](ledger.md#rust-toolchain) escapes arguments but prints the compiler program path
-without quoting it. A space in `RUSTUP_HOME` therefore made the helper mistake part of that program path
-for a separate token. Cargo built successfully, but collection skipped the compiler invocation and the existing
-own-unit guard reported that neither root compiled anything of its own package. This was a collection failure;
-the guard prevents an accepted empty-root inventory in the measured fixture.
-`M3.6.9.6.3.2.2.10.3.3.2` repairs this by selecting the fixed `RUSTC=rustc` command for inventory
-compilation under the same pinned environment as the recorded compiler identity. Cargo prints `rustc` as
-the program, so its installation path cannot be mistaken for arguments. Inherited compiler overrides remain
-cleared. The command helper and normalization rules are unchanged.
+Inventory compilation sets `RUSTC=rustc` under the same pinned environment as its recorded compiler identity.
+Cargo's formatter leaves its program unquoted; this fixed name prevents a spaced installation path from being
+mistaken for arguments. Inherited compiler overrides remain cleared. The command helper and normalization
+rules are unchanged.
 
 The permanent Unix public control uses separate child environments with ordinary, space, apostrophe, backslash
 and combined toolchain homes. It requires each root to retain exactly its own and the shared package's units,
@@ -377,9 +356,8 @@ CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PW
   cargo test -p xtask trust::tests::compiler_installation_paths_preserve_inventory_units_and_configuration -- --exact
 ```
 
-The exact compiler-selection reversal and the actual statement-deletion candidate both produce the control's
-named finishing failure, with strict exit zero. Maintained census checks verify original inputs after each;
-the copied sweep source matches. All older test bodies and catalogue entries are preserved.
+The exact compiler-selection reversal and actual statement deletion both give this control's named failure,
+with strict exit zero and maintained input restoration.
 
 Actual successful Cargo rustc builds can also print empty arguments: `-A "" -W ""` produces unknown-lint
 warnings but compilation succeeds on the pin. The permanent Unix parent control compares these empty operands
@@ -392,18 +370,35 @@ CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PW
   cargo test -p xtask trust::tests::cargo_verbose_empty_arguments_keep_their_token_boundaries -- --exact
 ```
 
-At `M3.6.9.6.3.2.2.10.3.3.3.1` (`2026-10-12`), all four actual empty-token-loss edits change from
-survivors to named finishing kills by this test, strict exit zero. The exact catalogue reversal
-`trust-cargo-empty-arguments-lost` also yields its named failure. Maintained census checks verify originals
-after each run; copied source matches. Production and prior test bodies are unchanged. Earlier failing empty
-check-cfg probes established no absence premise. Delimiter proofs and final helper obligation closure remain open.
+The exact reversal `trust-cargo-empty-arguments-lost` and actual empty-token-loss edits yield this test's
+named failures. Earlier failing check-cfg probes established no absence premise. Delimiter proofs and final
+helper closure remain open.
 
-Caller-framing diagnosis (`M3.6.9.6.3.2.2.10.3.3.3.2.1`, `2026-10-12`) finds a remaining limitation:
-Cargo builds successfully with a newline in the output directory, but inventory command collection panics
-because it splits the quoted command into physical lines. A diagnostic framing intervention in an isolated
-copy then exposes a separate dependency-reader omission: compiler-read file objects become empty when the
-first dependency target spans lines. Unmodified production still panics. Both defects are owned; the dependency
-reader is repaired first, then command framing and permanent public controls, before delimiter proofs.
+The dependency reader now matches the known first `.d` target before interpreting separators. Rustc writes
+that output target raw, and line breaks inside it do not end the rule. Its source prerequisites escape spaces;
+complete known scratch/canonical prefixes are consumed before splitting the catalog-grammar source suffixes.
+This preserves both relative source paths and absolute in-tree `include_str!` inputs. Missing or empty target
+rules refuse; this is a pinned-producer reader, without a general Makefile grammar claim.
+
+Run the permanent private-reader producer control with local stores:
+
+```sh
+CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PWD/target/cache" \
+  cargo test -p xtask trust::tests::cargo_dependency_information_retains_actual_source_paths -- --exact
+```
+
+It requires independently expected source files across ordinary, line-break, space, backtick, tab, backslash
+and hash paths. A separate malformed-target control includes a synthetic colon-space target: actual Cargo on
+this host refuses colon output paths when joining its dynamic-library search path. The exact prior-reader
+reversal `trust-dependency-first-physical-line` gives the producer control's named failure; maintained census
+checks verify originals after the reversal (`M3.6.9.6.3.2.2.10.3.3.3.2.2`, `2026-10-12`).
+
+A remaining public collection limitation is separately owned: successful Cargo commands containing quoted
+newlines still panic in the physical-line command reader. A diagnostic command-framing intervention with the
+repaired dependency reader also exposes an escaped environment-value normalization mismatch. Rustc writes
+backslash-n in these records, while the current replacement searches literal newlines. The environment repair
+comes next, before complete command framing and permanent public controls. Unmodified public collection
+still panics on that fixture; the copied diagnostics are qualified in the task record.
 
 ## Historical effects and current self-tests
 

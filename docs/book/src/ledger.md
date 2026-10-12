@@ -196,6 +196,14 @@ a physical-line command-slice panic. A diagnostic framing intervention exposes e
 from the separate first-target reader. Adapters/tests are untracked and qualified, not permanent controls;
 unmodified production still panics. Dependency-first and command-second repairs are owned before further proofs.
 
+The private `cargo_dependency_information_retains_actual_source_paths` control
+(`M3.6.9.6.3.2.2.10.3.3.3.2.2`, `2026-10-12`) reads actual pinned rustc dependency output with relative and
+absolute in-tree inputs, independently requiring their complete paths across ordinary, line-break, escaped-space,
+backtick, tab, backslash and hash roots. Known-target/prefix framing repairs file collection; exact prior-reader
+reversal gives a named failure. Synthetic colon-space target parsing is separate from Cargo's measured host refusal.
+A qualified copied command-framing intervention then exposes escaped environment-value normalization; its repair
+is owned before public command framing. No complete multiline inventory or universal producer grammar claim.
+
 ## `rust-reference`
 
 | Field | Value |

@@ -158,11 +158,17 @@ the measured two-root fixture. `.10.3.3.2` repairs this with the fixed command a
 controls exercise ordinary, space, apostrophe, backslash and combined installation paths, requiring the exact
 compiled packages and dependency arguments. Argument quoting evidence does not prove empty-argument absence.
 
-Known collection limitation (`M3.6.9.6.3.2.2.10.3.3.3.2.1`, `2026-10-12`): actual successful Cargo builds
-with an LF in the output directory panic in the physical-line command reader. A diagnostic framing intervention
-in a copy exposes a distinct first-dependency-target omission, returning empty compiler-read file objects;
-unmodified production still panics. These qualified exploratory controls own dependency-reader repair in
-`.10.3.3.3.2.2` before command-framing repair/public controls in `.10.3.3.3.2.3`. Neither is closed yet.
+The dependency reader (`M3.6.9.6.3.2.2.10.3.3.3.2.2`, `2026-10-12`) matches rustc's known raw first
+.d target before separators, then consumes complete space-escaped scratch/canonical prefixes before splitting
+catalog-grammar source suffixes. This preserves literal LF/CR in output targets and absolute in-tree prerequisites;
+missing/empty targets refuse. Actual pinned producer controls require independent relative/absolute source sets.
+The separate synthetic colon-space target control is not successful Cargo evidence: this host's Cargo refuses
+colon output paths when joining its dynamic-library search path. No general Makefile grammar is admitted.
+
+Known public collection limitation: actual successful Cargo builds with LF output paths still panic in the
+physical-line command reader. After dependency repair, a qualified copied command-framing intervention also
+exposes scratch normalization missing rustc's escaped environment values. Environment repair `.10.3.3.3.2.5`
+precedes public command framing `.10.3.3.3.2.3`; unmodified public collection still panics. Both remain open.
 
 **What it records, for each root:**
 

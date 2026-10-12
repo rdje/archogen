@@ -414,6 +414,51 @@ fn split_command(line: &str) -> Vec<String> {
     out
 }
 
+/// Read rustc's first dependency rule, matching its known raw output target before interpreting separators.
+/// A source path inside the written tree has the catalog's ASCII grammar; only its scratch prefix can contain
+/// spaces or line breaks. Rustc escapes spaces in prerequisites, but writes line breaks literally. Consume each
+/// known escaped prefix intact before splitting its path suffix. This is not a general Makefile parser.
+fn dependency_files(
+    text: &str,
+    dependency_file: &Path,
+    scratch: &str,
+    canonical_scratch: &str,
+) -> Result<Vec<String>, String> {
+    let target = format!("{}: ", dependency_file.display());
+    let mut rest = text.strip_prefix(&target).ok_or_else(|| {
+        format!(
+            "{}: missing expected first dependency target",
+            dependency_file.display()
+        )
+    })?;
+    let prefixes = [
+        scratch.replace(' ', "\\ "),
+        canonical_scratch.replace(' ', "\\ "),
+    ];
+    let mut files = Vec::new();
+    loop {
+        rest = rest.trim_start_matches(' ');
+        if rest.is_empty() || rest.starts_with(['\n', '\r']) {
+            break;
+        }
+        let prefix = prefixes
+            .iter()
+            .find(|p| rest.starts_with(p.as_str()))
+            .map_or(0, String::len);
+        let suffix = &rest[prefix..];
+        let end = prefix + suffix.find([' ', '\n', '\r']).unwrap_or(suffix.len());
+        files.push(rest[..end].replace("\\ ", " "));
+        rest = &rest[end..];
+    }
+    if files.is_empty() {
+        return Err(format!(
+            "{}: empty first dependency rule",
+            dependency_file.display()
+        ));
+    }
+    Ok(files)
+}
+
 /// The flags dropped from a unit's configuration, each with whether it takes the next token (§3): the toolchain's
 /// own hashes, which the build configuration holds by identity; paths of the scratch build; lint levels and
 /// `--check-cfg`, which change only what is warned about; and the output-format flags, which change only how.
@@ -661,7 +706,6 @@ fn compile(
         let text = fs::read_to_string(&d).map_err(|e| format!("{}: {e}", d.display()))?;
         let mut files = BTreeSet::new();
         let mut env_deps = Vec::new();
-        let mut first = true;
         for l in text.lines() {
             if let Some(dep) = l.strip_prefix("# env-dep:") {
                 // Only cargo's own variables, which the commit's manifests decide: the catalog's list (R8 remark 22).
@@ -676,35 +720,27 @@ fn compile(
                 env_deps.push(dep.replace(&scratch, "").replace(&canonical_scratch, ""));
                 continue;
             }
-            if !first || l.is_empty() {
+        }
+        for raw in dependency_files(&text, &d, &scratch, &canonical_scratch)? {
+            let rel = if let Some(r) = raw
+                .strip_prefix(&scratch)
+                .or_else(|| raw.strip_prefix(&canonical_scratch))
+            {
+                r.to_owned()
+            } else if raw.starts_with('/') {
+                refused.push(format!(
+                    "trust-undeclared-input: `{}` reads `{raw}`, outside the written tree",
+                    who
+                ));
                 continue;
-            }
-            first = false;
-            let Some((_, rest)) = l.split_once(": ") else {
-                continue;
+            } else {
+                raw
             };
-            for raw in rest.split(' ').filter(|x| !x.is_empty()) {
-                let raw = raw.replace("\\ ", " ");
-                let rel = if let Some(r) = raw
-                    .strip_prefix(&scratch)
-                    .or_else(|| raw.strip_prefix(&canonical_scratch))
-                {
-                    r.to_owned()
-                } else if raw.starts_with('/') {
-                    refused.push(format!(
-                        "trust-undeclared-input: `{}` reads `{raw}`, outside the written tree",
-                        who
-                    ));
-                    continue;
-                } else {
-                    raw
-                };
-                match lexical(&rel) {
-                    Some(path) => {
-                        files.insert(path);
-                    }
-                    None => refused.push(format!("trust-undeclared-input: `{}` reads `{rel}`, which climbs out of the written tree", who)),
+            match lexical(&rel) {
+                Some(path) => {
+                    files.insert(path);
                 }
+                None => refused.push(format!("trust-undeclared-input: `{}` reads `{rel}`, which climbs out of the written tree", who)),
             }
         }
         let configuration = normalise(&tokens, &scratch);
@@ -3973,6 +4009,93 @@ pub(crate) mod tests {
             assert!(
                 arguments.contains(&expected),
                 "{root} lost its dependency argument {expected:?}: {arguments:?}"
+            );
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn cargo_dependency_information_retains_actual_source_paths() {
+        crate::trust_test_process::bounded!(
+            cargo_dependency_information_retains_actual_source_paths
+        );
+        use std::{collections::BTreeSet, fs};
+        for case in [
+            "ordinary",
+            "with\nnewline",
+            "with\rreturn",
+            "with space",
+            "with`tick",
+            "with\tspecial",
+            "with\\ space",
+            "with#hash",
+        ] {
+            let f = two_roots(
+                &format!("cargo-dependency-information/{case}"),
+                "fn main() { let _ = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/src/data.txt\")); }\n",
+                "pub fn f() {}\n",
+                &[("crates/a/src/data.txt", "independently expected input\n".to_owned())],
+            );
+            let target = f.base.join("cargo-target");
+            let env = super::environment("1.95.0", &f.base.join("cargo-home"), &target).unwrap();
+            super::run_cargo(
+                &[
+                    "build",
+                    "--release",
+                    "--locked",
+                    "--offline",
+                    "--no-default-features",
+                    "--message-format=json",
+                    "-v",
+                    "-p",
+                    "a",
+                ],
+                &env,
+                &f.repo,
+            )
+            .expect("the real producer must compile the fixture");
+            let dep_files: Vec<_> = fs::read_dir(target.join("release/deps"))
+                .unwrap()
+                .map(|e| e.unwrap().path())
+                .filter(|p| p.extension().is_some_and(|e| e == "d"))
+                .collect();
+            assert_eq!(dep_files.len(), 1, "only the actual binary is compiled");
+            let d = &dep_files[0];
+            let text = fs::read_to_string(d).unwrap();
+            let scratch = format!("{}/", f.repo.display());
+            let canonical = format!("{}/", fs::canonicalize(&f.repo).unwrap().display());
+            let files: BTreeSet<_> = super::dependency_files(&text, d, &scratch, &canonical)
+                .unwrap()
+                .into_iter()
+                .collect();
+            let expected = BTreeSet::from([
+                "crates/a/src/main.rs".to_owned(),
+                format!("{}crates/a/src/data.txt", scratch),
+            ]);
+            assert_eq!(
+                files, expected,
+                "{case:?}: preserve every real relative/absolute prerequisite"
+            );
+        }
+    }
+
+    #[test]
+    fn dependency_information_requires_its_known_nonempty_target() {
+        let file = std::path::Path::new("target/with: space.d");
+        let text = "target/with: space.d: crates/a/src/main.rs\n\n";
+        assert_eq!(
+            super::dependency_files(text, file, "tree/", "canonical/").unwrap(),
+            ["crates/a/src/main.rs"]
+        );
+        for malformed in [
+            "unrelated.d: crates/a/src/main.rs\n",
+            "target/with: space.d: \n",
+            "",
+            "target/with: space.d",
+        ] {
+            assert!(
+                super::dependency_files(malformed, file, "tree/", "canonical/").is_err(),
+                "malformed dependency target: {malformed:?}"
             );
         }
     }

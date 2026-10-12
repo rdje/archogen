@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — dependency files preserve complete output targets and source prefixes
+
+`ARCHOGEN-M3-0692` (leaf `M3.6.9.6.3.2.2.10.3.3.3.2.2`), `2026-10-12`.
+
+- Match the known raw first dependency target and consume complete escaped scratch prefixes before splitting
+  source suffixes. Actual pinned producer controls retain independently expected relative and absolute inputs
+  across ordinary, line-break, space, quote-like and backslash paths; malformed/missing/empty targets refuse.
+- Exact prior-reader reversal gives a named finishing kill, strict 0; all 1010 captured inputs restore after the
+  native run and copied diagnostic. Prior bodies outside the owned compile region and old catalogue prefix stay exact.
+- Command framing remains separately owned. A qualified copied intervention exposes escaped environment values
+  failing scratch normalization; schedule its immediate repair before public framing. Production still panics there.
+- Canonical inventory/book/source ledger/live pointers align; compact repeated book history via existing task
+  records. Strict clippy and focused documentation gates pass; final exact-staged focused required before commit.
+
 ## archogen — multiline Cargo paths expose two distinct collection readers
 
 `ARCHOGEN-M3-0691` (leaf `M3.6.9.6.3.2.2.10.3.3.3.2.1`), `2026-10-12`.

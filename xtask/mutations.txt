@@ -5498,3 +5498,68 @@ from
 to
                     any = false;
 end
+
+mutation trust-dependency-first-physical-line
+file xtask/src/trust.rs
+test -p xtask trust::tests::cargo_dependency_information_retains_actual_source_paths -- --exact
+expect killed
+why M3.6.9.6.3.2.2.10.3.3.3.2.2: restore the prior first-physical-line and space-token reader; actual successful Cargo emits literal line breaks in its output target and absolute in-tree prerequisites, whose independent file set must be preserved.
+from
+    fn dependency_files(
+        text: &str,
+        dependency_file: &Path,
+        scratch: &str,
+        canonical_scratch: &str,
+    ) -> Result<Vec<String>, String> {
+        let target = format!("{}: ", dependency_file.display());
+        let mut rest = text.strip_prefix(&target).ok_or_else(|| {
+            format!(
+                "{}: missing expected first dependency target",
+                dependency_file.display()
+            )
+        })?;
+        let prefixes = [
+            scratch.replace(' ', "\\ "),
+            canonical_scratch.replace(' ', "\\ "),
+        ];
+        let mut files = Vec::new();
+        loop {
+            rest = rest.trim_start_matches(' ');
+            if rest.is_empty() || rest.starts_with(['\n', '\r']) {
+                break;
+            }
+            let prefix = prefixes
+                .iter()
+                .find(|p| rest.starts_with(p.as_str()))
+                .map_or(0, String::len);
+            let suffix = &rest[prefix..];
+            let end = prefix + suffix.find([' ', '\n', '\r']).unwrap_or(suffix.len());
+            files.push(rest[..end].replace("\\ ", " "));
+            rest = &rest[end..];
+        }
+        if files.is_empty() {
+            return Err(format!(
+                "{}: empty first dependency rule",
+                dependency_file.display()
+            ));
+        }
+        Ok(files)
+    }
+
+to
+    fn dependency_files(
+        text: &str,
+        dependency_file: &Path,
+        scratch: &str,
+        canonical_scratch: &str,
+    ) -> Result<Vec<String>, String> {
+        let _ = (dependency_file, scratch, canonical_scratch);
+        let first = text
+            .lines()
+            .find(|line| !line.is_empty() && !line.starts_with("# env-dep:"))
+            .unwrap_or_default();
+        let rest = first.split_once(": ").map(|(_,rest)| rest).unwrap_or_default();
+        Ok(rest.split(' ').filter(|s| !s.is_empty()).map(|s| s.replace("\\ ", " ")).collect())
+    }
+
+end
