@@ -406,9 +406,9 @@ Exact reversal `trust-dependency-environment-prefix-unescaped` gives its named f
 These controls bind the [pinned writer](ledger.md#rust-toolchain).
 
 Complete Cargo commands are framed before token decoding. Quoted newlines, carriage returns and backticks
-stay inside arguments. Cargo's Compiling/Checking status prints package paths raw: complete known scratch/
-canonical prefixes there are consumed before physical line breaks, so path text resembling a Running command
-cannot create another unit. Empty/unclosed records, unquoted breaks and trailing junk refuse without panics.
+stay inside arguments. Cargo's Compiling/Checking status prints package paths without quoting. The reader
+consumes complete known scratch/canonical prefixes in those messages before physical line breaks, so path
+text resembling a Running command cannot create another unit. Empty/unclosed records, unquoted breaks and trailing junk refuse without panics.
 
 Run the public actual-producer control:
 

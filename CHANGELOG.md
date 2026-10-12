@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — framing verification prose uses physical lines
+
+`ARCHOGEN-M3-0696` (leaf `M3.6.9.6.3.2.2.10.3.3.3.2.6`), `2026-10-12`.
+
+- Correct literal newline escapes introduced by the documentation adapter in the completed framing record.
+  Exact HEAD/current comparison proves every other evidence byte unchanged; code/tests/catalogue/equivalents stay exact.
+- Clarify the unchanged raw-status path behavior in the book. Book/documentation gates pass; live frontier and
+  status categories remain unchanged, with delimiter-equivalence proofs next.
+
 ## archogen — complete Cargo command records preserve public inventory
 
 `ARCHOGEN-M3-0695` (leaf `M3.6.9.6.3.2.2.10.3.3.3.2.3`), `2026-10-12`.
