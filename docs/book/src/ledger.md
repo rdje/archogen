@@ -313,9 +313,11 @@ The source/caller assessment (`.11.2.3`, `2026-10-12`) records exact pinned sour
 admission qualifications in `docs/specs/trust/flag-normalization-domain.md`. Explicitly admitted profile
 flags still fail stable Cargo before compilation. Its admitted-script execution defect is repaired by
 `.11.2.5.1`: hard metadata preflight, permanent script/procedural-macro refusal and disabled-script positive
-controls, with actual native reversal killed by both named parents. Original/copied inputs restore. Caller/E
-premise and integration revalidation still precede source completion and conditional flag proofs. Historical
-assessment preserved; no new flag equivalence or final whole-production adequacy claim.
+controls, with actual native reversal killed by both named parents. Original/copied inputs restore.
+Checkpoint `.11.2.5.2` revalidates root/harness/generated preflight and unchanged narrow delimiter premises;
+compiled actual controls and every full local integration stage pass, captured inputs restore. Its stamp names
+the activation tree, not later closure prose. Source/package/standard-library/channel completion still precedes
+conditional flag proofs. Historical assessment preserved; no new flag equivalence, remote CI or final adequacy claim.
 
 
 ## `rust-reference`

@@ -192,7 +192,11 @@ The [source-bound delimiter equivalents](../../book/src/ledger.md#rust-toolchain
 apply only to complete pinned Unix Cargo records with the fixed rustc program and exact outside separators.
 Encoded empty operands are included. Compiled actual variants, independent argv expectations and explicit
 outside-domain/wrong-oracle falsifiers support the reasons; selected strict native E is not full adequacy.
-No production collection behavior changes in this proof slice.
+No production collection behavior changes in this proof slice. After the admitted-dynamic-target repair,
+`.11.2.5.2` revalidates root/harness/generated preflight, fixed compiler, modes/environment/configuration and
+the unchanged narrow delimiter premises; compiled actual controls and full local integration pass. The later
+compiler-program filter cannot supply that premise because decoding precedes it. Flag-source completion and
+final whole-production measurements remain separate (`flag-normalization-domain.md`).
 
 Final bounded helper replay (`M3.6.9.6.3.2.2.10.3.4`) verifies every actual current helper edit with strict
 named-kill/scoped-equivalent outcomes and complete original/copy restoration. Original survivor obligations

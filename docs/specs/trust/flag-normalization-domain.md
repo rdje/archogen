@@ -3,8 +3,8 @@
 Observed `2026-10-12`, owner `M3.6.9.6.3.2.2.11.2.3` in `docs/tasks/M3.md`.
 Source: [the pinned Rust toolchain](../../book/src/ledger.md#rust-toolchain).
 This is a source/caller assessment, not an equivalence declaration. The remaining table obligations stay
-open. The confirmed prebuild metadata defect below is repaired by `.11.2.5.1`; caller/E premise and
-integration revalidation remain owned by `.11.2.5.2` before further classifications.
+open. The confirmed prebuild metadata defect below is repaired by `.11.2.5.1`; caller/E premise and local
+integration revalidation pass in `.11.2.5.2`. Source-domain completion remains `.11.2.6` before classifications.
 
 ## Pinned producer
 
@@ -102,9 +102,20 @@ with both named killing parents. Captured original/copied inputs restore; old co
 E and reviewed twins are preserved. Evidence, exact commands/exits and digests are in the repair leaf;
 ignored orchestration/audits remain supplemental to permanent controls and maintained native/census tools.
 
-`.11.2.5.2` revalidates the caller/equivalent premises and full integration. Existing delimiter proof scope
-and proposed flag proofs must be checked against the repaired no-dynamic-target caller. Other source-policy
-premises still require explicit evidence before conditional cap-lints equivalence.
+`.11.2.5.2` revalidates the delimiter caller premises after repair: root/harness closure preflight precedes
+any root build, and generated entry points preflight their closure before compiling. Test targets use no-run;
+other targets use build. Configuration remains alias-only, the environment cleared, and RUSTC fixed. Thus
+package scripts/macros cannot inject verbose command records into the scoped decoder input. Its later
+program filter is not used as the premise: decoding occurs before that filter. The pinned complete-record
+framing and exact Unix separator/encoding argument remain necessary; arbitrary command text stays outside.
+
+The maintained compiled actual delimiter controls pass with their independent argv/wider-domain/wrong-oracle
+checks on the repaired source. Full local integration passes every current stage, including gate self-tests,
+book, target builds/bindings and emulator/spike. Captured original inputs restore; code/tests/catalogue/E
+remain exact. The official integration stamp identifies the activation tree, with closure documentation
+checked separately. Exact commands, outcomes, identities and qualified supplemental audits are in the leaf.
+No new equivalence or remote CI outcome follows. Source/package/standard-library/channel and visited-token
+premises still require completion in `.11.2.6` before conditional cap-lints equivalence.
 
 ## Revalidation
 

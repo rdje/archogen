@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — repaired caller premises and local integration checkpoint
+
+`ARCHOGEN-M3-0705` (leaf `M3.6.9.6.3.2.2.11.2.5.2`), `2026-10-12`.
+
+- Revalidate root/harness/generated preflight and fixed compiler/mode/environment/configuration premises
+  after the metadata repair. Existing narrow delimiter reasons remain unchanged; actual compiled controls
+  pass with independent argv expectations and wider-domain/wrong-oracle falsifiers.
+- Full local integration passes every current stage, with its official activation-tree stamp. All 1012
+  regular inputs and the opaque pin restore; independent ordered-step/stamp audit rejects altered evidence.
+  Code/tests/catalogue/E unchanged; closure prose receives separate checks.
+- Close the bounded repair parent, sync canonical/book/live/resume and own source/package/standard-library/
+  channel/token-consumption completion next. No new equivalence, remote CI or final adequacy claim.
+
 ## archogen — hard prebuild dynamic-target boundary
 
 `ARCHOGEN-M3-0704` (leaf `M3.6.9.6.3.2.2.11.2.5.1`), `2026-10-12`.
