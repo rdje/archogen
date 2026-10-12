@@ -182,6 +182,12 @@ ordinary, line-break, backtick, fake-Running and combined quote/backslash paths;
 remain stable. Synthetic malformed/canonical controls and exact native reversals hold both boundaries.
 This repairs the measured public multiline collection defects; final helper adequacy remains separately open.
 
+The [source-bound delimiter equivalents](../../book/src/ledger.md#rust-toolchain) (`M3.6.9.6.3.2.2.10.3.3.3.2.4`)
+apply only to complete pinned Unix Cargo records with the fixed rustc program and exact outside separators.
+Encoded empty operands are included. Compiled actual variants, independent argv expectations and explicit
+outside-domain/wrong-oracle falsifiers support the reasons; selected strict native E is not full adequacy.
+No production collection behavior changes in this proof slice.
+
 **What it records, for each root:**
 
 - the packages its build compiled, from that build's units and not from workspace-wide metadata, each with its

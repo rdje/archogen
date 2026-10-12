@@ -421,8 +421,8 @@ It independently requires root/dependency units, source/data hashes, environment
 arguments across ordinary, line-break, backtick, fake-Running and combined apostrophe/backslash paths.
 Configurations/shared items match ordinary. Synthetic quote/canonical/malformed controls and exact reversals
 `trust-cargo-command-first-physical-line` and `trust-cargo-status-path-split` hold both boundaries; originals
-restore (`M3.6.9.6.3.2.2.10.3.3.3.2.3`). The measured public collection defects are repaired;
-delimiter proofs and final helper adequacy remain open.
+restore (`M3.6.9.6.3.2.2.10.3.3.3.2.3`). Delimiter proofs and their limits are
+[source-bound](ledger.md#rust-toolchain); final helper adequacy remains open.
 
 ## Historical effects and current self-tests
 

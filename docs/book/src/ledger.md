@@ -229,6 +229,43 @@ a fake command under the first framing intervention. Complete quoted records and
 handling repair both boundaries; synthetic malformed/canonical controls and both exact native reversals hold.
 Exploratory raw status audit remains qualified; permanent public controls establish the repair, not full adequacy.
 
+Delimiter equivalence (`M3.6.9.6.3.2.2.10.3.3.3.2.4`, `2026-10-12`) is scoped to complete records from
+this pinned Unix formatter and the fixed `rustc` program. It follows from the formatter's construction, rather
+than absence in samples: one outside space precedes each operand, with no leading/trailing/repeated outside
+separator. Every operand has nonempty encoded text; even an empty operand is `''`. At each separator or end,
+decoded bytes make the token nonempty or a visited quote marks an encoded empty token.
+
+Consequently, the initial token-state flag can be true without changing the nonempty program token, after which
+the first reset converges. Changing/deleting a separator reset cannot affect the next token's already-true push
+predicate. Replacing either push guard with true also leaves it true. The exact per-file reasons are in
+`xtask/trust.equivalents`; one shared text key covers both guards. This argument does not apply to arbitrary
+command text. The permanent compiled controls expose these differences outside the stated domain:
+
+| Actual edit | Input outside the domain | Original tokens | Changed tokens |
+| --- | --- | --- | --- |
+| initialize the flag true | empty text | `[]` | `[""]` |
+| make the separator guard true | `" rustc"` | `["rustc"]` | `["", "rustc"]` |
+| reset the flag true | `"rustc "` | `["rustc"]` | `["rustc", ""]` |
+| delete the flag reset | `"rustc '' "` | `["rustc", ""]` | `["rustc", "", ""]` |
+| make the final guard true | empty text | `[]` | `[""]` |
+
+`CommandDelimiterTests.test_actual_delimiter_candidates_hold_only_the_fixed_cargo_domain` discovers and
+compiles the actual original/replacements. Independent token expectations cover encoded empty middle/final
+operands, spaces, quoted line breaks/backticks, apostrophe/exclamation escapes, backslashes and Unicode.
+Deliberately wrong positive/negative oracles refuse. The control binds the fixed selector and installed Cargo
+commit; a producer/domain change requires revalidating the reasons. Actual producer/public controls above
+remain distinct from these synthetic encoded-input controls. Reproduce with local stores:
+
+```sh
+CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PWD/target/cache" \
+  python3 -I -B xtask/mutation_sweep_tests.py . CommandDelimiterTests.test_actual_delimiter_candidates_hold_only_the_fixed_cargo_domain
+```
+
+The same selected actual edits survive unlisted, then finish equivalent with the recorded reasons under the
+parent population, strict exit 0. Both input captures and copied source restore; altered audit evidence refuses.
+Selected outcomes establish these bounded judgments. Final all-helper replay, initial obligation closure and
+whole-production adequacy remain separately open.
+
 ## `rust-reference`
 
 | Field | Value |

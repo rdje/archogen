@@ -378,6 +378,94 @@ mod tests { fn fixture() { let _ = |x: i32| x > 0 && x < 10; } }
                 self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
 
 
+
+class CommandDelimiterTests(DiscoveryFixture):
+    @unittest.skipUnless(os.name == "posix", "the proof is scoped to Cargo's Unix formatter")
+    def test_actual_delimiter_candidates_hold_only_the_fixed_cargo_domain(self):
+        source = (ROOT / "xtask/src/trust.rs").read_text()
+        self.assertIn('c.env("RUSTC", "rustc");', source, "the raw program field must remain fixed")
+        self.assertIn("commit-hash: f2d3ce0bd7f24a49f8f72d9000448f8838c4e850",
+                      self.bounded(["cargo", "--version", "--verbose"]),
+                      "a producer change requires revalidating the proof")
+        namespace, _ = self.discovery(source)
+        lines = namespace["lines"]
+        first = source[:source.index("fn split_command(")].count("\n")
+        last = source[:source.index("/// Frame Cargo")].count("\n")
+        keys = {
+            ("let mut any = false;", "let mut any = true;"),
+            ("if any || !cur.is_empty() {", "if true {"),
+            ("any = false;", "any = true;"),
+            ("any = false;", "// any = false;"),
+        }
+        family = [m for m in namespace["mutants"]()
+                  if first <= m[0] < last and namespace["mutation_key"](m) in keys]
+        self.assertEqual(len(family), 5, "both guards and the three state edits must be actual candidates")
+        self.assertEqual({namespace["mutation_key"](m) for m in family}, keys)
+
+        def function(text, name):
+            start = text.index("fn split_command(")
+            end = text.index("\n/// Frame Cargo", start)
+            return text[start:end].replace("fn split_command(", "fn " + name + "(", 1)
+
+        functions = [function(source, "baseline")]
+        functions += [function(namespace["apply_mutant"](m), "variant_" + str(i))
+                      for i, m in enumerate(family)]
+        # Independent encoded inputs/argv expectations. Actual producer controls live in trust::tests;
+        # these compiler-backed controls hold the exact replacements, not another escape implementation.
+        cases = [
+            ("rustc", ["rustc"]),
+            ("rustc ''", ["rustc", ""]),
+            ("rustc '' --cfg ''", ["rustc", "", "--cfg", ""]),
+            ("rustc --out-dir 'a b'", ["rustc", "--out-dir", "a b"]),
+            ("rustc --out-dir 'a\n     Running `fake`\rb\tc'",
+             ["rustc", "--out-dir", "a\n     Running `fake`\rb\tc"]),
+            (r"rustc 'a'\''b' 'c'\!'d' '\literal'",
+             ["rustc", "a'b", "c!d", r"\literal"]),
+            ("rustc 'λ' '\\ntext'", ["rustc", "λ", r"\ntext"]),
+        ]
+        literal = lambda text: json.dumps(text, ensure_ascii=False)
+        checks = []
+        for command, expected in cases:
+            expected_rust = "[" + ", ".join(map(literal, expected)) + "]"
+            for name in ["baseline"] + ["variant_" + str(i) for i in range(len(family))]:
+                checks.append(f'assert_eq!({name}({literal(command)}), {expected_rust}, "{name} domain");')
+        for i, mutant in enumerate(family):
+            before, after = namespace["mutation_key"](mutant)
+            if before == "let mut any = false;" or before.startswith("if ") and lines[mutant[0]].startswith("    if "):
+                command, original, changed = "", [], [""]
+            elif before.startswith("if "):
+                command, original, changed = " rustc", ["rustc"], ["", "rustc"]
+            elif after == "any = true;":
+                command, original, changed = "rustc ", ["rustc"], ["rustc", ""]
+            else:
+                command, original, changed = "rustc '' ", ["rustc", ""], ["rustc", "", ""]
+            for name, expected in [("baseline", original), ("variant_" + str(i), changed)]:
+                expected_rust = "[" + ", ".join(map(literal, expected)) + "]"
+                # The empty expected value needs an explicit type for Rust's assert_eq inference.
+                expected_rust = "Vec::<String>::new()" if not expected else expected_rust
+                checks.append(f'assert_eq!({name}({literal(command)}), {expected_rust}, "{name} outside");')
+            checks.append(f'assert_ne!(baseline({literal(command)}), variant_{i}({literal(command)}), "overbroad proof {i}");')
+        guard = next(i for i, m in enumerate(family)
+                     if namespace["mutation_key"](m)[0].startswith("if ") and not lines[m[0]].startswith("    if "))
+        main = ("\nfn main() {\n" + "\n".join(checks)
+                + '\nmatch std::env::args().nth(1).as_deref() {\n'
+                + f' Some("wrong-positive") => assert_eq!(variant_{guard}(" rustc"), baseline(" rustc"), "wrong positive oracle"),\n'
+                + ' Some("wrong-negative") => assert_ne!(variant_0("rustc \'\'"), baseline("rustc \'\'"), "wrong negative oracle"),\n'
+                + ' _ => {}\n}\nprintln!("delimiter controls: encoded boundaries held; wider-domain claims refused");\n}\n')
+        program, binary = self.base / "cargo-delimiters.rs", self.base / "cargo-delimiters"
+        program.write_text("\n".join(functions) + main)
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.assertIn("encoded boundaries held; wider-domain claims refused", self.bounded([str(binary)]))
+        for argument, message in [("wrong-positive", "wrong positive oracle"),
+                                  ("wrong-negative", "wrong negative oracle")]:
+            with self.assertRaisesRegex(AssertionError, message):
+                self.bounded([str(binary), argument])
+        records = namespace["load_equivalents"](ROOT / "xtask/trust.equivalents")
+        for mutant in family:
+            self.assertIn(namespace["mutation_key"](mutant), records,
+                          "each actual delimiter proof requires its per-file reason")
+
+
 class IteratorTests(DiscoveryFixture):
     def test_the_actual_two_member_pair_loop_preserves_order_and_early_returns(self):
         source = (ROOT / "xtask/src/trust.rs").read_text()

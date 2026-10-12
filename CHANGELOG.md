@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — delimiter equivalents bind the pinned Cargo domain
+
+`ARCHOGEN-M3-0697` (leaf `M3.6.9.6.3.2.2.10.3.3.3.2.4`), `2026-10-12`.
+
+- Prove the actual delimiter edits against fixed rustc and pinned Unix Cargo separators/encoding, including
+  quoted empty operands. Compiled actual variants require independent argv, wider-domain differences and
+  wrong-oracle refusals; no arbitrary shell or empty-operand absence claim.
+- Same five actual candidates survive unlisted, then finish equivalent with exact per-file reasons, strict 0.
+  Maintained audit rejects altered evidence; all 1010 captured inputs/copy restore, old bodies/catalogue remain exact.
+- Permanent operator suite passes; book/canonical/source-ledger/live sync and final exact-staged focused required.
+  Domain parents close. Final all-helper replay and initial obligation closure remain next; full adequacy open.
+
 ## archogen — framing verification prose uses physical lines
 
 `ARCHOGEN-M3-0696` (leaf `M3.6.9.6.3.2.2.10.3.3.3.2.6`), `2026-10-12`.
