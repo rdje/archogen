@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — complete dropped-flag table measurement
+
+`ARCHOGEN-M3-0700` (leaf `M3.6.9.6.3.2.2.11.1`), `2026-10-12`.
+
+- All fourteen actual current table edits finish: two named kills, eleven survivors and one unviable
+  closing-array deletion. Native strict exit 1; measurement complete, adequacy criterion unmet.
+- Exact unchanged table/operator/producer bindings retain every original table outcome and all eleven P1
+  survivor obligations. No guessed ID offsets, new E classification or production/test/catalogue change.
+- Maintained census verifies all 1011 original/copied regular inputs restore with independent hashes/modes;
+  opaque pin preserved and altered evidence refuses. Book/live/resume sync; actual Cargo flag assessment next.
+
 ## archogen — helper integration checkpoint passes
 
 `ARCHOGEN-M3-0699` (leaf `M3.6.9.6.3.2.2.10.4`), `2026-10-12`.

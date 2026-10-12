@@ -290,6 +290,16 @@ checks. This closes the bounded helper group. Dropped-flag obligations are next;
 and runner-baseline compatibility remain open. No remote CI outcome follows from this local checkpoint.
 
 
+The dropped-flag table measurement (`M3.6.9.6.3.2.2.11.1`, `2026-10-12`) selects every actual table
+edit: thirteen operand-consumption switches and the array-terminator deletion. The switches finish with two
+named kills and eleven survivors; the terminator deletion fails compilation with an unclosed delimiter and
+proves no coverage. Native strict exit 1 means the adequacy criterion remains unmet. Exact unchanged
+table/operator/producer bindings retain all original table outcomes; the survivors stay owned for actual Cargo
+producer/caller assessment before controls or scoped equivalents. Every captured original/copied regular input
+restores with independent hashes/modes. Source, tests, catalogue and E records stay exact. This is a bounded
+measurement, separate from the completed helper group and pending whole-production adequacy.
+
+
 ## `rust-reference`
 
 | Field | Value |
