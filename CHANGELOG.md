@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hard prebuild dynamic-target boundary
+
+`ARCHOGEN-M3-0704` (leaf `M3.6.9.6.3.2.2.11.2.5.1`), `2026-10-12`.
+
+- Actual reached-package metadata kinds unconditionally refuse build scripts/procedural macros before
+  compilation, independently of exact ordinary manifest admissions. Disabled scripts retain static behavior.
+- Permanent public sentinel controls fail for actual execution before repair and pass after. Reversing the
+  exact guard through the native catalogue gives both named finishing kills, strict 0; independent audit
+  rejects altered outcomes and all 1012 original/copied regular inputs restore.
+- Older code/tests/catalogue prefix, E and reviewed twins preserved. Book/canonical/live/resume sync;
+  exact-staged focused required, then owned caller/E premise and full integration checkpoint. No final
+  whole-production adequacy or remote CI claim.
+
 ## archogen — flag premises expose an admitted-script execution defect
 
 `ARCHOGEN-M3-0703` (leaf `M3.6.9.6.3.2.2.11.2.3`), `2026-10-12`.

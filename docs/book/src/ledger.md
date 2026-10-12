@@ -311,11 +311,11 @@ finishing kill/strict 0; exact operand-leak failure and restored pass agree. Onl
 
 The source/caller assessment (`.11.2.3`, `2026-10-12`) records exact pinned source digests and channel/
 admission qualifications in `docs/specs/trust/flag-normalization-domain.md`. Explicitly admitted profile
-flags still fail stable Cargo before compilation. A separate public probe confirms a defect: exact manifest
-admission permits build-script execution and a written inventory despite §3's prebuild prohibition.
-Immediate P1 repair `.11.2.5.1`, then caller/E premise and integration revalidation, precede source completion
-and conditional flag proofs. All original/copied inputs restore; code/tests/catalogue/E are unchanged by
-this assessment. No new flag equivalence or final whole-production adequacy claim.
+flags still fail stable Cargo before compilation. Its admitted-script execution defect is repaired by
+`.11.2.5.1`: hard metadata preflight, permanent script/procedural-macro refusal and disabled-script positive
+controls, with actual native reversal killed by both named parents. Original/copied inputs restore. Caller/E
+premise and integration revalidation still precede source completion and conditional flag proofs. Historical
+assessment preserved; no new flag equivalence or final whole-production adequacy claim.
 
 
 ## `rust-reference`

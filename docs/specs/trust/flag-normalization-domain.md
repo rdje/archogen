@@ -3,7 +3,8 @@
 Observed `2026-10-12`, owner `M3.6.9.6.3.2.2.11.2.3` in `docs/tasks/M3.md`.
 Source: [the pinned Rust toolchain](../../book/src/ledger.md#rust-toolchain).
 This is a source/caller assessment, not an equivalence declaration. The remaining table obligations stay
-open. The confirmed prebuild metadata defect below is repaired before further classifications.
+open. The confirmed prebuild metadata defect below is repaired by `.11.2.5.1`; caller/E premise and
+integration revalidation remain owned by `.11.2.5.2` before further classifications.
 
 ## Pinned producer
 
@@ -66,8 +67,8 @@ owned by `.11.2.4`; no new E record is justified by this outline alone.
 ## Confirmed defect: an admitted build script executes
 
 The canonical inventory design §3 promises metadata refusal of build scripts and procedural macros before
-package code runs. The inventory's own metadata loop collects targets, but does not apply the catalog
-metadata helper's corresponding hard checks. Its later default manifest refusal can be admitted.
+package code runs. At the observed pre-repair revision, the inventory's own metadata loop collects targets, but does not
+apply the catalog metadata helper's corresponding hard checks. Its later default manifest refusal can be admitted.
 
 Reproduction on unchanged code at `3a2a7b22`:
 
@@ -81,16 +82,29 @@ Reproduction on unchanged code at `3a2a7b22`:
 
 This confirms an execution-boundary defect, not just a missing test. The diagnostic wrote only inside its
 owned synthetic fixture on the repository volume. Ignored copied diagnostic/adapters are qualified evidence;
-no maintained regression is claimed yet. Independent wrong-manifest-hash, missing-script-unit and false
+no maintained regression was present at that observation. Independent wrong-manifest-hash, missing-script-unit and false
 no-execution records refuse. All captured original/copied regular inputs restore under the maintained census.
 Evidence and digests are in the owning task leaf, with raw records in `target/m369-admitted-script/`.
 
-Priority P1, immediate owner `.11.2.5.1`: enforce the metadata target boundary before builds regardless of
-manifest admissions, with permanent public sentinel/refusal controls and actual reversal evidence.
-`.11.2.5.2` then revalidates the caller/equivalent premises and full integration. Existing delimiter proof
-scope and proposed flag proofs must be checked against the repaired no-dynamic-target caller; do not assume
-that every current verbose command is a compiler command while this defect remains. Other source-policy
-premises also require explicit evidence before conditional cap-lints equivalence.
+Repair `.11.2.5.1` enforces actual metadata kinds in the shared reached-package manifest preflight, before
+root/harness and generated-entrypoint builds. Neither exact manifest admission can override custom-build
+or proc-macro refusal. Permanent public parents
+`an_admitted_build_script_is_refused_before_any_compilation` and
+`an_admitted_procedural_macro_is_refused_before_any_compilation` require attributed refusal, absent owned
+sentinels and absent root compilation directories. For example, an exact build-script manifest admission
+with `package.build = false` still returns a static checker inventory: the ignored script is no metadata
+dynamic target. Enabling that same script refuses before compilation. An admitted macro called by a root
+likewise refuses before expansion can write its sentinel.
+
+Both permanent controls fail on the previous production code because package code actually runs, and pass
+after repair. Native regression `trust-admitted-dynamic-targets` removes the exact new preflight and finishes
+with both named killing parents. Captured original/copied inputs restore; old code/tests/catalogue prefix,
+E and reviewed twins are preserved. Evidence, exact commands/exits and digests are in the repair leaf;
+ignored orchestration/audits remain supplemental to permanent controls and maintained native/census tools.
+
+`.11.2.5.2` revalidates the caller/equivalent premises and full integration. Existing delimiter proof scope
+and proposed flag proofs must be checked against the repaired no-dynamic-target caller. Other source-policy
+premises still require explicit evidence before conditional cap-lints equivalence.
 
 ## Revalidation
 

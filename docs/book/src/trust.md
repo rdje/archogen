@@ -201,9 +201,9 @@ gate) and `xtask/src/trust_verify.rs` (the verifier); committed generated source
 `docs/specs/trust/decision_trust-generated-sources.md`, `docs/specs/trust/decision_trust-generated-refusals.md` and
 `xtask/src/trust_generated.rs`.
 
-Known defect (`2026-10-12`): an exact manifest admission permits build-script execution and a
-written inventory, contrary to §3's prebuild prohibition. `M3.6.9.6.3.2.2.11.2.5.1` owns repair;
-reproduction and scope: `docs/specs/trust/flag-normalization-domain.md`.
+Metadata preflight refuses reached build-script/procedural-macro targets before compilation, even
+with exact manifest admissions. Disabled scripts remain static. Controls and repair evidence:
+`docs/specs/trust/flag-normalization-domain.md`.
 
 ### The run's order
 

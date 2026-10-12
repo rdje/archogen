@@ -1336,6 +1336,8 @@ struct Rules<'a> {
     symlinks: &'a BTreeSet<String>,
     admissions: &'a BTreeMap<Admission, usize>,
     package_targets: &'a BTreeMap<String, Vec<String>>,
+    /// Actual metadata kinds are a hard prebuild boundary, independent of manifest admissions.
+    metadata_targets: &'a BTreeMap<String, Vec<(Vec<String>, String)>>,
     /// Every site the rules refused, admitted or not.
     sites: usize,
     /// How many sites each admission admits.
@@ -1392,6 +1394,16 @@ impl Rules<'_> {
             }
             if !self.manifests_checked.insert(pkg.clone()) {
                 continue;
+            }
+            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {
+                for kind in kinds {
+                    if kind == "custom-build" || kind == "proc-macro" {
+                        refused.push(format!(
+                            "trust-undeclared-input: `{who}` reaches `{pkg}` target `{name}` of kind `{kind}`, \
+                             which runs package code during compilation (§3)"
+                        ));
+                    }
+                }
             }
             let path = if pkg.is_empty() {
                 "Cargo.toml".to_owned()
@@ -1801,6 +1813,7 @@ pub fn inventory_with(
         symlinks: &symlinks,
         admissions: &roots.admissions,
         package_targets: &package_targets,
+        metadata_targets: &every_target,
         sites: 0,
         used: BTreeMap::new(),
         manifests_checked: BTreeSet::new(),
@@ -3719,6 +3732,91 @@ pub(crate) mod tests {
             !f.base.join("out/tree/crates/b/RAN").exists(),
             "the build script ran"
         );
+    }
+
+    #[test]
+    fn an_admitted_build_script_is_refused_before_any_compilation() {
+        crate::trust_test_process::bounded!(
+            an_admitted_build_script_is_refused_before_any_compilation
+        );
+        for enabled in [false, true] {
+            let manifest = manifest("b", if enabled { "" } else { "build = false\n" });
+            let rule = "`crates/b/build.rs`: a package has no build script";
+            let f = two_roots(
+                &format!("admitted-build-script-{enabled}"),
+                "fn main() {}\n",
+                "pub fn f() {}\n",
+                &[
+                    ("crates/b/Cargo.toml", manifest.clone()),
+                    (
+                        "crates/b/build.rs",
+                        "fn main() { std::fs::write(\"RAN\", \"build script ran\").unwrap(); }\n"
+                            .to_owned(),
+                    ),
+                    (
+                        "trust/roots.eadl",
+                        format!("{ROOTS}{}", admit("crates/b/Cargo.toml", rule, &manifest)),
+                    ),
+                ],
+            );
+            let outcome = f.run();
+            assert!(
+                !f.base.join("out/tree/crates/b/RAN").exists(),
+                "an admitted build script ran before refusal"
+            );
+            if enabled {
+                let why = refused(outcome);
+                says(&why, "reaches `crates/b`");
+                says(&why, "custom-build");
+                assert!(
+                    !f.base.join("out/target/gen").exists(),
+                    "a root compiled before metadata preflight ended"
+                );
+                assert!(!f.base.join("out/target/chk").exists());
+            } else {
+                // An ignored script is not a dynamic target. Its ordinary manifest admission still works.
+                let inv = written(outcome);
+                let units = program(&inv, "chk").get("units").unwrap().elements();
+                assert_eq!(units.len(), 1);
+                assert_eq!(units[0].get("crate").and_then(Json::as_str), Some("b"));
+            }
+        }
+    }
+
+    #[test]
+    fn an_admitted_procedural_macro_is_refused_before_any_compilation() {
+        crate::trust_test_process::bounded!(
+            an_admitted_procedural_macro_is_refused_before_any_compilation
+        );
+        let manifest = manifest("p", "[lib]\nproc-macro = true\n");
+        let rule = "`crates/p/Cargo.toml`: `lib.proc-macro` holds `proc-macro`, which can make the package another kind of crate";
+        let f = two_roots(
+            "admitted-procedural-macro",
+            "p::mark!();\nfn main() {}\n",
+            "pub fn f() {}\n",
+            &[
+                ("crates/a/Cargo.toml", self::manifest("a", "[dependencies]\np = { path = \"../p\" }\n")),
+                ("crates/p/Cargo.toml", manifest.clone()),
+                (
+                    "crates/p/src/lib.rs",
+                    "extern crate proc_macro;\n#[proc_macro]\npub fn mark(_: proc_macro::TokenStream) -> proc_macro::TokenStream { std::fs::write(\"PROC_RAN\", \"procedural macro ran\").unwrap(); proc_macro::TokenStream::new() }\n".to_owned(),
+                ),
+                ("trust/roots.eadl", format!("{ROOTS}{}", admit("crates/p/Cargo.toml", rule, &manifest))),
+            ],
+        );
+        let outcome = f.run();
+        assert!(
+            !f.base.join("out/tree/PROC_RAN").exists(),
+            "an admitted procedural macro ran before refusal"
+        );
+        let why = refused(outcome);
+        says(&why, "reaches `crates/p`");
+        says(&why, "proc-macro");
+        assert!(
+            !f.base.join("out/target/gen").exists(),
+            "a root compiled before metadata preflight ended"
+        );
+        assert!(!f.base.join("out/target/chk").exists());
     }
 
     #[test]

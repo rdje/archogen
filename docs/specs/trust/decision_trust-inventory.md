@@ -126,10 +126,10 @@ nothing but `[alias]` (`package::check_config`), which closes `build.rustc`, `bu
 creates it and a configuration left in it would reach every later build (R2 B12). Before any build, the packages'
 targets are read with `cargo metadata`, which runs no package's code, and a build script or procedural macro is
 refused there, as the catalog's `metadata` refuses them, so none runs (R2 B12).
-**Current implementation gap, `2026-10-12` (`M3.6.9.6.3.2.2.11.2.3`):** an exact manifest admission
-currently lets a build script execute and still return an inventory. The public sentinel reproduction is in
-`flag-normalization-domain.md`; immediate P1 repair `.11.2.5.1` restores this unconditional metadata
-boundary. The requirement above is unchanged; caller/equivalent premises are revalidated after repair.
+The shared manifest preflight enforces actual metadata target kinds for each reached package before
+root/harness or generated-entrypoint compilation, independently of ordinary manifest admissions. A disabled
+build script is no dynamic target. Permanent exact-admission script/procedural-macro sentinel controls and
+the disabled-script positive case verify this boundary (`flag-normalization-domain.md`, repair `.11.2.5.1`).
 
 The comparison harness a pair's form
 names is built the same way, with `cargo test --release --no-run -p <package> --test <name>`, and recorded as a root

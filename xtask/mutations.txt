@@ -5712,3 +5712,23 @@ from
 to
                 stderr = &stderr[(line_end + 1).min(stderr.len())..];
 end
+
+mutation trust-admitted-dynamic-targets
+file xtask/src/trust.rs
+test -p xtask -- trust::tests::an_admitted_build_script_is_refused_before_any_compilation trust::tests::an_admitted_procedural_macro_is_refused_before_any_compilation --exact
+expect killed
+why Exact manifest admissions must not bypass the metadata prohibition of package code execution; both public sentinel controls must finish with named failures when the hard prebuild gate is removed.
+from
+                for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {
+                    for kind in kinds {
+                        if kind == "custom-build" || kind == "proc-macro" {
+                            refused.push(format!(
+                                "trust-undeclared-input: `{who}` reaches `{pkg}` target `{name}` of kind `{kind}`, \
+                                 which runs package code during compilation (§3)"
+                            ));
+                        }
+                    }
+                }
+to
+                // Metadata dynamic-target preflight removed.
+end
