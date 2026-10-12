@@ -364,17 +364,34 @@ need domain judgments, and the final all-helper sweep remains open.
 
 Producer-domain investigation then found a distinct boundary: the
 [pinned Cargo formatter](ledger.md#rust-toolchain) escapes arguments but prints the compiler program path
-without quoting it. A space in `RUSTUP_HOME` therefore makes the helper mistake part of that program path
-for a separate token. Cargo builds successfully, but collection skips the compiler invocation and the existing
-own-unit guard reports that neither root compiled anything of its own package. This is a collection failure;
+without quoting it. A space in `RUSTUP_HOME` therefore made the helper mistake part of that program path
+for a separate token. Cargo built successfully, but collection skipped the compiler invocation and the existing
+own-unit guard reported that neither root compiled anything of its own package. This was a collection failure;
 the guard prevents an accepted empty-root inventory in the measured fixture.
-`M3.6.9.6.3.2.2.10.3.3.2` owns the repair and a permanent isolated public regression next.
+`M3.6.9.6.3.2.2.10.3.3.2` repairs this by selecting the fixed `RUSTC=rustc` command for inventory
+compilation under the same pinned environment as the recorded compiler identity. Cargo prints `rustc` as
+the program, so its installation path cannot be mistaken for arguments. Inherited compiler overrides remain
+cleared. The command helper and normalization rules are unchanged.
+
+The permanent Unix public control uses separate child environments with ordinary, space, apostrophe, backslash
+and combined toolchain homes. It requires each root to retain exactly its own and the shared package's units,
+plus the independently expected library dependency argument shown above. Local symlinks access the installed
+OS/toolchain dependency read-only; no other repository is written. Run it with project-local stores:
+
+```sh
+CARGO_HOME="$PWD/target/cargo-home" TMPDIR="$PWD/target/tmp" XDG_CACHE_HOME="$PWD/target/cache" \
+  cargo test -p xtask trust::tests::compiler_installation_paths_preserve_inventory_units_and_configuration -- --exact
+```
+
+The exact compiler-selection reversal and the actual statement-deletion candidate both produce the control's
+named finishing failure, with strict exit zero. Maintained census checks verify original inputs after each;
+the copied sweep source matches. All older test bodies and catalogue entries are preserved.
 
 An actual manifest `check-cfg = [""]` value also makes Cargo print an empty argument. Rustc rejects it,
 and the inventory returns the build failure before command decoding. Ordinary and `check-cfg = ["cfg()"]`
 controls compile successfully. These exploratory probes are qualified as untracked producers in the task
 record: they establish neither universal empty-argument absence nor an equivalent mutation. All remaining
-helper obligations stay open while the executable boundary is repaired.
+helper obligations stay open for renewed domain judgments after the executable-boundary repair.
 
 ## Historical effects and current self-tests
 

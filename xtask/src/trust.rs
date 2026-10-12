@@ -548,6 +548,9 @@ fn run_cargo(
     for (k, v) in env {
         c.env(k, v);
     }
+    // Cargo leaves its program field unquoted. Use the same pinned command as the recorded rustc identity,
+    // so a toolchain installation path never becomes ambiguous command text.
+    c.env("RUSTC", "rustc");
     let out = c.output().map_err(|e| format!("cargo did not run: {e}"))?;
     let stdout = String::from_utf8_lossy(&out.stdout).into_owned();
     let stderr = String::from_utf8_lossy(&out.stderr).into_owned();
@@ -3971,6 +3974,111 @@ pub(crate) mod tests {
                 arguments.contains(&expected),
                 "{root} lost its dependency argument {expected:?}: {arguments:?}"
             );
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn compiler_installation_paths_preserve_inventory_units_and_configuration() {
+        use std::collections::BTreeSet;
+        use std::fs;
+
+        crate::trust_test_process::bounded!(
+            compiler_installation_paths_preserve_inventory_units_and_configuration
+        );
+        const CASE: &str = "ARCHOGEN_COMPILER_PATH_CASE";
+        const NAME: &str =
+            "trust::tests::compiler_installation_paths_preserve_inventory_units_and_configuration";
+        if std::env::var_os(CASE).is_some() {
+            let f = two_roots(
+                "compiler-installation-paths",
+                "fn main() { common::c(); }\n",
+                "pub fn f() { common::c(); }\n",
+                &[
+                    ("crates/common/Cargo.toml", manifest("common", "")),
+                    ("crates/common/src/lib.rs", "pub fn c() {}\n".to_owned()),
+                    (
+                        "crates/a/Cargo.toml",
+                        manifest("a", "[dependencies]\ncommon = { path = \"../common\" }\n"),
+                    ),
+                    (
+                        "crates/b/Cargo.toml",
+                        manifest("b", "[dependencies]\ncommon = { path = \"../common\" }\n"),
+                    ),
+                ],
+            );
+            let inventory = written(f.run());
+            for (root, package, dependency) in [
+                ("gen", "crates/a", "--extern common=libcommon.rlib"),
+                ("chk", "crates/b", "--extern common=libcommon.rmeta"),
+            ] {
+                let units = program(&inventory, root).get("units").unwrap().elements();
+                let packages: BTreeSet<_> = units
+                    .iter()
+                    .map(|u| u.get("package").and_then(Json::as_str).unwrap())
+                    .collect();
+                assert_eq!(units.len(), 2, "each root must retain exactly both units");
+                assert_eq!(packages, BTreeSet::from([package, "crates/common"]));
+                let own = units
+                    .iter()
+                    .find(|u| u.get("package").and_then(Json::as_str) == Some(package))
+                    .unwrap();
+                assert!(
+                    list(own, "configuration").contains(&dependency.to_owned()),
+                    "{root} lost its independently expected dependency argument"
+                );
+            }
+            return;
+        }
+
+        // Only the installed OS/toolchain dependency is read through these local links. No other repository
+        // is written, and each environment belongs to a child, never to the process running parallel tests.
+        let output = Command::new("rustup")
+            .args(["which", "--toolchain", "1.95.0", "rustc"])
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "rustup could not locate the pinned compiler"
+        );
+        let compiler = PathBuf::from(String::from_utf8(output.stdout).unwrap().trim());
+        let toolchain = compiler
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .canonicalize()
+            .unwrap();
+        let homes = real_root().join("target/trust-tests/compiler-installation-homes");
+        let _ = fs::remove_dir_all(&homes);
+        for case in [
+            "ordinary",
+            "with space",
+            "with'quote",
+            "with\\slash",
+            "with space'\\quote",
+        ] {
+            let home = homes.join(case);
+            let toolchains = home.join("toolchains");
+            fs::create_dir_all(&toolchains).unwrap();
+            std::os::unix::fs::symlink(&toolchain, toolchains.join(toolchain.file_name().unwrap()))
+                .unwrap();
+            let result = Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", NAME, "--format=pretty", "--color=never"])
+                .env(CASE, case)
+                .env("RUSTUP_HOME", home)
+                .output()
+                .unwrap();
+            assert!(
+                result.status.success(),
+                "compiler home {case:?}: stdout {}; stderr {}",
+                String::from_utf8_lossy(&result.stdout),
+                String::from_utf8_lossy(&result.stderr)
+            );
+            let stdout = String::from_utf8(result.stdout).unwrap();
+            let named = format!("test {NAME} ... ok");
+            assert!(stdout.lines().any(|l| l == named));
+            assert!(stdout.contains("test result: ok. 1 passed; 0 failed; 0 ignored;"));
         }
     }
 

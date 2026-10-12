@@ -5,6 +5,23 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — inventory compilation fixes its pinned compiler command
+
+`ARCHOGEN-M3-0689` (leaf `M3.6.9.6.3.2.2.10.3.3.2`), `2026-10-12`.
+
+- Select the fixed RUSTC=rustc command under the same pinned environment as the identity check. Cargo prints a
+  plain executable name, preserving inventory collection across toolchain installation paths.
+- Permanent isolated Unix public control requires exact compiled packages and dependency arguments across
+  ordinary, space, quote, backslash and combined toolchain homes. Old behavior fails after the ordinary control;
+  repaired behavior passes. Exact native reversal and actual statement deletion both yield named finishing kills.
+- Maintained census verifies all 1003 captured original inputs after each mutation run; copied source matches.
+  Prior source/test bodies and catalogue prefix remain exact outside the owned additions. Canonical inventory,
+  book, source ledger and live pointers align; final focused Rust gate required of the staged commit tree.
+  Remaining helper judgments and full adequacy retain separate ownership.
+- Commit hook catches aggregate task-tree pressure. Published archival tool seals six completed subtrees,
+  preserving exact reconstruction, committed bodies and navigation. Independent comparison agrees; source and
+  catalogue hashes remain fixed. Re-stage and repeat the exact-tree focused gate before commit.
+
 ## archogen — Cargo domain investigation owns unescaped compiler-path failure
 
 `ARCHOGEN-M3-0688` (leaf `M3.6.9.6.3.2.2.10.3.3.1`), `2026-10-12`.

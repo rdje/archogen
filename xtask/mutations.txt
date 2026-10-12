@@ -5476,3 +5476,14 @@ to
             // out.push(cur);
         }
 end
+
+mutation trust-cargo-compiler-program-unfixed
+file xtask/src/trust.rs
+test -p xtask trust::tests::compiler_installation_paths_preserve_inventory_units_and_configuration -- --exact
+expect killed
+why M3.6.9.6.3.2.2.10.3.3.2: without the fixed pinned compiler command Cargo prints an unescaped installation path; public inventory under a spaced toolchain home must finish with a named failure rather than silently losing its units.
+from
+        c.env("RUSTC", "rustc");
+to
+        // c.env("RUSTC", "rustc");
+end

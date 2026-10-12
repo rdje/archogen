@@ -115,8 +115,11 @@ that differs from another only in ASCII case, a special name spelt in another ca
 catalog's path grammar — none today, and the catalog's own check refuses such a tree already (R3 C17)); never from the working tree, so an uncommitted or untracked file
 cannot stand in for a committed one (R1 A7). It builds with `--locked --offline` under the catalog's cleared,
 allowlisted environment (`environment`: `PATH`, `HOME`, the rustup home and the pinned toolchain, a `CARGO_HOME` of
-its own, its own target directory, nothing else — no `RUSTFLAGS`, no `RUSTC_WRAPPER`, no `CARGO_PROFILE_*`), and
-refuses a cargo configuration found above the repository or under `target/`, or one that is a symbolic link
+its own, its own target directory, nothing inherited beyond that — no `RUSTFLAGS`, no `RUSTC_WRAPPER`, no
+`CARGO_PROFILE_*`). Inventory compilation additionally sets its own fixed `RUSTC=rustc`, selecting the same
+pinned command as the recorded `rustc -vV` identity. Cargo then prints a plain executable name, independent of
+the installation path; no inherited compiler override is admitted. It refuses a cargo configuration found
+above the repository or under `target/`, or one that is a symbolic link
 (`configurations_on_path`), and admits an in-tree configuration only byte for byte as committed and holding
 nothing but `[alias]` (`package::check_config`), which closes `build.rustc`, `build.rustc-wrapper`, a linker,
 `[env]` and `rustflags` (R1 A6; R3 C18). `CARGO_HOME` is removed and made anew on every run, since `environment` only
@@ -149,10 +152,11 @@ ordinary, space, apostrophe and literal-backslash output paths and a shared depe
 shell-parser conformance claim.
 
 Producer investigation `M3.6.9.6.3.2.2.10.3.3.1` found that the executable itself is unescaped
-([pinned source and evidence](../../book/src/ledger.md#rust-toolchain)). A space in the toolchain home makes
-collection skip its actual compilation commands; the own-unit guard then refuses the measured two-root fixture.
-`.10.3.3.2` owns the executable-boundary repair and permanent public controls. Argument quoting evidence does
-not establish whole-command delimiter invariants or universal absence of empty arguments.
+([pinned source and evidence](../../book/src/ledger.md#rust-toolchain)). Before the fixed compiler selection,
+a space in the toolchain home made collection skip its actual compilation commands; the own-unit guard refused
+the measured two-root fixture. `.10.3.3.2` repairs this with the fixed command above. Its isolated Unix public
+controls exercise ordinary, space, apostrophe, backslash and combined installation paths, requiring the exact
+compiled packages and dependency arguments. Argument quoting evidence does not prove empty-argument absence.
 
 **What it records, for each root:**
 

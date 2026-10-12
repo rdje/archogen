@@ -175,7 +175,14 @@ quotes empty arguments. No downloaded source hash was captured. Actual public in
 spaced toolchain home fails collection after successful Cargo builds; an ordinary-home control passes.
 Exploratory check-cfg probes emit an empty argument only in a measured failing build. Their adapters are
 untracked and provide no universal absence proof. Revalidate formatting assumptions on a pin/producer change;
-the executable-boundary repair and permanent controls remain owned by `.10.3.3.2`.
+the executable-boundary repair and permanent controls are recorded by `.10.3.3.2`.
+
+The repair fixes inventory compilation's compiler selector to `RUSTC=rustc` under the same pinned environment
+as its identity command. The [pinned Cargo environment-variable contract](https://github.com/rust-lang/cargo/blob/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/doc/src/reference/environment-variables.md#environment-variables-cargo-reads)
+defines that selector. `compiler_installation_paths_preserve_inventory_units_and_configuration` is a permanent
+Unix public control with isolated ordinary/space/quote/backslash/combined toolchain homes and independent unit
+and dependency expectations. Its exact selector reversal gives a named failure. The command-format assumptions
+still require revalidation on a producer change; finite controls do not prove universal empty-argument absence.
 
 ## `rust-reference`
 
