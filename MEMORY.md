@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.71` next; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.9.6.3.2.2.11.2.6.3` source/caller completion after hard reset repair.
-  Revalidate pinned source/stdlib/channel/visited-token premises and delimiter scope, then integration.
+- **Next action:** `M3.6.9.6.3.2.2.11.2.6.3.2` integration after committed source/caller assessment.
+  Run the full local tier with pinned tools, local stores and actual OS reads; verify restoration, then .11.2.4.
   Initial `.9.5` complete; remaining `.9.6` full sweeps/review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.

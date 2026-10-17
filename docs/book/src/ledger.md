@@ -309,16 +309,15 @@ absence theorem. The permanent parent `cargo_diagnostic_flags_do_not_enter_unit_
 source hashes/environment/retained arguments. The actual check-cfg switch changes from survivor to named
 finishing kill/strict 0; exact operand-leak failure and restored pass agree. Only that original obligation closes.
 
-The source/caller assessment (`.11.2.3`, `2026-10-12`) records exact pinned source digests and channel/
-admission qualifications in `docs/specs/trust/flag-normalization-domain.md`. Explicitly admitted profile
-flags still fail stable Cargo before compilation. Its admitted-script execution defect is repaired by
-`.11.2.5.1`: hard metadata preflight, permanent script/procedural-macro refusal and disabled-script positive
-controls, with actual native reversal killed by both named parents. Original/copied inputs restore.
-Checkpoint `.11.2.5.2` revalidates root/harness/generated preflight and unchanged narrow delimiter premises;
-compiled actual controls and every full local integration stage pass, captured inputs restore. Its stamp names
-the activation tree, not later closure prose. Further assessment `.11.2.6.1` finds ignored Cargo-home reset
-failure can execute an untracked wrapper before returning an error/no inventory. Immediate P1 `.6.2` repairs
-this gap before `.6.3` source/caller completion and flag proofs. No new equivalence, remote CI or final adequacy claim.
+The source/caller assessment (`.11.2.3`, `2026-10-12`) and its repairs are recorded with exact pinned
+source digests in `docs/specs/trust/flag-normalization-domain.md`. Metadata repair `.11.2.5.1` hard-refuses
+reached scripts/macros despite manifest admissions; `.11.2.5.2` revalidates delimiter scope and local integration.
+Reset repair `.11.2.6.2` checks every Cargo-home removal before reuse, held by public wrapper/file controls
+and native reversal. Source completion `.11.2.6.3.1`, observed `2026-10-17`, binds package/cache/stdlib/channel
+and visited-token premises to pinned branches, including built-in alias precedence and inactive offline
+metadata dependencies. The repaired delimiter and public controls pass; actual-candidate E controls remain
+`.11.2.4`. The source record owns details and revalidation triggers. Integration checkpoint `.11.2.6.3.2`
+is next; no new equivalence, remote CI or whole-production adequacy outcome follows.
 
 
 ## `rust-reference`

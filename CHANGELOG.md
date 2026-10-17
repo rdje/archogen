@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — pinned caller premises after checked reset
+
+`ARCHOGEN-M3-0709` (leaf `M3.6.9.6.3.2.2.11.2.6.3.1`), `2026-10-17`.
+
+- Bind package/cache/standard-library/channel/alias and visited-token premises to exact pinned Cargo sources.
+  Keep inactive offline metadata dependencies distinct from units actually compiled; retain revalidation scope.
+- Existing public diagnostic/reset/toolchain and compiled delimiter controls pass with independent argv and
+  wider-domain/wrong-oracle checks. Production/tests/catalogue/E remain exact; no equivalence accepted.
+- Commit the verified source assessment before the longer integration child. Canonical/book/ledger/live
+  records agree; the pending checkpoint remains visible and owns the next action.
+
 ## archogen — checked fresh Cargo-home reset
 
 `ARCHOGEN-M3-0708` (leaf `M3.6.9.6.3.2.2.11.2.6.2`), `2026-10-17`.

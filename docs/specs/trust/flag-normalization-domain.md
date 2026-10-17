@@ -182,6 +182,81 @@ not a complete source-kind/visited-token theorem. Additional retrieved source id
 
 ## Revalidation
 
+### Caller domain after checked reset
+
+Revalidated `2026-10-17`, `.11.2.6.3.1`, on committed reset repair `362034e`. The argument concerns the
+installed pinned producer and successful inventory compilations under its declared environment/configuration
+contract. Integration checkpoint `.11.2.6.3.2` follows; actual-candidate proof controls and E acceptance
+remain `.11.2.4`.
+
+**Sources of compiled packages.** `source_id.rs::load` enumerates path, Git, registry, sparse registry,
+local registry and directory sources. Source replacement, directory/local-registry selection and alternate
+registry settings come from configuration (`sources/config.rs`); alias-only configuration and the cleared
+environment provide none. A manifest patch to a path still selects a path source. Admission does not relax
+the configuration grammar or the manifest parser's bare-key, single-line, no-string-escape grammar.
+`cli.rs::expand_aliases` gives built-in commands precedence over user aliases, so an alias cannot replace
+the inventory's metadata, build or test command with a different invocation.
+
+Each successful checked reset removes the old home before metadata or that build; `environment` creates
+the empty directory. `GlobalContext` derives Git databases/checkouts and registry index/cache/source paths
+from that home. `GitSource::fetch_db` needs a cached revision/database while offline and refuses otherwise.
+Both HTTP/sparse and Git registry implementations use those home-derived caches. The HTTP loader returns
+NotFound for an uncached offline index entry; registry downloads require an existing nonempty tarball for
+cache readiness. An actually needed uncached registry dependency cannot supply a compilation unit offline.
+The index resolver may still represent inactive optional/target dependencies without downloaded sources:
+this argument concerns compiled units, and does not equate metadata membership with execution.
+
+**Standard library and channel.** `ops/cargo_compile/mod.rs` resolves and generates standard-library roots
+only when `cli_unstable().build_std` is present. The inventory passes build or test/no-run arguments, with
+neither that option nor trailing compiler arguments; alias-only configuration and the allowlist supply no
+unstable configuration or bootstrap override. The installed pin is the stable release recorded in the
+ledger; `toolchain_file` requires numeric release syntax. This source argument must be redone for a changed
+pin. `Unit::is_local` is path-source and non-stdlib; such units show warnings. Consequently neither branch
+of `add_cap_lints` supplies a cap for these compiled units. Installed sysroot libraries are linked, not
+rebuilt into standard-library units by these commands.
+
+**Tokens normalization visits.** Follow `prepare_rustc` through base arguments, dependency arguments, cap
+selection, extra arguments and unit rustflags; runtime custom flags require the hard-refused dynamic targets.
+`TargetInfo::extra_args` obtains rustflags from environment or target/host/build configuration, excluded here.
+Admitted profile rustflags still require Cargo's unstable profile feature; the pinned stable-channel gate
+refuses it. Manifest lint conversion emits joined `--level=name` or `--level=tool::name` tokens. The diagnostic
+formatter emits joined JSON/output-width arguments and no separate color option.
+
+| Candidate family | Why a bare key is not visited in this caller |
+| --- | --- |
+| Short and long lint-level keys | Manifest conversion uses joined tokens; environment/configuration/profile/trailing-argument routes above supply no extra flags |
+| Separate cap-lints key | Compiled path/non-stdlib units are local and show warnings |
+| Separate color key | The pinned diagnostic formatter supplies no such argument |
+
+Other argv values do not invalidate that reasoning. Normalization skips the program; source arguments end
+in `.rs`, target crate names replace hyphens with underscores, and accepted crate types/editions are their
+producer-defined values. Feature cfg values carry their `feature=` encoding. Arbitrary manifest check-cfg
+values follow the unchanged consuming check-cfg entry; output/search operands and codegen/extern operands
+likewise remain consumed. Thus an operand merely containing or equalling a bare-key string does not show
+that the normalization loop visits it. These premises apply to a single table edit with other consumers
+unchanged; simultaneous edits and broader compiler invocations require separate assessment.
+
+The existing narrow delimiter premise remains fixed program `rustc`, pinned Unix argument escaping,
+complete framed command records, cleared environment and alias-only configurations, with checked fresh
+homes and dynamic-target preflight. The program filter occurs after decoding and cannot establish its
+input domain. Maintained actual delimiter candidates pass their independent argv, wider-domain and
+wrong-oracle controls on the repaired source. Public diagnostic-flag, hard-reset and toolchain-form controls
+also pass. The recorded producer's binary identities retain the ledger's stated limitations.
+
+Additional source bytes retrieved from the same official pinned commit and checked with Python/system
+SHA-256; the earlier source identities above are rechecked unchanged:
+
+| Official source | SHA-256 |
+| --- | --- |
+| [src/cargo/core/source_id.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/source_id.rs) | `fc2c38a770e91f66c45503a3824213c2b0881ffa0a83fef41bb474a1e412d294` |
+| [src/cargo/sources/registry/download.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/sources/registry/download.rs) | `5c51eb90daf504013b55af13ea4aa04532ee683ce4c87522a78b4e91eb4609c5` |
+| [src/cargo/sources/registry/http_remote.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/sources/registry/http_remote.rs) | `91b958e7137b894ce8594b961fc76e96f7ead76beaf880dc30f86fe65356faad` |
+| [src/cargo/sources/registry/index/mod.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/sources/registry/index/mod.rs) | `b5437ca4bdc24a731ff869c1e827412705f1578d4c537639a3a1ba011a45fca7` |
+| [src/cargo/core/compiler/build_config.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/compiler/build_config.rs) | `e5f4eeac36687832cd19bd958028bd3811b6757a4d39158b2a1e8bca03586a6f` |
+| [src/bin/cargo/cli.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/bin/cargo/cli.rs) | `9648dbe8147e7475ca14b453aba92f0bca9a7741abb9a66d65ee0becc9cae560` |
+
+### Revalidation triggers
+
 Revalidate on toolchain/channel/producer changes, compile-mode/argument/environment/configuration changes,
 manifest/admission/metadata policy changes, or changes to token consumption and source attribution. After
 repair, maintained compiled controls must distinguish every actual table edit outside its scoped caller
