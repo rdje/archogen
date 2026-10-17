@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — final complete dropped-flag table replay
+
+`ARCHOGEN-M3-0718` (leaf `M3.6.9.6.3.2.2.11.3`), `2026-10-18`.
+
+- Rediscover and bind all fourteen original/current table edits: three named finishing kills, ten scoped
+  equivalents and one compiler refusal, strict 0. Resolve all eleven initial survivor obligations on the
+  repaired caller while preserving historical outcomes; no refusal coverage or whole-file adequacy claim.
+- All 1026 originals/current copied regular inputs restore; five altered-evidence arms refuse through
+  maintained auditing. Production/prior tests/E/native remain exact; adapters are supplemental.
+- Canonical/Annex C/live sync selects the owned full integration checkpoint. Book/source/order/route/
+  size and staged doctrine checks bind closure documentation; no new Rust/focused or remote CI claim.
+
 ## archogen — permanent actual-color proof controls
 
 `ARCHOGEN-M3-0717` (leaf `M3.6.9.6.3.2.2.11.2.4.3.2`), `2026-10-18`.

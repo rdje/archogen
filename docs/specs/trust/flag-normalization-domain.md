@@ -161,6 +161,22 @@ Changed producer/pin, formatter/selector or other caller premises require revali
 whole-file stale-E handling and full production adequacy remain separate; no general numeric-release or
 arbitrary-argv equivalence follows.
 
+## Final bounded table replay
+
+`M3.6.9.6.3.2.2.11.3` (`2026-10-18`) rediscovers every actual table edit and uniquely binds the unchanged
+original table/operator/from/to keys: three named finishing kills (`--out-dir`, `-L`, `--check-cfg`), ten
+scoped equivalents and the array-terminator compiler refusal; strict exit 0, bool unviable/attempted 0/13
+and stmt 1/1. The refusal proves no coverage. All eleven original survivor obligations resolve on the
+repaired caller; their original historical S outcomes remain recorded, rather than retrospectively
+classified under premises absent from the earlier caller. Exact selected reasons and independent compiled
+controls justify current E; selected mode does not establish whole-file stale-E validity.
+
+All 1026 captured originals/current copied regular inputs restore with independent hashes/modes; source,
+prior tests, E and native producer stay unchanged. Maintained auditing rejects five altered-evidence arms.
+The task leaf records every ID and a reproducible native command. This closes only the table measurement;
+`.11.4` owns full local integration before group closure. Remaining normalise edits, full production
+measurements, review and runner compatibility retain their owners.
+
 ## Confirmed defect: an admitted build script executes
 
 The canonical inventory design §3 promises metadata refusal of build scripts and procedural macros before

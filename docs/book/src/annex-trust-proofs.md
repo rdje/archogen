@@ -136,14 +136,12 @@ checks. This closes the bounded helper group. Dropped-flag obligations are next;
 and runner-baseline compatibility remain open. No remote CI outcome follows from this local checkpoint.
 
 
-The dropped-flag table measurement (`M3.6.9.6.3.2.2.11.1`, `2026-10-12`) selects every actual table
-edit: thirteen operand-consumption switches and the array-terminator deletion. The switches finish with two
-named kills and eleven survivors; the terminator deletion fails compilation with an unclosed delimiter and
-proves no coverage. Native strict exit 1 means the adequacy criterion remains unmet. Exact unchanged
-table/operator/producer bindings retain all original table outcomes; the survivors stay owned for actual Cargo
-producer/caller assessment before controls or scoped equivalents. Every captured original/copied regular input
-restores with independent hashes/modes. Source, tests, catalogue and E records stay exact. This is a bounded
-measurement, separate from the completed helper group and pending whole-production adequacy.
+Initial dropped-flag table measurement `.11.1` (`2026-10-12`) selected all fourteen edits: thirteen
+consumption switches and the terminator deletion. Two switches gave named kills, eleven survived;
+the unclosed-delimiter compiler refusal proved no coverage. Strict exit 1 left adequacy unmet.
+Unchanged table/operator/producer bindings retained every original outcome. All original/copied regular
+inputs restored with independent hashes/modes; source, tests, catalogue and E stayed exact. The survivors
+were owned for Cargo producer/caller assessment; whole-production adequacy stayed open.
 
 
 The actual producer assessment (`M3.6.9.6.3.2.2.11.2.1`, `2026-10-12`) accepts ordinary and manifest
@@ -167,7 +165,7 @@ deny/forbid builds. Successful `cargo rustc -- -W unused_variables` and the othe
 refute broader equivalence: each changed helper leaks the operand. Synthetic consumed-value and wrong
 positive/negative controls hold the scope. Reproduce with the local-store environment above and
 `python3 -I -B xtask/mutation_sweep_tests.py . DiagnosticFlagTests`. Eight unlisted survivors become eight
-scoped E, strict 0; no kill is added. Final table replay and full adequacy remain open.
+scoped E, strict 0; no kill is added. See the final table replay below.
 
 Cap-lints proof `.11.2.4.2` requires compiled local path packages outside the standard-library build,
 which show warnings. Those premises make both pinned Cargo cap branches false. Actual local argv and
@@ -182,8 +180,11 @@ Permanent controls `.11.2.4.3.2` use successful override Cargo builds for always
 actual edit, library consumers, consumed values and positive/negative/forwarded-argv falsifiers.
 Selected survival becomes scoped E, strict 0; changed caller/pin premises require revalidation.
 
-Local integration `.11.2.6.3.2` passed `2026-10-17`, before `.11.2.7`–`.11.2.8` and these proof controls;
-its leaf binds activation/input restoration. Closure prose is checked separately; no remote CI is claimed.
+Final table replay `.11.3` (`2026-10-18`) binds all fourteen original edits: three named kills,
+ten scoped E and one compiler refusal, strict 0. All eleven initial survivor obligations resolve on the
+repaired caller; original classifications remain historical. Every original/current copied input restores.
+Only the table criterion is established. `.11.4` integration follows; prior `.11.2.6.3.2` passed before
+output cleanup/proof controls. Activation and closure prose have separate checks; no remote CI is claimed.
 
 
 ## Mutation measurements and controls

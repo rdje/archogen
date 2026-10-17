@@ -215,7 +215,10 @@ path/non-stdlib and show warnings; actual local argv and a successful explicit-c
 hold its boundary. The color consuming-bit proof (`.11.2.4.3.2`) binds the pinned formatter and fixed
 selector; its successful wider compiler-override control distinguishes raw Cargo requests from actual
 forwarded rustc argv, with real artifact consumers and wrong oracles. Plain color/JSON refusal counts as
-no successful control. See `flag-normalization-domain.md` for premises/revalidation; final measurements remain open.
+no successful control. See `flag-normalization-domain.md` for premises/revalidation. Final bounded table replay
+`.11.3` binds every original entry: 3 named kills, 10 scoped E, 1 compiler refusal, strict 0 and complete
+original/current-copy restoration. Initial outcomes remain historical; the repaired caller supplies current
+E premises. Compiler refusal proves no coverage. Milestone integration `.11.4` and full measurements stay open.
 
 Final bounded helper replay (`M3.6.9.6.3.2.2.10.3.4`) verifies every actual current helper edit with strict
 named-kill/scoped-equivalent outcomes and complete original/copy restoration. Original survivor obligations
