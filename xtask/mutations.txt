@@ -3444,9 +3444,9 @@ mutation trust-inventory-left-behind
 file xtask/src/trust.rs
 test -p xtask trust_generated::tests
 expect killed
-why M3.6.6.2.1, found writing the step frame: a refusal of the parent's before any build (`trust-baseline-stale`, a package gone), and the gate's tree and configuration refusals, returned without removing an earlier run's inventory, left to be read as this commit's; every run now removes it first (the parent's §3, R5 9: on any refusal no inventory).
+why M3.6.6.2.1, found writing the step frame: a refusal of the parent's before any build (`trust-baseline-stale`, a package gone), and the gate's tree and configuration refusals, returned without removing an earlier run's inventory, left to be read as this commit's; every run now removes it first (the parent's §3, R5 9: on any refusal no inventory). M3.6.9.6.3.2.2.11.2.7 retargets the same skipped-cleanup edit to its checked call.
 from
-        let _ = fs::remove_file(&target_json);
+        clear_previous_inventory(&target_json)?;
 to
         let _ = &target_json;
 end
@@ -5749,5 +5749,24 @@ from
         }
 to
         let _ = fs::remove_dir_all(home);
+        Ok(())
+end
+
+mutation trust-previous-inventory-cleanup-errors
+file xtask/src/trust.rs
+test -p xtask -- trust::tests::a_failed_previous_inventory_cleanup_stops_before_a_forms_refusal trust::tests::a_directory_at_the_inventory_path_stops_before_writing_the_tree --exact
+expect killed
+why Ignored initial cleanup errors must not yield an ordinary refusal with a readable previous inventory or start tree/metadata/build work against an invalid output path.
+from
+        match fs::remove_file(path) {
+            Ok(()) => Ok(()),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(error) => Err(format!(
+                "cannot remove previous inventory `{}`: {error}",
+                path.display()
+            )),
+        }
+to
+        let _ = fs::remove_file(path);
         Ok(())
 end

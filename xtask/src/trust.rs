@@ -1567,9 +1567,9 @@ pub fn inventory_with(
         .text(&["rev-parse", &format!("{commit}^{{tree}}")])?
         .trim()
         .to_owned();
-    // Only a run that writes leaves an inventory: one an earlier run wrote would read as this commit's (§3, R5 9).
+    // Clear the earlier inventory before forms are judged: refusal must leave none (§3, R5 9).
     let target_json = out.join("trust-dependencies.json");
-    let _ = fs::remove_file(&target_json);
+    clear_previous_inventory(&target_json)?;
     let entries = tree_entries(&git, &commit)?;
 
     // Step 1 of the generated-sources record's order (§2): the forms' text, read from the commit's own blob before
@@ -2645,6 +2645,19 @@ fn reset_cargo_home(home: &Path) -> Result<(), String> {
         Err(error) => Err(format!(
             "cannot reset inventory Cargo home `{}`: {error}",
             home.display()
+        )),
+    }
+}
+
+/// Clear a previous result before forms can refuse. A removal failure can leave that file readable, so report
+/// the failed invocation before classifying its input; only a missing file is harmless (§3, R5 9).
+fn clear_previous_inventory(path: &Path) -> Result<(), String> {
+    match fs::remove_file(path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(format!(
+            "cannot remove previous inventory `{}`: {error}",
+            path.display()
         )),
     }
 }
@@ -3745,6 +3758,129 @@ pub(crate) mod tests {
             !f.base.join("out/tree/crates/b/RAN").exists(),
             "the build script ran"
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_failed_previous_inventory_cleanup_stops_before_a_forms_refusal() {
+        crate::trust_test_process::bounded!(
+            a_failed_previous_inventory_cleanup_stops_before_a_forms_refusal
+        );
+        use std::fs;
+        use std::os::unix::fs::PermissionsExt;
+
+        struct RestorePermissions(PathBuf, fs::Permissions);
+        impl Drop for RestorePermissions {
+            fn drop(&mut self) {
+                fs::set_permissions(&self.0, self.1.clone())
+                    .expect("restore owned output permissions");
+            }
+        }
+
+        let f = two_roots(
+            "old-inventory-cleanup",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &[],
+        );
+        written(f.run());
+        let out = f.base.join("out");
+        let inventory = out.join("trust-dependencies.json");
+        let previous = fs::read(&inventory).unwrap();
+        let previous_commit = crate::catalog_check::Git::at(&f.repo)
+            .text(&["rev-parse", "HEAD"])
+            .unwrap();
+        f.commit(&[(
+            "trust/roots.eadl",
+            format!("{ROOTS}(defgenerated \"data/out.csv\" (generator \"scripts/make.sh\"))\n"),
+        )]);
+        fs::remove_dir_all(out.join("tree")).unwrap();
+        fs::remove_dir_all(out.join("target-metadata")).unwrap();
+        fs::remove_dir_all(out.join("target")).unwrap();
+        let restore = RestorePermissions(out.clone(), fs::metadata(&out).unwrap().permissions());
+        fs::set_permissions(&out, fs::Permissions::from_mode(0o555)).unwrap();
+        let deletion_probe = fs::remove_file(&inventory);
+        let result = inventory_with(&f.repo, "HEAD", &out, &configuration_roots());
+        drop(restore);
+
+        assert!(
+            deletion_probe.is_err(),
+            "the host did not enforce deletion denial"
+        );
+        let remaining = fs::read(&inventory).unwrap();
+        assert_eq!(remaining, previous);
+        let retained = crate::json::parse(std::str::from_utf8(&remaining).unwrap()).unwrap();
+        assert_eq!(
+            retained
+                .get("identity")
+                .and_then(|v| v.get("commit"))
+                .and_then(Json::as_str),
+            Some(previous_commit.trim())
+        );
+        assert_ne!(
+            crate::catalog_check::Git::at(&f.repo)
+                .text(&["rev-parse", "HEAD"])
+                .unwrap(),
+            previous_commit
+        );
+        let error = match result {
+            Err(error) => error,
+            Ok(Outcome::Refused(why)) => {
+                panic!("an ordinary forms refusal left the previous inventory readable: {why:?}")
+            }
+            Ok(Outcome::Written(_)) => panic!("failed cleanup produced a written inventory"),
+        };
+        assert!(
+            error.starts_with("cannot remove previous inventory `"),
+            "{error}"
+        );
+        assert!(error.contains(inventory.to_str().unwrap()), "{error}");
+        assert!(!out.join("tree").exists());
+        assert!(!out.join("target-metadata").exists());
+        assert!(!out.join("target").exists());
+        assert!(!refused(f.run()).is_empty());
+        assert!(
+            !inventory.exists(),
+            "ordinary refusal must clear the earlier inventory"
+        );
+    }
+
+    #[test]
+    fn a_directory_at_the_inventory_path_stops_before_writing_the_tree() {
+        crate::trust_test_process::bounded!(
+            a_directory_at_the_inventory_path_stops_before_writing_the_tree
+        );
+        let f = two_roots(
+            "inventory-output-directory",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &[],
+        );
+        let out = f.base.join("out");
+        let inventory = out.join("trust-dependencies.json");
+        std::fs::create_dir_all(&inventory).unwrap();
+        std::fs::write(inventory.join("keep"), b"owned contents").unwrap();
+        let error = match inventory_with(&f.repo, "HEAD", &out, &configuration_roots()) {
+            Err(error) => error,
+            Ok(_) => panic!("a directory at the inventory path must stop the invocation"),
+        };
+        assert!(
+            !out.join("tree").exists(),
+            "the source tree was written before rejecting the inventory output directory"
+        );
+        assert!(
+            error.starts_with("cannot remove previous inventory `"),
+            "{error}"
+        );
+        assert!(error.contains(inventory.to_str().unwrap()), "{error}");
+        assert_eq!(
+            std::fs::read(inventory.join("keep")).unwrap(),
+            b"owned contents"
+        );
+        assert!(!out.join("target-metadata").exists());
+        assert!(!out.join("target").exists());
+        std::fs::remove_dir_all(&inventory).unwrap();
+        written(f.run());
     }
 
     #[cfg(unix)]

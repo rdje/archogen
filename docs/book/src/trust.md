@@ -211,9 +211,11 @@ a file instead of a directory, and clean recovery. Repair, caller and local inte
 
 ### The run's order
 
-The generated-sources record §2 orders the run. Each step starts only if earlier steps refused nothing.
-A refusal leaves no inventory, including an earlier run's file. Build failures in steps 2 or 4 still allow
-all that step's builds and judgments to finish, then end unable to judge (exit 2), with refusals reported.
+Initial cleanup removes the earlier inventory before forms are judged. Failure ends unable to judge (exit 2),
+naming the path; old contents can remain. Fix that I/O problem and retry. Refusals leave no earlier inventory.
+The generated-sources record §2 orders the steps; each starts only if earlier steps refused nothing.
+Build failures in steps 2 or 4 still finish that step's builds and judgments, then end unable to judge (exit 2),
+with refusals reported.
 
 1. Validate all forms before writing or building. Malformed `defgenerated` forms refuse; other malformed
    forms or reader syntax errors leave the invocation unable to judge, reporting generated refusals too.

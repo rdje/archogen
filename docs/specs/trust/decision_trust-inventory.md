@@ -247,7 +247,12 @@ and runner compatibility remain separately owned; this is no remote CI outcome.
 
 **An input the inventory cannot account for is refused, not trusted** (`trust-undeclared-input`), and on any
 refusal the tool writes no inventory, only the report naming it, so `trust-verify` finds none and refuses the package
-(R5 9). **The rules are the catalog's, and the gate is default-deny** (R7): every rule the catalog applies to one
+(R5 9). Before classifying forms, `clear_previous_inventory` removes an earlier JSON file. A missing file is
+harmless; any other removal error ends the invocation unable to judge (exit 2), naming the path and I/O error.
+An unremovable old file can remain, so correct the I/O problem and retry. Neither forms judgment nor tree,
+metadata or build work starts on that failure. Permanent public deletion-denial and directory-at-output
+controls, recovery cases and native ignored-error reversal hold this boundary (`.11.2.7`).
+**The rules are the catalog's, and the gate is default-deny** (R7): every rule the catalog applies to one
 package's own manifest and sources — `check_manifest` and `scan` in `crates/archogen-catalog/src/package.rs`,
 unchanged: a build script or a `build` key, a procedural macro or another crate kind, `rustflags`, an optional
 dependency, `[features]`, `cargo-features`, `package.workspace`, a target's `path` leaving its package, `asm`,

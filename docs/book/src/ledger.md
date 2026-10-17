@@ -312,12 +312,13 @@ finishing kill/strict 0; exact operand-leak failure and restored pass agree. Onl
 The source/caller assessment (`.11.2.3`, `2026-10-12`) and its repairs are recorded with exact pinned
 source digests in `docs/specs/trust/flag-normalization-domain.md`. Metadata repair `.11.2.5.1` hard-refuses
 reached scripts/macros despite manifest admissions; `.11.2.5.2` revalidates delimiter scope and local integration.
-Reset repair `.11.2.6.2` checks every Cargo-home removal before reuse, held by public wrapper/file controls
-and native reversal. Source completion `.11.2.6.3.1`, observed `2026-10-17`, binds package/cache/stdlib/channel
+Checked cleanup stops the invocation on Cargo-home reset errors (`.11.2.6.2`) or earlier-inventory removal
+errors (`.11.2.7`), held by public/native controls. Source completion `.11.2.6.3.1`, observed `2026-10-17`,
+binds package/cache/stdlib/channel
 and visited-token premises to pinned branches, including built-in alias precedence and inactive offline
 metadata dependencies. The repaired delimiter and public controls pass; actual-candidate E controls remain
-`.11.2.4`. The source record owns details and revalidation triggers. Local integration `.11.2.6.3.2` passes
-on `2026-10-17`; its leaf binds the activation stamp and input restoration. Closure prose is checked
+`.11.2.4`. The source record owns details and revalidation triggers. Local integration `.11.2.6.3.2` passed
+on `2026-10-17`, before `.11.2.7`; its leaf binds activation and input restoration. Closure prose is checked
 separately. No new equivalence, remote CI or whole-production adequacy outcome follows.
 
 

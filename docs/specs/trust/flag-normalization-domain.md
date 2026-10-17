@@ -182,6 +182,18 @@ not a complete source-kind/visited-token theorem. Additional retrieved source id
 
 ## Revalidation
 
+### Initial inventory-output cleanup
+
+Assessment `.11.2.7` reproduces a separate P2 output-contract gap on `d6791a0`: failed initial removal can
+return an ordinary forms refusal while an earlier inventory remains readable. A permanent public control
+verifies the retained bytes and their earlier commit against native Git; a directory at the output path
+also demonstrates tree/metadata/build work before a late error. Checked `clear_previous_inventory` now
+returns an attributed invocation error before forms are classified, allowing only successful deletion or
+NotFound. The unremovable old artifact can remain on this exit-2 path; fixing the I/O error and retrying
+restores the ordinary no-inventory-on-refusal contract. Directory contents are preserved, with recovery
+verified. Native exact ignored-error reversal finishes with both named public parents. Source/caller flag
+premises, normalization, previous tests, E and reviewed twins are preserved; the leaf owns verification.
+
 ### Caller domain after checked reset
 
 Revalidated `2026-10-17`, `.11.2.6.3.1`, on committed reset repair `362034e`. The argument concerns the
@@ -243,7 +255,7 @@ input domain. Maintained actual delimiter candidates pass their independent argv
 wrong-oracle controls on the repaired source. Public diagnostic-flag, hard-reset and toolchain-form controls
 also pass. The recorded producer's binary identities retain the ledger's stated limitations.
 
-The full postrepair local integration passes every current stage, including gate self-tests, pinned book,
+The reset/source integration checkpoint `.11.2.6.3.2` passed on `2026-10-17`, before `.11.2.7`, including gate self-tests, pinned book,
 target/browser builds and bindings, emulator and spike. Current originals and the separately scoped retained
 copy restore. The official stamp names the activation tree; closure documentation is checked separately.
 Exact command, source identities, input populations and stamp binding are in `.11.2.6.3.2`'s leaf.

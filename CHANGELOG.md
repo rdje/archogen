@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hard previous-inventory cleanup
+
+`ARCHOGEN-M3-0711` (leaf `M3.6.9.6.3.2.2.11.2.7`), `2026-10-17`.
+
+- Reproduce a P2 stale-output contract defect: failed initial deletion permits ordinary forms refusal while
+  readable JSON still names the preceding commit. A directory output also causes work before a late error.
+- Check initial removal before forms classification; only success or missing-file permits continuation.
+  Actual failure names path/I/O and ends unable to judge. Unremovable data remains intact; recovery is tested.
+- Permanent public filesystem/identity controls pass, and exact ignored-error reversal finishes named kills.
+  Inputs restore, prior code/tests/E remain exact; migrate the existing skipped-cleanup catalogue anchor to the checked
+  call and retain its parent tests. Canonical/book/live agree;
+  focused passes all three stages; book checks pass and exact staged gates bind the commit.
+  Proposed-baseline cleanup assessment is owned next.
+
 ## archogen — postreset local integration checkpoint
 
 `ARCHOGEN-M3-0710` (leaf `M3.6.9.6.3.2.2.11.2.6.3.2`), `2026-10-17`.
