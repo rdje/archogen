@@ -26,7 +26,7 @@
 - [Matching an offer to a requirement](matching.md)
 - [What the scheduling checker establishes](analysis.md)
 - [Where the engine's knowledge comes from: the catalog](catalog.md)
-- [Checks that must not share a mistake: the trust gate](trust.md)
+- [The trust gate: what checks share](trust.md)
   - [Generated-sources test adequacy](trust-adequacy.md)
 
 # Generating and running a system
@@ -47,6 +47,7 @@
 
 - [Annex A: The runtime's rules in detail](annex-runtime.md)
 - [Annex B: The checks that keep the repository honest](annex-repository.md)
+- [Annex C: Trust proof records](annex-trust-proofs.md)
 
 [Words this book uses](glossary.md)
 [Index](book-index.md)

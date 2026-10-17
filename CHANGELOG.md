@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — trust proof annex within fixed book limits
+
+`ARCHOGEN-M3-0714` (leaf `M3.6.9.6.3.2.2.11.2.4.4`), `2026-10-17`.
+
+- Move detailed compiler/normalization proofs and mutation measurements byte-exact into Annex C. Retain
+  source entries, operative rules, every count/example/limitation and existing entry anchors with forward links.
+  Migrate the four historical figure-register path cells with classifications/dates/reasons preserved.
+- Regenerate navigation/index; a shorter accurate trust sidebar caption keeps all entries under fixed limits.
+  Book: 34 files, 588456 bytes; index 48910 bytes/339 entries. No ceilings change.
+- Pinned rendering, maintained book gates and native Git/Python-system hash/content/HTML checks pass.
+  Code/tests/catalogue/E unchanged; live/resume/frontier advance to cap-lints proof. Final staged gates bind commit.
+
 ## archogen — actual lint-level consuming-bit proofs
 
 `ARCHOGEN-M3-0713` (leaf `M3.6.9.6.3.2.2.11.2.4.1`), `2026-10-17`.
