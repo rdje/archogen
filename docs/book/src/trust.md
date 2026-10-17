@@ -201,8 +201,8 @@ gate) and `xtask/src/trust_verify.rs` (the verifier); committed generated source
 `docs/specs/trust/decision_trust-generated-sources.md`, `docs/specs/trust/decision_trust-generated-refusals.md` and
 `xtask/src/trust_generated.rs`.
 
-Metadata preflight refuses reached build-script/procedural-macro targets before compilation, even
-with exact manifest admissions. Disabled scripts remain static. Controls and repair evidence:
+Metadata preflight hard-refuses reached build-script/procedural-macro targets. A failed Cargo-home reset
+can still execute an untracked wrapper; P1 repair `.11.2.6.2` owns this gap. Evidence and scope:
 `docs/specs/trust/flag-normalization-domain.md`.
 
 ### The run's order

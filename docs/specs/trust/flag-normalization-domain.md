@@ -4,7 +4,8 @@ Observed `2026-10-12`, owner `M3.6.9.6.3.2.2.11.2.3` in `docs/tasks/M3.md`.
 Source: [the pinned Rust toolchain](../../book/src/ledger.md#rust-toolchain).
 This is a source/caller assessment, not an equivalence declaration. The remaining table obligations stay
 open. The confirmed prebuild metadata defect below is repaired by `.11.2.5.1`; caller/E premise and local
-integration revalidation pass in `.11.2.5.2`. Source-domain completion remains `.11.2.6` before classifications.
+integration revalidation pass in `.11.2.5.2`. Further assessment `.11.2.6.1` confirms a Cargo-home reset
+execution gap below; immediate `.11.2.6.2` repair precedes `.6.3` completion and further classifications.
 
 ## Pinned producer
 
@@ -116,6 +117,50 @@ remain exact. The official integration stamp identifies the activation tree, wit
 checked separately. Exact commands, outcomes, identities and qualified supplemental audits are in the leaf.
 No new equivalence or remote CI outcome follows. Source/package/standard-library/channel and visited-token
 premises still require completion in `.11.2.6` before conditional cap-lints equivalence.
+
+## Confirmed defect: failed Cargo-home reset reuses a wrapper
+
+Observed `2026-10-12` on unchanged `d00c3dee`, independently audited at resume `2026-10-17`, owner
+`.11.2.6.1`. Cargo-home deletion errors are ignored before metadata, each root and generated-entrypoint
+build. `environment` accepts an existing directory. A failed deletion can therefore retain Cargo
+configuration outside the source-tree/ancestor configuration checks. Fixed RUSTC does not disable a wrapper.
+
+The isolated public reproduction first succeeds on ordinary static generator/checker roots, populating the
+same owned Cargo home and lock files. It then writes only an untracked Cargo-home build-wrapper configuration
+and an owned passthrough wrapper, makes the home directory readable but non-writable for deletion, and calls
+the unchanged inventory again. The wrapper writes the owned `WRAPPER_RAN` sentinel. The public result is an
+error because verbose commands name the wrapper and no own compiler unit is collected; no inventory is
+written. Thus this is actual unsupplied-code execution before an eventual error, not a false written result.
+Fixture permissions restore before assertions through a scoped guard. No external system is accessed.
+
+Independent actual wrapper/config/sentinel bytes, fixture Git cleanliness, absent inventory and permissions
+agree. False no-execution, written-outcome and inventory-presence evidence refuse. All captured original and
+copied inputs restore; production/tests/catalogue/E are unchanged. Ignored diagnostics/audits are qualified
+exploratory evidence, not permanent regressions. Exact commands, digests and failed diagnostic setup are in
+the leaf and `target/m369-flags-domain-completion/`.
+
+Immediate P1 `.11.2.6.2` owns hard reset failure handling and permanent public/static/native controls.
+`.11.2.6.3` revalidates source/caller and delimiter scope after repair, including offline non-path sources and
+standard-library construction, before flag proofs. The earlier integration result remains a dated passing
+result; it does not establish absence of this later-discovered defect. No new E classification is justified.
+
+Further exact Cargo sources were retrieved read-only for this assessment. Git fetch requires an existing
+cache for offline reuse; cache paths derive from Cargo home. Standard-library unit construction depends on
+build-std options. These targeted source observations are premises to complete after the reset repair,
+not a complete source-kind/visited-token theorem. Additional retrieved source identities:
+
+| Official source at the same pinned commit | SHA-256 |
+| --- | --- |
+| [src/cargo/sources/git/source.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/sources/git/source.rs) | `aa8e1bd019c845a62b6754f78d7e9f424f56187f31cdf1d6e26db29a6a8a73ce` |
+| [src/cargo/sources/registry/mod.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/sources/registry/mod.rs) | `20715404e59e0fe47f68de6c016c0ebc6e84aebedc740e046f12657147fd148f` |
+| [src/cargo/sources/registry/remote.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/sources/registry/remote.rs) | `01b9bb8e68446ad0d4feceeff02b084913d2afd6e067dc34ca56ce9f89a51b65` |
+| [src/cargo/sources/config.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/sources/config.rs) | `f3cbe62254b8b4fb512c64abf8d435a8ed0e7e65397c2e9af4be1133884677c8` |
+| [src/cargo/core/compiler/standard_lib.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/compiler/standard_lib.rs) | `17cbb514863daad6d6e872750401b1f012a7ca416d401989637a480f5960ee94` |
+| [src/cargo/ops/cargo_compile/mod.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/ops/cargo_compile/mod.rs) | `e66a00c5fdd1ff9c27f3f3a3d07326226b26355867535d08659ed4ccb379f04f` |
+| [src/cargo/core/compiler/unit_dependencies.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/compiler/unit_dependencies.rs) | `17563082c4c7f47084272cf838400abc3c904de582da570bc473a1bb94d82896` |
+| [src/cargo/util/context/mod.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/util/context/mod.rs) | `30310d878bb05ffed2db0c55699619bb1452834d4db5b2166ec2f2aeceebda62` |
+| [src/bin/cargo/commands/build.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/bin/cargo/commands/build.rs) | `10435788c80cc418639d2a649acc58efd1d3fb25818fefb9fc78b9d0a9c0bce2` |
+| [src/bin/cargo/commands/test.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/bin/cargo/commands/test.rs) | `fe1944aa2e06daadc06fbeb078484b1303e13bb2f31cf2be367a394761e1491d` |
 
 ## Revalidation
 

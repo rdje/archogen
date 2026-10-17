@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — failed Cargo-home reset execution gap owned
+
+`ARCHOGEN-M3-0706` (leaf `M3.6.9.6.3.2.2.11.2.6.1`), `2026-10-17`.
+
+- Unchanged public inventory reproduces untracked owned wrapper execution after ignored Cargo-home deletion
+  failure. The result is an error/no inventory. Independent actual bytes, permissions and altered-evidence
+  audit agree; original/copied inputs restore. Earlier diagnostic setup failure retained and qualified.
+- Production/tests/catalogue/E unchanged. Further pinned Cargo source identities retained, with remaining
+  source-domain premises explicitly unfinished. Immediate P1 hard reset repair and permanent controls owned.
+- Book/canonical/live/resume disclose the gap and select repair before source/caller completion or flag
+  classifications. Historical local integration preserved; no new adequacy or remote CI claim.
+
 ## archogen — repaired caller premises and local integration checkpoint
 
 `ARCHOGEN-M3-0705` (leaf `M3.6.9.6.3.2.2.11.2.5.2`), `2026-10-12`.

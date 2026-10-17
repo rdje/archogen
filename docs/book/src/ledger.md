@@ -316,8 +316,9 @@ flags still fail stable Cargo before compilation. Its admitted-script execution 
 controls, with actual native reversal killed by both named parents. Original/copied inputs restore.
 Checkpoint `.11.2.5.2` revalidates root/harness/generated preflight and unchanged narrow delimiter premises;
 compiled actual controls and every full local integration stage pass, captured inputs restore. Its stamp names
-the activation tree, not later closure prose. Source/package/standard-library/channel completion still precedes
-conditional flag proofs. Historical assessment preserved; no new flag equivalence, remote CI or final adequacy claim.
+the activation tree, not later closure prose. Further assessment `.11.2.6.1` finds ignored Cargo-home reset
+failure can execute an untracked wrapper before returning an error/no inventory. Immediate P1 `.6.2` repairs
+this gap before `.6.3` source/caller completion and flag proofs. No new equivalence, remote CI or final adequacy claim.
 
 
 ## `rust-reference`
