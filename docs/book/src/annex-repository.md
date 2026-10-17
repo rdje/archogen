@@ -566,11 +566,11 @@ commit that sealed it, the index append-only, one placeholder per sealed section
 record held just before. The first seal, on `2026-09-30`, took four settled items of the director's findings
 register out of the decisions folder (`PROGRAM.41`).
 
-Each tree also keeps a Commit Log, one row per commit that worked on it, and `COMMIT-LOG-ROWS`
-(`scripts/check_commit_log_rows.sh`) holds every commit whose subject names a work unit to having its row —
-the pending commit included, so a commit that forgot its row is refused before it lands rather than found by
-hand a commit later, as two were on `2026-10-01` (`PROGRAM.46`). The rows missing when the gate landed are a
-backlog listed in the script, which may only shrink.
+Keep Verification and Commit Log rows contiguous. A Commit Log has one row per commit under `## Commit Log`.
+`COMMIT-LOG-ROWS` (`scripts/check_commit_log_rows.sh`) requires each work-unit commit, including the
+pending one, to have a pipe-prefixed record. It checks presence, not Markdown placement: a row after
+`## Changelog` or a blank separator still passes. Missing rows refuse before commit; two were found by hand on `2026-10-01`
+(`PROGRAM.46`). The script's measured backlog of earlier missing rows may only shrink.
 
 ```console
 $ bash scripts/check_decision_history.sh                                   # the gate

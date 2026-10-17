@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — task-log rendering and exact record placement
+
+`ARCHOGEN-M3-0720` (leaf `M3.6.9.6.3.2.2.12`), `2026-10-18`.
+
+- Repair 23 commit rows after Changelog, 51 header-detached commit rows and 59 detached verification
+  rows. Trace original/current-byte provenance; preserve all 241/159 prior rows exactly and both commit
+  sequences. Pinned rendering improves from 167 to 242 / 100 to 160 rows, including this unit's records.
+- Negative separator control renders one row; wrong location/changed/missing/separated records refuse
+  structural checks. Unchanged public gate's presence-only boundary is verified and explicit in Annex B.
+- Production/tests/E/archives unchanged; focused documentation and staged gates precede commit. Live
+  records select the owned prefix/helper measurement; fourteen original normalise obligations route there.
+
 ## archogen — full local flag-group integration checkpoint
 
 `ARCHOGEN-M3-0719` (leaf `M3.6.9.6.3.2.2.11.4`), `2026-10-18`.
