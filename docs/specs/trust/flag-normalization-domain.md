@@ -194,6 +194,19 @@ restores the ordinary no-inventory-on-refusal contract. Directory contents are p
 verified. Native exact ignored-error reversal finishes with both named public parents. Source/caller flag
 premises, normalization, previous tests, E and reviewed twins are preserved; the leaf owns verification.
 
+### Gate proposal cleanup
+
+Assessment `.11.2.8`, on `7cdc123`, reproduces ordinary inventory refusal with a new report beside a
+readable old proposal whose deletion alone is denied. The permanent macOS control proves actual denial
+and sibling writability; the portable directory-at-proposal control also exposes ignored cleanup. Checked
+proposal removal now permits only success or NotFound before publishing the refusal report; other I/O
+failures end unable to judge (exit 2), naming the path, leaving earlier contents intact. Retry after
+repair yields an ordinary refusal with no proposal; a later valid inventory proposes normally. Native
+exact ignored-error reversal finishes with both named killing parents. This repairs the gate's output
+contract; it changes no inventory source/caller normalization premise or accepted E. The leaf owns the
+source reconstruction, original/copy restoration and focused/book checks; earlier full integration is
+historical, before this repair.
+
 ### Caller domain after checked reset
 
 Revalidated `2026-10-17`, `.11.2.6.3.1`, on committed reset repair `362034e`. The argument concerns the

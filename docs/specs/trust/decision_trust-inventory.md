@@ -396,6 +396,14 @@ Until they land nothing is accepted, and every shared item is reported unreviewe
 
 ### 6. The gate
 
+When the inventory refuses, the gate removes any earlier `baseline-proposal.eadl` before writing the
+refusal's `report.txt`. Only successful deletion or a missing proposal permits continuation. Removal
+failure returns an attributed filesystem error (exit 2), naming the path, before replacing the report;
+old proposal/report contents may remain and must be treated as earlier output. Fix the I/O problem and
+retry. No deletion restriction is overridden and a directory's contents are preserved. Public controls
+in `M3.6.9.6.3.2.2.11.2.8` cover a readable protected proposal with writable sibling output (macOS), a
+directory at the proposal path (portable), refusal retry and later successful proposal generation.
+
 `cargo xtask trust-gate` builds the inventory as §3 says, compares it with the base commit's forms and the roots, and
 writes `target/trust/report.txt`, which names the build identity, the inventory's sha256 and the sha256 of the
 baseline it compared against, so a report is bound to the build it describes (R6 9). **Refused**

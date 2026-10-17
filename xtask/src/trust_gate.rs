@@ -951,7 +951,7 @@ pub fn gate(
                 standing: Vec::new(),
             };
             // No inventory, so no proposal: one left from an earlier run would read as this commit's.
-            let _ = fs::remove_file(out.join(PROPOSAL));
+            clear_previous_proposal(&out.join(PROPOSAL))?;
             let text = report(&commit, None, &base_view, &j);
             (j, text)
         }
@@ -1030,6 +1030,19 @@ pub fn run_gate(repo: &Path, args: &[&str]) -> i32 {
             eprintln!("trust-gate: {e}");
             2
         }
+    }
+}
+
+/// Refusal has no proposal. Report a cleanup failure before publishing that refusal's report; a prior file may
+/// remain readable on this unable-to-judge path, so only successful deletion or absence permits continuation.
+fn clear_previous_proposal(path: &Path) -> Result<(), String> {
+    match fs::remove_file(path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(format!(
+            "cannot remove previous proposal `{}`: {error}",
+            path.display()
+        )),
     }
 }
 
@@ -1490,6 +1503,147 @@ mod tests {
         let proposal =
             std::fs::read_to_string(f.base.join(out).join(super::PROPOSAL)).expect("a proposal");
         f.commit(&[("trust/baseline.eadl", proposal)]);
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_protected_previous_proposal_stops_before_a_refusal_report() {
+        crate::trust_test_process::bounded!(
+            a_protected_previous_proposal_stops_before_a_refusal_report
+        );
+        use std::path::PathBuf;
+        use std::process::Command;
+
+        struct RestoreFlags(PathBuf);
+        impl Drop for RestoreFlags {
+            fn drop(&mut self) {
+                let status = Command::new("chflags")
+                    .arg("nouchg")
+                    .arg(&self.0)
+                    .status()
+                    .expect("restore owned proposal flags");
+                assert!(status.success(), "restore owned proposal flags");
+            }
+        }
+
+        let f = f30("protected-previous-proposal");
+        let (_, old_report) = judge_head(&f, "output");
+        let out = f.base.join("output");
+        let proposal = out.join(super::PROPOSAL);
+        let previous = std::fs::read(&proposal).unwrap();
+        assert!(!read_baseline(std::str::from_utf8(&previous).unwrap())
+            .unwrap()
+            .forms
+            .is_empty());
+        f.commit(&[(
+            "trust/roots.eadl",
+            format!(
+                "{}(defgenerated \"data/out.csv\" (generator \"scripts/make.sh\"))\n",
+                f30_roots("")
+            ),
+        )]);
+        let current = crate::catalog_check::Git::at(&f.repo)
+            .text(&["rev-parse", "HEAD"])
+            .unwrap();
+        assert!(!old_report.contains(&format!("commit: {}\n", current.trim())));
+        let restore = RestoreFlags(proposal.clone());
+        let status = Command::new("chflags")
+            .arg("uchg")
+            .arg(&proposal)
+            .status()
+            .unwrap();
+        assert!(status.success(), "set owned proposal's immutable flag");
+        let deletion_probe = std::fs::remove_file(&proposal);
+        let sibling = out.join("writability-probe");
+        let write_probe = std::fs::write(&sibling, b"output remains writable");
+        let result = gate(&f.repo, "HEAD", None, &out, &configuration_roots());
+        drop(restore);
+
+        assert!(
+            deletion_probe.is_err(),
+            "host did not enforce file deletion denial"
+        );
+        write_probe.expect("report's output directory stays writable");
+        std::fs::remove_file(sibling).unwrap();
+        assert_eq!(std::fs::read(&proposal).unwrap(), previous);
+        let error = match result {
+            Err(error) => error,
+            Ok((j, text)) => panic!(
+                "a gate judgement left the earlier proposal readable: {:?}; {text}",
+                j.refused
+            ),
+        };
+        assert!(
+            error.starts_with("cannot remove previous proposal `"),
+            "{error}"
+        );
+        assert!(error.contains(proposal.to_str().unwrap()), "{error}");
+        assert_eq!(
+            std::fs::read_to_string(out.join(super::REPORT)).unwrap(),
+            old_report
+        );
+        assert!(!out.join("trust-dependencies.json").exists());
+        let (j, text) = judge_head(&f, "output");
+        assert!(!j.refused.is_empty());
+        assert!(text.contains(&format!("commit: {}\n", current.trim())));
+        assert!(text.contains("inventory: none"));
+        assert!(
+            !proposal.exists(),
+            "ordinary inventory refusal clears the proposal"
+        );
+    }
+
+    #[test]
+    fn a_directory_at_the_proposal_path_stops_before_a_refusal_report() {
+        crate::trust_test_process::bounded!(
+            a_directory_at_the_proposal_path_stops_before_a_refusal_report
+        );
+        let f = f30("proposal-output-directory");
+        let (_, old_report) = judge_head(&f, "output");
+        let out = f.base.join("output");
+        let proposal = out.join(super::PROPOSAL);
+        std::fs::remove_file(&proposal).unwrap();
+        std::fs::create_dir(&proposal).unwrap();
+        std::fs::write(proposal.join("keep"), b"owned contents").unwrap();
+        f.commit(&[(
+            "trust/roots.eadl",
+            format!(
+                "{}(defgenerated \"data/out.csv\" (generator \"scripts/make.sh\"))\n",
+                f30_roots("")
+            ),
+        )]);
+        let result = gate(&f.repo, "HEAD", None, &out, &configuration_roots());
+        assert_eq!(
+            std::fs::read(proposal.join("keep")).unwrap(),
+            b"owned contents"
+        );
+        let error = match result {
+            Err(error) => error,
+            Ok((j, text)) => panic!(
+                "a gate judgement accepted an unremovable proposal path: {:?}; {text}",
+                j.refused
+            ),
+        };
+        assert!(
+            error.starts_with("cannot remove previous proposal `"),
+            "{error}"
+        );
+        assert!(error.contains(proposal.to_str().unwrap()), "{error}");
+        assert_eq!(
+            std::fs::read_to_string(out.join(super::REPORT)).unwrap(),
+            old_report
+        );
+        assert!(!out.join("trust-dependencies.json").exists());
+        std::fs::remove_dir_all(&proposal).unwrap();
+        let (j, text) = judge_head(&f, "output");
+        assert!(!j.refused.is_empty());
+        assert!(text.contains("inventory: none"));
+        assert!(!proposal.exists());
+        // A later successful inventory still writes a proposal after the failed cleanup is repaired.
+        f.commit(&[("trust/roots.eadl", f30_roots(""))]);
+        let (j, _) = judge_head(&f, "output");
+        assert!(j.refused.is_empty(), "{:?}", j.refused);
+        read_baseline(&std::fs::read_to_string(proposal).unwrap()).unwrap();
     }
 
     #[test]

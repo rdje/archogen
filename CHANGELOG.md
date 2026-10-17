@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hard prior-proposal cleanup
+
+`ARCHOGEN-M3-0712` (leaf `M3.6.9.6.3.2.2.11.2.8`), `2026-10-17`.
+
+- Reproduce P2: file-only deletion denial leaves a readable earlier proposal beside a new ordinary refusal
+  report, despite writable sibling output. A directory at the proposal path is also silently retained.
+- Checked removal permits only success/missing-file before refusal report publication. Other I/O errors
+  name the path and end unable to judge; earlier contents remain intact, and repair/retry is verified.
+- Permanent public controls and native reversal finish named kills; current originals and retained copy
+  restore, prior gate/tests reconstruct exactly, catalogue append-only and inventory/E unchanged.
+- Canonical/book/live sync; correct historical JSON integration's stale "next" status from the committed
+  canonical leaf. Keep fixed book ceilings and all examples/counts/qualifiers. Focused/book/staged checks
+  pass; exact final stamp/staged gates bind the commit. Actual-candidate flag proofs are next.
+
 ## archogen — hard previous-inventory cleanup
 
 `ARCHOGEN-M3-0711` (leaf `M3.6.9.6.3.2.2.11.2.7`), `2026-10-17`.

@@ -211,8 +211,11 @@ a file instead of a directory, and clean recovery. Repair, caller and local inte
 
 ### The run's order
 
-Initial cleanup removes the earlier inventory before forms are judged. Failure ends unable to judge (exit 2),
-naming the path; old contents can remain. Fix that I/O problem and retry. Refusals leave no earlier inventory.
+Initial cleanup removes the earlier inventory before judging forms. Failure ends unable to judge (exit 2),
+naming path/I/O; old contents may remain. Fix the I/O error and retry. Ordinary refusals leave no inventory.
+When inventory refuses, the gate removes its earlier `baseline-proposal.eadl` before publishing `report.txt`.
+Proposal removal failure also ends exit 2, naming the path and preserving earlier files; no new report is written.
+For example, a protected old proposal needs its deletion restriction repaired before retrying the gate.
 The generated-sources record §2 orders the steps; each starts only if earlier steps refused nothing.
 Build failures in steps 2 or 4 still finish that step's builds and judgments, then end unable to judge (exit 2),
 with refusals reported.
@@ -548,7 +551,7 @@ Exact guard reversal bypasses a one-second limit; reapplication times out near o
 cargo test -p xtask mutation::tests::an_exited_command -- --nocapture
 ```
 
-All 103 original parent names/bodies remain apart from the guards (`2026-10-11`). Workers have 30s bounds in their own groups. The selected native regressions use 600s per candidate on this host to allow successive waves; observed budgets do not relax strict timeout rules.
+All 103 original parents remain apart from guards (`2026-10-11`). Workers have 30s bounds in their own groups. Selected native regressions allow 600s per candidate for successive waves; strict timeout rules remain.
 
 ```bash
 cargo test -p xtask trust_test_process::tests
@@ -556,7 +559,7 @@ ARCHOGEN_PARENT_TEST_TIMINGS=1 cargo test -q -p xtask -- \
   trust:: trust_generated:: trust_gate:: --skip route_tests --nocapture
 ```
 
-Measured `2026-10-11`: the five non-progress mutations gain named finishing kills, strict 0; all 32 exact entries retain their killing-name sets. Inputs restore, production prefixes stay unchanged and focused gates pass. These repair regressions precede the complete measurement below.
+Measured `2026-10-11`: five non-progress mutations gain named finishing kills, strict 0; all 32 entries retain their killing-name sets. Inputs restore, production prefixes stay unchanged and focused gates pass, before the complete measurement below.
 
 Measured `2026-10-11` at source 36154d6: the complete `trust.rs` retry attempts all 1,420 production candidates with every operator, the original 103-name parent population and no equivalents file. Its native baseline passes in 17s. Results are 802 finishing named kills, 540 survivors and 78 compiler refusals, with no timeout or unjudged result. The native strict exit is 1: this is a complete measurement, not an adequacy pass (`M3.6.9.6.3.2.1.3`).
 
@@ -566,13 +569,13 @@ bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask \
   --filter=trust_generated:: --filter=trust_gate:: --filter=--skip --filter=route_tests
 ```
 
-Measured `2026-10-11`: actual identities, replacements, killing names and counts agree; altered evidence refuses. The first attempt's measured prefix is retained, except its five non-finishing cases now have named kills. Compiler refusals prove no coverage. All 540 initial survivors are owned in `docs/tasks/M3.md`; each needs a repair or justified per-file equivalence before the final strict sweep.
+Measured `2026-10-11`: identities, edits, killing names and counts agree; altered evidence refuses. The first attempt's prefix remains, with its five non-finishing cases now named kills. Compiler refusals prove no coverage. All 540 initial survivors are owned in `docs/tasks/M3.md`, requiring repair or justified per-file equivalence before the final strict sweep.
 
-Initial `.1`–`.7` assessments (`2026-10-11`) repair malformed names/placeholder leaves and reader/role/pair test gaps; committed records hold named kills, reversals and source boundaries.
+Initial `.1`–`.7` assessments (`2026-10-11`) repair malformed names/placeholder leaves and reader/role/pair test gaps. Committed leaves hold kills, reversals and source boundaries.
 
-Measured `2026-10-11`, `.8.2`: the ends rewrite preserves order/early returns for both borrowed String references, with no user callback/destructor effect. Alias, wider-array and wrong-oracle controls support the scoped E: native survivor (strict 1), then reviewed equivalent (strict 0). Production stays unchanged; classification adds no kill.
+Measured `2026-10-11`, `.8.2`: the ends rewrite preserves order/early returns for two borrowed String references, with no user callback/destructor effect. Alias, wider-array and wrong-oracle controls support scoped E: native survivor (strict 1), reviewed equivalent (strict 0). Production unchanged; no kill added.
 
-Historical selected runs restore 988 captured inputs under Python/system hashes; the new E record is separately hashed. Commands/identities live in committed leaves. Listing `2026-10-11`: 1,416 candidates, production lines 144–2498. IDs require recorded source or fresh discovery; final exact/full current-source outcomes remain open.
+Historical selected runs restore 988 inputs under Python/system hashes; the new E is separately hashed. Committed leaves hold commands/identities. Listing `2026-10-11`: 1,416 candidates, production lines 144–2498. IDs need recorded source or fresh discovery; final current-source outcomes remain open.
 
 Measured `2026-10-11`, `.9.1`: four environment survivors gain named kills, strict 0. Public controls hold three compiled values and record boundaries; production/old tests stay unchanged and all 990 captured inputs restore.
 
@@ -583,13 +586,12 @@ named public kill; all 990 inputs restore and domain/focused controls pass. Chan
 require Linux proposal compatibility in `M3.6.3.2.1.1`, pending an authorized runner/base checker and review.
 The reproducer also changes content; it proves the field defect, not a complete-gate bypass.
 
-The [tooling JSON contracts](annex-repository.md#json-used-by-the-tooling) separate encoding from reader diagnostics. Number grammar, raw controls, Unicode escapes and inventory-byte admission are repaired; `.9.4` integration is next. These defects do not establish an artifact-hash bypass.
+The [tooling JSON contracts](annex-repository.md#json-used-by-the-tooling) separate encoding from reader diagnostics. Number grammar, raw controls, Unicode escapes and inventory-byte admission are repaired; `.9.4` local integration passed on `2026-10-12`. These defects establish no artifact-hash bypass.
 
 The [focused-stamp guard](annex-repository.md#a-commit-holds-what-was-run) now holds explicit successful-exit claims and large diffs; `.9.5` records its RED controls and repair.
 
-Timeout and unjudged results remain failures. Full adequacy and independent review stay open.
-Recorded native killing names remain accessible through the original `docs/tasks/M3.md` leaf stubs, which now
-route completed evidence to sealed task-history records. The stubs retain commit identities; the archive index
-holds content digests, and the task-history gate proves reconstruction and provenance.
+Timeout/unjudged results fail; full adequacy and independent review remain open. Native killing names
+route from original `docs/tasks/M3.md` stubs to sealed task-history. Stubs retain commits, the index holds
+digests, and the gate proves reconstruction/provenance.
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

@@ -5770,3 +5770,22 @@ to
         let _ = fs::remove_file(path);
         Ok(())
 end
+
+mutation trust-previous-proposal-cleanup-errors
+file xtask/src/trust_gate.rs
+test -p xtask -- trust_gate::tests::a_protected_previous_proposal_stops_before_a_refusal_report trust_gate::tests::a_directory_at_the_proposal_path_stops_before_a_refusal_report --exact
+expect killed
+why Ignoring failed proposal removal must not publish an ordinary inventory-refusal report beside a readable previous proposal or an invalid proposal output path.
+from
+        match fs::remove_file(path) {
+            Ok(()) => Ok(()),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(error) => Err(format!(
+                "cannot remove previous proposal `{}`: {error}",
+                path.display()
+            )),
+        }
+to
+        let _ = fs::remove_file(path);
+        Ok(())
+end
