@@ -527,6 +527,86 @@ class DiagnosticFlagTests(DiscoveryFixture):
         self.assertEqual(argv, expected, "actual pinned producer argv requires revalidation on drift")
         return argv
 
+    def color_override_argv(self, label, color):
+        """Keep the ordinary request, raw override request and actual compiler argv separate."""
+        ordinary = self.producer_argv(label)
+        project = self.base / ("producer-" + label)
+        compiler_dir = project / "bin"
+        compiler_dir.mkdir()
+        compiler = compiler_dir / "color-rustc"
+        compiler.write_text(r'''#!/usr/bin/env python3
+import json, os, sys
+from pathlib import Path
+arguments = [arg for arg in sys.argv[1:] if not arg.startswith(("--json=", "--error-format="))]
+if "--crate-name" in arguments and arguments[arguments.index("--crate-name") + 1] == "flagproof" and "src/lib.rs" in arguments:
+    with Path(__file__).with_name("forwarded.jsonl").open("a") as output:
+        output.write(json.dumps(["rustc"] + arguments) + "\n")
+os.execvp("rustc", ["rustc"] + arguments)
+''')
+        compiler.chmod(0o755)
+        target = project / "color-target"
+        self.assertFalse(target.exists(), "the wider build must not reuse a prior artifact")
+        env = {key: os.environ[key] for key in ("PATH", "HOME")}
+        env.update(PATH=str(compiler_dir) + os.pathsep + env["PATH"],
+                   RUSTUP_HOME=os.environ.get("RUSTUP_HOME", str(Path(env["HOME"]) / ".rustup")),
+                   RUSTUP_TOOLCHAIN="1.95.0", RUSTC="rustc", CARGO_HOME=str(project / "color-cargo-home"),
+                   CARGO_TARGET_DIR=str(target), TMPDIR=str(self.base))
+        command = ["cargo", "rustc", "--lib", "--release", "--locked", "--offline",
+                   "--no-default-features", "--message-format=json", "-v", "-p", "flagproof",
+                   "--", "--color", color]
+
+        def cargo(expected):
+            process = subprocess.Popen(command, cwd=project, env=env, stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE, text=True, start_new_session=True)
+            try:
+                stdout, stderr = process.communicate(timeout=60)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.communicate()
+                self.fail("actual color Cargo producer timed out: " + label)
+            self.assertEqual(process.returncode, expected, stdout + stderr)
+            return stderr
+
+        refused = cargo(101)
+        self.assertIn("cannot specify the `--color` option with `--json`", refused)
+        self.assertFalse(list((target / "release/deps").glob("libflagproof-*.rlib")),
+                         "a compiler-refused combination is not a successful wider build")
+        env["RUSTC"] = "color-rustc"
+        stderr = cargo(0)
+        commands = [line.strip()[len("Running `"):-1] for line in stderr.splitlines()
+                    if line.strip().startswith("Running `color-rustc ") and line.strip().endswith("`")]
+        self.assertEqual(len(commands), 1, stderr)
+        raw = shlex.split(commands[0])
+        metadata = [arg for arg in raw if re.fullmatch(r"metadata=[0-9a-f]{16}", arg)]
+        filename = [arg for arg in raw if re.fullmatch(r"extra-filename=-[0-9a-f]{16}", arg)]
+        self.assertEqual(len(metadata), 1, raw)
+        self.assertEqual(len(filename), 1, raw)
+        expected = ["color-rustc", "--crate-name", "flagproof", "--edition=2021", "src/lib.rs",
+                    "--error-format=json", "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+                    "--crate-type", "lib", "--emit=dep-info,metadata,link", "-C", "opt-level=3",
+                    "-C", "embed-bitcode=no", "--check-cfg", "cfg(docsrs,test)", "--check-cfg",
+                    "cfg(feature, values())", "-C", metadata[0], "-C", filename[0], "--out-dir",
+                    str(target / "release/deps"), "-C", "strip=debuginfo", "-L",
+                    "dependency=" + str(target / "release/deps"), "--color", color]
+        self.assertEqual(raw, expected, "independent raw Cargo request")
+        records = [json.loads(line) for line in (compiler_dir / "forwarded.jsonl").read_text().splitlines()]
+        self.assertEqual(len(records), 1, "one physical compilation, excluding version/probing calls")
+        forwarded = records[0]
+        # Independent compiler-argv prefix and the already checked, unchanged tail. The raw Cargo
+        # formatter options are not described as arguments executed by this forwarding compiler.
+        physical = ["rustc", "--crate-name", "flagproof", "--edition=2021", "src/lib.rs"] + expected[7:]
+        self.assertEqual(forwarded, physical, "independent actual compiler argv")
+        self.assertNotEqual(raw, forwarded)
+        suffix = filename[0].split("=", 1)[1]
+        artifact = target / "release/deps" / ("libflagproof" + suffix + ".rlib")
+        self.assertTrue(artifact.read_bytes().startswith(b"!<arch>\n"), "actual new library archive")
+        consumer, binary = project / "artifact-consumer.rs", project / "artifact-consumer"
+        consumer.write_text("fn main() { flagproof::c(); }\n")
+        self.bounded(["rustc", "--edition=2021", str(consumer), "--extern", "flagproof=" + str(artifact),
+                      "-o", str(binary)])
+        self.bounded([str(binary)])
+        return ordinary, raw, forwarded
+
     @unittest.skipUnless(os.name == "posix", "the pinned producer/decoder premise is Unix")
     def test_actual_lint_table_candidates_hold_only_the_inventory_caller_domain(self):
         source = (ROOT / "xtask/src/trust.rs").read_text()
@@ -666,6 +746,73 @@ class DiagnosticFlagTests(DiscoveryFixture):
                 self.bounded([str(binary), argument])
         records = namespace["load_equivalents"](ROOT / "xtask/trust.equivalents")
         self.assertIn(key, records, "the actual cap proof requires its per-file reason")
+
+
+    @unittest.skipUnless(os.name == "posix", "the pinned producer/decoder premise is Unix")
+    def test_actual_color_candidate_requires_the_fixed_inventory_formatter(self):
+        source = (ROOT / "xtask/src/trust.rs").read_text()
+        self.assertIn('c.env("RUSTC", "rustc");', source, "the forwarding mode is outside this caller")
+        self.assertIn("commit-hash: f2d3ce0bd7f24a49f8f72d9000448f8838c4e850",
+                      self.bounded(["cargo", "--version", "--verbose"]),
+                      "a changed producer requires source/caller revalidation")
+        namespace, candidates = self.discovery(source, "bool")
+        key = ('("--color", true),', '("--color", false),')
+        family = [mutant for mutant in candidates if namespace["mutation_key"](mutant) == key]
+        self.assertEqual(len(family), 1, "the color consuming-bit edit must be an actual unique candidate")
+
+        def module(text, name):
+            start = text.index("const DROPPED:")
+            end = text.index("/// `path` resolved", start)
+            body = text[start:end]
+            self.assertEqual(body.count("fn normalise("), 1)
+            return "mod " + name + " {\n" + body.replace("fn normalise(", "pub fn normalise(", 1) + "}\n"
+
+        modules = [module(source, "baseline"), module(namespace["apply_mutant"](family[0]), "variant")]
+        expected = ["--crate-name", "flagproof", "--edition=2021", "src/lib.rs", "--crate-type", "lib",
+                    "--emit=dep-info,metadata,link", "-C opt-level=3", "-C embed-bitcode=no", "-C strip=debuginfo"]
+        literal = lambda value: json.dumps(value, ensure_ascii=False)
+        vector = lambda values: "vec![" + ", ".join(literal(value) + ".to_owned()" for value in values) + "]"
+        checks = []
+        first = None
+        for color in ["always", "never", "auto"]:
+            ordinary, raw, forwarded = self.color_override_argv("color-" + color, color)
+            self.assertNotIn("--color", ordinary)
+            if first is None:
+                first = ordinary, raw, forwarded
+            for name in ["baseline", "variant"]:
+                checks.append(f'assert_eq!({name}::normalise(&{vector(ordinary)}, "unused-scratch/"), '
+                              f'{vector(expected)}, "{name} actual ordinary");')
+            # Raw Cargo request and physically forwarded compiler argv are distinct, checked inputs.
+            # Only the forwarded argv is described as executed by rustc in this successful wider mode.
+            for description, argv in [("raw Cargo request", raw), ("physical compiler", forwarded)]:
+                checks += [f'assert_eq!(baseline::normalise(&{vector(argv)}, "unused-scratch/"), '
+                           f'{vector(expected)}, "baseline {description} {color}");',
+                           f'assert_eq!(variant::normalise(&{vector(argv)}, "unused-scratch/"), '
+                           f'{vector(expected + [color])}, "variant {description} {color}");']
+        consumed = ["rustc", "--out-dir", "--color", "retained"]
+        for name in ["baseline", "variant"]:
+            checks.append(f'assert_eq!({name}::normalise(&{vector(consumed)}, "unused-scratch/"), '
+                          f'{vector(["retained"])}, "{name} consumed key value");')
+        ordinary, raw, forwarded = first
+        main = ("fn main() {\n" + "\n".join(checks)
+                + '\nmatch std::env::args().nth(1).as_deref() {\n'
+                + f' Some("wrong-positive") => assert_eq!(baseline::normalise(&{vector(forwarded)}, "unused-scratch/"), '
+                + f'variant::normalise(&{vector(forwarded)}, "unused-scratch/"), "wrong positive oracle"),\n'
+                + f' Some("wrong-negative") => assert_ne!(baseline::normalise(&{vector(ordinary)}, "unused-scratch/"), '
+                + f'variant::normalise(&{vector(ordinary)}, "unused-scratch/"), "wrong negative oracle"),\n'
+                + f' Some("wrong-forwarded") => assert_eq!({vector(raw)}, {vector(forwarded)}, "wrong forwarded argv oracle"),\n'
+                + ' _ => {}\n}\nprintln!("color controls: ordinary/raw/physical argv held; wider claims refused");\n}\n')
+        program, binary = self.base / "color-candidate.rs", self.base / "color-candidate"
+        program.write_text("\n".join(modules) + main)
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.assertIn("ordinary/raw/physical argv held; wider claims refused", self.bounded([str(binary)]))
+        for argument, message in [("wrong-positive", "wrong positive oracle"),
+                                  ("wrong-negative", "wrong negative oracle"),
+                                  ("wrong-forwarded", "wrong forwarded argv oracle")]:
+            with self.assertRaisesRegex(AssertionError, message):
+                self.bounded([str(binary), argument])
+        records = namespace["load_equivalents"](ROOT / "xtask/trust.equivalents")
+        self.assertIn(key, records, "the actual color proof requires its per-file reason")
 
 
 class IteratorTests(DiscoveryFixture):

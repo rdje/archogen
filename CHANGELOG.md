@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — permanent actual-color proof controls
+
+`ARCHOGEN-M3-0717` (leaf `M3.6.9.6.3.2.2.11.2.4.3.2`), `2026-10-18`.
+
+- Compile the actual color consuming-bit edit with independent ordinary/raw/physical argv and normalized
+  outputs. Published compiler overrides supply valid wider builds for always/never/auto; real library
+  consumers, expected JSON refusal, consumed values and three wrong oracles hold the fixed-caller scope.
+- Only missing E fails before the precise reason; selected native 1 survivor / strict 1 becomes 1 scoped
+  equivalent / strict 0, with altered-evidence refusal. All 28 operator tests and 1026 original/current
+  copied restoration pass; every old helper/test body and E prefix preserved, Rust/catalogue unchanged.
+- Canonical/Annex C/live sync. Producer/proof parents close; final complete table replay and milestone
+  integration remain owned next. Focused/book/staged gates and exact final stamp bind this commit.
+
 ## archogen — color compatibility and compiler-override boundary
 
 `ARCHOGEN-M3-0716` (leaf `M3.6.9.6.3.2.2.11.2.4.3.1`), `2026-10-18`.

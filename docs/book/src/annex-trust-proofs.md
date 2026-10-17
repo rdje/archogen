@@ -167,7 +167,7 @@ deny/forbid builds. Successful `cargo rustc -- -W unused_variables` and the othe
 refute broader equivalence: each changed helper leaks the operand. Synthetic consumed-value and wrong
 positive/negative controls hold the scope. Reproduce with the local-store environment above and
 `python3 -I -B xtask/mutation_sweep_tests.py . DiagnosticFlagTests`. Eight unlisted survivors become eight
-scoped E, strict 0; no kill is added. Color, final table replay and full adequacy remain open.
+scoped E, strict 0; no kill is added. Final table replay and full adequacy remain open.
 
 Cap-lints proof `.11.2.4.2` requires compiled local path packages outside the standard-library build,
 which show warnings. Those premises make both pinned Cargo cap branches false. Actual local argv and
@@ -175,11 +175,12 @@ independent outputs agree; successful `cargo rustc -- --cap-lints allow` makes t
 Consumed-value and wrong-oracle controls hold the boundary. Selected survival becomes scoped E, strict 0;
 changed caller/pin premises require revalidation.
 
-Color boundary `.11.2.4.3.1` (`2026-10-18`): Cargo's human/short/json modes still supply compiler JSON
-options, which conflict with separate color. A test-owned `RUSTC` forwarder removes those options and
-records the actual compiler argv; a successful explicit-color Cargo build supplies the wider domain.
-Raw/forwarded argv stay distinct, and the override is excluded by the inventory's fixed selector.
-These diagnostics are exploratory; permanent controls/E remain `.11.2.4.3.2`.
+Color boundary `.11.2.4.3.1` (`2026-10-18`): Cargo's human/short/json modes supply compiler JSON,
+which conflicts with separate color. A test-owned `RUSTC` forwarder removes formatting options;
+raw requests and actual compiler argv stay distinct, outside the inventory's fixed selector.
+Permanent controls `.11.2.4.3.2` use successful override Cargo builds for always/never/auto, checking the
+actual edit, library consumers, consumed values and positive/negative/forwarded-argv falsifiers.
+Selected survival becomes scoped E, strict 0; changed caller/pin premises require revalidation.
 
 Local integration `.11.2.6.3.2` passed `2026-10-17`, before `.11.2.7`–`.11.2.8` and these proof controls;
 its leaf binds activation/input restoration. Closure prose is checked separately; no remote CI is claimed.

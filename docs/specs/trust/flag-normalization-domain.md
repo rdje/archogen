@@ -118,7 +118,7 @@ strict 0, with explicit reason binding and altered-evidence refusal. Original/cu
 and all 27 operator controls pass. No kill, color classification, full-table/full-file adequacy or general
 numeric-release equivalence follows. The owning leaf records actual commands, identities and populations.
 
-### Color compatibility boundary before permanent controls
+### Color compatibility and permanent proof controls
 
 Observed `2026-10-18`, `.11.2.4.3.1`, on unchanged production `e4fc5a0`. Pinned
 `add_error_format_and_color` always appends `--error-format=json` and `--json=…`; its human/short display
@@ -136,12 +136,30 @@ contains the formatter options; actual forwarded compiler argv does not. The rec
 Independent Python/system hashes agree for the artifact; another rustc invocation consumes it and runs
 its exported function successfully. All files stay in the owned repository-volume fixture.
 
-The override is outside the inventory caller, which fixes `RUSTC=rustc`; it changes no production
-selector or admission. The diagnostic adapters are ignored exploratory evidence, not maintained proof
-controls. `.11.2.4.3.2` owns actual-edit compilation, independently specified ordinary/raw/forwarded argv
-and normalized outputs, valid artifact/JSON-refusal/wrong-oracle controls and exact E only if supported.
-No color equivalence is declared yet. Source construction plus caller restrictions, rather than sample
-absence or a compiler-refused invocation, must justify the narrow reason.
+The override remains outside the inventory caller, which fixes `RUSTC=rustc`; no production selector or
+admission changes. Initial `.11.2.4.3.1` diagnostics remain qualified exploratory evidence. Permanent
+`DiagnosticFlagTests.test_actual_color_candidate_requires_the_fixed_inventory_formatter`, completed
+`2026-10-18` in `.11.2.4.3.2`, now discovers and compiles the actual consuming-bit edit beside the original
+helper. Ordinary, raw Cargo and actual forwarded compiler argv have independently specified shapes and
+normalized vectors. The forwarded prefix is explicit and its unchanged tail comes from the already
+checked raw expectation, rather than from applying the normalizer or forwarding filter to actual data.
+
+For always/never/auto, plain JSON-plus-color compilation must refuse and produce no library in a fresh
+target. The published override then compiles, logs exactly one physical compiler invocation and produces
+the expected archive. Another rustc compilation consumes that library and runs its exported function.
+A fixed owned compiler basename on PATH avoids unescaped executable-path ambiguity. These are valid
+wider Cargo builds outside the inventory selector; each actual variant retains the color operand while
+the original drops it. Synthetic consumed-value controls and wrong positive/negative/forwarded-argv
+oracles hold the narrow claim and reject conflating raw requests with executed compiler arguments.
+
+All compiled checks precede the E-presence assertion. Before the reason that assertion alone fails;
+after one exact reason is appended it passes. Native selected survival/strict 1 becomes scoped E/strict 0,
+with explicit reason binding and altered-evidence refusal. All previous test/helper bodies and E prefix
+remain exact; original/current-copy restoration and the complete operator suite pass. Source construction
+and caller restrictions justify visited-key absence, not finite sample absence or compiler-refused input.
+Changed producer/pin, formatter/selector or other caller premises require revalidation. Final table replay,
+whole-file stale-E handling and full production adequacy remain separate; no general numeric-release or
+arbitrary-argv equivalence follows.
 
 ## Confirmed defect: an admitted build script executes
 
