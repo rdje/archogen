@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — actual lint-level consuming-bit proofs
+
+`ARCHOGEN-M3-0713` (leaf `M3.6.9.6.3.2.2.11.2.4.1`), `2026-10-17`.
+
+- Compile eight actual native lint-table edits beside the original helper. Require independent actual
+  pinned Cargo argv and normalized outputs, valid separate-argument Cargo counterexamples and wrong-oracle
+  failures before per-key reasons. The source-bound visited-key argument stays scoped to the current pin.
+- Native unlisted 8 survivors/strict 1 become 8 scoped equivalents/strict 0; altered audit evidence refuses.
+  All 26 operator tests pass; 1020 original/current copied inputs restore after each native run.
+- Older Python bodies and E prefix remain exact, Rust production/tests/catalogue unchanged. Canonical/book/
+  live sync; cap/color/final replay remain open. Own annex containment next under existing book ceilings.
+  Focused/book/staged verification and exact activation stamp bind the commit.
+
 ## archogen — hard prior-proposal cleanup
 
 `ARCHOGEN-M3-0712` (leaf `M3.6.9.6.3.2.2.11.2.8`), `2026-10-17`.

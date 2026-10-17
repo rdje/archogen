@@ -209,6 +209,10 @@ Writable homes are recreated normally. Permanent public controls cover a wrapper
 a file instead of a directory, and clean recovery. Repair, caller and local integration evidence:
 `docs/specs/trust/flag-normalization-domain.md`.
 
+Eight lint-level consuming-bit edits are scoped E for the pinned caller.
+`cargo rustc -- -W unused_variables` distinguishes the changed helper outside it.
+The [source ledger](ledger.md#rust-toolchain) gives actual argv and falsifiers. Other edits stay open.
+
 ### The run's order
 
 Initial cleanup removes the earlier inventory before judging forms. Failure ends unable to judge (exit 2),
@@ -561,7 +565,7 @@ ARCHOGEN_PARENT_TEST_TIMINGS=1 cargo test -q -p xtask -- \
 
 Measured `2026-10-11`: five non-progress mutations gain named finishing kills, strict 0; all 32 entries retain their killing-name sets. Inputs restore, production prefixes stay unchanged and focused gates pass, before the complete measurement below.
 
-Measured `2026-10-11` at source 36154d6: the complete `trust.rs` retry attempts all 1,420 production candidates with every operator, the original 103-name parent population and no equivalents file. Its native baseline passes in 17s. Results are 802 finishing named kills, 540 survivors and 78 compiler refusals, with no timeout or unjudged result. The native strict exit is 1: this is a complete measurement, not an adequacy pass (`M3.6.9.6.3.2.1.3`).
+Measured `2026-10-11`, source 36154d6: the complete `trust.rs` retry covers 1,420 candidates, all operators, the original 103 parents and no E file. Baseline passes in 17s; results: 802 finishing named kills, 540 survivors, 78 compiler refusals, no timeout/unjudged result. Strict exit 1 records a complete measurement; adequacy remains unmet (`M3.6.9.6.3.2.1.3`).
 
 ```bash
 bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask \
@@ -569,13 +573,13 @@ bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask \
   --filter=trust_generated:: --filter=trust_gate:: --filter=--skip --filter=route_tests
 ```
 
-Measured `2026-10-11`: identities, edits, killing names and counts agree; altered evidence refuses. The first attempt's prefix remains, with its five non-finishing cases now named kills. Compiler refusals prove no coverage. All 540 initial survivors are owned in `docs/tasks/M3.md`, requiring repair or justified per-file equivalence before the final strict sweep.
+Measured `2026-10-11`: identities/edits/names/counts agree; altered evidence refuses. The first prefix remains, its five non-finishing cases now named kills. Compiler refusals prove no coverage. All 540 initial survivors stay owned in `docs/tasks/M3.md`, requiring repair or justified E before the final strict sweep.
 
 Initial `.1`–`.7` assessments (`2026-10-11`) repair malformed names/placeholder leaves and reader/role/pair test gaps. Committed leaves hold kills, reversals and source boundaries.
 
-Measured `2026-10-11`, `.8.2`: the ends rewrite preserves order/early returns for two borrowed String references, with no user callback/destructor effect. Alias, wider-array and wrong-oracle controls support scoped E: native survivor (strict 1), reviewed equivalent (strict 0). Production unchanged; no kill added.
+Measured `2026-10-11`, `.8.2`: the ends rewrite preserves order/early returns for two borrowed String references, with no user callback/destructor. Alias/wider-array/wrong-oracle controls hold scoped E: native survivor (strict 1), reviewed E (strict 0); production unchanged, no kill added.
 
-Historical selected runs restore 988 inputs under Python/system hashes; the new E is separately hashed. Committed leaves hold commands/identities. Listing `2026-10-11`: 1,416 candidates, production lines 144–2498. IDs need recorded source or fresh discovery; final current-source outcomes remain open.
+Historical runs restore 988 inputs under Python/system hashes, the new E separately hashed; leaves hold commands/identities. Listing `2026-10-11`: 1,416 candidates, production lines 144–2498. IDs need bound source/fresh discovery; final current-source results stay open.
 
 Measured `2026-10-11`, `.9.1`: four environment survivors gain named kills, strict 0. Public controls hold three compiled values and record boundaries; production/old tests stay unchanged and all 990 captured inputs restore.
 

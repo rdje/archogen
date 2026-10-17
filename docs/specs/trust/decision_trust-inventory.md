@@ -205,6 +205,13 @@ the unchanged narrow delimiter premises; compiled actual controls and full local
 compiler-program filter cannot supply that premise because decoding precedes it. Flag-source completion and
 final whole-production measurements remain separate (`flag-normalization-domain.md`).
 
+Eight lint-level consuming-bit edits are scoped equivalents for the current pinned successful inventory
+caller (`M3.6.9.6.3.2.2.11.2.4.1`). Manifest lint flags are joined; excluded extra-argument/environment/
+configuration/profile routes and unchanged operand consumers mean the separate keys are not visited.
+Permanent compiled actual-edit controls require independent real argv/results and valid wider-domain
+cargo-rustc differences, plus wrong-oracle failures, before exact reasons and strict selected native E.
+See `flag-normalization-domain.md` for premises/revalidation; cap-lints/color and final measurements remain open.
+
 Final bounded helper replay (`M3.6.9.6.3.2.2.10.3.4`) verifies every actual current helper edit with strict
 named-kill/scoped-equivalent outcomes and complete original/copy restoration. Original survivor obligations
 bind to these corrected-context outcomes; no retroactive equivalence or whole-production adequacy is inferred.

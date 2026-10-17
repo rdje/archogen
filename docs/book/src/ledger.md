@@ -229,17 +229,13 @@ a fake command under the first framing intervention. Complete quoted records and
 handling repair both boundaries; synthetic malformed/canonical controls and both exact native reversals hold.
 Exploratory raw status audit remains qualified; permanent public controls establish the repair, not full adequacy.
 
-Delimiter equivalence (`M3.6.9.6.3.2.2.10.3.3.3.2.4`, `2026-10-12`) is scoped to complete records from
-this pinned Unix formatter and the fixed `rustc` program. It follows from the formatter's construction, rather
-than absence in samples: one outside space precedes each operand, with no leading/trailing/repeated outside
-separator. Every operand has nonempty encoded text; even an empty operand is `''`. At each separator or end,
-decoded bytes make the token nonempty or a visited quote marks an encoded empty token.
-
-Consequently, the initial token-state flag can be true without changing the nonempty program token, after which
-the first reset converges. Changing/deleting a separator reset cannot affect the next token's already-true push
-predicate. Replacing either push guard with true also leaves it true. The exact per-file reasons are in
-`xtask/trust.equivalents`; one shared text key covers both guards. This argument does not apply to arbitrary
-command text. The permanent compiled controls expose these differences outside the stated domain:
+Delimiter E (`M3.6.9.6.3.2.2.10.3.3.3.2.4`, `2026-10-12`) concerns complete pinned Unix records
+with fixed program `rustc`. Source construction gives one outside space before each nonempty encoding
+(empty operands encode as `''`), without leading/trailing/repeated separators. At every push boundary,
+decoded bytes or a visited quote already make the predicate true. Initial true converges at the first
+reset; changing/deleting a reset cannot affect the next true predicate, and making either guard true
+changes nothing. Reasons live in `xtask/trust.equivalents`, one text key covering both guards. This does
+not cover arbitrary command text; compiled controls expose each difference outside the domain:
 
 | Actual edit | Input outside the domain | Original tokens | Changed tokens |
 | --- | --- | --- | --- |
@@ -309,15 +305,22 @@ absence theorem. The permanent parent `cargo_diagnostic_flags_do_not_enter_unit_
 source hashes/environment/retained arguments. The actual check-cfg switch changes from survivor to named
 finishing kill/strict 0; exact operand-leak failure and restored pass agree. Only that original obligation closes.
 
-The source/caller assessment (`.11.2.3`, `2026-10-12`) and its repairs are recorded with exact pinned
-source digests in `docs/specs/trust/flag-normalization-domain.md`. Metadata repair `.11.2.5.1` hard-refuses
-reached scripts/macros despite manifest admissions; `.11.2.5.2` revalidates delimiter scope and local integration.
-Checked cleanup stops on Cargo-home reset (`.11.2.6.2`), inventory removal (`.11.2.7`) or proposal removal
-(`.11.2.8`) errors; public/native controls hold each. Source completion `.11.2.6.3.1`, observed `2026-10-17`,
-binds package/cache/stdlib/channel and visited-token premises to pinned branches, including built-in alias precedence and inactive offline
-metadata dependencies. The repaired delimiter and public controls pass; actual-candidate E controls remain
-`.11.2.4`. The source record owns details and revalidation triggers. Local integration `.11.2.6.3.2` passed
-on `2026-10-17`, before `.11.2.7`–`.11.2.8`; its leaf binds activation/input restoration. Closure prose is checked separately. No new equivalence, remote CI or whole-production adequacy outcome follows.
+Source/caller `.11.2.3` and completion `.11.2.6.3.1` bind package/cache/stdlib/channel and visited-token
+premises to pinned sources in `docs/specs/trust/flag-normalization-domain.md`. Metadata repair `.11.2.5.1`
+refuses reached scripts/macros despite admissions; `.11.2.5.2` revalidates delimiter scope. Checked cleanup
+stops on Cargo-home (`.11.2.6.2`), inventory (`.11.2.7`) and proposal (`.11.2.8`) errors, held by public/native controls.
+
+Lint proof `.11.2.4.1` (`2026-10-17`) covers eight separate lint-level consuming-bit edits. Pinned Cargo
+emits joined manifest lint tokens; the scoped caller supplies no separate ones. `DiagnosticFlagTests`
+compiles actual edits, requiring independent real argv and normalized outputs for ordinary/allow/warn/
+deny/forbid builds. Successful `cargo rustc -- -W unused_variables` and the other seven separate forms
+refute broader equivalence: each changed helper leaks the operand. Synthetic consumed-value and wrong
+positive/negative controls hold the scope. Reproduce with the local-store environment above and
+`python3 -I -B xtask/mutation_sweep_tests.py . DiagnosticFlagTests`. Eight unlisted survivors become eight
+scoped E, strict 0; no kill is added. Cap-lints/color, final table replay and full adequacy remain open.
+
+Local integration `.11.2.6.3.2` passed `2026-10-17`, before `.11.2.7`–`.11.2.8` and these proof controls;
+its leaf binds activation/input restoration. Closure prose is checked separately; no remote CI is claimed.
 
 
 ## `rust-reference`

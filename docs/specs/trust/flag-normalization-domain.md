@@ -65,6 +65,36 @@ and crate-name normalization constrain other values. A blanket claim that a bare
 in every argv would be stronger than necessary. Permanent actual-candidate/wider-domain falsifiers remain
 owned by `.11.2.4`; no new E record is justified by this outline alone.
 
+## Permanent lint-table proof controls
+
+Completed `2026-10-17`, `.11.2.4.1`, on unchanged Rust production from `d223d8d`. The eight short/long
+lint-level consuming-bit switches are scoped equivalents for the current pinned successful inventory
+caller, under the source/caller premises above and below. This is not an arbitrary-argv claim or a
+claim about every numeric toolchain release the generic inventory can select; a producer/pin change
+requires revalidation. Cap-lints and color are separately owned and are not classified here.
+
+`DiagnosticFlagTests.test_actual_lint_table_candidates_hold_only_the_inventory_caller_domain` discovers
+each actual native table edit and compiles its constants and unmodified normalization helper in a separate
+module beside the original. Real pinned Cargo builds cover ordinary/allow/warn/deny/forbid manifests.
+The control independently requires the complete producer argv shape and a literal normalized vector;
+only two nondeterministic hash values are matched by their fixed hexadecimal form. It decodes these
+simple Unix records independently with shlex, including the known quoted cfg operands. This is finite
+producer evidence; the source construction and caller restrictions supply the visited-key absence argument.
+
+All eight `cargo rustc -- <separate-flag> unused_variables` cases compile successfully outside the
+inventory's command contract. The original drops the separate flag and operand; each actual variant
+leaks `unused_variables`, matching independently specified output. Synthetic consumed-value controls show
+that a bare key consumed by an unchanged out-dir entry is not visited; those helper inputs are not claimed
+as successful Cargo builds. Deliberately wrong positive and negative runtime oracles both refuse.
+
+Permanent controls run before adding reasons: all compiled checks finish, then only the missing per-file
+reason assertion fails. Eight exact reasons are appended to the existing E prefix. Fresh native selected
+measurement with the unchanged parent filters moves eight survivors (strict 1) to eight scoped equivalents
+(strict 0), with explicit reason snapshots. The maintained audit rejects an unlisted E, wrong exit and
+missing result. Both runs restore all captured originals and current copied regular inputs. This adds no
+kill and does not establish full-table/full-file adequacy or whole-file stale-E handling in selected mode.
+Commands, exact identities, input populations and qualified supplemental receipts are in the owning leaf.
+
 ## Confirmed defect: an admitted build script executes
 
 The canonical inventory design §3 promises metadata refusal of build scripts and procedural macros before

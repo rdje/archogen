@@ -1,4 +1,4 @@
-"""Real sweep CLI probes and compiled candidates; no fixture Git/Cargo build."""
+"""Real sweep CLI probes, actual Cargo arguments and compiled candidates."""
 import ast
 import bisect
 import json
@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import signal
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -464,6 +465,144 @@ class CommandDelimiterTests(DiscoveryFixture):
         for mutant in family:
             self.assertIn(namespace["mutation_key"](mutant), records,
                           "each actual delimiter proof requires its per-file reason")
+
+
+class DiagnosticFlagTests(DiscoveryFixture):
+    def producer_argv(self, label, *, level=None, separate=None):
+        """One real pinned Cargo compilation, with an independently specified argv shape."""
+        project = self.base / ("producer-" + label)
+        (project / "src").mkdir(parents=True)
+        manifest = ('[workspace]\n[package]\nname = "flagproof"\nversion = "0.1.0"\n'
+                    'edition = "2021"\n')
+        if level is not None:
+            manifest += f'[lints.rust]\nunused_variables = "{level}"\n'
+        (project / "Cargo.toml").write_text(manifest)
+        (project / "src/lib.rs").write_text("pub fn c() {}\n")
+        target = project / "target"
+        env = {key: os.environ[key] for key in ("PATH", "HOME")}
+        env.update(RUSTUP_HOME=os.environ.get("RUSTUP_HOME", str(Path(env["HOME"]) / ".rustup")),
+                   RUSTUP_TOOLCHAIN="1.95.0", RUSTC="rustc", CARGO_HOME=str(project / "cargo-home"),
+                   CARGO_TARGET_DIR=str(target), TMPDIR=str(self.base))
+
+        def cargo(arguments):
+            process = subprocess.Popen(["cargo"] + arguments, cwd=project, env=env,
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       text=True, start_new_session=True)
+            try:
+                stdout, stderr = process.communicate(timeout=60)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.communicate()
+                self.fail("actual Cargo flag producer timed out: " + label)
+            self.assertEqual(process.returncode, 0, stdout + stderr)
+            return stderr
+
+        cargo(["generate-lockfile", "--offline"])
+        arguments = ["rustc" if separate else "build", "--lib", "--release", "--locked", "--offline",
+                     "--no-default-features", "--message-format=json", "-v", "-p", "flagproof"]
+        if separate:
+            arguments += ["--", separate, "unused_variables"]
+        stderr = cargo(arguments)
+        commands = [line.strip()[len("Running `"):-1] for line in stderr.splitlines()
+                    if line.strip().startswith("Running `rustc ") and line.strip().endswith("`")]
+        self.assertEqual(len(commands), 1, stderr)
+        # The normalization helper is under proof, not the command decoder. shlex is an independent
+        # Unix decoder for these generated simple paths and the two known quoted cfg operands.
+        argv = shlex.split(commands[0])
+        metadata = [arg for arg in argv if re.fullmatch(r"metadata=[0-9a-f]{16}", arg)]
+        filename = [arg for arg in argv if re.fullmatch(r"extra-filename=-[0-9a-f]{16}", arg)]
+        self.assertEqual(len(metadata), 1, argv)
+        self.assertEqual(len(filename), 1, argv)
+        expected = ["rustc", "--crate-name", "flagproof", "--edition=2021", "src/lib.rs",
+                    "--error-format=json", "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+                    "--crate-type", "lib", "--emit=dep-info,metadata,link", "-C", "opt-level=3",
+                    "-C", "embed-bitcode=no"]
+        if level:
+            expected += ["--" + level + "=unused_variables"]
+        expected += ["--check-cfg", "cfg(docsrs,test)", "--check-cfg", "cfg(feature, values())",
+                     "-C", metadata[0], "-C", filename[0], "--out-dir", str(target / "release/deps"),
+                     "-C", "strip=debuginfo", "-L", "dependency=" + str(target / "release/deps")]
+        if separate:
+            expected += [separate, "unused_variables"]
+        self.assertEqual(argv, expected, "actual pinned producer argv requires revalidation on drift")
+        return argv
+
+    @unittest.skipUnless(os.name == "posix", "the pinned producer/decoder premise is Unix")
+    def test_actual_lint_table_candidates_hold_only_the_inventory_caller_domain(self):
+        source = (ROOT / "xtask/src/trust.rs").read_text()
+        self.assertIn('c.env("RUSTC", "rustc");', source)
+        self.assertIn("commit-hash: f2d3ce0bd7f24a49f8f72d9000448f8838c4e850",
+                      self.bounded(["cargo", "--version", "--verbose"]),
+                      "a changed producer requires source/caller revalidation")
+        namespace, candidates = self.discovery(source, "bool")
+        flags = ["-W", "-A", "-D", "-F", "--warn", "--allow", "--deny", "--forbid"]
+        family = []
+        for flag in flags:
+            key = (f'("{flag}", true),', f'("{flag}", false),')
+            matches = [m for m in candidates if namespace["mutation_key"](m) == key]
+            self.assertEqual(len(matches), 1, "the consuming-bit switch must be an actual unique candidate")
+            family += matches
+
+        def module(text, name):
+            start = text.index("const DROPPED:")
+            end = text.index("/// `path` resolved", start)
+            body = text[start:end]
+            self.assertEqual(body.count("fn normalise("), 1)
+            return "mod " + name + " {\n" + body.replace("fn normalise(", "pub fn normalise(", 1) + "}\n"
+
+        modules = [module(source, "baseline")]
+        modules += [module(namespace["apply_mutant"](mutant), "variant_" + str(index))
+                    for index, mutant in enumerate(family)]
+        # This expected vector comes from the pinned compiler command contract, independently of normalise.
+        expected = ["--crate-name", "flagproof", "--edition=2021", "src/lib.rs", "--crate-type", "lib",
+                    "--emit=dep-info,metadata,link", "-C opt-level=3", "-C embed-bitcode=no", "-C strip=debuginfo"]
+        literal = lambda value: json.dumps(value, ensure_ascii=False)
+        rust_vector = lambda values: "vec![" + ", ".join(literal(value) + ".to_owned()" for value in values) + "]"
+        checks = []
+        names = ["baseline"] + ["variant_" + str(index) for index in range(len(family))]
+        ordinary = None
+        for level in [None, "allow", "warn", "deny", "forbid"]:
+            argv = self.producer_argv(level or "ordinary", level=level)
+            if level is None:
+                ordinary = argv
+            for name in names:
+                checks.append(f'assert_eq!({name}::normalise(&{rust_vector(argv)}, "unused-scratch/"), '
+                              f'{rust_vector(expected)}, "{name} actual {level or "ordinary"}");')
+        wider = []
+        for index, flag in enumerate(flags):
+            # These succeed in real Cargo/rustc. The inventory itself never invokes cargo rustc or
+            # supplies trailing compiler arguments, which is the essential boundary of the proof.
+            argv = self.producer_argv("separate-" + str(index), separate=flag)
+            wider.append(argv)
+            checks += [f'assert_eq!(baseline::normalise(&{rust_vector(argv)}, "unused-scratch/"), '
+                       f'{rust_vector(expected)}, "baseline wider {flag}");',
+                       f'assert_eq!(variant_{index}::normalise(&{rust_vector(argv)}, "unused-scratch/"), '
+                       f'{rust_vector(expected + ["unused_variables"])}, "variant wider {flag}");']
+            # A bare key in an operand is not a visited key: another unchanged table entry consumes it.
+            # This helper-boundary control makes no claim that its synthetic argv is a Cargo build.
+            consumed = ["rustc", "--out-dir", flag, "retained"]
+            for name in ["baseline", "variant_" + str(index)]:
+                checks.append(f'assert_eq!({name}::normalise(&{rust_vector(consumed)}, "unused-scratch/"), '
+                              f'{rust_vector(["retained"])}, "{name} consumed value {flag}");')
+        main = ("fn main() {\n" + "\n".join(checks)
+                + '\nmatch std::env::args().nth(1).as_deref() {\n'
+                + f' Some("wrong-positive") => assert_eq!(baseline::normalise(&{rust_vector(wider[0])}, "unused-scratch/"), '
+                + f'variant_0::normalise(&{rust_vector(wider[0])}, "unused-scratch/"), "wrong positive oracle"),\n'
+                + f' Some("wrong-negative") => assert_ne!(baseline::normalise(&{rust_vector(ordinary)}, "unused-scratch/"), '
+                + f'variant_0::normalise(&{rust_vector(ordinary)}, "unused-scratch/"), "wrong negative oracle"),\n'
+                + ' _ => {}\n}\nprintln!("lint controls: actual argv held; wider-domain claims refused");\n}\n')
+        program, binary = self.base / "lint-candidates.rs", self.base / "lint-candidates"
+        program.write_text("\n".join(modules) + main)
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.assertIn("actual argv held; wider-domain claims refused", self.bounded([str(binary)]))
+        for argument, message in [("wrong-positive", "wrong positive oracle"),
+                                  ("wrong-negative", "wrong negative oracle")]:
+            with self.assertRaisesRegex(AssertionError, message):
+                self.bounded([str(binary), argument])
+        records = namespace["load_equivalents"](ROOT / "xtask/trust.equivalents")
+        for mutant in family:
+            self.assertIn(namespace["mutation_key"](mutant), records,
+                          "each actual lint proof requires its own per-file reason")
 
 
 class IteratorTests(DiscoveryFixture):
