@@ -167,7 +167,13 @@ deny/forbid builds. Successful `cargo rustc -- -W unused_variables` and the othe
 refute broader equivalence: each changed helper leaks the operand. Synthetic consumed-value and wrong
 positive/negative controls hold the scope. Reproduce with the local-store environment above and
 `python3 -I -B xtask/mutation_sweep_tests.py . DiagnosticFlagTests`. Eight unlisted survivors become eight
-scoped E, strict 0; no kill is added. Cap-lints/color, final table replay and full adequacy remain open.
+scoped E, strict 0; no kill is added. Color, final table replay and full adequacy remain open.
+
+Cap-lints proof `.11.2.4.2` requires compiled local path packages outside the standard-library build,
+which show warnings. Those premises make both pinned Cargo cap branches false. Actual local argv and
+independent outputs agree; successful `cargo rustc -- --cap-lints allow` makes the variant retain `allow`.
+Consumed-value and wrong-oracle controls hold the boundary. Selected survival becomes scoped E, strict 0;
+changed caller/pin premises require revalidation.
 
 Local integration `.11.2.6.3.2` passed `2026-10-17`, before `.11.2.7`–`.11.2.8` and these proof controls;
 its leaf binds activation/input restoration. Closure prose is checked separately; no remote CI is claimed.

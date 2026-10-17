@@ -468,7 +468,7 @@ class CommandDelimiterTests(DiscoveryFixture):
 
 
 class DiagnosticFlagTests(DiscoveryFixture):
-    def producer_argv(self, label, *, level=None, separate=None):
+    def producer_argv(self, label, *, level=None, separate=None, operand="unused_variables"):
         """One real pinned Cargo compilation, with an independently specified argv shape."""
         project = self.base / ("producer-" + label)
         (project / "src").mkdir(parents=True)
@@ -501,7 +501,7 @@ class DiagnosticFlagTests(DiscoveryFixture):
         arguments = ["rustc" if separate else "build", "--lib", "--release", "--locked", "--offline",
                      "--no-default-features", "--message-format=json", "-v", "-p", "flagproof"]
         if separate:
-            arguments += ["--", separate, "unused_variables"]
+            arguments += ["--", separate, operand]
         stderr = cargo(arguments)
         commands = [line.strip()[len("Running `"):-1] for line in stderr.splitlines()
                     if line.strip().startswith("Running `rustc ") and line.strip().endswith("`")]
@@ -523,7 +523,7 @@ class DiagnosticFlagTests(DiscoveryFixture):
                      "-C", metadata[0], "-C", filename[0], "--out-dir", str(target / "release/deps"),
                      "-C", "strip=debuginfo", "-L", "dependency=" + str(target / "release/deps")]
         if separate:
-            expected += [separate, "unused_variables"]
+            expected += [separate, operand]
         self.assertEqual(argv, expected, "actual pinned producer argv requires revalidation on drift")
         return argv
 
@@ -603,6 +603,69 @@ class DiagnosticFlagTests(DiscoveryFixture):
         for mutant in family:
             self.assertIn(namespace["mutation_key"](mutant), records,
                           "each actual lint proof requires its own per-file reason")
+
+
+    @unittest.skipUnless(os.name == "posix", "the pinned producer/decoder premise is Unix")
+    def test_actual_cap_lints_candidate_requires_local_unit_premises(self):
+        source = (ROOT / "xtask/src/trust.rs").read_text()
+        self.assertIn("commit-hash: f2d3ce0bd7f24a49f8f72d9000448f8838c4e850",
+                      self.bounded(["cargo", "--version", "--verbose"]),
+                      "a changed producer requires source/caller revalidation")
+        namespace, candidates = self.discovery(source, "bool")
+        key = ('("--cap-lints", true),', '("--cap-lints", false),')
+        family = [mutant for mutant in candidates if namespace["mutation_key"](mutant) == key]
+        self.assertEqual(len(family), 1, "the cap consuming-bit edit must be an actual unique candidate")
+
+        def module(text, name):
+            start = text.index("const DROPPED:")
+            end = text.index("/// `path` resolved", start)
+            body = text[start:end]
+            self.assertEqual(body.count("fn normalise("), 1)
+            return "mod " + name + " {\n" + body.replace("fn normalise(", "pub fn normalise(", 1) + "}\n"
+
+        modules = [module(source, "baseline"), module(namespace["apply_mutant"](family[0]), "variant")]
+        expected = ["--crate-name", "flagproof", "--edition=2021", "src/lib.rs", "--crate-type", "lib",
+                    "--emit=dep-info,metadata,link", "-C opt-level=3", "-C embed-bitcode=no", "-C strip=debuginfo"]
+        literal = lambda value: json.dumps(value, ensure_ascii=False)
+        vector = lambda values: "vec![" + ", ".join(literal(value) + ".to_owned()" for value in values) + "]"
+        checks = []
+        local = None
+        for level in [None, "warn"]:
+            argv = self.producer_argv("cap-local-" + (level or "ordinary"), level=level)
+            self.assertNotIn("--cap-lints", argv, "actual local path package must show warnings")
+            if level is None:
+                local = argv
+            for name in ["baseline", "variant"]:
+                checks.append(f'assert_eq!({name}::normalise(&{vector(argv)}, "unused-scratch/"), '
+                              f'{vector(expected)}, "{name} actual local {level or "ordinary"}");')
+        # The inventory never supplies these trailing compiler arguments. Cargo/rustc accepts them,
+        # so this wider-domain difference cannot be explained away as a compiler refusal.
+        wider = self.producer_argv("cap-explicit", separate="--cap-lints", operand="allow")
+        checks += [f'assert_eq!(baseline::normalise(&{vector(wider)}, "unused-scratch/"), '
+                   f'{vector(expected)}, "baseline explicit cap");',
+                   f'assert_eq!(variant::normalise(&{vector(wider)}, "unused-scratch/"), '
+                   f'{vector(expected + ["allow"])}, "variant explicit cap");']
+        consumed = ["rustc", "--out-dir", "--cap-lints", "retained"]
+        for name in ["baseline", "variant"]:
+            checks.append(f'assert_eq!({name}::normalise(&{vector(consumed)}, "unused-scratch/"), '
+                          f'{vector(["retained"])}, "{name} consumed key value");')
+        main = ("fn main() {\n" + "\n".join(checks)
+                + '\nmatch std::env::args().nth(1).as_deref() {\n'
+                + f' Some("wrong-positive") => assert_eq!(baseline::normalise(&{vector(wider)}, "unused-scratch/"), '
+                + f'variant::normalise(&{vector(wider)}, "unused-scratch/"), "wrong positive oracle"),\n'
+                + f' Some("wrong-negative") => assert_ne!(baseline::normalise(&{vector(local)}, "unused-scratch/"), '
+                + f'variant::normalise(&{vector(local)}, "unused-scratch/"), "wrong negative oracle"),\n'
+                + ' _ => {}\n}\nprintln!("cap controls: actual local argv held; explicit-cap equivalence refused");\n}\n')
+        program, binary = self.base / "cap-candidate.rs", self.base / "cap-candidate"
+        program.write_text("\n".join(modules) + main)
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.assertIn("actual local argv held; explicit-cap equivalence refused", self.bounded([str(binary)]))
+        for argument, message in [("wrong-positive", "wrong positive oracle"),
+                                  ("wrong-negative", "wrong negative oracle")]:
+            with self.assertRaisesRegex(AssertionError, message):
+                self.bounded([str(binary), argument])
+        records = namespace["load_equivalents"](ROOT / "xtask/trust.equivalents")
+        self.assertIn(key, records, "the actual cap proof requires its per-file reason")
 
 
 class IteratorTests(DiscoveryFixture):

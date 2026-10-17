@@ -210,7 +210,9 @@ caller (`M3.6.9.6.3.2.2.11.2.4.1`). Manifest lint flags are joined; excluded ext
 configuration/profile routes and unchanged operand consumers mean the separate keys are not visited.
 Permanent compiled actual-edit controls require independent real argv/results and valid wider-domain
 cargo-rustc differences, plus wrong-oracle failures, before exact reasons and strict selected native E.
-See `flag-normalization-domain.md` for premises/revalidation; cap-lints/color and final measurements remain open.
+The separate cap-lints consuming-bit proof (`.11.2.4.2`) additionally requires compiled units to be local
+path/non-stdlib and show warnings; actual local argv and a successful explicit-cap cargo-rustc counterexample
+hold its boundary. See `flag-normalization-domain.md` for premises/revalidation; color and final measurements remain open.
 
 Final bounded helper replay (`M3.6.9.6.3.2.2.10.3.4`) verifies every actual current helper edit with strict
 named-kill/scoped-equivalent outcomes and complete original/copy restoration. Original survivor obligations

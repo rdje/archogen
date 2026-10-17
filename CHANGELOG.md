@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — conditional actual cap-lints proof
+
+`ARCHOGEN-M3-0715` (leaf `M3.6.9.6.3.2.2.11.2.4.2`), `2026-10-17`.
+
+- Compile the actual cap consuming-bit edit against independent real local argv/normalized outputs. Bind
+  path/non-stdlib/show-warnings and current-pin caller premises; successful explicit-cap Cargo arguments,
+  consumed-value and wrong-oracle controls limit the claim before adding the exact reason.
+- Native 1 survivor / strict 1 becomes 1 scoped E / strict 0; altered evidence refuses. All 27 operator tests and
+  all 1021 original/current copied input restoration pass. Previous tests/E prefix preserved; bounded helper
+  operand extension retains old default. Rust production/tests/catalogue unchanged.
+- Canonical/Annex C/live sync; color and final replay stay open. Focused/book/staged verification and exact
+  final stamp bind the commit. No new full integration or remote CI claim.
+- Seal five committed closed task subtrees/nine leaves with exact reconstruction and native history
+  provenance, restoring task-collection headroom within its fixed ceiling; current owner stays live.
+
 ## archogen — trust proof annex within fixed book limits
 
 `ARCHOGEN-M3-0714` (leaf `M3.6.9.6.3.2.2.11.2.4.4`), `2026-10-17`.

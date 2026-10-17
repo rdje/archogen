@@ -71,7 +71,7 @@ Completed `2026-10-17`, `.11.2.4.1`, on unchanged Rust production from `d223d8d`
 lint-level consuming-bit switches are scoped equivalents for the current pinned successful inventory
 caller, under the source/caller premises above and below. This is not an arbitrary-argv claim or a
 claim about every numeric toolchain release the generic inventory can select; a producer/pin change
-requires revalidation. Cap-lints and color are separately owned and are not classified here.
+requires revalidation. These eight reasons do not classify cap-lints or color.
 
 `DiagnosticFlagTests.test_actual_lint_table_candidates_hold_only_the_inventory_caller_domain` discovers
 each actual native table edit and compiles its constants and unmodified normalization helper in a separate
@@ -94,6 +94,29 @@ measurement with the unchanged parent filters moves eight survivors (strict 1) t
 missing result. Both runs restore all captured originals and current copied regular inputs. This adds no
 kill and does not establish full-table/full-file adequacy or whole-file stale-E handling in selected mode.
 Commands, exact identities, input populations and qualified supplemental receipts are in the owning leaf.
+
+### Conditional cap-lints consuming bit
+
+Completed `2026-10-17`, `.11.2.4.2`, on unchanged Rust production from `428a3cd`. Pinned
+`add_cap_lints` emits a separate cap only when `show_warnings` is false or `is_local` is false.
+`Unit::is_local` is path-source and non-stdlib; local units always show warnings. The repaired fresh
+offline homes, source-resolution and no-build-std caller premises in `.11.2.6.3.1` make both branches
+false for compiled inventory units. Extra-argument/environment/configuration/profile and dynamic-target
+routes remain excluded. Another unchanged consumer can consume a bare-key operand without visiting it.
+This justifies only the current pinned single-edit domain, with revalidation on changes to these premises.
+
+`DiagnosticFlagTests.test_actual_cap_lints_candidate_requires_local_unit_premises` compiles the original
+helper and actual native cap consuming-bit edit. Independently expected real local producer argv and
+normalized vectors cover ordinary and warning-lint manifests. Successful `cargo rustc -- --cap-lints allow`
+is a wider-domain falsifier: the changed helper retains `allow`, independently expected. Synthetic
+consumed-value and wrong positive/negative controls pass. The producer helper adds only an optional operand
+with its old lint default; all earlier test bodies and expected vectors remain exact.
+
+The permanent control completes every compiled check before failing only for missing E; after one exact
+reason is appended, it passes. Fresh selected native outcome moves one survivor/strict 1 to one scoped E/
+strict 0, with explicit reason binding and altered-evidence refusal. Original/current-copy restoration
+and all 27 operator controls pass. No kill, color classification, full-table/full-file adequacy or general
+numeric-release equivalence follows. The owning leaf records actual commands, identities and populations.
 
 ## Confirmed defect: an admitted build script executes
 
