@@ -186,8 +186,8 @@ not a complete source-kind/visited-token theorem. Additional retrieved source id
 
 Revalidated `2026-10-17`, `.11.2.6.3.1`, on committed reset repair `362034e`. The argument concerns the
 installed pinned producer and successful inventory compilations under its declared environment/configuration
-contract. Integration checkpoint `.11.2.6.3.2` follows; actual-candidate proof controls and E acceptance
-remain `.11.2.4`.
+contract. Local integration checkpoint `.11.2.6.3.2` passes after this assessment; actual-candidate proof
+controls and E acceptance remain `.11.2.4`.
 
 **Sources of compiled packages.** `source_id.rs::load` enumerates path, Git, registry, sparse registry,
 local registry and directory sources. Source replacement, directory/local-registry selection and alternate
@@ -242,6 +242,11 @@ homes and dynamic-target preflight. The program filter occurs after decoding and
 input domain. Maintained actual delimiter candidates pass their independent argv, wider-domain and
 wrong-oracle controls on the repaired source. Public diagnostic-flag, hard-reset and toolchain-form controls
 also pass. The recorded producer's binary identities retain the ledger's stated limitations.
+
+The full postrepair local integration passes every current stage, including gate self-tests, pinned book,
+target/browser builds and bindings, emulator and spike. Current originals and the separately scoped retained
+copy restore. The official stamp names the activation tree; closure documentation is checked separately.
+Exact command, source identities, input populations and stamp binding are in `.11.2.6.3.2`'s leaf.
 
 Additional source bytes retrieved from the same official pinned commit and checked with Python/system
 SHA-256; the earlier source identities above are rechecked unchanged:

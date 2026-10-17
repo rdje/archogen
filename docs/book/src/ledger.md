@@ -316,8 +316,9 @@ Reset repair `.11.2.6.2` checks every Cargo-home removal before reuse, held by p
 and native reversal. Source completion `.11.2.6.3.1`, observed `2026-10-17`, binds package/cache/stdlib/channel
 and visited-token premises to pinned branches, including built-in alias precedence and inactive offline
 metadata dependencies. The repaired delimiter and public controls pass; actual-candidate E controls remain
-`.11.2.4`. The source record owns details and revalidation triggers. Integration checkpoint `.11.2.6.3.2`
-is next; no new equivalence, remote CI or whole-production adequacy outcome follows.
+`.11.2.4`. The source record owns details and revalidation triggers. Local integration `.11.2.6.3.2` passes
+on `2026-10-17`; its leaf binds the activation stamp and input restoration. Closure prose is checked
+separately. No new equivalence, remote CI or whole-production adequacy outcome follows.
 
 
 ## `rust-reference`

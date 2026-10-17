@@ -135,8 +135,8 @@ target (`trust::reset_cargo_home`, repair `.11.2.6.2`). An absent home is harmle
 ends the invocation unable to judge, naming the home and I/O error, before that operation can run. The
 environment helper then creates the empty home. Permanent public permission/wrapper and file-state controls
 hold this boundary, including writable/absent positive cases and native exact reversal. The earlier gap
-and pinned source/caller premises are in `flag-normalization-domain.md` (`.11.2.6.3.1`); postrepair integration
-is `.11.2.6.3.2`, with actual-candidate proof controls/E acceptance in `.11.2.4`.
+and pinned source/caller premises are in `flag-normalization-domain.md` (`.11.2.6.3.1`); local postrepair
+integration passes in `.11.2.6.3.2`, with actual-candidate proof controls/E acceptance in `.11.2.4`.
 
 The comparison harness a pair's form
 names is built the same way, with `cargo test --release --no-run -p <package> --test <name>`, and recorded as a root

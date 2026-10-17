@@ -206,7 +206,7 @@ harness or separate generated-target build, checked removal clears the old Cargo
 are safe; other removal failures end unable to judge (exit 2), naming the home and I/O error. For example,
 an undeletable readable home reports `cannot reset inventory Cargo home` before reusing its configuration.
 Writable homes are recreated normally. Permanent public controls cover a wrapper that must never execute,
-a file instead of a directory, and clean recovery. Repair evidence and pinned source/caller premises:
+a file instead of a directory, and clean recovery. Repair, caller and local integration evidence:
 `docs/specs/trust/flag-normalization-domain.md`.
 
 ### The run's order
