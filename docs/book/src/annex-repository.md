@@ -71,11 +71,11 @@ and cold verification. Compiler caches may be regenerated; cited review evidence
 retained unless their removal is proven safe. Cleanup respects the same read-only boundary around other Git
 repositories. The record is overwritten after each run rather than growing into another history.
 
-The eighth run (`2026-10-12`, `PROGRAM.84`) removed 610779360 logical file bytes in 4867 incremental-cache
-files, including 300 `.bin` files, and an empty wasm incremental directory. The metadata adapter was untracked;
-independent system counts agreed. Maintained snapshots verified all 1003 regular tracked inputs unchanged after
-deletion and after passing focused/wasm checks. Existing build products were retained, so these checks establish
-the workflows run with incremental caches removed. Cited evidence and other Git workspaces remain preserved.
+Cleanup (`2026-10-17`, `PROGRAM.85`) removed only the main and wasm debug incremental caches. Independent
+filesystem metadata checks agreed; immediate residue and maintained tracked-input restoration passed before
+and after focused/wasm regeneration checks. Existing dependency/build products, cited evidence and Git
+workspaces were retained. The metadata/deletion adapters are untracked supplementary evidence; this verifies
+regeneration after incremental removal, not a complete rebuild from source.
 
 ## Before handing the workspace over
 

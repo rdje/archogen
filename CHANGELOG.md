@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — ninth daily artifact cleanup
+
+`ARCHOGEN-PROGRAM-0707` (leaf `PROGRAM.85`), `2026-10-17`.
+
+- Remove only proven main incremental caches after independent metadata/system census and exact identity
+  recheck: 343198312 logical bytes in 920 files. Immediate residue gone; evidence/stores/Git workspaces kept.
+- Complete tracked-input restoration after deletion and focused/wasm regeneration passes. Official stamp
+  names the activation tree, closure documentation separately checked; supplementary producers qualified.
+- Overwrite latest-only cleanup record, sync book/figure record and return to committed M3 hard reset repair.
+
 ## archogen — failed Cargo-home reset execution gap owned
 
 `ARCHOGEN-M3-0706` (leaf `M3.6.9.6.3.2.2.11.2.6.1`), `2026-10-17`.
