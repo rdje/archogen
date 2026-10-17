@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — color compatibility and compiler-override boundary
+
+`ARCHOGEN-M3-0716` (leaf `M3.6.9.6.3.2.2.11.2.4.3.1`), `2026-10-18`.
+
+- Native color consuming-bit edit survives unlisted, strict 1. Pinned Cargo always passes compiler JSON;
+  ordinary separate-color flags refuse across display modes and are not successful wider-domain controls.
+- Direct rustc accepts color. Published test-owned RUSTC forwarding override supplies a successful Cargo
+  compilation outside the fixed inventory caller; raw/forwarded argv stay distinct, artifact hashes agree
+  and an independent compiler consumer runs its exported function. Exploratory adapters remain qualified.
+- All 1026 originals/current copied inputs restore; code/tests/catalogue/E unchanged. Canonical/Annex C/
+  live sync, pinned protocol source hash captured. Permanent actual-edit controls/E are next; current
+  book/source/route/staged gates bind this assessment. No new equivalence or full CI claim.
+
 ## archogen — conditional actual cap-lints proof
 
 `ARCHOGEN-M3-0715` (leaf `M3.6.9.6.3.2.2.11.2.4.2`), `2026-10-17`.

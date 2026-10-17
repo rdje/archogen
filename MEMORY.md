@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.71` next; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.9.6.3.2.2.11.2.4.3` color proof.
-  Hold the actual consuming-bit edit against pinned formatter/caller and valid wider-domain/wrong-oracle controls.
+- **Next action:** `M3.6.9.6.3.2.2.11.2.4.3.2` permanent color controls.
+  Compile the actual edit with ordinary/raw/forwarded argv, valid override artifact and wrong-oracle controls.
   Initial `.9.5` complete; remaining `.9.6` full sweeps/review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.

@@ -118,6 +118,31 @@ strict 0, with explicit reason binding and altered-evidence refusal. Original/cu
 and all 27 operator controls pass. No kill, color classification, full-table/full-file adequacy or general
 numeric-release equivalence follows. The owning leaf records actual commands, identities and populations.
 
+### Color compatibility boundary before permanent controls
+
+Observed `2026-10-18`, `.11.2.4.3.1`, on unchanged production `e4fc5a0`. Pinned
+`add_error_format_and_color` always appends `--error-format=json` and `--json=…`; its human/short display
+choices do not remove those compiler arguments. It emits no separate color key. Actual `cargo rustc`
+probes across human/short/json and always/never/auto color choices all fail with the attributed rustc
+color/JSON conflict. These expected producer refusals are neither defects nor successful wider-domain
+controls. Direct pinned rustc without JSON accepts the color flag and writes metadata, confirming that
+the conflict is the combination rather than an invalid color value.
+
+The [pinned public RUSTC contract](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/doc/src/reference/environment-variables.md)
+allows selecting another compiler program. An exploratory test-owned forwarding compiler removes only
+JSON/error-format options, records the exact argv it forwards, then execs pinned rustc. `cargo rustc --
+--color always` succeeds through that published override and produces a real rlib. Raw Cargo argv still
+contains the formatter options; actual forwarded compiler argv does not. The records stay distinct.
+Independent Python/system hashes agree for the artifact; another rustc invocation consumes it and runs
+its exported function successfully. All files stay in the owned repository-volume fixture.
+
+The override is outside the inventory caller, which fixes `RUSTC=rustc`; it changes no production
+selector or admission. The diagnostic adapters are ignored exploratory evidence, not maintained proof
+controls. `.11.2.4.3.2` owns actual-edit compilation, independently specified ordinary/raw/forwarded argv
+and normalized outputs, valid artifact/JSON-refusal/wrong-oracle controls and exact E only if supported.
+No color equivalence is declared yet. Source construction plus caller restrictions, rather than sample
+absence or a compiler-refused invocation, must justify the narrow reason.
+
 ## Confirmed defect: an admitted build script executes
 
 The canonical inventory design §3 promises metadata refusal of build scripts and procedural macros before
@@ -352,6 +377,7 @@ Every link below names the installed Cargo commit. These are source digests, not
 
 | Official source | SHA-256 |
 | --- | --- |
+| [src/doc/src/reference/environment-variables.md](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/doc/src/reference/environment-variables.md) | `6f665b89e5a164da0526f22602105ba9dfb16928d76e028bf2fc4a30e0d37323` |
 | [src/cargo/core/compiler/mod.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/compiler/mod.rs) | `0676b172894d2d0e8536bb5197019f2c147f9aa3e4587e13909e73512fa9d023` |
 | [src/cargo/core/compiler/unit.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/compiler/unit.rs) | `edcc3fb5d266cd1de90b2e630cafea34c0bbda6722a860d3614a0f60b0862d8b` |
 | [src/cargo/util/toml/mod.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/util/toml/mod.rs) | `0b7e604cabcedb7d9e62942f5004625930220b2b1eef85cc1c71b0c4dfb7bb30` |

@@ -175,6 +175,12 @@ independent outputs agree; successful `cargo rustc -- --cap-lints allow` makes t
 Consumed-value and wrong-oracle controls hold the boundary. Selected survival becomes scoped E, strict 0;
 changed caller/pin premises require revalidation.
 
+Color boundary `.11.2.4.3.1` (`2026-10-18`): Cargo's human/short/json modes still supply compiler JSON
+options, which conflict with separate color. A test-owned `RUSTC` forwarder removes those options and
+records the actual compiler argv; a successful explicit-color Cargo build supplies the wider domain.
+Raw/forwarded argv stay distinct, and the override is excluded by the inventory's fixed selector.
+These diagnostics are exploratory; permanent controls/E remain `.11.2.4.3.2`.
+
 Local integration `.11.2.6.3.2` passed `2026-10-17`, before `.11.2.7`–`.11.2.8` and these proof controls;
 its leaf binds activation/input restoration. Closure prose is checked separately; no remote CI is claimed.
 
