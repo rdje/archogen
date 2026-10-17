@@ -183,8 +183,10 @@ Selected survival becomes scoped E, strict 0; changed caller/pin premises requir
 Final table replay `.11.3` (`2026-10-18`) binds all fourteen original edits: three named kills,
 ten scoped E and one compiler refusal, strict 0. All eleven initial survivor obligations resolve on the
 repaired caller; original classifications remain historical. Every original/current copied input restores.
-Only the table criterion is established. `.11.4` integration follows; prior `.11.2.6.3.2` passed before
-output cleanup/proof controls. Activation and closure prose have separate checks; no remote CI is claimed.
+Milestone integration `.11.4` then passes all twelve local stages, with no failures or absences, after
+output cleanup and proof controls. Its official activation stamp matches native Git; original/prior-copy
+inputs restore. Closure prose is checked separately. The bounded flag group closes; full production
+adequacy, independent review and runner compatibility remain open. No remote CI outcome is claimed.
 
 
 ## Mutation measurements and controls

@@ -173,9 +173,12 @@ controls justify current E; selected mode does not establish whole-file stale-E 
 
 All 1026 captured originals/current copied regular inputs restore with independent hashes/modes; source,
 prior tests, E and native producer stay unchanged. Maintained auditing rejects five altered-evidence arms.
-The task leaf records every ID and a reproducible native command. This closes only the table measurement;
-`.11.4` owns full local integration before group closure. Remaining normalise edits, full production
-measurements, review and runner compatibility retain their owners.
+The task leaf records every ID and a reproducible native command. Milestone `.11.4` then passes every
+current local integration stage (12 passed, zero failed/unavailable/not-built/quarantined). Its official
+stamp matches native Git for the unchanged activation tree; all 1026 originals and retained prior-copy
+regular inputs restore. Closure documentation follows with separate checks. This closes the bounded flag
+group; remaining normalise edits, full production measurements, review and runner compatibility retain
+their owners. No remote CI outcome follows.
 
 ## Confirmed defect: an admitted build script executes
 

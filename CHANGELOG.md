@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — full local flag-group integration checkpoint
+
+`ARCHOGEN-M3-0719` (leaf `M3.6.9.6.3.2.2.11.4`), `2026-10-18`.
+
+- All twelve current local integration stages pass after caller/output repairs and actual flag proofs;
+  zero failed/unavailable/not-built/quarantined. Pinned local tools/stores and required OS reads apply.
+- Official unchanged activation-tree stamp matches native Git. All 1026 captured originals and retained
+  prior-copy regular inputs restore; five altered log/stamp/exit receipts refuse in the supplemental audit.
+- Production/tests/E unchanged. Book/canonical/live sync closes only the bounded flag group; task-record
+  repair is next. Closure docs have separate checks; whole-production/review/runner and remote CI stay open.
+
 ## archogen — final complete dropped-flag table replay
 
 `ARCHOGEN-M3-0718` (leaf `M3.6.9.6.3.2.2.11.3`), `2026-10-18`.

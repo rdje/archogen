@@ -218,7 +218,10 @@ forwarded rustc argv, with real artifact consumers and wrong oracles. Plain colo
 no successful control. See `flag-normalization-domain.md` for premises/revalidation. Final bounded table replay
 `.11.3` binds every original entry: 3 named kills, 10 scoped E, 1 compiler refusal, strict 0 and complete
 original/current-copy restoration. Initial outcomes remain historical; the repaired caller supplies current
-E premises. Compiler refusal proves no coverage. Milestone integration `.11.4` and full measurements stay open.
+E premises. Compiler refusal proves no coverage. Milestone integration `.11.4` then passes every current
+local tier stage with an exact activation stamp/native Git binding and original/prior-copy restoration;
+closure prose has separate checks. The bounded flag group closes; full measurements/review/runner
+compatibility remain open. This is no remote CI outcome.
 
 Final bounded helper replay (`M3.6.9.6.3.2.2.10.3.4`) verifies every actual current helper edit with strict
 named-kill/scoped-equivalent outcomes and complete original/copy restoration. Original survivor obligations
