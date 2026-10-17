@@ -1614,7 +1614,7 @@ pub fn inventory_with(
     let tree_dir = out.join("tree");
     write_tree(&tree, &tree_dir).map_err(|f| format!("{f:?}"))?;
     let cargo_home = out.join("cargo-home");
-    let _ = fs::remove_dir_all(&cargo_home); // made anew on every run (§3, R2 B12)
+    reset_cargo_home(&cargo_home)?; // made anew on every run (§3, R2 B12)
     let pin = toolchain_file(&tree)?;
     // A cargo configuration on the build's path that §3 refuses is a refusal of the commit, never a run that could
     // not judge (`M3.6.3.4`, found running the gate built from a base).
@@ -1850,7 +1850,7 @@ pub fn inventory_with(
     let mut builds: BTreeMap<String, Build> = BTreeMap::new();
     let mut failed: Vec<String> = Vec::new();
     for p in &roots.programs {
-        let _ = fs::remove_dir_all(&cargo_home);
+        reset_cargo_home(&cargo_home)?;
         let target_dir = out.join("target").join(&p.name);
         let env = environment(&pin, &cargo_home, &target_dir)?;
         match build(
@@ -2066,7 +2066,7 @@ pub fn inventory_with(
                         "example" => vec!["build".into(), "--example".into(), name.clone()],
                         _ => vec!["build".into(), "--lib".into()],
                     };
-                    let _ = fs::remove_dir_all(&cargo_home);
+                    reset_cargo_home(&cargo_home)?;
                     let target_dir = out
                         .join("target-generators")
                         .join(format!("{}-{kind}-{name}", pkg.replace('/', "-")));
@@ -2633,6 +2633,19 @@ pub fn run(repo: &Path, args: &[&str]) -> i32 {
             eprintln!("trust-inventory: {e}");
             2
         }
+    }
+}
+
+/// An old Cargo home can contain configuration that changes what executes. Only an absent home is harmless;
+/// any other removal failure must stop the run before an environment can reuse it (§3, R2 B12).
+fn reset_cargo_home(home: &Path) -> Result<(), String> {
+    match fs::remove_dir_all(home) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(format!(
+            "cannot reset inventory Cargo home `{}`: {error}",
+            home.display()
+        )),
     }
 }
 
@@ -3732,6 +3745,123 @@ pub(crate) mod tests {
             !f.base.join("out/tree/crates/b/RAN").exists(),
             "the build script ran"
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_failed_cargo_home_reset_stops_before_metadata_or_wrapper_execution() {
+        crate::trust_test_process::bounded!(
+            a_failed_cargo_home_reset_stops_before_metadata_or_wrapper_execution
+        );
+        use std::fs;
+        use std::os::unix::fs::PermissionsExt;
+
+        struct RestorePermissions(PathBuf, fs::Permissions);
+        impl Drop for RestorePermissions {
+            fn drop(&mut self) {
+                fs::set_permissions(&self.0, self.1.clone())
+                    .expect("restore owned home permissions");
+            }
+        }
+
+        let f = two_roots("hard-home-reset", "fn main() {}\n", "pub fn f() {}\n", &[]);
+        written(f.run()); // Absent home and ordinary static compilation must succeed first.
+        let out = f.base.join("out");
+        let home = out.join("cargo-home");
+        let wrapper = f.base.join("wrapper.sh");
+        let sentinel = f.base.join("WRAPPER_RAN");
+        fs::write(
+            &wrapper,
+            "#!/bin/sh\nprintf 'wrapper ran' > \"$(dirname \"$0\")/WRAPPER_RAN\"\nexec \"$@\"\n",
+        )
+        .unwrap();
+        fs::set_permissions(&wrapper, fs::Permissions::from_mode(0o755)).unwrap();
+        fs::write(
+            home.join("config.toml"),
+            format!(
+                "[build]\nrustc-wrapper = {}\n",
+                crate::json::write(&Json::Str(wrapper.to_str().unwrap().to_owned()))
+            ),
+        )
+        .unwrap();
+        // Keep exactly the populated Cargo home, but expose any new metadata or compilation work.
+        fs::remove_dir_all(out.join("target-metadata")).unwrap();
+        fs::remove_dir_all(out.join("target")).unwrap();
+        let restore = RestorePermissions(home.clone(), fs::metadata(&home).unwrap().permissions());
+        fs::set_permissions(&home, fs::Permissions::from_mode(0o555)).unwrap();
+        let permission_probe = fs::write(home.join("permission-probe"), b"must fail");
+        let result = inventory_with(&f.repo, "HEAD", &out, &configuration_roots());
+        drop(restore); // Restore before assertions, also on unwinding through the scoped guard.
+
+        assert!(
+            permission_probe.is_err(),
+            "this host did not enforce the fixture permissions"
+        );
+        assert!(
+            !sentinel.exists(),
+            "a surviving Cargo-home wrapper executed"
+        );
+        let error = match result {
+            Err(error) => error,
+            Ok(_) => panic!("a failed Cargo-home reset did not stop the inventory"),
+        };
+        assert!(
+            error.starts_with("cannot reset inventory Cargo home `"),
+            "{error}"
+        );
+        assert!(error.contains(home.to_str().unwrap()), "{error}");
+        assert!(!out.join("target-metadata").exists());
+        assert!(!out.join("target").exists());
+        assert!(!out.join("trust-dependencies.json").exists());
+        // A writable populated home must be cleared, including the untracked wrapper configuration.
+        written(f.run());
+        assert!(!home.join("config.toml").exists());
+        assert!(!sentinel.exists());
+    }
+
+    #[test]
+    fn cargo_home_reset_accepts_absence_and_clears_data_but_rejects_a_file() {
+        crate::trust_test_process::bounded!(
+            cargo_home_reset_accepts_absence_and_clears_data_but_rejects_a_file
+        );
+        let f = two_roots(
+            "home-reset-states",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &[],
+        );
+        let home = f.base.join("home");
+        super::reset_cargo_home(&home).expect("an absent home is safe");
+        std::fs::create_dir_all(home.join("registry/cache")).unwrap();
+        std::fs::write(home.join("config.toml"), "[build]\n").unwrap();
+        std::fs::write(home.join("registry/cache/package"), b"old cache").unwrap();
+        super::reset_cargo_home(&home).expect("a writable home is removed completely");
+        assert!(!home.exists());
+        std::fs::write(&home, b"not a directory").unwrap();
+        let error =
+            super::reset_cargo_home(&home).expect_err("an actual removal failure must stop");
+        assert!(
+            error.starts_with("cannot reset inventory Cargo home `"),
+            "{error}"
+        );
+        assert!(error.contains(home.to_str().unwrap()), "{error}");
+        assert_eq!(std::fs::read(&home).unwrap(), b"not a directory");
+        let out = f.base.join("out");
+        std::fs::create_dir_all(&out).unwrap();
+        std::fs::rename(&home, out.join("cargo-home")).unwrap();
+        let error = match inventory_with(&f.repo, "HEAD", &out, &configuration_roots()) {
+            Err(error) => error,
+            Ok(_) => panic!("a file at Cargo home did not stop the inventory"),
+        };
+        assert!(
+            error.starts_with("cannot reset inventory Cargo home `"),
+            "{error}"
+        );
+        assert!(!out.join("target-metadata").exists());
+        assert!(!out.join("target").exists());
+        assert!(!out.join("trust-dependencies.json").exists());
+        std::fs::remove_file(out.join("cargo-home")).unwrap();
+        written(f.run());
     }
 
     #[test]

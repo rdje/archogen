@@ -201,32 +201,35 @@ gate) and `xtask/src/trust_verify.rs` (the verifier); committed generated source
 `docs/specs/trust/decision_trust-generated-sources.md`, `docs/specs/trust/decision_trust-generated-refusals.md` and
 `xtask/src/trust_generated.rs`.
 
-Metadata preflight hard-refuses reached build-script/procedural-macro targets. A failed Cargo-home reset
-can still execute an untracked wrapper; P1 repair `.11.2.6.2` owns this gap. Evidence and scope:
+Metadata preflight refuses reached build-script/procedural-macro targets. Before metadata or any root,
+harness or separate generated-target build, checked removal clears the old Cargo home. Missing homes
+are safe; other removal failures end unable to judge (exit 2), naming the home and I/O error. For example,
+an undeletable readable home reports `cannot reset inventory Cargo home` before reusing its configuration.
+Writable homes are recreated normally. Permanent public controls cover a wrapper that must never execute,
+a file instead of a directory, and clean recovery. Evidence and remaining source/caller assessment:
 `docs/specs/trust/flag-normalization-domain.md`.
 
 ### The run's order
 
-The inventory decides in steps, each running only when those before it refused nothing (the generated-sources record
-§2): first the forms' text, nothing built; then the programs' builds and the data their forms hand them, with every
-refusal the rules below make before or in those builds. A step that refuses ends the run and leaves no inventory — not
-even one an earlier run wrote, which would read as this commit's. A step in which a build fails still runs to its end,
-every build in it made, and then ends unable to judge (exit 2), the refusals it found printed beside the failure. A
-form of `trust/roots.eadl` other than a `defgenerated` one that departs from its shape also leaves the gate unable to
-judge, the `defgenerated` refusals read before it printed beside it. Syntax errors also leave the gate unable to judge:
-the eADL reader can recover valid forms, but its diagnostics refuse the whole roots input before those forms are used.
-For example, a valid root followed by an extra `)` reports `read-unexpected-close`; a root missing its final `)` reports
-`read-unclosed-list`. Neither recovered root starts a build or produces an inventory. The third step judges every form a program
-reads: a generator or input that is a symbolic link or no blob of the commit is refused, and so is one a form declares
-or whose header marks it generated, a chain; a form no program reads is held to its
-text alone. The fourth judges each such form's generator files against each program that reads it: a program
-target's entry point whose role packages, or the union of them when it is the entry point of more than one target, hold
-another role's is refused and not built, and is otherwise built and checked as a root is, the manifest rules first;
-a `.rs` file that is no program target's entry point is refused; a script lying in another role's package is refused.
-A build that fails there ends the run unable to judge, as in the second step. The fifth refuses a file a generator's
-build reads that a form declares or whose header marks it generated, then a file a program reads whose header marks it
-generated and that no form declares — one message for one file. Only when all five refuse nothing is the inventory
-written, and only then can the gate find a form stale.
+The generated-sources record §2 orders the run. Each step starts only if earlier steps refused nothing.
+A refusal leaves no inventory, including an earlier run's file. Build failures in steps 2 or 4 still allow
+all that step's builds and judgments to finish, then end unable to judge (exit 2), with refusals reported.
+
+1. Validate all forms before writing or building. Malformed `defgenerated` forms refuse; other malformed
+   forms or reader syntax errors leave the invocation unable to judge, reporting generated refusals too.
+   Reader recovery admits nothing: an extra `)` reports `read-unexpected-close`; a missing closing `)`
+   reports `read-unclosed-list`. Neither starts a build.
+2. Build the programs and judge the data their forms hand them, applying every prebuild/build refusal.
+3. Judge each live generated form's generators and inputs: each must be a commit blob, never a symbolic
+   link, declared generated file or header-marked generated file. An unread form receives text checks only.
+4. Judge every generator against every program reading its output. For a program-target entry point, use
+   the union of its targets' role packages. A foreign role package refuses before building; otherwise,
+   apply the manifest rules and build as for a root. Refuse a `.rs` generator with no program target,
+   and a script in another role's package.
+5. Refuse generated files read by generator builds (declared or header-marked), then marked files read by
+   programs with neither a declaration nor a generator-read attribution: one message per file.
+
+Only after all steps pass is an inventory written; only then can the gate find a form stale.
 
 ### Generated sources
 

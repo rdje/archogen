@@ -5,7 +5,7 @@ Source: [the pinned Rust toolchain](../../book/src/ledger.md#rust-toolchain).
 This is a source/caller assessment, not an equivalence declaration. The remaining table obligations stay
 open. The confirmed prebuild metadata defect below is repaired by `.11.2.5.1`; caller/E premise and local
 integration revalidation pass in `.11.2.5.2`. Further assessment `.11.2.6.1` confirms a Cargo-home reset
-execution gap below; immediate `.11.2.6.2` repair precedes `.6.3` completion and further classifications.
+execution gap below; `.11.2.6.2` repairs it before `.6.3` completion and further classifications.
 
 ## Pinned producer
 
@@ -139,7 +139,25 @@ copied inputs restore; production/tests/catalogue/E are unchanged. Ignored diagn
 exploratory evidence, not permanent regressions. Exact commands, digests and failed diagnostic setup are in
 the leaf and `target/m369-flags-domain-completion/`.
 
-Immediate P1 `.11.2.6.2` owns hard reset failure handling and permanent public/static/native controls.
+Repair `.11.2.6.2` routes the metadata, root/harness and separate generated-target resets through
+`trust::reset_cargo_home`. Only a missing home is harmless. Every other removal error returns an attributed
+invocation error before the corresponding environment, metadata or compilation call can reuse the home.
+
+Permanent Unix public parent `a_failed_cargo_home_reset_stops_before_metadata_or_wrapper_execution` first
+builds static roots normally, retains that populated home, adds only an owned untracked wrapper configuration,
+and denies deletion through directory permissions. Its independent write probe requires actual permission
+enforcement. The wrapper sentinel must remain absent, the error must name the reset/home, and metadata/build
+directories and the old inventory must be absent. Permissions restore before assertions through a scoped
+guard. Making the same home writable again must clear the configuration and produce an ordinary inventory.
+Portable parent `cargo_home_reset_accepts_absence_and_clears_data_but_rejects_a_file` holds absent/nested-cache
+cleanup and actual non-directory errors, both directly and through public inventory, followed by recovery.
+
+The public wrapper parent fails on the old production because its sentinel is written. Native entry
+`trust-home-reset-errors` restores ignored deletion errors and finishes with named failures from the permanent
+parents. The bounded sweep also kills the helper's inverted NotFound condition; it is a scoped control,
+not a full-file adequacy result. Maintained input census and copied-input checks verify exact restoration;
+supplemental orchestration is qualified in the leaf. No existing E record or reviewed twin changes.
+
 `.11.2.6.3` revalidates source/caller and delimiter scope after repair, including offline non-path sources and
 standard-library construction, before flag proofs. The earlier integration result remains a dated passing
 result; it does not establish absence of this later-discovered defect. No new E classification is justified.

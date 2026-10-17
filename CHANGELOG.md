@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — checked fresh Cargo-home reset
+
+`ARCHOGEN-M3-0708` (leaf `M3.6.9.6.3.2.2.11.2.6.2`), `2026-10-17`.
+
+- Stop on actual Cargo-home removal errors before metadata and every root/harness/generated-target build.
+  Missing homes remain harmless; writable homes are cleared. The error names the home and I/O failure.
+- Permanent public permission/wrapper and file-state controls fail on ignored errors and cover clean recovery.
+  Native exact reversal and scoped NotFound inversion finish with named kills; original/copied inputs restore.
+- Contain closure documentation under existing ceilings: preserve the ordered rules in concise book prose
+  and seal already committed closed M3 subtrees through the maintained byte-reconstruction tool.
+- Preserve earlier production/tests, existing equivalences and reviewed twins. Focused suite and pinned book
+  pass; exact-staged checks precede commit. Canonical/book/live/resume select source/caller revalidation next.
+
 ## archogen — ninth daily artifact cleanup
 
 `ARCHOGEN-PROGRAM-0707` (leaf `PROGRAM.85`), `2026-10-17`.

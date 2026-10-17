@@ -130,10 +130,13 @@ The shared manifest preflight enforces actual metadata target kinds for each rea
 root/harness or generated-entrypoint compilation, independently of ordinary manifest admissions. A disabled
 build script is no dynamic target. Permanent exact-admission script/procedural-macro sentinel controls and
 the disabled-script positive case verify this boundary (`flag-normalization-domain.md`, repair `.11.2.5.1`).
-**Current reset gap:** `.11.2.6.1` confirms ignored Cargo-home removal errors can retain an untracked wrapper
-configuration and execute it before returning an error/no inventory. Immediate P1 `.11.2.6.2` owns a hard
-reset check before metadata/builds. The fresh-home requirement remains unconditional; caller/E premises
-must be revalidated after repair. Reproduction and evidence: `flag-normalization-domain.md`.
+Reset removal is checked before metadata, every root/harness build and every separately built generated
+target (`trust::reset_cargo_home`, repair `.11.2.6.2`). An absent home is harmless; any other removal error
+ends the invocation unable to judge, naming the home and I/O error, before that operation can run. The
+environment helper then creates the empty home. Permanent public permission/wrapper and file-state controls
+hold this boundary, including writable/absent positive cases and native exact reversal. The earlier gap
+and its repair evidence are in `flag-normalization-domain.md`; remaining source/caller/E premises await
+`.11.2.6.3` revalidation.
 
 The comparison harness a pair's form
 names is built the same way, with `cargo test --release --no-run -p <package> --test <name>`, and recorded as a root

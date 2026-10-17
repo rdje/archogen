@@ -5732,3 +5732,22 @@ from
 to
                 // Metadata dynamic-target preflight removed.
 end
+
+mutation trust-home-reset-errors
+file xtask/src/trust.rs
+test -p xtask -- trust::tests::a_failed_cargo_home_reset_stops_before_metadata_or_wrapper_execution trust::tests::cargo_home_reset_accepts_absence_and_clears_data_but_rejects_a_file --exact
+expect killed
+why Ignoring actual Cargo-home deletion errors must fail the public wrapper-execution and filesystem-state controls before metadata or compilation can reuse that home.
+from
+        match fs::remove_dir_all(home) {
+            Ok(()) => Ok(()),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(error) => Err(format!(
+                "cannot reset inventory Cargo home `{}`: {error}",
+                home.display()
+            )),
+        }
+to
+        let _ = fs::remove_dir_all(home);
+        Ok(())
+end
