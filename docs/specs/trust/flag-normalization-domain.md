@@ -1,9 +1,10 @@
 # Inventory compiler flags: producer evidence and caller premises
 
-Observed `2026-10-12`, owner `M3.6.9.6.3.2.2.11.2.3` in `docs/tasks/M3.md`.
+Initial assessment observed `2026-10-12`, owner `M3.6.9.6.3.2.2.11.2.3` in `docs/tasks/M3.md`.
 Source: [the pinned Rust toolchain](../../book/src/ledger.md#rust-toolchain).
-This is a source/caller assessment, not an equivalence declaration. The remaining table obligations stay
-open. The confirmed prebuild metadata defect below is repaired by `.11.2.5.1`; caller/E premise and local
+That initial source/caller assessment left the table obligations open. Later sections record the scoped
+proofs, final table replay and `.11.4` checkpoint closing that group. Separate prefix/helper obligations
+remain under `.13.2`; each subsequent proof states its domain and revalidation conditions. The confirmed prebuild metadata defect below is repaired by `.11.2.5.1`; caller/E premise and local
 integration revalidation pass in `.11.2.5.2`. Further assessment `.11.2.6.1` confirms a Cargo-home reset
 execution gap below; `.11.2.6.2` repairs it before `.6.3` completion and further classifications.
 

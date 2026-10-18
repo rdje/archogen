@@ -5,6 +5,24 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — complete prefix/helper measurement and unbounded book growth
+
+`ARCHOGEN-M3-0721` (leaf `M3.6.9.6.3.2.2.13.1`), `2026-10-18`.
+
+- Measure all 59 actual current edits: 46 finishing named kills, 12 survivors and one compiler refusal,
+  strict 1. Bind the unchanged initial region by exact edits/relative spans; retain all 21 original
+  survivors, including seven generic source-line records beyond the fourteen labelled normalise.
+- Nine initial survivors now have named kills; twelve remain P1 under concrete path/codegen/matcher/
+  comparison owners. All 1026 originals/current copies restore; five altered-evidence arms refuse.
+- Production/prior Rust tests/E unchanged. Canonical header's initial context clarified, book/live sync;
+  path controls next. No full adequacy claim.
+- Apply the director's explicit ruling: the book grows as needed, with no size, chapter, file, line or
+  width limits. Remove every book ceiling and cancel the containment detour. Routing checks require
+  unbounded book dimensions while retaining other surfaces' controls and all book content checks.
+  Restore the trust chapter's full navigation label and regenerate the index without a size ceiling.
+- Seal only previously committed closed task records byte for byte; verify routing regression controls,
+  history provenance, book and staged doctrine gates before commit; routing suite 40 pass / 0 fail.
+
 ## archogen — task-log rendering and exact record placement
 
 `ARCHOGEN-M3-0720` (leaf `M3.6.9.6.3.2.2.12`), `2026-10-18`.

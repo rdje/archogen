@@ -629,15 +629,22 @@ $ bash scripts/check_review_counts.sh --self-test          # its RED arms, on a 
 
 A size limit on `README.md` does not remove the need to write things down; it moves it somewhere else. So
 `README_POLICY.md` also asks that every place the README points a reader to, and every place its checks tell an
-author to move detail to, is itself kept in bounds. `README-ROUTES` works that list out from the README's links and
+author to move detail to, has an explicit policy. `README-ROUTES` works that list out from the README's links and
 from what its two checks actually print. It follows each place on to wherever that place's own check sends overflow,
-and holds each one to the ceiling registered for it in the policy. The changelog and the development notes are
+and checks each policy registered for it. **The book grows as needed:** it is the only user-facing surface,
+so it has no size, chapter-count, file-count, line-count or line-width limits. Explanations, examples and
+evidence must remain complete. Its chapters and annexes follow the subject matter and readers' needs.
+Accuracy, glossary, index, anchors, coverage, sources, figures and the book build still have their checks.
+The director's `2026-10-18` ruling is `docs/decisions/decision_book-unbounded.md`; `README-ROUTES` requires
+`unbounded` for every book growth dimension, including nested routes. Other surfaces keep their controls.
+The changelog and the development notes are
 bounded as rolling ledgers (above). A design's review history, which grows by a round at a time, overflows from the
 decisions folder to `docs/reviews/`, which has ceilings of its own, and a closed review's history overflows on to
 `docs/review-history/` (above). The task trees are bounded too, and their
 finished parts overflow to `docs/task-history/`, as settled sections of a decision record do to
 `docs/decision-history/` (above). A folder grown too large is split by subject into sub-folders, each with ceilings
-of its own, while the folder's own limits still count everything in them, so a split adds no room; and no ceiling
+of its own, while the folder's own limits still count everything in them, so a split adds no room; this rule
+applies to bounded folders, and the book remains unbounded. No ceiling
 may rise above what a decision fixes, which the policy lists and the check enforces. The decisions folder was split
 this way on `2026-09-30`, and `DECISION-INDEX` keeps every record in a sub-folder listed in its index.
 

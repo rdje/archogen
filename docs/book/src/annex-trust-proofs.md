@@ -189,6 +189,10 @@ inputs restore. Closure prose is checked separately. The bounded flag group clos
 adequacy, independent review and runner compatibility remain open. No remote CI outcome is claimed.
 
 
+Prefix/helper `.13.1` (`2026-10-18`): all 59 edits yield 46 named kills, 12 survivors and one compiler
+refusal, strict 1. All captured originals/current copies restore; exact original bindings hold. Refusal
+proves no coverage. The twelve survivors stay owned; full adequacy remains open.
+
 ## Mutation measurements and controls
 
 Whether the instrument's tests hold the generated-sources rules — what a program reads, the chain, the blob rule,

@@ -26,7 +26,7 @@
 - [Matching an offer to a requirement](matching.md)
 - [What the scheduling checker establishes](analysis.md)
 - [Where the engine's knowledge comes from: the catalog](catalog.md)
-- [The trust gate: what checks share](trust.md)
+- [Checks that must not share a mistake: the trust gate](trust.md)
   - [Generated-sources test adequacy](trust-adequacy.md)
 
 # Generating and running a system

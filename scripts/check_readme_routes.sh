@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # scripts/check_readme_routes.sh — README-ROUTES: every destination the README sends a reader or an author to is
-# registered, classified and under a pressure control (leaf `PROGRAM.35.2`, `README_POLICY.md`).
+# registered, classified and governed by an explicit policy (leaf `PROGRAM.35.2`, `README_POLICY.md`).
 #
 # ⭐ WHY THIS EXISTS. A cap on the landing page does not remove the pressure to write things down; it moves it. The
 # README's guards tell an author where the detail goes instead, and if that place is unbounded the cap has only
 # displaced the growth — `README_POLICY.md` records one adoption whose neighbouring status file reached 1.5 MB that
-# way. So the policy asks for every route out of the README to be followed until it ends somewhere controlled.
+# way. Every route therefore has an explicit policy. The book, the only user-facing surface, is deliberately
+# unbounded under the director's 2026-10-18 ruling (`docs/decisions/decision_book-unbounded.md`).
 #
 # THE POPULATION is derived, never listed:
 #   - every repository link in `README.md` (a `navigation` route);
@@ -22,6 +23,7 @@
 #   3. each dimension a row must control carries a control: an inclusive ceiling that the destination is within
 #      (a file's lines, bytes and longest line; a directory's tracked files, an archive stub aside (below), largest
 #      file's lines and bytes, longest line and total bytes), a registered doctrine that owns that dimension, or `debt: <leaf>` naming an open leaf.
+#      Book routes instead require `unbounded` in every applicable dimension; that value is forbidden elsewhere.
 #      A PARTITION is a directory row under another: its files meet their own row's per-file ceilings and not the
 #      parent's, while the parent's tracked files and total count everything beneath it, sub-folders included, so a
 #      partition adds no capacity (`docs/decisions/decision_decisions-folder-ceiling.md`, leaf `PROGRAM.39`);
@@ -151,7 +153,20 @@ governing_row() {
 # $1 = destination, $2 = dimension, $3 = cell, $4 = measured value ("" when the dimension does not apply)
 control() {
   local dest="$1" dim="$2" cell="$3" actual="$4" leaf status
+  case "$dest" in docs/book/*)
+    if [ -n "$actual" ] && [ "$cell" != unbounded ]; then
+      note "\`$dest\`'s $dim must be unbounded — the director removed all book growth limits"
+      return
+    fi
+    ;;
+  esac
   case "$cell" in
+    unbounded)
+      case "$dest" in
+        docs/book/*) [ -n "$actual" ] || note "\`$dest\` declares unbounded $dim, which does not apply to it" ;;
+        *) note "\`$dest\`'s $dim is unbounded — that ruling applies only to book routes" ;;
+      esac
+      ;;
     '—'|'-'|'')
       [ -z "$actual" ] || note "\`$dest\` has no pressure control on its $dim — write a ceiling, a doctrine, or \`debt: <leaf>\`"
       ;;
@@ -287,6 +302,10 @@ scan() {
   while IFS=$'\t' read -r cdest ccol cmax cdec; do
     cdest="${cdest//\`/}"; cdec="${cdec//\`/}"
     [ -n "$cdest" ] || continue
+    case "$cdest" in docs/book/*)
+      note "\`$cdest\` has a decision ceiling — the director removed all book growth limits"
+      ;;
+    esac
     [ -f "$cdec" ] || note "the ceiling of \`$cdest\`'s $ccol is fixed by \`$cdec\`, which does not exist"
     case "$ccol" in
       Files) col=5 ;; Lines) col=6 ;; Bytes) col=7 ;; "Longest line") col=8 ;; "Total bytes") col=9 ;;
@@ -441,6 +460,44 @@ SH
   arm "a ceiling above the maximum a decision fixes is refused" 1 "above the 3000 that \`D.md\` fixes"
   fresh; printf '\n### Ceilings a decision fixes\n\n| Destination | Column | Maximum | Decision |\n| --- | --- | --- | --- |\n| `docs/tasks/` | Total bytes | 9000 | `NO-SUCH.md` |\n' >> "$work/README_POLICY.md"; git -C "$work" add -A
   arm "a cap whose decision does not exist is refused" 1 "which does not exist"
+  # The book may exceed every former dimension together, while route governance still applies.
+  book() {
+    mkdir -p "$work/docs/book/src"
+    printf '\n[book](docs/book/)\n' >> "$work/README.md"
+    edit README_POLICY.md '/^| `A.md` |/a\
+| `docs/book/` | navigation | W | maintained_reference | unbounded | unbounded | unbounded | unbounded | unbounded | — |'
+    for i in $(seq 49); do printf '# Chapter %s\n' "$i" > "$work/docs/book/src/chapter-$i.md"; done
+    for i in $(seq 751); do printf '%01025d\n' 0; done > "$work/docs/book/src/chapter-1.md"
+    git -C "$work" add -A
+  }
+  fresh; book
+  arm "the book can exceed all former file, line, byte, width and total limits" 0 ""
+  local dim
+  for dim in 5 6 7 8 9; do
+    fresh; book
+    awk -F'|' -v c="$dim" 'BEGIN { OFS="|" } /^\| `docs\/book\/` / { $(c+1)=" 9999999 " } { print }' \
+      "$work/README_POLICY.md" > "$work/policy.next"
+    mv "$work/policy.next" "$work/README_POLICY.md"; git -C "$work" add -A
+    arm "a book growth ceiling in column $dim is refused even above current usage" 1 "must be unbounded"
+  done
+  fresh; book; edit README_POLICY.md 's/maintained_reference | unbounded |/maintained_reference | — |/'
+  arm "an unspecified book dimension is refused" 1 "must be unbounded"
+  fresh; book; edit README_POLICY.md 's/^| `docs\/book\/` | navigation |/| `docs\/book\/` | overflow |/'
+  arm "an unbounded book still needs the correct derived route" 1 "what routes to it derives 'navigation'"
+  fresh; edit README_POLICY.md 's/| — | 10 | 1000 | 100 |/| — | unbounded | 1000 | 100 |/'
+  arm "the book ruling cannot remove another destination's limit" 1 "that ruling applies only to book routes"
+  book_partition() {
+    edit README_POLICY.md 's/^\(| `docs\/book\/` .*\) — |$/\1 `docs\/book\/src\/` |/'
+    edit README_POLICY.md '/^| `docs\/book\/` |/a\
+| `docs/book/src/` | overflow | W | maintained_reference | unbounded | unbounded | unbounded | unbounded | unbounded | — |'
+  }
+  fresh; book; book_partition
+  arm "nested book routes also remain unbounded" 0 ""
+  edit README_POLICY.md 's/^\(| `docs\/book\/src\/` .*\) unbounded | — |$/\1 9999999 | — |/'
+  arm "a nested book route cannot reintroduce a growth ceiling" 1 "must be unbounded"
+  fresh; book
+  printf '\n### Ceilings a decision fixes\n\n| Destination | Column | Maximum | Decision |\n| --- | --- | --- | --- |\n| `docs/book/` | Total bytes | 9999999 | `A.md` |\n' >> "$work/README_POLICY.md"; git -C "$work" add -A
+  arm "an obsolete book decision ceiling is refused" 1 "has a decision ceiling"
   rm -rf "$work"
   arms=$((arms + 1))
   if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the real README's routes are all governed"

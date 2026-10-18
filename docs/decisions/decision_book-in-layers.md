@@ -38,33 +38,17 @@ Three parts frame the chapters:
   where it is treated — but the four headings that mark a chapter's layers, which name a part and no topic. It is generated, never hand-kept, by `scripts/check_book_index.sh`, and a gate, `BOOK-INDEX`,
   refuses a commit whose index differs from what the generator writes — the Knowledge Map's pattern.
 
-## The book's ceilings
+## Book growth — no limits from `2026-10-18`
 
-The ruling grows the book on purpose: a glossary, an index, annexes and a plain opening in every chapter. So, with
-this record, `docs/book/`'s ceilings in `README_POLICY.md` rise: its files from 32 to **48**, for the glossary, the
-index and the annexes; its total bytes from 294 912 (288 KiB) to **393 216 (384 KiB)**. Measured when raised,
-`2026-10-02`: the glossary took the book to 295 147 bytes, past the old total; an index of a few tens of kilobytes
-and an opening of one or two kilobytes in each of the chapters account for most of the rest, and annexes mostly
-move text rather than add it. The per-file ceilings stay — 750 lines, 48 KiB, 1 024 bytes a line — so a chapter
-that outgrows them sheds its details into an annex rather than raising them.
+The director removed every book growth limit on `2026-10-18`; see
+[The book grows as needed](decision_book-unbounded.md). The reading layers above remain binding.
 
-**Raised again `2026-10-03` (leaf `PROGRAM.48`), to 458 752 bytes (448 KiB).** Measured then: 393 208 bytes, eight
-below the ceiling, after 44 commits touched the book in two days; the lockstep rule moves a chapter with every
-normative change, and each such paragraph costs a few hundred bytes, so the book grows by about a kilobyte a leaf by
-design. Below the ceiling, four of the last six book changes needed a compaction first, each taken from a passage
-that had become stale or redundant — a useful discipline that was running out of candidates. The new total gives
-room for sixty-odd leaves at that rate; the per-file ceilings stay, and a chapter that outgrows them still sheds
-into an annex. The next raise, if one is needed, is again a dated paragraph here with the measurement that asks for
-it.
-
-**Raised again `2026-10-10` (leaf `PROGRAM.74`), to 589 824 bytes (576 KiB).** Measured then, `git ls-files docs/book |
-xargs cat | wc -c`: 458 750 bytes, two below the ceiling, at `bfabefa`; 395 389 at `a274131`, the first commit after
-the last raise to touch the book, so 63 361 bytes in a week over the 38 commits after it that touched `docs/book/src` —
-about 1.7 KB a commit, the lockstep rule's cost as this record foresaw. `PROGRAM.70.2` and `PROGRAM.69`'s round 10 each
-had to replace a sentence rather than add one to fit, and `M3.6.6.4`, `M3.3` and `M3.5` each owe the book their
-account. The generated index is 44 785 bytes of the total and grows with the headings. The new total gives room for
-about eighty such commits; the files and per-file ceilings stay, and a chapter that outgrows them still sheds into an
-annex. The next raise is again a dated paragraph here, and should weigh a split of the book over another raise.
+Earlier rulings are superseded: `PROGRAM.47` raised the file count from 32 to 48 and total bytes
+from 294912 to 393216 on `2026-10-02`; `PROGRAM.48` raised total bytes to 458752 on `2026-10-03`;
+`PROGRAM.74` raised them to 589824 on `2026-10-10`. Their per-file limits were 750 lines, 49152 bytes
+and 1024 bytes per line. None applies now. The full earlier rationale and measurements remain in
+Git at `3d622a6251cc912d7f2a2a2510317a84b326703f:docs/decisions/decision_book-in-layers.md`
+and in those task records. No future containment or approval is required for the book to grow.
 
 ## Why
 
