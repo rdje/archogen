@@ -688,6 +688,106 @@ os.execvp("rustc", ["rustc"] + arguments)
                           "each actual lint proof requires its own per-file reason")
 
 
+    def codegen_key_controls(self, key, consumed_operand):
+        """Actual constructor edits, independently specified producer values and scoped counterexamples."""
+        self.assertIn("commit-hash: f2d3ce0bd7f24a49f8f72d9000448f8838c4e850",
+                      self.bounded(["cargo", "-vV"]))
+        source = (ROOT / "xtask/src/trust.rs").read_text()
+        namespace, directions = self.discovery(source, operator="dir")
+        _, literals = self.discovery(source, operator="lit")
+        original = f'|| v.starts_with("{key}=")'
+        line = next(index for index, text in enumerate(source.split("\n")) if text.strip() == original)
+        keys = [("dir", (original, f'|| v.contains("{key}=")')),
+                ("lit", (original, f'|| v.starts_with("{key}")'))]
+        family = [m for m in directions + literals if m[0] == line
+                  and (m[2], namespace["mutation_key"](m)) in keys]
+        self.assertEqual([(m[2], namespace["mutation_key"](m)) for m in family], keys)
+
+        def module(text, name):
+            first = text.index("const DROPPED:")
+            last = text.index("\n/// `path` resolved lexically", first)
+            body = text[first:last]
+            self.assertEqual(body.count("fn normalise("), 1)
+            return "mod " + name + " {\n" + body.replace("fn normalise(", "pub fn normalise(", 1) + "}\n"
+
+        modules = [module(source, "baseline")]
+        modules += [module(namespace["apply_mutant"](m), "variant_" + str(index))
+                    for index, m in enumerate(family)]
+        operand = "llvm-args=--pass-remarks=" + key + "=inside"
+        ordinary = self.producer_argv(key + "-ordinary", library_source="pub fn c() -> u32 { 37 }\n")
+        wider = self.producer_argv(key + "-wider", separate="-C", operand=operand,
+                                   library_source="pub fn c() -> u32 { 37 }\n")
+        self.assertEqual(wider[-2:], ["-C", operand])
+        with self.assertRaisesRegex(AssertionError, "wrong forwarded compiler argv"):
+            self.assertEqual(wider[-2:], [], "wrong forwarded compiler argv")
+        for label, argv in [("ordinary", ordinary), ("wider", wider)]:
+            extra = next(arg.removeprefix("extra-filename=") for arg in argv
+                         if re.fullmatch(r"extra-filename=-[0-9a-f]{16}", arg))
+            artifact = (self.base / ("producer-" + key + "-" + label) / "target/release/deps"
+                        / ("libflagproof" + extra + ".rlib"))
+            self.assertTrue(artifact.is_file(), artifact)
+            consumer = self.base / (key + "-consumer-" + label + ".rs")
+            binary = self.base / (key + "-consumer-" + label)
+            consumer.write_text('fn main() { assert_eq!(flagproof::c(), 37); println!("{}", flagproof::c()); }\n')
+            self.bounded(["rustc", "--edition=2021", "--crate-name", "codegen_consumer", str(consumer),
+                          "--extern", "flagproof=" + str(artifact), "-o", str(binary)])
+            self.assertEqual(self.bounded([str(binary)]), "37\n")
+        with self.assertRaisesRegex(AssertionError, re.escape(
+                "incorrect value `" + key + "=inside` for codegen option `strip`")):
+            self.producer_argv(key + "-refused-strip", release_strip=key + "=inside")
+
+        expected = ["--crate-name", "flagproof", "--edition=2021", "src/lib.rs", "--crate-type", "lib",
+                    "--emit=dep-info,metadata,link", "-C opt-level=3", "-C embed-bitcode=no", "-C strip=debuginfo"]
+        vector = lambda values: ("vec![" + ", ".join(json.dumps(value) + ".to_owned()" for value in values) + "]"
+                                 if values else "Vec::<String>::new()")
+        checks = []
+        for name in ["baseline", "variant_0", "variant_1"]:
+            checks.append(f'assert_eq!({name}::normalise(&{vector(ordinary)}, "unused-scratch/"), {vector(expected)});')
+        for name, output in [("baseline", expected + ["-C " + operand]), ("variant_0", expected),
+                             ("variant_1", expected + ["-C " + operand])]:
+            checks.append(f'assert_eq!({name}::normalise(&{vector(wider)}, "unused-scratch/"), {vector(output)});')
+        # These helper-boundary inputs are explicitly not successful compiler producers.
+        synthetic = ["rustc", "-C", key + "X=inside"]
+        for name, output in [("baseline", ["-C " + key + "X=inside"]),
+                             ("variant_0", ["-C " + key + "X=inside"]), ("variant_1", [])]:
+            checks.append(f'assert_eq!({name}::normalise(&{vector(synthetic)}, "unused-scratch/"), {vector(output)});')
+        refused = ["rustc", "-C", "strip=" + key + "=inside"]
+        for name, output in [("baseline", ["-C strip=" + key + "=inside"]), ("variant_0", []),
+                             ("variant_1", ["-C strip=" + key + "=inside"])]:
+            checks.append(f'assert_eq!({name}::normalise(&{vector(refused)}, "unused-scratch/"), {vector(output)});')
+        consumed = ["rustc", "-C", consumed_operand, "retained"]
+        for name in ["baseline", "variant_0", "variant_1"]:
+            checks.append(f'assert_eq!({name}::normalise(&{vector(consumed)}, "unused-scratch/"), {vector(["retained"])});')
+        main = ("fn main() {\n" + "\n".join(checks)
+                + '\nmatch std::env::args().nth(1).as_deref() {\n'
+                + f' Some("wrong-positive") => assert_eq!(baseline::normalise(&{vector(wider)}, "unused-scratch/"), '
+                + f'variant_0::normalise(&{vector(wider)}, "unused-scratch/"), "wrong positive oracle"),\n'
+                + f' Some("wrong-negative") => assert_ne!(baseline::normalise(&{vector(ordinary)}, "unused-scratch/"), '
+                + f'variant_1::normalise(&{vector(ordinary)}, "unused-scratch/"), "wrong negative oracle"),\n'
+                + f' Some("unsupported-helper") => assert_eq!(baseline::normalise(&{vector(synthetic)}, "unused-scratch/"), '
+                + f'variant_1::normalise(&{vector(synthetic)}, "unused-scratch/"), "unsupported helper input oracle"),\n'
+                + ' _ => {}\n}\nprintln!("codegen controls: actual variants and consumed compiler artifacts held");\n}\n')
+        program, binary = self.base / (key + "-candidates.rs"), self.base / (key + "-candidates")
+        program.write_text("\n".join(modules) + main)
+        self.bounded(["rustc", "--edition=2021", "--crate-name", "codegen_candidates", str(program), "-o", str(binary)])
+        self.assertIn("actual variants and consumed compiler artifacts held", self.bounded([str(binary)]))
+        for argument, message in [("wrong-positive", "wrong positive oracle"),
+                                  ("wrong-negative", "wrong negative oracle"),
+                                  ("unsupported-helper", "unsupported helper input oracle")]:
+            with self.assertRaisesRegex(AssertionError, message):
+                self.bounded([str(binary), argument])
+        return namespace, family
+
+    @unittest.skipUnless(os.name == "posix", "the pinned producer/decoder premise is Unix")
+    def test_actual_extra_filename_candidates_require_pinned_codegen_constructors(self):
+        namespace, family = self.codegen_key_controls(
+            "extra-filename", "incremental=cache/extra-filename=inside")
+        records = namespace["load_equivalents"](ROOT / "xtask/trust.equivalents")
+        for mutant in family:
+            self.assertIn(namespace["mutation_key"](mutant), records,
+                          "each actual extra-filename proof requires its own per-file reason")
+
+
     @unittest.skipUnless(os.name == "posix", "the pinned producer/decoder premise is Unix")
     def test_actual_metadata_candidates_require_pinned_codegen_constructors(self):
         self.assertIn("commit-hash: f2d3ce0bd7f24a49f8f72d9000448f8838c4e850",

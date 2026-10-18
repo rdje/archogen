@@ -262,6 +262,21 @@ Exact compiled controls and native replay bind both E reasons, strict zero; orig
 inputs restore and altered receipts refuse. Prior test bodies and reasons are preserved. Per-key
 extra-filename/incremental evidence and the basename comparison remain required; full adequacy is open.
 
+### Extra-filename matcher reasons
+
+Extra-filename evidence `.13.2.4.2.2` (`2026-10-18`) closes `L598.dir.192` and `L598.lit.193` as scoped E.
+When present, Cargo supplies `extra-filename=-<suffix>`; both edits still discard it. Other discarded
+fields stay discarded, successful retained scalar values have disjoint domains, and the caller excludes
+arbitrary linker/script/flag routes. Existing operand consumers remain unchanged.
+
+For example, successful `cargo rustc` forwards `-C llvm-args=--pass-remarks=extra-filename=inside`.
+The original retains that full option while contains drops it, so the reason is conditional on the
+inventory caller. Real libraries are consumed with expected value 37. The truncated edit also differs
+on synthetic `extra-filenameX=inside`, which is not a successful compiler input. Compiler-refused strip
+and wrong argv/output oracles keep these domains separate. Exact native replay gives two scoped E,
+strict zero; original/current-copy inputs restore, altered receipts refuse and prior test bodies/reasons
+are preserved. Incremental evidence and the basename comparison remain open; full adequacy is pending.
+
 ## Mutation measurements and controls
 
 Whether the instrument's tests hold the generated-sources rules — what a program reads, the chain, the blob rule,

@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — prove the extra-filename matcher edits within their pinned caller
+
+`ARCHOGEN-M3-0731` (leaf `M3.6.9.6.3.2.2.13.2.4.2.2`), `2026-10-18`.
+
+- Compile both actual variants through a shared constructor proof helper with literal real Cargo argv,
+  independent normalized outputs and consumed library value37. Valid wider LLVM input and qualified
+  refused/synthetic cases, unchanged consumers and wrong oracles delimit the successful caller domain.
+- After proof append two precise reasons: native2 E, strict0; operator30 passes, all29 prior bodies/reasons
+  and production/catalogue/native bytes preserved. All1037 originals/current copies restore; six false
+  receipts refuse. Canonical/book/live sync and exact committed archival; incremental pair next.
+
 ## archogen — prove the two metadata matcher edits within their pinned caller
 
 `ARCHOGEN-M3-0730` (leaf `M3.6.9.6.3.2.2.13.2.4.2.1`), `2026-10-18`.

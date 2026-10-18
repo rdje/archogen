@@ -527,6 +527,34 @@ copied-index or gitlink-content claim. Closure documentation is checked separate
 constructors, modes, arguments, environment/configuration/admissions/preflight or consumers require
 revalidation. Other matcher/helper obligations and full production adequacy remain open.
 
+## Permanent extra-filename matcher controls
+
+`.13.2.4.2.2` (`2026-10-18`) resolves actual `L598.dir.192` and `L598.lit.193` as scoped E. When
+present, the pinned Cargo constructor emits the literal `extra-filename=-` prefix and its suffix;
+both variants discard it. Metadata and incremental operands are already discarded by unchanged
+guards. The complete constructor/visited-token and successful-scalar matrix above applies to this
+marker too. Retained successful scalar domains do not contain `extra-filename=`; explicit linker,
+build-script and arbitrary flag/trailing-argument routes remain excluded. Failed Cargo status returns
+before normalization, including a profile strip string containing this marker.
+
+A new shared proof helper compiles the actual original and both native variants, while every prior
+test body remains exact. The key-specific permanent control requires independent literal real Cargo
+argv/configuration and consumes each ordinary/wider library with expected value 37. Successful
+`cargo rustc -- -C llvm-args=--pass-remarks=extra-filename=inside` is a valid wider compiler case:
+the original and truncated-prefix edit retain the full option, and contains discards it. The current
+inventory caller has no such trailing-argument route. `extra-filenameX=inside` is only a synthetic
+helper counterexample. Refused strip and synthetic cases establish premises, not successful-producer
+coverage. An unchanged incremental consumer and wrong argv/positive/negative/helper oracles hold scope.
+
+Only after the compiled proof are two exact reasons appended and bound by the permanent test. The
+full operator suite passes 30 controls; native selected replay yields two E at strict zero, with no
+refusal, timeout or unjudged outcome. Six false receipts refuse, all captured original/current-copy
+inputs restore, and existing test bodies/reasons/production/catalogue/native bytes are preserved.
+Copy receipts borrow index metadata without proving a copied index or gitlink contents. No new
+Rust-source focused/integration activation or whole-file adequacy follows. Changed pin, constructors,
+modes, arguments, environment/configuration/admissions/preflight or consumers require revalidation.
+Incremental and basename obligations remain owned. Closure book/staged checks have their own scope.
+
 ## Retrieved source identities
 
 Every link below names the installed Cargo commit. These are source digests, not toolchain binary digests.
