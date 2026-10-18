@@ -964,3 +964,49 @@ The production helper is unchanged. The preceding full measurement's nine surviv
 historical result; these proofs resolve two obligations, leaving seven for source/domain assessment.
 Revalidate if a constructor, concrete type, iterator or loop body changes. No arbitrary vector or chain,
 whole-file adequacy or remote CI claim follows.
+
+
+### Relative gate caller assessment
+
+Assessment `.14.3.2.2.2.2.1` (`2026-10-18`) checks a caller premise before classifying the
+seven remaining diagnostic-helper survivors. The inventory and baseline CLIs derive paths from
+`repo_root()`; the gate's `--repo` argument is retained as supplied. An absolute-path assumption
+therefore cannot be taken across every gate invocation.
+
+The original public CLI is compared on the same current main commit, with separate output
+directories and the same installed-host write guard:
+
+```console
+$ cargo xtask trust-gate --repo "$PWD" --commit HEAD \
+    --out target/cargo-caller-path-assessment/absolute
+$ cargo xtask trust-gate --repo . --commit HEAD \
+    --out target/cargo-caller-path-assessment/relative
+```
+
+The absolute invocation returns 0 and writes an inventory for the generator, scheduling checker,
+reference model, implementation and differential harness. Its change comparison is explicitly
+skipped because the baseline names the other host. That result establishes inventory production here;
+it is not a successful comparison across hosts.
+
+The relative invocation returns 1, writes no inventory and reports this false refusal:
+
+```text
+trust-undeclared-input: .cargo/config.toml: catalog-source [(config)] a cargo configuration above the repository, on a build's path (§3)
+```
+
+This is an original public defect, not a mutation result. `run_gate` preserves relative repo/output
+spellings, while `configurations_on_paths` judges ownership with lexical prefix comparisons. At the
+repository ancestor, the own configuration spelling does not match the supplied `.` root. The exact
+maintained ownership closure, compiled independently with literal expectations, refuses that relative
+pair and accepts the absolute pair. OS device/inode identity and equal bytes prove both name the same
+configuration. The absolute inventory binds its configuration hash and current commit.
+
+Repair `.14.3.2.2.2.2.2` owns runtime path resolution, public relative/absolute regression controls,
+missing-path/error and output-location behavior, plus verification before survivor classification
+resumes. No equivalent reason is added on the unproved caller premise.
+
+The held activation input check restores all 1051 regular inputs with modes and Python/system hashes;
+the gitlink remains an opaque index identity. The first post-run check correctly refused an intentional
+task finding edit written too early. The exact held task bytes were restored for the full maintained
+check, then the saved finding was reapplied byte-exactly. Both outcomes and their separate document
+epochs are retained. Source, operator controls, catalogue and previous reasons remain unchanged.

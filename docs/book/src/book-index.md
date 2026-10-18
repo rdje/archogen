@@ -394,6 +394,8 @@ a change that leaves it stale, so it is never edited by hand.
   repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Refusal is a feature — [The supported profile](profile.md#refusal-is-a-feature)
 - Refused by name — [Checking a description](checking.md#refused-by-name)
+- Relative gate caller assessment — [Annex C: Trust proof
+  records](annex-trust-proofs.md#relative-gate-caller-assessment)
 - **release** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [Quantities and units](quantities.md), [Describing a
   workload](workload.md), [Checking a description](checking.md), [What the scheduling checker establishes](analysis.md),
@@ -474,7 +476,8 @@ a change that leaves it stale, so it is never edited by hand.
   from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
   decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Verifying the
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
-  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
+  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust
+  proof records](annex-trust-proofs.md)
 - The admitted task model, enforced — [Describing a workload](workload.md#the-admitted-task-model-enforced)
 - The baseline and its forms — [Checks that must not share a mistake: the trust
   gate](trust.md#the-baseline-and-its-forms)

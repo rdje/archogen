@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — confirm the relative public gate caller defect
+
+`ARCHOGEN-M3-0746` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.1`), `2026-10-18`.
+
+- Actual same-commit public gate: absolute --repo writes inventory/exit0 with explicit other-host
+  baseline skip; relative dot falsely refuses its own configuration/exit1 and writes no inventory.
+- Exact compiled lexical ownership closure, OS same-file/bytes and native Git bind the caller cause.
+  Record full held1051 input restoration and intentional early task-edit refusal/reapplication epochs.
+- Code/controls/reasons remain exact. Book/canonical/live expose the limitation and immediate P2
+  repair owner; all seven remaining survivor classifications wait.
+
 ## archogen — prove the bounded Cargo path iterators
 
 `ARCHOGEN-M3-0745` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.1`), `2026-10-18`.

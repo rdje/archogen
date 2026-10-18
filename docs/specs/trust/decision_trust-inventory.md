@@ -690,3 +690,19 @@ original/current copied inputs restore and seven altered receipts reject. Existi
 prefixes stay exact. The other seven current survivors remain owned in .14.3.2.2.2.2; no broad adequacy.
 The [book proof](../../book/src/annex-trust-proofs.md#finite-cargo-path-iterator-proofs) records examples
 and revalidation triggers: changed constructors, types, iterator or body require a fresh judgment.
+
+
+## Relative public gate caller defect
+
+`M3.6.9.6.3.2.2.14.3.2.2.2.2.1` (`2026-10-18`) confirms a P2 original CLI defect before
+classifying the remaining seven helper survivors. On the same main commit, absolute --repo produces
+an inventory/exit0 (other-host baseline comparison explicitly skipped), while --repo . falsely calls
+the own .cargo/config.toml an above-repository configuration, exits1 and writes no inventory.
+
+Root: relative repo/output spellings pass unchanged into lexical configuration-root comparisons.
+The exact compiled ownership closure and OS same-file/byte identity distinguish spelling failure
+from a foreign or edited configuration. Held1051 regular inputs restore; an early intentional task
+finding edit was correctly refused, then checked in its held epoch and reapplied exactly. Code,
+controls and E reasons remain unchanged. Immediate repair/regression owner is .14.3.2.2.2.2.2; survivor
+classification waits. The [book assessment](../../book/src/annex-trust-proofs.md#relative-gate-caller-assessment)
+records commands, actual outcomes and the temporary absolute-path invocation.
