@@ -1515,5 +1515,56 @@ an attempted whole-file sweep. The actual full parent command and complete selec
   --only L717.clogic.1498
 ```
 
-The complete `trust.rs` sweep remains separate. Full integration and final bounded-parent closure
-are next in `.14.4.2`; no remote CI, physical-board or whole-file adequacy claim follows here.
+The complete `trust.rs` sweep remains separate. The following checkpoint closes full local integration
+and the diagnostic cohort; no remote CI, physical-board or whole-file adequacy claim follows here.
+
+
+### Diagnostic cohort integration checkpoint
+
+Checkpoint `.14.4.2` (`2026-10-18`) closes the diagnostic helper/caller cohort after the
+[complete region replay](#complete-diagnostic-region-replay). The actual final source retains that
+51-edit result: 43 named kills, four exact supported-domain equivalents and four compiler refusals,
+with strict exit 0 and the full 153-test parent population. This integration run does not replace or
+add mutation outcomes.
+
+| Local integration step | Result |
+| --- | --- |
+| format | passed |
+| strict lint | passed |
+| complete contract suite | passed |
+| doctrines | passed |
+| gate self-tests | passed |
+| pinned [mdBook](ledger.md#mdbook) | passed |
+| no_std build | passed |
+| pinned toolchain premises | passed |
+| wasm build | passed |
+| wasm binding | passed |
+| emulator configuration | passed |
+| target spike | passed |
+
+```text
+12 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined
+activation tree: 5fc854ec08a322af168a2615934a988a6e9e1b47
+```
+
+The actual log and exit, official tier stamp and native Git identity agree. The maintained input
+census restores all 1062 held regular inputs, including modes and Python/system hashes; the gitlink
+is an opaque index identity. Five altered bindings refuse: nonzero exit, missing step, false summary,
+wrong stamp and missing restoration. Final source/operator/catalogue/reason bytes remain exact,
+the shared environment constructor and three-name compiled-input allowlist remain unchanged, and all
+30 pinned source copies and tool metadata revalidate. The permanent operator suite has 34 controls.
+Tool metadata is not executable-digest evidence.
+
+Completion prose is a later document epoch with separate pinned-book and staged doctrine checks.
+The integration stamp names the activation above; it does not claim this later prose was itself
+the full tier's input. This closes the bounded diagnostic cohort, including its repaired caller and
+framing defect, exact reasons and regression gaps. The 26-record equivalent file has only the four
+applicable diagnostic reasons judged by this region run. Full-file adequacy, remote CI and physical-board
+execution remain separate.
+
+The next action is a survivor-ownership reconciliation, rather than the final whole-file sweep.
+The `2026-10-18` task-tree census finds 463 historical rows still assigned to the general assessment
+parent. This is an ownership-table observation, not a fresh count of current survivors: later repairs
+may have changed or already covered some rows. Task `.15.1` binds every historical row to current
+raw edits, retired edits or completed evidence, then schedules the next bounded assessment. The
+controlling final-sweep prerequisite remains all required assessments and repairs complete.

@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — close the diagnostic cohort integration checkpoint
+
+`ARCHOGEN-M3-0756` (leaf `M3.6.9.6.3.2.2.14.4.2`), `2026-10-18`.
+
+- Bind actual complete51 result43K/4E/4U/full153 parents to unchanged final code, proofs,
+ 30 pinned source copies,34 operator controls and tool metadata.
+- Actual full local integration12/0; native/official held5fc854 identity, all1062 regular inputs
+  restored, five false bindings refused. Publish the separately gated completion epoch.
+- Close bounded diagnostic containers. Own/correct premature whole-file resume ordering:
+  census463 general-parent historical rows, schedule complete ownership reconciliation next.
+  No new mutation outcomes, unrelated equivalent validity, whole-file adequacy or remote CI claim.
+
 ## archogen — pass the complete current diagnostic-region replay
 
 `ARCHOGEN-M3-0755` (leaf `M3.6.9.6.3.2.2.14.4.1`), `2026-10-18`.

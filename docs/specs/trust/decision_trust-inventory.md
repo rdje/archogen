@@ -894,3 +894,21 @@ The [book](../../book/src/annex-trust-proofs.md#complete-diagnostic-region-repla
 operator totals, full command and limits. Only four applicable E reasons are judged, not the
 whole26-record file. Full integration/cohort closure .14.4.2 remains before the complete trust.rs
 sweep. This is fresh bounded evidence, not a projected sum, remote CI or whole-file adequacy.
+
+
+## Diagnostic cohort integration closure
+
+`M3.6.9.6.3.2.2.14.4.2` (`2026-10-18`) binds final current source to the actual complete51 native
+43K/4E/4U strict0 result/full153 parents, then passes actual local integration12/0 with no unavailable,
+not-built or quarantined step. Native/official held activation 5fc854ec08a322af168a2615934a988a6e9e1b47 agrees;
+all1062 regular inputs restore with modes/Python-system hashes and one opaque gitlink identity.
+Five false bindings refuse. All30 pins,34 operator controls and tool metadata bind; production,
+caller/environment/allowlist, catalogue and reasons remain exact. Completion prose is a later
+separately gated epoch. No unrelated E validity, whole-file adequacy, remote CI or physical-board claim.
+
+The [book checkpoint](../../book/src/annex-trust-proofs.md#diagnostic-cohort-integration-checkpoint)
+closes all bounded diagnostic containers. P2 resume-order drift is also owned/corrected here:
+the earlier checkpoint goal jumped to the final trust.rs sweep although its containing assessment
+parent still owns historical rows. A literal table census finds463 general-parent rows, not463
+current survivors. Next `.15.1` must reconcile historical/current raw identities and completed
+evidence, then own the next assessment; only then may the controlling final-sweep prerequisite close.
