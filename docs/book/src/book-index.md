@@ -446,6 +446,8 @@ a change that leaves it stale, so it is never edited by hand.
   adequacy](trust-adequacy.md#semantic-witnesses-in-the-initial-cohort)
 - semulith — [What this project relies on from outside](ledger.md#semulith)
 - Sets: what a part accepts — [Matching an offer to a requirement](matching.md#sets-what-a-part-accepts)
+- Seven diagnostic-helper obligations: domain assessment — [Annex C: Trust proof
+  records](annex-trust-proofs.md#seven-diagnostic-helper-obligations-domain-assessment)
 - **SHA-256** — [definition](glossary.md), [What a report may claim](evidence.md), [Generated-sources test
   adequacy](trust-adequacy.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C:
   Trust proof records](annex-trust-proofs.md)

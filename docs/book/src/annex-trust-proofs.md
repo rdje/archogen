@@ -1116,3 +1116,40 @@ finishing controls or precise proofs, followed by the complete current replay.
 This checkpoint is local integration evidence. It does not establish remote CI, physical-board
 execution or F30 adequacy. The caller defect and stale timing rationale are resolved; the next activity
 is the seven outstanding helper judgments.
+
+
+### Seven diagnostic-helper obligations: domain assessment
+
+Assessment `.14.3.2.2.2.2.3` (`2026-10-18`) compiles the unchanged actual helper and all seven
+remaining edits, together with the actual shared environment constructor. It separates real
+[Cargo](ledger.md#rust-toolchain) diagnostic witnesses from constructed records that mark proof boundaries.
+
+| Edit | Assessment | Next verification |
+| --- | --- | --- |
+| `L676.eq.231` | A target alias has a multiline raw spelling and an ordinary physical destination. Selecting the last non-target environment entry loses that raw alias; its command continuation replaces the compiler error. | Permanent alias parent and native replay |
+| `L685.iter.233` | A multiline cwd emits a dual-configuration warning; its artifact target has a separate ordinary path. Last-path-only processing loses cwd and selects the warning continuation. | Permanent independent-cwd parent and native replay |
+| `L717.clogic.1497` | A missing-target manifest makes Cargo print its leading error before a multiline manifest path. Removing the lower bound suppresses that actual error. | Permanent leading-error parent and native replay |
+| `L690.cond.244` | Absolute-path examples agree; relative constructed records differ. | Exact absolute-prefix/caller proof with permanent premise guards |
+| `L717.cmp.257` | Absolute-path examples agree; relative constructed records differ. | Exact absolute-prefix/caller proof with permanent premise guards |
+| `L714.lit.253` | A constructed non-Cargo `erro:` line distinguishes the shorter literal. | Actual producer evidence or supported witness |
+| `L717.cmp.258` | A constructed path ending in newline immediately before an error distinguishes the closed upper bound. | Actual producer/path-boundary evidence or supported witness |
+
+The compiler cases use the actual build arguments and independently retain structured E0308 and
+the literal `error: could not compile … due to 1 previous error` diagnostic. OS device/inode identity
+confirms the artifact alias and physical directory are the same destination. The configuration-warning
+case keeps cwd and artifact prefixes independent, so a shared multiline ancestor cannot mask omission
+of cwd. The manifest case exercises the failed-command contract directly; it is not an admitted
+inventory or a successful public gate.
+
+The helper can consume arbitrary strings, but constructed records are not automatically possible
+outputs of the pinned producer. Conversely, agreement on a finite set cannot prove a supported-domain
+equivalence. The next slices therefore add the three real-Cargo parents first, prove the two
+absolute-prefix proposals separately, and resolve the final two producer-dependent obligations.
+
+All 1055 held regular inputs restore with modes and Python/system hashes; the submodule remains an
+opaque Git-index identity. Four falsified bindings refuse. The installed write guard permits its
+positive control and refuses the five forbidden operations; the actual Cargo witnesses use that guard.
+Initial scratch-template and stale-binary attempts are excluded from accepted final receipts.
+Production, operator controls, catalogue and existing reasons remain unchanged. These are source-bound
+witnesses and scheduled proof obligations, with **no fresh native kill or equivalence classification**.
+The historical nine-survivor measurement and later two finite-iterator proofs retain their own epochs.

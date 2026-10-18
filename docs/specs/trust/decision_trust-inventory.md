@@ -742,3 +742,21 @@ are not new measurements, and the full pass establishes no whole-file E validity
 Both caller false refusal and stale timing rationale are resolved; the seven remaining helper judgments
 resume. The [book checkpoint](../../book/src/annex-trust-proofs.md#repaired-caller-integration-checkpoint)
 records every stage and the local/host-comparison/physical-board limits.
+
+
+## Seven remaining helper domains
+
+Assessment `M3.6.9.6.3.2.2.14.3.2.2.2.2.3` (`2026-10-18`) binds exact current helper edits
+and the unchanged environment. Actual guarded Cargo witnesses distinguish target-key inequality,
+last-path-only processing and removal of the span's lower bound. The first two independently retain
+E0308 and the literal compiler failure; the third is a direct failed-command manifest control,
+not a public inventory fixture. No fresh native mutation outcome is claimed.
+
+Relative wider controls distinguish the unconditional-prefix and strict-begin edits; their finite
+absolute-path agreement only schedules universal caller/prefix proofs. Constructed shorter-literal
+and closed-upper-bound differences require producer evidence rather than an absolute-path assumption.
+Immediate owned .4 adds three permanent regression parents; .5 proves the absolute-prefix proposals;
+.6 resolves both producer-dependent boundaries before complete .14.4 replay. All1055 held inputs
+restore and four false bindings refuse; production/operator/catalogue/reasons stay unchanged.
+The [book assessment](../../book/src/annex-trust-proofs.md#seven-diagnostic-helper-obligations-domain-assessment)
+records every edit and its evidence boundary.
