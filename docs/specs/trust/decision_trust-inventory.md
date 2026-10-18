@@ -1023,3 +1023,9 @@ No projected full83 result follows;20 earlier survivors remain owned. The origin
 defect is open, with .3.3.1 contract/prototype immediately next and bounded repair/full milestone
 verification afterward. The [book](../../book/src/annex-trust-proofs.md#admitted-nonterminal-warning-regression-parent)
 records exact intended names, fixture correction and the distinction between coverage and repair.
+
+## Compiler provenance repair contract and prototype
+
+The complete pending repair contract, tracked prototype, actual outcomes and bounded
+implementation obligations are in [compiler-provenance-contract.md](compiler-provenance-contract.md).
+Production repair and independent verification remain open.

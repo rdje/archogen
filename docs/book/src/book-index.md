@@ -103,6 +103,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#compiler-command-provenance-assessment)
 - Compiler environment admission regressions — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-environment-admission-regressions)
+- Compiler provenance contract and prototype — [Annex C: Trust proof
+  records](annex-trust-proofs.md#compiler-provenance-contract-and-prototype)
 - Compiler records and normalization — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-records-and-normalization)
 - Complete compiler-function measurement — [Annex C: Trust proof
@@ -122,6 +124,7 @@ a change that leaves it stale, so it is never edited by hand.
   relevance](presence.md#contradictions-are-rejected-never-resolved)
 - cost-format — [What is versioned, and what changing it costs](versions.md#cost-format)
 - **CPU** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
+- **CR** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **CSR** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 
 ## D
@@ -286,6 +289,7 @@ a change that leaves it stale, so it is never edited by hand.
   detail](annex-runtime.md#latched-releases-and-completions-inside-a-region)
 - Later profiles — [The supported profile](profile.md#later-profiles)
 - **LCOFI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
+- **LF** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - linkedspec — [What this project relies on from outside](ledger.md#linkedspec)
 - Local build storage — [Where the engine's knowledge comes from: the catalog](catalog.md#local-build-storage)
 - --locked is refused, not ignored — [The S0 early generation path](s0.md#--locked-is-refused-not-ignored)
@@ -353,6 +357,7 @@ a change that leaves it stale, so it is never edited by hand.
   costs](versions.md)
 - **PGEN** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - pgen — [What this project relies on from outside](ledger.md#pgen)
+- **PID** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Planning the operator measurements — [Generated-sources test
   adequacy](trust-adequacy.md#planning-the-operator-measurements)
 - **PLIC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)

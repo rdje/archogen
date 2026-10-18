@@ -32,6 +32,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
 - **CLINT** — Core-Local Interruptor: the block that provides a RISC-V hart's timer and software interrupts on the
   emulated machine archogen targets first. See [Where generated systems run](targets.md).
 - **CPU** — Central Processing Unit: the processor. See [What this project relies on from outside](ledger.md).
+- **CR** — carriage return: a control character distinct from a line feed, retained by the native argument
+  transport checks. See [Compiler provenance](annex-trust-proofs.md#compiler-provenance-contract-and-prototype).
 - **CSR** — Control and Status Register: a RISC-V register that configures or reports the processor's state, such as
   whether interrupts are enabled. See [What this project relies on from outside](ledger.md).
 - **DMA** — Direct Memory Access: a device moving data to or from memory without the processor; excluded from the
@@ -67,6 +69,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
 - **JSON** — JavaScript Object Notation: a plain-text format for structured data. See [The engine API](engine-api.md).
 - **LCOFI** — Local Counter Overflow Interrupt: a RISC-V interrupt raised when a performance counter overflows. See
   [What this project relies on from outside](ledger.md).
+- **LF** — line feed: the control character used as a newline on Unix, also preserved inside native arguments.
+  See [Compiler provenance](annex-trust-proofs.md#compiler-provenance-contract-and-prototype).
 - **MCP** — Model Context Protocol: the protocol through which an AI agent calls a tool; archogen's server speaks it.
   See [The engine API](engine-api.md) and [the specification's ledger entry](ledger.md#mcp-specification).
 - **MEI**, **MSI**, **MTI** — Machine External, Software and Timer Interrupt: RISC-V's interrupts for its most
@@ -83,6 +87,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
 - **PDF** — Portable Document Format. See [What this project relies on from outside](ledger.md).
 - **PGEN** — a parser generator that [LinkedSpec](ledger.md#linkedspec)'s bootstrap uses: a name, not an acronym. See
   [its ledger entry](ledger.md#pgen).
+- **PID** — process identifier: the operating system's identifier for a running process. The prototype uses it
+  within a fresh session to name invocation records. See [Compiler provenance](annex-trust-proofs.md#compiler-provenance-contract-and-prototype).
 - **PLIC** — Platform-Level Interrupt Controller: the RISC-V block that routes devices' interrupts to a hart. See
   [its specification's ledger entry](ledger.md#riscv-plic).
 - **POSIX** — Portable Operating System Interface: the standard Unix-like interface; not the first profile's. See

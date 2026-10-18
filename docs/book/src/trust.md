@@ -106,7 +106,8 @@ resolve four of those obligations with real refusal/recovery controls. Command-f
 now has [verified warning controls](annex-trust-proofs.md#admitted-nonterminal-warning-regression-parent). A
 [reproduced parser defect](annex-trust-proofs.md#compiler-command-provenance-assessment) currently
 mistakes an admitted multiline assembly warning naming rustc for empty-name compilation units and
-refuses the inventory. Its provenance-repair contract/prototype is next; final whole-file adequacy remains open.
+refuses the inventory. The [verified separate-record prototype](annex-trust-proofs.md#compiler-provenance-contract-and-prototype)
+now supplies the repair contract. Production repair is next; final whole-file adequacy remains open.
 
 An admission's `defadmit` form names the file, rule and `sha256` of the site's extent (the whole manifest for a
 manifest rule), plus one textual `reason` value.

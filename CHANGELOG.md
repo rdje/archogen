@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — verify a separate compiler-provenance prototype
+
+`ARCHOGEN-M3-0762` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.1`), `2026-10-18`.
+
+- Track the published-wrapper observer, native C receiver and rerunnable probe. Complete20
+  actual Cargo builds across four roles/warning payloads,45 artifact naming queries with no
+  build-file changes,14 rejecting record controls and8 concurrent native writers.
+- Hold byte-exact argv, private environment removal, exit/stdio/signal forwarding and setup/
+  spawn failures. All1067 activation inputs restore; original production/tests/reasons exact.
+- Specify producer/consumer/session/artifact/failure contracts and bounded repair children in
+  canonical record/book. Partition the contract, shorten tool routing and seal one committed
+  task leaf with complete reconstruction; preserve all book detail. Final staged focused/book/
+  doctrine workflow; P2 repair remains next.
+
 ## archogen — hold admitted nonterminal command-warning records
 
 `ARCHOGEN-M3-0761` (leaf `M3.6.9.6.3.2.2.15.2.1.3.2`), `2026-10-18`.

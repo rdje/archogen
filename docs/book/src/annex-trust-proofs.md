@@ -2738,3 +2738,169 @@ The original P2 phantom-unit defect from a rustc-looking admitted warning is sti
 The next action is its concrete producer/consumer contract and prototype, `.15.2.1.3.3.1`,
 followed by bounded repair and complete current source/premise/mutation/integration verification.
 The command-filter cohort stays open until that defect is fixed.
+
+
+### Compiler provenance contract and prototype
+
+The `2026-10-18` slice `.15.2.1.3.3.1` verifies a repair mechanism for the admitted-warning
+false refusal above. **Production inventory is still unchanged.** The prototype records compiler
+invocations separately, through Cargo's published
+[`RUSTC_WRAPPER` interface](https://doc.rust-lang.org/cargo/reference/environment-variables.html),
+whose first argument is the compiler followed by its arguments. The global wrapper observes dependency
+compilations too. The workspace-only wrapper is not used. Both interfaces and the installed public
+compiler documentation are tied to the [pinned toolchain](ledger.md#rust-toolchain).
+
+A compiler warning can contain any of the following data without becoming a compilation unit:
+
+```text
+Running `not-a-compiler`
+Running `rustc`
+Running `rustc --crate-name phantom phantom.rs --out-dir bogus`
+```
+
+The observer receives arguments from Cargo's process invocation, independently of those strings.
+It forwards the arguments to the real compiler, with stdout and stderr inherited, and writes its own
+completed record into the build's private directory. The consumer reads that directory only after
+Cargo succeeds. It does not recover units from warning text if provenance is missing or malformed.
+
+The proposed production boundary is:
+
+| Step | Contract |
+| --- | --- |
+| Prepare the instrument | Compile the tracked embedded std-only observer with the pinned compiler once for this inventory invocation; verify its installed bytes in each role's target directory. |
+| Begin a role build | Create a fresh same-volume session for the root, harness or generator. Preserve the existing cleared base environment and fixed compiler; add explicit instrument settings only. |
+| Run the compiler | Reserve a partial record with exclusive creation before execution. Forward native argv and working directory, remove the wrapper and private settings from the compiler environment, and preserve diagnostic streams. |
+| Complete the record | Retain session, role, invocation identity, working directory, complete argv bytes and exit/signal outcome. Publish without replacing another record. A record failure fails the build. |
+| Read provenance | Require the exact schema and current identity, regular non-symlink files, complete byte framing and successful status. Empty, stale, partial, foreign-role or unknown records refuse. |
+| Separate queries | Recognize the pinned version and target-information queries; they yield no units. Unknown shapes refuse. Each real compilation remains subject to metadata ownership, dependency files, source admission, environment and configuration checks. |
+| Select the artifact | Bind the role target to an observed compilation. Ask pinned rustc for link-output names using empty input and observed naming options, then check basenames, target containment, regular output files and hashes. Arbitrary Cargo stdout does not select the artifact. |
+| Finish or fail | Sort units as before. Keep instrument/session paths out of configuration and shared-item identities. On failure leave no inventory, retain useful diagnostics and partial evidence, wait for children, and use a new session next time. |
+
+The [canonical inventory record](../../../docs/specs/trust/decision_trust-inventory.md#compiler-provenance-repair-contract-and-prototype)
+keeps the same contract. Implementation remains divided into producer/unit collection, artifact
+binding, compatibility/refusal controls and complete current mutation/premise/integration verification.
+The first implementation slice must include a real public inventory red/green case for the P2 defect.
+Independent review and final F30 adequacy remain separate obligations.
+
+#### Replaying the prototype
+
+The instrument and both native source fixtures are tracked:
+
+```bash
+python3 -I -B scripts/trust_compiler_provenance_probe.py \
+  --out target/compiler-provenance-probe
+```
+
+Choose a new output directory on each run. It must be relative to the repository under `target/` and
+resolve on the repository volume. The instrument derives the root from its own location, prepares
+project-local temporary/cache directories, compiles the actual current environment constructor and
+uses the pinned toolchain. The OS C compiler and installed toolchain/public documentation are read-only
+external dependencies. No submodule implementation, other checkout or old evaluation case is used.
+All build workspaces, Cargo homes, traces, binaries and receipts stay under the chosen output.
+
+The prototype format is `archogen-compiler-provenance-prototype/1`. It encodes native argument and
+working-directory bytes as hexadecimal; a record includes the session, role, PID, compiler exit code
+and signal. Raw observations can therefore retain the actual runtime spelling without becoming
+project lookup paths. Production configuration remains repository-relative after normalization.
+This is an internal prototype format, not a new public inventory schema or a production repair.
+
+#### Actual role and payload matrix
+
+The dated run completes **20 actual Cargo builds**, all with release/locked/offline/no-default-features,
+JSON messages and single verbosity, using the actual base environment plus explicit instrument settings.
+Each cell gives the independently expected real compilation units; every build succeeds.
+
+| Common-dependency source | Binary root | Library root | Comparison harness | Generator |
+| --- | --- | --- | --- | --- |
+| Ordinary | common, app | common, api | common, api, adapter | common, generator |
+| Warning naming not-a-compiler | common, app | common, api | common, api, adapter | common, generator |
+| Warning naming rustc | common, app | common, api | common, api, adapter | common, generator |
+| Full command-shaped warning | common, app | common, api | common, api, adapter | common, generator |
+| Escaped JSON-looking stdout | common, app | common, api | common, api, adapter | common, generator |
+
+Each build also observes the pinned producer's three query invocations: version twice and target
+information once. They produce no units. Every real unit agrees with a Cargo artifact report.
+These direct Cargo fixtures exercise the mechanism; they do not replace the separately reproduced
+public inventory admission/refusal case above or establish repaired production behavior.
+
+The stdout probe uses an assembler print directive. Its output retains backslashes before quotes,
+so it is JSON-looking text rather than a valid artifact object. Attempts using adjacent or single
+quotes fail in the assembler. No artifact-report exploit was demonstrated. The contract binds
+artifacts to real observed outputs so their selection does not depend on guessing which diagnostic
+text can resemble a Cargo record.
+
+For every observed compilation, a separate empty-input naming query selects only observed crate
+name/type, test mode, target if present and extra-filename. All **45 naming queries** agree with actual
+Cargo artifact bytes. A complete before/after file-hash census of each build directory is unchanged.
+This uses rustc's documented
+[`file-names` print option](https://doc.rust-lang.org/rustc/command-line-arguments/print-options.html#file-names),
+checked against the installed pinned documentation and actual outputs. No source macro is evaluated
+by these empty-input queries. The future artifact slice must preserve containment, role ownership and
+existing supported path geometry, including cases beyond this finite fixture matrix.
+
+#### Transport, failure and concurrency controls
+
+An independently compiled C receiver writes its actual native argv as NUL-separated bytes. The
+observer's decoded record matches it exactly for empty arguments, spaces, apostrophes, double quotes,
+LF/CR, backslashes, Unicode and non-UTF8 Unix bytes. The receiver also checks the private fields and
+wrapper setting are absent. Its exit7 and exact stdout/stderr are preserved. A signal15 case exits143
+and records the signal; a compiler spawn failure exits2 and leaves a refused partial record. A missing
+trace-directory setup exits2 before the requested receiver can execute.
+
+Eight concurrent native writers retain distinct, complete records with exact independent argv
+receipts. No record is replaced or left partial in that successful concurrency case. The consumer's
+following controls each alter a separate copy of valid primary records and all refuse:
+
+| Alteration | Required rejection |
+| --- | --- |
+| Missing record population | missing provenance |
+| Partial file | incomplete/unexpected record |
+| Old session | session identity |
+| Other role | role identity |
+| Other schema | schema identity |
+| Extra field | record schema |
+| Duplicate JSON field | duplicate JSON field |
+| Invalid hexadecimal | byte framing/alphabet |
+| Filename/PID disagreement | invocation identity |
+| Failed compiler status | compiler status |
+| Other compiler | compiler selection |
+| Other working directory | compiler cwd |
+| Unknown query | unknown query shape |
+| Symbolic-link record | incomplete/unexpected record |
+
+These **14 rejecting controls** and the native error cases exercise this prototype, not all future
+production failure branches. A trusted host/toolchain and preflight's prohibition on executing build
+scripts/procedural macros remain premises; the record is not a security boundary against a host that
+can rewrite both instrument and evidence. Source admissions and all input/file/environment rules
+remain in force.
+
+#### Evidence and remaining work
+
+The verified receipt is `target/compiler-provenance-prototype/verified/prototype-results.json`,
+SHA-256 `d247612c4726520bed465797a60d3eb2728a9538025ad5934f9aa552eca2937f`.
+The producer is durable: the replay command above builds the tracked instrument and fixtures.
+The receipt binds their hashes, current production sources, native tool identities and installed
+public documentation. The tracked supplemental auditor rechecks raw records, literal role sets and
+actual artifact hashes, and rejects altered summaries:
+
+```bash
+python3 -I -B scripts/fixtures/compiler_provenance_audit.py \
+  --input target/compiler-provenance-probe/prototype-results.json
+```
+
+The private runtime paths in raw argv are observations, not relocation inputs.
+
+All 1067 original regular inputs restore at the activation epoch, including modes and independent
+Python/system hashes. Later completion documents are a separate epoch. The original trust production
+and tests, current mutation operators/catalogue and equivalent-reason file remain unchanged.
+Exploratory failures are retained: an overly narrow emit-mode expectation omitted binary compilation;
+an assembler template needed brace escaping; escaped stdout was initially mistaken for valid JSON.
+The durable run uses the corrected expectations and records the narrower actual conclusions.
+
+Next, `.15.2.1.3.3.2.1` implements actual invocation collection with an admitted-warning public
+red/green regression. `.2.2` binds role artifacts to observed output; `.2.3` holds compatible paths,
+roles and refusal/recovery behavior. Affected old helpers and equivalent premises must be explicitly
+retired or revalidated as production changes, with their historical outcomes preserved.
+`.3.3.3` then rebinds all affected sources, current raw mutations, callers and producer premises,
+resolves new survivors and runs full milestone integration. The command-filter cohort and F30 stay
+open until the repair and those gates finish.
