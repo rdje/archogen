@@ -63,6 +63,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Canonical form — [Reading a description](reading.md#canonical-form)
 - **capability vocabulary** — [definition](glossary.md), [Modules and composition](modules.md), [Checking a
   description](checking.md), [Matching an offer to a requirement](matching.md), [The engine API](engine-api.md)
+- Cargo failure framing repair — [Annex C: Trust proof records](annex-trust-proofs.md#cargo-failure-framing-repair)
 - **catalog** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [What a report may claim](evidence.md), [Matching an offer to a requirement](matching.md), [What the
   scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md),
@@ -127,8 +128,7 @@ a change that leaves it stale, so it is never edited by hand.
   generated systems run](targets.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
   the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md), [Annex B: The checks
   that keep the repository honest](annex-repository.md)
-- Diagnostic selector assessment and current defect — [Annex C: Trust proof
-  records](annex-trust-proofs.md#diagnostic-selector-assessment-and-current-defect)
+- Diagnostic selector assessment — [Annex C: Trust proof records](annex-trust-proofs.md#diagnostic-selector-assessment)
 - Diagnostics — [The archogen command line](cli.md#diagnostics)
 - Diagnostics point at the problem — [Reading a description](reading.md#diagnostics-point-at-the-problem)
 - **DMA** — [definition](glossary.md), [The supported profile](profile.md), [Refinement](refinement.md)

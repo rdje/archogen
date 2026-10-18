@@ -5872,3 +5872,18 @@ from
 to
         let _ = fs::create_dir_all(&temp_dir);
 end
+
+mutation trust-cargo-failure-path-framing-removed
+file xtask/src/trust.rs
+test -p xtask trust::tests::cargo_failure_diagnostics
+expect killed
+why M3.6.9.6.3.2.2.14.3.2.1: raw physical error-prefix matching mistakes multiline configuration/status and quoted artifact paths for diagnostics; public build failure, operational refusal, target-only and canonical/ancestor regressions must finish with named failures.
+from
+            let first = cargo_error_line(&stderr, cwd, env);
+to
+            let first = stderr
+                .lines()
+                .find(|l| l.starts_with("error"))
+                .unwrap_or("")
+                .to_owned();
+end

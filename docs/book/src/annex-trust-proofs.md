@@ -578,7 +578,9 @@ operator catalogue, equivalence reasons and native tooling stay exact. Later clo
 separate pinned-book and staged checks. The next slice assesses the three diagnostic matcher survivors
 against exact compiled helpers and supported pinned Cargo output, including independent expected lines.
 
-### Diagnostic selector assessment and current defect
+<a id="diagnostic-selector-assessment-and-current-defect"></a>
+
+### Diagnostic selector assessment
 
 Assessment `.14.3.1` (`2026-10-18`) tests the exact original helper and its three current selector
 edits with real pinned Cargo. The caller admits alias configuration only; general configuration-warning
@@ -600,7 +602,7 @@ fragment. An oracle accepting any error would pass every variant, so it proves n
 The literal independent expectation distinguishes them. These observations are supported witnesses;
 permanent finishing parent controls and repaired-source native outcomes are still required.
 
-The same assessment exposes a defect in the original. A supported path continuation beginning
+The same assessment exposed the original defect, repaired in the following section. A supported path continuation beginning
 `error-path` is selected before Cargo’s genuine message:
 
 ```text
@@ -608,17 +610,69 @@ expected: error: could not compile `a` (bin "a") due to 1 previous error
 reported: error-path/source/crates/common)
 ```
 
-A second successful-path/failure control uses `error: decoy`. Its failure also selects the path, so
-adding a colon to an unframed prefix test would leave the defect. The cause is scanning physical stderr
-lines without distinguishing multiline path continuations. The helper’s misleading failure text hides
-the build reason; this is an original-code defect, independently of its mutation-test blind spots.
+A standalone-helper control uses `error: decoy` in the workspace prefix while keeping artifacts in a
+separate ordinary target. That Cargo build can succeed, but it is not the normal inventory geometry:
+Cargo cannot join a Unix library-search path containing a colon in its artifact directory. The earlier
+assessment’s inventory-layout implication was too broad. The repair keeps that observation qualified
+and adds public operational-failure controls, rather than counting an unsupported positive build.
 
-Immediate P2 repair is owned by `.14.3.2.1`. It must reproduce the issue through public inventory,
-frame useful actual diagnostics, preserve other refusal behavior and add permanent regression controls.
-`.14.3.2.2` then rebinds selector obligations against the repaired production source. This assessment
+The cause is scanning physical stderr lines without distinguishing multiline path continuations.
+Public dual-config warnings reproduce the colon-looking continuation before Cargo’s genuine setup
+failure, so merely tightening the prefix to a colon still loses the actual reason. Repair `.14.3.2.1`
+below adds permanent regressions. `.14.3.2.2` rebinds obligations against the repaired source. This assessment
 changes no production code, existing controls or equivalence records. Its exact compiled source,
 producer JSON/stderr, positive/negative controls and Python/system hashes are retained; the complete
 native `9 killed / 3 survived / strict exit 1` remains the preceding measurement, not a new result.
+
+### Cargo failure framing repair
+
+Repair `.14.3.2.1` (`2026-10-18`) preserves Cargo’s genuine failure line by excluding candidates whose
+byte positions fall inside known multiline workspace or artifact directory spellings. Ancestors cover
+warnings about containing configuration directories; canonical spellings cover output aliases. Raw
+status/warning paths and Cargo’s Unix quoted arguments both participate. The existing command decoder
+and successful-build processing remain byte-identical.
+
+The permanent public-inventory controls first build both roots successfully, then commit ordinary
+type errors in both root kinds. They require the literal Cargo diagnostics, no inventory after the
+failure and successful recovery after the sources are repaired. Paths include newline and carriage
+return, quoting/backslashes, non-ASCII text and distinct aliased/canonical names. Target-only controls
+exercise paths inside verbose command arguments. Admitted legacy/current alias configurations emit
+real containing-directory warnings, including repeated path spellings in a message.
+
+```text
+accepted old-code baseline: 3 finishing parent failures
+final repaired parents:    4 passed, 0 failed, 0 ignored
+old-defect catalogue entry: killed by all 4 named finishing parents, source restored
+```
+
+The colon boundary is explicit. A colon in the artifact path causes a Unix Cargo library-path setup
+failure; it is not successful compiler evidence. Public operational controls preserve that actual Cargo
+reason even when a preceding dual-config warning has a diagnostic-looking continuation. The earlier
+rejected colon-positive baseline remains retained and excluded from the repair’s failing baseline.
+Probe setup and compiler stores are repository-local; targeted Cargo/control runs use the recorded
+OS guard. The ordinary focused tier uses the repository-local store environment.
+
+For example, `with\nerror-path` denotes a directory name with a real newline. Its continued path is
+not used as the build diagnostic. A type mismatch still reports the pinned Cargo message:
+
+```text
+error: could not compile `a` (bin "a") due to 1 previous error
+```
+
+The maintained reversal command restores the original physical-line selector and proves the regression
+parents detect it:
+
+```console
+$ cargo xtask mutate --only trust-cargo-failure-path-framing-removed
+```
+
+Every older production/test byte reconstructs after removing only the new helper, call replacement
+and new regressions. The catalogue appends its defect entry; earlier operator controls and E reasons
+stay exact. Final focused, pinned-book and staged gates bind publication. This is a verified defect
+repair, not mutation adequacy: the repaired helper region has 51 current edits within a global listing
+of 1526. The old three raw selector rows are retired by the production change. Their semantic
+obligations and the new helper still require fresh binding, complete measurement and resolution under
+`.14.3.2.2`, before the final cohort checkpoint.
 
 ## Mutation measurements and controls
 

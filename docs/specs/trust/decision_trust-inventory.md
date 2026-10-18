@@ -630,9 +630,27 @@ pass. An ordinary type error supplies a literal independent diagnostic and struc
 compiled original/three selector edits differ as expected. These are witnesses, not fresh native kills.
 
 The original helper has a confirmed framing defect: a physical path continuation beginning with
-`error` can replace the actual diagnostic in its failure text. A successful-path/failure control with
-`error: decoy` also reproduces it, excluding a colon-only predicate repair. Immediate P2 owner
-`.14.3.2.1` must reproduce through public inventory, frame diagnostics correctly and add permanent
-regressions before remaining selector rebinding/classification. Source/controls/reasons are unchanged
-by the assessment. The [book](../../book/src/annex-trust-proofs.md#diagnostic-selector-assessment-and-current-defect)
+`error` can replace the actual diagnostic in its failure text. A standalone helper control with
+`error: decoy` and an ordinary separate target also reproduces it. This is not a successful inventory
+artifact-layout witness: colon artifacts cause a Unix Cargo library-path setup refusal. The following repair
+`.14.3.2.1` reproduces the issue through public inventory and adds permanent regressions before
+remaining selector rebinding/classification. Source/controls/reasons are unchanged
+by the assessment. The [book](../../book/src/annex-trust-proofs.md#diagnostic-selector-assessment)
 records producer evidence and limitations; the last complete native result remains nine K/three S.
+
+
+## Cargo failure framing repair
+
+`M3.6.9.6.3.2.2.14.3.2.1` (`2026-10-18`) excludes physical error candidates inside known workspace/
+artifact path spans, including ancestors, canonical aliases and Unix quote spellings. Public inventory
+compiler failures preserve both roots’ literal messages, no-inventory state and recovery. Operational
+colon-artifact refusals retain the actual Cargo path-joining reason despite admitted dual-config
+warnings. The initial unsupported colon-positive baseline is explicitly excluded; the earlier separate-
+target helper witness is qualified. Setup/compiler stores are local; targeted Cargo experiments and reversal runs are guarded.
+
+The final parent group passes; the native catalogue reversal kills the exact old selector with every
+new parent and restores the file. All earlier code/tests reconstruct exactly, the catalogue appends one
+entry and prior E records stay exact. Final focused/staged/book gates bind publication. Current global
+listing1526 and helper region51 are planning only; three old raw selector rows are textually retired,
+not converted to E. Fresh binding/measurement `.14.3.2.2.1` follows. The
+[book](../../book/src/annex-trust-proofs.md#cargo-failure-framing-repair) records behavior and scope.

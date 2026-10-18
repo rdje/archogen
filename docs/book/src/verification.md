@@ -217,6 +217,15 @@ the tests that must catch it. The harness checks each step:
 - the tests failed, and which ones;
 - the file was restored byte for byte.
 
+The `trust-cargo-failure-path-framing-removed` entry restores the old physical-line error selector.
+Its public compiler/setup, target-only and canonical/ancestor controls require the genuine Cargo
+message; [the framing repair](annex-trust-proofs.md#cargo-failure-framing-repair) records its named
+finishing kills and restoration. Run that entry with:
+
+```console
+$ cargo xtask mutate --only trust-cargo-failure-path-framing-removed
+```
+
 A defect that does not even compile is a broken entry, never a "kill". A run that is interrupted
 leaves a marker, and the next run refuses to start until the file is restored. Each entry's tests run under a time
 limit (`ARCHOGEN_MUTATE_TIMEOUT`): a defect that makes a test hang is reported as a hang the tests reach, their whole

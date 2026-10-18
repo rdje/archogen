@@ -668,6 +668,60 @@ fn beside<'a>(h: &'a Build, x: &Build, y: &Build) -> Vec<&'a Unit> {
         .collect()
 }
 
+/// Select a failure line outside multiline workspace and artifact paths. Admitted source/configuration names
+/// contain no line breaks; their directory prefixes can. Include ancestor and canonical spellings so raw status
+/// paths and configuration warnings are covered, as well as Cargo's Unix single-quoted command arguments.
+fn cargo_error_line(stderr: &str, cwd: &Path, env: &[(String, String)]) -> String {
+    let mut paths = vec![cwd.to_path_buf()];
+    if let Some((_, target)) = env.iter().rfind(|(key, _)| key == "CARGO_TARGET_DIR") {
+        let target = Path::new(target);
+        paths.push(if target.is_absolute() {
+            target.to_path_buf()
+        } else {
+            cwd.join(target)
+        });
+    }
+    let mut prefixes = BTreeSet::new();
+    for path in paths {
+        let canonical = fs::canonicalize(&path).ok();
+        for spelling in std::iter::once(path).chain(canonical) {
+            for prefix in spelling.ancestors() {
+                let prefix = prefix.to_string_lossy();
+                if prefix.contains('\n') {
+                    prefixes.insert(prefix.replace('\'', "'\\''"));
+                    prefixes.insert(prefix.into_owned());
+                }
+            }
+        }
+    }
+    let path_spans: Vec<_> = prefixes
+        .iter()
+        .flat_map(|prefix| {
+            stderr
+                .match_indices(prefix.as_str())
+                .map(|(start, matched)| (start, start + matched.len()))
+        })
+        .collect();
+    let mut offset = 0;
+    for physical in stderr.split_inclusive('\n') {
+        let start = offset;
+        offset += physical.len();
+        let line = if let Some(line) = physical.strip_suffix('\n') {
+            line.strip_suffix('\r').unwrap_or(line)
+        } else {
+            physical
+        };
+        if line.starts_with("error")
+            && !path_spans
+                .iter()
+                .any(|&(begin, end)| begin <= start && start < end)
+        {
+            return line.to_owned();
+        }
+    }
+    String::new()
+}
+
 /// What cargo printed: its standard output (the JSON messages) and its standard error (`-v`'s command lines).
 fn run_cargo(
     args: &[&str],
@@ -686,11 +740,7 @@ fn run_cargo(
     let stdout = String::from_utf8_lossy(&out.stdout).into_owned();
     let stderr = String::from_utf8_lossy(&out.stderr).into_owned();
     if !out.status.success() {
-        let first = stderr
-            .lines()
-            .find(|l| l.starts_with("error"))
-            .unwrap_or("")
-            .to_owned();
+        let first = cargo_error_line(&stderr, cwd, env);
         return Err(format!("`cargo {}` failed: {first}", args.join(" ")));
     }
     Ok((stdout, stderr))
@@ -5171,6 +5221,265 @@ pub(crate) mod tests {
             assert!(stdout.lines().any(|l| l == named));
             assert!(stdout.contains("test result: ok. 1 passed; 0 failed; 0 ignored;"));
         }
+    }
+
+    const CARGO_ROOT_TYPE_ERRORS: &str = concat!(
+        "`cargo build --bin a --release --locked --offline --no-default-features ",
+        "--message-format=json -v -p a` failed: error: could not compile `a` (bin \"a\") ",
+        "due to 1 previous error\n",
+        "`cargo build --lib --release --locked --offline --no-default-features ",
+        "--message-format=json -v -p b` failed: error: could not compile `b` (lib) ",
+        "due to 1 previous error"
+    );
+
+    #[test]
+    fn cargo_failure_diagnostics_ignore_multiline_output_paths() {
+        crate::trust_test_process::bounded!(
+            cargo_failure_diagnostics_ignore_multiline_output_paths
+        );
+        let main = "fn main() {}\n";
+        let library = "pub fn f() {}\n";
+        let legacy = std::fs::read_to_string(real_root().join(".cargo/config.toml")).unwrap();
+        let f = two_roots(
+            "cargo-failure-diagnostic-paths",
+            main,
+            library,
+            &[(".cargo/config", legacy)],
+        );
+        let outputs = [
+            "ordinary",
+            "with\nerroneous-path",
+            "with\nerror-path",
+            "with\nerror decoy",
+            "with\nerror could not compile `decoy`",
+            "with\r\nerror carriage-return decoy",
+            "with'\\\nerror quoted path",
+            "with-λ\nerror unicode path",
+        ];
+        for out in outputs {
+            assert_eq!(
+                written(f.run_into(out))
+                    .get("programs")
+                    .unwrap()
+                    .elements()
+                    .len(),
+                2,
+                "{out:?}"
+            );
+        }
+        f.commit(&[
+            (
+                "crates/a/src/main.rs",
+                "fn main() { let _: u8 = \"wrong type\"; }\n".to_owned(),
+            ),
+            (
+                "crates/b/src/lib.rs",
+                "pub fn f() { let _: u8 = \"wrong type\"; }\n".to_owned(),
+            ),
+        ]);
+
+        for out in outputs {
+            let destination = f.base.join(out);
+            let error = match inventory_with(&f.repo, "HEAD", &destination, &configuration_roots())
+            {
+                Err(error) => error,
+                Ok(Outcome::Written(_)) => panic!("failed builds wrote an inventory: {out:?}"),
+                Ok(Outcome::Refused(why)) => {
+                    panic!("build failure became a source refusal: {why:?}")
+                }
+            };
+            assert_eq!(error, CARGO_ROOT_TYPE_ERRORS, "{out:?}");
+            assert!(!destination.join("trust-dependencies.json").exists());
+        }
+        f.commit(&[
+            ("crates/a/src/main.rs", main.to_owned()),
+            ("crates/b/src/lib.rs", library.to_owned()),
+        ]);
+        for out in outputs {
+            assert_eq!(
+                written(f.run_into(out))
+                    .get("programs")
+                    .unwrap()
+                    .elements()
+                    .len(),
+                2,
+                "recovery: {out:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn cargo_failure_diagnostics_ignore_multiline_target_paths() {
+        crate::trust_test_process::bounded!(
+            cargo_failure_diagnostics_ignore_multiline_target_paths
+        );
+        let main = "fn main() {}\n";
+        let f = two_roots(
+            "cargo-failure-diagnostic-targets",
+            main,
+            "pub fn f() {}\n",
+            &[],
+        );
+        let targets = [
+            "ordinary",
+            "with\nerror-path",
+            "with\nerror decoy",
+            "with\nerror could not compile `decoy`",
+            "with'\\\nerror quoted path",
+            "with-λ\nerror unicode path",
+        ];
+        let args = [
+            "build",
+            "--bin",
+            "a",
+            "--release",
+            "--locked",
+            "--offline",
+            "--no-default-features",
+            "--message-format=json",
+            "-v",
+            "-p",
+            "a",
+        ];
+        for target in targets {
+            let env = super::environment(
+                "1.95.0",
+                &f.base.join("producer/cargo-home"),
+                &f.base.join("producer").join(target),
+            )
+            .unwrap();
+            super::run_cargo(&args, &env, &f.repo).unwrap();
+        }
+        f.commit(&[(
+            "crates/a/src/main.rs",
+            "fn main() { let _: u8 = \"wrong type\"; }\n".to_owned(),
+        )]);
+        let expected = concat!(
+            "`cargo build --bin a --release --locked --offline --no-default-features ",
+            "--message-format=json -v -p a` failed: error: could not compile `a` (bin \"a\") ",
+            "due to 1 previous error"
+        );
+        for target in targets {
+            let env = super::environment(
+                "1.95.0",
+                &f.base.join("producer/cargo-home"),
+                &f.base.join("producer").join(target),
+            )
+            .unwrap();
+            assert_eq!(
+                super::run_cargo(&args, &env, &f.repo).unwrap_err(),
+                expected,
+                "{target:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn cargo_failure_diagnostics_preserve_operational_refusals() {
+        crate::trust_test_process::bounded!(
+            cargo_failure_diagnostics_preserve_operational_refusals
+        );
+        let legacy = std::fs::read_to_string(real_root().join(".cargo/config.toml")).unwrap();
+        let f = two_roots(
+            "cargo-failure-diagnostic-operational",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &[(".cargo/config", legacy)],
+        );
+        written(f.run_into("ordinary"));
+        // Cargo cannot join a Unix library search path containing a colon. The source is valid;
+        // this is an operational failure control, not successful compiler evidence for this layout.
+        for out in [
+            "with\nerror: decoy",
+            "with\nerror: could not compile `decoy`",
+        ] {
+            let destination = f.base.join(out);
+            let error = match inventory_with(&f.repo, "HEAD", &destination, &configuration_roots())
+            {
+                Err(error) => error,
+                Ok(Outcome::Written(_)) => {
+                    panic!("colon artifact path unexpectedly built: {out:?}")
+                }
+                Ok(Outcome::Refused(why)) => panic!("source unexpectedly refused: {why:?}"),
+            };
+            let failures: Vec<_> = error.lines().collect();
+            assert_eq!(failures.len(), 2, "{error}");
+            for failure in failures {
+                assert!(
+                    failure.contains("` failed: error: failed to join paths from `$"),
+                    "{failure}"
+                );
+                assert!(failure.ends_with("` together"), "{failure}");
+            }
+            assert!(!destination.join("trust-dependencies.json").exists());
+        }
+    }
+
+    #[test]
+    fn cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings() {
+        crate::trust_test_process::bounded!(
+            cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings
+        );
+        let main = "fn main() {}\n";
+        let library = "pub fn f() {}\n";
+        let legacy = std::fs::read_to_string(real_root().join(".cargo/config.toml")).unwrap();
+        let f = two_roots(
+            "cargo-diagnostic-ancestor\nerror-repo",
+            main,
+            library,
+            &[
+                (".cargo/config", legacy),
+                (".gitignore", "target/\n".to_owned()),
+            ],
+        );
+        let real = f.repo.join("target/with\nerror-real");
+        let alias = f.repo.join("target/with\nerror-alias");
+        std::fs::create_dir_all(&real).unwrap();
+        std::os::unix::fs::symlink(&real, &alias).unwrap();
+        assert_eq!(
+            std::fs::canonicalize(&alias).unwrap(),
+            std::fs::canonicalize(&real).unwrap()
+        );
+        let mut roots = configuration_roots();
+        roots.push(f.repo.clone()); // the fixture explicitly authorizes its own containing configuration
+        assert_eq!(
+            written(inventory_with(&f.repo, "HEAD", &alias, &roots).unwrap())
+                .get("programs")
+                .unwrap()
+                .elements()
+                .len(),
+            2,
+        );
+        f.commit(&[
+            (
+                "crates/a/src/main.rs",
+                "fn main() { let _: u8 = \"wrong type\"; }\n".to_owned(),
+            ),
+            (
+                "crates/b/src/lib.rs",
+                "pub fn f() { let _: u8 = \"wrong type\"; }\n".to_owned(),
+            ),
+        ]);
+        let error = match inventory_with(&f.repo, "HEAD", &alias, &roots) {
+            Err(error) => error,
+            Ok(Outcome::Written(_)) => panic!("failed builds wrote an aliased inventory"),
+            Ok(Outcome::Refused(why)) => panic!("source unexpectedly refused: {why:?}"),
+        };
+        assert_eq!(error, CARGO_ROOT_TYPE_ERRORS);
+        assert!(!alias.join("trust-dependencies.json").exists());
+        assert!(!real.join("trust-dependencies.json").exists());
+        f.commit(&[
+            ("crates/a/src/main.rs", main.to_owned()),
+            ("crates/b/src/lib.rs", library.to_owned()),
+        ]);
+        assert_eq!(
+            written(inventory_with(&f.repo, "HEAD", &alias, &roots).unwrap())
+                .get("programs")
+                .unwrap()
+                .elements()
+                .len(),
+            2,
+        );
     }
 
     #[test]

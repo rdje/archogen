@@ -674,7 +674,7 @@ proves no copied index/gitlink contents. Actual code, controls, reasons and repa
 exact. Five false activation/result bindings refuse. Later closure prose has separate pinned book and
 staged checks. This closes `.13`, the prefix/helper cohort. The following run_cargo preflight `.14.1`
 is recorded in the [inventory contract](decision_trust-inventory.md) and book; guarded measurement
-is recorded in `.14.2`, with diagnostic assessment `.14.3.1` and its immediate framing repair `.14.3.2.1` recorded in the inventory contract. Remaining source obligations, final whole-file sweeps and independent review stay open.
+is recorded in `.14.2`, with diagnostic assessment `.14.3.1` and the completed framing repair `.14.3.2.1` and expanded binding `.14.3.2.2.1` recorded in the inventory contract. Remaining source obligations, final whole-file sweeps and independent review stay open.
 
 ## Retrieved source identities
 

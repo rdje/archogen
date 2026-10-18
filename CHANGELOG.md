@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — preserve Cargo diagnostics across multiline paths
+
+`ARCHOGEN-M3-0743` (leaf `M3.6.9.6.3.2.2.14.3.2.1`), `2026-10-18`.
+
+- Exclude path-continuation line starts using raw/quoted workspace and artifact prefixes, canonical
+  spellings and ancestors. Preserve the genuine compiler or operational Cargo message.
+- Public/target/canonical regressions: corrected before 3 fail to final 4 pass, no inventory on failed
+  builds and successful recovery. Maintained exact old-defect reversal is killed by all four parents.
+- Qualify the earlier separate-target colon helper witness; colon artifact paths are operational Cargo
+  refusals. Real public dual-config warnings establish the misleading-prefix setup-failure case.
+- Older source/tests reconstruct exactly, catalogue appends one entry, prior E stays exact. Final focused
+  stamp and book/staged gates bind publication; expanded 51-edit region needs fresh native measurement.
+
+
 ## archogen — assess Cargo selectors and own the framing defect
 
 `ARCHOGEN-M3-0742` (leaf `M3.6.9.6.3.2.2.14.3.1`), `2026-10-18`.
