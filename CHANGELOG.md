@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — collect units from actual compiler provenance
+
+`ARCHOGEN-M3-0763` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.2.1`), `2026-10-18`.
+
+- Replace production diagnostic parsing with a pinned embedded observer and strict per-role
+  record consumer. Actual admitted compiler-shaped warnings preserve literal units/configuration
+  and recovery; independent native C argv/exit/stdio and compiler/record failure controls pass.
+- Split the slow diagnostic matrix into bounded parents with every case/assertion/phase retained.
+  Diagnose the old copied-baseline timeout; own missing baseline evidence before full sweeps.
+- Fresh full162-parent native4K/22E strict0; all1077 originals/copies restore, intended names,
+ 37 source pins and eight false-receipt controls bind. All34 compiled/operator proof controls pass.
+- Retire five catalogue/four E records, preserve durable historical controls, rebind three counter
+  names and revalidate producer premises. Seal committed prototype with complete reconstruction;
+  final focused/book/doctrine gates. Artifact binding/compatibility/full source milestone remain.
+
 ## archogen — verify a separate compiler-provenance prototype
 
 `ARCHOGEN-M3-0762` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.1`), `2026-10-18`.

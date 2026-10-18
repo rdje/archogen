@@ -15,6 +15,9 @@
 //! `trust/roots.eadl` names its file, its rule and the sha256 of its extent — the statement or item it stands in
 //! (R8 4) — one admission per site (R8 3). Data other than a `.rs` file is hashed and never tokenised (R6 7; R8 10).
 
+#[path = "trust_compiler.rs"]
+mod compiler;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -385,109 +388,6 @@ fn unit_configuration(u: &Unit) -> String {
     ]))
 }
 
-/// Split one `rustc` command line as cargo's `-v` prints it, decoding single-quoted spans and outside escapes.
-fn split_command(line: &str) -> Vec<String> {
-    let mut out = Vec::new();
-    let mut cur = String::new();
-    let mut quoted = false;
-    let mut any = false;
-    let mut chars = line.chars();
-    while let Some(c) = chars.next() {
-        match c {
-            '\\' if !quoted => cur.push(chars.next().unwrap_or('\\')),
-            '\'' => {
-                quoted = !quoted;
-                any = true;
-            }
-            ' ' if !quoted => {
-                if any || !cur.is_empty() {
-                    out.push(std::mem::take(&mut cur));
-                }
-                any = false;
-            }
-            c => cur.push(c),
-        }
-    }
-    if any || !cur.is_empty() {
-        out.push(cur);
-    }
-    out
-}
-
-/// Frame Cargo's complete verbose records before decoding their arguments. The pinned Unix formatter can
-/// put literal line breaks and backticks inside single-quoted arguments. Only an unquoted, unescaped backtick
-/// ends a record; embedded Running lines stay inside it. Malformed records refuse rather than slicing blindly.
-fn cargo_commands<'a>(
-    mut stderr: &'a str,
-    scratch: &str,
-    canonical_scratch: &str,
-) -> Result<Vec<&'a str>, String> {
-    let mut commands = Vec::new();
-    while !stderr.is_empty() {
-        let line_end = stderr.find('\n').unwrap_or(stderr.len());
-        let line = &stderr[..line_end];
-        let Some(command) = line
-            .trim_start_matches([' ', '\t'])
-            .strip_prefix("Running `")
-        else {
-            // Cargo's Compiling/Checking status prints package paths without quoting. Consume any known raw
-            // scratch prefix on this non-command line intact, so its embedded Running line is not a record.
-            let prefix_end = [scratch, canonical_scratch]
-                .into_iter()
-                .filter(|prefix| !prefix.is_empty())
-                .filter_map(|prefix| {
-                    stderr
-                        .find(prefix)
-                        .filter(|start| *start < line_end)
-                        .map(|start| start + prefix.len())
-                })
-                .max()
-                .unwrap_or(line_end)
-                .max(line_end);
-            let skip = prefix_end
-                + stderr[prefix_end..]
-                    .find('\n')
-                    .unwrap_or(stderr.len() - prefix_end);
-            stderr = &stderr[(skip + 1).min(stderr.len())..];
-            continue;
-        };
-        let rest = &stderr[line.len() - command.len()..];
-        let mut quoted = false;
-        let mut escaped = false;
-        let mut end = None;
-        for (index, c) in rest.char_indices() {
-            if matches!(c, '\n' | '\r') && !quoted {
-                return Err("unquoted line break in Cargo Running command".to_owned());
-            }
-            if escaped {
-                escaped = false;
-                continue;
-            }
-            match c {
-                '\\' if !quoted => escaped = true,
-                '\'' => quoted = !quoted,
-                '`' if !quoted => {
-                    end = Some(index);
-                    break;
-                }
-                _ => {}
-            }
-        }
-        let end = end.ok_or_else(|| "unterminated Cargo Running command".to_owned())?;
-        if end == 0 {
-            return Err("empty Cargo Running command".to_owned());
-        }
-        let after = &rest[end + 1..];
-        let next = after.find('\n').unwrap_or(after.len());
-        if !after[..next].trim_matches([' ', '\t', '\r']).is_empty() {
-            return Err("trailing text after Cargo Running command".to_owned());
-        }
-        commands.push(&rest[..end]);
-        stderr = &after[(next + 1).min(after.len())..];
-    }
-    Ok(commands)
-}
-
 /// Read rustc's first dependency rule, matching its known raw output target before interpreting separators.
 /// A source path inside the written tree has the catalog's ASCII grammar; only its scratch prefix can contain
 /// spaces or line breaks. Rustc escapes spaces in prerequisites, but writes line breaks literally. Consume each
@@ -733,8 +633,8 @@ fn run_cargo(
     for (k, v) in env {
         c.env(k, v);
     }
-    // Cargo leaves its program field unquoted. Use the same pinned command as the recorded rustc identity,
-    // so a toolchain installation path never becomes ambiguous command text.
+    // Keep the pinned compiler identity independent of its installation path. The private observer
+    // requires this literal program; legacy verbose-output probes also retain an unambiguous field.
     c.env("RUSTC", "rustc");
     let out = c.output().map_err(|e| format!("cargo did not run: {e}"))?;
     let stdout = String::from_utf8_lossy(&out.stdout).into_owned();
@@ -762,6 +662,7 @@ fn compile(
     targets: &Targets,
     env: &[(String, String)],
     tree_dir: &Path,
+    compiler: &compiler::Compiler,
     refused: &mut Vec<String>,
 ) -> Result<(Vec<Unit>, String), String> {
     let name = package_names
@@ -782,7 +683,9 @@ fn compile(
     );
     args.push(name.clone());
     let argv: Vec<&str> = args.iter().map(String::as_str).collect();
-    let (stdout, stderr) = run_cargo(&argv, env, tree_dir)?;
+    let session = compiler.session(who, env, tree_dir)?;
+    let compile_env = session.environment(env)?;
+    let (stdout, _) = run_cargo(&argv, &compile_env, tree_dir)?;
     let scratch = format!("{}/", tree_dir.display());
     let canonical_scratch = fs::canonicalize(tree_dir)
         .map(|c| format!("{}/", c.display()))
@@ -794,11 +697,10 @@ fn compile(
             .to_owned()
     };
     let mut units = Vec::new();
-    for cmd in cargo_commands(&stderr, &scratch, &canonical_scratch)? {
-        let tokens = split_command(cmd);
-        if !tokens.first().is_some_and(|p| p.ends_with("rustc")) {
-            continue; // a build script's run, or a test binary: neither is a compilation
-        }
+    for tokens in session
+        .invocations()
+        .map_err(|why| format!("`{who}` compiler provenance: {why}"))?
+    {
         let get = |flag: &str| {
             tokens
                 .iter()
@@ -926,6 +828,7 @@ fn build(
     env: &[(String, String)],
     tree_dir: &Path,
     target_dir: &Path,
+    compiler: &compiler::Compiler,
     refused: &mut Vec<String>,
 ) -> Result<Build, String> {
     let target_args: Vec<String> = match &p.target {
@@ -943,6 +846,7 @@ fn build(
         targets,
         env,
         tree_dir,
+        compiler,
         refused,
     )?;
     // The root's artifact, from cargo's own report of what it wrote (R8 9).
@@ -1897,6 +1801,7 @@ pub fn inventory_with(
     // Build each program clean, its own target directory, a fresh `CARGO_HOME` each. A build that fails leaves the
     // gate unable to judge, but the step runs to its end, every build and judgment in it made, so the refusals it
     // finds are reported beside the failure (the generated-sources record §2).
+    let compiler = compiler::Compiler::prepare(out, &pin, &cargo_home)?;
     let mut builds: BTreeMap<String, Build> = BTreeMap::new();
     let mut failed: Vec<String> = Vec::new();
     for p in &roots.programs {
@@ -1911,6 +1816,7 @@ pub fn inventory_with(
             &env,
             &tree_dir,
             &target_dir,
+            &compiler,
             &mut refused,
         ) {
             Ok(b) => {
@@ -2129,6 +2035,7 @@ pub fn inventory_with(
                         &targets,
                         &env,
                         &tree_dir,
+                        &compiler,
                         &mut step4,
                     ) {
                         Ok((units, _)) => {
@@ -2722,6 +2629,110 @@ pub(crate) mod tests {
     use std::ffi::OsStr;
     use std::path::{Path, PathBuf};
     use std::process::Command;
+
+    // Historical verbose-format probes only; production uses private compiler records.
+    /// Split one `rustc` command line as cargo's `-v` prints it, decoding single-quoted spans and outside escapes.
+    fn split_command(line: &str) -> Vec<String> {
+        let mut out = Vec::new();
+        let mut cur = String::new();
+        let mut quoted = false;
+        let mut any = false;
+        let mut chars = line.chars();
+        while let Some(c) = chars.next() {
+            match c {
+                '\\' if !quoted => cur.push(chars.next().unwrap_or('\\')),
+                '\'' => {
+                    quoted = !quoted;
+                    any = true;
+                }
+                ' ' if !quoted => {
+                    if any || !cur.is_empty() {
+                        out.push(std::mem::take(&mut cur));
+                    }
+                    any = false;
+                }
+                c => cur.push(c),
+            }
+        }
+        if any || !cur.is_empty() {
+            out.push(cur);
+        }
+        out
+    }
+
+    /// Frame Cargo's complete verbose records before decoding their arguments. The pinned Unix formatter can
+    /// put literal line breaks and backticks inside single-quoted arguments. Only an unquoted, unescaped backtick
+    /// ends a record; embedded Running lines stay inside it. Malformed records refuse rather than slicing blindly.
+    fn cargo_commands<'a>(
+        mut stderr: &'a str,
+        scratch: &str,
+        canonical_scratch: &str,
+    ) -> Result<Vec<&'a str>, String> {
+        let mut commands = Vec::new();
+        while !stderr.is_empty() {
+            let line_end = stderr.find('\n').unwrap_or(stderr.len());
+            let line = &stderr[..line_end];
+            let Some(command) = line
+                .trim_start_matches([' ', '\t'])
+                .strip_prefix("Running `")
+            else {
+                // Cargo's Compiling/Checking status prints package paths without quoting. Consume any known raw
+                // scratch prefix on this non-command line intact, so its embedded Running line is not a record.
+                let prefix_end = [scratch, canonical_scratch]
+                    .into_iter()
+                    .filter(|prefix| !prefix.is_empty())
+                    .filter_map(|prefix| {
+                        stderr
+                            .find(prefix)
+                            .filter(|start| *start < line_end)
+                            .map(|start| start + prefix.len())
+                    })
+                    .max()
+                    .unwrap_or(line_end)
+                    .max(line_end);
+                let skip = prefix_end
+                    + stderr[prefix_end..]
+                        .find('\n')
+                        .unwrap_or(stderr.len() - prefix_end);
+                stderr = &stderr[(skip + 1).min(stderr.len())..];
+                continue;
+            };
+            let rest = &stderr[line.len() - command.len()..];
+            let mut quoted = false;
+            let mut escaped = false;
+            let mut end = None;
+            for (index, c) in rest.char_indices() {
+                if matches!(c, '\n' | '\r') && !quoted {
+                    return Err("unquoted line break in Cargo Running command".to_owned());
+                }
+                if escaped {
+                    escaped = false;
+                    continue;
+                }
+                match c {
+                    '\\' if !quoted => escaped = true,
+                    '\'' => quoted = !quoted,
+                    '`' if !quoted => {
+                        end = Some(index);
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+            let end = end.ok_or_else(|| "unterminated Cargo Running command".to_owned())?;
+            if end == 0 {
+                return Err("empty Cargo Running command".to_owned());
+            }
+            let after = &rest[end + 1..];
+            let next = after.find('\n').unwrap_or(after.len());
+            if !after[..next].trim_matches([' ', '\t', '\r']).is_empty() {
+                return Err("trailing text after Cargo Running command".to_owned());
+            }
+            commands.push(&rest[..end]);
+            stderr = &after[(next + 1).min(after.len())..];
+        }
+        Ok(commands)
+    }
 
     pub(crate) fn real_root() -> PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -4482,7 +4493,7 @@ pub(crate) mod tests {
             .expect("actual Cargo diagnostic-flag producer must compile");
             let scratch = format!("{}/", f.repo.display());
             let canonical = format!("{}/", f.repo.canonicalize().unwrap().display());
-            let commands = super::cargo_commands(&stderr, &scratch, &canonical).unwrap();
+            let commands = cargo_commands(&stderr, &scratch, &canonical).unwrap();
             assert_eq!(
                 commands.len(),
                 2,
@@ -4490,7 +4501,7 @@ pub(crate) mod tests {
             );
             let mut compiled = std::collections::BTreeSet::new();
             for command in commands {
-                let argv = super::split_command(command);
+                let argv = split_command(command);
                 assert_eq!(argv[0], "rustc");
                 let name = argv
                     .windows(2)
@@ -4662,11 +4673,11 @@ pub(crate) mod tests {
         let command = "rustc --out-dir 'with\n     Running `fake`\r\\path'\\''tail' --cfg ''";
         let stderr = format!("warning: contains Running `ignored`\n     Running `{command}`\r\n     Running `rustc other.rs`\n    Finished\n");
         assert_eq!(
-            super::cargo_commands(&stderr, "/scratch/", "/canonical/").unwrap(),
+            cargo_commands(&stderr, "/scratch/", "/canonical/").unwrap(),
             [command, "rustc other.rs"]
         );
         assert_eq!(
-            super::split_command(command),
+            split_command(command),
             [
                 "rustc",
                 "--out-dir",
@@ -4676,7 +4687,7 @@ pub(crate) mod tests {
             ]
         );
         assert!(
-            super::cargo_commands("warning: Running `unclosed\n", "/scratch/", "/canonical/")
+            cargo_commands("warning: Running `unclosed\n", "/scratch/", "/canonical/")
                 .unwrap()
                 .is_empty()
         );
@@ -4686,7 +4697,7 @@ pub(crate) mod tests {
         );
         for (scratch, canonical) in [(raw_prefix, "/other/"), ("/other/", raw_prefix)] {
             assert_eq!(
-                super::cargo_commands(&status, scratch, canonical).unwrap(),
+                cargo_commands(&status, scratch, canonical).unwrap(),
                 ["rustc actual.rs"]
             );
         }
@@ -4700,7 +4711,7 @@ pub(crate) mod tests {
             "     Running `rustc \\`\n",
         ] {
             assert!(
-                super::cargo_commands(malformed, "/scratch/", "/canonical/").is_err(),
+                cargo_commands(malformed, "/scratch/", "/canonical/").is_err(),
                 "malformed record {malformed:?}"
             );
         }
@@ -5108,7 +5119,7 @@ pub(crate) mod tests {
                 1,
                 "exactly the fixture's binary is compiled"
             );
-            let tokens = super::split_command(commands[0]);
+            let tokens = split_command(commands[0]);
             assert_eq!(tokens.first().map(String::as_str), Some("rustc"));
             let expected = ["-A", lint, "-W", lint].map(str::to_owned);
             assert!(
@@ -5508,30 +5519,11 @@ pub(crate) mod tests {
         written(f.run_into("recovered"));
     }
 
-    #[test]
-    fn cargo_failure_diagnostics_ignore_multiline_output_paths() {
-        crate::trust_test_process::bounded!(
-            cargo_failure_diagnostics_ignore_multiline_output_paths
-        );
+    fn check_cargo_failure_diagnostic_output_paths(fixture: &str, outputs: &[&str]) {
         let main = "fn main() {}\n";
         let library = "pub fn f() {}\n";
         let legacy = std::fs::read_to_string(real_root().join(".cargo/config.toml")).unwrap();
-        let f = two_roots(
-            "cargo-failure-diagnostic-paths",
-            main,
-            library,
-            &[(".cargo/config", legacy)],
-        );
-        let outputs = [
-            "ordinary",
-            "with\nerroneous-path",
-            "with\nerror-path",
-            "with\nerror decoy",
-            "with\nerror could not compile `decoy`",
-            "with\r\nerror carriage-return decoy",
-            "with'\\\nerror quoted path",
-            "with-λ\nerror unicode path",
-        ];
+        let f = two_roots(fixture, main, library, &[(".cargo/config", legacy)]);
         for out in outputs {
             assert_eq!(
                 written(f.run_into(out))
@@ -5582,6 +5574,43 @@ pub(crate) mod tests {
                 "recovery: {out:?}"
             );
         }
+    }
+
+    #[test]
+    fn cargo_failure_diagnostics_ignore_multiline_output_paths() {
+        crate::trust_test_process::bounded!(
+            cargo_failure_diagnostics_ignore_multiline_output_paths
+        );
+        check_cargo_failure_diagnostic_output_paths(
+            "cargo-failure-diagnostic-paths",
+            &["ordinary", "with\nerroneous-path", "with\nerror-path"],
+        );
+    }
+
+    #[test]
+    fn cargo_failure_diagnostics_ignore_multiline_output_paths_messages() {
+        crate::trust_test_process::bounded!(
+            cargo_failure_diagnostics_ignore_multiline_output_paths_messages
+        );
+        check_cargo_failure_diagnostic_output_paths(
+            "cargo-failure-diagnostic-message-paths",
+            &[
+                "with\nerror decoy",
+                "with\nerror could not compile `decoy`",
+                "with\r\nerror carriage-return decoy",
+            ],
+        );
+    }
+
+    #[test]
+    fn cargo_failure_diagnostics_ignore_multiline_output_paths_quoted_and_unicode() {
+        crate::trust_test_process::bounded!(
+            cargo_failure_diagnostics_ignore_multiline_output_paths_quoted_and_unicode
+        );
+        check_cargo_failure_diagnostic_output_paths(
+            "cargo-failure-diagnostic-quoted-paths",
+            &["with'\\\nerror quoted path", "with-λ\nerror unicode path"],
+        );
     }
 
     #[test]
@@ -6373,6 +6402,92 @@ Running `not-a-compiler-last`""#);"##;
             ("trust/roots.eadl", ROOTS.to_owned()),
         ]);
         written(f.run());
+    }
+
+    #[test]
+    fn compiler_provenance_ignores_admitted_compiler_shaped_warning_records() {
+        crate::trust_test_process::bounded!(
+            compiler_provenance_ignores_admitted_compiler_shaped_warning_records
+        );
+        let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
+        let ordinary = "pub fn f() {}\n";
+        let f = two_roots(
+            "compiler-provenance-warning-records",
+            "fn main() { common::f(); }\n",
+            "pub fn f() { common::f(); }\n",
+            &[
+                ("crates/common/Cargo.toml", manifest("common", "")),
+                ("crates/common/src/lib.rs", ordinary.to_owned()),
+                ("crates/a/Cargo.toml", manifest("a", dep)),
+                ("crates/b/Cargo.toml", manifest("b", dep)),
+            ],
+        );
+        let configurations = |inventory: &Json, root| {
+            let units = program(inventory, root).get("units").unwrap().elements();
+            assert_eq!(
+                units.len(),
+                2,
+                "only the root and common compile: {units:?}"
+            );
+            let expected = match root {
+                "gen" => ["crates/a", "crates/common"],
+                "chk" => ["crates/b", "crates/common"],
+                _ => panic!("unexpected fixture role {root}"),
+            };
+            assert_eq!(
+                units
+                    .iter()
+                    .map(|unit| unit.get("package").unwrap().as_str().unwrap())
+                    .collect::<std::collections::BTreeSet<_>>(),
+                expected.into_iter().collect(),
+            );
+            units
+                .iter()
+                .map(|unit| {
+                    (
+                        unit.get("package").unwrap().as_str().unwrap().to_owned(),
+                        unit.get("configuration").unwrap().clone(),
+                    )
+                })
+                .collect::<std::collections::BTreeMap<_, _>>()
+        };
+        let plain = written(f.run());
+        for payload in [
+            "not-a-compiler",
+            "rustc",
+            "rustc --crate-name phantom phantom.rs --out-dir bogus",
+        ] {
+            let assembly =
+                format!("core::arch::global_asm!(r#\".warning \"note\nRunning `{payload}`\"\"#);");
+            f.commit(&[
+                (
+                    "crates/common/src/lib.rs",
+                    format!("{assembly}\n{ordinary}"),
+                ),
+                (
+                    "trust/roots.eadl",
+                    format!(
+                        "{ROOTS}{}",
+                        admit("crates/common/src/lib.rs", "global_asm", &assembly)
+                    ),
+                ),
+            ]);
+            let actual = written(f.run());
+            for root in ["gen", "chk"] {
+                assert_eq!(configurations(&actual, root), configurations(&plain, root));
+            }
+        }
+        f.commit(&[
+            ("crates/common/src/lib.rs", ordinary.to_owned()),
+            ("trust/roots.eadl", ROOTS.to_owned()),
+        ]);
+        let recovered = written(f.run());
+        for root in ["gen", "chk"] {
+            assert_eq!(
+                configurations(&recovered, root),
+                configurations(&plain, root)
+            );
+        }
     }
 
     #[test]

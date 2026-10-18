@@ -4,8 +4,9 @@
 `RUSTC_WRAPPER` interface for a separate instrument-owned compiler record. The documented first
 argument is the actual compiler, followed by its arguments. The global wrapper covers dependencies;
 the workspace-only wrapper is not used. The [toolchain ledger](../../book/src/ledger.md#rust-toolchain)
-pins the public documentation and actual producer; this is an implementation contract pending repair,
-not a claim that current `compile` has stopped reading human output.
+pins the public documentation and actual producer. Unit collection implements this contract in
+`.3.3.2.1`; artifact binding is pending `.3.3.2.2`, with complete compatibility and final
+source/integration verification afterward. The table describes the complete target contract.
 
 | Boundary | Required behavior |
 | --- | --- |
@@ -14,34 +15,33 @@ not a claim that current `compile` has stopped reading human output.
 | Lifecycle | Fresh same-volume session per root, harness or generator build; no reuse of previous records. Create each partial record exclusively before running the compiler; publish a completed record without replacement only after the compiler finishes. Any setup/write/publication error fails the build. |
 | Consumer | Read the private directory after Cargo succeeds. Require exact version/schema, current session/role, regular non-symlink records, invocation identities, byte framing, working directory and successful compiler status. Refuse empty, partial, stale, malformed or unknown records explicitly. No fallback to diagnostic text. |
 | Queries | Distinguish the pinned version/target-information queries from actual compilation. Unknown invocation shapes refuse. Queries produce no inventory units. Every compilation must retain complete argv and have the existing metadata owner, dep-info, source/file, environment and configuration checks. |
-| Artifact | Bind the selected role target to an observed compilation and its actual output. Query pinned rustc with empty input and only observed naming arguments; validate complete basename outputs under the observed out-dir, regular files and hashes. No root artifact is selected from arbitrary Cargo stdout text. |
+| Artifact | Bind the selected role target to an observed compilation and its actual output. Query pinned rustc with empty input and only observed naming arguments; validate complete basename outputs under the observed out-dir, regular files and hashes. No root artifact is selected from arbitrary Cargo stdout text. Pending `.3.3.2.2`. |
 | Determinism | Ephemeral observer/session paths never enter inventoried configuration or shared-item identity. Preserve full compiler arguments, existing normalization and sorted units. Raw native evidence may record runtime path bytes; no project lookup or persisted configuration depends on them. |
 | Scope | Use the same protocol for binary/library roots, comparison test harnesses and generator entry points. Keep manifest/configuration/dynamic-target preflight and source admissions. Existing supported path geometry and copied execution must retain their contracts. |
 | Failure | Refuse provenance unable to be judged, leave no inventory and retain useful Cargo diagnostics on a genuine Cargo failure. Wait for all children; preserve partial evidence for diagnosis. The next invocation starts fresh. |
 
-The durable instrument is `scripts/trust_compiler_provenance_probe.py`, with
-`scripts/fixtures/compiler_provenance_observer.rs` and `compiler_provenance_receiver.c`.
-It compiles the current actual environment constructor, then the separate observer and native C argv
-receiver, entirely under a new repository-relative `target/` directory. The receiver independently
-records NUL-separated native arguments, including empty, quoting, line-break, Unicode and non-UTF8
-cases; exit7 and exact stdio agree, and private fields are absent. Actual signal15 maps to143 with a
-signal record; a failed compiler spawn leaves a refused partial record. Setup failure exits2 before
-the requested program executes. Concurrent native writers retain separate complete records.
+The [complete prototype record](../../book/src/annex-trust-proofs.md#compiler-provenance-contract-and-prototype)
+retains its tracked replay instrument, native receiver, complete role/payload matrix, all failure
+controls, source identities, initial corrections and limits. Its owning leaf .3.3.1 is sealed.
 
-The dated probe passes20 actual pinned Cargo builds: ordinary source, non-compiler warning,
-rustc-looking warning, complete command-shaped warning and escaped JSON-looking stdout, each across
-binary/library/harness/generator roles. Literal unit sets agree with Cargo artifacts;45 naming queries
-agree on artifact bytes and leave every build file unchanged. The stdout experiment prints escaped
-text, not valid artifact JSON: it demonstrates no artifact-report exploit and establishes no universal
-absence. Fourteen separate malformed/stale/identity controls reject; the book lists them all.
-Installed pinned public wrapper/print documentation hashes are recorded in the receipt.
+## Production unit collector and current premise revalidation
 
-All1067 held regular inputs restore at the activation epoch. Original production/test bytes, operators,
-catalogue and equivalent reasons are unchanged. Exploratory errors (binary emit shape, assembly brace
-escaping and JSON-looking text) remain retained and corrected in the durable instrument. The
-[book contract](../../book/src/annex-trust-proofs.md#compiler-provenance-contract-and-prototype)
-gives the replay command, exact matrix, evidence and limits. `.3.3.2.1` owns the bounded producer/unit
-repair and actual public red/green control; `.2.2` artifact binding; `.2.3` compatibility/failure controls.
-Each production change must retire or revalidate affected old helper/reason premises in the same slice.
-`.3.3.3` owns complete current source/mutation/premise and milestone integration verification.
-Independent review and final F30 adequacy remain open; this prototype is not production signoff.
+`2026-10-18`, `.15.2.1.3.3.2.1`: the controller/embedded observer implement the collection
+rows above for both compile callers. Base environment/preflight and argv remain; private fields are removed. Canonical records require
+current schema/session/role/cwd, matching PID/filename and successful status. Unknown, malformed,
+partial, stale or unsuccessful provenance stops the inventory. UTF-8 interpretation is explicit.
+Artifact binding remains `.2.2`; complete compatibility and source/integration gates follow.
+
+Public P2 red/green and native forwarding/failure controls pass. The diagnostic matrix splits3/3/2
+with every case/assertion/phase and30s bound retained. Baseline evidence repair is .3.3.3.0.
+
+Retire five legacy catalogue/four active delimiter reasons, preserve historical compiled controls,
+alpha-bind three iterator replacements and revalidate16 producer premises. Normalise/diagnostic
+bodies stay exact; extended source/altered-premise guards and all34 operator/compiled controls pass.
+Fresh full162-parent native4K/22E strict0;1077 original/copied inputs restore, copied names agree,
+37 pins bind and eight false summaries reject. Compiler-selection catalogue control is killed by
+its intended parent and restores. These are bounded results, not full source adequacy.
+
+Exact commands, controls, outcomes, failed attempts and scope are in the
+[production record](../../book/src/annex-trust-proofs.md#production-compiler-invocation-collection-repair).
+Both new judgment files join .3's complete scope.

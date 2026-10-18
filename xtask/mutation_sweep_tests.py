@@ -10,6 +10,7 @@ import shlex
 import subprocess
 import sys
 import tempfile
+import textwrap
 import unittest
 
 ROOT = Path(sys.argv.pop(1)).resolve()
@@ -383,8 +384,13 @@ mod tests { fn fixture() { let _ = |x: i32| x > 0 && x < 10; } }
 class CommandDelimiterTests(DiscoveryFixture):
     @unittest.skipUnless(os.name == "posix", "the proof is scoped to Cargo's Unix formatter")
     def test_actual_delimiter_candidates_hold_only_the_fixed_cargo_domain(self):
-        source = (ROOT / "xtask/src/trust.rs").read_text()
-        self.assertIn('c.env("RUSTC", "rustc");', source, "the raw program field must remain fixed")
+        current = (ROOT / "xtask/src/trust.rs").read_text()
+        self.assertNotIn("fn split_command(", current.split("#[cfg(test)]", 1)[0],
+                         "delimiter parsing must remain outside production provenance")
+        start = current.index("    fn split_command(")
+        end = current.index("    /// Frame Cargo", start)
+        source = (textwrap.dedent(current[start:end]) + "\n/// Frame Cargo: historical fixture boundary\n"
+                  + "#[cfg(test)]\nmod tests {}\n")
         self.assertIn("commit-hash: f2d3ce0bd7f24a49f8f72d9000448f8838c4e850",
                       self.bounded(["cargo", "--version", "--verbose"]),
                       "a producer change requires revalidating the proof")
@@ -461,10 +467,13 @@ class CommandDelimiterTests(DiscoveryFixture):
                                   ("wrong-negative", "wrong negative oracle")]:
             with self.assertRaisesRegex(AssertionError, message):
                 self.bounded([str(binary), argument])
-        records = namespace["load_equivalents"](ROOT / "xtask/trust.equivalents")
+        records = namespace["load_equivalents"](ROOT / "xtask/trust.retired-equivalents")
+        active = namespace["load_equivalents"](ROOT / "xtask/trust.equivalents")
+        self.assertEqual(set(records), keys, "preserve every retired delimiter reason exactly")
+        self.assertTrue(keys.isdisjoint(active), "historical formatter proofs cannot classify production")
         for mutant in family:
             self.assertIn(namespace["mutation_key"](mutant), records,
-                          "each actual delimiter proof requires its per-file reason")
+                          "each historical delimiter proof retains its reason")
 
 
 class DiagnosticFlagTests(DiscoveryFixture):
@@ -1136,15 +1145,25 @@ class IteratorTests(DiscoveryFixture):
         source = (ROOT / "xtask/src/trust.rs").read_text()
         gate = (ROOT / "xtask/src/trust_gate.rs").read_text()
         main = (ROOT / "xtask/src/main.rs").read_text()
+        controller = (ROOT / "xtask/src/trust_compiler.rs").read_text()
+        observer = (ROOT / "xtask/src/trust_compiler_observer.rs").read_text()
+        catalog = (ROOT / "xtask/src/catalog_build.rs").read_text()
+        environment = catalog[catalog.index("pub fn environment("):catalog.index("\nfn command(")]
 
-        def premises(trust, gate, main):
+        def premises(trust, gate, main, controller=controller, observer=observer, environment=environment):
             # These are proof-premise guards, not expected diagnostic output. Any
             # production/caller change needs the absolute-cwd argument revalidated.
             root = main[main.index("fn repo_root()"):main.index("\nfn on_path(")]
             entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
             guarded = {
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
-                    "c3c790af9007109e534a4a844c5979846f571c99d5addbfc22fc7ec93ee949d1"),
+                    "9a8bf609c803199017c6914303c9c6dbd058847b0b16c9d374b4bf7eb96117b5"),
+                "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
+                    "2364508f25c23a72db2fdca5e9f41280883a3b0bb3577a2a69e65ebbac2b5c69"),
+                "compiler observer": (observer.split("#[cfg(test)]", 1)[0],
+                    "c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f"),
+                "base environment": (environment,
+                    "8b6fa81a2d715c2e42f8ab75a02b6e0c037c97d2f55e71c44c21e4a5516ee74c"),
                 "gate production": (gate.split("#[cfg(test)]", 1)[0],
                     "8ad36a27c5e585660af256b59050f4393b1fa8601f591bd59de9ba2ffbfb7961"),
                 "repository root": (root, "84ec4298740c835ae19ed9f2cff11f0f985cd59a4f3c5c205e9abd47805b6d77"),
@@ -1163,6 +1182,11 @@ class IteratorTests(DiscoveryFixture):
                                  "let repo = match Ok::<_, std::io::Error>(repo.to_path_buf()) {", 1), main),
             (source, gate, main.replace('.expect("xtask/ sits at the repository root")',
                                         '.expect("widened root contract")', 1)),
+            (source, gate, main, controller.replace('"ARCHOGEN_COMPILER_ROLE".to_owned()',
+                                                    '"CARGO_TARGET_DIR".to_owned()', 1)),
+            (source, gate, main, controller, observer.replace('.args(&argv[1..])', '.args(&argv[2..])', 1)),
+            (source, gate, main, controller, observer,
+             environment.replace('"CARGO_TARGET_DIR".to_owned()', '"OTHER_TARGET".to_owned()', 1)),
         ]:
             with self.assertRaisesRegex(AssertionError, "revalidate absolute cwd proof"):
                 premises(*altered)

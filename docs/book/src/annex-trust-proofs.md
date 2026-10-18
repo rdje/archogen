@@ -2734,8 +2734,8 @@ controls, eight individual obligations from the initial compiler measurement now
 parents. The other 20 initial survivors remain owned at that measurement's epoch; this is not
 a newly measured full-region result.
 
-The original P2 phantom-unit defect from a rustc-looking admitted warning is still open.
-The next action is its concrete producer/consumer contract and prototype, `.15.2.1.3.3.1`,
+At this parent slice's close, the P2 phantom-unit defect remained open.
+Its next action was the concrete producer/consumer contract and prototype, `.15.2.1.3.3.1`,
 followed by bounded repair and complete current source/premise/mutation/integration verification.
 The command-filter cohort stays open until that defect is fixed.
 
@@ -2743,7 +2743,7 @@ The command-filter cohort stays open until that defect is fixed.
 ### Compiler provenance contract and prototype
 
 The `2026-10-18` slice `.15.2.1.3.3.1` verifies a repair mechanism for the admitted-warning
-false refusal above. **Production inventory is still unchanged.** The prototype records compiler
+false refusal above. **At this prototype epoch, production inventory was unchanged.** The prototype records compiler
 invocations separately, through Cargo's published
 [`RUSTC_WRAPPER` interface](https://doc.rust-lang.org/cargo/reference/environment-variables.html),
 whose first argument is the compiler followed by its arguments. The global wrapper observes dependency
@@ -2904,3 +2904,221 @@ retired or revalidated as production changes, with their historical outcomes pre
 `.3.3.3` then rebinds all affected sources, current raw mutations, callers and producer premises,
 resolves new survivors and runs full milestone integration. The command-filter cohort and F30 stay
 open until the repair and those gates finish.
+
+
+### Production compiler invocation collection repair
+
+The `2026-10-18` slice `.15.2.1.3.3.2.1` replaces production command collection with the
+separate observer protocol verified above. The admitted warning that previously invented empty-name
+units now produces a valid inventory. Root and dependency units come from actual compiler process
+arguments. Diagnostic text cannot add a unit to this collection.
+
+The regression uses two roots, each depending on `common`. An ordinary inventory establishes the
+configuration. The common source then receives an exact-extent admission for each warning payload:
+
+```text
+Running `not-a-compiler`
+Running `rustc`
+Running `rustc --crate-name phantom phantom.rs --out-dir bogus`
+```
+
+Against the original production code, the bare `rustc` payload fails with empty-name phantom-unit
+refusals for both roles. After the repair, every payload writes an inventory. Each root has exactly
+its own package and the fixture package value `"crates/common"`, and its complete unit configurations agree with the ordinary
+control. Restoring ordinary source and removing the admission succeeds again. Source-content hashes
+still reflect the source that was actually compiled; the configuration comparison does not erase them.
+
+#### What the production observer does
+
+The inventory builds its tracked, embedded, std-only observer with the pinned compiler once per
+inventory operation. For each root, comparison harness or generator compilation, it installs and
+byte-verifies a copy under that role's Cargo target directory and creates a fresh records directory.
+The base cleared environment is preserved. Only these explicit instrument settings are added:
+
+```text
+RUSTC_WRAPPER
+ARCHOGEN_COMPILER_RECORDS
+ARCHOGEN_COMPILER_SESSION
+ARCHOGEN_COMPILER_ROLE
+```
+
+Cargo's published wrapper interface passes the compiler and its actual native arguments to this
+observer. The compiler selection remains the pinned literal `rustc`. The observer reserves an
+exclusive partial file, forwards the immutable argument tail to the real compiler, inherits its
+working directory and diagnostic streams, and removes those private settings from the compiler's
+environment. After the compiler finishes, it syncs the record, publishes it without replacement,
+and removes the partial name. An observer failure makes the build fail.
+
+The internal record schema is `archogen-compiler-provenance/1`. The consumer requires canonical JSON,
+which also rejects duplicate fields, and validates every field:
+
+| Field | Meaning and check |
+| --- | --- |
+| `schema` | Exact protocol version. |
+| `session_hex` | The fresh current session identity; historical records cannot substitute. |
+| `role_hex` | The current root, harness or generator build identity. |
+| `cwd_hex` | The expected canonical working directory. |
+| `pid` | A positive invocation identity agreeing with the record filename. |
+| `argv_hex` | Complete native argument bytes, including the fixed compiler program. |
+| `exit` | Exactly successful compiler status for an accepted record. |
+| `signal` | No signal for an accepted record. |
+
+The hexadecimal wire representation preserves bytes. The current JSON inventory requires interpreted
+arguments and paths to be valid UTF-8; unsupported bytes produce an explicit inability to judge,
+without lossy argument conversion. Raw runtime paths in trace evidence are observations, not project
+lookup paths or persisted configuration. Session and observer paths do not enter unit configuration
+or shared-item identity.
+
+The consumer rejects missing, partial, linked, stale, foreign-role, malformed, failed or unknown
+records. Version and target-information queries from the pinned producer yield no units. Real
+compilations retain complete arguments and still pass the existing metadata ownership, dependency
+file, source admission, environment and configuration checks. There is no diagnostic-parser fallback.
+The unit sequence retains its deterministic sort.
+
+This slice repairs **unit collection**. Role artifacts still use Cargo's artifact report; direct
+observed-output binding is `.3.3.2.2`. The complete compatibility/failure matrix and whole-source
+mutation/integration checkpoint remain separately owned. No full F30 adequacy or independent
+review closure follows from this bounded repair.
+
+#### Independent forwarding and failure controls
+
+The production observer itself is checked with an independently compiled C receiver. That receiver
+writes NUL-separated native argv. Empty arguments, spaces, quotes, LF/CR, backslashes, Unicode,
+non-UTF8 bytes and flag-shaped arguments all arrive byte-for-byte, and the record agrees with the
+receiver. Exit7 and exact stdout/stderr are preserved. The receiver verifies that the private fields
+and wrapper setting are absent.
+
+A real compiler source also asserts that every private setting is absent. Its successful compile
+has the exact expected argument vector. A genuine compiler failure retains its diagnostic and is
+rejected by the record consumer; a missing compiler leaves a refused partial record; a fresh session
+recovers. A standalone observer test checks literal byte encodings and runs through the production
+parent. Separate actual query records exercise missing/partial/session/role/cwd/extra-field/duplicate/
+status/identity/hex/compiler/query/link/type/object refusals. Every valid copied record is accepted
+before its individual fault is applied.
+
+An initial identity test used PID zero while expecting a filename-mismatch diagnostic. Zero is
+already an invalid identity, so the fixture was corrected to a different positive PID. The initial
+failure remains in the evidence. This corrects the test's branch selection, not production behavior.
+
+#### Bounded diagnostic fixtures and baseline evidence
+
+Observer compilation increased the cost of each inventory operation. The old output-path diagnostic
+parent ran its entire matrix under one 30-second bound and failed in the unmodified sweep copy.
+An exact copied replay reproduced the timeout: the overall suite ended with 158 passes and one
+failure. That is a failed baseline, not a mutation kill or an adequacy result.
+
+The fixture now has three independently bounded parents, retaining the original first name:
+
+| Parent suffix | Path cases |
+| --- | --- |
+| `cargo_failure_diagnostics_ignore_multiline_output_paths` | ordinary; newline plus erroneous-path; newline plus error-path |
+| `_messages` | newline error decoy; newline Cargo-looking error; carriage-return/newline decoy |
+| `_quoted_and_unicode` | apostrophe/backslash/newline path; Unicode/newline path |
+
+All original path bytes and their order are retained. Each group uses the same success,
+compiler-failure/no-inventory and recovery phases. An audit checks the original assertion body,
+allowing only the fixture-name parameter and its exact formatting reflow. The bound stays at
+30 seconds. The direct split run passes with observed parent times about 6.6, 9.7 and 9.7 seconds;
+these timings describe that run, not every host or future load.
+
+The failed sweep also exposed an owned tool-evidence gap: its baseline diagnostic omitted the raw
+streams and finishing name. The exact copied test command supplied the diagnosis here.
+`.3.3.3.0` must preserve native failed-baseline evidence before the full source sweeps. No automatic
+retry or changed passing classification is used to hide the failed attempt.
+
+#### Source, catalogue and reason continuity
+
+The old command splitter and framer now exist only in test fixtures that observe historical verbose
+output. Production never calls them. Five catalogue mutations targeting those removed production
+paths are explicitly retired. The fixed-compiler mutation remains, with its reason updated for the
+new program-identity check. The catalogue's exact-source uniqueness control passes.
+
+Four delimiter reason records move to `xtask/trust.retired-equivalents`, a historical test fixture.
+Compiled controls still exercise their exact five old helper edits and wider-domain counterexamples,
+and require those keys to be absent from the active file. Historical native outcomes remain dated
+records; they are not relabelled as new kills or equivalents.
+
+The existing normalization and Cargo diagnostic helper bodies remain byte-for-byte unchanged.
+Three iterator replacement counter names are rebound to current source lines. The producer-dependent
+normalization premises are explicitly revalidated: the observer forwards actual immutable argv,
+adds no compiler flags, and removes only instrument settings. The existing constructor, fixed
+compiler, configuration/preflight and argument consumers retain their contracts. New source guards
+include the observer, controller and base environment, with altered-premise rejections. All 34
+operator and compiled proof controls pass on this source.
+
+The fresh native epoch holds **162 tests**, including every previous parent plus the new
+protocol and split-fixture parents. Its complete source listings contain 1433 trust, 124 controller
+and 16 observer candidates; the bounded commands select only the following edits. Source listings
+are discovery counts, not attempted coverage. Each selected protocol edit is killed by the intended
+`trust::compiler::tests::actual_query_records_reject_missing_stale_foreign_and_malformed_inputs`
+parent; other finishing names are retained in the raw results. All active trust reason records are
+included in their separate replay.
+
+| Source | Exact current edit | Native result |
+| --- | --- | --- |
+| `trust_compiler.rs` | `L216.cond.64` | killed |
+| `trust_compiler.rs` | `L273.cond.97` | killed |
+| `trust_compiler_observer.rs` | `L60.stmt.7` | killed |
+| `trust_compiler_observer.rs` | `L64.stmt.11` | killed |
+| `trust.rs` | `L345.iter.59` | equivalent |
+| `trust.rs` | `L455.bool.83` | equivalent |
+| `trust.rs` | `L456.bool.84` | equivalent |
+| `trust.rs` | `L457.bool.85` | equivalent |
+| `trust.rs` | `L458.bool.86` | equivalent |
+| `trust.rs` | `L459.bool.87` | equivalent |
+| `trust.rs` | `L460.bool.88` | equivalent |
+| `trust.rs` | `L461.bool.89` | equivalent |
+| `trust.rs` | `L462.bool.90` | equivalent |
+| `trust.rs` | `L463.bool.91` | equivalent |
+| `trust.rs` | `L464.bool.92` | equivalent |
+| `trust.rs` | `L497.dir.112` | equivalent |
+| `trust.rs` | `L497.lit.113` | equivalent |
+| `trust.rs` | `L498.dir.116` | equivalent |
+| `trust.rs` | `L498.lit.117` | equivalent |
+| `trust.rs` | `L499.dir.120` | equivalent |
+| `trust.rs` | `L499.lit.121` | equivalent |
+| `trust.rs` | `L514.cmp.139` | equivalent |
+| `trust.rs` | `L585.iter.158` | equivalent |
+| `trust.rs` | `L587.iter.161` | equivalent |
+| `trust.rs` | `L590.cond.168` | equivalent |
+| `trust.rs` | `L617.cmp.181` | equivalent |
+
+The protocol groups each finish with two kills and strict exit 0. The reason group finishes with
+22 scoped equivalents and strict exit 0. There are no compiler refusals, timeouts or unjudged
+results in these selected runs. Every group uses the complete parent command, not a finishing-only
+subset, and restores all 1077 held regular inputs in the original and copied tree with modes and
+independent Python/system hashes. Copied parent names agree exactly. The gitlink is metadata only.
+All 37 retained pinned source identities and tool metadata remain bound.
+
+The maintained compiler-selection catalogue entry is also replayed in the restored copy. It is killed
+by `compiler_installation_paths_preserve_inventory_units_and_configuration`, as expected, and both
+original/copy inputs restore again. A separate raw-receipt audit rejects altered scope, missing result,
+replacement, finishing name, count, exit, filename and outcome summaries. The summary adapters are
+ignored supplementary evidence; the native CLI, compiled controls and exact commands below are the
+tracked/re-runnable producers.
+
+All commands use this complete filter/strict tail:
+
+```bash
+--package xtask --timeout 600 \
+  --filter=trust:: --filter=trust_generated:: --filter=trust_gate:: \
+  --filter=--skip --filter=route_tests --timeouts-fail
+```
+
+The consumer command is `bash scripts/mutation_sweep.sh xtask/src/trust_compiler.rs` with
+`--only L216.cond.64 --only L273.cond.97`. The observer command is
+`bash scripts/mutation_sweep.sh xtask/src/trust_compiler_observer.rs` with
+`--only L60.stmt.7 --only L64.stmt.11`. The trust command is
+`bash scripts/mutation_sweep.sh xtask/src/trust.rs` with
+`--equivalents xtask/trust.equivalents` and one `--only` for every trust edit in the table.
+Run these commands sequentially: they share the maintained sweep workspace.
+
+Held native tree `9abd2a4f22ae17b3eba7cac0d030d787427c7aa6` names this measured epoch.
+The receipts are under `target/compiler-provenance-repair/current/`; the supplementary audit is
+SHA-256 `8fa90c2092f898b465e942601d5221c56d2529b6bacea595ddbe57211dfbd51e`.
+
+
+The held native epoch and final completion-document/focused epoch are separate. New judgment sources
+`xtask/src/trust_compiler.rs` and `trust_compiler_observer.rs` join the complete later mutation scope.
+Artifact binding, remaining compatibility controls, the baseline-evidence repair and full current
+source/premise/integration verification still precede F30 signoff.

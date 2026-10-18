@@ -193,7 +193,7 @@ a change that leaves it stale, so it is never edited by hand.
   comes from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
   decisions, not actions](runtime.md), [Verifying the toolchain](verification.md), [What this project relies on from
   outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the
-  repository honest](annex-repository.md)
+  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Faults in detail — [Annex A: The runtime's rules in detail](annex-runtime.md#faults-in-detail)
 - Final diagnostic regression parents — [Annex C: Trust proof
   records](annex-trust-proofs.md#final-diagnostic-regression-parents)
@@ -379,6 +379,8 @@ a change that leaves it stale, so it is never edited by hand.
   [Generated-sources test adequacy](trust-adequacy.md), [The runtime: decisions, not actions](runtime.md), [The S0 early
   generation path](s0.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
   detail](annex-runtime.md)
+- Production compiler invocation collection repair — [Annex C: Trust proof
+  records](annex-trust-proofs.md#production-compiler-invocation-collection-repair)
 - profile — [What is versioned, and what changing it costs](versions.md#profile)
 - **profile** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [The use cases](usecases.md), [Reading a
@@ -586,7 +588,7 @@ a change that leaves it stale, so it is never edited by hand.
 - **UART** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where generated systems
   run](targets.md)
 - **UTF-8** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Annex B: The
-  checks that keep the repository honest](annex-repository.md)
+  checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 
 ## V
 

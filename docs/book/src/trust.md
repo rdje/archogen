@@ -88,6 +88,14 @@ working directory. Inherited temp overrides do not redirect these builds. These 
 not grant compiled source permission to read them: the compiler dependency check refuses source-level
 `env!` or `option_env!` dependencies on these names.
 
+Compiler invocations are observed through the pinned Cargo wrapper interface in a separate session
+for each root, harness and generator build. The embedded observer forwards native arguments and
+stdio unchanged, removes its private settings before the real compiler, and publishes completed
+records without replacement. The consumer requires the current schema, role, session, working
+directory and successful status. Compiler queries yield no units. Metadata ownership, dependency
+files, source admissions and environment/configuration rules still judge every actual unit.
+See the [protocol and examples](annex-trust-proofs.md#production-compiler-invocation-collection-repair).
+
 Failure text retains Cargo’s actual compiler or setup diagnostic when an output path continues across
 physical lines. Known workspace/artifact paths are excluded from diagnostic selection, including quoted
 command arguments and canonical aliases. [The verified framing repair](annex-trust-proofs.md#cargo-failure-framing-repair)
@@ -104,10 +112,12 @@ records the initial 49 kills, 28 owned survivors and six compiler refusals, stri
 [Environment regression parents](annex-trust-proofs.md#compiler-environment-admission-regressions)
 resolve four of those obligations with real refusal/recovery controls. Command-filtering assessment
 now has [verified warning controls](annex-trust-proofs.md#admitted-nonterminal-warning-regression-parent). A
-[reproduced parser defect](annex-trust-proofs.md#compiler-command-provenance-assessment) currently
-mistakes an admitted multiline assembly warning naming rustc for empty-name compilation units and
-refuses the inventory. The [verified separate-record prototype](annex-trust-proofs.md#compiler-provenance-contract-and-prototype)
-now supplies the repair contract. Production repair is next; final whole-file adequacy remains open.
+[reproduced parser defect](annex-trust-proofs.md#compiler-command-provenance-assessment) used to
+interpret an admitted rustc-looking warning as empty-name compilation units. The
+[production unit-collection repair](annex-trust-proofs.md#production-compiler-invocation-collection-repair)
+now reads actual compiler arguments from private per-build records. Missing, stale or malformed
+provenance stops the inventory; warning text cannot add a unit. Direct role-artifact binding and
+complete compatibility/source/integration verification remain next, before F30 signoff.
 
 An admission's `defadmit` form names the file, rule and `sha256` of the site's extent (the whole manifest for a
 manifest rule), plus one textual `reason` value.

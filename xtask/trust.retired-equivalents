@@ -1,0 +1,18 @@
+# Historical delimiter reasons; retired from production by M3.6.9.6.3.2.2.15.2.1.3.3.2.1.
+# This file is a test fixture, never an active native --equivalents input.
+
+from-json "let mut any = false;"
+to-json "let mut any = true;"
+why split_command receives complete pinned Unix Cargo -v records; run_cargo fixes the raw program to rustc. Each operand follows exactly one outside space and has nonempty encoded text, including '' for an empty operand. The first boundary already has the nonempty program; both versions emit it and converge at the reset, or emit the same final program with no operands. Initial any=true adds nothing in this domain. Empty/leading-space input is outside it; compiled actual variants, independent argv expectations and wider-domain/wrong-oracle falsifiers hold the narrow claim (leaf M3.6.9.6.3.2.2.10.3.3.3.2.4).
+
+from-json "if any || !cur.is_empty() {"
+to-json "if true {"
+why Both split_command guards are reached only after the nonempty fixed rustc program or an encoded operand in complete pinned Unix Cargo -v records. The formatter emits one outside separator per operand and no leading/trailing/repeated outside space; an empty operand is '' and sets any. Thus any or nonempty cur is already true at each separator and at end, including quoted line breaks and escaped apostrophes; either guard becoming true preserves tokens. This excludes arbitrary empty/extra-space input. Compiled actual variants and explicit wider-domain/wrong-oracle falsifiers hold both sites (leaf M3.6.9.6.3.2.2.10.3.3.3.2.4).
+
+from-json "any = false;"
+to-json "any = true;"
+why After an outside separator in complete pinned Unix Cargo -v records, another operand always follows with nonempty encoded text; '' represents an empty operand. At its next boundary, quoted text has set any or decoded bytes make cur nonempty, so the push guard is already true regardless of the reset value. any affects no other output work; setting it true preserves every token. The fixed raw program is rustc and the formatter has no trailing/repeated outside separators. A trailing-space falsifier distinguishes the actual variant outside this domain; compiled argv and wrong-oracle controls hold the scope (leaf M3.6.9.6.3.2.2.10.3.3.3.2.4).
+
+from-json "any = false;"
+to-json "// any = false;"
+why Deleting split_command's separator reset can retain any=true from a quoted operand, but complete pinned Unix Cargo -v records always supply another nonempty encoding after each separator, including '' for an empty operand. At the next boundary the original guard is already true from quotes or decoded bytes, so retained any cannot change a push; no other output work reads it. The raw program is fixed rustc with no leading/trailing/repeated outside separators. A quoted-empty-plus-trailing-space falsifier exposes the actual variant outside this domain; compiled argv and wrong-oracle controls bind the reason (leaf M3.6.9.6.3.2.2.10.3.3.3.2.4).

@@ -3,8 +3,7 @@
 Initial assessment observed `2026-10-12`, owner `M3.6.9.6.3.2.2.11.2.3` in `docs/tasks/M3.md`.
 Source: [the pinned Rust toolchain](../../book/src/ledger.md#rust-toolchain).
 That initial source/caller assessment left the table obligations open. Later sections record the scoped
-proofs, final table replay and `.11.4` checkpoint closing that group. Separate prefix/helper obligations
-remain under `.13.2`; each subsequent proof states its domain and revalidation conditions. The confirmed prebuild metadata defect below is repaired by `.11.2.5.1`; caller/E premise and local
+proofs, final table replay and `.11.4` checkpoint closing that group. The prefix/helper cohort later closes in `.13.3.2.2`; each subsequent proof states its domain and revalidation conditions. The confirmed prebuild metadata defect below is repaired by `.11.2.5.1`; caller/E premise and local
 integration revalidation pass in `.11.2.5.2`. Further assessment `.11.2.6.1` confirms a Cargo-home reset
 execution gap below; `.11.2.6.2` repairs it before `.6.3` completion and further classifications.
 
@@ -36,7 +35,9 @@ The source table below identifies those bytes, rather than relying on moving bra
 
 `xtask/src/trust.rs::compile` selects build/bin, build/lib, or test/no-run/test target arguments, then
 release/locked/offline/no-default-features/JSON/verbose/package arguments. It supplies no trailing rustc
-arguments. `run_cargo` clears the environment, copies the catalog allowlist, and fixes `RUSTC=rustc`.
+arguments. `run_cargo` clears the environment, uses the catalog base allowlist plus explicit owned observer
+settings, and fixes `RUSTC=rustc`. The observer forwards immutable native argv without adding flags
+and removes its private settings before the real compiler. Inherited wrappers remain excluded.
 `catalog_build::environment` supplies PATH/HOME/rustup/toolchain and fresh project-local Cargo/target homes.
 After `PROGRAM.89.1`, it also prepares the target-local canonical temporary directory and seeds
 TMPDIR/TMP/TEMP; these are process settings, not new compiled-input admissions.
@@ -694,3 +695,30 @@ Every link below names the installed Cargo commit. These are source digests, not
 | [src/cargo/util/workspace.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/util/workspace.rs) | `a8ab44391e698a50d1b8f57a33ff6205866560e7f49520c1334aa8db2f419f83` |
 | [src/cargo/core/profiles.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/profiles.rs) | `df4b7e2d13f25efa7bb892a7efd31c82e549f0c80a138af361f7ab4e4252cfb7` |
 | [src/cargo/core/features.rs](https://raw.githubusercontent.com/rust-lang/cargo/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/features.rs) | `e07a9570fde7d272c5205579855b9942011275bb1730f56db0b686d6cfe168d6` |
+
+
+## Actual-argv collection caller revalidation
+
+`2026-10-18`, `.15.2.1.3.3.2.1`: the [production collector](compiler-provenance-contract.md#production-unit-collector-and-current-premise-revalidation)
+uses Cargo's published wrapper boundary, not diagnostic text, for actual compiler arguments.
+The normalization body, base environment9, fixed compiler, configuration/dynamic-target preflight
+and all token consumers remain byte-identical or retain their exact construction constraints.
+The embedded observer receives immutable native argv and passes its unchanged tail to Command;
+its only environment changes remove the wrapper/private settings. A native C receiver independently
+holds exact argument bytes, status/stdio and removed fields; actual public inventory retains literal
+root/dependency configurations and rejects warning-shaped pseudo-invocations as data.
+
+All16 producer-bound active reasons explicitly carry this revalidated caller. The absolute-prefix
+proof source guards additionally cover observer/controller/base environment and reject deliberate
+changes to target identity or forwarded argv. All34 maintained operator and compiled proof controls
+pass. The retired delimiter test uses a durable historical fixture, requires its four keys absent
+from active E and still exercises all five exact helper edits and wider-domain/wrong-oracle cases.
+Older native outcomes remain dated; they do not establish every historical caller premise.
+
+Fresh full162-parent native replay includes all22 current trust reason keys, every one scoped E,
+strict0. Three iterator counter-name alpha bindings are current. All1077 original/copied regular
+inputs restore and copied names agree. Raw listings: trust1433, controller124, observer16; only
+reason keys plus four separate protocol smoke edits are selected, not all discovered source edits.
+The [book](../../book/src/annex-trust-proofs.md#production-compiler-invocation-collection-repair)
+records exact commands/outcomes and the failed-baseline diagnostic-fixture repair. Complete new
+source mutation coverage, artifact binding, compatibility and milestone integration remain owned.

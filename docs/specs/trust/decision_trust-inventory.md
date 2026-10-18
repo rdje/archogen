@@ -116,10 +116,12 @@ catalog's path grammar — none today, and the catalog's own check refuses such 
 cannot stand in for a committed one (R1 A7). It builds with `--locked --offline` under the catalog's cleared,
 allowlisted environment (`environment`: `PATH`, `HOME`, the rustup home and the pinned toolchain, a `CARGO_HOME` of
 its own, its own target directory, and `TMPDIR`/`TMP`/`TEMP` pointing to that target's canonical `tmp`
-subdirectory, nothing inherited beyond that — no `RUSTFLAGS`, no `RUSTC_WRAPPER`, no
+subdirectory, nothing inherited beyond that — no `RUSTFLAGS`, no inherited `RUSTC_WRAPPER`, no
 `CARGO_PROFILE_*`). Inventory compilation additionally sets its own fixed `RUSTC=rustc`, selecting the same
-pinned command as the recorded `rustc -vV` identity. Cargo then prints a plain executable name, independent of
-the installation path; no inherited compiler override is admitted. Shared temporary storage is prepared
+pinned command as the recorded `rustc -vV` identity. The private observer requires that compiler
+argument and forwards its native argv; no inherited compiler override is admitted. Unit collection
+uses the [production provenance protocol](compiler-provenance-contract.md), with explicit private
+settings removed before the real compiler runs. Shared temporary storage is prepared
 with checked creation/canonicalization before commands execute. Blocked destinations refuse, while
 absent directories are created. The absolute runtime temp path works across child working directories.
 These process variables remain refused as compiled environment inputs; process setup grants no admission. It refuses a cargo configuration found
@@ -161,7 +163,7 @@ sysroot. The pin's bytes are in the build's identity, not in it, and the edition
 a package no root compiles changes no pair's item (R8 6). `Cargo.lock` is recorded and is not
 part of it: a package added elsewhere changes it and no root's compilation (case 5) (R1 A14; R4 7).
 
-Cargo's verbose command is decoded before arguments are identified: single-quoted spans retain literal
+Historical reader, retired from production by `.15.2.1.3.3.2.1`: Cargo's verbose command was decoded before arguments were identified: single-quoted spans retain literal
 backslashes, while a backslash outside them escapes the following character. This preserves Cargo's
 close-quote/escaped-apostrophe/reopen-quote path spelling. The public inventory control
 `cargo_quoted_output_paths_preserve_inventory_units_and_configuration` exercises the pinned producer with
@@ -189,7 +191,7 @@ require an independently expected relative manifest path and exact description/u
 line-break, backslash, literal-backslash-n and source-marker roots; a distinct canonical-prefix control passes.
 No general record decoder or path/host grammar is admitted.
 
-Complete-command framing (`M3.6.9.6.3.2.2.10.3.3.3.2.3`, `2026-10-12`) consumes quoted line breaks
+Historical complete-command framing (`M3.6.9.6.3.2.2.10.3.3.3.2.3`, `2026-10-12`) consumed quoted line breaks
 and backticks intact before token decoding. Cargo also prints package paths raw in Compiling/Checking status:
 known complete scratch/canonical prefixes there are consumed before physical line breaks, so embedded Running
 text cannot become a command. Empty/unclosed framing, unquoted breaks and trailing junk refuse without panics.
@@ -199,8 +201,8 @@ ordinary, line-break, backtick, fake-Running and combined quote/backslash paths;
 remain stable. Synthetic malformed/canonical controls and exact native reversals hold both boundaries.
 This repairs the measured public multiline collection defects; full-production adequacy remains separately open.
 
-The [source-bound delimiter equivalents](../../book/src/ledger.md#rust-toolchain) (`M3.6.9.6.3.2.2.10.3.3.3.2.4`)
-apply only to complete pinned Unix Cargo records with the fixed rustc program and exact outside separators.
+The retired [source-bound delimiter equivalents](../../book/src/ledger.md#rust-toolchain) (`M3.6.9.6.3.2.2.10.3.3.3.2.4`)
+applied only to complete pinned Unix Cargo records with the fixed rustc program and exact outside separators.
 Encoded empty operands are included. Compiled actual variants, independent argv expectations and explicit
 outside-domain/wrong-oracle falsifiers support the reasons; selected strict native E is not full adequacy.
 No production collection behavior changes in this proof slice. After the admitted-dynamic-target repair,
@@ -261,7 +263,7 @@ prefix/helper survivors and full production adequacy remain open; initial result
   since a test is not the root, but the harness's own (R1 A10, A17; R8 9). A unit's package is the one whose target,
   in `cargo metadata`, names the unit's crate root and crate name — never the directory that prefixes its source,
   which a crate root inside a nested package's directory defeats — and a unit no one target names is refused (R8 2);
-- each compilation unit's **configuration**: its whole rustc invocation as cargo reports it with `-v` — `--edition`,
+- each compilation unit's **configuration**: its whole actual rustc invocation from the private observer record — `--edition`,
   `--cfg` and features, every `-C` option — with every path written relative to the scratch directory, the program path dropped, the `-<hash>` stripped from
   every `--extern` file name, `--out-dir`, `-L` and `-C incremental` dropped, which name the scratch build's own
   directories while each dependency is named by its `--extern` (R8 remark 19; R9 1), and any path still absolute
@@ -1028,4 +1030,5 @@ records exact intended names, fixture correction and the distinction between cov
 
 The complete pending repair contract, tracked prototype, actual outcomes and bounded
 implementation obligations are in [compiler-provenance-contract.md](compiler-provenance-contract.md).
-Production repair and independent verification remain open.
+Unit collection is repaired by `.3.3.2.1`; artifact binding, complete compatibility/source checks and
+independent verification remain open.
