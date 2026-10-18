@@ -113,8 +113,9 @@ this protocol. Large sampled output is matched from an explicit project-local fi
 `pipefail` false failure when a short-circuit consumer closes a pipeline early. Missing evidence,
 persistent PIDs and unknown reader status have rejecting controls. Required OS-read failure controls
 remain part of the suite. The aggregate CI report did not retain its sampled process text, so the
-reproduced mechanisms are not attributed as the exact historical occurrence. The full integration
-rerun remains owned by `M3.6.9.6.3.2.2.13.3.2.2`.
+reproduced mechanisms are not attributed as the exact historical occurrence. Full integration
+subsequently passes in `M3.6.9.6.3.2.2.13.3.2.2`; [the final checkpoint](annex-trust-proofs.md#final-prefixhelper-checkpoint)
+records its activation and scope.
 
 ### Shell input storage and invocation environment
 

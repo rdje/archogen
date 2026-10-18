@@ -634,7 +634,7 @@ These validators bind reason presence/shape/text selection; their mathematical t
 separately committed source and compiled proofs. Ignored adapters supplement those primary tools.
 
 This is the completed cohort replay only. Caller/premise and full local integration checkpoint
-`.13.3.2` is next; closure prose gets a separate pinned book/staged gate. Whole-production final
+`.13.3.2` is recorded below; closure prose gets a separate pinned book/staged gate. Whole-production final
 adequacy, remaining source obligations, independent review and runner compatibility remain open.
 
 ## Prefix/helper caller and first integration assessment
@@ -650,14 +650,30 @@ Actual `make integration` exits 2 on held activation `6d82c979f23641a15589b08f6c
 11 steps pass and one fails, with none unavailable, not built or quarantined. Only the self-test step
 fails: the handoff first-sample-only process arm reports eight passed controls and one failed control.
 No official integration pass stamp exists for that run. `PROGRAM.92` subsequently verifies its direct
-control repair; `.13.3.2.2` repeats full integration after that committed prerequisite. The first run
+control repair; `.13.3.2.2` subsequently repeats full integration after that committed prerequisite. The first run
 remains a failed result.
 
 All 1043 originals restore against the staged epoch. The retained regular-copy population restores
 against its prior complete-native epoch; borrowed index fields prove no copied index or gitlink
 contents. Production, controls, reasons and gate source bytes remain exact throughout. The caller
-assessment is complete; checkpoint, cohort and whole-production adequacy remain open. Later closure
-prose receives separate actual pinned-book and staged checks.
+assessment alone closes neither checkpoint nor cohort. Its later closure is recorded below;
+whole-production adequacy remains open. Closure prose receives separate pinned-book/staged checks.
+
+## Final prefix/helper integration
+
+Final checkpoint `.13.3.2.2` (`2026-10-18`), after committed repair `eb02f9b`, revalidates unchanged
+callers, production/build inputs, pinned sources, operator controls and exact complete-helper results/reasons.
+The prior flag receipt is source/reason-bound retained evidence, without a fresh flag measurement.
+Actual full local integration exits zero: every declared stage passes, with no failed, unavailable,
+unbuilt or quarantined result. Native Git and the official stamp identify held activation
+`b551ad85dc21174e08c4e167d1a515708d886a3e`. The earlier failed run remains failed historical evidence.
+
+The maintained census restores all current originals (1046) against the staged activation. The retained
+native-copy population (1043) restores against its prior complete-replay epoch; borrowed index metadata
+proves no copied index/gitlink contents. Actual code, controls, reasons and repaired handoff source stay
+exact. Five false activation/result bindings refuse. Later closure prose has separate pinned book and
+staged checks. This closes `.13`, the prefix/helper cohort; run_cargo binding/locality preflight `.14.1`
+is next. Remaining source obligations, final whole-file sweeps and independent review stay open.
 
 ## Retrieved source identities
 

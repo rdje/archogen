@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — close the prefix/helper integration checkpoint
+
+`ARCHOGEN-M3-0739` (leaf `M3.6.9.6.3.2.2.13.3.2.2`), `2026-10-18`.
+
+- Revalidate unchanged callers, pinned source identities, controls and complete 59-edit results/reasons.
+- Full local integration passes all 12 stages on the held native/official activation after the committed
+  handoff repair. The earlier failed checkpoint remains historical; no remote CI or full adequacy claim.
+- All 1046 current originals and 1043 prior-native copy inputs restore in separate epochs; five false
+  result bindings refuse. Code, controls, reasons and census repair stay exact.
+- Close the prefix/helper cohort, sync the book and own run_cargo binding/locality preflight next.
+
+
 ## archogen — stabilize handoff self-tests with acknowledged sampling
 
 `ARCHOGEN-PROGRAM-0738` (leaf `PROGRAM.92`), `2026-10-18`.

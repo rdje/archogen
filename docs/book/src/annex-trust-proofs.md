@@ -355,8 +355,27 @@ Full local integration fails its self-test step; every other declared step passe
 is the handoff census's first-sample-only process arm. No integration pass stamp is issued. Original
 inputs restore, and the separately retained prior mutation copy also restores in its own epoch.
 `PROGRAM.92` subsequently verifies the direct repair with acknowledged sampling and large-output
-controls. Final checkpoint `.13.3.2.2` will repeat full local integration after that committed repair. The complete helper mutation result remains valid within its
-recorded scope; this failed checkpoint closes neither the cohort nor whole-production adequacy.
+controls. Final checkpoint `.13.3.2.2` follows that committed repair below. The complete helper mutation
+result remains valid within its recorded scope; this failed run closes neither cohort nor whole-production adequacy.
+
+### Final prefix/helper checkpoint
+
+Checkpoint `.13.3.2.2` (`2026-10-18`) passes full local integration after the committed handoff-control
+repair. Format, lint, contract tests, doctrine checks, gate self-tests, the pinned book, target builds,
+toolchain premises, browser binding, emulator and target spike all pass. The actual result is
+`12 passed / 0 failed / 0 unavailable / 0 not built / 0 quarantined`. The official stamp and native Git
+agree on activation `b551ad85dc21174e08c4e167d1a515708d886a3e`; the earlier failed run remains recorded.
+
+Caller/source/proof bindings remain exact. All captured originals (1046) restore against this staged
+epoch. The retained mutation copy (1043 regular inputs) restores against its prior complete-replay
+epoch; this check borrows index metadata and does not prove copied Git index or gitlink contents.
+Altered activation/result receipts reject, and production, controls, reasons and repaired census source
+stay unchanged. Closure prose is checked separately with the pinned book and staged doctrine gates.
+
+The prefix/helper cohort is now closed. The next source group is `run_cargo`: first bind its exact
+edits and establish volume-local execution before measuring environment-omission variants. Its old
+survivors are obligations, with no current classification inferred from historical results. Final
+whole-file adequacy, remaining source groups and independent review remain open.
 
 ## Mutation measurements and controls
 
