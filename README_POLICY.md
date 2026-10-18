@@ -37,6 +37,8 @@ The book is the only user-facing surface. The director's `2026-10-18` ruling,
 `docs/decisions/decision_book-unbounded.md`, requires `unbounded` for every book growth dimension,
 including nested book routes. No size, file, chapter, line or line-width ceiling applies to the book;
 accuracy, completeness, navigation and content checks remain binding. `unbounded` is valid only for book routes.
+Book files are excluded from the growth metrics of every non-book ancestor route; its existing limits
+and archive-stub rules still govern other material. A bounded parent cannot impose an indirect book ceiling.
 
 | Destination | Route | Owner | Lifecycle | Files | Lines | Bytes | Longest line | Total bytes | Overflows to |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

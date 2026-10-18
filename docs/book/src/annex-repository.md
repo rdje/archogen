@@ -638,14 +638,18 @@ evidence must remain complete. Its chapters and annexes follow the subject matte
 Accuracy, glossary, index, anchors, coverage, sources, figures and the book build still have their checks.
 The director's `2026-10-18` ruling is `docs/decisions/decision_book-unbounded.md`; `README-ROUTES` requires
 `unbounded` for every book growth dimension, including nested routes. Other surfaces keep their controls.
+Book files are excluded from every growth metric of a non-book ancestor route. For example, a bounded
+`docs/` route can govern other documentation without counting the book against its file or byte budget.
+Other material still follows that route's limits and archive-stub rules. Routing self-tests also refuse
+failed fixture edits before trusting a verdict.
 The changelog and the development notes are
 bounded as rolling ledgers (above). A design's review history, which grows by a round at a time, overflows from the
 decisions folder to `docs/reviews/`, which has ceilings of its own, and a closed review's history overflows on to
 `docs/review-history/` (above). The task trees are bounded too, and their
 finished parts overflow to `docs/task-history/`, as settled sections of a decision record do to
 `docs/decision-history/` (above). A folder grown too large is split by subject into sub-folders, each with ceilings
-of its own, while the folder's own limits still count everything in them, so a split adds no room; this rule
-applies to bounded folders, and the book remains unbounded. No ceiling
+of its own, while the parent still counts their non-book material, so an ordinary split adds no room.
+Book files remain excluded from those ancestor measurements. No ceiling
 may rise above what a decision fixes, which the policy lists and the check enforces. The decisions folder was split
 this way on `2026-09-30`, and `DECISION-INDEX` keeps every record in a sub-folder listed in its index.
 

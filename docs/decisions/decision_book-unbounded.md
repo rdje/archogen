@@ -19,8 +19,8 @@ and creates unnecessary compaction work whenever implementation needs a fuller a
 
 ## How to apply
 
-`README_POLICY.md` registers every book growth dimension as `unbounded`. `README-ROUTES` requires
-that value for book routes, including nested routes, and refuses it for other destinations.
+`README-ROUTES` requires `unbounded` for every book route in `README_POLICY.md`, including nested
+routes, rejects it elsewhere, and excludes book files from non-book ancestor metrics.
 Do not shorten explanations, abbreviate navigation labels, split the book, or defer documentation
 to satisfy a growth ceiling. Organize chapters and annexes for readers and the subject matter.
 

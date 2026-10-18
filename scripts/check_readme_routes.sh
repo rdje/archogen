@@ -25,8 +25,9 @@
 #      file's lines and bytes, longest line and total bytes), a registered doctrine that owns that dimension, or `debt: <leaf>` naming an open leaf.
 #      Book routes instead require `unbounded` in every applicable dimension; that value is forbidden elsewhere.
 #      A PARTITION is a directory row under another: its files meet their own row's per-file ceilings and not the
-#      parent's, while the parent's tracked files and total count everything beneath it, sub-folders included, so a
-#      partition adds no capacity (`docs/decisions/decision_decisions-folder-ceiling.md`, leaf `PROGRAM.39`);
+#      parent's, while the parent's tracked files and total count non-book material beneath it, sub-folders included,
+#      so an ordinary partition adds no capacity (`docs/decisions/decision_decisions-folder-ceiling.md`, `PROGRAM.39`).
+#      Book files contribute only to book-route metrics, so a bounded ancestor cannot impose an indirect book limit;
 #   4. every onward destination has a row, and no chain of onward routes is a cycle;
 #   5. an empty registry, a guard that prints no hint, or a malformed cell is a breach, not a pass;
 #   6. no ceiling is above the maximum a decision fixes for it, in the table under `### Ceilings a decision fixes`, and
@@ -268,11 +269,14 @@ scan() {
     if [ "${dest%/}" != "$dest" ]; then
       local listed; listed="$(git ls-files -- "$dest")"
       if [ -z "$listed" ]; then note "\`$dest\` is registered, and nothing under it is tracked"; continue; fi
-      # Per-file figures over the files this row governs; the file count and total over everything beneath it, a
-      # partition's files included, so a partition adds no capacity to its parent; an archive stub, no history, left
-      # out of the count alone.
+      # Per-file figures over the files this row governs; counts/totals include ordinary nested partitions.
+      # Book files belong only to unbounded book-route metrics. Ancestors retain their existing controls over
+      # other material, including the archive-stub exception to the file count alone.
       local n=0 ml=0 mb=0 tb=0 l b f own=""
       while IFS= read -r f; do
+        if [[ "$f" == docs/book/* && "$dest" != docs/book/* ]]; then
+          continue
+        fi
         is_archive_stub "$f" || n=$((n + 1))
         b=$(wc -c < "$f" | tr -d ' '); tb=$((tb + b))
         [ "$(governing_row "$f")" = "$dest" ] || continue
@@ -372,7 +376,10 @@ SH
     git -C "$work" add -A
   }
   edit() { # $1 = file in the world, $2 = sed expression
-    sed -i.bak "$2" "$work/$1"; rm -f "$work/$1.bak"; git -C "$work" add -A
+    if ! sed -i.bak "$2" "$work/$1" || ! rm -f "$work/$1.bak" || ! git -C "$work" add -A; then
+      echo "SELF-TEST: fixture edit failed for $1" >&2
+      exit 2
+    fi
   }
   arm() { # $1 = name, $2 = expected rc, $3 = text the output must carry ("" for a pass)
     local name="$1" want="$2" must="$3" out rc
@@ -498,6 +505,29 @@ SH
   fresh; book
   printf '\n### Ceilings a decision fixes\n\n| Destination | Column | Maximum | Decision |\n| --- | --- | --- | --- |\n| `docs/book/` | Total bytes | 9999999 | `A.md` |\n' >> "$work/README_POLICY.md"; git -C "$work" add -A
   arm "an obsolete book decision ceiling is refused" 1 "has a decision ceiling"
+  # An ancestor's budget must never become an indirect book growth ceiling.
+  book_ancestor() {
+    printf '\n[all docs](docs/)\n' >> "$work/README.md"
+    edit README_POLICY.md '/^| `docs\/book\/` |/a\
+| `docs/` | navigation | W | maintained_reference | 1 | 100 | 3000 | 200 | 1000 | — |'
+  }
+  fresh; book; book_ancestor
+  arm "a bounded ancestor excludes book growth from its file and byte budgets" 0 ""
+  printf 'another document\n' > "$work/docs/extra.md"; git -C "$work" add -A
+  arm "the ancestor still counts every non-book file" 1 "docs/: 2 tracked files"
+  fresh; book; book_ancestor
+  edit README_POLICY.md 's@^\(| `docs/` .*\) 1 | 100 |@\1 3 | 100 |@'
+  for i in $(seq 40); do printf '%049d\n' 0; done > "$work/docs/extra.md"; git -C "$work" add -A
+  arm "the ancestor still limits non-book bytes" 1 "bytes in total, over its ceiling of 1000"
+  fresh
+  local edit_out edit_rc
+  arms=$((arms + 1))
+  edit_out="$(edit README_POLICY.md 's/[' 2>&1)"; edit_rc=$?
+  if [ "$edit_rc" -eq 2 ] && printf '%s' "$edit_out" | grep -qF 'fixture edit failed for README_POLICY.md'; then
+    ok=$((ok + 1)); echo "  ✅ failed fixture preparation refuses before any verdict"
+  else
+    echo "SELF-TEST: failed fixture preparation must exit 2, got $edit_rc" >&2
+  fi
   rm -rf "$work"
   arms=$((arms + 1))
   if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the real README's routes are all governed"

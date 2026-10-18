@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — book growth stays free of bounded ancestor routes
+
+`ARCHOGEN-PROGRAM-0725` (leaf `PROGRAM.88`), `2026-10-18`.
+
+- Reproduce an indirect book ceiling: a bounded ancestor counted book files/bytes despite their
+  explicit unbounded policy. Exclude book files from all non-book ancestor growth metrics, preserving
+  those ancestors' existing controls for other material and ordinary partitions/stubs.
+- Keep every prior book/direct-route/content check. Add ancestor freedom and non-book file/byte
+  controls; make fixture edits fail closed and test invalid preparation. Same44 arms: red41/3 to
+  green44/0; shell syntax passes, actual book and staged gates before commit.
+- Sync the director's ruling, local policy, doctrine and book. PROGRAM.87 log repair next, then M3 matcher work.
+
 ## archogen — tenth daily artifact cleanup with retained evidence
 
 `ARCHOGEN-PROGRAM-0724` (leaf `PROGRAM.86`), `2026-10-18`.

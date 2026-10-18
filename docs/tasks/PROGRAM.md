@@ -806,14 +806,48 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.88`
-  Status: `pending` — P1 book growth boundary audit after daily cleanup
+  Status: `done` — direct and ancestor book growth boundaries verified
   Goal: exercise an unbounded book beneath a bounded ancestor route using the routing check's published
     fixture interface. Determine whether ancestor file/byte totals can indirectly constrain book growth.
     If reproduced, fix the book-only boundary with permanent positive/negative controls, retaining all
     non-book capacity rules and semantic/navigation checks. Sync the ruling/policy/book and commit.
   Schedule: immediately after PROGRAM.86, then PROGRAM.87, then resume M3 .13.2.4.
-  Verification: `pending`
-  Commit: `pending`
+  Startup: clean main a0ca6af, empty/untracked message and OS-readable handoff census. Read director
+    book ruling, routing registry/partition/metric/self-test contracts and book repository section.
+    Own the boundary reproduction, any book-only correction and permanent regression controls.
+  - [x] **ROOT CAUSE** — `bash scripts/check_readme_routes.sh --self-test`, authoritative red exit 1:
+    41 pass / 3 fail (44 arms). The new maintained ancestor regression reproduces 50 counted files /
+    771204 bytes against the ancestor's 1-file/1000-byte budget, despite the book's explicit unbounded
+    row. Root cause: scan() counts all nested files/bytes before consulting each governing row, so a
+    bounded ancestor indirectly caps the book. Boundaries on non-book material must remain effective.
+    Initial fixture preparation also exposed edit() ignoring a failed sed command. Own fail-closed
+    fixture preparation and a permanent invalid-edit arm here before authoritative red/green results;
+    correct the new fixture's delimiter typo first. This is necessary to trust these regressions.
+  - [x] **ADDRESSED** — exclude docs/book/ files from non-book ancestor metrics before counts,
+    bytes or per-file figures are accumulated. Book routes retain their full measured population and
+    require unbounded applicable dimensions. The parent retains its original non-book/partition/stub
+    rules. edit() now exits 2 with attribution if sed, backup cleanup or fixture staging fails.
+    `bash scripts/check_readme_routes.sh --self-test`, exit 0: 44 pass / 0 fail (44 arms), including
+    the oversized book under a bounded ancestor, non-book file/byte refusals and invalid edit rejection.
+    All 40 prior arms remain. Authoritative red was 41 pass / 3 fail, exit 1, with no unintended fixture error;
+    preliminary fixture delimiter typo corrected before that record. No weakened book content gates.
+  - [x] **NO REGRESSION** — maintained self-tests above preserve all existing direct/nested book
+    freedom, forbidden book ceilings, derived routes, ownership/lifecycle, decisions, ordinary partition
+    capacity and other destinations' bounds; new non-book refusal cases keep both ancestor budgets.
+    `bash -n scripts/check_readme_routes.sh`, exit 0. Actual pinned mdBook build, index/anchors/glossary/
+    coverage/source/figure/routes/order and staged doctrine gates precede commit. No Rust change,
+    fresh Rust-focused or full integration claim. Rule, README_POLICY.md local adoption, doctrine
+    description and book explain the same book-only exemption; generic copied policy body untouched.
+  - [x] **LOCKSTEP** — record all found boundaries and preparation repair here; keep the book's full
+    explanations, commands, examples and navigation. Live/resume/index select PROGRAM.87 log repair,
+    then M3 .13.2.4; ordinary PROGRAM.71 stays queued. Status categories unchanged, no new DEV_NOTES lesson.
+  Verification: `2026-10-18`, maintained --self-test and public gate are primary; outputs retained at
+    target/book-ancestor-boundary/red.log and green.log, with the qualified preliminary log separate.
+    Corrected test-only red and code/fixture-guard green runs cover the same 44 arms. No current book
+    growth ceiling applies directly or through ancestors to book files; other controls keep their scope.
+    red.log SHA256 3bd6bc41373b2ee583b6773451135e2f6d0b64c0f62eac09fb9c67075d4d115f;
+    green.log SHA256 f9c75cbd7db741e5e29b6e8d710b79722c65e086c9e0c635f01c698d695436d7;
+  Commit: `ARCHOGEN-PROGRAM-0725 (leaf PROGRAM.88)`
 
 
 ## Roadmap coverage map
@@ -880,10 +914,9 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.88` | `pending` | book growth boundary audit |
-| 2 | `PROGRAM.87` | `pending` | preserve PROGRAM log records in their headed tables |
-| 3 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
-| 4 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.87` | `pending` | preserve PROGRAM log records in their headed tables |
+| 2 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
+| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.72`, `.73` and `.78` — are filed and owned. Every closed
@@ -1105,6 +1138,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-11` | `PROGRAM.83.1` | published review archive refusal; closed-row prefix and source identity | old status prefix exits 1, nothing written; only index metadata corrected; history SHA-256 unchanged; staged count/history, book and doctrine gates before commit |
 | `2026-10-11` | `PROGRAM.83.2` | published task/review seal commands and final staged provenance checks | PROGRAM 15 subtrees/17 leaves, M3 four/four, each reconstructed byte for byte; review copies 98 522 and 9 565 bytes read back exactly; source bodies frozen, stubs retained; gate counts and doctrine hook before commit |
 | `2026-10-18` | `PROGRAM.86` | independent main-cache metadata/native census, identity recheck/removal/residue, maintained restoration, focused and wasm workflows | 928 files / 344389410 logical bytes removed only from admitted incremental caches; 1029 inputs restore after removal/build checks; focused3/3 exact activation, wasm0; evidence/stores/Git workspaces retained; closure book/staged checks separate |
+| `2026-10-18` | `PROGRAM.88` | maintained routing red/green controls, book ancestor and non-book budget cases, fixture failure rejection | red41/3 to green44/0, same44 arms; indirect book count/byte cap removed, other limits and all prior arms retained; shell syntax0, final book/staged gates before commit |
 
 ## Commit Log
 
@@ -1325,6 +1359,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 
 | `PROGRAM.84` | `ARCHOGEN-PROGRAM-0687 (leaf PROGRAM.84)` | **eighth daily artifact cleanup**: targeted metadata/system census, only proven incremental caches removed (610779360 logical bytes/4867 files/300 bin), immediate residue gone, maintained 1003-input restoration before/after passing focused and wasm checks; cited evidence/stores/Git workspaces retained, auxiliary limits explicit, latest-only record/book and parent-child range aligned; resume M3 helper domain judgments |
 | `PROGRAM.86` | `ARCHOGEN-PROGRAM-0724 (leaf PROGRAM.86)` | **tenth daily cleanup**: independent targeted same-volume/no-link/no-Git metadata/system census; only main and empty wasm incremental caches removed, immediate residue clear; all 1029 inputs restore before/after focused and wasm checks, exact held activation stamp; evidence/products/stores/Git workspaces retained, supplementary limits explicit; latest-only record/book sync, misplaced PROGRAM row owned in .87 and book boundary audit .88 next |
+| `PROGRAM.88` | `ARCHOGEN-PROGRAM-0725 (leaf PROGRAM.88)` | **book growth cannot inherit an ancestor cap**: reproduced unbounded book counted against bounded docs parent; book files now contribute only to book-route metrics, non-book budgets/partition/stub semantics retained; fixture preparation fails closed; same44 maintained arms red41/3 to green44/0, all prior controls preserved; ruling/policy/book/live sync, PROGRAM log repair next |
 
 ## Changelog
 
