@@ -1030,5 +1030,4 @@ records exact intended names, fixture correction and the distinction between cov
 
 The complete pending repair contract, tracked prototype, actual outcomes and bounded
 implementation obligations are in [compiler-provenance-contract.md](compiler-provenance-contract.md).
-Unit collection is repaired by `.3.3.2.1`; artifact binding, complete compatibility/source checks and
-independent verification remain open.
+Unit collection/artifact binding implement the contract; compatibility/source checks and independent verification remain open.

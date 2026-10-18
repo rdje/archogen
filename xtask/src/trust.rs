@@ -650,9 +650,21 @@ fn run_cargo(
 /// target's name, `-` written `_`, as rustc's `--crate-name` takes it), to its package's directory (R8 2).
 pub type Targets = BTreeMap<(String, String), String>;
 
+#[path = "trust_artifact.rs"]
+mod artifact;
+
+/// Metadata source roots by package, target kind and original target name.
+type TargetSources = BTreeMap<(String, String, String), BTreeSet<String>>;
+
+/// A metadata-owned compilation, retaining the observer's actual arguments.
+struct Compilation {
+    package: String,
+    arguments: Vec<String>,
+}
+
 /// Compile one target of the package at `package` clean in `tree_dir` — `target_args` such as `["build", "--bin",
 /// NAME]` — and read every unit's dependency information, each refusal naming `who` (§3). Returns the units, in a fixed
-/// order, and cargo's JSON messages.
+/// order, and the metadata-owned compiler invocations.
 #[allow(clippy::too_many_arguments)]
 fn compile(
     who: &str,
@@ -664,7 +676,7 @@ fn compile(
     tree_dir: &Path,
     compiler: &compiler::Compiler,
     refused: &mut Vec<String>,
-) -> Result<(Vec<Unit>, String), String> {
+) -> Result<(Vec<Unit>, Vec<Compilation>), String> {
     let name = package_names
         .get(package)
         .ok_or_else(|| format!("`{who}`: no package at `{package}`"))?;
@@ -685,7 +697,7 @@ fn compile(
     let argv: Vec<&str> = args.iter().map(String::as_str).collect();
     let session = compiler.session(who, env, tree_dir)?;
     let compile_env = session.environment(env)?;
-    let (stdout, _) = run_cargo(&argv, &compile_env, tree_dir)?;
+    let _ = run_cargo(&argv, &compile_env, tree_dir)?;
     let scratch = format!("{}/", tree_dir.display());
     let canonical_scratch = fs::canonicalize(tree_dir)
         .map(|c| format!("{}/", c.display()))
@@ -697,6 +709,7 @@ fn compile(
             .to_owned()
     };
     let mut units = Vec::new();
+    let mut compilations = Vec::new();
     for tokens in session
         .invocations()
         .map_err(|why| format!("`{who}` compiler provenance: {why}"))?
@@ -793,6 +806,10 @@ fn compile(
                 ));
             }
         }
+        compilations.push(Compilation {
+            package: package.clone(),
+            arguments: tokens,
+        });
         units.push(Unit {
             crate_name,
             package,
@@ -815,7 +832,7 @@ fn compile(
             "`{who}`'s build compiled nothing of its own package `{package}`"
         ));
     }
-    Ok((units, stdout))
+    Ok((units, compilations))
 }
 
 /// Build `p` clean in `tree_dir`, into `target_dir`, and read every unit's dependency information and its artifact.
@@ -824,7 +841,7 @@ fn build(
     p: &Program,
     package_names: &BTreeMap<String, String>,
     targets: &Targets,
-    id_dir: &BTreeMap<String, String>,
+    sources: &TargetSources,
     env: &[(String, String)],
     tree_dir: &Path,
     target_dir: &Path,
@@ -838,7 +855,7 @@ fn build(
         Target::Bin(b) => ["build", "--bin", b].map(str::to_owned).to_vec(),
         Target::Lib => ["build", "--lib"].map(str::to_owned).to_vec(),
     };
-    let (units, stdout) = compile(
+    let (units, compilations) = compile(
         &p.name,
         &p.package,
         &target_args,
@@ -849,65 +866,7 @@ fn build(
         compiler,
         refused,
     )?;
-    // The root's artifact, from cargo's own report of what it wrote (R8 9).
-    let mut artifact = None;
-    for line in stdout.lines() {
-        let Ok(m) = json::parse(line) else { continue };
-        if m.get("reason").and_then(Json::as_str) != Some("compiler-artifact") {
-            continue;
-        }
-        let pkg = m
-            .get("package_id")
-            .and_then(Json::as_str)
-            .and_then(|id| id_dir.get(id));
-        if pkg != Some(&p.package) {
-            continue;
-        }
-        let target = m.get("target");
-        let tname = target
-            .and_then(|t| t.get("name"))
-            .and_then(Json::as_str)
-            .unwrap_or_default();
-        let kinds: Vec<String> = target
-            .and_then(|t| t.get("kind"))
-            .map(Json::elements)
-            .unwrap_or_default()
-            .iter()
-            .filter_map(Json::as_str)
-            .map(str::to_owned)
-            .collect();
-        let executable = m.get("executable").and_then(Json::as_str);
-        let file = match &p.target {
-            Target::Bin(b) if tname == b && kinds.iter().any(|k| k == "bin") => {
-                executable.map(str::to_owned)
-            }
-            Target::Test(t) if tname == t && kinds.iter().any(|k| k == "test") => {
-                executable.map(str::to_owned)
-            }
-            Target::Lib if kinds.iter().any(|k| k.ends_with("lib")) => m
-                .get("filenames")
-                .map(Json::elements)
-                .unwrap_or_default()
-                .iter()
-                .filter_map(Json::as_str)
-                .find(|f| f.ends_with(".rlib"))
-                .map(str::to_owned),
-            _ => None,
-        };
-        if let Some(f) = file {
-            let bytes = fs::read(&f).map_err(|e| format!("{f}: {e}"))?;
-            let canonical_target = fs::canonicalize(target_dir)
-                .map(|c| format!("{}/", c.display()))
-                .unwrap_or_default();
-            let rel = f
-                .strip_prefix(&format!("{}/", target_dir.display()))
-                .or_else(|| f.strip_prefix(&canonical_target))
-                .unwrap_or(&f)
-                .to_owned();
-            artifact = Some((rel, Digest::of(&bytes).hex()));
-        }
-    }
-    let artifact = artifact.ok_or_else(|| format!("`{}`'s build reported no artifact", p.name))?;
+    let artifact = artifact::select(p, sources, &compilations, env, tree_dir, target_dir)?;
     Ok(Build { units, artifact })
 }
 
@@ -1605,6 +1564,7 @@ pub fn inventory_with(
     let mut package_names: BTreeMap<String, String> = BTreeMap::new();
     let mut id_dir: BTreeMap<String, String> = BTreeMap::new();
     let mut targets: Targets = BTreeMap::new();
+    let mut target_sources: TargetSources = BTreeMap::new();
     let mut package_targets: BTreeMap<String, Vec<String>> = BTreeMap::new();
     // Every program target (§2): (package, kind, name).
     let mut program_targets: Vec<(String, String, String)> = Vec::new();
@@ -1652,6 +1612,12 @@ pub fn inventory_with(
                 .filter_map(Json::as_str)
                 .collect();
             let target_name = t.get("name").and_then(Json::as_str).unwrap_or_default();
+            for kind in &kinds {
+                target_sources
+                    .entry((dir.clone(), (*kind).to_owned(), target_name.to_owned()))
+                    .or_default()
+                    .insert(src.clone());
+            }
             if let Some(kind) = PROGRAM_KINDS.iter().find(|k| kinds.contains(k)) {
                 program_targets.push((dir.clone(), (*kind).to_owned(), target_name.to_owned()));
                 program_roots.entry(src.clone()).or_default().push((
@@ -1812,7 +1778,7 @@ pub fn inventory_with(
             p,
             &package_names,
             &targets,
-            &id_dir,
+            &target_sources,
             &env,
             &tree_dir,
             &target_dir,
@@ -5881,6 +5847,81 @@ pub(crate) mod tests {
     }
 
     const SAME: &str = "#[test]\nfn same() { assert_eq!(i::imp(3), r::refm(3)); }\n";
+
+    fn observed_artifact(f: &Fixture, inventory: &Json, name: &str) -> PathBuf {
+        let artifact = program(inventory, name).get("artifact").unwrap();
+        let relative = artifact.get("path").and_then(Json::as_str).unwrap();
+        assert!(relative.starts_with("release/deps/"), "{name}: {relative}");
+        let path = f.base.join("out/target").join(name).join(relative);
+        let metadata = std::fs::symlink_metadata(&path).unwrap();
+        assert!(metadata.is_file() && !metadata.file_type().is_symlink());
+        // An independent system implementation hashes the actual selected bytes.
+        let digest = Command::new("shasum")
+            .args(["-a", "256"])
+            .arg(&path)
+            .output()
+            .unwrap();
+        assert!(digest.status.success());
+        let digest = String::from_utf8(digest.stdout).unwrap();
+        assert_eq!(
+            artifact.get("sha256").and_then(Json::as_str),
+            digest.split_whitespace().next()
+        );
+        path
+    }
+
+    #[test]
+    fn observed_artifacts_are_actual_binary_and_library_outputs() {
+        crate::trust_test_process::bounded!(
+            observed_artifacts_are_actual_binary_and_library_outputs
+        );
+        let f = two_roots(
+            "observed-artifacts",
+            "fn main() { println!(\"artifact-root\"); }\n",
+            "pub fn f() {}\n",
+            &[],
+        );
+        let inventory = written(f.run());
+        let executable = observed_artifact(&f, &inventory, "gen");
+        let result = Command::new(executable).output().unwrap();
+        assert!(result.status.success());
+        assert_eq!(result.stdout, b"artifact-root\n");
+        let library = observed_artifact(&f, &inventory, "chk");
+        assert!(library
+            .extension()
+            .is_some_and(|extension| extension == "rlib"));
+        assert!(std::fs::read(library).unwrap().starts_with(b"!<arch>\n"));
+    }
+
+    #[test]
+    fn observed_artifact_metadata_distinguishes_harness_and_same_named_binary() {
+        crate::trust_test_process::bounded!(
+            observed_artifact_metadata_distinguishes_harness_and_same_named_binary
+        );
+        let f = three_roots("observed-harness-artifact", "d", SAME, "", "");
+        let inventory = written(f.run());
+        let harness = observed_artifact(&f, &inventory, "diff");
+        let result = Command::new(harness).arg("--list").output().unwrap();
+        assert!(result.status.success());
+        assert!(String::from_utf8(result.stdout)
+            .unwrap()
+            .contains("same: test"));
+        let mut roots = std::fs::read_to_string(f.repo.join("trust/roots.eadl")).unwrap();
+        roots.push_str(
+            "(defprogram companion (package \"crates/i\") (target bin d) (reason \"fixture\"))\n",
+        );
+        f.commit(&[
+            ("trust/roots.eadl", roots),
+            ("crates/i/Cargo.toml", manifest("i", "[dev-dependencies]\nr = { path = \"../r\" }\n[[test]]\nname = \"d\"\nharness = false\n[[bin]]\nname = \"d\"\npath = \"src/main.rs\"\n")),
+            ("crates/i/src/main.rs", "fn main() { println!(\"companion-bin\"); }\n".to_owned()),
+            ("crates/i/tests/d.rs", "fn main() { assert_eq!(i::imp(3), r::refm(3)); println!(\"custom-harness\"); }\n".to_owned()),
+        ]);
+        let inventory = written(f.run());
+        let harness = observed_artifact(&f, &inventory, "diff");
+        let result = Command::new(harness).output().unwrap();
+        assert!(result.status.success());
+        assert_eq!(result.stdout, b"custom-harness\n");
+    }
 
     fn harness_item(inv: &Json) -> Json {
         items(inv)

@@ -321,12 +321,14 @@ a change that leaves it stale, so it is never edited by hand.
 - node — [What this project relies on from outside](ledger.md#node)
 - Not versioned yet — [What is versioned, and what changing it costs](versions.md#not-versioned-yet)
 - **NUL** — [definition](glossary.md), [Reading a description](reading.md), [Annex B: The checks that keep the
-  repository honest](annex-repository.md)
+  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Numbers are exact — there is no float anywhere — [Reading a
   description](reading.md#numbers-are-exact--there-is-no-float-anywhere)
 
 ## O
 
+- Observed compiler artifact binding — [Annex C: Trust proof
+  records](annex-trust-proofs.md#observed-compiler-artifact-binding)
 - Offered is a claim, not evidence — [Presence, absence, and relevance](presence.md#offered-is-a-claim-not-evidence)
 - Offers — [Matching an offer to a requirement](matching.md#offers)
 - One host — [Checks that must not share a mistake: the trust gate](trust.md#one-host)

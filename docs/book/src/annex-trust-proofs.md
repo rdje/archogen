@@ -3122,3 +3122,131 @@ The held native epoch and final completion-document/focused epoch are separate. 
 `xtask/src/trust_compiler.rs` and `trust_compiler_observer.rs` join the complete later mutation scope.
 Artifact binding, remaining compatibility controls, the baseline-evidence repair and full current
 source/premise/integration verification still precede F30 signoff.
+
+### Observed compiler artifact binding
+
+The `2026-10-18` slice `.15.2.1.3.3.2.2` completes production role-artifact binding.
+The inventory identifies an executable, a library's rlib or a comparison harness by the
+compilation actually observed for that role. Cargo's stdout messages no longer select that file.
+The earlier escaped JSON-looking warning experiment did not establish an artifact-report exploit;
+this change implements the specified provenance contract without claiming one.
+
+`xtask/src/trust_artifact.rs` owns selection and validation. The metadata pass retains each
+target's source by package directory, kind and original target name, separately from the existing
+unit-owner and target-classification maps. A binary or test selects that precise metadata target;
+a library selects its unique library source. Selection requires exactly one recorded compilation
+owned by the package and naming that source, whether relative to the written tree or under its
+ordinary/canonical prefix. Missing or ambiguous metadata and invocations stop the inventory.
+The generator-entrypoint caller still receives all verified units and ignores the additional
+invocation return value; its compiled-input checks remain in force.
+
+Source identity matters for test harnesses. A package may have a binary and integration test
+with the same target name. A custom `[[test]]` with `harness = false` also compiles without
+the normal `--test` switch. The permanent public-inventory regression builds that combination
+and runs the selected artifact: it prints `custom-harness`, while its companion binary would
+print `companion-bin`. The standard test-harness phase independently lists `same: test`.
+The selector therefore uses metadata ownership and source, rather than treating the presence of
+`--test` as target identity.
+
+#### A naming query, with no source evaluation
+
+For the selected invocation the instrument runs the pinned compiler in the same written tree,
+with the unchanged base environment and null stdin:
+
+```text
+rustc --print=file-names - --crate-name <observed-name> \
+  [--crate-type <observed-type>]... [--target <observed-target>] \
+  [--test] [-C extra-filename=<observed-suffix>]
+```
+
+Only observed naming options are forwarded. The actual source path, code generation options,
+feature cfgs, extern libraries and search paths are excluded. The observed `--out-dir` is retained
+for locating outputs, not passed to the query. Repeated crate types are preserved; duplicate
+singleton options, missing values and unsupported joined naming spellings refuse. An absent
+extra-filename option is not invented. The query uses the fixed `rustc` entrypoint and pinned
+toolchain environment, without the private observer fields. It creates no additional provenance
+unit or session record.
+
+A permanent actual-compiler control first compiles a real executable, then replaces its source
+with `compile_error!`. Selection still succeeds and the executable prints `query-artifact`.
+The source bytes, output file population and executable bytes stay identical across the query.
+This is an observable check that naming does not re-evaluate that source; the separate prototype's
+45 queries remain dated corroborating evidence, not a projection of all possible inputs.
+
+#### File validation and inventory paths
+
+The complete query output must be UTF-8, newline terminated and a nonempty sequence of unique
+basenames. Empty names, dot/dot-dot, separators, CR, NUL and duplicate names refuse. The canonical
+observed output directory must be within the canonical target directory for this role. Every
+reported output must exist as a regular non-symlink file and is read. The selected artifact is
+hashed: an executable requires exactly one output, and a library exactly one rlib among the
+validated outputs.
+Missing, foreign, linked, directory-valued and ambiguous outputs refuse rather than choosing an
+arbitrary last report.
+
+The recorded path is relative to the role's target directory and now names the compiler's direct
+output. For example, an actual binary fixture records
+`release/deps/a-ea31e1b4fa6d99dc`, while its library records
+`release/deps/libb-20572edba3a82d76.rlib`. The suffixes are compiler/build identities, not names
+a package consumer should hardcode. Previous Cargo root aliases such as `release/a` or
+`release/libb.rlib` are no longer selected. The inventory schema still carries `artifact.path`
+and `artifact.sha256`; packaging and verification use those fields and actual bytes.
+A clean rebuild under another output directory must retain the established build/configuration
+identity contracts; the broad trust parents continue to check that behavior.
+
+The permanent binary/library parent runs the selected binary, checks the library archive header,
+requires direct-output paths and compares both recorded hashes with the independent system
+SHA-256 implementation. The harness parent does the same hash/path validation before running
+both standard and custom harnesses. The output-refusal parent uses a literal independent digest
+and checks valid behavior before each malformed-output case. The actual-query parent also tests
+missing/wrong/ambiguous metadata, foreign/missing/duplicate invocations and an actual failing
+target-information query, followed by fresh successful selection.
+
+#### Replay commands and scope
+
+All shell scratch/cache settings are those in the toolbox. The focused artifact command is:
+
+```bash
+cargo test -p xtask artifact -- --nocapture
+python3 -I -B xtask/mutation_sweep_tests.py "$PWD" \
+  IteratorTests.test_cargo_absolute_prefix_edits_preserve_line_selection -v
+```
+
+The proof-premise guard initially rejects the changed production source. Revalidation confirms
+the unchanged normalization and diagnostic-selection bodies, base environment, observer,
+controller, CLI/gate, catalogue and active/historical reason files. The new artifact query uses
+the same absolute tree and no Cargo producer flags. The guard now also binds artifact production
+and rejects a deliberately changed query cwd. An initial isolated Python module-style command
+could not import the test harness; the recorded replay uses the harness's documented file/root
+arguments. That invocation error was not a proof result.
+
+The native copied-tree command is:
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 \
+  --filter=trust:: --filter=trust_generated:: --filter=trust_gate:: \
+  --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L84.cond.58 --only L156.logic.98 --only L154.chain.132
+```
+
+It selects three actual discovery edits: omit the containment refusal, weaken package/source
+conjunction to disjunction, and truncate the matching invocation population before uniqueness
+checking. This is a bounded contract smoke measurement. The full new source and all affected
+current sources/reasons remain owned by `.3.3.3`, after compatibility and the separately owned
+baseline-evidence repair. No whole-source adequacy or F30 closure follows from these three edits.
+
+The dated native result is 3 named kills, strict exit 0, with no timeout, compiler refusal or
+unjudged result. Original and restored-copy parent CLI lists agree at 167 names; all 1079
+held regular inputs restore with modes and independent Python/system hashes. The gitlink is
+metadata only. All 37 retained producer-source pins remain bound. The receipt audit rejects nine
+false summaries: scope, omitted result, replacement, intended name, total, exit, filename, source
+identity and outcome. It is supplemental to the maintained native producer and tracked controls.
+Held native tree `0e213978519fa101cc75e9f6eac1ed30249fd408` precedes completion-doc/focused staging.
+Receipts are under `target/compiler-artifact-binding/`; supplemental audit SHA-256 is
+`74fcaf11ad73522da648ecd14031568738f8893861dbe07302dc4721a7e0910a`.
+
+The prior completed collector leaf is sealed without rewriting its bytes. Independent committed-core,
+index and full pre-seal tree reconstruction agree, and all earlier archives remain identical.
+Final focused/book/doctrine checks close this bounded slice. Compatibility, the owned baseline
+evidence repair and complete current-source/integration review remain ahead; F30 remains open.

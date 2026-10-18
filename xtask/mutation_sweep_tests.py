@@ -1147,21 +1147,24 @@ class IteratorTests(DiscoveryFixture):
         main = (ROOT / "xtask/src/main.rs").read_text()
         controller = (ROOT / "xtask/src/trust_compiler.rs").read_text()
         observer = (ROOT / "xtask/src/trust_compiler_observer.rs").read_text()
+        artifact = (ROOT / "xtask/src/trust_artifact.rs").read_text()
         catalog = (ROOT / "xtask/src/catalog_build.rs").read_text()
         environment = catalog[catalog.index("pub fn environment("):catalog.index("\nfn command(")]
 
-        def premises(trust, gate, main, controller=controller, observer=observer, environment=environment):
+        def premises(trust, gate, main, controller=controller, observer=observer, environment=environment, artifact=artifact):
             # These are proof-premise guards, not expected diagnostic output. Any
             # production/caller change needs the absolute-cwd argument revalidated.
             root = main[main.index("fn repo_root()"):main.index("\nfn on_path(")]
             entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
             guarded = {
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
-                    "9a8bf609c803199017c6914303c9c6dbd058847b0b16c9d374b4bf7eb96117b5"),
+                    "036f650dc082d9d43956865ef67fb16f761c4b3ede54c0567f8936733322bef4"),
                 "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
                     "2364508f25c23a72db2fdca5e9f41280883a3b0bb3577a2a69e65ebbac2b5c69"),
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],
                     "c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f"),
+                "artifact binding": (artifact.split("#[cfg(test)]", 1)[0],
+                    "f51d00153db5f9be189efbe73ddb3ebd468cd1e48de93882d4c6e90406a2faa2"),
                 "base environment": (environment,
                     "8b6fa81a2d715c2e42f8ab75a02b6e0c037c97d2f55e71c44c21e4a5516ee74c"),
                 "gate production": (gate.split("#[cfg(test)]", 1)[0],
@@ -1187,6 +1190,8 @@ class IteratorTests(DiscoveryFixture):
             (source, gate, main, controller, observer.replace('.args(&argv[1..])', '.args(&argv[2..])', 1)),
             (source, gate, main, controller, observer,
              environment.replace('"CARGO_TARGET_DIR".to_owned()', '"OTHER_TARGET".to_owned()', 1)),
+            (source, gate, main, controller, observer, environment,
+             artifact.replace('.current_dir(tree)', '.current_dir(".")', 1)),
         ]:
             with self.assertRaisesRegex(AssertionError, "revalidate absolute cwd proof"):
                 premises(*altered)

@@ -721,4 +721,7 @@ inputs restore and copied names agree. Raw listings: trust1433, controller124, o
 reason keys plus four separate protocol smoke edits are selected, not all discovered source edits.
 The [book](../../book/src/annex-trust-proofs.md#production-compiler-invocation-collection-repair)
 records exact commands/outcomes and the failed-baseline diagnostic-fixture repair. Complete new
-source mutation coverage, artifact binding, compatibility and milestone integration remain owned.
+source mutation coverage, compatibility and milestone integration remain owned.
+Artifact binding `.3.3.2.2` preserves these callers/normalization/producer premises. Its separate
+empty-input rustc query adds no Cargo flags; the absolute-cwd guard now binds that production file.
+The [artifact record](../../book/src/annex-trust-proofs.md#observed-compiler-artifact-binding) retains revalidation and falsifiers.

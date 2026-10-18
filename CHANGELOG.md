@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — bind artifacts to observed compiler outputs
+
+`ARCHOGEN-M3-0764` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.2.2`), `2026-10-18`.
+
+- Replace stdout artifact selection with metadata-owned observed compilations and source-free
+  pinned naming queries. Validate complete basenames, containment, regular files and unique
+  executable/rlib outputs; record direct relative compiler paths and actual hashes.
+- Real binary/library and standard/custom same-named harness controls pass with independent
+  hashes/execution. Actual empty-input query preserves outputs beside now-invalid source.
+- Artifact7/0, full167-parent native3K strict0;1079 originals/copies restore,37 pins held,
+  nine false receipts rejected. Revalidate guarded callers without changing producer/reasons.
+- Seal committed collector with full reconstruction; synchronize complete unbounded book and
+  canonical/live records. Final staged focused/book/doctrine workflow; compatibility next.
+
 ## archogen — collect units from actual compiler provenance
 
 `ARCHOGEN-M3-0763` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.2.1`), `2026-10-18`.

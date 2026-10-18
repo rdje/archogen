@@ -116,8 +116,13 @@ now has [verified warning controls](annex-trust-proofs.md#admitted-nonterminal-w
 interpret an admitted rustc-looking warning as empty-name compilation units. The
 [production unit-collection repair](annex-trust-proofs.md#production-compiler-invocation-collection-repair)
 now reads actual compiler arguments from private per-build records. Missing, stale or malformed
-provenance stops the inventory; warning text cannot add a unit. Direct role-artifact binding and
-complete compatibility/source/integration verification remain next, before F30 signoff.
+provenance stops the inventory; warning text cannot add a unit.
+[Observed artifact binding](annex-trust-proofs.md#observed-compiler-artifact-binding) now selects each
+role's metadata-owned compiler output through an empty-input naming query. Artifacts name direct
+files under `release/deps/`, with observed suffixes, rather than Cargo root aliases. Existing
+inventory path/hash fields remain the consumer contract. Missing, ambiguous, foreign or linked
+outputs stop the inventory. Complete compatibility/source/integration verification remains before
+F30 signoff.
 
 An admission's `defadmit` form names the file, rule and `sha256` of the site's extent (the whole manifest for a
 manifest rule), plus one textual `reason` value.
