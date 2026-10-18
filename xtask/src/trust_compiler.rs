@@ -471,6 +471,227 @@ mod tests {
     }
 
     #[test]
+    fn actual_records_refuse_remaining_field_range_byte_and_shape_boundaries() {
+        crate::trust_test_process::bounded!(
+            actual_records_refuse_remaining_field_range_byte_and_shape_boundaries
+        );
+        let (out, compiler, session, base) = setup("record-boundaries");
+        let source = out.join("probe.rs");
+        let compiled = out.join("compiled");
+        fs::create_dir(&compiled).unwrap();
+        fs::write(&source, "fn main() {}\n").unwrap();
+        let arguments = [
+            "rustc",
+            "--crate-name",
+            "boundary_probe",
+            "--emit=dep-info,link",
+            "--out-dir",
+            compiled.to_str().unwrap(),
+            source.to_str().unwrap(),
+        ];
+        assert!(run(&session, &base, &arguments).status.success());
+        let expected = vec![arguments.map(str::to_owned).to_vec()];
+        assert_eq!(session.invocations().unwrap(), expected);
+        let original = fs::read_dir(&session.records)
+            .unwrap()
+            .next()
+            .unwrap()
+            .unwrap()
+            .path();
+        let bytes = fs::read(&original).unwrap();
+        for (fault, reason) in [
+            ("schema-version", "schema"),
+            ("schema-type", "schema"),
+            ("session-type", "missing session_hex"),
+            ("role-type", "missing role_hex"),
+            ("cwd-type", "missing cwd_hex"),
+            ("missing-key", "unexpected fields"),
+            (
+                "pid-zero",
+                "invalid compiler provenance invocation identity",
+            ),
+            (
+                "pid-negative",
+                "invalid compiler provenance invocation identity",
+            ),
+            (
+                "pid-overflow",
+                "invalid compiler provenance invocation identity",
+            ),
+            (
+                "pid-fraction",
+                "invalid compiler provenance invocation identity",
+            ),
+            (
+                "pid-type",
+                "invalid compiler provenance invocation identity",
+            ),
+            ("exit-type", "unsuccessful"),
+            ("signal-number", "unsuccessful"),
+            ("argv-type", "no argument vector"),
+            ("argv-empty", "another compiler"),
+            ("hex-odd", "hexadecimal"),
+            ("hex-uppercase", "hexadecimal"),
+            ("hex-nul", "NUL"),
+            ("hex-non-utf8", "non-UTF8"),
+            ("query-tail", "unknown"),
+            ("compilation-no-output", "unknown"),
+            ("compilation-no-name", "unknown"),
+            ("compilation-no-emit", "unknown"),
+            ("no-newline", "canonical"),
+            ("extra-newline", "canonical"),
+            ("invalid-json", ""),
+            ("invalid-text", ""),
+            ("record-directory", "incomplete"),
+            ("record-extension", "incomplete"),
+        ] {
+            let records = out.join(fault);
+            fs::create_dir(&records).unwrap();
+            let file = records.join(original.file_name().unwrap());
+            fs::write(&file, &bytes).unwrap();
+            let copy = Session {
+                records,
+                executable: session.executable.clone(),
+                identity: session.identity.clone(),
+                role: session.role.clone(),
+                cwd: session.cwd.clone(),
+            };
+            assert_eq!(
+                copy.invocations().unwrap(),
+                expected,
+                "valid before {fault}"
+            );
+            let mut value = json::parse(std::str::from_utf8(&bytes).unwrap()).unwrap();
+            let Json::Object(fields) = &mut value else {
+                panic!("producer object")
+            };
+            let raw = match fault {
+                "schema-version" => {
+                    fields.insert(
+                        "schema".into(),
+                        Json::Str("archogen-compiler-provenance/2".into()),
+                    );
+                    None
+                }
+                "schema-type" => {
+                    fields.insert("schema".into(), Json::Bool(false));
+                    None
+                }
+                "session-type" | "role-type" | "cwd-type" => {
+                    fields.insert(
+                        format!("{}_hex", fault.strip_suffix("-type").unwrap()),
+                        Json::Null,
+                    );
+                    None
+                }
+                "missing-key" => {
+                    fields.remove("schema");
+                    None
+                }
+                "pid-zero" | "pid-negative" | "pid-overflow" | "pid-fraction" => {
+                    let number = match fault {
+                        "pid-zero" => "0",
+                        "pid-negative" => "-1",
+                        "pid-overflow" => "4294967296",
+                        _ => "1.5",
+                    };
+                    fields.insert("pid".into(), Json::Number(number.into()));
+                    None
+                }
+                "pid-type" => {
+                    fields.insert("pid".into(), Json::Str("1".into()));
+                    None
+                }
+                "exit-type" => {
+                    fields.insert("exit".into(), Json::Str("0".into()));
+                    None
+                }
+                "signal-number" => {
+                    fields.insert("signal".into(), Json::Number("0".into()));
+                    None
+                }
+                "argv-type" => {
+                    fields.insert("argv_hex".into(), Json::Null);
+                    None
+                }
+                "argv-empty" => {
+                    fields.insert("argv_hex".into(), Json::Array(Vec::new()));
+                    None
+                }
+                "hex-odd" | "hex-uppercase" | "hex-nul" | "hex-non-utf8" => {
+                    let encoded = match fault {
+                        "hex-odd" => "0",
+                        "hex-uppercase" => "FF",
+                        "hex-nul" => "00",
+                        _ => "ff",
+                    };
+                    let Some(Json::Array(arguments)) = fields.get_mut("argv_hex") else {
+                        panic!("producer argument vector")
+                    };
+                    arguments.push(Json::Str(encoded.into()));
+                    None
+                }
+                "query-tail"
+                | "compilation-no-output"
+                | "compilation-no-name"
+                | "compilation-no-emit" => {
+                    let arguments: &[&str] = match fault {
+                        "query-tail" => &["rustc", "-vV", "extra"],
+                        "compilation-no-output" => {
+                            &["rustc", "--crate-name", "probe", "--emit=dep-info,link"]
+                        }
+                        "compilation-no-name" => {
+                            &["rustc", "--out-dir", "out", "--emit=dep-info,link"]
+                        }
+                        _ => &["rustc", "--out-dir", "out", "--crate-name", "probe"],
+                    };
+                    fields.insert(
+                        "argv_hex".into(),
+                        Json::Array(arguments.iter().map(|argument| hex(argument)).collect()),
+                    );
+                    None
+                }
+                "no-newline" => Some(bytes[..bytes.len() - 1].to_vec()),
+                "extra-newline" => Some([bytes.as_slice(), b"\n"].concat()),
+                "invalid-json" => Some(b"{\n".to_vec()),
+                "invalid-text" => Some(vec![0xff]),
+                "record-directory" => {
+                    fs::remove_file(&file).unwrap();
+                    fs::create_dir(&file).unwrap();
+                    None
+                }
+                "record-extension" => {
+                    fs::rename(&file, file.with_extension("JSON")).unwrap();
+                    None
+                }
+                _ => unreachable!(),
+            };
+            if let Some(raw) = raw {
+                fs::write(&file, raw).unwrap();
+            } else if !["record-directory", "record-extension"].contains(&fault) {
+                fs::write(&file, json::write(&value) + "\n").unwrap();
+            }
+            if fault.starts_with("pid-") && fault != "pid-type" {
+                let Some(Json::Number(number)) = value.get("pid") else {
+                    panic!("numeric PID fault")
+                };
+                fs::rename(&file, copy.records.join(format!("{number}.json"))).unwrap();
+            }
+            let error = copy.invocations().expect_err(fault);
+            assert!(
+                !error.is_empty() && error.contains(reason),
+                "{fault}: {error}"
+            );
+        }
+        let fresh = compiler
+            .session("boundary-recovery", &base, &session.cwd)
+            .unwrap();
+        assert_ne!(fresh.records, session.records);
+        assert!(run(&fresh, &base, &["rustc", "-vV"]).status.success());
+        assert!(fresh.invocations().unwrap().is_empty());
+    }
+
+    #[test]
     fn actual_compiler_removes_private_environment_and_records_failures() {
         crate::trust_test_process::bounded!(
             actual_compiler_removes_private_environment_and_records_failures

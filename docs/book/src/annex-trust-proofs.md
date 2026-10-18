@@ -3467,3 +3467,87 @@ and full saved raw reconstruction agree; all 276 older archives remain identical
 staged focused/book/doctrine workflow closes this bounded slice. Lifecycle/concurrent-writer
 controls, both native-tool hardening children and full current-source/integration review remain
 before F30 signoff.
+
+
+### Compiler record boundary controls
+
+The `2026-10-18` slice `.15.2.1.3.3.2.3.3.1` fills the remaining record-consumer
+boundary controls. Production, existing tests, observer, artifact selector, constructors, CLI,
+catalogue and reasons remain unchanged. This is one bounded part of the lifecycle matrix;
+writer/setup/publication/signal and concurrent-writer closure remain separate children.
+
+The new parent is
+`trust::compiler::tests::actual_records_refuse_remaining_field_range_byte_and_shape_boundaries`.
+It compiles the embedded observer with the pinned compiler, then uses that observer to run a
+real successful Rust compilation with actual source, dep-info/link output and complete argv.
+The consumer must return the literal original argument vector. Its completed record becomes
+the seed for isolated corruption cases, each first checked as valid with that same result.
+
+| Boundary | Explicit fault cases |
+| --- | --- |
+| Schema and decoded identity field types | `schema-version`, `schema-type`, `session-type`, `role-type`, `cwd-type`, `missing-key` |
+| PID representation/range | `pid-zero`, `pid-negative`, `pid-overflow`, `pid-fraction`, `pid-type` |
+| Exit and signal types | `exit-type`, `signal-number` |
+| Argument vector | `argv-type`, `argv-empty` |
+| Argument byte encoding | `hex-odd`, `hex-uppercase`, `hex-nul`, `hex-non-utf8` |
+| Compilation/query shape | `query-tail`, `compilation-no-output`, `compilation-no-name`, `compilation-no-emit` |
+| Canonical record framing | `no-newline`, `extra-newline` |
+| Raw JSON/text | `invalid-json`, `invalid-text` |
+| Record kind/extension | `record-directory`, `record-extension` |
+
+The dated source-derived census contains 29 cases, each with a valid-before-fault check.
+The earlier parent independently retains its missing/partial/stale-session/wrong-role/cwd,
+extra/duplicate fields, failed status, PID/filename mismatch, invalid hex/compiler/query,
+linked record, non-string argument and non-object controls. The actual compilation/forwarding
+and native byte receiver parents remain intact.
+
+Numeric PID faults use matching record filenames. In particular, PID 0 is paired with
+`0.json`, so the positive-PID guard must reject it even though the filename agrees.
+Byte faults append an extra encoded argument to an otherwise complete compilation record.
+Omitting the NUL guard would therefore admit the damaged compilation, rather than merely
+changing an unknown-query diagnostic. Odd-length and uppercase hex, embedded NUL and invalid
+UTF-8 remain explicit refusal boundaries.
+
+Missing/non-string identity fields, invalid PID type/range, malformed argv and status values,
+partial invocation shapes, missing/extra record newlines, invalid JSON/text and directory/
+extension substitutions must all refuse. Expected instrument-owned error categories are held;
+raw JSON/UTF-8 reader failures must produce a nonempty error without overconstraining the
+standard-library diagnostic. A fresh independently created session then runs a real
+`rustc -vV` query successfully and yields no compilation units.
+
+The direct command is:
+
+```bash
+cargo test -p xtask   actual_records_refuse_remaining_field_range_byte_and_shape_boundaries -- --nocapture
+```
+
+The final dated parent run passes within the existing 30-second bound, at about 0.65 seconds.
+An earlier successful query-seed version was strengthened before measurement to require
+otherwise valid compilations for byte faults and matching filenames for numeric PID faults.
+That strengthens the acceptance oracle without changing production.
+
+The native copied-tree command is:
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler.rs   --package xtask --timeout 600   --filter=trust:: --filter=trust_generated:: --filter=trust_gate::   --filter=--skip --filter=route_tests --timeouts-fail   --only L168.cond.31 --only L233.cmp.72
+```
+
+These actual discovery edits omit the NUL refusal and change the PID predicate from
+`> 0` to `>= 0`. The new parent must finish and kill each. Complete current-source
+assessment, all new judgment-source obligations and integration still belong to `.3`;
+neither these samples nor the corruption matrix establishes whole-source mutation adequacy.
+The separately owned baseline-evidence and unknown-ID selection repairs precede those full sweeps.
+
+The dated native result is 2 named kills, strict exit 0, with no timeout, compiler refusal or
+unjudged result. Both kills carry the new parent name. Original/restored-copy complete CLI
+lists agree at 171 parents, and all 1082 held regular inputs restore with modes and independent
+Python/system hashes. The gitlink is metadata only; all 37 retained producer-source pins bind.
+Nine deliberately false receipt summaries reject. Held native tree
+`1d6fca0e3c4861f50ce0bd33e241eff6c8184123` precedes completion-doc/focused staging.
+Receipts are under `target/compiler-record-boundaries/`; supplemental audit SHA-256 is
+`4c28247a53873e7d2ed3983bc3f334a08f3ec2b33addcab9ff9f6ee414c470e6`.
+
+The prior committed path/feature leaf seals with exact committed core, archive/index and full
+saved raw reconstruction; all 277 older archives remain identical. Final staged focused/book/
+doctrine checks close this bounded consumer slice; writer/publication/signal and concurrency
+children remain open before the compatibility checkpoint and native-tool/source milestone.

@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold remaining compiler record boundaries
+
+`ARCHOGEN-M3-0767` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.1`), `2026-10-18`.
+
+- Add one bounded consumer parent with real successful compilation records,29 isolated
+  valid-before-fault cases and fresh query recovery. Match numeric fault filenames and
+  retain compilation shape for byte faults so invalid acceptance is observable.
+- Native NUL/PID0 edits2K strict0/full171;1082 original/copy inputs restore,37 pins and
+  nine false receipt controls bind. Production/prior tests/reasons unchanged.
+- Seal committed path/feature leaf with full reconstruction; complete book/live sync.
+  Final staged focused gates; writer/publication/signal controls next, full source open.
+
 ## archogen — hold observed-artifact path and target-feature compatibility
 
 `ARCHOGEN-M3-0766` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.2`), `2026-10-18`.
