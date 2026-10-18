@@ -760,3 +760,19 @@ Immediate owned .4 adds three permanent regression parents; .5 proves the absolu
 restore and four false bindings refuse; production/operator/catalogue/reasons stay unchanged.
 The [book assessment](../../book/src/annex-trust-proofs.md#seven-diagnostic-helper-obligations-domain-assessment)
 records every edit and its evidence boundary.
+
+
+## Three Cargo diagnostic regression parents
+
+`M3.6.9.6.3.2.2.14.3.2.2.2.2.4` (`2026-10-18`) adds isolated actual-Cargo parents for
+independent raw target alias, separate cwd/configuration warning and error-before-multiline-path.
+Successful controls/recovery pass; compiler cases independently assert E0308 and literal diagnostics.
+The leading manifest control exercises failed Cargo directly, not public inventory admission.
+
+The unmodified three-parent baseline passes; native exact replay reports3 K/strict0, each with its
+intended finishing parent. All1056 original/current copied regular inputs restore and seven falsified
+receipts refuse. Exact reconstruction preserves every earlier source byte after removing only the
+new test block; production/catalogue/operator/reasons remain unchanged. Four obligations remain:
+two absolute-prefix proofs and two producer boundaries before complete .14.4 replay. Final focused/
+staged gates and the [book](../../book/src/annex-trust-proofs.md#real-cargo-regression-parents-and-exact-replay)
+bind publication; no fresh whole-file adequacy follows.

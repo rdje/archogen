@@ -5232,6 +5232,182 @@ pub(crate) mod tests {
         "due to 1 previous error"
     );
 
+    fn assert_cargo_type_failure(args: &[&str], env: &[(String, String)], cwd: &Path) {
+        let output = Command::new("cargo")
+            .args(args)
+            .current_dir(cwd)
+            .env_clear()
+            .envs(env.iter().map(|(key, value)| (key, value)))
+            .env("RUSTC", "rustc")
+            .output()
+            .unwrap();
+        assert!(!output.status.success());
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        assert!(
+            stdout.lines().any(|line| {
+                let message = crate::json::parse(line).unwrap();
+                message.get("reason").and_then(Json::as_str) == Some("compiler-message")
+                    && message
+                        .get("message")
+                        .and_then(|message| message.get("code"))
+                        .and_then(|code| code.get("code"))
+                        .and_then(Json::as_str)
+                        == Some("E0308")
+            }),
+            "{stdout}"
+        );
+        let diagnostic = "error: could not compile `a` (bin \"a\") due to 1 previous error";
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        assert!(stderr.lines().any(|line| line == diagnostic), "{stderr}");
+        assert_eq!(
+            super::run_cargo(args, env, cwd).unwrap_err(),
+            format!("`cargo {}` failed: {diagnostic}", args.join(" "))
+        );
+    }
+
+    #[test]
+    fn cargo_failure_diagnostics_keep_an_independent_target_alias() {
+        crate::trust_test_process::bounded!(
+            cargo_failure_diagnostics_keep_an_independent_target_alias
+        );
+        let main = "fn main() {}\n";
+        let f = two_roots(
+            "cargo-independent-target-alias",
+            main,
+            "pub fn f() {}\n",
+            &[],
+        );
+        let target = f.base.join("physical-target");
+        let alias = f.base.join("artifact\nerror-target-alias");
+        std::fs::create_dir_all(&target).unwrap();
+        std::os::unix::fs::symlink(&target, &alias).unwrap();
+        assert_eq!(
+            std::fs::canonicalize(&alias).unwrap(),
+            std::fs::canonicalize(&target).unwrap()
+        );
+        let env = super::environment("1.95.0", &f.base.join("cargo-home"), &alias).unwrap();
+        let args = [
+            "build",
+            "--bin",
+            "a",
+            "--release",
+            "--locked",
+            "--offline",
+            "--no-default-features",
+            "--message-format=json",
+            "-v",
+            "-p",
+            "a",
+        ];
+        super::run_cargo(&args, &env, &f.repo).unwrap();
+        f.commit(&[(
+            "crates/a/src/main.rs",
+            "fn main() { let _: u8 = \"wrong type\"; }\n".to_owned(),
+        )]);
+        assert_cargo_type_failure(&args, &env, &f.repo);
+        f.commit(&[("crates/a/src/main.rs", main.to_owned())]);
+        super::run_cargo(&args, &env, &f.repo).unwrap();
+    }
+
+    #[test]
+    fn cargo_failure_diagnostics_keep_cwd_beside_a_separate_target() {
+        crate::trust_test_process::bounded!(
+            cargo_failure_diagnostics_keep_cwd_beside_a_separate_target
+        );
+        let main = "fn main() {}\n";
+        let legacy = std::fs::read_to_string(real_root().join(".cargo/config.toml")).unwrap();
+        let mut f = two_roots(
+            "cargo-independent-cwd",
+            main,
+            "pub fn f() {}\n",
+            &[(".cargo/config", legacy)],
+        );
+        let cwd = f.base.join("workspace\nerror-cwd");
+        std::fs::rename(&f.repo, &cwd).unwrap();
+        f.repo = cwd;
+        let env = super::environment(
+            "1.95.0",
+            &f.base.join("cargo-home"),
+            &f.base.join("separate-target"),
+        )
+        .unwrap();
+        let args = [
+            "build",
+            "--bin",
+            "a",
+            "--release",
+            "--locked",
+            "--offline",
+            "--no-default-features",
+            "--message-format=json",
+            "-v",
+            "-p",
+            "a",
+        ];
+        let (_, stderr) = super::run_cargo(&args, &env, &f.repo).unwrap();
+        assert!(stderr.contains("warning: both `"), "{stderr}");
+        assert!(stderr.contains("error-cwd/.cargo/config"), "{stderr}");
+        f.commit(&[(
+            "crates/a/src/main.rs",
+            "fn main() { let _: u8 = \"wrong type\"; }\n".to_owned(),
+        )]);
+        assert_cargo_type_failure(&args, &env, &f.repo);
+        f.commit(&[("crates/a/src/main.rs", main.to_owned())]);
+        super::run_cargo(&args, &env, &f.repo).unwrap();
+    }
+
+    #[test]
+    fn cargo_failure_diagnostics_keep_an_error_before_a_multiline_path() {
+        crate::trust_test_process::bounded!(
+            cargo_failure_diagnostics_keep_an_error_before_a_multiline_path
+        );
+        let mut f = two_roots(
+            "cargo-leading-manifest-error",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &[],
+        );
+        let cwd = f.base.join("workspace\nerror-manifest-path");
+        std::fs::rename(&f.repo, &cwd).unwrap();
+        f.repo = cwd;
+        let env = super::environment(
+            "1.95.0",
+            &f.base.join("cargo-home"),
+            &f.base.join("separate-target"),
+        )
+        .unwrap();
+        let args = [
+            "build",
+            "--bin",
+            "a",
+            "--release",
+            "--locked",
+            "--offline",
+            "--no-default-features",
+            "--message-format=json",
+            "-v",
+            "-p",
+            "a",
+        ];
+        super::run_cargo(&args, &env, &f.repo).unwrap();
+        let manifest = f.repo.join("Cargo.toml");
+        let held = std::fs::read(&manifest).unwrap();
+        std::fs::write(
+            &manifest,
+            "[package]\nname = \"a\"\nversion = \"0.1.0\"\n[workspace]\n",
+        )
+        .unwrap();
+        let error = super::run_cargo(&args, &env, &f.repo).unwrap_err();
+        let leading = format!("error: failed to parse manifest at `{}", f.repo.display());
+        let expected = leading.split('\n').next().unwrap();
+        assert_eq!(
+            error,
+            format!("`cargo {}` failed: {expected}", args.join(" "))
+        );
+        std::fs::write(&manifest, held).unwrap();
+        super::run_cargo(&args, &env, &f.repo).unwrap();
+    }
+
     #[test]
     fn cargo_failure_diagnostics_ignore_multiline_output_paths() {
         crate::trust_test_process::bounded!(

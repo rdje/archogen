@@ -1153,3 +1153,40 @@ Initial scratch-template and stale-binary attempts are excluded from accepted fi
 Production, operator controls, catalogue and existing reasons remain unchanged. These are source-bound
 witnesses and scheduled proof obligations, with **no fresh native kill or equivalence classification**.
 The historical nine-survivor measurement and later two finite-iterator proofs retain their own epochs.
+
+
+### Real Cargo regression parents and exact replay
+
+Regression slice `.14.3.2.2.2.2.4` (`2026-10-18`) turns the assessment's actual
+[Cargo](ledger.md#rust-toolchain) witnesses into permanent isolated parents. Each begins with a
+successful build, requires the failure diagnostic, then restores valid source/manifest bytes and
+requires successful recovery.
+
+The artifact-alias parent separates the raw multiline alias from its ordinary canonical destination.
+The environment's target-local temporary directory is canonical, so selecting its last non-target
+entry cannot accidentally preserve the raw alias. The cwd parent moves the workspace to a multiline
+path while keeping the target elsewhere; a dual-configuration warning then requires cwd coverage.
+Both compiler parents independently inspect structured E0308 and the literal final compiler error.
+
+The leading-error parent temporarily writes a manifest with no target. Cargo prints its genuine
+leading error before the multiline manifest path. The parent requires that leading physical line,
+then restores the original manifest and builds successfully. This is a direct failed-Cargo control,
+not an admitted public inventory.
+
+| Exact edit | Actual finishing parent |
+| --- | --- |
+| `L676.eq.231` | `trust::tests::cargo_failure_diagnostics_keep_an_independent_target_alias` |
+| `L685.iter.233` | `trust::tests::cargo_failure_diagnostics_keep_cwd_beside_a_separate_target` |
+| `L717.clogic.1497` | `trust::tests::cargo_failure_diagnostics_keep_an_error_before_a_multiline_path` |
+
+The unmodified three-parent baseline passes. The actual guarded native replay reports **three killed,
+strict exit 0**, with precisely the finishing names above and no other outcome. The selected replay
+establishes these regression kills; four proof/producer obligations remain before the complete current
+region replay. It establishes no whole-file equivalent validity or F30 adequacy.
+
+All 1056 original and current copied regular inputs restore, with modes and Python/system hashes.
+The copy check borrows index metadata and makes no copied-index or submodule-content claim. Seven
+false receipts refuse. Exact reconstruction removes only the added three-parent/helper test block
+to recover every prior source byte. Production behavior, earlier tests, catalogue, operator controls
+and existing reasons remain unchanged. Final held focused verification and separate book/staged
+checks bind publication.

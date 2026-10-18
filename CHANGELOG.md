@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — close three Cargo diagnostic regression gaps
+
+`ARCHOGEN-M3-0751` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.4`), `2026-10-18`.
+
+- Add isolated real-Cargo target-alias, separate-cwd and leading-error parents, with literal diagnostics,
+  independent structured compiler evidence, successful controls and recovery.
+- Actual native replay:3 K/strict0, each intended finishing parent; all1056 original/current copied
+  inputs restore and seven false receipts refuse. Prior production/tests/catalogue/operators/reasons exact.
+- Publish the results/limits and four remaining proof/producer obligations; complete final held
+  focused and book/staged gates before publication. No new whole-file adequacy classification.
+
 ## archogen — assess the seven remaining diagnostic-helper domains
 
 `ARCHOGEN-M3-0750` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.3`), `2026-10-18`.
