@@ -719,9 +719,7 @@ frozen construct edited silently, and leaves the expensive one to the reader.
 
 ### Why `focused` runs the whole suite
 
-§14.3 defines the focused tier as "format/type checks and **affected** contract tests", and
-selecting affected tests needs change-impact machinery. Measured warm on this tree, the three
-focused steps take **2.9 seconds** together. At that size the machinery would cost more than it
-saves and would be one more thing to be wrong — so `focused` runs everything, and the measurement
-is written into the runner's own source so the decision can be re-taken against a number rather
-than re-argued from memory.
+The implemented focused tier runs formatting, strict lint and the complete contract suite.
+§14.3 describes affected contract tests; selecting them requires a dependable map from changes to
+contracts. The runner reports each step's elapsed time. Those current observations, together with
+the coverage required for a change, are the basis for revisiting test selection.

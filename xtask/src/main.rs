@@ -308,13 +308,13 @@ const SELF_TESTS: Step = Step {
 
 /// The §14.3 tiers, as data.
 ///
-/// ⚠️ **`focused` runs the whole test suite, and that is a measured decision rather than a
-/// reading of §14.3.** The tier is defined as "format/type checks and *affected* contract
-/// tests", and selecting affected tests needs change-impact machinery. Measured on this tree:
-/// `cargo test --all` takes **2.6 s** warm, and the three focused steps together **2.9 s**. At
-/// that size the machinery would cost more than it saves and would be one more thing to be wrong.
-/// Revisit when the suite stops fitting in an edit loop — the number above is what to compare
-/// against, which is why it is written down.
+/// The implemented focused tier runs formatting, strict lint and the whole contract suite.
+/// Selecting the affected contract tests described by §14.3 requires a dependable map
+/// from changes to contracts.
+///
+/// The runner reports elapsed time for each step on every invocation. Use those current
+/// observations, together with the coverage needed for a change, when revisiting test
+/// selection.
 const TIERS: &[Tier] = &[
     Tier {
         name: "focused",

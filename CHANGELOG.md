@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — correct stale verification timing rationale
+
+`ARCHOGEN-M3-0748` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.2.2.1`), `2026-10-18`.
+
+- Remove obsolete current warm-suite estimates from tier commentary and the verification book page.
+  Describe the implemented coverage and use each runner invocation's measured timings for review.
+- Exact Git reconstruction preserves executable source/Tier definitions and line positions; native
+  make tiers output stays identical. Existing caller/helpers/operators/catalogue/E remain exact.
+- Scoped census/source/hash proof and final matching-stage focused gate bind the correction;
+  full repaired-caller integration checkpoint follows.
+- Seal four committed task units with exact reconstruction and old archive/index preservation;
+  the live-task routing gate passes.
+
 ## archogen — resolve gate repository paths before deriving roots
 
 `ARCHOGEN-M3-0747` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.2.1`), `2026-10-18`.
