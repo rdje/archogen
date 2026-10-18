@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — measure the complete repaired Cargo diagnostic helper
+
+`ARCHOGEN-M3-0744` (leaf `M3.6.9.6.3.2.2.14.3.2.2.1`), `2026-10-18`.
+
+- Bind initial11/prior12 to current51: nine retained invocation edits, three retired raw selectors and
+  42 new helper candidates. Retirement is not equivalence; global1526 is a listing census only.
+- Revalidate the installed write guard and measure all51 through the native CLI:38 named kills,
+  nine survivors/four E0599 compiler refusals, strict1, no E/timeout/unjudged or adequacy pass.
+- Restore all1047 original/current copied inputs; reject seven false receipts. Source/tests/catalogue/
+  reasons/native stay exact. Publish every outcome in the book; schedule two finite-iterator proofs
+  followed by assessment of the remaining seven survivors.
+- Seal four committed closed task units with exact reconstruction and older archive/index preservation;
+  live tracking routing passes. Book size remains unrestricted.
+
 ## archogen — preserve Cargo diagnostics across multiline paths
 
 `ARCHOGEN-M3-0743` (leaf `M3.6.9.6.3.2.2.14.3.2.1`), `2026-10-18`.

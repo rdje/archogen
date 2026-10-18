@@ -92,6 +92,8 @@ Failure text retains Cargo’s actual compiler or setup diagnostic when an outpu
 physical lines. Known workspace/artifact paths are excluded from diagnostic selection, including quoted
 command arguments and canonical aliases. [The verified framing repair](annex-trust-proofs.md#cargo-failure-framing-repair)
 shows compiler failures, operational refusals, empty inventory state and successful recovery.
+The [complete repaired-helper measurement](annex-trust-proofs.md#complete-repaired-cargo-diagnostic-measurement)
+records all 51 current edits: 38 named kills, nine open survivors and four compiler refusals.
 
 An admission's `defadmit` form names the file, rule and `sha256` of the site's extent (the whole manifest for a
 manifest rule), plus one textual `reason` value.

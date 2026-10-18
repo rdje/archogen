@@ -99,6 +99,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Complete guarded run_cargo measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-guarded-run_cargo-measurement)
 - Complete prefix/helper replay — [Annex C: Trust proof records](annex-trust-proofs.md#complete-prefixhelper-replay)
+- Complete repaired Cargo diagnostic measurement — [Annex C: Trust proof
+  records](annex-trust-proofs.md#complete-repaired-cargo-diagnostic-measurement)
 - **composite input** — [definition](glossary.md), [What the scheduling checker establishes](analysis.md)
 - Configuration checkpoint integration — [Annex B: The checks that keep the repository
   honest](annex-repository.md#configuration-checkpoint-integration)

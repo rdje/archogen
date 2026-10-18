@@ -636,7 +636,7 @@ artifact-layout witness: colon artifacts cause a Unix Cargo library-path setup r
 `.14.3.2.1` reproduces the issue through public inventory and adds permanent regressions before
 remaining selector rebinding/classification. Source/controls/reasons are unchanged
 by the assessment. The [book](../../book/src/annex-trust-proofs.md#diagnostic-selector-assessment)
-records producer evidence and limitations; the last complete native result remains nine K/three S.
+records producer evidence and limitations; at that assessment, the last complete native result was nine K/three S.
 
 
 ## Cargo failure framing repair
@@ -651,6 +651,23 @@ target helper witness is qualified. Setup/compiler stores are local; targeted Ca
 The final parent group passes; the native catalogue reversal kills the exact old selector with every
 new parent and restores the file. All earlier code/tests reconstruct exactly, the catalogue appends one
 entry and prior E records stay exact. Final focused/staged/book gates bind publication. Current global
-listing1526 and helper region51 are planning only; three old raw selector rows are textually retired,
+listing1526 and helper region51 were planning only at the repair commit; three old raw selector rows are textually retired,
 not converted to E. Fresh binding/measurement `.14.3.2.2.1` follows. The
 [book](../../book/src/annex-trust-proofs.md#cargo-failure-framing-repair) records behavior and scope.
+
+
+## Complete repaired diagnostic-helper assessment
+
+`M3.6.9.6.3.2.2.14.3.2.2.1` (`2026-10-18`) measures all 51 current helper/invocation edits through
+the maintained native CLI under the revalidated installed-host write guard: 38 finishing named kills,
+nine survivors and four E0599 compiler refusals, strict exit 1. No E, timeout or unjudged outcome.
+The 1526-entry global listing is a scope census only. Eleven initial obligations bind through the
+prior twelve; nine prior invocation edits remain and are killed, three raw selector rows are retired
+by production repair, and all 42 new helper candidates are attempted. Retirement is not equivalence.
+
+All 1047 original/current copied regular inputs restore; seven false receipts reject. Code, tests,
+catalogue, native producer, previous reasons and opaque submodule identity stay exact. The nine
+survivors are scheduled under `.14.3.2.2.2`, finite-iterator proofs first, then evidence-directed
+assessment of the remaining seven. The
+[complete book table](../../book/src/annex-trust-proofs.md#complete-repaired-cargo-diagnostic-measurement)
+records each actual outcome and a finishing parent or refusal reason; no whole-file adequacy is claimed.

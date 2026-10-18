@@ -796,3 +796,112 @@ The [focused-stamp guard](annex-repository.md#a-commit-holds-what-was-run) now h
 Timeout/unjudged results fail; full adequacy and independent review remain open. Native killing names
 route from original `docs/tasks/M3.md` stubs to sealed task-history. Stubs retain commits, the index holds
 digests, and the gate proves reconstruction/provenance.
+
+
+### Complete repaired Cargo diagnostic measurement
+
+Measurement `.14.3.2.2.1` (`2026-10-18`) binds the exact repaired source and all current edits in
+`cargo_error_line` and `run_cargo`. The maintained CLI lists 1526 production candidates globally;
+51 belong to this region: 42 in the new diagnostic helper and nine retained invocation edits. The
+global listing is a scope census, not 1526 attempted mutations.
+
+The eleven initial obligations bind through the preceding twelve-entry cohort. Eight initial edits
+remain textually present, along with the later fixed-compiler deletion; the three original raw
+selector edits are retired by the production repair. Retirement is not equivalence. Their current
+semantic counterparts are measured: `contains("error")` and `starts_with("rror")` are killed;
+`starts_with("erro")` survives and stays open on the repaired path-exclusion domain. Only generated
+iterator identifier line numbers are normalized for historical matching; raw replacement text is kept.
+
+The installed-host write guard and its probe are reconstructed from the preceding recipe. One allowed
+write succeeds, five forbidden operations refuse, and those same operations succeed without the
+policy on the same project-local fixture. Held bytes are restored. The exact profile hash remains
+`2b3fbe199bddb4ba84c453a23334c7025308b06127ce3cc96f74b2a17680eedd`.
+
+Every selected edit is attempted through the maintained native command, with the same guard covering
+the command and its descendants:
+
+```console
+$ sandbox-exec -D WRITABLE_ROOT="$PWD" -f target/cargo-error-measurement/mutation-volume.sb \
+    bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --timeout 600 \
+    --filter=trust:: --filter=trust_generated:: --filter=trust_gate:: \
+    --filter=--skip --filter=route_tests --timeouts-fail \
+    --equivalents xtask/trust.equivalents --only <each of the 51 IDs below>
+```
+
+The placeholder means 51 separate `--only ID` arguments in one invocation, not a literal argument.
+The manifest holds every raw source span/replacement and the actual invocation. The unmutated copy
+passes. The complete result is **38 named kills, nine survivors and four compiler refusals**, strict
+native exit **1**. There is no equivalent, timeout or unjudged outcome. The criterion remains unmet.
+All nine retained invocation edits are killed, with a finishing parent also present in the preceding
+measurement. The earlier successful-build target-isolation diagnosis remains applicable: the framing
+repair changes only failure-text selection, and the invocation/environment producers remain exact.
+
+The following table covers every current candidate. A killed row shows one actual finishing parent;
+the native receipt retains the full set of names. Compiler refusals are not semantic coverage.
+
+| Current candidate | Native outcome | Finishing evidence or open obligation |
+| --- | --- | --- |
+| `L676.eq.231` | survived | Open obligation; assessment scheduled below |
+| `L685.iter.232` | killed | `trust::tests::cargo_failure_diagnostics_ignore_multiline_target_paths` |
+| `L685.iter.233` | survived | Open obligation; assessment scheduled below |
+| `L685.iter.234` | survived | Open obligation; assessment scheduled below |
+| `L687.iter.235` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L687.iter.236` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L687.iter.237` | survived | Open obligation; assessment scheduled below |
+| `L688.iter.238` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L688.iter.239` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L688.iter.240` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L688.guard.241` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L688.guard.242` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L688.guard.243` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L690.cond.244` | survived | Open obligation; assessment scheduled below |
+| `L690.cond.245` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L691.stmt.246` | killed | `trust::tests::cargo_failure_diagnostics_ignore_multiline_output_paths` |
+| `L692.stmt.247` | killed | `trust::tests::cargo_failure_diagnostics_ignore_multiline_output_paths` |
+| `L706.iter.248` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L706.iter.249` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L706.iter.250` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L708.stmt.251` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L714.dir.252` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L714.lit.253` | survived | Open obligation; assessment scheduled below |
+| `L714.lit.254` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L715.logic.255` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L715.not.256` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L717.cmp.257` | survived | Open obligation; assessment scheduled below |
+| `L717.cmp.258` | survived | Open obligation; assessment scheduled below |
+| `L717.logic.259` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L732.stmt.260` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L733.iter.261` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L733.iter.262` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L733.iter.263` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L734.stmt.264` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L738.stmt.265` | killed | `trust::tests::cargo_diagnostic_flags_do_not_enter_unit_configurations` |
+| `L742.cond.266` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L742.cond.267` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L742.not.268` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L676.chain.1145` | killed | `trust::tests::cargo_failure_diagnostics_ignore_multiline_target_paths` |
+| `L676.chain.1146` | killed | `trust::tests::cargo_failure_diagnostics_ignore_multiline_target_paths` |
+| `L687.chain.1147` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L690.contains.1148` | unviable | E0599: no `first` method on `Cow<str>` |
+| `L690.contains.1149` | unviable | E0599: no `first` method on `Cow<str>` |
+| `L690.contains.1150` | unviable | E0599: `Cow<str>` is not an iterator |
+| `L690.contains.1151` | unviable | E0599: `Cow<str>` is not an iterator |
+| `L698.chain.1152` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L698.chain.1153` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L716.chain.1154` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L716.chain.1155` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L717.clogic.1497` | survived | Open obligation; assessment scheduled below |
+| `L717.clogic.1498` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+
+The four refusals are generated collection operations on a string `Cow`, with actual E0599 diagnostics;
+they are not changes to the executable program. No equivalent record was added. Nine survivor
+obligations remain owned under `.14.3.2.2.2`: first the two end-elements edits over collections of at
+most two entries, then the remaining path-selection, prefix, selector and span-boundary cases. Even
+the finite-collection cases require exact source proofs before any E classification.
+
+All 1047 original and current copied regular inputs restore, including modes and bytes, with
+independent Python/system hashes. The submodule contributes one opaque Git-index identity; its
+implementation is not opened. Seven altered receipts refuse: false pass exit, missing/duplicate
+candidate, wrong replacement, wrong operator count, unlisted E and missing finishing kill names.
+Production, tests, catalogue, native producer and existing equivalence reasons remain byte-identical
+to the committed repair. This is a complete bounded assessment, not whole-file adequacy or remote CI.
