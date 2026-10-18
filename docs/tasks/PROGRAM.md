@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.85`, and the sub-leaves each of them names
+  Children: `PROGRAM.1` … `PROGRAM.88`, and the sub-leaves each of them names
 
 - ID: `PROGRAM.1`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.1.md`](../task-history/PROGRAM/PROGRAM.1.md); commit `ARCHOGEN-PROGRAM-0002`
@@ -735,6 +735,87 @@ mdBook that is the director's window into the project.
     task-history/live/order gates each exit 0. Final staged gates and project process census before commit.
   Commit: `ARCHOGEN-PROGRAM-0707 (leaf PROGRAM.85)`
 
+- ID: `PROGRAM.86`
+  Status: `done` — tenth daily artifact cleanup
+  Startup: clean main ae8ead1, empty/untracked message and OS-readable handoff census. Last cleanup
+    112f697 is 2026-10-17T02:43:14+02:00; current run begins after 2026-10-18T02:43+02:00. Read prior
+    cleanup, roadmap §11/§14, locality/boundary and book maintenance contracts. Resume M3 .13.2.4 later.
+  Goal: targeted main/wasm debug incremental, main debug deps and release metadata census; delete only
+    proven regenerable incremental directories after process/input checks. Preserve cited evidence,
+    stores/build products/Git workspaces. Recheck residue, focused/wasm workflow and complete inputs.
+  - [x] **ROOT CAUSE** — `python3 -I -B target/artifact-cleanup/2026-10-18/census.py`, exit 0:
+    main debug incremental 344389410 logical bytes / 928 regular files, 24 bin / 0 log; wasm incremental
+    empty. Independent native find plus /usr/bin/stat agrees on every location's count/total. Requested
+    debug/deps has 789 files / 668474330 bytes and release 117 / 17080485, both 0 bin/log strays.
+    Every parent/entry is real, same-volume, regular file/directory, without links or nested Git markers.
+    Only these four main-repository locations traversed; no other Git workspace or evidence census.
+    Ignored metadata adapter/manifest is supplemental; native system census and maintained input/
+    regeneration checks are primary. Counts describe logical bytes, not allocated disk-space release.
+  - [x] **ADDRESSED** — OS-readable `bash scripts/handoff_census.sh` exits 0 before deletion.
+    `python3 -I -B target/artifact-cleanup/2026-10-18/delete.py`, exit 0: repeat the complete metadata/
+    native-system census, require exact file/directory identity, mode, size and path-set equality plus
+    every no-link/same-volume/no-Git boundary. Only target/debug/incremental and
+    target/wasm32-unknown-unknown/debug/incremental removed; immediate lexists checks prove both gone.
+    Released 344389410 logical bytes / 928 files; empty wasm cache contributes zero. Existing source,
+    build products, dependency stores, cited diagnostics and Git workspaces retained. Adapters/receipts
+    remain ignored supplemental evidence; not a new maintained cleanup tool or allocated-byte claim.
+  - [x] **NO REGRESSION** — maintained `python3 -I -B scripts/trust_adequacy.py --snapshot-inputs
+    --output target/artifact-cleanup/2026-10-18/inputs.json`, exit 0 after staging activation. After
+    deletion and again after regeneration, `--check-inputs target/artifact-cleanup/2026-10-18/inputs.json
+    --output target/artifact-cleanup/2026-10-18/<case>-restoration.json`, exit 0: all 1029 regular
+    inputs restore with Python/system hashes, bytes/modes/sizes/index and one opaque gitlink identity.
+    `cargo xtask verify --tier focused`, exit 0: all 3 stages pass, exact activation stamp/native Git
+    519815201dd77a57b7595ba107a538bd5e4a2e1e, fmt .59s/clippy .16s/tests 74.43s. Documented
+    `bash scripts/wasm_build.sh`, exit 0. Existing dependency/build products retained: these check the
+    workflow after incremental removal, not rebuilding every dependency from source. All captured
+    inputs held until checks consumed; closure prose/snapshot changes are validated separately.
+    No source/script/submodule change and no new integration claim.
+  - [x] **LOCKSTEP** — overwrite latest-only cleanup record, update the book's actual date/scope and
+    extend parent child range to .88. Log the known PROGRAM.85 misplaced commit row under .87 and own
+    .88's book-boundary audit. Live/resume/index advance to .88, then .87, then M3 .13.2.4; ordinary
+    PROGRAM.71 remains queued. Product status categories unchanged; no new DEV_NOTES lesson.
+  Verification: `2026-10-18` — named native commands above and ignored supplementary census/deletion/
+    receipt adapters under target/artifact-cleanup/2026-10-18. Original inputs restored before closure,
+    exact activation stamp covers the held check tree; later book/source/order/routes/staged checks
+    cover final prose. First hook correctly refused the new 928-files phrase without classification;
+    add its dated record to docs/figures.md and re-run the maintained figure check before commit.
+    Independent Python/system SHA-256 agrees on retained outputs:
+    before.json 95a5ebf3be03c0a8e134bf7c9f52655286cd2455524edd09ba2a4e51a7306e04;
+    removed.json f3c95a6036ed24e1b288a0ceb588966722cbfac9dcb246ce5e5d7847c1b9f773;
+    inputs.json 4531569a8bc39a9d5e24625a503a14e772de3163adfbf44f6b57d5b7e175d440;
+    focused.log 6d77cfb98f531e37e9fba36be095f0e7da297957fea8dfce1413d8a522312cc0;
+    wasm.log c219aa1617a5b7e1ec163ae106b6021fb8d378214665251d7ad6eccf4a568854;
+    deletion-restoration.json 2a46e74f235d1c30b5d424b124580704f918ea6f34a4f1e0f7ea5d33b03e2b92;
+    build-restoration.json 2a46e74f235d1c30b5d424b124580704f918ea6f34a4f1e0f7ea5d33b03e2b92;
+  Findings: PROGRAM.85's existing commit row follows Changelog rather than its headed Commit Log;
+    PROGRAM.87 owns native-history/layout diagnosis and preservation repair. PROGRAM.88 owns a bounded
+    routing audit of whether a future bounded ancestor could contradict the book's unbounded policy.
+  Commit: `ARCHOGEN-PROGRAM-0724 (leaf PROGRAM.86)`
+
+- ID: `PROGRAM.87`
+  Status: `pending` — P2, after daily cleanup and book boundary audit
+  Goal: repair PROGRAM log placement/rendering while preserving every record. Reproduce the existing
+    PROGRAM.85/0707 row after Changelog using native source/heading positions, trace its introduction
+    and any other affected rows through native documentation history, assess blank-separated tables,
+    and move only proven misplaced/detached records into contiguous headed tables. Verify actual
+    pinned rendering, row counts/order/multiplicity/bytes and public row-presence gate scope.
+  Reproduction: tail docs/tasks/PROGRAM.md shows the 0707 row after ## Changelog, outside ## Commit Log.
+  Impact: the rendered headed log omits the ninth cleanup record. No source/evidence row may be lost.
+  Schedule: after PROGRAM.86/.88, before resuming M3 .13.2.4. Own any further confirmed log defects.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.88`
+  Status: `pending` — P1 book growth boundary audit after daily cleanup
+  Goal: exercise an unbounded book beneath a bounded ancestor route using the routing check's published
+    fixture interface. Determine whether ancestor file/byte totals can indirectly constrain book growth.
+    If reproduced, fix the book-only boundary with permanent positive/negative controls, retaining all
+    non-book capacity rules and semantic/navigation checks. Sync the ruling/policy/book and commit.
+  Schedule: immediately after PROGRAM.86, then PROGRAM.87, then resume M3 .13.2.4.
+  Verification: `pending`
+  Commit: `pending`
+
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -799,10 +880,12 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.71` | `pending` | next program-spine repair: task-history index row order |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.88` | `pending` | book growth boundary audit |
+| 2 | `PROGRAM.87` | `pending` | preserve PROGRAM log records in their headed tables |
+| 3 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
+| 4 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The second row waits on the director's yes. The pending leaves beside them —
+The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.72`, `.73` and `.78` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
@@ -1021,6 +1104,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-11` | `PROGRAM.69` (round 37 closure) | independent pinned review; root recount/authentication; staged count/history and book gates | zero defects/actionable arm gaps/remarks; 347 expected checker outcomes, separate 4 096 unit comparisons; retained results recount and 17 source identities pass, exit code 0; scope/limits retained; all 37 summary rows judged before removal from counted list |
 | `2026-10-11` | `PROGRAM.83.1` | published review archive refusal; closed-row prefix and source identity | old status prefix exits 1, nothing written; only index metadata corrected; history SHA-256 unchanged; staged count/history, book and doctrine gates before commit |
 | `2026-10-11` | `PROGRAM.83.2` | published task/review seal commands and final staged provenance checks | PROGRAM 15 subtrees/17 leaves, M3 four/four, each reconstructed byte for byte; review copies 98 522 and 9 565 bytes read back exactly; source bodies frozen, stubs retained; gate counts and doctrine hook before commit |
+| `2026-10-18` | `PROGRAM.86` | independent main-cache metadata/native census, identity recheck/removal/residue, maintained restoration, focused and wasm workflows | 928 files / 344389410 logical bytes removed only from admitted incremental caches; 1029 inputs restore after removal/build checks; focused3/3 exact activation, wasm0; evidence/stores/Git workspaces retained; closure book/staged checks separate |
 
 ## Commit Log
 
@@ -1240,6 +1324,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.83.2` | `ARCHOGEN-PROGRAM-0626 (leaf PROGRAM.83.2)` | archive committed closed PROGRAM/M3 units and the sealing/adequacy review histories through published tools; exact copy/reconstruction/provenance proofs; active implementation stays live |
 
 | `PROGRAM.84` | `ARCHOGEN-PROGRAM-0687 (leaf PROGRAM.84)` | **eighth daily artifact cleanup**: targeted metadata/system census, only proven incremental caches removed (610779360 logical bytes/4867 files/300 bin), immediate residue gone, maintained 1003-input restoration before/after passing focused and wasm checks; cited evidence/stores/Git workspaces retained, auxiliary limits explicit, latest-only record/book and parent-child range aligned; resume M3 helper domain judgments |
+| `PROGRAM.86` | `ARCHOGEN-PROGRAM-0724 (leaf PROGRAM.86)` | **tenth daily cleanup**: independent targeted same-volume/no-link/no-Git metadata/system census; only main and empty wasm incremental caches removed, immediate residue clear; all 1029 inputs restore before/after focused and wasm checks, exact held activation stamp; evidence/products/stores/Git workspaces retained, supplementary limits explicit; latest-only record/book sync, misplaced PROGRAM row owned in .87 and book boundary audit .88 next |
 
 ## Changelog
 

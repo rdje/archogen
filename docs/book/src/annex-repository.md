@@ -71,7 +71,8 @@ and cold verification. Compiler caches may be regenerated; cited review evidence
 retained unless their removal is proven safe. Cleanup respects the same read-only boundary around other Git
 repositories. The record is overwritten after each run rather than growing into another history.
 
-Cleanup (`2026-10-17`, `PROGRAM.85`) removed only the main and wasm debug incremental caches. Independent
+Cleanup (`2026-10-18`, `PROGRAM.86`) removed only the main and empty wasm debug incremental caches:
+928 files totaling 344389410 logical bytes, without an allocated disk-space claim. Independent
 filesystem metadata checks agreed; immediate residue and maintained tracked-input restoration passed before
 and after focused/wasm regeneration checks. Existing dependency/build products, cited evidence and Git
 workspaces were retained. The metadata/deletion adapters are untracked supplementary evidence; this verifies

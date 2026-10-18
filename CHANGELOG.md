@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — tenth daily artifact cleanup with retained evidence
+
+`ARCHOGEN-PROGRAM-0724` (leaf `PROGRAM.86`), `2026-10-18`.
+
+- Independently inventory four main-repository Rust artifact locations; remove only proven main and
+  empty wasm incremental caches after exact metadata/boundary rechecks and an OS-readable census.
+  Immediate residue is clear: 928 files / 344389410 logical bytes, with no allocated-space claim.
+- All 1029 captured inputs restore after deletion and after focused3/3 and documented wasm checks;
+  exact held activation stamp, retained dependency/build products, explicit supplementary evidence scope.
+- Latest-only record/book sync. Own the misplaced PROGRAM.85 log row in .87; bounded-ancestor book
+  growth audit .88 next, then that log repair and M3 matcher work. Product status categories unchanged.
+
 ## archogen — independently retain codegen operands and consume them once
 
 `ARCHOGEN-M3-0723` (leaf `M3.6.9.6.3.2.2.13.2.3`), `2026-10-18`.
