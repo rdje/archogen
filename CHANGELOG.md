@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — prove incremental matcher edits with a real enabled cache
+
+`ARCHOGEN-M3-0732` (leaf `M3.6.9.6.3.2.2.13.2.4.2.3`), `2026-10-18`.
+
+- Enable a real incremental release profile, require the independent full Cargo argv/local cache path and
+  populated cache, consume both libraries with value37, and compile the exact original/dir/lit variants.
+  Valid wider LLVM and qualified refused/synthetic/other-consumer/wrong-oracle controls delimit scope.
+- After proof append two reasons: native2 E, strict0. Operator31 passes; all30 old bodies/reasons and
+  production/catalogue/native bytes preserved. All1043 originals/current copies restore; six false receipts
+  refuse. Canonical/book/live sync closes all codegen matcher obligations; basename assessment next.
+
 ## archogen — prove the extra-filename matcher edits within their pinned caller
 
 `ARCHOGEN-M3-0731` (leaf `M3.6.9.6.3.2.2.13.2.4.2.2`), `2026-10-18`.

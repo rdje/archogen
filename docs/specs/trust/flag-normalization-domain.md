@@ -555,6 +555,34 @@ Rust-source focused/integration activation or whole-file adequacy follows. Chang
 modes, arguments, environment/configuration/admissions/preflight or consumers require revalidation.
 Incremental and basename obligations remain owned. Closure book/staged checks have their own scope.
 
+## Permanent incremental matcher controls
+
+`.13.2.4.2.3` (`2026-10-18`) resolves actual `L599.dir.196` and `L599.lit.197` as scoped E. The
+pinned constructor emits `incremental=` followed by the cache directory when enabled. Metadata and
+extra-filename guards remain unchanged and already discard their operands. The complete successful
+scalar/key and visited-token matrix above excludes a retained operand with an incremental marker;
+linker/script/arbitrary flag/trailing-argument routes are still excluded. Failed strip values return
+before normalization. No arbitrary-token or every-release equivalence follows.
+
+The permanent control enables a real release profile with `incremental = true`, independently checks
+the full actual producer argv and expected `<fixture>/target/release/incremental` operand, and verifies
+that the compiler populates that local cache. Both ordinary and wider libraries are consumed with
+expected value 37. Exact original/dir/lit variants compile against literal normalized outputs.
+Successful `cargo rustc -- -C llvm-args=--pass-remarks=incremental=inside` is the valid wider case:
+original/truncated-prefix retain that option, contains discards it. The inventory has no such trailing
+route. Synthetic `incrementalX=inside`, a marker under an unchanged metadata consumer and refused
+strip are explicitly premise controls rather than valid successful-producer coverage. Wrong forwarded
+argv and positive/negative/helper output oracles fail.
+
+After the independent compiled proof, append only these exact reasons and bind both keys. The full
+operator suite passes 31 controls; native selected replay yields two E, strict zero, without refusal,
+timeout or unjudged results. All prior test bodies/reasons and production/catalogue/native bytes hold.
+Captured originals/current copies restore and six altered receipts refuse; copied index/gitlink
+contents remain outside the borrowed-metadata census. Helper defaults preserve prior manifest/argv
+behavior. Changed pin, constructors, arguments, environment/configuration/admissions/preflight or
+consumers require revalidation. All six codegen matcher obligations now close; basename and final
+cohort/full production work remain open. Closure book/staged checks are separate from measurement.
+
 ## Retrieved source identities
 
 Every link below names the installed Cargo commit. These are source digests, not toolchain binary digests.

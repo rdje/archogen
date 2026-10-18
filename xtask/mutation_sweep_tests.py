@@ -469,7 +469,7 @@ class CommandDelimiterTests(DiscoveryFixture):
 
 class DiagnosticFlagTests(DiscoveryFixture):
     def producer_argv(self, label, *, level=None, separate=None, operand="unused_variables",
-                      library_source="pub fn c() {}\n", release_strip=None):
+                      library_source="pub fn c() {}\n", release_strip=None, release_incremental=None):
         """One real pinned Cargo compilation, with an independently specified argv shape."""
         project = self.base / ("producer-" + label)
         (project / "src").mkdir(parents=True)
@@ -477,8 +477,13 @@ class DiagnosticFlagTests(DiscoveryFixture):
                     'edition = "2021"\n')
         if level is not None:
             manifest += f'[lints.rust]\nunused_variables = "{level}"\n'
+        profile = []
         if release_strip is not None:
-            manifest += '[profile.release]\nstrip = ' + json.dumps(release_strip) + "\n"
+            profile.append("strip = " + json.dumps(release_strip))
+        if release_incremental is not None:
+            profile.append("incremental = " + json.dumps(release_incremental))
+        if profile:
+            manifest += "[profile.release]\n" + "\n".join(profile) + "\n"
         (project / "Cargo.toml").write_text(manifest)
         (project / "src/lib.rs").write_text(library_source)
         target = project / "target"
@@ -523,8 +528,10 @@ class DiagnosticFlagTests(DiscoveryFixture):
         if level:
             expected += ["--" + level + "=unused_variables"]
         expected += ["--check-cfg", "cfg(docsrs,test)", "--check-cfg", "cfg(feature, values())",
-                     "-C", metadata[0], "-C", filename[0], "--out-dir", str(target / "release/deps"),
-                     "-C", "strip=debuginfo", "-L", "dependency=" + str(target / "release/deps")]
+                     "-C", metadata[0], "-C", filename[0], "--out-dir", str(target / "release/deps")]
+        if release_incremental:
+            expected += ["-C", "incremental=" + str(target / "release/incremental")]
+        expected += ["-C", "strip=debuginfo", "-L", "dependency=" + str(target / "release/deps")]
         if separate:
             expected += [separate, operand]
         self.assertEqual(argv, expected, "actual pinned producer argv requires revalidation on drift")
@@ -688,7 +695,7 @@ os.execvp("rustc", ["rustc"] + arguments)
                           "each actual lint proof requires its own per-file reason")
 
 
-    def codegen_key_controls(self, key, consumed_operand):
+    def codegen_key_controls(self, key, consumed_operand, *, incremental=False):
         """Actual constructor edits, independently specified producer values and scoped counterexamples."""
         self.assertIn("commit-hash: f2d3ce0bd7f24a49f8f72d9000448f8838c4e850",
                       self.bounded(["cargo", "-vV"]))
@@ -714,9 +721,18 @@ os.execvp("rustc", ["rustc"] + arguments)
         modules += [module(namespace["apply_mutant"](m), "variant_" + str(index))
                     for index, m in enumerate(family)]
         operand = "llvm-args=--pass-remarks=" + key + "=inside"
-        ordinary = self.producer_argv(key + "-ordinary", library_source="pub fn c() -> u32 { 37 }\n")
-        wider = self.producer_argv(key + "-wider", separate="-C", operand=operand,
-                                   library_source="pub fn c() -> u32 { 37 }\n")
+        producer = dict(library_source="pub fn c() -> u32 { 37 }\n")
+        if incremental:
+            producer["release_incremental"] = True
+        ordinary = self.producer_argv(key + "-ordinary", **producer)
+        wider = self.producer_argv(key + "-wider", separate="-C", operand=operand, **producer)
+        if incremental:
+            for label, argv in [("ordinary", ordinary), ("wider", wider)]:
+                cache = self.base / ("producer-" + key + "-" + label) / "target/release/incremental"
+                self.assertIn("incremental=" + str(cache), argv)
+                self.assertTrue(cache.is_dir(), cache)
+                self.assertTrue(any(path.is_file() for path in cache.rglob("*")),
+                                "the enabled compiler did not populate its explicit local cache")
         self.assertEqual(wider[-2:], ["-C", operand])
         with self.assertRaisesRegex(AssertionError, "wrong forwarded compiler argv"):
             self.assertEqual(wider[-2:], [], "wrong forwarded compiler argv")
@@ -786,6 +802,16 @@ os.execvp("rustc", ["rustc"] + arguments)
         for mutant in family:
             self.assertIn(namespace["mutation_key"](mutant), records,
                           "each actual extra-filename proof requires its own per-file reason")
+
+
+    @unittest.skipUnless(os.name == "posix", "the pinned producer/decoder premise is Unix")
+    def test_actual_incremental_candidates_require_pinned_codegen_constructors(self):
+        namespace, family = self.codegen_key_controls(
+            "incremental", "metadata=incremental=inside", incremental=True)
+        records = namespace["load_equivalents"](ROOT / "xtask/trust.equivalents")
+        for mutant in family:
+            self.assertIn(namespace["mutation_key"](mutant), records,
+                          "each actual incremental proof requires its own per-file reason")
 
 
     @unittest.skipUnless(os.name == "posix", "the pinned producer/decoder premise is Unix")

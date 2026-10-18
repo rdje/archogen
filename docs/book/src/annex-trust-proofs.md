@@ -277,6 +277,28 @@ and wrong argv/output oracles keep these domains separate. Exact native replay g
 strict zero; original/current-copy inputs restore, altered receipts refuse and prior test bodies/reasons
 are preserved. Incremental evidence and the basename comparison remain open; full adequacy is pending.
 
+### Incremental matcher reasons
+
+Incremental evidence `.13.2.4.2.3` (`2026-10-18`) closes `L599.dir.196` and `L599.lit.197` as scoped E.
+The permanent producer enables the real release cache:
+
+```toml
+[profile.release]
+incremental = true
+```
+
+Its argv must contain the independently expected cache path, and the compiler must populate that
+local directory. Both compiled libraries are consumed with expected value 37. Exact original/edited
+normalization still discards the `incremental=<path>` operand. Other discarded fields, successful
+scalar domains, excluded flag routes and unchanged consumers justify the narrow caller reason.
+
+Successful `cargo rustc` also forwards `-C llvm-args=--pass-remarks=incremental=inside`; original and
+truncated-prefix retain the full option, while contains drops it. This valid wider input is outside
+the inventory caller. Synthetic `incrementalX=inside`, refused strip and wrong argv/output oracles
+keep the premises explicit. Native selected replay gives two scoped E, strict zero; input populations
+restore and altered receipts refuse. All codegen matcher obligations close, with prior bodies/reasons
+preserved. The basename comparison and final cohort/full adequacy work remain required.
+
 ## Mutation measurements and controls
 
 Whether the instrument's tests hold the generated-sources rules — what a program reads, the chain, the blob rule,

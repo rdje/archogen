@@ -211,6 +211,7 @@ a change that leaves it stale, so it is never edited by hand.
 ## I
 
 - **ID** — [definition](glossary.md), [The S0 early generation path](s0.md)
+- Incremental matcher reasons — [Annex C: Trust proof records](annex-trust-proofs.md#incremental-matcher-reasons)
 - Initial parent killing tests — [Generated-sources test adequacy](trust-adequacy.md#initial-parent-killing-tests)
 - Initial role and build operator outcomes — [Generated-sources test
   adequacy](trust-adequacy.md#initial-role-and-build-operator-outcomes)
@@ -387,7 +388,8 @@ a change that leaves it stale, so it is never edited by hand.
   gate](trust.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where
   generated systems run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from
   outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex A: The runtime's rules in
-  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
+  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust
+  proof records](annex-trust-proofs.md)
 - Relevance decides whether an unknown matters — [Presence, absence, and
   relevance](presence.md#relevance-decides-whether-an-unknown-matters)
 - Remaining measurements — [Generated-sources test adequacy](trust-adequacy.md#remaining-measurements)
