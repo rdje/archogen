@@ -1,4 +1,5 @@
 # PROGRAM: program spine — roadmap ownership, workspace, tiers, and the book
+| `PROGRAM.89.2` | `ARCHOGEN-PROGRAM-0729 (leaf PROGRAM.89.2)` | **Local-temp caller checkpoint closes**: exact caller/consumer delta and28 pinned sources, compiled actual-edit/producer controls; complete14 flag and6 matcher native replays, six/five rejecting receipt controls, original/current-copy1034 restoration; all12 integration stages and official/native activation binding pass; code/tests/E unchanged, canonical/book/live resume M3 metadata evidence, full adequacy open |
 | `PROGRAM.89.1` | `ARCHOGEN-PROGRAM-0728 (leaf PROGRAM.89.1)` | **Cleared builds keep temporary data local**: checked target/tmp creation/canonicalization and explicit TMPDIR/TMP/TEMP, real child effective path/volume/file controls, absent/hostile/relative/different-cwd and blocked-file recovery; compiled-input admissions unchanged; two native named kills, operator28 and original1034 restoration; canonical/book/live sync, focused/stamp/staged gates; caller/integration checkpoint next |
 
 ## Metadata
@@ -617,82 +618,14 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.86.md`](../task-history/PROGRAM/PROGRAM.86.md); commit `ARCHOGEN-PROGRAM-0724`
 
 - ID: `PROGRAM.87`
-  Status: `done` — native provenance and complete headed log rendering verified
-  Goal: repair PROGRAM log placement/rendering while preserving every record. Reproduce the existing
-    PROGRAM.85/0707 row after Changelog using native source/heading positions, trace its introduction
-    and any other affected rows through native documentation history, assess blank-separated tables,
-    and move only proven misplaced/detached records into contiguous headed tables. Verify actual
-    pinned rendering, row counts/order/multiplicity/bytes and public row-presence gate scope.
-  Reproduction: tail docs/tasks/PROGRAM.md shows the 0707 row after ## Changelog, outside ## Commit Log.
-  Impact: the rendered headed log omits the ninth cleanup record. No source/evidence row may be lost.
-  Schedule: after PROGRAM.86/.88, before resuming M3 .13.2.4. Own any further confirmed log defects.
-  Startup: clean main 85434b9, empty/untracked message and OS-readable handoff census. Read task-tree
-    log/template contracts, COMMIT.md, row-presence gate, prior M3 layout repair and book repository
-    section. Own current PROGRAM record layout/history/rendering only; source and frozen archives stay.
-  - [x] **ROOT CAUSE** — complete current source census: 204 prior commit rows (203 headed-section,
-    one after Changelog), only 182 in the contiguous table; 154 prior verification rows, only 135
-    contiguous. `python3 -I -B target/program-log-layout/audit-repair.py`, exit 0: all 41 affected
-    current row versions traced through 53 native task-doc commits after fence 6d61f65; all absent at
-    that boundary, exact introductions have no matching row in their direct parent. First detached
-    commit/verification row is c4c61209ea8418b729b1a0151628fecaa7dfe9af (PROGRAM-0604, round13), with
-    a blank immediately before each. Misplaced 0707 begins at 112f6973274d2997d711348a032f47b52fd7d549,
-    after Changelog. Native ancestry places it after 0687 and before 0724; no guessed lexical sorting.
-    Actual pinned rendering confirms 182/135 before, 204/154 after relocation, all cells present.
-    Supplementary renderer first assumed PROGRAM-area subjects; corrected one legitimate M1 filing
-    reference before final complete subject/multiplicity comparison. No source defect in that record.
-    Task collection measured 817912 bytes before this evidence (native indexed path census/Python stat),
-    1288 headroom. Own published sealing of only committed closed PROGRAM bodies here to fit closure;
-    current .87 remains active, all prior rows and frozen archives must stay exact.
-  - [x] **ADDRESSED** — preserve all 204 prior commit-record and 154 verification-record rows,
-    exact bytes/multiplicity, with all old headed-row and verification order unchanged. Stable-merge
-    0707 between native ancestors 0687/0724; remove blank data-row separators and nothing from the
-    records. `python3 -I -B target/program-log-layout/render.py`, exit 0, actual pinned mdBook: before
-    182/135 headed rows, relocation 204/154, complete 3/4 cells and all subject multiplicities,
-    including the legitimate M1 filing reference. Blank-after-first controls render one row in only
-    the affected table. Independent structure refuses wrong location, changed/missing/duplicate row
-    and blank separator. Append this unit's records contiguously only after all prior records.
-    `bash scripts/check_task_history.sh --seal PROGRAM`, exit 0: five committed closed subtrees,
-    six leaves, exact reconstruction; gate 241 sealed files / 489 stubs. Current .87 stayed active.
-    Native HEAD/system-hash corroboration holds all 236 prior archive files exact and old index rows
-    in order; new bodies' core lines match HEAD. Supplemental comparison normalizes only terminal
-    inter-leaf blanks; the published reconstruction/history gate proves exact source preservation.
-  - [x] **NO REGRESSION** — actual unchanged public check_commit_log_rows.sh accepts proper,
-    after-Changelog, blank-separated and changed-note controls, exit 0; deleting the 0707 row exits 1,
-    specifically its missing record. This holds the gate's defined presence-only scope, not layout/
-    truth validation. Every controlled file write is restored exactly in finally. Maintained
-    `python3 -I -B scripts/trust_adequacy.py --snapshot-inputs --output target/program-log-layout/inputs.json`
-    then `--check-inputs target/program-log-layout/inputs.json --output target/program-log-layout/restoration.json`,
-    both exit 0: all 1034 regular inputs, Python/system hashes/bytes/modes/sizes/index and opaque pin
-    metadata restore before closure prose. No source/script/old-archive change; new seals owned here.
-    Native Git history/ancestry, actual pinned renderer, template and maintained input/history/presence
-    gates are primary; extraction/orchestration scripts/receipts are ignored supplemental adapters.
-    Final 205/155-row render with new unit, book/index/anchors/glossary/source/figure/routes/history/
-    order/live/staged gates precede commit. No new Rust-focused/full integration/remote claim.
-    Sealed PROGRAM.83/.84/.88 retain their original terminal blank lines. Git whitespace checking
-    covers authored paths; exact archival bytes are validated by TASK-HISTORY/native hashes.
-  - [x] **LOCKSTEP** — current book explains complete log rendering and retained legacy references;
-    live/resume/index return to committed M3 .13.2.4 matcher assessment, ordinary PROGRAM.71 next.
-    All old global log/changelog records retained, no new DEV_NOTES lesson or product status category.
-  Verification: `2026-10-18` — target/program-log-layout retains committed before source, 41 native
-    introduction/break records, minimal merge ancestry, actual before/after/separator book HTML,
-    preserved seals/index, public gate boundary/restoration and independent rejected record controls.
-    History and row/renderer claims are bounded to PROGRAM logs; no whole-repository history audit.
-    Retained receipts, Python/system SHA-256 agree; restoration predates closure edits and rendering
-    below is the final 205/155-row run, superseding the intermediate render hash after this unit:
-    history-audit.json 39bbc61731b557565572217a0167856e65947d1d51a026b53b210c1652e6de5a;
-    render-audit.json 6871247c893aedd3fbced231b1d9fa6a7a6ad78652040cbe0f2b61da0e35654d;
-    seal-audit.json 7334f1b38d962f656bdae2562d32700a67cf4a1b6179c80153dbd830df12bd66;
-    boundary.json dbc40c9f673e2bf94eacb8aefc63a79d76129e725959eb63d0defd815cfa7885;
-    inputs.json a80ad2d22346c71beea8d61763f04e4eb953d75e7c39c169f6a7c11aefc72fe4;
-    restoration.json 45706ac3ca05e1cba356fb7a3b2367287a72f4c125ef28fef47400b97bd288c1;
-  Commit: `ARCHOGEN-PROGRAM-0726 (leaf PROGRAM.87)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.87.md`](../task-history/PROGRAM/PROGRAM.87.md); commit `ARCHOGEN-PROGRAM-0726`
 
 - ID: `PROGRAM.88`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.88.md`](../task-history/PROGRAM/PROGRAM.88.md); commit `ARCHOGEN-PROGRAM-0725`
 
 
 - ID: `PROGRAM.89`
-  Status: `active` — P1 shared build temporary-directory locality defect
+  Status: `done` — caller/native/integration and required closure archival complete
   Goal: prevent catalog/inventory cleared build environments from defaulting temporary data outside
     the repository volume. Supply repository-derived temporary directories, preserve input/admission
     contracts, add permanent effect/failure controls, and revalidate caller premises before more E.
@@ -703,60 +636,71 @@ mdBook that is the director's window into the project.
   Priority/schedule: immediate after committed M3 .13.2.4.1, before any further public inventory run
     or matcher classification. Native six-entry replay transfers to .89.2 after the fix.
   Children: .1 shared API/producer alignment and focused controls; .2 complete caller/E/integration checkpoint.
-  Verification: `pending`
-  Commit: `pending`
+  Verification: .89.1 permanent API/effect/error controls and focused; .89.2 complete caller/native/integration checkpoint.
+  Commit: `ARCHOGEN-PROGRAM-0729 (leaf PROGRAM.89.2)` closes the parent; .89.1 committed separately.
 
 - ID: `PROGRAM.89.1`
-  Status: `done` — checked shared local-temp environment and permanent controls
-  Goal: derive/create a temp directory from each build's project-local target, set TMPDIR/TMP/TEMP
-    after clearing inherited environment, propagate creation failures before tools execute. Verify
-    effective child paths/volumes, absent/file/error and hostile inherited-temp cases, and actual
-    public build callers. Keep compiled env-dependency admissions narrow. Align producer proof envs
-    where needed, update canonical/book contracts and run focused/operator checks before commit.
-  Startup: roadmap §4.4/§14.4, catalog hashes §3, inventory §3, pinned caller domain,
-    shared environment/cleared-command callers and existing catalog/trust public fixtures reviewed.
-    Book catalog/trust/Annex C reviewed; source contract currently lists no local temp variables.
-  - [x] **ROOT CAUSE** — M3 .13.2.4.1 exact API/cleared-child metadata evidence; permanent
-    cargo test -p xtask catalog_build::tests::cleared_builds_use_local_temporary_directories_despite_inherited_overrides
-    -- --exact and build_environment_refuses_blocked_storage_and_recovers_after_removal both RED101.
-    Missing keys and accepted temp-file destination reproduce before repair, with passive checks before
-    any child temp write. No off-volume project data created and no historical write/migration claim.
-  - [x] **ADDRESSED** — target/tmp checked creation/canonicalization, TMPDIR/TMP/TEMP explicitly
-    supplied after clearing. Permanent children verify absent/hostile inputs, relative target/different
-    cwd, explicit child path and Unix volume, actual local file effect; blocked Cargo/target/temp files stay
-    exact and recovery succeeds. Catalog test filter passes15 with one internal probe ignored; public
-    temporary_process_paths_are_not_admitted_as_compiled_environment_inputs passes all three variables.
-    Native cargo xtask mutate --timeouts-fail --only build-environment-local-temp-variables-omitted
-    build-environment-temp-creation-error-ignored exit 0, both named K, no refusal/timeout/unjudged.
-    Native result: mutate: OK — 2 mutation(s), each killed or surviving exactly as the catalog expects.
-    First catalogue loop context omitted its format's four-space escape and failed binding, while the
-    ignored-error control killed; exact indented context corrected before authoritative two-entry pass.
-  - [x] **NO REGRESSION** — python3 -I -B xtask/mutation_sweep_tests.py <root>, exit 0: all28 controls
-    pass after both actual producer environments gain local TMP/TEMP beside TMPDIR. Literal argv and
-    compiled candidate/proof controls hold. Native/full-input census restores all1034 regular inputs,
-    modes/index/opaque pin identity, independent Python/system hashes. Source reconstruction proves
-    every prior body outside shared API/doc and appended controls exact, old catalogue prefix and E
-    unchanged. The native catalogue operates/restores originals; no copied-input census claimed.
-    Canonical catalog/inventory/domain records and book align. Exact final staged activation
-    must pass focused3/3 with native write-tree stamp; actual pinned book and staged gates bind commit.
-    No new integration or final caller/E checkpoint claim: PROGRAM.89.2 owns it.
-    The locality gate forbids tracked temp_dir() calls. Permanent controls use explicit child settings;
-    a separate passive exact-API/std-default probe confirms all five locality/presence booleans true.
-    Its read-only metadata scope remains distinct from the permanent child file-effect control.
-  Verification: `2026-10-18`, target/build-temp-locality retains RED exits/logs, final mutations-final.log, green public API/
-    catalogue results, full28 operator output, original-input restoration and source/audit receipts.
-    audit.json SHA256 405506f965b49fa49de116ff66aeb15d3b44760b35f2ca675ba61fcbad50bd69; environment SHA256 8b6fa81a2d715c2e42f8ab75a02b6e0c037c97d2f55e71c44c21e4a5516ee74c.
-    Final focused/stamp and book/staged checks required, with no post-activation edits.
-  Commit: `ARCHOGEN-PROGRAM-0728 (leaf PROGRAM.89.1)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.89.1.md`](../task-history/PROGRAM/PROGRAM.89.1.md); commit `ARCHOGEN-PROGRAM-0728`
 
 - ID: `PROGRAM.89.2`
-  Status: `pending` — after committed temporary-environment repair
+  Status: `done` — caller/native/integration and required closure archival complete
   Goal: revalidate existing conditional caller premises, complete old flag and current six matcher
     native replay with original/copied input restoration, operator proofs and warranted full integration.
     Source/caller revision and all failed/incomplete outcomes stay explicit; no further matcher E
     declarations until this checkpoint closes. Then resume M3 .13.2.4.2.1 metadata evidence.
-  Verification: `pending`
-  Commit: `pending`
+  Startup: catalog/inventory §3, canonical pinned caller domain, unchanged token consumers, shared
+    API and all cleared build/tool identity callers; actual source/producer/native/auditor/census and
+    book trust/catalog/Annex C contracts reviewed. Preserve code, existing E and prior tests exactly.
+  - [x] **ROOT CAUSE / BINDING** — python3 -I -B target/build-temp-caller-checkpoint/caller-audit.py,
+    exit 0: exact db574de trust production, other consumers/preflight/modes, E and native bytes hold;
+    only shared production delta is local temporary preparation and three process settings. Compiled
+    env allowlist stays exact. Python/system hashes recheck28 immutable pinned sources, cargo/rustc
+    identities match pin; binary digests are not claimed. Current f0fd3fd operator source and its28
+    actual-edit/independent producer/wider/wrong-oracle controls hold. Permanent cleared-child/admission
+    controls and exact-API/std-default metadata probe bind the new environment. TMP settings add no
+    rustflags/wrapper/profile/config admission; alias/fresh-home/dynamic-target/stable/local-unit and
+    visited-token premises still apply. Six matcher edits bind exact current native identities; no E.
+  - [x] **ADDRESSED** — python3 -I -B target/build-temp-caller-checkpoint/replay.py, exit 0:
+    native flags all14 finish3 named K/10 scoped E/1 compiler refusal, strict0, bool0/13 stmt1/1
+    unviable/attempted; matcher all6 finish S, strict1, dir0/3 lit0/3. Baselines26s/22s; no timeout or
+    unjudged result. The six S remain P1 in M3 .13.2.4.2; strict1 is the unmet criterion, not a passing
+    adequacy claim. Compiler refusal establishes no coverage. Same filters/timeout600/strict E arguments
+    in retained command files. Maintained audit_measurement rejects6 flag and5 matcher falsifiers:
+    wrong exit, missing/duplicate result, replacement/summary drift, plus unlisted selected E for flags.
+    Selected E revalidates only these reasons, not unrelated whole-file stale-E validity.
+    First integration reports10 pass/2 fail, both the pending/active frontier mismatch and its real-tree
+    self-test. All inputs restore; frontier status alone is corrected and direct/bare self-tests pass.
+    Fresh make integration, exit 0: all12 local stages pass with no failure, absence or quarantine. Actual
+    OS reads permitted; fmt/clippy/contracts/doctrines/self-tests/book/no-std/pin premises/wasm build/
+    binding/emulator/spike all complete. Official activation stamp matches native write-tree at
+    22506bfe35d9a0f976c5dd0855109e3e82243d5f. No remote CI, hardware/assurance or whole-production adequacy claim.
+  - [x] **NO REGRESSION** — maintained --check-inputs against inputs.json after each native replay,
+    exit 0: all1034 original regular inputs restore with bytes/modes/sizes/index/Python-system hashes
+    and opaque pin metadata. Maintained regular_input adapter also restores all1034 current copied
+    inputs after each replay; borrowed original index fields prove no copied index/gitlink contents.
+    After integration, separate staged-epoch integration-inputs.json restores all1034 originals;
+    retained native copy still matches the prior native epoch, explicitly separate. Native source/
+    catalogue/tests/E equality holds throughout; ignored adapters are supplemental to maintained
+    CLI/auditor/census, compiled controls and checked primary source. Integration binds the activation
+    tree above; later closure edits are documentation only and receive actual pinned book plus staged
+    doctrine checks. No new DEV_NOTES lesson; existing caller revalidation method applies. Book and
+    canonical/live/frontier sync return to M3 metadata evidence. Close this leaf/parent before pivot.
+  Closure maintenance ownership: before archival, the collection measured822236 bytes against819200.
+    Use published --seal PROGRAM for committed closed units only; keep this parent/leaf active while
+    sealing, prove old archives/index and native committed bodies unchanged, then close the unit.
+    Book remains uncapped. No source/measurement change or new integration activation follows.
+    Published --seal PROGRAM exits 0: PROGRAM.87 and PROGRAM.89.1 reconstruct byte for byte,
+    TASK-HISTORY243 files/491 stubs pass. All241 old archives and exact old index after removing
+    only two new rows are preserved. Native committed core bodies match with terminal interleaf LF
+    normalization qualified; the published reconstruction proves complete bytes. seal-audit.json
+    SHA256 17611d937765ff59629989b88180d6a4592f2c98ae3ce587d7a15d1dcfc7f4db.
+  Verification: `2026-10-18`, target/build-temp-caller-checkpoint retains actual listing/plans/commands,
+    raw native exits/results, source/caller audit, false-receipt results, original/current-copy censuses,
+    integration log and exact activation/OS evidence. Closure docs have distinct validation scope.
+    caller-audit.json SHA256 9bb31756e438ce2a68704644944a2941ec671793326bb3f15d27af80d6d4f540;
+    replay-audit.json SHA256 8460630b8e6a6c9807df55518a5800360f1412768fcdc534a59aa491b77ae746;
+    integration-audit.json SHA256 efbc1fb15720e21b86c3d27166315b8f26a3bdc39165cdd5b22c308cefcad984.
+  Commit: `ARCHOGEN-PROGRAM-0729 (leaf PROGRAM.89.2)`
 
 ## Roadmap coverage map
 
@@ -822,9 +766,8 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.89.2` | `pending` | P1 changed caller-premise/native/integration checkpoint |
-| 2 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.72`, `.73` and `.78` — are filed and owned. Every closed
@@ -1038,6 +981,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-18` | `PROGRAM.88` | maintained routing red/green controls, book ancestor and non-book budget cases, fixture failure rejection | red41/3 to green44/0, same44 arms; indirect book count/byte cap removed, other limits and all prior arms retained; shell syntax0, final book/staged gates before commit |
 | `2026-10-18` | `PROGRAM.87` | complete native documentation history/ancestry, source/order/byte counters, actual pinned renderer/separator controls, preserved seals and public gate boundary/restoration | all 204/154 prior rows retained; headed render182/135 to205/155 including new records; 41 current affected versions traced; five exact seals/six leaves, 236 old archives unchanged; 1034 inputs restore, five structural falsifiers refuse; gate presence-only scope explicit |
 | `2026-10-18` | `PROGRAM.89.1` | passive RED/green; cleared-child path/volume/file effects and hostile overrides; blocked-file recovery; public env-input refusals; native mutations; operator28; census/source audit; focused | checked local temp setup, both native named K strict0; all1034 originals restore; prior bodies/E preserved; exact final focused/book/staged gates bind commit, caller checkpoint .89.2 next |
+| `2026-10-18` | `PROGRAM.89.2` | source/caller/compiled proof binding; native14 flags and6 matchers; result falsifiers; original/copy censuses; full integration/stamp | flags3K10E1U strict0, matchers6S strict1 remain owned; all1034 original/current-copy inputs restore, all12 local stages pass; activation and closure prose explicitly separate; no new E or full adequacy |
 
 ## Commit Log
 

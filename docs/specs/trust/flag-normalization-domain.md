@@ -444,12 +444,37 @@ seed local TMPDIR and are a separate environment. `PROGRAM.89.1` owns the immedi
 `.89.2` owns caller-premise revalidation, fresh native flag/matcher replay and integration before further
 matcher classification. Existing E records and historical survivor results are unchanged.
 The shared API repair subsequently passes permanent cleared-child/effect/error controls in
-`PROGRAM.89.1`; `.89.2` still owns the changed caller-premise checkpoint before new classifications.
+`PROGRAM.89.1`; `.89.2` subsequently closes the changed caller-premise checkpoint below before new classifications.
 
 The assessment restores all captured original inputs before closure documentation. Native listing,
 compiled modules, literal assertions, pinned producer/artifact consumption and checked source identities
 are primary; ignored adapters are supplemental. Permanent per-key evidence follows that prerequisite,
 with current gaps explicit. No full caller theorem, copied-input census or full adequacy is claimed here.
+
+## Postrepair temporary-environment checkpoint
+
+`PROGRAM.89.2` (`2026-10-18`) closes the temporary-path prerequisite. Native Git comparison with
+`db574de` confirms unchanged trust production, token consumers, preflight/modes and reasons; only the
+shared production environment preparation changed. Its added TMPDIR/TMP/TEMP settings supply local
+storage and introduce no compiler flags, wrapper or profile/configuration admissions. The compiled-input
+allowlist stays exact. Existing actual-edit producer/wider/wrong-oracle controls hold, and 28 recorded
+immutable Cargo source identities are rechecked with independent hashes. Toolchain identity metadata
+matches the pin; toolchain binary digests are not claimed.
+
+Fresh complete flag replay: three named kills, ten scoped E and one compiler refusal, strict zero.
+Fresh matcher replay: all six survive, strict one. No timeout or unjudged result occurs; the native
+baselines pass. The survivors remain owned by the per-key M3 leaves with no new E. Refusal establishes
+no coverage, and selected E does not validate unrelated whole-file reasons. The maintained auditor
+rejects wrong exits, missing/duplicate results, replacement/summary drift and unlisted selected E.
+All captured original/current-copy inputs restore after each replay. After staging the activation,
+integration originals and the separately retained prior native copy also restore in their own epochs;
+copy receipts borrow index metadata and make no copied-index or gitlink-content claim.
+
+All twelve local integration stages pass on activation `22506bfe35d9a0f976c5dd0855109e3e82243d5f`, checked against
+native Git and the official stamp. Closure prose follows that activation and receives separate actual
+book/staged checks. No remote CI, hardware/assurance result or full-production adequacy follows. The
+source/caller checkpoint is complete; permanent per-key matcher evidence and final cohort/full sweeps
+remain required. Exact commands, hashes, falsifiers and input populations are in `docs/tasks/PROGRAM.md`.
 
 ## Retrieved source identities
 

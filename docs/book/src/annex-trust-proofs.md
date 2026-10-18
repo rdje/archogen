@@ -222,10 +222,25 @@ The source/caller assessment also finds that the shared cleared build environmen
 variables. A passive compiled-API probe confirms a default outside the repository volume. It reads only
 OS directory metadata and creates no off-volume project files. `PROGRAM.89` owns immediate local-temp
 repair and caller/native/integration revalidation before more matcher classifications. The API repair
-`.89.1` now passes cleared-child path/file-effect and error/recovery controls; `.89.2` owns the remaining
-checkpoint. Producer proof fixtures seed local temp variables. No current E record changes. The canonical source domains,
+`.89.1` passes cleared-child path/file-effect and error/recovery controls; `.89.2` closes the caller
+checkpoint below. Producer proof fixtures seed local temp variables. No current E record changes. The canonical source domains,
 qualifications and evidence are in `docs/specs/trust/flag-normalization-domain.md` and the owning leaf
 in `docs/tasks/M3.md`; full adequacy remains open.
+
+### Postrepair caller checkpoint
+
+`PROGRAM.89.2` (`2026-10-18`) revalidates the changed build environment with unchanged consumers and
+compiler-selection/preflight rules. Local temp settings grant no new compiled inputs or compiler flags.
+Actual-edit producer, wider-domain and wrong-oracle controls hold, and recorded pinned source identities
+are checked again. The complete flag replay retains three named kills, ten scoped equivalents and a
+compiler refusal, strict zero. The complete matcher replay still has six survivors, strict one; per-key
+evidence remains required, and no matcher E is added. Refusal proves no coverage. Altered result receipts
+refuse, and original/current-copy input populations restore.
+
+All twelve steps of local integration pass. Its official stamp binds the activation tree recorded in
+`docs/tasks/PROGRAM.md`; later closure prose has separate book/staged validation. No remote CI or full
+production adequacy is claimed. The temp-path repair and its caller checkpoint close; M3 resumes the
+owned metadata matcher evidence.
 
 ## Mutation measurements and controls
 

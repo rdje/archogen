@@ -329,6 +329,7 @@ a change that leaves it stale, so it is never edited by hand.
   detail](annex-runtime.md)
 - **POSIX** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The supported
   profile](profile.md)
+- Postrepair caller checkpoint — [Annex C: Trust proof records](annex-trust-proofs.md#postrepair-caller-checkpoint)
 - Precise composition errors — [Modules and composition](modules.md#precise-composition-errors)
 - **preemption** — [definition](glossary.md), [The supported profile](profile.md), [What the scheduling checker
   establishes](analysis.md), [The runtime: decisions, not actions](runtime.md), [Where generated systems

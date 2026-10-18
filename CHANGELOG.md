@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — close the local-temp caller and integration checkpoint
+
+`ARCHOGEN-PROGRAM-0729` (leaf `PROGRAM.89.2`), `2026-10-18`.
+
+- Revalidate the temp-only shared API delta against unchanged production callers, consumers, preflight,
+  compiled-input admissions and existing actual-edit producer controls; recheck 28 pinned source identities.
+- Complete native14 flags:3K/10 scoped E/1 compiler refusal, strict0. Native6 matchers remain6S, strict1,
+  fully owned with no new E. Six/five altered-result controls refuse; all1034 originals/current copies restore.
+- All12 local integration stages pass with exact official/native activation binding. Separate staged-epoch
+  originals and retained prior native copy restore; later closure documentation has separate book/staged checks.
+- Close PROGRAM.89 repair/checkpoint and resume M3 metadata evidence. Full adequacy and remote CI remain open.
+
 ## archogen — keep cleared build temporary storage on the repository volume
 
 `ARCHOGEN-PROGRAM-0728` (leaf `PROGRAM.89.1`), `2026-10-18`.
