@@ -54,6 +54,8 @@
 # still made and still surviving; 1 — a survivor not listed, or a listed one stale; 2 — could not run (the unmutated
 # copy fails, a bad argument, a restore that did not read back, or an unjudged run). With `--timeouts-fail`, a timeout
 # instead fails with exit 1, even if an equivalents entry names it. Ordinary timeout handling is unchanged.
+# Sources must be normalized repository-relative, indexed stage-zero regular files with no linked parent.
+# Invalid source paths refuse with exit 2 before listing, replacing a retained copy or running commands.
 # Writes only under `target/mutation-sweep/`.
 # Each test command receives ARCHOGEN_SWEEP_SOURCE as this sweep's canonical own Git root, replacing inherited
 # values. The tests alone bind that source to the exact target/mutation-sweep/tree copy before admitting its config.
@@ -66,7 +68,7 @@
 set -uo pipefail
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 exec python3 - "$@" <<'PY'
-import argparse, bisect, json, os, re, shutil, signal, subprocess, sys, time
+import argparse, bisect, json, os, re, shutil, signal, stat, subprocess, sys, time
 
 ap = argparse.ArgumentParser(prog="mutation_sweep.sh")
 ap.add_argument("file")
@@ -85,7 +87,27 @@ WORK = os.path.join(ROOT, "target", "mutation-sweep")
 TREE = os.path.join(WORK, "tree")
 TARGET = os.path.join(WORK, "target")
 
-src = open(a.file, encoding="utf-8").read()
+# Resolve the selected input before discovery, deletion of an older copy or any test command.
+# Index mode alone is insufficient: the working file or one of its parents may now be a link.
+try:
+    if os.path.isabs(a.file) or any(part in {"", ".", ".."} for part in a.file.split(os.sep)):
+        raise ValueError("expected a normalized repository-relative path")
+    staged = subprocess.run(["git", "ls-files", "-s", "-z"], capture_output=True, text=True, check=True).stdout
+    selected = [entry.split("\t", 1)[0].split() for entry in staged.split("\0")
+                if entry and entry.split("\t", 1)[1] == a.file]
+    if len(selected) != 1 or selected[0][0] not in {"100644", "100755"} or selected[0][2] != "0":
+        raise ValueError("expected one indexed regular file at stage zero")
+    current = ROOT
+    parts = a.file.split(os.sep)
+    for number, part in enumerate(parts):
+        current = os.path.join(current, part)
+        mode = os.lstat(current).st_mode
+        if not (stat.S_ISREG(mode) if number == len(parts) - 1 else stat.S_ISDIR(mode)):
+            raise ValueError("expected regular source and directory parents without links")
+    src = open(a.file, encoding="utf-8").read()
+except (OSError, ValueError, subprocess.CalledProcessError) as error:
+    print("mutation-sweep: invalid source path %r: %s" % (a.file, error), file=sys.stderr)
+    sys.exit(2)
 lines = src.split("\n")
 try:
     first = next(i for i, l in enumerate(lines) if re.match(r"\s*(pub(\(crate\))? )?fn ", l))
@@ -728,7 +750,6 @@ if a.equivalents:
 if os.path.isdir(TREE):
     shutil.rmtree(TREE)
 os.makedirs(TREE)
-staged = subprocess.run(["git", "ls-files", "-s", "-z"], capture_output=True, text=True, check=True).stdout
 paths = [e.split("\t", 1)[1] for e in staged.split("\0") if e and not e.startswith("160000 ")]
 for p in paths:
     if os.path.lexists(p) and not os.path.isdir(p):

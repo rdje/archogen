@@ -218,7 +218,8 @@ a change that leaves it stale, so it is never edited by hand.
 ## G
 
 - **GB** — [definition](glossary.md), [Modules and composition](modules.md), [The engine API](engine-api.md)
-- **generated source** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
+- **generated source** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md),
+  [Verifying the toolchain](verification.md)
 - Generated sources — [Checks that must not share a mistake: the trust gate](trust.md#generated-sources)
 - github-actions — [What this project relies on from outside](ledger.md#github-actions)
 - github-actions-syntax — [What this project relies on from outside](ledger.md#github-actions-syntax)
@@ -322,6 +323,7 @@ a change that leaves it stale, so it is never edited by hand.
 - **MTIP** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Mutation measurements and controls — [Annex C: Trust proof
   records](annex-trust-proofs.md#mutation-measurements-and-controls)
+- Mutation source containment — [Verifying the toolchain](verification.md#mutation-source-containment)
 
 ## N
 

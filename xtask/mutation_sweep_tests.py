@@ -140,6 +140,102 @@ class SpanTests(SweepFixture):
                     self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
 
 
+class SourceBoundaryTests(SweepFixture):
+    def source_index(self, entries):
+        cargo = self.base / "bin/cargo"
+        cargo.write_text('''#!/usr/bin/env python3
+import json, os, pathlib
+root = pathlib.Path(os.environ['PROBE_ROOT'])
+source = os.environ['PROBE_SOURCE']
+with (root / 'observations').open('a') as out:
+    out.write(json.dumps({'original': (root / source).read_text(),
+                          'copy': pathlib.Path(source).read_text()}) + '\\n')
+''')
+        cargo.chmod(0o755)
+        git = self.base / "bin/git"
+        git.write_text(GIT.replace("b'100644 ' + b'0' * 40 + b' 0\\tsample.rs\\0'", repr(
+            b"".join(mode.encode() + b" " + b"0" * 40 + b" " + stage.encode() + b"\t" + name.encode() + b"\0"
+                     for mode, stage, name in entries))))
+        git.chmod(0o755)
+
+    def invoke_source(self, source, *, listing=False):
+        env = dict(os.environ, PROBE_ROOT=str(self.base), PROBE_SOURCE=source,
+                   PATH=str(self.base / "bin") + os.pathsep + os.environ["PATH"])
+        return subprocess.run(["bash", str(SCRIPT), source, "--package", "synthetic", "--op", "bool"]
+                              + (["--list"] if listing else []), env=env, capture_output=True,
+                              text=True, timeout=20)
+
+    def test_absolute_source_refuses_before_mutating_the_original(self):
+        original = self.base / "sample.rs"
+        original.write_text(ORIGINAL)
+        self.source_index([("100644", "0", "sample.rs")])
+        result = self.invoke_source(str(original))
+        self.assert_exit(result, 2)
+        self.assertIn("source path", result.stderr)
+        self.assertFalse((self.base / "observations").exists())
+        self.assertEqual(original.read_bytes(), ORIGINAL.encode())
+        self.assertFalse((self.base / "target/mutation-sweep/tree").exists())
+
+    def test_unsafe_sources_refuse_before_copy_or_command_including_listing(self):
+        original = self.base / "sample.rs"
+        original.write_text(ORIGINAL)
+        (self.base / "untracked.rs").write_text(ORIGINAL)
+        for name in ["gitlink.rs", "indexed-link.rs", "conflicted.rs"]:
+            (self.base / name).write_text(ORIGINAL)
+        (self.base / "directory.rs").mkdir()
+        (self.base / "linked.rs").symlink_to("sample.rs")
+        (self.base / "misdeclared.rs").symlink_to("sample.rs")
+        (self.base / "linked-parent").symlink_to(".")
+        tree = self.base / "target/mutation-sweep/tree"
+        tree.mkdir(parents=True)
+        (tree / "retained").write_bytes(b"previous evidence\0")
+        self.source_index([("100644", "0", "sample.rs"), ("120000", "0", "linked.rs"),
+                           ("100644", "0", "misdeclared.rs"), ("100644", "0", "linked-parent/sample.rs"),
+                           ("100644", "0", "directory.rs"), ("160000", "0", "gitlink.rs"),
+                           ("100644", "0", "missing.rs"), ("120000", "0", "indexed-link.rs"),
+                           ("100644", "1", "conflicted.rs")])
+        cases = ["", "nested//sample.rs", str(original), "../" + self.base.name + "/sample.rs", "nested/../sample.rs",
+                 "./sample.rs", "untracked.rs", "linked.rs", "misdeclared.rs",
+                 "linked-parent/sample.rs", "directory.rs", "gitlink.rs", "indexed-link.rs", "missing.rs", "conflicted.rs"]
+        for source in cases:
+            for listing in [False, True]:
+                with self.subTest(source=source, listing=listing):
+                    result = self.invoke_source(source, listing=listing)
+                    self.assert_exit(result, 2)
+                    self.assertIn("source path", result.stderr)
+                    self.assertFalse((self.base / "observations").exists())
+                    self.assertEqual(original.read_bytes(), ORIGINAL.encode())
+                    self.assertEqual(list(tree.iterdir()), [tree / "retained"])
+                    self.assertEqual((tree / "retained").read_bytes(), b"previous evidence\0")
+        self.assertTrue((self.base / "linked.rs").is_symlink())
+        self.assertTrue((self.base / "linked-parent").is_symlink())
+
+    def test_regular_indexed_relative_sources_mutate_only_the_copy_and_restore(self):
+        for source, mode in [("sample.rs", "100644"), ("space ' quote/line\nµ.rs", "100755")]:
+            with self.subTest(source=source, mode=mode):
+                original = self.base / source
+                original.parent.mkdir(parents=True, exist_ok=True)
+                original.write_bytes(ORIGINAL.encode())
+                original.chmod(int(mode[-3:], 8))
+                self.source_index([(mode, "0", source)])
+                (self.base / "observations").unlink(missing_ok=True)
+                listing = self.invoke_source(source, listing=True)
+                self.assert_exit(listing, 0)
+                self.assertIn("L2.bool.0", listing.stdout)
+                self.assertFalse((self.base / "observations").exists())
+                result = self.invoke_source(source)
+                self.assert_exit(result, 1)
+                self.assertIn("1 survived", result.stdout)
+                observed = [json.loads(row) for row in (self.base / "observations").read_text().splitlines()]
+                self.assertEqual(observed, [{"original": ORIGINAL, "copy": ORIGINAL},
+                                           {"original": ORIGINAL, "copy": ORIGINAL.replace("    true\n", "    false\n")}])
+                copied = self.base / "target/mutation-sweep/tree" / source
+                self.assertEqual(original.read_bytes(), ORIGINAL.encode())
+                self.assertEqual(copied.read_bytes(), ORIGINAL.encode())
+                self.assertEqual(original.stat().st_mode & 0o777, int(mode[-3:], 8))
+                self.assertEqual(copied.stat().st_mode & 0o777, int(mode[-3:], 8))
+
+
 class SourceHintTests(SweepFixture):
     def test_own_canonical_root_replaces_missing_empty_relative_and_unrelated_hints(self):
         for hint in [None, "", "not-a-repository", str(ROOT)]:

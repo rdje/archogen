@@ -261,6 +261,38 @@ traceback markers and test output that resembles a name, and unfinished lists su
 
 Limits cover child exit and both output pipes. [Trust](trust.md) shows bounded tests reporting named failures on hangs and crashes.
 
+### Mutation source containment
+
+Pass a normalized path relative to the repository root. The selected source must have exactly one
+stage-zero Git index entry with regular-file mode (`100644` or `100755`), and the working file must
+be regular with directory parents. Links at the source or any parent refuse, even when the index
+still describes an ordinary file. Absolute paths, empty components, `.` and `..` components,
+untracked or missing files, directories, gitlinks and conflicted entries refuse with exit 2.
+The check runs before discovery, including `--list`, and before replacing a retained copied tree or
+starting a test command. Use `xtask/src/trust.rs`, for example, rather than `./xtask/src/trust.rs`.
+Spaces, quotes, embedded newlines and Unicode in regular indexed paths remain supported.
+
+```sh
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler_observer.rs --package xtask --list
+```
+
+Leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.0.0` repairs a confirmed source escape: joining the copied-tree
+root to an unchecked absolute argument selected the original file for mutation, while Cargo still
+ran in the unchanged copy. A controlled reproduction used the actual unchanged driver with explicit
+Git and Cargo fixtures and a generated source under `target/`. During the mutation command, an
+independent witness read `false` from the original and `true` from the copy; both files were restored
+afterward. The command reported a survivor, so a final restoration check alone could miss the defect.
+The probe touched no maintained source or other repository.
+
+Permanent `SourceBoundaryTests` in `xtask/mutation_sweep_tests.py` require invalid paths to refuse
+before any command and preserve a sentinel in a retained copied tree. Separate valid ordinary and
+nested unusual-path controls observe both files during baseline and mutation: the original remains
+unchanged, the copy changes, and both end with their original bytes and modes. These are tool-protocol
+fixtures, with explicit fake Git/Cargo commands; they do not claim Rust compiler behavior. A real Git
+listing separately accepts an indexed relative observer source and refuses its absolute spelling.
+All existing mutation-discovery function syntax trees remain unchanged. The check assumes no concurrent
+hostile process replaces the selected source or its parents after preflight; it is not a filesystem sandbox.
+
 The sweep replaces a source-line interval with replacement text, then restores the copy byte for byte. Existing
 single-line equivalents keep their literal `from`, `to` and `why` fields. For a multiline candidate, use JSON strings
 so embedded newlines remain inside one field:
