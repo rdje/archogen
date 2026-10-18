@@ -107,6 +107,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#compiler-provenance-contract-and-prototype)
 - Compiler records and normalization — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-records-and-normalization)
+- Compiler warning data across harness and generator roles — [Annex C: Trust proof
+  records](annex-trust-proofs.md#compiler-warning-data-across-harness-and-generator-roles)
 - Complete compiler-function measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-compiler-function-measurement)
 - Complete diagnostic-region replay — [Annex C: Trust proof

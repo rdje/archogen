@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold warning data across harness and generator roles
+
+`ARCHOGEN-M3-0765` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.1`), `2026-10-18`.
+
+- Add bounded real harness/generator warning parents: ordinary/admitted success, source
+  refusal, actual compiler failure/no inventory and recovery. Hold literal units/files/
+  configurations, declared provenance/hashes, artifact execution/system SHA and child exit.
+- Correct initial test oracles from explicit generator-provenance and Cargo diagnostic
+  contracts; preserve production, previous tests, catalogue and all reason bytes.
+- Native2K strict0/full169 parents,1079 originals/copies restore,37 pins and nine false
+  receipt controls bind. Complete book/canonical/live sync; final staged focused gates.
+- Seal the prior artifact leaf byte-exact; path/feature/copy and lifecycle/concurrency remain
+  before full source signoff.
+
 ## archogen — bind artifacts to observed compiler outputs
 
 `ARCHOGEN-M3-0764` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.2.2`), `2026-10-18`.

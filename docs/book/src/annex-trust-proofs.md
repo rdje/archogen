@@ -3250,3 +3250,99 @@ The prior completed collector leaf is sealed without rewriting its bytes. Indepe
 index and full pre-seal tree reconstruction agree, and all earlier archives remain identical.
 Final focused/book/doctrine checks close this bounded slice. Compatibility, the owned baseline
 evidence repair and complete current-source/integration review remain ahead; F30 remains open.
+
+### Compiler warning data across harness and generator roles
+
+The `2026-10-18` slice `.15.2.1.3.3.2.3.1` adds permanent actual-inventory controls for
+the two remaining caller roles. The earlier root/library parent stays unchanged. Production
+collector, observer, artifact selection, normalization, base environment, gate/CLI, catalogue,
+proof controls and reason bytes stay identical to the preceding artifact-binding commit.
+
+Both new parents use a committed fixture and real Cargo/compiler builds under the pinned toolchain.
+The warning is an exact reviewed `global_asm!` site emitting a multiline `.warning` whose text
+contains a `Running` line. The complete command-shaped payload is
+`rustc --crate-name phantom phantom.rs --out-dir bogus`. Those tokens are warning data, never
+a compiler invocation.
+
+| Phase | Comparison harness | Separate generator entrypoint |
+| --- | --- | --- |
+| Ordinary source | Exact literal unit names, owners and source files; complete configurations retained as the baseline; selected test artifact hashed independently and run | Declared generator/input provenance paths, roles and hashes; separate generator target build required |
+| Admitted `not-a-compiler` warning | Same literal units/files and complete configurations; artifact still lists the actual test | Exact source/input hashes and roles; source admission is used |
+| Admitted `rustc` warning | Same checks | Same checks |
+| Admitted full command-shaped warning | Same checks; no phantom unit | Same checks; no diagnostic-driven build refusal |
+| Identical warning without its admission | Source-rule refusal, no inventory | Source-rule refusal, no inventory |
+| Genuine `compile_error!` | Public Cargo failure summary and actual recorded compiler exit 1, no inventory | Public Cargo failure summary and actual recorded compiler exit 1, no inventory |
+| Restored ordinary source | Original literal expectations/configurations and actual test executable recover | Original declared provenance/hash expectations recover |
+
+Package/path strings below belong to the scratch fixtures. The harness compiles exactly `d` and `i` from `"crates/i"`, and `r` from `"crates/r"`.
+Its test unit must read both `"crates/i/tests/d.rs"` and
+`"crates/i/tests/support/mod.rs"`; the other units read their literal library roots.
+The selected executable lists `same: test` and its inventoried hash agrees with the system
+SHA-256 implementation. Complete configuration comparisons use the same fixture/output root,
+while source-file population expectations are literal and independent of the collector.
+
+The generator is a separate `"crates/g"` binary that reads `src/helper.rs`.
+Its live form explicitly declares that helper as an input. The checker's provenance must
+therefore contain precisely `"crates/g/src/main.rs"` as `generator` and
+`"crates/g/src/helper.rs"` as `input`, with the exact committed source bytes hashed.
+Every admitted warning must consume its source admission; no unused admission can hide a
+skipped generator-file check.
+
+An initial oracle expected an undeclared helper to appear automatically in provenance.
+The [canonical generator limitation](trust.md#what-it-is-not) and
+`docs/specs/trust/decision_trust-generated-sources.md` §8 explicitly distinguish a
+generator's compiled-input checks from its declared provenance. Native dep-info did contain
+the helper, while the serialized provenance correctly held only the declared entrypoint.
+The fixture now declares the helper input rather than changing that contract. A separate
+initial failure-message oracle expected the source diagnostic text; Cargo emits that on
+its JSON stdout channel, while the public error selects Cargo's stderr summary. The corrected
+control independently requires one failed compiler record with exit 1, null signal and the
+expected crate-name argument. These were test-oracle corrections, not production repairs.
+
+The tracked parents are:
+
+```bash
+cargo test -p xtask compiler_provenance_preserves_admitted -- --nocapture
+```
+
+Their exact names are
+`trust::tests::compiler_provenance_preserves_admitted_harness_warning_records_and_recovery`
+and
+`trust_generated::generator_tests::compiler_provenance_preserves_admitted_generator_warning_records_and_recovery`.
+The unchanged child-process protocol retains its 30-second limit and requires a finishing
+named result. The local dated run passes both parents, with about 17.5 seconds for the harness
+and 13.9 for the generator. These timings describe that run; they are not a new timing bound.
+
+The native copied-tree smoke selects actual file-population edits, retaining only the first
+or only the last dependency-file entry:
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust.rs \
+  --package xtask --timeout 600 \
+  --filter=trust:: --filter=trust_generated:: --filter=trust_gate:: \
+  --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L775.iter.222 --only L775.iter.223
+```
+
+The scope is file-consumer integration across the real caller routes, not a reconstruction of
+the retired warning parser. No whole-source adequacy result follows. Remaining path/feature/
+copied-execution and lifecycle/concurrency controls stay separately owned before the complete
+source/premise/integration milestone and F30 review.
+
+The dated native result is 2 named kills, strict exit 0, with no timeout, compiler refusal or
+unjudged result. Both new parents kill the first-file truncation; the harness also kills the
+last-file truncation. Full original/restored-copy parent CLI lists agree at 169 names. All 1079
+regular inputs restore with modes and Python/system hashes; the gitlink is metadata only. All 37
+retained producer pins bind. Nine deliberately false receipt summaries reject; the supplementary
+audit is SHA-256 `c88ab259e9a0c5336a3e2a4bcf9b32f9e293bf51eb1f36c48fce38ae0172e85e`.
+Receipts are under `target/compiler-role-warnings/`; held native tree
+`ade5532820ac0f42eeaeed5ad2e60db124b69b49` precedes completion-doc/focused staging.
+
+The source diff is insertion-only inside test regions, with production/caller/reason identity
+checks retained in the receipt. The final staged focused/book/doctrine workflow is required before
+commit. Path/feature/copy and lifecycle/concurrent-writer slices remain active obligations;
+complete source/premise/integration verification still precedes F30 signoff.
+
+The previous committed artifact-binding leaf is sealed during completion bookkeeping. Its
+committed core, archive/index bytes and full raw pre-seal reconstruction agree; all 275 earlier
+archives remain identical. This archival epoch follows the native input-restoration epoch.

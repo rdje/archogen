@@ -5870,6 +5870,41 @@ pub(crate) mod tests {
         path
     }
 
+    /// Independent failed-child evidence, without treating a Cargo diagnostic string as compiler status.
+    pub(crate) fn failed_role_compilation(target: &Path, crate_name: &str) {
+        let hex = |value: &str| -> Json {
+            Json::Str(
+                value
+                    .as_bytes()
+                    .iter()
+                    .map(|byte| format!("{byte:02x}"))
+                    .collect(),
+            )
+        };
+        let mut failures = 0;
+        for session in std::fs::read_dir(target.join(".archogen-provenance")).unwrap() {
+            for record in std::fs::read_dir(session.unwrap().path().join("records")).unwrap() {
+                let path = record.unwrap().path();
+                assert_eq!(path.extension(), Some(OsStr::new("json")), "{path:?}");
+                let value = crate::json::parse(&std::fs::read_to_string(path).unwrap()).unwrap();
+                if value.get("exit") == Some(&Json::Number("1".to_owned())) {
+                    assert_eq!(value.get("signal"), Some(&Json::Null));
+                    assert!(value
+                        .get("argv_hex")
+                        .unwrap()
+                        .elements()
+                        .windows(2)
+                        .any(|pair| { pair == [hex("--crate-name"), hex(crate_name)] }));
+                    failures += 1;
+                }
+            }
+        }
+        assert_eq!(
+            failures, 1,
+            "one actual compiler child failed for {crate_name}"
+        );
+    }
+
     #[test]
     fn observed_artifacts_are_actual_binary_and_library_outputs() {
         crate::trust_test_process::bounded!(
@@ -5921,6 +5956,116 @@ pub(crate) mod tests {
         let result = Command::new(harness).output().unwrap();
         assert!(result.status.success());
         assert_eq!(result.stdout, b"custom-harness\n");
+    }
+
+    #[test]
+    fn compiler_provenance_preserves_admitted_harness_warning_records_and_recovery() {
+        crate::trust_test_process::bounded!(
+            compiler_provenance_preserves_admitted_harness_warning_records_and_recovery
+        );
+        let ordinary = "mod support;\n#[test]\nfn same() { assert_eq!(support::identity(i::imp(3)), r::refm(3)); }\n";
+        let f = three_roots("compiler-harness-warning-records", "d", ordinary, "", "");
+        f.commit(&[(
+            "crates/i/tests/support/mod.rs",
+            "pub fn identity(x: u32) -> u32 { x }\n".to_owned(),
+        )]);
+        let roots = std::fs::read_to_string(f.repo.join("trust/roots.eadl")).unwrap();
+        let configurations = |inventory: &Json| {
+            let units = program(inventory, "diff").get("units").unwrap().elements();
+            assert_eq!(
+                units.len(),
+                3,
+                "only i, r and the actual test compile: {units:?}"
+            );
+            for unit in units {
+                let expected = match unit.get("crate").and_then(Json::as_str).unwrap() {
+                    "d" => vec!["crates/i/tests/d.rs", "crates/i/tests/support/mod.rs"],
+                    "i" => vec!["crates/i/src/lib.rs"],
+                    "r" => vec!["crates/r/src/lib.rs"],
+                    unexpected => panic!("unexpected compiled unit {unexpected}"),
+                };
+                let Json::Object(files) = unit.get("files").unwrap() else {
+                    panic!("file map")
+                };
+                assert_eq!(
+                    files.keys().map(String::as_str).collect::<Vec<_>>(),
+                    expected
+                );
+            }
+            let actual: std::collections::BTreeMap<_, _> = units
+                .iter()
+                .map(|unit| {
+                    (
+                        (
+                            unit.get("package").unwrap().as_str().unwrap().to_owned(),
+                            unit.get("crate").unwrap().as_str().unwrap().to_owned(),
+                        ),
+                        unit.get("configuration").unwrap().clone(),
+                    )
+                })
+                .collect();
+            assert_eq!(
+                actual.keys().cloned().collect::<Vec<_>>(),
+                [
+                    ("crates/i".to_owned(), "d".to_owned()),
+                    ("crates/i".to_owned(), "i".to_owned()),
+                    ("crates/r".to_owned(), "r".to_owned()),
+                ]
+            );
+            let artifact = observed_artifact(&f, inventory, "diff");
+            let result = Command::new(artifact).arg("--list").output().unwrap();
+            assert!(result.status.success());
+            assert!(String::from_utf8(result.stdout)
+                .unwrap()
+                .contains("same: test"));
+            actual
+        };
+        let baseline = configurations(&written(f.run()));
+        let mut last = String::new();
+        for payload in [
+            "not-a-compiler",
+            "rustc",
+            "rustc --crate-name phantom phantom.rs --out-dir bogus",
+        ] {
+            let assembly =
+                format!("core::arch::global_asm!(r#\".warning \"note\nRunning `{payload}`\"\"#);");
+            last = format!("{assembly}\n{ordinary}");
+            f.commit(&[
+                ("crates/i/tests/d.rs", last.clone()),
+                (
+                    "trust/roots.eadl",
+                    format!(
+                        "{roots}{}",
+                        admit("crates/i/tests/d.rs", "global_asm", &assembly)
+                    ),
+                ),
+            ]);
+            assert_eq!(configurations(&written(f.run())), baseline);
+        }
+        // The same warning needs its exact source admission, independently of framing.
+        f.commit(&[("trust/roots.eadl", roots.clone())]);
+        says(&refused(f.run()), "crates/i/tests/d.rs:1");
+        assert!(!f.base.join("out/trust-dependencies.json").exists());
+        f.commit(&[(
+            "crates/i/tests/d.rs",
+            format!("{last}\ncompile_error!(\"actual harness failure\");\n"),
+        )]);
+        let failure =
+            match inventory_with(&f.repo, "HEAD", &f.base.join("out"), &configuration_roots()) {
+                Err(error) => error,
+                Ok(_) => {
+                    panic!("a genuine compiler failure must leave the inventory unable to judge")
+                }
+            };
+        assert!(
+            failure.contains("cargo test --no-run --test d")
+                && failure.contains("could not compile `i` (test \"d\")"),
+            "{failure}"
+        );
+        assert!(!f.base.join("out/trust-dependencies.json").exists());
+        failed_role_compilation(&f.base.join("out/target/diff"), "d");
+        f.commit(&[("crates/i/tests/d.rs", ordinary.to_owned())]);
+        assert_eq!(configurations(&written(f.run())), baseline);
     }
 
     fn harness_item(inv: &Json) -> Json {

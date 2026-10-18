@@ -20,9 +20,8 @@ source/integration verification afterward. The table describes the complete targ
 | Scope | Use the same protocol for binary/library roots, comparison test harnesses and generator entry points. Keep manifest/configuration/dynamic-target preflight and source admissions. Existing supported path geometry and copied execution must retain their contracts. |
 | Failure | Refuse provenance unable to be judged, leave no inventory and retain useful Cargo diagnostics on a genuine Cargo failure. Wait for all children; preserve partial evidence for diagnosis. The next invocation starts fresh. |
 
-The [complete prototype record](../../book/src/annex-trust-proofs.md#compiler-provenance-contract-and-prototype)
-retains its tracked replay instrument, native receiver, complete role/payload matrix, all failure
-controls, source identities, initial corrections and limits. Its owning leaf .3.3.1 is sealed.
+The [prototype record](../../book/src/annex-trust-proofs.md#compiler-provenance-contract-and-prototype)
+retains replay commands, native controls, source identities, corrections and limits.
 
 ## Production unit collector and current premise revalidation
 
@@ -41,3 +40,5 @@ Exact commands, controls, outcomes, failed attempts and scope are in the
 All new judgment files join .3's scope. The
 [artifact record](../../book/src/annex-trust-proofs.md#observed-compiler-artifact-binding) owns metadata/source
 selection, empty-input naming, direct relative paths, output refusals and actual/copy controls.
+The [role-warning matrix](../../book/src/annex-trust-proofs.md#compiler-warning-data-across-harness-and-generator-roles)
+holds harness/generator success, source refusal, compiler failure and recovery; other compatibility stays open.

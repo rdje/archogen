@@ -1548,6 +1548,109 @@ mod generator_tests {
     }
 
     #[test]
+    fn compiler_provenance_preserves_admitted_generator_warning_records_and_recovery() {
+        crate::trust_test_process::bounded!(
+            compiler_provenance_preserves_admitted_generator_warning_records_and_recovery
+        );
+        use crate::json::Json;
+        use archogen_evidence::sha256::Digest;
+        let ordinary = "mod helper;\nfn main() { let _ = helper::VALUE; }\n";
+        let helper = "pub const VALUE: u32 = 17;\n";
+        let declaration = chk_table("crates/g/src/main.rs")
+            .replace("(command", "(inputs \"crates/g/src/helper.rs\") (command");
+        let f = pair(
+            "compiler-generator-warning-records",
+            &[
+                roots(&declaration),
+                ("crates/g/Cargo.toml", manifest("g", "")),
+                ("crates/g/src/main.rs", ordinary.to_owned()),
+                ("crates/g/src/helper.rs", helper.to_owned()),
+            ],
+        );
+        let check = |inventory: &Json, source: &str| {
+            let checker = inventory
+                .get("programs")
+                .unwrap()
+                .elements()
+                .iter()
+                .find(|program| program.get("name").and_then(Json::as_str) == Some("chk"))
+                .unwrap();
+            let Json::Object(provenance) = checker.get("provenance").unwrap() else {
+                panic!("provenance object")
+            };
+            assert_eq!(
+                provenance.keys().map(String::as_str).collect::<Vec<_>>(),
+                ["crates/g/src/helper.rs", "crates/g/src/main.rs",]
+            );
+            for (path, expected, role) in [
+                ("crates/g/src/main.rs", source, "generator"),
+                ("crates/g/src/helper.rs", helper, "input"),
+            ] {
+                let entry = provenance.get(path).unwrap();
+                assert_eq!(
+                    entry.get("sha256").and_then(Json::as_str),
+                    Some(Digest::of(expected.as_bytes()).hex().as_str())
+                );
+                assert_eq!(
+                    entry.get("roles").unwrap().elements(),
+                    &[Json::Str(role.to_owned())]
+                );
+            }
+            assert!(inventory
+                .get("admissions-unused")
+                .unwrap()
+                .elements()
+                .is_empty());
+            assert!(f.base.join("out/target-generators/crates-g-bin-g").is_dir());
+        };
+        check(&written(f.run()), ordinary);
+        let mut last = String::new();
+        for payload in [
+            "not-a-compiler",
+            "rustc",
+            "rustc --crate-name phantom phantom.rs --out-dir bogus",
+        ] {
+            let assembly =
+                format!("core::arch::global_asm!(r#\".warning \"note\nRunning `{payload}`\"\"#);");
+            last = format!("{assembly}\n{ordinary}");
+            f.commit(&[
+                ("crates/g/src/main.rs", last.clone()),
+                roots(
+                    &(declaration.clone()
+                        + &admit("crates/g/src/main.rs", "global_asm", &assembly)),
+                ),
+            ]);
+            check(&written(f.run()), &last);
+        }
+        f.commit(&[roots(&declaration)]);
+        says(&refused(f.run()), "crates/g/src/main.rs:1");
+        assert!(!f.base.join("out/trust-dependencies.json").exists());
+        f.commit(&[(
+            "crates/g/src/main.rs",
+            format!("{last}\ncompile_error!(\"actual generator failure\");\n"),
+        )]);
+        let failure =
+            match inventory_with(&f.repo, "HEAD", &f.base.join("out"), &configuration_roots()) {
+                Err(error) => error,
+                Ok(_) => {
+                    panic!("a genuine compiler failure must leave the inventory unable to judge")
+                }
+            };
+        assert!(
+            failure.contains("cargo build --bin g")
+                && failure.contains("could not compile `g` (bin \"g\")"),
+            "{failure}"
+        );
+        assert!(!f.base.join("out/trust-dependencies.json").exists());
+        crate::trust::tests::failed_role_compilation(
+            &f.base.join("out/target-generators/crates-g-bin-g"),
+            "g",
+        );
+        f.commit(&[("crates/g/src/main.rs", ordinary.to_owned())]);
+        check(&written(f.run()), ordinary);
+    }
+
+    #[test]
     fn a_generator_build_failing_leaves_step_4_unable_to_judge_with_its_refusals_beside_it() {
         crate::trust_test_process::bounded!(
             a_generator_build_failing_leaves_step_4_unable_to_judge_with_its_refusals_beside_it

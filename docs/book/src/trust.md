@@ -121,8 +121,11 @@ provenance stops the inventory; warning text cannot add a unit.
 role's metadata-owned compiler output through an empty-input naming query. Artifacts name direct
 files under `release/deps/`, with observed suffixes, rather than Cargo root aliases. Existing
 inventory path/hash fields remain the consumer contract. Missing, ambiguous, foreign or linked
-outputs stop the inventory. Complete compatibility/source/integration verification remains before
-F30 signoff.
+outputs stop the inventory. The
+[role-warning matrix](annex-trust-proofs.md#compiler-warning-data-across-harness-and-generator-roles)
+holds admitted warning data, source refusal and actual compiler failure/recovery through both
+harness and separate generator builds. Remaining compatibility/source/integration verification
+precedes F30 signoff.
 
 An admission's `defadmit` form names the file, rule and `sha256` of the site's extent (the whole manifest for a
 manifest rule), plus one textual `reason` value.
