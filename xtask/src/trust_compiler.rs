@@ -346,6 +346,239 @@ mod tests {
         )
     }
 
+    fn native_fixture(
+        out: &std::path::Path,
+        name: &str,
+        source: &str,
+        base: &[(String, String)],
+    ) -> PathBuf {
+        let file = out.join(format!("{name}.c"));
+        let binary = out.join(name);
+        fs::write(&file, source).unwrap();
+        let built = Command::new("cc")
+            .args(["-Wall", "-Wextra", "-Werror"])
+            .arg(file)
+            .arg("-o")
+            .arg(&binary)
+            .env_clear()
+            .envs(base.iter().cloned())
+            .output()
+            .unwrap();
+        assert!(built.status.success(), "{built:?}");
+        binary
+    }
+
+    #[test]
+    fn actual_observer_setup_and_installation_fail_before_child_execution() {
+        crate::trust_test_process::bounded!(
+            actual_observer_setup_and_installation_fail_before_child_execution
+        );
+        use std::os::unix::fs::PermissionsExt;
+        let (out, compiler, session, base) = setup("writer-setup");
+        let collision = native_fixture(
+            &out,
+            "collision",
+            include_str!("../../scripts/fixtures/compiler_provenance_collision.c"),
+            &base,
+        );
+        let blocked = out.join("not-a-directory");
+        fs::write(&blocked, b"held file").unwrap();
+        assert!(Compiler::prepare(&blocked, "1.95.0", &out.join("cargo-home")).is_err());
+        let missing_target: Vec<_> = base
+            .iter()
+            .filter(|(key, _)| key != "CARGO_TARGET_DIR")
+            .cloned()
+            .collect();
+        assert!(compiler
+            .session("no-target", &missing_target, &session.cwd)
+            .err()
+            .unwrap()
+            .contains("CARGO_TARGET_DIR"));
+        let mut bad_target = base.clone();
+        bad_target
+            .iter_mut()
+            .find(|(key, _)| key == "CARGO_TARGET_DIR")
+            .unwrap()
+            .1 = blocked.to_str().unwrap().to_owned();
+        assert!(compiler
+            .session("blocked-target", &bad_target, &session.cwd)
+            .is_err());
+        let mut relative_target = base.clone();
+        relative_target
+            .iter_mut()
+            .find(|(key, _)| key == "CARGO_TARGET_DIR")
+            .unwrap()
+            .1 = "relative-target".into();
+        let relative = compiler
+            .session("relative-target", &relative_target, &out)
+            .unwrap();
+        assert!(relative.records.starts_with(out.join("relative-target")));
+        assert_eq!(relative.cwd, out.canonicalize().unwrap());
+        assert_eq!(fs::read(&relative.executable).unwrap(), compiler.bytes);
+        let mode = fs::metadata(&relative.executable)
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o111;
+        assert_ne!(mode, 0);
+        assert_eq!(
+            mode,
+            fs::metadata(&compiler.executable)
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o111
+        );
+        let held = out.join("held-observer");
+        fs::rename(&compiler.executable, &held).unwrap();
+        let missing_source = compiler.session("missing-install-source", &base, &session.cwd);
+        fs::rename(&held, &compiler.executable).unwrap();
+        assert!(missing_source.is_err());
+        let missing_argument = run(&session, &base, &[]);
+        assert_eq!(missing_argument.status.code(), Some(2));
+        assert!(String::from_utf8(missing_argument.stderr)
+            .unwrap()
+            .contains("missing compiler argument"));
+        assert_eq!(fs::read_dir(&session.records).unwrap().count(), 0);
+        for (key, reason) in [
+            ("ARCHOGEN_COMPILER_RECORDS", "missing records"),
+            ("ARCHOGEN_COMPILER_SESSION", "missing session"),
+            ("ARCHOGEN_COMPILER_ROLE", "missing role"),
+            ("records-is-file", "archogen compiler provenance:"),
+        ] {
+            let fresh = compiler.session(key, &base, &session.cwd).unwrap();
+            let mut command = Command::new(&fresh.executable);
+            command
+                .arg(&collision)
+                .arg(&fresh.records)
+                .current_dir(&fresh.cwd)
+                .env_clear()
+                .envs(fresh.environment(&base).unwrap());
+            if key == "records-is-file" {
+                command.env("ARCHOGEN_COMPILER_RECORDS", &blocked);
+            } else {
+                command.env_remove(key);
+            }
+            let result = command.output().unwrap();
+            assert_eq!(result.status.code(), Some(2), "{key}: {result:?}");
+            assert!(result.stdout.is_empty(), "the native child ran for {key}");
+            assert!(String::from_utf8(result.stderr).unwrap().contains(reason));
+            assert_eq!(fs::read_dir(&fresh.records).unwrap().count(), 0, "{key}");
+            assert_eq!(fs::read(&blocked).unwrap(), b"held file");
+        }
+        let recovered = compiler
+            .session("setup-recovery", &base, &session.cwd)
+            .unwrap();
+        assert!(run(&recovered, &base, &["rustc", "-vV"]).status.success());
+        assert!(recovered.invocations().unwrap().is_empty());
+    }
+
+    #[test]
+    fn actual_observer_publication_collision_preserves_completed_and_partial_evidence() {
+        crate::trust_test_process::bounded!(
+            actual_observer_publication_collision_preserves_completed_and_partial_evidence
+        );
+        let (out, compiler, session, base) = setup("writer-publication");
+        let collision = native_fixture(
+            &out,
+            "collision",
+            include_str!("../../scripts/fixtures/compiler_provenance_collision.c"),
+            &base,
+        );
+        let result = run(
+            &session,
+            &base,
+            &[
+                collision.to_str().unwrap(),
+                session.records.to_str().unwrap(),
+            ],
+        );
+        assert_eq!(result.status.code(), Some(2));
+        assert_eq!(result.stdout, b"native compiler completed\n");
+        assert!(String::from_utf8(result.stderr)
+            .unwrap()
+            .contains("archogen compiler provenance:"));
+        let files: std::collections::BTreeMap<_, _> = fs::read_dir(&session.records)
+            .unwrap()
+            .map(|entry| {
+                let path = entry.unwrap().path();
+                (
+                    path.file_name().unwrap().to_owned(),
+                    fs::read(path).unwrap(),
+                )
+            })
+            .collect();
+        assert_eq!(files.len(), 2);
+        let partial = files
+            .iter()
+            .find(|(name, _)| name.to_str().unwrap().ends_with(".part"))
+            .unwrap();
+        let value = json::parse(std::str::from_utf8(partial.1).unwrap()).unwrap();
+        let Some(Json::Number(pid)) = value.get("pid") else {
+            panic!("native PID")
+        };
+        assert_eq!(partial.0.to_str().unwrap(), format!(".{pid}.part"));
+        assert_eq!(value.get("exit"), Some(&Json::Number("0".into())));
+        assert_eq!(value.get("signal"), Some(&Json::Null));
+        assert_eq!(
+            files
+                .get(std::ffi::OsStr::new(&format!("{pid}.json")))
+                .unwrap(),
+            b"retained native evidence\n"
+        );
+        assert!(session.invocations().is_err());
+        for (name, bytes) in files {
+            assert_eq!(fs::read(session.records.join(name)).unwrap(), bytes);
+        }
+        let recovered = compiler
+            .session("publication-recovery", &base, &session.cwd)
+            .unwrap();
+        assert!(run(&recovered, &base, &["rustc", "-vV"]).status.success());
+        assert!(recovered.invocations().unwrap().is_empty());
+    }
+
+    #[test]
+    fn actual_observer_records_native_signal_and_recovers() {
+        crate::trust_test_process::bounded!(actual_observer_records_native_signal_and_recovers);
+        let (out, compiler, session, base) = setup("writer-signal");
+        let source = include_str!("../../scripts/fixtures/compiler_provenance_receiver.c")
+            .replace("ARCHOGEN_PROTO_TRACE_DIR", "ARCHOGEN_COMPILER_RECORDS")
+            .replace("ARCHOGEN_PROTO_ROLE", "ARCHOGEN_COMPILER_ROLE")
+            .replace("ARCHOGEN_PROTO_SESSION", "ARCHOGEN_COMPILER_SESSION");
+        let receiver = native_fixture(&out, "receiver", &source, &base);
+        let sink = out.join("signal.argv");
+        let result = Command::new(&session.executable)
+            .arg(&receiver)
+            .current_dir(&session.cwd)
+            .env_clear()
+            .envs(session.environment(&base).unwrap())
+            .env("ARGV_SINK", &sink)
+            .env("ARGV_SIGNAL", "1")
+            .output()
+            .unwrap();
+        assert_eq!(result.status.code(), Some(143));
+        assert!(result.stdout.is_empty() && result.stderr.is_empty());
+        use std::os::unix::ffi::OsStrExt;
+        assert_eq!(
+            fs::read(sink).unwrap(),
+            [receiver.as_os_str().as_bytes(), &[0]].concat()
+        );
+        let records: Vec<_> = fs::read_dir(&session.records)
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .collect();
+        assert_eq!(records.len(), 1);
+        let record = json::parse(&fs::read_to_string(&records[0]).unwrap()).unwrap();
+        assert_eq!(record.get("exit"), Some(&Json::Null));
+        assert_eq!(record.get("signal"), Some(&Json::Number("15".into())));
+        assert!(session.invocations().unwrap_err().contains("unsuccessful"));
+        let recovered = compiler
+            .session("signal-recovery", &base, &session.cwd)
+            .unwrap();
+        assert!(run(&recovered, &base, &["rustc", "-vV"]).status.success());
+        assert!(recovered.invocations().unwrap().is_empty());
+    }
+
     #[test]
     fn actual_query_records_reject_missing_stale_foreign_and_malformed_inputs() {
         crate::trust_test_process::bounded!(

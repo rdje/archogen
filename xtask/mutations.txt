@@ -5728,3 +5728,14 @@ to
             .map(str::to_owned),
         );
 end
+
+mutation trust-compiler-observer-signal-status-not-forwarded
+file xtask/src/trust_compiler_observer.rs
+test -p xtask -- trust::compiler::tests::actual_observer_records_native_signal_and_recovers --exact
+expect killed
+why A real native receiver terminates by SIGTERM: the private observer records signal15 and must return143, then a fresh pinned query recovers. Replacing signal forwarding with generic exit1 must kill the named bounded parent.
+from
+            .unwrap_or_else(|| 128 + status.signal().unwrap_or(1)))
+to
+            .unwrap_or(1))
+end

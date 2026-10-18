@@ -119,6 +119,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
 - **SHA-256** — Secure Hash Algorithm with a 256-bit result: a fingerprint of a file, which changes if one byte
   does. See [What a report may claim](evidence.md).
 - **SI** — the International System of Units (Système international). See [Quantities and units](quantities.md).
+- **SIGTERM** — the operating system's termination signal. The native compiler witness deliberately raises it;
+  the observer records the signal and its process outcome. See [Compiler writer lifecycle](annex-trust-proofs.md#compiler-writer-lifecycle-controls).
 - **SQL** — Structured Query Language: the language of relational databases, met here as a kind of file whose `--`
   comments the generated-file recogniser reads and whose `/* */` comments it does not. See [Checks that must not share a
   mistake: the trust gate](trust.md).

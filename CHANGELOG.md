@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold actual compiler writer lifecycle
+
+`ARCHOGEN-M3-0768` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.2`), `2026-10-18`.
+
+- Add actual setup/install, deterministic no-overwrite publication and native signal parents
+  with independent C witnesses, retained failed evidence and fresh pinned-query recovery.
+- Preserve production; add collision fixture/signal-status reversal. Root-cause a full-suite
+  harness timeout at final recovery; split phases with predicates/assertions/30s bound retained.
+- Fresh native publication1K/catalogue signal1K strict0/full175;1084 original/copy inputs restore,
+  37 pins/11 false receipts and source-retention falsifier bind.
+- Seal record-boundary leaf; complete book/live sync, SIGTERM glossary definition and explicit
+  I/O limits/caller premises.
+  Final staged focused gates; concurrent writers/contract closure next.
+
 ## archogen — hold remaining compiler record boundaries
 
 `ARCHOGEN-M3-0767` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.1`), `2026-10-18`.

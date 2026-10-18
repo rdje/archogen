@@ -113,6 +113,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#compiler-records-and-normalization)
 - Compiler warning data across harness and generator roles — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-warning-data-across-harness-and-generator-roles)
+- Compiler writer lifecycle controls — [Annex C: Trust proof
+  records](annex-trust-proofs.md#compiler-writer-lifecycle-controls)
 - Complete compiler-function measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-compiler-function-measurement)
 - Complete diagnostic-region replay — [Annex C: Trust proof
@@ -492,6 +494,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Shell input storage and invocation environment — [Annex B: The checks that keep the repository
   honest](annex-repository.md#shell-input-storage-and-invocation-environment)
 - **SI** — [definition](glossary.md), [Quantities and units](quantities.md)
+- **SIGTERM** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Silence is not admission — [The supported profile](profile.md#silence-is-not-admission)
 - Source paths and dependency arguments — [Checks that must not share a mistake: the trust
   gate](trust.md#source-paths-and-dependency-arguments)

@@ -3302,13 +3302,17 @@ expected crate-name argument. These were test-oracle corrections, not production
 The tracked parents are:
 
 ```bash
-cargo test -p xtask compiler_provenance_preserves_admitted -- --nocapture
+cargo test -p xtask -- \
+  compiler_provenance_preserves_admitted \
+  compiler_provenance_harness_warning_admission_and_failure_recover --nocapture
 ```
 
-Their exact names are
+The original names are
 `trust::tests::compiler_provenance_preserves_admitted_harness_warning_records_and_recovery`
 and
 `trust_generated::generator_tests::compiler_provenance_preserves_admitted_generator_warning_records_and_recovery`.
+The current replay above also includes the later bounded admission/failure parent described under
+[writer lifecycle](#bounded-harness-warning-workloads).
 The unchanged child-process protocol retains its 30-second limit and requires a finishing
 named result. The local dated run passes both parents, with about 17.5 seconds for the harness
 and 13.9 for the generator. These timings describe that run; they are not a new timing bound.
@@ -3551,3 +3555,160 @@ The prior committed path/feature leaf seals with exact committed core, archive/i
 saved raw reconstruction; all 277 older archives remain identical. Final staged focused/book/
 doctrine checks close this bounded consumer slice; writer/publication/signal and concurrency
 children remain open before the compatibility checkpoint and native-tool/source milestone.
+
+
+### Compiler writer lifecycle controls
+
+The `2026-10-18` slice `.15.2.1.3.3.2.3.3.2` adds actual setup/installation,
+publication and native signal controls. Production remains unchanged. A full-suite timeout also
+requires the bounded harness-warning split below; its original predicates and phases are retained.
+The observer source, base environment, caller interfaces and existing receiver fixture stay exact.
+A new independent native publication fixture and one maintained signal-status mutation are tracked.
+
+The direct command runs the bounded parents:
+
+```bash
+cargo test -p xtask actual_observer_ -- --nocapture
+```
+
+Their names and responsibilities are:
+
+| Parent in `trust::compiler::tests` | Actual boundary held |
+| --- | --- |
+| `actual_observer_setup_and_installation_fail_before_child_execution` | Controller storage/target/install failures; real relative target resolution and installed bytes/mode/cwd; observer missing argument/settings and non-directory records; no requested child execution; fresh pinned-query recovery |
+| `actual_observer_publication_collision_preserves_completed_and_partial_evidence` | A native child creates the completed filename before publication; wrapper fails without replacing it, preserves a complete partial record, consumer refuses, both evidence files remain exact; fresh recovery |
+| `actual_observer_records_native_signal_and_recovers` | Real native receiver terminates by SIGTERM, exact argv sink/status/record outcome, removed private environment, failed-record refusal and fresh recovery |
+
+The final local run passes within the unchanged 30-second parent bounds: about 1.20 seconds for
+setup/installation and 0.86 seconds each for publication and signal. These are dated observations.
+
+#### Setup and installation
+
+The controller refuses an observer-output parent that is a regular file, a missing
+`CARGO_TARGET_DIR`, a target path blocked by a regular file and a missing original observer
+whose metadata is needed for installation. The test restores the original executable before
+asserting that last refusal. A valid relative target resolves under the supplied cwd; installed
+bytes equal the prepared observer, execute permission bits match and cwd is canonical.
+
+The actual observer then receives no compiler argument, or lacks each required records/session/
+role setting in turn, or receives a records path that is a regular file. It must return 2 with
+its own diagnostic, leave the real session's record directory empty and produce no native-child
+completion marker. The held blocking file's bytes remain unchanged. Test setup first builds the
+observer and native witness; these refusal cases specifically prevent the requested wrapped child
+from executing. An independent new session subsequently runs the pinned `rustc -vV` query.
+
+#### A deterministic publication collision
+
+`scripts/fixtures/compiler_provenance_collision.c` is a controlled native test child. It derives
+its parent's PID through the OS and exclusively creates that PID's completed filename in the
+explicitly supplied test record directory. It writes `retained native evidence` and prints
+`native compiler completed` before exiting 0. This arranges the collision before the observer
+publishes, without a timing race or a replacement implementation of the publisher.
+
+The observer must return 2. The directory contains the child's unchanged completed evidence and
+the observer's fully written partial record. The partial filename and its recorded PID must agree;
+its child exit is 0 and its signal is null. Consumer refusal must not alter either file.
+A fresh session recovers successfully. The native witness is a lower-level producer fault control;
+ordinary inventory builds still use fixed pinned rustc.
+
+The actual native mutation omits `fs::hard_link(&partial, &completed)?`. The publication parent
+must finish and kill it, rather than accepting a wrapper that silently skips its publication step:
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler_observer.rs   --package xtask --timeout 600   --filter=trust:: --filter=trust_generated:: --filter=trust_gate::   --filter=--skip --filter=route_tests --timeouts-fail --only L63.stmt.10
+```
+
+#### Native signal outcome
+
+The unchanged independent receiver fixture writes its complete native argv and checks that the
+wrapper/private fields were removed, then raises SIGTERM. On the measured host that is signal 15.
+The observer must publish a completed record with `exit: null` and `signal: 15`, return 143,
+and preserve the expected empty diagnostic streams. The consumer rejects the unsuccessful
+invocation before interpreting its compiler identity. A new real pinned query then recovers.
+
+The maintained catalogue entry `trust-compiler-observer-signal-status-not-forwarded` replaces
+the observer's `128 + signal` outcome with generic exit 1. Its new native signal parent must
+kill that exact source edit. The replay runs in the verified scratch copy:
+
+```bash
+# Working directory: target/mutation-sweep/tree
+cargo xtask mutate --timeouts-fail   --only trust-compiler-observer-signal-status-not-forwarded
+```
+
+#### I/O limits and caller failure propagation
+
+These tests inject deterministic storage/metadata/setup and destination-collision failures.
+They do not inject every kernel write, sync or post-publication cleanup errno. Those operations
+use the observer's error-return path, whose main returns 2; the source retains each `?`.
+The standard command-status operation waits for the requested child before publication.
+The contract matrix keeps those source premises distinct from exercised failures.
+
+In `xtask/src/trust.rs`, session/setup errors propagate before Cargo; observer exit failure makes
+Cargo fail, and `compile` propagates that failure. Existing root/harness/generator public failure
+controls hold no-inventory and recovery behavior. The new lower-level producer controls do not
+claim to inject every private-record error through the complete public inventory entrypoint.
+Concurrent writers and final matrix accounting remain under the next child; full source judgments
+and native-tool hardening remain before the milestone.
+
+The dated native result is one named publication kill and one maintained signal-status catalogue
+kill, both strict exit 0. Complete original/restored-copy CLI lists agree at 174 parents. All 1084
+regular inputs restore after both runs, including modes and independent Python/system hashes;
+the gitlink is metadata only. All 37 producer-source pins bind. Eleven false receipt summaries
+reject. The catalogue preserves its old prefix and appends only the signal control.
+Held tree `88889135d33dcb003386dc90fdcddc8e28399d4d` precedes completion-doc/focused staging; receipts are
+under `target/compiler-writer-lifecycle/`, with supplemental audit SHA-256
+`3810c5092e82093e392f6c656d45fe3093e7f5cd9a046b5d7d1cfa9633dbaf08`.
+
+The prior committed record-boundary leaf seals with exact core, archive/index and saved raw
+reconstruction; all 278 older archives remain identical. Final staged focused/book/doctrine
+checks are required before commit. Concurrency and matrix closure remain next.
+
+
+#### Bounded harness warning workloads
+
+The first focused pass for the writer code succeeded. After the glossary correction, a full
+focused run on held tree `c9a61cae4f6a89e05fe3c603a8fa631919fdad8e` failed because the
+harness-warning parent exceeded its existing 30-second limit. Exact source comparison with
+the earlier passing `c22eee1fe38a5f1bc1c554e8293de14ba6d1f73f` confirms identical measuring/
+producer code. The fixture's current source was ordinary recovery and its preceding commit
+contained the intentional compiler error: the timeout occurred in the final recovery phase
+of the bundled workload, not in a production assertion. The native census found no stragglers.
+
+The old parent bundled ordinary, all admitted warning payloads, source refusal, actual compiler
+failure and recovery in one process. It is now split into independent fixtures under the same
+bound:
+
+| Parent | Inventory phases |
+| --- | --- |
+| `compiler_provenance_preserves_admitted_harness_warning_records_and_recovery` | Ordinary; each admitted warning payload; ordinary recovery |
+| `compiler_provenance_harness_warning_admission_and_failure_recover` | Admitted complete-command warning; remove admission/refuse/no inventory; actual compiler failure/no inventory; ordinary recovery |
+
+Their shared configuration checker retains the complete old assertion body: literal units/
+owners/files, full configurations, independent artifact hash and execution. The entire old
+refusal/compiler-failure/failed-child/recovery tail is retained. The source literal and payload
+loop remain exact apart from helper/variable spelling. A separate retention audit checks these
+after formatting and rejects a deliberately lost failed-child check. Each fixture owns its
+state and recovery; no workload depends on another test's output.
+
+The direct split run passes at about 11.0 and 8.7 seconds, respectively. These timings are dated
+observations, not replacement limits. The unchanged parent bound remains 30 seconds.
+
+```bash
+cargo test -p xtask --   compiler_provenance_preserves_admitted_harness_warning_records_and_recovery   compiler_provenance_harness_warning_admission_and_failure_recover --nocapture
+```
+
+The timeout, source/phase diagnosis and retention receipts remain under
+`target/compiler-writer-lifecycle/`. The original native writer receipts above retain their
+dated population. A fresh copied/native epoch below binds the split parents before final
+focused validation; there is no blind retry of the unchanged timed-out workload.
+
+
+After that split, fresh native revalidation passes the complete copied baseline at 175 parents.
+The publication edit again has its intended named kill; the signal catalogue control again has
+its native signal parent's kill. Both strict exits are 0, all 1084 regular inputs/modes restore
+in both trees after each run, all 37 producer pins bind and 11 false receipt summaries reject.
+The source-retention audit separately rejects a lost failed-child assertion. The latest held
+tree is `df6dc8e496dfaec26cb4f8b7566b6f9f83ab8023`; receipts are under
+`target/compiler-writer-lifecycle/after-latency/`, supplemental audit SHA-256
+`b89e0f83847331ddb6179657f0238025f03fd229e164d28df9e584a72fa51859`. Earlier receipts and the failed focused/diagnostic epoch
+are preserved. The final staged focused gate must pass this repaired workload before commit.
