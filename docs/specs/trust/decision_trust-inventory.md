@@ -976,3 +976,29 @@ completion documents and final staged focused gates. No E, original production r
 fresh83 outcome. The other24 earlier survivors remain owned; command filtering .15.2.1.3 follows.
 The [book](../../book/src/annex-trust-proofs.md#compiler-environment-admission-regressions) explains
 the real producer position, namespace controls and exact four verdict/name bindings.
+
+
+## Command-filter producer assessment and owned phantom-unit defect
+
+`M3.6.9.6.3.2.2.15.2.1.3.1` (`2026-10-18`) refutes JSON-only equivalence for the four original
+command-filter survivors. Compiled actual environment/parser/split helpers and real pinned Cargo
+show deprecated-note warnings routed to stdout in fixed JSON mode, while a wider plain-mode
+control parses the warning as a command. Actual multiline global_asm warnings also yield raw
+stderr command-shaped records under fixed JSON. Pinned Cargo forwards non-JSON stderr lines.
+
+The maintained actual inventory fixture, with exact global_asm extent admission, writes for
+ordinary source and warning text naming not-a-compiler. Changing only the warning name to rustc
+(with refreshed admission hash) refuses gen/chk for empty-name phantom units; real builds succeed.
+P2 defect `.3.3` owns this false refusal and is scheduled immediately after `.3.2` finishing
+parents. The parser cannot treat warning text as compiler-invocation provenance. Preserve existing
+admitted-source behavior, bind actual invocations independently of warning data, and rebind every
+affected mutation/producer/caller/equivalence premise after the repair; full milestone integration
+and independent review requirements remain.
+
+All1063 original regular inputs restore; only a temporary copied test was added and its Rust bytes
+restore exactly. Six false observations refuse. Seven new source copies match official Cargo
+archive/cache,37 total identities/system hashes rechecked. Ten literal writer call sites across
+seven production modules are a bounded syntax census, not all possible parsed input origins.
+All original Rust/operators/catalogue/reasons stay exact HEAD. The [book assessment](../../book/src/annex-trust-proofs.md#compiler-command-provenance-assessment)
+records the exact macro/admission and all producer/inventory outcomes. No E or new finishing
+parent, full-region result, root repair or universal-host claim is made in this assessment.

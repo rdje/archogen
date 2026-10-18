@@ -2601,3 +2601,81 @@ This resolves four particular obligations from the earlier 83-edit measurement. 
 survivors remain owned at that earlier measurement's epoch; no fresh whole-region count is inferred.
 Command-filtering assessment `.15.2.1.3` is next, before complete current compiler replay and
 the remaining helpers/files.
+
+
+### Compiler command provenance assessment
+
+Assessment `.15.2.1.3.1` (`2026-10-18`) finds a supported source of non-compiler
+records and an original phantom-unit refusal. The four command-filter survivors remain
+unclassified; JSON-message mode does not establish their equivalence.
+
+The current callers use `build` or `test --no-run --test`, the fixed
+`--message-format=json` and single `-v`, a cleared allowlisted environment, and prebuild
+target-kind admission. A first real deprecated-note probe puts the warning's forged
+`Running` line on stdout in JSON mode. The wider plain-mode control puts it on stderr,
+where the compiled current parser reads it as an extra command. That first result cannot
+be generalized to every compiler diagnostic.
+
+Actual multiline assembler warnings provide the counterexample. The pinned compiler can emit
+raw diagnostic text on stderr even in the fixed JSON mode. Cargo's pinned
+`on_stderr_line_inner` forwards a non-JSON line unchanged; the current `cargo_commands`
+then reads an embedded `Running` line as a command. The source census records ten matching
+call sites across seven Cargo production modules for its two exact patterns. Those real
+command writers do not account for every parsed record: diagnostic data is another route.
+Seven newly copied source inputs verify against the official pinned archive and existing cache;
+all 37 source identities and independent system hashes agree.
+
+| Actual producer probe | Build/parser outcome |
+| --- | --- |
+| Deprecated note, fixed JSON mode | success; warning on stdout, only the real rustc record |
+| Same note, wider plain mode | success; an extra non-compiler record parsed from stderr |
+| Assembler warning with literal backslash-n | success; no extra parsed command |
+| Assembler print directive | success; its output is on stdout |
+| Assembler warning with a physical line break | success; two extra non-compiler records |
+| Same physical warning, text naming rustc | success; two extra records naming rustc |
+
+All these rows describe the installed pinned toolchain. The inventory boundary is checked
+separately with a maintained two-root fixture whose roots compile a common dependency.
+Ordinary source writes an inventory. The warning macro is refused by the catalog unless its
+exact source extent has a reviewed admission; the following comparison includes that admission.
+
+| Admitted warning payload | Actual inventory |
+| --- | --- |
+| `Running not-a-compiler`, with the command delimiters | written |
+| `Running rustc`, with the same delimiters | refused for empty-name phantom units in both gen and chk |
+
+The latter is an **owned P2 defect**, not an unadmitted assembly-site refusal. Real compilation
+succeeds and the exact macro extent is admitted, yet warning text is interpreted as a compilation
+unit. The false diagnostic says that each root compiles an empty-named crate with no target owner.
+No inventory is left after refusal. The admitted non-compiler case is also a concrete supported
+witness for testing the filter; it is not evidence for equivalence.
+
+The compiler-warning source used by the second inventory case is:
+
+```rust
+core::arch::global_asm!(r#".warning "note
+Running `rustc`""#);
+pub fn f() {}
+```
+
+Its exact macro-extent admission is:
+
+```lisp
+(defadmit (file "crates/common/src/lib.rs") (rule "global_asm")
+  (sha256 "8fe9c284e0ccf464eee42de4f7d905be99f720fff309738ff5e35117168164ae") (reason "a fixture"))
+```
+
+Changing the payload to `not-a-compiler` also requires updating the extent hash. Both cases
+use the same roots, package graph, allowed configuration and JSON-mode build path. The observation
+parent temporarily extends only the maintained restored sweep copy and uses its normal exact
+outer-root configuration seam; no original Rust source changes. The copied Rust file restores
+byte-for-byte, and all 1063 original regular inputs restore with modes and Python/system hashes.
+Six altered observations refuse, including a false successful inventory and a wrong refusal reason.
+
+The next slice adds permanent finishing controls for the four measured filter edits
+(`.15.2.1.3.2`). The phantom-unit defect is scheduled immediately afterward under
+`.15.2.1.3.3`: define and verify compiler-invocation provenance that keeps warning data separate,
+preserve admitted-source behavior, implement the repair, then rebind mutation/proof scopes and
+run the full milestone gate. The command-filter cohort remains open until both tracks finish.
+No new parent or equivalent entry is added by this assessment, and no fresh whole-region result,
+remote CI or universal-host behavior is claimed.

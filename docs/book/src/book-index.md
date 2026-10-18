@@ -72,7 +72,8 @@ a change that leaves it stale, so it is never edited by hand.
   [Checks that must not share a mistake: the trust gate](trust.md), [The runtime: decisions, not actions](runtime.md),
   [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
-  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex C: Trust proof
+  records](annex-trust-proofs.md)
 - catalog-rules — [What is versioned, and what changing it costs](versions.md#catalog-rules)
 - catalog-s0 — [What is versioned, and what changing it costs](versions.md#catalog-s0)
 - **check-passing convention** — [definition](glossary.md), [Where the engine's knowledge comes from: the
@@ -96,6 +97,8 @@ a change that leaves it stale, so it is never edited by hand.
   gate](trust.md#codegen-options-retain-their-operands)
 - Codes — [Matching an offer to a requirement](matching.md#codes)
 - Comments survive — [Reading a description](reading.md#comments-survive)
+- Compiler command provenance assessment — [Annex C: Trust proof
+  records](annex-trust-proofs.md#compiler-command-provenance-assessment)
 - Compiler environment admission regressions — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-environment-admission-regressions)
 - Compiler records and normalization — [Annex C: Trust proof

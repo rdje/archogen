@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — establish compiler warning records and own the phantom-unit defect
+
+`ARCHOGEN-M3-0760` (leaf `M3.6.9.6.3.2.2.15.2.1.3.1`), `2026-10-18`.
+
+- Actual helper/Cargo JSON/plain and multiline assembler probes refute JSON-only equivalence.
+  With exact assembly-site admission, non-compiler warning writes; rustc-looking warning invents
+  empty units and refuses gen/chk despite successful builds. Own P2 repair immediately after controls.
+- Restore all1063 original inputs and copied Rust; reject six false observations. Verify37 pinned
+  source identities, ten bounded literal writer sites and official archive/cache source bytes.
+- Publish the exact source/admission and disposition; no E/new parent/full-region result. Seal
+  three committed task units/four leaves with full reconstruction and268 older archives preserved.
+
 ## archogen — hold compiler environment positions and namespace boundaries
 
 `ARCHOGEN-M3-0759` (leaf `M3.6.9.6.3.2.2.15.2.1.2.1`), `2026-10-18`.
