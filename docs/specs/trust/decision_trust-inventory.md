@@ -957,3 +957,22 @@ artifact suffix2, tail continue1, absolute dependencies4, absolute configuration
 owner cardinality2. First .2 assesses actual environment positions/prefixes; no S is preclassified.
 The [book](../../book/src/annex-trust-proofs.md#complete-compiler-function-measurement) publishes every
 outcome, one actual finishing name per K, precise compiler diagnostics, operator totals and full command.
+
+
+## Environment admission parent closure
+
+`M3.6.9.6.3.2.2.15.2.1.2.1` (`2026-10-18`) closes four actual compile survivors:
+L841.guard.292/.293 and L845.dir.301/lit.302. The old HOME fixture has its foreign record last.
+Two new permanent parents hold a nonterminal actual foreign dependency record and the foreign
+CARGO_PKGNAME/PREFIX_CARGO_PKG_NAME lookalikes, with allowed value/absence, literal refusals,
+no inventory after refusal and successful recovery. Production behavior is unchanged.
+
+Actual full155-parent selected native replay4K/strict0 has each required intended finishing name;
+old153 names remain. All1063 original/copied inputs restore, seven false bindings reject (including
+another valid but unintended parent),30 pinned copies/tool metadata unchanged. Removing only the
+two added functions reconstructs earlier Rust bytes exactly; production/global1526 raw listing and
+all operators/catalogue/26 reason records stay exact. Native heldb423bf43 epoch precedes later
+completion documents and final staged focused gates. No E, original production repair or projected
+fresh83 outcome. The other24 earlier survivors remain owned; command filtering .15.2.1.3 follows.
+The [book](../../book/src/annex-trust-proofs.md#compiler-environment-admission-regressions) explains
+the real producer position, namespace controls and exact four verdict/name bindings.

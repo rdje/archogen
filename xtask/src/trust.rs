@@ -6306,6 +6306,104 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn compiled_environment_refusals_cover_nonterminal_records() {
+        crate::trust_test_process::bounded!(
+            compiled_environment_refusals_cover_nonterminal_records
+        );
+        let allowed = "pub const PACKAGE: &str = env!(\"CARGO_PKG_NAME\");\n";
+        let f = two_roots("compiled-env-nonterminal", "fn main() {}\n", allowed, &[]);
+        written(f.run());
+        f.commit(&[(
+            "crates/b/src/lib.rs",
+            format!(
+                "{allowed}pub const FOREIGN: Option<&str> = option_env!(\"ARCHOGEN_UNDECLARED\");\n"
+            ),
+        )]);
+        says(
+            &refused(f.run()),
+            "the environment variable `ARCHOGEN_UNDECLARED`",
+        );
+        assert!(!f.base.join("out/trust-dependencies.json").exists());
+
+        // Hold the actual producer position, independently of compile's environment reader.
+        let dependency_files: Vec<_> =
+            std::fs::read_dir(f.base.join("out/target/chk/release/deps"))
+                .unwrap()
+                .map(|entry| entry.unwrap().path())
+                .filter(|path| {
+                    path.extension() == Some(OsStr::new("d"))
+                        && path
+                            .file_name()
+                            .unwrap()
+                            .to_str()
+                            .unwrap()
+                            .starts_with("b-")
+                })
+                .collect();
+        assert_eq!(dependency_files.len(), 1);
+        let dependency = std::fs::read_to_string(&dependency_files[0]).unwrap();
+        let lines: Vec<_> = dependency.lines().collect();
+        let foreign = lines
+            .iter()
+            .position(|line| *line == "# env-dep:ARCHOGEN_UNDECLARED")
+            .unwrap();
+        let package = lines
+            .iter()
+            .position(|line| *line == "# env-dep:CARGO_PKG_NAME=b")
+            .unwrap();
+        assert!(foreign > 0 && foreign < package && package < lines.len());
+
+        f.commit(&[("crates/b/src/lib.rs", allowed.to_owned())]);
+        written(f.run());
+    }
+
+    #[test]
+    fn compiled_environment_refuses_package_namespace_lookalikes() {
+        crate::trust_test_process::bounded!(
+            compiled_environment_refuses_package_namespace_lookalikes
+        );
+        let allowed = "pub const PACKAGE: &str = env!(\"CARGO_PKG_NAME\");\n\
+                       pub const ABSENT: Option<&str> = option_env!(\"CARGO_PKG_NOT_DEFINED\");\n";
+        for (index, variable) in ["CARGO_PKGNAME", "PREFIX_CARGO_PKG_NAME"]
+            .into_iter()
+            .enumerate()
+        {
+            let f = two_roots(
+                &format!("compiled-env-namespace-{index}"),
+                "fn main() {}\n",
+                allowed,
+                &[],
+            );
+            let inventory = written(f.run());
+            let root = program(&inventory, "chk");
+            let unit = root
+                .get("units")
+                .unwrap()
+                .elements()
+                .iter()
+                .find(|unit| unit.get("package").and_then(Json::as_str) == Some("crates/b"))
+                .unwrap();
+            let environment = list(unit, "env");
+            assert!(environment.contains(&"CARGO_PKG_NAME=b".to_owned()));
+            assert!(environment.contains(&"CARGO_PKG_NOT_DEFINED".to_owned()));
+
+            f.commit(&[(
+                "crates/b/src/lib.rs",
+                format!(
+                    "{allowed}pub const FOREIGN: Option<&str> = option_env!(\"{variable}\");\n"
+                ),
+            )]);
+            says(
+                &refused(f.run()),
+                &format!("the environment variable `{variable}`"),
+            );
+            assert!(!f.base.join("out/trust-dependencies.json").exists());
+            f.commit(&[("crates/b/src/lib.rs", allowed.to_owned())]);
+            written(f.run());
+        }
+    }
+
+    #[test]
     fn an_edit_no_root_s_compilation_reads_leaves_the_build_configuration() {
         crate::trust_test_process::bounded!(
             an_edit_no_root_s_compilation_reads_leaves_the_build_configuration

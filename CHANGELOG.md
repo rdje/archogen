@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold compiler environment positions and namespace boundaries
+
+`ARCHOGEN-M3-0759` (leaf `M3.6.9.6.3.2.2.15.2.1.2.1`), `2026-10-18`.
+
+- Add two actual-inventory parents: nonterminal foreign dependency record; missing-separator and
+  embedded package-prefix lookalikes. Hold allowed value/absence, refusal/no inventory and recovery.
+- Full155-parent selected native4K/strict0 with intended names; all1063 originals/copies restore,
+  seven false bindings reject and30 pins/tool metadata remain exact. Only two Rust functions added;
+  all prior Rust bytes reconstruct, production/operator/catalogue/reasons unchanged.
+- Final staged focused/pinned-book/doctrine verification. Resolve these four measured obligations,
+  without projecting new full83 outcomes; remaining compiler-command filtering is next.
+
 ## archogen — measure the complete current compiler function
 
 `ARCHOGEN-M3-0758` (leaf `M3.6.9.6.3.2.2.15.2.1.1`), `2026-10-18`.

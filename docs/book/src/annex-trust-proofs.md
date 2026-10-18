@@ -2366,8 +2366,8 @@ actual type diagnostic. Every selected candidate appears exactly once.
 | `L841.iter.289` | `iter` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
 | `L841.iter.290` | `iter` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
 | `L841.guard.291` | `guard` | killed | `trust::tests::a_shared_package_s_environment_is_in_its_item_and_a_foreign_variable_is_refused` |
-| `L841.guard.292` | `guard` | survived | `.15.2.1.2` — pending assessment |
-| `L841.guard.293` | `guard` | survived | `.15.2.1.2` — pending assessment |
+| `L841.guard.292` | `guard` | survived | `.15.2.1.2` — resolved by the environment parents below |
+| `L841.guard.293` | `guard` | survived | `.15.2.1.2` — resolved by the environment parents below |
 | `L842.lit.294` | `lit` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
 | `L842.lit.295` | `lit` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
 | `L844.dir.296` | `dir` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
@@ -2375,8 +2375,8 @@ actual type diagnostic. Every selected candidate appears exactly once.
 | `L845.cond.298` | `cond` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
 | `L845.cond.299` | `cond` | killed | `trust::tests::a_shared_package_s_environment_is_in_its_item_and_a_foreign_variable_is_refused` |
 | `L845.not.300` | `not` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
-| `L845.dir.301` | `dir` | survived | `.15.2.1.2` — pending assessment |
-| `L845.lit.302` | `lit` | survived | `.15.2.1.2` — pending assessment |
+| `L845.dir.301` | `dir` | survived | `.15.2.1.2` — resolved by the environment parents below |
+| `L845.lit.302` | `lit` | survived | `.15.2.1.2` — resolved by the environment parents below |
 | `L845.lit.303` | `lit` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
 | `L857.stmt.304` | `stmt` | survived | `.15.2.1.5` — pending assessment |
 | `L860.iter.305` | `iter` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
@@ -2441,8 +2441,8 @@ All surviving obligations are scheduled, without a presumed cause:
 | `.15.2.1.8` — Own-package completion | `L911.cond.332` | successful-build own-package completion and actual target/caller reachability |
 | `.15.2.1.9` — Unit owner cardinality | `L826.chain.1162`, `L826.chain.1163` | target metadata lookup, duplicate owners and exact reachable collection cardinality |
 
-Environment admission is next because its four survivors concern which undeclared inputs the
-inventory refuses. Each follow-up must use actual supported callers and independent expectations,
+The environment parents below resolve those four admission obligations. Command filtering is
+the next assessment. Each follow-up uses actual supported callers and independent expectations,
 then add finishing parent controls, repair an original defect if found, or establish a precise
 source/domain proof. Finite examples alone do not establish equivalence. Each resulting slice is
 committed separately before complete current-region replay; other helper/file scopes stay separate.
@@ -2545,3 +2545,59 @@ bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --timeout 600 
 The guard and source activation described above remain part of the recorded execution. These
 results establish neither final regional adequacy nor whole-file adequacy, remote CI or physical-board
 execution. The complete measured result is committed before any subsequent assessment changes.
+
+
+### Compiler environment admission regressions
+
+The `2026-10-18` regression slice (`.15.2.1.2.1`) resolves the four measured environment
+survivors with two permanent parents. Production already refuses these inputs; the correction is
+to the test coverage, with production, earlier tests, mutation operators and equivalent reasons
+unchanged.
+
+A compiled environment record must use the exact `CARGO_PKG_` prefix or one of the explicit
+allowed names, and a foreign record is refused at any position. The old single-`HOME` fixture's
+foreign record is the final physical dependency line. A check narrowed to the last line or the two
+ends therefore still passes that fixture. The new position parent holds a real foreign record
+strictly inside the emitted dependency file, before an allowed package record.
+
+| Measured survivor | Required finishing parent | Actual new verdict |
+| --- | --- | --- |
+| `L841.guard.292` | `trust::tests::compiled_environment_refusals_cover_nonterminal_records` | killed |
+| `L841.guard.293` | `trust::tests::compiled_environment_refusals_cover_nonterminal_records` | killed |
+| `L845.dir.301` | `trust::tests::compiled_environment_refuses_package_namespace_lookalikes` | killed |
+| `L845.lit.302` | `trust::tests::compiled_environment_refuses_package_namespace_lookalikes` | killed |
+
+The namespace parent uses two foreign names: `CARGO_PKGNAME`, which lacks the required underscore,
+and `PREFIX_CARGO_PKG_NAME`, which merely contains the prefix. The expected refusal names the
+literal foreign variable. Proper package variables remain accepted, including the recorded absence
+of `CARGO_PKG_NOT_DEFINED`. For example, these are valid Rust reads but remain foreign to the
+inventory's allowed namespace:
+
+```rust
+pub const MISSING_SEPARATOR: Option<&str> = option_env!("CARGO_PKGNAME");
+pub const EMBEDDED_PREFIX: Option<&str> = option_env!("PREFIX_CARGO_PKG_NAME");
+```
+
+Both parents use actual inventory builds. Allowed controls write an inventory; foreign reads
+produce the intended refusal and leave no `trust-dependencies.json`; restoring the allowed source
+writes successfully again. The position control independently reads Cargo/rustc's actual dependency
+file and asserts the literal records' physical ordering. The namespace control checks the recorded
+allowed value and absence, rather than only accepting a successful command.
+
+The selected native command uses the full **155 tests**, not just the new parents. Its unmodified
+copied baseline passes, and all four exact edits have their required finishing names with strict
+exit 0. Every original 153 parent remains present. All 1063 held original/copied regular inputs
+restore, including modes and Python/system hashes; restored copied names agree. Seven false
+bindings refuse, including substitution of another valid but unintended parent name.
+
+Only the two Rust test functions are added. Removing them reconstructs every previous Rust byte;
+the complete production listing remains 1526 with identical raw edits. The equivalent file still
+has 26 records, none applicable here; all 30 pinned source copies and tool metadata remain exact.
+The held native activation is `b423bf43fe5b28c48c01ea3101260108acd07df5`; later book/staged
+completion checks and the final focused verification belong to their own epoch. Copied index
+metadata is borrowed, the gitlink is opaque, and no executable-digest or new integration claim follows.
+
+This resolves four particular obligations from the earlier 83-edit measurement. The other 24
+survivors remain owned at that earlier measurement's epoch; no fresh whole-region count is inferred.
+Command-filtering assessment `.15.2.1.3` is next, before complete current compiler replay and
+the remaining helpers/files.

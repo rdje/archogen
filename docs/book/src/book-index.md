@@ -96,6 +96,8 @@ a change that leaves it stale, so it is never edited by hand.
   gate](trust.md#codegen-options-retain-their-operands)
 - Codes — [Matching an offer to a requirement](matching.md#codes)
 - Comments survive — [Reading a description](reading.md#comments-survive)
+- Compiler environment admission regressions — [Annex C: Trust proof
+  records](annex-trust-proofs.md#compiler-environment-admission-regressions)
 - Compiler records and normalization — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-records-and-normalization)
 - Complete compiler-function measurement — [Annex C: Trust proof
