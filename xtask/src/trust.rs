@@ -6068,6 +6068,173 @@ pub(crate) mod tests {
         assert_eq!(configurations(&written(f.run())), baseline);
     }
 
+    #[test]
+    fn observed_role_artifacts_preserve_paths_and_disable_target_default_features() {
+        crate::trust_test_process::bounded!(
+            observed_role_artifacts_preserve_paths_and_disable_target_default_features
+        );
+        use std::io::Write;
+        use std::process::Stdio;
+        let test = "mod support;\n#[test]\nfn same() { assert_eq!(i::imp(support::VALUE), r::refm(support::VALUE)); }\n";
+        let f = three_roots("observed-role-path-features", "d", test, "", "");
+        let features = "[features]\ndefault = [\"tripwire\"]\ntripwire = []\n";
+        let implementation_manifest = manifest(
+            "i",
+            &format!("{features}[dev-dependencies]\nr = {{ path = \"../r\" }}\n"),
+        );
+        let generator_manifest = manifest("g", features);
+        let implementation = "#[cfg(feature = \"tripwire\")]\ncompile_error!(\"role default features were enabled\");\npub fn imp(x: u32) -> u32 { x }\n";
+        let generator = "#[cfg(feature = \"tripwire\")]\ncompile_error!(\"generator default features were enabled\");\nmod helper;\nfn main() { let _ = helper::VALUE; }\n";
+        let helper = "pub const VALUE: u32 = 3;\n";
+        let mut roots = std::fs::read_to_string(f.repo.join("trust/roots.eadl")).unwrap();
+        roots.push_str("(defgenerated \"crates/i/tests/support/mod.rs\" (generator \"crates/g/src/main.rs\") (inputs \"crates/g/src/helper.rs\") (command \"fixture\") (reason \"fixture\"))\n");
+        for (path, content) in [
+            ("crates/i/Cargo.toml", &implementation_manifest),
+            ("crates/g/Cargo.toml", &generator_manifest),
+        ] {
+            roots.push_str(&admit(
+                path,
+                &format!("`{path}`: `[features]` makes a second configuration"),
+                content,
+            ));
+        }
+        f.commit(&[
+            ("trust/roots.eadl", roots),
+            ("crates/i/Cargo.toml", implementation_manifest),
+            ("crates/g/Cargo.toml", generator_manifest),
+            ("crates/i/src/lib.rs", implementation.to_owned()),
+            ("crates/i/tests/support/mod.rs", helper.to_owned()),
+            ("crates/g/src/main.rs", generator.to_owned()),
+            ("crates/g/src/helper.rs", helper.to_owned()),
+        ]);
+        let baseline = written(f.run_into("plain"));
+        let physical = f.base.join("physical'\nµ");
+        std::fs::create_dir(&physical).unwrap();
+        std::os::unix::fs::symlink(&physical, f.base.join("alias")).unwrap();
+        for output in [
+            "plain",
+            "space'quote\\slash\nRunning `rustc`\rµ",
+            "alias/output",
+        ] {
+            let inventory = if output == "plain" {
+                baseline.clone()
+            } else {
+                written(f.run_into(output))
+            };
+            assert_eq!(items(&inventory), items(&baseline), "{output:?}");
+            for name in ["refm", "imp", "chk", "diff"] {
+                let actual = program(&inventory, name);
+                for field in ["packages", "units", "provenance"] {
+                    assert_eq!(
+                        actual.get(field),
+                        program(&baseline, name).get(field),
+                        "{name} {field} {output:?}"
+                    );
+                }
+                let units = actual.get("units").unwrap().elements();
+                assert_eq!(units.len(), if name == "diff" { 3 } else { 1 });
+                for unit in units {
+                    let Json::Object(files) = unit.get("files").unwrap() else {
+                        panic!("file map")
+                    };
+                    let inputs = match unit.get("crate").and_then(Json::as_str).unwrap() {
+                        "i" => vec![("crates/i/src/lib.rs", implementation)],
+                        "r" => vec![("crates/r/src/lib.rs", "pub fn refm(x: u32) -> u32 { x }\n")],
+                        "c" => vec![("crates/c/src/lib.rs", "pub fn c() {}\n")],
+                        "d" => vec![
+                            ("crates/i/tests/d.rs", test),
+                            ("crates/i/tests/support/mod.rs", helper),
+                        ],
+                        other => panic!("unexpected unit {other}"),
+                    };
+                    assert_eq!(
+                        files,
+                        &inputs
+                            .into_iter()
+                            .map(|(path, bytes)| (
+                                path.to_owned(),
+                                Json::Str(Digest::of(bytes.as_bytes()).hex())
+                            ))
+                            .collect()
+                    );
+                }
+                let artifact = actual.get("artifact").unwrap();
+                let relative = artifact.get("path").and_then(Json::as_str).unwrap();
+                assert!(relative.starts_with("release/deps/"));
+                let path = f.base.join(output).join("target").join(name).join(relative);
+                let metadata = std::fs::symlink_metadata(&path).unwrap();
+                assert!(metadata.is_file() && !metadata.file_type().is_symlink());
+                // Hash stdin bytes: shasum's filename format escapes mixed-byte path spellings.
+                let mut process = Command::new("shasum")
+                    .args(["-a", "256"])
+                    .stdin(Stdio::piped())
+                    .stdout(Stdio::piped())
+                    .spawn()
+                    .unwrap();
+                process
+                    .stdin
+                    .take()
+                    .unwrap()
+                    .write_all(&std::fs::read(&path).unwrap())
+                    .unwrap();
+                let hash = process.wait_with_output().unwrap();
+                assert!(hash.status.success());
+                let hash = String::from_utf8(hash.stdout).unwrap();
+                assert_eq!(
+                    artifact.get("sha256").and_then(Json::as_str),
+                    hash.split_whitespace().next()
+                );
+                if name == "diff" {
+                    let result = Command::new(path).arg("--list").output().unwrap();
+                    assert!(result.status.success());
+                    assert!(String::from_utf8(result.stdout)
+                        .unwrap()
+                        .contains("same: test"));
+                }
+            }
+            let provenance = program(&inventory, "diff").get("provenance").unwrap();
+            let Json::Object(files) = provenance else {
+                panic!("provenance map")
+            };
+            assert_eq!(
+                files.keys().map(String::as_str).collect::<Vec<_>>(),
+                ["crates/g/src/helper.rs", "crates/g/src/main.rs"]
+            );
+            for (path, bytes) in [
+                ("crates/g/src/helper.rs", helper),
+                ("crates/g/src/main.rs", generator),
+            ] {
+                assert_eq!(
+                    files[path].get("sha256").and_then(Json::as_str),
+                    Some(Digest::of(bytes.as_bytes()).hex().as_str())
+                );
+            }
+            assert!(f
+                .base
+                .join(output)
+                .join("target-generators/crates-g-bin-g")
+                .is_dir());
+        }
+        // Independently enable the generator's defaults through Cargo's public interface.
+        // The inventory build must have compiled this same source with defaults disabled.
+        let env = super::environment(
+            "1.95.0",
+            &f.base.join("default-probe-home"),
+            &f.base.join("default-probe-target"),
+        )
+        .unwrap();
+        let failure = super::run_cargo(
+            &["build", "--release", "--locked", "--offline", "-p", "g"],
+            &env,
+            &f.repo,
+        )
+        .expect_err("the generator default-feature tripwire must fail when enabled");
+        assert!(
+            failure.contains("generator default features were enabled"),
+            "{failure}"
+        );
+    }
+
     fn harness_item(inv: &Json) -> Json {
         items(inv)
             .into_iter()

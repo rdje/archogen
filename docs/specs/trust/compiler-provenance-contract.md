@@ -21,7 +21,7 @@ source/integration verification afterward. The table describes the complete targ
 | Failure | Refuse provenance unable to be judged, leave no inventory and retain useful Cargo diagnostics on a genuine Cargo failure. Wait for all children; preserve partial evidence for diagnosis. The next invocation starts fresh. |
 
 The [prototype record](../../book/src/annex-trust-proofs.md#compiler-provenance-contract-and-prototype)
-retains replay commands, native controls, source identities, corrections and limits.
+retains commands, controls, source identities and limits.
 
 ## Production unit collector and current premise revalidation
 
@@ -40,5 +40,6 @@ Exact commands, controls, outcomes, failed attempts and scope are in the
 All new judgment files join .3's scope. The
 [artifact record](../../book/src/annex-trust-proofs.md#observed-compiler-artifact-binding) owns metadata/source
 selection, empty-input naming, direct relative paths, output refusals and actual/copy controls.
-The [role-warning matrix](../../book/src/annex-trust-proofs.md#compiler-warning-data-across-harness-and-generator-roles)
-holds harness/generator success, source refusal, compiler failure and recovery; other compatibility stays open.
+Controls: [warning roles](../../book/src/annex-trust-proofs.md#compiler-warning-data-across-harness-and-generator-roles)
+and [paths/features](../../book/src/annex-trust-proofs.md#compiler-artifact-path-and-feature-compatibility).
+Lifecycle/concurrency and full source gates remain.

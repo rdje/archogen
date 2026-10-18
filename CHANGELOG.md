@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold observed-artifact path and target-feature compatibility
+
+`ARCHOGEN-M3-0766` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.2`), `2026-10-18`.
+
+- Real combined harness/generator parent holds mixed-byte/canonical paths, complete units/
+  provenance and literal file hashes, actual artifact bytes/system SHA and harness execution.
+- Admitted target default-feature tripwires remain disabled; direct Cargo enables generator
+  defaults and fails its guard. Append maintained omitted-flag catalogue control.
+- Full170-parent native1K plus catalogue1K strict0;1081 originals/copies restore,37 pins
+  and11 false receipts bind. Production/prior tests/reasons/tools exact; seal prior warning leaf.
+- Reproduce and own P2 unknown native --only acceptance under .3.3.3.0.2 before full sweeps.
+  Complete unbounded book/live sync; final focused gates, lifecycle/concurrency next.
+
 ## archogen — hold warning data across harness and generator roles
 
 `ARCHOGEN-M3-0765` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.1`), `2026-10-18`.

@@ -124,8 +124,10 @@ inventory path/hash fields remain the consumer contract. Missing, ambiguous, for
 outputs stop the inventory. The
 [role-warning matrix](annex-trust-proofs.md#compiler-warning-data-across-harness-and-generator-roles)
 holds admitted warning data, source refusal and actual compiler failure/recovery through both
-harness and separate generator builds. Remaining compatibility/source/integration verification
-precedes F30 signoff.
+harness and separate generator builds.
+[Path/feature/copy controls](annex-trust-proofs.md#compiler-artifact-path-and-feature-compatibility)
+also hold mixed-byte paths, canonical aliases, actual output hashes and target default-feature
+suppression. Lifecycle/concurrency and full source/integration verification remain before F30 signoff.
 
 An admission's `defadmit` form names the file, rule and `sha256` of the site's extent (the whole manifest for a
 manifest rule), plus one textual `reason` value.

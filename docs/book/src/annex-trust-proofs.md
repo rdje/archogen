@@ -3346,3 +3346,124 @@ complete source/premise/integration verification still precedes F30 signoff.
 The previous committed artifact-binding leaf is sealed during completion bookkeeping. Its
 committed core, archive/index bytes and full raw pre-seal reconstruction agree; all 275 earlier
 archives remain identical. This archival epoch follows the native input-restoration epoch.
+
+### Compiler artifact path and feature compatibility
+
+The `2026-10-18` slice `.15.2.1.3.3.2.3.2` holds the observed-artifact contract across
+actual harness and separate generator builds, including admitted target features. Earlier
+quoted/multiline/source-environment/canonical path and feature-isolation parents remain in place.
+Production and previous controls remain unchanged; the maintained mutation catalogue gains one
+default-feature omission control.
+
+The new parent is
+`trust::tests::observed_role_artifacts_preserve_paths_and_disable_target_default_features`.
+It builds a comparison harness that reads a declared generated support module, plus a separate
+generator binary that reads its declared helper input. The library target and generator each
+declare this reviewed manifest feature table:
+
+```toml
+[features]
+default = ["tripwire"]
+tripwire = []
+```
+
+Both source files contain a compile-error guard under `cfg(feature = "tripwire")`.
+The manifests need exact whole-file admissions for the feature rule. Successful inventory builds
+therefore exercise the fixed `--no-default-features` argument for the actual library, test and
+generator target routes. A separate real Cargo build of the generator with defaults enabled must
+fail with the generator tripwire diagnostic, establishing that its guard is operative.
+
+The output cases are these fixture-relative path strings:
+
+```text
+plain
+space'quote\slash\nRunning `rustc`\rµ
+alias/output -> physical'\nµ/output
+```
+
+Here `\n` and `\r` describe actual LF and CR bytes in the fixture names; the mixed path also
+contains a space, apostrophe, backslash, backticks and Unicode. The alias is a real symbolic link
+in the scratch fixture. It resolves to a physical parent whose name itself contains a quote,
+line break and Unicode. The artifact files themselves must still be regular non-symlink files
+within the canonical target directory.
+
+For every output, the parent requires:
+
+- Complete package, unit and provenance records, and shared items, equal to the plain baseline.
+- Literal unit counts and source-file/hash maps for every root and the comparison harness,
+  including the harness's generated support module.
+- Direct `release/deps/` artifact paths, existing regular files and actual bytes whose hashes
+  agree with the independent system SHA-256 implementation.
+- A selected harness executable that lists `same: test`.
+- Precisely the declared generator/helper provenance paths and source hashes, plus the separate
+  generator build directory.
+
+The independent hash command receives artifact bytes on stdin. Its filename-output format
+escapes paths containing line breaks or backslashes, so parsing that format as an unescaped digest
+would be an incorrect oracle. No equality of rlib bytes across different output directories is
+assumed: the inventory records each actual artifact and its digest at that output.
+
+The direct command is:
+
+```bash
+cargo test -p xtask \
+  observed_role_artifacts_preserve_paths_and_disable_target_default_features -- --nocapture
+```
+
+The dated run passes within the unchanged 30-second parent limit, at about 7.5 seconds.
+The copied whole-trust baseline includes this parent. A native file-population smoke also
+requires its finishing name:
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust.rs \
+  --package xtask --timeout 600 \
+  --filter=trust:: --filter=trust_generated:: --filter=trust_gate:: \
+  --filter=--skip --filter=route_tests --timeouts-fail --only L775.iter.222
+```
+
+The maintained catalogue control `trust-cargo-target-default-features-enabled` removes only
+the observed compile argument `--no-default-features`. Its exact source block must occur once,
+and `cargo xtask mutate` must report a finishing kill by the new parent, then restore the
+original source. It is run in the already verified scratch copy:
+
+```bash
+# Working directory: target/mutation-sweep/tree
+cargo xtask mutate --timeouts-fail --only trust-cargo-target-default-features-enabled
+```
+
+This omission reaches the library's default-feature tripwire before generator checking. The
+separate direct-Cargo failure above independently holds the generator guard. The control is a
+regression against a missing argument, not a claim that current production enabled defaults.
+The native smoke and catalogue replay are bounded evidence, not a whole-source adequacy result.
+
+#### Owned native selection defect
+
+Preparing the copied run uncovered a separate P2 tool defect. The native sweep's `--only`
+filter does not validate requested IDs. Through its existing explicit Git/Cargo CLI fixture,
+requesting `L999999.not-a-current-id.0` runs one baseline, attempts zero mutations, and exits 0
+with `none attempted`. A contrasting valid control attempts its one mutation and reports an
+equivalent. The actual script is unchanged in this reproduction; the fixture tests tool argument
+selection and makes no claim about a Rust compiler.
+
+Source review identifies the skip loop and empty-result success path as the root cause.
+Task `M3.6.9.6.3.2.2.15.2.1.3.3.3.0.2` owns rejecting unknown, mixed-valid/unknown and stale
+selections before commands, with permanent red/green tests and unchanged valid-selection/
+restoration semantics. It is scheduled after failed-baseline evidence hardening and before
+full source sweeps. Current measurements additionally bind exact selected/result populations;
+the receipt audits reject missing results and incorrect scopes. This defect is open until its
+owned repair passes; a successful zero-attempt selection is not mutation evidence.
+
+The dated native result is one named file-population kill and one maintained default-feature
+catalogue kill, both strict exit 0. The full original/restored-copy CLI lists agree at 170 parent
+names. All 1081 held regular inputs restore after both runs, with modes and Python/system hashes;
+the gitlink is metadata only. All 37 producer-source pins remain bound. Eleven false receipt
+summaries reject. The catalogue preserves its entire prior prefix and appends only the new control.
+Held native tree `2d57037b0d18086c94dcd668d65776f62f51180a` precedes completion-doc/focused staging.
+Receipts are under `target/compiler-path-feature/`; supplemental audit SHA-256 is
+`7ba3713e1e98903138857d1e19642b581242a631ca0c9dcb1fd920457748e14a`.
+
+The prior committed warning-role leaf is sealed byte-exact. Its committed core, archive/index
+and full saved raw reconstruction agree; all 276 older archives remain identical. The final
+staged focused/book/doctrine workflow closes this bounded slice. Lifecycle/concurrent-writer
+controls, both native-tool hardening children and full current-source/integration review remain
+before F30 signoff.

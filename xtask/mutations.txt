@@ -5696,3 +5696,35 @@ from
 to
         // Repository resolution removed: preserve the supplied spelling.
 end
+
+mutation trust-cargo-target-default-features-enabled
+file xtask/src/trust.rs
+test -p xtask -- trust::tests::observed_role_artifacts_preserve_paths_and_disable_target_default_features --exact
+expect killed
+why The admitted role/library/harness and separate generator targets contain actual default-feature compile-error tripwires. Dropping the target-only no-default-features flag must fail the named real-inventory parent; current production is correct.
+from
+        args.extend(
+            [
+                "--release",
+                "--locked",
+                "--offline",
+                "--no-default-features",
+                "--message-format=json",
+                "-v",
+                "-p",
+            ]
+            .map(str::to_owned),
+        );
+to
+        args.extend(
+            [
+                "--release",
+                "--locked",
+                "--offline",
+                "--message-format=json",
+                "-v",
+                "-p",
+            ]
+            .map(str::to_owned),
+        );
+end
