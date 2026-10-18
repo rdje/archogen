@@ -2347,11 +2347,11 @@ actual type diagnostic. Every selected candidate appears exactly once.
 | `L797.iter.270` | `iter` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
 | `L797.iter.271` | `iter` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
 | `L797.iter.272` | `iter` | killed | `trust::tests::a_harness_or_a_library_root_compiling_another_role_s_package_is_refused` |
-| `L797.guard.273` | `guard` | survived | `.15.2.1.3` — pending assessment |
-| `L797.guard.274` | `guard` | survived | `.15.2.1.3` — pending assessment |
-| `L797.guard.275` | `guard` | survived | `.15.2.1.3` — pending assessment |
+| `L797.guard.273` | `guard` | survived | `.15.2.1.3` — finishing parent verified; original parser defect remains owned |
+| `L797.guard.274` | `guard` | survived | `.15.2.1.3` — finishing parent verified; original parser defect remains owned |
+| `L797.guard.275` | `guard` | survived | `.15.2.1.3` — finishing parent verified; original parser defect remains owned |
 | `L799.cond.276` | `cond` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
-| `L799.cond.277` | `cond` | survived | `.15.2.1.3` — pending assessment |
+| `L799.cond.277` | `cond` | survived | `.15.2.1.3` — finishing parent verified; original parser defect remains owned |
 | `L799.not.278` | `not` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
 | `L805.eq.279` | `eq` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
 | `L806.int.280` | `int` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
@@ -2672,10 +2672,69 @@ outer-root configuration seam; no original Rust source changes. The copied Rust 
 byte-for-byte, and all 1063 original regular inputs restore with modes and Python/system hashes.
 Six altered observations refuse, including a false successful inventory and a wrong refusal reason.
 
-The next slice adds permanent finishing controls for the four measured filter edits
-(`.15.2.1.3.2`). The phantom-unit defect is scheduled immediately afterward under
+The following slice adds permanent finishing controls for the four measured filter edits
+(`.15.2.1.3.2`). The phantom-unit defect remains scheduled immediately afterward under
 `.15.2.1.3.3`: define and verify compiler-invocation provenance that keeps warning data separate,
 preserve admitted-source behavior, implement the repair, then rebind mutation/proof scopes and
 run the full milestone gate. The command-filter cohort remains open until both tracks finish.
 No new parent or equivalent entry is added by this assessment, and no fresh whole-region result,
 remote CI or universal-host behavior is claimed.
+
+
+### Admitted nonterminal warning regression parent
+
+The `2026-10-18` slice `.15.2.1.3.2` adds one permanent parent:
+`trust::tests::compiler_command_filter_ignores_admitted_nonterminal_warning_records`.
+Two ordinary roots compile a common dependency. An ordinary control writes an inventory;
+then the dependency gains a reviewed exact-extent assembly macro with two explicit warning
+records, naming `not-a-compiler-first` and `not-a-compiler-last`. The unchanged production
+filter ignores this warning data, and the inventory still writes. Restoring ordinary source
+and its roots removes the admission and writes again.
+
+The exact warning-source macro is:
+
+```rust
+core::arch::global_asm!(r#".warning "first
+Running `not-a-compiler-first`"
+.warning "last
+Running `not-a-compiler-last`""#);
+```
+
+The producer control uses an actual cold Cargo build with the current environment constructor
+and the fixed JSON/single-verbose arguments. It independently observes a genuine common-crate
+compilation before the first warning and a later warning after it. One warning is therefore
+nonterminal without depending on when the consumer crate starts compiling. The initial stricter
+fixture required the dependency warning before that consumer's command. Actual output put the
+consumer command first: pipelined dependency metadata can enable consumer work before final
+assembler diagnostics. That experimental assertion failed and was corrected before verification;
+the original failed receipt remains retained.
+
+| Exact edit | Required actual finishing parent | New native outcome |
+| --- | --- | --- |
+| `L797.guard.273` | `trust::tests::compiler_command_filter_ignores_admitted_nonterminal_warning_records` | killed |
+| `L797.guard.274` | `trust::tests::compiler_command_filter_ignores_admitted_nonterminal_warning_records` | killed |
+| `L797.guard.275` | `trust::tests::compiler_command_filter_ignores_admitted_nonterminal_warning_records` | killed |
+| `L799.cond.277` | `trust::tests::compiler_command_filter_ignores_admitted_nonterminal_warning_records` | killed |
+
+The native command retains the full **156 tests**, including all earlier 155 parent names,
+and freshly kills all four exact edits with the intended new parent and strict exit 0.
+All 1066 held regular inputs restore in the original and copied tree, with modes and
+Python/system hashes; restored copied names agree. Seven falsified receipts refuse, including
+another valid but unintended finishing name.
+
+Removing only this new Rust function reconstructs every earlier Rust byte. Production,
+the 1526-candidate listing/raw edits, mutation operators, catalogue and 26 equivalent records
+remain unchanged. All 37 pinned source copies and tool metadata revalidate. Native held
+activation `ff8c42813c93968b07c03684f11f6713a3bf0f79` is distinct from later completion
+documents and final staged focused verification; copied index metadata is borrowed and the
+gitlink remains opaque.
+
+These four particular filter obligations are resolved. Together with the earlier four environment
+controls, eight individual obligations from the initial compiler measurement now have finishing
+parents. The other 20 initial survivors remain owned at that measurement's epoch; this is not
+a newly measured full-region result.
+
+The original P2 phantom-unit defect from a rustc-looking admitted warning is still open.
+The next action is its concrete producer/consumer contract and prototype, `.15.2.1.3.3.1`,
+followed by bounded repair and complete current source/premise/mutation/integration verification.
+The command-filter cohort stays open until that defect is fixed.

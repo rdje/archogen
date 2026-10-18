@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.6`. `PROGRAM` resumes at `PROGRAM.71`. `M2`'s frontier is `M2.7.4`, on the director; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.9.6.3.2.2.15.2.1.3.2` compiler-command warning regression controls.
-  Add finishing controls for supported warning records; then .3.3 owns the phantom-unit parser repair.
+- **Next action:** `M3.6.9.6.3.2.2.15.2.1.3.3.1` compiler-invocation provenance contract/prototype.
+  Prototype the compiler provenance repair for the confirmed P2 phantom-unit refusal; preserve admitted source behavior.
   Final full sweeps and review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.

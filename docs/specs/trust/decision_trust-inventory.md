@@ -1002,3 +1002,24 @@ seven production modules are a bounded syntax census, not all possible parsed in
 All original Rust/operators/catalogue/reasons stay exact HEAD. The [book assessment](../../book/src/annex-trust-proofs.md#compiler-command-provenance-assessment)
 records the exact macro/admission and all producer/inventory outcomes. No E or new finishing
 parent, full-region result, root repair or universal-host claim is made in this assessment.
+
+
+## Nonterminal command-warning parent closure
+
+`M3.6.9.6.3.2.2.15.2.1.3.2` (`2026-10-18`) adds one bounded actual-inventory parent.
+Two explicit admitted non-compiler warning records hold a nonterminal case independent of
+consumer scheduling, with ordinary/admitted success and recovery. An independent cold producer
+observation replaces an initially overstrict ordering assertion: consumer compilation can start
+before final dependency diagnostics. Preserve the initial exit101 and corrected actual observations.
+
+Fresh full156-parent selected native4K/strict0 requires the new parent for every exact L797.guard.
+273/.274/.275 and L799.cond.277 edit. All1066 original/copied regular inputs restore with modes/
+Python-system hashes; copied156 names agree,37 pinned copies/tool metadata unchanged. Seven false
+receipts reject, including another valid but unintended parent. Only one Rust function is added;
+all previous Rust bytes reconstruct exactly and production/global1526 raw edits/operators/catalogue/
+26 reason entries remain unchanged. Held nativeff8c428 epoch precedes final staged focused/book gates.
+
+No projected full83 result follows;20 earlier survivors remain owned. The original P2 phantom-unit
+defect is open, with .3.3.1 contract/prototype immediately next and bounded repair/full milestone
+verification afterward. The [book](../../book/src/annex-trust-proofs.md#admitted-nonterminal-warning-regression-parent)
+records exact intended names, fixture correction and the distinction between coverage and repair.

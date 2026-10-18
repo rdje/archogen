@@ -6306,6 +6306,76 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn compiler_command_filter_ignores_admitted_nonterminal_warning_records() {
+        crate::trust_test_process::bounded!(
+            compiler_command_filter_ignores_admitted_nonterminal_warning_records
+        );
+        let dep = "[dependencies]\ncommon = { path = \"../common\" }\n";
+        let ordinary = "pub fn f() {}\n";
+        let f = two_roots(
+            "compiler-command-warning-records",
+            "fn main() { common::f(); }\n",
+            "pub fn f() { common::f(); }\n",
+            &[
+                ("crates/common/Cargo.toml", manifest("common", "")),
+                ("crates/common/src/lib.rs", ordinary.to_owned()),
+                ("crates/a/Cargo.toml", manifest("a", dep)),
+                ("crates/b/Cargo.toml", manifest("b", dep)),
+            ],
+        );
+        written(f.run());
+        let assembly = r##"core::arch::global_asm!(r#".warning "first
+Running `not-a-compiler-first`"
+.warning "last
+Running `not-a-compiler-last`""#);"##;
+        f.commit(&[
+            (
+                "crates/common/src/lib.rs",
+                format!("{assembly}\n{ordinary}"),
+            ),
+            (
+                "trust/roots.eadl",
+                format!(
+                    "{ROOTS}{}",
+                    admit("crates/common/src/lib.rs", "global_asm", assembly)
+                ),
+            ),
+        ]);
+        written(f.run());
+
+        // Observe the actual producer ordering without requiring a particular parser result.
+        let env = super::environment(
+            "1.95.0",
+            &f.base.join("diagnostic-cargo-home"),
+            &f.base.join("diagnostic-target"),
+        )
+        .unwrap();
+        let args = [
+            "build",
+            "--lib",
+            "--release",
+            "--locked",
+            "--offline",
+            "--no-default-features",
+            "--message-format=json",
+            "-v",
+            "-p",
+            "b",
+        ];
+        let (_, stderr) = super::run_cargo(&args, &env, &f.repo).unwrap();
+        let first_compilation = stderr.find("--crate-name common ").unwrap();
+        let first_warning = stderr.find("Running `not-a-compiler-first`").unwrap();
+        let later_warning = stderr.find("Running `not-a-compiler-last`").unwrap();
+        assert!(first_compilation < first_warning && first_warning < later_warning);
+
+        f.commit(&[
+            ("crates/common/src/lib.rs", ordinary.to_owned()),
+            ("trust/roots.eadl", ROOTS.to_owned()),
+        ]);
+        written(f.run());
+    }
+
+    #[test]
     fn compiled_environment_refusals_cover_nonterminal_records() {
         crate::trust_test_process::bounded!(
             compiled_environment_refusals_cover_nonterminal_records

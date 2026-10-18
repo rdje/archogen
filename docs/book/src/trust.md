@@ -103,10 +103,10 @@ accounts for every initial survivor and schedules the remaining source lanes. Th
 records the initial 49 kills, 28 owned survivors and six compiler refusals, strict exit 1.
 [Environment regression parents](annex-trust-proofs.md#compiler-environment-admission-regressions)
 resolve four of those obligations with real refusal/recovery controls. Command-filtering assessment
-has a supported warning-data witness; its finishing controls are next. A
+now has [verified warning controls](annex-trust-proofs.md#admitted-nonterminal-warning-regression-parent). A
 [reproduced parser defect](annex-trust-proofs.md#compiler-command-provenance-assessment) currently
 mistakes an admitted multiline assembly warning naming rustc for empty-name compilation units and
-refuses the inventory. Its repair is owned before this cohort closes; final whole-file adequacy remains open.
+refuses the inventory. Its provenance-repair contract/prototype is next; final whole-file adequacy remains open.
 
 An admission's `defadmit` form names the file, rule and `sha256` of the site's extent (the whole manifest for a
 manifest rule), plus one textual `reason` value.

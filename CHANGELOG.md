@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold admitted nonterminal command-warning records
+
+`ARCHOGEN-M3-0761` (leaf `M3.6.9.6.3.2.2.15.2.1.3.2`), `2026-10-18`.
+
+- Add one actual-inventory parent with two explicit reviewed warning records, ordinary/admitted
+  success/recovery and an independent cold-producer order check. Correct the exploratory ordering
+  assertion that overconstrained Cargo's pipelined dependency/consumer execution.
+- Full156-parent native4K/strict0 with intended name; all1066 originals/copies restore, seven false
+  bindings reject and37 source pins/tool metadata stable. Preserve prior Rust except one new test,
+  all production/raw1526 candidates/operators/catalogue/reasons unchanged.
+- Final staged focused/pinned-book/doctrine verification. Original P2 phantom-unit defect stays
+  open; concrete provenance contract/prototype next. No projected whole-region result.
+
 ## archogen — establish compiler warning records and own the phantom-unit defect
 
 `ARCHOGEN-M3-0760` (leaf `M3.6.9.6.3.2.2.15.2.1.3.1`), `2026-10-18`.

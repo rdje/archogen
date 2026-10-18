@@ -32,6 +32,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#absolute-diagnostic-prefix-proofs)
 - **ACLINT** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Acronyms and abbreviations — [Words this book uses](glossary.md#acronyms-and-abbreviations)
+- Admitted nonterminal warning regression parent — [Annex C: Trust proof
+  records](annex-trust-proofs.md#admitted-nonterminal-warning-regression-parent)
 - **AI** — [definition](glossary.md), [The engine API](engine-api.md)
 - An example that runs — [The engine API](engine-api.md#an-example-that-runs)
 - analysis-model — [What is versioned, and what changing it costs](versions.md#analysis-model)
@@ -43,7 +45,7 @@ a change that leaves it stale, so it is never edited by hand.
 - **assembly** — [definition](glossary.md), [Modules and composition](modules.md), [Where the engine's knowledge comes
   from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
   decisions, not actions](runtime.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md)
+  outside](ledger.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **AUTOSAR** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What this project relies
   on from outside](ledger.md)
 - autosar-os — [What this project relies on from outside](ledger.md#autosar-os)
