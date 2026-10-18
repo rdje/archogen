@@ -1043,6 +1043,92 @@ os.execvp("rustc", ["rustc"] + arguments)
         self.assertIn(key, records, "the actual color proof requires its per-file reason")
 
 
+class BasenameComparisonTests(DiscoveryFixture):
+    def test_actual_basename_comparison_uses_distinct_same_string_positions(self):
+        source = (ROOT / "xtask/src/trust.rs").read_text()
+        namespace, comparisons = self.discovery(source, operator="cmp")
+        original = "(Some(dash), Some(dot)) if dash < dot => {"
+        replacement = "(Some(dash), Some(dot)) if dash <= dot => {"
+        family = [m for m in comparisons if namespace["mutation_key"](m) == (original, replacement)]
+        self.assertEqual(len(family), 1)
+
+        def module(text, name):
+            first = text.index("const DROPPED:")
+            last = text.index("\n/// `path` resolved lexically", first)
+            body = text[first:last]
+            self.assertIn("match (file.rfind('-'), file.rfind('.'))", body)
+            self.assertEqual(body.count("fn normalise("), 1)
+            return "mod " + name + " {\n" + body.replace("fn normalise(", "pub fn normalise(", 1) + "}\n"
+
+        modules = [module(source, "original"), module(namespace["apply_mutant"](family[0]), "variant")]
+        program, binary = self.base / "basename-candidates.rs", self.base / "basename-candidates"
+        program.write_text("\n".join(modules) + r'''
+fn original_config(file: &str) -> Vec<String> {
+    original::normalise(&vec!["rustc".to_owned(), "--extern".to_owned(), format!("common={file}")], "")
+}
+fn variant_config(file: &str) -> Vec<String> {
+    variant::normalise(&vec!["rustc".to_owned(), "--extern".to_owned(), format!("common={file}")], "")
+}
+fn search_property(file: &str, first: char, second: char) {
+    if let (Some(a), Some(b)) = (file.rfind(first), file.rfind(second)) {
+        assert_ne!(a, b, "distinct search pattern premise");
+        assert_eq!(a < b, a <= b, "comparison predicate under unequal indices");
+    }
+}
+fn main() {
+    let cases = [
+        ("", ""), ("plain", "plain"), ("-", "-"), (".", "."), ("-.", "."),
+        ("a.b-c", "a.b-c"), ("a-.b", "a.b"),
+        ("libcommon-abcd.rlib", "libcommon.rlib"),
+        ("cache=one=two/libcommon-abcd.rmeta", "libcommon.rmeta"),
+        ("dir-with.dots/name-123.so", "name.so"),
+        ("a-foo-123.ext.more", "a-foo.more"), ("é-Ω.λ", "é.λ"),
+    ];
+    for (file, stem) in cases {
+        let expected = vec![format!("--extern common={stem}")];
+        assert_eq!(original_config(file), expected, "independent original output {file:?}");
+        assert_eq!(variant_config(file), expected, "independent actual edit output {file:?}");
+        search_property(file.rsplit('/').next().unwrap(), '-', '.');
+    }
+    // A bounded helper-input grid supplements the source proof; it is not an exhaustive universe claim.
+    let mut level = vec![String::new()];
+    let mut visited = 0usize;
+    for _ in 0..=6 {
+        for file in &level {
+            search_property(file, '-', '.');
+            assert_eq!(original_config(file), variant_config(file));
+            visited += 1;
+        }
+        level = level.iter().flat_map(|prefix| ['a', '-', '.', 'é'].map(|ch| format!("{prefix}{ch}"))).collect();
+    }
+    assert_eq!(visited, 5461);
+    match std::env::args().nth(1).as_deref() {
+        Some("wrong-negative") => assert_ne!(original_config("libcommon-abcd.rlib"),
+                                             variant_config("libcommon-abcd.rlib"), "wrong negative oracle"),
+        // This relaxes the search premise of the predicate argument only. It does not claim that
+        // changing the search in normalise must change its final string output.
+        Some("same-search") => search_property("a.b", '.', '.'),
+        Some("wrong-broad") => {
+            let equal = "a.b".rfind('.').unwrap();
+            assert_eq!(equal < equal, equal <= equal, "wrong arbitrary-index comparison oracle");
+        }
+        _ => {}
+    }
+    println!("basename controls: literal outputs and 5461 generated strings held");
+}
+''')
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.assertIn("literal outputs and 5461 generated strings held", self.bounded([str(binary)]))
+        for argument, message in [("wrong-negative", "wrong negative oracle"),
+                                  ("same-search", "distinct search pattern premise"),
+                                  ("wrong-broad", "wrong arbitrary-index comparison oracle")]:
+            with self.assertRaisesRegex(AssertionError, message):
+                self.bounded([str(binary), argument])
+        records = namespace["load_equivalents"](ROOT / "xtask/trust.equivalents")
+        self.assertIn(namespace["mutation_key"](family[0]), records,
+                      "the actual basename comparison proof requires its own per-file reason")
+
+
 class IteratorTests(DiscoveryFixture):
     def test_the_actual_two_member_pair_loop_preserves_order_and_early_returns(self):
         source = (ROOT / "xtask/src/trust.rs").read_text()

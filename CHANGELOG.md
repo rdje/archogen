@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — prove the basename comparison from distinct search positions
+
+`ARCHOGEN-M3-0733` (leaf `M3.6.9.6.3.2.2.13.2.5`), `2026-10-18`.
+
+- Prove same-string dash/dot positions cannot equal; compile the exact comparison edit with independent
+  literal outputs and a bounded helper grid. Qualified premise/equal-index/wrong-negative controls reject
+  broader or inverted claims. Add the precise reason only after proof; native1 E, strict0, operator32 pass.
+- All31 prior test bodies, reasons and production/catalogue/native bytes hold; all1043 captured original/
+  copied regular inputs restore and six false receipts refuse. Canonical/book/live sync closes the
+  evidence-directed parent and resumes complete cohort replay; whole-production adequacy remains open.
+
 ## archogen — prove incremental matcher edits with a real enabled cache
 
 `ARCHOGEN-M3-0732` (leaf `M3.6.9.6.3.2.2.13.2.4.2.3`), `2026-10-18`.

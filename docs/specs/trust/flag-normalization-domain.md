@@ -583,6 +583,32 @@ behavior. Changed pin, constructors, arguments, environment/configuration/admiss
 consumers require revalidation. All six codegen matcher obligations now close; basename and final
 cohort/full production work remain open. Closure book/staged checks are separate from measurement.
 
+## Basename comparison: distinct search positions
+
+`.13.2.5` (`2026-10-18`) resolves actual `L614.cmp.215` as source-context E. The two indices
+come from `file.rfind('-')` and `file.rfind('.')` on the same immutable Rust string. If both are
+present, their byte positions cannot be equal: one position cannot match both distinct nonempty
+ASCII characters. Consequently `dash < dot` and `dash <= dot` take the same branch for every
+defined string input here. Other Option cases, branch work, outputs and index progress are unchanged.
+This argument requires no Cargo producer or pinned-caller restriction. It is not a theorem about
+arbitrary integer comparisons. Revalidate changed patterns, receivers, comparison/context or string
+contracts; the permanent test also binds the actual discoverable edit and source search expression.
+
+Before adding the reason, the permanent control compiled the actual original and edited normalise
+modules. Independent literal outputs cover empty/plain strings, missing/reversed/adjacent punctuation,
+rlib/rmeta basenames, paths, equals signs, repeated punctuation and Unicode. A grid of all words of
+length zero through six over `a`, `-`, `.`, `é` checks 5461 helper strings, supplementing rather than
+establishing the universal source argument. A same-character search refutes the distinct-position
+predicate premise only; it does not claim a wider normalise final-string difference. An equal-index
+oracle rejects arbitrary numeric equivalence, and a wrong negative output oracle fails.
+
+After proof, append the exact reason and bind its key. Full operator suite: 32 tests pass; all 31 prior
+test bodies, old reasons and production/catalogue/native bytes remain exact. Native selected replay
+reports one E, strict zero, with no refusal, timeout or unjudged result. All 1043 captured originals
+and current copied regular inputs restore; six altered receipts refuse. Copied index/gitlink contents
+are outside the borrowed-metadata copy census. This closes the last initial prefix/helper survivor
+obligation; final complete cohort replay and whole-production adequacy remain separate work.
+
 ## Retrieved source identities
 
 Every link below names the installed Cargo commit. These are source digests, not toolchain binary digests.

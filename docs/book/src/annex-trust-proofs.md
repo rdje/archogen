@@ -299,6 +299,35 @@ keep the premises explicit. Native selected replay gives two scoped E, strict ze
 restore and altered receipts refuse. All codegen matcher obligations close, with prior bodies/reasons
 preserved. The basename comparison and final cohort/full adequacy work remain required.
 
+### Basename comparison reason
+
+Basename evidence `.13.2.5` (`2026-10-18`) closes `L614.cmp.215` as source-context E. Normalization
+finds the final dash and final dot in the same filename. Those distinct characters cannot occupy the
+same byte position, so changing the guard from `<` to `<=` cannot change the selected branch. This
+holds for the function's string inputs without requiring the restricted inventory caller.
+
+The actual original and edited functions compile against independent literal examples:
+
+| Extern operand | Normalized entry |
+| --- | --- |
+| `common=libcommon-abcd.rlib` | `--extern common=libcommon.rlib` |
+| `common=cache=one=two/libcommon-abcd.rmeta` | `--extern common=libcommon.rmeta` |
+| `common=a.b-c` | `--extern common=a.b-c` |
+| `common=a-foo-123.ext.more` | `--extern common=a-foo.more` |
+| `common=é-Ω.λ` | `--extern common=é.λ` |
+
+Empty strings, absent/adjacent punctuation and path components have literal expectations too. A bounded
+grid of 5461 strings supplements the source argument; it does not prove an unrestricted universe by
+enumeration. Searching for the same character instead refutes the distinct-position predicate premise
+only, without claiming a final-string counterexample. Equal numeric indices and a wrong negative output
+oracle reject broader or inverted claims. Changed search patterns, receivers or source context require
+revalidation.
+
+Only after those controls pass does the exact reason enter the per-file record. Native selected replay
+reports one E, strict zero; captured original/current copied inputs restore and altered receipts refuse.
+All initial prefix/helper survivor obligations now have separate controls or proofs. Final complete
+cohort replay and whole-production adequacy remain required.
+
 ## Mutation measurements and controls
 
 Whether the instrument's tests hold the generated-sources rules — what a program reads, the chain, the blob rule,
