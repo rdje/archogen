@@ -168,12 +168,12 @@ a form is accepted: acceptance is read where reviews are protected, never from a
 
 ### The gate
 
-The current `--repo .` path handling can falsely refuse this repository's own configuration.
-Until the tracked repair lands, pass an absolute repository path derived at runtime, for example
-`cargo xtask trust-gate --repo "$PWD"` when running at its root. The
-[caller-path assessment](annex-trust-proofs.md#relative-gate-caller-assessment) records the exact
-reproduction, cause and immediate repair owner.
-
+The gate resolves `--repo` against the process's current directory before deriving its output and
+configuration roots. From the repository root, `cargo xtask trust-gate --repo . --out target/trust`
+uses the same repository and destination as their absolute spellings. Relative `--out` values are
+relative to the selected repository; absolute values keep their destination. Repository aliases resolve
+to their physical root. Missing or non-directory repository paths return 2 and create no output.
+The [verified caller repair](annex-trust-proofs.md#repository-path-caller-repair) records the controls.
 
 `cargo xtask trust-gate` builds the commit's inventory and compares it with the forms its **base** commit holds. Its
 report, `target/trust/report.txt`, names the build it describes and comes in two parts — here as it would read had the

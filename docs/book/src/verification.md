@@ -226,6 +226,15 @@ finishing kills and restoration. Run that entry with:
 $ cargo xtask mutate --only trust-cargo-failure-path-framing-removed
 ```
 
+The `trust-gate-repository-resolution-removed` entry removes runtime repository resolution.
+Its named command parent must detect the original relative-path false refusal while authorization
+and path-error controls remain intact. The
+[caller repair](annex-trust-proofs.md#repository-path-caller-repair) records the full before/after evidence.
+
+```console
+$ cargo xtask mutate --only trust-gate-repository-resolution-removed
+```
+
 The separate [complete helper sweep](annex-trust-proofs.md#complete-repaired-cargo-diagnostic-measurement)
 measures all 51 current edits and records each outcome. The [finite-iterator proofs](annex-trust-proofs.md#finite-cargo-path-iterator-proofs)
 resolve two of its historical nine survivors; seven remain open. The catalogue reversal alone does not

@@ -984,6 +984,12 @@ pub fn gate(
 /// judged. `--repo` names the repository, for a gate built from a base commit's written tree, which has none of its
 /// own (§7, `M3.6.3.4`); `--out` is relative to it.
 pub fn run_gate(repo: &Path, args: &[&str]) -> i32 {
+    run_gate_with_roots(repo, args, &[])
+}
+
+/// The command's parser and worker. Explicit outer roots are for authorized fixture callers;
+/// the public command supplies none, so its selected repository is its only configuration root.
+fn run_gate_with_roots(repo: &Path, args: &[&str], outer_roots: &[PathBuf]) -> i32 {
     let (mut repo, mut commit, mut base, mut out) =
         (repo.to_path_buf(), "HEAD".to_owned(), None, None);
     let mut i = 0;
@@ -1000,9 +1006,21 @@ pub fn run_gate(repo: &Path, args: &[&str]) -> i32 {
         }
         i += 2;
     }
+    let repo = match repo.canonicalize() {
+        Ok(repo) => repo,
+        Err(error) => {
+            eprintln!(
+                "trust-gate: cannot resolve repository `{}`: {error}",
+                repo.display()
+            );
+            return 2;
+        }
+    };
     let out = out.map_or_else(|| repo.join("target").join("trust"), |o| repo.join(o));
+    let mut config_roots = vec![repo.clone()];
+    config_roots.extend_from_slice(outer_roots);
     let repo = repo.as_path();
-    match gate(repo, &commit, base.as_deref(), &out, &[repo.to_path_buf()]) {
+    match gate(repo, &commit, base.as_deref(), &out, &config_roots) {
         Ok((j, _)) => {
             for r in &j.refused {
                 eprintln!("{r}");
@@ -1052,6 +1070,164 @@ mod tests {
     use crate::json::{self, Json};
     use crate::trust::read_roots;
     use archogen_evidence::sha256::Digest;
+
+    fn gate_command_fixture(name: &str) -> crate::trust::tests::Fixture {
+        crate::trust::tests::two_roots(name, "fn main() {}\n", "pub fn f() {}\n", &[])
+    }
+
+    fn gate_command_inventory(
+        fixture: &crate::trust::tests::Fixture,
+        out: &std::path::Path,
+        status: i32,
+    ) -> String {
+        assert_eq!(status, 0, "the admitted fixture command must pass");
+        let text =
+            std::fs::read_to_string(out.join("trust-dependencies.json")).unwrap_or_else(|error| {
+                panic!(
+                    "the command must write its inventory at {}: {error}",
+                    out.display()
+                )
+            });
+        let inventory = json::parse(&text).unwrap();
+        let identity = inventory.get("identity").unwrap();
+        let commit = crate::catalog_check::Git::at(&fixture.repo)
+            .text(&["rev-parse", "HEAD"])
+            .unwrap();
+        assert_eq!(
+            identity.get("commit").and_then(Json::as_str),
+            Some(commit.trim_end_matches('\n'))
+        );
+        let config = std::fs::read(fixture.repo.join(".cargo/config.toml")).unwrap();
+        assert_eq!(
+            identity.get(".cargo/config.toml").and_then(Json::as_str),
+            Some(Digest::of(&config).hex().as_str())
+        );
+        let names: Vec<_> = inventory
+            .get("programs")
+            .unwrap()
+            .elements()
+            .iter()
+            .map(|program| program.get("name").and_then(Json::as_str).unwrap())
+            .collect();
+        assert_eq!(names, ["gen", "chk"]);
+        text
+    }
+
+    #[test]
+    fn gate_command_resolves_relative_repository_and_output_paths() {
+        crate::trust_test_process::bounded!(
+            gate_command_resolves_relative_repository_and_output_paths
+        );
+        let f = gate_command_fixture("gate-command-relative-paths");
+        let roots = crate::trust::tests::configuration_roots();
+        // Each body runs alone in its bounded child, so changing cwd cannot affect other tests.
+        std::env::set_current_dir(&f.repo).unwrap();
+        let absolute_out = f.repo.join("target/relative-output");
+        let absolute = super::run_gate_with_roots(
+            &f.repo,
+            &[
+                "--repo",
+                f.repo.to_str().unwrap(),
+                "--out",
+                absolute_out.to_str().unwrap(),
+            ],
+            &roots,
+        );
+        let expected = gate_command_inventory(&f, &absolute_out, absolute);
+        let relative_out = f.repo.join("target/relative-output");
+        let relative = super::run_gate_with_roots(
+            &f.repo,
+            &["--repo", ".", "--out", "target/relative-output"],
+            &roots,
+        );
+        let actual = gate_command_inventory(&f, &relative_out, relative);
+        assert_eq!(
+            actual, expected,
+            "path spelling must not change the inventory"
+        );
+    }
+
+    #[test]
+    fn gate_command_preserves_absolute_output_and_missing_repository_errors() {
+        crate::trust_test_process::bounded!(
+            gate_command_preserves_absolute_output_and_missing_repository_errors
+        );
+        let f = gate_command_fixture("gate-command-absolute-and-errors");
+        let roots = crate::trust::tests::configuration_roots();
+        std::env::set_current_dir(&f.repo).unwrap();
+        let out = f.base.join("absolute-output");
+        let status = super::run_gate_with_roots(
+            &f.repo,
+            &[
+                "--repo",
+                f.repo.to_str().unwrap(),
+                "--out",
+                out.to_str().unwrap(),
+            ],
+            &roots,
+        );
+        gate_command_inventory(&f, &out, status);
+        let absent = f.base.join("missing-repository");
+        let file = f.base.join("repository-file");
+        std::fs::write(&file, "not a directory").unwrap();
+        for (repo, label) in [(&absent, "missing-output"), (&file, "file-output")] {
+            let refused_out = f.base.join(label);
+            assert_eq!(
+                super::run_gate(
+                    &f.repo,
+                    &[
+                        "--repo",
+                        repo.to_str().unwrap(),
+                        "--out",
+                        refused_out.to_str().unwrap()
+                    ]
+                ),
+                2,
+                "a repository path error is unjudged"
+            );
+            assert!(!refused_out.exists(), "path errors must not create output");
+        }
+    }
+
+    #[test]
+    fn gate_command_public_wrapper_keeps_outer_configurations_unauthorized() {
+        crate::trust_test_process::bounded!(
+            gate_command_public_wrapper_keeps_outer_configurations_unauthorized
+        );
+        let f = gate_command_fixture("gate-command-authorization");
+        let out = f.base.join("public-refusal");
+        assert_eq!(
+            super::run_gate(
+                &f.repo,
+                &[
+                    "--repo",
+                    f.repo.to_str().unwrap(),
+                    "--out",
+                    out.to_str().unwrap()
+                ]
+            ),
+            1,
+            "the production wrapper does not authorize the containing test roots"
+        );
+        assert!(!out.join("trust-dependencies.json").exists());
+        let report = std::fs::read_to_string(out.join(super::REPORT)).unwrap();
+        assert!(
+            report.contains("a cargo configuration above the repository"),
+            "{report}"
+        );
+        let admitted_out = f.base.join("authorized-fixture-control");
+        let admitted = super::run_gate_with_roots(
+            &f.repo,
+            &[
+                "--repo",
+                f.repo.to_str().unwrap(),
+                "--out",
+                admitted_out.to_str().unwrap(),
+            ],
+            &crate::trust::tests::configuration_roots(),
+        );
+        gate_command_inventory(&f, &admitted_out, admitted);
+    }
 
     /// An inventory as `trust-inventory` writes one: every kind of shared item, on a host of its own.
     const INVENTORY: &str = r#"{"identity":{"host":"test-host-triple"},"shared":[

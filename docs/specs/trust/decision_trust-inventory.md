@@ -706,3 +706,22 @@ finding edit was correctly refused, then checked in its held epoch and reapplied
 controls and E reasons remain unchanged. Immediate repair/regression owner is .14.3.2.2.2.2.2; survivor
 classification waits. The [book assessment](../../book/src/annex-trust-proofs.md#relative-gate-caller-assessment)
 records commands, actual outcomes and the temporary absolute-path invocation.
+
+
+## Repository-path caller repair
+
+`M3.6.9.6.3.2.2.14.3.2.2.2.2.2.1` (`2026-10-18`) resolves the runtime repository before deriving
+output/configuration roots. Relative and aliased inputs match absolute ones; absolute output selection
+and missing/non-directory errors retain their contracts. The public wrapper still authorizes only its
+selected repository. The private fixture command worker receives only already validated test roots;
+the production wrapper passes none, held by a strict refusal parent.
+
+Permanent command controls go from2 pass/1 fail to3 pass/0 fail, retain expected identities/programs,
+and compare the same physical output. The exact maintained defect reversal is killed/restored.
+Actual frozen-source public absolute/relative/alias calls produce byte-identical inventories; invalid
+repository calls return2/no output. Other-host baseline comparison remains skipped and qualified.
+A rejected different-directory byte oracle is explained by embedded source paths in rlib metadata,
+with originals retained. All1051 held public inputs restore and older source/controls/reasons preserve.
+Final exact-stage focused pass/stamp is required before publication; the full integration/caller
+checkpoint remains .14.3.2.2.2.2.2.2, before the seven remaining judgments. The
+[book repair](../../book/src/annex-trust-proofs.md#repository-path-caller-repair) records behavior and scope.

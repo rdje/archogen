@@ -5887,3 +5887,23 @@ to
                 .unwrap_or("")
                 .to_owned();
 end
+
+mutation trust-gate-repository-resolution-removed
+file xtask/src/trust_gate.rs
+test -p xtask trust_gate::tests::gate_command_
+expect killed
+why M3.6.9.6.3.2.2.14.3.2.2.2.2.2.1: retaining relative repository/output spellings falsely refuses the repository's own configuration; actual same-output relative/absolute command controls must finish with a named failure, while the public wrapper keeps outer configuration roots unauthorized.
+from
+        let repo = match repo.canonicalize() {
+            Ok(repo) => repo,
+            Err(error) => {
+                eprintln!(
+                    "trust-gate: cannot resolve repository `{}`: {error}",
+                    repo.display()
+                );
+                return 2;
+            }
+        };
+to
+        // Repository resolution removed: preserve the supplied spelling.
+end

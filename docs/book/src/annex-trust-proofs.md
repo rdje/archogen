@@ -1010,3 +1010,59 @@ the gitlink remains an opaque index identity. The first post-run check correctly
 task finding edit written too early. The exact held task bytes were restored for the full maintained
 check, then the saved finding was reapplied byte-exactly. Both outcomes and their separate document
 epochs are retained. Source, operator controls, catalogue and previous reasons remain unchanged.
+
+
+### Repository path caller repair
+
+Repair `.14.3.2.2.2.2.2.1` (`2026-10-18`) resolves the selected repository with the runtime
+filesystem before deriving its output path or configuration-root list. Relative, absolute and aliased
+repository spellings therefore share the same physical root. Relative output arguments remain relative
+to that root; an absolute output argument retains its selected destination. Missing repositories and
+non-directory paths remain unable-to-judge errors, exit 2, before output creation.
+
+The public wrapper continues to supply no outer configuration roots. A private command worker shares
+parsing and invocation with the regression controls, which use only the existing validated fixture
+roots. A permanent public-wrapper control requires the containing test configuration to remain refused;
+the explicit authorized fixture control succeeds. This test seam adds no CLI option or environment
+route for authorizing a configuration above the selected repository.
+
+The isolated command parents use small committed repositories. Their absolute control succeeds before
+the fix; the relative call fails with the false above-repository diagnostic. After resolution, the
+relative and absolute spellings target the **same physical output**, preserve every inventory byte and
+retain the literal root/configuration identities and both expected fixture programs.
+
+```text
+before: 2 passed, 1 failed — relative repository/output command
+after:  3 passed, 0 failed, 0 ignored
+exact catalogue reversal: killed by the named relative command parent; source restored
+```
+
+The controls also require absolute-output behavior, missing/non-directory error status and no created
+output on those errors. They run in the existing isolated child protocol, so their current-directory
+change cannot affect other tests. The defect reversal is maintained as:
+
+```console
+$ cargo xtask mutate --only trust-gate-repository-resolution-removed
+```
+
+The real public CLI is then tested on the same frozen source commit as the original assessment.
+Absolute, relative and repository-alias arguments all return 0 and write byte-identical inventories
+at the same output location. Their inventory SHA-256 is
+`73c4e740fc47d32b87b4d1a7a74164fec5daa62aa1933d781a332a36346489c6`.
+The baseline's other-host comparison remains explicitly skipped; this is inventory/path evidence,
+not successful comparison across hosts. Actual missing and file repository arguments return 2 and
+create no output.
+
+An initially overbroad oracle compared different physical output directories. Only the library
+artifact hash differed: the retained rlibs have the same archive members and different embedded source
+directory paths, verified with `ar`, `strings` and hashes. That rejected oracle is not evidence against
+the repair or for reproducibility across arbitrary directories. The corrected unit and public controls
+compare equivalent spellings of the same destination. An initial unavailable sandbox setup attempt is
+also retained and excluded from the test baseline; the actual targeted runs use the installed guard.
+
+All earlier production/test bytes reconstruct after removing exactly the wrapper/worker adaptation,
+resolution block and new controls. The catalogue adds one entry; the diagnostic helper, operator
+controls and prior E reasons stay exact. All 1051 public-experiment inputs restore with modes and
+Python/system hashes. The final focused tier must pass on the held complete staged tree with its
+matching official stamp before this repair is committed. Full integration and repaired-caller closure
+remain the next child `.14.3.2.2.2.2.2.2`; the seven diagnostic-helper judgments still wait.

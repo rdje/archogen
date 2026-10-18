@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.6`. `PROGRAM` resumes at `PROGRAM.71`. `M2`'s frontier is `M2.7.4`, on the director; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.9.6.3.2.2.14.3.2.2.2.2.2` P2 relative-repository caller repair.
-  Repair the confirmed own-configuration false refusal for --repo .; seven helper judgments wait.
+- **Next action:** `M3.6.9.6.3.2.2.14.3.2.2.2.2.2.2` repaired-caller integration checkpoint.
+  Bind the repaired caller and run full integration on held inputs; seven helper judgments wait.
   Final full sweeps and review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.

@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — resolve gate repository paths before deriving roots
+
+`ARCHOGEN-M3-0747` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.2.1`), `2026-10-18`.
+
+- Resolve runtime repository spellings before output/configuration roots; keep public outer-root
+  authorization strict and preserve absolute output and invalid-repository error contracts.
+- Isolated command parents: before2 pass/1 fail to final3 pass; native exact defect reversal killed
+  and restored. Actual frozen-source public absolute/relative/alias calls write byte-identical
+  same-output inventories; missing/file repositories return2 without output. Host comparison skip qualified.
+- Root/exclude a different-output artifact-byte oracle using retained rlib embedded paths. Prior source/
+  test bodies reconstruct, catalogue adds one entry, helper/operators/E remain exact; public1051
+  inputs restore. Final focused matching-stage stamp required, full integration checkpoint next.
+
 ## archogen — confirm the relative public gate caller defect
 
 `ARCHOGEN-M3-0746` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.1`), `2026-10-18`.

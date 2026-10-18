@@ -408,6 +408,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Relevance decides whether an unknown matters — [Presence, absence, and
   relevance](presence.md#relevance-decides-whether-an-unknown-matters)
 - Remaining measurements — [Generated-sources test adequacy](trust-adequacy.md#remaining-measurements)
+- Repository path caller repair — [Annex C: Trust proof records](annex-trust-proofs.md#repository-path-caller-repair)
 - Requirements and sides — [Matching an offer to a requirement](matching.md#requirements-and-sides)
 - **RFC** — [definition](glossary.md), [What this project relies on from outside](ledger.md), [Annex B: The checks that
   keep the repository honest](annex-repository.md)
