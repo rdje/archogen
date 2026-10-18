@@ -567,7 +567,7 @@ commit that sealed it, the index append-only, one placeholder per sealed section
 record held just before. The first seal, on `2026-09-30`, took four settled items of the director's findings
 register out of the decisions folder (`PROGRAM.41`).
 
-Keep Verification and Commit Log rows contiguous. A Commit Log has one row per commit under `## Commit Log`.
+Keep Verification and Commit Log rows contiguous. Put each work-unit record under `## Commit Log`; retain legacy filing references.
 `COMMIT-LOG-ROWS` (`scripts/check_commit_log_rows.sh`) requires each work-unit commit, including the
 pending one, to have a pipe-prefixed record. It checks presence, not Markdown placement: a row after
 `## Changelog` or a blank separator still passes. Missing rows refuse before commit; two were found by hand on `2026-10-01`
@@ -625,6 +625,11 @@ change that comparison. An unreadable present entry or failed proof refuses; dis
 $ bash scripts/check_review_counts.sh                      # the gate
 $ bash scripts/check_review_counts.sh --self-test          # its RED arms, on a scratch repository
 ```
+
+`PROGRAM` log repair (`2026-10-18`, `PROGRAM.87`): all 204 prior commit-log records and 154 verification records remain exact; the headed tables render 205 and 155 rows with the repair record.
+The cleanup record that had followed Changelog returns between its native predecessor and successor.
+Blank separators are removed while each record's text and relative history stay intact. Actual pinned
+rendering and deliberately separated-row controls verify the complete tables in `docs/tasks/PROGRAM.md`.
 
 ## Where the landing page sends things
 

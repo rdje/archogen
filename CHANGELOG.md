@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — preserve PROGRAM history in complete headed log tables
+
+`ARCHOGEN-PROGRAM-0726` (leaf `PROGRAM.87`), `2026-10-18`.
+
+- Trace the misplaced 0707 row and 21 commit/19 verification detached row versions through 53 native
+  task-doc commits after the sealed-set fence. Preserve all 204/154 prior records exactly; merge
+  the cleanup row by native ancestry and remove only data-row blank separators.
+- Actual pinned rendering changes headed tables from 182/135 to 205/155 including this repair;
+  blank controls render one affected row, and record-location/content/count falsifiers refuse.
+- Seal five committed closed subtrees/six leaves byte for byte to fit the live task collection;
+  all 236 old archives and index rows preserved, all 1034 captured inputs restore after public gate
+  controls. Presence-only gate scope remains explicit. Book/live resume M3 matcher assessment.
+
 ## archogen — book growth stays free of bounded ancestor routes
 
 `ARCHOGEN-PROGRAM-0725` (leaf `PROGRAM.88`), `2026-10-18`.

@@ -13,11 +13,11 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `PROGRAM` → maintenance frontier `PROGRAM.87`; M3 resumes at `.13.2.4`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s ordinary repair is `PROGRAM.71`; `API` is
+- **Active tree:** `M3` → frontier `M3.6`. `M2`'s frontier is `M2.7.4`, on the director; `PROGRAM`'s is `PROGRAM.71` next; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `PROGRAM.87` task-log placement/rendering repair.
-  Preserve every PROGRAM log record while restoring headed contiguous tables; verify native history and rendering, then resume M3 .13.2.4.
+- **Next action:** `M3.6.9.6.3.2.2.13.2.4` matcher assessment.
+  Assess six codegen matcher edits against the full pinned producer/caller domain; establish valid wider controls before scoped proofs.
   Initial `.9.5` complete; remaining `.9.6` full sweeps/review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.
