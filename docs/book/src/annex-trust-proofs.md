@@ -3453,10 +3453,11 @@ selection and makes no claim about a Rust compiler.
 Source review identifies the skip loop and empty-result success path as the root cause.
 Task `M3.6.9.6.3.2.2.15.2.1.3.3.3.0.2` owns rejecting unknown, mixed-valid/unknown and stale
 selections before commands, with permanent red/green tests and unchanged valid-selection/
-restoration semantics. It is scheduled after failed-baseline evidence hardening and before
-full source sweeps. Current measurements additionally bind exact selected/result populations;
-the receipt audits reject missing results and incorrect scopes. This defect is open until its
-owned repair passes; a successful zero-attempt selection is not mutation evidence.
+restoration semantics. The repair now passes permanent refusal, valid-selection and real compiler
+counter controls; [selected mutation IDs](verification.md#selected-mutation-ids) gives the implemented
+contract and its source-binding limit. Current measurements additionally bind exact selected/result
+populations; receipt audits reject missing results and incorrect scopes. A successful empty
+exploration is not mutation evidence.
 
 The dated native result is one named file-population kill and one maintained default-feature
 catalogue kill, both strict exit 0. The full original/restored-copy CLI lists agree at 170 parent

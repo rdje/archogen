@@ -261,6 +261,44 @@ traceback markers and test output that resembles a name, and unfinished lists su
 
 Limits cover child exit and both output pipes. [Trust](trust.md) shows bounded tests reporting named failures on hangs and crashes.
 
+### Selected mutation IDs
+
+Every `--only` value must belong to the current discovery after the requested `--op` filters.
+An unknown value, a valid/unknown mixture, a line ID no longer generated, or an ID excluded by
+those filters refuses with exit 2 before replacing the copied tree or running any test command.
+The same validation applies with `--list`. The error quotes the invalid strings so embedded line
+breaks cannot appear as additional diagnostics. Duplicate valid IDs still run their candidate once.
+
+Generate IDs from the current source with exactly the operator options you will use for the run:
+
+```sh
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler_observer.rs --package xtask --list
+```
+
+A valid `--list` continues to print the complete discovered population, including when valid
+`--only` values are supplied; it does not run commands or replace the copied tree. An exploration
+with no selected IDs and no discovered candidates still runs its ordinary baseline and reports
+`none attempted`. That output establishes no mutation coverage.
+
+ID membership checks the current spelling. If a source edit reuses an ID for a different edit,
+membership alone cannot distinguish it. Bind the source hash, exact discovery and replacement
+alongside every measured result, and regenerate the list after source changes. The complete-source
+checkpoint retains that obligation.
+
+Leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.0.2` repairs the earlier skip-loop defect: an unknown selection
+ran one passing baseline, skipped every candidate and returned success; a valid/unknown mixture
+could measure only part of the request. Permanent actual-driver fixtures first expose the defect,
+then require refusal before any command while retaining an old-tree sentinel. Other controls hold
+valid/repeated IDs, complete listing and explicit empty exploration. The compiled operator-counter
+control independently confirms that an unknown selection invokes no compiler, while its valid
+runs retain their original counts and source restoration. A real Git listing also refuses an
+unknown observer ID. All mutation discovery, classification, receipt and restoration functions,
+and the catalogue, remain unchanged.
+
+```sh
+python3 -I -B xtask/mutation_sweep_tests.py . SelectionIdTests OperatorCountTests -v
+```
+
 ### Failed mutation baseline evidence
 
 The mutation sweep runs the unmodified copied source once before attempting a mutation. A failed,

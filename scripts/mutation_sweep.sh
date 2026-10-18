@@ -62,7 +62,9 @@
 # A failed baseline retains raw stdout/stderr and a source/command/status/names receipt under
 # `target/mutation-sweep/baseline-failures/`, prints its relative path and exits 2 without retry.
 # Evidence-write failures are explicit and remain exit 2. Successful baselines create no failure receipt.
-# `--list` prints the mutations without running them.
+# Selected IDs must all belong to the current operator-filtered discovery, including with --list.
+# Unknown/mixed/stale/excluded IDs refuse before replacing the copy or running commands; duplicates run once.
+# `--list` prints all discovered mutations without running them.
 # Completed runs also report per-operator `unviable/attempted` counts, including zero refusals. The baseline,
 # listed-only and filtered-out candidates are excluded; neither an attempted nor an unviable count is coverage.
 #
@@ -734,6 +736,10 @@ def mutants():
 
 ms = [m for m in mutants() if not a.op or m[2] in a.op]
 ids = ["L%d.%s.%d" % (n + 1, op, k) for k, (n, _, op, _) in enumerate(ms)]
+unknown = sorted(set(a.only) - set(ids))
+if unknown:
+    print("mutation-sweep: unknown selected mutation ID(s): " + ", ".join(repr(i) for i in unknown), file=sys.stderr)
+    sys.exit(2)
 if a.list:
     for i, m in zip(ids, ms):
         before, after = mutation_key(m)

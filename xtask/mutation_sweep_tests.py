@@ -141,6 +141,76 @@ class SpanTests(SweepFixture):
                     self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
 
 
+class SelectionIdTests(SweepFixture):
+    def selected(self, ids, *, operator="bool", listing=False, original=ORIGINAL,
+                 record="from true\nto false\nwhy fixture\n"):
+        (self.base / "invoked").unlink(missing_ok=True)
+        (self.base / "sample.rs").write_bytes(original.encode())
+        (self.base / "equivalents").write_text(record)
+        env = dict(os.environ, PROBE_ROOT=str(self.base), PROBE_ORIGINAL=original,
+                   PROBE_MUTATED=original.replace("    true\n", "    false\n"),
+                   PATH=str(self.base / "bin") + os.pathsep + os.environ["PATH"])
+        command = ["bash", str(SCRIPT), "sample.rs", "--package", "synthetic", "--op", operator,
+                   "--equivalents", "equivalents"]
+        for ident in ids:
+            command.extend(["--only", ident])
+        if listing:
+            command.append("--list")
+        result = subprocess.run(command, env=env, capture_output=True, text=True, timeout=20)
+        self.assertEqual((self.base / "sample.rs").read_bytes(), original.encode())
+        copied = self.base / "target/mutation-sweep/tree/sample.rs"
+        if copied.exists() and not listing and result.returncode != 2:
+            self.assertEqual(copied.read_bytes(), original.encode())
+        return result
+
+    def test_unknown_mixed_stale_and_operator_excluded_ids_refuse_before_copy_or_command(self):
+        cases = [(["L999999.not-a-current-id.0"], "bool", ORIGINAL),
+                 (["L2.bool.0", "L999999.not-a-current-id.0"], "bool", ORIGINAL),
+                 (["L2.bool.0"], "bool", "\n" + ORIGINAL),
+                 (["L2.bool.0"], "cmp", ORIGINAL),
+                 ([""], "bool", ORIGINAL),
+                 (["bad\nRunning `rustc`"], "bool", ORIGINAL)]
+        tree = self.base / "target/mutation-sweep/tree"
+        for ids, operator, original in cases:
+            for listing in [False, True]:
+                with self.subTest(ids=ids, operator=operator, listing=listing):
+                    tree.mkdir(parents=True, exist_ok=True)
+                    (tree / "retained").write_bytes(b"old evidence\0")
+                    before = {p.name: p.read_bytes() for p in tree.iterdir()}
+                    result = self.selected(ids, operator=operator, listing=listing, original=original)
+                    self.assert_exit(result, 2)
+                    self.assertIn("unknown selected mutation ID", result.stderr)
+                    self.assertFalse((self.base / "invoked").exists())
+                    self.assertEqual({p.name: p.read_bytes() for p in tree.iterdir()}, before)
+
+    def test_valid_and_duplicate_ids_keep_one_attempt_and_restoration(self):
+        for ids in [[], ["L2.bool.0"], ["L2.bool.0", "L2.bool.0"]]:
+            with self.subTest(ids=ids):
+                result = self.selected(ids)
+                self.assert_exit(result, 0)
+                self.assertIn("1 equivalent", result.stdout)
+                self.assertIn("bool=0/1", result.stdout)
+                self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
+                self.assertEqual((self.base / "target/mutation-sweep/tree/sample.rs").read_bytes(), ORIGINAL.encode())
+
+    def test_valid_listing_remains_complete_without_commands(self):
+        original = ORIGINAL.replace("    true\n", "    true && false\n")
+        result = self.selected(["L2.bool.0"], listing=True, original=original)
+        self.assert_exit(result, 0)
+        self.assertIn("L2.bool.0", result.stdout)
+        self.assertIn("L2.bool.1", result.stdout)
+        self.assertFalse((self.base / "invoked").exists())
+        self.assertFalse((self.base / "target/mutation-sweep/tree").exists())
+
+    def test_empty_discovery_without_selected_ids_remains_an_explicit_exploration(self):
+        original = "fn sample() {}\n#[cfg(test)]\nmod tests {}\n"
+        result = self.selected([], original=original, record="")
+        self.assert_exit(result, 0)
+        self.assertIn("none attempted", result.stdout)
+        self.assertEqual((self.base / "invoked").read_text(), "called\n")
+        self.assertEqual((self.base / "target/mutation-sweep/tree/sample.rs").read_bytes(), original.encode())
+
+
 class BaselineEvidenceTests(SweepFixture):
     def failing_baseline(self, kind):
         source = self.base / "sample.rs"
@@ -407,10 +477,16 @@ sys.exit(code)
         self.assertFalse((self.base / "outcomes").exists(), "listing invoked the compiler")
         ids = re.findall(r"^(L\d+\.(?:bool|contains)\.\d+) ", listing.stdout, re.M)
         self.assertEqual(len(ids), 5)
+        refused = subprocess.run(command + ["--only", "not-a-candidate"], env=env,
+                                 capture_output=True, text=True, timeout=20)
+        self.assert_exit(refused, 2)
+        self.assertIn("unknown selected mutation ID", refused.stderr)
+        self.assertFalse((self.base / "outcomes").exists(), "unknown selection invoked the compiler")
+        self.assertFalse((self.base / "target/mutation-sweep/tree").exists())
+        self.assertEqual((self.base / "sample.rs").read_bytes(), original.encode())
         cases = [([], "bool=0/1, contains=2/4", (6, 2, 3)),
                  (["--only", ids[0]], "bool=0/1", (2, 0, 1)),
-                 (["--only", ids[2]], "contains=1/1", (2, 1, 0)),
-                 (["--only", "not-a-candidate"], "none attempted", (1, 0, 0))]
+                 (["--only", ids[2]], "contains=1/1", (2, 1, 0))]
         for selection, summary, expected in cases:
             with self.subTest(selection=selection):
                 (self.base / "outcomes").unlink(missing_ok=True)

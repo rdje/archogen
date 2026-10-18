@@ -255,8 +255,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## I
 
-- **ID** — [definition](glossary.md), [The S0 early generation path](s0.md), [Annex C: Trust proof
-  records](annex-trust-proofs.md)
+- **ID** — [definition](glossary.md), [The S0 early generation path](s0.md), [Verifying the toolchain](verification.md),
+  [Annex C: Trust proof records](annex-trust-proofs.md)
 - Incremental matcher reasons — [Annex C: Trust proof records](annex-trust-proofs.md#incremental-matcher-reasons)
 - Initial parent killing tests — [Generated-sources test adequacy](trust-adequacy.md#initial-parent-killing-tests)
 - Initial role and build operator outcomes — [Generated-sources test
@@ -487,6 +487,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Scratch stays on this volume — [Annex B: The checks that keep the repository
   honest](annex-repository.md#scratch-stays-on-this-volume)
 - **SEI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
+- Selected mutation IDs — [Verifying the toolchain](verification.md#selected-mutation-ids)
 - Semantic witnesses in the initial cohort — [Generated-sources test
   adequacy](trust-adequacy.md#semantic-witnesses-in-the-initial-cohort)
 - semulith — [What this project relies on from outside](ledger.md#semulith)

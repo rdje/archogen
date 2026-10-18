@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — refuse unknown selected mutation IDs
+
+`ARCHOGEN-M3-0772` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.0.2`), `2026-10-19`.
+
+- Validate every selected ID against current operator-filtered discovery before listing/copy/commands.
+  Unknown, mixed, no-longer-generated and excluded IDs refuse; duplicate valid IDs run once.
+- Hold retained copied evidence, valid listings/empty exploration, real compiler invocation counts,
+  exact original/copy restoration and unchanged discovery/classification/receipt/catalogue functions.
+- Seal baseline-evidence leaf and synchronize book/tool/live records. Native-tool prerequisites close;
+  current source/premise binding and full integration qualify the subsequent measurements.
+
 ## archogen — retain failed mutation baseline evidence
 
 `ARCHOGEN-M3-0771` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.0.1`), `2026-10-19`.
