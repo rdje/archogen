@@ -776,3 +776,62 @@ new test block; production/catalogue/operator/reasons remain unchanged. Four obl
 two absolute-prefix proofs and two producer boundaries before complete .14.4 replay. Final focused/
 staged gates and the [book](../../book/src/annex-trust-proofs.md#real-cargo-regression-parents-and-exact-replay)
 bind publication; no fresh whole-file adequacy follows.
+
+
+## Absolute Cargo diagnostic-prefix proof
+
+Proof leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.5` resolves only the unconditional prefix insertion
+`L690.cond.244` and strict span-begin `L717.cmp.257` proposals. Its domain is the supported Unix
+Cargo-built xtask callers with absolute cwd, any supplied environment values and any stderr string.
+Relative cwd is outside this proof; permanent wider controls distinguish both edits there.
+
+Caller premise: the inventory/baseline CLI uses the parent of Cargo's absolute manifest directory;
+the gate resolves its selected repository before joining output. Inventory derives cwd as out/tree,
+and compile is the sole production run_cargo caller. Joining an absolute cwd with either a relative
+target or retaining an absolute target supplies absolute raw paths. Successful canonicalization also
+supplies absolute paths; failure only omits that spelling. Unix ancestors of an absolute path retain
+the leading slash. Lossy UTF-8 conversion and apostrophe quoting preserve that slash.
+
+The pinned Cargo source at f2d3ce0bd7f24a49f8f72d9000448f8838c4e850 supplies the build premise:
+[workspace construction](https://github.com/rust-lang/cargo/blob/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/workspace.rs)
+rejects a relative manifest path; [package roots](https://github.com/rust-lang/cargo/blob/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/package.rs)
+derive from that manifest's parent, and the already held compilation.rs exports pkg.root() as
+CARGO_MANIFEST_DIR. The supported build uses a normal workspace, not the ephemeral install/package
+constructor. Native Cargo also compiles the actual repository-root function through a relative
+manifest argument and directory alias, requiring its absolute result and physical identity.
+
+A candidate physical line starts at byte zero or immediately after newline, and its first bytes
+are error. For an added prefix containing no newline, its match cannot straddle such a line start:
+straddling would include the preceding newline. At equality with the match begin, the slash and
+error disagree. Therefore adding those no-newline prefixes cannot suppress any candidate, and the
+unconditional insertion edit preserves every selected result, including empty stderr.
+
+The strict-begin edit changes span membership only when begin equals the candidate start. Every
+recorded prefix begins with slash, whereas that candidate begins with error. They cannot occupy
+the same byte position. Thus any original containing span already has begin strictly before start;
+the edited predicate has the same value. All other work, ordering and returned bytes remain exact.
+
+Permanent test test_cargo_absolute_prefix_edits_preserve_line_selection binds the complete current
+trust/gate production slices and repository-root/CLI entry functions. These deliberately broad
+premise guards require proof revalidation after any change in those guarded slices. Three altered
+source/caller premises refuse. Actual original/two edited helpers compile; independent literal
+records, aliases, missing/relative targets, both line endings and4681 generated strings support the
+universal argument. Two relative wider witnesses and three wrong oracles fail as required. These
+finite examples do not define the proof's universe. The operator test requires separate precise
+reasons only after reaching those controls; its first pre-reason run refuses at that final guard.
+
+The two additional pinned source identities are package.rs c69d85227b154d36e828acdbc3705ef921a4919775dd2a9e1c0eed912287cff7
+and workspace.rs fa321dfbd2857f42b4a1dd37054dd749a860f664baa89fc55e76978da32abbd2.
+Their complete copies and system-hash bindings are retained under target/cargo-absolute-prefix-proofs.
+They supplement, not replace, the earlier28 pinned sources. Revalidate after caller/root/constructor,
+prefix conversion, line iteration, predicate or toolchain/platform contract changes. No arbitrary
+relative-cwd equivalence or judgment on the final two producer-dependent edits follows.
+
+
+Proof verification: the full operator suite passes34 controls, and the selected guarded native replay
+reports2 E/strict0 with original baseline passing. Only these2 reason records are appended; prior
+reasons/source/tests remain byte-exact. All1058 original/current copied regular inputs restore;
+six falsified bindings refuse. The copy borrows index metadata only. Native selected E does not
+establish unrelated reason validity. Two producer-dependent obligations remain before .14.4.
+The [book proof](../../book/src/annex-trust-proofs.md#absolute-diagnostic-prefix-proofs)
+carries the argument and boundary examples.

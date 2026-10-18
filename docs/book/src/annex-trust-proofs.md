@@ -1190,3 +1190,59 @@ false receipts refuse. Exact reconstruction removes only the added three-parent/
 to recover every prior source byte. Production behavior, earlier tests, catalogue, operator controls
 and existing reasons remain unchanged. Final held focused verification and separate book/staged
 checks bind publication.
+
+
+### Absolute diagnostic-prefix proofs
+
+Proof slice `.14.3.2.2.2.2.5` (`2026-10-18`) resolves `L690.cond.244` and `L717.cmp.257`.
+The argument covers every stderr string and environment value with absolute cwd on the supported
+Unix callers. It uses path and line boundaries, independently of the producer's diagnostic vocabulary.
+
+The caller chain supplies that absolute cwd. Inventory and baseline start from
+[Cargo's](ledger.md#rust-toolchain) absolute manifest directory; the gate canonicalizes its selected
+repository before deriving output. Inventory joins output with `tree`, and compile is the sole
+production caller of `run_cargo`. The helper retains absolute targets or joins relative targets to cwd.
+Raw/canonical spellings and their ancestors remain absolute. Lossy conversion and apostrophe quoting
+preserve the leading slash.
+
+The pinned [workspace constructor](https://github.com/rust-lang/cargo/blob/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/workspace.rs)
+rejects relative manifest paths. [Package roots](https://github.com/rust-lang/cargo/blob/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/package.rs)
+come from their manifest's parent; the held compiler setup exports that root as
+`CARGO_MANIFEST_DIR`. The supported normal workspace build is the premise here. A permanent
+control also compiles the actual repository-root function through a relative manifest argument and
+directory alias, requiring its absolute value and physical identity.
+
+The unconditional prefix edit adds only prefixes without newline. Such a match cannot straddle a
+physical line start: doing so would include the preceding newline. If the match starts exactly at
+the candidate, its slash disagrees with the candidate's `error` bytes. Added prefixes therefore
+cannot suppress any candidate. For example, `/workspace` cannot begin at the start of
+`error: actual diagnostic`, nor cross the newline immediately before it.
+
+The strict-begin edit changes only equality between span begin and candidate start. Every recorded
+prefix begins with slash, while a candidate begins with `error`. Equality is impossible. An original
+containing span already begins strictly before the candidate, so both predicates select the same
+diagnostic and return identical bytes.
+
+| Exact edit | Universal premise | Native selected replay |
+| --- | --- | --- |
+| `L690.cond.244` | No-newline absolute prefixes cannot cover candidate line starts | equivalent |
+| `L717.cmp.257` | A slash-prefixed span cannot begin at an error-prefixed candidate | equivalent |
+
+The permanent operator control holds broad source-premise guards for the complete trust/gate
+production slices and repository-root/CLI entry functions. A change there deliberately requires
+revalidation. Actual original/two edited helpers compile, with literal diagnostics, aliases,
+relative targets, both line endings and 4681 generated strings. Three altered source/caller bindings
+refuse. Relative wider records distinguish both edits, and three wrong oracles fail. Finite records
+support the source proof; they do not define its universe.
+
+The complete operator suite passes **34 controls**. Only after the proof, two precise reasons are
+added. The actual guarded selected replay reports **two equivalent, strict exit 0**, with no other
+outcome and a passing original baseline. It does not validate unrelated reasons.
+
+All 1058 original and current copied regular inputs restore with modes and Python/system hashes;
+the copy borrows index metadata, and the submodule remains opaque. Six false receipt bindings refuse.
+Every earlier source/test/reason byte is preserved; production, catalogue and native operator remain
+unchanged. The two additional pinned sources join the earlier 28, all 30 independently hash-checked.
+Revalidate after changes to guarded callers/root, constructors, conversion, framing/predicates or
+Unix/toolchain contracts. Relative cwd is outside these two reasons. The shorter error literal and
+closed span upper bound remain open before the complete current replay.

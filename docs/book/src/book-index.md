@@ -28,6 +28,8 @@ a change that leaves it stale, so it is never edited by hand.
   project relies on from outside](ledger.md)
 - Absence is reported, never skipped — [Where generated systems run](targets.md#absence-is-reported-never-skipped)
 - Absent is a definite answer — [Presence, absence, and relevance](presence.md#absent-is-a-definite-answer)
+- Absolute diagnostic-prefix proofs — [Annex C: Trust proof
+  records](annex-trust-proofs.md#absolute-diagnostic-prefix-proofs)
 - **ACLINT** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Acronyms and abbreviations — [Words this book uses](glossary.md#acronyms-and-abbreviations)
 - **AI** — [definition](glossary.md), [The engine API](engine-api.md)

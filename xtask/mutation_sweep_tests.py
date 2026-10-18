@@ -1130,6 +1130,160 @@ fn main() {
 
 
 class IteratorTests(DiscoveryFixture):
+    def test_cargo_absolute_prefix_edits_preserve_line_selection(self):
+        import hashlib
+
+        source = (ROOT / "xtask/src/trust.rs").read_text()
+        gate = (ROOT / "xtask/src/trust_gate.rs").read_text()
+        main = (ROOT / "xtask/src/main.rs").read_text()
+
+        def premises(trust, gate, main):
+            # These are proof-premise guards, not expected diagnostic output. Any
+            # production/caller change needs the absolute-cwd argument revalidated.
+            root = main[main.index("fn repo_root()"):main.index("\nfn on_path(")]
+            entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
+            guarded = {
+                "trust production": (trust.split("#[cfg(test)]", 1)[0],
+                    "c3c790af9007109e534a4a844c5979846f571c99d5addbfc22fc7ec93ee949d1"),
+                "gate production": (gate.split("#[cfg(test)]", 1)[0],
+                    "8ad36a27c5e585660af256b59050f4393b1fa8601f591bd59de9ba2ffbfb7961"),
+                "repository root": (root, "84ec4298740c835ae19ed9f2cff11f0f985cd59a4f3c5c205e9abd47805b6d77"),
+                "CLI entry": (entry, "3bf4d646e31f96b58fe18697db897614d1e1aac4e11b585e0d02cca641b4ab62"),
+            }
+            for label, (text, expected) in guarded.items():
+                self.assertEqual(hashlib.sha256(text.encode()).hexdigest(), expected,
+                                 "revalidate absolute cwd proof: " + label)
+            return root
+
+        root_function = premises(source, gate, main)
+        for altered in [
+            (source.replace('let tree_dir = out.join("tree");',
+                            'let tree_dir = PathBuf::from("tree");', 1), gate, main),
+            (source, gate.replace("let repo = match repo.canonicalize() {",
+                                 "let repo = match Ok::<_, std::io::Error>(repo.to_path_buf()) {", 1), main),
+            (source, gate, main.replace('.expect("xtask/ sits at the repository root")',
+                                        '.expect("widened root contract")', 1)),
+        ]:
+            with self.assertRaisesRegex(AssertionError, "revalidate absolute cwd proof"):
+                premises(*altered)
+
+        selected = []
+        for operator, original, replacement in [
+            ("cond", "                if prefix.contains('\\n') {", "                if true {"),
+            ("cmp", "                .any(|&(begin, end)| begin <= start && start < end)",
+                    "                .any(|&(begin, end)| begin < start && start < end)"),
+        ]:
+            namespace, candidates = self.discovery(source, operator)
+            matches = [m for m in candidates
+                       if "\n".join(namespace["lines"][m[0]:m[1]]) == original and m[3] == replacement]
+            self.assertEqual(len(matches), 1, "one exact native proof edit")
+            selected.append((namespace, matches[0]))
+
+        def module(text, name):
+            body = text[text.index("fn cargo_error_line("):text.index("\n/// What cargo printed:")]
+            return (f"mod {name} {{\nuse std::{{collections::BTreeSet, fs, path::Path}};\n"
+                    + body.replace("fn cargo_error_line(", "pub fn cargo_error_line(", 1) + "\n}\n")
+
+        modules = [module(source, "original")]
+        modules += [module(namespace["apply_mutant"](edit), name)
+                    for (namespace, edit), name in zip(selected, ("all_prefixes", "strict_begin"))]
+        program = self.base / "absolute-prefixes.rs"
+        binary = self.base / "absolute-prefixes"
+        program.write_text("\n".join(modules) + r'''
+fn main() {
+    use std::{fs, path::{Path, PathBuf}};
+    let base = PathBuf::from(std::env::args().nth(1).unwrap());
+    assert!(base.is_absolute());
+    fs::create_dir_all(&base).unwrap();
+    let physical = base.join("physical\nerror-real");
+    let alias = base.join("alias'\\\nerror-alias");
+    fs::create_dir_all(&physical).unwrap();
+    std::os::unix::fs::symlink(&physical, &alias).unwrap();
+    let literal = "error: actual diagnostic";
+    for cwd in [base.join("ordinary"), base.join("with\nerror-cwd"), base.join("ends\n"), alias] {
+        fs::create_dir_all(&cwd).unwrap();
+        for target in [None, Some(base.join("artifact\nerror-target")), Some(PathBuf::from("relative\nerror-target"))] {
+            let env = target.as_ref().map(|p| vec![("CARGO_TARGET_DIR".to_owned(), p.display().to_string())])
+                .unwrap_or_default();
+            let mut records = String::new();
+            for path in std::iter::once(cwd.clone()).chain(target.map(|p| if p.is_absolute() {p} else {cwd.join(p)})) {
+                for spelling in std::iter::once(path.clone()).chain(fs::canonicalize(&path).ok()) {
+                    records.push_str(&format!("warning: {}\n", spelling.display()));
+                    records.push_str(&format!("Running '{}': refused\n", spelling.display().to_string().replace('\'', "'\\''")));
+                }
+            }
+            for (stderr, expected) in [(String::new(), ""), (literal.to_owned(), literal),
+                (format!("{records}{literal}\n"), literal), (format!("{records}{literal}\r\n"), literal)] {
+                assert_eq!(original::cargo_error_line(&stderr, &cwd, &env), expected);
+                assert_eq!(all_prefixes::cargo_error_line(&stderr, &cwd, &env), expected);
+                assert_eq!(strict_begin::cargo_error_line(&stderr, &cwd, &env), expected);
+            }
+        }
+    }
+    let cwd = base.join("ordinary");
+    let mut words = vec![String::new()];
+    let mut frontier = vec![String::new()];
+    for _ in 0..4 {
+        frontier = frontier.iter().flat_map(|prefix| ["e", "r", "o", "/", "\n", "\r", "λ", "'"]
+            .map(|part| format!("{prefix}{part}"))).collect();
+        words.extend(frontier.clone());
+    }
+    for stderr in &words {
+        let expected = original::cargo_error_line(stderr, &cwd, &[]);
+        assert_eq!(all_prefixes::cargo_error_line(stderr, &cwd, &[]), expected);
+        assert_eq!(strict_begin::cargo_error_line(stderr, &cwd, &[]), expected);
+    }
+    // Wider relative paths invalidate the absolute-prefix premise, concretely.
+    assert_eq!(original::cargo_error_line("error: actual\n", Path::new("error"), &[]), "error: actual");
+    assert_eq!(all_prefixes::cargo_error_line("error: actual\n", Path::new("error"), &[]), "");
+    assert_eq!(original::cargo_error_line("error\nx\nerror: actual\n", Path::new("error\nx"), &[]), "error: actual");
+    assert_eq!(strict_begin::cargo_error_line("error\nx\nerror: actual\n", Path::new("error\nx"), &[]), "error");
+    match std::env::args().nth(2).as_deref() {
+        Some("wrong-absolute") => assert_ne!(original::cargo_error_line(literal, &cwd, &[]),
+            strict_begin::cargo_error_line(literal, &cwd, &[]), "wrong absolute oracle"),
+        Some("wrong-relative") => assert_eq!(original::cargo_error_line("error: actual\n", Path::new("error"), &[]),
+            all_prefixes::cargo_error_line("error: actual\n", Path::new("error"), &[]), "wrong relative oracle"),
+        Some("wrong-empty") => assert_eq!(original::cargo_error_line("", &cwd, &[]), literal, "wrong empty oracle"),
+        _ => {}
+    }
+    println!("actual absolute-prefix helpers held; {} generated strings; relative wider controls differ", words.len());
+}
+''')
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.assertIn("4681 generated strings", self.bounded([str(binary), str(self.base / "normal")]))
+        for argument, message in [("wrong-absolute", "wrong absolute oracle"),
+                                  ("wrong-relative", "wrong relative oracle"),
+                                  ("wrong-empty", "wrong empty oracle")]:
+            with self.assertRaisesRegex(AssertionError, message):
+                self.bounded([str(binary), str(self.base / argument), argument])
+
+        # Compile the actual repository-root function through Cargo, using a
+        # relative manifest argument and an alias. This is producer evidence;
+        # the universal argument and pinned source are recorded in the book.
+        root = self.base / "owned-root"
+        package = root / "xtask"
+        (package / "src").mkdir(parents=True)
+        (package / "Cargo.toml").write_text(
+            '[package]\nname = "prefix-root-proof"\nversion = "0.1.0"\nedition = "2021"\n[workspace]\n')
+        (package / "src/main.rs").write_text(
+            "use std::path::{Path, PathBuf};\n" + root_function + r'''
+fn main() {
+    let root = repo_root();
+    assert!(root.is_absolute());
+    assert_eq!(root.canonicalize().unwrap(),
+        PathBuf::from(std::env::args().nth(1).unwrap()).canonicalize().unwrap());
+    println!("actual Cargo root is absolute");
+}
+''')
+        (self.base / "root-alias").symlink_to(root, target_is_directory=True)
+        self.assertIn("actual Cargo root is absolute", self.bounded([
+            "env", "CARGO_TARGET_DIR=" + str(self.base / "cargo-target"), "cargo", "run",
+            "--quiet", "--offline", "--manifest-path", "root-alias/xtask/Cargo.toml", "--", str(root)]))
+        records = selected[0][0]["load_equivalents"](ROOT / "xtask/trust.equivalents")
+        for namespace, edit in selected:
+            self.assertTrue(namespace["mutation_key"](edit) in records,
+                            "the actual absolute-prefix edit requires its precise supported-domain reason")
+
     def test_actual_cargo_path_end_loops_preserve_the_bounded_collections(self):
         source = (ROOT / "xtask/src/trust.rs").read_text()
         first = source.index("fn cargo_error_line(")

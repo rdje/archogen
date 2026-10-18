@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — prove the two absolute diagnostic-prefix edits
+
+`ARCHOGEN-M3-0752` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.5`), `2026-10-18`.
+
+- Prove unconditional prefix and strict span-begin edits on supported absolute-cwd callers using
+  universal slash/line-boundary arguments, source guards and pinned Cargo root construction.
+- Add actual compiled-helper, Cargo relative-manifest/alias root and wider/wrong-oracle controls;
+  full operator suite34 passes. Append only2 precise reasons; native selected2 E/strict0.
+- All1058 originals/current copies restore, six false receipts refuse and all30 source pins agree;
+  prior production/tests/reason prefixes remain exact. Book/canonical/live sync; final2 producer
+  judgments remain before the full current-region replay, with no whole-file adequacy claim.
+
 ## archogen — close three Cargo diagnostic regression gaps
 
 `ARCHOGEN-M3-0751` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.4`), `2026-10-18`.
