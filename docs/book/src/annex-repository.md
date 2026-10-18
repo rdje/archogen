@@ -579,9 +579,12 @@ A preamble record, a record after Changelog or after a blank separator, an absen
 duplicate headings and a bad indexed copy hidden by an unstaged correction all refuse. For example,
 writing a new row below Changelog leaves its text present but outside the log; move it into the
 existing table before committing. Sealed task history keeps its immutable presence-only contract.
-Placement validation reads both copies. The presence census still reads working rows: an unstaged-only
-pending record can pass. `PROGRAM.91` owns that reproduced staging gap and precedes the next M3
-integration checkpoint. Source evidence establishes each record's content.
+`PROGRAM.91` (`2026-10-18`) also requires every historical and pending work-unit record in the
+index as well as the working copy. An unstaged-only row or an untracked new task cannot supply a
+commit's record. Stage that task document before committing. A staged removal concealed by a working
+copy refuses for live and archived records; an indexed restored backlog record must leave the backlog.
+Archived records keep their presence-only placement contract, while their content remains sealed.
+Source evidence establishes each record's content.
 
 ```console
 $ bash scripts/check_commit_log_rows.sh               # presence and live placement

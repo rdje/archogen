@@ -16,6 +16,8 @@
 # Live task records, in working and indexed copies, must sit in the contiguous table below their actual root-level
 # Commit Log heading (PROGRAM.90). Inline mentions and fenced examples are not headings.
 # Sealed history retains the original presence-only rule: its bytes are immutable evidence.
+# PROGRAM.91 requires presence in the index as well as the working copy: an unstaged row
+# cannot supply a record for the pending commit or hide a staged historical-row removal.
 #
 # ⚠️ HONEST LIMIT: it proves a row exists, not that the row says anything true, nor that it sits in the right tree.
 #
@@ -60,8 +62,9 @@ if os.path.exists(message):
 
 files = subprocess.run(["git", "ls-files", "-c", "-o", "--exclude-standard", "--", "docs/tasks", "docs/task-history"],
                        capture_output=True, text=True).stdout.split()
-indexed = set(subprocess.check_output(["git", "ls-files", "-z", "--", "docs/tasks"]).decode().split("\0"))
+indexed = set(subprocess.check_output(["git", "ls-files", "-z", "--", "docs/tasks", "docs/task-history"]).decode().split("\0"))
 rows = set()
+indexed_rows = set()
 fails = []
 ROW = re.compile(r"`(ARCHOGEN-[A-Z0-9]+-[0-9]{4}) \(leaf ")
 
@@ -117,7 +120,11 @@ for path in files:
         continue
     if path in indexed:
         staged = subprocess.check_output(["git", "show", ":" + path]).decode("utf-8").splitlines()
-        live_placement("index:" + path, staged)
+        if path.startswith("docs/tasks/"):
+            live_placement("index:" + path, staged)
+        for line in staged:
+            if line.startswith("|"):
+                indexed_rows.update(ROW.findall(line))
     if not os.path.exists(path):
         continue
     lines = open(path, encoding="utf-8").read().splitlines()
@@ -129,8 +136,12 @@ for path in files:
 
 for i in sorted(ids - rows - backlog):
     fails.append("%s has no row in any tree's Commit Log%s" % (i, " (the pending commit)" if i == pending else ""))
+for i in sorted(ids - indexed_rows - backlog):
+    fails.append("%s has no indexed row in any tree's Commit Log%s" % (i, " (the pending commit)" if i == pending else ""))
 for i in sorted(backlog & rows):
     fails.append("%s is in the backlog and now has a row: remove it from BACKLOG" % i)
+for i in sorted((backlog & indexed_rows) - rows):
+    fails.append("%s is in the backlog and now has an indexed row: remove it from BACKLOG" % i)
 for i in sorted(backlog - ids):
     fails.append("%s is in the backlog and names no commit in this history: remove it from BACKLOG" % i)
 for f in fails:
@@ -173,6 +184,8 @@ self_test() {
   fresh; printf 'ARCHOGEN-T-0003 (leaf T.1): three\n' > "$work/git_message_brief.txt"
   arm "the pending commit with no row is refused" 1 "ARCHOGEN-T-0003 has no row in any tree's Commit Log (the pending commit)"
   printf '| `T.1` | `ARCHOGEN-T-0003 (leaf T.1)` | three |\n' >> "$work/docs/tasks/T.md"
+  arm "an unstaged-only pending record is refused" 1 "ARCHOGEN-T-0003 has no indexed row in any tree's Commit Log (the pending commit)"
+  git -C "$work" add docs/tasks/T.md
   arm "the pending commit whose row is written passes" 0 "2 work-unit commit(s)"
   fresh; commit "ARCHOGEN-T-0004 (leaf T.1): four"
   arm "a commit in the backlog passes" 0 "1 in the backlog" "ARCHOGEN-T-0004"
@@ -242,7 +255,31 @@ PY
   mkdir -p "$work/docs/task-history/T"
   tail -n 1 "$work/docs/tasks/T.md" > "$work/docs/task-history/T/T.1.md"
   rm "$work/docs/tasks/T.md"
+  git -C "$work" add -A docs/tasks docs/task-history
   arm "sealed history keeps its presence contract" 0 "1 work-unit commit(s)"
+  cp "$work/docs/task-history/T/T.1.md" "$work/archive-row.md"
+  printf '# Historical copy\n' > "$work/docs/task-history/T/T.1.md"
+  git -C "$work" add docs/task-history/T/T.1.md
+  cp "$work/archive-row.md" "$work/docs/task-history/T/T.1.md"
+  arm "a working archive cannot hide an indexed row removal" 1 "ARCHOGEN-T-0001 has no indexed row"
+  fresh
+  cp "$work/docs/tasks/T.md" "$work/proper.md"
+  sed '$d' "$work/proper.md" > "$work/docs/tasks/T.md"
+  git -C "$work" add docs/tasks/T.md
+  cp "$work/proper.md" "$work/docs/tasks/T.md"
+  arm "a working task cannot hide an indexed row removal" 1 "ARCHOGEN-T-0001 has no indexed row"
+  fresh
+  printf 'ARCHOGEN-T-0002 (leaf T.2): two\n' > "$work/git_message_brief.txt"
+  printf '# U\n\n## Commit Log\n\n| Leaf | Commit | Notes |\n| --- | --- | --- |\n| `T.2` | `ARCHOGEN-T-0002 (leaf T.2)` | two |\n' > "$work/docs/tasks/U.md"
+  arm "an untracked task cannot supply the pending record" 1 "ARCHOGEN-T-0002 has no indexed row"
+  git -C "$work" add docs/tasks/U.md
+  arm "a tracked new task supplies the pending record" 0 "2 work-unit commit(s)"
+  fresh; commit "ARCHOGEN-T-0004 (leaf T.1): four"
+  cp "$work/docs/tasks/T.md" "$work/proper.md"
+  printf '| `T.1` | `ARCHOGEN-T-0004 (leaf T.1)` | four |\n' >> "$work/docs/tasks/T.md"
+  git -C "$work" add docs/tasks/T.md
+  cp "$work/proper.md" "$work/docs/tasks/T.md"
+  arm "a restored indexed backlog record must leave the backlog" 1 "ARCHOGEN-T-0004 is in the backlog and now has an indexed row" "ARCHOGEN-T-0004"
   fresh
   cp "$work/docs/tasks/T.md" "$work/proper.md"
   printf '\n| `T.1` | `ARCHOGEN-T-0001 (leaf T.1)` | separated |\n' >> "$work/docs/tasks/T.md"

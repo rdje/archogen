@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — require indexed work-unit records
+
+`ARCHOGEN-PROGRAM-0736` (leaf `PROGRAM.91`), `2026-10-18`.
+
+- Require historical/pending work-unit records in working and indexed live/archive copies. The original
+  unstaged-only pending fixture now refuses until staged; hidden indexed removals, untracked new tasks
+  and indexed-only backlog restorations have permanent controls.
+- All27 controls pass, retaining prior placement/presence/backlog/archive cases. Placement function,
+  archived/index files and engine/proof sources remain exact. Book/doctrine/live sync; M3 resumes its
+  separately owned caller and full integration checkpoint.
+
 ## archogen — enforce headed live commit-log records
 
 `ARCHOGEN-PROGRAM-0735` (leaf `PROGRAM.90`), `2026-10-18`.

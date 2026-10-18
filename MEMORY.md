@@ -13,11 +13,11 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `PROGRAM` → frontier `PROGRAM.91`. `M3` waits at its integration checkpoint. `M2`'s frontier is `M2.7.4`, on the director; `API` is
+- **Active tree:** `M3` → frontier `M3.6`. `PROGRAM` resumes at `PROGRAM.71`. `M2`'s frontier is `M2.7.4`, on the director; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `PROGRAM.91` indexed work-unit presence repair.
-  Require durable indexed records, then resume `M3.6.9.6.3.2.2.13.3.2` caller/integration checkpoint.
+- **Next action:** `M3.6.9.6.3.2.2.13.3.2` prefix/helper integration checkpoint.
+  Revalidate caller/proof premises, run full local integration and preserve activation/restoration evidence.
   Final full sweeps and review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.

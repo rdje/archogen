@@ -736,19 +736,37 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0735 (leaf PROGRAM.90)`
 
 - ID: `PROGRAM.91`
-  Status: `pending` — P1 indexed work-unit presence gap, immediately after PROGRAM.90
-  Goal: require the commit's indexed work-unit records, including pending and historical subjects,
-    without weakening the working presence/backlog or immutable archive contracts. Permanent controls
-    must refuse an unstaged-only pending record and staged removal hidden by working copies.
-  Reproduce: target/program-log-placement/index-presence-probe.json, actual maintained gate in an
-    isolated project-owned Git fixture: pending ARCHOGEN-T-0002 exists only in working T.md;
-    native git show :docs/tasks/T.md proves absent from index; gate exits0 and reports2 records.
-    Impact: a commit can omit its durable record despite gate success. Fix before M3 .13.3.2.
-  - [ ] **ROOT CAUSE** — reproduce maintained working/index discrepancy and census source.
-  - [ ] **ADDRESSED** — indexed presence with positive and rejecting staging/backlog/archive controls.
-  - [ ] **NO REGRESSION** — preserve existing placement/presence controls, book/live sync and gates.
-  Verification: `pending`
-  Commit: `pending`
+  Status: `done` — historical/pending work-unit presence requires working and indexed records
+  Goal: close indexed presence gap while retaining live placement, immutable archive and backlog rules.
+  Startup: clean mainfdbcec5, empty message/OS handoff clear; COMMIT durable-row contract, source
+    working/indexed readers, PROGRAM.90 original fixture and Annex B reviewed before changes.
+  - [x] **ROOT CAUSE** — original actual maintained-gate fixture reported2 work units, exit 0,
+    with pending T-0002 only in working T.md. Native git show :docs/tasks/T.md proves it absent.
+    Gate collected IDs only from working rows; indexed live validation discarded IDs and archive
+    index records were outside that reader. Source and index-presence-probe.json bind reproduction.
+  - [x] **ADDRESSED** — collect indexed row IDs in live and archived documents; every HEAD/pending
+    subject requires working and indexed presence beyond the unchanged18-item backlog. Indexed-only
+    restored backlog records must leave it. bash scripts/check_commit_log_rows.sh in the same
+    original fixture: exit 1, naming missing indexed
+    T-0002; stage its row, native indexed readback confirms presence and gate exit 0. Retain raw probe.
+    Working/archive placement contracts are unchanged; historical records concealed by working copies
+    and untracked pending tasks now refuse before commit.
+  - [x] **NO REGRESSION** — bash scripts/check_commit_log_rows.sh --self-test, exit 0:
+    27 pass / 0 fail (27 arms), including prior21 controls; positive pending/archive preparations now
+    explicitly stage their records. Actual missing indexed pending/history/live/archive, untracked/
+    staged new tasks and indexed-only restored backlog cases hold. Exact source-function comparison
+    preserves live_placement bytes; native byte checks retain250 archive/index files and engine/
+    proof/native sources. bash -n passes. Book/doctrine/live sync and actual pinned book/staged gates
+    bind closure. No Rust source/focused run warranted; established gate method, no new DEV_NOTES
+    lesson. M3 .13.3.2 still owns full caller/integration checkpoint; resume after this clean commit.
+  Verification: `2026-10-18`, target/program-index-presence retains original/actual RED/green probe,
+    native staged-blob confirmation, full27 self-test and source/archive audit. Ignored adapter is
+    supplemental to maintained gate, real Git fixture, native byte checks and permanent controls.
+    audit.json SHA256 e0abf927f9f940e7f9210f6bd9e05fd593a6a982bc7f1156a78f5038af1a4c22.
+    Initial direct task-acceptance refused prose-only ADDRESSED result syntax; explicit invocation/exit
+    results correct that same bullet before commit. Placement validation establishes literal unfenced
+    table structure; source evidence proves row content.
+  Commit: `ARCHOGEN-PROGRAM-0736 (leaf PROGRAM.91)`
 
 ## Roadmap coverage map
 
@@ -814,9 +832,8 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.91` | `pending` | P1 indexed work-unit presence gap before M3 integration |
-| 2 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.72`, `.73` and `.78` — are filed and owned. Every closed
@@ -1032,6 +1049,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-18` | `PROGRAM.89.1` | passive RED/green; cleared-child path/volume/file effects and hostile overrides; blocked-file recovery; public env-input refusals; native mutations; operator28; census/source audit; focused | checked local temp setup, both native named K strict0; all1034 originals restore; prior bodies/E preserved; exact final focused/book/staged gates bind commit, caller checkpoint .89.2 next |
 | `2026-10-18` | `PROGRAM.89.2` | source/caller/compiled proof binding; native14 flags and6 matchers; result falsifiers; original/copy censuses; full integration/stamp | flags3K10E1U strict0, matchers6S strict1 remain owned; all1034 original/current-copy inputs restore, all12 local stages pass; activation and closure prose explicitly separate; no new E or full adequacy |
 | `2026-10-18` | `PROGRAM.90` | native row introductions and inline-heading/-1 root; maintained RED/green, renderer/separator and working/indexed controls | all prior rows/order exact, headed205 to207 before closure,250 archive/index files exact;21/0 controls, indexed-presence gap owned PROGRAM.91 next |
+| `2026-10-18` | `PROGRAM.91` | original maintained unstaged-row fixture, native index readback, pending/history/live/archive and backlog controls; source-function and archive/source parity | old0/new1 unstaged, staged new0;27/0 controls, placement body exact,250 archive/index files and engine/proofs preserved; book/staged gates, M3 integration next |
 
 ## Commit Log
 
@@ -1245,6 +1263,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.89.1` | `ARCHOGEN-PROGRAM-0728 (leaf PROGRAM.89.1)` | **Cleared builds keep temporary data local**: checked target/tmp creation/canonicalization and explicit TMPDIR/TMP/TEMP, real child effective path/volume/file controls, absent/hostile/relative/different-cwd and blocked-file recovery; compiled-input admissions unchanged; two native named kills, operator28 and original1034 restoration; canonical/book/live sync, focused/stamp/staged gates; caller/integration checkpoint next |
 | `PROGRAM.89.2` | `ARCHOGEN-PROGRAM-0729 (leaf PROGRAM.89.2)` | **Local-temp caller checkpoint closes**: exact caller/consumer delta and28 pinned sources, compiled actual-edit/producer controls; complete14 flag and6 matcher native replays, six/five rejecting receipt controls, original/current-copy1034 restoration; all12 integration stages and official/native activation binding pass; code/tests/E unchanged, canonical/book/live resume M3 metadata evidence, full adequacy open |
 | `PROGRAM.90` | `ARCHOGEN-PROGRAM-0735 (leaf PROGRAM.90)` | **Live commit-log placement enforced**: two exact rows relocated in native introduction order, original text/headed order/verification rows and250 archive/index files preserved; inline-heading/-1 cause reproduced, working/indexed heading/table/contiguity checks with21 passing controls and actual pinned rendering; existing presence/backlog/archive contract retained, newly reproduced indexed-presence gap owned in PROGRAM.91 before M3 integration |
+| `PROGRAM.91` | `ARCHOGEN-PROGRAM-0736 (leaf PROGRAM.91)` | **Indexed work-unit presence required**: original working-only pending record fails until staged; historical live/archive removals hidden by working copies and untracked new tasks refuse, indexed restored backlog must shrink; prior placement body and250 archive/index files/engine sources exact,27 controls pass; book/doctrine/live sync resumes M3 caller/integration checkpoint |
 
 ## Changelog
 
