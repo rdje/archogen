@@ -476,6 +476,57 @@ book/staged checks. No remote CI, hardware/assurance result or full-production a
 source/caller checkpoint is complete; permanent per-key matcher evidence and final cohort/full sweeps
 remain required. Exact commands, hashes, falsifiers and input populations are in `docs/tasks/PROGRAM.md`.
 
+## Permanent metadata matcher controls
+
+`.13.2.4.2.1` (`2026-10-18`) resolves actual `L597.dir.188` and `L597.lit.189` as scoped E for the
+current pinned inventory caller. This relies on source/caller restrictions, not the absence of a flag
+in sampled argv. Every literal `-C` constructor in the pinned compiler source is accounted for:
+
+| Operand source | Successful caller domain and effect |
+| --- | --- |
+| Metadata, extra-filename and incremental constructors | Each uses its literal key followed by `=`; all are already discarded, even if an incremental path contains a metadata marker |
+| Prefer-dynamic, debug/overflow assertions, rpath, embed-bitcode and linker-plugin-LTO | Fixed key/boolean forms from the constructor and LTO model |
+| Optimization, codegen units, debug/split-debug information and strip | Numeric or named values accepted by the successful compiler; accepted spellings contain no metadata marker |
+| Panic and LTO profiles | Cargo validates the named panic/LTO values; its LTO model emits fixed argument forms |
+| Explicit linker path | Host/target or matching-cfg configuration is its source; alias-only configuration and the cleared environment exclude that override |
+| Linker arguments | Runtime build-script output; hard target preflight excludes it |
+| Arbitrary rustflags or trailing compiler arguments | Environment/configuration excluded, admitted profile rustflags still fail the stable feature gate, and compile invokes build/test-no-run without trailing arguments |
+
+The rustdoc metadata constructor belongs to another mode. Codegen backend uses `-Z`, and its profile gate
+is separately unstable. Existing visited-token premises still matter: unchanged consumers skip their
+operands, source roots end in `.rs`, crate names are normalized, and cfg/edition/type arguments have their
+producer encodings. A data operand is not automatically a visited `-C` token.
+
+A qualification found during source review is essential: Cargo's profile `strip` can hold a raw string;
+it is not a Cargo enum guarantee. The installed pin's `rustc -C help` names none/debuginfo/symbols, and
+actual Rustc and Cargo reject `strip=metadata=inside`. `run_cargo` returns on unsuccessful status before
+commands reach normalization. The permanent control holds that refusal, plus a helper-boundary case
+showing why arbitrary failed-command argv would invalidate a broader contains claim. This is not valid
+successful-producer coverage. The [official rustc guide](https://doc.rust-lang.org/rustc/codegen-options/index.html#strip)
+is contextual; the installed pin's native help/refusal is primary. Its version-specific web page was not
+accessible to the retrieval tool, and no pinned webpage or toolchain-binary digest is claimed.
+
+The new permanent operator control compiles the exact original and both actual variants. Real ordinary
+Cargo argv matches a literal independent contract; libraries return the independently expected value 37
+when consumed by another compiler/executable. Successful `cargo rustc -- -C
+llvm-args=--pass-remarks=metadata=inside` supplies a valid wider input: original and truncated-prefix
+variants retain the full option, while contains drops it. The inventory has no trailing-argument route.
+`metadataX=inside` is explicitly only a synthetic helper counterexample for truncation, not a valid
+compiler input. An unchanged incremental consumer, wrong positive/negative/helper output oracles and
+a wrong forwarded-argv oracle all hold the boundary. The initial broad line selection also found the
+already-owned leading-character edit; select only the two exact operator/key pairs. An empty-vector
+type annotation was corrected before the successful generated Rust proof; neither failed preparation
+supplies mutation coverage.
+
+All prior test bodies and reason bytes are preserved; only the producer fixture's optional source and
+refused-strip inputs extend its unchanged defaults. The complete operator suite passes 29 controls.
+The two actual native edits now finish with two scoped E results, strict zero, no refusal/timeout/unjudged result, with all
+captured original/current-copy inputs restored. False exits, missing/duplicate results, changed edits,
+unlisted E and operator-summary drift refuse. Copy receipts borrow original index metadata, without a
+copied-index or gitlink-content claim. Closure documentation is checked separately. Changed pin,
+constructors, modes, arguments, environment/configuration/admissions/preflight or consumers require
+revalidation. Other matcher/helper obligations and full production adequacy remain open.
+
 ## Retrieved source identities
 
 Every link below names the installed Cargo commit. These are source digests, not toolchain binary digests.

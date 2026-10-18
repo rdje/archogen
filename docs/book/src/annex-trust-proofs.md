@@ -242,6 +242,26 @@ All twelve steps of local integration pass. Its official stamp binds the activat
 production adequacy is claimed. The temp-path repair and its caller checkpoint close; M3 resumes the
 owned metadata matcher evidence.
 
+### Metadata matcher reasons
+
+Metadata evidence `.13.2.4.2.1` (`2026-10-18`) closes `L597.dir.188` and `L597.lit.189` as scoped E.
+Cargo constructs `metadata=<hash>`; other visited codegen keys are distinct. Already-discarded
+extra-filename/incremental operands stay discarded. Retained scalar values must pass Cargo/compiler
+validation. The current caller excludes linker overrides, build scripts, arbitrary rustflags and trailing compiler
+arguments. These source premises, with the unchanged operand consumers, justify the reasons.
+
+For example, successful `cargo rustc` can forward `-C llvm-args=--pass-remarks=metadata=inside`.
+The original retains that full option; the contains edit drops it. This valid wider input is outside
+the inventory caller, so the reason grants no arbitrary-argument equivalence. The truncated key also
+differs for synthetic `metadataX=inside`, which has no successful compiler producer in this control.
+Both real libraries are consumed and return the expected value 37; wrong argv/output oracles fail.
+
+Cargo forwards profile `strip` strings, and the compiler rejects unsupported values. The refused
+`strip=metadata=inside` case establishes a successful-build premise, not coverage from a failed build.
+Exact compiled controls and native replay bind both E reasons, strict zero; original/current-copy
+inputs restore and altered receipts refuse. Prior test bodies and reasons are preserved. Per-key
+extra-filename/incremental evidence and the basename comparison remain required; full adequacy is open.
+
 ## Mutation measurements and controls
 
 Whether the instrument's tests hold the generated-sources rules — what a program reads, the chain, the blob rule,

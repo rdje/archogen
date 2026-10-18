@@ -468,7 +468,8 @@ class CommandDelimiterTests(DiscoveryFixture):
 
 
 class DiagnosticFlagTests(DiscoveryFixture):
-    def producer_argv(self, label, *, level=None, separate=None, operand="unused_variables"):
+    def producer_argv(self, label, *, level=None, separate=None, operand="unused_variables",
+                      library_source="pub fn c() {}\n", release_strip=None):
         """One real pinned Cargo compilation, with an independently specified argv shape."""
         project = self.base / ("producer-" + label)
         (project / "src").mkdir(parents=True)
@@ -476,8 +477,10 @@ class DiagnosticFlagTests(DiscoveryFixture):
                     'edition = "2021"\n')
         if level is not None:
             manifest += f'[lints.rust]\nunused_variables = "{level}"\n'
+        if release_strip is not None:
+            manifest += '[profile.release]\nstrip = ' + json.dumps(release_strip) + "\n"
         (project / "Cargo.toml").write_text(manifest)
-        (project / "src/lib.rs").write_text("pub fn c() {}\n")
+        (project / "src/lib.rs").write_text(library_source)
         target = project / "target"
         env = {key: os.environ[key] for key in ("PATH", "HOME")}
         env.update(RUSTUP_HOME=os.environ.get("RUSTUP_HOME", str(Path(env["HOME"]) / ".rustup")),
@@ -683,6 +686,105 @@ os.execvp("rustc", ["rustc"] + arguments)
         for mutant in family:
             self.assertIn(namespace["mutation_key"](mutant), records,
                           "each actual lint proof requires its own per-file reason")
+
+
+    @unittest.skipUnless(os.name == "posix", "the pinned producer/decoder premise is Unix")
+    def test_actual_metadata_candidates_require_pinned_codegen_constructors(self):
+        self.assertIn("commit-hash: f2d3ce0bd7f24a49f8f72d9000448f8838c4e850",
+                      self.bounded(["cargo", "-vV"]))
+        source = (ROOT / "xtask/src/trust.rs").read_text()
+        namespace, directions = self.discovery(source, operator="dir")
+        _, literals = self.discovery(source, operator="lit")
+        line = next(index for index, text in enumerate(source.split("\n"))
+                    if text.strip() == 'if v.starts_with("metadata=")')
+        keys = [("dir", ('if v.starts_with("metadata=")', 'if v.contains("metadata=")')),
+                ("lit", ('if v.starts_with("metadata=")', 'if v.starts_with("metadata")'))]
+        family = [mutant for mutant in directions + literals if mutant[0] == line
+                  and (mutant[2], namespace["mutation_key"](mutant)) in keys]
+        self.assertEqual([(m[2], namespace["mutation_key"](m)) for m in family], keys)
+
+        def module(text, name):
+            first = text.index("const DROPPED:")
+            last = text.index("\n/// `path` resolved lexically", first)
+            body = text[first:last]
+            self.assertEqual(body.count("fn normalise("), 1)
+            return "mod " + name + " {\n" + body.replace("fn normalise(", "pub fn normalise(", 1) + "}\n"
+
+        modules = [module(source, "baseline")]
+        modules += [module(namespace["apply_mutant"](m), "variant_" + str(index))
+                    for index, m in enumerate(family)]
+        operand = "llvm-args=--pass-remarks=metadata=inside"
+        ordinary = self.producer_argv("metadata-ordinary", library_source="pub fn c() -> u32 { 37 }\n")
+        wider = self.producer_argv("metadata-wider", separate="-C", operand=operand,
+                                   library_source="pub fn c() -> u32 { 37 }\n")
+        # Public Cargo forwarded these literal arguments; an oracle silently omitting them must fail.
+        self.assertEqual(wider[-2:], ["-C", operand])
+        with self.assertRaisesRegex(AssertionError, "wrong forwarded compiler argv"):
+            self.assertEqual(wider[-2:], [], "wrong forwarded compiler argv")
+        for label, argv in [("ordinary", ordinary), ("wider", wider)]:
+            extra = next(arg.removeprefix("extra-filename=") for arg in argv
+                         if re.fullmatch(r"extra-filename=-[0-9a-f]{16}", arg))
+            artifact = (self.base / ("producer-metadata-" + label) / "target/release/deps"
+                        / ("libflagproof" + extra + ".rlib"))
+            self.assertTrue(artifact.is_file(), artifact)
+            consumer = self.base / ("metadata-consumer-" + label + ".rs")
+            binary = self.base / ("metadata-consumer-" + label)
+            consumer.write_text('fn main() { assert_eq!(flagproof::c(), 37); println!("{}", flagproof::c()); }\n')
+            self.bounded(["rustc", "--edition=2021", "--crate-name", "metadata_consumer", str(consumer),
+                          "--extern", "flagproof=" + str(artifact), "-o", str(binary)])
+            self.assertEqual(self.bounded([str(binary)]), "37\n")
+
+        # Cargo forwards strip strings, but a failed compilation never reaches inventory normalise.
+        # This is a refused producer/premise control, never a successful wider-domain example.
+        with self.assertRaisesRegex(AssertionError, re.escape(
+                "incorrect value `metadata=inside` for codegen option `strip`")):
+            self.producer_argv("metadata-refused-strip", release_strip="metadata=inside")
+
+        # Independent literal contract: never use baseline normalise as the expected result.
+        expected = ["--crate-name", "flagproof", "--edition=2021", "src/lib.rs", "--crate-type", "lib",
+                    "--emit=dep-info,metadata,link", "-C opt-level=3", "-C embed-bitcode=no", "-C strip=debuginfo"]
+        vector = lambda values: ("vec![" + ", ".join(json.dumps(value) + ".to_owned()" for value in values) + "]"
+                                 if values else "Vec::<String>::new()")
+        checks = []
+        for name in ["baseline", "variant_0", "variant_1"]:
+            checks.append(f'assert_eq!({name}::normalise(&{vector(ordinary)}, "unused-scratch/"), {vector(expected)});')
+        for name, output in [("baseline", expected + ["-C " + operand]), ("variant_0", expected),
+                             ("variant_1", expected + ["-C " + operand])]:
+            checks.append(f'assert_eq!({name}::normalise(&{vector(wider)}, "unused-scratch/"), {vector(output)});')
+        # Explicit helper-boundary premise controls, not successful compiler invocations.
+        synthetic = ["rustc", "-C", "metadataX=inside"]
+        for name, output in [("baseline", ["-C metadataX=inside"]), ("variant_0", ["-C metadataX=inside"]),
+                             ("variant_1", [])]:
+            checks.append(f'assert_eq!({name}::normalise(&{vector(synthetic)}, "unused-scratch/"), {vector(output)});')
+        refused_argv = ["rustc", "-C", "strip=metadata=inside"]
+        for name, output in [("baseline", ["-C strip=metadata=inside"]), ("variant_0", []),
+                             ("variant_1", ["-C strip=metadata=inside"])]:
+            checks.append(f'assert_eq!({name}::normalise(&{vector(refused_argv)}, "unused-scratch/"), {vector(output)});')
+        consumed = ["rustc", "-C", "incremental=cache/metadata=inside", "retained"]
+        for name in ["baseline", "variant_0", "variant_1"]:
+            checks.append(f'assert_eq!({name}::normalise(&{vector(consumed)}, "unused-scratch/"), {vector(["retained"])});')
+        main = ("fn main() {\n" + "\n".join(checks)
+                + '\nmatch std::env::args().nth(1).as_deref() {\n'
+                + f' Some("wrong-positive") => assert_eq!(baseline::normalise(&{vector(wider)}, "unused-scratch/"), '
+                + f'variant_0::normalise(&{vector(wider)}, "unused-scratch/"), "wrong positive oracle"),\n'
+                + f' Some("wrong-negative") => assert_ne!(baseline::normalise(&{vector(ordinary)}, "unused-scratch/"), '
+                + f'variant_1::normalise(&{vector(ordinary)}, "unused-scratch/"), "wrong negative oracle"),\n'
+                + f' Some("unsupported-helper") => assert_eq!(baseline::normalise(&{vector(synthetic)}, "unused-scratch/"), '
+                + f'variant_1::normalise(&{vector(synthetic)}, "unused-scratch/"), "unsupported helper input oracle"),\n'
+                + ' _ => {}\n}\nprintln!("metadata controls: actual variants and consumed compiler artifacts held");\n}\n')
+        program, binary = self.base / "metadata-candidates.rs", self.base / "metadata-candidates"
+        program.write_text("\n".join(modules) + main)
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.assertIn("actual variants and consumed compiler artifacts held", self.bounded([str(binary)]))
+        for argument, message in [("wrong-positive", "wrong positive oracle"),
+                                  ("wrong-negative", "wrong negative oracle"),
+                                  ("unsupported-helper", "unsupported helper input oracle")]:
+            with self.assertRaisesRegex(AssertionError, message):
+                self.bounded([str(binary), argument])
+        records = namespace["load_equivalents"](ROOT / "xtask/trust.equivalents")
+        for mutant in family:
+            self.assertIn(namespace["mutation_key"](mutant), records,
+                          "each actual metadata proof requires its own per-file reason")
 
 
     @unittest.skipUnless(os.name == "posix", "the pinned producer/decoder premise is Unix")

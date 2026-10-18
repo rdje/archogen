@@ -16,7 +16,7 @@
 - **Active tree:** `M3` → frontier `M3.6`. `PROGRAM` resumes at `PROGRAM.71`. `M2`'s frontier is `M2.7.4`, on the director; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.9.6.3.2.2.13.2.4.2.1` metadata matcher evidence.
+- **Next action:** `M3.6.9.6.3.2.2.13.2.4.2.2` extra-filename matcher evidence.
   Resolve the exact contains/truncated-prefix edits with permanent source/caller and compiled controls.
   Remaining per-key/helper evidence, final cohort/full sweeps and review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.

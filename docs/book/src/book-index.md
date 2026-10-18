@@ -266,6 +266,7 @@ a change that leaves it stale, so it is never edited by hand.
 - mcp-specification — [What this project relies on from outside](ledger.md#mcp-specification)
 - mdbook — [What this project relies on from outside](ledger.md#mdbook)
 - **MEI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
+- Metadata matcher reasons — [Annex C: Trust proof records](annex-trust-proofs.md#metadata-matcher-reasons)
 - miri — [What this project relies on from outside](ledger.md#miri)
 - **MMIO** — [definition](glossary.md), [Where generated systems run](targets.md)
 - More is not better — [Quantities and units](quantities.md#more-is-not-better)
