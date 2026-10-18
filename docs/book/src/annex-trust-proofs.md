@@ -344,6 +344,20 @@ establish each reason's substance. This result covers the complete helper region
 the production file still open. A separate caller/premise and full local integration checkpoint follows;
 whole-production adequacy, independent review and runner compatibility are still required.
 
+### Caller binding and first checkpoint result
+
+Checkpoint `.13.3.2.1` (`2026-10-18`) binds the completed helper replay and its reasons to unchanged
+production callers, preflight/build inputs and pinned source identities. Existing compiled controls
+remain source-bound. The earlier flag-table receipt is checked against unchanged source and reasons;
+it is explicitly retained evidence, rather than a fresh flag measurement.
+
+Full local integration fails its self-test step; every other declared step passes. The failing control
+is the handoff census's first-sample-only process arm. No integration pass stamp is issued. Original
+inputs restore, and the separately retained prior mutation copy also restores in its own epoch.
+`PROGRAM.92` owns the exact diagnosis and repair. Final checkpoint `.13.3.2.2` will repeat full local
+integration after that committed repair. The complete helper mutation result remains valid within its
+recorded scope; this failed checkpoint closes neither the cohort nor whole-production adequacy.
+
 ## Mutation measurements and controls
 
 Whether the instrument's tests hold the generated-sources rules — what a program reads, the chain, the blob rule,

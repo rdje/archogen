@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — bind the helper caller and preserve failed integration
+
+`ARCHOGEN-M3-0737` (leaf `M3.6.9.6.3.2.2.13.3.2.1`), `2026-10-18`.
+
+- Bind unchanged production/caller/build inputs, 28 pinned sources, 32 source-bound controls and the
+  complete 59-edit replay/reasons; revalidate the earlier flag receipt without claiming a fresh measurement.
+- Full local integration: 11 passed/1 failed, no missing/quarantined step, no pass stamp. The handoff
+  first-sample-only self-test fails; all 1043 originals/prior-copy inputs restore in separate epochs.
+- Record raw failure/activation/source evidence, book/live state and PROGRAM.92 root/repair ownership.
+  Final full integration .13.3.2.2 follows that committed prerequisite; cohort/adequacy remain open.
+- Seal completed PROGRAM records through the published workflow: exact reconstruction, older archive/
+  index preservation and native committed-body proof; the book remains uncapped.
+
+
 ## archogen — require indexed work-unit records
 
 `ARCHOGEN-PROGRAM-0736` (leaf `PROGRAM.91`), `2026-10-18`.

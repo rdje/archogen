@@ -623,150 +623,37 @@ mdBook that is the director's window into the project.
 
 
 - ID: `PROGRAM.89`
-  Status: `done` — caller/native/integration and required closure archival complete
-  Goal: prevent catalog/inventory cleared build environments from defaulting temporary data outside
-    the repository volume. Supply repository-derived temporary directories, preserve input/admission
-    contracts, add permanent effect/failure controls, and revalidate caller premises before more E.
-  Reproduction: M3 .13.2.4.1 compiles exact catalog_build::environment() and executes a real env_clear
-    child. TMPDIR/TMP/TEMP absent, std::env::temp_dir outside repository and on a different volume.
-    Probe reads only OS metadata and creates no off-volume project data; no historical write census.
-  Impact: violates the standing same-volume/no-system-temp-default rule in catalog and trust callers.
-  Priority/schedule: immediate after committed M3 .13.2.4.1, before any further public inventory run
-    or matcher classification. Native six-entry replay transfers to .89.2 after the fix.
-  Children: .1 shared API/producer alignment and focused controls; .2 complete caller/E/integration checkpoint.
-  Verification: .89.1 permanent API/effect/error controls and focused; .89.2 complete caller/native/integration checkpoint.
-  Commit: `ARCHOGEN-PROGRAM-0729 (leaf PROGRAM.89.2)` closes the parent; .89.1 committed separately.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.89.md`](../task-history/PROGRAM/PROGRAM.89.md); commit `ARCHOGEN-PROGRAM-0729`
 
 - ID: `PROGRAM.89.1`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.89.1.md`](../task-history/PROGRAM/PROGRAM.89.1.md); commit `ARCHOGEN-PROGRAM-0728`
 
 - ID: `PROGRAM.89.2`
-  Status: `done` — caller/native/integration and required closure archival complete
-  Goal: revalidate existing conditional caller premises, complete old flag and current six matcher
-    native replay with original/copied input restoration, operator proofs and warranted full integration.
-    Source/caller revision and all failed/incomplete outcomes stay explicit; no further matcher E
-    declarations until this checkpoint closes. Then resume M3 .13.2.4.2.1 metadata evidence.
-  Startup: catalog/inventory §3, canonical pinned caller domain, unchanged token consumers, shared
-    API and all cleared build/tool identity callers; actual source/producer/native/auditor/census and
-    book trust/catalog/Annex C contracts reviewed. Preserve code, existing E and prior tests exactly.
-  - [x] **ROOT CAUSE / BINDING** — python3 -I -B target/build-temp-caller-checkpoint/caller-audit.py,
-    exit 0: exact db574de trust production, other consumers/preflight/modes, E and native bytes hold;
-    only shared production delta is local temporary preparation and three process settings. Compiled
-    env allowlist stays exact. Python/system hashes recheck28 immutable pinned sources, cargo/rustc
-    identities match pin; binary digests are not claimed. Current f0fd3fd operator source and its28
-    actual-edit/independent producer/wider/wrong-oracle controls hold. Permanent cleared-child/admission
-    controls and exact-API/std-default metadata probe bind the new environment. TMP settings add no
-    rustflags/wrapper/profile/config admission; alias/fresh-home/dynamic-target/stable/local-unit and
-    visited-token premises still apply. Six matcher edits bind exact current native identities; no E.
-  - [x] **ADDRESSED** — python3 -I -B target/build-temp-caller-checkpoint/replay.py, exit 0:
-    native flags all14 finish3 named K/10 scoped E/1 compiler refusal, strict0, bool0/13 stmt1/1
-    unviable/attempted; matcher all6 finish S, strict1, dir0/3 lit0/3. Baselines26s/22s; no timeout or
-    unjudged result. The six S remain P1 in M3 .13.2.4.2; strict1 is the unmet criterion, not a passing
-    adequacy claim. Compiler refusal establishes no coverage. Same filters/timeout600/strict E arguments
-    in retained command files. Maintained audit_measurement rejects6 flag and5 matcher falsifiers:
-    wrong exit, missing/duplicate result, replacement/summary drift, plus unlisted selected E for flags.
-    Selected E revalidates only these reasons, not unrelated whole-file stale-E validity.
-    First integration reports10 pass/2 fail, both the pending/active frontier mismatch and its real-tree
-    self-test. All inputs restore; frontier status alone is corrected and direct/bare self-tests pass.
-    Fresh make integration, exit 0: all12 local stages pass with no failure, absence or quarantine. Actual
-    OS reads permitted; fmt/clippy/contracts/doctrines/self-tests/book/no-std/pin premises/wasm build/
-    binding/emulator/spike all complete. Official activation stamp matches native write-tree at
-    22506bfe35d9a0f976c5dd0855109e3e82243d5f. No remote CI, hardware/assurance or whole-production adequacy claim.
-  - [x] **NO REGRESSION** — maintained --check-inputs against inputs.json after each native replay,
-    exit 0: all1034 original regular inputs restore with bytes/modes/sizes/index/Python-system hashes
-    and opaque pin metadata. Maintained regular_input adapter also restores all1034 current copied
-    inputs after each replay; borrowed original index fields prove no copied index/gitlink contents.
-    After integration, separate staged-epoch integration-inputs.json restores all1034 originals;
-    retained native copy still matches the prior native epoch, explicitly separate. Native source/
-    catalogue/tests/E equality holds throughout; ignored adapters are supplemental to maintained
-    CLI/auditor/census, compiled controls and checked primary source. Integration binds the activation
-    tree above; later closure edits are documentation only and receive actual pinned book plus staged
-    doctrine checks. No new DEV_NOTES lesson; existing caller revalidation method applies. Book and
-    canonical/live/frontier sync return to M3 metadata evidence. Close this leaf/parent before pivot.
-  Closure maintenance ownership: before archival, the collection measured822236 bytes against819200.
-    Use published --seal PROGRAM for committed closed units only; keep this parent/leaf active while
-    sealing, prove old archives/index and native committed bodies unchanged, then close the unit.
-    Book remains uncapped. No source/measurement change or new integration activation follows.
-    Published --seal PROGRAM exits 0: PROGRAM.87 and PROGRAM.89.1 reconstruct byte for byte,
-    TASK-HISTORY243 files/491 stubs pass. All241 old archives and exact old index after removing
-    only two new rows are preserved. Native committed core bodies match with terminal interleaf LF
-    normalization qualified; the published reconstruction proves complete bytes. seal-audit.json
-    SHA256 17611d937765ff59629989b88180d6a4592f2c98ae3ce587d7a15d1dcfc7f4db.
-  Verification: `2026-10-18`, target/build-temp-caller-checkpoint retains actual listing/plans/commands,
-    raw native exits/results, source/caller audit, false-receipt results, original/current-copy censuses,
-    integration log and exact activation/OS evidence. Closure docs have distinct validation scope.
-    caller-audit.json SHA256 9bb31756e438ce2a68704644944a2941ec671793326bb3f15d27af80d6d4f540;
-    replay-audit.json SHA256 8460630b8e6a6c9807df55518a5800360f1412768fcdc534a59aa491b77ae746;
-    integration-audit.json SHA256 efbc1fb15720e21b86c3d27166315b8f26a3bdc39165cdd5b22c308cefcad984.
-  Commit: `ARCHOGEN-PROGRAM-0729 (leaf PROGRAM.89.2)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.89.md`](../task-history/PROGRAM/PROGRAM.89.md); commit `ARCHOGEN-PROGRAM-0729`
 
 - ID: `PROGRAM.90`
-  Status: `done` — recurrent placement repaired and live working/indexed tables enforced
-  Goal: preserve prior row text and headed order, repair displaced records, and prevent recurrence.
-  Reproduce/root: f0fd3fd and97189a0 inserted exact .89.1/.89.2 rows above Metadata. The closure
-    adapter matched an inline heading mention in .87, found no table row (-1), and used the first
-    newline as fallback insertion. Existing presence-only gate accepted this. Initial live census
-    found only these two misplaced commit records across docs/tasks; all other live records headed.
-  - [x] **ROOT CAUSE** — actual native Git introductions/7130730 lookup replay in root-cause.json;
-    native old gate exit 0 with both records misplaced. Maintained placement extension then exits 1
-    naming both preamble records, retained maintained-red.log. First draft also refused M3's legitimate
-    pre-table scope note; root-bounded table search and a permanent positive control correct that.
-  - [x] **ADDRESSED** — exact row relocation restores native introduction order after all205 headed
-    prior rows. python3 -I -B target/program-log-placement/audit.py, exit 0: actual pinned renderer
-    before205/after207, separated-row negative renders1; full commit-row Counter, headed sequence and
-    verification rows preserved. Gate requires one unfenced root heading, three-column header/delimiter
-    and contiguous live records in working and indexed copies. Scope notes/inline mentions pass;
-    missing/fenced/duplicate headings, preamble/Changelog/separated records, delimiter omission and
-    an indexed bad table hidden by a working correction refuse. Existing presence/backlog cases hold.
-  - [x] **NO REGRESSION** — bash scripts/check_commit_log_rows.sh --self-test, exit 0:
-    21 pass / 0 fail (21 arms), including all prior9. Native byte checks preserve250 tracked archive/
-    index files and engine/proof/catalogue/native sources. Closure adds only this unit's headed rows;
-    final actual render/pinned book/staged gates required. No Rust source/focused run warranted;
-    existing structural verification method applies, no new DEV_NOTES lesson. Full integration is
-    still M3 .13.3.2. A separate actual probe confirms an unstaged-only pending row passes; PROGRAM.91
-    owns that P1 indexed-presence gap and is next before integration. Frozen archive scope stays exact.
-  Verification: `2026-10-18`, target/program-log-placement retains native root/introductions/census,
-    old gate acceptance/new refusal, actual full-document render fixtures, source/row preservation,
-    complete self-test and index-presence-probe.json. Ignored extraction adapters supplement native
-    Git, pinned renderer and maintained gate. Pre-closure audit.json SHA256
-    e50e64ea5fa6d1a1af0aac2bd6aae0bbb00149c27c792749425899ddd8f99262.
-    Final pinned render205 to208 including this unit; separated-row negative1; all prior rows/archives
-    preserve. Final audit SHA2561cbecf0b0225a99d23701d8ce3fc967c9bd758b7c56357931ee475d64cb32245.
-    Actual full pinned book exits 0; staged gates bind the final unit record separately.
-  Commit: `ARCHOGEN-PROGRAM-0735 (leaf PROGRAM.90)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.90.md`](../task-history/PROGRAM/PROGRAM.90.md); commit `ARCHOGEN-PROGRAM-0735`
 
 - ID: `PROGRAM.91`
-  Status: `done` — historical/pending work-unit presence requires working and indexed records
-  Goal: close indexed presence gap while retaining live placement, immutable archive and backlog rules.
-  Startup: clean mainfdbcec5, empty message/OS handoff clear; COMMIT durable-row contract, source
-    working/indexed readers, PROGRAM.90 original fixture and Annex B reviewed before changes.
-  - [x] **ROOT CAUSE** — original actual maintained-gate fixture reported2 work units, exit 0,
-    with pending T-0002 only in working T.md. Native git show :docs/tasks/T.md proves it absent.
-    Gate collected IDs only from working rows; indexed live validation discarded IDs and archive
-    index records were outside that reader. Source and index-presence-probe.json bind reproduction.
-  - [x] **ADDRESSED** — collect indexed row IDs in live and archived documents; every HEAD/pending
-    subject requires working and indexed presence beyond the unchanged18-item backlog. Indexed-only
-    restored backlog records must leave it. bash scripts/check_commit_log_rows.sh in the same
-    original fixture: exit 1, naming missing indexed
-    T-0002; stage its row, native indexed readback confirms presence and gate exit 0. Retain raw probe.
-    Working/archive placement contracts are unchanged; historical records concealed by working copies
-    and untracked pending tasks now refuse before commit.
-  - [x] **NO REGRESSION** — bash scripts/check_commit_log_rows.sh --self-test, exit 0:
-    27 pass / 0 fail (27 arms), including prior21 controls; positive pending/archive preparations now
-    explicitly stage their records. Actual missing indexed pending/history/live/archive, untracked/
-    staged new tasks and indexed-only restored backlog cases hold. Exact source-function comparison
-    preserves live_placement bytes; native byte checks retain250 archive/index files and engine/
-    proof/native sources. bash -n passes. Book/doctrine/live sync and actual pinned book/staged gates
-    bind closure. No Rust source/focused run warranted; established gate method, no new DEV_NOTES
-    lesson. M3 .13.3.2 still owns full caller/integration checkpoint; resume after this clean commit.
-  Verification: `2026-10-18`, target/program-index-presence retains original/actual RED/green probe,
-    native staged-blob confirmation, full27 self-test and source/archive audit. Ignored adapter is
-    supplemental to maintained gate, real Git fixture, native byte checks and permanent controls.
-    audit.json SHA256 e0abf927f9f940e7f9210f6bd9e05fd593a6a982bc7f1156a78f5038af1a4c22.
-    Initial direct task-acceptance refused prose-only ADDRESSED result syntax; explicit invocation/exit
-    results correct that same bullet before commit. Placement validation establishes literal unfenced
-    table structure; source evidence proves row content.
-  Commit: `ARCHOGEN-PROGRAM-0736 (leaf PROGRAM.91)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.91.md`](../task-history/PROGRAM/PROGRAM.91.md); commit `ARCHOGEN-PROGRAM-0736`
+
+- ID: `PROGRAM.92`
+  Status: `pending` — P1 handoff self-test failure blocks M3 full integration
+  Goal: diagnose and repair the first-sample-only handoff control from actual captured reader/process/
+    predicate evidence; preserve required OS-read refusal and real handoff behavior. Use controlled
+    scheduling/output cases so a passing rerun alone cannot discharge the failure. Commit before M3
+    .13.3.2.2 full integration revalidation. Native scaffold census remains its published black box.
+  Reproduce: M3 .13.3.2.1 make integration on6d82c979f23641a15589b08f6c700a933d96ddd5, exit2,
+    self-tests387.30s, only scripts/handoff_census.sh fails8 pass/1 fail of9 arms: first sample names/
+    second omits process arm. Full tier11 pass/1 fail. Raw log/restoration in M3 checkpoint folder.
+    Impact: required full integration cannot pass; root is unclassified until diagnostics distinguish
+    lifetime/reader timing, predicate/pipeline status and OS-read availability. Own next, no waiver.
+  - [ ] **ROOT CAUSE** — capture real arm evidence and controlled reproduction; distinguish causes.
+  - [ ] **ADDRESSED** — repair confirmed failure with rejecting and real-process controls.
+  - [ ] **NO REGRESSION** — keep required-read/prod census contracts, direct/bare self-tests,
+    book/live/staged checks; then repeat full integration in M3's owned leaf.
+  Verification: `pending`
+  Commit: `pending`
 
 ## Roadmap coverage map
 
@@ -832,8 +719,9 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.92` | `pending` | P1 handoff self-test failure before M3 full integration |
+| 2 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
+| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.72`, `.73` and `.78` — are filed and owned. Every closed

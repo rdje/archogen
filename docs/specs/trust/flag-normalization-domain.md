@@ -637,6 +637,27 @@ This is the completed cohort replay only. Caller/premise and full local integrat
 `.13.3.2` is next; closure prose gets a separate pinned book/staged gate. Whole-production final
 adequacy, remaining source obligations, independent review and runner compatibility remain open.
 
+## Prefix/helper caller and first integration assessment
+
+Assessment `.13.3.2.1` (`2026-10-18`) binds the complete replay of 59 edits and seven new reasons to
+unchanged production, preflight and build inputs from `97189a0`. The local-temp function and compiled
+allowlist remain exact. Python and system hashes recheck 28 pinned Cargo source identities. Toolchain
+metadata matches; no binary digest is claimed. The 32 operator controls retain exact current source.
+The earlier flag receipt binds unchanged source and reasons, with no fresh measurement claimed.
+Conditional caller premises remain explicit.
+
+Actual `make integration` exits 2 on held activation `6d82c979f23641a15589b08f6c700a933d96ddd5`:
+11 steps pass and one fails, with none unavailable, not built or quarantined. Only the self-test step
+fails: the handoff first-sample-only process arm reports eight passed controls and one failed control.
+No official integration pass stamp exists. `PROGRAM.92` owns the precise diagnosis and repair;
+`.13.3.2.2` repeats full integration after that committed prerequisite. This remains a failed result.
+
+All 1043 originals restore against the staged epoch. The retained regular-copy population restores
+against its prior complete-native epoch; borrowed index fields prove no copied index or gitlink
+contents. Production, controls, reasons and gate source bytes remain exact throughout. The caller
+assessment is complete; checkpoint, cohort and whole-production adequacy remain open. Later closure
+prose receives separate actual pinned-book and staged checks.
+
 ## Retrieved source identities
 
 Every link below names the installed Cargo commit. These are source digests, not toolchain binary digests.
