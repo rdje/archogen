@@ -179,6 +179,8 @@ a change that leaves it stale, so it is never edited by hand.
   outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the
   repository honest](annex-repository.md)
 - Faults in detail — [Annex A: The runtime's rules in detail](annex-runtime.md#faults-in-detail)
+- Final diagnostic regression parents — [Annex C: Trust proof
+  records](annex-trust-proofs.md#final-diagnostic-regression-parents)
 - Final prefix/helper checkpoint — [Annex C: Trust proof records](annex-trust-proofs.md#final-prefixhelper-checkpoint)
 - Finished work leaves the task trees — [Annex B: The checks that keep the repository
   honest](annex-repository.md#finished-work-leaves-the-task-trees)

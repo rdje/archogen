@@ -1299,3 +1299,41 @@ adequacy is claimed.
 Fixture metadata stores repository-relative bases. Current file access derives the root at runtime;
 the audit derives historical text prefixes from the retained raw Cargo records. A different root
 spelling resolves the same files, and the metadata correction preserves every raw diagnostic byte.
+
+
+### Final diagnostic regression parents
+
+Regression slice `.14.3.2.2.2.2.6.2` (`2026-10-18`) makes both remaining producer controls
+permanent, using actual [Cargo](ledger.md#rust-toolchain) and bounded isolated parents.
+
+The quoted-key parent starts with an ordinary successful inventory. It then commits a Cargo-valid
+quoted key whose decoded name contains a newline and `erroneous-warning`. The inventory must refuse
+the manifest syntax before creating any program target directory, and write no inventory. A direct
+Cargo build succeeds and emits the expected warning. After a real type error is introduced, the
+command helper must retain the actual compiler error and structured E0308. Restoring ordinary
+source/manifest bytes makes both the direct command and inventory succeed. This guards the direct
+failed-command contract without admitting quoted keys to inventory.
+
+The boundary parent begins and ends with successful ordinary inventories. Its alternate output
+lies below a directory whose spelling matches the containing configuration warning's final path,
+closing backtick and newline. A colon in the target layout produces the genuine operational failure.
+The actual inventory must retain the Cargo path-joining error for both roots and write no inventory.
+The parent verifies that the legacy configuration is a file and the matching ancestor is a distinct
+directory. It explicitly authorizes only the existing fixture's containing configuration root.
+
+| Exact edit | Actual finishing parent |
+| --- | --- |
+| `L714.lit.253` | `trust::tests::cargo_failure_diagnostics_keep_the_error_after_a_quoted_key_warning` |
+| `L717.cmp.258` | `trust::tests::cargo_failure_diagnostics_keep_the_error_at_a_config_warning_boundary` |
+
+Both unmodified parents pass. The actual guarded selected native replay reports **two killed,
+strict exit 0**, with precisely those finishing names and no other outcome. All 1060 original and
+current copied regular inputs restore with modes and Python/system hashes; seven altered receipts
+refuse. The copy borrows index metadata and makes no copied-index/submodule-content claim.
+
+Exact reconstruction removes only the added test functions to recover every prior source byte.
+Production behavior, earlier tests, operators, catalogue and existing reasons remain unchanged.
+Final held focused verification and book/staged checks bind publication. This resolves the final
+individual survivor obligations; the complete current region replay and full integration checkpoint
+remain separate committed slices. Historical results are not added together as a substitute for
+that new measurement, and no whole-file adequacy follows yet.

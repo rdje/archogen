@@ -5409,6 +5409,106 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn cargo_failure_diagnostics_keep_the_error_after_a_quoted_key_warning() {
+        crate::trust_test_process::bounded!(
+            cargo_failure_diagnostics_keep_the_error_after_a_quoted_key_warning
+        );
+        let main = "fn main() {}\n";
+        let f = two_roots("cargo-quoted-key-warning", main, "pub fn f() {}\n", &[]);
+        written(f.run_into("ordinary"));
+        let quoted = manifest("a", "\"unused\\nerroneous-warning\" = true\n");
+        let outside = archogen_catalog::manifest::parse(&quoted).unwrap_err();
+        assert_eq!(outside.why, "a key is bare keys joined by `.`");
+        f.commit(&[("crates/a/Cargo.toml", quoted)]);
+        // Cargo accepts the key, while the inventory's dialect refuses it before builds.
+        says(
+            &refused(f.run_into("syntax-refused")),
+            "a key is bare keys joined by `.`",
+        );
+        let refused_out = f.base.join("syntax-refused");
+        assert!(!refused_out.join("trust-dependencies.json").exists());
+        assert!(!refused_out.join("target").exists());
+        let env = super::environment(
+            "1.95.0",
+            &f.base.join("producer/cargo-home"),
+            &f.base.join("producer/target"),
+        )
+        .unwrap();
+        let args = [
+            "build",
+            "--bin",
+            "a",
+            "--release",
+            "--locked",
+            "--offline",
+            "--no-default-features",
+            "--message-format=json",
+            "-v",
+            "-p",
+            "a",
+        ];
+        let (_, stderr) = super::run_cargo(&args, &env, &f.repo).unwrap();
+        assert!(
+            stderr.contains("unused manifest key: package.unused\nerroneous-warning"),
+            "{stderr}"
+        );
+        f.commit(&[(
+            "crates/a/src/main.rs",
+            "fn main() { let _: u8 = \"wrong type\"; }\n".to_owned(),
+        )]);
+        assert_cargo_type_failure(&args, &env, &f.repo);
+        f.commit(&[
+            ("crates/a/src/main.rs", main.to_owned()),
+            ("crates/a/Cargo.toml", manifest("a", "")),
+        ]);
+        super::run_cargo(&args, &env, &f.repo).unwrap();
+        written(f.run_into("recovered"));
+    }
+
+    #[test]
+    fn cargo_failure_diagnostics_keep_the_error_at_a_config_warning_boundary() {
+        crate::trust_test_process::bounded!(
+            cargo_failure_diagnostics_keep_the_error_at_a_config_warning_boundary
+        );
+        let legacy = std::fs::read_to_string(real_root().join(".cargo/config.toml")).unwrap();
+        let f = two_roots(
+            "cargo-config-warning-boundary",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &[(".cargo/config", legacy)],
+        );
+        written(f.run_into("ordinary"));
+        // This distinct directory's spelling matches the containing legacy
+        // configuration path, Cargo's closing backtick and its record newline.
+        let boundary = f.repo.join(".cargo/config`\n");
+        let destination = boundary.join("with:colon");
+        let mut roots = configuration_roots();
+        roots.push(f.repo.clone());
+        let error = match inventory_with(&f.repo, "HEAD", &destination, &roots) {
+            Err(error) => error,
+            Ok(Outcome::Written(_)) => panic!("colon artifact path unexpectedly built"),
+            Ok(Outcome::Refused(why)) => panic!("ordinary input unexpectedly refused: {why:?}"),
+        };
+        let failures: Vec<_> = error.lines().collect();
+        assert_eq!(failures.len(), 2, "{error}");
+        for failure in failures {
+            assert!(
+                failure.contains("` failed: error: failed to join paths from `$"),
+                "{failure}"
+            );
+            assert!(failure.ends_with("` together"), "{failure}");
+        }
+        assert!(!destination.join("trust-dependencies.json").exists());
+        assert!(f.repo.join(".cargo/config").is_file());
+        assert!(boundary.is_dir());
+        assert_ne!(
+            std::fs::canonicalize(f.repo.join(".cargo/config")).unwrap(),
+            std::fs::canonicalize(&boundary).unwrap()
+        );
+        written(f.run_into("recovered"));
+    }
+
+    #[test]
     fn cargo_failure_diagnostics_ignore_multiline_output_paths() {
         crate::trust_test_process::bounded!(
             cargo_failure_diagnostics_ignore_multiline_output_paths

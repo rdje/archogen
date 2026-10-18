@@ -857,3 +857,20 @@ unchanged and all30 prior pins match the read-only existing-commit source cache.
 public quoted-key failure, original repair or complete producer-grammar claim. The
 [book](../../book/src/annex-trust-proofs.md#remaining-diagnostic-producer-assessment)
 retains cases and limits before permanent parents and final .14.4 replay.
+
+
+## Final diagnostic regression parents
+
+`M3.6.9.6.3.2.2.14.3.2.2.2.2.6.2` (`2026-10-18`) adds actual bounded Cargo parents for
+the final literal/upper-bound edits. The direct helper case also requires inventory syntax refusal,
+no program target/inventory and ordinary recovery. The actual inventory boundary case requires
+ordinary successes, distinct file/directory identity, genuine operational errors for both roots,
+no inventory and recovery, using only the existing authorized fixture roots.
+
+Original parents pass; selected guarded native replay reports2 K/strict0 with intended finishing
+names. All1060 original/current copied regular inputs restore and seven false bindings refuse.
+Only two test functions are added; earlier source/tests/operators/catalogue/reasons remain exact.
+Final held focused/staged/book gates bind publication. Individual nine-survivor resolution is
+complete, but final current-region measurement .14.4.1 and full integration .14.4.2 remain before
+bounded cohort closure. The [book](../../book/src/annex-trust-proofs.md#final-diagnostic-regression-parents)
+records behavior and limits; no new original repair or whole-file E/adequacy claim.

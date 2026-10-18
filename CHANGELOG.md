@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — close the final two diagnostic regression gaps
+
+`ARCHOGEN-M3-0754` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.6.2`), `2026-10-18`.
+
+- Add real-Cargo direct-helper quoted-key and actual inventory span-boundary parents, with syntax
+  refusal before builds, literal/structured diagnostics, distinct-path checks and success/recovery.
+- Native exact2 K/strict0 with intended names; all1060 originals/current copies restore and seven
+  false receipts refuse. Preserve all prior production/tests/operator/catalogue/reason bytes.
+- Book/canonical/live sync and final held focused/staged gates. All individual obligations resolve;
+  separately own complete current-region replay then full integration before cohort closure.
+
 ## archogen — assess the final diagnostic-producer boundaries
 
 `ARCHOGEN-M3-0753` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.6.1`), `2026-10-18`.
