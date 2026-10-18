@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — reconcile all initial survivor ownership
+
+`ARCHOGEN-M3-0757` (leaf `M3.6.9.6.3.2.2.15.1`), `2026-10-18`.
+
+- Bind all540 initial survivor rows:512 exact retained source/edit identities,28 with no current
+  exact edit, zero ambiguity. Audit native old1420/current1526 and70 historical result bindings.
+- Assign every463 general-parent row to coherent source lanes; schedule complete compile83 next,
+  with command/dependency helpers separate. No new verdict, equivalence or coverage from identity.
+- All1062 held inputs restore; six false censuses refuse. Publish every old/current/owner mapping
+  in the unbounded book. Seal only the committed closed .14 task subtree with exact reconstruction,
+  nine leaves and all267 older archives preserved; code/tests/operators/reasons remain exact.
+
 ## archogen — close the diagnostic cohort integration checkpoint
 
 `ARCHOGEN-M3-0756` (leaf `M3.6.9.6.3.2.2.14.4.2`), `2026-10-18`.

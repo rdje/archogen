@@ -912,3 +912,27 @@ the earlier checkpoint goal jumped to the final trust.rs sweep although its cont
 parent still owns historical rows. A literal table census finds463 general-parent rows, not463
 current survivors. Next `.15.1` must reconcile historical/current raw identities and completed
 evidence, then own the next assessment; only then may the controlling final-sweep prerequisite close.
+
+
+## Complete initial survivor ownership census
+
+`M3.6.9.6.3.2.2.15.1` (`2026-10-18`) reconciles all540 actual initial survivor rows:
+512 retain exact source-span/raw edits (only constructor-derived fresh iterator line numbers
+normalized),28 have no current exact edit, zero ambiguity. Maintained old native auditor retains
+802K/540S/78U strict1 at36154d6; actual current native listing/discovery agree on1526.
+No new current verdict, semantic equivalence or adequacy is inferred from identity or disappearance.
+
+All463 previously general-parent rows gain concrete .15.2–.11 assessment owners: compiler-input
+path, build, source extents, compiled rules, tool output, target/program closure, Rules/refusals,
+inventory orchestration, command and harness-relative units. These contain442 retained edits/21
+without exact current edits. Earlier77 rows retain completed owners, with70 exact edits bound to
+audited actual historical measurements and seven absent. Prior result epochs/test populations
+remain explicit. All1062 held regular inputs restore before the completion-doc epoch; six false
+censuses refuse. Published .14 sealing preserves all267 older archives and reconstructs the live
+tree byte-exactly; nine committed leaves move to one immutable archive.
+
+Next .15.2.1 measures all83 current compile candidates against the full parent population and
+strict timeout/unjudged rules. Separate command/dependency helpers and later source lanes follow
+actual evidence-directed resolution, with fresh whole-file criterion only after required repairs/
+assessments. The [book](../../book/src/annex-trust-proofs.md#survivor-ownership-reconciliation)
+publishes the source-scope summary and every initial/current/owner row. No production/test/reason change.

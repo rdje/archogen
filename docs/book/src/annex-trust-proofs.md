@@ -1568,3 +1568,717 @@ parent. This is an ownership-table observation, not a fresh count of current sur
 may have changed or already covered some rows. Task `.15.1` binds every historical row to current
 raw edits, retired edits or completed evidence, then schedules the next bounded assessment. The
 controlling final-sweep prerequisite remains all required assessments and repairs complete.
+
+
+### Survivor ownership reconciliation
+
+The `2026-10-18` census (`.15.1`) reconciles every survivor from the initial complete
+`trust.rs` measurement at `36154d6`. Native history remains 802 killed, 540 survived and
+78 compiler refusals, with strict exit 1. The current production listing contains 1526 candidates.
+Mapping old text to current text supplies no new mutation verdict or equivalence.
+
+| Source-identity observation | Initial survivor rows |
+| --- | ---: |
+| Complete unchanged source span and exact edit retained | 512 |
+| No current exact edit | 28 |
+| Ambiguous mapping | 0 |
+| Bound to a completed actual measurement by current raw edit | 70 |
+
+The fresh-name portion of a generated iterator identifier contains its source line. The constructor
+is unchanged and that prefix is absent from both complete sources; only its line number is normalized
+when comparing replacements. The original fragments and every other replacement byte remain exact.
+All retained rows also lie in complete unchanged source blocks. A missing exact edit means its old
+text disappeared, not that its replacement behavior or new candidates pass.
+
+For example, the old inline command framing in `compile` moved to the repaired `cargo_commands`
+and `dependency_files` path. Some old edits therefore disappear, while retained ownership/configuration
+edits still require assessment. Their replacement helpers have their own current mutation shapes.
+The old `run_cargo` selector edits are covered by its separately documented repair and fresh complete
+region replay; the initial raw outcomes remain historical.
+
+The census finds 463 rows still assigned to the general parent before this update. They now all have
+the concrete lanes below. Of these, 442 retain an exact current edit and 21 lack an exact current edit;
+neither category is declared a current survivor or a pass. The completed 77-row families retain their
+previous owners; 70 have a retained raw edit and seven lack one.
+
+| Next assessment lane | Source scope | Historical rows assigned | Current candidates in the full lane |
+| --- | --- | ---: | ---: |
+| `.15.2` — Compiler-input path | `compile` plus `cargo_commands` and `dependency_files` | 48 | 159 |
+| `.15.3` — Build artifacts | `build` | 21 | 34 |
+| `.15.4` — Source extents | `refused_sites`, `site_extent` | 24 | 90 |
+| `.15.5` — Compiled rule names | `inadmissible`, `compiled_names` | 18 | 42 |
+| `.15.6` — Tool identity output | `tool_line` | 2 | 5 |
+| `.15.7` — Target and program closure | `target_closure`, `classify_programs` | 30 | 90 |
+| `.15.8` — Refusal and admission state | `refuse`, `Rules` | 60 | 135 |
+| `.15.9` — Inventory orchestration | `inventory_with` | 237 | 688 |
+| `.15.10` — Trust command | `run` | 15 | 15 |
+| `.15.11` — Harness-relative units | `beside` | 8 | 15 |
+
+The next committed measurement is the complete current `compile` function (`.15.2.1`):
+83 candidates against the full parent command, with strict timeout/unjudged rules and whole-input
+restoration. Its command-record and dependency helpers follow as separate bounded children; actual
+survivors gain controls, owned repairs or exact proofs before final complete replay. The remaining
+lanes follow the same discipline. All required assessments precede the final whole-file sweep.
+
+The maintained historical native auditor and actual current native listing agree with the census.
+Independent old/current source-span and complete replacement checks cover every row; six altered
+censuses refuse (missing/duplicate row, foreign current ID, wrong replacement, false retirement and
+wrong ownership count). All 1062 held regular inputs restore before these later completion documents.
+No Rust, operator, catalogue or equivalent reason changes. The closed diagnostic task subtree is
+sealed with exact reconstruction and all previous archives preserved; the book remains unbounded.
+
+The following tables expose every initial row, its current raw identity or its absence, the bound
+historical verdict when one is available, and its assessment owner. Owner suffixes are under
+`M3.6.9.6.3.2.2`; older families keep their previously completed records. “No bound result here”
+does not erase earlier evidence or infer a failure: the census only binds the explicitly audited
+receipt set. Every final current outcome still requires its actual native run.
+
+#### Initial `read_roots` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L185.cond.2` | `L185.cond.2` | killed (historical) | `.1` |
+
+#### Initial `read_form` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L235.iter.25` | `L238.iter.25` | killed (historical) | `.2` |
+| `L235.iter.26` | `L238.iter.26` | killed (historical) | `.2` |
+| `L235.guard.28` | `L238.guard.28` | killed (historical) | `.2` |
+| `L235.guard.29` | `L238.guard.29` | killed (historical) | `.2` |
+| `L235.guard.30` | `L238.guard.30` | killed (historical) | `.2` |
+| `L235.guard.31` | `L238.guard.31` | killed (historical) | `.2` |
+| `L235.guard.32` | `L238.guard.32` | killed (historical) | `.2` |
+| `L264.stmt.42` | `L267.stmt.42` | killed (historical) | `.3` |
+| `L317.stmt.47` | `L320.stmt.47` | killed (historical) | `.4` |
+| `L263.chain.1020` | `L266.chain.1104` | killed (historical) | `.3` |
+| `L312.chain.1029` | `L315.chain.1113` | killed (historical) | `.3` |
+| `L312.chain.1030` | `L315.chain.1114` | killed (historical) | `.3` |
+
+#### Initial `check_pairs` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L334.iter.51` | `L340.iter.52` | killed (historical) | `.7` |
+| `L334.iter.52` | `L340.iter.53` | killed (historical) | `.7` |
+| `L334.guard.53` | `L340.guard.54` | killed (historical) | `.7` |
+| `L334.guard.54` | `L340.guard.55` | killed (historical) | `.7` |
+| `L334.guard.55` | `L340.guard.56` | killed (historical) | `.7` |
+| `L336.iter.58` | `L342.iter.59` | equivalent (historical) | `.8.2` |
+| `L348.cond.64` | `L354.cond.65` | killed (historical) | `.7` |
+| `L340.clogic.1392` | `L346.clogic.1496` | killed (historical) | `.7` |
+
+#### Initial `unit_configuration` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L376.iter.65` | no current exact edit | no bound result here | `.9.1` |
+| `L376.iter.66` | no current exact edit | no bound result here | `.9.1` |
+| `L376.iter.67` | no current exact edit | no bound result here | `.9.1` |
+| `L377.stmt.68` | no current exact edit | no bound result here | `.9.1` |
+
+#### Initial `split_command` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L388.bool.71` | `L393.bool.67` | equivalent (historical) | `.10.3.4` |
+| `L392.not.78` | `L399.not.69` | killed (historical) | `.10.3.4` |
+| `L392.stmt.79` | `L399.stmt.70` | killed (historical) | `.10.3.4` |
+| `L393.bool.80` | `L400.bool.71` | killed (historical) | `.10.3.4` |
+| `L393.stmt.81` | `L400.stmt.72` | killed (historical) | `.10.3.4` |
+| `L396.logic.84` | `L403.logic.75` | killed (historical) | `.10.3.4` |
+| `L396.cond.86` | `L403.cond.77` | equivalent (historical) | `.10.3.4` |
+| `L399.bool.90` | `L406.bool.81` | equivalent (historical) | `.10.3.4` |
+| `L399.stmt.91` | `L406.stmt.82` | equivalent (historical) | `.10.3.4` |
+| `L404.logic.92` | `L411.logic.83` | killed (historical) | `.10.3.4` |
+| `L404.logic.93` | `L411.logic.84` | killed (historical) | `.10.3.4` |
+| `L404.logic.94` | `L411.logic.85` | killed (historical) | `.10.3.4` |
+| `L404.cond.95` | `L411.cond.86` | equivalent (historical) | `.10.3.4` |
+| `L404.cond.96` | `L411.cond.87` | killed (historical) | `.10.3.4` |
+| `L404.not.97` | `L411.not.88` | killed (historical) | `.10.3.4` |
+| `L405.stmt.98` | `L412.stmt.89` | killed (historical) | `.10.3.4` |
+
+#### Initial `DROPPED` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L416.bool.101` | `L554.bool.158` | killed (historical) | `.11.2.2` |
+| `L417.bool.102` | `L555.bool.159` | equivalent (historical) | `.11.2.4.2` |
+| `L418.bool.103` | `L556.bool.160` | equivalent (historical) | `.11.2.4.1` |
+| `L419.bool.104` | `L557.bool.161` | equivalent (historical) | `.11.2.4.1` |
+| `L420.bool.105` | `L558.bool.162` | equivalent (historical) | `.11.2.4.1` |
+| `L421.bool.106` | `L559.bool.163` | equivalent (historical) | `.11.2.4.1` |
+| `L422.bool.107` | `L560.bool.164` | equivalent (historical) | `.11.2.4.1` |
+| `L423.bool.108` | `L561.bool.165` | equivalent (historical) | `.11.2.4.1` |
+| `L424.bool.109` | `L562.bool.166` | equivalent (historical) | `.11.2.4.1` |
+| `L425.bool.110` | `L563.bool.167` | equivalent (historical) | `.11.2.4.1` |
+| `L426.bool.111` | `L564.bool.168` | equivalent (historical) | `.11.2.4.3.2` |
+
+#### Initial `normalise` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L452.cond.120` | `L590.cond.177` | killed (historical) | `.13.1` |
+| `L452.dir.121` | `L590.dir.178` | killed (historical) | `.13.2.2` |
+| `L453.int.122` | `L591.int.179` | killed (historical) | `.13.1` |
+| `L454.stmt.125` | `L592.stmt.182` | killed (historical) | `.13.1` |
+| `L457.int.129` | `L595.int.186` | killed (historical) | `.13.1` |
+| `L457.int.130` | `L595.int.187` | killed (historical) | `.13.2.3` |
+| `L459.dir.131` | `L597.dir.188` | equivalent/survived (historical) | `.13.2.4.2.1` |
+| `L459.lit.132` | `L597.lit.189` | equivalent/survived (historical) | `.13.2.4.2.1` |
+| `L460.dir.135` | `L598.dir.192` | equivalent/survived (historical) | `.13.2.4.2.2` |
+| `L460.lit.136` | `L598.lit.193` | equivalent/survived (historical) | `.13.2.4.2.2` |
+| `L461.dir.139` | `L599.dir.196` | equivalent/survived (historical) | `.13.2.4.2.3` |
+| `L461.lit.140` | `L599.lit.197` | equivalent/survived (historical) | `.13.2.4.2.3` |
+| `L466.stmt.146` | `L604.stmt.203` | killed (historical) | `.13.2.3` |
+| `L467.int.148` | `L605.int.205` | killed (historical) | `.13.2.3` |
+| `L472.int.155` | `L610.int.212` | killed (historical) | `.13.1` |
+| `L473.dir.156` | `L611.dir.213` | killed (historical) | `.13.2.2` |
+| `L474.dir.157` | `L612.dir.214` | killed (historical) | `.13.1` |
+| `L476.cmp.158` | `L614.cmp.215` | equivalent (historical) | `.13.2.5` |
+| `L481.stmt.159` | `L619.stmt.216` | killed (historical) | `.13.1` |
+| `L452.chain.1035` | `L590.chain.1129` | killed (historical) | `.13.1` |
+| `L452.chain.1036` | `L590.chain.1130` | killed (historical) | `.13.1` |
+
+#### Initial `run_cargo` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L541.iter.177` | `L733.iter.263` | killed (historical) | `.14` |
+| `L550.dir.182` | no current exact edit | no bound result here | `.14` |
+| `L550.lit.183` | no current exact edit | no bound result here | `.14` |
+| `L550.lit.184` | no current exact edit | no bound result here | `.14` |
+
+#### Initial `compile` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L606.guard.189` | no current exact edit | no bound result here | `.15.2` |
+| `L606.guard.190` | no current exact edit | no bound result here | `.15.2` |
+| `L606.guard.191` | no current exact edit | no bound result here | `.15.2` |
+| `L610.int.193` | no current exact edit | no bound result here | `.15.2` |
+| `L610.int.194` | no current exact edit | no bound result here | `.15.2` |
+| `L612.cond.196` | `L799.cond.277` | no bound result here | `.15.2` |
+| `L627.dir.203` | `L814.dir.284` | no bound result here | `.15.2` |
+| `L627.lit.204` | `L814.lit.285` | no bound result here | `.15.2` |
+| `L655.iter.210` | `L841.iter.290` | no bound result here | `.15.2` |
+| `L655.guard.212` | `L841.guard.292` | no bound result here | `.15.2` |
+| `L655.guard.213` | `L841.guard.293` | no bound result here | `.15.2` |
+| `L655.guard.214` | no current exact edit | no bound result here | `.15.2` |
+| `L655.guard.215` | no current exact edit | no bound result here | `.15.2` |
+| `L655.guard.216` | no current exact edit | no bound result here | `.15.2` |
+| `L659.dir.224` | `L845.dir.301` | no bound result here | `.15.2` |
+| `L659.lit.225` | `L845.lit.302` | no bound result here | `.15.2` |
+| `L667.stmt.228` | `L857.stmt.304` | no bound result here | `.15.2` |
+| `L669.logic.229` | no current exact edit | no bound result here | `.15.2` |
+| `L669.logic.230` | no current exact edit | no bound result here | `.15.2` |
+| `L669.logic.231` | no current exact edit | no bound result here | `.15.2` |
+| `L669.cond.233` | no current exact edit | no bound result here | `.15.2` |
+| `L670.stmt.235` | `L871.stmt.314` | no bound result here | `.15.2` |
+| `L672.bool.236` | no current exact edit | no bound result here | `.15.2` |
+| `L672.stmt.237` | no current exact edit | no bound result here | `.15.2` |
+| `L673.dir.238` | no current exact edit | no bound result here | `.15.2` |
+| `L676.dir.241` | no current exact edit | no bound result here | `.15.2` |
+| `L676.guard.245` | no current exact edit | no bound result here | `.15.2` |
+| `L676.guard.246` | no current exact edit | no bound result here | `.15.2` |
+| `L676.guard.247` | no current exact edit | no bound result here | `.15.2` |
+| `L683.cond.249` | no current exact edit | no bound result here | `.15.2` |
+| `L703.iter.253` | `L885.iter.316` | no bound result here | `.15.2` |
+| `L703.iter.254` | `L885.iter.317` | no bound result here | `.15.2` |
+| `L703.iter.255` | `L885.iter.318` | no bound result here | `.15.2` |
+| `L703.guard.256` | `L885.guard.319` | no bound result here | `.15.2` |
+| `L703.guard.257` | `L885.guard.320` | no bound result here | `.15.2` |
+| `L703.guard.258` | `L885.guard.321` | no bound result here | `.15.2` |
+| `L704.logic.259` | `L886.logic.322` | no bound result here | `.15.2` |
+| `L704.logic.260` | `L886.logic.323` | no bound result here | `.15.2` |
+| `L704.logic.261` | `L886.logic.324` | no bound result here | `.15.2` |
+| `L704.cond.263` | `L886.cond.326` | no bound result here | `.15.2` |
+| `L729.cond.269` | `L911.cond.332` | no bound result here | `.15.2` |
+| `L639.chain.1057` | `L826.chain.1162` | no bound result here | `.15.2` |
+| `L639.chain.1058` | `L826.chain.1163` | no bound result here | `.15.2` |
+| `L659.contains.1059` | `L845.contains.1164` | no bound result here | `.15.2` |
+| `L659.contains.1060` | `L845.contains.1165` | no bound result here | `.15.2` |
+| `L659.contains.1061` | `L845.contains.1166` | no bound result here | `.15.2` |
+| `L659.contains.1062` | `L845.contains.1167` | no bound result here | `.15.2` |
+| `L676.chain.1065` | no current exact edit | no bound result here | `.15.2` |
+
+#### Initial `build` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L768.guard.274` | `L950.guard.337` | no bound result here | `.15.3` |
+| `L768.guard.275` | `L950.guard.338` | no bound result here | `.15.3` |
+| `L768.guard.276` | `L950.guard.339` | no bound result here | `.15.3` |
+| `L768.guard.277` | `L950.guard.340` | no bound result here | `.15.3` |
+| `L768.guard.278` | `L950.guard.341` | no bound result here | `.15.3` |
+| `L768.guard.279` | `L950.guard.342` | no bound result here | `.15.3` |
+| `L770.cond.282` | `L952.cond.345` | no bound result here | `.15.3` |
+| `L771.stmt.283` | `L953.stmt.346` | no bound result here | `.15.3` |
+| `L777.cond.286` | `L959.cond.349` | no bound result here | `.15.3` |
+| `L778.stmt.287` | `L960.stmt.350` | no bound result here | `.15.3` |
+| `L795.logic.290` | `L977.logic.353` | no bound result here | `.15.3` |
+| `L798.logic.293` | `L980.logic.356` | no bound result here | `.15.3` |
+| `L789.chain.1072` | `L971.chain.1174` | no bound result here | `.15.3` |
+| `L789.chain.1073` | `L971.chain.1175` | no bound result here | `.15.3` |
+| `L795.chain.1074` | `L977.chain.1176` | no bound result here | `.15.3` |
+| `L795.chain.1075` | `L977.chain.1177` | no bound result here | `.15.3` |
+| `L798.chain.1076` | `L980.chain.1178` | no bound result here | `.15.3` |
+| `L798.chain.1077` | `L980.chain.1179` | no bound result here | `.15.3` |
+| `L801.chain.1078` | `L983.chain.1180` | no bound result here | `.15.3` |
+| `L801.chain.1079` | `L983.chain.1181` | no bound result here | `.15.3` |
+| `L805.chain.1080` | `L987.chain.1182` | no bound result here | `.15.3` |
+
+#### Initial `refused_sites` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L835.guard.298` | `L1017.guard.361` | no bound result here | `.15.4` |
+| `L835.guard.299` | `L1017.guard.362` | no bound result here | `.15.4` |
+| `L835.guard.300` | `L1017.guard.363` | no bound result here | `.15.4` |
+| `L848.int.305` | `L1030.int.368` | no bound result here | `.15.4` |
+| `L852.cmp.307` | `L1034.cmp.370` | no bound result here | `.15.4` |
+| `L853.eq.308` | `L1035.eq.371` | no bound result here | `.15.4` |
+| `L855.int.311` | `L1037.int.374` | no bound result here | `.15.4` |
+| `L857.cond.316` | `L1039.cond.379` | no bound result here | `.15.4` |
+| `L860.iter.317` | `L1042.iter.380` | no bound result here | `.15.4` |
+| `L860.iter.318` | `L1042.iter.381` | no bound result here | `.15.4` |
+| `L860.iter.319` | `L1042.iter.382` | no bound result here | `.15.4` |
+
+#### Initial `site_extent` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L911.cond.340` | `L1093.cond.403` | no bound result here | `.15.4` |
+| `L924.int.345` | `L1106.int.408` | no bound result here | `.15.4` |
+| `L931.cmp.347` | `L1113.cmp.410` | no bound result here | `.15.4` |
+| `L933.logic.351` | `L1115.logic.414` | no bound result here | `.15.4` |
+| `L951.cmp.361` | `L1133.cmp.424` | no bound result here | `.15.4` |
+| `L954.stmt.363` | `L1136.stmt.426` | no bound result here | `.15.4` |
+| `L955.int.364` | `L1137.int.427` | no bound result here | `.15.4` |
+| `L955.int.365` | `L1137.int.428` | no bound result here | `.15.4` |
+| `L962.stmt.369` | `L1144.stmt.432` | no bound result here | `.15.4` |
+| `L963.int.371` | `L1145.int.434` | no bound result here | `.15.4` |
+| `L970.stmt.375` | `L1152.stmt.438` | no bound result here | `.15.4` |
+| `L917.chain.1086` | `L1099.chain.1188` | no bound result here | `.15.4` |
+| `L917.chain.1087` | `L1099.chain.1189` | no bound result here | `.15.4` |
+
+#### Initial `inadmissible` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L996.bool.382` | `L1178.bool.445` | no bound result here | `.15.5` |
+| `L999.eq.383` | `L1181.eq.446` | no bound result here | `.15.5` |
+| `L999.logic.385` | `L1181.logic.448` | no bound result here | `.15.5` |
+| `L994.chain.1088` | `L1176.chain.1190` | no bound result here | `.15.5` |
+| `L998.chain.1091` | `L1180.chain.1193` | no bound result here | `.15.5` |
+| `L989.clogic.1393` | `L1171.clogic.1499` | no bound result here | `.15.5` |
+| `L995.clogic.1396` | `L1177.clogic.1502` | no bound result here | `.15.5` |
+| `L999.clogic.1397` | `L1181.clogic.1503` | no bound result here | `.15.5` |
+| `L999.clogic.1398` | `L1181.clogic.1504` | no bound result here | `.15.5` |
+
+#### Initial `compiled_names` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L1014.cmp.387` | `L1196.cmp.450` | no bound result here | `.15.5` |
+| `L1019.guard.393` | `L1201.guard.456` | no bound result here | `.15.5` |
+| `L1019.guard.394` | `L1201.guard.457` | no bound result here | `.15.5` |
+| `L1019.guard.395` | `L1201.guard.458` | no bound result here | `.15.5` |
+| `L1020.cond.398` | `L1202.cond.461` | no bound result here | `.15.5` |
+| `L1021.stmt.400` | `L1203.stmt.463` | no bound result here | `.15.5` |
+| `L1026.eq.401` | `L1208.eq.464` | no bound result here | `.15.5` |
+| `L1028.int.402` | `L1210.int.465` | no bound result here | `.15.5` |
+| `L1028.int.403` | `L1210.int.466` | no bound result here | `.15.5` |
+
+#### Initial `tool_line` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L1073.iter.410` | `L1255.iter.473` | no bound result here | `.15.6` |
+| `L1073.iter.412` | `L1255.iter.475` | no bound result here | `.15.6` |
+
+#### Initial `target_closure` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L1098.stmt.417` | `L1280.stmt.480` | no bound result here | `.15.7` |
+| `L1100.iter.419` | `L1282.iter.482` | no bound result here | `.15.7` |
+| `L1100.iter.420` | `L1282.iter.483` | no bound result here | `.15.7` |
+| `L1100.guard.422` | `L1282.guard.485` | no bound result here | `.15.7` |
+| `L1100.guard.423` | `L1282.guard.486` | no bound result here | `.15.7` |
+| `L1103.logic.435` | `L1285.logic.498` | no bound result here | `.15.7` |
+| `L1103.logic.437` | `L1285.logic.500` | no bound result here | `.15.7` |
+| `L1103.contains.1098` | `L1285.contains.1200` | no bound result here | `.15.7` |
+| `L1103.contains.1100` | `L1285.contains.1202` | no bound result here | `.15.7` |
+
+#### Initial `classify_programs` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L1128.logic.453` | `L1310.logic.516` | no bound result here | `.15.7` |
+| `L1129.logic.455` | `L1311.logic.518` | no bound result here | `.15.7` |
+| `L1139.logic.460` | `L1321.logic.523` | no bound result here | `.15.7` |
+| `L1118.chain.1102` | `L1300.chain.1204` | no bound result here | `.15.7` |
+| `L1119.chain.1104` | `L1301.chain.1206` | no bound result here | `.15.7` |
+| `L1119.chain.1106` | `L1301.chain.1208` | no bound result here | `.15.7` |
+| `L1120.chain.1107` | `L1302.chain.1209` | no bound result here | `.15.7` |
+| `L1120.chain.1108` | `L1302.chain.1210` | no bound result here | `.15.7` |
+| `L1125.chain.1109` | `L1307.chain.1211` | no bound result here | `.15.7` |
+| `L1133.chain.1111` | `L1315.chain.1213` | no bound result here | `.15.7` |
+| `L1134.chain.1113` | `L1316.chain.1215` | no bound result here | `.15.7` |
+| `L1134.chain.1114` | `L1316.chain.1216` | no bound result here | `.15.7` |
+| `L1134.contains.1117` | `L1316.contains.1219` | no bound result here | `.15.7` |
+| `L1151.chain.1122` | `L1333.chain.1224` | no bound result here | `.15.7` |
+| `L1151.chain.1123` | `L1333.chain.1225` | no bound result here | `.15.7` |
+| `L1169.chain.1125` | `L1351.chain.1227` | no bound result here | `.15.7` |
+| `L1170.chain.1126` | `L1352.chain.1228` | no bound result here | `.15.7` |
+| `L1170.chain.1127` | `L1352.chain.1229` | no bound result here | `.15.7` |
+| `L1139.clogic.1399` | `L1321.clogic.1505` | no bound result here | `.15.7` |
+| `L1139.clogic.1400` | `L1321.clogic.1506` | no bound result here | `.15.7` |
+| `L1139.clogic.1401` | `L1321.clogic.1507` | no bound result here | `.15.7` |
+
+#### Initial `refuse` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L1192.stmt.466` | `L1374.stmt.529` | no bound result here | `.15.8` |
+| `L1193.stmt.467` | `L1375.stmt.530` | no bound result here | `.15.8` |
+
+#### Initial `Rules` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L1224.int.468` | `L1408.int.531` | no bound result here | `.15.8` |
+| `L1224.int.469` | `L1408.int.532` | no bound result here | `.15.8` |
+| `L1224.stmt.470` | `L1408.stmt.533` | no bound result here | `.15.8` |
+| `L1230.cond.472` | `L1414.cond.535` | no bound result here | `.15.8` |
+| `L1231.int.473` | `L1415.int.536` | no bound result here | `.15.8` |
+| `L1231.int.474` | `L1415.int.537` | no bound result here | `.15.8` |
+| `L1231.stmt.475` | `L1415.stmt.538` | no bound result here | `.15.8` |
+| `L1249.guard.480` | `L1433.guard.543` | no bound result here | `.15.8` |
+| `L1249.guard.481` | `L1433.guard.544` | no bound result here | `.15.8` |
+| `L1249.guard.482` | `L1433.guard.545` | no bound result here | `.15.8` |
+| `L1253.iter.486` | `L1437.iter.549` | no bound result here | `.15.8` |
+| `L1253.iter.487` | `L1437.iter.550` | no bound result here | `.15.8` |
+| `L1253.iter.488` | `L1437.iter.551` | no bound result here | `.15.8` |
+| `L1261.cond.492` | `L1445.cond.555` | no bound result here | `.15.8` |
+| `L1262.stmt.494` | `L1446.stmt.557` | no bound result here | `.15.8` |
+| `L1278.int.495` | `L1472.int.574` | no bound result here | `.15.8` |
+| `L1278.int.496` | `L1472.int.575` | no bound result here | `.15.8` |
+| `L1278.stmt.497` | `L1472.stmt.576` | no bound result here | `.15.8` |
+| `L1286.int.500` | `L1480.int.579` | no bound result here | `.15.8` |
+| `L1308.guard.508` | `L1502.guard.587` | no bound result here | `.15.8` |
+| `L1308.guard.509` | `L1502.guard.588` | no bound result here | `.15.8` |
+| `L1308.guard.510` | `L1502.guard.589` | no bound result here | `.15.8` |
+| `L1308.guard.511` | `L1502.guard.590` | no bound result here | `.15.8` |
+| `L1308.guard.512` | `L1502.guard.591` | no bound result here | `.15.8` |
+| `L1308.guard.513` | `L1502.guard.592` | no bound result here | `.15.8` |
+| `L1308.guard.514` | `L1502.guard.593` | no bound result here | `.15.8` |
+| `L1308.guard.515` | `L1502.guard.594` | no bound result here | `.15.8` |
+| `L1313.cond.520` | `L1507.cond.599` | no bound result here | `.15.8` |
+| `L1317.stmt.521` | `L1511.stmt.600` | no bound result here | `.15.8` |
+| `L1325.cond.525` | `L1519.cond.604` | no bound result here | `.15.8` |
+| `L1338.iter.529` | `L1532.iter.608` | no bound result here | `.15.8` |
+| `L1363.guard.536` | `L1557.guard.615` | no bound result here | `.15.8` |
+| `L1363.guard.537` | `L1557.guard.616` | no bound result here | `.15.8` |
+| `L1363.guard.538` | `L1557.guard.617` | no bound result here | `.15.8` |
+| `L1367.iter.542` | `L1561.iter.621` | no bound result here | `.15.8` |
+| `L1367.iter.543` | `L1561.iter.622` | no bound result here | `.15.8` |
+| `L1367.iter.544` | `L1561.iter.623` | no bound result here | `.15.8` |
+| `L1373.eq.546` | `L1567.eq.625` | no bound result here | `.15.8` |
+| `L1373.logic.549` | `L1567.logic.628` | no bound result here | `.15.8` |
+| `L1373.cond.551` | `L1567.cond.630` | no bound result here | `.15.8` |
+| `L1374.iter.553` | `L1568.iter.632` | no bound result here | `.15.8` |
+| `L1374.iter.554` | `L1568.iter.633` | no bound result here | `.15.8` |
+| `L1374.iter.555` | `L1568.iter.634` | no bound result here | `.15.8` |
+| `L1375.iter.556` | `L1569.iter.635` | no bound result here | `.15.8` |
+| `L1375.iter.557` | `L1569.iter.636` | no bound result here | `.15.8` |
+| `L1375.iter.558` | `L1569.iter.637` | no bound result here | `.15.8` |
+| `L1382.iter.564` | `L1576.iter.643` | no bound result here | `.15.8` |
+| `L1382.iter.565` | `L1576.iter.644` | no bound result here | `.15.8` |
+| `L1382.guard.566` | `L1576.guard.645` | no bound result here | `.15.8` |
+| `L1382.guard.567` | `L1576.guard.646` | no bound result here | `.15.8` |
+| `L1382.guard.568` | `L1576.guard.647` | no bound result here | `.15.8` |
+| `L1383.cond.570` | `L1577.cond.649` | no bound result here | `.15.8` |
+| `L1253.chain.1133` | `L1437.chain.1235` | no bound result here | `.15.8` |
+| `L1253.chain.1134` | `L1437.chain.1236` | no bound result here | `.15.8` |
+| `L1312.chain.1135` | `L1506.chain.1239` | no bound result here | `.15.8` |
+| `L1312.chain.1136` | `L1506.chain.1240` | no bound result here | `.15.8` |
+| `L1313.contains.1137` | `L1507.contains.1241` | no bound result here | `.15.8` |
+| `L1313.contains.1139` | `L1507.contains.1243` | no bound result here | `.15.8` |
+
+#### Initial `inventory_with` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L1435.eq.577` | `L1629.eq.657` | no bound result here | `.15.9` |
+| `L1459.iter.584` | `L1653.iter.664` | no bound result here | `.15.9` |
+| `L1459.iter.586` | `L1653.iter.666` | no bound result here | `.15.9` |
+| `L1460.iter.587` | `L1654.iter.667` | no bound result here | `.15.9` |
+| `L1460.iter.588` | `L1654.iter.668` | no bound result here | `.15.9` |
+| `L1460.iter.589` | `L1654.iter.669` | no bound result here | `.15.9` |
+| `L1460.guard.590` | `L1654.guard.670` | no bound result here | `.15.9` |
+| `L1460.guard.591` | `L1654.guard.671` | no bound result here | `.15.9` |
+| `L1460.guard.592` | `L1654.guard.672` | no bound result here | `.15.9` |
+| `L1461.logic.594` | `L1655.logic.674` | no bound result here | `.15.9` |
+| `L1494.cond.600` | `L1688.cond.680` | no bound result here | `.15.9` |
+| `L1598.iter.613` | `L1792.iter.693` | no bound result here | `.15.9` |
+| `L1598.iter.614` | `L1792.iter.694` | no bound result here | `.15.9` |
+| `L1599.iter.617` | `L1793.iter.697` | no bound result here | `.15.9` |
+| `L1599.guard.620` | `L1793.guard.700` | no bound result here | `.15.9` |
+| `L1607.iter.624` | `L1801.iter.704` | no bound result here | `.15.9` |
+| `L1607.iter.626` | `L1801.iter.706` | no bound result here | `.15.9` |
+| `L1607.guard.627` | `L1801.guard.707` | no bound result here | `.15.9` |
+| `L1607.guard.629` | `L1801.guard.709` | no bound result here | `.15.9` |
+| `L1619.eq.632` | `L1813.eq.712` | no bound result here | `.15.9` |
+| `L1619.logic.634` | `L1813.logic.714` | no bound result here | `.15.9` |
+| `L1647.iter.645` | `L1841.iter.725` | no bound result here | `.15.9` |
+| `L1652.iter.646` | `L1846.iter.726` | no bound result here | `.15.9` |
+| `L1652.iter.647` | `L1846.iter.727` | no bound result here | `.15.9` |
+| `L1652.iter.648` | `L1846.iter.728` | no bound result here | `.15.9` |
+| `L1682.iter.654` | `L1877.iter.734` | no bound result here | `.15.9` |
+| `L1687.stmt.658` | `L1882.stmt.738` | no bound result here | `.15.9` |
+| `L1689.iter.659` | `L1884.iter.739` | no bound result here | `.15.9` |
+| `L1689.iter.661` | `L1884.iter.741` | no bound result here | `.15.9` |
+| `L1689.guard.662` | `L1884.guard.742` | no bound result here | `.15.9` |
+| `L1689.guard.664` | `L1884.guard.744` | no bound result here | `.15.9` |
+| `L1690.eq.666` | `L1885.eq.746` | no bound result here | `.15.9` |
+| `L1690.logic.669` | `L1885.logic.749` | no bound result here | `.15.9` |
+| `L1691.logic.671` | `L1886.logic.751` | no bound result here | `.15.9` |
+| `L1691.logic.672` | `L1886.logic.752` | no bound result here | `.15.9` |
+| `L1691.logic.673` | `L1886.logic.753` | no bound result here | `.15.9` |
+| `L1691.logic.674` | `L1886.logic.754` | no bound result here | `.15.9` |
+| `L1691.logic.675` | `L1886.logic.755` | no bound result here | `.15.9` |
+| `L1691.cond.676` | `L1886.cond.756` | no bound result here | `.15.9` |
+| `L1731.iter.693` | `L1926.iter.774` | no bound result here | `.15.9` |
+| `L1732.iter.696` | `L1927.iter.777` | no bound result here | `.15.9` |
+| `L1759.iter.710` | `L1954.iter.791` | no bound result here | `.15.9` |
+| `L1759.iter.711` | `L1954.iter.792` | no bound result here | `.15.9` |
+| `L1759.iter.712` | `L1954.iter.793` | no bound result here | `.15.9` |
+| `L1759.guard.713` | `L1954.guard.794` | no bound result here | `.15.9` |
+| `L1759.guard.714` | `L1954.guard.795` | no bound result here | `.15.9` |
+| `L1759.guard.715` | `L1954.guard.796` | no bound result here | `.15.9` |
+| `L1826.iter.729` | `L2021.iter.810` | no bound result here | `.15.9` |
+| `L1827.iter.730` | `L2022.iter.811` | no bound result here | `.15.9` |
+| `L1827.iter.731` | `L2022.iter.812` | no bound result here | `.15.9` |
+| `L1827.iter.732` | `L2022.iter.813` | no bound result here | `.15.9` |
+| `L1845.iter.739` | `L2040.iter.820` | no bound result here | `.15.9` |
+| `L1857.iter.750` | `L2052.iter.831` | no bound result here | `.15.9` |
+| `L1857.iter.751` | `L2052.iter.832` | no bound result here | `.15.9` |
+| `L1858.iter.752` | `L2053.iter.833` | no bound result here | `.15.9` |
+| `L1858.iter.753` | `L2053.iter.834` | no bound result here | `.15.9` |
+| `L1858.iter.754` | `L2053.iter.835` | no bound result here | `.15.9` |
+| `L1858.guard.755` | `L2053.guard.836` | no bound result here | `.15.9` |
+| `L1858.guard.756` | `L2053.guard.837` | no bound result here | `.15.9` |
+| `L1858.guard.757` | `L2053.guard.838` | no bound result here | `.15.9` |
+| `L1890.iter.769` | `L2085.iter.850` | no bound result here | `.15.9` |
+| `L1890.iter.770` | `L2085.iter.851` | no bound result here | `.15.9` |
+| `L1890.iter.771` | `L2085.iter.852` | no bound result here | `.15.9` |
+| `L1890.guard.772` | `L2085.guard.853` | no bound result here | `.15.9` |
+| `L1890.guard.773` | `L2085.guard.854` | no bound result here | `.15.9` |
+| `L1890.guard.774` | `L2085.guard.855` | no bound result here | `.15.9` |
+| `L1890.guard.775` | `L2085.guard.856` | no bound result here | `.15.9` |
+| `L1890.guard.776` | `L2085.guard.857` | no bound result here | `.15.9` |
+| `L1890.guard.777` | `L2085.guard.858` | no bound result here | `.15.9` |
+| `L1896.logic.781` | `L2091.logic.862` | no bound result here | `.15.9` |
+| `L1897.eq.782` | `L2092.eq.863` | no bound result here | `.15.9` |
+| `L1897.eq.783` | `L2092.eq.864` | no bound result here | `.15.9` |
+| `L1897.eq.784` | `L2092.eq.865` | no bound result here | `.15.9` |
+| `L1897.logic.786` | `L2092.logic.867` | no bound result here | `.15.9` |
+| `L1897.logic.787` | `L2092.logic.868` | no bound result here | `.15.9` |
+| `L1900.iter.788` | `L2095.iter.869` | no bound result here | `.15.9` |
+| `L1900.iter.789` | `L2095.iter.870` | no bound result here | `.15.9` |
+| `L1900.iter.790` | `L2095.iter.871` | no bound result here | `.15.9` |
+| `L1901.iter.791` | `L2096.iter.872` | no bound result here | `.15.9` |
+| `L1901.iter.793` | `L2096.iter.874` | no bound result here | `.15.9` |
+| `L1910.cond.796` | `L2105.cond.877` | no bound result here | `.15.9` |
+| `L1911.stmt.798` | `L2106.stmt.879` | no bound result here | `.15.9` |
+| `L1941.iter.806` | `L2136.iter.888` | no bound result here | `.15.9` |
+| `L1941.iter.808` | `L2136.iter.890` | no bound result here | `.15.9` |
+| `L2021.iter.834` | `L2216.iter.916` | no bound result here | `.15.9` |
+| `L2022.iter.837` | `L2217.iter.919` | no bound result here | `.15.9` |
+| `L2022.guard.840` | `L2217.guard.922` | no bound result here | `.15.9` |
+| `L2045.lit.853` | `L2240.lit.935` | no bound result here | `.15.9` |
+| `L2062.iter.856` | `L2257.iter.938` | no bound result here | `.15.9` |
+| `L2062.iter.857` | `L2257.iter.939` | no bound result here | `.15.9` |
+| `L2062.guard.859` | `L2257.guard.941` | no bound result here | `.15.9` |
+| `L2062.guard.860` | `L2257.guard.942` | no bound result here | `.15.9` |
+| `L2065.bool.865` | `L2260.bool.947` | no bound result here | `.15.9` |
+| `L2067.dir.867` | `L2262.dir.949` | no bound result here | `.15.9` |
+| `L2079.stmt.876` | `L2274.stmt.958` | no bound result here | `.15.9` |
+| `L2091.iter.880` | `L2286.iter.962` | no bound result here | `.15.9` |
+| `L2108.logic.882` | `L2303.logic.964` | no bound result here | `.15.9` |
+| `L2109.eq.884` | `L2304.eq.966` | no bound result here | `.15.9` |
+| `L2109.eq.885` | `L2304.eq.967` | no bound result here | `.15.9` |
+| `L2109.logic.886` | `L2304.logic.968` | no bound result here | `.15.9` |
+| `L2109.logic.888` | `L2304.logic.970` | no bound result here | `.15.9` |
+| `L2182.iter.897` | `L2377.iter.979` | no bound result here | `.15.9` |
+| `L2182.guard.899` | `L2377.guard.981` | no bound result here | `.15.9` |
+| `L2182.guard.900` | `L2377.guard.982` | no bound result here | `.15.9` |
+| `L2190.logic.905` | `L2385.logic.987` | no bound result here | `.15.9` |
+| `L2204.eq.912` | `L2399.eq.994` | no bound result here | `.15.9` |
+| `L2204.eq.913` | `L2399.eq.995` | no bound result here | `.15.9` |
+| `L2204.logic.914` | `L2399.logic.996` | no bound result here | `.15.9` |
+| `L2204.logic.916` | `L2399.logic.998` | no bound result here | `.15.9` |
+| `L2212.iter.920` | `L2407.iter.1002` | no bound result here | `.15.9` |
+| `L2218.logic.922` | `L2413.logic.1004` | no bound result here | `.15.9` |
+| `L2220.eq.925` | `L2415.eq.1007` | no bound result here | `.15.9` |
+| `L2220.eq.926` | `L2415.eq.1008` | no bound result here | `.15.9` |
+| `L2220.logic.928` | `L2415.logic.1010` | no bound result here | `.15.9` |
+| `L2296.iter.936` | `L2491.iter.1018` | no bound result here | `.15.9` |
+| `L2296.iter.937` | `L2491.iter.1019` | no bound result here | `.15.9` |
+| `L2296.guard.939` | `L2491.guard.1021` | no bound result here | `.15.9` |
+| `L2296.guard.940` | `L2491.guard.1022` | no bound result here | `.15.9` |
+| `L2308.iter.947` | `L2503.iter.1029` | no bound result here | `.15.9` |
+| `L2308.iter.948` | `L2503.iter.1030` | no bound result here | `.15.9` |
+| `L2308.guard.950` | `L2503.guard.1032` | no bound result here | `.15.9` |
+| `L2308.guard.951` | `L2503.guard.1033` | no bound result here | `.15.9` |
+| `L2309.cond.952` | `L2504.cond.1034` | no bound result here | `.15.9` |
+| `L2314.cond.962` | `L2509.cond.1044` | no bound result here | `.15.9` |
+| `L2375.iter.986` | `L2570.iter.1068` | no bound result here | `.15.9` |
+| `L2375.iter.987` | `L2570.iter.1069` | no bound result here | `.15.9` |
+| `L2439.stmt.992` | `L2634.stmt.1074` | no bound result here | `.15.9` |
+| `L1447.chain.1145` | `L1641.chain.1249` | no bound result here | `.15.9` |
+| `L1447.chain.1146` | `L1641.chain.1250` | no bound result here | `.15.9` |
+| `L1461.contains.1148` | `L1655.contains.1252` | no bound result here | `.15.9` |
+| `L1461.contains.1150` | `L1655.contains.1254` | no bound result here | `.15.9` |
+| `L1491.chain.1152` | `L1685.chain.1256` | no bound result here | `.15.9` |
+| `L1553.chain.1154` | `L1747.chain.1258` | no bound result here | `.15.9` |
+| `L1553.chain.1155` | `L1747.chain.1259` | no bound result here | `.15.9` |
+| `L1557.contains.1158` | `L1751.contains.1262` | no bound result here | `.15.9` |
+| `L1557.contains.1159` | `L1751.contains.1263` | no bound result here | `.15.9` |
+| `L1557.contains.1160` | `L1751.contains.1264` | no bound result here | `.15.9` |
+| `L1557.contains.1161` | `L1751.contains.1265` | no bound result here | `.15.9` |
+| `L1566.chain.1162` | `L1760.chain.1266` | no bound result here | `.15.9` |
+| `L1566.chain.1163` | `L1760.chain.1267` | no bound result here | `.15.9` |
+| `L1578.chain.1165` | `L1772.chain.1269` | no bound result here | `.15.9` |
+| `L1583.chain.1168` | `L1777.chain.1272` | no bound result here | `.15.9` |
+| `L1587.chain.1170` | `L1781.chain.1274` | no bound result here | `.15.9` |
+| `L1587.chain.1171` | `L1781.chain.1275` | no bound result here | `.15.9` |
+| `L1591.chain.1172` | `L1785.chain.1276` | no bound result here | `.15.9` |
+| `L1591.chain.1173` | `L1785.chain.1277` | no bound result here | `.15.9` |
+| `L1591.chain.1174` | `L1785.chain.1278` | no bound result here | `.15.9` |
+| `L1618.chain.1177` | `L1812.chain.1281` | no bound result here | `.15.9` |
+| `L1618.chain.1178` | `L1812.chain.1282` | no bound result here | `.15.9` |
+| `L1691.contains.1179` | `L1886.contains.1283` | no bound result here | `.15.9` |
+| `L1691.contains.1181` | `L1886.contains.1285` | no bound result here | `.15.9` |
+| `L1826.chain.1211` | `L2021.chain.1315` | no bound result here | `.15.9` |
+| `L1858.chain.1226` | `L2053.chain.1330` | no bound result here | `.15.9` |
+| `L1858.chain.1227` | `L2053.chain.1331` | no bound result here | `.15.9` |
+| `L1875.chain.1235` | `L2070.chain.1339` | no bound result here | `.15.9` |
+| `L1877.chain.1237` | `L2072.chain.1341` | no bound result here | `.15.9` |
+| `L1877.chain.1238` | `L2072.chain.1342` | no bound result here | `.15.9` |
+| `L1893.chain.1243` | `L2088.chain.1347` | no bound result here | `.15.9` |
+| `L1981.chain.1247` | `L2176.chain.1351` | no bound result here | `.15.9` |
+| `L1981.chain.1248` | `L2176.chain.1352` | no bound result here | `.15.9` |
+| `L2023.contains.1256` | `L2218.contains.1360` | no bound result here | `.15.9` |
+| `L2023.contains.1258` | `L2218.contains.1362` | no bound result here | `.15.9` |
+| `L2054.chain.1259` | `L2249.chain.1363` | no bound result here | `.15.9` |
+| `L2054.chain.1260` | `L2249.chain.1364` | no bound result here | `.15.9` |
+| `L2068.chain.1262` | `L2263.chain.1366` | no bound result here | `.15.9` |
+| `L2097.chain.1266` | `L2292.chain.1370` | no bound result here | `.15.9` |
+| `L2105.chain.1267` | `L2300.chain.1371` | no bound result here | `.15.9` |
+| `L2105.chain.1268` | `L2300.chain.1372` | no bound result here | `.15.9` |
+| `L2106.chain.1269` | `L2301.chain.1373` | no bound result here | `.15.9` |
+| `L2106.chain.1270` | `L2301.chain.1374` | no bound result here | `.15.9` |
+| `L2106.chain.1271` | `L2301.chain.1375` | no bound result here | `.15.9` |
+| `L2108.contains.1272` | `L2303.contains.1376` | no bound result here | `.15.9` |
+| `L2127.chain.1276` | `L2322.chain.1380` | no bound result here | `.15.9` |
+| `L2127.chain.1277` | `L2322.chain.1381` | no bound result here | `.15.9` |
+| `L2145.chain.1278` | `L2340.chain.1382` | no bound result here | `.15.9` |
+| `L2145.chain.1279` | `L2340.chain.1383` | no bound result here | `.15.9` |
+| `L2154.chain.1280` | `L2349.chain.1384` | no bound result here | `.15.9` |
+| `L2154.chain.1281` | `L2349.chain.1385` | no bound result here | `.15.9` |
+| `L2165.chain.1282` | `L2360.chain.1386` | no bound result here | `.15.9` |
+| `L2165.chain.1283` | `L2360.chain.1387` | no bound result here | `.15.9` |
+| `L2202.chain.1293` | `L2397.chain.1397` | no bound result here | `.15.9` |
+| `L2216.chain.1296` | `L2411.chain.1400` | no bound result here | `.15.9` |
+| `L2218.contains.1299` | `L2413.contains.1403` | no bound result here | `.15.9` |
+| `L2229.chain.1305` | `L2424.chain.1409` | no bound result here | `.15.9` |
+| `L2229.chain.1306` | `L2424.chain.1410` | no bound result here | `.15.9` |
+| `L2230.chain.1309` | `L2425.chain.1413` | no bound result here | `.15.9` |
+| `L2233.chain.1310` | `L2428.chain.1414` | no bound result here | `.15.9` |
+| `L2236.chain.1313` | `L2431.chain.1417` | no bound result here | `.15.9` |
+| `L2237.chain.1314` | `L2432.chain.1418` | no bound result here | `.15.9` |
+| `L2237.chain.1315` | `L2432.chain.1419` | no bound result here | `.15.9` |
+| `L2237.contains.1319` | `L2432.contains.1423` | no bound result here | `.15.9` |
+| `L2237.contains.1320` | `L2432.contains.1424` | no bound result here | `.15.9` |
+| `L2249.chain.1321` | `L2444.chain.1425` | no bound result here | `.15.9` |
+| `L2249.chain.1322` | `L2444.chain.1426` | no bound result here | `.15.9` |
+| `L2250.chain.1323` | `L2445.chain.1427` | no bound result here | `.15.9` |
+| `L2250.chain.1324` | `L2445.chain.1428` | no bound result here | `.15.9` |
+| `L2250.chain.1325` | `L2445.chain.1429` | no bound result here | `.15.9` |
+| `L2251.chain.1326` | `L2446.chain.1430` | no bound result here | `.15.9` |
+| `L2251.chain.1327` | `L2446.chain.1431` | no bound result here | `.15.9` |
+| `L2252.chain.1329` | `L2447.chain.1433` | no bound result here | `.15.9` |
+| `L2252.chain.1330` | `L2447.chain.1434` | no bound result here | `.15.9` |
+| `L2257.chain.1333` | `L2452.chain.1437` | no bound result here | `.15.9` |
+| `L2257.chain.1334` | `L2452.chain.1438` | no bound result here | `.15.9` |
+| `L2283.chain.1340` | `L2478.chain.1444` | no bound result here | `.15.9` |
+| `L2283.chain.1341` | `L2478.chain.1445` | no bound result here | `.15.9` |
+| `L2284.chain.1342` | `L2479.chain.1446` | no bound result here | `.15.9` |
+| `L2284.chain.1343` | `L2479.chain.1447` | no bound result here | `.15.9` |
+| `L2285.chain.1346` | `L2480.chain.1450` | no bound result here | `.15.9` |
+| `L2291.chain.1347` | `L2486.chain.1451` | no bound result here | `.15.9` |
+| `L2291.chain.1348` | `L2486.chain.1452` | no bound result here | `.15.9` |
+| `L2292.chain.1349` | `L2487.chain.1453` | no bound result here | `.15.9` |
+| `L2292.chain.1350` | `L2487.chain.1454` | no bound result here | `.15.9` |
+| `L2292.chain.1351` | `L2487.chain.1455` | no bound result here | `.15.9` |
+| `L2293.chain.1354` | `L2488.chain.1458` | no bound result here | `.15.9` |
+| `L2294.chain.1359` | `L2489.chain.1463` | no bound result here | `.15.9` |
+| `L2294.chain.1360` | `L2489.chain.1464` | no bound result here | `.15.9` |
+| `L2344.chain.1365` | `L2539.chain.1469` | no bound result here | `.15.9` |
+| `L2345.chain.1367` | `L2540.chain.1471` | no bound result here | `.15.9` |
+| `L2345.chain.1368` | `L2540.chain.1472` | no bound result here | `.15.9` |
+| `L2353.chain.1369` | `L2548.chain.1473` | no bound result here | `.15.9` |
+| `L2353.chain.1370` | `L2548.chain.1474` | no bound result here | `.15.9` |
+| `L2373.chain.1371` | `L2568.chain.1475` | no bound result here | `.15.9` |
+| `L2373.chain.1372` | `L2568.chain.1476` | no bound result here | `.15.9` |
+| `L2373.chain.1374` | `L2568.chain.1478` | no bound result here | `.15.9` |
+| `L2374.chain.1375` | `L2569.chain.1479` | no bound result here | `.15.9` |
+| `L2374.chain.1376` | `L2569.chain.1480` | no bound result here | `.15.9` |
+| `L2374.chain.1377` | `L2569.chain.1481` | no bound result here | `.15.9` |
+| `L2374.chain.1378` | `L2569.chain.1482` | no bound result here | `.15.9` |
+| `L2374.chain.1379` | `L2569.chain.1483` | no bound result here | `.15.9` |
+| `L2388.chain.1380` | `L2583.chain.1484` | no bound result here | `.15.9` |
+| `L2388.chain.1381` | `L2583.chain.1485` | no bound result here | `.15.9` |
+| `L2430.chain.1383` | `L2625.chain.1487` | no bound result here | `.15.9` |
+| `L2431.chain.1384` | `L2626.chain.1488` | no bound result here | `.15.9` |
+| `L2431.chain.1385` | `L2626.chain.1489` | no bound result here | `.15.9` |
+| `L1435.clogic.1403` | `L1629.clogic.1509` | no bound result here | `.15.9` |
+| `L1619.clogic.1405` | `L1813.clogic.1511` | no bound result here | `.15.9` |
+| `L1750.clogic.1406` | `L1945.clogic.1512` | no bound result here | `.15.9` |
+
+#### Initial `run` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L2449.cmp.994` | `L2644.cmp.1076` | no bound result here | `.15.10` |
+| `L2449.cond.995` | `L2644.cond.1077` | no bound result here | `.15.10` |
+| `L2450.int.996` | `L2645.int.1078` | no bound result here | `.15.10` |
+| `L2450.int.997` | `L2645.int.1079` | no bound result here | `.15.10` |
+| `L2454.stmt.998` | `L2649.stmt.1080` | no bound result here | `.15.10` |
+| `L2458.int.999` | `L2653.int.1081` | no bound result here | `.15.10` |
+| `L2458.int.1000` | `L2653.int.1082` | no bound result here | `.15.10` |
+| `L2458.stmt.1001` | `L2653.stmt.1083` | no bound result here | `.15.10` |
+| `L2478.iter.1002` | `L2673.iter.1084` | no bound result here | `.15.10` |
+| `L2478.iter.1003` | `L2673.iter.1085` | no bound result here | `.15.10` |
+| `L2478.iter.1004` | `L2673.iter.1086` | no bound result here | `.15.10` |
+| `L2479.stmt.1005` | `L2674.stmt.1087` | no bound result here | `.15.10` |
+| `L2488.stmt.1006` | `L2683.stmt.1088` | no bound result here | `.15.10` |
+| `L2464.chain.1389` | `L2659.chain.1493` | no bound result here | `.15.10` |
+| `L2464.chain.1390` | `L2659.chain.1494` | no bound result here | `.15.10` |
+
+#### Initial `beside` rows
+
+| Initial ID | Current exact ID | Bound result | Owner |
+| --- | --- | --- | --- |
+| `L526.chain.1037` | `L664.chain.1131` | no bound result here | `.15.11` |
+| `L526.chain.1038` | `L664.chain.1132` | no bound result here | `.15.11` |
+| `L526.chain.1039` | `L664.chain.1133` | no bound result here | `.15.11` |
+| `L526.chain.1040` | `L664.chain.1134` | no bound result here | `.15.11` |
+| `L526.chain.1041` | `L664.chain.1135` | no bound result here | `.15.11` |
+| `L528.chain.1042` | `L666.chain.1136` | no bound result here | `.15.11` |
+| `L529.chain.1044` | `L667.chain.1138` | no bound result here | `.15.11` |
+| `L529.contains.1049` | `L667.contains.1143` | no bound result here | `.15.11` |
