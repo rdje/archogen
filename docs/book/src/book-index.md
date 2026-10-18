@@ -136,6 +136,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **CPU** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **CR** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **CSR** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
+- Current compiler measurement qualification — [Annex C: Trust proof
+  records](annex-trust-proofs.md#current-compiler-measurement-qualification)
 
 ## D
 

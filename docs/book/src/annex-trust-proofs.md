@@ -3793,8 +3793,8 @@ permanent controls and explicit source/domain premises. Test names below are in
 The matrix keeps the trusted-host, pinned-toolchain, source-admission and supported path/encoding
 domain explicit. It establishes the implemented contract's bounded compatibility controls.
 Complete current-source/premise/mutation/integration verification and independent review remain
-before F30 signoff. Failed-baseline evidence and unknown `--only` selection are still owned native
-tool repairs, both scheduled before those full source measurements. No global adequacy result is
+before F30 signoff. Native source-boundary, failed-baseline evidence and selected-ID repairs now
+close under `.3.3.3.0`; the qualification checkpoint below precedes full measurements. No global adequacy result is
 inferred from compatibility closure.
 
 The dated native result is 2 named kills, strict exit 0, with no timeout, compiler refusal or
@@ -3807,5 +3807,112 @@ supplemental audit SHA-256 is `55d0ceaff9bb0b2eef4ec110ea65f36639d9e68200722a1eb
 
 The previous committed writer leaf seals with exact core, archive/index and saved raw
 reconstruction; all 279 earlier archives remain identical. Final staged focused/book/doctrine
-checks close the compatibility implementation subtree. The next owned unit preserves failed
-native-baseline evidence, followed by unknown-ID refusal and full source verification.
+checks close the compatibility implementation subtree. The native prerequisite repairs now pass;
+the current source/integration checkpoint follows below.
+
+### Current compiler measurement qualification
+
+Checkpoint `.15.2.1.3.3.3.1.1` (`2026-10-19`) qualifies the measurement inputs after the
+source-boundary, failed-baseline evidence and selected-ID repairs. The four changed production
+files below are discovered with all native operators; these are raw planning populations, with
+no killed/survived/equivalent classification and no global adequacy inference.
+
+The actual CLI output agrees exactly with `scripts/trust_adequacy.py::discover` and its complete
+listing verifier. For each file, deliberately missing a candidate, changing the range or naming a
+different source makes that verifier refuse. Source bytes and production prefixes are bound;
+the latter also agree with the independently captured implementation prefixes from the bounded
+compatibility work and with system SHA-256 over stdin. The full input census checks complete
+source hashes independently through Python and the system tool.
+
+Earlier active routing labels described the initial `069d8e59` compiler lane as current and named
+its historical 159/83 scopes. Those labels now say historical: the removed diagnostic-text
+collector and the new provenance/artifact modules cannot inherit those old populations. Historical
+outcomes remain retained under their original source bindings.
+
+| Source | Raw candidates | Complete source SHA-256 |
+| --- | --- | --- |
+| `xtask/src/trust.rs` | 1404 | `fdc28b267ceb173da133e6b0d287758df703ecba6e7b3ca4453964b1c7aa567c` |
+| `xtask/src/trust_compiler.rs` | 124 | `470e941f7d85d1e737d9942099173fa4060de9b9e41457abca760c1776785b01` |
+| `xtask/src/trust_compiler_observer.rs` | 16 | `64b8376bf404a32f3097071f7737a721e789133f716d16e05f8d0ceeb3e38475` |
+| `xtask/src/trust_artifact.rs` | 141 | `3c42078e46da0424e4c47aa467cd5e4b6edf851af1a0d50c811f595979aaa5c5` |
+
+Operator populations for this same source epoch:
+
+| Operator | `trust.rs` | Controller | Observer | Artifact |
+| --- | --- | --- | --- | --- |
+| `alt` | 4 | 0 | 0 | 2 |
+| `bool` | 18 | 2 | 2 | 0 |
+| `chain` | 286 | 13 | 2 | 23 |
+| `clogic` | 31 | 2 | 0 | 2 |
+| `cmp` | 12 | 2 | 0 | 0 |
+| `cond` | 132 | 22 | 0 | 20 |
+| `contains` | 100 | 8 | 0 | 8 |
+| `dir` | 19 | 1 | 0 | 5 |
+| `eq` | 98 | 18 | 0 | 12 |
+| `guard` | 117 | 15 | 0 | 21 |
+| `int` | 60 | 4 | 0 | 4 |
+| `iter` | 234 | 6 | 3 | 6 |
+| `lit` | 18 | 2 | 0 | 4 |
+| `logic` | 93 | 15 | 0 | 19 |
+| `not` | 42 | 5 | 0 | 11 |
+| `stmt` | 140 | 9 | 9 | 4 |
+
+The production range starts at the first supported function declaration and ends before the
+first standalone test-module marker. Test bodies do not join these raw production populations.
+Caller, fixture, operator/control, catalogue, configuration and contract bindings accompany the
+census; the full indexed-input snapshot also holds their bytes and modes. The retained prior
+copied tree has its own earlier snapshot and is verified separately, without treating it as the
+current source. Gitlinks contribute metadata only; their implementation is never read.
+
+The published compiler-provenance contract and complete compatibility matrix remain the behavior
+contract. These bindings qualify measurements; all affected current-source mutations, reason
+premises and independent review still need their finishing verification before F30 signoff.
+
+Reproduce the raw discovery/listing agreement from the committed source:
+
+```sh
+python3 -I -B - <<'PY'
+from pathlib import Path
+import importlib.util, subprocess
+spec = importlib.util.spec_from_file_location('adequacy', 'scripts/trust_adequacy.py')
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+driver = Path(m.SWEEP).read_text()
+for name in ['trust.rs', 'trust_compiler.rs', 'trust_compiler_observer.rs', 'trust_artifact.rs']:
+    filename = 'xtask/src/' + name
+    candidates, listing, bounds = m.discover(driver, Path(filename).read_text())
+    actual = subprocess.check_output(['bash', m.SWEEP, filename, '--package', 'xtask', '--list'], text=True)
+    m.verify_listing(actual, listing, filename, bounds)
+    print(filename, len(candidates), 'raw candidates; listing agrees')
+PY
+```
+
+The full local integration command uses the repository-owned stores from `TOOLBOX.md` and the
+pinned book tool on `PATH`:
+
+```sh
+PATH="$PWD/target/ci/tools/bin:$PATH" make integration
+```
+
+Held tree `086cca8d05162af74a1ed0343ed40efbd4503f69` passes all 12 steps, with zero failures,
+unavailable steps, unbuilt steps or quarantines: format, lint, complete tests, doctrines,
+self-tests, book, no-std, pinned premises, browser build/binding, emulator configuration and actual
+target execution. The test and self-test phases observe about 147 and 408 seconds on this run;
+these are measurements, not timing guarantees. The current full trust parent population remains
+176 names. All 37 pinned producer sources match; direct source/caller/control/configuration
+bindings cover 28 files, including the four discovered source records.
+
+The held indexed snapshot contains 1090 regular inputs and one gitlink identity. All regular
+bytes/modes restore with independent Python/system hashes, and gitlink checks read metadata only.
+The prior native copy separately retains its earlier 1085-input epoch exactly. It is not relabeled
+as the current source. The prerequisite subtree seals with two exact committed bodies and all
+283 older archives/index rows unchanged.
+
+Receipts are under `target/compiler-source-qualification/`: raw CLI lists, complete candidate
+records and source/producer bindings, the held-tree/input snapshot, full integration log and
+original/prior-copy restoration reports. The regeneration example above passes unmodified.
+Completion-document edits follow the held integration epoch; production, caller, fixture,
+control, catalogue and contract bindings remain unchanged. Final book/doctrine checks cover those
+document edits. The first next complete native population is the observer source; each actual
+outcome must be bound and owned before the other current files can close.
+

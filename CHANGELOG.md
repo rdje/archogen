@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — qualify current compiler measurement inputs
+
+`ARCHOGEN-M3-0773` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.1.1`), `2026-10-19`.
+
+- Bind four current production/raw populations with exact CLI agreement and rejecting false listings;
+  preserve production prefixes,28 direct bindings and37 producer pins. Label old159/83 scopes historical.
+- Full integration12 pass/zero unavailable or quarantined, held tree086cca8d; all1090 original and
+  prior-copy1085 inputs restore by bytes/modes and Python/system hashes, gitlink metadata only.
+- Seal committed native prerequisites exactly, publish complete book census/method/limits and
+  resume pointers. Current native outcomes, equivalent premises and independent F30 review remain.
+
 ## archogen — refuse unknown selected mutation IDs
 
 `ARCHOGEN-M3-0772` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.0.2`), `2026-10-19`.
