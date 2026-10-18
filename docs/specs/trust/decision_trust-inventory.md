@@ -835,3 +835,25 @@ six falsified bindings refuse. The copy borrows index metadata only. Native sele
 establish unrelated reason validity. Two producer-dependent obligations remain before .14.4.
 The [book proof](../../book/src/annex-trust-proofs.md#absolute-diagnostic-prefix-proofs)
 carries the argument and boundary examples.
+
+
+## Final diagnostic-producer boundaries
+
+Assessment `M3.6.9.6.3.2.2.14.3.2.2.2.2.6.1` (`2026-10-18`) separates the shorter-literal
+helper witness from inventory reachability. The maintained parser refuses both quoted multiline-key
+fixtures before program compilation; admissions cannot override parse failure. Initial warning-data
+misselection is an outside-dialect control, not an admitted public defect or claimed repair.
+The direct command helper's literal-prefix behavior gets a permanent parent with this explicit limit.
+
+An ordinary-manifest/configuration, inventory-shaped colon layout proves the closed upper bound
+can suppress a genuine Cargo path-joining error. A known ancestor text matches a containing
+configuration warning's closing backtick/newline; its end is exactly the following error's start.
+Original retains the error. Permanent inventory reproduction belongs to next .6.2. Two lexical-alias
+hypotheses are refuted by actual path spellings and equal original/edited results.
+
+Five guarded cases, two compiled syntax refusals, exact helper/environment and raw/structured
+output bind the assessment. All1058 inputs restore, five false bindings refuse, code/reasons remain
+unchanged and all30 prior pins match the read-only existing-commit source cache. No new native K/E,
+public quoted-key failure, original repair or complete producer-grammar claim. The
+[book](../../book/src/annex-trust-proofs.md#remaining-diagnostic-producer-assessment)
+retains cases and limits before permanent parents and final .14.4 replay.

@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — assess the final diagnostic-producer boundaries
+
+`ARCHOGEN-M3-0753` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.6.1`), `2026-10-18`.
+
+- Bind actual quoted-key/helper differences and compiled inventory syntax refusal; narrow the
+  suspected defect to an outside-dialect limit, with no admitted failure or repair claim.
+- Ordinary manifest/configuration warning boundary distinguishes closed upper bound: original
+  retains genuine operational error, edit suppresses it. Refute lexical-alias hypothesis.
+- All1058 held inputs restore; five false bindings refuse and30 pins/full source cache agree.
+  Publish limits and immediate direct-helper/inventory parents; no fresh native K/E.
+
 ## archogen — prove the two absolute diagnostic-prefix edits
 
 `ARCHOGEN-M3-0752` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.5`), `2026-10-18`.

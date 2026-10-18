@@ -1246,3 +1246,56 @@ unchanged. The two additional pinned sources join the earlier 28, all 30 indepen
 Revalidate after changes to guarded callers/root, constructors, conversion, framing/predicates or
 Unix/toolchain contracts. Relative cwd is outside these two reasons. The shorter error literal and
 closed span upper bound remain open before the complete current replay.
+
+
+### Remaining diagnostic-producer assessment
+
+Assessment `.14.3.2.2.2.2.6.1` (`2026-10-18`) tests the final literal and upper-bound edits
+with actual [Cargo](ledger.md#rust-toolchain) output. It makes no new native classification.
+
+A quoted unused manifest key can contain an escaped newline. Cargo emits the decoded key in a
+warning before the compiler failure. A continuation `erroneous-warning` distinguishes the shortened
+`erro` literal: the original retains the compiler error, while the shorter edit selects warning text.
+This is a direct failed-command helper witness, like the earlier missing-target manifest control.
+It is **outside the inventory's admitted manifest grammar**.
+
+The actual maintained parser refuses both quoted multiline-key fixtures; a bare-key positive parses.
+Inventory treats parse refusal separately from admissions and returns before program compilation.
+A path-shaped quoted-key continuation also makes the original select warning data, while the
+closed-end edit happens to mask it. That wider example establishes neither an admitted/public defect
+nor a general repair. The initial suspected defect is narrowed by the verified syntax fence.
+
+An ordinary-manifest case independently distinguishes the upper bound. Its containing configuration
+has both file spellings, so Cargo prints a warning ending with the preferred configuration path,
+a closing backtick and a newline. A distinct output ancestor is named to match those exact bytes.
+Its target layout contains a colon, producing the existing genuine Unix library-path joining refusal
+immediately after that warning.
+
+    warning: both ... exist. Using `<repo>/.cargo/config`
+    error: failed to join paths from `$…` together
+
+The known ancestor spelling is `<repo>/.cargo/config` followed by a backtick and newline.
+The text match ends exactly where the real error starts. The original open upper bound retains that
+error; the closed bound suppresses it and returns empty. These paths are distinct filesystem objects:
+the collision involves path spelling plus Cargo's framing bytes. This uses ordinary manifest and
+configuration text with inventory-shaped output/cwd/target paths; permanent inventory reproduction
+is the next parent, so this assessment claims no actual public-gate run.
+
+| Edit | Real producer witness | Next parent |
+| --- | --- | --- |
+| `L714.lit.253` | Quoted-key continuation distinguishes the direct helper; inventory syntax refuses the manifest | Failed-command helper parent with explicit syntax-refusal boundary |
+| `L717.cmp.258` | Configuration-warning terminator matches an ancestor and edited bound suppresses following setup error | Inventory boundary/operational parent with success and recovery |
+
+A lexical-normalization alias hypothesis is refuted. Cargo retains its raw `/./` target spelling;
+both error-like path controls agree for original and both edits. These are negative controls.
+
+All 1058 held regular inputs restore with modes and Python/system hashes; five false bindings refuse.
+Code, operator, catalogue and existing reasons remain unchanged. The read-only existing-commit source
+archive has 4639 entries, including 2906 regular files verified byte-for-byte. All 30 prior source
+pins agree with their archive copies and system hashes. No other Git checkout, dependency build
+or source amendment is made. The cache binds evidence; no complete producer grammar or whole-file
+adequacy is claimed.
+
+Fixture metadata stores repository-relative bases. Current file access derives the root at runtime;
+the audit derives historical text prefixes from the retained raw Cargo records. A different root
+spelling resolves the same files, and the metadata correction preserves every raw diagnostic byte.

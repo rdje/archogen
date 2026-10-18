@@ -411,6 +411,8 @@ a change that leaves it stale, so it is never edited by hand.
   proof records](annex-trust-proofs.md)
 - Relevance decides whether an unknown matters — [Presence, absence, and
   relevance](presence.md#relevance-decides-whether-an-unknown-matters)
+- Remaining diagnostic-producer assessment — [Annex C: Trust proof
+  records](annex-trust-proofs.md#remaining-diagnostic-producer-assessment)
 - Remaining measurements — [Generated-sources test adequacy](trust-adequacy.md#remaining-measurements)
 - Repaired caller integration checkpoint — [Annex C: Trust proof
   records](annex-trust-proofs.md#repaired-caller-integration-checkpoint)
