@@ -208,6 +208,24 @@ originals/current copies restore and five false receipts refuse. Existing bodies
 catalogue entries append. Closure docs and focused/staged checks are separate. Seven prefix/helper
 survivors remain owned; final cohort replay and full production adequacy stay open.
 
+### Codegen matcher domain and temporary-path prerequisite
+
+Assessment `.13.2.4.1` (`2026-10-18`) keeps the remaining matcher results historical. Exact compiled
+variants agree on ordinary Cargo-shaped metadata, filename and incremental operands. Valid wider
+compiler invocations such as `-C llvm-args=--pass-remarks=metadata=inside` produce libraries consumed
+by a separate executable; the original retains that complete option, while the corresponding contains
+edit drops it. Extra-filename and incremental markers have matching wider controls. This does not prove
+that the inventory caller can emit those arguments. Truncated-prefix helper counterexamples are
+synthetic; compiler-refused bare forms establish no coverage or equivalence. Wrong oracles fail.
+
+The source/caller assessment also finds that the shared cleared build environment omits temporary-path
+variables. A passive compiled-API probe confirms a default outside the repository volume. It reads only
+OS directory metadata and creates no off-volume project files. `PROGRAM.89` owns immediate local-temp
+repair and caller/native/integration revalidation before more matcher classifications. Existing producer
+proof fixtures already select local `TMPDIR`. No current E record changes. The canonical source domains,
+qualifications and evidence are in `docs/specs/trust/flag-normalization-domain.md` and the owning leaf
+in `docs/tasks/M3.md`; full adequacy remains open.
+
 ## Mutation measurements and controls
 
 Whether the instrument's tests hold the generated-sources rules — what a program reads, the chain, the blob rule,

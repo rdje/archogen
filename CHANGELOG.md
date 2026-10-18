@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — bound matcher assessment and own shared temporary-default repair
+
+`ARCHOGEN-M3-0727` (leaf `M3.6.9.6.3.2.2.13.2.4.1`), `2026-10-18`.
+
+- Bind six exact current edits to the native listing; compile original/actual variants against independent
+  ordinary expectations and valid wider compiler artifacts. Qualify synthetic and refused cases; wrong
+  oracles and altered bindings refuse. No fresh mutation verdict or E classification.
+- Exact shared environment API and cleared-child metadata probe expose missing temp variables and a
+  default outside the repository volume. Create no off-volume project data; own immediate repair and
+  caller/native/integration checkpoint in PROGRAM.89 before further inventory or matcher classification.
+- All 1034 captured original inputs restore, production/tests/catalogue/E stay exact. Canonical/book/live
+  sync; finish this bounded assessment cleanly before the PROGRAM prerequisite.
+
 ## archogen — preserve PROGRAM history in complete headed log tables
 
 `ARCHOGEN-PROGRAM-0726` (leaf `PROGRAM.87`), `2026-10-18`.

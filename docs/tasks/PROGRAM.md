@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.88`, and the sub-leaves each of them names
+  Children: `PROGRAM.1` … `PROGRAM.89`, and the sub-leaves each of them names
 
 - ID: `PROGRAM.1`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.1.md`](../task-history/PROGRAM/PROGRAM.1.md); commit `ARCHOGEN-PROGRAM-0002`
@@ -690,6 +690,40 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.88.md`](../task-history/PROGRAM/PROGRAM.88.md); commit `ARCHOGEN-PROGRAM-0725`
 
 
+- ID: `PROGRAM.89`
+  Status: `pending` — P1 shared build temporary-directory locality defect
+  Goal: prevent catalog/inventory cleared build environments from defaulting temporary data outside
+    the repository volume. Supply repository-derived temporary directories, preserve input/admission
+    contracts, add permanent effect/failure controls, and revalidate caller premises before more E.
+  Reproduction: M3 .13.2.4.1 compiles exact catalog_build::environment() and executes a real env_clear
+    child. TMPDIR/TMP/TEMP absent, std::env::temp_dir outside repository and on a different volume.
+    Probe reads only OS metadata and creates no off-volume project data; no historical write census.
+  Impact: violates the standing same-volume/no-system-temp-default rule in catalog and trust callers.
+  Priority/schedule: immediate after committed M3 .13.2.4.1, before any further public inventory run
+    or matcher classification. Native six-entry replay transfers to .89.2 after the fix.
+  Children: .1 shared API/producer alignment and focused controls; .2 complete caller/E/integration checkpoint.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.89.1`
+  Status: `pending` — after bounded source assessment is committed cleanly
+  Goal: derive/create a temp directory from each build's project-local target, set TMPDIR/TMP/TEMP
+    after clearing inherited environment, propagate creation failures before tools execute. Verify
+    effective child paths/volumes, absent/file/error and hostile inherited-temp cases, and actual
+    public build callers. Keep compiled env-dependency admissions narrow. Align producer proof envs
+    where needed, update canonical/book contracts and run focused/operator checks before commit.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `PROGRAM.89.2`
+  Status: `pending` — after committed temporary-environment repair
+  Goal: revalidate existing conditional caller premises, complete old flag and current six matcher
+    native replay with original/copied input restoration, operator proofs and warranted full integration.
+    Source/caller revision and all failed/incomplete outcomes stay explicit; no further matcher E
+    declarations until this checkpoint closes. Then resume M3 .13.2.4.2.1 metadata evidence.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -754,10 +788,11 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.71` | `pending` | next program-spine repair: task-history index row order |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.89.1` | `pending` | P1 shared build temporary-directory locality repair |
+| 2 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
+| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The second row waits on the director's yes. The pending leaves beside them —
+The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.72`, `.73` and `.78` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 

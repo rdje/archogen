@@ -409,6 +409,44 @@ repair, maintained compiled controls must distinguish every actual table edit ou
 using successful explicit cargo rustc flags and reject wrong oracles before precise E records are considered.
 No final whole-production adequacy or remote CI result follows from this assessment.
 
+## Codegen matcher assessment and temporary-path prerequisite
+
+Assessment `.13.2.4.1` (`2026-10-18`) binds the six actual contains/truncated-prefix edits at
+`L597.dir.188`, `L597.lit.189`, `L598.dir.192`, `L598.lit.193`, `L599.dir.196` and `L599.lit.197`
+to the unchanged native listing and `.13.1` edits. No fresh mutation outcome or E classification follows.
+
+The pinned compiler constructor emits `-C metadata=<hash>` and `-C extra-filename=-<hash>` from
+Cargo metadata. When enabled, its incremental constructor emits `-C incremental=<directory>`.
+Other codegen operands require their own source domains: profile settings, linker configuration,
+build-script linker output, unit rustflags and trailing arguments cannot be dismissed by the sampled
+ordinary argv alone. Existing alias-only configuration, stable profile-feature and dynamic-target
+restrictions remain relevant. The same official compiler source digest in the table below is rechecked.
+
+A real successful ordinary Cargo producer matches the maintained literal argv assertion. Compiled exact
+original and six variants all satisfy independent ordinary normalization expectations, including an
+incremental directory containing the other marker strings. For each contains edit, successful pinned rustc
+accepts `-C llvm-args=--pass-remarks=metadata=inside` (and the corresponding extra-filename/incremental
+values); each produced library is consumed by a separate executable which prints its literal expected
+answer. The original helper retains that full option, while its actual contains variant discards it.
+These are valid wider-compiler controls, outside the inventory caller; they are not caller-reachability
+proofs. Truncated keys also differ for synthetic `<key>X=inside` helper operands, but those operands
+have no demonstrated successful compiler producer. Actual bare metadata, extra-filename and incremental
+forms are compiler-refused and supply no valid wider control. Wrong retained-option oracles fail.
+
+Caller inspection found an independent defect: the shared `catalog_build::environment` creates local
+Cargo/target directories but supplies none of TMPDIR/TMP/TEMP to its cleared children. An exact compiled
+API extraction and real cleared child report an effective temporary default outside this repository and
+on another volume. Diagnosis only reads OS directory metadata; it creates no off-volume project data
+and establishes no historical write or migration census. Existing operator producer fixtures explicitly
+seed local TMPDIR and are a separate environment. `PROGRAM.89.1` owns the immediate shared API repair;
+`.89.2` owns caller-premise revalidation, fresh native flag/matcher replay and integration before further
+matcher classification. Existing E records and historical survivor results are unchanged.
+
+The assessment restores all captured original inputs before closure documentation. Native listing,
+compiled modules, literal assertions, pinned producer/artifact consumption and checked source identities
+are primary; ignored adapters are supplemental. Permanent per-key evidence follows that prerequisite,
+with current gaps explicit. No full caller theorem, copied-input census or full adequacy is claimed here.
+
 ## Retrieved source identities
 
 Every link below names the installed Cargo commit. These are source digests, not toolchain binary digests.

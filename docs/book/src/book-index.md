@@ -84,6 +84,8 @@ a change that leaves it stale, so it is never edited by hand.
   the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md), [Annex C: Trust proof
   records](annex-trust-proofs.md)
 - **CLINT** — [definition](glossary.md), [Where generated systems run](targets.md)
+- Codegen matcher domain and temporary-path prerequisite — [Annex C: Trust proof
+  records](annex-trust-proofs.md#codegen-matcher-domain-and-temporary-path-prerequisite)
 - Codegen options retain their operands — [Checks that must not share a mistake: the trust
   gate](trust.md#codegen-options-retain-their-operands)
 - Codes — [Matching an offer to a requirement](matching.md#codes)
