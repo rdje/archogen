@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold observer synchronization failure
+
+`ARCHOGEN-M3-0775` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.2`), `2026-10-19`.
+
+- Close the sync test gap with calibrated native I/O error, actual pinned query/stdout, partial
+  evidence, loaded pass-through and fresh recovery; production synchronization remains unchanged.
+- Retain failed loader calibrations and root causes; native1K/full177 plus catalogue2K have the
+  intended name. All1093 originals/copies restore;29 bindings/37 pins/11 false receipts bind.
+- Clarify synchronization in the canonical lifecycle contract; seal the measured observer leaf,
+  publish complete book methods/limits and live pointers. Explicit-close assessment remains next.
+
 ## archogen — measure the complete current compiler observer
 
 `ARCHOGEN-M3-0774` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.1`), `2026-10-19`.

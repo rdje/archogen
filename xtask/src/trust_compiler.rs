@@ -369,6 +369,179 @@ mod tests {
     }
 
     #[test]
+    fn actual_observer_sync_failure_retains_partial_evidence_and_recovers() {
+        crate::trust_test_process::bounded!(
+            actual_observer_sync_failure_retains_partial_evidence_and_recovers
+        );
+        use std::process::Stdio;
+        let (out, compiler, session, base) = setup("writer-sync");
+        let source = out.join("io_fault.c");
+        fs::write(
+            &source,
+            include_str!("../../scripts/fixtures/compiler_provenance_io_fault.c"),
+        )
+        .unwrap();
+        let library = out.join(if cfg!(target_os = "macos") {
+            "io_fault.dylib"
+        } else {
+            "io_fault.so"
+        });
+        let mut build = Command::new("cc");
+        build.args(["-Wall", "-Wextra", "-Werror"]);
+        if cfg!(target_os = "macos") {
+            build.args(["-dynamiclib", "-Wl,-install_name,@rpath/io_fault.dylib"]);
+        } else {
+            build.args(["-shared", "-fPIC"]);
+        }
+        build.arg(source).arg("-o").arg(&library);
+        if cfg!(target_os = "linux") {
+            build.arg("-ldl");
+        }
+        let built = build
+            .env_clear()
+            .envs(base.iter().cloned())
+            .output()
+            .unwrap();
+        assert!(built.status.success(), "{built:?}");
+        let canonical_library = fs::canonicalize(&library).unwrap();
+        // A relative preload path avoids loader-list delimiters in a relocated repository root.
+        let preload = canonical_library.strip_prefix(&session.cwd).unwrap();
+        let expected = Command::new("rustc")
+            .arg("-vV")
+            .current_dir(&session.cwd)
+            .env_clear()
+            .envs(base.iter().cloned())
+            .output()
+            .unwrap();
+        assert!(expected.status.success(), "{expected:?}");
+        assert!(expected.stderr.is_empty());
+        assert!(expected.stdout.starts_with(b"rustc 1.95.0"));
+        let mut retained_failure = None;
+        for (role, inject, fail) in [
+            ("sync-no-library", false, false),
+            ("sync-fail", true, true),
+            ("sync-pass", true, false),
+        ] {
+            let current = compiler.session(role, &base, &session.cwd).unwrap();
+            let trace = out.join(format!("{role}.trace"));
+            let mut command = Command::new(&current.executable);
+            command
+                .args(["rustc", "-vV"])
+                .current_dir(&current.cwd)
+                .env_clear()
+                .envs(current.environment(&base).unwrap())
+                .env_remove("DYLD_INSERT_LIBRARIES")
+                .env_remove("LD_PRELOAD")
+                .stdin(Stdio::null())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped());
+            if inject {
+                command
+                    .env(
+                        if cfg!(target_os = "macos") {
+                            "DYLD_INSERT_LIBRARIES"
+                        } else {
+                            "LD_PRELOAD"
+                        },
+                        preload,
+                    )
+                    .env("ARCHOGEN_TEST_IO_TRACE", &trace)
+                    .env("ARCHOGEN_TEST_IO_ERROR", if fail { "1" } else { "0" });
+            }
+            let child = command.spawn().unwrap();
+            let pid = child.id();
+            let result = child.wait_with_output().unwrap();
+            assert_eq!(
+                result.status.code(),
+                Some(if fail { 2 } else { 0 }),
+                "{role}: {result:?}"
+            );
+            assert_eq!(result.stdout, expected.stdout, "{role}");
+            if fail {
+                assert!(String::from_utf8_lossy(&result.stderr)
+                    .contains("archogen compiler provenance:"));
+            } else {
+                assert!(result.stderr.is_empty(), "{role}: {result:?}");
+            }
+            let filename = if fail {
+                format!(".{pid}.part")
+            } else {
+                format!("{pid}.json")
+            };
+            let files: Vec<_> = fs::read_dir(&current.records)
+                .unwrap()
+                .map(|entry| entry.unwrap().file_name())
+                .collect();
+            assert_eq!(files, [std::ffi::OsString::from(&filename)], "{role}");
+            let path = current.records.join(filename);
+            assert!(fs::symlink_metadata(&path).unwrap().file_type().is_file());
+            let bytes = fs::read(&path).unwrap();
+            let value = json::parse(std::str::from_utf8(&bytes).unwrap()).unwrap();
+            assert_eq!(value.get("pid"), Some(&Json::Number(pid.to_string())));
+            assert_eq!(value.get("exit"), Some(&Json::Number("0".into())));
+            assert_eq!(value.get("signal"), Some(&Json::Null));
+            assert_eq!(
+                value.get("schema"),
+                Some(&Json::Str("archogen-compiler-provenance/1".into()))
+            );
+            assert_eq!(
+                value.get("argv_hex"),
+                Some(&Json::Array(vec![hex("rustc"), hex("-vV")]))
+            );
+            assert_eq!(value.get("session_hex"), Some(&hex(&current.identity)));
+            assert_eq!(value.get("role_hex"), Some(&hex(role)));
+            assert_eq!(
+                value.get("cwd_hex"),
+                Some(&hex(current.cwd.to_str().unwrap()))
+            );
+            if inject {
+                let text = fs::read_to_string(&trace).unwrap();
+                let identity = format!(" pid={pid} ");
+                let own: Vec<_> = text.lines().collect();
+                assert!(own.iter().all(|line| line.contains(&identity)), "{text}");
+                assert_eq!(own.len(), 2, "{role}: {text}");
+                assert_eq!(own[0], format!("loaded pid={pid} fd=-1"));
+                let sync = if cfg!(target_os = "macos") {
+                    "full-sync"
+                } else {
+                    "sync"
+                };
+                assert!(
+                    own[1].starts_with(&format!("{sync} pid={pid} fd=")),
+                    "{text}"
+                );
+                assert!(
+                    own[1]
+                        .rsplit_once(" fd=")
+                        .unwrap()
+                        .1
+                        .parse::<i32>()
+                        .unwrap()
+                        >= 0
+                );
+            } else {
+                assert!(!trace.exists());
+            }
+            if fail {
+                assert!(current.invocations().is_err());
+                assert_eq!(fs::read(&path).unwrap(), bytes);
+                retained_failure = Some((path, bytes));
+            } else {
+                assert!(current.invocations().unwrap().is_empty());
+            }
+        }
+        let recovered = compiler
+            .session("sync-recovery", &base, &session.cwd)
+            .unwrap();
+        let result = run(&recovered, &base, &["rustc", "-vV"]);
+        assert!(result.status.success(), "{result:?}");
+        assert!(recovered.invocations().unwrap().is_empty());
+        assert_eq!(fs::read_dir(&recovered.records).unwrap().count(), 1);
+        let (path, bytes) = retained_failure.unwrap();
+        assert_eq!(fs::read(path).unwrap(), bytes);
+    }
+
+    #[test]
     fn actual_observer_setup_and_installation_fail_before_child_execution() {
         crate::trust_test_process::bounded!(
             actual_observer_setup_and_installation_fail_before_child_execution

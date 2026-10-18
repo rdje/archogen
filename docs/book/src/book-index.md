@@ -185,7 +185,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **EIP** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Elaboration produces instances, not modules — [Modules and
   composition](modules.md#elaboration-produces-instances-not-modules)
-- **ELF** — [definition](glossary.md), [Verifying the toolchain](verification.md)
+- **ELF** — [definition](glossary.md), [Verifying the toolchain](verification.md), [Annex C: Trust proof
+  records](annex-trust-proofs.md)
 - engine — [What is versioned, and what changing it costs](versions.md#engine)
 - engine-api — [What is versioned, and what changing it costs](versions.md#engine-api)
 - Every crate is in this book — [Annex B: The checks that keep the repository
@@ -349,6 +350,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 - Observed compiler artifact binding — [Annex C: Trust proof
   records](annex-trust-proofs.md#observed-compiler-artifact-binding)
+- Observer synchronization failure control — [Annex C: Trust proof
+  records](annex-trust-proofs.md#observer-synchronization-failure-control)
 - Offered is a claim, not evidence — [Presence, absence, and relevance](presence.md#offered-is-a-claim-not-evidence)
 - Offers — [Matching an offer to a requirement](matching.md#offers)
 - One host — [Checks that must not share a mistake: the trust gate](trust.md#one-host)

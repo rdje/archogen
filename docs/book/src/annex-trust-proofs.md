@@ -3782,7 +3782,7 @@ permanent controls and explicit source/domain premises. Test names below are in
 | --- | --- |
 | Producer | `Compiler::prepare` builds the tracked std-only observer with pinned rustc before the role loop; `session` installs held bytes. Actual compiler/environment, native argv and setup/install parents hold executable bytes/mode and failure. The once-per-inventory call placement is a source premise. |
 | Invocation | `actual_compiler_removes_private_environment_and_records_failures` and `actual_native_receiver_observes_every_forwarded_argument_byte` hold complete argv, private-field removal, status/stdio and unsupported reader encodings. The native signal parent holds the measured signal outcome. The unchanged base constructor/fixed compiler and preflight remain source-bound. |
-| Lifecycle | Fresh exclusive session and partial paths, completed no-overwrite publication and actual error/recovery controls; the native collision witness preserves both destination and partial evidence. The overlapping-writer parent holds reservation/publication/cleanup populations. Arbitrary kernel write/sync/post-link errno injection is not claimed; those source operations propagate errors. |
+| Lifecycle | Fresh exclusive session and partial paths, completed no-overwrite publication and actual error/recovery controls; the native collision witness preserves both destination and partial evidence. The overlapping-writer parent holds reservation/publication/cleanup populations. The later sync control injects one calibrated libc-boundary error and holds pre-publication refusal/recovery. Arbitrary kernel write/post-link errno injection is not claimed; those source operations propagate errors. |
 | Consumer | The original malformed-record parent plus `actual_records_refuse_remaining_field_range_byte_and_shape_boundaries` hold schema/session/role/cwd/PID/filename/status, exact canonical framing, byte/type/range and record-file refusals, valid-before-fault and recovery. Native NUL and PID 0 acceptance edits are killed. No diagnostic fallback exists. |
 | Queries | Actual version queries return no units; actual cold Cargo root/harness/generator builds exercise the pinned target-information query. Unknown/partial invocation shapes refuse. Actual successful compilations retain their full arguments. The accepted query population is pinned, not a promise for future compiler versions. |
 | Artifact | `actual_empty_input_query_preserves_build_and_ignores_now_invalid_source`, naming/output refusal controls and actual binary/library/standard/custom same-named harness parents bind metadata source and observed naming/output. Missing/foreign/linked/ambiguous outputs refuse; selected bytes agree with independent system hashes. |
@@ -3974,12 +3974,12 @@ broader public inventory tests. The two survivor rows identify their owned next 
 | `L45.chain.14` | record first argv only | killed | `actual_native_receiver_observes_every_forwarded_argument_byte` |
 | `L45.chain.15` | record last argv only | killed | `actual_native_receiver_observes_every_forwarded_argument_byte` |
 
-The sync omission survives despite the current pre-publication sync action and error-propagation
-contract. Its P1 assessment must determine the actual I/O boundary and add an independent finishing
-control where required. The explicit-close omission has a separate P2 assessment of File lifetime,
+The sync omission survived despite the pre-publication sync action and error-propagation
+contract. Its P1 assessment now adds the independent [failure control](#observer-synchronization-failure-control)
+described below. The explicit-close omission has a separate P2 assessment of File lifetime,
 consumer timing and the publication contract. Neither is called equivalent from survival; both
-are scheduled before measurements of the other production files. Their root causes and resolutions
-remain open until the follow-up evidence closes them.
+are scheduled before measurements of the other production files. The sync obligation now closes through the bounded native proof below; explicit-close
+assessment remains open.
 
 All 1091 held original and copied inputs restore by bytes/modes and independent Python/system
 hashes; the gitlink contributes metadata only. The original and copied full parent lists agree on
@@ -3995,4 +3995,76 @@ The prior qualification subtree seals byte for byte. The historical provenance l
 preserves the original completed task notes verbatim while private routes retain their identities.
 Final book/doctrine checks cover these documentation changes. Sync assessment is next; full
 source/premise verification and independent review remain open before F30 signoff.
+
+### Observer synchronization failure control
+
+Assessment `.15.2.1.3.3.3.2.2` (`2026-10-19`) resolves the sync survivor as a missing regression
+control. The production observer already propagates synchronization errors. A calibrated native
+fault makes that observer exit 2 with partial evidence, while the exact omission exits 0 and
+publishes a completed record. That is a behavior difference under the required I/O-failure contract,
+so survival cannot justify an equivalent entry.
+
+The [File synchronization API](https://doc.rust-lang.org/std/fs/struct.File.html#method.sync_all)
+describes explicit synchronization and error handling. Runtime conclusions here come from the
+pinned executable, not a claim that current online documentation proves its implementation.
+The probe first verified library loading. A `fsync`-only hook did not observe this macOS build:
+the binary imports `fcntl`, and the actual sync path uses `F_FULLFSYNC`. A strict forwarding
+tripwire exposed required metadata operations, including `F_GETPATH` and file-descriptor flags.
+A pointer-identity probe then showed that `RTLD_NEXT` resolved the interposed symbol back to the
+fixture itself. The corrected Mach-O fixture calls original symbols directly, following the
+[public interposition interface](https://raw.githubusercontent.com/apple-oss-distributions/dyld/main/include/mach-o/dyld-interposing.h).
+Those unsuccessful calibrations remain recorded; none is treated as a passing fault control.
+
+The permanent control is
+`trust::compiler::tests::actual_observer_sync_failure_retains_partial_evidence_and_recovers`.
+It builds the tracked C fixture `scripts/fixtures/compiler_provenance_io_fault.c` with warnings as
+errors, and runs a real pinned `rustc -vV` query through the actual observer. The fault library
+clears its loader variables inside that observer, so the compiler child runs without the library.
+The test compares compiler stdout with an independent direct query and requires successful child
+status in the completed or partial record.
+
+The control checks all of these boundaries:
+
+- Ordinary operation without a library succeeds, publishes only the completed record, and creates no trace.
+- The loaded library must report its constructor and exactly the observed parent sync call. The trace carries the actual observer PID and a valid descriptor.
+- A programmed I/O error must produce observer exit 2 and useful diagnostics, with only a fully written partial record. All protocol fields match independent expected values; consumer refusal preserves the bytes.
+- Loaded pass-through still succeeds and produces a valid query record. A new session then runs an ordinary real query successfully, leaving the failed evidence unchanged.
+
+The preload path is relative to the canonical working directory, avoiding delimiter characters
+in a relocated repository root. The macOS fixture forwards documented `fcntl` argument shapes
+and refuses unexpected operations; it does not guess unknown variadic arguments. The ELF branch
+uses the host preload mechanism. Runtime validation reported here is macOS; this record does not
+claim local Linux execution. These controls inject a libc-boundary return error, not a physical
+disk failure, power loss, or every possible kernel errno.
+
+The direct parent passes in about 1.25 seconds on this run. Both maintained regressions finish
+with its name: `trust-compiler-observer-sync-skipped` removes the call, and
+`trust-compiler-observer-sync-error-ignored` retains the call but discards its error. The second
+case ensures the control holds failure behavior as well as observing an actual synchronization.
+
+```sh
+cargo test -p xtask trust::compiler::tests::actual_observer_sync_failure_retains_partial_evidence_and_recovers -- --exact
+cargo xtask mutate --timeouts-fail --only trust-compiler-observer-sync-skipped trust-compiler-observer-sync-error-ignored
+```
+
+The final native omission replay uses the complete current parent population of 177 names.
+Its unmodified baseline passes in 56 seconds, and the exact `L61.stmt.8` omission finishes with
+only the new control as its killing name, strict exit 0. All 1093 original/copied regular inputs
+restore by bytes/modes and independent Python/system hashes; gitlinks remain metadata only.
+All 29 direct bindings and 37 producer pins bind. Eleven false receipt controls reject wrong
+scope, identity, result, name, counts, exit or invented equivalence.
+
+The observer production bytes and the controller production prefix are unchanged. Removing the
+new parent from the controller recovers its prior file exactly; the old catalogue is an exact
+prefix with only the two new regressions appended. The prior complete observer result remains
+the dated 14-kill/two-survivor measurement. This bounded replay resolves the sync obligation;
+the explicit-close survivor still needs its owned assessment, followed by complete current
+source and premise verification before F30 signoff.
+
+Held native tree `97f50a2d181ff6fd3f213e9e60d7cd5478ddec76` precedes completion-document/focused
+staging. Receipts are under `target/compiler-observer-sync/`, including failed calibrations and
+the initial stand-in native epoch. The final supplemental audit SHA-256 is
+`185c0854c51a77269b79b4f10203f862f9c4454dc43720c438ec0d2292ef7013`.
+The preceding measurement leaf seals exactly with all 285 older archives unchanged. Final
+staged focused/book/doctrine checks close this control slice; explicit-close assessment is next.
 
