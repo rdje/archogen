@@ -240,7 +240,15 @@ for the binary and `--extern common=libcommon.rmeta` for the library. The public
 `cargo_dependency_paths_with_equals_preserve_extern_arguments` kill the exact prefix-contains and
 last-separator edits in catalogue and systematic native runs. The production helper was already
 correct; two parent gaps close. Tracked source names remain subject to §4's path grammar. Initial
-outcomes stay historical; ten prefix/helper survivors and full production adequacy remain open.
+outcomes stay historical; the codegen controls below close three further parent gaps.
+
+Codegen operand controls (`M3.6.9.6.3.2.2.13.2.3`, `2026-10-18`) use actual public inventory with
+release opt-level/codegen-units 1/3 and a package-b override 2/5. Each literal complete `-C` option
+occurs once, and its consumed raw operand is absent as a separate configuration entry. The permanent
+`trust::tests::cargo_codegen_arguments_remain_single_normalized_options` parent kills exact
+current-token selection, retained-output deletion and one-token advancement edits in both native
+harnesses, strict zero. The production helper was correct; these three parent gaps close. Seven
+prefix/helper survivors and full production adequacy remain open; initial results stay historical.
 
 **What it records, for each root:**
 

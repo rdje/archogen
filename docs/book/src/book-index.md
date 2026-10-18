@@ -84,6 +84,8 @@ a change that leaves it stale, so it is never edited by hand.
   the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md), [Annex C: Trust proof
   records](annex-trust-proofs.md)
 - **CLINT** — [definition](glossary.md), [Where generated systems run](targets.md)
+- Codegen options retain their operands — [Checks that must not share a mistake: the trust
+  gate](trust.md#codegen-options-retain-their-operands)
 - Codes — [Matching an offer to a requirement](matching.md#codes)
 - Comments survive — [Reading a description](reading.md#comments-survive)
 - Compiler records and normalization — [Annex C: Trust proof
@@ -343,7 +345,8 @@ a change that leaves it stale, so it is never edited by hand.
   actions](runtime.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [The archogen
   command line](cli.md), [The engine API](engine-api.md), [What this project relies on from outside](ledger.md), [What
   is versioned, and what changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md),
-  [Annex B: The checks that keep the repository honest](annex-repository.md)
+  [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
+  records](annex-trust-proofs.md)
 - Promised narrowing spellings — [Generated-sources test adequacy](trust-adequacy.md#promised-narrowing-spellings)
 - **provenance** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What a report may
   claim](evidence.md), [Checks that must not share a mistake: the trust gate](trust.md), [Generated-sources test

@@ -199,7 +199,14 @@ Both exact catalogue entries and the selected systematic replay pass strict zero
 two named kills and no refusal, timeout, E or unjudged result. All 1029 captured originals/current
 copies restore, and five altered-evidence cases refuse. Prior production/tests/catalogue bodies and E
 are preserved. Closure documentation and the focused commit gate are separate from that restoration
-capture. Ten other prefix/helper survivors and full adequacy remain open.
+capture. Ten other prefix/helper survivors remained after that slice; full adequacy stays open.
+
+Codegen controls `.13.2.3` (`2026-10-18`) then kill actual `L595.int.187`, `L604.stmt.203` and
+`L605.int.205` with the independent profile/operand parent. Both native harnesses pass strict zero;
+the systematic run has three named kills, int 0/2 and stmt 0/1 unviable/attempted. All 1029 captured
+originals/current copies restore and five false receipts refuse. Existing bodies and E are unchanged,
+catalogue entries append. Closure docs and focused/staged checks are separate. Seven prefix/helper
+survivors remain owned; final cohort replay and full production adequacy stay open.
 
 ## Mutation measurements and controls
 

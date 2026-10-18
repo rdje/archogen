@@ -236,6 +236,26 @@ arguments: `trust::tests::cargo_source_paths_with_diagnostic_substrings_remain_i
 sign in a tracked source filename is refused before compilation; equals-bearing untracked build-output
 paths are admitted. These examples establish the tested boundaries, while full mutation adequacy remains open.
 
+### Codegen options retain their operands
+
+A `-C` compiler option and its following operand are recorded together as one configuration entry.
+The operand is consumed once. It also carries information: removing the option would lose part of
+what the compiler was asked to do, while retaining a second unprefixed copy would add a spurious argument.
+The metadata, extra-filename and incremental options keep their separate normalization rules.
+
+For example, a fixture's release profile sets `opt-level=1` and `codegen-units=3`. Its binary
+configuration must contain `-C opt-level=1` and `-C codegen-units=3`, each once. A package override for
+its library sets `opt-level=2` and `codegen-units=5`, so that library must retain the corresponding
+`-C opt-level=2` and `-C codegen-units=5` entries instead. None of the four bare operands, such as
+`opt-level=1` without its `-C`, is a second configuration entry for the unit it belongs to.
+
+The permanent public control is
+`trust::tests::cargo_codegen_arguments_remain_single_normalized_options`. It builds the committed
+fixture with the pinned Cargo producer and checks literal profile expectations for both roots.
+The current-token selection, retained-option deletion and one-token advancement edits each give
+its finishing named failure. These three controls close measured parent gaps; they do not establish
+whole-file mutation adequacy.
+
 ### The run's order
 
 Initial cleanup removes the earlier inventory before judging forms. Failure ends unable to judge (exit 2),

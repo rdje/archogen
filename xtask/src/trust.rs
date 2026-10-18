@@ -6393,6 +6393,71 @@ pub(crate) mod tests {
             }
         }
     }
+
+    #[test]
+    fn cargo_codegen_arguments_remain_single_normalized_options() {
+        crate::trust_test_process::bounded!(
+            cargo_codegen_arguments_remain_single_normalized_options
+        );
+        let f = two_roots(
+            "retained-codegen-arguments",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &[(
+                "Cargo.toml",
+                format!("{WS}\n[profile.release]\nopt-level = 1\ncodegen-units = 3\n\n[profile.release.package.b]\nopt-level = 2\ncodegen-units = 5\n"),
+            )],
+        );
+        let inventory = written(f.run());
+        for (root, package, options) in [
+            (
+                "gen",
+                "crates/a",
+                [
+                    ("-C opt-level=1", "opt-level=1"),
+                    ("-C codegen-units=3", "codegen-units=3"),
+                ],
+            ),
+            (
+                "chk",
+                "crates/b",
+                [
+                    ("-C opt-level=2", "opt-level=2"),
+                    ("-C codegen-units=5", "codegen-units=5"),
+                ],
+            ),
+        ] {
+            let units = program(&inventory, root).get("units").unwrap().elements();
+            assert_eq!(units.len(), 1);
+            assert_eq!(
+                units[0].get("package").and_then(Json::as_str),
+                Some(package)
+            );
+            let arguments: Vec<_> = units[0]
+                .get("configuration")
+                .unwrap()
+                .elements()
+                .iter()
+                .map(|arg| arg.as_str().expect("a configuration argument is text"))
+                .collect();
+            for (expected, operand) in options {
+                // Expectations come from the committed profile, independently of the normalized output.
+                assert_eq!(
+                    arguments
+                        .iter()
+                        .copied()
+                        .filter(|arg| *arg == expected)
+                        .count(),
+                    1,
+                    "{root} must retain {expected:?} once: {arguments:?}"
+                );
+                assert!(
+                    !arguments.contains(&operand),
+                    "{root} retained a consumed operand {operand:?}: {arguments:?}"
+                );
+            }
+        }
+    }
 }
 
 #[cfg(test)]

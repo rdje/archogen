@@ -5811,3 +5811,40 @@ from
 to
                     let (name, path) = v.rsplit_once('=').unwrap_or((v, ""));
 end
+
+mutation trust-codegen-operand-current-token
+file xtask/src/trust.rs
+test -p xtask trust::tests::cargo_codegen_arguments_remain_single_normalized_options -- --exact
+expect killed
+why M3.6.9.6.3.2.2.13.2.3: exact L595.int.187 survivor: the profile operand is the following token, independently required as a complete normalized codegen option.
+from
+            if t == "-C" {
+                if let Some(v) = tokens.get(i + 1) {
+to
+            if t == "-C" {
+                if let Some(v) = tokens.get(i + 0) {
+end
+
+mutation trust-codegen-configuration-push-deleted
+file xtask/src/trust.rs
+test -p xtask trust::tests::cargo_codegen_arguments_remain_single_normalized_options -- --exact
+expect killed
+why M3.6.9.6.3.2.2.13.2.3: exact L604.stmt.203 survivor: each explicitly configured optimization/codegen-unit option must appear once in its binary/library configuration.
+from
+                    out.push(format!("-C {v}"));
+to
+                    // out.push(format!("-C {v}"));
+end
+
+mutation trust-codegen-operand-advance-one
+file xtask/src/trust.rs
+test -p xtask trust::tests::cargo_codegen_arguments_remain_single_normalized_options -- --exact
+expect killed
+why M3.6.9.6.3.2.2.13.2.3: exact L605.int.205 survivor: a retained codegen option consumes its operand, which must never reappear as a stray unprefixed configuration argument.
+from
+                    out.push(format!("-C {v}"));
+                    i += 2;
+to
+                    out.push(format!("-C {v}"));
+                    i += 1;
+end

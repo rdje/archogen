@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — independently retain codegen operands and consume them once
+
+`ARCHOGEN-M3-0723` (leaf `M3.6.9.6.3.2.2.13.2.3`), `2026-10-18`.
+
+- Add a bounded public parent with explicit release and package-override optimization/codegen-unit
+  values. Actual successful pinned Cargo inventories retain each expected complete option once and
+  no stray raw operand, independently of normalized output.
+- All three exact catalogue and current systematic edits finish named K, strict 0; all 1029 originals/
+  current copies restore, five false receipts refuse. Prior production/tests/E preserved, catalogue
+  append-only, each context edit byte-equal to its actual systematic candidate.
+- Book examples/canonical/live sync; focused/stamp and staged gates bind commit. Seven helper survivors
+  remain, six matcher assessments next; final full adequacy stays open.
+
 ## archogen — public source and dependency path normalization controls
 
 `ARCHOGEN-M3-0722` (leaf `M3.6.9.6.3.2.2.13.2.2`), `2026-10-18`.
