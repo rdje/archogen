@@ -88,6 +88,11 @@ working directory. Inherited temp overrides do not redirect these builds. These 
 not grant compiled source permission to read them: the compiler dependency check refuses source-level
 `env!` or `option_env!` dependencies on these names.
 
+A current defect affects the build helper’s failure text under multiline output paths: a path
+continuation beginning with `error` can be reported in place of Cargo’s actual diagnostic. The
+[verified assessment](annex-trust-proofs.md#diagnostic-selector-assessment-and-current-defect) records
+the reproduction and scope. Immediate repair is owned by `M3.6.9.6.3.2.2.14.3.2.1`.
+
 An admission's `defadmit` form names the file, rule and `sha256` of the site's extent (the whole manifest for a
 manifest rule), plus one textual `reason` value.
 For example, `(reason "the reviewed template")` has one value. An absent reason, `(reason)` or

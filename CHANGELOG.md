@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — assess Cargo selectors and own the framing defect
+
+`ARCHOGEN-M3-0742` (leaf `M3.6.9.6.3.2.2.14.3.1`), `2026-10-18`.
+
+- Exact original/three selector edits and actual pinned Cargo on supported multiline paths: successful
+  controls pass; all three edits differ from the literal diagnostic on an ordinary type failure.
+- Confirm an original framing defect: a continued path beginning with error, including error: decoy,
+  replaces the genuine Cargo diagnostic. A colon-only predicate change is insufficient.
+- Record root, impact, source/receipt proofs and the immediate P2 public repair/regression owner.
+  Book/live show the known defect; production, controls and E records remain unchanged in this assessment.
+
+
 ## archogen — measure the complete guarded run_cargo cohort
 
 `ARCHOGEN-M3-0741` (leaf `M3.6.9.6.3.2.2.14.2`), `2026-10-18`.

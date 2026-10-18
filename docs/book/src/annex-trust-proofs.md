@@ -578,6 +578,48 @@ operator catalogue, equivalence reasons and native tooling stay exact. Later clo
 separate pinned-book and staged checks. The next slice assesses the three diagnostic matcher survivors
 against exact compiled helpers and supported pinned Cargo output, including independent expected lines.
 
+### Diagnostic selector assessment and current defect
+
+Assessment `.14.3.1` (`2026-10-18`) tests the exact original helper and its three current selector
+edits with real pinned Cargo. The caller admits alias configuration only; general configuration-warning
+examples fall outside that contract. The witness instead uses multiline scratch prefixes already
+supported by public inventory controls and an ordinary Rust type error. All home/temp stores stay
+local, and the OS write guard remains active.
+
+Cargo first succeeds on the source, then fails after a normal type mismatch. Structured output names
+E0308, and Cargo’s independent stderr diagnostic is:
+
+```text
+error: could not compile `a` (bin "a") due to 1 previous error
+```
+
+All compiled variants succeed with valid source. On the failure case whose physical path continuation
+begins `erroneous-prefix`, the original returns the literal diagnostic. The actual `contains` edit
+selects a status/path line, the `erro` edit selects the continuation and the `rror` edit returns an empty
+fragment. An oracle accepting any error would pass every variant, so it proves no diagnostic precision.
+The literal independent expectation distinguishes them. These observations are supported witnesses;
+permanent finishing parent controls and repaired-source native outcomes are still required.
+
+The same assessment exposes a defect in the original. A supported path continuation beginning
+`error-path` is selected before Cargo’s genuine message:
+
+```text
+expected: error: could not compile `a` (bin "a") due to 1 previous error
+reported: error-path/source/crates/common)
+```
+
+A second successful-path/failure control uses `error: decoy`. Its failure also selects the path, so
+adding a colon to an unframed prefix test would leave the defect. The cause is scanning physical stderr
+lines without distinguishing multiline path continuations. The helper’s misleading failure text hides
+the build reason; this is an original-code defect, independently of its mutation-test blind spots.
+
+Immediate P2 repair is owned by `.14.3.2.1`. It must reproduce the issue through public inventory,
+frame useful actual diagnostics, preserve other refusal behavior and add permanent regression controls.
+`.14.3.2.2` then rebinds selector obligations against the repaired production source. This assessment
+changes no production code, existing controls or equivalence records. Its exact compiled source,
+producer JSON/stderr, positive/negative controls and Python/system hashes are retained; the complete
+native `9 killed / 3 survived / strict exit 1` remains the preceding measurement, not a new result.
+
 ## Mutation measurements and controls
 
 Whether the instrument's tests hold the generated-sources rules — what a program reads, the chain, the blob rule,

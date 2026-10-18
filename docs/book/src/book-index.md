@@ -127,6 +127,8 @@ a change that leaves it stale, so it is never edited by hand.
   generated systems run](targets.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
   the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md), [Annex B: The checks
   that keep the repository honest](annex-repository.md)
+- Diagnostic selector assessment and current defect — [Annex C: Trust proof
+  records](annex-trust-proofs.md#diagnostic-selector-assessment-and-current-defect)
 - Diagnostics — [The archogen command line](cli.md#diagnostics)
 - Diagnostics point at the problem — [Reading a description](reading.md#diagnostics-point-at-the-problem)
 - **DMA** — [definition](glossary.md), [The supported profile](profile.md), [Refinement](refinement.md)

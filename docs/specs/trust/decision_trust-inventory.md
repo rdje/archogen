@@ -577,7 +577,7 @@ isolation: a successful mutated inventory omits common from the second root afte
 artifact. An independent omission-only public Cargo intervention confirms fresh/no-command behavior
 while all home/temp settings remain local. Original production retains isolated targets; the existing
 shared-package parent catches this altered behavior. The book records full results and restoration;
-matcher assessment `.14.3.1` follows, with no cohort or full-production adequacy claim.
+matcher assessment `.14.3.1` is recorded below, with no cohort or full-production adequacy claim.
 
 
 ## Why
@@ -620,3 +620,19 @@ that the baseline cannot be accepted by its author; every finding answered here.
 Defects per round, oldest first: 11, 12, 16, 11, 10, 10, 8, 11, 4, 1, 0. Each round's findings, its reader's measurements and every answer are in
 the review history linked above, which holds them whole; this record keeps only the count (`PROGRAM.52.2`, the
 folder's ceiling).
+
+
+## Cargo failure diagnostic assessment
+
+Assessment `M3.6.9.6.3.2.2.14.3.1` (`2026-10-18`) uses the supported multiline scratch-prefix
+contract and actual pinned Cargo, retaining the admitted alias configuration. Successful controls
+pass. An ordinary type error supplies a literal independent diagnostic and structured E0308; exact
+compiled original/three selector edits differ as expected. These are witnesses, not fresh native kills.
+
+The original helper has a confirmed framing defect: a physical path continuation beginning with
+`error` can replace the actual diagnostic in its failure text. A successful-path/failure control with
+`error: decoy` also reproduces it, excluding a colon-only predicate repair. Immediate P2 owner
+`.14.3.2.1` must reproduce through public inventory, frame diagnostics correctly and add permanent
+regressions before remaining selector rebinding/classification. Source/controls/reasons are unchanged
+by the assessment. The [book](../../book/src/annex-trust-proofs.md#diagnostic-selector-assessment-and-current-defect)
+records producer evidence and limitations; the last complete native result remains nine K/three S.
