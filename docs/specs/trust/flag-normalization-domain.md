@@ -38,6 +38,8 @@ The source table below identifies those bytes, rather than relying on moving bra
 release/locked/offline/no-default-features/JSON/verbose/package arguments. It supplies no trailing rustc
 arguments. `run_cargo` clears the environment, copies the catalog allowlist, and fixes `RUSTC=rustc`.
 `catalog_build::environment` supplies PATH/HOME/rustup/toolchain and fresh project-local Cargo/target homes.
+After `PROGRAM.89.1`, it also prepares the target-local canonical temporary directory and seeds
+TMPDIR/TMP/TEMP; these are process settings, not new compiled-input admissions.
 Configuration admission is alias-only, with tracked bytes and ancestor checks.
 
 Manifest rules are different: `Rules.workspace` and `Rules.manifests` allow a default rule refusal when
@@ -441,6 +443,8 @@ and establishes no historical write or migration census. Existing operator produ
 seed local TMPDIR and are a separate environment. `PROGRAM.89.1` owns the immediate shared API repair;
 `.89.2` owns caller-premise revalidation, fresh native flag/matcher replay and integration before further
 matcher classification. Existing E records and historical survivor results are unchanged.
+The shared API repair subsequently passes permanent cleared-child/effect/error controls in
+`PROGRAM.89.1`; `.89.2` still owns the changed caller-premise checkpoint before new classifications.
 
 The assessment restores all captured original inputs before closure documentation. Native listing,
 compiled modules, literal assertions, pinned producer/artifact consumption and checked source identities

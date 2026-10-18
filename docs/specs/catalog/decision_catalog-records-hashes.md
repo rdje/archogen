@@ -165,9 +165,14 @@ set** and reads the compiler's dependency information:
   rules admit only `alias` keys, so no program a configuration names ever runs.
 - **Its environment is an allowlist:** `PATH`, `HOME`, `RUSTUP_HOME`, `RUSTUP_TOOLCHAIN` set to the pin,
   `CARGO_HOME` set to an empty directory of the gate's own, since a workspace of path dependencies needs no
-  registry, and the gate's own `CARGO_TARGET_DIR`, and nothing else. A list of variables to clear would miss the
+  registry, the gate's own `CARGO_TARGET_DIR`, and `TMPDIR`, `TMP` and `TEMP` set to its canonical
+  `tmp` subdirectory. No other inherited variables are supplied. A list of variables to clear would miss the
   next one that changes a build. `RUSTUP_TOOLCHAIN` outranks every rustup override, and `rustc -vV` must then name
   the pinned release, or the gate refuses (premise 1).
+  Temporary storage is created and canonicalized before any child command is prepared; a file in its
+  place or any preparation error stops the build. The absolute runtime value stays correct when the
+  compiler uses a different working directory. These process settings do not admit source-level
+  environment dependencies: the compiler-read allowlist below remains unchanged.
 - **The pin** is the `channel` of the `rust-toolchain.toml` at the written index's root, which holds only a
   `[toolchain]` table whose keys are `channel`, which is required, and any of `components`, `targets` and `profile`,
   so no `path` toolchain is named. The channel must be a release number: three decimal numbers, `MAJOR.MINOR.PATCH`,

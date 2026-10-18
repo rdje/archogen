@@ -6458,6 +6458,25 @@ pub(crate) mod tests {
             }
         }
     }
+
+    #[test]
+    fn temporary_process_paths_are_not_admitted_as_compiled_environment_inputs() {
+        crate::trust_test_process::bounded!(
+            temporary_process_paths_are_not_admitted_as_compiled_environment_inputs
+        );
+        for variable in ["TMPDIR", "TMP", "TEMP"] {
+            let f = two_roots(
+                &format!("compiled-temporary-input-{variable}"),
+                "fn main() {}\n",
+                &format!("pub const H: Option<&str> = option_env!(\"{variable}\");\n"),
+                &[],
+            );
+            says(
+                &refused(f.run()),
+                &format!("the environment variable `{variable}`"),
+            );
+        }
+    }
 }
 
 #[cfg(test)]

@@ -171,11 +171,12 @@ pub fn toolchain_file(tree: &Tree) -> Result<String, String> {
 }
 
 /// §3's allowlisted environment for cargo and rustc: `PATH`, `HOME`, `RUSTUP_HOME`, `RUSTUP_TOOLCHAIN` the pin,
-/// `CARGO_HOME` an empty directory of the gate's own, `CARGO_TARGET_DIR` its own, and nothing else.
+/// `CARGO_HOME` an empty directory of the gate's own, `CARGO_TARGET_DIR` its own, and `TMPDIR`/`TMP`/`TEMP`
+/// the canonical `tmp` directory within that target. No other inherited variables are supplied.
 ///
 /// # Errors
 ///
-/// `CARGO_HOME` could not be made.
+/// The Cargo home, target directory or target-local temporary directory could not be prepared.
 pub fn environment(
     pin: &str,
     cargo_home: &Path,
@@ -183,6 +184,10 @@ pub fn environment(
 ) -> Result<Vec<(String, String)>, String> {
     fs::create_dir_all(cargo_home).map_err(|e| format!("{}: {e}", cargo_home.display()))?;
     fs::create_dir_all(target_dir).map_err(|e| format!("{}: {e}", target_dir.display()))?;
+    let temp_dir = target_dir.join("tmp");
+    fs::create_dir_all(&temp_dir).map_err(|e| format!("{}: {e}", temp_dir.display()))?;
+    let temp_dir =
+        fs::canonicalize(&temp_dir).map_err(|e| format!("{}: {e}", temp_dir.display()))?;
     let mut env = Vec::new();
     for key in ["PATH", "HOME"] {
         let value = std::env::var(key).map_err(|_| format!("`{key}` is unset"))?;
@@ -199,6 +204,9 @@ pub fn environment(
         "CARGO_TARGET_DIR".to_owned(),
         target_dir.display().to_string(),
     ));
+    for key in ["TMPDIR", "TMP", "TEMP"] {
+        env.push((key.to_owned(), temp_dir.display().to_string()));
+    }
     Ok(env)
 }
 
@@ -1545,6 +1553,139 @@ mod tests {
                 );
             }
             other => panic!("{other:?}"),
+        }
+    }
+
+    #[test]
+    #[ignore = "invoked only by the cleared build-environment control"]
+    fn build_temporary_directory_probe() {
+        const PROBE: &str = "catalog_build::tests::build_temporary_directory_probe";
+        let base = PathBuf::from(std::env::var("ARCHOGEN_BUILD_TEMP_ROOT").unwrap());
+        match std::env::var("ARCHOGEN_BUILD_TEMP_MODE").unwrap().as_str() {
+            "seed" => {
+                // The hostile case also checks a relative target and a different compiler cwd.
+                let target = if base.ends_with("hostile") {
+                    PathBuf::from("build-target")
+                } else {
+                    base.join("build-target")
+                };
+                let env = super::environment(&pin(), &base.join("cargo-home"), &target).unwrap();
+                let keys: std::collections::BTreeSet<_> =
+                    env.iter().map(|(key, _)| key.as_str()).collect();
+                assert_eq!(
+                    keys,
+                    [
+                        "PATH",
+                        "HOME",
+                        "RUSTUP_HOME",
+                        "RUSTUP_TOOLCHAIN",
+                        "CARGO_HOME",
+                        "CARGO_TARGET_DIR",
+                        "TMPDIR",
+                        "TMP",
+                        "TEMP",
+                    ]
+                    .into_iter()
+                    .collect()
+                );
+                assert_eq!(keys.len(), env.len(), "duplicate environment keys");
+                let cwd = base.join("compiler-cwd");
+                std::fs::create_dir_all(&cwd).unwrap();
+                let output = super::command(
+                    std::env::current_exe().unwrap().to_str().unwrap(),
+                    &["--exact", PROBE, "--ignored", "--nocapture"],
+                    &env,
+                    &cwd,
+                )
+                .env("ARCHOGEN_BUILD_TEMP_ROOT", &base)
+                .env("ARCHOGEN_BUILD_TEMP_MODE", "effect")
+                .output()
+                .unwrap();
+                assert!(output.status.success(), "{output:?}");
+                assert!(String::from_utf8_lossy(&output.stdout)
+                    .contains(&format!("test {PROBE} ... ok")));
+            }
+            "effect" => {
+                let expected = std::fs::canonicalize(base.join("build-target/tmp")).unwrap();
+                for key in ["TMPDIR", "TMP", "TEMP"] {
+                    assert_eq!(PathBuf::from(std::env::var_os(key).unwrap()), expected);
+                }
+                // Use the child's explicit local setting; no filesystem default may choose storage.
+                let actual = PathBuf::from(std::env::var_os("TMPDIR").unwrap());
+                assert_eq!(actual, expected);
+                assert!(actual.is_absolute() && actual.is_dir());
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::MetadataExt;
+                    assert_eq!(
+                        std::fs::metadata(&actual).unwrap().dev(),
+                        std::fs::metadata(real_root()).unwrap().dev()
+                    );
+                }
+                std::fs::write(actual.join("created-by-cleared-child"), b"local\n").unwrap();
+            }
+            other => panic!("unknown build temporary-directory probe {other}"),
+        }
+    }
+
+    #[test]
+    fn cleared_builds_use_local_temporary_directories_despite_inherited_overrides() {
+        crate::trust_test_process::bounded!(
+            cleared_builds_use_local_temporary_directories_despite_inherited_overrides
+        );
+        let dir = scratch("local-temporary-directories");
+        for case in ["absent", "hostile"] {
+            let base = dir.join(case);
+            std::fs::create_dir_all(&base).unwrap();
+            let mut command = Command::new(std::env::current_exe().unwrap());
+            command
+                .args([
+                    "--exact",
+                    "catalog_build::tests::build_temporary_directory_probe",
+                    "--ignored",
+                    "--nocapture",
+                ])
+                .current_dir(&base)
+                .env("ARCHOGEN_BUILD_TEMP_ROOT", &base)
+                .env("ARCHOGEN_BUILD_TEMP_MODE", "seed");
+            for key in ["TMPDIR", "TMP", "TEMP"] {
+                command.env_remove(key);
+                if case == "hostile" {
+                    command.env(key, base.join("unused-inherited").join(key));
+                }
+            }
+            let output = command.output().unwrap();
+            assert!(output.status.success(), "{case}: {output:?}");
+            assert_eq!(
+                std::fs::read(base.join("build-target/tmp/created-by-cleared-child")).unwrap(),
+                b"local\n"
+            );
+            assert!(!base.join("unused-inherited").exists());
+        }
+    }
+
+    #[test]
+    fn build_environment_refuses_blocked_storage_and_recovers_after_removal() {
+        let dir = scratch("blocked-build-storage");
+        for (index, blocked) in ["cargo-home", "build-target", "build-target/tmp"]
+            .into_iter()
+            .enumerate()
+        {
+            let base = dir.join(index.to_string());
+            let path = base.join(blocked);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(&path, b"keep this file\n").unwrap();
+            let result =
+                super::environment(&pin(), &base.join("cargo-home"), &base.join("build-target"));
+            let error = result.expect_err("a blocked build directory was accepted");
+            assert!(error.contains(path.to_str().unwrap()), "{error}");
+            assert_eq!(std::fs::read(&path).unwrap(), b"keep this file\n");
+            std::fs::remove_file(&path).unwrap();
+            super::environment(&pin(), &base.join("cargo-home"), &base.join("build-target"))
+                .unwrap();
+            if blocked == "build-target/tmp" {
+                assert!(base.join("build-target/tmp").is_dir());
+            }
         }
     }
 }

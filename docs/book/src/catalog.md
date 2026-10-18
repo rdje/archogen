@@ -107,6 +107,16 @@ Every facet has two hashes, and neither is written in the record; both are compu
 A review names a bound hash. So a review is of exactly the content that hash covers, and any change to any of it,
 a comment in the code under a model included, leaves the review stale. Nobody has to remember to lower a status.
 
+### Local build storage
+
+The catalog build checker uses its own [Cargo](ledger.md#rust-toolchain) and target directories under
+repository-owned scratch.
+Its cleared subprocesses receive `TMPDIR`, `TMP` and `TEMP` set to `<scratch>/records-target/tmp`.
+The helper creates that directory and resolves its runtime path before preparing commands. A file in
+its place or another preparation error stops the build. Child working-directory changes and inherited
+temp overrides cannot redirect this setting. Compiler-read environment dependencies remain subject
+to the catalog's separate admission rules.
+
 ### Status is derived, never written
 
 A facet's evidence status is `production`, `rejected`, `stale` or `unreviewed`, and it is computed from reviews,

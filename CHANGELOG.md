@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — keep cleared build temporary storage on the repository volume
+
+`ARCHOGEN-PROGRAM-0728` (leaf `PROGRAM.89.1`), `2026-10-18`.
+
+- Prepare and canonicalize each target's tmp directory before commands; seed TMPDIR/TMP/TEMP in
+  the cleared shared build environment. Fail on blocked storage instead of falling back to OS defaults.
+- Permanent RED/green controls verify real effective paths, local file effects, absent/hostile settings,
+  relative targets, changed child cwd and blocked-file recovery. Process settings remain refused as
+  compiled environment inputs. Two exact native mutations finish with named parent kills, strict zero.
+- Both proof producers use local temp variables; operator28 passes. All1034 original inputs restore,
+  prior bodies/catalogue prefix/E remain exact. Canonical/book/live sync; exact final focused
+  activation and staged gates bind commit, followed by the separately owned caller/integration checkpoint.
+
 ## archogen — bound matcher assessment and own shared temporary-default repair
 
 `ARCHOGEN-M3-0727` (leaf `M3.6.9.6.3.2.2.13.2.4.1`), `2026-10-18`.

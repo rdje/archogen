@@ -1,4 +1,5 @@
 # PROGRAM: program spine — roadmap ownership, workspace, tiers, and the book
+| `PROGRAM.89.1` | `ARCHOGEN-PROGRAM-0728 (leaf PROGRAM.89.1)` | **Cleared builds keep temporary data local**: checked target/tmp creation/canonicalization and explicit TMPDIR/TMP/TEMP, real child effective path/volume/file controls, absent/hostile/relative/different-cwd and blocked-file recovery; compiled-input admissions unchanged; two native named kills, operator28 and original1034 restoration; canonical/book/live sync, focused/stamp/staged gates; caller/integration checkpoint next |
 
 ## Metadata
 
@@ -691,7 +692,7 @@ mdBook that is the director's window into the project.
 
 
 - ID: `PROGRAM.89`
-  Status: `pending` — P1 shared build temporary-directory locality defect
+  Status: `active` — P1 shared build temporary-directory locality defect
   Goal: prevent catalog/inventory cleared build environments from defaulting temporary data outside
     the repository volume. Supply repository-derived temporary directories, preserve input/admission
     contracts, add permanent effect/failure controls, and revalidate caller premises before more E.
@@ -706,14 +707,47 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.89.1`
-  Status: `pending` — after bounded source assessment is committed cleanly
+  Status: `done` — checked shared local-temp environment and permanent controls
   Goal: derive/create a temp directory from each build's project-local target, set TMPDIR/TMP/TEMP
     after clearing inherited environment, propagate creation failures before tools execute. Verify
     effective child paths/volumes, absent/file/error and hostile inherited-temp cases, and actual
     public build callers. Keep compiled env-dependency admissions narrow. Align producer proof envs
     where needed, update canonical/book contracts and run focused/operator checks before commit.
-  Verification: `pending`
-  Commit: `pending`
+  Startup: roadmap §4.4/§14.4, catalog hashes §3, inventory §3, pinned caller domain,
+    shared environment/cleared-command callers and existing catalog/trust public fixtures reviewed.
+    Book catalog/trust/Annex C reviewed; source contract currently lists no local temp variables.
+  - [x] **ROOT CAUSE** — M3 .13.2.4.1 exact API/cleared-child metadata evidence; permanent
+    cargo test -p xtask catalog_build::tests::cleared_builds_use_local_temporary_directories_despite_inherited_overrides
+    -- --exact and build_environment_refuses_blocked_storage_and_recovers_after_removal both RED101.
+    Missing keys and accepted temp-file destination reproduce before repair, with passive checks before
+    any child temp write. No off-volume project data created and no historical write/migration claim.
+  - [x] **ADDRESSED** — target/tmp checked creation/canonicalization, TMPDIR/TMP/TEMP explicitly
+    supplied after clearing. Permanent children verify absent/hostile inputs, relative target/different
+    cwd, explicit child path and Unix volume, actual local file effect; blocked Cargo/target/temp files stay
+    exact and recovery succeeds. Catalog test filter passes15 with one internal probe ignored; public
+    temporary_process_paths_are_not_admitted_as_compiled_environment_inputs passes all three variables.
+    Native cargo xtask mutate --timeouts-fail --only build-environment-local-temp-variables-omitted
+    build-environment-temp-creation-error-ignored exit 0, both named K, no refusal/timeout/unjudged.
+    Native result: mutate: OK — 2 mutation(s), each killed or surviving exactly as the catalog expects.
+    First catalogue loop context omitted its format's four-space escape and failed binding, while the
+    ignored-error control killed; exact indented context corrected before authoritative two-entry pass.
+  - [x] **NO REGRESSION** — python3 -I -B xtask/mutation_sweep_tests.py <root>, exit 0: all28 controls
+    pass after both actual producer environments gain local TMP/TEMP beside TMPDIR. Literal argv and
+    compiled candidate/proof controls hold. Native/full-input census restores all1034 regular inputs,
+    modes/index/opaque pin identity, independent Python/system hashes. Source reconstruction proves
+    every prior body outside shared API/doc and appended controls exact, old catalogue prefix and E
+    unchanged. The native catalogue operates/restores originals; no copied-input census claimed.
+    Canonical catalog/inventory/domain records and book align. Exact final staged activation
+    must pass focused3/3 with native write-tree stamp; actual pinned book and staged gates bind commit.
+    No new integration or final caller/E checkpoint claim: PROGRAM.89.2 owns it.
+    The locality gate forbids tracked temp_dir() calls. Permanent controls use explicit child settings;
+    a separate passive exact-API/std-default probe confirms all five locality/presence booleans true.
+    Its read-only metadata scope remains distinct from the permanent child file-effect control.
+  Verification: `2026-10-18`, target/build-temp-locality retains RED exits/logs, final mutations-final.log, green public API/
+    catalogue results, full28 operator output, original-input restoration and source/audit receipts.
+    audit.json SHA256 405506f965b49fa49de116ff66aeb15d3b44760b35f2ca675ba61fcbad50bd69; environment SHA256 8b6fa81a2d715c2e42f8ab75a02b6e0c037c97d2f55e71c44c21e4a5516ee74c.
+    Final focused/stamp and book/staged checks required, with no post-activation edits.
+  Commit: `ARCHOGEN-PROGRAM-0728 (leaf PROGRAM.89.1)`
 
 - ID: `PROGRAM.89.2`
   Status: `pending` — after committed temporary-environment repair
@@ -788,7 +822,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.89.1` | `pending` | P1 shared build temporary-directory locality repair |
+| 1 | `PROGRAM.89.2` | `pending` | P1 changed caller-premise/native/integration checkpoint |
 | 2 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
@@ -1003,6 +1037,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-18` | `PROGRAM.86` | independent main-cache metadata/native census, identity recheck/removal/residue, maintained restoration, focused and wasm workflows | 928 files / 344389410 logical bytes removed only from admitted incremental caches; 1029 inputs restore after removal/build checks; focused3/3 exact activation, wasm0; evidence/stores/Git workspaces retained; closure book/staged checks separate |
 | `2026-10-18` | `PROGRAM.88` | maintained routing red/green controls, book ancestor and non-book budget cases, fixture failure rejection | red41/3 to green44/0, same44 arms; indirect book count/byte cap removed, other limits and all prior arms retained; shell syntax0, final book/staged gates before commit |
 | `2026-10-18` | `PROGRAM.87` | complete native documentation history/ancestry, source/order/byte counters, actual pinned renderer/separator controls, preserved seals and public gate boundary/restoration | all 204/154 prior rows retained; headed render182/135 to205/155 including new records; 41 current affected versions traced; five exact seals/six leaves, 236 old archives unchanged; 1034 inputs restore, five structural falsifiers refuse; gate presence-only scope explicit |
+| `2026-10-18` | `PROGRAM.89.1` | passive RED/green; cleared-child path/volume/file effects and hostile overrides; blocked-file recovery; public env-input refusals; native mutations; operator28; census/source audit; focused | checked local temp setup, both native named K strict0; all1034 originals restore; prior bodies/E preserved; exact final focused/book/staged gates bind commit, caller checkpoint .89.2 next |
 
 ## Commit Log
 

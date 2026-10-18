@@ -13,11 +13,11 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `PROGRAM` → frontier `PROGRAM.89.1`. `M3` waits for this locality prerequisite. `M2`'s frontier is `M2.7.4`, on the director; `API` is
+- **Active tree:** `PROGRAM` → frontier `PROGRAM.89.2`. `M3` waits for this locality prerequisite. `M2`'s frontier is `M2.7.4`, on the director; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `PROGRAM.89.1` shared build temporary-directory locality repair.
-  Seed checked repository-derived TMPDIR/TMP/TEMP; `.89.2` revalidates caller proofs/native groups and integration.
+- **Next action:** `PROGRAM.89.2` changed build-environment caller checkpoint.
+  Revalidate pinned caller proofs, native flag/matcher groups and full integration after the local-temp repair.
   Then resume `M3.6.9.6.3.2.2.13.2.4.2.1` metadata evidence. Full sweeps/review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.

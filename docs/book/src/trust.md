@@ -80,6 +80,14 @@ clean, and reads the compiler's own record of every file it read. Every source a
 catalog's rules: a construct that could read something the commit does not track — an `include!` of an untracked
 file, an environment variable, assembly pulling in bytes — is refused unless a reviewed **admission** names it.
 
+Build subprocesses use a cleared environment with repository-derived Cargo, target and temporary
+storage. `TMPDIR`, `TMP` and `TEMP` point to the canonical `tmp` directory inside each build target;
+for example, metadata uses `<output>/target-metadata/tmp`. The directory is prepared before commands
+run, and a blocked destination stops the run. Its runtime path remains correct when a child changes
+working directory. Inherited temp overrides do not redirect these builds. These process settings do
+not grant compiled source permission to read them: the compiler dependency check refuses source-level
+`env!` or `option_env!` dependencies on these names.
+
 An admission's `defadmit` form names the file, rule and `sha256` of the site's extent (the whole manifest for a
 manifest rule), plus one textual `reason` value.
 For example, `(reason "the reviewed template")` has one value. An absent reason, `(reason)` or

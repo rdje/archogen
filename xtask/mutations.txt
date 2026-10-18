@@ -5848,3 +5848,27 @@ to
                     out.push(format!("-C {v}"));
                     i += 1;
 end
+
+mutation build-environment-local-temp-variables-omitted
+file xtask/src/catalog_build.rs
+test -p xtask catalog_build::tests::cleared_builds_use_local_temporary_directories_despite_inherited_overrides -- --exact
+expect killed
+why PROGRAM.89.1: a real cleared child must receive all local temporary-path variables and use the target-local directory even with hostile inherited values and a different working directory.
+from
+        for key in ["TMPDIR", "TMP", "TEMP"] {
+            env.push((key.to_owned(), temp_dir.display().to_string()));
+        }
+to
+        // Local temporary-path variables omitted.
+end
+
+mutation build-environment-temp-creation-error-ignored
+file xtask/src/catalog_build.rs
+test -p xtask catalog_build::tests::build_environment_refuses_blocked_storage_and_recovers_after_removal -- --exact
+expect killed
+why PROGRAM.89.1: an existing file at the target-local temporary destination must fail before a cleared build command can be prepared; canonicalizing that file alone does not make it a directory.
+from
+        fs::create_dir_all(&temp_dir).map_err(|e| format!("{}: {e}", temp_dir.display()))?;
+to
+        let _ = fs::create_dir_all(&temp_dir);
+end

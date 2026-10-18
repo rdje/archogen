@@ -115,10 +115,14 @@ that differs from another only in ASCII case, a special name spelt in another ca
 catalog's path grammar — none today, and the catalog's own check refuses such a tree already (R3 C17)); never from the working tree, so an uncommitted or untracked file
 cannot stand in for a committed one (R1 A7). It builds with `--locked --offline` under the catalog's cleared,
 allowlisted environment (`environment`: `PATH`, `HOME`, the rustup home and the pinned toolchain, a `CARGO_HOME` of
-its own, its own target directory, nothing inherited beyond that — no `RUSTFLAGS`, no `RUSTC_WRAPPER`, no
+its own, its own target directory, and `TMPDIR`/`TMP`/`TEMP` pointing to that target's canonical `tmp`
+subdirectory, nothing inherited beyond that — no `RUSTFLAGS`, no `RUSTC_WRAPPER`, no
 `CARGO_PROFILE_*`). Inventory compilation additionally sets its own fixed `RUSTC=rustc`, selecting the same
 pinned command as the recorded `rustc -vV` identity. Cargo then prints a plain executable name, independent of
-the installation path; no inherited compiler override is admitted. It refuses a cargo configuration found
+the installation path; no inherited compiler override is admitted. Shared temporary storage is prepared
+with checked creation/canonicalization before commands execute. Blocked destinations refuse, while
+absent directories are created. The absolute runtime temp path works across child working directories.
+These process variables remain refused as compiled environment inputs; process setup grants no admission. It refuses a cargo configuration found
 above the repository or under `target/`, or one that is a symbolic link
 (`configurations_on_path`), and admits an in-tree configuration only byte for byte as committed and holding
 nothing but `[alias]` (`package::check_config`), which closes `build.rustc`, `build.rustc-wrapper`, a linker,

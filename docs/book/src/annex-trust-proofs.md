@@ -221,8 +221,9 @@ synthetic; compiler-refused bare forms establish no coverage or equivalence. Wro
 The source/caller assessment also finds that the shared cleared build environment omits temporary-path
 variables. A passive compiled-API probe confirms a default outside the repository volume. It reads only
 OS directory metadata and creates no off-volume project files. `PROGRAM.89` owns immediate local-temp
-repair and caller/native/integration revalidation before more matcher classifications. Existing producer
-proof fixtures already select local `TMPDIR`. No current E record changes. The canonical source domains,
+repair and caller/native/integration revalidation before more matcher classifications. The API repair
+`.89.1` now passes cleared-child path/file-effect and error/recovery controls; `.89.2` owns the remaining
+checkpoint. Producer proof fixtures seed local temp variables. No current E record changes. The canonical source domains,
 qualifications and evidence are in `docs/specs/trust/flag-normalization-domain.md` and the owning leaf
 in `docs/tasks/M3.md`; full adequacy remains open.
 

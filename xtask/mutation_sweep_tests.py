@@ -482,7 +482,7 @@ class DiagnosticFlagTests(DiscoveryFixture):
         env = {key: os.environ[key] for key in ("PATH", "HOME")}
         env.update(RUSTUP_HOME=os.environ.get("RUSTUP_HOME", str(Path(env["HOME"]) / ".rustup")),
                    RUSTUP_TOOLCHAIN="1.95.0", RUSTC="rustc", CARGO_HOME=str(project / "cargo-home"),
-                   CARGO_TARGET_DIR=str(target), TMPDIR=str(self.base))
+                   CARGO_TARGET_DIR=str(target), TMPDIR=str(self.base), TMP=str(self.base), TEMP=str(self.base))
 
         def cargo(arguments):
             process = subprocess.Popen(["cargo"] + arguments, cwd=project, env=env,
@@ -550,7 +550,7 @@ os.execvp("rustc", ["rustc"] + arguments)
         env.update(PATH=str(compiler_dir) + os.pathsep + env["PATH"],
                    RUSTUP_HOME=os.environ.get("RUSTUP_HOME", str(Path(env["HOME"]) / ".rustup")),
                    RUSTUP_TOOLCHAIN="1.95.0", RUSTC="rustc", CARGO_HOME=str(project / "color-cargo-home"),
-                   CARGO_TARGET_DIR=str(target), TMPDIR=str(self.base))
+                   CARGO_TARGET_DIR=str(target), TMPDIR=str(self.base), TMP=str(self.base), TEMP=str(self.base))
         command = ["cargo", "rustc", "--lib", "--release", "--locked", "--offline",
                    "--no-default-features", "--message-format=json", "-v", "-p", "flagproof",
                    "--", "--color", color]
