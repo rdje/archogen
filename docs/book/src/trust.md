@@ -95,7 +95,9 @@ shows compiler failures, operational refusals, empty inventory state and success
 The [initial repaired-helper measurement](annex-trust-proofs.md#complete-repaired-cargo-diagnostic-measurement)
 records the dated 51-edit assessment: 38 named kills, nine survivor obligations and four compiler refusals.
 [Individual controls and proofs](annex-trust-proofs.md#final-diagnostic-regression-parents) now resolve those
-nine obligations; the complete current-region replay and integration checkpoint follow.
+nine obligations. The [complete region replay](annex-trust-proofs.md#complete-diagnostic-region-replay)
+records 43 kills, four proven equivalents and four compiler refusals, strict exit 0. The full integration
+checkpoint remains next; this is a bounded region result, with the complete file sweep still separate.
 
 An admission's `defadmit` form names the file, rule and `sha256` of the site's extent (the whole manifest for a
 manifest rule), plus one textual `reason` value.

@@ -1337,3 +1337,183 @@ Final held focused verification and book/staged checks bind publication. This re
 individual survivor obligations; the complete current region replay and full integration checkpoint
 remain separate committed slices. Historical results are not added together as a substitute for
 that new measurement, and no whole-file adequacy follows yet.
+
+
+### Complete diagnostic-region replay
+
+Replay `.14.4.1` (`2026-10-18`) freshly judges every current `cargo_error_line`/`run_cargo` edit
+against the controlling full parent population. This is an actual new run, rather than the sum of
+earlier partial outcomes. The unmodified copied tree passes; original and restored copied test
+lists select the same **153 tests**, with route tests skipped and no ignored parent attributes.
+
+| Scope/result | Actual observation |
+| --- | --- |
+| Global production listing | 1526 edits listed |
+| Complete diagnostic region | 51 edits attempted |
+| Named finishing kills | 43 |
+| Proven equivalents | 4 |
+| Compiler refusals | 4 |
+| Survivors, timeouts, unjudged | 0 each |
+| Strict native exit | 0 |
+
+This local native-host run uses the [pinned toolchain](ledger.md#rust-toolchain). Source identity is
+`069d8e598fd9d6c12306fbe0f091635b60f942b747e78e6167e92b41e0ca01ba`; the held Git activation tree is `6306e488b8c4e06ce5fc1b39acb53c74586b3028`.
+Later completion documents receive separate book/staged checks. These identities do not claim that
+the later document tree itself was the native input or that a full integration stamp was produced.
+
+Each row below is freshly observed. One actual finishing parent is shown for each kill; the native
+receipt retains every reported failing name. Compiler refusals execute no mutant tests and establish
+no coverage. Equivalent rows retain their individual source proofs and revalidation conditions.
+
+| Exact edit | Change | Outcome | One actual finishing parent or precise reason |
+| --- | --- | --- | --- |
+| `L676.eq.231` | `if let Some((_, target)) = env.iter().rfind(\|(key, _)\| key == "CARGO_TARGET_DIR") {` → `if let Some((_, target)) = env.iter().rfind(\|(key, _)\| key != "CARGO_TARGET_DIR") {` | killed | `trust::tests::cargo_failure_diagnostics_keep_an_independent_target_alias` |
+| `L685.iter.232` | Visit first positions of `for path in paths` | killed | `trust::tests::cargo_failure_diagnostics_ignore_multiline_target_paths` |
+| `L685.iter.233` | Visit last positions of `for path in paths` | killed | `trust::tests::cargo_failure_diagnostics_keep_cwd_beside_a_separate_target` |
+| `L685.iter.234` | Visit first and last positions of `for path in paths` | equivalent | [At-most-two path vector](#finite-cargo-path-iterator-proofs) |
+| `L687.iter.235` | Visit first positions of `for spelling in std::iter::once(path).chain(canonical)` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L687.iter.236` | Visit last positions of `for spelling in std::iter::once(path).chain(canonical)` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L687.iter.237` | Visit first and last positions of `for spelling in std::iter::once(path).chain(canonical)` | equivalent | [At-most-two spelling chain](#finite-cargo-path-iterator-proofs) |
+| `L688.iter.238` | Visit first positions of `for prefix in spelling.ancestors()` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L688.iter.239` | Visit last positions of `for prefix in spelling.ancestors()` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L688.iter.240` | Visit first and last positions of `for prefix in spelling.ancestors()` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L688.guard.241` | Take newline-prefix guard only at first ancestor positions in `for prefix in spelling.ancestors()` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L688.guard.242` | Take newline-prefix guard only at last ancestor positions in `for prefix in spelling.ancestors()` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L688.guard.243` | Take newline-prefix guard only at first and last ancestor positions in `for prefix in spelling.ancestors()` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L690.cond.244` | `if prefix.contains('\n') {` → `if true {` | equivalent | [Absolute no-newline prefix](#absolute-diagnostic-prefix-proofs) |
+| `L690.cond.245` | `if prefix.contains('\n') {` → `if false {` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L691.stmt.246` | `prefixes.insert(prefix.replace('\'', "'\\''"));` → `// prefixes.insert(prefix.replace('\'', "'\\''"));` | killed | `trust::tests::cargo_failure_diagnostics_ignore_multiline_output_paths` |
+| `L692.stmt.247` | `prefixes.insert(prefix.into_owned());` → `// prefixes.insert(prefix.into_owned());` | killed | `trust::tests::cargo_failure_diagnostics_ignore_multiline_output_paths` |
+| `L706.iter.248` | Visit first positions of `for physical in stderr.split_inclusive('\n')` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L706.iter.249` | Visit last positions of `for physical in stderr.split_inclusive('\n')` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L706.iter.250` | Visit first and last positions of `for physical in stderr.split_inclusive('\n')` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L708.stmt.251` | `offset += physical.len();` → `// offset += physical.len();` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L714.dir.252` | `if line.starts_with("error")` → `if line.contains("error")` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L714.lit.253` | `if line.starts_with("error")` → `if line.starts_with("erro")` | killed | `trust::tests::cargo_failure_diagnostics_keep_the_error_after_a_quoted_key_warning` |
+| `L714.lit.254` | `if line.starts_with("error")` → `if line.starts_with("rror")` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L715.logic.255` | `&& !path_spans` → `\|\| !path_spans` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L715.not.256` | `&& !path_spans` → `&& path_spans` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L717.cmp.257` | `.any(\|&(begin, end)\| begin <= start && start < end)` → `.any(\|&(begin, end)\| begin < start && start < end)` | equivalent | [Absolute prefix cannot begin at error](#absolute-diagnostic-prefix-proofs) |
+| `L717.cmp.258` | `.any(\|&(begin, end)\| begin <= start && start < end)` → `.any(\|&(begin, end)\| begin <= start && start <= end)` | killed | `trust::tests::cargo_failure_diagnostics_keep_the_error_at_a_config_warning_boundary` |
+| `L717.logic.259` | `.any(\|&(begin, end)\| begin <= start && start < end)` → `.any(\|&(begin, end)\| begin <= start \|\| start < end)` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L732.stmt.260` | `c.args(args).current_dir(cwd).env_clear();` → `// c.args(args).current_dir(cwd).env_clear();` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L733.iter.261` | Visit first positions of `for (k, v) in env` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L733.iter.262` | Visit last positions of `for (k, v) in env` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L733.iter.263` | Visit first and last positions of `for (k, v) in env` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L734.stmt.264` | `c.env(k, v);` → `// c.env(k, v);` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L738.stmt.265` | `c.env("RUSTC", "rustc");` → `// c.env("RUSTC", "rustc");` | killed | `trust::tests::cargo_diagnostic_flags_do_not_enter_unit_configurations` |
+| `L742.cond.266` | `if !out.status.success() {` → `if true {` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L742.cond.267` | `if !out.status.success() {` → `if false {` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L742.not.268` | `if !out.status.success() {` → `if out.status.success() {` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L676.chain.1145` | `if let Some((_, target)) = env.iter().rfind(\|(key, _)\| key == "CARGO_TARGET_DIR") {` → `if let Some((_, target)) = env.iter().take(1).rfind(\|(key, _)\| key == "CARGO_TARGET_DIR") {` | killed | `trust::tests::cargo_failure_diagnostics_ignore_multiline_target_paths` |
+| `L676.chain.1146` | `if let Some((_, target)) = env.iter().rfind(\|(key, _)\| key == "CARGO_TARGET_DIR") {` → `if let Some((_, target)) = env.iter().rev().take(1).rfind(\|(key, _)\| key == "CARGO_TARGET_DIR") {` | killed | `trust::tests::cargo_failure_diagnostics_ignore_multiline_target_paths` |
+| `L687.chain.1147` | `for spelling in std::iter::once(path).chain(canonical) {` → `for spelling in std::iter::once(path)/* chain dropped */ {` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L690.contains.1148` | `if prefix.contains('\n') {` → `if ((prefix).first() == Some('\n')) {` | compiler-refused | E0599: `Cow<'_, str>` has no first method |
+| `L690.contains.1149` | `if prefix.contains('\n') {` → `if ((prefix).first().copied() == Some('\n')) {` | compiler-refused | E0599: `Cow<'_, str>` has no first method |
+| `L690.contains.1150` | `if prefix.contains('\n') {` → `if ((prefix).last() == Some('\n')) {` | compiler-refused | E0599: `Cow<'_, str>` is not an iterator |
+| `L690.contains.1151` | `if prefix.contains('\n') {` → `if ((prefix).last().copied() == Some('\n')) {` | compiler-refused | E0599: `Cow<'_, str>` is not an iterator |
+| `L698.chain.1152` | `.iter()` → `.iter().take(1)` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L698.chain.1153` | `.iter()` → `.iter().rev().take(1)` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L716.chain.1154` | `.iter()` → `.iter().take(1)` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L716.chain.1155` | `.iter()` → `.iter().rev().take(1)` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+| `L717.clogic.1497` | `.any(\|&(begin, end)\| begin <= start && start < end)` → `.any(\|&(begin, end)\|  start < end)` | killed | `trust::tests::cargo_failure_diagnostics_keep_an_error_before_a_multiline_path` |
+| `L717.clogic.1498` | `.any(\|&(begin, end)\| begin <= start && start < end)` → `.any(\|&(begin, end)\| begin <= start )` | killed | `trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings` |
+
+The per-operator totals independently agree with every attempted edit:
+
+| Operator | Attempted | Compiler-refused |
+| --- | ---: | ---: |
+| eq | 1 | 0 |
+| iter | 15 | 0 |
+| guard | 3 | 0 |
+| cond | 4 | 0 |
+| stmt | 6 | 0 |
+| dir | 1 | 0 |
+| lit | 2 | 0 |
+| logic | 2 | 0 |
+| not | 2 | 0 |
+| cmp | 2 | 0 |
+| chain | 7 | 0 |
+| contains | 4 | 4 |
+| clogic | 2 | 0 |
+
+Only the four applicable reason records are judged here. The per-file record retains 26 entries;
+this bounded replay does not validate the rest. All five newly added finishing parents remain named
+kills in the full population. The source/caller/environment guards stay exact, all 30 pinned source
+copies independently hash-check, and Cargo/rustc metadata agrees before and after the run. Metadata
+is not a binary-digest attestation.
+
+All 1061 original and current copied regular inputs restore with modes and Python/system hashes.
+The restored copied tree is then listed again, proving the same parent population and unchanged
+copied inputs. Copied index metadata is borrowed; the submodule supplies only opaque index identity.
+Ten altered receipts refuse: wrong exit, missing/duplicate row, foreign ID, wrong replacement,
+missing/foreign finishing name, unlisted equivalent, wrong compiler-refusal reason and wrong
+operator total.
+
+To repeat this dated selection, prepare the local shell stores and the evidenced installed-host
+write guard from the earlier [preflight](#run_cargo-locality-preflight) first. Check the
+source identity and re-discover/rebind IDs after source changes; do not read the global listing as
+an attempted whole-file sweep. The actual full parent command and complete selection are:
+
+```bash
+/usr/bin/sandbox-exec -D WRITABLE_ROOT="$PWD" \
+  -f target/run-cargo-preflight/mutation-volume.sb \
+  bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask \
+    --timeout 600 --filter=trust:: --filter=trust_generated:: \
+    --filter=trust_gate:: --filter=--skip --filter=route_tests \
+    --timeouts-fail --equivalents xtask/trust.equivalents \
+  --only L676.eq.231 \
+  --only L685.iter.232 \
+  --only L685.iter.233 \
+  --only L685.iter.234 \
+  --only L687.iter.235 \
+  --only L687.iter.236 \
+  --only L687.iter.237 \
+  --only L688.iter.238 \
+  --only L688.iter.239 \
+  --only L688.iter.240 \
+  --only L688.guard.241 \
+  --only L688.guard.242 \
+  --only L688.guard.243 \
+  --only L690.cond.244 \
+  --only L690.cond.245 \
+  --only L691.stmt.246 \
+  --only L692.stmt.247 \
+  --only L706.iter.248 \
+  --only L706.iter.249 \
+  --only L706.iter.250 \
+  --only L708.stmt.251 \
+  --only L714.dir.252 \
+  --only L714.lit.253 \
+  --only L714.lit.254 \
+  --only L715.logic.255 \
+  --only L715.not.256 \
+  --only L717.cmp.257 \
+  --only L717.cmp.258 \
+  --only L717.logic.259 \
+  --only L732.stmt.260 \
+  --only L733.iter.261 \
+  --only L733.iter.262 \
+  --only L733.iter.263 \
+  --only L734.stmt.264 \
+  --only L738.stmt.265 \
+  --only L742.cond.266 \
+  --only L742.cond.267 \
+  --only L742.not.268 \
+  --only L676.chain.1145 \
+  --only L676.chain.1146 \
+  --only L687.chain.1147 \
+  --only L690.contains.1148 \
+  --only L690.contains.1149 \
+  --only L690.contains.1150 \
+  --only L690.contains.1151 \
+  --only L698.chain.1152 \
+  --only L698.chain.1153 \
+  --only L716.chain.1154 \
+  --only L716.chain.1155 \
+  --only L717.clogic.1497 \
+  --only L717.clogic.1498
+```
+
+The complete `trust.rs` sweep remains separate. Full integration and final bounded-parent closure
+are next in `.14.4.2`; no remote CI, physical-board or whole-file adequacy claim follows here.

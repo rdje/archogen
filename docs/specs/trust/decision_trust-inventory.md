@@ -874,3 +874,23 @@ Final held focused/staged/book gates bind publication. Individual nine-survivor 
 complete, but final current-region measurement .14.4.1 and full integration .14.4.2 remain before
 bounded cohort closure. The [book](../../book/src/annex-trust-proofs.md#final-diagnostic-regression-parents)
 records behavior and limits; no new original repair or whole-file E/adequacy claim.
+
+
+## Complete current diagnostic-region replay
+
+`M3.6.9.6.3.2.2.14.4.1` (`2026-10-18`) actually reruns every current helper/run_cargo edit:
+43 K/4 E/4 U, strict0, no survivor/timeout/unjudged. Full controlling parent arguments select153 tests
+in both original and restored copied trees; no reduced finishing-only population. All51 identities/
+raw edits bind current069d8e598fd9d6c12306fbe0f091635b60f942b747e78e6167e92b41e0ca01ba source.
+
+The four selected reasons retain their exact proofs; all five new intended finishing names remain
+actual kills. Four E0599 Cow first/last compiler refusals establish no coverage. All1061 original/
+current copied regular inputs restore, including modes/Python-system hashes; ten false receipts
+refuse. Copied index metadata is borrowed and the gitlink remains opaque. All30 pinned source
+copies and tool metadata revalidate; metadata is not executable-digest evidence. Native held tree
+6306e488b8c4e06ce5fc1b39acb53c74586b3028 is distinct from the later completion-doc epoch.
+
+The [book](../../book/src/annex-trust-proofs.md#complete-diagnostic-region-replay) publishes every row,
+operator totals, full command and limits. Only four applicable E reasons are judged, not the
+whole26-record file. Full integration/cohort closure .14.4.2 remains before the complete trust.rs
+sweep. This is fresh bounded evidence, not a projected sum, remote CI or whole-file adequacy.

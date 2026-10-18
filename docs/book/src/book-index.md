@@ -98,6 +98,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Comments survive — [Reading a description](reading.md#comments-survive)
 - Compiler records and normalization — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-records-and-normalization)
+- Complete diagnostic-region replay — [Annex C: Trust proof
+  records](annex-trust-proofs.md#complete-diagnostic-region-replay)
 - Complete guarded run_cargo measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-guarded-run_cargo-measurement)
 - Complete prefix/helper replay — [Annex C: Trust proof records](annex-trust-proofs.md#complete-prefixhelper-replay)
@@ -227,7 +229,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## I
 
-- **ID** — [definition](glossary.md), [The S0 early generation path](s0.md)
+- **ID** — [definition](glossary.md), [The S0 early generation path](s0.md), [Annex C: Trust proof
+  records](annex-trust-proofs.md)
 - Incremental matcher reasons — [Annex C: Trust proof records](annex-trust-proofs.md#incremental-matcher-reasons)
 - Initial parent killing tests — [Generated-sources test adequacy](trust-adequacy.md#initial-parent-killing-tests)
 - Initial role and build operator outcomes — [Generated-sources test

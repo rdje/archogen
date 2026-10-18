@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — pass the complete current diagnostic-region replay
+
+`ARCHOGEN-M3-0755` (leaf `M3.6.9.6.3.2.2.14.4.1`), `2026-10-18`.
+
+- Actual full153-parent native51 replay:43 K/4 E/4 U, strict0, no survivor/timeout/unjudged;
+  bind all raw edits/four precise reasons, intended new finishing names and explicit E0599 refusals.
+- All1061 originals/current copies restore, copied parent lists agree and ten false receipts refuse.
+  Source/caller/environment,30 pins and tool metadata remain exact; no production/operator/E change.
+- Publish every row, operator totals and full command; separately gated completion documents.
+  Full integration/cohort checkpoint next, with full-file/remote CI claims still outside this result.
+
 ## archogen — close the final two diagnostic regression gaps
 
 `ARCHOGEN-M3-0754` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.6.2`), `2026-10-18`.
