@@ -638,22 +638,47 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.91.md`](../task-history/PROGRAM/PROGRAM.91.md); commit `ARCHOGEN-PROGRAM-0736`
 
 - ID: `PROGRAM.92`
-  Status: `pending` — P1 handoff self-test failure blocks M3 full integration
-  Goal: diagnose and repair the first-sample-only handoff control from actual captured reader/process/
-    predicate evidence; preserve required OS-read refusal and real handoff behavior. Use controlled
-    scheduling/output cases so a passing rerun alone cannot discharge the failure. Commit before M3
-    .13.3.2.2 full integration revalidation. Native scaffold census remains its published black box.
-  Reproduce: M3 .13.3.2.1 make integration on6d82c979f23641a15589b08f6c700a933d96ddd5, exit2,
-    self-tests387.30s, only scripts/handoff_census.sh fails8 pass/1 fail of9 arms: first sample names/
-    second omits process arm. Full tier11 pass/1 fail. Raw log/restoration in M3 checkpoint folder.
-    Impact: required full integration cannot pass; root is unclassified until diagnostics distinguish
-    lifetime/reader timing, predicate/pipeline status and OS-read availability. Own next, no waiver.
-  - [ ] **ROOT CAUSE** — capture real arm evidence and controlled reproduction; distinguish causes.
-  - [ ] **ADDRESSED** — repair confirmed failure with rejecting and real-process controls.
-  - [ ] **NO REGRESSION** — keep required-read/prod census contracts, direct/bare self-tests,
-    book/live/staged checks; then repeat full integration in M3's owned leaf.
-  Verification: `pending`
-  Commit: `pending`
+  Status: `done` — bare/delayed fourteen controls verified; production census unchanged
+  Goal: repair confirmed handoff-control failures while preserving the production census and OS-read contract.
+  Startup: clean main858cb41, empty message/OS handoff clear; failed full tier/restoration, actual wrapper
+    and nine controls, native public CLI boundary, filtered self-test runner and book contracts reviewed.
+  - [x] **ROOT CAUSE** — copied unchanged public wrapper with first real ps snapshot delayed3s:
+    exit 1,8 pass/1 fail; the2s worker is absent at the first snapshot and native census correctly
+    reports no job. Actual old first-arm predicate on large valid output: status141 under pipefail;
+    independent match status0. Protected replay also141, excluding scratch location as that cause.
+    Native source/readback and retained slow-reader-before/large-output logs bind both mechanisms.
+    The aggregate historical CI output filtered sampled text; exact historical occurrence is not attributed.
+  - [x] **ADDRESSED** — workers acknowledge readiness and remain held through the required snapshots;
+    transient release/wait occurs between them, persistent release/wait afterward. No fixed worker
+    lifetime or broad process kill. Permanent delayed real reader confirms completed3s intervention.
+    Explicit project output file removes the early-consumer pipeline; missing evidence/persistent PID/
+    unknown status reject. Self-test seeds local temporary aliases; observed real reader sees all3.
+    bash scripts/handoff_census.sh --self-test under bare settings, exit 0:14 pass/0 fail(14 arms).
+    Copied CLI with the original delayed reader also exits 0,14/0. Python payload is isolated/no bytecode.
+  - [x] **NO REGRESSION** — native Git comparison proves entire production wrapper prefix and CLI
+    dispatch bytes exact; native scaffold and affected engine/proof/reason sources stay exact. All253
+    tracked archive/index files remain exact. Inline native/descriptor audit, exit 0; Python/system hashes
+    agree. Actual normal production census exits 0, handoff: OK. bash -n passes. Book/bootstrap/toolbox/
+    README setup selects repository-owned scratch/cache stores. Detailed observations move to the
+    unbounded book; original policy and all tool rows stay intact. No migration/shared deletion.
+    Actual pinned book/staged gates bind closure; full integration remains M3 .13.3.2.2 after this commit.
+  Closure gate ownership: use the explicit ROOT/target/tmp path for creation; route new duplicate
+    toolbox setup and decision observations into README/the unbounded book, preserving every fact
+    and all registered tool rows. Register the dated descriptor byte measurement in docs/figures.md.
+    No book ceiling or policy ceiling change. Focused controls repeated successfully.
+  Diagnostic locality incident: early diagnostic shells omitted explicit local temporary settings;
+    read-only host metadata confirms an off-volume default. Protected Bash5.3.15 input1600001 is a
+    regular target/tmp file; exact known path is absent afterward. Earlier off-volume shell scratch is
+    an inference with untraced filenames, no historical residue-absence claim or shared deletion.
+    Inspected37063-byte gate input is an anonymous pipe: device difference alone proves no filesystem
+    write. Tests use explicit project files/local settings; future invocations prepare all stores in
+    the same shell before redirections. Existing canonical policy remains exact; bootstrap/book record scope and limits.
+  Verification: `2026-10-18`, target/handoff-control-repair holds original public delayed-reader8/1,
+    actual predicate141/protected replay, final bare/delayed14/0 and effective temp settings, production
+    census, descriptor metadata and native source/archive checks. Ignored adapters supplement actual
+    OS/native Git/published CLI and maintained controls. audit.json SHA256 c36a9336546a8e036966a6f79f5cbb14553b64eb41ce902204c0755d4f7bbbb5.
+    Production/pin/consumer behavior unchanged; failed first integration stays historical until full rerun.
+  Commit: `ARCHOGEN-PROGRAM-0738 (leaf PROGRAM.92)`
 
 ## Roadmap coverage map
 
@@ -719,9 +744,8 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.92` | `pending` | P1 handoff self-test failure before M3 full integration |
-| 2 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.72`, `.73` and `.78` — are filed and owned. Every closed
@@ -938,6 +962,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-18` | `PROGRAM.89.2` | source/caller/compiled proof binding; native14 flags and6 matchers; result falsifiers; original/copy censuses; full integration/stamp | flags3K10E1U strict0, matchers6S strict1 remain owned; all1034 original/current-copy inputs restore, all12 local stages pass; activation and closure prose explicitly separate; no new E or full adequacy |
 | `2026-10-18` | `PROGRAM.90` | native row introductions and inline-heading/-1 root; maintained RED/green, renderer/separator and working/indexed controls | all prior rows/order exact, headed205 to207 before closure,250 archive/index files exact;21/0 controls, indexed-presence gap owned PROGRAM.91 next |
 | `2026-10-18` | `PROGRAM.91` | original maintained unstaged-row fixture, native index readback, pending/history/live/archive and backlog controls; source-function and archive/source parity | old0/new1 unstaged, staged new0;27/0 controls, placement body exact,250 archive/index files and engine/proofs preserved; book/staged gates, M3 integration next |
+| `2026-10-18` | `PROGRAM.92` | actual old delayed-reader8/1 and predicate141; protected replay; final real/bare/delayed controls, metadata and native byte/archive audit |14/0 bare and delayed; acknowledged workers, explicit output file, local temp aliases; production/native/engine exact,253 archives/index exact, normal handoff0; historical scratch limits recorded, full integration next in M3 |
 
 ## Commit Log
 
@@ -1152,6 +1177,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.89.2` | `ARCHOGEN-PROGRAM-0729 (leaf PROGRAM.89.2)` | **Local-temp caller checkpoint closes**: exact caller/consumer delta and28 pinned sources, compiled actual-edit/producer controls; complete14 flag and6 matcher native replays, six/five rejecting receipt controls, original/current-copy1034 restoration; all12 integration stages and official/native activation binding pass; code/tests/E unchanged, canonical/book/live resume M3 metadata evidence, full adequacy open |
 | `PROGRAM.90` | `ARCHOGEN-PROGRAM-0735 (leaf PROGRAM.90)` | **Live commit-log placement enforced**: two exact rows relocated in native introduction order, original text/headed order/verification rows and250 archive/index files preserved; inline-heading/-1 cause reproduced, working/indexed heading/table/contiguity checks with21 passing controls and actual pinned rendering; existing presence/backlog/archive contract retained, newly reproduced indexed-presence gap owned in PROGRAM.91 before M3 integration |
 | `PROGRAM.91` | `ARCHOGEN-PROGRAM-0736 (leaf PROGRAM.91)` | **Indexed work-unit presence required**: original working-only pending record fails until staged; historical live/archive removals hidden by working copies and untracked new tasks refuse, indexed restored backlog must shrink; prior placement body and250 archive/index files/engine sources exact,27 controls pass; book/doctrine/live sync resumes M3 caller/integration checkpoint |
+| `PROGRAM.92` | `ARCHOGEN-PROGRAM-0738 (leaf PROGRAM.92)` | **Handoff controls use acknowledged sampling**: reproduce expired-before-first worker and large-valid-output SIGPIPE predicate; hold/release/reap real workers by phase, permanent slow reader and evidence/status rejects, file-based matches and local temporary settings; bare/delayed14/0, production/native/engine and253 archive/index files exact; scratch incident/evidence limits and per-shell local-store setup recorded, full M3 integration rerun next |
 
 ## Changelog
 

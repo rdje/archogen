@@ -80,6 +80,16 @@ regeneration after incremental removal, not a complete rebuild from source.
 
 ## Before handing the workspace over
 
+Prepare the temporary environment in each new shell before diagnostics, including shell input that
+may be materialized before its consumer starts. Run from the repository root:
+
+```bash
+mkdir -p target/cargo-home target/cache target/tmp
+export CARGO_HOME="$PWD/target/cargo-home" XDG_CACHE_HOME="$PWD/target/cache"
+export TMPDIR="$PWD/target/tmp" TMP="$PWD/target/tmp" TEMP="$PWD/target/tmp"
+```
+
+
 ```console
 $ bash scripts/handoff_census.sh             # the project handoff command
 $ bash scripts/handoff_census.sh --self-test # synthetic failures and real process controls
@@ -95,6 +105,37 @@ The native scaffold file stays unchanged; the wrapper is the project command (`P
 Exit **0** means no project job persisted across the samples; exit **1** names one that did. The check is a snapshot:
 a job starting after the first sample is not counted unless another run finds it, and a job whose process number and command
 line both change can escape the comparison. Run it after the work and its background checks finish.
+
+The handoff self-tests (`PROGRAM.92`, `2026-10-18`) use acknowledged sampling phases. A worker is
+ready before the first snapshot; the transient worker is released and reaped between snapshots,
+while the persistent worker stays held through both. A deliberately delayed real snapshot checks
+this protocol. Large sampled output is matched from an explicit project-local file, avoiding a
+`pipefail` false failure when a short-circuit consumer closes a pipeline early. Missing evidence,
+persistent PIDs and unknown reader status have rejecting controls. Required OS-read failure controls
+remain part of the suite. The aggregate CI report did not retain its sampled process text, so the
+reproduced mechanisms are not attributed as the exact historical occurrence. The full integration
+rerun remains owned by `M3.6.9.6.3.2.2.13.3.2.2`.
+
+### Shell input storage and invocation environment
+
+`PROGRAM.92` (`2026-10-18`) measures implicit shell input storage on installed Bash 5.3.15.
+A protected large here-string supplies a regular input file of 1600001 bytes under `target/tmp`;
+native descriptor names and filesystem identity confirm its location. The inspected task-history
+here-document instead supplies an anonymous pipe. A pipe's device identity differs from the repository
+without establishing an off-volume filesystem write. Determine storage type before interpreting it.
+These are host observations, not a new shell-version pin or a claim about every redirection.
+
+Early diagnostic invocations omitted an explicit shell temporary environment. Read-only metadata
+confirms the inherited host default is on another volume. Off-volume scratch for those untraced
+large-input invocations is an inference from the observed shell behavior; individual historical
+filenames were not captured. No shared temporary data was deleted, and no historical residue-absence
+claim follows. The protected file observed above is gone after its command completes.
+
+Every diagnostic invocation prepares `target/tmp` and exports `TMPDIR`, `TMP` and `TEMP` from the
+current root before redirections or child shells. Prior tool calls do not retain those exports.
+The handoff self-test also seeds its own temporary environment and reads large sampled output from
+an explicit project-local file. `CLAUDE.md` and `TOOLBOX.md` carry the invocation requirement so it
+survives context recovery. No foreign repository or scaffold-owned file is changed.
 
 ## A commit holds what was run
 

@@ -24,7 +24,12 @@ Current progress: [`LIVE_STATUS.md`](LIVE_STATUS.md). Next action:
 
 ## Quick start
 
+Run from the repository root; prepare the local stores in each new shell.
+
 ```bash
+mkdir -p target/cargo-home target/cache target/tmp
+export CARGO_HOME="$PWD/target/cargo-home" XDG_CACHE_HOME="$PWD/target/cache"
+export TMPDIR="$PWD/target/tmp" TMP="$PWD/target/tmp" TEMP="$PWD/target/tmp"
 git config core.hooksPath .githooks   # once per clone — activates the doctrine gate
 make focused                          # §14.3 focused tier: format, lints, the whole suite
 make integration                      # §14.3 integration tier: + doctrines, book, emulator

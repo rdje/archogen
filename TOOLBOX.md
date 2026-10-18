@@ -1,8 +1,6 @@
 # TOOLBOX.md — the tools-first diagnostic doctrine
 
-⛔ **TOOLS-FIRST.** For ANY unknown — a failure, a crash, a hang, a surprising result, a
-"why isn't this working" — reach for a diagnostic tool FIRST. Never eyeball the code and
-guess a root cause.
+⛔ **TOOLS-FIRST.** Use a diagnostic tool first for every unknown. Never guess a root cause.
 
 ## The rule
 
@@ -15,6 +13,8 @@ guess a root cause.
 - **ANTI-SPIN TRIPWIRE:** if you have analyzed for ~2 turns without producing NEW tool
   output that pinpoints WHY+WHERE, STOP — run a tool, build one, or escalate. Never loop
   on analysis.
+
+Prepare local stores first: [setup](README.md#quick-start).
 
 ## The 3-step UNKNOWN protocol (adapt the specific tools to your domain)
 

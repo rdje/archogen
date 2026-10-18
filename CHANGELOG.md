@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — stabilize handoff self-tests with acknowledged sampling
+
+`ARCHOGEN-PROGRAM-0738` (leaf `PROGRAM.92`), `2026-10-18`.
+
+- Reproduce the two-second worker disappearing before a delayed snapshot and a valid large-output
+  predicate returning SIGPIPE. Hold/release/reap workers by sampling phase and match an explicit file.
+- All 14 controls pass under bare and delayed readers, with effective local temporary settings observed.
+  Production census/dispatch, native scaffold/engine proofs and 253 archive/index files remain exact.
+- Record the earlier diagnostic temporary-environment miss and its evidence limits; prepare local stores
+  in bootstrap, tool and user instructions. Historical filenames remain untraced; no shared data deleted.
+  Full integration rerun remains M3 .13.3.2.2, after this committed repair.
+
 ## archogen — bind the helper caller and preserve failed integration
 
 `ARCHOGEN-M3-0737` (leaf `M3.6.9.6.3.2.2.13.3.2.1`), `2026-10-18`.

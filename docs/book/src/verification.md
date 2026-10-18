@@ -29,6 +29,18 @@ the versions they run at, are in [What this project relies on from outside](ledg
 [mdBook](ledger.md#mdbook), the [Rust toolchain and Cargo](ledger.md#rust-toolchain) and, once adopted,
 [Miri](ledger.md#miri).
 
+Start each shell at the repository root and select its local stores before running tools:
+
+```bash
+mkdir -p target/cargo-home target/cache target/tmp
+export CARGO_HOME="$PWD/target/cargo-home" XDG_CACHE_HOME="$PWD/target/cache"
+export TMPDIR="$PWD/target/tmp" TMP="$PWD/target/tmp" TEMP="$PWD/target/tmp"
+```
+
+Shell input can itself use temporary storage before its consumer runs. These settings also keep
+Cargo's dependency store and the standard cache directory under this repository. Existing shared
+stores require separate ownership evidence for any cleanup.
+
 ```console
 $ cargo xtask verify --tier focused      # or: make focused
 $ cargo xtask verify --tier integration  # or: make integration

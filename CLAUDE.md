@@ -29,6 +29,11 @@ human is working. Follow it exactly.
 - **Nothing changes without a task-tree first.** Every code change is owned by a
   task-tree leaf under `docs/tasks/` (index: `docs/TASK_TREE.md`) BEFORE the change is
   made. Track every activity, task, slice, and lane so the project survives a lost session.
+- **Prepare shell scratch in each invocation.** Before diagnostics or redirections that can
+  materialize input, prepare the repository-owned stores and environment in `TOOLBOX.md` from the
+  current repository root. Separate tool calls do not preserve exports; shell input can create temporary
+  files before the invoked program runs. See `TOOLBOX.md` and
+  `docs/decisions/decision_scratch-on-the-repository-volume.md`.
 - **Record durable facts/decisions** as one-file-per-record notes under `docs/decisions/`
   (index there). Convert relative dates to absolute.
 - **Commit per `COMMIT.md`** after each completed leaf, with the work-unit id in the

@@ -649,8 +649,9 @@ Conditional caller premises remain explicit.
 Actual `make integration` exits 2 on held activation `6d82c979f23641a15589b08f6c700a933d96ddd5`:
 11 steps pass and one fails, with none unavailable, not built or quarantined. Only the self-test step
 fails: the handoff first-sample-only process arm reports eight passed controls and one failed control.
-No official integration pass stamp exists. `PROGRAM.92` owns the precise diagnosis and repair;
-`.13.3.2.2` repeats full integration after that committed prerequisite. This remains a failed result.
+No official integration pass stamp exists for that run. `PROGRAM.92` subsequently verifies its direct
+control repair; `.13.3.2.2` repeats full integration after that committed prerequisite. The first run
+remains a failed result.
 
 All 1043 originals restore against the staged epoch. The retained regular-copy population restores
 against its prior complete-native epoch; borrowed index fields prove no copied index or gitlink

@@ -434,6 +434,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **SHA-256** — [definition](glossary.md), [What a report may claim](evidence.md), [Generated-sources test
   adequacy](trust-adequacy.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - **shared item** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
+- Shell input storage and invocation environment — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#shell-input-storage-and-invocation-environment)
 - **SI** — [definition](glossary.md), [Quantities and units](quantities.md)
 - Silence is not admission — [The supported profile](profile.md#silence-is-not-admission)
 - Source paths and dependency arguments — [Checks that must not share a mistake: the trust
