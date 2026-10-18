@@ -99,8 +99,9 @@ nine obligations. The [complete region replay](annex-trust-proofs.md#complete-di
 records 43 kills, four proven equivalents and four compiler refusals, strict exit 0. The
 [diagnostic integration checkpoint](annex-trust-proofs.md#diagnostic-cohort-integration-checkpoint)
 passes all local stages and closes this cohort. The [ownership reconciliation](annex-trust-proofs.md#survivor-ownership-reconciliation)
-accounts for every initial survivor and schedules the remaining source lanes. The complete compiler
-function is measured next; final whole-file adequacy remains open.
+accounts for every initial survivor and schedules the remaining source lanes. The [complete compiler measurement](annex-trust-proofs.md#complete-compiler-function-measurement)
+records 49 kills, 28 owned survivors and six compiler refusals, strict exit 1. Environment-admission
+assessment is next; final whole-file adequacy remains open.
 
 An admission's `defadmit` form names the file, rule and `sha256` of the site's extent (the whole manifest for a
 manifest rule), plus one textual `reason` value.

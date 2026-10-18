@@ -1614,7 +1614,7 @@ previous owners; 70 have a retained raw edit and seven lack one.
 | `.15.10` — Trust command | `run` | 15 | 15 |
 | `.15.11` — Harness-relative units | `beside` | 8 | 15 |
 
-The next committed measurement is the complete current `compile` function (`.15.2.1`):
+The following measurement covers the complete current `compile` function (`.15.2.1.1`):
 83 candidates against the full parent command, with strict timeout/unjudged rules and whole-input
 restoration. Its command-record and dependency helpers follow as separate bounded children; actual
 survivors gain controls, owned repairs or exact proofs before final complete replay. The remaining
@@ -2282,3 +2282,266 @@ receipt set. Every final current outcome still requires its actual native run.
 | `L528.chain.1042` | `L666.chain.1136` | no bound result here | `.15.11` |
 | `L529.chain.1044` | `L667.chain.1138` | no bound result here | `.15.11` |
 | `L529.contains.1049` | `L667.contains.1143` | no bound result here | `.15.11` |
+
+
+### Complete compiler-function measurement
+
+Measurement `.15.2.1.1` (`2026-10-18`) actually attempts every current `compile`
+candidate, using the complete controlling parent population. This function associates compiled
+units with package targets, records dependency/environment inputs, normalizes command configuration,
+and refuses unheld paths or a build that produced nothing of its own package.
+
+| Observation | Actual result |
+| --- | --- |
+| Global production listing | 1526 candidates listed |
+| Complete compiler-function selection | 83 attempted |
+| Full parent population, original and restored copy | 153 tests, none ignored |
+| Named finishing kills | 49 |
+| Survivors requiring assessment | 28 |
+| Compiler refusals | 6 |
+| Equivalents / timeouts / unjudged | 0 / 0 / 0 |
+| Native strict exit | 1 — criterion unmet |
+| Unmutated copied baseline | passed |
+
+The controller's exit 0 means the complete native result was audited. Native exit 1 remains an
+unmet adequacy criterion. No survivor is classified as equivalent, and the six typed refusals
+establish no coverage. No equivalent record applies to this selection; the file still contains
+26 records whose unrelated validity is outside this run.
+
+Every actual ID/raw replacement and ordered operator total binds the source
+`069d8e598fd9d6c12306fbe0f091635b60f942b747e78e6167e92b41e0ca01ba`.
+The installed same-volume write guard passes its positive control and refuses all five forbidden
+write operations before the run; the unmodified copied parent command passes. All 1063 held
+regular inputs restore in the original and copied tree, with modes and Python/system hashes.
+The restored copy retains the same full parent names; its borrowed index metadata does not prove
+a copied Git index or submodule contents. The gitlink remains an opaque identity.
+
+The native held activation is `21450e7ebb479e57f83ea79f013c4ab867397a9a`. This is not an
+integration stamp or the later completion-document tree. Final source/operator/catalogue/reason
+bytes, all 30 pinned source copies and Cargo/rustc metadata remain exact. Seven altered receipts
+refuse: missing/duplicate row, foreign ID, wrong replacement or strict exit, and missing/foreign
+finishing test name. The completion book/staged checks belong to a later document epoch.
+
+| Operator | Attempted | Compiler-refused |
+| --- | ---: | ---: |
+| `stmt` | 5 | 2 |
+| `iter` | 12 | 0 |
+| `guard` | 12 | 0 |
+| `cond` | 10 | 0 |
+| `not` | 3 | 0 |
+| `eq` | 3 | 0 |
+| `int` | 2 | 0 |
+| `logic` | 5 | 0 |
+| `dir` | 5 | 0 |
+| `lit` | 8 | 0 |
+| `chain` | 10 | 0 |
+| `contains` | 8 | 4 |
+
+Each killed row below gives one actual finishing parent name; the native receipt retains the
+complete name set. Survivor rows name their owned follow-up. Compiler-refused rows retain their
+actual type diagnostic. Every selected candidate appears exactly once.
+
+| Current ID | Operator | Actual outcome | Finishing parent, owned assessment or compiler diagnostic |
+| --- | --- | --- | --- |
+| `L783.stmt.269` | `stmt` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L797.iter.270` | `iter` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L797.iter.271` | `iter` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L797.iter.272` | `iter` | killed | `trust::tests::a_harness_or_a_library_root_compiling_another_role_s_package_is_refused` |
+| `L797.guard.273` | `guard` | survived | `.15.2.1.3` — pending assessment |
+| `L797.guard.274` | `guard` | survived | `.15.2.1.3` — pending assessment |
+| `L797.guard.275` | `guard` | survived | `.15.2.1.3` — pending assessment |
+| `L799.cond.276` | `cond` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L799.cond.277` | `cond` | survived | `.15.2.1.3` — pending assessment |
+| `L799.not.278` | `not` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L805.eq.279` | `eq` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L806.int.280` | `int` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L806.int.281` | `int` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L814.eq.282` | `eq` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L814.logic.283` | `logic` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L814.dir.284` | `dir` | survived | `.15.2.1.4` — pending assessment |
+| `L814.lit.285` | `lit` | survived | `.15.2.1.4` — pending assessment |
+| `L814.lit.286` | `lit` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L834.stmt.287` | `stmt` | unviable | error[E0308]: match arms have incompatible types |
+| `L841.iter.288` | `iter` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
+| `L841.iter.289` | `iter` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
+| `L841.iter.290` | `iter` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
+| `L841.guard.291` | `guard` | killed | `trust::tests::a_shared_package_s_environment_is_in_its_item_and_a_foreign_variable_is_refused` |
+| `L841.guard.292` | `guard` | survived | `.15.2.1.2` — pending assessment |
+| `L841.guard.293` | `guard` | survived | `.15.2.1.2` — pending assessment |
+| `L842.lit.294` | `lit` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
+| `L842.lit.295` | `lit` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
+| `L844.dir.296` | `dir` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
+| `L845.logic.297` | `logic` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
+| `L845.cond.298` | `cond` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
+| `L845.cond.299` | `cond` | killed | `trust::tests::a_shared_package_s_environment_is_in_its_item_and_a_foreign_variable_is_refused` |
+| `L845.not.300` | `not` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
+| `L845.dir.301` | `dir` | survived | `.15.2.1.2` — pending assessment |
+| `L845.lit.302` | `lit` | survived | `.15.2.1.2` — pending assessment |
+| `L845.lit.303` | `lit` | killed | `trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change` |
+| `L857.stmt.304` | `stmt` | survived | `.15.2.1.5` — pending assessment |
+| `L860.iter.305` | `iter` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L860.iter.306` | `iter` | killed | `trust::tests::a_macro_assembling_a_path_attribute_is_refused` |
+| `L860.iter.307` | `iter` | killed | `trust_generated::generator_tests::a_generator_build_failing_leaves_step_4_unable_to_judge_with_its_refusals_beside_it` |
+| `L860.guard.308` | `guard` | survived | `.15.2.1.6` — pending assessment |
+| `L860.guard.309` | `guard` | survived | `.15.2.1.6` — pending assessment |
+| `L860.guard.310` | `guard` | survived | `.15.2.1.6` — pending assessment |
+| `L866.cond.311` | `cond` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L866.cond.312` | `cond` | survived | `.15.2.1.6` — pending assessment |
+| `L866.dir.313` | `dir` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L871.stmt.314` | `stmt` | unviable | error[E0308]: if and else have incompatible types |
+| `L877.stmt.315` | `stmt` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L885.iter.316` | `iter` | survived | `.15.2.1.7` — pending assessment |
+| `L885.iter.317` | `iter` | survived | `.15.2.1.7` — pending assessment |
+| `L885.iter.318` | `iter` | survived | `.15.2.1.7` — pending assessment |
+| `L885.guard.319` | `guard` | survived | `.15.2.1.7` — pending assessment |
+| `L885.guard.320` | `guard` | survived | `.15.2.1.7` — pending assessment |
+| `L885.guard.321` | `guard` | survived | `.15.2.1.7` — pending assessment |
+| `L886.logic.322` | `logic` | survived | `.15.2.1.7` — pending assessment |
+| `L886.logic.323` | `logic` | survived | `.15.2.1.7` — pending assessment |
+| `L886.logic.324` | `logic` | survived | `.15.2.1.7` — pending assessment |
+| `L886.cond.325` | `cond` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L886.cond.326` | `cond` | survived | `.15.2.1.7` — pending assessment |
+| `L886.dir.327` | `dir` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L886.lit.328` | `lit` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L886.lit.329` | `lit` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L911.eq.330` | `eq` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L911.cond.331` | `cond` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L911.cond.332` | `cond` | survived | `.15.2.1.8` — pending assessment |
+| `L911.not.333` | `not` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L784.chain.1156` | `chain` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L784.chain.1157` | `chain` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L804.chain.1158` | `chain` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L804.chain.1159` | `chain` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L822.chain.1160` | `chain` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L822.chain.1161` | `chain` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L826.chain.1162` | `chain` | survived | `.15.2.1.9` — pending assessment |
+| `L826.chain.1163` | `chain` | survived | `.15.2.1.9` — pending assessment |
+| `L845.contains.1164` | `contains` | killed | `trust::tests::cargo_multiline_output_paths_preserve_complete_inventory` |
+| `L845.contains.1165` | `contains` | killed | `trust::tests::cargo_multiline_output_paths_preserve_complete_inventory` |
+| `L845.contains.1166` | `contains` | killed | `trust::tests::cargo_multiline_output_paths_preserve_complete_inventory` |
+| `L845.contains.1167` | `contains` | killed | `trust::tests::cargo_multiline_output_paths_preserve_complete_inventory` |
+| `L886.contains.1168` | `contains` | unviable | error[E0599]: no method named first found for reference &String in the current scope |
+| `L886.contains.1169` | `contains` | unviable | error[E0599]: no method named first found for reference &String in the current scope |
+| `L886.contains.1170` | `contains` | unviable | error[E0599]: &String is not an iterator |
+| `L886.contains.1171` | `contains` | unviable | error[E0599]: &String is not an iterator |
+| `L911.chain.1172` | `chain` | killed | `trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read` |
+| `L911.chain.1173` | `chain` | killed | `trust::adequacy_tests::reader_role_tests::every_compiled_reader_is_judged_for_scripts_and_program_targets` |
+
+
+All surviving obligations are scheduled, without a presumed cause:
+
+| Assessment | Exact current survivors | What it must establish |
+| --- | --- | --- |
+| `.15.2.1.2` — Environment admission | `L841.guard.292`, `L841.guard.293`, `L845.dir.301`, `L845.lit.302` | foreign environment record positions and exact CARGO_PKG_ namespace |
+| `.15.2.1.3` — Compiler-command filtering | `L797.guard.273`, `L797.guard.274`, `L797.guard.275`, `L799.cond.277` | non-rustc command reachability, actual producer/caller domain and command positions |
+| `.15.2.1.4` — Artifact suffix extraction | `L814.dir.284`, `L814.lit.285` | exact extra-filename option and prefix/substring boundaries |
+| `.15.2.1.5` — Environment-loop tail | `L857.stmt.304` | final continue control flow and complete remaining loop body/drop order |
+| `.15.2.1.6` — Dependency absolute paths | `L860.guard.308`, `L860.guard.309`, `L860.guard.310`, `L866.cond.312` | absolute dependency refusals at every position and supported raw/canonical path geometry |
+| `.15.2.1.7` — Configuration absolute paths | `L885.iter.316`, `L885.iter.317`, `L885.iter.318`, `L885.guard.319`, `L885.guard.320`, `L885.guard.321`, `L886.logic.322`, `L886.logic.323`, `L886.logic.324`, `L886.cond.326` | retained absolute configuration reachability, both rejection forms and every position |
+| `.15.2.1.8` — Own-package completion | `L911.cond.332` | successful-build own-package completion and actual target/caller reachability |
+| `.15.2.1.9` — Unit owner cardinality | `L826.chain.1162`, `L826.chain.1163` | target metadata lookup, duplicate owners and exact reachable collection cardinality |
+
+Environment admission is next because its four survivors concern which undeclared inputs the
+inventory refuses. Each follow-up must use actual supported callers and independent expectations,
+then add finishing parent controls, repair an original defect if found, or establish a precise
+source/domain proof. Finite examples alone do not establish equivalence. Each resulting slice is
+committed separately before complete current-region replay; other helper/file scopes stay separate.
+
+Reproduce the full parent population with:
+
+```bash
+cargo test -q -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+```
+
+The exact selected native command is:
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail --equivalents xtask/trust.equivalents \
+  --only L783.stmt.269 \
+  --only L797.iter.270 \
+  --only L797.iter.271 \
+  --only L797.iter.272 \
+  --only L797.guard.273 \
+  --only L797.guard.274 \
+  --only L797.guard.275 \
+  --only L799.cond.276 \
+  --only L799.cond.277 \
+  --only L799.not.278 \
+  --only L805.eq.279 \
+  --only L806.int.280 \
+  --only L806.int.281 \
+  --only L814.eq.282 \
+  --only L814.logic.283 \
+  --only L814.dir.284 \
+  --only L814.lit.285 \
+  --only L814.lit.286 \
+  --only L834.stmt.287 \
+  --only L841.iter.288 \
+  --only L841.iter.289 \
+  --only L841.iter.290 \
+  --only L841.guard.291 \
+  --only L841.guard.292 \
+  --only L841.guard.293 \
+  --only L842.lit.294 \
+  --only L842.lit.295 \
+  --only L844.dir.296 \
+  --only L845.logic.297 \
+  --only L845.cond.298 \
+  --only L845.cond.299 \
+  --only L845.not.300 \
+  --only L845.dir.301 \
+  --only L845.lit.302 \
+  --only L845.lit.303 \
+  --only L857.stmt.304 \
+  --only L860.iter.305 \
+  --only L860.iter.306 \
+  --only L860.iter.307 \
+  --only L860.guard.308 \
+  --only L860.guard.309 \
+  --only L860.guard.310 \
+  --only L866.cond.311 \
+  --only L866.cond.312 \
+  --only L866.dir.313 \
+  --only L871.stmt.314 \
+  --only L877.stmt.315 \
+  --only L885.iter.316 \
+  --only L885.iter.317 \
+  --only L885.iter.318 \
+  --only L885.guard.319 \
+  --only L885.guard.320 \
+  --only L885.guard.321 \
+  --only L886.logic.322 \
+  --only L886.logic.323 \
+  --only L886.logic.324 \
+  --only L886.cond.325 \
+  --only L886.cond.326 \
+  --only L886.dir.327 \
+  --only L886.lit.328 \
+  --only L886.lit.329 \
+  --only L911.eq.330 \
+  --only L911.cond.331 \
+  --only L911.cond.332 \
+  --only L911.not.333 \
+  --only L784.chain.1156 \
+  --only L784.chain.1157 \
+  --only L804.chain.1158 \
+  --only L804.chain.1159 \
+  --only L822.chain.1160 \
+  --only L822.chain.1161 \
+  --only L826.chain.1162 \
+  --only L826.chain.1163 \
+  --only L845.contains.1164 \
+  --only L845.contains.1165 \
+  --only L845.contains.1166 \
+  --only L845.contains.1167 \
+  --only L886.contains.1168 \
+  --only L886.contains.1169 \
+  --only L886.contains.1170 \
+  --only L886.contains.1171 \
+  --only L911.chain.1172 \
+  --only L911.chain.1173
+```
+
+The guard and source activation described above remain part of the recorded execution. These
+results establish neither final regional adequacy nor whole-file adequacy, remote CI or physical-board
+execution. The complete measured result is committed before any subsequent assessment changes.

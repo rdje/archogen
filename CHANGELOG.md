@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — measure the complete current compiler function
+
+`ARCHOGEN-M3-0758` (leaf `M3.6.9.6.3.2.2.15.2.1.1`), `2026-10-18`.
+
+- Actual complete83/full153-parent native run49 K/28 S/6 U, strict1, no E/timeout/unjudged.
+  Unmodified copied baseline passes; actual raw identities/names/operator totals bind current source.
+- All1063 originals/copies restore with modes/Python-system hashes; restored copied names agree.
+  Seven false receipts refuse; source/operator/catalogue/reasons,30 pins/tool metadata unchanged.
+- Own all28 survivors in eight source groups, environment admission4 next. Publish every outcome
+  and full command in the book; controller0 means audited completion, no adequacy pass inferred.
+
 ## archogen — reconcile all initial survivor ownership
 
 `ARCHOGEN-M3-0757` (leaf `M3.6.9.6.3.2.2.15.1`), `2026-10-18`.

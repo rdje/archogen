@@ -98,6 +98,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Comments survive — [Reading a description](reading.md#comments-survive)
 - Compiler records and normalization — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-records-and-normalization)
+- Complete compiler-function measurement — [Annex C: Trust proof
+  records](annex-trust-proofs.md#complete-compiler-function-measurement)
 - Complete diagnostic-region replay — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-diagnostic-region-replay)
 - Complete guarded run_cargo measurement — [Annex C: Trust proof

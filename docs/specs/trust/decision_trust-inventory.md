@@ -936,3 +936,24 @@ strict timeout/unjudged rules. Separate command/dependency helpers and later sou
 actual evidence-directed resolution, with fresh whole-file criterion only after required repairs/
 assessments. The [book](../../book/src/annex-trust-proofs.md#survivor-ownership-reconciliation)
 publishes the source-scope summary and every initial/current/owner row. No production/test/reason change.
+
+
+## Complete compiler-function measurement
+
+`M3.6.9.6.3.2.2.15.2.1.1` (`2026-10-18`) actually measures all83 current compile candidates
+on source069d8e59 with the full153-parent population:49 named K/28 S/6 U, zero E/timeout/unjudged,
+native strict1. The copied unmutated baseline passes. Controller0 means audited completion, not
+adequacy. Applicable reasons0/file records26; no unrelated E validity inferred.
+
+Actual identities/raw replacements, finishing names and operator totals agree with maintained
+discovery/auditor. All1063 original/copied held regular inputs restore including modes/Python-system
+hashes; restored copied parent names agree. Opaque gitlink/borrowed copied index metadata only.
+Held native21450e7 activation is distinct from completion documents and not an integration stamp.
+All30 pinned source copies/tool metadata and code/operator/catalogue/reasons remain exact.
+Seven falsified receipts refuse. Book/staged gates check the later completion epoch.
+
+All28 S gain exact owned source groups under .15.2.1.2–.9: environment admission4, command filter4,
+artifact suffix2, tail continue1, absolute dependencies4, absolute configuration10, own package1,
+owner cardinality2. First .2 assesses actual environment positions/prefixes; no S is preclassified.
+The [book](../../book/src/annex-trust-proofs.md#complete-compiler-function-measurement) publishes every
+outcome, one actual finishing name per K, precise compiler diagnostics, operator totals and full command.

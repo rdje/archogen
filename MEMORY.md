@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.6`. `PROGRAM` resumes at `PROGRAM.71`. `M2`'s frontier is `M2.7.4`, on the director; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.9.6.3.2.2.15.2.1` complete current compiler-function measurement.
-  Measure all current compile candidates with the full parent command; own actual remaining outcomes.
+- **Next action:** `M3.6.9.6.3.2.2.15.2.1.2` compiler environment-admission assessment.
+  Assess the four actual environment-admission survivors with supported producers and independent expectations.
   Final full sweeps and review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.
