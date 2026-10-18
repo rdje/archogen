@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — retain failed mutation baseline evidence
+
+`ARCHOGEN-M3-0771` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.0.1`), `2026-10-19`.
+
+- Preserve failed-baseline raw stdout/stderr, actual status, finishing names and source/command
+  identity in exclusive repository-relative receipts; expose write failures, retain exit2/no retry.
+- Hold byte hashes, ordinary/signal/timeout statuses, repeated receipt retention, write obstruction,
+  actual compiled failing Rust test and original/copy restoration. Refresh the stale invocation
+  regression anchor caught by focused preflight; exact source restore and intended strict kill.
+- Seal committed source-boundary leaf and synchronize book/tool/live records. Exact selected-ID
+  refusal remains before full current-source/premise/integration signoff.
+
 ## archogen — contain mutation sweep source selection
 
 `ARCHOGEN-M3-0770` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.0.0`), `2026-10-18`.

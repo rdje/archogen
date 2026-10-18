@@ -59,6 +59,9 @@
 # Writes only under `target/mutation-sweep/`.
 # Each test command receives ARCHOGEN_SWEEP_SOURCE as this sweep's canonical own Git root, replacing inherited
 # values. The tests alone bind that source to the exact target/mutation-sweep/tree copy before admitting its config.
+# A failed baseline retains raw stdout/stderr and a source/command/status/names receipt under
+# `target/mutation-sweep/baseline-failures/`, prints its relative path and exits 2 without retry.
+# Evidence-write failures are explicit and remain exit 2. Successful baselines create no failure receipt.
 # `--list` prints the mutations without running them.
 # Completed runs also report per-operator `unviable/attempted` counts, including zero refusals. The baseline,
 # listed-only and filtered-out candidates are excluded; neither an attempted nor an unviable count is coverage.
@@ -68,7 +71,7 @@
 set -uo pipefail
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 exec python3 - "$@" <<'PY'
-import argparse, bisect, json, os, re, shutil, signal, stat, subprocess, sys, time
+import argparse, bisect, hashlib, json, os, re, shutil, signal, stat, subprocess, sys, tempfile, time
 
 ap = argparse.ArgumentParser(prog="mutation_sweep.sh")
 ap.add_argument("file")
@@ -781,25 +784,55 @@ def failed_tests(stdout):
 def run():
     t0 = time.time()
     p = subprocess.Popen(cmd, cwd=TREE, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
+    def finish(outcome, detail):
+        return outcome, detail, time.time() - t0, (so, se, p.returncode)
     try:
         so, se = p.communicate(timeout=a.timeout)
     except subprocess.TimeoutExpired:
-        os.killpg(p.pid, signal.SIGKILL); p.communicate()
-        return "timeout", [], time.time() - t0
-    so, se = so.decode("utf-8", "replace"), se.decode("utf-8", "replace")
+        os.killpg(p.pid, signal.SIGKILL)
+        so, se = p.communicate()
+        return finish("timeout", [])
+    stdout, stderr = so.decode("utf-8", "replace"), se.decode("utf-8", "replace")
     if p.returncode == 0:
-        return "survived", [], time.time() - t0
-    if "could not compile" in se and "test result" not in so:
-        return "unviable", [next((x for x in se.splitlines() if x.startswith("error")), "")], time.time() - t0
-    failed = failed_tests(so)
-    if failed and any(l.startswith("test result: FAILED.") for l in so.splitlines()):
-        return "killed", failed, time.time() - t0
-    detail = next((l for l in se.splitlines() if l.strip()), "nonzero exit without a finishing, named test failure")
-    return "unjudged", [detail], time.time() - t0
+        return finish("survived", [])
+    if "could not compile" in stderr and "test result" not in stdout:
+        return finish("unviable", [next((x for x in stderr.splitlines() if x.startswith("error")), "")])
+    failed = failed_tests(stdout)
+    if failed and any(l.startswith("test result: FAILED.") for l in stdout.splitlines()):
+        return finish("killed", failed)
+    detail = next((l for l in stderr.splitlines() if l.strip()), "nonzero exit without a finishing, named test failure")
+    return finish("unjudged", [detail])
 
-base, _, secs = run()
+def retain_baseline(outcome, detail, seconds, evidence):
+    directory = os.path.join(WORK, "baseline-failures")
+    os.makedirs(directory, exist_ok=True)
+    receipt_dir = tempfile.mkdtemp(prefix="failure.", dir=directory)
+    stdout, stderr, status = evidence
+    receipt = dict(schema_version=1, source=a.file, source_sha256=hashlib.sha256(original).hexdigest(),
+                   command=cmd, cwd=os.path.relpath(TREE, ROOT), outcome=outcome,
+                   exit_status=status, seconds=seconds, detail=detail,
+                   failed_tests=failed_tests(stdout.decode("utf-8", "replace")))
+    for name, data in [("stdout", stdout), ("stderr", stderr)]:
+        path = os.path.join(receipt_dir, name + ".bin")
+        with open(path, "xb") as stream:
+            stream.write(data)
+        receipt[name] = dict(path=os.path.relpath(path, ROOT), bytes=len(data),
+                             sha256=hashlib.sha256(data).hexdigest())
+    path = os.path.join(receipt_dir, "receipt.json")
+    with open(path, "x", encoding="utf-8") as stream:
+        json.dump(receipt, stream, indent=2)
+        stream.write("\n")
+    return os.path.relpath(path, ROOT)
+
+base, detail, secs, evidence = run()
 if base != "survived":
     print("mutation-sweep: could not run — the unmutated copy does not pass (%s, %.0fs): %s" % (base, secs, " ".join(cmd)), file=sys.stderr)
+    try:
+        receipt = retain_baseline(base, detail, secs, evidence)
+    except OSError as error:
+        print("mutation-sweep: could not retain baseline evidence: %s" % error, file=sys.stderr)
+    else:
+        print("mutation-sweep: baseline evidence: " + receipt, file=sys.stderr)
     sys.exit(2)
 print("mutation-sweep: the unmutated copy passes (%.0fs); %d mutation(s) of %s, lines %d to %d" % (secs, len(ms), a.file, first + 1, last))
 
@@ -813,7 +846,7 @@ try:
         if open(target_file, encoding="utf-8").read() != mutated:
             print("mutation-sweep: %s did not land in %s" % (i, target_file), file=sys.stderr); sys.exit(2)
         try:
-            outcome, detail, secs = run()
+            outcome, detail, secs, _ = run()
         finally:
             open(target_file, "wb").write(original)
             if open(target_file, "rb").read() != original:

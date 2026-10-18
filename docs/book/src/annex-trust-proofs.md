@@ -3023,8 +3023,9 @@ these timings describe that run, not every host or future load.
 
 The failed sweep also exposed an owned tool-evidence gap: its baseline diagnostic omitted the raw
 streams and finishing name. The exact copied test command supplied the diagnosis here.
-`.3.3.3.0` must preserve native failed-baseline evidence before the full source sweeps. No automatic
-retry or changed passing classification is used to hide the failed attempt.
+`.3.3.3.0.1` now closes that gap; [failed mutation baseline evidence](verification.md#failed-mutation-baseline-evidence)
+gives the implemented receipt contract and permanent controls. No automatic retry or changed passing
+classification is used to hide the failed attempt.
 
 #### Source, catalogue and reason continuity
 

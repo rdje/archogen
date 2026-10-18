@@ -199,6 +199,7 @@ a change that leaves it stale, so it is never edited by hand.
 - F28, and what it could not see — [The S0 early generation path](s0.md#f28-and-what-it-could-not-see)
 - F29: the fixture built so an omission cannot hide — [What the scheduling checker
   establishes](analysis.md#f29-the-fixture-built-so-an-omission-cannot-hide)
+- Failed mutation baseline evidence — [Verifying the toolchain](verification.md#failed-mutation-baseline-evidence)
 - **fault** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where the engine's knowledge
   comes from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
   decisions, not actions](runtime.md), [Verifying the toolchain](verification.md), [What this project relies on from
@@ -332,8 +333,9 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#next-means-what-the-task-tree-says)
 - node — [What this project relies on from outside](ledger.md#node)
 - Not versioned yet — [What is versioned, and what changing it costs](versions.md#not-versioned-yet)
-- **NUL** — [definition](glossary.md), [Reading a description](reading.md), [Annex B: The checks that keep the
-  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- **NUL** — [definition](glossary.md), [Reading a description](reading.md), [Verifying the toolchain](verification.md),
+  [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
+  records](annex-trust-proofs.md)
 - Numbers are exact — there is no float anywhere — [Reading a
   description](reading.md#numbers-are-exact--there-is-no-float-anywhere)
 
@@ -492,8 +494,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Seven diagnostic-helper obligations: domain assessment — [Annex C: Trust proof
   records](annex-trust-proofs.md#seven-diagnostic-helper-obligations-domain-assessment)
 - **SHA-256** — [definition](glossary.md), [What a report may claim](evidence.md), [Generated-sources test
-  adequacy](trust-adequacy.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C:
-  Trust proof records](annex-trust-proofs.md)
+  adequacy](trust-adequacy.md), [Verifying the toolchain](verification.md), [Annex B: The checks that keep the
+  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **shared item** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
 - Shell input storage and invocation environment — [Annex B: The checks that keep the repository
   honest](annex-repository.md#shell-input-storage-and-invocation-environment)
@@ -602,8 +604,9 @@ a change that leaves it stale, so it is never edited by hand.
 
 - **UART** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where generated systems
   run](targets.md)
-- **UTF-8** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Annex B: The
-  checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- **UTF-8** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Verifying
+  the toolchain](verification.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C:
+  Trust proof records](annex-trust-proofs.md)
 
 ## V
 

@@ -4307,9 +4307,9 @@ test -p xtask mutation::tests::the_sweep_requires_finishing_test_evidence_and_ca
 expect killed
 why M3.6.9.1: the sweep refuses an invocation failure after restoring the mutation.
 from
-        return "unjudged", [detail], time.time() - t0
+        return finish("unjudged", [detail])
 to
-        return "killed", [], time.time() - t0
+        return finish("killed", [])
 end
 
 mutation sweep-a-strict-timeout-is-accepted

@@ -1,6 +1,7 @@
 """Real sweep CLI probes, actual Cargo arguments and compiled candidates."""
 import ast
 import bisect
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -138,6 +139,128 @@ class SpanTests(SweepFixture):
                     self.assert_exit(result, 0 if equivalent else 1)
                     self.assertIn("1 equivalent" if equivalent else "1 survived", result.stdout)
                     self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
+
+
+class BaselineEvidenceTests(SweepFixture):
+    def failing_baseline(self, kind):
+        source = self.base / "sample.rs"
+        source.write_bytes(ORIGINAL.encode())
+        stdout = (b"raw stdout \x00\xff\r\nfailures:\n    tests::omega\n    tests::alpha\n"
+                  b"test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out\n")
+        if kind != "killed":
+            stdout = b"raw stdout \x00\xff\r\n"
+        stderr = (b"error: could not compile `synthetic`\n" if kind == "unviable" else b"") + b"raw stderr \xfe\x00\r\n"
+        cargo = self.base / "bin/cargo"
+        cargo.write_text('''#!/usr/bin/env python3
+import os, pathlib, signal, sys, time
+root = pathlib.Path(os.environ['PROBE_ROOT'])
+assert pathlib.Path('sample.rs').read_bytes() == ''' + repr(ORIGINAL.encode()) + '''
+assert os.environ['ARCHOGEN_SWEEP_SOURCE'] == str(root.resolve())
+with (root / 'invoked').open('a') as out:
+    out.write('called\\n')
+os.write(1, ''' + repr(stdout) + ')\nos.write(2, ' + repr(stderr) + ')\n' +
+                         ("time.sleep(20)\n" if kind == "timeout" else
+                          "os.kill(os.getpid(), signal.SIGTERM)\n" if kind == "signal" else
+                          "sys.exit(101)\n" if kind in {"killed", "unviable"} else "sys.exit(23)\n"))
+        cargo.chmod(0o755)
+        env = dict(os.environ, PROBE_ROOT=str(self.base),
+                   PATH=str(self.base / "bin") + os.pathsep + os.environ["PATH"])
+        result = subprocess.run(["bash", str(SCRIPT), "sample.rs", "--package", "synthetic",
+                                 "--op", "bool", "--timeout", "1"], env=env,
+                                capture_output=True, text=True, timeout=20)
+        self.assert_exit(result, 2)
+        self.assertEqual(source.read_bytes(), ORIGINAL.encode())
+        self.assertEqual((self.base / "target/mutation-sweep/tree/sample.rs").read_bytes(), ORIGINAL.encode())
+        return result, stdout, stderr
+
+    def test_failed_baselines_retain_raw_streams_actual_status_and_finishing_names(self):
+        receipts = self.base / "target/mutation-sweep/baseline-failures"
+        for kind, outcome, status, names in [("killed", "killed", 101, ["tests::alpha", "tests::omega"]),
+                                             ("unviable", "unviable", 101, []),
+                                             ("unjudged", "unjudged", 23, []),
+                                             ("signal", "unjudged", -signal.SIGTERM, []),
+                                             ("timeout", "timeout", -signal.SIGKILL, []),
+                                             ("killed", "killed", 101, ["tests::alpha", "tests::omega"])]:
+            with self.subTest(kind=kind):
+                retained = {p: p.read_bytes() for p in receipts.glob("*/*")}
+                (self.base / "invoked").unlink(missing_ok=True)
+                result, stdout, stderr = self.failing_baseline(kind)
+                paths = set(receipts.glob("*/receipt.json")) - set(retained)
+                self.assertEqual(len(paths), 1, result.stdout + result.stderr)
+                path = paths.pop()
+                receipt = json.loads(path.read_bytes())
+                self.assertEqual(receipt["schema_version"], 1)
+                self.assertEqual(receipt["source"], "sample.rs")
+                self.assertEqual(receipt["source_sha256"], hashlib.sha256(ORIGINAL.encode()).hexdigest())
+                self.assertEqual(receipt["command"], ["cargo", "test", "-q", "-p", "synthetic", "--"])
+                self.assertEqual(receipt["cwd"], "target/mutation-sweep/tree")
+                self.assertEqual(receipt["outcome"], outcome)
+                self.assertEqual(receipt["exit_status"], status)
+                self.assertEqual(receipt["failed_tests"], names)
+                self.assertGreaterEqual(receipt["seconds"], 0)
+                self.assertIn(str(path.relative_to(self.base)), result.stderr)
+                for stream, expected in [("stdout", stdout), ("stderr", stderr)]:
+                    record = receipt[stream]
+                    relative = Path(record["path"])
+                    self.assertFalse(relative.is_absolute())
+                    self.assertNotIn("..", relative.parts)
+                    data = (self.base / relative).read_bytes()
+                    self.assertEqual(data, expected)
+                    self.assertEqual(record["bytes"], len(expected))
+                    self.assertEqual(record["sha256"], hashlib.sha256(expected).hexdigest())
+                self.assertEqual((self.base / "invoked").read_text(), "called\n", "baseline must not retry")
+                for old, data in retained.items():
+                    self.assertEqual(old.read_bytes(), data, "a later failure replaced retained evidence")
+
+    def test_actual_rust_test_baseline_retains_its_finishing_failure(self):
+        original = ORIGINAL.replace("mod tests {}", "mod tests { #[test] fn actual_baseline_failure() { assert!(false); } }")
+        (self.base / "sample.rs").write_text(original)
+        cargo = self.base / "bin/cargo"
+        cargo.write_text('''#!/usr/bin/env python3
+import os, pathlib, subprocess, sys
+root = pathlib.Path(os.environ['PROBE_ROOT'])
+with (root / 'invoked').open('a') as out:
+    out.write('called\\n')
+binary = root / 'baseline-tests'
+compiled = subprocess.run(['rustc', '--edition=2021', '--test', 'sample.rs', '-o', str(binary)], capture_output=True)
+assert compiled.returncode == 0, compiled.stderr
+result = subprocess.run([str(binary)], capture_output=True)
+sys.stdout.buffer.write(result.stdout)
+sys.stderr.buffer.write(result.stderr)
+sys.exit(result.returncode)
+''')
+        cargo.chmod(0o755)
+        env = dict(os.environ, PROBE_ROOT=str(self.base),
+                   PATH=str(self.base / "bin") + os.pathsep + os.environ["PATH"])
+        result = subprocess.run(["bash", str(SCRIPT), "sample.rs", "--package", "synthetic", "--op", "bool"],
+                                env=env, capture_output=True, text=True, timeout=20)
+        self.assert_exit(result, 2)
+        paths = list((self.base / "target/mutation-sweep/baseline-failures").glob("*/receipt.json"))
+        self.assertEqual(len(paths), 1)
+        receipt = json.loads(paths[0].read_bytes())
+        self.assertEqual((receipt["outcome"], receipt["exit_status"], receipt["failed_tests"]),
+                         ("killed", 101, ["tests::actual_baseline_failure"]))
+        stdout = (self.base / receipt["stdout"]["path"]).read_bytes()
+        self.assertIn(b"thread 'tests::actual_baseline_failure'", stdout)
+        self.assertIn(b"test result: FAILED.", stdout)
+        self.assertEqual((self.base / "invoked").read_text(), "called\n")
+        self.assertEqual((self.base / "sample.rs").read_bytes(), original.encode())
+        self.assertEqual((self.base / "target/mutation-sweep/tree/sample.rs").read_bytes(), original.encode())
+
+    def test_successful_baseline_does_not_emit_failure_receipts(self):
+        result = self.run_sweep("from true\nto false\nwhy fixture\n")
+        self.assert_exit(result, 0)
+        self.assertFalse((self.base / "target/mutation-sweep/baseline-failures").exists())
+        self.assertEqual((self.base / "invoked").read_text(), "called\ncalled\n")
+
+    def test_evidence_write_failure_is_explicit_and_never_retries(self):
+        blocked = self.base / "target/mutation-sweep/baseline-failures"
+        blocked.parent.mkdir(parents=True)
+        blocked.write_bytes(b"retained obstruction\0")
+        result, _, _ = self.failing_baseline("killed")
+        self.assertIn("could not retain baseline evidence", result.stderr)
+        self.assertEqual(blocked.read_bytes(), b"retained obstruction\0")
+        self.assertEqual((self.base / "invoked").read_text(), "called\n")
 
 
 class SourceBoundaryTests(SweepFixture):

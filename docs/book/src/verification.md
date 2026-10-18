@@ -261,6 +261,61 @@ traceback markers and test output that resembles a name, and unfinished lists su
 
 Limits cover child exit and both output pipes. [Trust](trust.md) shows bounded tests reporting named failures on hangs and crashes.
 
+### Failed mutation baseline evidence
+
+The mutation sweep runs the unmodified copied source once before attempting a mutation. A failed,
+unviable, unjudged or timed-out baseline aborts the sweep with exit 2. It now saves its raw stdout
+and stderr as separate binary files and prints the repository-relative path of a JSON receipt under
+`target/mutation-sweep/baseline-failures/failure.<unique>/receipt.json`. Each failure gets its own
+exclusive directory; a later run preserves earlier receipts. A successful baseline creates no
+failure receipt. There is no automatic retry.
+
+The receipt is schema version 1:
+
+| Field | Meaning |
+| --- | --- |
+| `source`, `source_sha256` | Selected relative path and SHA-256 of the copied source bytes captured before the baseline command. |
+| `command`, `cwd` | Actual command argument array and repository-relative copied-tree working directory. |
+| `outcome`, `exit_status` | Existing classification and actual process return code. On the supported Unix host a signal gives a negative return code. A timeout remains a timeout even if the parent exited while an output pipe stayed open. |
+| `failed_tests` | Sorted unique names from completed libtest failure-list/failed-summary pairs; diagnostic text and unfinished lists provide no names. |
+| `seconds`, `detail` | Measured duration and the existing classification detail, including compiler or invocation diagnostic text where available. |
+| `stdout`, `stderr` | Objects containing a repository-relative binary-file `path`, byte count `bytes`, and SHA-256 `sha256`. |
+
+The binary streams preserve invalid UTF-8, NUL bytes and line endings exactly. Classification and
+failure-name extraction use the existing UTF-8 replacement decoding; the original bytes remain
+available for diagnosis. JSON escapes retain command strings without depending on terminal display.
+The receipt paths resolve from the current repository root, so moving the repository does not
+change their meaning. Hashes detect changed evidence; they are not signatures.
+
+Inspect the `receipt.json` path printed by the failed command, then read the two binary paths it
+names. A baseline receipt whose `outcome` is `killed` still aborts before mutation attempts: it
+reports an unmodified test failure, not a killed mutation. Resolve that failure before starting a
+new sweep. Ordinary mutation classification, strict timeout handling and restoration are unchanged.
+
+The tool writes both streams before writing the receipt and prints the receipt path only after
+all writes finish. An evidence-write error is explicit and keeps exit 2. An interrupted or failed
+write may leave an incomplete directory; the tool does not report it as a complete receipt.
+Preserve untriaged failure evidence during artifact cleanup.
+
+Leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.0.1` repairs the earlier loss: `run()` discarded raw output and the
+baseline caller discarded finishing failure names, leaving only a classification/time/command
+summary. The new permanent controls first fail against that unchanged driver, then hold raw byte
+identity and hashes, actual ordinary/signal/timeout statuses, named failures, separate repeated
+receipts, one attempt per failure, explicit write refusal and unchanged original/copied sources.
+A separate control compiles and runs an actual failing Rust test and retains its finishing failure
+name. These use an explicit Git/Cargo fixture, with real rustc and a native test binary in that
+control; they do not claim to reproduce a complete Cargo build.
+
+The first focused gate also caught the existing invocation-error mutation anchor becoming stale
+when the classifier return gained evidence. Its exact `from`/`to` now targets the corresponding
+`finish` call. The strict catalogue run still finishes with a kill attributed to
+`mutation::tests::the_sweep_requires_finishing_test_evidence_and_can_refuse_timeouts`, and restores
+the source exactly. Other catalogue entries and classification conditions remain unchanged.
+
+```sh
+python3 -I -B xtask/mutation_sweep_tests.py . BaselineEvidenceTests -v
+```
+
 ### Mutation source containment
 
 Pass a normalized path relative to the repository root. The selected source must have exactly one
