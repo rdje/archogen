@@ -174,6 +174,8 @@ uses the same repository and destination as their absolute spellings. Relative `
 relative to the selected repository; absolute values keep their destination. Repository aliases resolve
 to their physical root. Missing or non-directory repository paths return 2 and create no output.
 The [verified caller repair](annex-trust-proofs.md#repository-path-caller-repair) records the controls.
+Its [local integration checkpoint](annex-trust-proofs.md#repaired-caller-integration-checkpoint)
+passes the complete tier; diagnostic-helper mutation assessment continues.
 
 `cargo xtask trust-gate` builds the commit's inventory and compares it with the forms its **base** commit holds. Its
 report, `target/trust/report.txt`, names the build it describes and comes in two parts — here as it would read had the

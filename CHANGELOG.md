@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — close the repaired caller integration checkpoint
+
+`ARCHOGEN-M3-0749` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.2.2.2`), `2026-10-18`.
+
+- Bind current caller/environment/allowlist,28 pinned sources/33 operator controls and exact historical
+  59/14/51/2 raw edits; prior outcomes retain their epochs, with no new mutation/E-validity claim.
+- Actual complete local integration12 passed/0 other outcomes, matching held native/official activation
+  180b081792ea1770b6ca8e79efcf11487e97cb21. All1055 regular inputs restore; five false bindings refuse.
+- Code/controls/catalogue/reasons stay exact. Book/canonical/live completion is separately gated;
+  close caller/timing checkpoint and resume seven helper obligations. No remote CI or physical-board claim.
+
 ## archogen — correct stale verification timing rationale
 
 `ARCHOGEN-M3-0748` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.2.2.2.1`), `2026-10-18`.

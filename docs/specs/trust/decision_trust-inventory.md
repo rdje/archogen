@@ -725,3 +725,20 @@ with originals retained. All1051 held public inputs restore and older source/con
 Final exact-stage focused pass/stamp is required before publication; the full integration/caller
 checkpoint remains .14.3.2.2.2.2.2.2, before the seven remaining judgments. The
 [book repair](../../book/src/annex-trust-proofs.md#repository-path-caller-repair) records behavior and scope.
+
+
+## Repaired caller integration closure
+
+`M3.6.9.6.3.2.2.14.3.2.2.2.2.2.2.2` (`2026-10-18`) closes the caller repair after a complete
+local integration12/0, no unavailable/not-built/quarantined steps, with native/official activation stamp
+180b081792ea1770b6ca8e79efcf11487e97cb21. All1055 held regular inputs restore; five false bindings refuse.
+Completion documents receive separate pinned-book/staged checks in a later epoch. No Rust, operator,
+catalogue or reason change occurs in this checkpoint.
+
+Current source/pinned/tool metadata bind unchanged environment/allowlist,28 source identities,33
+operator controls and exact historical59/14/51/2 edits. The repaired default caller maps relative and
+aliased inputs to runtime absolute geometry without new outer-root authorization. Historical results
+are not new measurements, and the full pass establishes no whole-file E validity or mutation adequacy.
+Both caller false refusal and stale timing rationale are resolved; the seven remaining helper judgments
+resume. The [book checkpoint](../../book/src/annex-trust-proofs.md#repaired-caller-integration-checkpoint)
+records every stage and the local/host-comparison/physical-board limits.

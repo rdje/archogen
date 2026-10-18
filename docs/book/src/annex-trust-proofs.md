@@ -1064,5 +1064,55 @@ All earlier production/test bytes reconstruct after removing exactly the wrapper
 resolution block and new controls. The catalogue adds one entry; the diagnostic helper, operator
 controls and prior E reasons stay exact. All 1051 public-experiment inputs restore with modes and
 Python/system hashes. The final focused tier must pass on the held complete staged tree with its
-matching official stamp before this repair is committed. Full integration and repaired-caller closure
-remain the next child `.14.3.2.2.2.2.2.2`; the seven diagnostic-helper judgments still wait.
+matching official stamp before this repair is committed. That focused pass is recorded with the repair;
+full integration and repaired-caller closure are recorded in the checkpoint below. The seven
+diagnostic-helper judgments remain open.
+
+
+### Repaired caller integration checkpoint
+
+Checkpoint `.14.3.2.2.2.2.2.2.2` (`2026-10-18`) closes the caller repair after its focused
+implementation and timing-comment correction. The complete local integration tier passes:
+
+| Step | Result |
+| --- | --- |
+| format | passed |
+| strict lint | passed |
+| complete contract suite | passed |
+| doctrines | passed |
+| script self-tests | passed |
+| pinned [mdBook](ledger.md#mdbook) | passed |
+| no_std build | passed |
+| pinned toolchain premises | passed |
+| wasm build | passed |
+| wasm binding | passed |
+| emulator configuration | passed |
+| target spike | passed |
+
+```text
+12 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined
+activation tree: 180b081792ea1770b6ca8e79efcf11487e97cb21
+```
+
+The actual runner log, native Git activation identity and official integration stamp agree. All 1055
+held regular inputs restore, including modes and Python/system hashes; the submodule supplies only its
+opaque Git-index identity. Five altered bindings refuse: nonzero exit, a missing step, a false summary,
+a wrong stamp and missing restoration. Completion prose is a later document epoch, with separate
+pinned-book and staged doctrine checks. The integration stamp names the held activation above, rather
+than claiming the later completion text itself was the tier's input.
+
+The source/caller binding retains 28 pinned source identities and the 33 operator controls. The
+environment constructor, compiled-input allowlist and recorded reasons remain exact. The repaired
+command resolves its runtime repository before output/configuration roots, and its production wrapper
+supplies no outer roots. The actual frozen-source public absolute/relative/alias and invalid-repository
+receipts remain bound; their other-host baseline comparison skip remains explicit.
+
+Historical measurements are rebound by exact source span, operator and raw edit: the prefix/helper
+cohort59, flag cohort14, repaired diagnostic region51 and finite-iterator pair2. Their original outcomes
+stay historical. No fresh mutation outcome or whole-file equivalent validity follows from this
+integration pass. Seven diagnostic-helper obligations still need source/domain assessment and their
+finishing controls or precise proofs, followed by the complete current replay.
+
+This checkpoint is local integration evidence. It does not establish remote CI, physical-board
+execution or F30 adequacy. The caller defect and stale timing rationale are resolved; the next activity
+is the seven outstanding helper judgments.
