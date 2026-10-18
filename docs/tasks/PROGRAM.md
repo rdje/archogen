@@ -1,6 +1,4 @@
 # PROGRAM: program spine — roadmap ownership, workspace, tiers, and the book
-| `PROGRAM.89.2` | `ARCHOGEN-PROGRAM-0729 (leaf PROGRAM.89.2)` | **Local-temp caller checkpoint closes**: exact caller/consumer delta and28 pinned sources, compiled actual-edit/producer controls; complete14 flag and6 matcher native replays, six/five rejecting receipt controls, original/current-copy1034 restoration; all12 integration stages and official/native activation binding pass; code/tests/E unchanged, canonical/book/live resume M3 metadata evidence, full adequacy open |
-| `PROGRAM.89.1` | `ARCHOGEN-PROGRAM-0728 (leaf PROGRAM.89.1)` | **Cleared builds keep temporary data local**: checked target/tmp creation/canonicalization and explicit TMPDIR/TMP/TEMP, real child effective path/volume/file controls, absent/hostile/relative/different-cwd and blocked-file recovery; compiled-input admissions unchanged; two native named kills, operator28 and original1034 restoration; canonical/book/live sync, focused/stamp/staged gates; caller/integration checkpoint next |
 
 ## Metadata
 
@@ -702,6 +700,56 @@ mdBook that is the director's window into the project.
     integration-audit.json SHA256 efbc1fb15720e21b86c3d27166315b8f26a3bdc39165cdd5b22c308cefcad984.
   Commit: `ARCHOGEN-PROGRAM-0729 (leaf PROGRAM.89.2)`
 
+- ID: `PROGRAM.90`
+  Status: `done` — recurrent placement repaired and live working/indexed tables enforced
+  Goal: preserve prior row text and headed order, repair displaced records, and prevent recurrence.
+  Reproduce/root: f0fd3fd and97189a0 inserted exact .89.1/.89.2 rows above Metadata. The closure
+    adapter matched an inline heading mention in .87, found no table row (-1), and used the first
+    newline as fallback insertion. Existing presence-only gate accepted this. Initial live census
+    found only these two misplaced commit records across docs/tasks; all other live records headed.
+  - [x] **ROOT CAUSE** — actual native Git introductions/7130730 lookup replay in root-cause.json;
+    native old gate exit 0 with both records misplaced. Maintained placement extension then exits 1
+    naming both preamble records, retained maintained-red.log. First draft also refused M3's legitimate
+    pre-table scope note; root-bounded table search and a permanent positive control correct that.
+  - [x] **ADDRESSED** — exact row relocation restores native introduction order after all205 headed
+    prior rows. python3 -I -B target/program-log-placement/audit.py, exit 0: actual pinned renderer
+    before205/after207, separated-row negative renders1; full commit-row Counter, headed sequence and
+    verification rows preserved. Gate requires one unfenced root heading, three-column header/delimiter
+    and contiguous live records in working and indexed copies. Scope notes/inline mentions pass;
+    missing/fenced/duplicate headings, preamble/Changelog/separated records, delimiter omission and
+    an indexed bad table hidden by a working correction refuse. Existing presence/backlog cases hold.
+  - [x] **NO REGRESSION** — bash scripts/check_commit_log_rows.sh --self-test, exit 0:
+    21 pass / 0 fail (21 arms), including all prior9. Native byte checks preserve250 tracked archive/
+    index files and engine/proof/catalogue/native sources. Closure adds only this unit's headed rows;
+    final actual render/pinned book/staged gates required. No Rust source/focused run warranted;
+    existing structural verification method applies, no new DEV_NOTES lesson. Full integration is
+    still M3 .13.3.2. A separate actual probe confirms an unstaged-only pending row passes; PROGRAM.91
+    owns that P1 indexed-presence gap and is next before integration. Frozen archive scope stays exact.
+  Verification: `2026-10-18`, target/program-log-placement retains native root/introductions/census,
+    old gate acceptance/new refusal, actual full-document render fixtures, source/row preservation,
+    complete self-test and index-presence-probe.json. Ignored extraction adapters supplement native
+    Git, pinned renderer and maintained gate. Pre-closure audit.json SHA256
+    e50e64ea5fa6d1a1af0aac2bd6aae0bbb00149c27c792749425899ddd8f99262.
+    Final pinned render205 to208 including this unit; separated-row negative1; all prior rows/archives
+    preserve. Final audit SHA2561cbecf0b0225a99d23701d8ce3fc967c9bd758b7c56357931ee475d64cb32245.
+    Actual full pinned book exits 0; staged gates bind the final unit record separately.
+  Commit: `ARCHOGEN-PROGRAM-0735 (leaf PROGRAM.90)`
+
+- ID: `PROGRAM.91`
+  Status: `pending` — P1 indexed work-unit presence gap, immediately after PROGRAM.90
+  Goal: require the commit's indexed work-unit records, including pending and historical subjects,
+    without weakening the working presence/backlog or immutable archive contracts. Permanent controls
+    must refuse an unstaged-only pending record and staged removal hidden by working copies.
+  Reproduce: target/program-log-placement/index-presence-probe.json, actual maintained gate in an
+    isolated project-owned Git fixture: pending ARCHOGEN-T-0002 exists only in working T.md;
+    native git show :docs/tasks/T.md proves absent from index; gate exits0 and reports2 records.
+    Impact: a commit can omit its durable record despite gate success. Fix before M3 .13.3.2.
+  - [ ] **ROOT CAUSE** — reproduce maintained working/index discrepancy and census source.
+  - [ ] **ADDRESSED** — indexed presence with positive and rejecting staging/backlog/archive controls.
+  - [ ] **NO REGRESSION** — preserve existing placement/presence controls, book/live sync and gates.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -766,8 +814,9 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.91` | `pending` | P1 indexed work-unit presence gap before M3 integration |
+| 2 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
+| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.72`, `.73` and `.78` — are filed and owned. Every closed
@@ -982,6 +1031,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-18` | `PROGRAM.87` | complete native documentation history/ancestry, source/order/byte counters, actual pinned renderer/separator controls, preserved seals and public gate boundary/restoration | all 204/154 prior rows retained; headed render182/135 to205/155 including new records; 41 current affected versions traced; five exact seals/six leaves, 236 old archives unchanged; 1034 inputs restore, five structural falsifiers refuse; gate presence-only scope explicit |
 | `2026-10-18` | `PROGRAM.89.1` | passive RED/green; cleared-child path/volume/file effects and hostile overrides; blocked-file recovery; public env-input refusals; native mutations; operator28; census/source audit; focused | checked local temp setup, both native named K strict0; all1034 originals restore; prior bodies/E preserved; exact final focused/book/staged gates bind commit, caller checkpoint .89.2 next |
 | `2026-10-18` | `PROGRAM.89.2` | source/caller/compiled proof binding; native14 flags and6 matchers; result falsifiers; original/copy censuses; full integration/stamp | flags3K10E1U strict0, matchers6S strict1 remain owned; all1034 original/current-copy inputs restore, all12 local stages pass; activation and closure prose explicitly separate; no new E or full adequacy |
+| `2026-10-18` | `PROGRAM.90` | native row introductions and inline-heading/-1 root; maintained RED/green, renderer/separator and working/indexed controls | all prior rows/order exact, headed205 to207 before closure,250 archive/index files exact;21/0 controls, indexed-presence gap owned PROGRAM.91 next |
 
 ## Commit Log
 
@@ -1192,6 +1242,9 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.86` | `ARCHOGEN-PROGRAM-0724 (leaf PROGRAM.86)` | **tenth daily cleanup**: independent targeted same-volume/no-link/no-Git metadata/system census; only main and empty wasm incremental caches removed, immediate residue clear; all 1029 inputs restore before/after focused and wasm checks, exact held activation stamp; evidence/products/stores/Git workspaces retained, supplementary limits explicit; latest-only record/book sync, misplaced PROGRAM row owned in .87 and book boundary audit .88 next |
 | `PROGRAM.88` | `ARCHOGEN-PROGRAM-0725 (leaf PROGRAM.88)` | **book growth cannot inherit an ancestor cap**: reproduced unbounded book counted against bounded docs parent; book files now contribute only to book-route metrics, non-book budgets/partition/stub semantics retained; fixture preparation fails closed; same44 maintained arms red41/3 to green44/0, all prior controls preserved; ruling/policy/book/live sync, PROGRAM log repair next |
 | `PROGRAM.87` | `ARCHOGEN-PROGRAM-0726 (leaf PROGRAM.87)` | **PROGRAM logs fully headed again**: 0707 after Changelog and 21 commit/19 verification header-detached rows traced through native history; all prior204/154 rows preserve bytes/order/multiplicity, minimal native-ancestry merge and contiguous tables; actual rendered205/155 with this unit, separator controls and missing/changed/duplicate/wrong-location evidence refuse; exact closed-body sealing, old archives/index preserved, public gate scope and1034-input restoration explicit; book/live resume M3 matcher assessment |
+| `PROGRAM.89.1` | `ARCHOGEN-PROGRAM-0728 (leaf PROGRAM.89.1)` | **Cleared builds keep temporary data local**: checked target/tmp creation/canonicalization and explicit TMPDIR/TMP/TEMP, real child effective path/volume/file controls, absent/hostile/relative/different-cwd and blocked-file recovery; compiled-input admissions unchanged; two native named kills, operator28 and original1034 restoration; canonical/book/live sync, focused/stamp/staged gates; caller/integration checkpoint next |
+| `PROGRAM.89.2` | `ARCHOGEN-PROGRAM-0729 (leaf PROGRAM.89.2)` | **Local-temp caller checkpoint closes**: exact caller/consumer delta and28 pinned sources, compiled actual-edit/producer controls; complete14 flag and6 matcher native replays, six/five rejecting receipt controls, original/current-copy1034 restoration; all12 integration stages and official/native activation binding pass; code/tests/E unchanged, canonical/book/live resume M3 metadata evidence, full adequacy open |
+| `PROGRAM.90` | `ARCHOGEN-PROGRAM-0735 (leaf PROGRAM.90)` | **Live commit-log placement enforced**: two exact rows relocated in native introduction order, original text/headed order/verification rows and250 archive/index files preserved; inline-heading/-1 cause reproduced, working/indexed heading/table/contiguity checks with21 passing controls and actual pinned rendering; existing presence/backlog/archive contract retained, newly reproduced indexed-presence gap owned in PROGRAM.91 before M3 integration |
 
 ## Changelog
 

@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — enforce headed live commit-log records
+
+`ARCHOGEN-PROGRAM-0735` (leaf `PROGRAM.90`), `2026-10-18`.
+
+- Reproduce inline-heading lookup and missing-row fallback; relocate two exact PROGRAM rows while
+  preserving original text, headed order and verification records. Actual pinned rendering and a
+  separated-row negative prove placement; archived/index files and engine/proof sources stay exact.
+- Enforce rooted contiguous tables in live working/indexed copies. All21 controls pass, preserving
+  existing presence/backlog/archive semantics. Book/live sync; independently reproduced unstaged-only
+  pending-record gap is owned in PROGRAM.91 and precedes M3 integration.
+
 ## archogen — replay the complete prefix/helper cohort
 
 `ARCHOGEN-M3-0734` (leaf `M3.6.9.6.3.2.2.13.3.1`), `2026-10-18`.

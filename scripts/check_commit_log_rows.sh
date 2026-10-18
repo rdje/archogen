@@ -13,6 +13,9 @@
 # row: a table line (`| …`) under `docs/tasks/` or `docs/task-history/` carrying `` `ARCHOGEN-<TREE>-NNNN (leaf ``.
 # The ids that had no row when this landed are [`BACKLOG`] below, measured, which may shrink and may not grow: an
 # entry that gains a row, or names no commit, is refused until it is removed.
+# Live task records, in working and indexed copies, must sit in the contiguous table below their actual root-level
+# Commit Log heading (PROGRAM.90). Inline mentions and fenced examples are not headings.
+# Sealed history retains the original presence-only rule: its bytes are immutable evidence.
 #
 # ⚠️ HONEST LIMIT: it proves a row exists, not that the row says anything true, nor that it sits in the right tree.
 #
@@ -57,16 +60,73 @@ if os.path.exists(message):
 
 files = subprocess.run(["git", "ls-files", "-c", "-o", "--exclude-standard", "--", "docs/tasks", "docs/task-history"],
                        capture_output=True, text=True).stdout.split()
+indexed = set(subprocess.check_output(["git", "ls-files", "-z", "--", "docs/tasks"]).decode().split("\0"))
 rows = set()
+fails = []
 ROW = re.compile(r"`(ARCHOGEN-[A-Z0-9]+-[0-9]{4}) \(leaf ")
+
+def live_placement(path, lines):
+    records = [i for i, line in enumerate(lines) if line.startswith("|") and ROW.search(line)]
+    if not records:
+        return
+    headings = []
+    roots = []
+    fenced = set()
+    fence = None
+    for i, line in enumerate(lines):
+        if fence is not None:
+            fenced.add(i)
+            if re.fullmatch(r" {0,3}" + re.escape(fence[0]) + r"{" + str(fence[1]) + r",}[ \t]*", line):
+                fence = None
+            continue
+        opening = re.match(r" {0,3}(`{3,}|~{3,})(.*)$", line)
+        if opening:
+            fenced.add(i)
+            fence = (opening[1][0], len(opening[1]))
+            continue
+        if line == "## Commit Log":
+            headings.append(i)
+        if line.startswith("## "):
+            roots.append(i)
+    if len(headings) != 1:
+        fails.append("%s: live records require exactly one unfenced root Commit Log heading" % path)
+        return
+    start = headings[0] + 1
+    stop = next((i for i in roots if i > headings[0]), len(lines))
+    # Historical scope notes may precede the table (M3). They do not own a record.
+    while start < stop and (start in fenced or not lines[start].startswith("|")):
+        start += 1
+    def cells(line):
+        return [cell.strip() for cell in line.strip().strip("|").split("|")]
+    if (start + 1 >= stop or not lines[start].startswith("|")
+            or len(cells(lines[start])) != 3 or cells(lines[start])[0] != "Leaf"
+            or not lines[start + 1].startswith("|")
+            or len(cells(lines[start + 1])) != 3
+            or not all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells(lines[start + 1]))):
+        fails.append("%s: Commit Log requires its three-column header and delimiter" % path)
+        return
+    end = start + 2
+    while end < stop and end not in fenced and lines[end].startswith("|"):
+        end += 1
+    for i in records:
+        if not start + 2 <= i < end:
+            fails.append("%s:%d: work-unit record outside the contiguous Commit Log table" % (path, i + 1))
+
 for path in files:
-    if not path.endswith(".md") or not os.path.exists(path):
+    if not path.endswith(".md"):
         continue
-    for line in open(path, encoding="utf-8"):
+    if path in indexed:
+        staged = subprocess.check_output(["git", "show", ":" + path]).decode("utf-8").splitlines()
+        live_placement("index:" + path, staged)
+    if not os.path.exists(path):
+        continue
+    lines = open(path, encoding="utf-8").read().splitlines()
+    if path.startswith("docs/tasks/"):
+        live_placement(path, lines)
+    for line in lines:
         if line.startswith("|"):
             rows.update(ROW.findall(line))
 
-fails = []
 for i in sorted(ids - rows - backlog):
     fails.append("%s has no row in any tree's Commit Log%s" % (i, " (the pending commit)" if i == pending else ""))
 for i in sorted(backlog & rows):
@@ -120,6 +180,75 @@ self_test() {
   arm "a backlog entry naming no commit is refused" 1 "ARCHOGEN-T-0099 is in the backlog and names no commit" "ARCHOGEN-T-0004 ARCHOGEN-T-0099"
   fresh; printf 'mention ARCHOGEN-T-0005 (leaf T.1) in prose only\n' >> "$work/docs/tasks/T.md"; commit "ARCHOGEN-T-0005 (leaf T.1): five"
   arm "a mention outside a table row is not a row" 1 "ARCHOGEN-T-0005 has no row"
+  fresh
+  python3 - "$work/docs/tasks/T.md" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1]); text = p.read_text(); row = text.splitlines(keepends=True)[-1]
+p.write_text(text.replace(row, "").replace("# T\n", "# T\n" + row))
+PY
+  arm "a preamble record is refused" 1 "outside the contiguous Commit Log table"
+  fresh
+  printf '\n## Changelog\n\n| `T.1` | `ARCHOGEN-T-0001 (leaf T.1)` | displaced |\n' >> "$work/docs/tasks/T.md"
+  arm "an after-Changelog record is refused even with a proper copy" 1 "outside the contiguous Commit Log table"
+  fresh
+  printf '\n| `T.1` | `ARCHOGEN-T-0001 (leaf T.1)` | separated |\n' >> "$work/docs/tasks/T.md"
+  arm "a blank-separated record is refused" 1 "outside the contiguous Commit Log table"
+  fresh
+  python3 - "$work/docs/tasks/T.md" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1]); text = p.read_text(); p.write_text(text.replace("# T\n", "# T\n\nAn inline mention of ## Commit Log is prose.\n"))
+PY
+  arm "an inline heading mention preserves the real table" 0 "1 work-unit commit(s)"
+  fresh
+  python3 - "$work/docs/tasks/T.md" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1]); text = p.read_text(); p.write_text(text.replace("## Commit Log", "An inline ## Commit Log mention only."))
+PY
+  arm "an inline mention alone cannot own records" 1 "exactly one unfenced root"
+  fresh
+  python3 - "$work/docs/tasks/T.md" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1]); text = p.read_text(); p.write_text(text.replace("## Commit Log\n", "## Commit Log\n\nA historical scope note precedes the table.\n"))
+PY
+  arm "a scope note before the real table passes" 0 "1 work-unit commit(s)"
+  fresh
+  python3 - "$work/docs/tasks/T.md" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1]); text = p.read_text(); p.write_text(text.replace("## Commit Log\n", "~~~markdown\n## Commit Log\n~~~\n\n## Commit Log\n"))
+PY
+  arm "a fenced example before the real heading is ignored" 0 "1 work-unit commit(s)"
+  fresh
+  python3 - "$work/docs/tasks/T.md" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1]); text = p.read_text(); p.write_text(text.replace("## Commit Log", "```markdown\n## Commit Log\n```"))
+PY
+  arm "a fenced heading cannot own records" 1 "exactly one unfenced root"
+  fresh; printf '\n## Commit Log\n' >> "$work/docs/tasks/T.md"
+  arm "duplicate real log headings are refused" 1 "exactly one unfenced root"
+  fresh
+  python3 - "$work/docs/tasks/T.md" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1]); p.write_text(p.read_text().replace("| --- | --- | --- |\n", ""))
+PY
+  arm "a missing table delimiter is refused" 1 "three-column header and delimiter"
+  fresh
+  mkdir -p "$work/docs/task-history/T"
+  tail -n 1 "$work/docs/tasks/T.md" > "$work/docs/task-history/T/T.1.md"
+  rm "$work/docs/tasks/T.md"
+  arm "sealed history keeps its presence contract" 0 "1 work-unit commit(s)"
+  fresh
+  cp "$work/docs/tasks/T.md" "$work/proper.md"
+  printf '\n| `T.1` | `ARCHOGEN-T-0001 (leaf T.1)` | separated |\n' >> "$work/docs/tasks/T.md"
+  git -C "$work" add docs/tasks/T.md
+  cp "$work/proper.md" "$work/docs/tasks/T.md"
+  arm "an unstaged correction cannot hide a bad indexed table" 1 "index:docs/tasks/T.md"
   rm -rf "$work"
   arms=$((arms + 1))
   if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the real history passes"

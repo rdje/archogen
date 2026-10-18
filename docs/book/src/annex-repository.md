@@ -569,9 +569,24 @@ register out of the decisions folder (`PROGRAM.41`).
 
 Keep Verification and Commit Log rows contiguous. Put each work-unit record under `## Commit Log`; retain legacy filing references.
 `COMMIT-LOG-ROWS` (`scripts/check_commit_log_rows.sh`) requires each work-unit commit, including the
-pending one, to have a pipe-prefixed record. It checks presence, not Markdown placement: a row after
-`## Changelog` or a blank separator still passes. Missing rows refuse before commit; two were found by hand on `2026-10-01`
-(`PROGRAM.46`). The script's measured backlog of earlier missing rows may only shrink.
+pending one, to have a pipe-prefixed record. Missing rows refuse before commit; two were found by hand
+on `2026-10-01` (`PROGRAM.46`). The script's measured backlog of earlier missing rows may only shrink.
+
+Since `PROGRAM.90` (`2026-10-18`), live task records must also belong to the contiguous table under
+one actual root Commit Log heading. Both working and indexed copies are checked. Inline mentions and
+fenced examples cannot supply that heading; historical scope notes before the table remain allowed.
+A preamble record, a record after Changelog or after a blank separator, an absent table delimiter,
+duplicate headings and a bad indexed copy hidden by an unstaged correction all refuse. For example,
+writing a new row below Changelog leaves its text present but outside the log; move it into the
+existing table before committing. Sealed task history keeps its immutable presence-only contract.
+Placement validation reads both copies. The presence census still reads working rows: an unstaged-only
+pending record can pass. `PROGRAM.91` owns that reproduced staging gap and precedes the next M3
+integration checkpoint. Source evidence establishes each record's content.
+
+```console
+$ bash scripts/check_commit_log_rows.sh               # presence and live placement
+$ bash scripts/check_commit_log_rows.sh --self-test   # positive and rejecting controls
+```
 
 ```console
 $ bash scripts/check_decision_history.sh                                   # the gate
