@@ -609,6 +609,34 @@ and current copied regular inputs restore; six altered receipts refuse. Copied i
 are outside the borrowed-metadata copy census. This closes the last initial prefix/helper survivor
 obligation; final complete cohort replay and whole-production adequacy remain separate work.
 
+## Complete prefix/helper replay
+
+`.13.3.1` (`2026-10-18`) re-derives the complete `DROPPED_PREFIX`/`normalise` region, binds all
+59 actual current edits to their original operator/from/to/relative-span identities, and replays the
+unchanged native command with current tests and precise reasons. Native listing remains 1487 across
+the production file; only this complete helper region is selected. All 59 edit identities and helper-region bytes
+match `.13.1`; its measurement and the initial production outcomes remain historical. Later parent
+controls extend the historical test section. The production range and helper-region bytes remain exact.
+
+Final cohort result: 51 named finishing kills, seven scoped E and one compiler refusal, strict zero.
+Every one of the twelve survivors in `.13.1` is now resolved: five independent parent controls kill
+their exact edits, and the six pinned-caller codegen proofs plus the distinct-search basename proof
+justify the other seven. The existing compiler refusal remains a refusal and proves no coverage.
+No survivor, timeout or unjudged outcome remains in this selected region. Native per-operator attempted/
+refused accounting and every killing test name are retained with exact original/current identities.
+
+Maintained input census confirms all 1043 captured originals restore, with Python/system hashes and
+opaque gitlink metadata. The current-copy adapter confirms the same regular-input bytes/modes/sizes,
+borrowing original index fields; copied Git index/gitlink contents are not established. Production,
+prior controls, reasons, catalogue and native tools are unchanged. Seven altered receipt variants
+refuse: exit, missing/duplicate row, replacement, unlisted E, empty reason and operator summary.
+These validators bind reason presence/shape/text selection; their mathematical truth rests on the
+separately committed source and compiled proofs. Ignored adapters supplement those primary tools.
+
+This is the completed cohort replay only. Caller/premise and full local integration checkpoint
+`.13.3.2` is next; closure prose gets a separate pinned book/staged gate. Whole-production final
+adequacy, remaining source obligations, independent review and runner compatibility remain open.
+
 ## Retrieved source identities
 
 Every link below names the installed Cargo commit. These are source digests, not toolchain binary digests.

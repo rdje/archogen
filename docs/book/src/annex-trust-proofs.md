@@ -328,6 +328,22 @@ reports one E, strict zero; captured original/current copied inputs restore and 
 All initial prefix/helper survivor obligations now have separate controls or proofs. Final complete
 cohort replay and whole-production adequacy remain required.
 
+### Complete prefix/helper replay
+
+Complete replay `.13.3.1` (`2026-10-18`) binds all 59 actual prefix/helper edits to their original
+source/operator/replacement identities and preserves their earlier outcomes. Its current result is
+51 named kills, seven scoped E and one compiler refusal, strict zero. All twelve survivors from
+`.13.1` resolve: five gain independent parent controls, six have pinned-caller codegen proofs, and
+one has the source-context basename proof. The refusal proves no coverage. No survivor, timeout
+or unjudged result remains in this helper region.
+
+Captured original and current copied inputs restore; production, controls, reasons and native tools
+remain unchanged. Altered result receipts refuse. The copier's borrowed index metadata does not prove
+copied index or gitlink contents. Reason validators bind the selected text; the source/compiled proofs
+establish each reason's substance. This result covers the complete helper region, with the rest of
+the production file still open. A separate caller/premise and full local integration checkpoint follows;
+whole-production adequacy, independent review and runner compatibility are still required.
+
 ## Mutation measurements and controls
 
 Whether the instrument's tests hold the generated-sources rules — what a program reads, the chain, the blob rule,

@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — replay the complete prefix/helper cohort
+
+`ARCHOGEN-M3-0734` (leaf `M3.6.9.6.3.2.2.13.3.1`), `2026-10-18`.
+
+- Bind all59 actual edits to exact original source/operator/from/to/relative spans and historical outcomes.
+  Complete native replay gives51 named kills/seven scoped E/one compiler refusal, strict0; all12 prior
+  cohort survivors resolve. Refusal proves no coverage; no S/timeout/unjudged result remains in this cohort.
+- All1043 original/current-copy regular inputs restore, prior source/controls/reasons/native tools remain
+  exact and seven altered receipts refuse. Canonical/book/live sync; caller/full integration checkpoint
+  follows separately. Whole-production final adequacy and review remain open.
+
 ## archogen — prove the basename comparison from distinct search positions
 
 `ARCHOGEN-M3-0733` (leaf `M3.6.9.6.3.2.2.13.2.5`), `2026-10-18`.
