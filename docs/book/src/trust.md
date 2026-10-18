@@ -127,7 +127,11 @@ holds admitted warning data, source refusal and actual compiler failure/recovery
 harness and separate generator builds.
 [Path/feature/copy controls](annex-trust-proofs.md#compiler-artifact-path-and-feature-compatibility)
 also hold mixed-byte paths, canonical aliases, actual output hashes and target default-feature
-suppression. Lifecycle/concurrency and full source/integration verification remain before F30 signoff.
+suppression. The
+[compatibility checkpoint](annex-trust-proofs.md#compiler-provenance-compatibility-checkpoint)
+also accounts for record validation, writer failures, signals and overlapping actual compilers,
+with explicit source and I/O limits. Native-tool hardening and full source/integration verification
+remain before F30 signoff.
 
 An admission's `defadmit` form names the file, rule and `sha256` of the site's extent (the whole manifest for a
 manifest rule), plus one textual `reason` value.

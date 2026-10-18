@@ -3712,3 +3712,98 @@ tree is `df6dc8e496dfaec26cb4f8b7566b6f9f83ab8023`; receipts are under
 `target/compiler-writer-lifecycle/after-latency/`, supplemental audit SHA-256
 `b89e0f83847331ddb6179657f0238025f03fd229e164d28df9e584a72fa51859`. Earlier receipts and the failed focused/diagnostic epoch
 are preserved. The final staged focused gate must pass this repaired workload before commit.
+
+### Compiler provenance compatibility checkpoint
+
+The `2026-10-18` slice `.15.2.1.3.3.2.3.3.3` completes the bounded compatibility
+control matrix. Production and all previous control bodies stay unchanged. The final new parent is
+`trust::compiler::tests::actual_concurrent_observer_writers_publish_independent_complete_records`.
+
+#### Actual overlapping writers
+
+Measured `2026-10-18`: the main session publishes 8 records from overlapping observer processes.
+
+The parent prepares the production observer, then launches actual pinned rustc compilations through
+it. Each compilation receives source on standard input and writes into its own output directory.
+The parent holds all input pipes open until every observer's empty partial reservation exists and
+every observer is still running. No compiler can finish its input before that release. This establishes
+overlapping live writers through real process and filesystem observations, without a timing-based
+guess, a mock compiler or a replacement publisher.
+
+After all reservations are present, the parent supplies source and closes every input. The source
+contains compile-time assertions that the wrapper/private fields are absent. Every native compiler
+must finish successfully. The record consumer must return exactly the expected complete argument
+vectors, independent of file iteration order. Completed record names and recorded PIDs agree with
+the operating system's observer-child identifiers; current role/session/cwd, successful status and unique
+record population are checked. These PIDs identify the observers, each of which waits for its own
+real rustc child. No partial record remains.
+
+Each actual compiled executable is run and must print its own worker marker. A fresh session with
+a different role label then runs a real pinned query, sees only its own query record and returns no compilation
+units; the preceding session retains its completed population. This is a producer/record-consumer
+concurrency control. Normal inventory builds still apply metadata/source ownership to every unit.
+
+The parent routes spawn, reservation and input-write errors through a common close-and-wait path
+before assertions: all input handles close and every started observer is waited on. The existing
+bounded outer worker guards a hang and its process group. The direct dated run passes in about
+2.16 seconds under the unchanged 30-second limit.
+
+```bash
+cargo test -p xtask \
+  actual_concurrent_observer_writers_publish_independent_complete_records -- --nocapture
+```
+
+The native smoke omits the record write and then omits partial-file cleanup:
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler_observer.rs \
+  --package xtask --timeout 600 \
+  --filter=trust:: --filter=trust_generated:: --filter=trust_gate:: \
+  --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L60.stmt.7 --only L64.stmt.11
+```
+
+The new parent must finish and kill each actual edit. This measures publication-data/cleanup
+behavior under overlapping real writers, not complete mutation coverage.
+
+#### Complete contract accounting
+
+The [canonical provenance contract](../../../docs/specs/trust/compiler-provenance-contract.md)
+keeps the required behaviors. This table accounts for each row through the current production,
+permanent controls and explicit source/domain premises. Test names below are in
+`trust::compiler::tests`, `trust::artifact::tests`, `trust::tests` or the named
+`trust_generated` modules; the measuring implementation is in `xtask/src/trust.rs`,
+`xtask/src/trust_compiler.rs`, `xtask/src/trust_compiler_observer.rs` and
+`xtask/src/trust_artifact.rs`.
+
+| Contract row | Current evidence and practical limits |
+| --- | --- |
+| Producer | `Compiler::prepare` builds the tracked std-only observer with pinned rustc before the role loop; `session` installs held bytes. Actual compiler/environment, native argv and setup/install parents hold executable bytes/mode and failure. The once-per-inventory call placement is a source premise. |
+| Invocation | `actual_compiler_removes_private_environment_and_records_failures` and `actual_native_receiver_observes_every_forwarded_argument_byte` hold complete argv, private-field removal, status/stdio and unsupported reader encodings. The native signal parent holds the measured signal outcome. The unchanged base constructor/fixed compiler and preflight remain source-bound. |
+| Lifecycle | Fresh exclusive session and partial paths, completed no-overwrite publication and actual error/recovery controls; the native collision witness preserves both destination and partial evidence. The overlapping-writer parent holds reservation/publication/cleanup populations. Arbitrary kernel write/sync/post-link errno injection is not claimed; those source operations propagate errors. |
+| Consumer | The original malformed-record parent plus `actual_records_refuse_remaining_field_range_byte_and_shape_boundaries` hold schema/session/role/cwd/PID/filename/status, exact canonical framing, byte/type/range and record-file refusals, valid-before-fault and recovery. Native NUL and PID 0 acceptance edits are killed. No diagnostic fallback exists. |
+| Queries | Actual version queries return no units; actual cold Cargo root/harness/generator builds exercise the pinned target-information query. Unknown/partial invocation shapes refuse. Actual successful compilations retain their full arguments. The accepted query population is pinned, not a promise for future compiler versions. |
+| Artifact | `actual_empty_input_query_preserves_build_and_ignores_now_invalid_source`, naming/output refusal controls and actual binary/library/standard/custom same-named harness parents bind metadata source and observed naming/output. Missing/foreign/linked/ambiguous outputs refuse; selected bytes agree with independent system hashes. |
+| Determinism | Existing same-output repeat, different-directory configuration, quoted/multiline/canonical path, dependency-environment and configuration-key parents remain. The combined path/feature parent holds complete records/shared items and each actual output hash; cross-directory rlib-byte equality is not assumed. Private settings stay outside compiled configuration; normalization and unit ordering remain source-bound. |
+| Scope | Actual root binary/library, standard/custom test harness and separate generator callers share the collector. Admitted warning success, source refusal, compiler failure/recovery and target-default-feature tripwires run through those roles. Existing manifest/configuration/dynamic-target/source/role ownership and copied-execution controls remain. |
+| Failure | Public root/harness/generator compiler failures leave no inventory and recover; observer setup/spawn/publication/signal and strict consumer errors refuse. Source error propagation precedes inventory writing, and command status waits for the compiler. The constructor/consumer/public-caller composition is distinguished from injecting every private fault through the whole entrypoint. |
+
+The matrix keeps the trusted-host, pinned-toolchain, source-admission and supported path/encoding
+domain explicit. It establishes the implemented contract's bounded compatibility controls.
+Complete current-source/premise/mutation/integration verification and independent review remain
+before F30 signoff. Failed-baseline evidence and unknown `--only` selection are still owned native
+tool repairs, both scheduled before those full source measurements. No global adequacy result is
+inferred from compatibility closure.
+
+The dated native result is 2 named kills, strict exit 0, with no timeout, compiler refusal or
+unjudged result; each carries the new concurrency parent. Complete original/restored-copy
+CLI lists agree at 176 parents. All 1085 held regular inputs restore with modes and independent
+Python/system hashes; the gitlink is metadata only. All 37 producer-source pins bind, and nine
+false receipt summaries reject. Held native tree `163f93e9fcc9725c87f12f5aa5fe7c360a766d3e` precedes
+completion-doc/focused staging. Receipts are under `target/compiler-concurrent-writers/`;
+supplemental audit SHA-256 is `55d0ceaff9bb0b2eef4ec110ea65f36639d9e68200722a1eb202d7db3671dcdf`.
+
+The previous committed writer leaf seals with exact core, archive/index and saved raw
+reconstruction; all 279 earlier archives remain identical. Final staged focused/book/doctrine
+checks close the compatibility implementation subtree. The next owned unit preserves failed
+native-baseline evidence, followed by unknown-ID refusal and full source verification.

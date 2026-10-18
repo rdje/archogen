@@ -580,6 +580,173 @@ mod tests {
     }
 
     #[test]
+    fn actual_concurrent_observer_writers_publish_independent_complete_records() {
+        crate::trust_test_process::bounded!(
+            actual_concurrent_observer_writers_publish_independent_complete_records
+        );
+        use std::{
+            collections::BTreeSet,
+            io::Write,
+            process::Stdio,
+            time::{Duration, Instant},
+        };
+        let (out, compiler, session, base) = setup("concurrent-writers");
+        let environment = session.environment(&base).unwrap();
+        let mut expected = Vec::new();
+        let mut binaries = Vec::new();
+        for index in 0..8 {
+            let name = format!("concurrent_{index}");
+            let directory = out.join(&name);
+            fs::create_dir(&directory).unwrap();
+            binaries.push(directory.join(&name));
+            expected.push(vec![
+                "rustc".to_owned(),
+                "--crate-name".into(),
+                name,
+                "-".into(),
+                "--emit=dep-info,link".into(),
+                "--out-dir".into(),
+                directory.to_str().unwrap().to_owned(),
+            ]);
+        }
+        let mut children = Vec::new();
+        let mut pids = BTreeSet::new();
+        // Do not assert while a child owns an unreleased stdin. Every error below goes through
+        // the common close-and-wait path before an assertion can unwind this test.
+        let launched = (|| -> Result<(), String> {
+            for arguments in &expected {
+                let child = Command::new(&session.executable)
+                    .args(arguments)
+                    .current_dir(&session.cwd)
+                    .env_clear()
+                    .envs(environment.clone())
+                    .stdin(Stdio::piped())
+                    .stdout(Stdio::piped())
+                    .stderr(Stdio::piped())
+                    .spawn()
+                    .map_err(|error| error.to_string())?;
+                pids.insert(child.id());
+                children.push(child);
+            }
+            let reservations: BTreeSet<_> = pids
+                .iter()
+                .map(|pid| std::ffi::OsString::from(format!(".{pid}.part")))
+                .collect();
+            let deadline = Instant::now() + Duration::from_secs(5);
+            loop {
+                let names: BTreeSet<_> = fs::read_dir(&session.records)
+                    .map_err(|error| error.to_string())?
+                    .map(|entry| entry.map(|entry| entry.file_name()))
+                    .collect::<Result<_, _>>()
+                    .map_err(|error| error.to_string())?;
+                if names == reservations {
+                    for name in &names {
+                        let metadata = fs::symlink_metadata(session.records.join(name))
+                            .map_err(|error| error.to_string())?;
+                        if !metadata.is_file() || metadata.len() != 0 {
+                            return Err("a writer completed before source release".into());
+                        }
+                    }
+                    break;
+                }
+                if Instant::now() >= deadline {
+                    return Err(format!("concurrent reservations differ: {names:?}"));
+                }
+                std::thread::sleep(Duration::from_millis(5));
+            }
+            for child in &mut children {
+                if child
+                    .try_wait()
+                    .map_err(|error| error.to_string())?
+                    .is_some()
+                {
+                    return Err("a writer exited before source release".into());
+                }
+            }
+            for (index, child) in children.iter_mut().enumerate() {
+                let source = format!(
+                    r#"
+const _: () = assert!(option_env!("RUSTC_WRAPPER").is_none());
+const _: () = assert!(option_env!("ARCHOGEN_COMPILER_RECORDS").is_none());
+const _: () = assert!(option_env!("ARCHOGEN_COMPILER_SESSION").is_none());
+const _: () = assert!(option_env!("ARCHOGEN_COMPILER_ROLE").is_none());
+fn main() {{ println!("worker-{index}"); }}
+"#
+                );
+                child
+                    .stdin
+                    .as_mut()
+                    .ok_or("missing writer stdin")?
+                    .write_all(source.as_bytes())
+                    .map_err(|error| error.to_string())?;
+            }
+            Ok(())
+        })();
+        // Release all compiler inputs, even when a spawn/reservation/write failed, and reap
+        // every observer before examining results. The bounded outer worker guards a hang.
+        for child in &mut children {
+            drop(child.stdin.take());
+        }
+        let outputs: Vec<_> = children
+            .into_iter()
+            .map(|child| child.wait_with_output())
+            .collect();
+        assert!(launched.is_ok(), "{launched:?}");
+        assert_eq!(pids.len(), 8);
+        for output in outputs {
+            let output = output.unwrap();
+            assert!(output.status.success(), "{output:?}");
+            assert!(output.stdout.is_empty() && output.stderr.is_empty());
+        }
+        let mut observed = session.invocations().unwrap();
+        observed.sort();
+        expected.sort();
+        assert_eq!(observed, expected);
+        let files: Vec<_> = fs::read_dir(&session.records)
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .collect();
+        assert_eq!(files.len(), 8);
+        let mut recorded = BTreeSet::new();
+        for file in files {
+            let value = json::parse(&fs::read_to_string(&file).unwrap()).unwrap();
+            let Some(Json::Number(pid)) = value.get("pid") else {
+                panic!("native PID")
+            };
+            let pid = pid.parse::<u32>().unwrap();
+            assert!(pids.contains(&pid) && recorded.insert(pid));
+            assert_eq!(
+                file.file_name().unwrap(),
+                std::ffi::OsStr::new(&format!("{pid}.json"))
+            );
+            assert_eq!(value.get("exit"), Some(&Json::Number("0".into())));
+            assert_eq!(value.get("signal"), Some(&Json::Null));
+            assert_eq!(value.get("role_hex"), Some(&hex(&session.role)));
+            assert_eq!(value.get("session_hex"), Some(&hex(&session.identity)));
+            assert_eq!(
+                value.get("cwd_hex"),
+                Some(&hex(session.cwd.to_str().unwrap()))
+            );
+        }
+        assert_eq!(recorded, pids);
+        for (index, binary) in binaries.iter().enumerate() {
+            let output = Command::new(binary).output().unwrap();
+            assert!(output.status.success());
+            assert_eq!(output.stdout, format!("worker-{index}\n").as_bytes());
+        }
+        let fresh = compiler
+            .session("after-concurrent-role", &base, &session.cwd)
+            .unwrap();
+        assert_ne!(fresh.records, session.records);
+        assert_ne!(fresh.identity, session.identity);
+        assert_ne!(fresh.role, session.role);
+        assert!(run(&fresh, &base, &["rustc", "-vV"]).status.success());
+        assert!(fresh.invocations().unwrap().is_empty());
+        assert_eq!(fs::read_dir(&fresh.records).unwrap().count(), 1);
+        assert_eq!(fs::read_dir(&session.records).unwrap().count(), 8);
+    }
+
+    #[test]
     fn actual_query_records_reject_missing_stale_foreign_and_malformed_inputs() {
         crate::trust_test_process::bounded!(
             actual_query_records_reject_missing_stale_foreign_and_malformed_inputs

@@ -29,7 +29,7 @@ retains commands, controls, source identities and limits.
 rows above for both compile callers. Base environment/preflight and argv remain. Records require
 current schema/session/role/cwd, matching PID/filename and successful status. Unknown, malformed,
 partial, stale or unsuccessful provenance stops the inventory. UTF-8 interpretation is explicit.
-Artifact binding is implemented; compatibility and source/integration gates follow.
+Artifact/compatibility controls pass; source/integration gates follow.
 
 The production record retains the verified P2/native controls, bounded diagnostic matrix,
 legacy catalogue/reason retirements, historical controls and current premise revalidation.
@@ -40,6 +40,6 @@ Exact commands, controls, outcomes, failed attempts and scope are in the
 All new judgment files join .3's scope. The
 [artifact record](../../book/src/annex-trust-proofs.md#observed-compiler-artifact-binding) owns metadata/source
 selection, empty-input naming, direct relative paths, output refusals and actual/copy controls.
-Controls: [warning roles](../../book/src/annex-trust-proofs.md#compiler-warning-data-across-harness-and-generator-roles)
-and [paths/features](../../book/src/annex-trust-proofs.md#compiler-artifact-path-and-feature-compatibility).
-Lifecycle/concurrency and full source gates remain.
+The [complete compatibility matrix](../../book/src/annex-trust-proofs.md#compiler-provenance-compatibility-checkpoint)
+binds every contract row to controls and explicit source/domain premises.
+Full source/premise/integration verification remains .3.

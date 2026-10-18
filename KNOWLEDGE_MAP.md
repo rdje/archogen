@@ -82,7 +82,7 @@ justifies the split — the rows below appear as that happens.
   `trust_compiler.rs` controller and embedded `trust_compiler_observer.rs` collect actual compiler
   arguments independently of diagnostics. `docs/specs/trust/compiler-provenance-contract.md` and
   the book document verified collection and `trust_artifact.rs` metadata-bound output selection;
-  compatibility/source checkpoints remain. `xtask/trust.retired-equivalents` preserves
+  full source checkpoints remain. `xtask/trust.retired-equivalents` preserves
   historical delimiter controls without making them active production reasons.
 - `ROADMAP.md` — the program's direction, milestone exit gates, and the F01–F30 acceptance
   matrix. The single source of what "done" means.

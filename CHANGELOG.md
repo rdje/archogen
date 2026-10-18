@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — close bounded compiler-provenance compatibility
+
+`ARCHOGEN-M3-0769` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.3`), `2026-10-18`.
+
+- Hold actual overlapping observer/rustc writers with an input-release barrier, complete
+  native records/argv, actual executable markers and independent fresh-role query recovery.
+- Native publication/cleanup2K strict0/full176;1085 original/copy inputs/modes/hashes restore,
+  37 pins/nine false receipts bind. Production/prior controls/reasons unchanged.
+- Account for every contract row with permanent controls or explicit source/domain premises;
+  seal prior writer leaf and synchronize the complete book/canonical/live records.
+- Final focused gates close implementation/compatibility only. Native baseline-evidence
+  and unknown-ID repairs precede full current-source/premise/integration/F30 verification.
+
 ## archogen — hold actual compiler writer lifecycle
 
 `ARCHOGEN-M3-0768` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.2`), `2026-10-18`.
