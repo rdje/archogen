@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.6`. `PROGRAM` resumes at `PROGRAM.71`. `M2`'s frontier is `M2.7.4`, on the director; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.9.6.3.2.2.14.3.2.2.2.1` finite-iterator proofs.
-  Prove the two end-elements edits over collections of at most two; remaining seven survivors follow.
+- **Next action:** `M3.6.9.6.3.2.2.14.3.2.2.2.2` assessment of seven survivors.
+  Assess the remaining seven against actual producer/caller domains; split witnessed repairs/proofs.
   Final full sweeps and review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.

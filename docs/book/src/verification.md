@@ -227,8 +227,9 @@ $ cargo xtask mutate --only trust-cargo-failure-path-framing-removed
 ```
 
 The separate [complete helper sweep](annex-trust-proofs.md#complete-repaired-cargo-diagnostic-measurement)
-measures all 51 current edits and records each outcome. Its nine survivors remain open; the catalogue
-reversal alone does not establish mutation adequacy.
+measures all 51 current edits and records each outcome. The [finite-iterator proofs](annex-trust-proofs.md#finite-cargo-path-iterator-proofs)
+resolve two of its historical nine survivors; seven remain open. The catalogue reversal alone does not
+establish mutation adequacy.
 
 A defect that does not even compile is a broken entry, never a "kill". A run that is interrupted
 leaves a marker, and the next run refuses to start until the file is restored. Each entry's tests run under a time

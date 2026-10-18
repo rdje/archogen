@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — prove the bounded Cargo path iterators
+
+`ARCHOGEN-M3-0745` (leaf `M3.6.9.6.3.2.2.14.3.2.2.2.1`), `2026-10-18`.
+
+- Exact constructors supply one or two owned paths/spellings: ends filtering skips nothing and
+  preserves order. Permanent controls compile actual helpers/traces and reject wider constructors,
+  wrong positive/negative/wider oracles and widened source premises.
+- Append only two precise reasons after proof; actual guarded native replay reports2 E/strict0.
+  The complete33 operator suite passes; all1051 original/current copied regular inputs restore,
+  seven false receipts reject and older source/control/reason prefixes stay exact.
+- Canonical/book/live align; production is unchanged and seven other helper survivors remain open.
+
 ## archogen — measure the complete repaired Cargo diagnostic helper
 
 `ARCHOGEN-M3-0744` (leaf `M3.6.9.6.3.2.2.14.3.2.2.1`), `2026-10-18`.

@@ -671,3 +671,22 @@ survivors are scheduled under `.14.3.2.2.2`, finite-iterator proofs first, then 
 assessment of the remaining seven. The
 [complete book table](../../book/src/annex-trust-proofs.md#complete-repaired-cargo-diagnostic-measurement)
 records each actual outcome and a finishing parent or refusal reason; no whole-file adequacy is claimed.
+
+
+## Finite diagnostic-path iterator equivalences
+
+`M3.6.9.6.3.2.2.14.3.2.2.2.1` (`2026-10-18`) proves the actual end-elements edits over
+cargo_error_line's owned path vector and raw/canonical spelling chain. The complete vector constructor
+has cwd plus at most one last-selected target. The chain is once(path) plus a precomputed
+Option<PathBuf> from canonicalization. Both have one or two positions; every position is an end.
+The counter cannot overflow, peeking moves concrete paths without user/FS callbacks, and the
+unchanged loop work observes the same values and order.
+
+Permanent controls bind both exact constructors and compile the original/actual edits with literal
+helper outputs and ordered traces. Successful wider Vec-backed constructors lose a middle value;
+wrong positive/negative/wider oracles fail, and widened source-premise controls refuse. Add only the
+two scoped reasons after proof. Native2 E/strict0 and the full33 operator controls pass; all1051
+original/current copied inputs restore and seven altered receipts reject. Existing source/test/reason
+prefixes stay exact. The other seven current survivors remain owned in .14.3.2.2.2.2; no broad adequacy.
+The [book proof](../../book/src/annex-trust-proofs.md#finite-cargo-path-iterator-proofs) records examples
+and revalidation triggers: changed constructors, types, iterator or body require a fresh judgment.

@@ -1130,6 +1130,132 @@ fn main() {
 
 
 class IteratorTests(DiscoveryFixture):
+    def test_actual_cargo_path_end_loops_preserve_the_bounded_collections(self):
+        source = (ROOT / "xtask/src/trust.rs").read_text()
+        first = source.index("fn cargo_error_line(")
+        last = source.index("\n/// What cargo printed:", first)
+        helper = source[first:last]
+        namespace, candidates = self.discovery(source)
+        constructor = """fn cargo_error_line(stderr: &str, cwd: &Path, env: &[(String, String)]) -> String {
+    let mut paths = vec![cwd.to_path_buf()];
+    if let Some((_, target)) = env.iter().rfind(|(key, _)| key == "CARGO_TARGET_DIR") {
+        let target = Path::new(target);
+        paths.push(if target.is_absolute() {
+            target.to_path_buf()
+        } else {
+            cwd.join(target)
+        });
+    }
+    let mut prefixes = BTreeSet::new();
+"""
+        self.assertTrue(helper.startswith(constructor), "revalidate the exact at-most-two path constructor")
+        outer = "    for path in paths {"
+        inner = "        for spelling in std::iter::once(path).chain(canonical) {"
+        self.assertIn(outer + "\n        let canonical = fs::canonicalize(&path).ok();\n" + inner, helper)
+        families = []
+        for header in (outer, inner):
+            family = [m for m in candidates if "\n".join(namespace["lines"][m[0]:m[1]]) == header]
+            self.assertEqual(len(family), 3)
+            self.assertIn("first ||", family[2][3], "select the actual ends edit")
+            families.append(family)
+
+        def module(text, name):
+            body = text[text.index("fn cargo_error_line("):text.index("\n/// What cargo printed:")]
+            return (f"mod {name} {{\nuse std::{{collections::BTreeSet, fs, path::Path}};\n"
+                    + body.replace("fn cargo_error_line(", "pub fn cargo_error_line(", 1) + "\n}\n")
+
+        modules = [module(source, "original")]
+        modules += [module(namespace["apply_mutant"](family[2]), name)
+                    for family, name in zip(families, ("path_ends", "spelling_ends"))]
+
+        def trace(name, arguments, header, item):
+            return (f"fn {name}({arguments}) -> Vec<std::path::PathBuf> {{\n"
+                    "    let mut seen = Vec::new();\n" + header + "\n"
+                    f"        seen.push({item});\n    }}\n    seen\n}}\n")
+
+        functions = []
+        for suffix, header in zip(("paths", "spellings"), (outer, inner)):
+            arguments = ("paths: Vec<std::path::PathBuf>" if suffix == "paths"
+                         else "path: std::path::PathBuf, canonical: Option<std::path::PathBuf>")
+            item = "path" if suffix == "paths" else "spelling"
+            family = families[0 if suffix == "paths" else 1]
+            for name, prefix in zip(("original", "first", "last", "ends"), [header] + [m[3] for m in family]):
+                functions.append(trace(name + "_" + suffix, arguments, prefix, item))
+            # The same actual edit compiles on a wider constructor but then loses the middle.
+            wider = arguments.replace("Option<std::path::PathBuf>", "Vec<std::path::PathBuf>")
+            functions.append(trace("wider_" + suffix, wider, family[2][3], item))
+        program, binary = self.base / "cargo-path-ends.rs", self.base / "cargo-path-ends"
+        program.write_text("\n".join(modules + functions) + r'''
+fn main() {
+    use std::{fs, path::PathBuf};
+    let base = PathBuf::from(std::env::args().nth(1).unwrap());
+    let cwd = base.join("with\nerror-cwd");
+    let target = base.join("with'\\\nerror-target");
+    let real = base.join("with\nerror-real");
+    let alias = base.join("with\nerror-alias");
+    for path in [&cwd, &target, &real] { fs::create_dir_all(path).unwrap(); }
+    std::os::unix::fs::symlink(&real, &alias).unwrap();
+    let expected = "error: could not compile `a` (bin \"a\") due to 1 previous error";
+    for working in [&cwd, &alias, &base.join("missing\nerror-cwd")] {
+        for artifact in [None, Some(target.clone()), Some(alias.clone()), Some(PathBuf::from("relative\nerror-target"))] {
+            let env: Vec<_> = artifact.as_ref().map(|p|
+                vec![("CARGO_TARGET_DIR".to_owned(), p.display().to_string())]).unwrap_or_default();
+            let mut records = String::new();
+            let resolved_artifact = artifact.map(|p| if p.is_absolute() { p } else { working.join(p) });
+            for path in [working.to_path_buf()].into_iter().chain(resolved_artifact) {
+                for spelling in std::iter::once(path.clone()).chain(fs::canonicalize(&path).ok()) {
+                    records.push_str(&format!("warning: {}\n", spelling.display()));
+                    records.push_str(&format!("Running '{}': refused\n",
+                        spelling.display().to_string().replace('\'', "'\\''")));
+                }
+            }
+            for stderr in [String::new(), format!("{records}{expected}\n"), format!("{records}{expected}\r\n")] {
+                let literal = if stderr.is_empty() { "" } else { expected };
+                assert_eq!(original::cargo_error_line(&stderr, working, &env), literal);
+                assert_eq!(path_ends::cargo_error_line(&stderr, working, &env), literal);
+                assert_eq!(spelling_ends::cargo_error_line(&stderr, working, &env), literal);
+            }
+        }
+    }
+    let (a, b, c) = (PathBuf::from("cwd"), PathBuf::from("target"), PathBuf::from("third"));
+    for paths in [vec![a.clone()], vec![a.clone(), b.clone()], vec![a.clone(), a.clone()]] {
+        assert_eq!(original_paths(paths.clone()), paths);
+        assert_eq!(ends_paths(paths.clone()), paths);
+        assert_eq!(first_paths(paths.clone()), vec![paths[0].clone()]);
+        assert_eq!(last_paths(paths.clone()), vec![paths.last().unwrap().clone()]);
+    }
+    for canonical in [None, Some(b.clone()), Some(a.clone())] {
+        let expected = match canonical.clone() { None => vec![a.clone()], Some(p) => vec![a.clone(), p] };
+        assert_eq!(original_spellings(a.clone(), canonical.clone()), expected);
+        assert_eq!(ends_spellings(a.clone(), canonical.clone()), expected);
+        assert_eq!(first_spellings(a.clone(), canonical.clone()), vec![a.clone()]);
+        assert_eq!(last_spellings(a.clone(), canonical.clone()), vec![canonical.unwrap_or(a.clone())]);
+    }
+    assert_eq!(wider_paths(vec![a.clone(), b.clone(), c.clone()]), vec![a.clone(), c.clone()]);
+    assert_eq!(wider_spellings(a.clone(), vec![b.clone(), c.clone()]), vec![a.clone(), c.clone()]);
+    assert_ne!(wider_paths(vec![a.clone(), b.clone(), c.clone()]), vec![a.clone(), b.clone(), c.clone()]);
+    match std::env::args().nth(2).as_deref() {
+        Some("wrong-positive") => assert_eq!(first_paths(vec![a.clone(), b.clone()]), vec![a, b], "wrong positive oracle"),
+        Some("wrong-negative") => assert_ne!(ends_paths(vec![a.clone(), b.clone()]), vec![a, b], "wrong negative oracle"),
+        Some("wrong-wider") => assert_eq!(wider_spellings(a.clone(), vec![b.clone(), c.clone()]), vec![a, b, c], "wrong wider oracle"),
+        _ => {}
+    }
+    println!("cargo path ends: actual helpers and ordered traces held; wider constructors refused");
+}
+''')
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        fixture = self.base / "normal"
+        self.assertIn("actual helpers and ordered traces held", self.bounded([str(binary), str(fixture)]))
+        for argument, message in (("wrong-positive", "wrong positive oracle"),
+                                  ("wrong-negative", "wrong negative oracle"),
+                                  ("wrong-wider", "wrong wider oracle")):
+            with self.assertRaisesRegex(AssertionError, message):
+                self.bounded([str(binary), str(self.base / argument), argument])
+        records = namespace["load_equivalents"](ROOT / "xtask/trust.equivalents")
+        for family in families:
+            self.assertTrue(namespace["mutation_key"](family[2]) in records,
+                            "the actual bounded Cargo path loop requires its own precise reason")
+
     def test_the_actual_two_member_pair_loop_preserves_order_and_early_returns(self):
         source = (ROOT / "xtask/src/trust.rs").read_text()
         self.assertIn("pub pair: Option<(String, String)>", source)

@@ -905,3 +905,62 @@ implementation is not opened. Seven altered receipts refuse: false pass exit, mi
 candidate, wrong replacement, wrong operator count, unlisted E and missing finishing kill names.
 Production, tests, catalogue, native producer and existing equivalence reasons remain byte-identical
 to the committed repair. This is a complete bounded assessment, not whole-file adequacy or remote CI.
+
+
+### Finite Cargo path iterator proofs
+
+Proof slice `.14.3.2.2.2.1` (`2026-10-18`) resolves only `L685.iter.234` and `L687.iter.237`.
+Their end-elements rewrites preserve every element because the current constructors supply one or
+two elements. This is a source argument; the finite compiled examples support it rather than define
+the universe of inputs.
+
+The outer loop consumes an owned `Vec<PathBuf>`. Its constructor starts with cwd and adds at most
+one target, from the last matching environment entry. The exact complete constructor is held by a
+permanent source guard. Relative targets are joined to cwd before recording; duplicate values do not
+increase the constructor's number of positions.
+
+The inner loop is the concrete chain `std::iter::once(path).chain(canonical)`, where `canonical` was
+already computed as `fs::canonicalize(&path).ok()`, an `Option<PathBuf>`. There is always the raw
+spelling and optionally its canonical spelling. A missing path supplies no canonical spelling.
+
+For a sequence of length one, its sole element is both first and last. For length two, its positions
+are first and last respectively. The rewrite therefore skips nothing and preserves order. Its counter
+advances at most twice and cannot overflow. Peeking merely moves concrete owned path values; it calls
+no user iterator or filesystem operation. Canonicalization remains before the spelling loop, and the
+unchanged ancestor/prefix work receives exactly the same values in the same order. The argument also
+holds when raw and canonical spellings coincide or the target equals cwd.
+
+| Actual current edit | Proven constructor | Native replay |
+| --- | --- | --- |
+| `L685.iter.234` | cwd plus optional target; length one or two | equivalent |
+| `L687.iter.237` | raw spelling plus optional canonical spelling; length one or two | equivalent |
+
+The permanent control compiles the actual original helper and each actual native replacement. It
+checks literal diagnostics and empty output, with line endings of either newline alone or carriage
+return followed by newline. Separate traces hold path order.
+Its filesystem cases include aliases, absent paths, relative targets and repeated values. These helper
+records are constructed controls; the separate native parent replay exercises real Cargo builds.
+
+Wider constructors mark the boundary concretely. The same actual edit compiles for a vector holding
+`[cwd, target, third]` and produces `[cwd, third]`. A chain with a raw path followed by a vector of
+two more spellings loses its middle too. First/last-only traces differ on distinct bounded values.
+Wrong positive, negative and wider-domain oracles all fail. Independent source-premise controls also
+reject insertion of another path or expansion of the canonical iterator before classification.
+
+```console
+$ python3 -I -B xtask/mutation_sweep_tests.py "$PWD" \
+    IteratorTests.test_actual_cargo_path_end_loops_preserve_the_bounded_collections -v
+$ python3 -I -B xtask/mutation_sweep_tests.py "$PWD" -q
+```
+
+The exact parent passes and the complete operator suite passes 33 controls. After the source/compiled
+proof, the per-file record gains only these precise reasons. The guarded actual native replay attempts
+both candidates and reports **two equivalent, strict exit 0**; `iter=0/2` compiler refusals. This
+selected replay does not validate unrelated equivalents.
+
+All 1051 original and copied regular inputs restore, with modes and Python/system hashes. Seven
+altered receipts refuse. Earlier source, operator controls, catalogue and reason prefixes remain exact.
+The production helper is unchanged. The preceding full measurement's nine survivors remain its
+historical result; these proofs resolve two obligations, leaving seven for source/domain assessment.
+Revalidate if a constructor, concrete type, iterator or loop body changes. No arbitrary vector or chain,
+whole-file adequacy or remote CI claim follows.

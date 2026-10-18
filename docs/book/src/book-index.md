@@ -180,6 +180,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Final prefix/helper checkpoint — [Annex C: Trust proof records](annex-trust-proofs.md#final-prefixhelper-checkpoint)
 - Finished work leaves the task trees — [Annex B: The checks that keep the repository
   honest](annex-repository.md#finished-work-leaves-the-task-trees)
+- Finite Cargo path iterator proofs — [Annex C: Trust proof
+  records](annex-trust-proofs.md#finite-cargo-path-iterator-proofs)
 - freertos-kernel — [What this project relies on from outside](ledger.md#freertos-kernel)
 - fsmgen — [What this project relies on from outside](ledger.md#fsmgen)
 
