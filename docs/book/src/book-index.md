@@ -411,6 +411,7 @@ a change that leaves it stale, so it is never edited by hand.
 - **RP2350** — [definition](glossary.md), [Where generated systems run](targets.md), [What this project relies on from
   outside](ledger.md)
 - rp2350 — [What this project relies on from outside](ledger.md#rp2350)
+- run_cargo locality preflight — [Annex C: Trust proof records](annex-trust-proofs.md#run_cargo-locality-preflight)
 - **runtime** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [What a report may claim](evidence.md), [What the scheduling
   checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [Checks that
@@ -433,7 +434,8 @@ a change that leaves it stale, so it is never edited by hand.
 - semulith — [What this project relies on from outside](ledger.md#semulith)
 - Sets: what a part accepts — [Matching an offer to a requirement](matching.md#sets-what-a-part-accepts)
 - **SHA-256** — [definition](glossary.md), [What a report may claim](evidence.md), [Generated-sources test
-  adequacy](trust-adequacy.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
+  adequacy](trust-adequacy.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C:
+  Trust proof records](annex-trust-proofs.md)
 - **shared item** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
 - Shell input storage and invocation environment — [Annex B: The checks that keep the repository
   honest](annex-repository.md#shell-input-storage-and-invocation-environment)

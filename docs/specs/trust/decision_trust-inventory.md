@@ -565,6 +565,12 @@ beside its pair's builds, the comparison-harness item's. A change to any of thes
   misreads a form is shared with the generator and unseen by this gate; a form's review reads its text, not the
   gate's reading of it (R4 remark 9).
 
+Mutation preflight `M3.6.9.6.3.2.2.14.1` (`2026-10-18`) binds the complete `run_cargo` operator
+region and observes actual environment-omission edits with a write-free compiled child. Production
+setup remains unchanged. An installed-host, parameterized OS write guard and real parent baseline
+precede mutation writers; [the book records the reproducible boundary and its limits](../../book/src/annex-trust-proofs.md#run_cargo-locality-preflight).
+No current mutant classification follows from that preflight.
+
 ## Why
 
 - §4.4 and §14.4 make independence a disclosed, reviewed property rather than a crate-name claim. A dependency graph

@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — bind run_cargo edits and verify local execution preflight
+
+`ARCHOGEN-M3-0740` (leaf `M3.6.9.6.3.2.2.14.1`), `2026-10-18`.
+
+- Bind all 11 historical edits to the complete current 12, including the new fixed-compiler statement;
+  retain four initial survivor obligations, exact raw edits and the limited line-identifier normalization.
+- Exact compiled passive original/six edits expose dropped child stores without launching build writers.
+  A parameterized installed-host OS profile permits project writes and denies five operations outside
+  its writable subtree; identical unprotected controls succeed on the same project-local targets.
+- The guarded real parent selection passes 141 tests. Production, controls, reasons and pins stay exact;
+  book reproduction and live pointer advance to guarded measurement, with no current mutation result/E.
+- Seal committed prefix/helper task records through the published workflow; reconstruction and older
+  archive/index preservation pass. No book limit or policy ceiling changes.
+
+
 ## archogen — close the prefix/helper integration checkpoint
 
 `ARCHOGEN-M3-0739` (leaf `M3.6.9.6.3.2.2.13.3.2.2`), `2026-10-18`.

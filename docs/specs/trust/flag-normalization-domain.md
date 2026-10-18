@@ -672,8 +672,9 @@ The maintained census restores all current originals (1046) against the staged a
 native-copy population (1043) restores against its prior complete-replay epoch; borrowed index metadata
 proves no copied index/gitlink contents. Actual code, controls, reasons and repaired handoff source stay
 exact. Five false activation/result bindings refuse. Later closure prose has separate pinned book and
-staged checks. This closes `.13`, the prefix/helper cohort; run_cargo binding/locality preflight `.14.1`
-is next. Remaining source obligations, final whole-file sweeps and independent review stay open.
+staged checks. This closes `.13`, the prefix/helper cohort. The following run_cargo preflight `.14.1`
+is recorded in the [inventory contract](decision_trust-inventory.md) and book; guarded measurement
+follows in `.14.2`. Remaining source obligations, final whole-file sweeps and independent review stay open.
 
 ## Retrieved source identities
 

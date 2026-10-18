@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.6`. `PROGRAM` resumes at `PROGRAM.71`. `M2`'s frontier is `M2.7.4`, on the director; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.9.6.3.2.2.14.1` run_cargo source binding and locality preflight.
-  Establish a volume-local execution boundary before environment-omission mutation writers.
+- **Next action:** `M3.6.9.6.3.2.2.14.2` complete current run_cargo measurement.
+  Reconstruct/recheck the book-recorded OS write guard; execute all twelve edits inside it.
   Final full sweeps and review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.

@@ -377,6 +377,139 @@ edits and establish volume-local execution before measuring environment-omission
 survivors are obligations, with no current classification inferred from historical results. Final
 whole-file adequacy, remaining source groups and independent review remain open.
 
+### run_cargo locality preflight
+
+Preflight `.14.1` (`2026-10-18`) binds the complete current `run_cargo` region. Its eleven initial
+edits map uniquely to twelve current edits; the extra statement selects the fixed compiler. Apart
+from that three-line insertion, the function is byte-identical. Generated iterator identifiers carry
+source line numbers, so only that verified identifier prefix is normalized for matching. Raw edits
+remain recorded. The four initial survivors stay historical obligations; no current outcome is inferred.
+
+This helper applies the cleared child environment. Its end-elements iterator edit removes middle
+settings, including Cargo home, build target and temporary aliases. Before any altered helper can
+launch a build, the measurement needs a write boundary that still holds when those settings disappear.
+An exact compiled original and six actual edits are observed using a Rust executable named `cargo`
+that only prints selected metadata. It creates no artifacts or caches and runs no Cargo/Rustup code.
+The original forwards every local store and clears the parent sentinel. The end-elements edit drops
+middle stores; last-only and no-environment edits cannot spawn the controlled child in this setup.
+These observations are passive controls, not native kill, equivalence or compiler-refusal results.
+
+On the installed macOS host, the preflight uses the OS `sandbox-exec` command and this exact profile.
+The executable and toolchain are necessary read-only OS dependencies. `/dev/null` is the sole explicit
+non-project output exception: descriptor metadata verifies it is a character device, not project storage.
+The writable path is passed at runtime, so the profile contains no checkout-specific path.
+
+```bash
+mkdir -p target/run-cargo-preflight
+cat > target/run-cargo-preflight/mutation-volume.sb <<'PROFILE'
+(version 1)
+(allow default)
+(deny file-write*)
+(allow file-write* (subpath (param "WRITABLE_ROOT")))
+(allow file-write-data (literal "/dev/null"))
+PROFILE
+```
+
+Profile SHA-256: `2b3fbe199bddb4ba84c453a23334c7025308b06127ce3cc96f74b2a17680eedd`.
+Prepare local shell stores as described in [verification](verification.md), before running
+commands or redirections. Start with a fresh project-owned control fixture:
+
+```bash
+mkdir -p target/run-cargo-preflight/allowed target/run-cargo-preflight/denied
+printf 'held\n' > target/run-cargo-preflight/denied/existing
+ln -s ../denied target/run-cargo-preflight/allowed/escape
+```
+
+Save the following control as `target/run-cargo-preflight/guard-probe.py`. It permits one write,
+requires permission errors for the listed forbidden operations and verifies held content. Every
+probe target is inside the repository volume, including paths deliberately outside the narrower
+writable subtree. No off-volume write is attempted.
+
+```python
+from pathlib import Path
+import errno
+import json
+import os
+import stat
+
+root = Path.cwd()
+fixture = root / "target/run-cargo-preflight"
+allowed = fixture / "allowed"
+denied = fixture / "denied"
+assert allowed.is_dir() and denied.is_dir()
+
+(allowed / "positive").write_text("allowed\n")
+assert (allowed / "positive").read_text() == "allowed\n"
+
+operations = [
+    ("create", lambda: (denied / "new").write_text("forbidden")),
+    ("truncate", lambda: (denied / "existing").write_text("forbidden")),
+    ("mkdir", lambda: (denied / "new-dir").mkdir()),
+    ("unlink", lambda: (denied / "existing").unlink()),
+    ("symlink-target", lambda: (allowed / "escape/existing").write_text("forbidden")),
+]
+refused = []
+for label, action in operations:
+    try:
+        action()
+    except PermissionError as error:
+        assert error.errno in (errno.EPERM, errno.EACCES)
+        refused.append(label)
+    else:
+        raise AssertionError("write boundary failed: " + label)
+
+assert (denied / "existing").read_text() == "held\n"
+assert not (denied / "new").exists()
+assert not (denied / "new-dir").exists()
+with open(os.devnull, "wb") as stream:
+    assert stat.S_ISCHR(os.fstat(stream.fileno()).st_mode)
+    stream.write(b"null-device-control")
+
+report = {
+    "qualification": (
+        "Installed-host parameterized policy controls only; forbidden targets remain "
+        "within project volume. No off-volume write attempt or universal OS security proof."
+    ),
+    "positive_write": True,
+    "refused": refused,
+    "denied_fixture_exact": True,
+    "null_is_character_device": True,
+}
+(allowed / "guard-observations.json").write_text(json.dumps(report, indent=2) + "\n")
+print(
+    "guard: allowed write succeeds; five forbidden operations refuse; "
+    "held bytes exact; null is a character device"
+)
+```
+
+Run the control with only its `allowed` directory writable:
+
+```bash
+sandbox-exec -D WRITABLE_ROOT="$PWD/target/run-cargo-preflight/allowed" \
+  -f target/run-cargo-preflight/mutation-volume.sb \
+  python3 -I -B target/run-cargo-preflight/guard-probe.py
+```
+
+The measured control passes. Create, truncate, mkdir, unlink and a write through the symlink all
+refuse, with held bytes unchanged. The identical operations succeed without the guard on those same
+project-local paths, after which the held fixture is restored; ordinary permissions do not explain
+the denials. These are installed-host observations, not a universal OS security proof.
+
+For actual parent tests, pass the current repository as the writable root, keeping the same policy:
+
+```bash
+sandbox-exec -D WRITABLE_ROOT="$PWD" \
+  -f target/run-cargo-preflight/mutation-volume.sb \
+  cargo test -q -p xtask -- trust:: trust_generated:: trust_gate:: --skip route_tests
+```
+
+The actual unmutated baseline reports `141 passed; 0 failed; 0 ignored`. This proves compatibility of
+that baseline with the guard. The next measurement must retain its exact guarded native command,
+profile hash, all candidate outcomes and input restoration. A guard denial is evidence to investigate,
+never an equivalence waiver or an invented finishing kill. Changed or unsupported hosts must establish
+an equivalent evidenced boundary before running environment-omission build variants. Source, existing
+controls, equivalence reasons and production behavior remain unchanged by this preflight.
+
 ## Mutation measurements and controls
 
 Whether the instrument's tests hold the generated-sources rules — what a program reads, the chain, the blob rule,
