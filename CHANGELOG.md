@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — measure the complete guarded run_cargo cohort
+
+`ARCHOGEN-M3-0741` (leaf `M3.6.9.6.3.2.2.14.2`), `2026-10-18`.
+
+- Reconstruct/recheck the committed write guard, then measure all 12 exact current edits: nine named
+  kills and three diagnostic matcher survivors, strict exit 1. No refusal, timeout or unjudged outcome.
+- Trace the environment end-elements kill: lost target isolation reuses the shared dependency on the
+  second root, omitting its compiler command/unit despite successful builds. Actual inventory and an
+  independent Cargo target intervention establish the cause, with local stores and guard preserved.
+- All 1047 originals/current copies restore; seven false receipts reject; source/controls/reasons stay
+  exact. Book/live sync and three survivor obligations advance to diagnostic matcher assessment.
+
+
 ## archogen — bind run_cargo edits and verify local execution preflight
 
 `ARCHOGEN-M3-0740` (leaf `M3.6.9.6.3.2.2.14.1`), `2026-10-18`.

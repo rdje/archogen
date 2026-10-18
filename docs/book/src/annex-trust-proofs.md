@@ -510,6 +510,74 @@ never an equivalence waiver or an invented finishing kill. Changed or unsupporte
 an equivalent evidenced boundary before running environment-omission build variants. Source, existing
 controls, equivalence reasons and production behavior remain unchanged by this preflight.
 
+### Complete guarded run_cargo measurement
+
+Measurement `.14.2` (`2026-10-18`) reconstructs the committed guard and control sources exactly,
+rechecks the real write-boundary controls, then runs the unchanged native CLI and its parent selection
+inside that guard. The unmutated copy passes. Every edit in the complete current helper region is judged:
+
+```text
+9 named finishing kills
+3 survivors
+0 equivalent, compiler-refused, timed-out or unjudged outcomes
+strict native exit: 1
+```
+
+| Current edit | Change | Actual result |
+| --- | --- | --- |
+| `L678.stmt.231` | Drop argument, working-directory and cleared-environment setup | killed |
+| `L679.iter.232` | Forward only the first environment entry | killed |
+| `L679.iter.233` | Forward only the last environment entry | killed |
+| `L679.iter.234` | Forward only the two end entries | killed |
+| `L680.stmt.235` | Drop each environment assignment | killed |
+| `L684.stmt.236` | Drop the fixed compiler selector | killed |
+| `L688.cond.237` | Always take the unsuccessful-command branch | killed |
+| `L688.cond.238` | Always take the successful-command branch | killed |
+| `L688.not.239` | Reverse the success check | killed |
+| `L691.dir.240` | Select a line containing `error` | survived |
+| `L691.lit.241` | Select a line starting with `erro` | survived |
+| `L691.lit.242` | Select a line starting with `rror` | survived |
+
+The native log retains every finishing test name and the per-operator attempted/refused accounting.
+The global listing is a catalogue, not attempted coverage outside this helper. The three survivors
+are explicit obligations under `.14.3`; strict adequacy is still unmet. No equivalence is added.
+
+#### Why the environment end-elements edit now fails
+
+The original environment at the initial measurement ended with `CARGO_TARGET_DIR`. Its two-end-entry
+edit retained that setting. The current environment ends with `TEMP`, so the same constructor now
+omits the target setting as well as other middle entries. Source and raw edit identities remain bound;
+the historical result describes its historical context.
+
+The existing shared-package test passes with the original and fails with the current actual edit.
+Inspection of the resulting public inventory shows no refusals: the first root has units for `a` and
+`common`, while the second has only `b`. The shared dependency was silently absent from that second
+root’s compiler records. Successful builds alone do not establish a complete inventory.
+
+An independent public Cargo experiment isolates the target-directory choice. It builds identical
+tracked fixture sources in a fresh workspace for each mode, keeping every home/temp setting local
+and preserving the OS guard. Both root builds succeed in both modes:
+
+| Target arrangement | Root | Cargo artifact `fresh` for `common` | New compiler command for `common` |
+| --- | --- | --- | --- |
+| Distinct target per root | `a` | false | present |
+| Distinct target per root | `b` | false | present |
+| Shared default target | `a` | false | present |
+| Shared default target | `b` | true | absent |
+
+The inventory reads verbose compiler invocations. A warm shared target lets Cargo reuse the dependency
+without another invocation, so its second-root unit is missing. The actual mutated inventory, native
+Cargo JSON/verbose records and target-only intervention establish this cause. The production helper
+retains target isolation, and its existing parent test detects this omission. The guard-denial concern
+was investigated before accepting this result as coverage.
+
+All captured originals and the current mutation copy restore (1047 regular inputs each), with native
+modes, sizes and Python/system hashes checked. The copy check borrows original index fields and does
+not prove copied Git index or gitlink contents. Seven altered receipts reject; existing source, tests,
+operator catalogue, equivalence reasons and native tooling stay exact. Later closure prose receives
+separate pinned-book and staged checks. The next slice assesses the three diagnostic matcher survivors
+against exact compiled helpers and supported pinned Cargo output, including independent expected lines.
+
 ## Mutation measurements and controls
 
 Whether the instrument's tests hold the generated-sources rules — what a program reads, the chain, the blob rule,

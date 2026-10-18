@@ -571,6 +571,15 @@ setup remains unchanged. An installed-host, parameterized OS write guard and rea
 precede mutation writers; [the book records the reproducible boundary and its limits](../../book/src/annex-trust-proofs.md#run_cargo-locality-preflight).
 No current mutant classification follows from that preflight.
 
+The following complete guarded measurement `.14.2` judges all twelve current edits: nine named kills
+and three diagnostic matcher survivors, strict exit one. The end-elements edit now drops target
+isolation: a successful mutated inventory omits common from the second root after Cargo reuses its
+artifact. An independent omission-only public Cargo intervention confirms fresh/no-command behavior
+while all home/temp settings remain local. Original production retains isolated targets; the existing
+shared-package parent catches this altered behavior. The book records full results and restoration;
+matcher assessment `.14.3.1` follows, with no cohort or full-production adequacy claim.
+
+
 ## Why
 
 - §4.4 and §14.4 make independence a disclosed, reviewed property rather than a crate-name claim. A dependency graph
