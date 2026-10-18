@@ -6295,6 +6295,104 @@ pub(crate) mod tests {
             );
         }
     }
+
+    #[test]
+    fn cargo_source_paths_with_diagnostic_substrings_remain_in_configuration() {
+        crate::trust_test_process::bounded!(
+            cargo_source_paths_with_diagnostic_substrings_remain_in_configuration
+        );
+        let f = two_roots(
+            "retained-diagnostic-source-paths",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &[
+                (
+                    "crates/a/Cargo.toml",
+                    manifest("a", "[[bin]]\nname = \"a\"\npath = \"src/kept--json.rs\"\n"),
+                ),
+                ("crates/a/src/kept--json.rs", "fn main() {}\n".to_owned()),
+                (
+                    "crates/b/Cargo.toml",
+                    manifest("b", "[lib]\npath = \"src/kept--error-format.rs\"\n"),
+                ),
+                (
+                    "crates/b/src/kept--error-format.rs",
+                    "pub fn f() {}\n".to_owned(),
+                ),
+            ],
+        );
+        let inventory = written(f.run());
+        // These are committed target paths, not diagnostic options despite their interior substrings.
+        for (root, source) in [
+            ("gen", "crates/a/src/kept--json.rs"),
+            ("chk", "crates/b/src/kept--error-format.rs"),
+        ] {
+            let units = program(&inventory, root).get("units").unwrap().elements();
+            assert_eq!(units.len(), 1, "{root} has exactly its own compiled unit");
+            let arguments: Vec<_> = units[0]
+                .get("configuration")
+                .unwrap()
+                .elements()
+                .iter()
+                .map(|arg| arg.as_str().expect("a configuration argument is text"))
+                .collect();
+            assert!(
+                arguments.contains(&source),
+                "{root} lost its source argument {source:?}: {arguments:?}"
+            );
+            assert!(units[0].get("files").unwrap().get(source).is_some());
+        }
+    }
+
+    #[test]
+    fn cargo_dependency_paths_with_equals_preserve_extern_arguments() {
+        crate::trust_test_process::bounded!(
+            cargo_dependency_paths_with_equals_preserve_extern_arguments
+        );
+        let f = two_roots(
+            "retained-equals-dependency-paths",
+            "fn main() { common::c(); }\n",
+            "pub fn f() { common::c(); }\n",
+            &[
+                ("crates/common/Cargo.toml", manifest("common", "")),
+                ("crates/common/src/lib.rs", "pub fn c() {}\n".to_owned()),
+                (
+                    "crates/a/Cargo.toml",
+                    manifest("a", "[dependencies]\ncommon = { path = \"../common\" }\n"),
+                ),
+                (
+                    "crates/b/Cargo.toml",
+                    manifest("b", "[dependencies]\ncommon = { path = \"../common\" }\n"),
+                ),
+            ],
+        );
+        for out in ["plain", "scratch=one", "scratch=one=two"] {
+            let inventory = written(f.run_into(out));
+            for (root, package, expected) in [
+                ("gen", "crates/a", "--extern common=libcommon.rlib"),
+                ("chk", "crates/b", "--extern common=libcommon.rmeta"),
+            ] {
+                let units = program(&inventory, root).get("units").unwrap().elements();
+                assert_eq!(units.len(), 2, "{root} retains its dependency at {out:?}");
+                let own = units
+                    .iter()
+                    .find(|unit| unit.get("package").and_then(Json::as_str) == Some(package))
+                    .expect("the root's own compiled unit is inventoried");
+                let arguments: Vec<_> = own
+                    .get("configuration")
+                    .unwrap()
+                    .elements()
+                    .iter()
+                    .map(|arg| arg.as_str().expect("a configuration argument is text"))
+                    .collect();
+                // Only the first '=' separates the dependency name; scratch-path separators are path data.
+                assert!(
+                    arguments.contains(&expected),
+                    "{root} at {out:?} lost its dependency argument {expected:?}: {arguments:?}"
+                );
+            }
+        }
+    }
 }
 
 #[cfg(test)]

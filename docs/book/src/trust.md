@@ -213,6 +213,29 @@ Eight lint-level consuming-bit edits are scoped E for the pinned caller.
 `cargo rustc -- -W unused_variables` distinguishes the changed helper outside it.
 The [source ledger](ledger.md#rust-toolchain) gives actual argv and falsifiers. Other edits stay open.
 
+### Source paths and dependency arguments
+
+A compiler argument can contain text that resembles an option while still naming a source file.
+Diagnostic options are removed by their option prefix; a substring inside a source filename remains
+path data. The tests create a synthetic repository, whose root is denoted here by `<fixture>`.
+Its binary source `<fixture>/crates/a/src/kept--json.rs` and library source
+`<fixture>/crates/b/src/kept--error-format.rs` remain inventoried, and their configurations retain
+those paths relative to `<fixture>`. Treating every argument that merely contains `--json` as a
+diagnostic option would erase a real input identity.
+
+A dependency argument separates the dependency name from its path at the **first** equals sign.
+Further equals signs belong to the path. For example, a build under `scratch=one=two` still records
+`--extern common=libcommon.rlib` for the binary and `--extern common=libcommon.rmeta` for the library.
+The scratch directory and Cargo's artifact hash are removed from that identity; the dependency name
+and library kind are retained. The ordinary `plain` output path is a positive control for the same rule.
+
+Two permanent public inventory controls use real successful Cargo builds and these literal expected
+arguments: `trust::tests::cargo_source_paths_with_diagnostic_substrings_remain_in_configuration` and
+`trust::tests::cargo_dependency_paths_with_equals_preserve_extern_arguments`. Run either with
+`cargo test -p xtask <test-name> -- --exact`. The tracked-source path grammar still applies: an equals
+sign in a tracked source filename is refused before compilation; equals-bearing untracked build-output
+paths are admitted. These examples establish the tested boundaries, while full mutation adequacy remains open.
+
 ### The run's order
 
 Initial cleanup removes the earlier inventory before judging forms. Failure ends unable to judge (exit 2),

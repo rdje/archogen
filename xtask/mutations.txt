@@ -5789,3 +5789,25 @@ to
         let _ = fs::remove_file(path);
         Ok(())
 end
+
+mutation trust-diagnostic-substring-source-path-dropped
+file xtask/src/trust.rs
+test -p xtask trust::tests::cargo_source_paths_with_diagnostic_substrings_remain_in_configuration -- --exact
+expect killed
+why M3.6.9.6.3.2.2.13.2.2: exact L590.dir.178 survivor: a valid source path containing a diagnostic prefix is an input identity and must remain in its root configuration.
+from
+            if DROPPED_PREFIX.iter().any(|p| t.starts_with(p)) {
+to
+            if DROPPED_PREFIX.iter().any(|p| t.contains(p)) {
+end
+
+mutation trust-dependency-path-last-equals
+file xtask/src/trust.rs
+test -p xtask trust::tests::cargo_dependency_paths_with_equals_preserve_extern_arguments -- --exact
+expect killed
+why M3.6.9.6.3.2.2.13.2.2: exact L611.dir.213 survivor: equals-bearing Cargo output paths must retain independent literal binary/library dependency arguments, splitting the name only at the first separator.
+from
+                    let (name, path) = v.split_once('=').unwrap_or((v, ""));
+to
+                    let (name, path) = v.rsplit_once('=').unwrap_or((v, ""));
+end

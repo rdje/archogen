@@ -193,6 +193,14 @@ Prefix/helper `.13.1` (`2026-10-18`): all 59 edits yield 46 named kills, 12 surv
 refusal, strict 1. All captured originals/current copies restore; exact original bindings hold. Refusal
 proves no coverage. The twelve survivors stay owned; full adequacy remains open.
 
+Path controls `.13.2.2` (`2026-10-18`) close two of those measured survivors: `L590.dir.178` and
+`L611.dir.213` now finish with their independently expected source/dependency parent failures.
+Both exact catalogue entries and the selected systematic replay pass strict zero; the latter has
+two named kills and no refusal, timeout, E or unjudged result. All 1029 captured originals/current
+copies restore, and five altered-evidence cases refuse. Prior production/tests/catalogue bodies and E
+are preserved. Closure documentation and the focused commit gate are separate from that restoration
+capture. Ten other prefix/helper survivors and full adequacy remain open.
+
 ## Mutation measurements and controls
 
 Whether the instrument's tests hold the generated-sources rules — what a program reads, the chain, the blob rule,

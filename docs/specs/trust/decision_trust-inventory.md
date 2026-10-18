@@ -230,6 +230,18 @@ The local helper integration checkpoint (`M3.6.9.6.3.2.2.10.4`) passes every tie
 process-read permissions; captured inputs restore and the helper group closes. Final full measurements/review
 and runner compatibility remain separately owned; this is no remote CI outcome.
 
+Path-boundary controls (`M3.6.9.6.3.2.2.13.2.2`, `2026-10-18`) preserve diagnostic-prefix substrings
+inside admitted source arguments: `crates/a/src/kept--json.rs` and
+`crates/b/src/kept--error-format.rs` are retained rather than mistaken for diagnostic options.
+Dependency arguments split their name/path at the first equals sign; successful ordinary and
+`scratch=one` / `scratch=one=two` output builds retain literal `--extern common=libcommon.rlib`
+for the binary and `--extern common=libcommon.rmeta` for the library. The public controls
+`trust::tests::cargo_source_paths_with_diagnostic_substrings_remain_in_configuration` and
+`cargo_dependency_paths_with_equals_preserve_extern_arguments` kill the exact prefix-contains and
+last-separator edits in catalogue and systematic native runs. The production helper was already
+correct; two parent gaps close. Tracked source names remain subject to §4's path grammar. Initial
+outcomes stay historical; ten prefix/helper survivors and full production adequacy remain open.
+
 **What it records, for each root:**
 
 - the packages its build compiled, from that build's units and not from workspace-wide metadata, each with its

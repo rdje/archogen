@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — public source and dependency path normalization controls
+
+`ARCHOGEN-M3-0722` (leaf `M3.6.9.6.3.2.2.13.2.2`), `2026-10-18`.
+
+- Keep diagnostic-looking substrings inside valid source arguments and first-separator dependency
+  identities under ordinary, one-equals and two-equals output paths. Two bounded public controls pass
+  through actual successful pinned Cargo builds with independent literal expectations.
+- Both exact catalogue controls kill; actual current `L590.dir.178` / `L611.dir.213` move from measured
+  S to named K, strict 0, no E/refusal/timeout. All 1029 originals/current copied inputs restore; five
+  falsified receipts refuse. Production/prior tests/E exact, catalogue append-only.
+- Document rules, concrete binary/library examples and admitted-path boundaries. Book/live/canonical
+  sync; focused/stamp and staged gates bind commit. Three codegen argument controls next; full adequacy open.
+
 ## archogen — complete prefix/helper measurement and unbounded book growth
 
 `ARCHOGEN-M3-0721` (leaf `M3.6.9.6.3.2.2.13.1`), `2026-10-18`.
