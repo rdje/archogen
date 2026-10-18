@@ -89,6 +89,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
   [its ledger entry](ledger.md#pgen).
 - **PID** — process identifier: the operating system's identifier for a running process. The prototype uses it
   within a fresh session to name invocation records. See [Compiler provenance](annex-trust-proofs.md#compiler-provenance-contract-and-prototype).
+- **PID0** — PID 0: historical shorthand for process identifier zero, retained in the
+  [provenance commit ledger](annex-trust-proofs.md#compiler-provenance-commit-ledger).
 - **PLIC** — Platform-Level Interrupt Controller: the RISC-V block that routes devices' interrupts to a hart. See
   [its specification's ledger entry](ledger.md#riscv-plic).
 - **POSIX** — Portable Operating System Interface: the standard Unix-like interface; not the first profile's. See

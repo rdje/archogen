@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — measure the complete current compiler observer
+
+`ARCHOGEN-M3-0774` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.1`), `2026-10-19`.
+
+- Complete native observer16/full176-parent measurement:14 named kills,2 survivors, no timeout,
+  unjudged or compiler refusal. Native exit1 reflects sync/close survivors; no equivalent inference.
+- Own P1 sync assessment next and P2 explicit-close assessment afterward, before other files.
+  All1091 originals/copies restore;28 bindings/37 pins and11 false receipt controls hold.
+- Seal qualification exactly; retain seven exact historical provenance commit notes in the book
+  with private task routes, publish complete current outcomes and synchronize live pointers.
+
 ## archogen — qualify current compiler measurement inputs
 
 `ARCHOGEN-M3-0773` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.1.1`), `2026-10-19`.

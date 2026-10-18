@@ -3916,3 +3916,83 @@ control, catalogue and contract bindings remain unchanged. Final book/doctrine c
 document edits. The first next complete native population is the observer source; each actual
 outcome must be bound and owned before the other current files can close.
 
+### Compiler provenance commit ledger
+
+These are the exact completed task-table records for the implementation and compatibility
+sequence, retained here without shortening their original notes. The record date is the source
+epoch described in those entries. Words such as current and next retain their meaning at that
+epoch; the latest measurement record and resume pointer govern current work. Private task rows
+retain their original leaf/work-unit identities and route to this full ledger.
+
+| Recorded | Leaf | Work unit | Original record |
+| --- | --- | --- | --- |
+| 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.3.2.1` | `ARCHOGEN-M3-0763 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.2.1)` | **Compiler unit provenance repaired**: private embedded observer/typed consumer replaces diagnostic parser for both callers; actual P2 red/green and native C byte oracle, malformed/failure/recovery controls; split slow diagnostic matrix with all cases/assertions/bounds preserved; fresh full162-parent4K/22E strict0,1077 original/copied inputs restore, intended names/37 pins and eight false-receipt refusals; retire5 catalogue/4 E, alpha-bind3/revalidate16 and preserve historical controls; seal committed prototype with full reconstruction/273 older archives exact; final focused/book gates, artifact binding next and baseline-evidence P2 owned |
+| 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.3.2.2` | `ARCHOGEN-M3-0764 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.2.2)` | **Artifacts bind to observed compiler outputs**: metadata/source-owned selection, empty-input pinned query, direct paths/hash, real bin/lib/standard/custom same-named harness controls; artifact7/0, native3K strict0 full167,1079 original/copy restore,37 pins/nine false receipts; producer/normalization/reasons exact, guard red/green; collector sealed/reconstructed, complete book/live sync and final staged focused/doctrine required; compatibility next |
+| 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.1` | `ARCHOGEN-M3-0765 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.2.3.1)` | **Harness/generator warning routes held**: exact admitted payload matrix, literal units/files/configurations or declared provenance/hashes, actual artifact/exit evidence, source refusal and fresh recovery; two initial oracle contracts corrected from native/canonical evidence, no production change; native2K strict0 full169,1079 original/copy restore,37 pins/nine false receipts; book/live sync and final staged focused required; path/feature/copy next |
+| 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.2` | `ARCHOGEN-M3-0766 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.2.3.2)` | **Role path/features held**: mixed/canonical outputs and operative defaults; native1K/catalogue1K strict0, full170/1081 restore/37 pins/11 falsifiers; prior leaf sealed, unknown selection owned .0.2; book/live/final focused, lifecycle next |
+| 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.1` | `ARCHOGEN-M3-0767 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.1)` | **Record boundaries held**: real compilation seed/29 corruption cases/recovery, meaningful NUL/PID0 native2K strict0 full171;1082 inputs restore/37 pins/nine falsifiers, production/prior tests/reasons exact; prior leaf seal verified, full book/live/final focused; writer lifecycle next |
+| 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.2` | `ARCHOGEN-M3-0768 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.2)` | **Writer lifecycle/harness bounds held**: actual setup/install/no-overwrite/signal, observed recovery timeout fixed by exact-assertion split/30s; fresh native1K/catalogue1K full175/1084 restore/37 pins/11 falsifiers; seal/book/glossary/live/final focused, concurrency next |
+| 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.3` | `ARCHOGEN-M3-0769 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.3)` | **Bounded compatibility closes**: actual8 overlapping writers/records/argv/executables/recovery; native2K full176/1085 restores/37 pins/nine falsifiers; complete9-row matrix/explicit limits, production/prior controls exact; seal/book/live/final focused, native baseline evidence next |
+
+### Complete native compiler observer measurement
+
+Measurement `.15.2.1.3.3.3.2.1` (`2026-10-19`) executes the complete current observer population
+listed by the qualification checkpoint. The unmodified full-parent baseline passes in 53 seconds.
+Every candidate finishes: 14 named kills and two survivors, with no timeout, unjudged result,
+compiler refusal or listed equivalent. The native command exits 1 because of the survivors;
+this is a complete measurement, not an adequacy pass. The production source remains unchanged.
+
+The controlling command runs inside the same repository write-boundary profile as the earlier
+native measurements, with the repository-owned stores from `TOOLBOX.md`:
+
+```sh
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler_observer.rs --package xtask \
+  --timeout 600 --filter=trust:: --filter=trust_generated:: --filter=trust_gate:: \
+  --filter=--skip --filter=route_tests --timeouts-fail
+```
+
+The following table gives a direct finishing control for each kill. Control names have the
+common prefix `trust::compiler::tests::`; the receipt retains every finishing name, including
+broader public inventory tests. The two survivor rows identify their owned next assessments.
+
+| Current ID | Actual edit | Result | Direct control or scheduled owner |
+| --- | --- | --- | --- |
+| `L16.iter.0` | hex loop first | killed | `actual_native_receiver_observes_every_forwarded_argument_byte` |
+| `L16.iter.1` | hex loop last | killed | `actual_native_receiver_observes_every_forwarded_argument_byte` |
+| `L16.iter.2` | hex loop ends | killed | `actual_native_receiver_observes_every_forwarded_argument_byte` |
+| `L17.stmt.3` | omit high hex nibble | killed | `actual_native_receiver_observes_every_forwarded_argument_byte` |
+| `L18.stmt.4` | omit low hex nibble | killed | `actual_native_receiver_observes_every_forwarded_argument_byte` |
+| `L34.bool.5` | disable write access | killed | `actual_native_receiver_observes_every_forwarded_argument_byte` |
+| `L35.bool.6` | disable exclusive creation | killed | `actual_native_receiver_observes_every_forwarded_argument_byte` |
+| `L60.stmt.7` | omit record write | killed | `actual_concurrent_observer_writers_publish_independent_complete_records` |
+| `L61.stmt.8` | omit record sync | survived | P1 `.2.2` sync assessment, next |
+| `L62.stmt.9` | omit explicit file close | survived | P2 `.2.3` close assessment, after sync |
+| `L63.stmt.10` | omit no-overwrite publication | killed | `actual_observer_publication_collision_preserves_completed_and_partial_evidence` |
+| `L64.stmt.11` | omit partial cleanup | killed | `actual_concurrent_observer_writers_publish_independent_complete_records` |
+| `L74.stmt.12` | omit error diagnostic | killed | `actual_observer_publication_collision_preserves_completed_and_partial_evidence` |
+| `L75.stmt.13` | omit failure exit | killed | `actual_observer_setup_and_installation_fail_before_child_execution` |
+| `L45.chain.14` | record first argv only | killed | `actual_native_receiver_observes_every_forwarded_argument_byte` |
+| `L45.chain.15` | record last argv only | killed | `actual_native_receiver_observes_every_forwarded_argument_byte` |
+
+The sync omission survives despite the current pre-publication sync action and error-propagation
+contract. Its P1 assessment must determine the actual I/O boundary and add an independent finishing
+control where required. The explicit-close omission has a separate P2 assessment of File lifetime,
+consumer timing and the publication contract. Neither is called equivalent from survival; both
+are scheduled before measurements of the other production files. Their root causes and resolutions
+remain open until the follow-up evidence closes them.
+
+All 1091 held original and copied inputs restore by bytes/modes and independent Python/system
+hashes; the gitlink contributes metadata only. The original and copied full parent lists agree on
+176 names. All 28 direct source/caller/control bindings and 37 producer pins remain exact.
+The receipt checker rejects changed scope, missing or duplicate results, wrong replacement,
+wrong direct-control attribution, terminal counts, exit, source identity, outcome and an invented
+equivalent reason. These are plumbing controls, not substitute proofs of equivalence.
+
+Held native tree `93b487968f63bf4694a0aa143066cd98ea80aa4c` precedes completion-document staging.
+Receipts are under `target/compiler-observer-full/`; the supplemental audit SHA-256 is
+`df0418ff47bc286fe3b7b55a75acf26a5ca86380fbfa93fcb849c44b2b5188cc`.
+The prior qualification subtree seals byte for byte. The historical provenance ledger above
+preserves the original completed task notes verbatim while private routes retain their identities.
+Final book/doctrine checks cover these documentation changes. Sync assessment is next; full
+source/premise verification and independent review remain open before F30 signoff.
+

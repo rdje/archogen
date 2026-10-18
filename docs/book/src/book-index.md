@@ -105,6 +105,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#compiler-command-provenance-assessment)
 - Compiler environment admission regressions — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-environment-admission-regressions)
+- Compiler provenance commit ledger — [Annex C: Trust proof
+  records](annex-trust-proofs.md#compiler-provenance-commit-ledger)
 - Compiler provenance compatibility checkpoint — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-provenance-compatibility-checkpoint)
 - Compiler provenance contract and prototype — [Annex C: Trust proof
@@ -123,6 +125,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#complete-diagnostic-region-replay)
 - Complete guarded run_cargo measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-guarded-run_cargo-measurement)
+- Complete native compiler observer measurement — [Annex C: Trust proof
+  records](annex-trust-proofs.md#complete-native-compiler-observer-measurement)
 - Complete prefix/helper replay — [Annex C: Trust proof records](annex-trust-proofs.md#complete-prefixhelper-replay)
 - Complete repaired Cargo diagnostic measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-repaired-cargo-diagnostic-measurement)
@@ -376,6 +380,7 @@ a change that leaves it stale, so it is never edited by hand.
 - **PGEN** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - pgen — [What this project relies on from outside](ledger.md#pgen)
 - **PID** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- **PID0** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Planning the operator measurements — [Generated-sources test
   adequacy](trust-adequacy.md#planning-the-operator-measurements)
 - **PLIC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
