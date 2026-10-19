@@ -163,7 +163,8 @@ a change that leaves it stale, so it is never edited by hand.
   relevance](presence.md#contradictions-are-rejected-never-resolved)
 - cost-format — [What is versioned, and what changing it costs](versions.md#cost-format)
 - **CPU** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
-- **CR** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- **CR** — [definition](glossary.md), [What this project relies on from outside](ledger.md), [Annex B: The checks that
+  keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **CRLF** — [definition](glossary.md), [Annex B: The checks that keep the repository honest](annex-repository.md),
   [Annex C: Trust proof records](annex-trust-proofs.md)
 - **CSR** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
@@ -484,6 +485,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **provider** — [definition](glossary.md), [Introduction](introduction.md), [The boundary: functionality versus
   implementation](boundary.md), [Presence, absence, and relevance](presence.md), [Matching an offer to a
   requirement](matching.md), [The S0 early generation path](s0.md)
+- Publication guard for renderer control bytes — [Annex C: Trust proof
+  records](annex-trust-proofs.md#publication-guard-for-renderer-control-bytes)
 
 ## Q
 

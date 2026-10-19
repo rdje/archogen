@@ -817,11 +817,21 @@ remaining contents literal. These rules follow the
 for the standalone forms covered here.
 
 The pinned mdBook renderer currently differs from that specification for bare carriage-return
-line endings and tabs after closing markers. The gate follows the renderer's current boundary:
-LF and CRLF line endings work in the maintained cases, while a tab-suffixed closing run stays
-literal. The [dated compatibility finding](annex-trust-proofs.md#figure-registration-for-literal-fences)
-records the public reproductions and owns their repair. This scanner is a standalone fence
-check; it does not claim complete Markdown container parsing.
+line endings and tabs after closing markers. The figure gate follows the renderer's current
+boundary, in which a tab-suffixed closing run stays literal. The supported build command,
+`bash scripts/build_book.sh`, checks source forms before rendering and refuses bare CR or a
+tab after matching standalone closing markers. Its error names the repository-relative source
+path and line and explains the correction: use LF or CRLF line endings, and spaces after closing
+markers. `scripts/check_book_sources.py` performs that read-only check.
+
+This conservative source check preserves shorter or mismatched marker lines inside a surrounding
+literal fence. To show such a marker as data, use an outer fence of a different kind or sufficient
+length; control-byte evidence can also use explicit JSON escapes, as in the
+[compatibility finding](annex-trust-proofs.md#renderer-compatibility-finding).
+The [publication guard record](annex-trust-proofs.md#publication-guard-for-renderer-control-bytes)
+holds actual refusal/recovery results and the upstream-adoption task. These standalone checks
+do not claim complete Markdown container parsing. The book is unbounded in size, chapter count
+and detail.
 
 ## Every diagnostic shown in this book is a real run
 

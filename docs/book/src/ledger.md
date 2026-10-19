@@ -196,7 +196,7 @@ Producer observations, normalization proofs, counterexamples and revalidation re
 | Retrieved | `2026-09-29`; the release assets `2026-09-30` |
 | Hash | sha256 of the release tarballs, recorded in `.github/ci-tools.env` and checked before use: `084e4342…1f6d` (`x86_64-unknown-linux-gnu`), `da2f5565…4222` (`aarch64-apple-darwin`) — each equal to the digest GitHub publishes for the asset |
 | Scope | the `book` step of the `integration` tier |
-| Known limitations | a release that changes how heading anchors are derived would silently break every `ledger.md#…` link on this page — which is why the `book` step checks the version rather than trusting it |
+| Known limitations | heading-anchor changes can break `ledger.md#…` links, so the `book` step checks the version. The pinned parser mishandles bare CR and closing-fence tabs; `scripts/build_book.sh` invokes `scripts/check_book_sources.py` to refuse those source forms before publication. See the [guard and upstream-adoption record](annex-trust-proofs.md#publication-guard-for-renderer-control-bytes) |
 | Revalidation trigger | `mdbook --version` changing; `MDBOOK_VERSION_PINNED` moving |
 | Named as | `mdBook` |
 

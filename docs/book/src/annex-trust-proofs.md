@@ -8865,3 +8865,108 @@ its private entry is1159 bytes, saving1976 bytes under the private task-director
 Substituting the preserved fragment back into that entry reconstructs the entire previous
 task file exactly. Truncated, modified and extra-newline fragments are refused independently.
 The previous book prefix is exact; no public detail is discarded.
+
+
+### Publication guard for renderer control bytes
+
+Measured `2026-10-19`, leaf `M3.6.9.6.3.2.2.15.2.1.4.3.4.0`,
+`ARCHOGEN-M3-0809`. The preceding finding identifies real differences between source and
+rendered code/prose boundaries. The project's supported book build now refuses the affected
+source forms before invoking the pinned renderer. Its diagnostics name the relative source
+path and source line and give an immediate correction:
+
+```text
+book-sources: docs/book/src/nested/control.md:3: bare CR line ending; use LF or CRLF so the pinned renderer preserves code/prose boundaries
+book-sources: docs/book/src/nested/control.md:5: tab after closing markers; replace closing-line tabs with spaces
+```
+
+`scripts/check_book_sources.py` reads Markdown files recursively beneath `docs/book/src`;
+it imposes no chapter, file-size or detail ceiling. It rejects bare CR line endings, invalid
+UTF-8 input, unreadable/absent sources and tabs after matching standalone closing markers.
+The fence check tracks marker kind and length, valid info strings and indentation. Shorter,
+mismatched or overindented markers inside a literal remain data. The check is conservative
+source validation rather than a complete Markdown parser. Source bytes are never rewritten.
+
+Authors can use LF or CRLF line endings and spaces after closing markers. A longer outer
+fence or a different marker kind keeps an inner marker line literal. JSON escapes retain exact
+control-byte evidence without depending on those bytes as Markdown syntax. The examples in
+the preceding finding preserve their actual source bytes when decoded.
+
+`scripts/build_book.sh` keeps its version check first, then runs the source check before
+`mdbook build`. Source-check failures, including an unexpected checker exit, return build
+failure without reaching the renderer. Its existing unavailable/version behavior is preserved:
+the unavailable tool result remains `20`, ordinary failure `1` and success `0`. The
+discovered build-script self-test now runs the checker and actual wrapper controls, so those
+controls also run in the integration tier. The supported publication entrypoint remains this
+wrapper; the external renderer's own CLI retains its upstream behavior.
+
+#### Public execution and source preservation
+
+Measured `2026-10-19`: the original wrapper reports `22 pass / 4 fail (26 arms)` against
+the expanded controls. It reaches the renderer for each defective input and even when the
+checker would fail. The repaired checker controls report `26 pass / 0 fail`, and the
+build-script suite reports `5 pass / 0 fail`, preserving its earlier version controls.
+A deliberately failing checker is normalized to build failure and cannot fall through.
+
+An independent public replay executes the original and repaired wrappers with the actual
+pinned mdBook0.5.2 executable. Instrumentation records each build invocation and passes the
+complete command to that native executable; it supplies no HTML. The phases are ordinary,
+bare-CR tilde, bare-CR backtick, closing-tab and corrected CRLF/space-only input, for each
+wrapper. Original runs reproduce the actual misrenderings. Repaired defective runs refuse
+before any renderer build invocation and retain the preceding complete output inventory.
+Ordinary and corrected runs render `seven tests` as code, with `nine tests` after the
+corrected closing fence as prose. Source SHA-256 remains exact through every phase.
+
+The replay binds the build wrapper, checker, unchanged figure gate, tool pins and native
+executable. Its receipt SHA-256 is
+`f621347b91fd4890f13d8ee0fc5cb5830ac73b874086f049314defec7d9ac878`.
+The first independent diagnostic expectation omitted the fixture's heading and blank line;
+the correct reported source line includes them. That oracle calibration is retained separately
+and supplies no defect-repair or passing-coverage claim.
+
+The source/archive audit reverses only the new wrapper guard and self-test integration to
+recover the complete previous wrapper byte for byte. It verifies Python/Bash syntax, unchanged
+figure-gate bytes, the final public receipt, unchanged read-only book sources and the existing
+release pin. False helper binding, renderer-call, source-rewrite, output-rewrite and recovered
+literal assertions are independently refused.
+
+Measured `2026-10-19`: all318 prior task archives remain exact; the completed figure leaf
+forms the319th archive. Filesystem, Git-plus-new-path and indexed digest sets agree, and the
+new body plus its separating LF reconstructs the original committed span exactly.
+Truncated/modified seals and a false total are refused. Every preceding byte of this trust
+annex remains an exact prefix. The combined audit SHA-256 is
+`6c47da1b9e64f6c52e17a546337161c0d83a1d4e324de94aa2031754c5653b30`.
+
+Supplementary reproduction commands and receipts are in `target/book-fence-compat/`:
+
+```console
+$ bash scripts/build_book.sh --self-test
+$ python3 -I -B target/book-fence-compat/replay-public.py
+$ python3 -I -B target/book-fence-compat/audit.py
+```
+
+The maintained checker/build self-tests are the durable executable controls. The public
+fixtures, parser mechanisms, invocation boundary and expected outcomes are described here;
+ignored scratch is supplementary. Publication/doctrine checks and the pinned full book build
+must pass before this commit. This slice changes no Rust source, reason or mutation result.
+
+#### Corrected upstream renderer remains owned
+
+The reviewed stable release is
+[mdBook0.5.4](https://github.com/rust-lang/mdBook/releases/tag/v0.5.4),
+published `2026-07-06T15:28:05Z`. Its
+[locked dependencies](https://github.com/rust-lang/mdBook/blob/v0.5.4/Cargo.lock)
+select pulldown-cmark0.13.4. The tagged
+[scanner source](https://github.com/pulldown-cmark/pulldown-cmark/blob/v0.13.4/pulldown-cmark/src/scanners.rs)
+is byte-identical to the reviewed0.13.0 scanner:
+`2cdcb3cc76bc3d6947eec066eefe4582b660dd52da71d048f6dc515665291840`.
+Both identified mechanisms therefore remain in the stable source; upgrading that release
+alone supplies neither fix. This is a source-level conclusion; actual replay executions
+above use the project's pinned0.5.2 binary.
+
+Leaf `M3.6.9.6.3.2.2.15.2.1.4.3.4.1` owns adoption of a stable corrected renderer at
+the next release review, before this guard is retired. It requires qualified source/assets,
+local and CI pins, actual control-byte renders, old anchors/literals, figure-gate alignment
+and complete integration. The explicit publication refusal is in place while that upstream
+prerequisite remains. Parent compatibility stays open; the deferred prefix proof resumes
+after the committed guard. The book remains unbounded.

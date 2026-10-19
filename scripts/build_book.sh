@@ -30,6 +30,10 @@ build() {
     note "  another release may derive heading anchors differently, and every ledger.md#… link depends on them"
     return 1
   fi
+  # The pinned parser silently changes code/prose boundaries for these source
+  # forms. Refuse them with a location before invoking the renderer; never rewrite
+  # literal evidence (M3.6.9.6.3.2.2.15.2.1.4.3.4.0).
+  python3 -I -B scripts/check_book_sources.py || return 1
   mdbook build docs/book
 }
 
@@ -57,6 +61,12 @@ self_test() {
   stub "mdbook v$pinned" 1; arm "a failing build is a failure" 1 ""
   stub "mdbook v0.4.40" 0;  arm "another release is refused, before it builds anything" 1 "reports 'mdbook v0.4.40', and the book is pinned to 'mdbook v$pinned'"
   stub "mdbook v$pinned-rc.1" 0; arm "a release that only starts like the pin is another release" 1 "is pinned to 'mdbook v$pinned'"
+  arms=$((arms + 1))
+  if python3 -I -B scripts/check_book_sources.py --self-test; then
+    ok=$((ok + 1)); echo "  ✅ source controls and actual wrapper refusal/recovery pass"
+  else
+    echo "SELF-TEST: source controls or actual wrapper refusal/recovery failed" >&2
+  fi
   rm -rf "$work"
   echo "build-book self-test: $ok pass / $((arms - ok)) fail ($arms arms)"
   [ "$ok" -eq "$arms" ]

@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — refuse known book misrendering before publication
+
+`ARCHOGEN-M3-0809` (leaf `M3.6.9.6.3.2.2.15.2.1.4.3.4.0`), `2026-10-19`.
+
+- Read-only recursive book-source guard reports relative path/line and correction before
+  the pinned renderer sees bare CR or tabs after matching standalone closing markers.
+  Preserve literal shorter/mismatched markers, source bytes and existing version contract.
+- Original wrapper22pass/4fail across26 controls becomes26pass/0fail; build5 passes,
+  including checker-failure refusal. Actual pinned renderer10 original/repaired phases
+  hold ordinary/refused/recovered boundaries and unchanged refused output inventories.
+- Reverse wrapper patch exactly, retain318 archives/new319th seal and reject8 false
+  receipt/history oracles. Stable0.5.4 source retains both mechanisms; fixed stable
+  adoption stays owned separately. Book/live synchronized, precise prefix proof next.
+
 ## archogen — match figure registration to literal fences
 
 `ARCHOGEN-M3-0808` (leaf `M3.6.9.6.3.2.2.15.2.1.4.3.3`), `2026-10-19`.
