@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — finish the complete current observer replay
+
+`ARCHOGEN-M3-0777` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.4`), `2026-10-19`.
+
+- Replay all16 actual observer edits/full177 parents:15 named kills and1 scoped equivalent,
+  strict0; sync has its intended control, no timeout/unjudged/refusal/unlisted survivor.
+- All1097 originals/copies restore;31 bindings/37 pins/12 false receipt controls hold. Code,
+  tests, catalogues and reasons unchanged; close assessment and287 older archives seal exactly.
+- Publish every current disposition, commands and limits in the book; synchronize live pointers.
+  Current controller measurement is next; no other-source or whole-milestone adequacy claim.
+
 ## archogen — prove the observer explicit-close boundary
 
 `ARCHOGEN-M3-0776` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.3`), `2026-10-19`.

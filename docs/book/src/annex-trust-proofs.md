@@ -4191,3 +4191,86 @@ private rows keep their identities and links. Reconstruction checks every other 
 row unchanged and rejects missing notes, duplicates or changed identities. The book remains
 unbounded. Complete current observer replay is next, before other-source and premise/integration review.
 
+### Complete current observer replay
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.4`: every actual observer candidate now has a
+finishing disposition on the current parent population. The complete native result is fifteen
+named kills and one scoped equivalent, strict exit 0; there are no timeouts, unjudged results,
+compiler refusals or unlisted survivors. The earlier fourteen-kill/two-survivor measurement
+remains a historical record. The synchronization failure control resolves its first obligation;
+the explicit-close proof resolves the other within its stated protocol domain.
+
+The production file remains SHA-256
+`64b8376bf404a32f3097071f7737a721e789133f716d16e05f8d0ceeb3e38475`.
+Actual discovery agrees exactly with the complete CLI listing, from the first production
+function through the first standalone test boundary. Every actual replacement and identity
+is checked, including the complete population rather than a selected subset. A listing
+preflight initially omitted the required package option and refused before any copy or
+baseline work; the corrected command below agrees with maintained discovery.
+
+```sh
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler_observer.rs --package xtask --list
+python3 -I -B xtask/mutation_sweep_tests.py "$PWD" \
+  ObserverCloseTests.test_close_reason_requires_current_production_and_caller_premises
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler_observer.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --equivalents xtask/trust_compiler_observer.equivalents
+```
+
+The unmodified copied baseline passes in 54 seconds with the complete current population of
+177 parent names. Every kill reports its finishing test names, all belonging to that population.
+The table gives the number of names and one actual direct observer control for each kill;
+it does not present that example as the only killing test. The collision control is
+`trust::compiler::tests::actual_observer_publication_collision_preserves_completed_and_partial_evidence`;
+the sync control is
+`trust::compiler::tests::actual_observer_sync_failure_retains_partial_evidence_and_recovers`.
+
+| Actual ID | Disposition | Finishing names | Direct control or reason |
+| --- | --- | --- | --- |
+| `L16.iter.0` | killed | 119 | [collision](#a-deterministic-publication-collision) |
+| `L16.iter.1` | killed | 119 | [collision](#a-deterministic-publication-collision) |
+| `L16.iter.2` | killed | 119 | [collision](#a-deterministic-publication-collision) |
+| `L17.stmt.3` | killed | 119 | [collision](#a-deterministic-publication-collision) |
+| `L18.stmt.4` | killed | 119 | [collision](#a-deterministic-publication-collision) |
+| `L34.bool.5` | killed | 119 | [collision](#a-deterministic-publication-collision) |
+| `L35.bool.6` | killed | 119 | [collision](#a-deterministic-publication-collision) |
+| `L60.stmt.7` | killed | 119 | [collision](#a-deterministic-publication-collision) |
+| `L61.stmt.8` | killed | 1 | [sync](#observer-synchronization-failure-control) |
+| `L62.stmt.9` | equivalent | 0 | [close proof](#observer-explicit-close-assessment) |
+| `L63.stmt.10` | killed | 119 | [collision](#a-deterministic-publication-collision) |
+| `L64.stmt.11` | killed | 118 | [collision](#a-deterministic-publication-collision) |
+| `L74.stmt.12` | killed | 3 | [collision](#a-deterministic-publication-collision) |
+| `L75.stmt.13` | killed | 4 | [collision](#a-deterministic-publication-collision) |
+| `L45.chain.14` | killed | 119 | [collision](#a-deterministic-publication-collision) |
+| `L45.chain.15` | killed | 119 | [collision](#a-deterministic-publication-collision) |
+
+The sync omission has exactly its intended new finishing name. The close omission survives
+and matches only the exact maintained per-file reason. Its source/caller/toolchain premise
+control passes again. No source or test changes were made for this final replay: observer,
+controller, caller, artifact binder, mutation catalogue, tool controls, old reasons and sync/close
+fixtures are byte for byte the committed versions. The preceding code-qualified commit also
+passed formatting, strict lint and the complete focused test suite in 154.81 seconds, staged
+tree `1aed62fad517f44f67b7af3e755f2736c1f53eaa`.
+
+All 1097 original and current copied regular inputs restore by bytes/modes and independent
+Python/system hashes. The original and copied parent lists agree exactly. All 31 direct
+bindings and 37 pinned public producer inputs bind, with gitlinks recorded only as metadata.
+The supplemental audit re-discovers the entire candidate list and checks every actual
+replacement, outcome, named kill, reason and terminal count. It rejects twelve altered receipts:
+wrong scope, missing result, changed replacement, invented name, wrong total, wrong exit,
+wrong file, wrong source hash, changed outcome, duplicate result, invented reason and reduced
+population. The committed close assessment seals exactly and all 287 older archives remain
+unchanged; reconstruction retains the structural separator newline.
+
+Held native tree `43acf850fb92f7c4c5249e3578c8afffffb1b6e1` precedes completion-document staging.
+Receipts are under `target/compiler-observer-final/`, including the listing, plan, full raw
+native output, per-edit finishing names, original/copy restoration and source audit.
+The supplemental audit SHA-256 is
+`12c3d62f20fdcc57ba073250d48dafbc6188855db172dd0e45f01b60b40cb2a6`.
+
+This closes the current observer replay. The remaining controller, artifact and caller
+populations, their producer/caller premises, broader integration and independent review remain
+owned before F30. Next is the current controller's complete native measurement; this observer
+result makes no adequacy projection to those other files.
+

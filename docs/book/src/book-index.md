@@ -121,6 +121,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#compiler-writer-lifecycle-controls)
 - Complete compiler-function measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-compiler-function-measurement)
+- Complete current observer replay — [Annex C: Trust proof
+  records](annex-trust-proofs.md#complete-current-observer-replay)
 - Complete diagnostic-region replay — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-diagnostic-region-replay)
 - Complete guarded run_cargo measurement — [Annex C: Trust proof
