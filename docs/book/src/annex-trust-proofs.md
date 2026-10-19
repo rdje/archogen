@@ -5436,3 +5436,366 @@ F30 and other source populations remain open under their own owners.
 The next native source population is the artifact binder, followed by the current caller and
 other judgment sources. Their complete source/premise revalidation, restoration, warranted
 broader gates and independent review remain owned before F30 or any global adequacy claim.
+
+### Historical trust helper and controller commit records
+
+`2026-10-19`: these verbatim completed task-table notes retain their original epoch and
+meaning. Private rows keep every leaf and work-unit identity and route here. This historical
+ledger does not project earlier measurements to the current source or replace the current frontier.
+
+| Leaf | Work unit | Original record |
+| --- | --- | --- |
+| `M3.6.9.6.3.2.2.9.4` | `ARCHOGEN-M3-0680 (leaf M3.6.9.6.3.2.2.9.4)` | **configuration checkpoint integration passed**: after committed key/API/JSON/effects repairs, complete local tier 12 passed/zero failures or absences, exact committed-tree stamp, captured inputs restored with auxiliary durability limitation explicit; JSON repair container closes, book/live frontier advances to maintained census/current native replay; no current full mutation or runner-baseline claim |
+| `M3.6.9.6.3.2.2.9.7.1` | `ARCHOGEN-M3-0681 (leaf M3.6.9.6.3.2.2.9.7.1)` | **restoration producer is maintained**: indexed working bytes/modes and gitlink metadata snapshots/checks, independent system hashes, strict on-volume/boundary/schema/receipt controls; actual byte RED/restore and guard/truncation reversals fail correctly, restored 23 self-tests/native contracts/effects/planner pass; book/tool/live sync and version-register scope qualification, current five native replays next |
+| `M3.6.9.6.3.2.2.9.7.2` | `ARCHOGEN-M3-0682 (leaf M3.6.9.6.3.2.2.9.7.2)` | **current boundary repairs replayed with durable census**: committed producer/catalogue/code, all selected native entries yield strict named finishing kills and all 1003 captured inputs restore after each; historical auxiliary limits retained, environment/JSON/durability group closes, book/live state advances to split_command assessment; complete current mutation adequacy and runner compatibility remain open |
+| `M3.6.9.6.3.2.2.10.1` | `ARCHOGEN-M3-0683 (leaf M3.6.9.6.3.2.2.10.1)` | **bounded helper measurement and actual Cargo quote defect**: all 29 current edits measured, 13 named kills/16 survivors/strict 1, exact initial bindings and complete original/copy restoration; ordinary/space public Cargo controls versus apostrophe path failure, untracked probe limitation explicit and permanent repair owned next; book/live sync, no survivor closure or full adequacy claim |
+| `M3.6.9.6.3.2.2.10.2` | `ARCHOGEN-M3-0684 (leaf M3.6.9.6.3.2.2.10.2)` | **Cargo apostrophe paths preserve inventory**: actual public inventory RED/green over shared dependencies and six output-path cases; outside escapes decoded, quoted backslashes retained, exact old-helper native named kill and maintained 1003-input restoration; old bodies/catalogue prefix exact, format failure corrected and final focused required; canonical/book/pinned-producer/live sync, survivor assessment next |
+| `M3.6.9.6.3.2.2.10.3.1` | `ARCHOGEN-M3-0685 (leaf M3.6.9.6.3.2.2.10.3.1)` | **post-repair helper measured**: all 24 current edits, 13 named kills/11 survivors/strict 1, five prior survivor edits now killed by the quote control, exact source-region/edit bindings; all 1003 originals and copied source restored, auxiliary producer limits explicit; final-token coverage gap owned next, book/live sync, no equivalence or full adequacy claim |
+| `M3.6.9.6.3.2.2.10.3.2` | `ARCHOGEN-M3-0686 (leaf M3.6.9.6.3.2.2.10.3.2)` | **retained dependency argument controlled independently**: real binary/library fixture expects rlib/rmeta arguments, exact deleted-push reversal and both actual final-token edits give named kills/strict 0, all 1003 originals/copied source restored; production/prior bodies/catalogue prefix preserved, focused passes and final stamp required; book/pinned-source/live sync, remaining domain judgments next |
+| `M3.6.9.6.3.2.2.10.3.3.1` | `ARCHOGEN-M3-0688 (leaf M3.6.9.6.3.2.2.10.3.3.1)` | **producer boundary investigated**: pinned formatter distinguishes raw executable from escaped arguments; actual spaced toolchain builds succeed but public inventory collection fails with own-unit guards, ordinary-home control passes; empty check-cfg emitted only in measured failing build, exploratory producer limits explicit; production/tests/catalogue/equivalents unchanged, high-priority repair owned next, no survivor closure |
+| `M3.6.9.6.3.2.2.10.3.3.2` | `ARCHOGEN-M3-0689 (leaf M3.6.9.6.3.2.2.10.3.3.2)` | **compiler selector fixes collection**: same pinned rustc command makes Cargo print a plain program name; permanent isolated public RED/green requires exact units/dependencies across five compiler-home controls; exact native reversal and actual statement deletion yield named kills/strict 0, all 1003 captured inputs and copied source restore, prior bodies/catalogue prefix exact; canonical/book/ledger/live sync, exact staged focused required, remaining helper judgments next |
+| `M3.6.9.6.3.2.2.10.3.3.3.1` | `ARCHOGEN-M3-0690 (leaf M3.6.9.6.3.2.2.10.3.3.3.1)` | **real empty operands held**: successful pinned Cargo nonempty/empty lint controls preserve middle/final boundaries; four actual surviving loss edits now give named finishing kills/strict 0, exact catalogue reversal also killed; all 1009 captured inputs restore after each run, copied source matches, prior source bodies/catalogue prefix exact; test-only, book/ledger/live sync and published history rollover, final staged focused required; initial obligations and delimiter judgments remain separately owned |
+| `M3.6.9.6.3.2.2.10.3.3.3.2.1` | `ARCHOGEN-M3-0691 (leaf M3.6.9.6.3.2.2.10.3.3.3.2.1)` | **multiline framing defects owned**: real Cargo succeeds with line-break output paths; copied public ordinary/LF control pinpoints current compile slice panic; diagnostic framing intervention exposes separate empty compiler-read file objects, qualified apart from unchanged production; originals unchanged and copy restored, immediate dependency-first/command-second repair children, canonical/book/ledger/live lockstep; no production or equivalent change |
+| `M3.6.9.6.3.2.2.10.3.3.3.2.2` | `ARCHOGEN-M3-0692 (leaf M3.6.9.6.3.2.2.10.3.3.3.2.2)` | **dependency files retain complete paths**: match known first target and whole scratch prefixes before delimiters, real relative/absolute producer controls and malformed-target refusals pass; exact prior-reader native reversal yields named finishing kill, all 1010 captured inputs restore, older bodies outside owned compile region preserved; copied diagnostic owns escaped environment normalization next before public command framing; canonical/book/ledger/live sync and final staged focused required |
+| `M3.6.9.6.3.2.2.10.3.3.3.2.5.1` | `ARCHOGEN-M3-0693 (leaf M3.6.9.6.3.2.2.10.3.3.3.2.5.1)` | **environment producer domain pinned**: actual encoded metadata/runtime controls and pinned rustc source bind LF/CR/backslash encoding; source-marker control and output-colon refusal distinguish framing hypotheses; isolated native getenv oracle root-causes equals-name host surprise without a universal or project-defect claim; qualify exploratory producers, preserve tracked code, own encoded-prefix repair next; canonical/book/ledger/live sync |
+| `M3.6.9.6.3.2.2.10.3.3.3.2.5.2` | `ARCHOGEN-M3-0694 (leaf M3.6.9.6.3.2.2.10.3.3.3.2.5.2)` | **encoded environment prefixes normalize**: permanent actual Cargo controls require exact package-relative manifest path, encoded description/unset records across six source roots; distinct canonical control passes, exact literal-prefix reversal gives named finishing kill/strict 0 and all 1010 captured inputs restore; all prior bodies outside new helper/call/tests and catalogue prefix exact; book/canonical/ledger/live sync, final exact staged focused required; public complete-command framing next |
+| `M3.6.9.6.3.2.2.10.3.3.3.2.3` | `ARCHOGEN-M3-0695 (leaf M3.6.9.6.3.2.2.10.3.3.3.2.3)` | **complete Cargo records preserve inventory**: public newline panic and raw status-path fake invocation independently reproduced/root-caused; quote-aware full records plus known raw status prefixes repaired, malformed framing refuses; permanent exact unit/file-hash/env/dependency/configuration controls pass, both native reversals give named finishing kills/strict 0, all 1010 inputs restore and prior bodies/catalogue prefix exact; canonical/book/ledger/live sync, exact staged focused required; delimiter proofs next, final adequacy open |
+| `M3.6.9.6.3.2.2.10.3.3.3.2.6` | `ARCHOGEN-M3-0696 (leaf M3.6.9.6.3.2.2.10.3.3.3.2.6)` | **verification prose formatting repaired**: exact HEAD/current comparison replaces only literal newline escapes in the completed framing record; all other evidence and code/test/catalogue/equivalent bytes unchanged; book clarifies existing raw-status behavior, documentation gates pass and live frontier remains delimiter proofs |
+| `M3.6.9.6.3.2.2.10.3.3.3.2.4` | `ARCHOGEN-M3-0697 (leaf M3.6.9.6.3.2.2.10.3.3.3.2.4)` | **delimiter equivalents precisely bound**: same five actual sites survive before records and finish equivalent afterward/strict 0; fixed-program/pinned Unix formatter invariant includes encoded empty operands, compiled actual argv and wider-domain/wrong-oracle controls pass, all 1010 inputs/copy restore and older bodies unchanged; four per-file keys cover both guards and state edits, operator suite passes, canonical/book/ledger/live sync; exact staged focused required, final helper replay/initial closure next |
+| `M3.6.9.6.3.2.2.10.3.4` | `ARCHOGEN-M3-0698 (leaf M3.6.9.6.3.2.2.10.3.4)` | **complete bounded helper replay passes**: all 24 actual current edits finish 19 named kills/5 scoped E, strict 0; all sixteen original obligations independently bind to eleven named kills/five E through exact source/operator/context and owned repair, all 1010 original/copied regular inputs restore under maintained hashes/modes and opaque pin preserved; altered evidence refuses, code/tests/catalogue/E unchanged, book/canonical/live sync; integration checkpoint next, whole-production adequacy remains open |
+| `M3.6.9.6.3.2.2.10.4` | `ARCHOGEN-M3-0699 (leaf M3.6.9.6.3.2.2.10.4)` | **helper integration checkpoint passes**: first restricted tier fails process-detection controls, direct denied/readable OS probes and targeted RED arms isolate permissions; full bare-Git rerun passes all twelve steps/52 self-tests, exact activation-tree stamp and all 1010 captured inputs restore under maintained hashes/modes; code/tests unchanged, book/canonical/live sync, helper group closes and dropped-flag measurement is owned next; no remote CI or whole-production adequacy claim |
+| `M3.6.9.6.3.2.2.11.1` | `ARCHOGEN-M3-0700 (leaf M3.6.9.6.3.2.2.11.1)` | **complete dropped-flag table measurement**: all fourteen actual edits finish two named kills/eleven survivors/one compiler refusal, strict 1 and criterion unmet; unchanged table/producer bind every original entry and retain all eleven P1 obligations, no guessed offsets or E classifications; all 1011 original/copied regular inputs restore under maintained hashes/modes, altered evidence refuses, code/tests/catalogue/E unchanged, book/live sync and actual producer/caller assessment owned next |
+| `M3.6.9.6.3.2.2.11.2.1` | `ARCHOGEN-M3-0701 (leaf M3.6.9.6.3.2.2.11.2.1)` | **finite actual Cargo flag assessment**: successful ordinary/manifest-lint producer and unchanged public inventory records independently agree on raw argv, units/roles/packages/source hashes/env/configurations; altered evidence refuses, all 1011 original/copied inputs restore, source/tests/catalogue/E unchanged; ignored diagnostic/adapters explicitly qualified, all eleven obligations remain open, permanent check-cfg regression then source-bound remaining-flag evidence/conditional proofs owned; book/live sync |
+| `M3.6.9.6.3.2.2.11.2.2` | `ARCHOGEN-M3-0702 (leaf M3.6.9.6.3.2.2.11.2.2)` | **check-cfg operand exclusion controlled**: permanent successful actual-Cargo/public parent independently requires expected producer operands and exact inventory identity/source hashes/env/retained arguments across manifest lint levels; actual current switch changes prior S to named finishing K/strict 0, exact candidate fails for operand leak then restored GREEN, all 1011 original/copied inputs restore and altered evidence refuses; production/older tests/catalogue/E unchanged, one original obligation closes, ten remain, book/live sync and final exact-staged focused required; source-bound flag assessment next |
+| `M3.6.9.6.3.2.2.11.2.3` | `ARCHOGEN-M3-0703 (leaf M3.6.9.6.3.2.2.11.2.3)` | **initial flag premises assessed; execution defect owned**: installed Cargo pin/primary source and explicit-admission stable-profile refusals independently verified, finite evidence/ignored diagnostics qualified; actual public admitted build script writes owned sentinel and returns inventory, independent manifest/source/unit/sentinel audits reject altered evidence, all 1011 original/copied inputs restore and code/tests/catalogue/E unchanged; canonical/book/live disclose contract gap, immediate P1 hard metadata repair and premise/integration/source completion precede E work; no remaining-flag equivalence or final adequacy claim |
+| `M3.6.9.6.3.2.2.11.2.5.1` | `ARCHOGEN-M3-0704 (leaf M3.6.9.6.3.2.2.11.2.5.1)` | **hard metadata execution boundary repaired**: both admitted dynamic targets reproduce owned sentinel execution before repair, permanent public refusal/static positive controls pass after; actual native reversal killed by both named finishing parents, all 1012 original/copied regular inputs restore and independent altered-evidence controls refuse; older code/tests/catalogue prefix/E/twins preserved, book/canonical/live sync and exact-staged focused required; caller/E premise and full integration checkpoint next |
+| `M3.6.9.6.3.2.2.11.2.5.2` | `ARCHOGEN-M3-0705 (leaf M3.6.9.6.3.2.2.11.2.5.2)` | **repaired caller/integration checkpoint**: root/harness/generated preflight, fixed compiler/modes/environment/config and unchanged narrow delimiter reasons revalidated; actual compiled variants and wider-domain/wrong-oracle controls pass, every full local integration stage passes with official activation-tree stamp; all 1012 original regular inputs and opaque pin restore, independent altered-evidence audit refuses; close repair parent, sync book/canonical/live, source/stdlib/channel flag-domain completion next; no remote CI or full-production adequacy claim |
+| `M3.6.9.6.3.2.2.11.2.6.1` | `ARCHOGEN-M3-0706 (leaf M3.6.9.6.3.2.2.11.2.6.1)` | **failed Cargo-home reset execution gap owned**: unchanged public static fixture executes untracked owned wrapper after ignored removal failure, returns error/no inventory; independent bytes/permissions/altered-evidence audit agrees, all 1012 original/copied inputs restore and code/tests/catalogue/E unchanged; pinned source identities retained, source-domain completion unclaimed, current book/canonical/live disclose P1 and immediate hard reset repair .6.2; cleanup due at clean boundary |
+| `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.6` | `ARCHOGEN-M3-0785 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.6)` | actual controller/native descriptor-scarcity original/literal lifetime calibration and pinned recovery; permanent macOS parent/native1K full183,1111 restored/37 bindings/37 pins/12 falsifiers; prior source/control/catalogue/reason bytes exact, installed-byte seal/295 archives exact; focused/book/live gates; record presence next |
+| `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.7` | `ARCHOGEN-M3-0786 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.7)` | direct record presence; only three state lines/two revalidated guards; actual47 proof/tool controls, native6K/full183,1112 restored/37 bindings/37 pins/12 falsifiers; prior tests/catalogue/reasons/installation-close seal/296 older archives exact; book/live/focused gates, permission handback then complete controller replay |
+| `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.8` | `ARCHOGEN-M3-0787 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.8)` | complete current controller124/full183:113K/11U strict0, historical23S now K/quantity removed; 1113 restored/37 bindings/37 pins/12 receipt+2 refusal falsifiers, presence seal/297 archives exact; integration12/book/live gates, artifact source next |
+| `M3.6.9.6.3.2.2.11.2.6.2` | `ARCHOGEN-M3-0708 (leaf M3.6.9.6.3.2.2.11.2.6.2)` | **hard fresh Cargo-home reset**: checked helper propagates actual errors before metadata and all root/harness/generated-target builds; permanent public wrapper/permission and file-state controls hold absent/populated/recovery cases; old ignored-error reversal and NotFound inversion finish named kills; all original/copied inputs restore, earlier production/tests reconstruct exactly, catalogue append only, E/twins unchanged; focused/book and staged gates precede commit, source/caller revalidation next |
+| `M3.6.9.6.3.2.2.11.2.6.3.1` | `ARCHOGEN-M3-0709 (leaf M3.6.9.6.3.2.2.11.2.6.3.1)` | **pinned source/caller premises after hard reset**: source-kind/cache/std/channel/alias/visited-token branches revalidated with immutable official identities; inactive metadata dependencies distinguished from compiled units; permanent public and compiled delimiter/wider-domain/wrong-oracle controls pass, production/tests/catalogue/E exact; canonical/book/ledger/live synced and integration child next |
+| `M3.6.9.6.3.2.2.11.2.6.3.2` | `ARCHOGEN-M3-0710 (leaf M3.6.9.6.3.2.2.11.2.6.3.2)` | **full postreset local integration**: every current stage passes with pinned local tools/stores and required OS reads; official activation stamp matches native Git and complete originals/scoped prior-copy inputs restore; code/tests/catalogue/E exact, source/caller and reset groups close; closure book/canonical/live synced, initial output cleanup assessment owned next before flag controls; no remote CI or final adequacy claim |
+| `M3.6.9.6.3.2.2.11.2.7` | `ARCHOGEN-M3-0711 (leaf M3.6.9.6.3.2.2.11.2.7)` | **hard prior-inventory cleanup**: public P2 reproduction ties retained readable JSON to the preceding commit after ordinary refusal; directory output triggers late work; checked remove_file now stops before forms on actual errors, preserves contents and supports recovery; permanent public controls/native reversal and complete restoration hold the boundary, previous production/tests/E exact, skipped-cleanup anchor migrated and repair entry appended; canonical/book/live sync, focused 3/3 and book checks pass, exact final stamp/staged gates bind commit; proposal cleanup assessment owned next |
+| `M3.6.9.6.3.2.2.11.2.8` | `ARCHOGEN-M3-0712 (leaf M3.6.9.6.3.2.2.11.2.8)` | **hard proposal cleanup**: ordinary refusal/new report beside protected readable old proposal reproduced with writable sibling output; checked remove_file now returns attributed Err before report replacement, preserves old files and supports refusal/valid retries; public controls/native finishing kills and complete restoration hold the boundary; gate/tests reconstructed, catalogue append-only, trust.rs/E unchanged; canonical/book/live sync, historical .9.4 status corrected, fixed ceilings retained; focused 3/3 and book pass, exact stamp/staged gates bind commit; actual-candidate flag proofs next |
+| `M3.6.9.6.3.2.2.11.2.4.1` | `ARCHOGEN-M3-0713 (leaf M3.6.9.6.3.2.2.11.2.4.1)` | **lint-level actual-edit proofs**: eight consuming-bit switches compile beside original helper; actual pinned Cargo argv and literal normalized outputs, eight valid separate-argument counterexamples, consumed-value and wrong-oracle controls precede per-key E; native 8 S strict1 to 8 scoped E strict0 with altered-evidence refusal; 26 operator tests pass, original/current copy restore, older bodies/E prefix exact and production/catalogue unchanged; canonical/book/live sync, tight book ceilings trigger owned annex containment before cap/color |
+| `M3.6.9.6.3.2.2.11.2.4.4` | `ARCHOGEN-M3-0714 (leaf M3.6.9.6.3.2.2.11.2.4.4)` | **book proof annex**: compiler/normalization and closed mutation-measurement blocks move byte-exact from ledger/trust into Annex C; old entry anchors link onward, all source entries/rules/counts/examples/limits retained; shorter accurate sidebar caption keeps generated index under its unchanged ceiling; pinned rendering and maintained book gates plus native Git/Python-system hash/HTML checks pass; code/tests/catalogue/E unchanged, live selects cap-lints proof |
+
+### Complete native artifact-binder measurement
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.7`: the complete current artifact binder has **99 killed,
+31 survived and 11 compiler-rejected edits**, strict exit `1`. The source adequacy criterion
+is **unmet**. There are no equivalent, timeout or unjudged outcomes. All survivors have exact
+owned resolution leaves below; they are not silently exempted. The first next repair fixes
+an actual absolute symlink in an existing test fixture.
+
+The whole measured file is `xtask/src/trust_artifact.rs`, SHA-256
+`3c42078e46da0424e4c47aa467cd5e4b6edf851af1a0d50c811f595979aaa5c5`.
+The discovery range is zero-based `[11,198]`; the production prefix including its separator
+has SHA-256 `f51d00153db5f9be189efbe73ddb3ebd468cd1e48de93882d4c6e90406a2faa2`.
+Fresh actual CLI output agrees exactly with maintained discovery; this command has no
+selected-ID filter or equivalent reason file:
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail
+```
+
+`2026-10-19`: all 141 edits run against all 183 current trust parents after a passing baseline.
+Held native tree `a17071fc8835ba0af612ee1048a04f61fca7eb21` includes the measurement activation
+and exact committed-controller seal. Native sandbox profile SHA-256
+`2b3fbe199bddb4ba84c453a23334c7025308b06127ce3cc96f74b2a17680eedd`
+permits repository-volume writes and the required null device. This records the actual local
+execution, not remote CI or a caller result.
+
+#### Every native result
+
+`2026-10-19`: the table preserves all 141 current identities in native order. `K` means a
+finishing named parent failed; `S` means the current full parent population did not distinguish
+the edit; `U` means compilation rejected the candidate. A killed row names an actual witness
+and gives the total distinct named killing parents; the raw receipt retains every such name.
+The witness aliases expand to exact fresh parent names below. Survivor destinations are
+suffixes under `M3.6.9.6.3.2.2.15.2.1.3.3.3.2`; each remains open.
+
+| Alias | Actual named parent |
+| --- | --- |
+| A1 | `trust::artifact::tests::naming_query_excludes_source_codegen_and_environment_inputs` |
+| A2 | `trust::artifact::tests::actual_empty_input_query_preserves_build_and_ignores_now_invalid_source` |
+| A3 | `trust::tests::a_second_run_writes_the_same_bytes` |
+| A4 | `trust::artifact::tests::artifact_names_refuse_missing_foreign_linked_and_ambiguous_outputs` |
+| A5 | `trust::tests::every_program_target_is_a_root_or_classified_and_the_rest_is_reported` |
+| A6 | `trust_generated::generator_tests::the_harness_may_use_its_pair_s_roles_and_no_other` |
+| A7 | `trust::tests::naked_asm_is_refused` |
+
+| Current ID | Outcome | Actual witness / refusal / owner |
+| --- | --- | --- |
+| `L16.iter.0` | K | A1; 112 named killing parents |
+| `L16.iter.1` | K | A1; 112 named killing parents |
+| `L16.iter.2` | K | A1; 112 named killing parents |
+| `L16.guard.3` | K | A1; 1 named killing parent |
+| `L16.guard.4` | K | A1; 1 named killing parent |
+| `L16.guard.5` | K | A1; 1 named killing parent |
+| `L16.guard.6` | K | A1; 112 named killing parents |
+| `L16.guard.7` | K | A1; 112 named killing parents |
+| `L16.guard.8` | K | A1; 112 named killing parents |
+| `L16.guard.9` | S | owned `.8.2` |
+| `L16.guard.10` | S | owned `.8.2` |
+| `L16.guard.11` | S | owned `.8.2` |
+| `L16.guard.12` | K | A1; 112 named killing parents |
+| `L16.guard.13` | K | A1; 112 named killing parents |
+| `L16.guard.14` | K | A1; 112 named killing parents |
+| `L16.guard.15` | K | A1; 1 named killing parent |
+| `L16.guard.16` | K | A1; 1 named killing parent |
+| `L16.guard.17` | K | A1; 1 named killing parent |
+| `L20.int.18` | K | A1; 112 named killing parents |
+| `L20.int.19` | K | A1; 112 named killing parents |
+| `L21.logic.20` | S | owned `.8.3` |
+| `L21.not.21` | K | A1; 112 named killing parents |
+| `L21.not.22` | K | A1; 112 named killing parents |
+| `L21.dir.23` | K | A2; 111 named killing parents |
+| `L23.eq.24` | K | A1; 112 named killing parents |
+| `L23.logic.25` | K | A1; 112 named killing parents |
+| `L23.logic.26` | K | A1; 1 named killing parent |
+| `L23.logic.27` | K | A1; 112 named killing parents |
+| `L23.cond.28` | K | A1; 112 named killing parents |
+| `L23.cond.29` | K | A1; 112 named killing parents |
+| `L23.not.30` | K | A1; 112 named killing parents |
+| `L26.eq.31` | K | A1; 112 named killing parents |
+| `L26.cond.32` | K | A1; 112 named killing parents |
+| `L26.cond.33` | K | A1; 112 named killing parents |
+| `L27.stmt.34` | K | A1; 112 named killing parents |
+| `L29.stmt.35` | K | A1; 112 named killing parents |
+| `L33.cond.36` | K | A3; 13 named killing parents |
+| `L33.cond.37` | S | owned `.8.2` |
+| `L33.not.38` | K | A3; 13 named killing parents |
+| `L36.stmt.39` | S | owned `.8.2` |
+| `L40.int.40` | K | A1; 112 named killing parents |
+| `L40.int.41` | K | A1; 112 named killing parents |
+| `L42.cond.42` | K | A1; 111 named killing parents |
+| `L42.cond.43` | K | A1; 112 named killing parents |
+| `L42.dir.44` | S | owned `.8.4` |
+| `L42.lit.45` | S | owned `.8.4` |
+| `L42.lit.46` | K | A1; 112 named killing parents |
+| `L43.cond.47` | K | A1; 112 named killing parents |
+| `L43.cond.48` | K | A1; 1 named killing parent |
+| `L43.not.49` | K | A1; 112 named killing parents |
+| `L46.stmt.50` | K | A1; 112 named killing parents |
+| `L58.dir.51` | S | owned `.8.5` |
+| `L65.cond.52` | K | A1; 112 named killing parents |
+| `L65.cond.53` | K | A1; 1 named killing parent |
+| `L65.not.54` | K | A1; 112 named killing parents |
+| `L65.lit.55` | K | A1; 112 named killing parents |
+| `L65.lit.56` | K | A1; 112 named killing parents |
+| `L84.cond.57` | K | A4; 112 named killing parents |
+| `L84.cond.58` | K | A4; 1 named killing parent |
+| `L84.not.59` | K | A4; 112 named killing parents |
+| `L84.dir.60` | U | compiler refusal assessed below |
+| `L89.dir.61` | S | owned `.8.12` |
+| `L89.iter.62` | K | A4; 1 named killing parent |
+| `L89.iter.63` | K | A4; 1 named killing parent |
+| `L89.iter.64` | S | owned `.8.6` |
+| `L89.guard.65` | S | owned `.8.7` |
+| `L89.guard.66` | S | owned `.8.7` |
+| `L89.guard.67` | S | owned `.8.7` |
+| `L89.guard.68` | K | A4; 1 named killing parent |
+| `L89.guard.69` | K | A4; 1 named killing parent |
+| `L89.guard.70` | S | owned `.8.6` |
+| `L91.logic.71` | S | owned `.8.8` |
+| `L91.alt.72` | U | compiler refusal assessed below |
+| `L91.alt.73` | U | compiler refusal assessed below |
+| `L92.logic.74` | S | owned `.8.8` |
+| `L93.logic.75` | S | owned `.8.8` |
+| `L93.not.76` | K | A4; 112 named killing parents |
+| `L99.logic.77` | S | owned `.8.7` |
+| `L99.logic.78` | S | owned `.8.7` |
+| `L99.logic.79` | S | owned `.8.13` |
+| `L99.cond.80` | K | A4; 112 named killing parents |
+| `L99.cond.81` | K | A4; 1 named killing parent |
+| `L99.not.82` | K | A4; 112 named killing parents |
+| `L105.logic.83` | K | A4; 112 named killing parents |
+| `L105.logic.84` | K | A4; 111 named killing parents |
+| `L105.logic.85` | K | A4; 111 named killing parents |
+| `L105.cond.86` | K | A4; 1 named killing parent |
+| `L105.cond.87` | K | A4; 112 named killing parents |
+| `L105.not.88` | K | A4; 111 named killing parents |
+| `L135.eq.89` | K | A2; 111 named killing parents |
+| `L136.logic.90` | K | A3; 49 named killing parents |
+| `L137.eq.91` | K | A2; 95 named killing parents |
+| `L137.eq.92` | K | A2; 97 named killing parents |
+| `L137.logic.93` | K | A5; 4 named killing parents |
+| `L138.eq.94` | K | A3; 13 named killing parents |
+| `L138.eq.95` | K | A3; 13 named killing parents |
+| `L138.logic.96` | K | A6; 4 named killing parents |
+| `L155.eq.97` | K | A2; 111 named killing parents |
+| `L156.logic.98` | K | A2; 17 named killing parents |
+| `L158.eq.99` | K | A2; 17 named killing parents |
+| `L159.eq.100` | K | A2; 17 named killing parents |
+| `L159.logic.101` | K | A2; 111 named killing parents |
+| `L160.eq.102` | K | A2; 17 named killing parents |
+| `L160.logic.103` | S | owned `.8.9` |
+| `L179.cond.104` | K | A2; 111 named killing parents |
+| `L179.cond.105` | K | A2; 1 named killing parent |
+| `L179.not.106` | K | A2; 111 named killing parents |
+| `L195.eq.107` | K | A2; 110 named killing parents |
+| `L16.chain.108` | K | A1; 112 named killing parents |
+| `L16.chain.109` | K | A1; 112 named killing parents |
+| `L21.chain.110` | U | compiler refusal assessed below |
+| `L21.chain.111` | U | compiler refusal assessed below |
+| `L21.chain.112` | S | owned `.8.3` |
+| `L57.chain.113` | S | owned `.8.5` |
+| `L57.chain.114` | K | A1; 1 named killing parent |
+| `L65.contains.115` | U | compiler refusal assessed below |
+| `L65.contains.116` | S | owned `.8.14` |
+| `L65.contains.117` | U | compiler refusal assessed below |
+| `L65.contains.118` | K | A1; 112 named killing parents |
+| `L92.contains.119` | U | compiler refusal assessed below |
+| `L92.contains.120` | U | compiler refusal assessed below |
+| `L92.contains.121` | U | compiler refusal assessed below |
+| `L92.contains.122` | U | compiler refusal assessed below |
+| `L133.chain.123` | K | A7; 110 named killing parents |
+| `L133.chain.124` | K | A7; 109 named killing parents |
+| `L134.chain.125` | S | owned `.8.11` |
+| `L134.chain.126` | S | owned `.8.11` |
+| `L134.chain.127` | K | A7; 110 named killing parents |
+| `L144.chain.128` | S | owned `.8.11` |
+| `L144.chain.129` | K | A2; 1 named killing parent |
+| `L153.chain.130` | K | A2; 39 named killing parents |
+| `L153.chain.131` | K | A2; 42 named killing parents |
+| `L154.chain.132` | K | A2; 1 named killing parent |
+| `L154.chain.133` | K | A2; 1 named killing parent |
+| `L154.chain.134` | K | A2; 49 named killing parents |
+| `L156.chain.135` | K | A2; 111 named killing parents |
+| `L156.chain.136` | K | A2; 111 named killing parents |
+| `L175.chain.137` | S | owned `.8.10` |
+| `L175.chain.138` | K | A2; 111 named killing parents |
+| `L21.clogic.139` | S | owned `.8.3` |
+| `L21.clogic.140` | S | owned `.8.3` |
+
+| Operator | Attempted | Killed | Survived | Compiler refused |
+| --- | --- | --- | --- | --- |
+| `iter` | 6 | 5 | 1 | 0 |
+| `guard` | 21 | 14 | 7 | 0 |
+| `int` | 4 | 4 | 0 | 0 |
+| `logic` | 19 | 11 | 8 | 0 |
+| `not` | 11 | 11 | 0 | 0 |
+| `dir` | 5 | 1 | 3 | 1 |
+| `eq` | 12 | 12 | 0 | 0 |
+| `cond` | 20 | 19 | 1 | 0 |
+| `stmt` | 4 | 3 | 1 | 0 |
+| `lit` | 4 | 3 | 1 | 0 |
+| `alt` | 2 | 0 | 0 | 2 |
+| `chain` | 23 | 15 | 6 | 2 |
+| `contains` | 8 | 1 | 1 | 6 |
+| `clogic` | 2 | 0 | 2 | 0 |
+
+#### Compiler refusals are not coverage
+
+`2026-10-19`: all 11 `U` candidates are explicitly compiler-rejected. They contribute no
+semantic killing parent or equivalence. These diagnostics match the actual attempted edit:
+
+| ID | First actual diagnostic | Source/API assessment |
+| --- | --- | --- |
+| `L84.dir.60` | ``error[E0599]: no method named `contains` found for struct `PathBuf` in the current scope`` | PathBuf has starts_with, not the substituted contains method. |
+| `L91.alt.72` | ``error: unexpected closing delimiter: `}``` | Alternative mutation of matches! breaks Rust delimiter structure; no executable candidate. |
+| `L91.alt.73` | ``error: mismatched closing delimiter: `}``` | Alternative mutation of matches! breaks Rust delimiter structure; no executable candidate. |
+| `L21.chain.110` | ``error[E0061]: this method takes 0 arguments but 1 argument was supplied`` | Option iterator-style chain supplies an argument to a zero-argument method. |
+| `L21.chain.111` | ``error[E0599]: no method named `rev` found for enum `Option<&String>` in the current scope`` | Option<&String> is not the substituted reversible iterator. |
+| `L65.contains.115` | ``error[E0308]: mismatched types`` | BTreeSet<&str> first/last returns Option<&&str>; direct Some(&str) comparison has incompatible type. |
+| `L65.contains.117` | ``error[E0308]: mismatched types`` | BTreeSet<&str> first/last returns Option<&&str>; direct Some(&str) comparison has incompatible type. |
+| `L92.contains.119` | ``error[E0599]: no method named `first` found for reference `&str` in the current scope`` | A str slice has no first/last collection method; these membership rewrites are outside its API. |
+| `L92.contains.120` | ``error[E0599]: no method named `first` found for reference `&str` in the current scope`` | A str slice has no first/last collection method; these membership rewrites are outside its API. |
+| `L92.contains.121` | ``error[E0599]: `&str` is not an iterator`` | A str slice has no first/last collection method; these membership rewrites are outside its API. |
+| `L92.contains.122` | ``error[E0599]: `&str` is not an iterator`` | A str slice has no first/last collection method; these membership rewrites are outside its API. |
+
+#### Assessed survivors and repair order
+
+All probes below compile the actual helper or whole artifact component with the exact literal
+edit. Whole-component probes retain exact caller type declarations, the actual environment
+constructor and actual pinned compiler artifacts; file hashes have independent Python checks.
+They establish the stated helper behavior, with limits made explicit. Production is unchanged;
+these are adequacy gaps and proof obligations, except for the separately identified fixture link.
+No finite agreement or native survival is classified as equivalent.
+
+| Resolution leaf | Reproduction, impact and required next action | Actual survivor identities |
+| --- | --- | --- |
+| `.8.1` — relative artifact fixture link; P1, first | Existing output-refusal test stores an absolute link target; relocation loses its payload. Change only that target to relative root, preserve every assertion, independently copy/relocate/read it and replay the actual refusal parent. This repairs fixture locality, not production selection. | separate actual defect / final checkpoint |
+| `.8.2` — --test forwarding and duplicate refusal; P1 | Single --test must be forwarded; repeats at early, middle and final positions must refuse. Literal edits accept a repeated middle flag or omit the valid query flag. Add one bounded naming-helper control with independent exact query/refusal expectations. | `L16.guard.9`, `L16.guard.10`, `L16.guard.11`, `L33.cond.37`, `L36.stmt.39` |
+| `.8.3` — nonempty naming-option values; P1 | Present empty and flaglike values currently lack controls. Exact helper edits accept invalid --out-dir values while valid outputs agrees. Hold each naming-option family and both invalid shapes, exact error attribution and valid query controls. | `L21.logic.20`, `L21.chain.112`, `L21.clogic.139`, `L21.clogic.140` |
+| `.8.4` — exact extra-filename prefix; P1 | Substring and missing-equals edits forward metadata=extra-filename=-bait or bare extra-filename. Require only exact extra-filename= forwarding and valid suffix controls. Reconcile old .15.2.1.4 identities by exact source signature before closing that historical obligation. | `L42.dir.44`, `L42.lit.45` |
+| `.8.5` — joined option spellings and lookalikes; P1 | Truncation accepts unsupported joined families after crate-name; contains falsely refuses an ordinary source filename containing --target=. Hold every joined family and supported ordinary lookalikes with exact errors and valid controls. | `L58.dir.51`, `L57.chain.113` |
+| `.8.6` — complete output visitation and selection positions; P1 | A three-name library response loses middle validation or middle rlib selection. Use actual pinned three-output order, sole rlib in each position and a missing middle nonselected file. Hold independent selected path/hash plus valid recovery. | `L89.iter.64`, `L89.guard.70` |
+| `.8.7` — regular non-symlink outputs at every position; P1 | Position guards accept a middle symlink to owned foreign bytes. Lost regular-file tests select bytes from an owned named pipe. Hold every position and nonregular kind with valid file controls, bounded parent failures, no stranded writer/read or outer-timeout verdict. | `L89.guard.65`, `L89.guard.66`, `L89.guard.67`, `L99.logic.77`, `L99.logic.78` |
+| `.8.8` — basename grammar and all-output uniqueness; P1 | Existing nested/parent-relative files defeat lost syntax checks; duplicate nonselected library output defeats lost uniqueness. Dot/empty mutants retain refusal but lose the precise invalid-basename category. Hold exact diagnostics before filesystem access, valid controls and nonselected duplicate cases. | `L91.logic.71`, `L92.logic.74`, `L93.logic.75` |
+| `.8.9` — ordinary and canonical source prefixes under a tree alias; P1 | Whole actual component with actual environment/compiler and relative tree alias accepts ordinary/canonical absolute source argv; conjunction loses both. Hold both geometries and physical control, invalidated source, unchanged artifact bytes/hash and real invocation evidence. | `L160.logic.103` |
+| `.8.10` — complete pinned naming-query environment; P1 | Exact environment/whole component with nonexistent explicit pin refuses originally; take(1) keeps PATH and succeeds through ambient default. Establish a bounded meaningful pin/environment control, preserving original source. A nonexistent-pin helper falsifier alone is not a supported Cargo build claim. | `L175.chain.137` |
+| `.8.11` — complete metadata roots: producer and defensive contract; P1 assessment | Constructed two matching library keys/distinct roots refuse originally but truncation selects real compiled output. Bind exact Cargo metadata producer and every caller: library kinds may share one source. Add justified direct defensive controls or exact guarded all-domain proof; no equivalence from synthetic reachability or survival. | `L134.chain.125`, `L134.chain.126`, `L144.chain.128` |
+| `.8.12` — reported-output diagnostic ordering; P2 before caller | Reversed split preserves valid selection but attributes first failure to the later missing name. Review accepted diagnostic contract; hold a meaningful deterministic first-failure oracle or precise source proof. Never invent an arbitrary kill or claim acceptance changed. | `L89.dir.61` |
+| `.8.13` — explicit symlink term after regular-file predicate; P2 before caller | Finite regular/named-pipe controls agree after deleting only is_symlink. Bind symlink_metadata snapshot and published FileType/Metadata exclusivity/purity, source/callers and falsified axioms. Choose exact guarded proof or justified verified simplification; no E from the finite grid. | `L99.logic.79` |
+| `.8.14` — required crate-name minimum-member predicate; P2 before caller | Exact helper/mutant agree over exercised optional subsets; crate-name appears lexical minimum of closed inserted-key set. Prove all insertions, BTreeSet/string ordering and source/caller closure; compile actual original/edit, reject wider smaller-key premise and guard it before any exact reason/native E. | `L65.contains.116` |
+| `.8.15` — complete final artifact replay and checkpoint; after .1-.14 | Fresh complete CLI/discovery/source/caller/producer/reason census and all current native parents, no selected projection. Reconcile every initial survivor/removed edit, compiler refusal, exact proof reason and historical suffix obligation. Restore original/copied inputs/modes/names; reject false receipts; integration at milestone; book/live sync before caller pivot. | separate actual defect / final checkpoint |
+
+The actual library-output probes use a response containing dylib, rlib and staticlib names.
+The metadata position edits accept a middle relative symlink and hash its owned foreign target;
+the regular-file edits accept writer-supplied named-pipe bytes. All named-pipe probes have finite
+writer/reader deadlines and join their workers. Valid regular files and fresh recovery are held.
+Missing-middle and sole-middle-rlib probes distinguish visitation from artifact selection.
+Syntax witnesses create the nested and parent-relative files first, preventing an unrelated
+missing-file error from masking the removed basename judgment. The uniqueness witness repeats
+a nonselected output while keeping exactly one valid rlib. Dot/empty-name and output-order
+changes currently affect diagnostic category/order, not successful selection; their owners
+must justify a meaningful diagnostic contract rather than assert an acceptance defect.
+
+The last metadata truncations are calibrated against explicitly constructed differing roots.
+Cargo library kinds normally share the library's source; the producer/caller reachability proof
+is still required. Likewise, dropping the query environment ignores an explicitly nonexistent
+toolchain pin and succeeds through an ambient default in the helper probe. That probe proves
+the pin is lost, not that such a pin belongs to a successful Cargo build. These scopes remain
+visible in `.8.10` and `.8.11`.
+
+The required-crate-name membership edit agrees over the exercised optional-key subsets because
+the observed insertion keys place crate-name first lexically. The regular-file-only predicate
+also agrees on the exercised file kinds. Both need exact source/API premises, rejected wider
+domains and source/caller guards before any equivalence reason can be considered.
+
+#### Real fixture-locality defect: owned repair first
+
+The existing `artifact_names_refuse_missing_foreign_linked_and_ambiguous_outputs` parent creates
+its link with `symlink(out.join("root"), out.join("link"))`; `out` is runtime absolute, so the
+stored link target is absolute. The actual retained fixture confirms this with `readlink`.
+An owned copy/move calibration reproduces loss of the target after relocating the source tree;
+a relative `root` link preserves the same payload and independently checked hash. The original
+fixture was untouched during the frozen replay. `.8.1` owns the immediate next safe repair after
+this measurement commit, including preservation of every existing assertion and actual
+relocation/refusal checks. This is a real portability defect in a test fixture, not a claim
+that production selected a wrong artifact.
+
+#### Restoration, receipt controls and preservation
+
+`2026-10-19`: all 1114 captured regular original/current-copy inputs restore with independent
+Python/system hashes and modes; the gitlink identity is checked as metadata only. The copied
+parent listing equals all 183 fresh names. All 37 direct source/caller/tool bindings and
+37 pinned public producer sources agree. Production, previous tests, mutation catalogues and
+active reason records remain byte-exact to `bab3a537598dd611515fd13f60c9b94ca3a93849`.
+
+`2026-10-19`: all 12 falsified receipts refuse: changed scope, missing result, changed edit,
+invented parent, changed total, changed exit, wrong file, wrong source hash, changed outcome,
+duplicate result, invented equivalent and reduced population. The exact audit program has
+SHA-256 `1e351c6170886c2ae13618b04d4823e28a33131d50c5e1e4b2fde32b2445a77f`.
+The committed controller container and final-replay body seal exactly, with all 298 older
+archive files unchanged. Historical task-table routing reconstructs all 36 original notes
+verbatim and rejects omitted/changed notes; no book-size ceiling is introduced.
+
+Raw plan, actual CLI/listing, execution/native log/exit, complete named results, original/copy
+restoration, audit, seal, source-bound calibrations and routing audit remain under
+`target/compiler-artifact-full/`. The executable audit and detailed results are retained evidence,
+not a dependency of normal project builds. An initial malformed snapshot CLI invocation refused
+before native work; the corrected flag-only invocation generated the input snapshot. No result
+is inferred from that refused invocation.
+
+The preceding controller checkpoint's full integration passed on unchanged production; this
+ordinary measurement commit runs the documentation gates and book build. Resolution controls
+run focused checks when Rust changes, and the complete artifact checkpoint requires full
+integration. Caller measurement and final source/premise/reason replay plus independent review
+remain ahead; neither this measured population nor the bounded helper probes closes F30.

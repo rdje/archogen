@@ -133,6 +133,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#complete-diagnostic-region-replay)
 - Complete guarded run_cargo measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-guarded-run_cargo-measurement)
+- Complete native artifact-binder measurement — [Annex C: Trust proof
+  records](annex-trust-proofs.md#complete-native-artifact-binder-measurement)
 - Complete native compiler controller measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-native-compiler-controller-measurement)
 - Complete native compiler observer measurement — [Annex C: Trust proof
@@ -173,7 +175,7 @@ a change that leaves it stale, so it is never edited by hand.
   gate](trust.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where
   generated systems run](targets.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
   the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md), [Annex B: The checks
-  that keep the repository honest](annex-repository.md)
+  that keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Diagnostic cohort integration checkpoint — [Annex C: Trust proof
   records](annex-trust-proofs.md#diagnostic-cohort-integration-checkpoint)
 - Diagnostic selector assessment — [Annex C: Trust proof records](annex-trust-proofs.md#diagnostic-selector-assessment)
@@ -248,6 +250,7 @@ a change that leaves it stale, so it is never edited by hand.
 - **GNU** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Verifying the
   toolchain](verification.md)
 - **GPG** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
+- **GREEN** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 
 ## H
 
@@ -255,8 +258,11 @@ a change that leaves it stale, so it is never edited by hand.
   in detail](annex-runtime.md)
 - Hashes: what a review is a review of — [Where the engine's knowledge comes from: the
   catalog](catalog.md#hashes-what-a-review-is-a-review-of)
+- **HEAD** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Historical effects and current self-tests — [Annex B: The checks that keep the repository
   honest](annex-repository.md#historical-effects-and-current-self-tests)
+- Historical trust helper and controller commit records — [Annex C: Trust proof
+  records](annex-trust-proofs.md#historical-trust-helper-and-controller-commit-records)
 - Holding interrupts back — [The runtime: decisions, not actions](runtime.md#holding-interrupts-back)
 - How a format is held to its identifier — [What is versioned, and what changing it
   costs](versions.md#how-a-format-is-held-to-its-identifier)
@@ -271,6 +277,7 @@ a change that leaves it stale, so it is never edited by hand.
 - How time is charged — [What the scheduling checker establishes](analysis.md#how-time-is-charged)
 - How to read this book — [Introduction](introduction.md#how-to-read-this-book)
 - How we know it is right — [The runtime: decisions, not actions](runtime.md#how-we-know-it-is-right)
+- **HTML** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **HTTP** — [definition](glossary.md), [The engine API](engine-api.md)
 - **HTTPS** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 
@@ -397,6 +404,7 @@ a change that leaves it stale, so it is never edited by hand.
 ## P
 
 - Parent repairs — [Generated-sources test adequacy](trust-adequacy.md#parent-repairs)
+- **PATH** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **PDF** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **period** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Reading a
   description](reading.md), [Kinds and schemas](kinds.md), [Quantities and units](quantities.md), [The S0 early

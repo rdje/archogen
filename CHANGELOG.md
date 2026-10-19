@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — measure the complete artifact binder and own every survivor
+
+`ARCHOGEN-M3-0788` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.7`), `2026-10-19`.
+
+- Complete current141/all183 native:99 named kills/31 survivors/11 compiler refusals,
+  strict1; no equivalent/timeout/unjudged result. Criterion remains unmet.
+- Assess and schedule every survivor; reproduce the actual absolute-link fixture locality
+  defect and own its immediate next repair. Preserve production, prior tests, catalogues/reasons.
+- Restore1114 original/copied inputs,37 direct bindings/37 pins,12 false-receipt controls;
+  seal controller bodies exactly/298 prior archives unchanged. Route36 historical notes
+  verbatim to the unbounded book and independently reconstruct them with false-note controls.
+- Publish all identities/refusals/scoped calibrations, update live frontier to relative-link
+  repair, run documentation gates and book build; final complete artifact replay/integration
+  remains owned after bounded resolution. No adequacy or caller projection.
+
 ## archogen — complete current compiler-controller replay
 
 `ARCHOGEN-M3-0787` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.8`), `2026-10-19`.
