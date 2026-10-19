@@ -6146,3 +6146,79 @@ and false receipts. Raw evidence remains in `target/artifact-joined-options/`. F
 focused/book/commit gates complete this leaf; complete output visitation and selection positions
 are next. A final complete current artifact replay remains separately owned, so these selected
 kills establish no new full-file, caller or global adequacy result.
+
+### Complete output visitation and rlib selection positions
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.6`: a permanent bounded parent obtains the pinned
+compiler's actual three-type filename report, validates the selector on that report and holds
+selection of the sole rlib in every position. Each nonselected output must also exist: removing
+it must refuse with that filename attributed, followed by exact recovery. Production and every
+previous test remain byte-exact.
+
+The parent uses the actual base-environment constructor, pinned toolchain and null stdin:
+
+```text
+rustc --print=file-names - --crate-name probe \
+  --crate-type dylib --crate-type rlib --crate-type staticlib
+```
+
+It requires exactly the expected shared-library, rlib and static-library name set. On the measured
+macOS host the fresh response is `libprobe.dylib`, `libprobe.rlib`, `libprobe.a`; the supported
+Linux fixture expects `libprobe.so` for the shared library. It feeds the actual reported order
+to the selector, without requiring the producer to promise one order. Explicit protocol
+permutations then place the rlib first, middle and last:
+
+| Sole rlib position | Protocol response order |
+| --- | --- |
+| First | rlib, shared library, static library |
+| Middle | shared library, rlib, static library |
+| Last | shared library, static library, rlib |
+
+The named files contain controlled regular-file payloads. The selected payload is the literal
+`selected library bytes` followed by LF; the others contain `nonselected output bytes` followed
+by LF. Every valid call must select `release/deps/libprobe.rlib` with SHA-256
+`26fff0e84dc91af757184906354cddbb54702d2078c781ce0ad5eb1ff693de8d`.
+The expected digest agrees independently between Python, the system SHA-256 command and the
+actual selector's Rust digest. These fixtures exercise selection/hash/recovery; existing public
+artifact parents retain actual compiled binary and library checks.
+
+For each selected position, each nonselected file is removed in turn. The parent calls the
+selector and restores the file before asserting the attributed refusal, then immediately checks
+the valid path/hash again. In particular, a valid first rlib cannot hide a missing middle output.
+The original and native-copy fixtures retain all payloads after the current selected replay.
+The actual report remains in the fixture's `reported-names.txt`; the bounded parent leaves no
+compiler or worker running.
+
+| Exact current edit | Initial full measurement | Current native result |
+| --- | --- | --- |
+| `L89.iter.64`, output loop restricted to endpoints | S | K, new intended parent |
+| `L89.guard.70`, artifact selection condition restricted to endpoints | S | K, new intended parent |
+
+The exact new parent is
+`trust::artifact::tests::every_reported_output_is_read_and_the_rlib_can_be_in_each_position`.
+It is the only added name, and every earlier parent remains.
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L89.iter.64 --only L89.guard.70
+```
+
+`2026-10-19`: both selected edits finish killed against all 188 current trust parents, strict
+exit `0`, with the new intended name in each failure list. No selected survivor, compiler refusal,
+equivalent, timeout or unjudged result occurs. All 1121 original/copied regular inputs
+restore with independent Python/system hashes and modes. All 37 direct bindings and 37 pinned
+public producer sources agree. Invented-parent, missing-result, changed-outcome, changed-exit
+and duplicate-result receipts refuse. The committed joined-option leaf seals exactly and all
+304 prior task archive files remain unchanged. Original/copy fixture audits independently
+verify the actual filename sets, regular file kinds and each complete payload/hash.
+
+Held native tree `dbb687bdb69dfe640b399d55a9a9dcc9a8ba319a` precedes completion documentation.
+Whole artifact file SHA-256 `1cb191cbc4645e8c41650ef605177534586b770bbaf18f143c7e557d52e67d7e`;
+its production prefix remains exact. Audit SHA-256
+`417aa5fc0f086a69ab9ad6aa5f795d4ddb73dba09fb7e5591a5125fa938a346c`
+binds source/parent preservation, actual fixture recovery, historical/native edit identities,
+restoration and false receipts. Raw evidence remains in `target/artifact-output-positions/`.
+Final staged focused/book/commit gates complete this leaf; every-position regular non-symlink
+file controls are next. Complete artifact/caller/global adequacy remains separately owned and open.

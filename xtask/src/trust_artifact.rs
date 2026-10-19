@@ -557,6 +557,89 @@ mod tests {
     }
 
     #[test]
+    fn every_reported_output_is_read_and_the_rlib_can_be_in_each_position() {
+        crate::trust_test_process::bounded!(
+            every_reported_output_is_read_and_the_rlib_can_be_in_each_position
+        );
+        use crate::catalog_build::environment;
+        use std::{
+            collections::BTreeSet,
+            process::{Command, Stdio},
+        };
+
+        let base = real_root().join("target/trust-tests/artifact-output-positions");
+        let _ = fs::remove_dir_all(&base);
+        let target = base.join("target");
+        let out = target.join("release/deps");
+        fs::create_dir_all(&out).unwrap();
+        let env = environment("1.95.0", &base.join("cargo-home"), &target).unwrap();
+        let printed = Command::new("rustc")
+            .args([
+                "--print=file-names",
+                "-",
+                "--crate-name",
+                "probe",
+                "--crate-type",
+                "dylib",
+                "--crate-type",
+                "rlib",
+                "--crate-type",
+                "staticlib",
+            ])
+            .current_dir(&base)
+            .env_clear()
+            .envs(env.iter().map(|(key, value)| (key, value)))
+            .stdin(Stdio::null())
+            .output()
+            .unwrap();
+        assert!(printed.status.success(), "{:?}", printed.stderr);
+        let shared = if cfg!(target_os = "macos") {
+            "libprobe.dylib"
+        } else {
+            "libprobe.so"
+        };
+        let rlib = "libprobe.rlib";
+        let archive = "libprobe.a";
+        let names: Vec<_> = std::str::from_utf8(&printed.stdout)
+            .unwrap()
+            .lines()
+            .collect();
+        assert_eq!(names.len(), 3);
+        assert_eq!(
+            names.into_iter().collect::<BTreeSet<_>>(),
+            BTreeSet::from([shared, rlib, archive])
+        );
+        fs::write(base.join("reported-names.txt"), &printed.stdout).unwrap();
+        fs::write(out.join(rlib), b"selected library bytes\n").unwrap();
+        for name in [shared, archive] {
+            fs::write(out.join(name), b"nonselected output bytes\n").unwrap();
+        }
+        let good = |stdout: &[u8]| {
+            let actual = outputs(stdout, &out, &target, true).unwrap();
+            assert_eq!(actual.0, "release/deps/libprobe.rlib");
+            assert_eq!(
+                actual.1,
+                "26fff0e84dc91af757184906354cddbb54702d2078c781ce0ad5eb1ff693de8d"
+            );
+        };
+        good(&printed.stdout);
+        for position in 0..3 {
+            let mut names = vec![shared, archive];
+            names.insert(position, rlib);
+            let stdout = format!("{}\n", names.join("\n"));
+            good(stdout.as_bytes());
+            for missing in [shared, archive] {
+                fs::remove_file(out.join(missing)).unwrap();
+                let result = outputs(stdout.as_bytes(), &out, &target, true);
+                fs::write(out.join(missing), b"nonselected output bytes\n").unwrap();
+                let error = result.unwrap_err();
+                assert!(error.starts_with(&format!("{missing}:")), "{error}");
+                good(stdout.as_bytes());
+            }
+        }
+    }
+
+    #[test]
     fn actual_empty_input_query_preserves_build_and_ignores_now_invalid_source() {
         crate::trust_test_process::bounded!(
             actual_empty_input_query_preserves_build_and_ignores_now_invalid_source

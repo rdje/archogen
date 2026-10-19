@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold complete output visitation and rlib positions
+
+`ARCHOGEN-M3-0794` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.6`), `2026-10-19`.
+
+- Add a bounded actual three-type filename-query parent; hold sole rlib in each position and
+  refusal/recovery for each missing nonselected output, with literal path and independent hash.
+- Exact historical2S become native2K/full188 strict0;1121 originals/copies restored,
+  37 bindings/37 pins/five false receipts; original/copy fixture payloads intact.
+- Joined-option seal/304 prior archives exact; production/old tests/reasons unchanged.
+  Book/live and final staged focused gates; every-position file kinds next, full adequacy open.
+
 ## archogen — hold every joined naming-option boundary
 
 `ARCHOGEN-M3-0793` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.5`), `2026-10-19`.

@@ -141,6 +141,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#complete-native-compiler-controller-measurement)
 - Complete native compiler observer measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-native-compiler-observer-measurement)
+- Complete output visitation and rlib selection positions — [Annex C: Trust proof
+  records](annex-trust-proofs.md#complete-output-visitation-and-rlib-selection-positions)
 - Complete prefix/helper replay — [Annex C: Trust proof records](annex-trust-proofs.md#complete-prefixhelper-replay)
 - Complete repaired Cargo diagnostic measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-repaired-cargo-diagnostic-measurement)
