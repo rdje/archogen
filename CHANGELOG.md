@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — eleventh daily artifact cleanup
+
+`ARCHOGEN-PROGRAM-0778` (leaf `PROGRAM.93`), `2026-10-19`.
+
+- Remove only main, empty wasm and owned native-sweep incremental caches after physical/native
+  identity and process checks:2863 files/929596234 logical bytes, no allocated-space claim.
+- Immediate residue and1098-input restoration pass; focused3/3 and documented wasm workflow pass.
+  Retain evidence, dependency stores, final outputs and Git workspaces.
+- Seal PROGRAM.92 exactly/all288 old archives unchanged; repair root range through93 and update
+  latest-only record/full book methods. Resume current M3 controller measurement.
+
 ## archogen — finish the complete current observer replay
 
 `ARCHOGEN-M3-0777` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.4`), `2026-10-19`.

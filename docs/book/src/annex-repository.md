@@ -65,6 +65,8 @@ $ bash scripts/check_scratch_locality.sh              # the gate
 $ bash scripts/check_scratch_locality.sh --self-test  # its RED arms, on scratch repositories
 ```
 
+### Daily artifact cleanup
+
 Daily artifact cleanup has a task-tree owner and a metadata inventory before deletion. The latest date and summary
 live in `docs/ARTIFACT_CLEANUP.md`; the owning leaf keeps the deletion list, regeneration commands, retained evidence
 and cold verification. Compiler caches may be regenerated; cited review evidence, tools and dependency stores are
@@ -77,6 +79,49 @@ filesystem metadata checks agreed; immediate residue and maintained tracked-inpu
 and after focused/wasm regeneration checks. Existing dependency/build products, cited evidence and Git
 workspaces were retained. The metadata/deletion adapters are untracked supplementary evidence; this verifies
 regeneration after incremental removal, not a complete rebuild from source.
+
+Cleanup (`2026-10-19`, `PROGRAM.93`) removed 2863 files totaling 929596234 logical
+bytes from the main and owned native-sweep incremental caches, plus the empty wasm cache.
+This is logical file size, with no allocated disk-space claim. The
+[Cargo cache reference](https://doc.rust-lang.org/cargo/reference/build-cache.html)
+identifies incremental output as a compiler cache; actual locations and behavior here were
+checked with the pinned toolchain.
+
+| Repository-relative location | Regular files | Logical bytes | `.bin` / `.log` | Action |
+| --- | --- | --- | --- | --- |
+| `target/debug/incremental` | 965 | 415272869 | 40 / 0 | Remove cache |
+| `target/wasm32-unknown-unknown/debug/incremental` | 0 | 0 | 0 / 0 | Remove empty cache |
+| `target/mutation-sweep/target/debug/incremental` | 1898 | 514323365 | 42 / 0 | Remove owned cache |
+| `target/debug/deps` | 800 | 671631278 | 0 / 0 | Retain build products |
+| `target/release` | 117 | 17080485 | 0 / 0 | Retain build products |
+
+Physical metadata checks every parent, directory and file for the repository volume,
+regular-file/directory type, symlinks and nested Git markers. Independent native `find` and
+`/usr/bin/stat` agree on every location's counts and logical bytes. Before deletion, the native
+process census reports no project background jobs; repeating the complete inventory must match
+all paths, identities, modes and sizes. Only the fixed incremental directories are deleted,
+and immediate existence checks prove each gone. Raw evidence, dependency stores, final build
+products and Git workspaces remain. The ignored metadata/deletion adapters are supplementary;
+maintained input checks, native system tools and documented builds are primary verification.
+
+All 1098 captured regular inputs restore after deletion and again after the workflows under
+Python/system hashes, bytes and modes; the gitlink remains opaque metadata. Focused verification
+passes formatting, strict lint and complete tests in 153.07 seconds; the documented wasm build
+also succeeds. Retained build products may be reused, so this checks workflow after cache
+removal without claiming a full dependency rebuild from source.
+
+```sh
+make focused
+bash scripts/wasm_build.sh
+```
+
+Held activation tree `c64735bfcf5bf93f561625a132221cbbb4a35303` covers these checks; final
+book/snapshot staging is a later documentation epoch. Receipts are under
+`target/artifact-cleanup/2026-10-19/`. The previous task seals exactly with all 288 older
+archives unchanged. The task-tree root's child summary now includes the already defined
+children beyond its former `.89` endpoint. The latest-only record retains the removal receipt's
+exact recorded time. Cleanup ran shortly before the daily boundary ahead of the next long
+controller sweep; current controller measurement resumes next.
 
 ## Before handing the workspace over
 
