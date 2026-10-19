@@ -4816,3 +4816,85 @@ Supplemental audit SHA-256:
 Final focused/book/doctrine checks close this slice. Installed-observer byte verification is
 next; final complete controller replay remains separately owned.
 
+### Installed observer byte verification
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.6.5`: the installed-image comparison now has a
+native corruption control. The original production comparison already refuses changed bytes;
+its production prefix is unchanged. This measurement and retained native fixture are macOS-specific.
+
+The control compiles the actual controller with its JSON and embedded observer sources in an
+isolated helper. It includes the real base-environment constructor without changing its
+selection or forwarding. Controller source comes from the compiled test context, including
+an actual native mutation. The pristine source-root hint is not substituted for it.
+
+The tracked C fixture uses the existing public Mach-O interposition boundary. After the real
+permission operation succeeds on an installed observer, it changes the first file byte with
+an exclusive-or mask of one. The write occurs before the controller closes its writer and
+before its readback. The fixture targets only observer files in the helper's own session root.
+It does not hook close or change the bytes returned by read. Consequently, both the original
+and guard-omitted controllers receive a genuinely changed installed file, even when the latter
+omits readback altogether.
+
+Trace records identify loaded-library, successful permission, corruption and readback events
+by actual file inode. The parent independently reads the prepared and installed images and
+requires exactly the intended changed byte, unchanged remaining bytes and preserved permissions.
+This separates a real filesystem effect from a fixture that only reports that it injected one.
+
+| Case | Required behavior |
+| --- | --- |
+| Baseline, no library | Accept an exact installed image and complete a real pinned query |
+| Loaded library, pass mode | Preserve exact image bytes and complete the same query |
+| Corruption | Refuse with `installed compiler provenance observer differs`, retain the changed image without creating its records directory, then complete a fresh valid session and pinned-query recovery |
+
+The helper compares observer-query stdout with an independent direct pinned query and requires
+the typed consumer to accept the query record without producing compilation units. The fixture
+removes its loader variables before compiler or observer children start. All environment changes
+remain within the isolated helper process. The relative preload path avoids a checkout-root
+delimiter in the loader list.
+
+`2026-10-19`: original/literal calibration retains all six combinations of controller and
+baseline/pass/corrupt mode. Both controllers receive the same precise corruption effect.
+The original refuses and recovers; the omitted comparison accepts the changed image.
+The deliberately unexpected-acceptance branch returns before attempting to execute that image.
+Baseline and loaded-pass cases succeed for both. Independent byte, permission, inode-trace,
+record-state, stdout and stderr checks agree.
+
+This is controlled filesystem corruption at a component boundary. It does not claim to induce
+physical storage failure, establish crash consistency or measure arbitrary close-sensitive
+filesystems. Other hosts require their own supported boundary witness. The host-neutral
+catalogue remains unchanged.
+
+The permanent parent is
+`trust::compiler::tests::actual_installed_observer_corruption_is_refused_before_use_and_recovers`.
+Its fixtures are `scripts/fixtures/compiler_install_readback.c` and
+`scripts/fixtures/compiler_install_readback_probe.rs`.
+
+```sh
+cargo test -p xtask trust::compiler::tests::actual_installed_observer_corruption_is_refused_before_use_and_recovers -- --exact
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L120.cond.18
+```
+
+The permanent control passes directly in 2.08 seconds. The native replay confirms the guard-omission regression.
+
+`2026-10-19`: native baseline 54 seconds; the actual guard omission finishes killed by only
+the new parent against all 182 current macOS trust parents, strict exit 0. There is no timeout,
+unjudged result, compiler refusal or equivalence judgment in this selected replay.
+
+`2026-10-19`: all 1108 original/current-copy inputs restore by bytes, modes and independent
+Python/system hashes. All 35 direct bindings and 37 public source pins agree. Twelve altered
+source/scope/replacement/name/outcome/count/exit/population receipts reject. The independent
+native calibration audit verifies every retained original/literal case and its actual files.
+Removing the new parent reconstructs the entire previous controller exactly. Other production,
+prior tests, catalogue and reasons are unchanged. The committed emit-marker body seals exactly,
+and all 294 earlier archives retain their bytes.
+
+Held native tree `5354a8d5fe8a9cf7e3a9dfffce9d803d39341783` precedes completion documentation
+and final focused staging. Raw calibration and receipts are under `target/compiler-install-readback/`.
+Supplemental audit SHA-256:
+`80af8168e21a568b165d78eb695a49a0e66006b65543355a69db18f983d8cee1`.
+Final focused/book/doctrine checks close this slice. Installation's explicit close is assessed
+next; the observer's path-only close proof does not transfer to this later readback allocation.
+

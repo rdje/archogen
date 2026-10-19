@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold installed observer byte verification
+
+`ARCHOGEN-M3-0784` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.5`), `2026-10-19`.
+
+- Calibrate actual controller/real environment with native corruption after chmod and before
+  close/readback; independently hold changed bytes, inode traces, permissions and pinned recovery.
+- Original refuses/omitted guard accepts the same changed image. Permanent macOS parent/native1K
+  full182 strict0,1108 originals/copies restore;35 bindings/37 pins/12 false receipts hold.
+- Preserve prior production/tests/catalogue/reasons and emit-marker seal/294 older archives.
+  Track C/Rust fixtures, publish complete book/host limits and live pointers; final focused/staged
+  gates, installation explicit-close assessment next.
+
 ## archogen — hold exact compilation emit-marker validation
 
 `ARCHOGEN-M3-0783` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.4`), `2026-10-19`.

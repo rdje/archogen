@@ -368,6 +368,181 @@ mod tests {
         binary
     }
 
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn actual_installed_observer_corruption_is_refused_before_use_and_recovers() {
+        crate::trust_test_process::bounded!(
+            actual_installed_observer_corruption_is_refused_before_use_and_recovers
+        );
+        use std::os::unix::fs::{MetadataExt, PermissionsExt};
+        fn directories(path: &std::path::Path) -> Vec<PathBuf> {
+            let mut result = fs::read_dir(path)
+                .unwrap()
+                .map(|entry| entry.unwrap().path())
+                .collect::<Vec<_>>();
+            result.sort();
+            result
+        }
+        let (out, _, session, base) = setup("install-readback");
+        let source = out.join("install_fault.c");
+        fs::write(
+            &source,
+            include_str!("../../scripts/fixtures/compiler_install_readback.c"),
+        )
+        .unwrap();
+        let library = out.join("install_fault.dylib");
+        let built = Command::new("cc")
+            .args([
+                "-Wall",
+                "-Wextra",
+                "-Werror",
+                "-dynamiclib",
+                "-Wl,-install_name,@rpath/install_fault.dylib",
+            ])
+            .arg(&source)
+            .arg("-o")
+            .arg(&library)
+            .env_clear()
+            .envs(base.iter().cloned())
+            .output()
+            .unwrap();
+        assert!(built.status.success(), "{built:?}");
+        let canonical_library = fs::canonicalize(&library).unwrap();
+        let preload = canonical_library.strip_prefix(&session.cwd).unwrap();
+        let sources = out.join("component");
+        fs::create_dir(&sources).unwrap();
+        fs::write(
+            sources.join("controller.rs"),
+            include_str!("trust_compiler.rs"),
+        )
+        .unwrap();
+        fs::write(sources.join("json.rs"), include_str!("json.rs")).unwrap();
+        fs::write(sources.join("trust_compiler_observer.rs"), super::SOURCE).unwrap();
+        fs::write(
+            sources.join("probe.rs"),
+            include_str!("../../scripts/fixtures/compiler_install_readback_probe.rs"),
+        )
+        .unwrap();
+        let catalog = include_str!("catalog_build.rs");
+        let start = catalog.find("pub fn environment(").unwrap();
+        let tail = &catalog[start..];
+        let end = tail.find("\nfn command(").unwrap();
+        fs::write(sources.join("base_environment.rs"), &tail[..end]).unwrap();
+        let helper = sources.join("probe");
+        let built = Command::new("rustc")
+            .args(["--edition=2021", "--crate-name", "install_component"])
+            .arg(sources.join("probe.rs"))
+            .arg("-o")
+            .arg(&helper)
+            .env_clear()
+            .envs(base.iter().cloned())
+            .output()
+            .unwrap();
+        assert!(built.status.success(), "{built:?}");
+        for (mode, inject, corrupt) in [
+            ("baseline", false, false),
+            ("corrupt", true, true),
+            ("pass", true, false),
+        ] {
+            let case = out.join(mode);
+            let target = case.join("target");
+            fs::create_dir_all(&target).unwrap();
+            let trace = case.join("trace");
+            let mut command = Command::new(&helper);
+            command
+                .arg(&case)
+                .arg(out.join("cargo-home"))
+                .arg(if corrupt { "corrupt" } else { "pass" })
+                .current_dir(&session.cwd)
+                .env_clear()
+                .envs(base.iter().cloned())
+                .env(
+                    "ARCHOGEN_TEST_INSTALL_ROOT",
+                    fs::canonicalize(&target).unwrap(),
+                )
+                .env("ARCHOGEN_TEST_INSTALL_TRACE", &trace)
+                .env(
+                    "ARCHOGEN_TEST_INSTALL_CORRUPT",
+                    if corrupt { "1" } else { "0" },
+                );
+            if inject {
+                command.env("DYLD_INSERT_LIBRARIES", preload);
+            }
+            let result = command.output().unwrap();
+            assert!(result.status.success(), "{mode}: {result:?}");
+            assert!(result.stderr.is_empty(), "{mode}: {result:?}");
+            let prepared = directories(&case.join("compiler-provenance"));
+            assert_eq!(prepared.len(), 1);
+            let prepared = prepared[0].join("observer");
+            let image = fs::read(&prepared).unwrap();
+            assert!(!image.is_empty());
+            let sessions = directories(&target.join(".archogen-provenance"));
+            assert!(!sessions.is_empty());
+            let first = sessions[0].join("observer");
+            let mut expected = image.clone();
+            if corrupt {
+                expected[0] ^= 1;
+            }
+            // Establish the same real byte effect before judging acceptance or recovery.
+            assert_eq!(fs::read(&first).unwrap(), expected, "{mode}");
+            let events = if inject {
+                fs::read_to_string(&trace).unwrap()
+            } else {
+                assert!(!trace.exists());
+                String::new()
+            };
+            if inject {
+                assert_eq!(events.matches("loaded inode=0\n").count(), 1);
+                assert_eq!(
+                    events.matches("corrupt inode=").count(),
+                    usize::from(corrupt)
+                );
+                if corrupt {
+                    assert!(events.contains(&format!(
+                        "corrupt inode={}\n",
+                        fs::metadata(&first).unwrap().ino()
+                    )));
+                }
+            }
+            let stdout = if corrupt {
+                "refused:installed compiler provenance observer differs\nrecovery-ok\n"
+            } else {
+                "accepted\nquery-ok\n"
+            };
+            assert_eq!(result.stdout, stdout.as_bytes(), "{mode}");
+            assert_eq!(sessions.len(), if corrupt { 2 } else { 1 });
+            for (index, directory) in sessions.iter().enumerate() {
+                let file = directory.join("observer");
+                let metadata = fs::symlink_metadata(&file).unwrap();
+                assert!(metadata.is_file());
+                assert_eq!(
+                    metadata.permissions().mode(),
+                    fs::metadata(&prepared).unwrap().permissions().mode()
+                );
+                let mut expected = image.clone();
+                if corrupt && index == 0 {
+                    expected[0] ^= 1;
+                }
+                assert_eq!(fs::read(&file).unwrap(), expected, "{mode}/{index}");
+                if inject {
+                    let permissions = format!("permissions inode={}\n", metadata.ino());
+                    let readback = format!("readback inode={}\n", metadata.ino());
+                    assert!(
+                        events.contains(&permissions) && events.contains(&readback),
+                        "{mode}/{index}: {events}"
+                    );
+                    assert!(events.find(&permissions).unwrap() < events.find(&readback).unwrap());
+                }
+                let records = directory.join("records");
+                if corrupt && index == 0 {
+                    assert!(!records.exists());
+                } else {
+                    assert_eq!(directories(&records).len(), 1);
+                }
+            }
+        }
+    }
+
     #[test]
     fn actual_preparation_holds_status_output_and_selected_environment() {
         crate::trust_test_process::bounded!(
