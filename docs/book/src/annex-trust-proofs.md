@@ -8702,3 +8702,166 @@ The complete next-task record is retained verbatim here; its private resume entr
   Verification: `pending`
   Commit: `pending`
 ```
+
+
+### Figure registration for literal fences
+
+Measured `2026-10-19`, leaf `M3.6.9.6.3.2.2.15.2.1.4.3.3`,
+`ARCHOGEN-M3-0808`. The preceding archived draft's tilde fences exposed a real publication
+defect: the gate toggled a Boolean at every line beginning with triple backticks. It counted
+tilde-fenced content as prose and could end a block on short or invalid closing markers.
+The actual pinned mdBook renderer treated that historical content as code. Registering the
+phrase as a current figure would have described the wrong surface.
+
+The repaired gate remembers the opening marker and length. Only an appropriately indented
+closing run of the same kind, of sufficient length and with permitted trailing whitespace,
+ends it. It validates backtick info strings before entering code. Figure patterns, inline-code
+handling, dated records, register validation and the staged per-document ratchet are unchanged.
+Reversing exactly the fence-state replacement and new self-test arms reconstructs the complete
+previous script byte for byte. The director's section10 ownership ruling permits repair of
+this project-created gate; no held template file or external repository is changed.
+
+Measured `2026-10-19`: the original 14-arm self-test passes; after adding the maintained
+regressions the original scanner reports20 pass/13 fail across33 arms, while the repaired
+scanner reports33 pass/0 fail. An independent staged scratch-repository replay compares
+the original and repaired public commands on19 explicit source fixtures and confirms the same
+13 original disagreements. A separate actual mdBook0.5.2 build independently identifies prose
+and code in all19 HTML pages. Those expectations come from rendered text, not from calling
+the repaired lexer. Every inverted output oracle is refused.
+
+The permanent cases cover both marker kinds, shorter/longer/mismatched closers, a closer with
+text, opening/closing indentation, overindentation, unclosed blocks, valid/invalid info strings,
+short opening runs, LF/CRLF inputs and the pinned closing-tab behavior. These are standalone
+fences; no complete Markdown-container correctness claim follows from this finite matrix.
+
+#### Renderer compatibility finding
+
+The independent renderer check also found inputs on which the pinned renderer differs from
+the published grammar. The following JSON strings preserve their exact control bytes:
+
+```json
+[
+  {
+    "source": "~~~text\rseven tests\r~~~\r",
+    "intended": "seven tests is literal"
+  },
+  {
+    "source": "```text\rseven tests\r```\rnine tests\r",
+    "intended": "seven tests literal; nine tests prose"
+  },
+  {
+    "source": "~~~text\nseven tests\n~~~ \t\nnine tests\n",
+    "intended": "seven tests literal; nine tests prose"
+  }
+]
+```
+
+The bare-CR tilde input becomes an empty code block whose language attribute contains the
+payload. The bare-CR backtick input exposes `seven tests` as prose and places following
+text in code metadata. The real tab after the last fixture's closing markers keeps
+`nine tests` in code. Source bytes were checked directly, including09 for the tab.
+Disabling default preprocessors reproduces the bare-CR result, while the Markdown renderer
+retains the original bytes, narrowing the discrepancy to the HTML parse/render path.
+
+The pinned release's
+[Cargo.lock](https://github.com/rust-lang/mdBook/blob/v0.5.2/Cargo.lock)
+selects pulldown-cmark0.13.0. Its checksum-verified
+[scanner source](https://docs.rs/crate/pulldown-cmark/0.13.0/source/src/scanners.rs)
+shows `scan_nextline` searching only LF and `scan_closing_code_fence` consuming only spaces
+before checking the line ending. Its
+[first-pass parser](https://docs.rs/crate/pulldown-cmark/0.13.0/source/src/firstpass.rs)
+uses that line scan to delimit the opening info string and subsequent code lines. These
+mechanisms explain both observations. The crate archive SHA-256 is
+`1e8bbe1a966bd2f362681a44f6edce3c2310ac21e4d5067a6e7ec396297a6ea0`;
+the actual local native mdBook executable reports0.5.2 and hashes to
+`8085338f2694c9614c48f80430b4ac7cc8ecf8503974f061070602f3c08b5c1a`.
+The executable hash is a local observation, not the release-archive checksum.
+
+The current gate matches the actual pinned closing-tab outcome. Bare-CR probes grant no
+positive gate coverage. Leaf `M3.6.9.6.3.2.2.15.2.1.4.3.4` owns compatibility for both
+deviations before the deferred prefix proof. It must preserve literal evidence, qualify
+the public transformation and check the gate against independently rendered prose/code.
+Current committed book chapters are unaffected by these control-byte inputs. Nothing here
+limits the book's size, chapter count or detail.
+
+#### Verification and continuity
+
+Measured `2026-10-19`: all317 earlier task archives retain their exact SHA-256.
+The newly sealed completed preflight leaf is the original committed span minus its separating
+LF, independently reconstructed; filesystem, Git-plus-new-path and digest-index sets agree
+on318 archives. Truncated/modified seals and false previous/total-count oracles all refuse.
+Every byte of the preceding committed trust annex remains an exact prefix of this chapter.
+
+Supplementary commands and receipts live under `target/figure-fences/`:
+
+```console
+$ bash -n scripts/check_figure_register.sh
+$ bash scripts/check_figure_register.sh --self-test
+$ python3 -I -B target/figure-fences/render-controls.py
+$ python3 -I -B target/figure-fences/audit.py
+```
+
+The self-test and public gate remain maintained entrypoints; ignored renderer/audit scratch
+is supplementary. Its public input cases and root cause are durable above and in the script.
+The audit binds original/repaired sources, public exits, actual HTML, archive reconstruction,
+and falsifiers; its SHA-256 is
+`18d912b0716b33255278026b94ce473af89caaca5dcd0173beb86087bb1e856a`.
+Bash syntax and the targeted self-tests pass. This Bash-only slice changes no Rust source,
+mutation result, reason or native adequacy claim. Publication/doctrine gates and the pinned
+book build are required before its commit; the preflight-cache checkpoint, precise prefix
+proof and whole-source adequacy remain separately owned.
+
+#### Completed figure-registration task record
+
+The completed private record is preserved verbatim below, measured `2026-10-19`. Its compact
+private entry retains the acceptance checks and links here; the book has no size limit.
+
+~~~~markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.4.3.3`
+  Status: `done` — figure registration respects the pinned literal fence boundary
+  Priority: P1 immediately after .0, before .1; owner .4.3.
+  Defect: mdBook renders the withdrawn draft's four-tilde fences as literal code, while
+    scripts/check_figure_register.sh's figures() recognizes only line-start triple backticks.
+    Its public gate falsely calls the fenced historical phrase "two production" new prose.
+    Root cause is the fence scanner, not a carried current figure.
+  Reproduce: .0's archived draft with four-tilde Python/text/Markdown fences builds in mdBook
+    but the staged figure gate exits1 on "two production"; standard backtick fences pass
+    with exact archived bytes. Original build/refusal output retained in .0's tool records.
+  Impact: valid public book literals can block publication or be wrongly registered as
+    current prose. .0 uses supported fences; the defect remains owned until verified repair.
+  Scope: reproduce the public gate independently in same-volume scratch; preserve source
+    ownership boundaries (this project owns the gate per the director's section10 ruling).
+    Repair open/close fence handling for supported Markdown backtick/tilde lengths and
+    reject mismatched/short closing fences without hiding subsequent real prose. Add
+    meaningful gate self-test arms, retain all earlier controls, sync book/live and commit.
+  Acceptance: code literals skip in both styles; prose after correct closing fences still
+    rejects unclassified counts; existing gate self-tests and real staged book pass.
+  Ownership: director ruling section10, current gate origin PROGRAM.20.3, outside the17
+    untouched template files; no external repository is changed.
+  Additional scope: seal prior completed preflight leaf exactly for private continuity;
+    compare public gate outcomes with actual mdBook code/prose rendering, preserve previous
+    scanner/register/count behavior outside fence handling and every earlier self-test.
+  Acceptance:
+  - [x] ROOT CAUSE: `python3 -I -B target/figure-fences/audit.py`, exit code 0:
+    original public gate disagrees on13/19 renderer-qualified cases; initial14 passes,
+    expanded original20pass/13fail; source toggle mechanism and ownership verified.
+  - [x] ADDRESSED: `bash scripts/check_figure_register.sh --self-test`, exit code 0:
+    33pass/0fail; actual mdBook19 independent literal/prose checks and public19 replay
+    agree, including valid-close prose and pinned tab behavior; inverted oracles refuse.
+  - [x] NO REGRESSION: `bash -n scripts/check_figure_register.sh` and
+    `python3 -I -B target/figure-fences/audit.py`, exit code 0:
+    reverse only state/new arms gives exact prior script,317 old archives exact,
+    new318th seal reconstructs exactly;4 history falsifiers refuse, book prefix preserved.
+  Verification: audit18d912b0716b33255278026b94ce473af89caaca5dcd0173beb86087bb1e856a.
+    Public record: book annex-trust-proofs, figure-registration-for-literal-fences.
+    Bare-CR and closing-tab standard deviations root-caused and owned in .4 before .1.
+  Commit: `ARCHOGEN-M3-0808`
+
+~~~~
+
+Measured `2026-10-19`: the verbatim task fragment is3135 bytes, SHA-256
+`c36e268f6e0afb8c8eae78ac4443da4aeea812291a75693b6325f0b8a999ef06`;
+its private entry is1159 bytes, saving1976 bytes under the private task-directory rule.
+Substituting the preserved fragment back into that entry reconstructs the entire previous
+task file exactly. Truncated, modified and extra-newline fragments are refused independently.
+The previous book prefix is exact; no public detail is discarded.

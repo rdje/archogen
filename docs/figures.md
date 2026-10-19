@@ -8,6 +8,13 @@ in one file:
 - `record` — a measurement true of its date, never re-read as current;
 - `not-a-count` — figure-shaped, but not a carried figure.
 
+Fenced literals are excluded according to the pinned mdBook renderer's standalone LF/CRLF
+fence syntax: backticks or tildes, matching marker kind, sufficient closing length, and permitted
+indentation. A closing line accepts trailing spaces; a tab keeps it literal in the current renderer.
+Backtick info strings containing a backtick do not open a fence. See the public explanation and
+examples in `docs/book/src/annex-repository.md`, and the compatibility issue recorded in
+`docs/book/src/annex-trust-proofs.md#figure-registration-for-literal-fences`.
+
 The phrases already in the live documents when the check was written are a backlog it reports and does not
 refuse; a commit may only lower their number in a file it touches. ⛔ The first row written here claimed
 `five tiers` in `docs/book/src/verification.md` was gated by `xtask`'s tier test. The check refused it,

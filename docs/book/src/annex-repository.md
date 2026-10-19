@@ -798,6 +798,31 @@ $ bash scripts/check_figure_register.sh              # the gate
 $ bash scripts/check_figure_register.sh --self-test  # its RED arms, on scratch repositories
 ```
 
+Fenced code is literal evidence, so the figure gate excludes its contents. A fence may use
+backticks or tildes; the closing run uses the opening marker kind and is at least as long.
+Opening and closing lines may be indented by up to three spaces. A shorter run or a different
+marker kind inside the block remains literal. For example, this Markdown source keeps the
+embedded backtick block inside its surrounding tilde block:
+
+~~~~markdown
+```text
+seven tests
+```
+~~~~
+
+A count written after the proper closing fence is prose again and needs its own classification.
+Backtick info strings containing a backtick do not open a fence. Unclosed fences keep their
+remaining contents literal. These rules follow the
+[CommonMark fenced-code grammar](https://spec.commonmark.org/0.31.2/#fenced-code-blocks)
+for the standalone forms covered here.
+
+The pinned mdBook renderer currently differs from that specification for bare carriage-return
+line endings and tabs after closing markers. The gate follows the renderer's current boundary:
+LF and CRLF line endings work in the maintained cases, while a tab-suffixed closing run stays
+literal. The [dated compatibility finding](annex-trust-proofs.md#figure-registration-for-literal-fences)
+records the public reproductions and owns their repair. This scanner is a standalone fence
+check; it does not claim complete Markdown container parsing.
+
 ## Every diagnostic shown in this book is a real run
 
 When this book shows `archogen check` refusing a description, a test re-runs that command and requires

@@ -34,6 +34,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
 - **CPU** — Central Processing Unit: the processor. See [What this project relies on from outside](ledger.md).
 - **CR** — carriage return: a control character distinct from a line feed, retained by the native argument
   transport checks. See [Compiler provenance](annex-trust-proofs.md#compiler-provenance-contract-and-prototype).
+- **CRLF** — carriage return followed by line feed: a newline sequence whose components must be
+  interpreted together. See [literal fences](annex-repository.md#a-number-added-to-this-book-says-what-keeps-it-true).
 - **CSR** — Control and Status Register: a RISC-V register that configures or reports the processor's state, such as
   whether interrupts are enabled. See [What this project relies on from outside](ledger.md).
 - **DMA** — Direct Memory Access: a device moving data to or from memory without the processor; excluded from the

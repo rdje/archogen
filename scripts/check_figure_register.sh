@@ -45,8 +45,26 @@ figures() {
       $nouns = q{tests?|descriptions?|cases|files?|leaves|leaf|arms?|entries|entry|constructs?|crates?|chapters?|suites?|rows?|lines?|bytes|commits?|transcripts?|examples?|blocks?|diagnostics?|targets?|members?|properties|mutations?|surfaces?|trees?|steps?|tiers?|gates?|doctrines?|records?|issues?|bugs?|legs?|items?|productions?|rules?|kinds?|shapes?};
       $words = q{two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|twenty|thirty|forty|fifty|hundred};
     }
-    if (/^```/) { $fence = !$fence; next }
-    next if $fence;
+    # Follow the pinned mdBook renderer for standalone LF/CRLF fences. Its parser
+    # accepts spaces, but not tabs, after closing markers (compatibility is owned
+    # by M3.6.9.6.3.2.2.15.2.1.4.3.4).
+    if (defined $fence_char) {
+      if (/^ {0,3}(`{3,}|~{3,}) *\r?$/
+          && substr($1, 0, 1) eq $fence_char
+          && length($1) >= $fence_length) {
+        undef $fence_char;
+        undef $fence_length;
+      }
+      next;
+    }
+    if (/^ {0,3}(`{3,}|~{3,})([^\r\n]*)\r?$/) {
+      my ($run, $info) = ($1, $2);
+      if (substr($run, 0, 1) ne "`" || index($info, "`") < 0) {
+        $fence_char = substr($run, 0, 1);
+        $fence_length = length($run);
+        next;
+      }
+    }
     next if /20\d\d-\d\d-\d\d/;
     s/`[^`]*`//g;
     while (/(?<![§\d])\b(\d[\d, ]*\s+of\s+(?:the\s+)?\d[\d,]*)\b/g) { print lc($1), "\n" }
@@ -144,6 +162,44 @@ self_test() {
   arm "a figure on a line carrying its measurement date is a record by construction" 0 ""
   fresh; stage docs/book/src/ch.md 'See `3 descriptions` and\n\n```text\n7 tests\n```\n'
   arm "a figure in a code span or a code fence is not prose" 0 ""
+  fresh; stage docs/book/src/ch.md '~~~text\nseven tests\n~~~\n'
+  arm "tilde fence is literal" 0 ""
+  fresh; stage docs/book/src/ch.md '~~~~text\n~~~\nseven tests\n~~~~\n'
+  arm "short tilde closer remains literal" 0 ""
+  fresh; stage docs/book/src/ch.md '````text\n```\nseven tests\n````\n'
+  arm "short backtick closer remains literal" 0 ""
+  fresh; stage docs/book/src/ch.md '```text\n~~~\nseven tests\n```\n'
+  arm "mismatched tilde closer remains literal" 0 ""
+  fresh; stage docs/book/src/ch.md '~~~text\n```\nseven tests\n~~~\nnine tests\n'
+  arm "mismatched backtick closer cannot hide later prose" 1 "nine tests"
+  fresh; stage docs/book/src/ch.md '```text\n``` not-a-close\nseven tests\n```\n'
+  arm "text after markers is not a closing fence" 0 ""
+  fresh; stage docs/book/src/ch.md '```text\nseven tests\n   ```\nnine tests\n'
+  arm "indented closing fence restores prose scanning" 1 "nine tests"
+  fresh; stage docs/book/src/ch.md '   ~~~~text\nseven tests\n~~~~\n'
+  arm "indented opening fence is literal" 0 ""
+  fresh; stage docs/book/src/ch.md '```text\nseven tests\n`````\nnine tests\n'
+  arm "longer backtick closing fence restores prose" 1 "nine tests"
+  fresh; stage docs/book/src/ch.md '~~~text\nseven tests\n~~~~~\nnine tests\n'
+  arm "longer tilde closing fence restores prose" 1 "nine tests"
+  fresh; stage docs/book/src/ch.md '```text\nseven tests\n'
+  arm "unclosed backtick fence stays literal to EOF" 0 ""
+  fresh; stage docs/book/src/ch.md '~~~text\nseven tests\n'
+  arm "unclosed tilde fence stays literal to EOF" 0 ""
+  fresh; stage docs/book/src/ch.md '```info`bad\nnine tests\n'
+  arm "invalid backtick info does not hide prose" 1 "nine tests"
+  fresh; stage docs/book/src/ch.md '~~~info`ok\nseven tests\n~~~\n'
+  arm "tilde info may contain a backtick" 0 ""
+  fresh; stage docs/book/src/ch.md '~~\nseven tests\n~~\n'
+  arm "short tilde run is ordinary prose" 1 "seven tests"
+  fresh; stage docs/book/src/ch.md '~~~text\r\nseven tests\r\n~~~\r\n'
+  arm "CRLF tilde fence is literal" 0 ""
+  fresh; stage docs/book/src/ch.md '```text\r\nseven tests\r\n```\r\nnine tests\r\n'
+  arm "CRLF backtick close restores prose" 1 "nine tests"
+  fresh; stage docs/book/src/ch.md '~~~text\n    ~~~\nseven tests\n~~~\n'
+  arm "overindented closer remains literal" 0 ""
+  fresh; stage docs/book/src/ch.md '~~~text\nseven tests\n~~~ \t\nnine tests\n'
+  arm "pinned renderer keeps a tab-suffixed closer literal" 0 ""
   fresh; stage docs/book/src/ch.md 'As §7 rule 5 says.\n'
   arm "a section reference is not a figure" 0 ""
   fresh; stage CHANGELOG.md '41 commits later\n'

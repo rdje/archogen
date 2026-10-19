@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — match figure registration to literal fences
+
+`ARCHOGEN-M3-0808` (leaf `M3.6.9.6.3.2.2.15.2.1.4.3.3`), `2026-10-19`.
+
+- Track fence kind, length, indentation and valid info/closing syntax; preserve all other
+  figure/register/ratchet logic. Original expanded20pass/13fail becomes33pass/0fail.
+- Actual pinned mdBook19 rendering and independent public19 gate cases agree; reversed
+  output oracles refuse. Seal completed preflight leaf exactly, preserve317 archives,
+  independently reconcile318 total and reject false history oracles.
+- Root-cause bare-CR/closing-tab renderer deviations in its pinned parser; own compatibility
+  before the deferred prefix proof. Public book examples, full finding and live pointers
+  synchronized. No Rust/native adequacy claim; book size and chapter count remain unbounded.
+
 ## archogen — preserve preflight refusals across generator targets
 
 `ARCHOGEN-M3-0807` (leaf `M3.6.9.6.3.2.2.15.2.1.4.3.0`), `2026-10-19`.

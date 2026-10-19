@@ -164,6 +164,8 @@ a change that leaves it stale, so it is never edited by hand.
 - cost-format — [What is versioned, and what changing it costs](versions.md#cost-format)
 - **CPU** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **CR** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- **CRLF** — [definition](glossary.md), [Annex B: The checks that keep the repository honest](annex-repository.md),
+  [Annex C: Trust proof records](annex-trust-proofs.md)
 - **CSR** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Current compiler measurement qualification — [Annex C: Trust proof
   records](annex-trust-proofs.md#current-compiler-measurement-qualification)
@@ -246,6 +248,8 @@ a change that leaves it stale, so it is never edited by hand.
   outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the
   repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Faults in detail — [Annex A: The runtime's rules in detail](annex-runtime.md#faults-in-detail)
+- Figure registration for literal fences — [Annex C: Trust proof
+  records](annex-trust-proofs.md#figure-registration-for-literal-fences)
 - Final diagnostic regression parents — [Annex C: Trust proof
   records](annex-trust-proofs.md#final-diagnostic-regression-parents)
 - Final prefix/helper checkpoint — [Annex C: Trust proof records](annex-trust-proofs.md#final-prefixhelper-checkpoint)
@@ -353,7 +357,8 @@ a change that leaves it stale, so it is never edited by hand.
   detail](annex-runtime.md#latched-releases-and-completions-inside-a-region)
 - Later profiles — [The supported profile](profile.md#later-profiles)
 - **LCOFI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
-- **LF** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- **LF** — [definition](glossary.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex
+  C: Trust proof records](annex-trust-proofs.md)
 - linkedspec — [What this project relies on from outside](ledger.md#linkedspec)
 - **LLVM** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Local build storage — [Where the engine's knowledge comes from: the catalog](catalog.md#local-build-storage)
