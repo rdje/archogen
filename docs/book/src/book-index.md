@@ -562,6 +562,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Silence is not admission — [The supported profile](profile.md#silence-is-not-admission)
 - Source paths and dependency arguments — [Checks that must not share a mistake: the trust
   gate](trust.md#source-paths-and-dependency-arguments)
+- Source prefixes under a tree alias — [Annex C: Trust proof
+  records](annex-trust-proofs.md#source-prefixes-under-a-tree-alias)
 - Source/provenance parent killing tests — [Generated-sources test
   adequacy](trust-adequacy.md#sourceprovenance-parent-killing-tests)
 - Source/provenance route killing tests — [Generated-sources test

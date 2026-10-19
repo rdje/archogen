@@ -896,6 +896,153 @@ mod tests {
         }
     }
 
+    fn independent_artifact_hash(bytes: &[u8], env: &[(String, String)]) -> String {
+        use std::{
+            io::Write,
+            process::{Command, Stdio},
+        };
+        let mut child = Command::new("shasum")
+            .args(["-a", "256"])
+            .env_clear()
+            .envs(env.iter().map(|(key, value)| (key, value)))
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let wrote = child.stdin.take().unwrap().write_all(bytes);
+        let output = child.wait_with_output().unwrap();
+        wrote.unwrap();
+        assert!(output.status.success(), "{:?}", output.stderr);
+        String::from_utf8(output.stdout)
+            .unwrap()
+            .split_whitespace()
+            .next()
+            .unwrap()
+            .to_owned()
+    }
+
+    #[test]
+    fn source_selection_preserves_ordinary_and_canonical_prefixes_under_a_tree_alias() {
+        crate::trust_test_process::bounded!(
+            source_selection_preserves_ordinary_and_canonical_prefixes_under_a_tree_alias
+        );
+        use super::{select, Compilation, Program, Target, TargetSources};
+        use crate::catalog_build::environment;
+        use std::{
+            collections::BTreeSet,
+            process::{Command, Stdio},
+        };
+
+        let base = real_root().join("target/trust-tests/artifact-source-aliases");
+        let _ = fs::remove_dir_all(&base);
+        let physical = base.join("physical-tree");
+        let alias = base.join("tree-alias");
+        fs::create_dir_all(&physical).unwrap();
+        symlink("physical-tree", &alias).unwrap();
+        assert_eq!(fs::read_link(&alias).unwrap(), Path::new("physical-tree"));
+        assert_eq!(fs::canonicalize(&alias).unwrap(), physical);
+        let target = base.join("target");
+        let out = target.join("release/deps");
+        fs::create_dir_all(&out).unwrap();
+        let env = environment("1.95.0", &base.join("cargo-home"), &target).unwrap();
+        let program = Program {
+            name: "root".into(),
+            role: "generator".into(),
+            package: "p".into(),
+            target: Target::Bin("probe".into()),
+            role_packages: BTreeSet::new(),
+            pair: None,
+            data: Vec::new(),
+        };
+        let sources = TargetSources::from([(
+            ("p".into(), "bin".into(), "probe".into()),
+            BTreeSet::from(["source.rs".into()]),
+        )]);
+        for (label, tree, source_path) in [
+            ("physical", physical.clone(), physical.join("source.rs")),
+            ("ordinary", alias.clone(), alias.join("source.rs")),
+            ("canonical", alias.clone(), physical.join("source.rs")),
+        ] {
+            fs::write(
+                physical.join("source.rs"),
+                "fn main() { println!(\"alias-artifact\"); }\n",
+            )
+            .unwrap();
+            let arguments: Vec<String> = vec![
+                "rustc".into(),
+                "--crate-name".into(),
+                "probe".into(),
+                source_path.to_str().unwrap().into(),
+                "--crate-type".into(),
+                "bin".into(),
+                "--out-dir".into(),
+                out.to_str().unwrap().into(),
+                "-C".into(),
+                "extra-filename=-alias".into(),
+            ];
+            let compiled = Command::new("rustc")
+                .args(&arguments[1..])
+                .current_dir(&tree)
+                .env_clear()
+                .envs(env.iter().map(|(key, value)| (key, value)))
+                .stdin(Stdio::null())
+                .output()
+                .unwrap();
+            assert!(compiled.status.success(), "{label}: {:?}", compiled.stderr);
+            fs::write(
+                base.join(format!("{label}.arguments")),
+                arguments.join("\0"),
+            )
+            .unwrap();
+            let artifact = out.join("probe-alias");
+            let before = fs::read(&artifact).unwrap();
+            let expected = independent_artifact_hash(&before, &env);
+            fs::write(base.join(format!("{label}-before.bin")), &before).unwrap();
+            let before_names: BTreeSet<_> = fs::read_dir(&out)
+                .unwrap()
+                .map(|entry| entry.unwrap().file_name())
+                .collect();
+            fs::write(
+                physical.join("source.rs"),
+                "compile_error!(\"selection must not recompile the source\");\n",
+            )
+            .unwrap();
+            let invalid_source = fs::read(physical.join("source.rs")).unwrap();
+            let compilations = vec![Compilation {
+                package: "p".into(),
+                arguments,
+            }];
+            let actual = select(&program, &sources, &compilations, &env, &tree, &target)
+                .unwrap_or_else(|error| panic!("{label}: {error}"));
+            assert_eq!(actual.0, "release/deps/probe-alias", "{label}");
+            assert_eq!(actual.1, expected, "{label}");
+            assert_eq!(fs::read(&artifact).unwrap(), before, "{label}");
+            assert_eq!(
+                fs::read(physical.join("source.rs")).unwrap(),
+                invalid_source,
+                "{label}"
+            );
+            assert_eq!(
+                fs::read_dir(&out)
+                    .unwrap()
+                    .map(|entry| entry.unwrap().file_name())
+                    .collect::<BTreeSet<_>>(),
+                before_names,
+                "{label}"
+            );
+            let ran = Command::new(&artifact)
+                .current_dir(&tree)
+                .env_clear()
+                .envs(env.iter().map(|(key, value)| (key, value)))
+                .stdin(Stdio::null())
+                .output()
+                .unwrap();
+            assert!(ran.status.success(), "{label}: {:?}", ran.stderr);
+            assert_eq!(ran.stdout, b"alias-artifact\n", "{label}");
+        }
+    }
+
     #[test]
     fn actual_empty_input_query_preserves_build_and_ignores_now_invalid_source() {
         crate::trust_test_process::bounded!(

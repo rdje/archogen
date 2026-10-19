@@ -6446,3 +6446,90 @@ byte comparisons are unchanged. The incorrect report/program remain under
 `target/artifact-basename-controls/audit-counter-before-fix.*` for inspection; the corrected
 `audit.py` reproduces rejection of the stale count and writes the verified `audit.json`. The earlier mismatched parent-log filename
 also refused before publication and was corrected to the actual `parents.log` evidence.
+
+### Source prefixes under a tree alias
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.9`: a bounded permanent parent holds source
+matching through a physical tree and its relative symbolic alias. The source selector must
+match the observed compiler argument against either the ordinary tree prefix or its canonical
+prefix. Replacing the final disjunction with conjunction wrongly requires both prefixes at once.
+
+#### Real compilation and source-free selection
+
+The parent uses the actual catalog environment constructor, pinned toolchain and compiler
+([Rust toolchain source](ledger.md#rust-toolchain)). It creates a repository-local physical tree,
+a relative `tree-alias -> physical-tree` link, a metadata source `source.rs` and a real binary.
+The recorded source argument is passed to the actual successful compilation in each case.
+
+| Case | Selector tree | Actual compiler source argument | Required original behavior |
+| --- | --- | --- | --- |
+| physical control | physical tree | physical tree / source.rs | select the compiled binary |
+| ordinary alias | alias tree | alias tree / source.rs | select the compiled binary |
+| canonical alias | alias tree | physical tree / source.rs | select the compiled binary |
+
+For example, the ordinary alias supplies the alias spelling of the source while metadata
+continues to identify `source.rs`. The canonical alias supplies its physical spelling under
+the same aliased selector tree. Neither case depends on reading the source to make a naming
+decision. After each successful compilation, the parent records its actual arguments and
+independently hashes the produced executable by feeding its bytes to the system checksum tool.
+
+Before calling the actual selector it replaces the source with:
+
+```rust
+compile_error!("selection must not recompile the source");
+```
+
+Selection must still return `release/deps/probe-alias` with the independently measured hash.
+The executable bytes, invalid source bytes and complete output-directory population must
+remain unchanged. Running the selected executable must succeed and print `alias-artifact`
+followed by a newline. The parent checks each artifact against its own before-image; it does
+not require independent compilations to produce identical bytes.
+
+These controls exercise the complete actual artifact component and environment with real
+compiler invocations. They establish the helper's accepted source geometries; they do not
+claim every geometry was independently produced by a complete Cargo inventory build.
+
+#### Exact mutation and restored evidence
+
+| Exact edit | Earlier complete measurement | New native result |
+| --- | --- | --- |
+| `L160.logic.103`, final source-prefix disjunction becomes conjunction | S | K, required alias parent |
+
+The retained whole-component calibration runs the cases independently: the original accepts
+every geometry, while the edit accepts the physical control and refuses each alias geometry
+as missing or ambiguous observed compilations. The permanent parent orders the physical
+control first, then the ordinary and canonical cases. Its actual mutant execution fails at
+ordinary selection, after completing the physical control; it never reaches the canonical
+case. The copy audit verifies exactly that partial fixture, while the original fixture
+contains all completed cases. This prevents later-case evidence from being inferred from
+an earlier failure.
+
+```text
+trust::artifact::tests::source_selection_preserves_ordinary_and_canonical_prefixes_under_a_tree_alias
+```
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L160.logic.103
+```
+
+`2026-10-19`: the selected edit finishes killed against all 193 current trust parents, strict
+exit `0`, with the new parent in its actual failure list. No survivor, equivalent, compiler
+refusal, timeout or unjudged result occurs. All 1125 original/copied regular inputs
+restore with independent Python/system hashes and modes; all 38 direct bindings and 37 pinned
+public producer sources agree. Invented-parent, missing-result, changed-outcome, changed-exit
+and duplicate-result receipts refuse. The basename leaf seals exactly; all 307 older task
+archives remain byte-exact. Git, committed index and filesystem populations agree, and
+incorrect archive counts refuse. Production, all older tests and the pipe fixture are unchanged.
+
+Held native tree `a6a361ad834d3ea054dae257fcb9ede3ccf135a9` precedes completion documentation.
+Whole artifact file SHA-256 `fcd59faf5248bdd8c016f973e7ff9974747b9bc9f1a7e0b3315085a733d8e781`;
+its production prefix remains exact. Local supplemental audit SHA-256
+`f878f365377db270ab8512a4eefbceddf256bdff1c80f311024119755652c524`
+binds the input, parent, source, fixture, archive and false-receipt checks. Supplemental raw
+programs and observations are untracked in `target/artifact-source-aliases/`; the tracked
+parent and native command above reproduce the behavior and mutation result.
+Final staged focused/book/commit checks complete this leaf. The complete pinned naming-query
+environment is next; complete artifact/caller/global adequacy remains separately owned and open.

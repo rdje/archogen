@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold compiler source prefixes under a tree alias
+
+`ARCHOGEN-M3-0797` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.9`), `2026-10-19`.
+
+- Add a bounded real compiler parent for physical, ordinary alias and canonical source argv;
+  invalidate source before selection and retain independent executable hash/bytes and behavior.
+- Exact historical survivor becomes native1K/full193 strict0;1125 originals/copies restore,
+  38 bindings/37 pins/five false receipts; copy fixture checked at its actual failure point.
+- Basename leaf seals exactly;307 older archives, production and earlier tests unchanged.
+  Book/live sync and final staged focused gates; pinned query environment next, full adequacy open.
+
 ## archogen — require basename grammar and all-output uniqueness
 
 `ARCHOGEN-M3-0796` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.8`), `2026-10-19`.
