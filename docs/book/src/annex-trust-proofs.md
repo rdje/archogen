@@ -5799,3 +5799,52 @@ ordinary measurement commit runs the documentation gates and book build. Resolut
 run focused checks when Rust changes, and the complete artifact checkpoint requires full
 integration. Caller measurement and final source/premise/reason replay plus independent review
 remain ahead; neither this measured population nor the bounded helper probes closes F30.
+
+### Relative artifact-output fixture link repaired
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.1`: the existing output-refusal test now creates
+its link with `symlink("root", out.join("link"))`. Only the stored target literal changes.
+Every existing assertion and every production byte remain exact. This fixes the fixture's
+relocation defect; it changes no production artifact selection or adequacy classification.
+The preceding measurement remains the historical source epoch it records.
+
+The actual old parent passes but stores an absolute target. An independent check copies its
+real fixture with links preserved and moves the source directory: neither copied nor moved
+link resolves. It restores the source in a finalizer and verifies all regular payloads/modes.
+After the repair the same actual parent passes; copied and moved links both resolve to the
+same payload. The target returned by `readlink` is exactly `root`, including in the native
+mutation copy. No global cache, toolchain or other repository is written.
+
+| Actual fixture | Stored link | After copy and source move | Payload SHA-256 |
+| --- | --- | --- | --- |
+| Before | absolute runtime path | does not resolve | `064d7f281f05977e9f8b0f34f693e69bac17a13f1640d4decac712ea3128329f` |
+| Repaired | `root` | both links resolve | `064d7f281f05977e9f8b0f34f693e69bac17a13f1640d4decac712ea3128329f` |
+
+The digest is independently equal under Python and the system SHA-256 command. Byte-level
+reconstruction replaces the relative target with its old expression and recovers the complete
+committed source exactly. The source-free naming production prefix is unchanged; the whole
+file SHA-256 after this test-only repair is
+`c45cb81b2e1bcc202eadfbf9a15bb74952efacedb7fe8b12bc5ba72f3517c62c`.
+
+```bash
+cargo test -q -p xtask \
+  trust::artifact::tests::artifact_names_refuse_missing_foreign_linked_and_ambiguous_outputs \
+  -- --exact
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L99.cond.81
+```
+
+`2026-10-19`: the selected native edit removes file-kind validation and is killed by the
+unchanged named output-refusal parent, with all 183 current parents available and strict exit
+`0`. This is a selected regression check, not a new complete artifact replay. All 1115 original
+and copied regular inputs restore; direct bindings and public producer pins remain at 37 each.
+Altered invented-parent, missing-result, outcome and exit receipts refuse. The measured leaf
+seals byte-exact, with all 299 previous archives unchanged.
+Held native tree `99eac01cf0ad66f22a7239054c0223a4d5b6b03e` predates completion documentation.
+Audit SHA-256 `17d862b3fa7d49b142ae23a13f41270c259767216f64755458cb8c7179773783`
+binds the actual old/repaired fixture, exact source reconstruction and native/restoration checks.
+Raw evidence remains in `target/artifact-fixture-locality/`; final staged focused, book and
+commit doctrine gates complete this repair. The next owned leaf holds `--test` forwarding
+and duplicate refusal. The measured survivors and complete final artifact checkpoint remain open.

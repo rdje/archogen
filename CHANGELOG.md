@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — repair the artifact fixture's absolute symlink
+
+`ARCHOGEN-M3-0789` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.1`), `2026-10-19`.
+
+- Change only the existing output-refusal fixture's link target to relative root; preserve
+  every assertion and all production. Actual old copy/move loses target; repaired actual
+  copy/move resolves with unchanged independent Python/system payload digest.
+- Actual parent passes before/after; selected native1K/full183 strict0,1115 originals/copies
+  restored,37 bindings/37 pins/four altered receipts; measurement seal/299 prior archives exact.
+- Book/live sync; final staged focused/book/doctrine gates required. Continue --test controls;
+  this fixture repair establishes no new complete adequacy result.
+
 ## archogen — measure the complete artifact binder and own every survivor
 
 `ARCHOGEN-M3-0788` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.7`), `2026-10-19`.

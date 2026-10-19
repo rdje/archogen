@@ -252,7 +252,7 @@ mod tests {
         assert!(outputs(b"root\n", &foreign, &target, false)
             .unwrap_err()
             .contains("outside"));
-        symlink(out.join("root"), out.join("link")).unwrap();
+        symlink("root", out.join("link")).unwrap();
         assert!(outputs(b"link\n", &out, &target, false)
             .unwrap_err()
             .contains("non-symlink"));

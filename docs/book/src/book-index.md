@@ -479,6 +479,8 @@ a change that leaves it stale, so it is never edited by hand.
   repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Refusal is a feature — [The supported profile](profile.md#refusal-is-a-feature)
 - Refused by name — [Checking a description](checking.md#refused-by-name)
+- Relative artifact-output fixture link repaired — [Annex C: Trust proof
+  records](annex-trust-proofs.md#relative-artifact-output-fixture-link-repaired)
 - Relative gate caller assessment — [Annex C: Trust proof
   records](annex-trust-proofs.md#relative-gate-caller-assessment)
 - **release** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
