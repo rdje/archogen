@@ -639,6 +639,197 @@ mod tests {
         }
     }
 
+    use std::path::{Path, PathBuf};
+
+    struct OutputFiles {
+        base: PathBuf,
+        target: PathBuf,
+        out: PathBuf,
+        names: [&'static str; 3],
+    }
+
+    impl OutputFiles {
+        fn new(label: &str) -> Self {
+            let base = real_root().join("target/trust-tests").join(label);
+            let _ = fs::remove_dir_all(&base);
+            let target = base.join("target");
+            let out = target.join("release/deps");
+            fs::create_dir_all(&out).unwrap();
+            let shared = if cfg!(target_os = "macos") {
+                "libprobe.dylib"
+            } else {
+                "libprobe.so"
+            };
+            let fixture = Self {
+                base,
+                target,
+                out,
+                names: [shared, "libprobe.rlib", "libprobe.a"],
+            };
+            for name in fixture.names {
+                fixture.restore(name);
+            }
+            fixture
+        }
+
+        fn restore(&self, name: &str) {
+            let bytes: &[u8] = if name == "libprobe.rlib" {
+                b"selected library bytes\n"
+            } else {
+                b"nonselected output bytes\n"
+            };
+            fs::write(self.out.join(name), bytes).unwrap();
+        }
+
+        fn response(&self) -> String {
+            format!("{}\n", self.names.join("\n"))
+        }
+
+        fn good(&self) {
+            let actual =
+                outputs(self.response().as_bytes(), &self.out, &self.target, true).unwrap();
+            assert_eq!(actual.0, "release/deps/libprobe.rlib");
+            assert_eq!(
+                actual.1,
+                "26fff0e84dc91af757184906354cddbb54702d2078c781ce0ad5eb1ff693de8d"
+            );
+        }
+    }
+
+    fn pipe_command(
+        fixture: &OutputFiles,
+        action: &str,
+        pipe: &Path,
+        stop: Option<&Path>,
+    ) -> std::process::Command {
+        use crate::catalog_build::environment;
+        use std::process::{Command, Stdio};
+        let env = environment("1.95.0", &fixture.base.join("cargo-home"), &fixture.target).unwrap();
+        let mut command = Command::new("python3");
+        command
+            .args(["-I", "-B", "-X", "utf8"])
+            .arg(real_root().join("scripts/fixtures/artifact_output_pipe.py"))
+            .arg(action)
+            .arg("--pipe")
+            .arg(pipe);
+        if let Some(stop) = stop {
+            command.arg("--stop").arg(stop);
+        }
+        command
+            .current_dir(&fixture.base)
+            .env_clear()
+            .envs(env.iter().map(|(key, value)| (key, value)))
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        command
+    }
+
+    fn create_pipe(fixture: &OutputFiles, pipe: &Path) {
+        let output = pipe_command(fixture, "create", pipe, None)
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{:?}", output.stderr);
+        assert_eq!(output.stdout, b"created\n");
+    }
+
+    fn finish_pipe_writer(child: std::process::Child, stop: &Path) -> std::process::Output {
+        let stopped = fs::write(stop, b"stop");
+        let output = child.wait_with_output().unwrap();
+        let removed = fs::remove_file(stop);
+        stopped.unwrap();
+        removed.unwrap();
+        output
+    }
+
+    fn assert_pipe_writer(output: &std::process::Output, expected: &[u8]) {
+        assert!(output.status.success(), "{:?}", output.stderr);
+        assert_eq!(output.stdout, expected);
+    }
+
+    #[test]
+    fn linked_outputs_are_refused_at_every_reported_position() {
+        crate::trust_test_process::bounded!(linked_outputs_are_refused_at_every_reported_position);
+        let fixture = OutputFiles::new("artifact-output-kind-links");
+        let foreign = b"foreign library bytes\n";
+        fs::write(fixture.base.join("foreign.rlib"), foreign).unwrap();
+        fixture.good();
+        for name in fixture.names {
+            let file = fixture.out.join(name);
+            fs::remove_file(&file).unwrap();
+            symlink("../../../foreign.rlib", &file).unwrap();
+            assert_eq!(
+                fs::read_link(&file).unwrap(),
+                Path::new("../../../foreign.rlib")
+            );
+            assert_eq!(fs::read(&file).unwrap(), foreign);
+            let result = outputs(
+                fixture.response().as_bytes(),
+                &fixture.out,
+                &fixture.target,
+                true,
+            );
+            fs::remove_file(&file).unwrap();
+            fixture.restore(name);
+            assert_eq!(
+                result.unwrap_err(),
+                format!("compiler artifact {name} is not a regular non-symlink file")
+            );
+            fixture.good();
+        }
+        assert_eq!(
+            fs::read(fixture.base.join("foreign.rlib")).unwrap(),
+            foreign
+        );
+    }
+
+    #[test]
+    fn named_pipe_outputs_are_refused_without_reading_at_every_position() {
+        crate::trust_test_process::bounded!(
+            named_pipe_outputs_are_refused_without_reading_at_every_position
+        );
+        let fixture = OutputFiles::new("artifact-output-kind-pipes");
+        let control = fixture.base.join("writer-control");
+        let stop = fixture.base.join("writer-control.stop");
+        create_pipe(&fixture, &control);
+        let child = pipe_command(&fixture, "write", &control, Some(&stop))
+            .spawn()
+            .unwrap();
+        let bytes = fs::read(&control);
+        let output = finish_pipe_writer(child, &stop);
+        fs::remove_file(&control).unwrap();
+        assert_pipe_writer(&output, b"wrote\n");
+        assert_eq!(bytes.unwrap(), b"stream artifact bytes\n");
+        fixture.good();
+        for (index, name) in ["libprobe.rlib", fixture.names[0], fixture.names[2]]
+            .into_iter()
+            .enumerate()
+        {
+            let file = fixture.out.join(name);
+            let stop = fixture.base.join(format!("writer-{index}.stop"));
+            fs::remove_file(&file).unwrap();
+            create_pipe(&fixture, &file);
+            let child = pipe_command(&fixture, "write", &file, Some(&stop))
+                .spawn()
+                .unwrap();
+            let result = outputs(
+                fixture.response().as_bytes(),
+                &fixture.out,
+                &fixture.target,
+                true,
+            );
+            let output = finish_pipe_writer(child, &stop);
+            fs::remove_file(&file).unwrap();
+            fixture.restore(name);
+            assert_pipe_writer(&output, b"stopped\n");
+            assert_eq!(
+                result.unwrap_err(),
+                format!("compiler artifact {name} is not a regular non-symlink file")
+            );
+            fixture.good();
+        }
+    }
+
     #[test]
     fn actual_empty_input_query_preserves_build_and_ignores_now_invalid_source() {
         crate::trust_test_process::bounded!(

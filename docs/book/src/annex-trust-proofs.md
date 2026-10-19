@@ -6222,3 +6222,111 @@ binds source/parent preservation, actual fixture recovery, historical/native edi
 restoration and false receipts. Raw evidence remains in `target/artifact-output-positions/`.
 Final staged focused/book/commit gates complete this leaf; every-position regular non-symlink
 file controls are next. Complete artifact/caller/global adequacy remains separately owned and open.
+
+### Regular files and symlinks at every output position
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.7`: permanent bounded parents now require regular
+non-symlink files at every reported position, including nonselected outputs. One parent holds
+real relative symlinks; another holds named pipes with an independently checked finite writer.
+Production and every previous test remain byte-exact. Existing directory refusal remains; the
+separate all-domain FileType/predicate assessment stays owned by `.8.13`.
+
+Both fixtures start with shared-library, rlib and static-library names and controlled regular
+payloads. Their valid selection is `release/deps/libprobe.rlib`, with the previously independently
+verified SHA-256 `26fff0e84dc91af757184906354cddbb54702d2078c781ce0ad5eb1ff693de8d`.
+Every negative case restores the regular file before asserting the result and checks valid
+selection/hash again after recovery.
+
+#### Relative symlinks, including nonselected outputs
+
+The symlink parent replaces each reported file in turn with a real relative link to an owned
+`foreign.rlib` outside the role target. Its stored target is `../../../foreign.rlib`, so moving
+the complete fixture preserves its meaning. The parent independently reads the link to confirm
+it resolves to the foreign payload, then requires exactly
+`compiler artifact <name> is not a regular non-symlink file` from the selector. It removes the
+link and restores the regular file before checking the refusal; foreign bytes remain unchanged.
+Thus a nonselected link must refuse even when the selected rlib and its hash would stay valid.
+
+#### Named pipes: actual byte flow and no-reader refusal
+
+The test-only `scripts/fixtures/artifact_output_pipe.py` provides a finite resource fixture.
+Its paths derive from its own repository root and stay beneath the pipe fixture directory on
+the same device. It refuses non-pipe and linked endpoints; the writer verifies the opened file
+type too. Its private protocol is:
+
+| Operation | Required outcome |
+| --- | --- |
+| `create --pipe <owned-path>` | create a mode-restricted named pipe and report `created` |
+| `write --pipe <owned-path> --stop <owned-marker>` | try a nonblocking write-open; report `wrote` after a complete payload or `stopped` after a regular stop marker |
+| No reader or marker before its finite deadline | refuse explicitly, with nonzero exit |
+
+A positive control first reads a separate real named pipe and requires the exact bytes
+`stream artifact bytes` followed by LF and writer result `wrote`. This checks the writer can
+actually exchange bytes before it becomes a refusal witness. Each output position is then
+replaced with a named pipe, starting with the selected rlib. The selector must return the exact
+regular-file refusal without opening a reader. The parent signals stop, joins the writer,
+removes the pipe and restores the file before checking result `stopped` and the refusal.
+A lost guard allows the writer to report `wrote` and supplies stream bytes to the selector;
+that is a finishing named failure rather than an outer mutation timeout.
+
+The stream payload's independently equal Python/system SHA-256 is
+`4c27fec8360fdfc27464d0ddf2c92953614100af57399c0f351aa0f8ae9f06c3`, distinct
+from the permitted regular rlib payload. Every writer process is joined; the ordinary test
+uses the existing bounded-parent contract as an additional execution limit.
+
+`2026-10-19`: seven standalone fixture controls hold regular-stop handling, the finite
+no-reader deadline, regular/linked endpoint refusals, outside endpoint/stop refusals and
+nonregular stop-marker refusal. All control children are joined and their endpoints removed.
+The writer uses its own monotonic deadline of three seconds; the measured no-reader refusal took
+about three seconds. The positive and refusal parents pass together on the original source.
+
+#### Actual native kills and preservation
+
+| Exact current edit | Required actual killing parent |
+| --- | --- |
+| `L89.guard.65`, metadata judged only at first position | linked-output parent |
+| `L89.guard.66`, metadata judged only at last position | linked-output parent |
+| `L89.guard.67`, metadata judged only at endpoints | linked-output parent |
+| `L99.logic.77`, file-kind disjunction becomes conjunction | named-pipe parent |
+| `L99.logic.78`, regular-file term omitted | named-pipe parent |
+
+The exact parent names are:
+
+```text
+trust::artifact::tests::linked_outputs_are_refused_at_every_reported_position
+trust::artifact::tests::named_pipe_outputs_are_refused_without_reading_at_every_position
+```
+
+Every old parent name remains; only these names are added. The named-pipe parent also kills
+the positional metadata edits; the complete raw failure lists retain those additional names.
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L89.guard.65 --only L89.guard.66 --only L89.guard.67 \
+  --only L99.logic.77 --only L99.logic.78
+```
+
+`2026-10-19`: all 5 selected edits finish killed against all 190 current trust parents, strict
+exit `0`, with the required new names in their actual failure lists. No selected survivor,
+compiler refusal, equivalent, timeout or unjudged result occurs. All 1123 regular original/copied
+inputs restore with independent Python/system hashes and modes. All 38 direct bindings,
+including the new writer source, and 37 pinned public producer sources agree. Invented-parent,
+missing-result, changed-outcome, changed-exit and duplicate-result receipts refuse. The committed
+output-position leaf seals exactly; all 305 previous task archive files remain unchanged.
+Original/copy fixture audits verify complete payload recovery and the absence of remaining
+pipes, links and stop markers.
+
+Held native tree `608626871555d3ae58b6f7e214125cff8f0b57cc` precedes completion documentation.
+Whole artifact file SHA-256 `60f0ff3fdc31255926bb3f927372bd27c6a4c60d92de65bfe097264a022cbc49`;
+its production prefix remains exact. Writer source SHA-256
+`45b3cbfe9115136cc999e832e0117420a0d3bd4c7ae2c2a441485c4c3f9cca36`. Audit SHA-256
+`5fad04c7e558326e0374b4dd47044185e5805ac1d84c371a2603fb1f84f9da10`
+binds actual source/parent preservation, writer controls, both complete fixture recoveries,
+historical/native edit identities, restoration and false receipts. Raw evidence remains in
+`target/artifact-output-kinds/`. An initial Cargo invocation put the second filter before its
+argument separator and refused before testing; passing both exact filters to libtest corrected
+that invocation. No native result is inferred from the refusal. Final staged focused/book/commit
+gates complete this leaf; basename grammar and all-output uniqueness are next.
+The explicit symlink-term assessment, complete artifact replay and caller/global adequacy remain open.

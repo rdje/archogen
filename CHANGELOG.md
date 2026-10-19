@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — require regular non-symlink outputs at every position
+
+`ARCHOGEN-M3-0795` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.7`), `2026-10-19`.
+
+- Add bounded every-position relative-link and named-pipe parents; finite project-local Python
+  writer has actual positive byte flow, stopped/no-reader checks and seven refusal/deadline controls.
+- Exact historical5S become native5K/full190 strict0;1123 originals/copies restored,
+  38 bindings/37 pins/five false receipts; no residual pipes, links or stop markers.
+- Prior position seal/305 older archives exact; production/older tests/reasons unchanged.
+  Book/live and final staged focused gates; basename grammar/uniqueness next, full adequacy open.
+
 ## archogen — hold complete output visitation and rlib positions
 
 `ARCHOGEN-M3-0794` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.6`), `2026-10-19`.
