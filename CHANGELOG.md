@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — complete final artifact checkpoint
+
+`ARCHOGEN-M3-0803` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.15`), `2026-10-19`.
+
+- Complete fresh artifact138/full196: 126 named K/1 exact guarded E/11 compiler refusals,
+  strict0; every initial survivor binds fresh intended witnesses or proved source retirement.
+- Whole actual normal component compiles before all exact11 refusal variants independently fail;
+  source/types, reasons and39 direct/37 producer/10 API bindings agree, no coverage from U.
+- All1132 original/copied inputs restore;13 receipt/five witness-refusal falsifiers reject,
+  membership seal/313 older archives exact. Book records every outcome and source mapping.
+- Final still-tree integration/normal operator and book gates before commit; bounded artifact
+  group closes, current caller suffix producer/domain assessment next; F30/global remain open.
+
 ## archogen — prove required crate-name minimum membership
 
 `ARCHOGEN-M3-0802` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.14`), `2026-10-19`.

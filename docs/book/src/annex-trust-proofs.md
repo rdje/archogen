@@ -7298,3 +7298,353 @@ passes on the normalized file. The initial layout/receipt is retained under
 `target/artifact-crate-name-membership/before-eof-normalization/`. The fresh native replay
 binds the final catalog bytes, again finishing as one equivalent with complete restoration.
 Final focused/commit checks remain required.
+
+### Complete final artifact checkpoint
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.15`: the fresh complete artifact run finishes with
+**126 named kills, 1 precisely guarded equivalent edit and 11 compiler
+refusals**, strict exit `0`. There are no survivors, timeouts or unjudged edits.
+This closes the bounded artifact resolution population after the committed controls and
+source proof. Caller suffix/remaining caller populations, final source/reason revalidation and
+independent review remain open before F30 or global adequacy.
+
+#### Exact current source, reason and full cohort
+
+The complete current artifact file is `xtask/src/trust_artifact.rs`, SHA-256
+`f3c8b408ec1733cdf5828123ad5e1f6db1d205995fffe30f0e9bc1acfd30d673`. Its production prefix has SHA-256
+`9365cd07c990d1ef4295b8e905ac1f3baa4754272498904f6b88e1c982b8ef8c`.
+Fresh actual CLI discovery and maintained discovery agree on the entire zero-based
+production range `[11,198]`, every span/operator/original/replacement and native order.
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --equivalents xtask/trust_artifact.equivalents
+```
+
+`2026-10-19`: this command runs all 138 current edits against all 196 current semantic
+parents after a passing unmodified baseline. It has no selected-ID filter. The copied parent
+names and order agree exactly with the fresh original population. The normal operator proof
+suite remains outside this semantic cohort, so source-hash guards cannot supply semantic
+kills. Its permanent membership proof is required separately by normal verification.
+
+The precise reason file SHA-256 is
+`591981f27cd23cb1c40f63c71554ef01208ed1c07a191d63e66ed82d66678435`. It contains only the exact required-crate-name first/copied
+predicate proved in the preceding section. The native reader binds the same original/edit
+pair. The pure same-snapshot file-kind simplification adds no reason record.
+
+The held native Git tree is `3d6e5613db5cc40d623dfba44ffd9bf79b8dc54e`. The unchanged
+repository-volume sandbox profile has SHA-256
+`2b3fbe199bddb4ba84c453a23334c7025308b06127ce3cc96f74b2a17680eedd`.
+The held tree includes the owned checkpoint activation and membership-leaf seal; no source,
+test, producer or reason changes occur during the replay.
+
+#### Every final native result
+
+`2026-10-19`: every current edit appears below in actual native order. Initial IDs/outcomes
+refer only to the earlier source `3c42078e46da0424e4c47aa467cd5e4b6edf851af1a0d50c811f595979aaa5c5`
+and its earlier parent cohort. Identity is reconciled by exact span, operator and edit text
+under the single proved term removal; final outcomes are all freshly measured.
+`K` is an actual finishing named failure, `E` the precise source-proved reason, and `U` a
+compiler refusal. Each K row gives an actual witness alias and the total distinct failing
+names; the full native receipt retains all names. Required regression witnesses are
+independently checked below.
+
+| Alias | Actual current semantic parent |
+| --- | --- |
+| F1 | `trust::artifact::tests::naming_query_excludes_source_codegen_and_environment_inputs` |
+| F2 | `trust::artifact::tests::naming_query_preserves_test_and_refuses_duplicate_test_options` |
+| F3 | `trust::artifact::tests::naming_query_requires_nonempty_nonflaglike_option_values` |
+| F4 | `trust::artifact::tests::actual_empty_input_query_preserves_build_and_ignores_now_invalid_source` |
+| F5 | `trust::tests::a_second_run_writes_the_same_bytes` |
+| F6 | `trust::artifact::tests::naming_query_forwards_only_the_exact_extra_filename_option` |
+| F7 | `trust::artifact::tests::naming_query_refuses_each_joined_option_but_allows_source_lookalikes` |
+| F8 | `trust::artifact::tests::artifact_names_refuse_missing_foreign_linked_and_ambiguous_outputs` |
+| F9 | `trust::artifact::tests::output_diagnostics_name_the_first_failure_in_the_reported_order` |
+| F10 | `trust::artifact::tests::every_reported_output_is_read_and_the_rlib_can_be_in_each_position` |
+| F11 | `trust::artifact::tests::linked_outputs_are_refused_at_every_reported_position` |
+| F12 | `trust::artifact::tests::malformed_basenames_are_refused_before_their_output_lookup` |
+| F13 | `trust::artifact::tests::every_output_name_is_unique_including_nonselected_outputs` |
+| F14 | `trust::adequacy_tests::every_program_target_position_is_refused_before_a_foreign_role_build` |
+| F15 | `trust::adequacy_tests::reader_role_tests::the_harness_allows_both_pair_roles_and_refuses_each_foreign_generator_kind` |
+| F16 | `trust::artifact::tests::source_selection_preserves_ordinary_and_canonical_prefixes_under_a_tree_alias` |
+| F17 | `trust::artifact::tests::metadata_roots_share_one_source_and_refuse_distinct_compiled_sources` |
+| F18 | `trust::artifact::tests::naming_query_honors_the_explicit_toolchain_environment` |
+
+| Current ID | Earlier ID / outcome | Final | Actual witness or refusal |
+| --- | --- | --- | --- |
+| `L16.iter.0` | `L16.iter.0` / K | K | F1; 119 distinct named killing parents |
+| `L16.iter.1` | `L16.iter.1` / K | K | F1; 119 distinct named killing parents |
+| `L16.iter.2` | `L16.iter.2` / K | K | F1; 119 distinct named killing parents |
+| `L16.guard.3` | `L16.guard.3` / K | K | F1; 1 distinct named killing parent |
+| `L16.guard.4` | `L16.guard.4` / K | K | F1; 1 distinct named killing parent |
+| `L16.guard.5` | `L16.guard.5` / K | K | F1; 1 distinct named killing parent |
+| `L16.guard.6` | `L16.guard.6` / K | K | F1; 119 distinct named killing parents |
+| `L16.guard.7` | `L16.guard.7` / K | K | F1; 119 distinct named killing parents |
+| `L16.guard.8` | `L16.guard.8` / K | K | F1; 119 distinct named killing parents |
+| `L16.guard.9` | `L16.guard.9` / S | K | F2; 1 distinct named killing parent |
+| `L16.guard.10` | `L16.guard.10` / S | K | F2; 1 distinct named killing parent |
+| `L16.guard.11` | `L16.guard.11` / S | K | F2; 1 distinct named killing parent |
+| `L16.guard.12` | `L16.guard.12` / K | K | F1; 116 distinct named killing parents |
+| `L16.guard.13` | `L16.guard.13` / K | K | F1; 116 distinct named killing parents |
+| `L16.guard.14` | `L16.guard.14` / K | K | F1; 116 distinct named killing parents |
+| `L16.guard.15` | `L16.guard.15` / K | K | F1; 1 distinct named killing parent |
+| `L16.guard.16` | `L16.guard.16` / K | K | F1; 1 distinct named killing parent |
+| `L16.guard.17` | `L16.guard.17` / K | K | F1; 1 distinct named killing parent |
+| `L20.int.18` | `L20.int.18` / K | K | F1; 119 distinct named killing parents |
+| `L20.int.19` | `L20.int.19` / K | K | F1; 119 distinct named killing parents |
+| `L21.logic.20` | `L21.logic.20` / S | K | F3; 1 distinct named killing parent |
+| `L21.not.21` | `L21.not.21` / K | K | F1; 119 distinct named killing parents |
+| `L21.not.22` | `L21.not.22` / K | K | F1; 119 distinct named killing parents |
+| `L21.dir.23` | `L21.dir.23` / K | K | F4; 114 distinct named killing parents |
+| `L23.eq.24` | `L23.eq.24` / K | K | F1; 119 distinct named killing parents |
+| `L23.logic.25` | `L23.logic.25` / K | K | F1; 119 distinct named killing parents |
+| `L23.logic.26` | `L23.logic.26` / K | K | F1; 2 distinct named killing parents |
+| `L23.logic.27` | `L23.logic.27` / K | K | F1; 119 distinct named killing parents |
+| `L23.cond.28` | `L23.cond.28` / K | K | F1; 119 distinct named killing parents |
+| `L23.cond.29` | `L23.cond.29` / K | K | F1; 119 distinct named killing parents |
+| `L23.not.30` | `L23.not.30` / K | K | F1; 119 distinct named killing parents |
+| `L26.eq.31` | `L26.eq.31` / K | K | F1; 119 distinct named killing parents |
+| `L26.cond.32` | `L26.cond.32` / K | K | F1; 119 distinct named killing parents |
+| `L26.cond.33` | `L26.cond.33` / K | K | F1; 119 distinct named killing parents |
+| `L27.stmt.34` | `L27.stmt.34` / K | K | F1; 119 distinct named killing parents |
+| `L29.stmt.35` | `L29.stmt.35` / K | K | F1; 119 distinct named killing parents |
+| `L33.cond.36` | `L33.cond.36` / K | K | F5; 14 distinct named killing parents |
+| `L33.cond.37` | `L33.cond.37` / S | K | F2; 1 distinct named killing parent |
+| `L33.not.38` | `L33.not.38` / K | K | F5; 14 distinct named killing parents |
+| `L36.stmt.39` | `L36.stmt.39` / S | K | F2; 1 distinct named killing parent |
+| `L40.int.40` | `L40.int.40` / K | K | F1; 116 distinct named killing parents |
+| `L40.int.41` | `L40.int.41` / K | K | F1; 116 distinct named killing parents |
+| `L42.cond.42` | `L42.cond.42` / K | K | F1; 112 distinct named killing parents |
+| `L42.cond.43` | `L42.cond.43` / K | K | F1; 116 distinct named killing parents |
+| `L42.dir.44` | `L42.dir.44` / S | K | F6; 1 distinct named killing parent |
+| `L42.lit.45` | `L42.lit.45` / S | K | F6; 1 distinct named killing parent |
+| `L42.lit.46` | `L42.lit.46` / K | K | F1; 116 distinct named killing parents |
+| `L43.cond.47` | `L43.cond.47` / K | K | F1; 116 distinct named killing parents |
+| `L43.cond.48` | `L43.cond.48` / K | K | F1; 1 distinct named killing parent |
+| `L43.not.49` | `L43.not.49` / K | K | F1; 116 distinct named killing parents |
+| `L46.stmt.50` | `L46.stmt.50` / K | K | F1; 116 distinct named killing parents |
+| `L58.dir.51` | `L58.dir.51` / S | K | F7; 1 distinct named killing parent |
+| `L65.cond.52` | `L65.cond.52` / K | K | F1; 119 distinct named killing parents |
+| `L65.cond.53` | `L65.cond.53` / K | K | F1; 1 distinct named killing parent |
+| `L65.not.54` | `L65.not.54` / K | K | F1; 119 distinct named killing parents |
+| `L65.lit.55` | `L65.lit.55` / K | K | F1; 119 distinct named killing parents |
+| `L65.lit.56` | `L65.lit.56` / K | K | F1; 119 distinct named killing parents |
+| `L84.cond.57` | `L84.cond.57` / K | K | F4; 121 distinct named killing parents |
+| `L84.cond.58` | `L84.cond.58` / K | K | F8; 1 distinct named killing parent |
+| `L84.not.59` | `L84.not.59` / K | K | F4; 121 distinct named killing parents |
+| `L84.dir.60` | `L84.dir.60` / U | U | error[E0599]: no method named contains found for struct PathBuf in the current scope |
+| `L89.dir.61` | `L89.dir.61` / S | K | F9; 1 distinct named killing parent |
+| `L89.iter.62` | `L89.iter.62` / K | K | F8; 7 distinct named killing parents |
+| `L89.iter.63` | `L89.iter.63` / K | K | F8; 8 distinct named killing parents |
+| `L89.iter.64` | `L89.iter.64` / S | K | F10; 6 distinct named killing parents |
+| `L89.guard.65` | `L89.guard.65` / S | K | F11; 2 distinct named killing parents |
+| `L89.guard.66` | `L89.guard.66` / S | K | F11; 2 distinct named killing parents |
+| `L89.guard.67` | `L89.guard.67` / S | K | F11; 2 distinct named killing parents |
+| `L89.guard.68` | `L89.guard.68` / K | K | F8; 7 distinct named killing parents |
+| `L89.guard.69` | `L89.guard.69` / K | K | F8; 8 distinct named killing parents |
+| `L89.guard.70` | `L89.guard.70` / S | K | F10; 6 distinct named killing parents |
+| `L91.logic.71` | `L91.logic.71` / S | K | F12; 1 distinct named killing parent |
+| `L91.alt.72` | `L91.alt.72` / U | U | error: unexpected closing delimiter: } |
+| `L91.alt.73` | `L91.alt.73` / U | U | error: mismatched closing delimiter: } |
+| `L92.logic.74` | `L92.logic.74` / S | K | F12; 1 distinct named killing parent |
+| `L93.logic.75` | `L93.logic.75` / S | K | F13; 2 distinct named killing parents |
+| `L93.not.76` | `L93.not.76` / K | K | F4; 121 distinct named killing parents |
+| `L99.cond.77` | `L99.cond.80` / K | K | F4; 121 distinct named killing parents |
+| `L99.cond.78` | `L99.cond.81` / K | K | F8; 3 distinct named killing parents |
+| `L99.not.79` | `L99.not.82` / K | K | F4; 121 distinct named killing parents |
+| `L105.logic.80` | `L105.logic.83` / K | K | F4; 121 distinct named killing parents |
+| `L105.logic.81` | `L105.logic.84` / K | K | F4; 113 distinct named killing parents |
+| `L105.logic.82` | `L105.logic.85` / K | K | F8; 118 distinct named killing parents |
+| `L105.cond.83` | `L105.cond.86` / K | K | F8; 8 distinct named killing parents |
+| `L105.cond.84` | `L105.cond.87` / K | K | F4; 121 distinct named killing parents |
+| `L105.not.85` | `L105.not.88` / K | K | F4; 120 distinct named killing parents |
+| `L135.eq.86` | `L135.eq.89` / K | K | F4; 114 distinct named killing parents |
+| `L136.logic.87` | `L136.logic.90` / K | K | F5; 49 distinct named killing parents |
+| `L137.eq.88` | `L137.eq.91` / K | K | F4; 97 distinct named killing parents |
+| `L137.eq.89` | `L137.eq.92` / K | K | F4; 99 distinct named killing parents |
+| `L137.logic.90` | `L137.logic.93` / K | K | F14; 4 distinct named killing parents |
+| `L138.eq.91` | `L138.eq.94` / K | K | F5; 13 distinct named killing parents |
+| `L138.eq.92` | `L138.eq.95` / K | K | F5; 13 distinct named killing parents |
+| `L138.logic.93` | `L138.logic.96` / K | K | F15; 4 distinct named killing parents |
+| `L155.eq.94` | `L155.eq.97` / K | K | F4; 114 distinct named killing parents |
+| `L156.logic.95` | `L156.logic.98` / K | K | F4; 18 distinct named killing parents |
+| `L158.eq.96` | `L158.eq.99` / K | K | F4; 18 distinct named killing parents |
+| `L159.eq.97` | `L159.eq.100` / K | K | F4; 18 distinct named killing parents |
+| `L159.logic.98` | `L159.logic.101` / K | K | F4; 114 distinct named killing parents |
+| `L160.eq.99` | `L160.eq.102` / K | K | F4; 18 distinct named killing parents |
+| `L160.logic.100` | `L160.logic.103` / S | K | F16; 1 distinct named killing parent |
+| `L179.cond.101` | `L179.cond.104` / K | K | F4; 114 distinct named killing parents |
+| `L179.cond.102` | `L179.cond.105` / K | K | F4; 2 distinct named killing parents |
+| `L179.not.103` | `L179.not.106` / K | K | F4; 114 distinct named killing parents |
+| `L195.eq.104` | `L195.eq.107` / K | K | F4; 113 distinct named killing parents |
+| `L16.chain.105` | `L16.chain.108` / K | K | F1; 119 distinct named killing parents |
+| `L16.chain.106` | `L16.chain.109` / K | K | F1; 119 distinct named killing parents |
+| `L21.chain.107` | `L21.chain.110` / U | U | error[E0061]: this method takes 0 arguments but 1 argument was supplied |
+| `L21.chain.108` | `L21.chain.111` / U | U | error[E0599]: no method named rev found for enum Option<&String> in the current scope |
+| `L21.chain.109` | `L21.chain.112` / S | K | F3; 1 distinct named killing parent |
+| `L57.chain.110` | `L57.chain.113` / S | K | F7; 1 distinct named killing parent |
+| `L57.chain.111` | `L57.chain.114` / K | K | F1; 2 distinct named killing parents |
+| `L65.contains.112` | `L65.contains.115` / U | U | error[E0308]: mismatched types |
+| `L65.contains.113` | `L65.contains.116` / S | E | exact closed-key membership proof and reason above |
+| `L65.contains.114` | `L65.contains.117` / U | U | error[E0308]: mismatched types |
+| `L65.contains.115` | `L65.contains.118` / K | K | F1; 119 distinct named killing parents |
+| `L92.contains.116` | `L92.contains.119` / U | U | error[E0599]: no method named first found for reference &str in the current scope |
+| `L92.contains.117` | `L92.contains.120` / U | U | error[E0599]: no method named first found for reference &str in the current scope |
+| `L92.contains.118` | `L92.contains.121` / U | U | error[E0599]: &str is not an iterator |
+| `L92.contains.119` | `L92.contains.122` / U | U | error[E0599]: &str is not an iterator |
+| `L133.chain.120` | `L133.chain.123` / K | K | F5; 111 distinct named killing parents |
+| `L133.chain.121` | `L133.chain.124` / K | K | F5; 110 distinct named killing parents |
+| `L134.chain.122` | `L134.chain.125` / S | K | F17; 1 distinct named killing parent |
+| `L134.chain.123` | `L134.chain.126` / S | K | F17; 1 distinct named killing parent |
+| `L134.chain.124` | `L134.chain.127` / K | K | F5; 110 distinct named killing parents |
+| `L144.chain.125` | `L144.chain.128` / S | K | F17; 1 distinct named killing parent |
+| `L144.chain.126` | `L144.chain.129` / K | K | F4; 2 distinct named killing parents |
+| `L153.chain.127` | `L153.chain.130` / K | K | F4; 41 distinct named killing parents |
+| `L153.chain.128` | `L153.chain.131` / K | K | F4; 44 distinct named killing parents |
+| `L154.chain.129` | `L154.chain.132` / K | K | F4; 1 distinct named killing parent |
+| `L154.chain.130` | `L154.chain.133` / K | K | F4; 1 distinct named killing parent |
+| `L154.chain.131` | `L154.chain.134` / K | K | F4; 50 distinct named killing parents |
+| `L156.chain.132` | `L156.chain.135` / K | K | F4; 114 distinct named killing parents |
+| `L156.chain.133` | `L156.chain.136` / K | K | F4; 114 distinct named killing parents |
+| `L175.chain.134` | `L175.chain.137` / S | K | F18; 1 distinct named killing parent |
+| `L175.chain.135` | `L175.chain.138` / K | K | F4; 114 distinct named killing parents |
+| `L21.clogic.136` | `L21.clogic.139` / S | K | F3; 1 distinct named killing parent |
+| `L21.clogic.137` | `L21.clogic.140` / S | K | F3; 1 distinct named killing parent |
+
+
+#### Initial survivors, removed predicates and intended witnesses
+
+`2026-10-19`: every earlier survivor is reconciled to a freshly measured current outcome
+or an explicitly source-proved removed predicate. No old selected result is projected onto
+this full run. The current regularity control also preserves the legacy relative-link parent
+and both every-position link/finite-pipe parents; it was already a kill after the fixture
+repair and remains a separately checked regression.
+
+| Earlier survivor | Exact current ID or retired source | Fresh result and intended evidence |
+| --- | --- | --- |
+| `L16.guard.9` | `L16.guard.9` | K; `trust::artifact::tests::naming_query_preserves_test_and_refuses_duplicate_test_options` |
+| `L16.guard.10` | `L16.guard.10` | K; `trust::artifact::tests::naming_query_preserves_test_and_refuses_duplicate_test_options` |
+| `L16.guard.11` | `L16.guard.11` | K; `trust::artifact::tests::naming_query_preserves_test_and_refuses_duplicate_test_options` |
+| `L21.logic.20` | `L21.logic.20` | K; `trust::artifact::tests::naming_query_requires_nonempty_nonflaglike_option_values` |
+| `L33.cond.37` | `L33.cond.37` | K; `trust::artifact::tests::naming_query_preserves_test_and_refuses_duplicate_test_options` |
+| `L36.stmt.39` | `L36.stmt.39` | K; `trust::artifact::tests::naming_query_preserves_test_and_refuses_duplicate_test_options` |
+| `L42.dir.44` | `L42.dir.44` | K; `trust::artifact::tests::naming_query_forwards_only_the_exact_extra_filename_option` |
+| `L42.lit.45` | `L42.lit.45` | K; `trust::artifact::tests::naming_query_forwards_only_the_exact_extra_filename_option` |
+| `L58.dir.51` | `L58.dir.51` | K; `trust::artifact::tests::naming_query_refuses_each_joined_option_but_allows_source_lookalikes` |
+| `L89.dir.61` | `L89.dir.61` | K; `trust::artifact::tests::output_diagnostics_name_the_first_failure_in_the_reported_order` |
+| `L89.iter.64` | `L89.iter.64` | K; `trust::artifact::tests::every_reported_output_is_read_and_the_rlib_can_be_in_each_position` |
+| `L89.guard.65` | `L89.guard.65` | K; `trust::artifact::tests::linked_outputs_are_refused_at_every_reported_position` |
+| `L89.guard.66` | `L89.guard.66` | K; `trust::artifact::tests::linked_outputs_are_refused_at_every_reported_position` |
+| `L89.guard.67` | `L89.guard.67` | K; `trust::artifact::tests::linked_outputs_are_refused_at_every_reported_position` |
+| `L89.guard.70` | `L89.guard.70` | K; `trust::artifact::tests::every_reported_output_is_read_and_the_rlib_can_be_in_each_position` |
+| `L91.logic.71` | `L91.logic.71` | K; `trust::artifact::tests::malformed_basenames_are_refused_before_their_output_lookup` |
+| `L92.logic.74` | `L92.logic.74` | K; `trust::artifact::tests::malformed_basenames_are_refused_before_their_output_lookup` |
+| `L93.logic.75` | `L93.logic.75` | K; `trust::artifact::tests::every_output_name_is_unique_including_nonselected_outputs` |
+| `L99.logic.77` | retired with the redundant same-metadata symlink term | source proof and one-term production diff; no K/E inherited |
+| `L99.logic.78` | retired with the redundant same-metadata symlink term | source proof and one-term production diff; no K/E inherited |
+| `L99.logic.79` | retired with the redundant same-metadata symlink term | source proof and one-term production diff; no K/E inherited |
+| `L160.logic.103` | `L160.logic.100` | K; `trust::artifact::tests::source_selection_preserves_ordinary_and_canonical_prefixes_under_a_tree_alias` |
+| `L21.chain.112` | `L21.chain.109` | K; `trust::artifact::tests::naming_query_requires_nonempty_nonflaglike_option_values` |
+| `L57.chain.113` | `L57.chain.110` | K; `trust::artifact::tests::naming_query_refuses_each_joined_option_but_allows_source_lookalikes` |
+| `L65.contains.116` | `L65.contains.113` | E; closed-key all-domain proof; exact native E |
+| `L134.chain.125` | `L134.chain.122` | K; `trust::artifact::tests::metadata_roots_share_one_source_and_refuse_distinct_compiled_sources` |
+| `L134.chain.126` | `L134.chain.123` | K; `trust::artifact::tests::metadata_roots_share_one_source_and_refuse_distinct_compiled_sources` |
+| `L144.chain.128` | `L144.chain.125` | K; `trust::artifact::tests::metadata_roots_share_one_source_and_refuse_distinct_compiled_sources` |
+| `L175.chain.137` | `L175.chain.134` | K; `trust::artifact::tests::naming_query_honors_the_explicit_toolchain_environment` |
+| `L21.clogic.139` | `L21.clogic.136` | K; `trust::artifact::tests::naming_query_requires_nonempty_nonflaglike_option_values` |
+| `L21.clogic.140` | `L21.clogic.137` | K; `trust::artifact::tests::naming_query_requires_nonempty_nonflaglike_option_values` |
+
+The original production prefix becomes the current prefix after removing exactly
+` || metadata.file_type().is_symlink()`, with no other production-byte change. The earlier
+file-kind section proves the same immutable metadata snapshot, exclusivity and pure stored
+getters, and includes falsified mixed snapshots. Thus the removed boolean-term edits have
+no current candidate. Their earlier S outcomes remain historical; they are never counted as
+new kills or equivalents.
+
+`2026-10-19`: all 28 mapped earlier survivors meet their fresh required verdict.
+The witness audit holds all 29 required rows, including the separate regularity regression,
+all 30 intended named-witness obligations and the single precise E. Wrong required
+outcome, removed required witness, changed refusal diagnostic, U-as-E and omitted-refusal
+receipts all fail. The independent full-receipt audit also prevents invented parent names.
+
+#### Every compiler refusal remains separate from coverage
+
+The exact whole current component, with its exact caller `Target`, `Program`,
+`TargetSources` and `Compilation` definitions plus the actual `Digest` dependency, compiles
+in normal configuration before any edit. Each exact current compiler-rejected edit is then
+compiled in its own component copy with `rustc --emit=metadata`. Every compiler rejection
+matches the final native first diagnostic. This confirms production compilation failure,
+rather than a broken test-only branch or a runtime behavioral witness.
+
+| Current U | Actual type or syntax reason |
+| --- | --- |
+| `L84.dir.60` | PathBuf receiver; no contains method |
+| `L91.alt.72` | Token-level alternative removal leaves an unexpected closing delimiter |
+| `L91.alt.73` | Token-level alternative removal leaves a mismatched closing delimiter |
+| `L21.chain.107` | Option<&String>::take takes no numeric argument; this is not Iterator::take |
+| `L21.chain.108` | Option<&String> has no rev method; this is not an iterator chain |
+| `L65.contains.112` | BTreeSet<&str>::first returns Option<&&str>, versus Some(&str) |
+| `L65.contains.114` | BTreeSet<&str>::last returns Option<&&str>, versus Some(&str) |
+| `L92.contains.116` | &str receiver has no first method |
+| `L92.contains.117` | &str receiver has no first method; copied cannot repair the missing method |
+| `L92.contains.118` | &str receiver has no last method or Iterator implementation |
+| `L92.contains.119` | &str receiver has no last method or Iterator implementation; copied cannot repair it |
+
+
+The set's `first`/`last` result is `Option<&&str>`; the two rejected comparisons try to build
+`Some(&str)`. The separately proved first/copied edit removes the extra reference and is a
+different, compiling candidate. The option-chain receiver remains `Option<&String>`, so an
+iterator-shaped `take(1)` or `rev()` does not acquire iterator semantics. The basename
+receiver is `&str`, and the directory receiver is `PathBuf`; their rejected methods are
+bound to those actual source types. The alternative-token rewrites are malformed syntax.
+These are tool/operator outcomes, never coverage, equivalence or proof of a missing test.
+
+Exact caller-type text has SHA-256
+`1aabfad19aab65116a32d4ee6c044d14911233dc21174d991f5590e5f16c3df4`.
+The installed compiler identity is the pinned toolchain
+([Rust toolchain ledger](ledger.md#rust-toolchain)). Component copies, complete diagnostics,
+commands and dependency/source hashes remain under
+`target/compiler-artifact-final/refusal-assessment/`. Normal builds do not depend on these
+observations. Reproduction uses the actual current file, source types and dependency, rather
+than a shortened hand-written substitute.
+
+#### Restored inputs, pinned premises and falsified receipts
+
+`2026-10-19`: all 1132 captured regular original/copied inputs restore with independent
+Python/system hashes and modes; the opaque gitlink is checked as metadata only. All
+39 direct bindings, 37 pinned public producer sources and 10 installed public API/source
+bindings agree. The installed sources derive at runtime from `rustc --print sysroot`; their
+repository-relative evidence copies and identities are preserved in the preceding proof
+sections. No submodule implementation is inspected and no pin changes.
+
+`2026-10-19`: all 13 full-receipt falsifiers reject: scope, omitted result, changed
+replacement, invented parent, changed total/exit/file/source hash/outcome, duplicate result,
+invented equivalent, reduced population and missing reason. All 313 earlier archive files
+remain byte-exact. The membership leaf seals exactly; independent Git/index/filesystem
+populations agree, and false small/off-by-one archive counts refuse.
+
+Full-receipt audit SHA-256 `52d8e48f87a7dad42a24b9b9f1992f2ce6d1c8a1e6dc8dbd937766b77c635244` and
+witness/refusal audit SHA-256 `e7ae1256e4928a65e2dcfad18d7a1dab7f0162b0c847a5d1656e84003199cc71` bind the native results,
+source identities, required witnesses, unchanged reasons/parents and restoration. Raw
+discovery, listings, plans, commands, native output/exit, complete named results and audit
+programs remain untracked under `target/compiler-artifact-final/`.
+
+#### Integration checkpoint and next caller obligation
+
+`2026-10-19`: the complete local integration tier must pass on the final still staged tree
+before this checkpoint commits. It includes formatting, strict lints, the full contract suite
+and operator proof controls, doctrine gates and their negative self-tests, the pinned book
+build, bare-metal and browser-target builds and the emulator check. A failed, incomplete,
+unavailable or quarantined result prevents closure. The official integration stamp must
+name exactly the committed tree. This is a local checkpoint, with no remote CI claim.
+
+The next owned caller suffix assessment is `.15.2.1.4.1`: historical
+`L814.dir.284`/`L814.lit.285` map uniquely to current caller
+`L729.dir.201`/`L729.lit.202` in `xtask/src/trust.rs`. These are distinct from the artifact
+constructor forwarding edits now killed above. No artifact K/E or retired predicate
+resolves a caller obligation. The current caller source SHA-256 is
+`fdc28b267ceb173da133e6b0d287758df703ecba6e7b3ca4453964b1c7aa567c`.
+Public producer/caller-domain assessment and its own full-parent evidence precede later
+compiler/global closure and independent review.
