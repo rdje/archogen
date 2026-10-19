@@ -196,7 +196,7 @@ impl Session {
     /// Read completed successful invocations; query-only records never become units.
     pub(super) fn invocations(&self) -> Result<Vec<Vec<String>>, String> {
         let entries = fs::read_dir(&self.records).map_err(|error| error.to_string())?;
-        let mut count = 0;
+        let mut saw_record = false;
         let mut invocations = Vec::new();
         for entry in entries {
             let entry = entry.map_err(|error| error.to_string())?;
@@ -268,9 +268,9 @@ impl Session {
             } else if !query(&argv[1..]) {
                 return Err("unknown compiler provenance invocation shape".to_owned());
             }
-            count += 1;
+            saw_record = true;
         }
-        if count == 0 {
+        if !saw_record {
             return Err("missing compiler provenance records".to_owned());
         }
         Ok(invocations)

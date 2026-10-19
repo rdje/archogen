@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — represent compiler-record presence directly
+
+`ARCHOGEN-M3-0786` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.7`), `2026-10-19`.
+
+- Replace unused record quantity with presence; retain validation of every entry and exact
+  missing/query/compilation behavior. Retire the old numeric edit without an equivalence claim.
+- Revalidate observer-close and absolute-cwd proof premises after both stale guards refuse;
+  all 47 actual tool controls pass, only two guard hashes change, prior tests remain exact.
+- Native six finishing kills/full 183, 1,112 original/copied inputs restored; 37 bindings / 37 pins
+  and 12 altered receipts hold. Seal installation-close evidence / 296 older archives unchanged.
+- Synchronize the unbounded book/live pointers and focused/staged gates; restore default
+  permission with the director before the complete current controller replay.
+
 ## archogen — hold installation writer lifetime before readback
 
 `ARCHOGEN-M3-0785` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.6`), `2026-10-19`.

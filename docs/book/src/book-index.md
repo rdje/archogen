@@ -463,6 +463,8 @@ a change that leaves it stale, so it is never edited by hand.
   the toolchain](verification.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - Real Cargo regression parents and exact replay — [Annex C: Trust proof
   records](annex-trust-proofs.md#real-cargo-regression-parents-and-exact-replay)
+- Record-presence state assessment — [Annex C: Trust proof
+  records](annex-trust-proofs.md#record-presence-state-assessment)
 - **RED** — [definition](glossary.md), [Verifying the toolchain](verification.md), [Annex B: The checks that keep the
   repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Refusal is a feature — [The supported profile](profile.md#refusal-is-a-feature)

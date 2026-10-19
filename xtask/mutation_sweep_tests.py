@@ -538,7 +538,7 @@ class ObserverCloseTests(DiscoveryFixture):
     def test_close_reason_requires_current_production_and_caller_premises(self):
         expected = {
             'xtask/src/trust_compiler_observer.rs': '58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98',
-            'xtask/src/trust_compiler.rs': '9dbac3db6e10908fa1028d7464adcd6af092468f6ed455cadcafb07e787e0db2',
+            'xtask/src/trust_compiler.rs': '1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973',
             'xtask/src/trust.rs': 'd4b2ae51fa78f79c770cb7c9f84dbcf06578be12735461c328a28e509e8ab88c',
         }
         def verify(inputs):
@@ -1568,7 +1568,7 @@ class IteratorTests(DiscoveryFixture):
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
                     "036f650dc082d9d43956865ef67fb16f761c4b3ede54c0567f8936733322bef4"),
                 "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
-                    "2364508f25c23a72db2fdca5e9f41280883a3b0bb3577a2a69e65ebbac2b5c69"),
+                    "634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70"),
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],
                     "c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f"),
                 "artifact binding": (artifact.split("#[cfg(test)]", 1)[0],

@@ -5027,3 +5027,123 @@ change is needed, issue the prominent `ARCHOGEN` alert and block until the direc
 After finishing the work that needs the temporary permission, pause again so the director
 can restore **Approve for me**; await that reaction before continuing the next-task loop. Record both
 waiting states durably. This instruction governs the current approval recovery too.
+
+### Record-presence state assessment
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.6.7`: the actual old `L271.int.92` changes
+`count += 1` to `count += 2`. The consumer uses this quantity only for its final zero test.
+The implementation now stores `saw_record`: initially false, set true only after a record
+passes every validation, then checked after the complete directory traversal. Empty directories
+still refuse; valid query records establish presence without becoming inventory units; real
+compilation records retain their complete argument vectors. A valid earlier record does not
+skip checks on later entries. This replaces unnecessary numeric state; the old edit is removed
+from the current source, without declaring it equivalent or claiming a new platform restriction.
+
+The only controller changes are the initialization, update and final presence condition.
+Existing actual missing/query/compilation/malformed and later-record controls remain unchanged.
+Observer-close and absolute-working-directory proof guards both rejected the changed controller
+before their stored hashes were updated. Source comparison confirms that session target/cwd
+construction, environment propagation, synchronous successful Cargo-before-reader ordering and
+observer post-synchronization publication operations are unchanged. Actual protocol and cwd
+counterexample executions must revalidate those premises before this leaf can close.
+
+The current discovery includes false/true initialization, false/omitted update and both constant
+or inverted final-condition edits. Selected native controls and the final complete controller
+replay judge the current source; historical edit identities and outcomes remain historical.
+`xtask/src/trust_compiler.rs`, `xtask/mutation_sweep_tests.py` and the
+[compiler provenance contract](../../specs/trust/compiler-provenance-contract.md) own these
+interfaces and checks. Raw assessment evidence is under `target/compiler-record-presence/`.
+
+`2026-10-19`: automatic review accepted tracking-file staging after default permissions were
+restored, but refused the proof-control execution request because its reviewer model was at
+capacity. The command never executed. The director responded to the prominent alert by changing
+to **Ask for approval**; the retry still selected automatic review and failed capacity before
+execution. The active run still declares automatic review. End the run, then resume in a fresh
+turn with manual review retained, as in the preceding recovery; this is an observed recovery
+procedure, not an established explanation of the setting mismatch. Native/proof/focused
+results were pending at that stopping point. A fresh turn picked up manual approval and
+launched the actual controls. After commit and the native handoff census, pause again for
+the director to restore **Approve for me** and react before continuing.
+
+#### Presence contract examples
+
+The state records whether any complete valid provenance exists, independently of whether
+those records contribute compilation units:
+
+| Input in the private record directory | Required consumer result |
+| --- | --- |
+| Empty directory | Explicit missing-record refusal |
+| Valid pinned compiler queries | Success with no compilation units |
+| Valid observed compilations | Success retaining their complete argument vectors |
+| Valid records together with a malformed, partial or foreign record | Refusal; earlier valid records cannot hide the bad entry |
+
+The existing actual query-refusal, compilation and every-record-position parents exercise
+these boundaries. They were preserved verbatim. Neither the scope of supported records nor
+the order in which validation visits directory entries changes.
+
+#### Revalidation and actual native results
+
+`2026-10-19`: all 47 controls in `xtask/mutation_sweep_tests.py` pass in 138.525 s. This includes
+the actual pinned observer original/omitted-close protocol and its deliberately different
+syscall timing, plus compiled absolute-cwd/target-path counterexamples and all existing
+changed-premise/wrong-oracle falsifiers. Both stale controller guards first failed on purpose.
+Only their controller prefix digests change after the complete source/caller comparison:
+
+| Guard | Current controller prefix SHA-256 |
+| --- | --- |
+| Observer-close proof, excluding the separator newline | `1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973` |
+| Absolute-cwd proof, including that newline | `634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70` |
+
+`2026-10-19`: the actual CLI and discovery agree on all 124 current edits, with production lines 31 through 307 and whole controller SHA-256
+`28565b71d0a9471a855335b4037685a8a0a11449a8fe955a10c031e502e6d766`.
+`2026-10-19`: the selected native run uses all 183 current macOS trust parents; baseline passes in 56 s.
+Every presence edit has a finishing kill from
+`actual_query_records_reject_missing_stale_foreign_and_malformed_inputs`:
+
+| Actual current ID | Change | Required boundary that rejects it |
+| --- | --- | --- |
+| `L199.bool.33` | Initialize presence true | Empty record directory must refuse |
+| `L271.bool.93` | Set presence false after a valid record | A valid query must succeed |
+| `L271.stmt.94` | Omit setting presence after a valid record | A valid query must succeed |
+| `L273.cond.95` | Always take missing-record refusal | A valid query must succeed |
+| `L273.cond.96` | Never take missing-record refusal | Empty record directory must refuse |
+| `L273.not.97` | Invert final presence condition | A valid query must succeed |
+
+`2026-10-19`: the selected result is six finishing kills, strict exit 0, with no timeout, unjudged, unviable or equivalent result. Complete current controller replay remains the next leaf; these selected
+results do not establish the outcome of the other current edits or any global adequacy rate.
+`2026-10-19`: all 1,112 original/current-copy regular inputs restore by bytes/modes and Python/system hashes; Gitlinks remain metadata only. All 37 direct bindings and 37 public producer pins bind, and 12 false receipt arms reject altered scope, missing/duplicate results, replacement, killing name,
+totals, exit, source file/hash, outcome, invented equivalence or reduced population. Every
+reported killing name belongs to the complete current parent list, which the restored copy
+also reproduces. The proof controls run outside that semantic parent population.
+
+Reconstructing the prior controller by reversing the three state edits recovers its complete
+committed bytes, including every prior test. Reversing only the two digest replacements
+recovers the complete prior Python tool controls. Other callers, observer, environment,
+artifact code, catalogue and reasons remain exact.
+`2026-10-19`: the committed installation-close leaf seals exactly and all 296 older archives are unchanged. Held native tree:
+`48c97b148dea511d9cbb3c39d6d23b32d1c75eb0`; supplemental raw-audit SHA-256:
+`2a456733f50dc3fa68800e4a6edb65f7900e1615eaa7f0078825260519d66ae0`.
+Final focused/book/staged doctrine gates close this slice before permission handback.
+
+```sh
+python3 -I -B xtask/mutation_sweep_tests.py "$PWD"
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L199.bool.33 --only L271.bool.93 --only L271.stmt.94 \
+  --only L273.cond.95 --only L273.cond.96 --only L273.not.97
+```
+
+`2026-10-19`: the director asked why apparently safe commands still need explicit approval.
+Approval is also an execution-boundary decision, rather than a declaration that the requested
+operation is dangerous. This session requested broader execution for protected Git writes and
+native verification. Under the active request policy, commands containing environment setup,
+redirection or other shell wrappers are not automatically covered by saved command-prefix
+approvals. Grouping routine work into such requests can therefore add approval friction.
+The engineering practice is to use ordinary workspace sandbox execution where possible,
+separate routine steps from operations needing an exception, and make each required approval
+request narrow and explicit. This does not override a denial or authorize bypassing a review.
+The [official permission model](https://learn.chatgpt.com/docs/permission-modes) distinguishes
+the sandbox boundary from the reviewer: **Approve for me** sends eligible requests to the
+automatic reviewer; **Ask for approval** sends them to the user. The observed reviewer capacity
+failure prompted the temporary switch. No permission configuration is changed by this explanation.
