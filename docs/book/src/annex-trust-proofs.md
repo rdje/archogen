@@ -3918,14 +3918,20 @@ outcome must be bound and owned before the other current files can close.
 
 ### Compiler provenance commit ledger
 
-These are the exact completed task-table records for the implementation and compatibility
-sequence, retained here without shortening their original notes. The record date is the source
+These are exact completed task-table records for ownership reconciliation and the compiler
+qualification, repair and verification sequence, with every original note retained. The record date is the source
 epoch described in those entries. Words such as current and next retain their meaning at that
 epoch; the latest measurement record and resume pointer govern current work. Private task rows
 retain their original leaf/work-unit identities and route to this full ledger.
 
 | Recorded | Leaf | Work unit | Original record |
 | --- | --- | --- | --- |
+| 2026-10-18 | `M3.6.9.6.3.2.2.15.1` | `ARCHOGEN-M3-0757 (leaf M3.6.9.6.3.2.2.15.1)` | **All initial survivor ownership reconciled**: native old1420/current1526 bind, all540 initial rows exact/order complete;512 retained raw edits/28 absent/no ambiguity,70 exact historical result bindings without relabelling; all463 general rows gain coherent .15.2–.11 owners, complete compiler83 next;1062 held inputs restore, six false censuses refuse; closed .14 sealed with nine committed bodies/all267 older archives exact and full reconstruction, book exposes every mapping, no code/E/new-outcome claim |
+| 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.1` | `ARCHOGEN-M3-0758 (leaf M3.6.9.6.3.2.2.15.2.1.1)` | **Complete compiler region measured, criterion unmet**: actual83/full153-parent guarded run49K/28S/6U strict1, zero E/timeout/unjudged; exact raw IDs/names/operator totals/source30 pins bind, two E0308/four E0599 refusals explicit; all1063 originals/copies restore and copied153 names agree, seven false receipts reject; own every S in .2–.9, environment admission4 next, all83 outcomes/command in book; no Rust/E/full-file claim |
+| 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.2.1` | `ARCHOGEN-M3-0759 (leaf M3.6.9.6.3.2.2.15.2.1.2.1)` | **Four environment gaps closed**: two real-inventory parents hold nonterminal foreign records and exact namespace boundaries, allowed value/absence plus refusal/no inventory/recovery; full155-parent native4K/strict0 with intended names, all1063 originals/copies restore and seven false receipts reject, prior Rust exact except two added functions/production operators reasons unchanged; final focused/book/staged gates, no projected83 outcome; command-filter assessment next |
+| 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.1` | `ARCHOGEN-M3-0760 (leaf M3.6.9.6.3.2.2.15.2.1.3.1)` | **Command producer boundary/root defect established**: actual current helper/Cargo deprecated JSON/plain and multiline assembler probes refute JSON-only E; exact-admitted noncompiler warning writes, rustc-looking warning invents empty units and refuses gen/chk, P2 .3.3 owned immediately after .3.2 finishing controls; all1063 originals/copied Rust restore, six false observations reject,37 source identities/ten literal sites checked; three committed units/four leaves sealed with268 older archives exact; no new E/parent/full-region claim |
+| 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.2` | `ARCHOGEN-M3-0761 (leaf M3.6.9.6.3.2.2.15.2.1.3.2)` | **Four command-filter gaps closed**: one real-inventory parent holds exact-admitted nonterminal warning records, ordinary/recovery writes and independent cold producer ordering; correct initial overstrict pipelining assertion; full156-parent native4K/strict0 with intended name, all1066 originals/copies restore and seven false bindings reject, prior Rust exact except one added function/production operators reasons unchanged; final focused/book gates, P2 original phantom-unit defect open and provenance contract/prototype next, no projected83 result |
+| 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.3.1` | `ARCHOGEN-M3-0762 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.1)` | **Compiler provenance prototype verified**: tracked published-wrapper/C-receiver instrument passes20 real Cargo builds/four roles,45 empty-input artifact queries with unchanged build files,14 false-record controls,8 concurrent writers and byte/exit/stdio/environment/signal/failure cases; all1067 activation inputs restore, original production/tests/operators/reasons exact; canonical/book contract and three bounded repair children, final focused/book gates; original P2 remains open, producer/unit repair next |
 | 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.3.2.1` | `ARCHOGEN-M3-0763 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.2.1)` | **Compiler unit provenance repaired**: private embedded observer/typed consumer replaces diagnostic parser for both callers; actual P2 red/green and native C byte oracle, malformed/failure/recovery controls; split slow diagnostic matrix with all cases/assertions/bounds preserved; fresh full162-parent4K/22E strict0,1077 original/copied inputs restore, intended names/37 pins and eight false-receipt refusals; retire5 catalogue/4 E, alpha-bind3/revalidate16 and preserve historical controls; seal committed prototype with full reconstruction/273 older archives exact; final focused/book gates, artifact binding next and baseline-evidence P2 owned |
 | 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.3.2.2` | `ARCHOGEN-M3-0764 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.2.2)` | **Artifacts bind to observed compiler outputs**: metadata/source-owned selection, empty-input pinned query, direct paths/hash, real bin/lib/standard/custom same-named harness controls; artifact7/0, native3K strict0 full167,1079 original/copy restore,37 pins/nine false receipts; producer/normalization/reasons exact, guard red/green; collector sealed/reconstructed, complete book/live sync and final staged focused/doctrine required; compatibility next |
 | 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.1` | `ARCHOGEN-M3-0765 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.2.3.1)` | **Harness/generator warning routes held**: exact admitted payload matrix, literal units/files/configurations or declared provenance/hashes, actual artifact/exit evidence, source refusal and fresh recovery; two initial oracle contracts corrected from native/canonical evidence, no production change; native2K strict0 full169,1079 original/copy restore,37 pins/nine false receipts; book/live sync and final staged focused required; path/feature/copy next |
@@ -4273,4 +4279,241 @@ This closes the current observer replay. The remaining controller, artifact and 
 populations, their producer/caller premises, broader integration and independent review remain
 owned before F30. Next is the current controller's complete native measurement; this observer
 result makes no adequacy projection to those other files.
+
+### Complete native compiler controller measurement
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.5`: every actual edit in the controller's complete
+production range is measured against all current parents. The result is 89 named kills,
+24 survivors and 11 compiler refusals, strict exit 1. There are no timeouts, unjudged results
+or equivalent classifications. This completes the measurement; the surviving edits remain
+owned test-adequacy obligations before the controller can meet the source criterion.
+
+The controller `xtask/src/trust_compiler.rs` is SHA-256
+`cfb16b7b6c97e52a3b702429a6400db9a196bff07ddc5f1fef1ac5b224f9c1e5`.
+The range begins at `fresh` and ends before the standalone test module: source lines 31 through
+307. Maintained discovery agrees exactly with the complete CLI listing and every replacement.
+The observer, artifact binder, caller, controls, catalogue and reasons remain committed bytes.
+The prior observer close reason is specific to its own file and was not applied to this one.
+
+```sh
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler.rs --package xtask --list
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail
+```
+
+These commands reproduce this record only with the matching source/caller/producer epoch;
+later changes require a new measurement. The unmodified copied baseline passes in 54 seconds,
+and original/restored-copy lists agree on all 177 parent names. The directory-retry loop's
+first/last/endpoint edits deliberately make retries spin; bounded parent workers finish and
+supply named kills. They are not native timeout classifications.
+
+#### Owned survivor resolution
+
+All survivor ownership below shares prefix `M3.6.9.6.3.2.2.15.2.1.3.3.3.2`.
+Container `.6` owns their resolution and final full replay. Each child commits separately;
+preparation is first, followed by the remaining P1 controls and then the P2 assessments.
+Source repairs or scoped proofs follow diagnosis, rather than being inferred from survival.
+
+| Child | Priority | Boundary | Exact original survivor IDs |
+| --- | --- | --- | --- |
+| `.6.1` | P1 | Preparation status, output and selected environment | `L72.cond.7`, `L80.cond.11`, `L68.chain.101` |
+| `.6.2` | P1 | Record validation at every position | `L201.guard.36`, `L201.guard.38`, `L201.guard.39`, `L201.guard.40`, `L201.guard.41`, `L201.guard.42`, `L201.guard.43`, `L201.guard.44`, `L201.guard.45`, `L201.guard.46`, `L201.guard.47`, `L201.guard.48`, `L201.guard.49`, `L201.guard.50` |
+| `.6.3` | P1 | Internal NUL argument bytes | `L168.contains.109`, `L168.contains.111` |
+| `.6.4` | P1 | Exact compilation emit marker | `L265.dir.85`, `L265.lit.86` |
+| `.6.5` | P1 | Installed observer byte verification | `L120.cond.18` |
+| `.6.6` | P2 | Installation explicit-close assessment | `L119.stmt.15` |
+| `.6.7` | P2 | Record-presence state | `L271.int.92` |
+
+The preparation cases disable failure-status and empty-output checks or forward only the
+first selected environment entry. Installation cases remove explicit close or installed-byte
+comparison. The close assessment must account for the later file read, which allocates a
+descriptor; it cannot borrow the observer's path-only argument.
+
+The position mutations still visit every entry. They restrict only one validation check to
+the first entry, last entry, or the two endpoints. Their exact predicate families are:
+
+| Original check | Surviving positions |
+| --- | --- |
+| Regular file and `.json` metadata | First; endpoints |
+| Exact field count and canonical JSON framing | First; last; endpoints |
+| Filename equals the record's PID identity | First; last; endpoints |
+| Compiler argument names `rustc` | First; last; endpoints |
+| Non-compilation invocation is a known query | First; last; endpoints |
+
+The remaining scalar cases broaden `--emit=` prefix matching to substring matching or a
+prefix without the equals sign; restrict NUL detection to a byte-string endpoint; or change
+`count += 1` to `count += 2` when the value is used only to test presence. Each has its own
+owner. The presence assessment may simplify that state directly; no platform limit or
+arithmetic equivalence has been adopted from these observations.
+
+Controlled preparation processes, multi-record corruption, internal argument bytes, marker
+boundaries, installation readback and descriptor lifetime are planned diagnostics, not claimed
+fixes. Full current controller replay follows the resolutions, before another source pivot.
+
+#### Every actual outcome
+
+The table retains every current ID and its method. For a kill, the final column shows one
+actual finishing control and the number counts every reported name; the example is not claimed
+to be the only killing test. Full raw names and replacement spans remain in the retained
+receipt, and maintained discovery regenerates the exact edit from this source epoch.
+Compiler refusals are not semantic coverage. The owning child appears for each survivor.
+
+| Actual ID | Method | Outcome | Finishing names | Control label or owner |
+| --- | --- | --- | --- | --- |
+| `L32.stmt.0` | `fresh` | killed | 119 | `C1` |
+| `L33.iter.1` | `fresh` | killed | 48 | `C1` |
+| `L33.iter.2` | `fresh` | killed | 119 | `C1` |
+| `L33.iter.3` | `fresh` | killed | 48 | `C1` |
+| `L37.eq.4` | `fresh` | killed | 48 | `C1` |
+| `L55.stmt.5` | `prepare` | killed | 119 | `C1` |
+| `L72.cond.6` | `prepare` | killed | 119 | `C1` |
+| `L72.cond.7` | `prepare` | survived | 0 | `.6.1` |
+| `L72.not.8` | `prepare` | killed | 119 | `C1` |
+| `L79.stmt.9` | `prepare` | unviable | 0 | Compiler refusal |
+| `L80.cond.10` | `prepare` | killed | 119 | `C1` |
+| `L80.cond.11` | `prepare` | survived | 0 | `.6.1` |
+| `L95.eq.12` | `session` | killed | 3 | `C2` |
+| `L106.bool.13` | `session` | killed | 119 | `C1` |
+| `L107.bool.14` | `session` | killed | 119 | `C1` |
+| `L119.stmt.15` | `session` | survived | 0 | `.6.6` |
+| `L120.eq.16` | `session` | killed | 119 | `C1` |
+| `L120.cond.17` | `session` | killed | 119 | `C1` |
+| `L120.cond.18` | `session` | survived | 0 | `.6.5` |
+| `L124.stmt.19` | `session` | killed | 119 | `C1` |
+| `L126.stmt.20` | `session` | unviable | 0 | Compiler refusal |
+| `L147.not.21` | `decode_hex` | killed | 118 | `C1` |
+| `L148.logic.22` | `decode_hex` | killed | 2 | `C3` |
+| `L148.not.23` | `decode_hex` | killed | 118 | `C1` |
+| `L150.logic.24` | `decode_hex` | killed | 118 | `C1` |
+| `L159.cmp.25` | `decode_hex` | killed | 118 | `C1` |
+| `L159.cond.26` | `decode_hex` | killed | 118 | `C1` |
+| `L159.cond.27` | `decode_hex` | killed | 118 | `C1` |
+| `L162.int.28` | `decode_hex` | killed | 118 | `C1` |
+| `L162.int.29` | `decode_hex` | killed | 118 | `C1` |
+| `L168.cond.30` | `decode_hex` | killed | 118 | `C1` |
+| `L168.cond.31` | `decode_hex` | killed | 1 | `C4` |
+| `L192.stmt.32` | `environment` | unviable | 0 | Compiler refusal |
+| `L201.iter.33` | `invocations` | killed | 111 | `C5` |
+| `L201.iter.34` | `invocations` | killed | 111 | `C5` |
+| `L201.iter.35` | `invocations` | killed | 102 | `C5` |
+| `L201.guard.36` | `invocations` | survived | 0 | `.6.2` |
+| `L201.guard.37` | `invocations` | killed | 1 | `C3` |
+| `L201.guard.38` | `invocations` | survived | 0 | `.6.2` |
+| `L201.guard.39` | `invocations` | survived | 0 | `.6.2` |
+| `L201.guard.40` | `invocations` | survived | 0 | `.6.2` |
+| `L201.guard.41` | `invocations` | survived | 0 | `.6.2` |
+| `L201.guard.42` | `invocations` | survived | 0 | `.6.2` |
+| `L201.guard.43` | `invocations` | survived | 0 | `.6.2` |
+| `L201.guard.44` | `invocations` | survived | 0 | `.6.2` |
+| `L201.guard.45` | `invocations` | survived | 0 | `.6.2` |
+| `L201.guard.46` | `invocations` | survived | 0 | `.6.2` |
+| `L201.guard.47` | `invocations` | survived | 0 | `.6.2` |
+| `L201.guard.48` | `invocations` | survived | 0 | `.6.2` |
+| `L201.guard.49` | `invocations` | survived | 0 | `.6.2` |
+| `L201.guard.50` | `invocations` | survived | 0 | `.6.2` |
+| `L205.eq.51` | `invocations` | killed | 118 | `C1` |
+| `L205.logic.52` | `invocations` | killed | 3 | `C1` |
+| `L205.logic.53` | `invocations` | killed | 2 | `C3` |
+| `L205.logic.54` | `invocations` | killed | 3 | `C1` |
+| `L205.cond.55` | `invocations` | killed | 118 | `C1` |
+| `L205.cond.56` | `invocations` | killed | 3 | `C1` |
+| `L205.not.57` | `invocations` | killed | 118 | `C1` |
+| `L216.eq.58` | `invocations` | killed | 118 | `C1` |
+| `L216.eq.59` | `invocations` | killed | 118 | `C1` |
+| `L216.logic.60` | `invocations` | killed | 2 | `C3` |
+| `L216.logic.61` | `invocations` | killed | 2 | `C3` |
+| `L216.logic.62` | `invocations` | killed | 2 | `C3` |
+| `L216.cond.63` | `invocations` | killed | 118 | `C1` |
+| `L216.cond.64` | `invocations` | killed | 2 | `C3` |
+| `L222.eq.65` | `invocations` | killed | 118 | `C1` |
+| `L223.eq.66` | `invocations` | killed | 118 | `C1` |
+| `L223.logic.67` | `invocations` | killed | 2 | `C3` |
+| `L224.eq.68` | `invocations` | killed | 118 | `C1` |
+| `L224.logic.69` | `invocations` | killed | 2 | `C3` |
+| `L225.eq.70` | `invocations` | killed | 118 | `C1` |
+| `L225.logic.71` | `invocations` | killed | 2 | `C3` |
+| `L233.cmp.72` | `invocations` | killed | 1 | `C4` |
+| `L237.eq.73` | `invocations` | killed | 118 | `C1` |
+| `L237.cond.74` | `invocations` | killed | 118 | `C1` |
+| `L237.cond.75` | `invocations` | killed | 1 | `C3` |
+| `L242.eq.76` | `invocations` | killed | 118 | `C1` |
+| `L243.eq.77` | `invocations` | killed | 118 | `C1` |
+| `L243.logic.78` | `invocations` | killed | 3 | `C1` |
+| `L259.eq.79` | `invocations` | killed | 118 | `C1` |
+| `L259.cond.80` | `invocations` | killed | 118 | `C1` |
+| `L259.cond.81` | `invocations` | killed | 2 | `C3` |
+| `L262.eq.82` | `invocations` | killed | 1 | `C4` |
+| `L264.logic.83` | `invocations` | killed | 1 | `C4` |
+| `L265.logic.84` | `invocations` | killed | 1 | `C4` |
+| `L265.dir.85` | `invocations` | survived | 0 | `.6.4` |
+| `L265.lit.86` | `invocations` | survived | 0 | `.6.4` |
+| `L265.lit.87` | `invocations` | killed | 113 | `C1` |
+| `L267.stmt.88` | `invocations` | killed | 113 | `C1` |
+| `L268.cond.89` | `invocations` | killed | 118 | `C1` |
+| `L268.cond.90` | `invocations` | killed | 2 | `C3` |
+| `L268.not.91` | `invocations` | killed | 118 | `C1` |
+| `L271.int.92` | `invocations` | survived | 0 | `.6.7` |
+| `L271.int.93` | `invocations` | killed | 118 | `C1` |
+| `L271.stmt.94` | `invocations` | killed | 118 | `C1` |
+| `L273.eq.95` | `invocations` | killed | 118 | `C1` |
+| `L273.cond.96` | `invocations` | killed | 118 | `C1` |
+| `L273.cond.97` | `invocations` | killed | 1 | `C3` |
+| `L281.eq.98` | `query` | killed | 118 | `C1` |
+| `L282.logic.99` | `query` | killed | 118 | `C1` |
+| `L283.eq.100` | `query` | killed | 112 | `C3` |
+| `L68.chain.101` | `prepare` | survived | 0 | `.6.1` |
+| `L68.chain.102` | `prepare` | killed | 119 | `C1` |
+| `L94.chain.103` | `session` | killed | 119 | `C1` |
+| `L94.chain.104` | `session` | killed | 119 | `C1` |
+| `L150.contains.105` | `decode_hex` | unviable | 0 | Compiler refusal |
+| `L150.contains.106` | `decode_hex` | unviable | 0 | Compiler refusal |
+| `L150.contains.107` | `decode_hex` | unviable | 0 | Compiler refusal |
+| `L150.contains.108` | `decode_hex` | unviable | 0 | Compiler refusal |
+| `L168.contains.109` | `decode_hex` | survived | 0 | `.6.3` |
+| `L168.contains.110` | `decode_hex` | unviable | 0 | Compiler refusal |
+| `L168.contains.111` | `decode_hex` | survived | 0 | `.6.3` |
+| `L168.contains.112` | `decode_hex` | unviable | 0 | Compiler refusal |
+| `L233.chain.113` | `invocations` | unviable | 0 | Compiler refusal |
+| `L233.chain.114` | `invocations` | unviable | 0 | Compiler refusal |
+| `L233.chain.115` | `invocations` | killed | 1 | `C4` |
+| `L251.chain.116` | `invocations` | killed | 118 | `C1` |
+| `L251.chain.117` | `invocations` | killed | 118 | `C1` |
+| `L262.chain.118` | `invocations` | killed | 113 | `C1` |
+| `L262.chain.119` | `invocations` | killed | 113 | `C1` |
+| `L265.chain.120` | `invocations` | killed | 113 | `C1` |
+| `L265.chain.121` | `invocations` | killed | 113 | `C1` |
+| `L150.clogic.122` | `decode_hex` | killed | 118 | `C1` |
+| `L150.clogic.123` | `decode_hex` | killed | 118 | `C1` |
+
+The illustrated controls are:
+
+| Label | Exact finishing test |
+| --- | --- |
+| `C1` | `trust::compiler::tests::actual_compiler_removes_private_environment_and_records_failures` |
+| `C2` | `trust::compiler::tests::actual_observer_setup_and_installation_fail_before_child_execution` |
+| `C3` | `trust::compiler::tests::actual_query_records_reject_missing_stale_foreign_and_malformed_inputs` |
+| `C4` | `trust::compiler::tests::actual_records_refuse_remaining_field_range_byte_and_shape_boundaries` |
+| `C5` | `trust::compiler::tests::actual_concurrent_observer_writers_publish_independent_complete_records` |
+
+All 1099 original/current-copy regular inputs restore by bytes, modes and independent
+Python/system hashes. All 31 direct bindings and 37 public producer pins agree; gitlinks
+remain metadata only. The audit re-discovers the entire population and rejects twelve altered
+receipts: wrong scope, missing result, changed replacement, invented name, wrong totals,
+wrong exit, wrong file/hash, changed outcome, duplicate result, invented equivalence and
+reduced population. The committed observer replay seals exactly with all 289 older archives
+unchanged, including its structural separator newline.
+
+Held native tree `5f2358cac0bb909f92b1e7e41d9794da24e877b1` precedes completion-document
+staging. Receipts are under `target/compiler-controller-full/`, with the source/listing plan,
+full raw run, per-edit finishing names, operator refusals, original/copied restoration and
+supplemental source audit. Audit SHA-256:
+`1e752e3d046b474156d1f94baf58dc42ddd210fc9a3656a5be00c0d6592b60cc`.
+Six earlier completed task notes move verbatim into the book ledger; private rows keep their
+identities and links. Reconstruction preserves every other prior commit row and rejects lost
+notes, duplicate records or changed identities.
+The code and tests are unchanged for this measurement; the unmutated parent baseline is the
+core check, followed by pinned book and final doctrine checks for completion documentation.
+The artifact/caller populations and wider source/premise/integration/review obligations remain
+open before F30. Next is `.6.1` preparation failure/output/environment control.
 

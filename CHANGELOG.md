@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — measure the complete current compiler controller
+
+`ARCHOGEN-M3-0779` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.5`), `2026-10-19`.
+
+- Complete controller124/full177 native measurement:89 named kills,24 survivors,11 compiler refusals,
+  strict1; no timeout/unjudged/E. All24 survivors have concrete P1/P2 resolution children.
+- All1099 originals/copies restore;31 bindings/37 pins/12 altered receipts hold. Production,
+  controls, catalogue and reasons unchanged; prior observer replay/289 old archives seal exactly.
+- Publish every current disposition, exact survivor groups and commands/limits in the book;
+  synchronize live pointers. Preparation status/output/environment control is next, before other sources.
+
 ## archogen — eleventh daily artifact cleanup
 
 `ARCHOGEN-PROGRAM-0778` (leaf `PROGRAM.93`), `2026-10-19`.

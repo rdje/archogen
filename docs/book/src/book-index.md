@@ -127,6 +127,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#complete-diagnostic-region-replay)
 - Complete guarded run_cargo measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-guarded-run_cargo-measurement)
+- Complete native compiler controller measurement — [Annex C: Trust proof
+  records](annex-trust-proofs.md#complete-native-compiler-controller-measurement)
 - Complete native compiler observer measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-native-compiler-observer-measurement)
 - Complete prefix/helper replay — [Annex C: Trust proof records](annex-trust-proofs.md#complete-prefixhelper-replay)
@@ -410,7 +412,7 @@ a change that leaves it stale, so it is never edited by hand.
   description](reading.md), [Describing a workload](workload.md), [Checking a description](checking.md),
   [Generated-sources test adequacy](trust-adequacy.md), [The runtime: decisions, not actions](runtime.md), [The S0 early
   generation path](s0.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
-  detail](annex-runtime.md)
+  detail](annex-runtime.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Production compiler invocation collection repair — [Annex C: Trust proof
   records](annex-trust-proofs.md#production-compiler-invocation-collection-repair)
 - profile — [What is versioned, and what changing it costs](versions.md#profile)
