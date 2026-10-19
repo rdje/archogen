@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — preserve complete metadata source roots
+
+`ARCHOGEN-M3-0799` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.11`), `2026-10-19`.
+
+- Bind public/pinned metadata and the sole production selector caller; add bounded real
+  shared-source metadata and actual compiled artifacts, plus explicit defensive conflict maps.
+- All exact historical3S become native3K/full195 strict0;1127 inputs restore,
+  38 bindings/37 pins/five false receipts; original and actual copy failure-point bytes verified.
+- Environment leaf seals exactly;309 older archives and prior production/tests unchanged.
+  Book/live and final staged focused gates; diagnostic ordering next, full adequacy open.
+
 ## archogen — honor the explicit compiler naming-query environment
 
 `ARCHOGEN-M3-0798` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.10`), `2026-10-19`.

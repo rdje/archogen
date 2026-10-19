@@ -1192,6 +1192,207 @@ mod tests {
     }
 
     #[test]
+    fn metadata_roots_share_one_source_and_refuse_distinct_compiled_sources() {
+        crate::trust_test_process::bounded!(
+            metadata_roots_share_one_source_and_refuse_distinct_compiled_sources
+        );
+        use super::{select, Compilation, Program, Target, TargetSources};
+        use crate::{
+            catalog_build::environment,
+            json::{self, Json},
+        };
+        use std::{
+            collections::{BTreeMap, BTreeSet},
+            process::{Command, Stdio},
+        };
+
+        let base = real_root().join("target/trust-tests/artifact-metadata-roots");
+        let _ = fs::remove_dir_all(&base);
+        let tree = base.join("tree");
+        let target = base.join("target");
+        let out = target.join("release/deps");
+        fs::create_dir_all(tree.join("p")).unwrap();
+        fs::create_dir_all(&out).unwrap();
+        fs::write(
+            tree.join("Cargo.toml"),
+            "[workspace]\nmembers = [\"p\"]\nresolver = \"2\"\n",
+        )
+        .unwrap();
+        fs::write(
+            tree.join("p/Cargo.toml"),
+            "[package]\nname = \"probe\"\nversion = \"0.0.0\"\nedition = \"2021\"\n\
+             [lib]\npath = \"a.rs\"\ncrate-type = [\"rlib\", \"dylib\"]\n",
+        )
+        .unwrap();
+        fs::write(tree.join("p/a.rs"), "pub fn value() -> u32 { 17 }\n").unwrap();
+        fs::write(tree.join("p/b.rs"), "pub fn value() -> u32 { 23 }\n").unwrap();
+        let env = environment("1.95.0", &base.join("cargo-home"), &target).unwrap();
+        let run = |program: &str, arguments: &[String]| {
+            let output = Command::new(program)
+                .args(arguments)
+                .current_dir(&tree)
+                .env_clear()
+                .envs(env.iter().map(|(key, value)| (key, value)))
+                .stdin(Stdio::null())
+                .output()
+                .unwrap();
+            assert!(output.status.success(), "{program}: {:?}", output.stderr);
+            output
+        };
+        run(
+            "cargo",
+            &["generate-lockfile", "--offline"].map(str::to_owned),
+        );
+        let metadata = run(
+            "cargo",
+            &["metadata", "--offline", "--locked", "--format-version", "1"].map(str::to_owned),
+        );
+        fs::write(base.join("metadata.json"), &metadata.stdout).unwrap();
+        let metadata = json::parse(std::str::from_utf8(&metadata.stdout).unwrap()).unwrap();
+        let packages = metadata.get("packages").unwrap().elements();
+        assert_eq!(packages.len(), 1);
+        let targets = packages[0].get("targets").unwrap().elements();
+        assert_eq!(targets.len(), 1);
+        let metadata_source = targets[0].get("src_path").and_then(Json::as_str).unwrap();
+        assert_eq!(Path::new(metadata_source), tree.join("p/a.rs"));
+        let source = Path::new(metadata_source)
+            .strip_prefix(&tree)
+            .unwrap()
+            .to_str()
+            .unwrap();
+        let name = targets[0].get("name").and_then(Json::as_str).unwrap();
+        assert_eq!(name, "probe");
+        let kinds = targets[0].get("kind").unwrap().elements();
+        let kinds: BTreeSet<_> = kinds.iter().map(|kind| kind.as_str().unwrap()).collect();
+        assert_eq!(kinds, BTreeSet::from(["dylib", "rlib"]));
+        let sources: TargetSources = kinds
+            .iter()
+            .map(|kind| {
+                (
+                    ("p".into(), (*kind).into(), name.into()),
+                    BTreeSet::from([source.into()]),
+                )
+            })
+            .collect();
+        let mut compilations = Vec::new();
+        for (label, crate_name, source_path, crate_types) in [
+            ("a", "probe", "p/a.rs", vec!["rlib", "dylib"]),
+            ("b", "probe_other", "p/b.rs", vec!["rlib"]),
+        ] {
+            let mut arguments: Vec<String> = [
+                "rustc",
+                "--crate-name",
+                crate_name,
+                source_path,
+                "--edition",
+                "2021",
+                "--out-dir",
+                out.to_str().unwrap(),
+                "-C",
+                &format!("extra-filename=-{label}"),
+            ]
+            .map(str::to_owned)
+            .to_vec();
+            for kind in crate_types {
+                arguments.extend(["--crate-type".into(), kind.into()]);
+            }
+            run("rustc", &arguments[1..]);
+            fs::write(
+                base.join(format!("{label}.arguments")),
+                arguments.join("\0"),
+            )
+            .unwrap();
+            compilations.push(Compilation {
+                package: "p".into(),
+                arguments,
+            });
+        }
+        let before: BTreeMap<_, _> = fs::read_dir(&out)
+            .unwrap()
+            .map(|entry| {
+                let path = entry.unwrap().path();
+                let name = path.file_name().unwrap().to_str().unwrap().to_owned();
+                let bytes = fs::read(&path).unwrap();
+                fs::write(base.join(format!("before-{name}.bin")), &bytes).unwrap();
+                (name, bytes)
+            })
+            .collect();
+        let expected = independent_artifact_hash(&before["libprobe-a.rlib"], &env);
+        for path in ["p/a.rs", "p/b.rs"] {
+            fs::write(
+                tree.join(path),
+                "compile_error!(\"metadata selection must not compile either source\");\n",
+            )
+            .unwrap();
+        }
+        let program = Program {
+            name: "root".into(),
+            role: "generator".into(),
+            package: "p".into(),
+            target: Target::Lib,
+            role_packages: BTreeSet::new(),
+            pair: None,
+            data: Vec::new(),
+        };
+        let unchanged = || {
+            let files: BTreeMap<_, _> = fs::read_dir(&out)
+                .unwrap()
+                .map(|entry| {
+                    let path = entry.unwrap().path();
+                    (
+                        path.file_name().unwrap().to_str().unwrap().to_owned(),
+                        fs::read(&path).unwrap(),
+                    )
+                })
+                .collect();
+            assert_eq!(files, before);
+            for path in ["p/a.rs", "p/b.rs"] {
+                assert_eq!(
+                    fs::read(tree.join(path)).unwrap(),
+                    b"compile_error!(\"metadata selection must not compile either source\");\n"
+                );
+            }
+        };
+        let good = || {
+            let selected = select(&program, &sources, &compilations, &env, &tree, &target).unwrap();
+            assert_eq!(selected.0, "release/deps/libprobe-a.rlib");
+            assert_eq!(selected.1, expected);
+            unchanged();
+        };
+        good();
+        // These are defensive helper inputs, not claims about valid Cargo metadata.
+        let conflicting_keys = TargetSources::from([
+            (
+                ("p".into(), "dylib".into(), "probe".into()),
+                BTreeSet::from(["p/a.rs".into()]),
+            ),
+            (
+                ("p".into(), "rlib".into(), "probe".into()),
+                BTreeSet::from(["p/b.rs".into()]),
+            ),
+        ]);
+        let conflicting_roots = TargetSources::from([(
+            ("p".into(), "rlib".into(), "probe".into()),
+            BTreeSet::from(["p/a.rs".into(), "p/b.rs".into()]),
+        )]);
+        for (label, bad) in [("keys", conflicting_keys), ("roots", conflicting_roots)] {
+            good();
+            let result = select(&program, &bad, &compilations, &env, &tree, &target);
+            fs::write(
+                base.join(format!("bad-{label}.result")),
+                format!("{result:?}"),
+            )
+            .unwrap();
+            good();
+            assert_eq!(
+                result.unwrap_err(),
+                "`root` has missing or ambiguous metadata artifact sources",
+                "{label}"
+            );
+        }
+    }
+
+    #[test]
     fn actual_empty_input_query_preserves_build_and_ignores_now_invalid_source() {
         crate::trust_test_process::bounded!(
             actual_empty_input_query_preserves_build_and_ignores_now_invalid_source

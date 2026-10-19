@@ -6627,3 +6627,125 @@ untracked in `target/artifact-query-environment/`; the tracked parent and native
 above reproduce the behavior and mutation result. Final staged focused/book/commit checks
 complete this leaf. Metadata producer/root contracts are next; complete artifact/caller/global
 adequacy remains separately owned and open.
+
+### Complete metadata source roots
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.11`: a permanent bounded parent now holds
+shared-source library metadata and the selector's defensive refusal of distinct metadata
+sources. The producer domain and the wider helper-input domain remain explicit.
+
+#### Published producer, pinned implementation and actual caller
+
+Cargo permits a package's library target to report several crate kinds while retaining its
+source path. A package has one library target. These published contracts are documented in
+[the metadata format](https://doc.rust-lang.org/cargo/commands/cargo-metadata.html) and
+[Cargo targets](https://doc.rust-lang.org/cargo/reference/cargo-targets.html);
+the pinned producer is also bound through the [toolchain ledger](ledger.md#rust-toolchain).
+
+The retained pinned target serializer emits a target's kind list and its source path from
+the same target object. Its library-kind serializer emits the configured crate kinds.
+The actual inventory caller obtains successful locked, offline metadata, then adds that
+source under each reported kind in its source map. Library selection unions these matching
+roots before requiring exactly one distinct source.
+
+| Source-bound production census | Result |
+| --- | --- |
+| Metadata source-map construction site | inventory metadata loop |
+| Artifact selector call site | `build`, after observed compilation |
+| Library kind keys with the same source | deduplicated to that source |
+| Missing or distinct matching sources | explicit metadata-source refusal |
+
+The exact caller and producer hashes are retained with the supplemental contract record.
+The maintained production caller, source type and map construction remain unchanged.
+
+#### Real shared-source metadata and actual compiled artifacts
+
+The new parent creates an isolated repository-local workspace with a library configured as:
+
+```toml
+[lib]
+path = "a.rs"
+crate-type = ["rlib", "dylib"]
+```
+
+It generates the fixture's lock file offline, then runs the same metadata command shape as
+the caller: `cargo metadata --offline --locked --format-version 1`. The real metadata must
+identify the fixture package, its library, both kinds and the actual source path. The parent
+maps these actual kind/source fields to the selector's source-map interface:
+
+| Metadata key | Repository source |
+| --- | --- |
+| package `p`, kind `dylib`, name `probe` | `p/a.rs` |
+| package `p`, kind `rlib`, name `probe` | `p/a.rs` |
+
+Using the actual pinned environment/compiler, it then compiles that source to the requested
+library forms and compiles a different source as a second real rlib. The actual arguments and
+before-images of every output are retained. The selector must accept the real shared-source
+map and choose `release/deps/libprobe-a.rlib` with its independent system-measured hash.
+
+Before every selection, both source files contain an unconditional compile error. Every
+valid and defensive selection must preserve those invalid source bytes and every compiled
+output byte, with no added or removed output names. Valid selection/recovery runs around
+each conflicting case. The compiler-produced libraries, not arbitrary nonexistent paths,
+therefore witness what a truncating selector could wrongly select.
+
+#### Constructed conflicting roots and defensive contract
+
+These negative maps are deliberately constructed helper inputs, not successful metadata
+outputs claimed reachable from Cargo's library model:
+
+| Defensive input | Required selector result |
+| --- | --- |
+| matching kind keys point to different compiled sources | missing-or-ambiguous metadata-source refusal |
+| one matching key contains both compiled sources | the same refusal |
+
+The parent holds the existing complete error, including the role name, rather than accepting
+a later missing-compilation or filesystem failure as evidence that ambiguity was checked.
+Both possible sources have real observed compilations and existing artifacts, so taking a
+first or last root can select a genuine output. This protects the helper's broader defensive
+contract. It does not turn the constructed conflict into an end-to-end Cargo defect or an
+all-domain reachability claim. No equivalent classification is inferred.
+
+| Exact edit | Earlier complete measurement | Required native result |
+| --- | --- | --- |
+| `L134.chain.125`, first matching metadata key only | S | K, new metadata-roots parent |
+| `L134.chain.126`, last matching metadata key only | S | K, new metadata-roots parent |
+| `L144.chain.128`, first distinct unioned root only | S | K, new metadata-roots parent |
+
+```text
+trust::artifact::tests::metadata_roots_share_one_source_and_refuse_distinct_compiled_sources
+```
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L134.chain.125 --only L134.chain.126 --only L144.chain.128
+```
+
+`2026-10-19`: all 3 selected edits finish killed against all 195 current trust parents, strict
+exit `0`, with the required new parent in their actual failure lists. No selected survivor,
+equivalent, compiler refusal, timeout or unjudged outcome occurs. All 1127 original/copied
+regular inputs restore with independent Python/system hashes and modes; all 38 direct
+bindings and 37 pinned public producer sources agree. Invented-parent, missing-result,
+changed-outcome, changed-exit and duplicate-result receipts refuse. The environment leaf
+seals exactly; all 309 older task archives remain byte-exact with independent population
+checks. Production and every older test remain unchanged.
+
+The original fixture completes both conflict checks. The final native copy is the
+union-truncation edit: it accepts the first conflicting-key source, then fails the parent's
+refusal assertion before the single-key conflict case. The audit verifies that actual
+failure point, both invalidated sources, every before-image and the full actual metadata.
+It never infers that the copied test completed later cases. Cargo/compiler caches created
+inside these fixtures remain under their project-local Cargo home and target stores.
+
+Held native tree `30be6cc0f7b7b9e0330f290b5f02086c0aac8e66` precedes completion documentation.
+Whole artifact file SHA-256 `86a90f2767a257b500214086193efa30910de2937f3eb5dd359e94911a730d40`;
+its production prefix remains exact. Local supplemental audit SHA-256
+`7315f5c50a93e947edb98f73503127a76034d5d516e4c39655332d45c25490c6`
+binds source/caller/producer preservation, actual metadata/arguments/artifacts, both fixture
+states, restoration, archive counts and false receipts. Supplemental programs/observations
+are untracked in `target/artifact-metadata-roots/`; the tracked parent and native command
+above reproduce the behavior and mutation result. Final staged focused/book/commit checks
+complete this leaf. Reported-output diagnostic ordering is next; complete artifact/caller/global
+adequacy remains separately owned and open.
