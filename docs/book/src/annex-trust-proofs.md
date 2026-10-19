@@ -3934,6 +3934,14 @@ retain their original leaf/work-unit identities and route to this full ledger.
 | 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.2` | `ARCHOGEN-M3-0768 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.2)` | **Writer lifecycle/harness bounds held**: actual setup/install/no-overwrite/signal, observed recovery timeout fixed by exact-assertion split/30s; fresh native1K/catalogue1K full175/1084 restore/37 pins/11 falsifiers; seal/book/glossary/live/final focused, concurrency next |
 | 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.3` | `ARCHOGEN-M3-0769 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.3)` | **Bounded compatibility closes**: actual8 overlapping writers/records/argv/executables/recovery; native2K full176/1085 restores/37 pins/nine falsifiers; complete9-row matrix/explicit limits, production/prior controls exact; seal/book/live/final focused, native baseline evidence next |
 
+| 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.0.0` | `ARCHOGEN-M3-0770 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.0.0)` | repair P1 original-source mutation with normalized indexed regular relative selection; actual red/green fixtures and real Git, retained copy sentinel, unchanged operators and exact archive proof; complete tool/focused/book gates; native baseline evidence next |
+| 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.0.1` | `ARCHOGEN-M3-0771 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.0.1)` | retain raw failed-baseline evidence/status/names and source/command identity, unique relative receipts/no retry; actual red/green/native Rust and complete41 tool controls, exact classification/archive audits; focused/book gates; selected-ID refusal next |
+| 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.0.2` | `ARCHOGEN-M3-0772 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.0.2)` | reject unknown/mixed/stale/excluded selected IDs before copy/commands; actual red/green,45 tool and real compiler controls, unchanged functions/catalogue and exact archive audit; focused/book gates; native prerequisites close, source qualification next |
+
+| 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.1.1` | `ARCHOGEN-M3-0773 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.1.1)` | current raw/source/producer/caller bindings, historical labels corrected, full integration12 pass and exact original/prior-copy restoration; prerequisites seal exactly, book/live sync; observer native population next |
+| 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.1` | `ARCHOGEN-M3-0774 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.1)` | full observer16 native14K2S/exit1; all1091 originals/copies restore,28 bindings/37 pins/11 false receipts bind; exact qualification seal and seven historical rows in book; P1 sync then P2 close owned next |
+| 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.2` | `ARCHOGEN-M3-0775 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.2)` | calibrated actual sync fault/pinned query/partial evidence/recovery; native1K/full177 and catalogue2K with intended name,1093 original/copy restoration/29 bindings/37 pins/11 falsifiers; production/prior controls exact, seal/book/live/focused gates; close assessment next |
+
 ### Complete native compiler observer measurement
 
 Measurement `.15.2.1.3.3.3.2.1` (`2026-10-19`) executes the complete current observer population
@@ -4067,4 +4075,119 @@ the initial stand-in native epoch. The final supplemental audit SHA-256 is
 `185c0854c51a77269b79b4f10203f862f9c4454dc43720c438ec0d2292ef7013`.
 The preceding measurement leaf seals exactly with all 285 older archives unchanged. Final
 staged focused/book/doctrine checks close this control slice; explicit-close assessment is next.
+
+### Observer explicit-close assessment
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.3`: the actual `L62.stmt.9` edit replaces
+`drop(file);` with its inert comment. The complete earlier measurement found it survived.
+The current assessment supplies a source/API/caller proof and permanent controls before
+recording a scoped equivalent in `xtask/trust_compiler_observer.equivalents`.
+The observer production source remains SHA-256
+`64b8376bf404a32f3097071f7737a721e789133f716d16e05f8d0ceeb3e38475`.
+
+#### What the protocol observes
+
+The concrete writer is an exclusively created, unbuffered `std::fs::File`. It has no clones,
+locks or ownership transfer. The complete record is written and `sync_all` must succeed before
+publication. After explicit close, the only filesystem operations are path-based hard-link
+publication and removal of the partial name; neither opens another descriptor. There are no
+later record writes. The only other work computes the compiler's already available status.
+
+The [File API](https://doc.rust-lang.org/std/fs/struct.File.html) specifies automatic close on
+scope exit, ignored destructor close errors and unbuffered reads/writes. The
+[Rust drop-scope rules](https://doc.rust-lang.org/reference/destructors.html#drop-scopes)
+put the local writer in `observe`'s scope. Removing the explicit call therefore moves its
+destructor to that function's return, including either publication error propagated with `?`.
+`main` calls `process::exit` only after `observe` has returned. These public documents explain
+the semantics; the current online standard-library page is not the pinned compiler's source.
+Actual pinned executions below independently check the relevant behavior.
+
+The public [hard-link interface](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/link.2.html)
+creates another directory name for the same object; removal of the partial name leaves the
+completed name. The [unlink interface](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/unlink.2.html)
+removes a directory entry, with final object reclamation depending on remaining links and open
+references. Here the successful hard link precedes partial-name removal. The proof uses ordinary
+Unix regular-file semantics. It does not establish behavior for an arbitrary filesystem with
+additional close-sensitive rules, injected resource schedules or crash timing.
+
+The production caller census finds the private controller embedded by `trust.rs`.
+Its `compile` function creates the session, calls `run_cargo`, and only then reads
+`Session::invocations`. `run_cargo` uses synchronous `Command::output` and refuses unsuccessful
+Cargo status. Consequently the supported reader sees records after the observer has returned
+and closed its writer in either version. No production streaming reader or descriptor inspection
+occurs between publication operations. Earlier setup, child, write and synchronization error
+paths precede the edited statement and retain the same destructor behavior.
+
+This gives the source proof: under those concrete premises, moving this ignored-error
+unbuffered destructor across these path operations changes none of the required record bytes,
+no-replacement publication, partial evidence, diagnostics or exit/signal results. The native
+samples validate the premises and controls; surviving tests alone are not that proof.
+
+#### Actual native controls and their limits
+
+`ObserverCloseTests` in `xtask/mutation_sweep_tests.py` discovers and applies the real omission,
+compiles the complete original and changed observer, and compares actual pinned `rustc -vV`
+stdout with an independent direct query. Each record must match an independently constructed
+complete protocol object, actual process identity and exact expected filenames. Only process
+identity is removed for cross-run record comparison. Diagnostics must also agree.
+
+| Mode, applied to both executables | Required result |
+| --- | --- |
+| No fault library | Success, only a completed query record, no trace |
+| Loaded pass-through | Same protocol success; parent-only trace confirms synchronization and publication |
+| Link return error | Exit 2 with useful diagnostics and only the complete partial record |
+| Unlink return error | Exit 2 with diagnostics and both partial and completed names |
+| Close return error after real close | Success in both; the destructor ignores that return error |
+
+The macOS C fixture `scripts/fixtures/compiler_provenance_close.c` uses the public Mach-O
+interposition interface. Its constructor clears loader variables before the compiler child.
+It tracks the synchronized record descriptor, forwards documented `fcntl` argument shapes,
+and refuses unknown operations. Normal close, link and unlink call the real libc functions.
+Fault modes return an I/O error at a selected boundary. The close-error mode really closes first,
+then reports the programmed error; it does not model every possible failed-close kernel state.
+The trace itself preserves errno and must report only the observer's actual PID.
+
+The successful original trace is `loaded → full-sync → closed → link → unlink`.
+The omission trace is `loaded → full-sync → link → unlink → closed`.
+Link/unlink errors also show the deferred destructor before process termination.
+Publication sees the live record descriptor only in the omission. This is a deliberately
+observed wider-domain difference: a claim that descriptor lifetime or syscall timing is equal
+must fail. Wrong negative protocol expectations also fail. These controls validate a specific
+libc boundary on macOS; they make no claim of local Linux execution or physical-disk fault coverage.
+
+Separate premise controls hash the complete production prefixes of observer, controller and
+caller, bind the pinned toolchain and require the unique actual omission and per-file reason.
+Changed-byte falsifiers reject each source binding. These controls live outside the semantic
+parent mutation population, so a hash mismatch cannot manufacture a killing test for a mutant.
+Changes to writer type, buffering, locks, operations after synchronization, platform semantics,
+producer or reader ordering require revalidation. The initial prefix-check attempt mixed two
+trailing-newline conventions; retained diagnostics and Python/system hashes identify and correct
+that boundary without changing production code.
+
+```sh
+python3 -I -B xtask/mutation_sweep_tests.py "$PWD" ObserverCloseTests
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler_observer.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L62.stmt.9 --equivalents xtask/trust_compiler_observer.equivalents
+```
+
+The permanent close controls pass in about 1.10 seconds; the complete tool suite passes all
+47 tests in 151.443 seconds. The selected native replay uses all 177 current parent names:
+baseline 59 seconds, one scoped equivalent, strict exit 0. All 1096 original/current-copy
+regular inputs restore by bytes/modes and Python/system hashes. All 31 direct bindings and
+37 producer pins bind; eleven false receipt arms refuse altered scope, source, replacement,
+reason, outcome, totals, exit or missing/duplicate results. Gitlinks remain metadata only.
+
+The prior tool file is recovered byte for byte by removing the new test class. All production
+sources, prior equivalents, catalogue and sync fixture remain exact. The committed sync leaf
+seals exactly with all 286 older archives unchanged; the extra inter-record separator newline
+is restored during reconstruction. Receipts are under `target/compiler-observer-close/`.
+Held native tree `826d5ded634f4fe55261a1e3555b5286bddef7b2` precedes final documentation staging;
+supplemental audit SHA-256 is
+`309adf235fb12ec720f957cc4f7e42f2dbbbca204621730c4bcd4232c9417e65`.
+Completed prerequisite/measurement commit notes are retained verbatim in the book ledger;
+private rows keep their identities and links. Reconstruction checks every other prior commit
+row unchanged and rejects missing notes, duplicates or changed identities. The book remains
+unbounded. Complete current observer replay is next, before other-source and premise/integration review.
 

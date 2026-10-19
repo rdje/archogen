@@ -350,6 +350,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 - Observed compiler artifact binding — [Annex C: Trust proof
   records](annex-trust-proofs.md#observed-compiler-artifact-binding)
+- Observer explicit-close assessment — [Annex C: Trust proof
+  records](annex-trust-proofs.md#observer-explicit-close-assessment)
 - Observer synchronization failure control — [Annex C: Trust proof
   records](annex-trust-proofs.md#observer-synchronization-failure-control)
 - Offered is a claim, not evidence — [Presence, absence, and relevance](presence.md#offered-is-a-claim-not-evidence)

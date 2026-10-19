@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — prove the observer explicit-close boundary
+
+`ARCHOGEN-M3-0776` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.3`), `2026-10-19`.
+
+- Bind concrete File/drop/publication and the complete after-Cargo reader domain; actual original
+  and omission preserve independently expected protocol/error outputs while timing differs.
+- Add guarded per-file equivalence and permanent native/premise/wrong-oracle controls outside
+  semantic parents. Complete47 tools pass; native1E/full177 strict0 and1096 originals/copies restore.
+- Retain31 bindings/37 pins/11 false receipt refusals, exact prior code/catalogue/seal; publish
+  the full proof and platform limits in the unbounded book. Complete observer replay is next.
+
 ## archogen — hold observer synchronization failure
 
 `ARCHOGEN-M3-0775` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.2`), `2026-10-19`.

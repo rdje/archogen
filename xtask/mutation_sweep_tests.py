@@ -532,6 +532,119 @@ class DiscoveryFixture(SweepFixture):
         return stdout
 
 
+class ObserverCloseTests(DiscoveryFixture):
+    # These are premise controls outside the semantic parent mutation population. A changed
+    # producer/caller/source must invalidate the proof, not become an artificial killing test.
+    def test_close_reason_requires_current_production_and_caller_premises(self):
+        expected = {
+            'xtask/src/trust_compiler_observer.rs': '58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98',
+            'xtask/src/trust_compiler.rs': '9dbac3db6e10908fa1028d7464adcd6af092468f6ed455cadcafb07e787e0db2',
+            'xtask/src/trust.rs': 'd4b2ae51fa78f79c770cb7c9f84dbcf06578be12735461c328a28e509e8ab88c',
+        }
+        def verify(inputs):
+            for path, digest in expected.items():
+                production = inputs[path].split('\n#[cfg(test)]\n', 1)[0]
+                self.assertEqual(hashlib.sha256(production.encode()).hexdigest(), digest,
+                                 'changed close-proof source/caller requires revalidation: ' + path)
+        inputs = {path: (ROOT / path).read_text() for path in expected}
+        verify(inputs)
+        for path in inputs:
+            with self.subTest(path=path), self.assertRaisesRegex(AssertionError, 'requires revalidation'):
+                verify({**inputs, path: '// changed premise\n' + inputs[path]})
+        source = inputs['xtask/src/trust_compiler_observer.rs']
+        namespace, candidates = self.discovery(source, 'stmt')
+        key = ('drop(file);', '// drop(file);')
+        family = [m for m in candidates if namespace['mutation_key'](m) == key]
+        self.assertEqual(len(family), 1, 'require the actual unique native omission')
+        records = namespace['load_equivalents'](ROOT / 'xtask/trust_compiler_observer.equivalents')
+        self.assertEqual(set(records), {key})
+        self.assertIn('channel = "1.95.0"', (ROOT / 'rust-toolchain.toml').read_text())
+
+    @unittest.skipUnless(sys.platform == 'darwin', 'native close trace uses the public Mach-O interface')
+    def test_actual_close_omission_preserves_completed_protocol_but_changes_timing(self):
+        source = (ROOT / 'xtask/src/trust_compiler_observer.rs').read_text()
+        namespace, candidates = self.discovery(source, 'stmt')
+        candidate, = [m for m in candidates if namespace['mutation_key'](m) == ('drop(file);', '// drop(file);')]
+        self.assertIn('rustc 1.95.0 ', self.bounded(['rustc', '-vV']))
+        expected = subprocess.check_output(['rustc', '-vV'], cwd=self.base)
+        library = self.base / 'close.dylib'
+        self.bounded(['cc', '-Wall', '-Wextra', '-Werror', '-dynamiclib',
+                      str(ROOT / 'scripts/fixtures/compiler_provenance_close.c'), '-o', str(library)])
+        for label, text in [('original', source), ('omitted', namespace['apply_mutant'](candidate))]:
+            path = self.base / (label + '.rs')
+            path.write_text(text)
+            self.bounded(['rustc', '--edition=2021', '--crate-name', 'observer_close', '-O', str(path),
+                          '-o', str(self.base / label)])
+        results = {}
+        for mode in ['normal', 'pass', 'link-error', 'unlink-error', 'close-error']:
+            for label in ['original', 'omitted']:
+                with self.subTest(mode=mode, label=label):
+                    case = self.base / (mode + '-' + label)
+                    records = case / 'records'
+                    records.mkdir(parents=True)
+                    trace = case / 'trace'
+                    env = dict(os.environ, ARCHOGEN_COMPILER_RECORDS=str(records),
+                               ARCHOGEN_COMPILER_SESSION='close-proof', ARCHOGEN_COMPILER_ROLE='root')
+                    for name in ['DYLD_INSERT_LIBRARIES', 'LD_PRELOAD', 'ARCHOGEN_TEST_IO_ERROR',
+                                 'ARCHOGEN_TEST_LINK_ERROR', 'ARCHOGEN_TEST_UNLINK_ERROR',
+                                 'ARCHOGEN_TEST_CLOSE_ERROR']:
+                        env.pop(name, None)
+                    if mode != 'normal':
+                        env.update(DYLD_INSERT_LIBRARIES='close.dylib', ARCHOGEN_TEST_IO_TRACE=str(trace))
+                        if mode.endswith('-error'):
+                            env['ARCHOGEN_TEST_' + mode.upper().replace('-', '_')] = '1'
+                    process = subprocess.Popen([str(self.base / label), 'rustc', '-vV'], cwd=self.base,
+                                               env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                               start_new_session=True)
+                    try:
+                        stdout, stderr = process.communicate(timeout=45)
+                    except subprocess.TimeoutExpired:
+                        os.killpg(process.pid, signal.SIGKILL)
+                        process.communicate()
+                        self.fail('actual close observer timed out')
+                    failed = mode in ['link-error', 'unlink-error']
+                    self.assertEqual(process.returncode, 2 if failed else 0, stderr)
+                    self.assertEqual(stdout, expected)
+                    self.assertEqual(bool(stderr), failed)
+                    names = sorted(path.name for path in records.iterdir())
+                    partial, completed = '.' + str(process.pid) + '.part', str(process.pid) + '.json'
+                    self.assertEqual(names, sorted([partial, completed] if mode == 'unlink-error'
+                                                  else [partial] if mode == 'link-error' else [completed]))
+                    normalized = []
+                    for path in records.iterdir():
+                        actual = json.loads(path.read_bytes())
+                        wanted = dict(argv_hex=[b'rustc'.hex(), b'-vV'.hex()],
+                                      cwd_hex=os.fsencode(self.base).hex(), exit=0, pid=process.pid,
+                                      role_hex=b'root'.hex(), schema='archogen-compiler-provenance/1',
+                                      session_hex=b'close-proof'.hex(), signal=None)
+                        self.assertEqual(actual, wanted)
+                        actual.pop('pid')
+                        normalized.append((path.name.endswith('.part'), actual))
+                    lines = trace.read_text().splitlines() if trace.exists() else []
+                    self.assertTrue(all('pid=' + str(process.pid) + ' ' in line for line in lines), lines)
+                    events = [line.split()[0] for line in lines]
+                    if mode == 'normal':
+                        self.assertEqual(events, [])
+                    else:
+                        tail = ['link'] if mode == 'link-error' else ['link', 'unlink']
+                        wanted = (['loaded', 'full-sync', 'closed'] + tail if label == 'original'
+                                  else ['loaded', 'full-sync'] + tail + ['closed'])
+                        self.assertEqual(events, wanted)
+                        sync_fd = lines[1].split('fd=')[1]
+                        self.assertGreaterEqual(int(sync_fd), 0)
+                        for line in lines:
+                            if line.startswith(('link ', 'unlink ')):
+                                self.assertEqual(line.split('fd=')[1], '-1' if label == 'original' else sync_fd)
+                    results[mode, label] = (sorted(normalized, key=lambda row: row[0]), stderr, events)
+            a, b = results[mode, 'original'], results[mode, 'omitted']
+            self.assertEqual(a[:2], b[:2], 'independent protocol expectations must agree')
+            with self.assertRaisesRegex(AssertionError, 'wrong negative protocol oracle'):
+                self.assertNotEqual(a[:2], b[:2], 'wrong negative protocol oracle')
+            if mode != 'normal':
+                with self.assertRaisesRegex(AssertionError, 'overbroad timing equivalence'):
+                    self.assertEqual(a[2], b[2], 'overbroad timing equivalence')
+
+
 class LogicTests(DiscoveryFixture):
     def test_each_operand_deletion_compiles_and_matches_its_boolean_truth_table(self):
         cases = [
