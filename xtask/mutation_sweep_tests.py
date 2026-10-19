@@ -1572,7 +1572,7 @@ class IteratorTests(DiscoveryFixture):
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],
                     "c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f"),
                 "artifact binding": (artifact.split("#[cfg(test)]", 1)[0],
-                    "f51d00153db5f9be189efbe73ddb3ebd468cd1e48de93882d4c6e90406a2faa2"),
+                    "9365cd07c990d1ef4295b8e905ac1f3baa4754272498904f6b88e1c982b8ef8c"),
                 "base environment": (environment,
                     "8b6fa81a2d715c2e42f8ab75a02b6e0c037c97d2f55e71c44c21e4a5516ee74c"),
                 "gate production": (gate.split("#[cfg(test)]", 1)[0],

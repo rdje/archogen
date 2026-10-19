@@ -6831,3 +6831,266 @@ programs/observations are untracked in `target/artifact-output-order/`; the trac
 native command above reproduce the behavior and mutation result. Final staged focused/book/commit
 checks complete this leaf. The explicit symlink term is next; complete artifact/caller/global
 adequacy remains separately owned and open.
+
+### Redundant symlink predicate on one metadata snapshot
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.13`: the explicit symlink term is removed from
+the regular-file refusal after an API/source proof. Symlinks, directories, pipes and other
+nonregular kinds still refuse. The same error text and every semantic parent remain intact. The external absolute-cwd proof binding is revalidated below.
+
+```diff
+-if !metadata.is_file() || metadata.file_type().is_symlink() {
++if !metadata.is_file() {
+```
+
+This simplification relies on the actual `std::fs::Metadata` value returned by the unchanged
+`symlink_metadata` call. It is not a general identity for unrelated booleans or arbitrary
+getter functions, and finite filesystem examples alone do not establish it.
+
+#### Pinned API and pure stored-value predicates
+
+The [FileType contract](https://doc.rust-lang.org/std/fs/struct.FileType.html#method.is_file)
+makes regular-file and symbolic-link results mutually exclusive.
+[Metadata::is_file](https://doc.rust-lang.org/std/fs/struct.Metadata.html#method.is_file)
+also excludes symlink metadata, and
+[symlink_metadata](https://doc.rust-lang.org/std/fs/fn.symlink_metadata.html) obtains the
+link's own metadata. The proof uses the documentation and published source installed with
+the [pinned toolchain](ledger.md#rust-toolchain), rather than assuming the current online
+documentation has that pinned version.
+
+In that pinned public implementation, `Metadata::is_file` delegates to its stored file
+type's regular-file predicate. `Metadata::file_type` obtains that same stored type.
+The relevant Unix implementation copies the saved mode from its metadata record; file-kind
+predicates compare masked mode bits. These getters neither query the path again nor mutate
+the record, perform fallible work or introduce observable side effects. The selector binds
+one immutable metadata value and uses these exact methods on that same value.
+
+The installed toolchain is a necessary read-only external dependency. Documentation/source
+paths derive at runtime from `rustc --print sysroot`; local evidence copies live beneath
+`target/artifact-filetype-simplification/` on the repository volume. Project configuration
+does not depend on a persisted absolute toolchain path.
+
+| Pinned installed documentation/source, relative to its HTML root | SHA-256 |
+| --- | --- |
+| `std/fs/struct.FileType.html` | `ae3988afb7bb18c46b29cdaa7e4446ffc7de6d6842f34553f59d75bc1f41640e` |
+| `std/fs/struct.Metadata.html` | `e21b302f98e64ce35a50d50ab38dcb2b4fef27caa4049d38a02a337acd1f6c9e` |
+| `std/fs/fn.symlink_metadata.html` | `5a6682b0fc52456b68ad9b867e34f2e4d6012373064fee376bdecd398c6fb80f` |
+| `src/std/fs.rs.html` | `e61ac152430012a90b36cba590ca32c50f92088095079993a848ab88dc24f734` |
+| `src/std/sys/fs/unix.rs.html` | `ae881a5195b1c9756f3d336c16aeaa1d970cc50bc6c4885717573ea09ca78004` |
+
+The HTML root is `share/doc/rust/html` beneath the runtime sysroot. This complete command
+re-derives the source identities without an absolute installation path:
+
+```bash
+python3 -I -B - <<'PY'
+from pathlib import Path
+import hashlib, subprocess
+root = Path(subprocess.check_output(
+    ["rustc", "--print", "sysroot"], text=True).strip()) / "share/doc/rust/html"
+for path in [
+    "std/fs/struct.FileType.html",
+    "std/fs/struct.Metadata.html",
+    "std/fs/fn.symlink_metadata.html",
+    "src/std/fs.rs.html",
+    "src/std/sys/fs/unix.rs.html",
+]:
+    print(path, hashlib.sha256((root / path).read_bytes()).hexdigest())
+PY
+```
+
+#### Complete predicate argument and falsified premises
+
+Let `R` be `metadata.is_file()` and `S` be
+`metadata.file_type().is_symlink()`. The API supplies `R => !S` on this same value.
+
+| Legal metadata state | Original refusal | Simplified refusal |
+| --- | --- | --- |
+| not regular, not symlink | true | true |
+| not regular, symlink | true | true |
+| regular, not symlink | false | false |
+
+If the record is nonregular, both conditions refuse. If it is regular, the API excludes the
+symlink state and both conditions allow the next unchanged validation step. The removed
+getter is pure, so its omission also preserves observable behavior. This covers every metadata
+value admitted by the pinned API contract; filesystem examples are supplementary controls.
+
+The following executable abstract-domain check includes the counterexample excluded by the
+API, rather than silently dropping it:
+
+```python
+from itertools import product
+for regular, symlink in product([False, True], repeat=2):
+    original = (not regular) or symlink
+    simplified = not regular
+    if regular and symlink:
+        assert original != simplified  # excluded by the FileType contract
+    else:
+        assert original == simplified
+```
+
+The other premises are independently falsified:
+
+| False premise | Counterexample held |
+| --- | --- |
+| Arbitrary simultaneous file/link flags are allowed | regular and symlink makes the conditions disagree |
+| The omitted getter may have side effects | a regular-file case with a recording getter has equal booleans but a different call trace |
+| Predicates may use different metadata records | saved regular metadata and fresh symlink metadata make the mixed-record expression disagree |
+
+For the purity control, a getter that appends to a trace and returns false is evaluated by
+the original regular-file expression but omitted by the simplified expression. The actual
+pinned getter source rules out that model. For the snapshot control, the real compiled probe
+saves regular metadata, replaces the path with a relative symlink and obtains fresh metadata.
+The saved value stays regular; the fresh value describes the symlink. The expression using
+both records differs, while the expression on the saved record remains equal. Exact
+production-source checks retain the single `symlink_metadata` binding and the same value in
+both original predicates.
+
+#### Actual before/after whole-component controls
+
+The original and simplified complete artifact components are compiled separately with the
+exact unchanged caller types and environment constructor. Each uses a real pinned compiler
+to build an executable, then invalidates its source before invoking selection. Independent
+Python/system hashes verify the retained before-image and final executable bytes.
+
+| Actual fixture | Required behavior in both components |
+| --- | --- |
+| regular compiled executable | select the same relative path and independently measured hash; execution succeeds |
+| relative link to owned foreign bytes | refuse as nonregular |
+| dangling relative link | refuse as nonregular |
+| directory | refuse as nonregular |
+| named pipe | refuse without opening it |
+| local Unix-domain socket | refuse as nonregular |
+| saved and fresh metadata around path replacement | stable saved record; mixed-record premise counterexample |
+
+Every negative fixture recovers to its original compiled regular file and valid selection.
+No pipe or socket remains after completion. The whole-component probes supplement the
+all-domain API argument; they are not an equivalent verdict derived from a finite kind grid.
+
+#### Source mutation retirement and fresh protection control
+
+The only maintained artifact-source change is the condition above. Existing semantic test bodies,
+the caller, producer/controller code, finite pipe fixture and equivalence catalogs remain exact.
+The external absolute-cwd proof changes only its artifact-prefix binding after revalidation.
+
+| Historical predicate edit | Current disposition |
+| --- | --- |
+| `L99.logic.77`, change predicate disjunction to conjunction | old predicate edit retired by the simplification |
+| `L99.logic.78`, keep only explicit symlink term | old predicate edit retired |
+| `L99.logic.79`, keep only the regular-file refusal | now the proved production simplification; old edit retired |
+
+No retired identity is counted as a current kill or equivalent. Source reconciliation uses
+span, operator, full original and replacement text, rebasing the removed term in enclosing
+source contexts. This maps current edit syntax, not outcomes: no old verdict transfers merely
+because its edit maps to a new identity.
+
+`2026-10-19`: discovery changes from 141 raw mutations to 138; every current
+identity maps exactly once, while the retired predicate edits have no current candidate.
+The unchanged crate-name membership edit maps from `L65.contains.116` to `L65.contains.113`
+and remains separately owned by the next leaf, with no inherited K/E classification.
+
+The fresh current protection control deliberately skips the remaining regular-file judgment:
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L99.cond.78
+```
+
+`2026-10-19`: that current edit finishes killed against all 196 unchanged semantic trust parents,
+strict exit `0`. Both existing every-position relative-link and finite pipe parents are actual
+killing witnesses. All 1129 original/copied regular inputs restore with independent
+Python/system hashes and modes; all 38 direct bindings, 37 public producer pins and
+the pinned toolchain bindings agree. Invented-parent, missing-result, changed-outcome,
+changed-exit and duplicate-result receipts refuse. The diagnostic leaf seals exactly;
+all 311 prior task archives remain byte-exact with independent population checks.
+This is a current protection-control result, not a complete artifact adequacy checkpoint.
+
+#### Calibration observations
+
+Identity calibration: an initial text-only reconciliation key refused its uniqueness assertion because equal edits occur at different spans. The corrected key includes source span/operator/full text; every current edit maps once and only the removed predicate edits retire.
+
+Calibration fix: initial whole-component socket witness exceeded the OS socket-address path bound before selection; retained failure in `target/artifact-filetype-simplification/socket-path-before-fix.*`. Bind its relative basename from the same owned directory, restoring the previous working directory before asserting; no verdict from the failed probe. The default sandbox then refused local socket bind with `EPERM`; the approved same probe succeeds. Installed toolchain documentation/source reads remain read-only.
+
+The failed calibration attempts produce no selector or equivalence classification. The
+corrected whole-component probes and identity reconciliation pass before publication.
+
+Held native tree `be55e84050d599d3ebdb4424b50a7accde3df8b5` precedes completion documentation.
+Whole artifact file SHA-256 `f3c8b408ec1733cdf5828123ad5e1f6db1d205995fffe30f0e9bc1acfd30d673`; production-prefix SHA-256
+`9365cd07c990d1ef4295b8e905ac1f3baa4754272498904f6b88e1c982b8ef8c` replaces the previous prefix
+`f51d00153db5f9be189efbe73ddb3ebd468cd1e48de93882d4c6e90406a2faa2`. Supplemental premise script SHA-256
+`db266bee6b99f42c1dea4afeafa1244db4c6d320fcc71bd5e811baca53a529fb` and audit SHA-256
+`b26fc049ad7de7d2c88c5851da4c719f7fbcc46482f6139a96e27a02a5ceef1d` bind the pinned sources, false premises,
+before/after components, source mapping, restored fixtures, inputs and archive census.
+Supplemental programs/observations are untracked in `target/artifact-filetype-simplification/`;
+the proof and reproduction commands above are retained here, and the existing tracked
+parents/native command reproduce the operational protections. Final staged focused/book/commit
+checks complete this leaf. Required crate-name minimum membership is next; the complete final
+artifact replay, caller work and global adequacy remain separately owned and open.
+
+#### Absolute-cwd proof revalidated after the source change
+
+The initial final-focused run caught an existing source binding that had not been revalidated.
+The absolute-cwd proof guard correctly refused the changed artifact production prefix. Its
+failed run and earlier regularity evidence remain under
+`target/artifact-filetype-simplification/before-cwd-revalidation/`. That earlier snapshot is
+inspection evidence; the completed current replays below replace its final-tree qualification.
+
+Revalidation reread the [absolute-prefix argument](#absolute-diagnostic-prefix-proofs), pinned
+producer identities and actual CLI/gate/inventory/compile/query chain. The only artifact
+behavioral edit removes a pure redundant predicate. It changes no root construction, output
+join, query cwd, environment, compiler controller/observer or diagnostic-prefix framing.
+The supported absolute-cwd premise and universal slash/physical-line-boundary arguments
+therefore still hold. Relative cwd remains outside these existing reasons.
+
+Only the existing operator control's artifact-prefix digest changes. All of its case bodies,
+altered-premise arms, compiled helpers, real Cargo-root/relative-manifest/alias control, wider
+witnesses and wrong oracles remain byte-exact. The complete targeted control passes before
+fresh native replay. The precise equivalent reason records also remain byte-exact.
+
+| Revalidated guarded slice | SHA-256 |
+| --- | --- |
+| trust production | `036f650dc082d9d43956865ef67fb16f761c4b3ede54c0567f8936733322bef4` |
+| compiler controller | `634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70` |
+| compiler observer | `c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f` |
+| artifact binding | `9365cd07c990d1ef4295b8e905ac1f3baa4754272498904f6b88e1c982b8ef8c` |
+| base environment | `8b6fa81a2d715c2e42f8ab75a02b6e0c037c97d2f55e71c44c21e4a5516ee74c` |
+| gate production | `8ad36a27c5e585660af256b59050f4393b1fa8601f591bd59de9ba2ffbfb7961` |
+| repository root | `84ec4298740c835ae19ed9f2cff11f0f985cd59a4f3c5c205e9abd47805b6d77` |
+| CLI entry | `3bf4d646e31f96b58fe18697db897614d1e1aac4e11b585e0d02cca641b4ab62` |
+
+`2026-10-19`: the permanent targeted proof control passes with all 8 guarded source
+bindings and 7 altered-source rejection arms. The source/caller review precedes the
+single digest update; it is not a blind refresh to silence the guard. The ordinary final
+focused tier also runs the complete operator suite before commit.
+
+| Earlier absolute-prefix identity | Current exact identity | Fresh result |
+| --- | --- | --- |
+| `L690.cond.244` | `L590.cond.168` | existing precise E retained |
+| `L717.cmp.257` | `L617.cmp.181` | existing precise E retained |
+
+```bash
+python3 -I -B xtask/mutation_sweep_tests.py "$PWD" \
+  IteratorTests.test_cargo_absolute_prefix_edits_preserve_line_selection -v
+bash scripts/mutation_sweep.sh xtask/src/trust.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --equivalents xtask/trust.equivalents \
+  --only L590.cond.168 --only L617.cmp.181
+```
+
+`2026-10-19`: the refreshed current regularity replay finishes 1K and the existing absolute-prefix
+replay finishes 2E, each against all 196 current semantic parents with strict exit `0`.
+Both use exactly the same held tree `be55e84050d599d3ebdb4424b50a7accde3df8b5` and identical
+indexed input snapshots. All 1129 original/copied regular inputs restore after each replay;
+all direct, producer and pinned toolchain bindings agree. The regularity audit rejects its
+invented-parent/missing/outcome/exit/duplicate controls. The equivalence audit separately
+rejects changed exit, missing result, duplicate result, changed replacement, unlisted E and
+invented detail. No earlier or unrelated equivalent verdict is projected from this selection.
+
+Final audit SHA-256 `b26fc049ad7de7d2c88c5851da4c719f7fbcc46482f6139a96e27a02a5ceef1d` binds both current native
+receipts, exact one-digest proof-test change, source/premise preservation and restored fixtures.
+No new FileType equivalent classification is assigned. The formal simplification, retired
+predicate identities and independently revalidated existing prefix reasons remain distinct.
+Final staged focused/book/commit checks complete this leaf; complete artifact/caller/global
+adequacy remains separately owned and open.

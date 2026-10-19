@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — remove the proved redundant symlink predicate
+
+`ARCHOGEN-M3-0801` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.13`), `2026-10-19`.
+
+- Prove same-metadata file-kind exclusivity/pure getters with pinned API/source and false
+  premises; remove only the redundant term and retain all semantic parent bodies.
+- Revalidate the existing absolute-cwd proof caught by focused; update only its artifact-prefix
+  digest after source/caller and complete compiled/wider/false controls. Reasons unchanged.
+- Same-tree regularity1K plus existing prefix2E/full196;1129 inputs restore,
+  38 direct/37 producer/5 toolchain bindings, five kill/six E false receipts and archives exact.
+- Current138 source identities rebound, three old predicate edits retire without K/E;
+  book/live and final staged focused gates. Membership proof/full replay remain open.
+
 ## archogen — preserve first-reported artifact failure diagnostics
 
 `ARCHOGEN-M3-0800` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.12`), `2026-10-19`.

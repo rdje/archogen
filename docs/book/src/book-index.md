@@ -491,6 +491,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#record-presence-state-assessment)
 - **RED** — [definition](glossary.md), [Verifying the toolchain](verification.md), [Annex B: The checks that keep the
   repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- Redundant symlink predicate on one metadata snapshot — [Annex C: Trust proof
+  records](annex-trust-proofs.md#redundant-symlink-predicate-on-one-metadata-snapshot)
 - Refusal is a feature — [The supported profile](profile.md#refusal-is-a-feature)
 - Refused by name — [Checking a description](checking.md#refused-by-name)
 - Regular files and symlinks at every output position — [Annex C: Trust proof

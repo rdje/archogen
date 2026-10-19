@@ -96,7 +96,7 @@ fn outputs(
         }
         let file = out.join(name);
         let metadata = fs::symlink_metadata(&file).map_err(|error| format!("{name}: {error}"))?;
-        if !metadata.is_file() || metadata.file_type().is_symlink() {
+        if !metadata.is_file() {
             return Err(format!(
                 "compiler artifact {name} is not a regular non-symlink file"
             ));
