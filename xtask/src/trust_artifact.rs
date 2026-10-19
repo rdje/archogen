@@ -330,6 +330,94 @@ mod tests {
         );
     }
     #[test]
+    fn naming_query_preserves_test_and_refuses_duplicate_test_options() {
+        let query = |observed: &[&str]| {
+            naming_arguments(
+                &observed
+                    .iter()
+                    .map(|value| (*value).to_owned())
+                    .collect::<Vec<_>>(),
+            )
+        };
+        for (observed, expected) in [
+            (
+                &[
+                    "rustc",
+                    "--test",
+                    "--crate-name",
+                    "probe",
+                    "--out-dir",
+                    "outputs",
+                ][..],
+                &["--print=file-names", "-", "--test", "--crate-name", "probe"][..],
+            ),
+            (
+                &[
+                    "rustc",
+                    "--crate-name",
+                    "probe",
+                    "--test",
+                    "--out-dir",
+                    "outputs",
+                ][..],
+                &["--print=file-names", "-", "--crate-name", "probe", "--test"][..],
+            ),
+            (
+                &[
+                    "rustc",
+                    "--crate-name",
+                    "probe",
+                    "--out-dir",
+                    "outputs",
+                    "--test",
+                ][..],
+                &["--print=file-names", "-", "--crate-name", "probe", "--test"][..],
+            ),
+        ] {
+            let (actual, directory) = query(observed).unwrap();
+            assert_eq!(actual, expected, "{observed:?}");
+            assert_eq!(directory, "outputs");
+        }
+        for observed in [
+            &[
+                "rustc",
+                "--test",
+                "--test",
+                "--crate-name",
+                "probe",
+                "--out-dir",
+                "outputs",
+            ][..],
+            &[
+                "rustc",
+                "--crate-name",
+                "probe",
+                "--test",
+                "--out-dir",
+                "outputs",
+                "--test",
+                "-C",
+                "opt-level=3",
+            ][..],
+            &[
+                "rustc",
+                "--crate-name",
+                "probe",
+                "--out-dir",
+                "outputs",
+                "--test",
+                "--test",
+            ][..],
+        ] {
+            assert_eq!(
+                query(observed).unwrap_err(),
+                "duplicate observed --test",
+                "{observed:?}"
+            );
+        }
+    }
+
+    #[test]
     fn actual_empty_input_query_preserves_build_and_ignores_now_invalid_source() {
         crate::trust_test_process::bounded!(
             actual_empty_input_query_preserves_build_and_ignores_now_invalid_source

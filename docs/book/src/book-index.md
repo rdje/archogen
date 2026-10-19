@@ -576,6 +576,8 @@ a change that leaves it stale, so it is never edited by hand.
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
   detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust
   proof records](annex-trust-proofs.md)
+- Test-flag naming query controls — [Annex C: Trust proof
+  records](annex-trust-proofs.md#test-flag-naming-query-controls)
 - The admitted task model, enforced — [Describing a workload](workload.md#the-admitted-task-model-enforced)
 - The baseline and its forms — [Checks that must not share a mistake: the trust
   gate](trust.md#the-baseline-and-its-forms)

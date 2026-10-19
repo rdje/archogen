@@ -5848,3 +5848,75 @@ binds the actual old/repaired fixture, exact source reconstruction and native/re
 Raw evidence remains in `target/artifact-fixture-locality/`; final staged focused, book and
 commit doctrine gates complete this repair. The next owned leaf holds `--test` forwarding
 and duplicate refusal. The measured survivors and complete final artifact checkpoint remain open.
+
+### Test-flag naming query controls
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.2`: a permanent direct naming-helper parent now
+requires exact forwarding of a single `--test` flag and exact refusal of duplicates.
+Production and every previous test remain byte-exact; the relative-link fixture repair stays
+in place. These controls close the measured forwarding/duplicate gaps, not a production defect.
+
+A single flag is exercised before, between and after the required naming options. Literal
+query expectations retain observed option order and the output directory `outputs`. For example:
+
+```text
+observed: rustc --crate-name probe --out-dir outputs --test
+query:    --print=file-names - --crate-name probe --test
+directory: outputs
+```
+
+Repeated flags at early, middle and final positions must return exactly
+`duplicate observed --test`. A middle duplicate is followed by ignored `-C opt-level=3`
+arguments, preventing endpoint-only checking from appearing sufficient. A single early flag
+has its own literal query order; the test does not compute an expectation through the helper.
+This parent is pure and finite and launches no compiler, worker or fixture process.
+
+The source-bound initial full measurement classified every edit below as survived; actual
+literal-helper calibration independently demonstrates accepted repeated flags or loss of
+valid query forwarding. After the new parent, the same exact production source edits have
+these native outcomes:
+
+| Current ID | Lost judgment | Actual native outcome |
+| --- | --- | --- |
+| `L16.guard.9` | duplicate check only at first argument | K, new intended parent |
+| `L16.guard.10` | duplicate check only at last argument | K, new intended parent |
+| `L16.guard.11` | duplicate check only at argument endpoints | K, new intended parent |
+| `L33.cond.37` | duplicate guard replaced with false | K, new intended parent |
+| `L36.stmt.39` | valid --test query argument omitted | K, new intended parent |
+
+The exact new parent is
+`trust::artifact::tests::naming_query_preserves_test_and_refuses_duplicate_test_options`.
+Every old parent name remains; only this name is added.
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L16.guard.9 --only L16.guard.10 --only L16.guard.11 \
+  --only L33.cond.37 --only L36.stmt.39
+```
+
+`2026-10-19`: all 5 selected edits finish killed against all 184 current trust parents, strict
+exit `0`, with the new intended name in every actual failure list. There are no selected
+survivors, compiler refusals, equivalents, timeouts or unjudged outcomes. All 1116 regular
+original/copied inputs restore, with independent Python/system hashes and modes. All 37 direct
+bindings and 37 pinned public producer sources agree. Invented-parent, missing-result,
+changed-outcome, changed-exit and duplicate-result receipts refuse. The committed fixture
+repair seals exactly and all 300 older archive files remain unchanged.
+
+Held native tree `f929ac7974353f043378e810e5085e030f9e5877` precedes completion documentation.
+Whole test file SHA-256 `9264bfe668221706c3404c5559c6ea33c721e77f2e8f52086272e764da0738cf`;
+the production prefix is unchanged. Audit SHA-256
+`6728f64af252265b3a31e5fee3ce3d02745d885b7d539a537041f8034e292863`
+binds historical/current edit signatures, exact parent/source preservation, native outcomes,
+restoration and false receipts. Raw evidence remains in `target/artifact-test-flags/`.
+An ad hoc progress display initially assumed an unpadded native column; the actual raw log
+showed completed kills. Correcting it to accept whitespace runs fixed the display; the
+unchanged maintained parser audits the final results. No replay retry or result was changed.
+Final staged focused/book/commit gates complete this leaf; nonempty naming-option values are
+next. The complete current artifact replay remains separately owned after all resolution
+leaves, so these selected kills do not project a new full-file or caller adequacy result.
+
+`2026-10-19`: the required routine changelog rollover seals its oldest 20 entries into
+`docs/history/changelog/0031.md`. Independent concatenation reconstructs the complete
+pre-rollover staged changelog byte-for-byte; previous history segments remain exact.
