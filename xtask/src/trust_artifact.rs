@@ -1044,6 +1044,154 @@ mod tests {
     }
 
     #[test]
+    fn naming_query_honors_the_explicit_toolchain_environment() {
+        crate::trust_test_process::bounded!(naming_query_honors_the_explicit_toolchain_environment);
+        use super::{select, Compilation, Program, Target, TargetSources};
+        use crate::catalog_build::environment;
+        use std::{
+            collections::BTreeSet,
+            process::{Command, Stdio},
+        };
+
+        let base = real_root().join("target/trust-tests/artifact-query-environment");
+        let _ = fs::remove_dir_all(&base);
+        let tree = base.join("tree");
+        let target = base.join("target");
+        let out = target.join("release/deps");
+        fs::create_dir_all(&tree).unwrap();
+        fs::create_dir_all(&out).unwrap();
+        fs::write(
+            tree.join("source.rs"),
+            "fn main() { println!(\"pinned-artifact\"); }\n",
+        )
+        .unwrap();
+        let env = environment("1.95.0", &base.join("cargo-home"), &target).unwrap();
+        let version = Command::new("rustc")
+            .arg("--version")
+            .current_dir(&tree)
+            .env_clear()
+            .envs(env.iter().map(|(key, value)| (key, value)))
+            .stdin(Stdio::null())
+            .output()
+            .unwrap();
+        assert!(version.status.success(), "{:?}", version.stderr);
+        assert!(String::from_utf8_lossy(&version.stdout).starts_with("rustc 1.95.0 "));
+        fs::write(base.join("pinned-version.stdout"), &version.stdout).unwrap();
+        let arguments: Vec<String> = vec![
+            "rustc".into(),
+            "--crate-name".into(),
+            "probe".into(),
+            "source.rs".into(),
+            "--crate-type".into(),
+            "bin".into(),
+            "--out-dir".into(),
+            out.to_str().unwrap().into(),
+            "-C".into(),
+            "extra-filename=-pinned".into(),
+        ];
+        let compiled = Command::new("rustc")
+            .args(&arguments[1..])
+            .current_dir(&tree)
+            .env_clear()
+            .envs(env.iter().map(|(key, value)| (key, value)))
+            .stdin(Stdio::null())
+            .output()
+            .unwrap();
+        assert!(compiled.status.success(), "{:?}", compiled.stderr);
+        fs::write(base.join("compiled.arguments"), arguments.join("\0")).unwrap();
+        let artifact = out.join("probe-pinned");
+        let before = fs::read(&artifact).unwrap();
+        let expected = independent_artifact_hash(&before, &env);
+        fs::write(base.join("before.bin"), &before).unwrap();
+        let before_names: BTreeSet<_> = fs::read_dir(&out)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name())
+            .collect();
+        fs::write(
+            tree.join("source.rs"),
+            "compile_error!(\"naming must preserve the compiled artifact\");\n",
+        )
+        .unwrap();
+        let invalid_source = fs::read(tree.join("source.rs")).unwrap();
+        let program = Program {
+            name: "root".into(),
+            role: "generator".into(),
+            package: "p".into(),
+            target: Target::Bin("probe".into()),
+            role_packages: BTreeSet::new(),
+            pair: None,
+            data: Vec::new(),
+        };
+        let sources = TargetSources::from([(
+            ("p".into(), "bin".into(), "probe".into()),
+            BTreeSet::from(["source.rs".into()]),
+        )]);
+        let compilations = vec![Compilation {
+            package: "p".into(),
+            arguments,
+        }];
+        let good = || {
+            let actual = select(&program, &sources, &compilations, &env, &tree, &target).unwrap();
+            assert_eq!(actual.0, "release/deps/probe-pinned");
+            assert_eq!(actual.1, expected);
+            assert_eq!(fs::read(&artifact).unwrap(), before);
+            assert_eq!(fs::read(tree.join("source.rs")).unwrap(), invalid_source);
+            assert_eq!(
+                fs::read_dir(&out)
+                    .unwrap()
+                    .map(|entry| entry.unwrap().file_name())
+                    .collect::<BTreeSet<_>>(),
+                before_names
+            );
+        };
+        good();
+        let ran = Command::new(&artifact)
+            .current_dir(&tree)
+            .env_clear()
+            .envs(env.iter().map(|(key, value)| (key, value)))
+            .stdin(Stdio::null())
+            .output()
+            .unwrap();
+        assert!(ran.status.success(), "{:?}", ran.stderr);
+        assert_eq!(ran.stdout, b"pinned-artifact\n");
+
+        let missing_pin = "archogen-artifact-query-missing-toolchain";
+        let mut bad_env = env.clone();
+        bad_env
+            .iter_mut()
+            .find(|(key, _)| key == "RUSTUP_TOOLCHAIN")
+            .unwrap()
+            .1 = missing_pin.into();
+        for (label, values) in [("pinned", &env), ("missing-pin", &bad_env)] {
+            let fields: Vec<_> = values
+                .iter()
+                .flat_map(|(key, value)| [key.as_str(), value.as_str()])
+                .collect();
+            fs::write(base.join(format!("{label}.environment")), fields.join("\0")).unwrap();
+        }
+        let refused = Command::new("rustc")
+            .arg("--version")
+            .current_dir(&tree)
+            .env_clear()
+            .envs(bad_env.iter().map(|(key, value)| (key, value)))
+            .stdin(Stdio::null())
+            .output()
+            .unwrap();
+        assert!(!refused.status.success());
+        assert!(String::from_utf8_lossy(&refused.stderr).contains(missing_pin));
+        fs::write(base.join("missing-pin.stderr"), &refused.stderr).unwrap();
+        let observed = select(&program, &sources, &compilations, &bad_env, &tree, &target);
+        fs::write(base.join("missing-pin.result"), format!("{observed:?}")).unwrap();
+        good();
+        let error = observed.unwrap_err();
+        assert!(
+            error.starts_with("compiler artifact naming query failed:"),
+            "{error}"
+        );
+        assert!(error.contains(missing_pin), "{error}");
+    }
+
+    #[test]
     fn actual_empty_input_query_preserves_build_and_ignores_now_invalid_source() {
         crate::trust_test_process::bounded!(
             actual_empty_input_query_preserves_build_and_ignores_now_invalid_source

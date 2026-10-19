@@ -222,6 +222,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Exactly one primitive is trusted — [Kinds and schemas](kinds.md#exactly-one-primitive-is-trusted)
 - Exit codes — [Checking a description](checking.md#exit-codes)
 - Exit codes — [The archogen command line](cli.md#exit-codes)
+- Explicit toolchain environment for naming queries — [Annex C: Trust proof
+  records](annex-trust-proofs.md#explicit-toolchain-environment-for-naming-queries)
 - Extra-filename matcher reasons — [Annex C: Trust proof records](annex-trust-proofs.md#extra-filename-matcher-reasons)
 
 ## F

@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — honor the explicit compiler naming-query environment
+
+`ARCHOGEN-M3-0798` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.10`), `2026-10-19`.
+
+- Add bounded actual pinned build/query controls and independent unavailable custom-pin
+  refusal; preserve invalidated source, executable bytes/hash, behavior and valid recovery.
+- Exact environment-tail survivor becomes native1K/full194 strict0;1126 inputs restore,
+  38 bindings/37 pins/five false receipts; mutant's silent pin fallback observed directly.
+- Alias leaf seals exactly;308 prior archives and earlier code/tests unchanged.
+  Book/live and final staged focused gates; metadata root contracts next, full adequacy open.
+
 ## archogen — hold compiler source prefixes under a tree alias
 
 `ARCHOGEN-M3-0797` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.9`), `2026-10-19`.

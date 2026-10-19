@@ -6533,3 +6533,97 @@ programs and observations are untracked in `target/artifact-source-aliases/`; th
 parent and native command above reproduce the behavior and mutation result.
 Final staged focused/book/commit checks complete this leaf. The complete pinned naming-query
 environment is next; complete artifact/caller/global adequacy remains separately owned and open.
+
+### Explicit toolchain environment for naming queries
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.10`: a permanent bounded parent now holds the
+naming query's explicit toolchain pin. The query must receive the supplied allowlisted
+environment after clearing inherited variables; losing its tail can silently select an
+ambient compiler instead of honoring an unavailable explicit pin.
+
+#### Actual pinned build and independent refusal
+
+The parent obtains the actual catalog environment, asks the real compiler for its version
+and requires the configured pinned version. It then uses that compiler and the recorded
+arguments to build a real executable
+([Rust toolchain source](ledger.md#rust-toolchain)). Before selection it independently
+hashes the executable bytes through the system checksum tool and invalidates the source:
+
+```rust
+compile_error!("naming must preserve the compiled artifact");
+```
+
+Valid selection must still return `release/deps/probe-pinned` and the independent before
+hash. The binary must execute successfully and print `pinned-artifact` followed by a newline.
+The invalid source, artifact bytes and full output-directory population must remain unchanged.
+
+The control then clones that same environment and changes only `RUSTUP_TOOLCHAIN` to the
+deliberately unavailable custom name `archogen-artifact-query-missing-toolchain`. A direct
+real `rustc --version` command under that environment must fail and identify that exact pin.
+This independently establishes the refusal before asking the actual selector to perform its
+source-free naming query.
+
+| Supplied environment | Independent compiler control | Required selector behavior |
+| --- | --- | --- |
+| actual pinned environment | version succeeds; actual compilation succeeds | select existing artifact and its hash |
+| same environment, unavailable explicit custom pin | version refuses and identifies that pin | naming-query failure identifying that pin |
+| valid environment again | previously compiled bytes remain valid | selection and unchanged bytes still pass |
+
+The selector result is recorded before the assertion. Valid recovery runs even if the bad-pin
+result is unexpectedly successful, so the mutation's completed fixture retains the before
+artifact and invalid source checks. The unavailable-pin result must begin with
+`compiler artifact naming query failed:` and contain the explicit custom pin.
+
+Both runtime environment records preserve the actual constructor order and values. Their
+key sets are `PATH`, `HOME`, `RUSTUP_HOME`, `RUSTUP_TOOLCHAIN`, `CARGO_HOME`,
+`CARGO_TARGET_DIR`, `TMPDIR`, `TMP` and `TEMP`. The Cargo home, target and temporary
+stores derive from the fixture root on the repository volume. The installed toolchain is
+the existing read-only toolchain dependency. An operating-system compiler cache observed
+beneath the fixture's target-local temporary directory remains project-local.
+
+This is a defensive helper-boundary control. It does not assert that an unavailable pin can
+produce a successful Cargo build, nor that this single pin falsifier independently tests
+every environment key's effect.
+
+#### Exact environment-tail mutation
+
+| Exact edit | Earlier complete measurement | Actual new result |
+| --- | --- | --- |
+| `L175.chain.137`, truncate the supplied environment iterator | S | K, required explicit-pin parent |
+
+The actual edit adds `take(1)` before the key/value mapping. The constructor supplies `PATH`
+first, so the modified query loses the explicit pin. In the copied native execution the
+independent compiler command still refuses the missing pin, but the modified selector returns
+the existing artifact and its correct hash. That observed acceptance is precisely the
+behavior the new parent rejects; the original selector reports the expected pin failure.
+
+```text
+trust::artifact::tests::naming_query_honors_the_explicit_toolchain_environment
+```
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L175.chain.137
+```
+
+`2026-10-19`: the selected edit finishes killed against all 194 current trust parents, strict
+exit `0`, with the new parent in its actual failure list. No selected survivor, equivalent,
+compiler refusal, timeout or unjudged outcome occurs. All 1126 original/copied regular
+inputs restore with independent Python/system hashes and modes; all 38 direct bindings and
+37 pinned public producer sources agree. Invented-parent, missing-result, changed-outcome,
+changed-exit and duplicate-result receipts refuse. The alias leaf seals exactly, and all
+308 older task archives remain byte-exact with independent Git/index/filesystem counts.
+Production and every earlier test remain unchanged.
+
+Held native tree `7271a5c64ddb7aaee566318ed5306a4a7d6b652b` precedes completion documentation.
+Whole artifact file SHA-256 `576635928cb5d67afd460503de8417b250e4e20c19cb469341e2c89f678531e9`;
+its production prefix remains exact. Local supplemental audit SHA-256
+`20eca7edf8614d6a00ef3c4acd7bc9568f8ecf42e89edafc98d5fa1bebcbfe9c`
+binds both complete fixtures, environment records, actual original refusal and mutant
+acceptance, restoration, archives and false receipts. Supplemental programs/observations are
+untracked in `target/artifact-query-environment/`; the tracked parent and native command
+above reproduce the behavior and mutation result. Final staged focused/book/commit checks
+complete this leaf. Metadata producer/root contracts are next; complete artifact/caller/global
+adequacy remains separately owned and open.
