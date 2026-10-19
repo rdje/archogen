@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — require basename grammar and all-output uniqueness
+
+`ARCHOGEN-M3-0796` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.8`), `2026-10-19`.
+
+- Add bounded real malformed-file and duplicate-output parents; hold precise invalid-name
+  diagnostics and duplicates of nonselected files without relying on missing files or ambiguity.
+- Exact historical3S become native3K/full192 strict0;1124 originals/copies restored,
+  38 bindings/37 pins/five false receipts; complete normal/malformed fixture bytes intact.
+- Fix raw audit count shadowing with Git/index/filesystem census and false-count controls.
+- File-kind seal/306 prior archives exact; production/old tests/pipe fixture unchanged.
+  Book/live and final staged focused gates; source-alias prefixes next, full adequacy open.
+
 ## archogen — require regular non-symlink outputs at every position
 
 `ARCHOGEN-M3-0795` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.7`), `2026-10-19`.

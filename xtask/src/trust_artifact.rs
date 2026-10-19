@@ -831,6 +831,72 @@ mod tests {
     }
 
     #[test]
+    fn malformed_basenames_are_refused_before_their_output_lookup() {
+        crate::trust_test_process::bounded!(
+            malformed_basenames_are_refused_before_their_output_lookup
+        );
+        let fixture = OutputFiles::new("artifact-basename-controls");
+        fs::create_dir_all(fixture.out.join("nested")).unwrap();
+        let witnesses = [
+            fixture.out.join("nested/inside"),
+            fixture.base.join("foreign.rlib"),
+            fixture.out.join("back\\slash"),
+            fixture.out.join("carriage\rname"),
+        ];
+        let bytes = b"malformed basename bytes\n";
+        for file in &witnesses {
+            fs::write(file, bytes).unwrap();
+        }
+        for name in [
+            "nested/inside",
+            "../../../foreign.rlib",
+            "back\\slash",
+            "carriage\rname",
+            "nul\0name",
+            "",
+            ".",
+            "..",
+        ] {
+            fixture.good();
+            let stdout = format!("{name}\n");
+            assert_eq!(
+                outputs(stdout.as_bytes(), &fixture.out, &fixture.target, false).unwrap_err(),
+                "invalid or duplicate compiler artifact basename",
+                "{name:?}"
+            );
+            fixture.good();
+        }
+        for file in witnesses {
+            assert_eq!(fs::read(file).unwrap(), bytes);
+        }
+    }
+
+    #[test]
+    fn every_output_name_is_unique_including_nonselected_outputs() {
+        crate::trust_test_process::bounded!(
+            every_output_name_is_unique_including_nonselected_outputs
+        );
+        let fixture = OutputFiles::new("artifact-output-uniqueness");
+        let shared = fixture.names[0];
+        let rlib = fixture.names[1];
+        for names in [
+            [rlib, shared, shared],
+            [shared, rlib, shared],
+            [shared, shared, rlib],
+            [rlib, rlib, shared],
+        ] {
+            fixture.good();
+            let stdout = format!("{}\n", names.join("\n"));
+            assert_eq!(
+                outputs(stdout.as_bytes(), &fixture.out, &fixture.target, true).unwrap_err(),
+                "invalid or duplicate compiler artifact basename",
+                "{names:?}"
+            );
+            fixture.good();
+        }
+    }
+
+    #[test]
     fn actual_empty_input_query_preserves_build_and_ignores_now_invalid_source() {
         crate::trust_test_process::bounded!(
             actual_empty_input_query_preserves_build_and_ignores_now_invalid_source

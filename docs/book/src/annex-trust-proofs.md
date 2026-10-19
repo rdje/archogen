@@ -6330,3 +6330,119 @@ argument separator and refused before testing; passing both exact filters to lib
 that invocation. No native result is inferred from the refusal. Final staged focused/book/commit
 gates complete this leaf; basename grammar and all-output uniqueness are next.
 The explicit symlink-term assessment, complete artifact replay and caller/global adequacy remain open.
+
+### Basename grammar and all-output uniqueness
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.8`: permanent bounded parents now hold malformed
+basename validation and uniqueness of every reported output, including nonselected files.
+Production, the finite pipe fixture and every previous test remain byte-exact. Valid selection
+and recovery retain the literal rlib path and independently verified payload hash.
+
+#### Existing malformed files and precise protocol diagnostics
+
+The grammar parent creates readable controlled witnesses before exercising malformed reports:
+a nested file beneath the output directory, a parent-relative file outside the role target but
+inside the fixture, and Unix filenames containing a backslash or carriage return. These files
+exist, so a missing-file error cannot mask loss of the grammar check. Malformed path cases run
+before the diagnostic-only cases, preserving a semantic acceptance witness for the path edit.
+
+| Reported name | Required behavior |
+| --- | --- |
+| `nested/inside` | refuse despite an existing readable nested file |
+| `"../../../foreign.rlib"` | refuse despite an existing readable fixture file outside the role target |
+| `"back\\slash"` | refuse despite an existing readable Unix filename containing backslash |
+| `"carriage\rname"` | refuse despite an existing readable Unix filename containing carriage return |
+| `"nul\0name"` | refuse as an invalid basename |
+| empty, `.` or `..` | refuse as an invalid basename |
+
+Every case must return exactly `invalid or duplicate compiler artifact basename`. The target
+and output directories are valid and canonicalized first; the held diagnostic then identifies
+the malformed protocol name before its per-output metadata lookup. The dot/empty edit already
+retains refusal through later directory checks, but changes this observable reason to a file-kind
+error. The parent preserves the precise protocol diagnosis rather than treating unrelated
+filesystem failure as proof of validation. All witness bytes remain unchanged, and valid query
+selection is checked before and after each case.
+
+#### Duplicates that do not create artifact ambiguity
+
+The uniqueness parent repeats a nonselected shared-library name while keeping exactly one rlib.
+It exercises a final repeat, a first/last repeat and an early repeat, then a repeated selected
+rlib as an additional diagnostic control. Every reported file exists and is regular.
+
+| Response shape | Required outcome |
+| --- | --- |
+| rlib, shared, shared | invalid-or-duplicate basename refusal |
+| shared, rlib, shared | the same refusal |
+| shared, shared, rlib | the same refusal |
+| rlib, rlib, shared | the same refusal before later artifact ambiguity |
+
+The required exact message is `invalid or duplicate compiler artifact basename`. Without the
+uniqueness judgment the nonselected-repeat cases can still select one rlib and its unchanged
+hash, so they distinguish the rule directly. Unique valid reports pass before and after each
+case with `release/deps/libprobe.rlib` and SHA-256
+`26fff0e84dc91af757184906354cddbb54702d2078c781ce0ad5eb1ff693de8d`.
+
+#### Actual native results
+
+| Exact current edit | Initial full measurement | Required actual killing parent |
+| --- | --- | --- |
+| `L91.logic.71`, dot/empty disjunction becomes conjunction | S | grammar parent |
+| `L92.logic.74`, forbidden-character disjunction becomes conjunction | S | grammar parent |
+| `L93.logic.75`, uniqueness disjunction becomes conjunction | S | nonselected-duplicate parent |
+
+The exact added names are:
+
+```text
+trust::artifact::tests::malformed_basenames_are_refused_before_their_output_lookup
+trust::artifact::tests::every_output_name_is_unique_including_nonselected_outputs
+```
+
+Every earlier parent remains. The grammar parent also kills the uniqueness edit because that
+edit weakens the combined condition; the raw receipt retains every additional actual name.
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L91.logic.71 --only L92.logic.74 --only L93.logic.75
+```
+
+`2026-10-19`: all 3 selected edits finish killed against all 192 current trust parents, strict
+exit `0`, with their required new names in the actual failure lists. No selected survivor,
+compiler refusal, equivalent, timeout or unjudged result occurs. All 1124 original/copied
+regular inputs restore with independent Python/system hashes and modes. All 38 direct bindings
+and 37 pinned public producer sources agree. Invented-parent, missing-result, changed-outcome,
+changed-exit and duplicate-result receipts refuse. The committed file-kind leaf seals exactly;
+all 306 previous task archive files remain unchanged. Original/copy fixture audits verify
+all normal and malformed witness payloads with independent content hashes; stdin hashing keeps
+control characters in filenames from affecting checksum-output parsing.
+
+Held native tree `51c082478d60c284b1812dce53b0d2e210eb489c` precedes completion documentation.
+Whole artifact file SHA-256 `95ad9e9262a1b848f99273ee0f5c16ac823e52276ae1e9e55e364c9e63bb8b71`;
+its production prefix remains exact. Audit SHA-256
+`d988dac8a42bdd0d2b8bb1579001d23c455fdc3493d579218f88ecd63d665bed`
+binds source/parent preservation, historical/native edit identities, both fixture recoveries,
+restoration and false receipts. Raw evidence remains in `target/artifact-basename-controls/`.
+Final staged focused/book/commit gates complete this leaf; ordinary/canonical source prefixes
+under a tree alias are next. Complete artifact/caller/global adequacy remains separately owned and open.
+
+#### Audit population correction
+
+`2026-10-19`: the first completed audit compared every older archive byte but reused its
+archive-list variable for a later fixture listing. The report therefore emitted the final
+fixture size as the archive count. This was caught before committing, owned in the current
+leaf, and corrected with distinct archive/fixture variables and independent population checks:
+
+| Independent population | Correct measured count |
+| --- | --- |
+| Prior Git tree archive paths | 306 |
+| Committed task-history index rows | 306 |
+| Current filesystem archive files | 307 |
+| Newly sealed archive | 1 |
+
+The corrected audit rejects reported counts of `3`, `305` and `307`, including the original
+shadowed value. The native results, source bindings, payload verification and actual archive
+byte comparisons are unchanged. The incorrect report/program remain under
+`target/artifact-basename-controls/audit-counter-before-fix.*` for inspection; the corrected
+`audit.py` reproduces rejection of the stale count and writes the verified `audit.json`. The earlier mismatched parent-log filename
+also refused before publication and was corrected to the actual `parents.log` evidence.

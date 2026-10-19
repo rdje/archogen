@@ -53,6 +53,8 @@ a change that leaves it stale, so it is never edited by hand.
 ## B
 
 - Basename comparison reason — [Annex C: Trust proof records](annex-trust-proofs.md#basename-comparison-reason)
+- Basename grammar and all-output uniqueness — [Annex C: Trust proof
+  records](annex-trust-proofs.md#basename-grammar-and-all-output-uniqueness)
 - bedrock — [What this project relies on from outside](ledger.md#bedrock)
 - Before handing the workspace over — [Annex B: The checks that keep the repository
   honest](annex-repository.md#before-handing-the-workspace-over)
