@@ -5761,3 +5761,36 @@ from
 to
         let _ = file.sync_all();
 end
+
+mutation trust-compiler-prepare-failed-status-accepted
+file xtask/src/trust_compiler.rs
+test -p xtask -- trust::compiler::tests::actual_preparation_holds_status_output_and_selected_environment --exact
+expect killed
+why M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.1: A native callee leaves a real nonempty observer image but returns failure; preparation must preserve its diagnostic and refuse regardless of leftover output. Controlled component callee, not a claim of a real pinned compiler fault.
+from
+        if !result.status.success() {
+to
+        if false {
+end
+
+mutation trust-compiler-prepare-empty-output-accepted
+file xtask/src/trust_compiler.rs
+test -p xtask -- trust::compiler::tests::actual_preparation_holds_status_output_and_selected_environment --exact
+expect killed
+why M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.1: A native callee returns success with an empty observer image; preparation must refuse the empty output while a real nonempty image supports pinned-query recovery. Controlled component callee, not a claim of a real pinned compiler fault.
+from
+        if bytes.is_empty() {
+to
+        if false {
+end
+
+mutation trust-compiler-prepare-selected-environment-truncated
+file xtask/src/trust_compiler.rs
+test -p xtask -- trust::compiler::tests::actual_preparation_holds_status_output_and_selected_environment --exact
+expect killed
+why M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.1: The actual allowlist constructor selects the full environment. An independent native callee retains exactly what it received; forwarding only the first entry cannot satisfy the selected-key/value and closed-environment contract. Controlled component callee, not a claim of a real pinned compiler fault.
+from
+            .envs(env.iter().map(|(key, value)| (key, value)))
+to
+            .envs(env.iter().take(1).map(|(key, value)| (key, value)))
+end

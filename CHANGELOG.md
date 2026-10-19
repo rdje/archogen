@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold compiler preparation status, output and environment
+
+`ARCHOGEN-M3-0780` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.1`), `2026-10-19`.
+
+- Calibrate complete actual controller/real allowlist constructor against an independent native
+  callee; hold failed/nonempty, successful/empty and successful/nonempty with live pinned recovery.
+- New parent observes every selected environment key/value; catalogue3K and native3K/full178
+  finish only with its name, strict0. All1102 originals/copies restore;33 bindings/37 pins/12 falsifiers.
+- Preserve production, prior controls/reasons and old catalogue prefix; seal measurement/290 old
+  archives exactly. Publish full book scope/limits and live pointers; record-position validation next.
+
 ## archogen — measure the complete current compiler controller
 
 `ARCHOGEN-M3-0779` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.5`), `2026-10-19`.

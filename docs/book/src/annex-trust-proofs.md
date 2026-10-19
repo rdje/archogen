@@ -4517,3 +4517,86 @@ core check, followed by pinned book and final doctrine checks for completion doc
 The artifact/caller populations and wider source/premise/integration/review obligations remain
 open before F30. Next is `.6.1` preparation failure/output/environment control.
 
+### Compiler preparation boundary controls
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.6.1`: the preparation status, empty-output and
+selected-environment obligations now have finishing controls. Production preparation already
+contains the intended checks and forwarding. This slice adds a native component witness,
+permanent parent and regressions while preserving the production prefix exactly.
+
+The control compiles the complete actual controller with this project's actual JSON and
+embedded observer sources. It retains the real `catalog_build::environment` allowlist constructor.
+A test-only wrapper prepends a relative directory containing a controlled native callee to
+`PATH`; all other selected values remain unchanged. The helper captures the selected vector,
+and the independent C callee records the environment it actually receives as zero-delimited
+`KEY=VALUE` bytes. Comparison requires every key/value and rejects duplicates or inherited
+marker leakage. The selected keys are `PATH`, `HOME`, `RUSTUP_HOME`, `RUSTUP_TOOLCHAIN`,
+`CARGO_HOME`, `CARGO_TARGET_DIR`, `TMPDIR`, `TMP` and `TEMP`.
+
+The relative `PATH` component introduces no checkout-root delimiter into the test callee lookup.
+The constructor still creates repository-owned stores and canonical temporary paths. The
+standalone helper runs in an isolated child, so the test never changes the parent process's
+global environment. Controller source is embedded from the compiled test's context, including
+an actual native mutation; the pristine source-root hint is not substituted for it.
+
+The C callee checks the real preparation argument shape and nonempty source file. It then
+records its received environment and performs the selected output/status operation:
+
+| Controlled case | Native behavior | Required preparation result |
+| --- | --- | --- |
+| Failed | Copy a real pinned observer image, then return 7 with a deliberate diagnostic | Refuse and retain the useful failure diagnostic despite nonempty output |
+| Empty | Create an empty output and return 0 | Refuse the empty observer |
+| Success | Copy the real image and return 0 | Accept; install and run a fresh real pinned query |
+
+The image is first compiled by the ordinary pinned compiler. Nonempty outputs must match
+those bytes exactly and have executable permissions. In the successful case, the helper
+installs the prepared observer using the real base environment, compares a real `rustc -vV`
+query with an independent direct query, and requires the typed consumer to accept a query-only
+record without producing units. This is a controlled component callee, with real process,
+filesystem, status and environment effects; it does not claim to induce a genuine rustc
+internal failure or a physical I/O fault.
+
+Initial actual-source probes compile original plus each literal edit separately. Disabling
+the status check accepts the failed-but-nonempty case. Disabling the byte guard accepts the
+empty case. Forwarding only the first environment entry preserves those output cases but
+loses the rest of the selected environment. The original passes every independent expectation,
+and each actual variant fails its intended boundary. The permanent control is
+`trust::compiler::tests::actual_preparation_holds_status_output_and_selected_environment`;
+it passes directly in 1.08 seconds. The C and Rust helper fixtures are tracked under
+`scripts/fixtures/compiler_preparation_callee.c` and
+`scripts/fixtures/compiler_preparation_probe.rs`.
+
+```sh
+cargo test -p xtask trust::compiler::tests::actual_preparation_holds_status_output_and_selected_environment -- --exact
+cargo xtask mutate --timeouts-fail --only \
+  trust-compiler-prepare-failed-status-accepted \
+  trust-compiler-prepare-empty-output-accepted \
+  trust-compiler-prepare-selected-environment-truncated
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L72.cond.7 --only L80.cond.11 --only L68.chain.101
+```
+
+All maintained catalogue anchors pass. The catalogue regressions finish with the intended
+new parent in 1.7, 1.8 and 2.0 seconds. The bounded native replay uses all 178 current parent
+names: baseline 50 seconds, all three actual edits killed, only that new finishing name,
+strict exit 0 and no timeout, unjudged result or compiler refusal. The complete controller
+listing remains the original production population; this replay selects only these obligations.
+
+All 1102 original/current-copy regular inputs restore by bytes/modes and independent
+Python/system hashes. All 33 direct bindings and 37 public producer pins bind; twelve altered
+scope/source/replacement/name/outcome/count/exit/population receipts reject. Gitlinks remain
+metadata only. Removing the new parent recovers the entire previous controller exactly;
+the old catalogue remains an exact prefix, with three regressions appended. Other production,
+controls and reasons remain byte for byte unchanged. The committed measurement seals exactly
+with all 290 older archives unchanged.
+
+Held native tree `d79d96e319108baf2b68da46d89b432de2ef48d6` precedes completion-document and
+focused staging. Receipts, direct original/literal calibration and retained component outputs
+are under `target/compiler-prepare-controls/`. Supplemental audit SHA-256:
+`2bb6af43d44b09aa5bcc2d78b09a717f46af95e20e823eabe474f68d2c8a0699`.
+Final staged focused/book/doctrine checks close this slice. The original controller result
+remains its dated measurement; remaining ownership groups require their own controls and
+final complete replay. Next is record validation across real multi-record inputs.
+

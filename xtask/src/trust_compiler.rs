@@ -369,6 +369,132 @@ mod tests {
     }
 
     #[test]
+    fn actual_preparation_holds_status_output_and_selected_environment() {
+        crate::trust_test_process::bounded!(
+            actual_preparation_holds_status_output_and_selected_environment
+        );
+        use std::collections::{BTreeMap, BTreeSet};
+        fn environment_record(bytes: &[u8]) -> BTreeMap<Vec<u8>, Vec<u8>> {
+            assert_eq!(bytes.last(), Some(&0));
+            let mut result = BTreeMap::new();
+            for field in bytes[..bytes.len() - 1].split(|byte| *byte == 0) {
+                let equals = field.iter().position(|byte| *byte == b'=').unwrap();
+                assert!(result
+                    .insert(field[..equals].to_vec(), field[equals + 1..].to_vec())
+                    .is_none());
+            }
+            result
+        }
+        let (out, compiler, session, base) = setup("prepare-component");
+        let bin = out.join("callee");
+        fs::create_dir(&bin).unwrap();
+        native_fixture(
+            &bin,
+            "rustc",
+            include_str!("../../scripts/fixtures/compiler_preparation_callee.c"),
+            &base,
+        );
+        fs::copy(&compiler.executable, bin.join("seed-observer")).unwrap();
+        let canonical_bin = fs::canonicalize(&bin).unwrap();
+        // The relative PATH component also works when the repository root contains a colon.
+        let relative_bin = canonical_bin.strip_prefix(&session.cwd).unwrap();
+        let sources = out.join("component");
+        fs::create_dir(&sources).unwrap();
+        fs::write(
+            sources.join("controller.rs"),
+            include_str!("trust_compiler.rs"),
+        )
+        .unwrap();
+        fs::write(sources.join("json.rs"), include_str!("json.rs")).unwrap();
+        fs::write(sources.join("trust_compiler_observer.rs"), super::SOURCE).unwrap();
+        fs::write(
+            sources.join("probe.rs"),
+            include_str!("../../scripts/fixtures/compiler_preparation_probe.rs"),
+        )
+        .unwrap();
+        // Keep the real allowlist constructor; the helper changes only executable selection.
+        let catalog = include_str!("catalog_build.rs");
+        let start = catalog.find("pub fn environment(").unwrap();
+        let tail = &catalog[start..];
+        let end = tail.find("\nfn command(").unwrap();
+        let selected =
+            tail[..end].replacen("pub fn environment(", "pub fn selected_environment(", 1);
+        fs::write(sources.join("base_environment.rs"), selected).unwrap();
+        let helper = sources.join("probe");
+        let built = Command::new("rustc")
+            .args(["--edition=2021", "--crate-name", "prepare_component"])
+            .arg(sources.join("probe.rs"))
+            .arg("-o")
+            .arg(&helper)
+            .env_clear()
+            .envs(base.iter().cloned())
+            .output()
+            .unwrap();
+        assert!(built.status.success(), "{built:?}");
+        let expected_keys: BTreeSet<_> = [
+            "PATH",
+            "HOME",
+            "RUSTUP_HOME",
+            "RUSTUP_TOOLCHAIN",
+            "CARGO_HOME",
+            "CARGO_TARGET_DIR",
+            "TMPDIR",
+            "TMP",
+            "TEMP",
+        ]
+        .into_iter()
+        .map(|key| key.as_bytes().to_vec())
+        .collect();
+        for (mode, expected) in [
+            (
+                "failed",
+                "refused:compiler provenance observer build failed: controlled compiler failure\n",
+            ),
+            ("empty", "refused:compiler provenance observer is empty\n"),
+            ("success", "accepted\nquery-ok\n"),
+        ] {
+            let case = out.join(mode);
+            let result = Command::new(&helper)
+                .arg(&case)
+                .arg(out.join("cargo-home"))
+                .current_dir(&session.cwd)
+                .env_clear()
+                .envs(base.iter().cloned())
+                .env("ARCHOGEN_TEST_COMPILER_BIN", relative_bin)
+                .env("ARCHOGEN_TEST_UNDECLARED", "must-not-reach-callee")
+                .output()
+                .unwrap();
+            assert!(result.status.success(), "{mode}: {result:?}");
+            assert!(result.stderr.is_empty(), "{mode}: {result:?}");
+            let directories: Vec<_> = fs::read_dir(case.join("compiler-provenance"))
+                .unwrap()
+                .map(|entry| entry.unwrap().path())
+                .collect();
+            assert_eq!(directories.len(), 1, "{mode}");
+            let directory = &directories[0];
+            let selected =
+                environment_record(&fs::read(directory.join("selected-environment.bin")).unwrap());
+            assert_eq!(
+                selected.keys().cloned().collect::<BTreeSet<_>>(),
+                expected_keys
+            );
+            let received =
+                environment_record(&fs::read(directory.join("environment.bin")).unwrap());
+            assert_eq!(
+                received, selected,
+                "{mode}: selected environment was not forwarded"
+            );
+            assert_eq!(result.stdout, expected.as_bytes(), "{mode}");
+            let output = fs::read(directory.join("observer")).unwrap();
+            if mode == "empty" {
+                assert!(output.is_empty());
+            } else {
+                assert_eq!(output, compiler.bytes, "{mode}");
+            }
+        }
+    }
+
+    #[test]
     fn actual_observer_sync_failure_retains_partial_evidence_and_recovers() {
         crate::trust_test_process::bounded!(
             actual_observer_sync_failure_retains_partial_evidence_and_recovers

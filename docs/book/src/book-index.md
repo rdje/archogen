@@ -105,6 +105,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#compiler-command-provenance-assessment)
 - Compiler environment admission regressions — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-environment-admission-regressions)
+- Compiler preparation boundary controls — [Annex C: Trust proof
+  records](annex-trust-proofs.md#compiler-preparation-boundary-controls)
 - Compiler provenance commit ledger — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-provenance-commit-ledger)
 - Compiler provenance compatibility checkpoint — [Annex C: Trust proof
