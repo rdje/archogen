@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — assess current caller suffix producer domain
+
+`ARCHOGEN-M3-0804` (leaf `M3.6.9.6.3.2.2.15.2.1.4.1`), `2026-10-19`.
+
+- Current exact caller pair remains native2S/full196 strict1; all1133 original/copy inputs
+  restore. Complete discovery1404 and historical/current source mappings revalidated.
+- Successful admitted mixed-library/incremental path distinguishes the whole contains edit:
+  actual b.d versus wrong lookup/no inventory; original/relocated/ordinary controls succeed.
+- Real28 compilations/13 inventories/four consumers37,39 direct/37 existing plus one producer
+  pin; ten native/five public/three consumer falsifiers reject; source/tests/reasons exact.
+- Artifact container seals exact two bodies/314 older archives/fourteen prior stubs; corrected
+  supplemental archive assumption retained. Twelve commit notes route verbatim to the
+  unbounded book with exact reconstruction/source coverage. Book/live/doc gates; next P1 control
+  then separate literal assessment/proof and bounded checkpoint. No E or adequacy closure.
+
 ## archogen — complete final artifact checkpoint
 
 `ARCHOGEN-M3-0803` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.15`), `2026-10-19`.

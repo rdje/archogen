@@ -66,6 +66,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 - Caller binding and first checkpoint result — [Annex C: Trust proof
   records](annex-trust-proofs.md#caller-binding-and-first-checkpoint-result)
+- Caller suffix producer assessment — [Annex C: Trust proof
+  records](annex-trust-proofs.md#caller-suffix-producer-assessment)
 - Canonical form — [Reading a description](reading.md#canonical-form)
 - **capability vocabulary** — [definition](glossary.md), [Modules and composition](modules.md), [Checking a
   description](checking.md), [Matching an offer to a requirement](matching.md), [The engine API](engine-api.md)
