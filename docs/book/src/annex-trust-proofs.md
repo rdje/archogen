@@ -6749,3 +6749,85 @@ are untracked in `target/artifact-metadata-roots/`; the tracked parent and nativ
 above reproduce the behavior and mutation result. Final staged focused/book/commit checks
 complete this leaf. Reported-output diagnostic ordering is next; complete artifact/caller/global
 adequacy remains separately owned and open.
+
+### First reported output failure
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.12`: a permanent bounded parent now holds
+the first failing basename in a supplied compiler-output response. Artifact validation reports
+that basename through the build result and inventory diagnostic. This lets the user start
+with the earliest reported output problem for that response.
+
+This is a diagnostic contract. It neither promises that the compiler emits the same output
+order across runs nor claims that reversing validation changes valid artifact selection.
+It holds the existing forward traversal and first-error attribution rather than creating a
+successful-selection defect from a different error name.
+
+#### Literal order controls with real filesystem witnesses
+
+The parent starts with the regular library-output fixture: a shared-library file, a sole
+selected rlib and a static-library file. It confirms valid selection and its independently
+verified payload hash, then removes both nonselected files. Separate metadata lookups must
+confirm that both are missing before the selector sees the response.
+
+| Supplied response order | Required first failing basename |
+| --- | --- |
+| shared, rlib, static | shared |
+| static, rlib, shared | static |
+| rlib, shared, static | shared |
+| rlib, static, shared | static |
+| shared, static, rlib | shared |
+| static, shared, rlib | static |
+
+Each expected first name is literal in the parent. The selected rlib remains valid, so
+missing nonselected outputs test the full validation path. The error must begin with the
+expected basename and its attribution separator; the operating system's remaining error
+wording is not fixed.
+
+After the query returns, the parent restores both missing files and confirms valid
+selection before asserting the diagnostic. Every resulting fixture therefore recovers even
+when the mutation makes that assertion fail. Both normal and mutated runs retain the
+unchanged selected payload and the complete regular output population.
+
+#### Actual reversal and scoped native result
+
+| Exact edit | Earlier complete measurement | New result |
+| --- | --- | --- |
+| `L89.dir.61`, response `split` becomes `rsplit` | S | K, required first-failure parent |
+
+The copied mutant reports the static-library name for the initial response, while the
+original reports the shared-library name. Its existing rlib selection remains valid after
+fixture recovery. The original completes every literal response order; the copied parent
+fails its initial diagnostic assertion after restoring all payloads. No later copied case is
+inferred. The unchanged production caller propagates the helper's error through `build`
+into the inventory failure text.
+
+```text
+trust::artifact::tests::output_diagnostics_name_the_first_failure_in_the_reported_order
+```
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L89.dir.61
+```
+
+`2026-10-19`: the selected edit finishes killed against all 196 current trust parents, strict
+exit `0`, with the new parent in the actual failure list. No selected survivor, equivalent,
+compiler refusal, timeout or unjudged outcome occurs. All 1128 original/copied regular
+inputs restore with independent Python/system hashes and modes; all 38 direct bindings and
+37 pinned public producer sources agree. Invented-parent, missing-result, changed-outcome,
+changed-exit and duplicate-result receipts refuse. The metadata leaf seals exactly; all
+310 prior task archives remain byte-exact with independent population checks.
+Production, all previous tests and the finite pipe fixture remain unchanged.
+
+Held native tree `2a0cfbff07e83b4bc312a600d18f87f3be885786` precedes completion documentation.
+Whole artifact file SHA-256 `7bb0d87d15f8f48356a39ef4bad371e8d4a28955176a9980704059cea7bc3001`;
+its production prefix remains exact. Local supplemental audit SHA-256
+`9550dabad17d661c06ced0c32534d8558a0df85dcc7b671b31ad17dac80f2dc8`
+binds the original order cases, actual copied diagnostic/failure point, both recovered payload
+fixtures, caller/source preservation, restoration, archives and false receipts. Supplemental
+programs/observations are untracked in `target/artifact-output-order/`; the tracked parent and
+native command above reproduce the behavior and mutation result. Final staged focused/book/commit
+checks complete this leaf. The explicit symlink term is next; complete artifact/caller/global
+adequacy remains separately owned and open.

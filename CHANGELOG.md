@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — preserve first-reported artifact failure diagnostics
+
+`ARCHOGEN-M3-0800` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.12`), `2026-10-19`.
+
+- Hold the first failing basename for every literal output order with a valid rlib and
+  independently missing nonselected files; restore complete payloads before assertions.
+- Exact split-direction survivor becomes native1K/full196 strict0;1128 inputs restore,
+  38 bindings/37 pins/five false receipts; actual copied later-name diagnostic verified.
+- Metadata seal/310 prior archives and older production/tests exact; no acceptance
+  defect or compiler-order promise claimed. Book/live and final staged focused gates.
+
 ## archogen — preserve complete metadata source roots
 
 `ARCHOGEN-M3-0799` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.11`), `2026-10-19`.

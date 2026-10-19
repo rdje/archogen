@@ -247,6 +247,7 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#finished-work-leaves-the-task-trees)
 - Finite Cargo path iterator proofs — [Annex C: Trust proof
   records](annex-trust-proofs.md#finite-cargo-path-iterator-proofs)
+- First reported output failure — [Annex C: Trust proof records](annex-trust-proofs.md#first-reported-output-failure)
 - freertos-kernel — [What this project relies on from outside](ledger.md#freertos-kernel)
 - fsmgen — [What this project relies on from outside](ledger.md#fsmgen)
 

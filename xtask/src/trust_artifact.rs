@@ -1393,6 +1393,50 @@ mod tests {
     }
 
     #[test]
+    fn output_diagnostics_name_the_first_failure_in_the_reported_order() {
+        crate::trust_test_process::bounded!(
+            output_diagnostics_name_the_first_failure_in_the_reported_order
+        );
+        let fixture = OutputFiles::new("artifact-output-order");
+        let [shared, rlib, other] = fixture.names;
+        for (index, (names, first)) in [
+            ([shared, rlib, other], shared),
+            ([other, rlib, shared], other),
+            ([rlib, shared, other], shared),
+            ([rlib, other, shared], other),
+            ([shared, other, rlib], shared),
+            ([other, shared, rlib], other),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            fixture.good();
+            for name in [shared, other] {
+                fs::remove_file(fixture.out.join(name)).unwrap();
+                assert_eq!(
+                    fs::symlink_metadata(fixture.out.join(name))
+                        .unwrap_err()
+                        .kind(),
+                    std::io::ErrorKind::NotFound
+                );
+            }
+            let stdout = format!("{}\n", names.join("\n"));
+            let result = outputs(stdout.as_bytes(), &fixture.out, &fixture.target, true);
+            // Recover the entire fixture even when the diagnostic assertion will fail.
+            for name in [shared, other] {
+                fixture.restore(name);
+            }
+            fixture.good();
+            let error = result.unwrap_err();
+            fs::write(fixture.base.join(format!("case-{index}.result")), &error).unwrap();
+            assert!(
+                error.starts_with(&format!("{first}: ")),
+                "{names:?}: {error}"
+            );
+        }
+    }
+
+    #[test]
     fn actual_empty_input_query_preserves_build_and_ignores_now_invalid_source() {
         crate::trust_test_process::bounded!(
             actual_empty_input_query_preserves_build_and_ignores_now_invalid_source
