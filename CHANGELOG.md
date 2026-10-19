@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold exact compilation emit-marker validation
+
+`ARCHOGEN-M3-0783` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.4`), `2026-10-19`.
+
+- Corrupt only the emit marker of a real compilation record; require precise unknown-shape
+  refusal for substring/extra-name/bare markers, unchanged evidence and exact recovery.
+- Original passes/both actual edits fail; permanent/native2K/full181 strict0,
+  1105 originals/copies restored,33 bindings/37 pins/12 altered receipts rejected.
+- Preserve prior production/tests/catalogue/reasons and internal-NUL seal/293 older archives.
+  Publish complete book scope and live pointers; final focused/staged gates, installed bytes next.
+
 ## archogen — hold internal NUL validation in compiler records
 
 `ARCHOGEN-M3-0782` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.3`), `2026-10-19`.

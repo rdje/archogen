@@ -203,6 +203,8 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#every-crate-is-in-this-book)
 - Every diagnostic shown in this book is a real run — [Annex B: The checks that keep the repository
   honest](annex-repository.md#every-diagnostic-shown-in-this-book-is-a-real-run)
+- Exact compilation emit-marker validation — [Annex C: Trust proof
+  records](annex-trust-proofs.md#exact-compilation-emit-marker-validation)
 - Exact, always — [Quantities and units](quantities.md#exact-always)
 - Exact-entry measurements — [Generated-sources test adequacy](trust-adequacy.md#exact-entry-measurements)
 - Exactly one primitive is trusted — [Kinds and schemas](kinds.md#exactly-one-primitive-is-trusted)

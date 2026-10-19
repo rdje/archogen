@@ -4756,3 +4756,63 @@ Supplemental audit SHA-256:
 Final focused/book/doctrine checks close this slice. Exact compilation emit-marker validation
 is next; the final complete controller replay remains separately owned.
 
+### Exact compilation emit-marker validation
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.6.4`: the compilation-record shape check now has
+a permanent control for the exact `--emit=` prefix. The original production check remains
+unchanged.
+
+The control creates a real observer session, compiles a program with the pinned compiler,
+requires successful status and empty diagnostics, and executes the resulting program.
+It independently compares the complete compilation vector returned by the consumer with
+the supplied arguments, then retains the exact producer-record bytes.
+
+`2026-10-19`: each case changes only the emit argument in that real record:
+
+| Changed argument | Boundary held |
+| --- | --- |
+| `prefix--emit=dep-info,link` | The marker must start the argument |
+| `--emit-extra=dep-info,link` | Extra name text before the equals sign is refused |
+| `--emit` | The equals sign is required |
+
+The compiler name, crate-name marker, output-directory marker and their values remain intact.
+Each case requires the explicit unknown-invocation-shape refusal and unchanged corrupted bytes.
+Restoring the original record must restore the exact accepted compilation vector and bytes.
+These are consumer corruption controls, not claims that Cargo emitted the changed argument
+shapes or that the underlying compiler executed them. The control holds prefix recognition;
+it does not claim to replace the compiler's option-value parser or downstream artifact checks.
+
+The permanent parent is
+`trust::compiler::tests::actual_compilation_records_require_the_exact_emit_marker`.
+
+```sh
+cargo test -p xtask trust::compiler::tests::actual_compilation_records_require_the_exact_emit_marker -- --exact
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L265.dir.85 --only L265.lit.86
+```
+
+Actual-source calibration runs the original and each literal edit separately. The original
+succeeds. Replacing the prefix test with a substring test accepts the prefixed decoy; shortening
+the tested literal to `--emit` accepts the extra-name form. Each variant compiles and finishes
+with the intended failed-test summary. The permanent parent passes directly in 0.77 seconds.
+
+`2026-10-19`: native baseline 56 seconds; both actual edits finish killed by only the new
+parent against all 181 current trust parent names, strict exit 0. There is no timeout, unjudged
+result, compiler refusal or equivalence judgment in this selected replay.
+
+`2026-10-19`: all 1105 original/current-copy inputs restore by bytes, modes and independent
+Python/system hashes. All 33 direct bindings and 37 public source pins agree. Twelve altered
+source/scope/replacement/name/outcome/count/exit/population receipts reject. Removing the new
+parent reconstructs the entire previous controller exactly. Other production, prior tests,
+catalogue and reasons are unchanged. The committed internal-NUL body seals exactly, and all
+293 earlier archives retain their bytes.
+
+Held native tree `a596c2190204f09b9a72399f0c7f23d8e84f41a6` precedes completion documentation
+and final focused staging. Raw calibration and receipts are under `target/compiler-emit-marker/`.
+Supplemental audit SHA-256:
+`45f7cb2ad33b21ff8772b69212bb3fc1cee1a728eef3e6b5e95f1104465db95f`.
+Final focused/book/doctrine checks close this slice. Installed-observer byte verification is
+next; final complete controller replay remains separately owned.
+

@@ -1387,6 +1387,71 @@ fn main() {{ println!("worker-{index}"); }}
     }
 
     #[test]
+    fn actual_compilation_records_require_the_exact_emit_marker() {
+        crate::trust_test_process::bounded!(
+            actual_compilation_records_require_the_exact_emit_marker
+        );
+        let (out, _, session, base) = setup("emit-marker");
+        let source = out.join("probe.rs");
+        let compiled = out.join("compiled");
+        fs::create_dir(&compiled).unwrap();
+        fs::write(&source, "fn main() { println!(\"emit-control\"); }\n").unwrap();
+        let arguments = [
+            "rustc",
+            "--crate-name",
+            "emit_control",
+            "--emit=dep-info,link",
+            "--out-dir",
+            compiled.to_str().unwrap(),
+            source.to_str().unwrap(),
+        ];
+        let result = run(&session, &base, &arguments);
+        assert!(result.status.success(), "{result:?}");
+        assert!(result.stderr.is_empty());
+        let expected = vec![arguments.map(str::to_owned).to_vec()];
+        assert_eq!(session.invocations().unwrap(), expected);
+        let result = Command::new(compiled.join("emit_control"))
+            .output()
+            .unwrap();
+        assert!(result.status.success());
+        assert_eq!(result.stdout, b"emit-control\n");
+        let files = fs::read_dir(&session.records)
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .collect::<Vec<_>>();
+        assert_eq!(files.len(), 1);
+        let file = &files[0];
+        let bytes = fs::read(file).unwrap();
+        for marker in [
+            "prefix--emit=dep-info,link",
+            "--emit-extra=dep-info,link",
+            "--emit",
+        ] {
+            assert_eq!(session.invocations().unwrap(), expected);
+            let mut value = json::parse(std::str::from_utf8(&bytes).unwrap()).unwrap();
+            let Json::Object(fields) = &mut value else {
+                panic!("producer object")
+            };
+            let Some(Json::Array(encoded)) = fields.get_mut("argv_hex") else {
+                panic!("producer argv")
+            };
+            assert_eq!(encoded[3], hex("--emit=dep-info,link"));
+            encoded[3] = hex(marker);
+            let changed = json::write(&value) + "\n";
+            fs::write(file, &changed).unwrap();
+            let error = session.invocations().expect_err("invalid emit marker");
+            assert!(
+                error.contains("unknown compiler provenance invocation shape"),
+                "{marker}: {error}"
+            );
+            assert_eq!(fs::read(file).unwrap(), changed.as_bytes());
+            fs::write(file, &bytes).unwrap();
+            assert_eq!(session.invocations().unwrap(), expected);
+            assert_eq!(fs::read(file).unwrap(), bytes);
+        }
+    }
+
+    #[test]
     fn actual_records_refuse_remaining_field_range_byte_and_shape_boundaries() {
         crate::trust_test_process::bounded!(
             actual_records_refuse_remaining_field_range_byte_and_shape_boundaries
