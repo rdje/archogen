@@ -7,7 +7,7 @@ mean something precise in this project. Each entry points to the chapter that tr
 This page is kept true by a check, not by care. `scripts/check_book_glossary.sh` (the `BOOK-GLOSSARY` gate)
 refuses a change whose chapters use an acronym this page does not define, or that leaves an entry here that no
 chapter uses any more. Code, file names and the project's own identifiers — milestones such as `M2`, fixtures such
-as `F26`, task-tree leaves — are names, not words, and are not listed.
+as `F26`, task-tree leaves — are names, not words, and are not listed. Historical records retained verbatim can use a name as prose; an entry then explains that historical usage.
 
 ## Acronyms and abbreviations
 
@@ -74,6 +74,7 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
   [What this project relies on from outside](ledger.md).
 - **LF** — line feed: the control character used as a newline on Unix, also preserved inside native arguments.
   See [Compiler provenance](annex-trust-proofs.md#compiler-provenance-contract-and-prototype).
+- **LLVM** — the compiler infrastructure named in the historical wider-argument controls, where options are passed to Rust’s compiler backend. See [the retained records](annex-trust-proofs.md#supported-regression-commit-note-routing).
 - **MCP** — Model Context Protocol: the protocol through which an AI agent calls a tool; archogen's server speaks it.
   See [The engine API](engine-api.md) and [the specification's ledger entry](ledger.md#mcp-specification).
 - **MEI**, **MSI**, **MTI** — Machine External, Software and Timer Interrupt: RISC-V's interrupts for its most
@@ -99,6 +100,7 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
   [its specification's ledger entry](ledger.md#riscv-plic).
 - **POSIX** — Portable Operating System Interface: the standard Unix-like interface; not the first profile's. See
   [The supported profile](profile.md).
+- **PROGRAM** — the project’s engineering and workflow task tree, named in retained historical verification records. See [the retained records](annex-trust-proofs.md#supported-regression-commit-note-routing).
 - **QEMU** — the open-source machine emulator ("Quick EMUlator") that runs archogen's first target. See [Where
   generated systems run](targets.md) and [its ledger entry](ledger.md#qemu).
 - **R24-11** — AUTOSAR's release of November 2024: a version, not an acronym. See [What this project relies on from

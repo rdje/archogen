@@ -355,6 +355,7 @@ a change that leaves it stale, so it is never edited by hand.
 - **LCOFI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **LF** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - linkedspec — [What this project relies on from outside](ledger.md#linkedspec)
+- **LLVM** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Local build storage — [Where the engine's knowledge comes from: the catalog](catalog.md#local-build-storage)
 - --locked is refused, not ignored — [The S0 early generation path](s0.md#--locked-is-refused-not-ignored)
 
@@ -468,6 +469,7 @@ a change that leaves it stale, so it is never edited by hand.
   is versioned, and what changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md),
   [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
   records](annex-trust-proofs.md)
+- **PROGRAM** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Promised narrowing spellings — [Generated-sources test adequacy](trust-adequacy.md#promised-narrowing-spellings)
 - **provenance** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What a report may
   claim](evidence.md), [Checks that must not share a mistake: the trust gate](trust.md), [Generated-sources test
@@ -588,6 +590,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Status is derived, never written — [Where the engine's knowledge comes from: the
   catalog](catalog.md#status-is-derived-never-written)
 - **STI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
+- Supported no-suffix collector regression — [Annex C: Trust proof
+  records](annex-trust-proofs.md#supported-no-suffix-collector-regression)
 - Survivor ownership reconciliation — [Annex C: Trust proof
   records](annex-trust-proofs.md#survivor-ownership-reconciliation)
 - Syntax evidence before semantic classification — [Generated-sources test

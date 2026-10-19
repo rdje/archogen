@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — preserve no-suffix dep-info selection under incremental paths
+
+`ARCHOGEN-M3-0806` (leaf `M3.6.9.6.3.2.2.15.2.1.4.2.1`), `2026-10-19`.
+
+- One bounded actual admitted mixed-library parent holds ordinary/captured incremental/
+  recovered builds, literal b.d and unit/source hashes, retained rlib and real consumer37.
+- Exact caller contains edit becomes native1K/full198 strict0, sole intended name after
+  recovery/consumer marker; production/helper/older parents and raw1404 remain exact.
+- All1134 original/copy inputs restore,39 bindings/37 existing plus one producer pin;
+  nine native/two marker falsifiers,316 unchanged archives and independent counts pass.
+- Retained-rlib variance is compiler location metadata, confirmed by equal object bytes
+  and diagnostic remapped replay; actual-artifact contract retained. Twelve completed notes
+  route verbatim into the unbounded book with independent reconstruction/source checks.
+- Book/live and final staged focused gates; regression group closes after its committed
+  hash prerequisite. Separate no-equals prefix assessment/proof next; full adequacy open.
+
 ## archogen — hash observed artifacts independently of filename escaping
 
 `ARCHOGEN-M3-0805` (leaf `M3.6.9.6.3.2.2.15.2.1.4.2.0`), `2026-10-19`.

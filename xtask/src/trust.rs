@@ -5979,6 +5979,176 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn dep_info_suffix_does_not_match_an_incremental_output_path() {
+        use std::io::Write as _;
+        use std::process::Stdio;
+
+        crate::trust_test_process::bounded!(
+            dep_info_suffix_does_not_match_an_incremental_output_path
+        );
+        // The reviewed mixed library has an unhashed dep-info name on the pinned producer.
+        let library = manifest("b", "[lib]\ncrate-type = [\"rlib\", \"dylib\"]\n");
+        let rule = concat!(
+            "`crates/b/Cargo.toml`: `lib.crate-type` holds `crate-type`, ",
+            "which can make the package another kind of crate"
+        );
+        let roots = format!(
+            "{ROOTS}{}(defprogram dynamic (package \"crates/b\") (target dylib b) \
+             (reason \"explicit alternate output\") (role-packages \"crates/b\"))\n",
+            admit("crates/b/Cargo.toml", rule, &library),
+        );
+        let f = two_roots(
+            "dep-info-extra-filename=inside",
+            "fn main() {}\n",
+            "pub fn check() -> u8 { 37 }\n",
+            &[
+                ("crates/b/Cargo.toml", library),
+                ("trust/roots.eadl", roots),
+            ],
+        );
+        let check_units = |inventory: &Json| {
+            for (name, package, crate_name, source, expected) in [
+                (
+                    "gen",
+                    "crates/a",
+                    "a",
+                    "crates/a/src/main.rs",
+                    "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+                ),
+                (
+                    "chk",
+                    "crates/b",
+                    "b",
+                    "crates/b/src/lib.rs",
+                    "a746195f0d21200b88bfa6608912329fec0d6b4b19c2f09a0e75628a1eada50b",
+                ),
+            ] {
+                let units = program(inventory, name).get("units").unwrap().elements();
+                assert_eq!(units.len(), 1, "{name}");
+                assert_eq!(
+                    units[0].get("package").and_then(Json::as_str),
+                    Some(package)
+                );
+                assert_eq!(
+                    units[0].get("crate").and_then(Json::as_str),
+                    Some(crate_name)
+                );
+                assert_eq!(
+                    units[0].get("files"),
+                    Some(&super::obj(vec![(source, super::s(expected))]))
+                );
+            }
+            assert_eq!(
+                program(inventory, "chk")
+                    .get("artifact")
+                    .unwrap()
+                    .get("path")
+                    .and_then(Json::as_str),
+                Some("release/deps/libb.rlib"),
+            );
+        };
+        let ordinary = written(f.run());
+        check_units(&ordinary);
+        observed_artifact(&f, &ordinary, "chk");
+
+        f.commit(&[(
+            "Cargo.toml",
+            format!("{WS}\n[profile.release]\nincremental = true\n"),
+        )]);
+        let incremental = std::panic::catch_unwind(|| {
+            inventory_with(&f.repo, "HEAD", &f.base.join("out"), &configuration_roots())
+        });
+        // Retain the genuine products before the next clean inventory replaces them.
+        let deps = f.base.join("out/target/chk/release/deps");
+        let dep_info = std::fs::read(deps.join("b.d")).unwrap();
+        assert!(String::from_utf8(dep_info.clone())
+            .unwrap()
+            .contains("crates/b/src/lib.rs"));
+        let dep_names: Vec<_> = std::fs::read_dir(&deps)
+            .unwrap()
+            .map(|entry| entry.unwrap())
+            .filter(|entry| entry.path().extension() == Some(OsStr::new("d")))
+            .map(|entry| entry.file_name())
+            .collect();
+        assert_eq!(dep_names, vec![std::ffi::OsString::from("b.d")]);
+        let bytes = std::fs::read(deps.join("libb.rlib")).unwrap();
+        assert!(bytes.starts_with(b"!<arch>\n"));
+        let saved_library = f.base.join("libb-incremental-before.rlib");
+        std::fs::write(&saved_library, &bytes).unwrap();
+        std::fs::write(f.base.join("incremental-before.d"), dep_info).unwrap();
+        let mut hash = Command::new("shasum")
+            .args(["-a", "256"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let sent = hash.stdin.take().unwrap().write_all(&bytes);
+        let hashed = hash.wait_with_output().unwrap();
+        sent.unwrap();
+        assert!(hashed.status.success());
+        let digest = String::from_utf8(hashed.stdout)
+            .unwrap()
+            .split_whitespace()
+            .next()
+            .unwrap()
+            .to_owned();
+        let result = match &incremental {
+            Ok(Ok(Outcome::Written(_))) => "written".to_owned(),
+            Ok(Ok(Outcome::Refused(why))) => format!("refused: {why:?}"),
+            Ok(Err(why)) => format!("error: {why}"),
+            Err(_) => "panicked".to_owned(),
+        };
+        std::fs::write(f.base.join("incremental-result.txt"), result).unwrap();
+
+        // Recover before judging the captured incremental result, including in the edit.
+        f.commit(&[("Cargo.toml", WS.to_owned())]);
+        let recovered = written(f.run());
+        check_units(&recovered);
+        observed_artifact(&f, &recovered, "chk");
+        let consumer = f.base.join("incremental-consumer.rs");
+        std::fs::write(&consumer, "fn main() { println!(\"{}\", b::check()); }\n").unwrap();
+        let executable = f.base.join("incremental-consumer");
+        let built = Command::new("rustc")
+            .env("RUSTUP_TOOLCHAIN", "1.95.0")
+            .args(["--edition=2021", "--crate-name", "dep_info_suffix_consumer"])
+            .arg(&consumer)
+            .arg("--extern")
+            .arg(format!("b={}", saved_library.display()))
+            .arg("-o")
+            .arg(&executable)
+            .output()
+            .unwrap();
+        assert!(
+            built.status.success(),
+            "{}",
+            String::from_utf8_lossy(&built.stderr)
+        );
+        let ran = Command::new(executable).output().unwrap();
+        assert!(ran.status.success());
+        assert_eq!(ran.stdout, b"37\n");
+        std::fs::write(
+            f.base.join("incremental-recovery.txt"),
+            "recovered\nconsumer=37\n",
+        )
+        .unwrap();
+        let inventory = written(
+            incremental
+                .expect("incremental collection must not panic")
+                .expect("the literal no-suffix dep-info file must be read"),
+        );
+        check_units(&inventory);
+        assert_eq!(
+            program(&inventory, "chk")
+                .get("artifact")
+                .unwrap()
+                .get("sha256")
+                .and_then(Json::as_str),
+            Some(digest.as_str()),
+        );
+    }
+
+    #[test]
     fn observed_artifact_metadata_distinguishes_harness_and_same_named_binary() {
         crate::trust_test_process::bounded!(
             observed_artifact_metadata_distinguishes_harness_and_same_named_binary

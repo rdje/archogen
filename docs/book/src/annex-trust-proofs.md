@@ -7959,3 +7959,187 @@ The final still-tree focused tier must pass before this leaf commits, including 
 format/lint, the full contract suite and existing operator proof controls. The next owned
 leaf `.15.2.1.4.2.1` adds the actual admitted no-suffix/incremental-path collector regression.
 Caller/global adequacy and the separate no-equals-prefix assessment remain open.
+
+### Supported no-suffix collector regression
+
+`2026-10-19`, leaf `.15.2.1.4.2.1`: the exact caller substring edit `L729.dir.201` now
+finishes as a named kill against the complete current semantic cohort. The permanent public
+input succeeds before and after its incremental phase, retains genuine compiler products,
+and runs the actual library consumer before judging the captured result. Production code
+remains unchanged; this closes the owned substring test-adequacy obligation.
+
+#### Complete admitted input and independent expectations
+
+The fixture has an ordinary binary root `a` and library root `b`. All paths in this input
+and the source table are relative to the generated fixture root. The library manifest
+explicitly requests these outputs:
+
+```toml
+[lib]
+crate-type = ["rlib", "dylib"]
+```
+
+Its full manifest SHA-256 is `900157f2b6cfaa42f7526b2b12e936ece4fab7c48daccbfb1341b6caa65d4ae4`. The actual roots/admission/classification
+input is retained here, with the exact hash and rule rather than an inferred bypass:
+
+<pre><code class="language-lisp">(defroot gen (role generator) (package "crates/a") (target bin a) (role-packages "crates/a"))
+(defroot chk (role scheduling-checker) (package "crates/b") (target lib) (role-packages "crates/b"))
+(defadmit (file "crates/b/Cargo.toml") (rule "&#96;crates/b/Cargo.toml&#96;: &#96;lib.crate-type&#96; holds &#96;crate-type&#96;, which can make the package another kind of crate") (sha256 "900157f2b6cfaa42f7526b2b12e936ece4fab7c48daccbfb1341b6caa65d4ae4") (reason "a fixture"))
+(defprogram dynamic (package "crates/b") (target dylib b) (reason "explicit alternate output") (role-packages "crates/b"))</code></pre>
+
+The ordinary workspace has the standard explicit member set. Only the captured phase adds:
+
+```toml
+[profile.release]
+incremental = true
+```
+
+The fixture path contains literal `extra-filename=inside`. The pinned producer's admitted
+mixed-library case has no extra-filename operand and emits literal `b.d` and `libb.rlib`.
+The [producer assessment](#caller-suffix-producer-assessment) binds that optional branch to
+published source and actual accepted inputs
+([toolchain ledger](ledger.md#rust-toolchain)). The test requires the literal dep-info
+basename independently of the matcher. It also requires the exact unit/package/source set
+and these known source hashes:
+
+| Unit | Literal source | Independent expected SHA-256 |
+| --- | --- | --- |
+| `a / crates/a` | `"crates/a/src/main.rs"` | `536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4` |
+| `b / crates/b` | `"crates/b/src/lib.rs"` | `a746195f0d21200b88bfa6608912329fec0d6b4b19c2f09a0e75628a1eada50b` |
+
+#### Successful phases and a finishing failure
+
+| Phase | Original collector | Exact contains edit |
+| --- | --- | --- |
+| admitted mixed library, ordinary release profile | inventory written | inventory written |
+| same input with release incremental enabled | captured inventory written | captured wrong dep-info error |
+| ordinary profile restored in a fresh commit | inventory written | inventory written |
+| consumer linked to retained incremental rlib | prints `37` | prints `37` |
+| final captured incremental-result judgment | passes | intended named failure |
+
+The permanent parent captures both an API error and an unexpected panic before retrying;
+either still fails its final success requirement. It saves the actual incremental `b.d`
+and rlib before the clean retry replaces the role outputs. The retained rlib has a valid
+archive header and an independent system stdin digest. The actual consumer is compiled
+against that retained library and must run successfully with the literal output above.
+
+Only after recovery and consumer assertions pass does the test write
+`incremental-recovery.txt` with `recovered` and `consumer=37`. Then it unwraps the captured
+incremental result and checks its unit/source and artifact hash against the retained bytes.
+Thus a compiler failure, incomplete retry or failed consumer cannot masquerade as the
+finishing suffix judgment.
+
+On this host the edited collector records the expected wrong nested dep-info path, with
+an OS not-found error. The real literal `b.d` exists; the compiler succeeded. The recovery
+marker and re-executed actual consumer are independently checked in both original and
+native-copy fixtures.
+
+| Audited fixture | Captured incremental result | Retained rlib SHA-256 | Consumer |
+| --- | --- | --- | --- |
+| original | written | `9038c55a0e8514369e2d1269d8488d9c18e181b362207d49321ce8d5bf0c2e48` | `37` |
+| native-copy | expected wrong dep-info error | `834a98939eb78fd796206edb52fe66a20d18b9d9121216114e16766c30ccef2b` | `37` |
+
+The retained rlib hashes differ between the physical original and copied build locations.
+This was investigated before signoff. Their machine-code object member payloads are byte
+identical, while archive member names and compiler metadata contain different build paths.
+The matching real invocation records retain the actual incremental arguments in each case.
+
+A separate diagnostic replay removes incremental-cache naming from both recorded commands;
+all non-location flags agree. Raw path builds still differ. Mapping each compilation
+directory to the same virtual relative path makes the two resulting rlibs byte-identical,
+with independent Python/system hashes agreeing. The argument census also identifies the
+distinct role dependency-search directories; an initial check that normalized only the
+output directory refused before this qualification.
+
+This matches the [inventory consumption contract](../../specs/trust/decision_trust-inventory.md),
+section 6, case 4: the package ships its actual trust-build artifacts, and two-build byte
+reproducibility is not assumed. The table records those actual per-build identities.
+The diagnostic adds no production/test build flag. Commands/member hashes/results remain
+under `target/caller-suffix-regression/library-variance/`.
+
+Both fixture repositories finish clean with the ordinary workspace restored; their prior
+commits retain the actual incremental setting. Every recovery inventory's source and
+artifact hashes agree with independent Python/system hashes. The retained compiler products
+and result/recovery traces remain available under each bounded fixture.
+
+#### Fresh source-bound native kill
+
+The source file is `xtask/src/trust.rs`, SHA-256
+`90c1078daba457e76f6564dcaf19557013b30e2275921a2fd25ca000c16d10ef`. Its production prefix remains SHA-256
+`036f650dc082d9d43956865ef67fb16f761c4b3ede54c0567f8936733322bef4`. Removing only the new parent reconstructs the complete
+preceding file, including the repaired hash helper and every earlier parent, byte for byte.
+
+The historical caller `L814.dir.284` maps to current `L729.dir.201`. Its earlier current-source
+assessment measured S on sourcefdc28b26/full196. That is before evidence only. This native
+run binds the actual current file, exact unchanged raw edit and expanded current cohort.
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L729.dir.201
+```
+
+`2026-10-19`: complete CLI/maintained discovery still agrees on all 1404 raw candidates.
+The selected edit runs against all 198 current semantic parents after a passing copied
+baseline and finishes **1K**, strict exit `0`. Its sole failing name is the intended parent:
+
+```text
+trust::tests::dep_info_suffix_does_not_match_an_incremental_output_path
+```
+
+There are no selected survivors, equivalent, compiler-refused, timeout or unjudged results.
+The copied names/order match the fresh original population. Held native tree
+`1e3121db1090f4439648bd01f30dba5dc5a006dd` binds the activation/source state before completion documentation.
+The new parent uses actual input/output/hash oracles; it adds no production-source hash guard
+to the semantic cohort. No result is projected onto the separate no-equals edit or the rest
+of the caller production range.
+
+#### Restoration and checkpoint scope
+
+`2026-10-19`: all 1134 captured regular original/copied inputs restore with independent
+Python/system hashes and modes; the gitlink is metadata only. All 39 direct bindings,
+37 earlier public producer pins and the additional immutable optional-suffix source agree.
+All 316 task archives and their index remain byte-exact; independent
+Git/index/filesystem populations agree and false small/off-by-one counts refuse.
+
+Nine false native receipts reject missing/changed/duplicate results, changed exit, invented
+parent/equivalence, wrong source/replacement/scope. Empty or wrong-value recovery markers
+reject. Independent retained-library execution and source/artifact hashes bind the actual
+failure point, after the successful recovery marker. The original probe and permanent
+parent both pass; the actual edit fails that parent's final captured-result requirement.
+
+Audit SHA-256 `31156a17eedaa83a3da3452448cad4856db3898e7c81da0923324a57301e4cdb` and
+new-parent SHA-256 `61cde5bea3a9cbe62e27b1576e0bc25b9e1d960b7bfcbd94df99017d45445592` identify the exact result and permanent
+control. Raw plans, commands, native output/exit, complete original/copy restoration,
+fixture observations and audits remain under `target/caller-suffix-regression/`. The
+maintained parent and commands preserve reproducibility independently of those observations.
+
+Final still-tree focused/book/doctrine checks must pass before this leaf commits. The
+bounded actual-regression group `.15.2.1.4.2` then closes with its hash-helper prerequisite.
+The next owned leaf `.15.2.1.4.3` assesses the distinct no-equals-prefix edit; its finite
+agreement still grants no E. The bounded pair checkpoint, later full caller/source/reason
+replays and independent review remain open before F30/global adequacy.
+
+#### Supported regression commit-note routing
+
+`2026-10-19`: the following completed commit rows are retained verbatim from the committed
+private task index. Their statements describe their recorded source/parent epochs; they do
+not become current measurements here. Exact reconstruction recovers every original private
+row and preserves the whole preceding book. This contains the private resume index while
+the public book remains unbounded.
+
+| Leaf | Recorded commit | Verbatim historical note |
+| --- | --- | --- |
+| `M3.6.9.6.3.2.2.12` | `ARCHOGEN-M3-0720 (leaf M3.6.9.6.3.2.2.12)` | **task-log layout repaired**: all 23 outside-section and 51 separator-broken current row versions traced, stable merge preserves all 241 prior commit records and both source sequences; 59 verification separators repaired with all 159 evidence rows exact; rendered rows 167 to 242 / 100 to 160 including new records, separator/wrong-location/changed/missing controls refuse; unchanged public presence gate boundary explicit, source/archives untouched, book/live sync and next prefix/helper cohort owned |
+| `M3.6.9.6.3.2.2.13.1` | `ARCHOGEN-M3-0721 (leaf M3.6.9.6.3.2.2.13.1)` | **complete prefix/helper measurement**: all 59 actual edits bind unchanged initial region, 46 finishing named kills/12 survivors/1 compiler refusal and strict 1; reconcile 14 labelled plus 7 generic original obligations, nine now K/twelve routed; all 1026 originals/current copy restore, altered evidence refuses, production/prior Rust tests/native/E exact; canonical/book/live sync, director's unbounded-book ruling removes all book ceilings and cancels containment, route regression controls/history sealing verified; concrete path controls next, full adequacy open |
+| `M3.6.9.6.3.2.2.13.2.2` | `ARCHOGEN-M3-0722 (leaf M3.6.9.6.3.2.2.13.2.2)` | **public path boundaries held**: valid diagnostic-substring source targets and ordinary/one-/two-equals dependency paths retain independent literal arguments in actual successful inventory builds; exact catalogue and current native edits finish named K strict0, all 1029 original/current copied inputs restore, altered evidence refuses; prior production/tests/E exact and catalogue append-only; full book examples/canonical/live sync, codegen arguments next, focused/stamp/staged gates bind commit; full adequacy open |
+| `M3.6.9.6.3.2.2.13.2.3` | `ARCHOGEN-M3-0723 (leaf M3.6.9.6.3.2.2.13.2.3)` | **codegen operands independently held**: real release/package-override inventories retain four literal complete options once without raw-operand duplicates; current-token selection, retained-output deletion and one-token advancement exact catalogue/systematic edits all finish named K strict0, every original/current copied input restores and false receipts refuse; prior production/tests/E exact, catalogue append-only; book examples/canonical/live sync, six matcher assessments next, focused/stamp/staged gates bind commit; full adequacy open |
+| `M3.6.9.6.3.2.2.13.2.4.2.1` | `ARCHOGEN-M3-0730 (leaf M3.6.9.6.3.2.2.13.2.4.2.1)` | **Metadata matcher obligations resolve narrowly**: complete pinned constructor/visited-token matrix, successful scalar validation and raw-strip refusal qualified; permanent actual edits with independent Cargo argv, consumed library values and valid wider/wrong-oracle controls; after proof append two exact reasons, actual native2 E strict0, operator29 and original/current-copy1036 restoration, six false receipts refuse; old bodies/reasons/code preserved, book/live extra-filename evidence next |
+| `M3.6.9.6.3.2.2.13.2.4.2.2` | `ARCHOGEN-M3-0731 (leaf M3.6.9.6.3.2.2.13.2.4.2.2)` | **Extra-filename matcher obligations resolve narrowly**: permanent actual edits with independent Cargo argv/configuration and consumed library values, valid wider LLVM and qualified refused/synthetic/wrong-oracle controls; after proof append two exact reasons, native2 E strict0, operator30, source preservation and original/current-copy1037 restoration, six false receipts refuse; canonical/book/live incremental next, exact committed archival as needed, full adequacy open |
+| `M3.6.9.6.3.2.2.13.2.4.2.3` | `ARCHOGEN-M3-0732 (leaf M3.6.9.6.3.2.2.13.2.4.2.3)` | **Incremental matcher obligations resolve narrowly**: real enabled release profile, independent full Cargo argv/cache path/population and consumed library values, actual compiled edits, valid wider LLVM and qualified premises/wrong oracles; after proof append two reasons, native2 E strict0, operator31, prior body/reason/code preservation and original/current-copy1043 restoration, six false receipts refuse; canonical/book/live close codegen pair parents and resume basename assessment, full adequacy open |
+| `M3.6.9.6.3.2.2.13.2.5` | `ARCHOGEN-M3-0733 (leaf M3.6.9.6.3.2.2.13.2.5)` | **Basename comparison proven from distinct positions**: actual compiled original/edit, independent literal examples, bounded helper grid and qualified predicate/equal-index/wrong-negative controls precede exact reason; native1 E strict0, operator32, prior source/body/reason preservation and original/current-copy1043 restoration, six false receipts refuse; canonical/book/live close evidence-directed parent and resume final complete cohort replay |
+| `M3.6.9.6.3.2.2.13.3.1` | `ARCHOGEN-M3-0734 (leaf M3.6.9.6.3.2.2.13.3.1)` | **Complete prefix/helper replay passes strict criterion**: all59 actual edits exactly bound to original identities/outcomes, 51 named kills/seven scoped proofs/one compiler refusal strict0; all12 prior cohort survivors resolved, originals/current copies1043 restored, prior source/controls/reasons/native exact, seven altered receipts refuse; canonical/book/live sync, caller/full integration checkpoint next, whole-production adequacy remains open |
+| `M3.6.9.6.3.2.2.13.3.2.1` | `ARCHOGEN-M3-0737 (leaf M3.6.9.6.3.2.2.13.3.2.1)` | **Caller bound; failed integration preserved**: exact production/build/pin/source/32-control and complete59 reason/result bindings; full local tier11 passed/1 self-test failed on held native activation, no pass stamp; all1043 originals/prior-copy restore, epochs explicit; book/live record failure, PROGRAM.92 owns handoff-arm root/repair before final integration .2 |
+| `M3.6.9.6.3.2.2.13.3.2.2` | `ARCHOGEN-M3-0739 (leaf M3.6.9.6.3.2.2.13.3.2.2)` | **Prefix/helper checkpoint passes**: unchanged caller/28-source/32-control and complete59 reason/result bindings; actual full local tier12/0 on held native/official activation, prior11/1 remains historical; all1046 originals and prior-copy1043 restore in separate epochs, five false bindings refuse, code/controls/reasons/handoff exact; book/live close .13 and own run_cargo binding/locality preflight, full adequacy remains open |
+| `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.4` | `ARCHOGEN-M3-0792 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.4)` | exact extra-filename= helper boundary held; historical2S become native2K/full186,1119 restored/37 pins/five false receipts; caller old/current pair separately mapped/owned, six historical queue labels corrected with exact reversal;8 notes verbatim/prior ledger/value seal/302 archives exact; book/live/final staged focused, joined options next |
