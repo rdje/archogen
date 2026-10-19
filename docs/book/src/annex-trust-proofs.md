@@ -5147,3 +5147,292 @@ The [official permission model](https://learn.chatgpt.com/docs/permission-modes)
 the sandbox boundary from the reviewer: **Approve for me** sends eligible requests to the
 automatic reviewer; **Ask for approval** sends them to the user. The observed reviewer capacity
 failure prompted the temporary switch. No permission configuration is changed by this explanation.
+
+### Complete current controller replay
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.6.8`: the complete current controller population finishes with 113 named kills and 11 compiler refusals, strict exit 0. There are no survivors, timeouts, unjudged results or equivalence classifications.
+This closes the controller's current source criterion after its owned survivor resolutions.
+It does not project adequacy to the artifact binder, caller or other judgment sources.
+
+The measured controller `xtask/src/trust_compiler.rs` is SHA-256
+`28565b71d0a9471a855335b4037685a8a0a11449a8fe955a10c031e502e6d766`.
+The production range starts at `fresh` and ends before the standalone test module, source
+lines 31 through 307. Fresh maintained discovery agrees exactly with the complete actual
+CLI listing, source spans, operators and replacements. There is no selected-ID filter or
+controller equivalence file in this measurement.
+
+`2026-10-19`: all 124 current edits run against the complete current macOS cohort of 183 semantic trust parents; original and restored-copy lists agree exactly. The unmodified copied baseline passes in 56 seconds.
+The directory-retry loop's non-progress edits finish through bounded parent failures with
+actual libtest names. These are named kills, not outer native timeout classifications.
+
+```sh
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler.rs --package xtask --list
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail
+```
+
+Reproduction requires these matching source, caller and producer identities. The same-volume
+native profile derives the writable repository root at runtime; its SHA-256 remains
+`2b3fbe199bddb4ba84c453a23334c7025308b06127ce3cc96f74b2a17680eedd`.
+It permits writes only in this repository and to the null device. The held native tree is
+`239f541d37dd06b49ee9bbfa14bb3e9fbb15dfb2`; the raw execution, plans, receipts, restoration
+proofs and independent audit are under `target/compiler-controller-final/`.
+
+#### Complete operator census
+
+The terminal operator summary and independent audit agree on every attempt and refusal.
+The viable edits in each row finish as named kills; compiler refusals remain separate.
+
+| Operator | Attempted | Killed | Compiler refusals |
+| --- | --- | --- | --- |
+| `bool` | 4 | 4 | 0 |
+| `chain` | 13 | 11 | 2 |
+| `clogic` | 2 | 2 | 0 |
+| `cmp` | 2 | 2 | 0 |
+| `cond` | 22 | 22 | 0 |
+| `contains` | 8 | 2 | 6 |
+| `dir` | 1 | 1 | 0 |
+| `eq` | 17 | 17 | 0 |
+| `guard` | 15 | 15 | 0 |
+| `int` | 2 | 2 | 0 |
+| `iter` | 6 | 6 | 0 |
+| `lit` | 2 | 2 | 0 |
+| `logic` | 15 | 15 | 0 |
+| `not` | 6 | 6 | 0 |
+| `stmt` | 9 | 6 | 3 |
+
+#### Every current controller outcome
+
+This table records the complete current population. For a kill, the name count includes every
+finishing name in its receipt; the label identifies an actual control, not the only possible
+killer. Compiler refusals carry their own diagnostics below and do not count as semantic coverage.
+Exact replacements regenerate from the source-bound listing; the retained receipt has all names.
+
+| Actual ID | Method | Outcome | Finishing names | Control |
+| --- | --- | --- | --- | --- |
+| `L32.stmt.0` | `fresh` | killed | 125 | `F1` |
+| `L33.iter.1` | `fresh` | killed | 50 | `F2` |
+| `L33.iter.2` | `fresh` | killed | 125 | `F1` |
+| `L33.iter.3` | `fresh` | killed | 50 | `F2` |
+| `L37.eq.4` | `fresh` | killed | 50 | `F2` |
+| `L55.stmt.5` | `Compiler::prepare` | killed | 125 | `F1` |
+| `L72.cond.6` | `Compiler::prepare` | killed | 125 | `F1` |
+| `L72.cond.7` | `Compiler::prepare` | killed | 1 | `F1` |
+| `L72.not.8` | `Compiler::prepare` | killed | 125 | `F1` |
+| `L79.stmt.9` | `Compiler::prepare` | unviable | — | compiler refusal |
+| `L80.cond.10` | `Compiler::prepare` | killed | 125 | `F1` |
+| `L80.cond.11` | `Compiler::prepare` | killed | 1 | `F1` |
+| `L95.eq.12` | `Compiler::session` | killed | 5 | `F2` |
+| `L106.bool.13` | `Compiler::session` | killed | 125 | `F1` |
+| `L107.bool.14` | `Compiler::session` | killed | 125 | `F1` |
+| `L119.stmt.15` | `Compiler::session` | killed | 1 | `F3` |
+| `L120.eq.16` | `Compiler::session` | killed | 125 | `F1` |
+| `L120.cond.17` | `Compiler::session` | killed | 125 | `F1` |
+| `L120.cond.18` | `Compiler::session` | killed | 2 | `F2` |
+| `L124.stmt.19` | `Compiler::session` | killed | 125 | `F1` |
+| `L126.stmt.20` | `Compiler::session` | unviable | — | compiler refusal |
+| `L147.not.21` | `decode/decode_hex` | killed | 124 | `F1` |
+| `L148.logic.22` | `decode/decode_hex` | killed | 2 | `F4` |
+| `L148.not.23` | `decode/decode_hex` | killed | 124 | `F1` |
+| `L150.logic.24` | `decode/decode_hex` | killed | 124 | `F1` |
+| `L159.cmp.25` | `decode/decode_hex` | killed | 124 | `F1` |
+| `L159.cond.26` | `decode/decode_hex` | killed | 124 | `F1` |
+| `L159.cond.27` | `decode/decode_hex` | killed | 124 | `F1` |
+| `L162.int.28` | `decode/decode_hex` | killed | 124 | `F1` |
+| `L162.int.29` | `decode/decode_hex` | killed | 124 | `F1` |
+| `L168.cond.30` | `decode/decode_hex` | killed | 124 | `F1` |
+| `L168.cond.31` | `decode/decode_hex` | killed | 2 | `F5` |
+| `L192.stmt.32` | `Session::environment` | unviable | — | compiler refusal |
+| `L199.bool.33` | `Session::invocations` | killed | 1 | `F4` |
+| `L201.iter.34` | `Session::invocations` | killed | 109 | `F6` |
+| `L201.iter.35` | `Session::invocations` | killed | 111 | `F6` |
+| `L201.iter.36` | `Session::invocations` | killed | 104 | `F6` |
+| `L201.guard.37` | `Session::invocations` | killed | 1 | `F6` |
+| `L201.guard.38` | `Session::invocations` | killed | 2 | `F6` |
+| `L201.guard.39` | `Session::invocations` | killed | 1 | `F6` |
+| `L201.guard.40` | `Session::invocations` | killed | 1 | `F6` |
+| `L201.guard.41` | `Session::invocations` | killed | 1 | `F6` |
+| `L201.guard.42` | `Session::invocations` | killed | 1 | `F6` |
+| `L201.guard.43` | `Session::invocations` | killed | 1 | `F6` |
+| `L201.guard.44` | `Session::invocations` | killed | 1 | `F6` |
+| `L201.guard.45` | `Session::invocations` | killed | 1 | `F6` |
+| `L201.guard.46` | `Session::invocations` | killed | 1 | `F6` |
+| `L201.guard.47` | `Session::invocations` | killed | 1 | `F6` |
+| `L201.guard.48` | `Session::invocations` | killed | 1 | `F6` |
+| `L201.guard.49` | `Session::invocations` | killed | 1 | `F6` |
+| `L201.guard.50` | `Session::invocations` | killed | 1 | `F6` |
+| `L201.guard.51` | `Session::invocations` | killed | 1 | `F6` |
+| `L205.eq.52` | `Session::invocations` | killed | 124 | `F1` |
+| `L205.logic.53` | `Session::invocations` | killed | 4 | `F6` |
+| `L205.logic.54` | `Session::invocations` | killed | 3 | `F6` |
+| `L205.logic.55` | `Session::invocations` | killed | 3 | `F4` |
+| `L205.cond.56` | `Session::invocations` | killed | 124 | `F1` |
+| `L205.cond.57` | `Session::invocations` | killed | 4 | `F6` |
+| `L205.not.58` | `Session::invocations` | killed | 124 | `F1` |
+| `L216.eq.59` | `Session::invocations` | killed | 124 | `F1` |
+| `L216.eq.60` | `Session::invocations` | killed | 124 | `F1` |
+| `L216.logic.61` | `Session::invocations` | killed | 3 | `F6` |
+| `L216.logic.62` | `Session::invocations` | killed | 3 | `F6` |
+| `L216.logic.63` | `Session::invocations` | killed | 3 | `F6` |
+| `L216.cond.64` | `Session::invocations` | killed | 124 | `F1` |
+| `L216.cond.65` | `Session::invocations` | killed | 3 | `F6` |
+| `L222.eq.66` | `Session::invocations` | killed | 124 | `F1` |
+| `L223.eq.67` | `Session::invocations` | killed | 124 | `F1` |
+| `L223.logic.68` | `Session::invocations` | killed | 2 | `F4` |
+| `L224.eq.69` | `Session::invocations` | killed | 124 | `F1` |
+| `L224.logic.70` | `Session::invocations` | killed | 2 | `F4` |
+| `L225.eq.71` | `Session::invocations` | killed | 124 | `F1` |
+| `L225.logic.72` | `Session::invocations` | killed | 2 | `F4` |
+| `L233.cmp.73` | `Session::invocations` | killed | 1 | `F7` |
+| `L237.eq.74` | `Session::invocations` | killed | 124 | `F1` |
+| `L237.cond.75` | `Session::invocations` | killed | 124 | `F1` |
+| `L237.cond.76` | `Session::invocations` | killed | 2 | `F6` |
+| `L242.eq.77` | `Session::invocations` | killed | 124 | `F1` |
+| `L243.eq.78` | `Session::invocations` | killed | 124 | `F1` |
+| `L243.logic.79` | `Session::invocations` | killed | 3 | `F4` |
+| `L259.eq.80` | `Session::invocations` | killed | 124 | `F1` |
+| `L259.cond.81` | `Session::invocations` | killed | 124 | `F1` |
+| `L259.cond.82` | `Session::invocations` | killed | 3 | `F6` |
+| `L262.eq.83` | `Session::invocations` | killed | 1 | `F7` |
+| `L264.logic.84` | `Session::invocations` | killed | 2 | `F8` |
+| `L265.logic.85` | `Session::invocations` | killed | 2 | `F8` |
+| `L265.dir.86` | `Session::invocations` | killed | 1 | `F8` |
+| `L265.lit.87` | `Session::invocations` | killed | 1 | `F8` |
+| `L265.lit.88` | `Session::invocations` | killed | 116 | `F6` |
+| `L267.stmt.89` | `Session::invocations` | killed | 116 | `F6` |
+| `L268.cond.90` | `Session::invocations` | killed | 122 | `F1` |
+| `L268.cond.91` | `Session::invocations` | killed | 4 | `F6` |
+| `L268.not.92` | `Session::invocations` | killed | 123 | `F1` |
+| `L271.bool.93` | `Session::invocations` | killed | 124 | `F1` |
+| `L271.stmt.94` | `Session::invocations` | killed | 124 | `F1` |
+| `L273.cond.95` | `Session::invocations` | killed | 124 | `F1` |
+| `L273.cond.96` | `Session::invocations` | killed | 1 | `F4` |
+| `L273.not.97` | `Session::invocations` | killed | 124 | `F1` |
+| `L281.eq.98` | `query` | killed | 123 | `F1` |
+| `L282.logic.99` | `query` | killed | 122 | `F1` |
+| `L283.eq.100` | `query` | killed | 114 | `F6` |
+| `L68.chain.101` | `Compiler::prepare` | killed | 1 | `F1` |
+| `L68.chain.102` | `Compiler::prepare` | killed | 125 | `F1` |
+| `L94.chain.103` | `Compiler::session` | killed | 125 | `F1` |
+| `L94.chain.104` | `Compiler::session` | killed | 125 | `F1` |
+| `L150.contains.105` | `decode/decode_hex` | unviable | — | compiler refusal |
+| `L150.contains.106` | `decode/decode_hex` | unviable | — | compiler refusal |
+| `L150.contains.107` | `decode/decode_hex` | unviable | — | compiler refusal |
+| `L150.contains.108` | `decode/decode_hex` | unviable | — | compiler refusal |
+| `L168.contains.109` | `decode/decode_hex` | killed | 1 | `F5` |
+| `L168.contains.110` | `decode/decode_hex` | unviable | — | compiler refusal |
+| `L168.contains.111` | `decode/decode_hex` | killed | 1 | `F5` |
+| `L168.contains.112` | `decode/decode_hex` | unviable | — | compiler refusal |
+| `L233.chain.113` | `Session::invocations` | unviable | — | compiler refusal |
+| `L233.chain.114` | `Session::invocations` | unviable | — | compiler refusal |
+| `L233.chain.115` | `Session::invocations` | killed | 1 | `F7` |
+| `L251.chain.116` | `Session::invocations` | killed | 124 | `F1` |
+| `L251.chain.117` | `Session::invocations` | killed | 124 | `F1` |
+| `L262.chain.118` | `Session::invocations` | killed | 116 | `F6` |
+| `L262.chain.119` | `Session::invocations` | killed | 116 | `F6` |
+| `L265.chain.120` | `Session::invocations` | killed | 116 | `F6` |
+| `L265.chain.121` | `Session::invocations` | killed | 116 | `F6` |
+| `L150.clogic.122` | `decode/decode_hex` | killed | 124 | `F1` |
+| `L150.clogic.123` | `decode/decode_hex` | killed | 124 | `F1` |
+
+Control labels name actual finishing libtest parents:
+
+| Label | Exact parent name |
+| --- | --- |
+| `F1` | `trust::compiler::tests::actual_preparation_holds_status_output_and_selected_environment` |
+| `F2` | `trust::compiler::tests::actual_installed_observer_corruption_is_refused_before_use_and_recovers` |
+| `F3` | `trust::compiler::tests::actual_installation_closes_its_writer_before_readback_allocation` |
+| `F4` | `trust::compiler::tests::actual_query_records_reject_missing_stale_foreign_and_malformed_inputs` |
+| `F5` | `trust::compiler::tests::actual_compilation_records_refuse_internal_nul_in_argument_values` |
+| `F6` | `trust::compiler::tests::actual_record_validation_applies_to_every_real_record` |
+| `F7` | `trust::compiler::tests::actual_records_refuse_remaining_field_range_byte_and_shape_boundaries` |
+| `F8` | `trust::compiler::tests::actual_compilation_records_require_the_exact_emit_marker` |
+
+#### Actual compiler refusals
+
+These edits do not compile with the pinned producer. Their exact source-edit signatures and
+first compiler diagnostics match the earlier complete controller measurement. They remain
+compiler refusals; none is promoted to a kill or equivalence. Invented and removed refusal
+population controls are both rejected by the independent comparison.
+
+| Actual ID | Diagnostic |
+| --- | --- |
+| `L79.stmt.9` | `` error: expected `;`, found `Ok` `` |
+| `L126.stmt.20` | `` error: expected expression, found `let` statement `` |
+| `L192.stmt.32` | `` error: mismatched closing delimiter: `}` `` |
+| `L150.contains.105` | `` error[E0599]: no method named `first` found for struct `std::ops::RangeInclusive<Idx>` in the current scope `` |
+| `L150.contains.106` | `` error[E0599]: no method named `first` found for struct `std::ops::RangeInclusive<Idx>` in the current scope `` |
+| `L150.contains.107` | `error[E0308]: mismatched types` |
+| `L150.contains.108` | `` error[E0599]: no method named `copied` found for enum `Option<u8>` in the current scope `` |
+| `L168.contains.110` | `error[E0308]: mismatched types` |
+| `L168.contains.112` | `error[E0308]: mismatched types` |
+| `L233.chain.113` | `error[E0061]: this method takes 0 arguments but 1 argument was supplied` |
+| `L233.chain.114` | `` error[E0599]: no method named `rev` found for enum `Option<u32>` in the current scope `` |
+
+The statement omissions leave an incomplete assignment or an unmatched delimiter. The range
+membership rewrites request sequence methods or incompatible option types on a range receiver.
+The copied byte endpoints compare a value option with a reference option. The PID rewrites
+request iterator-style operations from an option. None reaches a semantic test judgment.
+
+#### Resolution of the earlier surviving edits
+
+The mapping uses exact span/operator/original/replacement signatures, not IDs alone. The
+removed quantity update has no current signature after the presence-state repair and receives
+no equivalence classification. Every retained former survivor has its own measured current
+disposition here.
+
+| Earlier ID | Current ID | Current disposition |
+| --- | --- | --- |
+| `L72.cond.7` | `L72.cond.7` | killed |
+| `L80.cond.11` | `L80.cond.11` | killed |
+| `L119.stmt.15` | `L119.stmt.15` | killed |
+| `L120.cond.18` | `L120.cond.18` | killed |
+| `L201.guard.36` | `L201.guard.37` | killed |
+| `L201.guard.38` | `L201.guard.39` | killed |
+| `L201.guard.39` | `L201.guard.40` | killed |
+| `L201.guard.40` | `L201.guard.41` | killed |
+| `L201.guard.41` | `L201.guard.42` | killed |
+| `L201.guard.42` | `L201.guard.43` | killed |
+| `L201.guard.43` | `L201.guard.44` | killed |
+| `L201.guard.44` | `L201.guard.45` | killed |
+| `L201.guard.45` | `L201.guard.46` | killed |
+| `L201.guard.46` | `L201.guard.47` | killed |
+| `L201.guard.47` | `L201.guard.48` | killed |
+| `L201.guard.48` | `L201.guard.49` | killed |
+| `L201.guard.49` | `L201.guard.50` | killed |
+| `L201.guard.50` | `L201.guard.51` | killed |
+| `L265.dir.85` | `L265.dir.86` | killed |
+| `L265.lit.86` | `L265.lit.87` | killed |
+| `L271.int.92` | — | removed numeric state; no equivalence claim |
+| `L68.chain.101` | `L68.chain.101` | killed |
+| `L168.contains.109` | `L168.contains.109` | killed |
+| `L168.contains.111` | `L168.contains.111` | killed |
+
+#### Restoration and independent audit
+
+`2026-10-19`: all 1,113 indexed regular inputs restore byte-for-byte and with their original modes in the original tree and current copy. Python and independent system SHA-256 agree; the sole Gitlink is compared as metadata only.
+No submodule implementation is inspected. The copied parent list and all direct source,
+caller, proof, fixture and published-producer bindings are checked again after the run.
+
+`2026-10-19`: all 37 direct bindings and 37 pinned public producer sources remain exact. The independent auditor rejects 12 altered transcript/selection receipts and both invented-refusal and missing-refusal populations.
+The controls falsify changed source/scope/replacement/population, missing or duplicate rows,
+invented names or equivalence, outcome/summary/exit disagreement and altered refusal membership.
+Every retained earlier survivor maps by its exact source-edit signature to a measured current
+kill. The old numeric quantity update is absent after the presence-state repair, with no
+equivalence asserted for the old edit.
+
+`2026-10-19`: the committed record-presence leaf is sealed by exact reconstruction, and all 297 older task-history files remain unchanged. Production source, prior tests and proof controls, catalogues and per-file reasons remain committed bytes.
+The audit script is SHA-256
+`06f7dcd531e4ead01cb205e797f84fc4c1bb6a3de798a5e0a704971ffd1e6e61`.
+Its complete result and separate refusal assessment both pass.
+
+`2026-10-19`: `make integration` passes all 12 steps with no failure, unavailable step, missing implementation or quarantine. Workspace tests take 149.37 seconds and rejecting gate self-tests 387.98 seconds.
+The passing integration stamp names the same held tree as the native replay. Formatting,
+strict lint, doctrines, book, bare-metal/browser builds, pinned premises and target execution
+all pass. Final documentation edits receive the staged doctrine and book checks before commit.
+F30 and other source populations remain open under their own owners.
+
+The next native source population is the artifact binder, followed by the current caller and
+other judgment sources. Their complete source/premise revalidation, restoration, warranted
+broader gates and independent review remain owned before F30 or any global adequacy claim.

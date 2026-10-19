@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — complete current compiler-controller replay
+
+`ARCHOGEN-M3-0787` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.8`), `2026-10-19`.
+
+- Full current124 edits/all183 parents finish113 named kills/11 compiler refusals, strict0;
+  no survivors/timeouts/unjudged/E. All23 retained historical survivors now K; quantity removed.
+- Exact refusal contexts/diagnostics, 1113 original/copied inputs restored,37 bindings/37 pins,
+  12 altered receipts and2 refusal falsifiers; presence seal/297 older archives exact.
+- Preserve production/tests/catalogue/reasons. Full integration12 passes; publish every actual
+  outcome, refusal and historical mapping in the unbounded book; artifact measurement next.
+
 ## archogen — represent compiler-record presence directly
 
 `ARCHOGEN-M3-0786` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.7`), `2026-10-19`.
