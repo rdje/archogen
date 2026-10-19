@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — prove required crate-name minimum membership
+
+`ARCHOGEN-M3-0802` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.14`), `2026-10-19`.
+
+- Prove the exact first/copied predicate on the closed local string-key domain using pinned
+  set/string APIs; keep production unchanged and add a permanent operator proof guard.
+- Hold complete32 abstract states,96 paired actual-helper comparisons, literal query and
+  actual smaller-key difference; false source/pin/wrong-oracle controls precede one precise reason.
+- Native1E/full196 strict0;1131 inputs restore,39 direct/37 producer/5 toolchain bindings,
+  six false receipts and prior archives/book prefix exact. Proof guard is outside semantic cohort.
+- Book/live and final staged focused/all48 operator gates; complete artifact checkpoint next.
+
 ## archogen — remove the proved redundant symlink predicate
 
 `ARCHOGEN-M3-0801` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.13`), `2026-10-19`.

@@ -2357,6 +2357,130 @@ mod tests { fn fixture() { let _: Vec<_> = [7].iter().collect(); } }
 
 
 class ContainsTests(DiscoveryFixture):
+    def test_required_crate_name_first_membership_has_a_closed_key_domain(self):
+        source = (ROOT / "xtask/src/trust_artifact.rs").read_text()
+        pin = (ROOT / "rust-toolchain.toml").read_text()
+
+        def helper(text):
+            return text[text.index("fn naming_arguments("):text.index("/// Validate every returned output")]
+
+        def premises(artifact, toolchain):
+            # This proof gate runs in the operator suite, outside the native semantic trust filters.
+            # Its hashes force domain revalidation; they are not semantic mutation kill witnesses.
+            self.assertEqual(hashlib.sha256(artifact.split("#[cfg(test)]", 1)[0].encode()).hexdigest(),
+                             "9365cd07c990d1ef4295b8e905ac1f3baa4754272498904f6b88e1c982b8ef8c",
+                             "revalidate crate-name minimum proof: production/types/caller")
+            self.assertEqual(hashlib.sha256(toolchain.encode()).hexdigest(),
+                             "4706b7b407427c38a3b63860b2e131cacc9eb57569a6755a39e81756cca676cd",
+                             "revalidate crate-name minimum proof: pinned toolchain")
+            body = helper(artifact)
+            self.assertEqual(body.count("seen.insert("), 3)
+            self.assertEqual(artifact.split("#[cfg(test)]", 1)[0].count("naming_arguments("), 2)
+            self.assertIn('if argument != "--crate-type" && !seen.insert(argument.as_str())', body)
+            return body
+
+        original = premises(source, pin)
+        self.assertTrue(self.bounded(["rustc", "--version"]).startswith("rustc 1.95.0 "))
+        for altered_source, altered_pin in [
+            (source.replace('seen.insert("extra-filename")', 'seen.insert("--aaa")', 1), pin),
+            (source.replace("collections::BTreeSet", "collections::HashSet", 1), pin),
+            (source, pin.replace('"1.95.0"', '"1.98.0"', 1)),
+        ]:
+            self.assertNotEqual((altered_source, altered_pin), (source, pin))
+            with self.assertRaisesRegex(AssertionError, "revalidate crate-name minimum proof"):
+                premises(altered_source, altered_pin)
+
+        namespace, candidates = self.discovery(source, "contains")
+        before = 'if !seen.contains("--crate-name") {'
+        after = 'if !((seen).first().copied() == Some("--crate-name")) {'
+        family = [m for m in candidates if namespace["mutation_key"](m) == (before, after)]
+        self.assertEqual(len(family), 1, "one exact required-name first/copied edit")
+        edited = helper(namespace["apply_mutant"](family[0]))
+
+        def module(body, name, *, wider=False):
+            if wider:
+                marker = before if name == "wider_original" else after
+                self.assertEqual(body.count(marker), 1)
+                body = body.replace(marker, 'seen.insert("--aaa");\n    ' + marker, 1)
+            return ("mod " + name + " {\nuse std::collections::BTreeSet;\n"
+                    + body.replace("fn naming_arguments(", "pub fn naming_arguments(", 1) + "}\n")
+
+        program = self.base / "required-crate-name.rs"
+        binary = self.base / "required-crate-name"
+        modules = [module(original, "original"), module(edited, "edited"),
+                   module(original, "wider_original", wider=True), module(edited, "wider_edited", wider=True)]
+        program.write_text("\n".join(modules) + r'''
+fn main() {
+    use std::collections::BTreeSet;
+    const KEYS: [&str; 5] = ["--crate-name", "--out-dir", "--target", "--test", "extra-filename"];
+    for key in &KEYS[1..] {
+        assert!("--crate-name" < *key);
+    }
+    let mut observations = 0;
+    for mask in 0u8..32 {
+        let keys: BTreeSet<&str> = KEYS.iter().enumerate()
+            .filter(|(index, _)| mask & (1 << index) != 0).map(|(_, key)| *key).collect();
+        assert_eq!(keys.contains("--crate-name"), keys.first().copied() == Some("--crate-name"));
+        let mut groups = Vec::new();
+        if mask & 1 != 0 { groups.push(vec!["--crate-name", "probe"]); }
+        if mask & 2 != 0 { groups.push(vec!["--out-dir", "outputs"]); }
+        if mask & 4 != 0 { groups.push(vec!["--target", "host"]); }
+        if mask & 8 != 0 { groups.push(vec!["--test"]); }
+        if mask & 16 != 0 { groups.push(vec!["-C", "extra-filename=-hash"]); }
+        // These real helper tokens do not add keys to the membership set.
+        groups.push(vec!["source.rs", "--crate-type", "rlib", "--crate-type", "dylib",
+                         "-C", "metadata=ignored"]);
+        for layout in 0..3 {
+            let mut order = groups.clone();
+            match layout {
+                1 => order.reverse(),
+                2 => order.rotate_left(1),
+                _ => {}
+            }
+            let mut arguments = vec!["rustc".to_owned()];
+            arguments.extend(order.into_iter().flatten().map(str::to_owned));
+            assert_eq!(original::naming_arguments(&arguments), edited::naming_arguments(&arguments),
+                       "mask {mask}, layout {layout}");
+            observations += 1;
+        }
+    }
+    assert_eq!(observations, 96);
+    let literal: Vec<String> = ["rustc", "source.rs", "--crate-name", "probe",
+                                "--out-dir", "outputs"].map(str::to_owned).to_vec();
+    let expected = Ok((["--print=file-names", "-", "--crate-name", "probe"]
+                       .map(str::to_owned).to_vec(), "outputs".to_owned()));
+    assert_eq!(original::naming_arguments(&literal), expected);
+    assert_eq!(edited::naming_arguments(&literal), expected);
+    let wider = BTreeSet::from(["--aaa", "--crate-name"]);
+    assert!(wider.contains("--crate-name"));
+    assert_ne!(wider.first().copied(), Some("--crate-name"));
+    assert_eq!(wider_original::naming_arguments(&literal), expected);
+    assert_eq!(wider_edited::naming_arguments(&literal), Err("missing observed --crate-name".to_owned()));
+    match std::env::args().nth(1).as_deref() {
+        Some("wrong-closed") => assert_ne!(original::naming_arguments(&literal),
+            edited::naming_arguments(&literal), "wrong closed-domain oracle"),
+        Some("wrong-wider") => assert_eq!(wider_original::naming_arguments(&literal),
+            wider_edited::naming_arguments(&literal), "wrong wider-domain oracle"),
+        _ => {}
+    }
+    println!("crate-name proof: 32 complete key subsets; 96 paired actual helper comparisons; literal/wider controls held");
+}
+''')
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.assertIn("32 complete key subsets; 96 paired actual helper comparisons",
+                      self.bounded([str(binary)]))
+        for argument, message in [("wrong-closed", "wrong closed-domain oracle"),
+                                  ("wrong-wider", "wrong wider-domain oracle")]:
+            with self.assertRaisesRegex(AssertionError, message):
+                self.bounded([str(binary), argument])
+        reasons = ROOT / "xtask/trust_artifact.equivalents"
+        records = namespace["load_equivalents"](reasons) if reasons.is_file() else {}
+        key = namespace["mutation_key"](family[0])
+        self.assertIn(key, records, "the actual required-name edit requires its precise per-file reason")
+        self.assertEqual(set(records), {key}, "only the reviewed artifact membership reason is active")
+        self.assertIn("9365cd07c990d1ef4295b8e905ac1f3baa4754272498904f6b88e1c982b8ef8c", records[key])
+        self.assertIn("required-crate-name-minimum-membership", records[key])
+
     def test_function_type_arrows_keep_the_complete_generic_receiver_viable(self):
         source = ("fn one() -> i32 { 1 }\nfn two() -> i32 { 2 }\nfn three() -> i32 { 3 }\n"
                   "fn four() -> i32 { 4 }\n"

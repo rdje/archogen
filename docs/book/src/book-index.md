@@ -518,6 +518,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Repaired caller integration checkpoint — [Annex C: Trust proof
   records](annex-trust-proofs.md#repaired-caller-integration-checkpoint)
 - Repository path caller repair — [Annex C: Trust proof records](annex-trust-proofs.md#repository-path-caller-repair)
+- Required crate-name minimum membership — [Annex C: Trust proof
+  records](annex-trust-proofs.md#required-crate-name-minimum-membership)
 - Requirements and sides — [Matching an offer to a requirement](matching.md#requirements-and-sides)
 - **RFC** — [definition](glossary.md), [What this project relies on from outside](ledger.md), [Annex B: The checks that
   keep the repository honest](annex-repository.md)

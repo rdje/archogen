@@ -7094,3 +7094,207 @@ No new FileType equivalent classification is assigned. The formal simplification
 predicate identities and independently revalidated existing prefix reasons remain distinct.
 Final staged focused/book/commit checks complete this leaf; complete artifact/caller/global
 adequacy remains separately owned and open.
+
+### Required crate-name minimum membership
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.14`: the remaining required-name membership
+edit is assessed on the constructor's closed source domain. The exact current edit is
+`L65.contains.113`, mapped from the earlier `L65.contains.116`:
+
+```diff
+-if !seen.contains("--crate-name") {
++if !((seen).first().copied() == Some("--crate-name")) {
+```
+
+The native replacement deliberately parenthesizes the receiver; the permanent control binds
+that literal edit rather than an abbreviated spelling.
+
+#### Closed local state and ordering contracts
+
+The source starts with an empty local `std::collections::BTreeSet<&str>`. Every possible
+insertion is accounted for:
+
+| Insertion site | Possible inserted values |
+| --- | --- |
+| exact naming-option arm, with `--crate-type` excluded | `--crate-name`, `--out-dir`, `--target` |
+| exact test flag | `--test` |
+| qualifying code-generation option | literal `extra-filename` |
+
+Unknown arguments do not insert a key. Unsupported joined forms and malformed or duplicate
+options can return earlier, identically in the original and edit. Processing a value as
+another token still cannot widen these insertion cases. The set never escapes for a caller
+to modify; its borrowed string keys remain immutable during the call. The actual typed
+constructor and its production caller/imports are bound by the source guard.
+
+Let `KEYS` be this complete key set. Induction over the loop starts with the empty subset
+and preserves `seen` as a subset of `KEYS` after every insertion. This statement covers
+arbitrary argument-vector lengths and values; a finite selection of argument examples is
+not its basis.
+
+The [ordered-set API](https://doc.rust-lang.org/std/collections/struct.BTreeSet.html#method.first)
+gives `first` as the minimum present key.
+[Membership](https://doc.rust-lang.org/std/collections/struct.BTreeSet.html#method.contains)
+tests equality with the borrowed key under matching ordering. The actual keys are ordinary
+immutable `str` values with built-in comparisons. The pinned string implementation compares
+their byte sequences for ordering and equality
+([toolchain identity](ledger.md#rust-toolchain)). Every other possible key sorts after
+`--crate-name`: the other option names follow it, while `extra-filename` follows names
+beginning with dashes. The compiled control independently checks those literal comparisons.
+
+#### All-domain predicate argument
+
+If `--crate-name` is present, it is the minimum of the closed set, so `first().copied()`
+is `Some("--crate-name")`. If it is absent, the first key is another present member or the set
+is empty; neither is that value. Thus membership and this exact first-element comparison
+have the same boolean on every reachable local state, including the empty state.
+
+The lookups use the same immutable set with primitive string comparisons and introduce no
+user comparison callbacks or changed state. All earlier parsing and returns, and all code
+after the required-name judgment, are identical. Therefore the complete constructor returns
+the same query/output pair or the same error for every input in its typed, source-guarded
+domain. This proves only the exact first/copied edit under the closed-key contract.
+
+#### Complete abstract state and wider-source falsifiers
+
+The permanent operator control compiles the actual constructor and the exact discovered
+edit. It checks the complete powerset of the closed keys, not merely reached example states,
+and compares original/edited helper results over alternative option-group orders. A literal
+valid query supplies an independent output oracle.
+
+The control also inserts `--aaa` immediately before the required-name judgment in separate
+copies of each actual helper. With a valid observed crate name, the original still returns
+the literal query while the first-element edit falsely reports a missing crate name.
+A matching wider set contains the required key while its minimum is `--aaa`. This is the
+concrete counterexample to dropping the closed-key premise.
+
+Source guards reject a smaller inserted key, a changed collection type and a changed
+toolchain pin. Deliberately wrong equal/different result oracles also fail. Those controls
+run before the precise-reason requirement; the initial run reaches only that final missing
+record guard after the source and compiled proof controls succeed.
+
+The proof gate lives in `ContainsTests` within the existing operator suite. Ordinary focused
+checks run it. The native semantic trust filters exclude that suite, so its source hashes
+cannot become artificial semantic killing witnesses. The semantic parent cohort stays
+unchanged; operational protection and formal reason validity are measured separately.
+
+The source production prefix is
+`9365cd07c990d1ef4295b8e905ac1f3baa4754272498904f6b88e1c982b8ef8c`.
+The helper body SHA-256 is
+`37d4ebcdc401547ff50834df1c11f4fe17046b5a15dc8ec15d49afa7cb7a0c1c`.
+The exact pinned toolchain-file SHA-256 is
+`4706b7b407427c38a3b63860b2e131cacc9eb57569a6755a39e81756cca676cd`.
+Changes to guarded source/types/callers, insertion closure, ordering contracts or the pin
+require revalidation before retaining a reason.
+
+`2026-10-19`: the compiled proof holds all 32 closed key subsets, 96 paired actual-helper
+comparisons, literal query behavior and the wider inserted-key difference. This is pre-reason
+proof evidence; native equivalence is completed below; final operator/focused checks remain required before commit.
+Supplemental pinned documentation/source copies and calibration records live under
+`target/artifact-crate-name-membership/`. The tracked operator control and this argument
+preserve the proof independently of those untracked observations.
+
+#### Concrete constructor results
+
+For this observed argument vector, both actual helpers return the same literal query and
+separate output directory:
+
+```text
+observed:
+  rustc source.rs --crate-name probe --out-dir outputs
+query:
+  ["--print=file-names", "-", "--crate-name", "probe"]
+output directory:
+  outputs
+```
+
+| Local membership state | Contains required name | First is required name |
+| --- | --- | --- |
+| empty | false | false |
+| `--out-dir` only | false | false |
+| `--crate-name` only | true | true |
+| `--crate-name` and `--test` | true | true |
+| wider `--aaa` and `--crate-name` | true | false; outside the guarded source domain |
+
+The actual inserted-key helper control uses valid crate-name/output arguments. Its original
+returns the query above, while its edited version returns `missing observed --crate-name`.
+The normal source guard rejects that wider source before it can qualify a reason.
+
+#### Pinned source identities and permanent reproduction
+
+The source/API review uses the documentation and public implementation installed with the
+pinned toolchain. These read-only external dependency paths derive at runtime from
+`rustc --print sysroot`. The local evidence copies are repository-relative; builds do not
+depend on a persisted absolute toolchain installation path.
+
+| Installed document/source relative to `share/doc/rust/html` | SHA-256 |
+| --- | --- |
+| `std/collections/struct.BTreeSet.html` | `29479dab12759067e827b8aecb41cf599a67a7e5c8b4798506c8366b8ccd1a2a` |
+| `std/primitive.str.html` | `0a08f21dd7dffe6cad11fffe94061ade54560f1f1a8bd781011496686206afb4` |
+| `std/cmp/trait.Ord.html` | `64a2217080830334a3139f756906b2fb87faf49c39b10db053a37c4d3b9b6aac` |
+| `src/alloc/collections/btree/set.rs.html` | `816ce6b51e99a05652ace5eb49a2cf0ed03cf8a5e1847c553a2f9cfbc78c4969` |
+| `src/core/str/traits.rs.html` | `a787be8d697865a7f30d98ac01ccac82cac4fff66a17535c93784dfbb10c2dd7` |
+
+The same toolchain-root derivation shown in the preceding file-kind proof reproduces these
+identities using the relative paths above. The permanent control is independently runnable:
+
+```bash
+python3 -I -B xtask/mutation_sweep_tests.py "$PWD" \
+  ContainsTests.test_required_crate_name_first_membership_has_a_closed_key_domain -v
+```
+
+Its exact source guards preserve the constructor, standard collection/string types and
+production caller. A pin change requires source/API revalidation. Earlier operator cases,
+all production source and every semantic trust parent remain byte-exact.
+
+#### Precise reason and actual native result
+
+Only the exact first/copied pair gains a record in `xtask/trust_artifact.equivalents`.
+The original constructor retains its clear membership expression. No last-element or
+arbitrary-set reason is added.
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --equivalents xtask/trust_artifact.equivalents --only L65.contains.113
+```
+
+`2026-10-19`: the selected edit finishes as 1E against all 196 unchanged semantic parents,
+strict exit `0`, after the guarded proof and precise reason. The original copied baseline
+passes. No selected kill, compiler refusal, timeout or unjudged result occurs; source-premise
+hash guards are not in this cohort. All 1131 original/copied regular inputs restore with
+independent Python/system hashes and modes; all 39 direct bindings, 37 public producer
+pins and 5 pinned toolchain source bindings agree. Changed-exit, missing-result,
+duplicate-result, changed-replacement, unlisted-E and invented-detail receipts refuse.
+The file-kind leaf seals exactly; all 312 prior task archives remain byte-exact, with
+independent Git/index/filesystem counts and false-count controls.
+
+#### Calibration corrections and scope
+
+Calibration: the pinned str equality source spells `impl const PartialEq`, and the exact native predicate parenthesizes its receiver `(seen)`. Narrower initial literal lookups refused before proof/result publication; source-domain notes and `predicate-shape-before-fix.*` retain the corrections.
+
+The proof-book append is verified against the complete committed chapter prefix byte for
+byte. An overbroad temporary section-marker expansion was corrected before reason/result
+publication by reconstructing that prefix exactly; only this new proof section remains.
+These calibration refusals/repairs are not semantic or equivalence evidence.
+
+Held native tree `6217ab18486beced79780fe73bd78b878b11f1a4` precedes completion documentation.
+Artifact file SHA-256 `f3c8b408ec1733cdf5828123ad5e1f6db1d205995fffe30f0e9bc1acfd30d673` is unchanged;
+precise reason-file SHA-256 `591981f27cd23cb1c40f63c71554ef01208ed1c07a191d63e66ed82d66678435` and supplemental
+audit SHA-256 `91b6a03c3a700d385beacb797a0bd98e1f06c971d1397a61fdf8467169eb2156` bind the exact relation,
+preserved source/parents/book prefix, proof controls, complete input restoration and rejected
+receipts. Supplemental programs/observations remain untracked under
+`target/artifact-crate-name-membership/`; the tracked permanent control, precise reason,
+source proof and native command preserve re-runnability.
+
+Final staged focused/book/commit checks run the complete operator suite before this leaf
+commits. The complete final artifact checkpoint is next: fresh full discovery and reasons,
+all current semantic parents, compiler-refusal assessment, initial/retired identity reconciliation,
+restoration and integration. This selected result does not close artifact/caller/global adequacy.
+
+The final whitespace check required removing the new catalog's extra end separator.
+The native reader returns identical records for both endings; the permanent proof control
+passes on the normalized file. The initial layout/receipt is retained under
+`target/artifact-crate-name-membership/before-eof-normalization/`. The fresh native replay
+binds the final catalog bytes, again finishing as one equivalent with complete restoration.
+Final focused/commit checks remain required.
