@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — freeze the complete cache and current-reason replay plan
+
+`ARCHOGEN-M3-0811` (leaf `M3.6.9.6.3.2.2.15.2.1.4.3.2.0`), `2026-10-20`.
+
+- Actual1414 discovery and anchored capture/lookup/insertion blocks select20 conservative
+  cache overlaps; all23 current reason edits form the exact43-entry native plan/full200.
+- Retain source blocks, why text, old/current production delta, actual tool identities,
+  48 critical bindings/37 producer pins and complete native argv in the unbounded book.
+- Reject16 false plans,3 history/6 routing falsifiers; preserve320 prior archives and
+  exact new321st seal. Private parent/assessment records route verbatim and reconstruct.
+- Source/reasons unchanged; this unit claims no native outcome. Commit reviewed planning
+  before the long initial assessment, with all later obligations owned by its parent.
+
 ## archogen — bind the precise caller-prefix proof to repaired preflight
 
 `ARCHOGEN-M3-0810` (leaf `M3.6.9.6.3.2.2.15.2.1.4.3.1`), `2026-10-19`.

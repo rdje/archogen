@@ -132,6 +132,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#compiler-warning-data-across-harness-and-generator-roles)
 - Compiler writer lifecycle controls — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-writer-lifecycle-controls)
+- Complete cache and current-reason replay plan — [Annex C: Trust proof
+  records](annex-trust-proofs.md#complete-cache-and-current-reason-replay-plan)
 - Complete compiler-function measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-compiler-function-measurement)
 - Complete current controller replay — [Annex C: Trust proof
