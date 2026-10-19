@@ -115,6 +115,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#compiler-provenance-contract-and-prototype)
 - Compiler record boundary controls — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-record-boundary-controls)
+- Compiler record validation at every position — [Annex C: Trust proof
+  records](annex-trust-proofs.md#compiler-record-validation-at-every-position)
 - Compiler records and normalization — [Annex C: Trust proof
   records](annex-trust-proofs.md#compiler-records-and-normalization)
 - Compiler warning data across harness and generator roles — [Annex C: Trust proof

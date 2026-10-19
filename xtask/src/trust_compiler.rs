@@ -1046,6 +1046,152 @@ fn main() {{ println!("worker-{index}"); }}
     }
 
     #[test]
+    fn actual_record_validation_applies_to_every_real_record() {
+        crate::trust_test_process::bounded!(actual_record_validation_applies_to_every_real_record);
+        use std::collections::BTreeMap;
+        fn valid(session: &Session, expected: &[Vec<String>]) {
+            let mut actual = session.invocations().unwrap();
+            actual.sort();
+            let mut expected = expected.to_vec();
+            expected.sort();
+            assert_eq!(actual, expected);
+        }
+        fn snapshot(session: &Session) -> BTreeMap<PathBuf, Vec<u8>> {
+            fs::read_dir(&session.records)
+                .unwrap()
+                .map(|entry| {
+                    let path = entry.unwrap().path();
+                    assert!(fs::symlink_metadata(&path).unwrap().file_type().is_file());
+                    let bytes = fs::read(&path).unwrap();
+                    (path, bytes)
+                })
+                .collect()
+        }
+        let (out, _, session, base) = setup("record-positions");
+        let mut expected = Vec::new();
+        for _ in 0..3 {
+            let result = run(&session, &base, &["rustc", "-vV"]);
+            assert!(result.status.success(), "{result:?}");
+            assert!(result.stderr.is_empty());
+            assert!(result.stdout.starts_with(b"rustc 1.95.0 "));
+        }
+        let source = out.join("position.rs");
+        fs::write(&source, "fn main() { println!(\"record-position\"); }\n").unwrap();
+        for index in 0..2 {
+            let name = format!("position_{index}");
+            let compiled = out.join(format!("compiled-{index}"));
+            fs::create_dir(&compiled).unwrap();
+            let arguments = [
+                "rustc",
+                "--crate-name",
+                &name,
+                "--emit=dep-info,link",
+                "--out-dir",
+                compiled.to_str().unwrap(),
+                source.to_str().unwrap(),
+            ];
+            let result = run(&session, &base, &arguments);
+            assert!(result.status.success(), "{result:?}");
+            assert!(result.stderr.is_empty());
+            expected.push(arguments.map(str::to_owned).to_vec());
+            let result = Command::new(compiled.join(&name)).output().unwrap();
+            assert!(result.status.success());
+            assert_eq!(result.stdout, b"record-position\n");
+        }
+        valid(&session, &expected);
+        let seeded = snapshot(&session);
+        assert_eq!(seeded.len(), 5);
+        let held_directory = session.records.parent().unwrap().join("held-records");
+        fs::create_dir(&held_directory).unwrap();
+        for (file, bytes) in &seeded {
+            valid(&session, &expected);
+            let name = file.file_name().unwrap();
+            let held = held_directory.join(name);
+            fs::rename(file, &held).unwrap();
+            let relative = PathBuf::from("..").join("held-records").join(name);
+            std::os::unix::fs::symlink(&relative, file).unwrap();
+            assert!(!fs::read_link(file).unwrap().is_absolute());
+            assert_eq!(fs::read(file).unwrap(), *bytes, "valid symlink target");
+            // Add a valid record after the link, also exposing insertion-order endpoint guards.
+            let result = run(&session, &base, &["rustc", "-vV"]);
+            assert!(result.status.success(), "{result:?}");
+            let error = session
+                .invocations()
+                .expect_err("symlink in a real record set");
+            assert!(error.contains("incomplete"), "{error}");
+            assert_eq!(fs::read(&held).unwrap(), *bytes);
+            assert_eq!(fs::read_link(file).unwrap(), relative);
+            fs::remove_file(file).unwrap();
+            fs::rename(&held, file).unwrap();
+            valid(&session, &expected);
+        }
+        let originals = snapshot(&session);
+        assert_eq!(originals.len(), 10);
+        for (fault, reason) in [
+            ("extra-field", "unexpected fields"),
+            ("noncanonical", "canonical"),
+            ("filename", "filename"),
+            ("compiler", "another compiler"),
+            ("query", "unknown"),
+        ] {
+            for (file, bytes) in &originals {
+                valid(&session, &expected);
+                let mut value = json::parse(std::str::from_utf8(bytes).unwrap()).unwrap();
+                let Json::Object(fields) = &mut value else {
+                    panic!("producer object")
+                };
+                let raw = match fault {
+                    "extra-field" => {
+                        fields.insert("extra".into(), Json::Null);
+                        None
+                    }
+                    "noncanonical" => Some([b" ".as_slice(), bytes].concat()),
+                    "filename" => {
+                        let Some(Json::Number(pid)) = fields.get("pid") else {
+                            panic!("producer pid")
+                        };
+                        let other = pid.parse::<u32>().unwrap().checked_add(1).unwrap();
+                        fields.insert("pid".into(), Json::Number(other.to_string()));
+                        None
+                    }
+                    "compiler" => {
+                        let Some(Json::Array(arguments)) = fields.get_mut("argv_hex") else {
+                            panic!("producer argv")
+                        };
+                        arguments[0] = hex("another");
+                        None
+                    }
+                    "query" => {
+                        fields.insert(
+                            "argv_hex".into(),
+                            Json::Array(vec![hex("rustc"), hex("--unknown-query")]),
+                        );
+                        None
+                    }
+                    _ => unreachable!(),
+                };
+                let changed = raw.unwrap_or_else(|| (json::write(&value) + "\n").into_bytes());
+                fs::write(file, &changed).unwrap();
+                let error = session.invocations().expect_err(fault);
+                assert!(
+                    error.contains(reason),
+                    "{fault}, {}: {error}",
+                    file.display()
+                );
+                assert_eq!(
+                    fs::read(file).unwrap(),
+                    changed,
+                    "refusal preserves evidence"
+                );
+                fs::write(file, bytes).unwrap();
+                valid(&session, &expected);
+                assert_eq!(snapshot(&session), originals, "{fault} recovery");
+            }
+        }
+        assert_eq!(snapshot(&session), originals);
+    }
+
+    #[test]
     fn actual_query_records_reject_missing_stale_foreign_and_malformed_inputs() {
         crate::trust_test_process::bounded!(
             actual_query_records_reject_missing_stale_foreign_and_malformed_inputs
@@ -1150,7 +1296,10 @@ fn main() {{ println!("worker-{index}"); }}
                 }
                 "symlink" => {
                     fs::remove_file(&file).unwrap();
-                    std::os::unix::fs::symlink(&original, &file).unwrap();
+                    let relative = PathBuf::from("..").join(original.strip_prefix(&out).unwrap());
+                    std::os::unix::fs::symlink(&relative, &file).unwrap();
+                    assert!(!fs::read_link(&file).unwrap().is_absolute());
+                    assert_eq!(fs::read(&file).unwrap(), bytes);
                 }
                 "argument-type" => {
                     fields.insert("argv_hex".to_owned(), Json::Array(vec![Json::Bool(false)]));

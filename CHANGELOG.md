@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold compiler validation across every real record
+
+`ARCHOGEN-M3-0781` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.2`), `2026-10-19`.
+
+- Add real multi-record query/compile controls, per-file metadata/framing/filename/compiler/query
+  corruption, preserved evidence and exact recovery; correct the older valid link to a relative target.
+- Original passes/all14 actual literal variants fail; native14K/full179, strict0. Reconcile the
+  rejected pre-staging census to the immutable held tree; all1103 originals/copies restore.
+- Preserve production/prior controls/catalogue/reasons,291 archives/new preparation seal and six
+  exact ledger notes. Publish full book evidence; final focused/staged gates, internal-NUL next.
+
 ## archogen — hold compiler preparation status, output and environment
 
 `ARCHOGEN-M3-0780` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.1`), `2026-10-19`.

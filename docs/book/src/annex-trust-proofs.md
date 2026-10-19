@@ -3926,6 +3926,12 @@ retain their original leaf/work-unit identities and route to this full ledger.
 
 | Recorded | Leaf | Work unit | Original record |
 | --- | --- | --- | --- |
+| 2026-10-18 | `M3.6.9.6.3.2.2.14.3.2.2.2.2.4` | `ARCHOGEN-M3-0751 (leaf M3.6.9.6.3.2.2.14.3.2.2.2.2.4)` | **Three real-Cargo regression gaps closed**: bounded alias/separate-cwd/leading-error parents pass with independent compiler diagnostics and recovery; actual native3 K/strict0, each named new finishing parent; all1056 originals/copies restore, seven falsified receipts refuse, prior code/reasons/operators exact; final held focused and book/staged gates; four proof/producer obligations remain |
+| 2026-10-18 | `M3.6.9.6.3.2.2.14.3.2.2.2.2.5` | `ARCHOGEN-M3-0752 (leaf M3.6.9.6.3.2.2.14.3.2.2.2.2.5)` | **Two absolute-prefix edits proven**: universal leading-slash/line-boundary arguments, guarded production/callers/root and actual Cargo relative-manifest/alias producer; actual compiled helpers, literals/wider/wrong-oracle controls and34 operator tests; only2 precise reasons, native2E/strict0, all1058 originals/copies restore, six false bindings refuse,30 source pins agree; final two producer judgments next, no complete adequacy claim |
+| 2026-10-18 | `M3.6.9.6.3.2.2.14.3.2.2.2.2.6.1` | `ARCHOGEN-M3-0753 (leaf M3.6.9.6.3.2.2.14.3.2.2.2.2.6.1)` | **Final producer boundaries assessed**: quoted-key helper differences are inventory-syntax-refused, not admitted defects; ordinary config/path boundary makes closed-end edit suppress genuine operational error while original retains it; lexical hypothesis refuted; all1058 inputs restore,30 pins/full cache agree and five false bindings refuse; direct-helper/inventory parents next, no new native K/E or repair |
+| 2026-10-18 | `M3.6.9.6.3.2.2.14.3.2.2.2.2.6.2` | `ARCHOGEN-M3-0754 (leaf M3.6.9.6.3.2.2.14.3.2.2.2.2.6.2)` | **Final two diagnostic regression gaps closed**: direct-Cargo quoted-key parent enforces inventory syntax refusal/prebuild state and recovery; actual inventory warning-terminator/ancestor collision retains genuine setup errors, no inventory and recovery; native2K/strict0 with intended names, all1060 originals/copies restored, seven false bindings refuse, prior code/reasons exact; final focused/book gates, full current replay then integration owned separately |
+| 2026-10-18 | `M3.6.9.6.3.2.2.14.4.1` | `ARCHOGEN-M3-0755 (leaf M3.6.9.6.3.2.2.14.4.1)` | **Complete current diagnostic region passes**: actual full153-parent native51 replay43K/4E/4U, strict0, no S/timeout/unjudged; exact current raw edits/4 reasons and all intended new names bind, E0599 refusals explicit, full operator totals; all1061 originals/copies restore and copied names agree, ten false receipts refuse,30 pins/tool metadata stable; every row published, no full-file/remote CI claim; integration checkpoint next |
+| 2026-10-18 | `M3.6.9.6.3.2.2.14.4.2` | `ARCHOGEN-M3-0756 (leaf M3.6.9.6.3.2.2.14.4.2)` | **Diagnostic cohort full checkpoint passes**: final native51 result43K/4E/4U/full153 parents and exact source/proofs bind; actual local integration12/0 with official/native held5fc854 identity, all1062 inputs restore, five false bindings refuse,30 pins/34 controls stable; bounded containers close, completion book/staged epoch separate; own/fix premature final-sweep resume and schedule complete remaining ownership census before final adequacy |
 | 2026-10-18 | `M3.6.9.6.3.2.2.15.1` | `ARCHOGEN-M3-0757 (leaf M3.6.9.6.3.2.2.15.1)` | **All initial survivor ownership reconciled**: native old1420/current1526 bind, all540 initial rows exact/order complete;512 retained raw edits/28 absent/no ambiguity,70 exact historical result bindings without relabelling; all463 general rows gain coherent .15.2–.11 owners, complete compiler83 next;1062 held inputs restore, six false censuses refuse; closed .14 sealed with nine committed bodies/all267 older archives exact and full reconstruction, book exposes every mapping, no code/E/new-outcome claim |
 | 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.1` | `ARCHOGEN-M3-0758 (leaf M3.6.9.6.3.2.2.15.2.1.1)` | **Complete compiler region measured, criterion unmet**: actual83/full153-parent guarded run49K/28S/6U strict1, zero E/timeout/unjudged; exact raw IDs/names/operator totals/source30 pins bind, two E0308/four E0599 refusals explicit; all1063 originals/copies restore and copied153 names agree, seven false receipts reject; own every S in .2–.9, environment admission4 next, all83 outcomes/command in book; no Rust/E/full-file claim |
 | 2026-10-18 | `M3.6.9.6.3.2.2.15.2.1.2.1` | `ARCHOGEN-M3-0759 (leaf M3.6.9.6.3.2.2.15.2.1.2.1)` | **Four environment gaps closed**: two real-inventory parents hold nonterminal foreign records and exact namespace boundaries, allowed value/absence plus refusal/no inventory/recovery; full155-parent native4K/strict0 with intended names, all1063 originals/copies restore and seven false receipts reject, prior Rust exact except two added functions/production operators reasons unchanged; final focused/book/staged gates, no projected83 outcome; command-filter assessment next |
@@ -4599,4 +4605,98 @@ are under `target/compiler-prepare-controls/`. Supplemental audit SHA-256:
 Final staged focused/book/doctrine checks close this slice. The original controller result
 remains its dated measurement; remaining ownership groups require their own controls and
 final complete replay. Next is record validation across real multi-record inputs.
+
+### Compiler record validation at every position
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.6.2`: record validation now has a permanent
+multi-record control. The original production consumer already checks each record; the
+remaining position variants weakened those checks while earlier controls stayed green.
+The production prefix is unchanged.
+
+The control starts a real observer session, runs pinned version queries, and compiles
+distinct programs through it. It executes the resulting programs and independently compares
+the consumer's complete compilation vectors with the original arguments. Query records
+must remain excluded from those vectors. Returned vector order is normalized only for this
+comparison; directory iteration order is never assumed.
+
+`2026-10-19`: the seed contains three real query records and two real compilation records.
+Each seeded filename is temporarily replaced with a relative symbolic link to its original
+bytes in a sibling directory. The test reads the link and target to prove it is relative and
+valid, adds a fresh real query record, and requires the regular-file refusal. Both link and
+held bytes must remain intact. Restoring the regular file must restore the exact expected
+compilation vectors.
+
+`2026-10-19`: after those five link cases, the directory contains ten real records.
+Every filename then receives each of the following corruptions, one at a time:
+
+| Corruption | Independent refusal expectation | Position variants |
+| --- | --- | --- |
+| Valid relative link to original record bytes | Incomplete or unexpected record | `L201.guard.36`, `L201.guard.38` |
+| Additional field in otherwise canonical JSON | Unexpected fields | `L201.guard.39`, `L201.guard.40`, `L201.guard.41` |
+| Leading whitespace before otherwise valid JSON | Noncanonical framing | Same canonical-record group |
+| Positive PID changed while filename stays fixed | Filename differs from invocation identity | `L201.guard.42`, `L201.guard.43`, `L201.guard.44` |
+| Compiler name changed while other arguments remain | Another compiler | `L201.guard.45`, `L201.guard.46`, `L201.guard.47` |
+| Unknown query vector in a real producer record | Unknown invocation shape | `L201.guard.48`, `L201.guard.49`, `L201.guard.50` |
+
+Each refusal must retain the corrupted bytes. The test restores the original file, checks
+successful reading again, and compares all regular record bytes with the full snapshot.
+Both compilation and query records receive every content fault. This distinguishes
+validity of the whole directory from merely validating an endpoint.
+
+The older single-record symbolic-link fixture also stored an absolute target. Reading its
+actual persisted link reproduced that portability-policy defect while confirming the target
+was valid. Its replacement computes a relative target and explicitly verifies the same
+bytes; the metadata refusal still has a real, readable target. No production behavior changes.
+
+The permanent parent is
+`trust::compiler::tests::actual_record_validation_applies_to_every_real_record`.
+The corrected older parent is
+`trust::compiler::tests::actual_query_records_reject_missing_stale_foreign_and_malformed_inputs`.
+
+```sh
+cargo test -p xtask trust::compiler::tests::actual_record_validation_applies_to_every_real_record -- --exact
+cargo test -p xtask trust::compiler::tests::actual_query_records_reject_missing_stale_foreign_and_malformed_inputs -- --exact
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L201.guard.36 --only L201.guard.38 --only L201.guard.39 \
+  --only L201.guard.40 --only L201.guard.41 --only L201.guard.42 \
+  --only L201.guard.43 --only L201.guard.44 --only L201.guard.45 \
+  --only L201.guard.46 --only L201.guard.47 --only L201.guard.48 \
+  --only L201.guard.49 --only L201.guard.50
+```
+
+Original/literal calibration runs the original and each actual production edit separately
+against the new parent. The original succeeds and every edited controller produces a
+finishing failed-test summary. Direct permanent tests pass. The native replay uses all current trust parents.
+
+`2026-10-19`: baseline 50 seconds; all fourteen selected edits finish killed by only the new
+parent, strict exit 0. All 179 current parent names bind. There is no timeout, unjudged result,
+compiler refusal or equivalence judgment in this selected replay. The full production listing
+remains unchanged; final complete controller measurement remains a separate owned leaf.
+
+The first restoration check correctly refused its stale index epoch: the input census had
+been captured before staging. A full difference census found unchanged working bytes/modes,
+three updated index entries and the newly staged preparation archive. The original census and
+refusal remain retained. Reconciliation checks every regular blob against the immutable held
+Git tree, then checks originals and the restored copy with independent Python/system hashes.
+The reconciliation's initial permission assertion was also too strict: Git regular-file mode
+does not encode write bits, and an existing read-only policy file legitimately retains them.
+The corrected check preserves observed permissions and compares the executable bit with Git.
+
+`2026-10-19`: all 1103 activation inputs restore; all 33 direct bindings and 37 public pins
+agree. Twelve altered source/scope/edit/name/outcome/count/exit/population receipts reject.
+Removing the new parent and reversing only the explicit relative-link fixture correction
+reconstructs the entire previous controller exactly. Other code, prior controls, catalogue and
+reasons are unchanged. The committed preparation body seals exactly, and all 291 prior
+archives retain their bytes. Six earlier completed private notes move verbatim to the
+compiler-provenance ledger, with their identities and every other private commit row preserved;
+lost-note, duplicate-record and changed-identity controls reject.
+
+Held native tree `0e7f8ca8b85c97b4447ff5d2fc4bd4fb0f5c93ff` precedes completion documentation
+and final focused staging. Raw calibration, restoration and reconciliation evidence is under
+`target/compiler-record-positions/`. Supplemental audit SHA-256:
+`ff272af1f01c64017746825e63511db8f3e148e40c07381fe71540c78e48a600`.
+Final focused/book/doctrine checks close this slice. Internal-NUL argument validation is next;
+the dated original controller result retains its original meaning until full replay.
 
