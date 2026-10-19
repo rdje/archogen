@@ -5849,18 +5849,27 @@ pub(crate) mod tests {
     const SAME: &str = "#[test]\nfn same() { assert_eq!(i::imp(3), r::refm(3)); }\n";
 
     fn observed_artifact(f: &Fixture, inventory: &Json, name: &str) -> PathBuf {
+        use std::io::Write as _;
+        use std::process::Stdio;
+
         let artifact = program(inventory, name).get("artifact").unwrap();
         let relative = artifact.get("path").and_then(Json::as_str).unwrap();
         assert!(relative.starts_with("release/deps/"), "{name}: {relative}");
         let path = f.base.join("out/target").join(name).join(relative);
         let metadata = std::fs::symlink_metadata(&path).unwrap();
         assert!(metadata.is_file() && !metadata.file_type().is_symlink());
-        // An independent system implementation hashes the actual selected bytes.
-        let digest = Command::new("shasum")
+        // Hash bytes on stdin so filename escaping cannot alter the digest token.
+        let bytes = std::fs::read(&path).unwrap();
+        let mut child = Command::new("shasum")
             .args(["-a", "256"])
-            .arg(&path)
-            .output()
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
             .unwrap();
+        let sent = child.stdin.take().unwrap().write_all(&bytes);
+        let digest = child.wait_with_output().unwrap();
+        sent.unwrap();
         assert!(digest.status.success());
         let digest = String::from_utf8(digest.stdout).unwrap();
         assert_eq!(
@@ -5903,6 +5912,47 @@ pub(crate) mod tests {
             failures, 1,
             "one actual compiler child failed for {crate_name}"
         );
+    }
+
+    #[test]
+    fn observed_artifact_hashing_preserves_newlines_and_backslashes_in_paths() {
+        crate::trust_test_process::bounded!(
+            observed_artifact_hashing_preserves_newlines_and_backslashes_in_paths
+        );
+        let base = real_root().join("target/trust-tests/artifact-hash-filenames");
+        match std::fs::remove_dir_all(&base) {
+            Ok(()) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => panic!("cannot clear {base:?}: {error}"),
+        }
+        let payload = b"held artifact bytes\n";
+        let expected = "ea40e457619b75b94b1cd15dfbaaf73b8cf1f6b5d039a77548178711af4e7629";
+        assert_eq!(Digest::of(payload).hex(), expected);
+        let relative = "release/deps/libfixture.rlib";
+        let inventory = super::obj(vec![(
+            "programs",
+            Json::Array(vec![super::obj(vec![
+                ("name", super::s("chk")),
+                (
+                    "artifact",
+                    super::obj(vec![
+                        ("path", super::s(relative)),
+                        ("sha256", super::s(expected)),
+                    ]),
+                ),
+            ])]),
+        )]);
+        for name in ["ordinary", "line\nbreak", "back\\slash", "both\nand\\slash"] {
+            let f = Fixture {
+                repo: base.join(name).join("repo"),
+                base: base.join(name),
+            };
+            let path = f.base.join("out/target/chk").join(relative);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(&path, payload).unwrap();
+            assert_eq!(std::fs::read(&path).unwrap(), payload);
+            assert_eq!(observed_artifact(&f, &inventory, "chk"), path);
+        }
     }
 
     #[test]

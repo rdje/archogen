@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hash observed artifacts independently of filename escaping
+
+`ARCHOGEN-M3-0805` (leaf `M3.6.9.6.3.2.2.15.2.1.4.2.0`), `2026-10-19`.
+
+- Actual unchanged helper reproduces newline-path hash-token mismatch; known payload,
+  Python/system stdin and documented shasum filename escaping bind the root cause.
+- Minimal helper-only stdin hashing waits/reaps before input-error reporting; permanent
+  ordinary/newline/backslash/combined path control changes real RED to GREEN.
+- Reverse helper/new-parent removal reconstructs prior file exactly; production/raw1404
+  unchanged, current197 listing adds only the regression;38 other bindings/reasons exact.
+- Assessment seal/315 older archives and false hash/payload/count controls pass; book/live
+  and final still-tree focused gates. Actual no-suffix collector regression remains next.
+
 ## archogen — assess current caller suffix producer domain
 
 `ARCHOGEN-M3-0804` (leaf `M3.6.9.6.3.2.2.15.2.1.4.1`), `2026-10-19`.

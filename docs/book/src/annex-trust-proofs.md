@@ -7842,3 +7842,120 @@ the public book remains unbounded.
 | `M3.6.9.6.3.2.2.14.3.2.2.2.2.2.2.2` | `ARCHOGEN-M3-0749 (leaf M3.6.9.6.3.2.2.14.3.2.2.2.2.2.2.2)` | **Repaired caller full checkpoint passes**: exact current raw historical59/14/51/2,28 pinned sources/33 controls and unchanged environment/allowlist/reasons bind; actual local integration12/0 on official/native held180b activation, all1055 originals restore and five false bindings refuse; code exact, completion book/staged epoch separate, caller repair and timing checkpoint close, seven remaining helper judgments resume, no fresh adequacy/remote CI/board claim |
 | `M3.6.9.6.3.2.2.14.3.2.2.2.2.3` | `ARCHOGEN-M3-0750 (leaf M3.6.9.6.3.2.2.14.3.2.2.2.2.3)` | **Seven helper obligations assessed**: exact current edits/compiled environment bind; real Cargo target alias, independent cwd warning and leading manifest error distinguish three edits; two absolute-path proof proposals and two producer-dependent boundaries remain; wider/false-binding controls, all1055 restored; no new native result/E; separately own immediate regressions, proofs and producer assessment |
 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.6` | `ARCHOGEN-M3-0794 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.6)` | actual three-output query, each rlib position and each missing nonselected file held with literal path/independent digest/recovery; exact historical2S become native2K/full188,1121 restored/37 pins/five false receipts; original/copy payloads/joined seal/304 archives exact, production/old tests unchanged; book/live/final staged focused, file kinds next |
+
+### Artifact hash checks under escaped paths
+
+`2026-10-19`, leaf `.15.2.1.4.2.0`: the test-only `observed_artifact` checker now sends
+the actual artifact bytes to the independent system hash command through stdin. The new
+path regression reproduces a false failure in the old helper and passes after the repair.
+This protects the existing artifact oracles before the supported caller-suffix regression.
+
+#### Actual formatter defect and unchanged-helper reproduction
+
+The old helper runs `shasum -a 256 <path>` and compares its first output token with the
+inventory's plain digest. Installed `shasum 6.02` documents a leading backslash when its
+filename output escapes a newline or backslash. That marker belongs to the filename-bearing
+output format, not to the SHA-256 value.
+
+The known regular-file payload is `held artifact bytes` followed by LF. Python and the
+system stdin form independently give this digest:
+
+```text
+ea40e457619b75b94b1cd15dfbaaf73b8cf1f6b5d039a77548178711af4e7629
+```
+
+With an escaped filename, the filename form's first token instead begins:
+
+```text
+\ea40e457619b75b94b1cd15dfbaaf73b8cf1f6b5d039a77548178711af4e7629
+```
+
+The permanent parent calls the actual unchanged helper with a minimal inventory artifact
+record and this known payload. The ordinary case passes; the newline case triggers the
+helper's digest equality assertion. The bounded child and Cargo both report exit `101`.
+The expected token is the plain hash while the parsed token includes the extra backslash.
+The existing helper body was byte-exact to the committed source during that reproduction.
+
+The first supplemental output guard expected the child's failure as flattened text. The
+bounded runner retains it as a debug-escaped stdout string, so that guard refused. Decoding
+the nested string and both digest values exactly confirms the actual helper failure;
+`red.json` retains that qualification. No compile/setup failure is counted as the defect.
+
+#### Byte hashing and child lifetime
+
+The helper reads the verified regular file's bytes before spawning the independent hash
+process, pipes those bytes to `shasum -a 256` with no filename argument, and waits for its
+output. The write result is checked only after waiting, so the child is reaped before an
+input-write error is reported:
+
+```rust
+let sent = child.stdin.take().unwrap().write_all(&bytes);
+let digest = child.wait_with_output().unwrap();
+sent.unwrap();
+```
+
+The path, regular-file and inventory-digest checks retain their existing contracts. The
+new regression supplies ordinary, newline, backslash and combined path names:
+
+| Fixture path component | Filename form has an escape prefix | Repaired actual helper |
+| --- | --- | --- |
+| `ordinary` | no | passes |
+| `line\nbreak` | yes | passes |
+| `back\slash` | yes | passes |
+| `both\nand\slash` | yes | passes |
+
+The backslash sequences in this table describe actual newline/backslash filename bytes;
+the test creates those bytes, rather than paths containing a printed escape notation.
+Each stored file contains the exact known payload. Independent Python/system stdin hashes
+agree in every case, while the filename form reproduces its documented marker. Wrong
+payload and wrong-hash oracles reject. All files remain on the repository volume.
+
+`2026-10-19`: the exact maintained parent finishes `1 passed; 0 failed` after the repair.
+Its full name is
+`trust::tests::observed_artifact_hashing_preserves_newlines_and_backslashes_in_paths`.
+
+```bash
+cargo test -p xtask \
+  trust::tests::observed_artifact_hashing_preserves_newlines_and_backslashes_in_paths \
+  -- --exact
+```
+
+The code ordering handles child lifetime on a write error; the runtime regression exercises
+successful writes and the filename cases, without claiming a separate injected write-error test.
+
+#### Exact change and source scope
+
+Reversing only the helper repair and removing only the new parent reconstructs the complete
+previous `xtask/src/trust.rs` byte for byte. Every earlier test body and production byte is
+preserved. Current whole-file SHA-256 is
+`b39ca1f3e2b31d2fdd57a25e0e3e4fa6edd7729fb5ea302f2a1976268737d28b`; production-prefix SHA-256 remains
+`036f650dc082d9d43956865ef67fb16f761c4b3ede54c0567f8936733322bef4`.
+
+`2026-10-19`: fresh CLI/maintained discovery retains all 1404 raw production edits exactly.
+The current semantic listing is 197 parents, with only the new path control added to the
+earlier cohort. That is a fresh listing, not a new caller mutation verdict. The earlier
+suffix assessment's source/cohort remains historical evidence; the next regression must
+bind the current source and require its intended finishing native kill.
+
+Helper SHA-256 `5e5061a995c93a838ea18eec26e363f621752c7a54ef9893f328beec326fba5c` and
+new-parent SHA-256 `932d3ff3a8479f28047d55785c7a4976da400242071740bd1d22279643a1a3b5` identify the exact repair/control.
+The independent audit checks 38 other source/test/tool bindings and every catalogue/reason
+against the committed bytes. No production predicate or equivalence record changes.
+
+The prior caller-assessment body seals exactly, and all 315 older archive files remain
+byte-exact. Independent Git/index/filesystem populations agree and false small/off-by-one
+counts reject. The new assessment seal retains the committed body’s terminal blank
+separator exactly: the canonical body has three final LF bytes and its sealed form has two.
+The ordinary whitespace command flags only that historical ending; new-content whitespace
+is checked separately and the sealed bytes remain unchanged. Exact-source reconstruction
+verifies that retained separator. Audit SHA-256
+`99a4997dd9551b39429c84428edc16418e4edf0947ccb6cc73740111ad96b436` binds the original helper reproduction, repaired control,
+known payload/hash oracles, exact source reconstruction, raw discovery and preservation.
+Supplemental logs, formatter/help output and audit programs remain under
+`target/artifact-hash-filenames/`. The permanent maintained test preserves the regression
+independently of those untracked observations.
+
+The final still-tree focused tier must pass before this leaf commits, including strict
+format/lint, the full contract suite and existing operator proof controls. The next owned
+leaf `.15.2.1.4.2.1` adds the actual admitted no-suffix/incremental-path collector regression.
+Caller/global adequacy and the separate no-equals-prefix assessment remain open.
