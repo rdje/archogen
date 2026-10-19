@@ -1291,9 +1291,10 @@ impl Rules<'_> {
 
     /// The manifest rules over every package of `closure`, from the metadata graph, before any build of `who`: a build
     /// script or a procedural macro is refused here, so none runs (§3, R2 B12), and a crate root that is not a `.rs`
-    /// file (R8 1); each manifest once across the run.
+    /// file (R8 1); each successful package judgment once across the run.
     fn manifests(&mut self, who: &str, closure: &BTreeSet<String>, refused: &mut Vec<String>) {
         for pkg in closure {
+            let before = refused.len();
             // rustc compiles a crate root whatever its name, and no token rule reads a file that is not `.rs`; `mod`
             // finds only `.rs` files, and `#[path]` and `include!` are refused, so with this every Rust source a root
             // compiles is a `.rs` file (R8 1).
@@ -1305,7 +1306,7 @@ impl Rules<'_> {
                     refused.push(format!("trust-undeclared-input: `{}` reaches `{src}`, a crate root that is not a `.rs` file, which rustc compiles and no rule reads", who));
                 }
             }
-            if !self.manifests_checked.insert(pkg.clone()) {
+            if self.manifests_checked.contains(pkg) {
                 continue;
             }
             for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {
@@ -1354,6 +1355,10 @@ impl Rules<'_> {
                     "trust-undeclared-input: `{}` reaches a package with no tracked `{path}`",
                     who
                 )),
+            }
+            // A refusal must still block every later target that reaches this package.
+            if refused.len() == before {
+                self.manifests_checked.insert(pkg.clone());
             }
         }
     }
@@ -4025,6 +4030,163 @@ pub(crate) mod tests {
         assert!(!out.join("trust-dependencies.json").exists());
         std::fs::remove_file(out.join("cargo-home")).unwrap();
         written(f.run());
+    }
+
+    fn repeated_generator_preflight(dynamic: bool) {
+        for order in [["one", "two"], ["two", "one"]] {
+            let accepted = manifest("g", if dynamic { "build = false\n" } else { "" });
+            let rejected = manifest(
+                "g",
+                if dynamic {
+                    ""
+                } else {
+                    "[features]\ndefault = [\"extra\"]\nextra = []\n"
+                },
+            );
+            let roots = |text: &str| {
+                let mut value = format!(
+                    "{ROOTS}(defgenerated \"crates/a/src/main.rs\" \
+                     (generator \"crates/g/src/bin/{}.rs\" \"crates/g/src/bin/{}.rs\") \
+                     (command \"fixture\") (reason \"fixture\"))\n",
+                    order[0], order[1],
+                );
+                for name in ["one", "two"] {
+                    value.push_str(&format!(
+                        "(defprogram generator-{name} (package \"crates/g\") \
+                         (target bin {name}) (reason \"fixture\") (role-packages \"crates/g\"))\n"
+                    ));
+                }
+                if dynamic {
+                    value.push_str(&admit(
+                        "crates/g/Cargo.toml",
+                        "`crates/g/build.rs`: a package has no build script",
+                        text,
+                    ));
+                }
+                value
+            };
+            let f = two_roots(
+                &format!("generator-preflight-cache-{dynamic}-{}", order[0]),
+                "fn main() {}\n",
+                "pub fn f() {}\n",
+                &[
+                    ("crates/g/Cargo.toml", accepted.clone()),
+                    ("crates/g/src/bin/one.rs", "fn main() {}\n".to_owned()),
+                    ("crates/g/src/bin/two.rs", "fn main() {}\n".to_owned()),
+                    ("trust/roots.eadl", roots(&accepted)),
+                ],
+            );
+            if dynamic {
+                f.commit(&[(
+                    "crates/g/build.rs",
+                    "fn main() { std::fs::write(\"RAN\", \"build script ran\").unwrap(); }\n"
+                        .to_owned(),
+                )]);
+            }
+            let check = |inventory: &Json| {
+                assert_eq!(
+                    inventory.get("refused-sites").and_then(Json::as_str),
+                    Some(if dynamic { "1" } else { "0" })
+                );
+                for name in ["one", "two"] {
+                    let targets = inventory.get("program-targets").unwrap().elements();
+                    let target = targets
+                        .iter()
+                        .find(|target| {
+                            target.get("package").and_then(Json::as_str) == Some("crates/g")
+                                && target.get("name").and_then(Json::as_str) == Some(name)
+                        })
+                        .unwrap();
+                    assert_eq!(
+                        target.get("status").and_then(Json::as_str),
+                        Some(format!("classified generator-{name}").as_str())
+                    );
+                }
+                assert!(inventory
+                    .get("admissions-unused")
+                    .unwrap()
+                    .elements()
+                    .is_empty());
+                assert!(inventory
+                    .get("classifications-unused")
+                    .unwrap()
+                    .elements()
+                    .is_empty());
+            };
+            let ordinary = written(f.run());
+            check(&ordinary);
+            assert!(f
+                .base
+                .join("out/target-generators/crates-g-bin-one")
+                .is_dir());
+            assert!(f
+                .base
+                .join("out/target-generators/crates-g-bin-two")
+                .is_dir());
+            assert!(!f.base.join("out/tree/crates/g/RAN").exists());
+            // The bad phase must not mistake the successful prior products for a new build.
+            std::fs::remove_dir_all(f.base.join("out/target-generators")).unwrap();
+            f.commit(&[
+                ("crates/g/Cargo.toml", rejected.clone()),
+                ("trust/roots.eadl", roots(&rejected)),
+            ]);
+            let outcome = f.run();
+            let ran = f.base.join("out/tree/crates/g/RAN").exists();
+            let compiled = f.base.join("out/target-generators").exists();
+            let wrote_inventory = f.base.join("out/trust-dependencies.json").exists();
+            // Hold the bad-case observations while a normal third invocation recovers.
+            f.commit(&[
+                ("crates/g/Cargo.toml", accepted.clone()),
+                ("trust/roots.eadl", roots(&accepted)),
+            ]);
+            let recovered = written(f.run());
+            check(&recovered);
+            assert_eq!(items(&recovered), items(&ordinary));
+            assert!(f
+                .base
+                .join("out/target-generators/crates-g-bin-one")
+                .is_dir());
+            assert!(f
+                .base
+                .join("out/target-generators/crates-g-bin-two")
+                .is_dir());
+            assert!(!f.base.join("out/tree/crates/g/RAN").exists());
+            assert!(
+                !ran,
+                "an earlier refusal let the repeated package run its script"
+            );
+            assert!(
+                !compiled,
+                "an earlier refusal let the repeated package compile"
+            );
+            assert!(!wrote_inventory);
+            let why = refused(outcome);
+            for name in order {
+                says(&why, &format!("generator crates/g/src/bin/{name}.rs"));
+            }
+            if dynamic {
+                says(&why, "custom-build");
+            } else {
+                says(&why, "[features]");
+                says(&why, "no admission names it");
+            }
+        }
+    }
+
+    #[test]
+    fn repeated_generator_build_script_refusals_prevent_compilation() {
+        crate::trust_test_process::bounded!(
+            repeated_generator_build_script_refusals_prevent_compilation
+        );
+        repeated_generator_preflight(true);
+    }
+
+    #[test]
+    fn repeated_generator_manifest_refusals_prevent_compilation() {
+        crate::trust_test_process::bounded!(
+            repeated_generator_manifest_refusals_prevent_compilation
+        );
+        repeated_generator_preflight(false);
     }
 
     #[test]

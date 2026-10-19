@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — preserve preflight refusals across generator targets
+
+`ARCHOGEN-M3-0807` (leaf `M3.6.9.6.3.2.2.15.2.1.4.3.0`), `2026-10-19`.
+
+- Public API reproduces first refusal/second generator compilation in both orders, including
+  an active admitted build script's side effect. Cache only successful complete preflight.
+- Two bounded classified-input parents hold script and unadmitted-manifest cases, literal
+  accepted site counts and ordinary/recovery; original RED becomes repaired2 GREEN.
+- Exact cache insertion guard finishes1K/full200 with both intended names; all1135 inputs
+  restore,39 bindings/37 producer pins,10 native/3 public falsifiers and prior316 archives/
+  new3-node seal pass. Two proof guards revalidated before their hash updates; operator48.
+- Initial missing-reason-file replay and close-guard refusal retained honestly; canonical/
+  unbounded book/live sync and final focused. New prefix proof deferred; complete changed-
+  cache/current-reason and suffix checkpoints remain owned, no global adequacy closure.
+
 ## archogen — preserve no-suffix dep-info selection under incremental paths
 
 `ARCHOGEN-M3-0806` (leaf `M3.6.9.6.3.2.2.15.2.1.4.2.1`), `2026-10-19`.

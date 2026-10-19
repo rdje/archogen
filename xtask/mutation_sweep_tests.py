@@ -539,7 +539,7 @@ class ObserverCloseTests(DiscoveryFixture):
         expected = {
             'xtask/src/trust_compiler_observer.rs': '58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98',
             'xtask/src/trust_compiler.rs': '1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973',
-            'xtask/src/trust.rs': 'd4b2ae51fa78f79c770cb7c9f84dbcf06578be12735461c328a28e509e8ab88c',
+            'xtask/src/trust.rs': '401c7abd874b00bd53d5d0d9801c6d34f2ee7e19b1d4ed6042bede9c7704b041',
         }
         def verify(inputs):
             for path, digest in expected.items():
@@ -1566,7 +1566,7 @@ class IteratorTests(DiscoveryFixture):
             entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
             guarded = {
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
-                    "036f650dc082d9d43956865ef67fb16f761c4b3ede54c0567f8936733322bef4"),
+                    "51af305a7198e25bb793f1d24a24628082f6b0479704b6e65a488497d9c4502d"),
                 "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
                     "634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70"),
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],

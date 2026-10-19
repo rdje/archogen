@@ -525,6 +525,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Remaining measurements — [Generated-sources test adequacy](trust-adequacy.md#remaining-measurements)
 - Repaired caller integration checkpoint — [Annex C: Trust proof
   records](annex-trust-proofs.md#repaired-caller-integration-checkpoint)
+- Repeated generator preflight refusals — [Annex C: Trust proof
+  records](annex-trust-proofs.md#repeated-generator-preflight-refusals)
 - Repository path caller repair — [Annex C: Trust proof records](annex-trust-proofs.md#repository-path-caller-repair)
 - Required crate-name minimum membership — [Annex C: Trust proof
   records](annex-trust-proofs.md#required-crate-name-minimum-membership)

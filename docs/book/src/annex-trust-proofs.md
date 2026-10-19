@@ -8143,3 +8143,562 @@ the public book remains unbounded.
 | `M3.6.9.6.3.2.2.13.3.2.1` | `ARCHOGEN-M3-0737 (leaf M3.6.9.6.3.2.2.13.3.2.1)` | **Caller bound; failed integration preserved**: exact production/build/pin/source/32-control and complete59 reason/result bindings; full local tier11 passed/1 self-test failed on held native activation, no pass stamp; all1043 originals/prior-copy restore, epochs explicit; book/live record failure, PROGRAM.92 owns handoff-arm root/repair before final integration .2 |
 | `M3.6.9.6.3.2.2.13.3.2.2` | `ARCHOGEN-M3-0739 (leaf M3.6.9.6.3.2.2.13.3.2.2)` | **Prefix/helper checkpoint passes**: unchanged caller/28-source/32-control and complete59 reason/result bindings; actual full local tier12/0 on held native/official activation, prior11/1 remains historical; all1046 originals and prior-copy1043 restore in separate epochs, five false bindings refuse, code/controls/reasons/handoff exact; book/live close .13 and own run_cargo binding/locality preflight, full adequacy remains open |
 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.4` | `ARCHOGEN-M3-0792 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.4)` | exact extra-filename= helper boundary held; historical2S become native2K/full186,1119 restored/37 pins/five false receipts; caller old/current pair separately mapped/owned, six historical queue labels corrected with exact reversal;8 notes verbatim/prior ledger/value seal/302 archives exact; book/live/final staged focused, joined options next |
+
+### Repeated generator preflight refusals
+
+`2026-10-19`, leaf `.15.2.1.4.3.0`: a repeated generator package could run code after
+preflight had already refused it. The repair in `xtask/src/trust.rs` caches successful
+package judgments. A failed visit remains a failure for every later target that reaches
+that package. Separate bounded parents hold script execution and manifest-only compilation.
+
+#### Trigger and observed defect
+
+Two generator binaries belong to one package. A role reads a file declared with both:
+
+```lisp
+(defgenerated "crates/a/src/main.rs"
+  (generator "crates/g/src/bin/one.rs" "crates/g/src/bin/two.rs")
+  (command "fixture")
+  (reason "fixture"))
+```
+
+These paths are relative to the generated fixture repository. Both binaries have explicit
+program classifications in the successful controls. The package's build script writes a
+literal marker in its own written-tree directory:
+
+```rust
+fn main() {
+    std::fs::write("RAN", "build script ran").unwrap();
+}
+```
+
+Its manifest has the exact reviewed build-script admission. That admission permits the
+reviewed manifest bytes; unconditional metadata preflight still refuses a live `custom-build`
+target before that package is compiled. Its admission rule is
+<code>&#96;crates/g/build.rs&#96;: a package has no build script</code>.
+
+Previously the first generator visit inserted the package into the manifest cache before
+recording its dynamic-target refusal. Step 4 skips a build when that visit adds refusals.
+The second target found the package cached, skipped checks, added no new refusal and
+compiled. The script wrote `RAN`. Final refusal prevented an inventory, but could not undo
+the execution.
+
+The same defect affected an ordinary unadmitted feature manifest, without a build script:
+
+```toml
+[features]
+default = ["extra"]
+extra = []
+```
+
+The first target recorded the manifest refusal and the second still compiled. The defect
+concerned caching failed judgments, rather than only the dynamic check's location.
+
+Eight fresh public API replays compare both implementations, cases and generator orders.
+All inputs have two classified generator binaries; fixture source bytes remain exact.
+
+| Case | Original, each order | Repaired, each order |
+| --- | --- | --- |
+| admitted manifest, active script | first target refused; second compiles and writes `RAN` | both refused; no generator compilation or script marker |
+| unadmitted feature manifest | first target refused; second compiles | both refused; no generator compilation |
+| final inventory in either refused case | absent | absent |
+
+Role builds finish before live generator preflight; the no-build assertions cover the
+refused generator package. This does not promise that no earlier role compilation ran.
+
+#### Successful caching and regression controls
+
+The function records the refusal-vector length before each package's checks. Only a visit
+that adds no refusal enters the successful set. Immutable accepted packages still reuse
+their judgment. Failed metadata, manifest parsing, missing manifests or unadmitted content
+cannot acquire a passed entry.
+
+The two parents use the existing bounded-child limit independently:
+
+```text
+trust::tests::repeated_generator_build_script_refusals_prevent_compilation
+trust::tests::repeated_generator_manifest_refusals_prevent_compilation
+```
+
+Each checks both orders. An ordinary inventory builds both binaries; the bad manifest is
+committed; a third ordinary commit recovers before the captured bad result is judged.
+The dynamic case uses an ignored `build = false` script for successful phases. The other
+case introduces and removes the unadmitted feature table.
+
+Literal expectations hold both classification statuses, no unused classifications or
+admissions, and one accepted manifest site for the ignored script versus zero for the
+plain case. Shared items match before and after recovery. Only that fixture's prior
+generator outputs are cleared before the bad invocation, so stale products cannot count
+as a new attempt. Script-marker, target-directory and inventory presence are captured
+before recovery cleans or rebuilds them.
+
+Both parents fail on the original cache at the intended script/compilation assertion,
+after successful recovery; repaired code passes both. Early fixture-oracle calibrations
+are retained separately: generator directories include the full package path, prior
+products must be cleared, and the inventory site count is a string. These early refusals
+are not counted as the defect's RED evidence.
+
+#### Source and native revalidation
+
+Whole-file SHA-256: `c02f30e133a9ef8b54f237dd5aa2cb0c8b55041fbdd304290d5109d65277aa49`. Production-prefix SHA-256: `51af305a7198e25bb793f1d24a24628082f6b0479704b6e65a488497d9c4502d`.
+Removing only the helper/two new parents and reversing the small cache change reconstructs
+the committed predecessor. Earlier test bodies, all reasons and catalogues remain exact.
+
+The absolute-Cargo-path proof guards the production prefix. Its helper, both compile
+routes, root/cwd/output constructors and environment/observer are unchanged. Actual
+original/edited helpers, generated records, wider relative paths, altered premises and
+wrong oracles pass before the maintained binding changes.
+
+The observer-close proof’s guarded caller hash also changes. Its writer/controller,
+post-sync/publication operations and synchronous reader are exact; actual close omission,
+protocol/error/timing and altered-premise controls pass before that binding changes.
+These two reviewed hash bindings are the only operator-suite edits; all 48 controls pass.
+
+Fresh CLI/maintained discovery agrees on 1414 raw candidates. This repair selects the
+cache insertion guard `L1360.cond.479` against all 200 semantic parents. All 22
+current reasons remain byte-exact and map to current candidates; their native outcomes are
+not remeasured by this repair. The targeted invocation is:
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --equivalents xtask/trust.equivalents --only L1360.cond.479
+```
+
+The owned receipt reports **1K**, strict exit `0`. The cache edit finishes with exactly
+the two intended new parent names. No selected survivor, timeout, compiler refusal or
+unjudged result remains. Copied baseline and all current parent names agree.
+
+All 1135 captured regular original/copied inputs restore with Python/system hashes and
+modes; the gitlink is metadata-only. The 39 direct bindings and 37 pinned
+published producer sources agree with the native input epoch. During completion, the
+canonical repair detail and completed collector history route verbatim below. Exact
+reconstruction recovers that document’s measured bytes; the compact contract retains its
+protocol table, cache invariant and links to the complete records. Ten false native receipts and three false public-case
+receipts reject. The prior regression subtree seals exactly; all 316 older archives
+stay exact, with independent Git/index/filesystem populations and false-count controls.
+
+Held tree `79a9ca87afb538b38dc69b3d904ae8ad1252fdb6` and audit SHA-256 `31aa4f0d1dc08eddcf95ca5196be45e4b3ae14fa3b4097feb42d76911632e46f` identify this checkpoint. Commands,
+original/repaired public observations, RED/GREEN and proof-binding logs, source copies,
+native output and restoration audits remain under `target/generator-preflight-cache/`.
+The initial combined replay omitted its explicit reason-file argument and was interrupted;
+its partial survivors are not the planned evidence. Original/copied inputs restored before
+the corrected targeted run. Its failed receipt remains available. Final still-tree focused,
+book and doctrine checks precede the commit.
+
+#### The separate prefix proof remains open
+
+The defect surfaced while checking the no-equals suffix proof's preflight premise. Its
+source90c1078d/full198 provisional E receipt and operator49 result do not establish that
+proof while the premise is false. The proposed new reason/control were removed from active
+files and retained verbatim as deferred evidence; the 22 earlier reasons remain.
+
+Next, `.15.2.1.4.3.3` repairs figure registration for literal fences. Leaf `.4.3.1` then
+rebinds repaired source and remeasures without E before completing
+the source/constructor/adjacency proof. Leaf `.4.3.2` measures the complete changed-cache
+cohort and all current trust reasons. The suffix-pair checkpoint, complete caller/global replay and independent review
+remain open before F30/M3 adequacy.
+
+The [canonical contract](../../specs/trust/compiler-provenance-contract.md#repeated-generator-package-preflight)
+records the successful-cache rule and provenance.
+
+#### Detailed preflight repair record
+
+This record is retained verbatim from the repair’s canonical draft. The canonical contract
+keeps the cache invariant and points here; complete detail remains available in the book.
+
+
+`M3.6.9.6.3.2.2.15.2.1.4.3.0`, `2026-10-19`: unconditional metadata and manifest
+preflight must block every target whose build reaches a refused package. A package already
+visited for another generator is not thereby accepted.
+
+The previous `Rules::manifests` inserted the package into `manifests_checked` before its
+dynamic-target and manifest-content checks. Generated-source step 4 refuses each target
+when that visit adds refusals. If two distinct generator targets reach the same failing
+package, the first visit records the refusal, but the second used to skip the cached
+checks, add no new refusal and proceed to compilation. A public API fixture actually ran
+the package's build script on that second visit. The final inventory was still refused;
+the prebuild no-package-code contract had already been violated. A separate unadmitted
+feature manifest also allowed its second target to compile.
+
+The repair caches only successful complete package judgments. Record the refusal count
+before that package's checks and insert it into the successful set only if the count has
+not grown. Repeated failed visits therefore issue their own contextual refusal and cannot
+pass the caller's new-refusal gate. An already successful immutable package still reuses
+its manifest judgment, with accepted sites/admissions counted once. Source-extension
+checks remain per visit; no configuration, environment, manifest admission or supported
+target kind is broadened.
+
+Two bounded maintained parents in `xtask/src/trust.rs` cover actual build-script and
+unadmitted-feature refusals, each in both generator orders. Their ordinary and recovered
+inventories have two explicitly classified generator binaries; literal accepted site counts
+and unchanged shared items hold. Before the bad invocation, only the fixture's prior
+generator build outputs are cleared so stale successful products cannot masquerade as a
+new compilation. The parents capture the bad-phase script marker, target-directory creation
+and inventory presence before running the successful recovery, then judge those captured
+values and require both target-specific refusals.
+
+The owned original source fails both parents after successful recovery; the repaired source
+must pass both. The [book evidence](../../book/src/annex-trust-proofs.md#repeated-generator-preflight-refusals)
+records current native/reason preservation and final focused checks. The complete current
+cache-edit cohort has its own checkpoint before this assessment container closes.
+
+This defect was found while assessing a caller suffix proof. Its provisional source90c1078d/
+full198 reason receipt and operator49 result do not establish that proof: the supposed
+unconditional dynamic-target premise had not held for repeated generator packages. The new
+prefix reason and proof control were removed from the active files and preserved as deferred
+evidence. The owned follow-up rebinds the repaired source, remeasures without E and completes
+the proof before adding any precise reason. Existing prefix/helper proofs are revalidated
+against the repaired preflight; no finite native receipt substitutes for their source arguments.
+
+#### Collector revalidation history
+
+This completed implementation record is retained verbatim from the canonical contract.
+Its dates, controls and open verification statements describe its recorded source epoch.
+
+
+`2026-10-18`, `.15.2.1.3.3.2.1`: the controller/embedded observer implement the collection
+rows above for both compile callers. Base environment/preflight and argv remain. Records require
+current schema/session/role/cwd, matching PID/filename and successful status. Unknown, malformed,
+partial, stale or unsuccessful provenance stops the inventory. UTF-8 interpretation is explicit.
+Artifact/compatibility controls pass; source/integration gates follow.
+
+The production record retains the verified P2/native controls, bounded diagnostic matrix,
+legacy catalogue/reason retirements, historical controls and current premise revalidation.
+Baseline evidence repair is .3.3.3.0; bounded results do not establish full source adequacy.
+
+Exact commands, controls, outcomes, failed attempts and scope are in the
+[production record](../../book/src/annex-trust-proofs.md#production-compiler-invocation-collection-repair).
+All new judgment files join .3's scope. The
+[artifact record](../../book/src/annex-trust-proofs.md#observed-compiler-artifact-binding) owns metadata/source
+selection, empty-input naming, direct relative paths, output refusals and actual/copy controls.
+The [complete compatibility matrix](../../book/src/annex-trust-proofs.md#compiler-provenance-compatibility-checkpoint)
+binds every contract row to controls and explicit source/domain premises.
+Full source/premise/integration verification remains .3.
+
+#### Literal fence gate follow-up
+
+The publication gate read tilde-fenced draft text as prose even though mdBook rendered it
+as code. This publication uses standard backtick fences with the archived bytes unchanged;
+`.4.3.3` owns the isolated reproduction and gate repair. It does not grant any draft claim.
+
+#### Withdrawn prefix draft preserved for continuation
+
+The following three draft additions are retained verbatim against base commit
+§05c7ddd1a2abfc5a7d6e0d4b847e2f97cc96eecb§. They were withdrawn when the repeated-generator preflight
+counterexample invalidated a premise. Their old source guards, provisional reason and
+unconditional preflight statements are historical draft material; they are not an active
+or accepted equivalence. The follow-up must rebind repaired source and finish its proof.
+
+**Python proof control**, SHA-256 §277facb417041eb9a94315e62eadd563ec41f22759d7f55608343883fb61426b§:
+
+```python
+    @unittest.skipUnless(os.name == "posix", "the pinned producer/caller proof is Unix")
+    def test_caller_suffix_prefix_requires_the_complete_pinned_constructor(self):
+        """Exact extraction edit: source proof is conditional, wider argv is deliberately different."""
+        paths = ["xtask/src/trust.rs", "xtask/src/trust_compiler.rs",
+                 "xtask/src/trust_compiler_observer.rs", "xtask/src/catalog_build.rs",
+                 "rust-toolchain.toml", ".cargo/config.toml"]
+        inputs = {path: (ROOT / path).read_bytes() for path in paths}
+        expected = {'xtask/src/trust.rs': '036f650dc082d9d43956865ef67fb16f761c4b3ede54c0567f8936733322bef4', 'xtask/src/trust_compiler.rs': '634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70', 'xtask/src/trust_compiler_observer.rs': 'c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f', 'xtask/src/catalog_build.rs': 'a3ec83b4f8ae870ea7a301dd8acc61d0eb42bb20a5b561c673fa8bb2a23d4864', 'rust-toolchain.toml': '4706b7b407427c38a3b63860b2e131cacc9eb57569a6755a39e81756cca676cd', '.cargo/config.toml': '48296b18a2b27cc7268cf489fc37bdcf24e04d79b914c2237c248e4db1f6fa79'}
+        version = self.bounded(["cargo", "--version", "--verbose"])
+        commit = "commit-hash: f2d3ce0bd7f24a49f8f72d9000448f8838c4e850"
+
+        def premises(values, producer):
+            actual = {path: hashlib.sha256(data.split(b"#[cfg(test)]", 1)[0]
+                       if path.endswith(".rs") else data).hexdigest()
+                      for path, data in values.items()}
+            self.assertEqual(actual, expected, "caller suffix source premise requires revalidation")
+            self.assertIn(commit, producer, "caller suffix producer premise requires revalidation")
+
+        premises(inputs, version)
+        for path in paths:
+            altered = dict(inputs)
+            altered[path] = b"// changed premise\n" + altered[path]
+            with self.assertRaisesRegex(AssertionError, "source premise requires revalidation"):
+                premises(altered, version)
+        with self.assertRaisesRegex(AssertionError, "producer premise requires revalidation"):
+            premises(inputs, version.replace(commit, "commit-hash: changed", 1))
+
+        source = inputs["xtask/src/trust.rs"].decode()
+        namespace, literals = self.discovery(source, "lit")
+        key = ('(w[0] == "-C" && w[1].starts_with("extra-filename="))',
+               '(w[0] == "-C" && w[1].starts_with("extra-filename"))')
+        family = [candidate for candidate in literals if namespace["mutation_key"](candidate) == key]
+        self.assertEqual(len(family), 1, "one exact actual caller edit")
+
+        def module(text, name):
+            start = text.index("        let extra = tokens\n")
+            end = text.index("        // The unit's package", start)
+            body = text[start:end]
+            self.assertEqual(body.count(".windows(2)"), 1)
+            return f"mod {name} {{ pub fn collect(tokens: &[String]) -> String {{\n{body}extra\n}} }}\n"
+
+        modules = module(source, "baseline") + module(namespace["apply_mutant"](family[0]), "variant")
+        ordinary = self.producer_argv("caller-suffix-ordinary", library_source="pub fn c() -> u32 { 37 }\n")
+        incremental = self.producer_argv("caller-suffix-incremental",
+                                       library_source="pub fn c() -> u32 { 37 }\n",
+                                       release_incremental=True)
+
+        # This distinct, real producer exercises Cargo's optional no-suffix branch.
+        project = self.base / "producer-caller-extra-filename=inside"
+        (project / "src").mkdir(parents=True)
+        (project / "Cargo.toml").write_text(
+            '[workspace]\n[package]\nname = "flagproof"\nversion = "0.1.0"\nedition = "2021"\n'
+            '[lib]\ncrate-type = ["rlib", "dylib"]\n[profile.release]\nincremental = true\n')
+        (project / "src/lib.rs").write_text("pub fn c() -> u32 { 37 }\n")
+        target = project / "target"
+        env = {name: os.environ[name] for name in ("PATH", "HOME")}
+        env.update(RUSTUP_HOME=os.environ.get("RUSTUP_HOME", str(Path(env["HOME"]) / ".rustup")),
+                   RUSTUP_TOOLCHAIN="1.95.0", RUSTC="rustc", CARGO_HOME=str(project / "cargo-home"),
+                   CARGO_TARGET_DIR=str(target), TMPDIR=str(self.base), TMP=str(self.base), TEMP=str(self.base))
+
+        def cargo(arguments):
+            process = subprocess.Popen(["cargo"] + arguments, cwd=project, env=env,
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       text=True, start_new_session=True)
+            try:
+                stdout, stderr = process.communicate(timeout=60)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.communicate()
+                self.fail("actual optional-suffix Cargo producer timed out")
+            self.assertEqual(process.returncode, 0, stdout + stderr)
+            return stderr
+
+        cargo(["generate-lockfile", "--offline"])
+        stderr = cargo(["build", "--lib", "--release", "--locked", "--offline", "--no-default-features",
+                        "--message-format=json", "-v", "-p", "flagproof"])
+        commands = [line.strip()[len("Running `"):-1] for line in stderr.splitlines()
+                    if line.strip().startswith("Running `rustc ") and line.strip().endswith("`")]
+        self.assertEqual(len(commands), 1, stderr)
+        mixed = shlex.split(commands[0])
+        metadata = [arg for arg in mixed if re.fullmatch(r"metadata=[0-9a-f]{16}", arg)]
+        self.assertEqual(len(metadata), 1)
+        expected_mixed = ["rustc", "--crate-name", "flagproof", "--edition=2021", "src/lib.rs",
+                          "--error-format=json", "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+                          "--crate-type", "rlib", "--crate-type", "dylib", "--emit=dep-info,link",
+                          "-C", "opt-level=3", "-C", "embed-bitcode=no", "--check-cfg", "cfg(docsrs,test)", "--check-cfg",
+                          "cfg(feature, values())", "-C", metadata[0], "--out-dir", str(target / "release/deps"),
+                          "-C", "incremental=" + str(target / "release/incremental"),
+                          "-C", "strip=debuginfo", "-L", "dependency=" + str(target / "release/deps")]
+        self.assertEqual(mixed, expected_mixed, "independent complete optional-suffix producer argv")
+        self.assertEqual(sorted(path.name for path in (target / "release/deps").glob("*.d")), ["flagproof.d"])
+        self.assertIn("src/lib.rs", (target / "release/deps/flagproof.d").read_text())
+
+        actual = []
+        for label, argv, base in [("ordinary", ordinary, self.base / "producer-caller-suffix-ordinary"),
+                                 ("incremental", incremental, self.base / "producer-caller-suffix-incremental"),
+                                 ("mixed", mixed, project)]:
+            operands = [value for left, value in zip(argv, argv[1:]) if left == "-C"
+                        and re.fullmatch(r"extra-filename=-[0-9a-f]{16}", value)]
+            self.assertEqual(len(operands), 0 if label == "mixed" else 1)
+            suffix = operands[0].split("=", 1)[1] if operands else ""
+            library = base / "target/release/deps" / ("libflagproof" + suffix + ".rlib")
+            self.assertTrue(library.read_bytes().startswith(b"!<arch>\n"))
+            consumer, binary = base / "consumer.rs", base / "consumer"
+            consumer.write_text('fn main() { println!("{}", flagproof::c()); }\n')
+            self.bounded(["rustc", "--edition=2021", "--crate-name", "caller_suffix_consumer", str(consumer),
+                          "--extern", "flagproof=" + str(library), "-o", str(binary)])
+            self.assertEqual(self.bounded([str(binary)]), "37\n")
+            actual.append((label, argv, suffix))
+
+        vector = lambda values: ("vec![" + ", ".join(json.dumps(value, ensure_ascii=False) + ".to_owned()"
+                                                    for value in values) + "]"
+                                 if values else "Vec::<String>::new()")
+        checks = []
+        for label, argv, suffix in actual:
+            for name in ["baseline", "variant"]:
+                checks.append(f'assert_eq!({name}::collect(&{vector(argv)}), {json.dumps(suffix)}, "{label}");')
+        literal = [([], ""), (["-C"], ""), (["rustc", "extra-filenameX=tail"], ""),
+                   (["-C", "extra-filename="], ""),
+                   (["-C", "extra-filename=-0123456789abcdef"], "-0123456789abcdef"),
+                   (["-C", "extra-filename=-é"], "-é"),
+                   (["-C", "extra-filename=-first", "-C", "extra-filename=-second"], "-first"),
+                   (["-C", "incremental=cache/extra-filenameX=tail"], ""),
+                   (["-C", "metadata=extra-filenameX=tail"], ""),
+                   (["--out-dir", "-C", "--error-format=json"], "")]
+        # These are constructor/adjacency controls, not additional successful Cargo inputs.
+        for operand in ["prefer-dynamic", "rpath", "lto", "linker-plugin-lto"] + [
+                name + "=extra-filenameX=tail" for name in [
+                    "opt-level", "panic", "lto", "embed-bitcode", "codegen-units", "debuginfo",
+                    "split-debuginfo", "debug-assertions", "overflow-checks", "metadata", "linker",
+                    "incremental", "strip", "link-arg"]]:
+            literal.append((["-C", operand], ""))
+        literal.append((["--check-cfg", "-C", "-C", "extra-filename=-held"], "-held"))
+        for argv, suffix in literal:
+            for name in ["baseline", "variant"]:
+                checks.append(f'assert_eq!({name}::collect(&{vector(argv)}), '
+                              f'{json.dumps(suffix, ensure_ascii=False)}, "literal suffix");')
+        wider = ["-C", "extra-filenameX=tail"]
+        incidental = ["--out-dir", "-C", "extra-filenameX=tail"]
+        for argv in [wider, incidental]:
+            checks += [f'assert_eq!(baseline::collect(&{vector(argv)}), "");',
+                       f'assert_eq!(variant::collect(&{vector(argv)}), "=tail");']
+        for value in ["extra-filename", "extra-filenameé=tail"]:
+            argv = vector(["-C", value])
+            checks += [f'assert_eq!(baseline::collect(&{argv}), "");',
+                       f'assert!(std::panic::catch_unwind(|| variant::collect(&{argv})).is_err());']
+        main = ("fn main() {\n" + "\n".join(checks)
+                + '\nmatch std::env::args().nth(1).as_deref() {\n'
+                + f' Some("wrong-positive") => assert_eq!(baseline::collect(&{vector(wider)}), '
+                + f'variant::collect(&{vector(wider)}), "wrong wider equality"),\n'
+                + f' Some("wrong-negative") => assert_ne!(baseline::collect(&{vector(ordinary)}), '
+                + f'variant::collect(&{vector(ordinary)}), "wrong supported inequality"),\n'
+                + ' Some("wrong-literal") => assert_eq!(baseline::collect(&vec!["-C".into(), '
+                + '"extra-filename=-held".into()]), "-changed", "wrong literal suffix"),\n'
+                + ' _ => {}\n}\nprintln!("caller suffix controls: literal, actual, wider and panic domains held");\n}\n')
+        program, binary = self.base / "caller-suffix.rs", self.base / "caller-suffix"
+        program.write_text(modules + main)
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.assertIn("literal, actual, wider and panic domains held", self.bounded([str(binary)]))
+        for argument, message in [("wrong-positive", "wrong wider equality"),
+                                  ("wrong-negative", "wrong supported inequality"),
+                                  ("wrong-literal", "wrong literal suffix")]:
+            with self.assertRaisesRegex(AssertionError, message):
+                self.bounded([str(binary), argument])
+        print("caller suffix compiled controls complete; checking the precise reason", flush=True)
+        records = namespace["load_equivalents"](ROOT / "xtask/trust.equivalents")
+        self.assertTrue(key in records, "the completed caller proof requires its exact per-file reason")
+
+
+```
+
+**Provisional reason record**, SHA-256 §d60d3fec0ab5ef4c96aa80560ecf699be09bb5a4f377283f8b75178a038bc185§:
+
+```text
+
+from (w[0] == "-C" && w[1].starts_with("extra-filename="))
+to (w[0] == "-C" && w[1].starts_with("extra-filename"))
+why For the current Unix inventory caller with pinned stable Cargo f2d3ce0bd7f24a49f8f72d9000448f8838c4e850 / Rust 1.95.0, every adjacent pair whose first token is -C either has no extra-filename prefix or has the complete ASCII extra-filename= constructor. Cargo emits the optional suffix as extra-filename=- plus a sixteen-hex UnitHash, or omits it. All other codegen constructors retain distinct initial keys for any value. Both role/test and generated-entry compile routes use fixed build or test/no-run commands without trailing compiler args; cleared allowlisted environment, reset Cargo homes and alias-only ancestor-checked config exclude arbitrary flags/wrappers, hard metadata preflight excludes dynamic package code independently of manifest admissions, and the pinned stable gate excludes profile rustflags. Source/name/type, lint/check-cfg, dependency and directory constructors cannot introduce a distinguishing incidental adjacent pair; in particular arbitrary custom check-cfg values are followed by fixed option tokens, not arbitrary suffix operands. The observer forwards immutable native argv and the consumer selects only successful current compilation records after Cargo succeeds. Thus both predicates choose the same first pair or the same empty default; the unchanged fifteen-byte slice starts after the same complete ASCII prefix at a valid UTF-8 boundary and returns identical bytes, preserving dep-info selection and subsequent behavior. Permanent exact production/controller/observer/base/pin/config guards outside semantic tests, actual compiled original/edit, complete real ordinary/incremental/mixed argv and three consumed libraries, literal/constructor/adjacency controls, wider changed-output and short/Unicode panic witnesses, seven altered-premise controls and three wrong-oracle controls delimit the proof. Wider argv is explicitly not equivalent; finite producer agreement is not the proof. Revalidate producer/pin, both callers, environment/config/admissions/preflight, constructors/adjacency, record filter or extraction/slicing changes. Canonical proof: docs/specs/trust/compiler-provenance-contract.md, Caller dep-info suffix prefix proof (leaf M3.6.9.6.3.2.2.15.2.1.4.3).
+```
+
+**Provisional source argument**, SHA-256 §c26dc7ff1576aebea2c8fcb69d12a9238c50db148d778da923af5ca2452bf240§:
+
+```markdown
+
+## Caller dep-info suffix prefix proof
+
+`M3.6.9.6.3.2.2.15.2.1.4.3`, `2026-10-19`: this proof concerns only the actual
+`compile` extraction edit from `starts_with("extra-filename=")` to
+`starts_with("extra-filename")`. It does not justify the separate substring matcher,
+which the supported no-suffix/incremental-path regression kills.
+
+The domain is the current Unix inventory caller with the repository's pinned stable
+Cargo `f2d3ce0bd7f24a49f8f72d9000448f8838c4e850` / Rust `1.95.0`, its unchanged preflight,
+base environment and compiler observer. Finite API/helper agreement is not the proof.
+Changes to these premises require source/producer revalidation before retaining the reason.
+
+### Producer and every compile route
+
+There are two production call sites. Role builds select binary/library or comparison-test
+targets; generated-source entry points select binary/library/example targets after the
+same manifest/dynamic-target preflight. Every route uses fixed `build` or `test --no-run`
+commands with release/locked/offline/no-default-features/JSON/package arguments. None uses
+`cargo rustc` or supplies trailing compiler arguments.
+
+The Cargo environment is cleared and rebuilt from the allowlist. Cargo homes are reset and
+configuration is alias-only, including ancestor checks. User flags/compiler/workspace wrappers
+are excluded. Exact manifest admissions do not bypass unconditional build-script/procedural-macro
+metadata preflight; the default manifest rule is not itself used as an unconditional premise.
+The stable Cargo feature gate prevents admitted profile rustflags from becoming arbitrary
+compiler arguments. Cargo's `extra_args_for` supplies trailing `rustc`/`rustdoc` arguments,
+absent in both guarded callers. The observer forwards the immutable native argument tail,
+without adding compiler flags. Only successful, current-session compilation records with
+crate name/out-dir/emit are passed to extraction; recognized queries are excluded.
+
+The published producer source is pinned in
+[the flag-domain record](flag-normalization-domain.md#retrieved-source-identities).
+Relevant constructors in
+[compiler/mod.rs](https://github.com/rust-lang/cargo/blob/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/compiler/mod.rs)
+are `prepare_rustc`, `build_base_args`, `lto_args`, `build_deps_args`, `extern_args`,
+`add_cap_lints` and the runtime native/custom-flag appenders. The optional suffix comes from
+[compilation_files.rs](https://github.com/rust-lang/cargo/blob/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/compiler/build_runner/compilation_files.rs),
+SHA-256 `5ab7f5e394d69a042c13229d59689c3b037eef966bfb0bad8098a713bc82d910`:
+`Option<UnitHash>` emits either no operand or the complete
+`extra-filename=-` followed by a sixteen-digit hexadecimal `UnitHash`.
+
+| Construction | Relevant adjacent tokens and boundary |
+| --- | --- |
+| Scalar/boolean/codegen profiles | After literal `-C`, keys are `prefer-dynamic`, `opt-level`, `panic`, `lto`, `linker-plugin-lto`, `embed-bitcode`, `codegen-units`, `debuginfo`, `split-debuginfo`, `debug-assertions`, `overflow-checks`, `metadata`, `rpath` or `strip`. Dynamic values follow a fixed key and cannot change its initial bytes. |
+| Optional suffix | Only the complete `extra-filename=` constructor has the shortened prefix; the optional absent branch introduces no matching operand. |
+| Directories/link configuration | Cargo constructs `--out-dir` with its output directory, `-L dependency=…` and optionally fixed `linker=…` / `incremental=…` codegen keys. Directory text containing the prefix does not change any initial key. |
+| Crate identity/source/type | Names/types have their Cargo constructors; the source argument is followed by fixed diagnostic arguments. Unconditional preflight requires source roots with the `rs` extension. No source/path/name argument can create an unguarded matching adjacent pair. |
+| Manifest lints/features | Joined lint flags begin with `--`. Feature and generated check-cfg operands retain their fixed prefixes. Custom check-cfg strings are paired with `--check-cfg`: even if an operand were literal `-C`, its successor is another fixed option, not an arbitrary suffix operand. This accounts for incidental data tokens rather than assuming every `-C` is a codegen flag. |
+| Dependencies/lint caps | Extern values contain their name/path delimiter or fixed `proc_macro`; search paths have `dependency=`; cap values are fixed levels. These introduce no matching incidental pair. |
+| Build-script/native runtime appenders | Hard dynamic-target preflight excludes these routes. Their fixed `link-arg=` codegen key is also distinct; arbitrary raw custom cfg/native flags are not silently assumed absent without that preflight. |
+| Arbitrary extra/profile/unit flags | Trailing compiler args are absent; alias-only/fresh-home/cleared environment excludes config/environment rustflags; the pinned stable feature gate excludes profile rustflags. These are required premises, not conclusions inferred from sample builds. |
+
+### Consequence for the actual extraction
+
+For every adjacent pair satisfying `w[0] == "-C"`, either both prefix predicates are false,
+or the same operand begins with the complete ASCII `extra-filename=` prefix. The source
+construction and boundary argument above establish this implication for all values in the
+stated caller domain, independently of the finite controls.
+
+Both predicates therefore choose the same first pair. For a chosen pair, the unchanged
+fifteen-byte slice starts after that complete ASCII prefix, at a valid UTF-8 boundary;
+the extracted string is identical. With no chosen pair, both use the same empty default.
+Subsequent dep-info paths, errors, units and source hashes are unchanged. No arbitrary-argv
+equivalence or compiler-refusal coverage is claimed.
+
+### Permanent controls and falsification
+
+The maintained control in `xtask/mutation_sweep_tests.py` guards complete production prefixes
+of collector/controller/observer/base build code, the toolchain file and alias configuration,
+plus actual Cargo commit identity. Altered bytes in each source/pin/config premise and a
+changed producer identity refuse. These proof gates remain outside the semantic native cohort.
+
+It compiles the exact actual original/edited extraction, not a reimplementation. Independently
+specified literals cover the first match, empty/missing operands, complete prefix, Unicode
+suffixes, all other codegen key families and incidental check-cfg adjacency. Actual ordinary,
+incremental and mixed-rlib/dylib Cargo commands have independently expected complete argv;
+the mixed case emits literal `flagproof.d` without a suffix. All three real library consumers
+print `37`.
+
+Wider synthetic inputs explicitly disprove arbitrary-domain equivalence: after `-C`,
+`extra-filenameX=tail` changes the returned suffix, bare `extra-filename` panics only in
+the edit, and `extra-filenameé=tail` makes its byte slice cross a UTF-8 character boundary.
+A synthetic incidental-data pair also distinguishes the edit. These are helper-boundary
+counterexamples, not successful Cargo inputs. Wrong supported/wider/literal output oracles
+refuse independently.
+
+The first new direct-Cargo expectation omitted `embed-bitcode=no` and refused before a reason
+existed. Pinned
+[lto.rs](https://github.com/rust-lang/cargo/blob/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/compiler/lto.rs),
+SHA-256 `97652b448f525af54f1baee199722cd1534768927a2d4deeae924504cade64d6`,
+selects `OnlyObject` for the default false profile; `lto_args` supplies that operand.
+Fresh current inventory records independently confirm it. The corrected new control requires
+the complete actual argv. Historical diagnostic command shapes are not inherited as current
+producer expectations. Completed compiled/false controls precede adding the exact reason;
+final reason/native replay and checkpoint evidence are recorded in the task tree and book.
+```
+
+#### Figure registration repair task
+
+The complete next-task record is retained verbatim here; its private resume entry links to it.
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.4.3.3`
+  Status: `pending` — figure registration must respect literal Markdown fences
+  Priority: P1 immediately after .0, before .1; owner .4.3.
+  Defect: mdBook renders the withdrawn draft's four-tilde fences as literal code, while
+    scripts/check_figure_register.sh's figures() recognizes only line-start triple backticks.
+    Its public gate falsely calls the fenced historical phrase "two production" new prose.
+    Root cause is the fence scanner, not a carried current figure.
+  Reproduce: .0's archived draft with four-tilde Python/text/Markdown fences builds in mdBook
+    but the staged figure gate exits1 on "two production"; standard backtick fences pass
+    with exact archived bytes. Original build/refusal output retained in .0's tool records.
+  Impact: valid public book literals can block publication or be wrongly registered as
+    current prose. .0 uses supported fences; the defect remains owned until verified repair.
+  Scope: reproduce the public gate independently in same-volume scratch; preserve source
+    ownership boundaries (this project owns the gate per the director's section10 ruling).
+    Repair open/close fence handling for supported Markdown backtick/tilde lengths and
+    reject mismatched/short closing fences without hiding subsequent real prose. Add
+    meaningful gate self-test arms, retain all earlier controls, sync book/live and commit.
+  Acceptance: code literals skip in both styles; prose after correct closing fences still
+    rejects unclassified counts; existing gate self-tests and real staged book pass.
+  Verification: `pending`
+  Commit: `pending`
+```

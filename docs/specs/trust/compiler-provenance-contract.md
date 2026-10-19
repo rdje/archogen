@@ -25,21 +25,12 @@ retains commands, controls, source identities and limits.
 
 ## Production unit collector and current premise revalidation
 
-`2026-10-18`, `.15.2.1.3.3.2.1`: the controller/embedded observer implement the collection
-rows above for both compile callers. Base environment/preflight and argv remain. Records require
-current schema/session/role/cwd, matching PID/filename and successful status. Unknown, malformed,
-partial, stale or unsuccessful provenance stops the inventory. UTF-8 interpretation is explicit.
-Artifact/compatibility controls pass; source/integration gates follow.
+The [production record](../../book/src/annex-trust-proofs.md#production-compiler-invocation-collection-repair)
+and [verbatim history](../../book/src/annex-trust-proofs.md#collector-revalidation-history)
+retain this implementation’s premise revalidation, controls and checkpoint scope.
 
-The production record retains the verified P2/native controls, bounded diagnostic matrix,
-legacy catalogue/reason retirements, historical controls and current premise revalidation.
-Baseline evidence repair is .3.3.3.0; bounded results do not establish full source adequacy.
+## Repeated generator package preflight
 
-Exact commands, controls, outcomes, failed attempts and scope are in the
-[production record](../../book/src/annex-trust-proofs.md#production-compiler-invocation-collection-repair).
-All new judgment files join .3's scope. The
-[artifact record](../../book/src/annex-trust-proofs.md#observed-compiler-artifact-binding) owns metadata/source
-selection, empty-input naming, direct relative paths, output refusals and actual/copy controls.
-The [complete compatibility matrix](../../book/src/annex-trust-proofs.md#compiler-provenance-compatibility-checkpoint)
-binds every contract row to controls and explicit source/domain premises.
-Full source/premise/integration verification remains .3.
+`Rules::manifests` caches only complete package judgments that add no refusal.
+Every failed visit must block every later target; successful immutable judgments and
+accepted site counts remain once-only. [Repair, evidence and continuation](../../book/src/annex-trust-proofs.md#repeated-generator-preflight-refusals).
