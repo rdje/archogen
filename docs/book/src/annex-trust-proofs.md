@@ -5920,3 +5920,67 @@ leaves, so these selected kills do not project a new full-file or caller adequac
 `2026-10-19`: the required routine changelog rollover seals its oldest 20 entries into
 `docs/history/changelog/0031.md`. Independent concatenation reconstructs the complete
 pre-rollover staged changelog byte-for-byte; previous history segments remain exact.
+
+### Naming-option values: nonempty and nonflaglike
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.3`: a permanent direct naming-helper parent now
+holds value validation for `--crate-name`, `--crate-type`, `--target` and `--out-dir`.
+Each family has a literal valid-query expectation and malformed controls for an empty value
+and `-flaglike`. Every malformed input must return exactly `missing observed <option> value`,
+including the option's own spelling. Existing absent-value and duplicate controls remain.
+Production and every earlier test are byte-exact; this closes defensive-parser coverage gaps
+without asserting that malformed argv belongs to a successful supported Cargo compilation.
+
+| Observed option | Valid value | Valid naming-query suffix | Returned output directory |
+| --- | --- | --- | --- |
+| `--crate-name` | `probe` | `--crate-name probe` | `outputs` |
+| `--crate-type` | `rlib` | `--crate-name probe --crate-type rlib` | `outputs` |
+| `--target` | `host` | `--crate-name probe --target host` | `outputs` |
+| `--out-dir` | `outputs` | `--crate-name probe` | `outputs` |
+
+Valid in this table means accepted by the helper value grammar; `host` is illustrative
+and does not name an installed compiler target here. No compiler is launched by this parent.
+Each expected query starts with the literal `--print=file-names -`. The output directory is
+retained for locating artifacts and is never forwarded to the query. The expected vectors are
+literal test data rather than computed by the helper. This parent is pure, finite and creates
+no compiler process or filesystem fixture.
+
+The initial complete measurement records these exact source edits as survived. Actual compiled
+helper calibrations distinguish loss of the nonempty and nonflaglike terms separately and
+together; the permanent parent now gives these actual native results:
+
+| Current ID | Actual source edit | Native result |
+| --- | --- | --- |
+| `L21.logic.20` | value conjunction becomes disjunction | K, new intended parent |
+| `L21.chain.112` | complete value filter omitted | K, new intended parent |
+| `L21.clogic.139` | nonempty term omitted | K, new intended parent |
+| `L21.clogic.140` | nonflaglike term omitted | K, new intended parent |
+
+The exact new parent is
+`trust::artifact::tests::naming_query_requires_nonempty_nonflaglike_option_values`.
+It is the only addition to the parent population; every previous name remains.
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L21.logic.20 --only L21.chain.112 \
+  --only L21.clogic.139 --only L21.clogic.140
+```
+
+`2026-10-19`: all 4 selected edits finish killed against all 185 current trust parents, strict
+exit `0`, with the intended new parent in every failure list. No selected survivor, compiler
+refusal, equivalent, timeout or unjudged result occurs. All 1118 regular original/copied
+inputs restore with independent Python/system hashes and modes. All 37 direct bindings and
+37 pinned public producer sources agree. Invented-parent, missing-result, changed-outcome,
+changed-exit and duplicate-result receipts refuse. The committed test-flag leaf seals exactly;
+all 301 prior task archive files remain unchanged.
+
+Held native tree `976733a91232da6d1cdfa297dfc6c3cc5f38e070` precedes completion documentation.
+Whole file SHA-256 `50e3629323a989734b0a8ed46ffd893f61ee491edbdfbb0982c4abbfaa11c42c`;
+the production prefix remains exact. Audit SHA-256
+`f49175270f8287cac13d3ebc8011377621eee96c861e279e026151c7409c470f`
+binds actual source/parent preservation, historical edit identity, native results, restoration
+and false receipts. Raw evidence remains in `target/artifact-option-values/`. Final staged
+focused/book/commit gates complete this leaf. Exact `extra-filename=` prefix controls are next;
+the complete current artifact replay and caller adequacy remain separately owned and open.

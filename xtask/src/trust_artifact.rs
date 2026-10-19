@@ -418,6 +418,70 @@ mod tests {
     }
 
     #[test]
+    fn naming_query_requires_nonempty_nonflaglike_option_values() {
+        let base = &["rustc", "--crate-name", "probe", "--out-dir", "outputs"][..];
+        let basic_query = &["--print=file-names", "-", "--crate-name", "probe"][..];
+        for (option, valid, prefix, expected) in [
+            (
+                "--crate-name",
+                "probe",
+                &["rustc", "--out-dir", "outputs"][..],
+                basic_query,
+            ),
+            (
+                "--crate-type",
+                "rlib",
+                base,
+                &[
+                    "--print=file-names",
+                    "-",
+                    "--crate-name",
+                    "probe",
+                    "--crate-type",
+                    "rlib",
+                ][..],
+            ),
+            (
+                "--target",
+                "host",
+                base,
+                &[
+                    "--print=file-names",
+                    "-",
+                    "--crate-name",
+                    "probe",
+                    "--target",
+                    "host",
+                ][..],
+            ),
+            (
+                "--out-dir",
+                "outputs",
+                &["rustc", "--crate-name", "probe"][..],
+                basic_query,
+            ),
+        ] {
+            for value in [valid, "", "-flaglike"] {
+                let mut observed: Vec<String> =
+                    prefix.iter().map(|value| (*value).to_owned()).collect();
+                observed.extend([option.to_owned(), value.to_owned()]);
+                let result = naming_arguments(&observed);
+                if value == valid {
+                    let (query, directory) = result.unwrap();
+                    assert_eq!(query, expected, "{observed:?}");
+                    assert_eq!(directory, "outputs");
+                } else {
+                    assert_eq!(
+                        result.unwrap_err(),
+                        format!("missing observed {option} value"),
+                        "{observed:?}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
     fn actual_empty_input_query_preserves_build_and_ignores_now_invalid_source() {
         crate::trust_test_process::bounded!(
             actual_empty_input_query_preserves_build_and_ignores_now_invalid_source

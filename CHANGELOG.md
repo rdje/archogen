@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold nonempty naming-option values
+
+`ARCHOGEN-M3-0791` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.3`), `2026-10-19`.
+
+- Add one pure parent holding valid queries and exact empty/flaglike-value errors for every
+  naming-option family; preserve production and every earlier test.
+- Exact historical4S become native4K/full185 strict0 with intended new name in every failure
+  list;1118 original/copied inputs restore,37 bindings/37 pins/five false receipts hold.
+- Preceding test-flag seal/301 prior archives exact; book/live sync and final staged focused
+  gates. Exact suffix prefix next; full artifact/caller adequacy remains open.
+
 ## archogen — hold test-flag forwarding and duplicate refusal
 
 `ARCHOGEN-M3-0790` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.2`), `2026-10-19`.

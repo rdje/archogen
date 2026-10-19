@@ -363,6 +363,8 @@ a change that leaves it stale, so it is never edited by hand.
 ## N
 
 - Names carry their whole path — [Modules and composition](modules.md#names-carry-their-whole-path)
+- Naming-option values: nonempty and nonflaglike — [Annex C: Trust proof
+  records](annex-trust-proofs.md#naming-option-values-nonempty-and-nonflaglike)
 - "Next" means what the task tree says — [Annex B: The checks that keep the repository
   honest](annex-repository.md#next-means-what-the-task-tree-says)
 - node — [What this project relies on from outside](ledger.md#node)
