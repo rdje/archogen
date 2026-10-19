@@ -280,6 +280,8 @@ a change that leaves it stale, so it is never edited by hand.
   adequacy](trust-adequacy.md#initial-role-and-build-operator-outcomes)
 - Initial source/provenance operator outcomes — [Generated-sources test
   adequacy](trust-adequacy.md#initial-sourceprovenance-operator-outcomes)
+- Internal NUL argument validation — [Annex C: Trust proof
+  records](annex-trust-proofs.md#internal-nul-argument-validation)
 - **interrupt** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [What the scheduling checker establishes](analysis.md), [Where
   the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [Where

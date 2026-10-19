@@ -4700,3 +4700,59 @@ and final focused staging. Raw calibration, restoration and reconciliation evide
 Final focused/book/doctrine checks close this slice. Internal-NUL argument validation is next;
 the dated original controller result retains its original meaning until full replay.
 
+### Internal NUL argument validation
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.6.3`: the consumer's complete NUL-byte check now
+has a control distinguishing it from checks of only the first or last decoded byte.
+The original production check is retained exactly.
+
+The permanent control creates a real observer session and compiles a program with the pinned
+compiler. It checks successful status and empty diagnostics, executes the produced program,
+and independently compares the consumer's full argument vector with the arguments supplied.
+A snapshot retains the actual producer record.
+
+`2026-10-19`: the test separately inserts an internal NUL into the crate-name value,
+output-directory value and source-path value. Insertion uses a UTF-8 character boundary and
+leaves both endpoint bytes nonzero. The compiler name and compilation markers remain intact.
+The consumer must refuse with `NUL in argument`, preserve the corrupted record, and accept the
+exact original vector after byte-for-byte restoration. Each case starts and ends valid.
+
+These are corrupted-record controls at the consumer boundary. Native operating-system process
+arguments cannot carry NUL bytes; the test does not claim the compiler produced such arguments.
+The complete byte-validation requirement also protects the reader from damaged or foreign
+record data. Leaving required compilation markers intact prevents unrelated shape checks
+from masking the endpoint-only validation defect.
+
+The permanent parent is
+`trust::compiler::tests::actual_compilation_records_refuse_internal_nul_in_argument_values`.
+
+```sh
+cargo test -p xtask trust::compiler::tests::actual_compilation_records_refuse_internal_nul_in_argument_values -- --exact
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L168.contains.109 --only L168.contains.111
+```
+
+Actual-source calibration runs the original and each literal endpoint edit separately.
+The original succeeds; each endpoint-only controller compiles and produces the intended
+finishing failed-test summary. The permanent parent passes directly in 0.43 seconds.
+
+`2026-10-19`: native baseline 54 seconds; both actual endpoint edits finish killed by only
+the new parent against all 180 current trust parent names, strict exit 0. There is no timeout,
+unjudged result, compiler refusal or equivalence judgment in this selected replay.
+
+`2026-10-19`: all 1104 original/current-copy inputs restore by bytes, modes and independent
+Python/system hashes. All 33 direct bindings and 37 public source pins agree. Twelve altered
+source/scope/replacement/name/outcome/count/exit/population receipts reject. Removing the new
+parent reconstructs the entire previous controller exactly; other production, prior tests,
+catalogue and reasons are unchanged. The committed record-position body seals exactly and
+all 292 earlier archives retain their bytes.
+
+Held native tree `1881a975636dda2540509433923760d7cb6f0fe2` precedes completion documentation
+and final focused staging. Raw calibration and receipts are under `target/compiler-internal-nul/`.
+Supplemental audit SHA-256:
+`7db90d127e54867b18d3bc202e2c82b2aba6688071be34a9a2d1eb6de4545839`.
+Final focused/book/doctrine checks close this slice. Exact compilation emit-marker validation
+is next; the final complete controller replay remains separately owned.
+
