@@ -28,6 +28,14 @@ because predicate P is false" before writing a single line of fix.
 
 ## This project's toolbox
 
+### Approval blockers
+
+Director ruling `2026-10-19`: default **Approve for me**. When user action is needed, show
+**🚨 ARCHOGEN BLOCKED — ACTION REQUIRED** with operation, exact cause, verified
+steps and next action. Distinguish review failure from denial. For a permission change, block until the director reacts. Finish work requiring the temporary mode, then pause
+for return to **Approve for me** and await the director before continuing. Save the
+state in its task-tree; end with WAITING while either reaction is pending.
+
 Each row: what question the tool answers, and how to invoke it. Reach for one of these
 before forming a theory about any failure.
 

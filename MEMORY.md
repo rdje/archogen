@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.6`. `PROGRAM` resumes at `PROGRAM.71`. `M2`'s frontier is `M2.7.4`, on the director; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.6` installation explicit-close assessment.
-  Assess concrete writer lifetime and later readback allocation with native resource controls.
+- **Next action:** pause for the director to restore default **Approve for me** and react.
+  Then assess record-presence state in `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.7`, revalidating affected premises.
   Final full sweeps and review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.

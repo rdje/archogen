@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold installation writer lifetime before readback
+
+`ARCHOGEN-M3-0785` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.6`), `2026-10-19`.
+
+- Calibrate actual controller with native per-process descriptor exhaustion before writer close;
+  original reuses the freed writer slot, omission returns EMFILE, both restore resources and recover.
+- Permanent macOS parent/native1K full183 strict0,1111 originals/copies restored;
+  37 bindings/37 pins/12 false receipts and independent actual-file/resource audit pass.
+- Preserve production/prior controls/catalogue/reasons and installed-byte seal/295 older archives.
+  Track C/Rust fixtures, document public API and host/resource limits; final focused/book/staged
+  gates, record-presence state next. Record loud permission-change alerts and pauses for
+  the director both before changing mode and before restoring default Approve for me.
+
 ## archogen — hold installed observer byte verification
 
 `ARCHOGEN-M3-0784` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.5`), `2026-10-19`.

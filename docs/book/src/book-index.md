@@ -282,6 +282,8 @@ a change that leaves it stale, so it is never edited by hand.
   adequacy](trust-adequacy.md#initial-role-and-build-operator-outcomes)
 - Initial source/provenance operator outcomes — [Generated-sources test
   adequacy](trust-adequacy.md#initial-sourceprovenance-operator-outcomes)
+- Installation writer lifetime and readback allocation — [Annex C: Trust proof
+  records](annex-trust-proofs.md#installation-writer-lifetime-and-readback-allocation)
 - Installed observer byte verification — [Annex C: Trust proof
   records](annex-trust-proofs.md#installed-observer-byte-verification)
 - Internal NUL argument validation — [Annex C: Trust proof

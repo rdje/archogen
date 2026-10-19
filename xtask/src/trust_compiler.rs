@@ -370,6 +370,217 @@ mod tests {
 
     #[cfg(target_os = "macos")]
     #[test]
+    fn actual_installation_closes_its_writer_before_readback_allocation() {
+        crate::trust_test_process::bounded!(
+            actual_installation_closes_its_writer_before_readback_allocation
+        );
+        use std::os::unix::fs::{MetadataExt, PermissionsExt};
+        fn directories(path: &std::path::Path) -> Vec<PathBuf> {
+            let mut result = fs::read_dir(path)
+                .unwrap()
+                .map(|entry| entry.unwrap().path())
+                .collect::<Vec<_>>();
+            result.sort();
+            result
+        }
+        let (out, _, session, base) = setup("install-close");
+        let source = out.join("install_close.c");
+        fs::write(
+            &source,
+            include_str!("../../scripts/fixtures/compiler_install_close.c"),
+        )
+        .unwrap();
+        let library = out.join("install_close.dylib");
+        let built = Command::new("cc")
+            .args([
+                "-Wall",
+                "-Wextra",
+                "-Werror",
+                "-dynamiclib",
+                "-Wl,-install_name,@rpath/install_close.dylib",
+            ])
+            .arg(&source)
+            .arg("-o")
+            .arg(&library)
+            .env_clear()
+            .envs(base.iter().cloned())
+            .output()
+            .unwrap();
+        assert!(built.status.success(), "{built:?}");
+        let canonical_library = fs::canonicalize(&library).unwrap();
+        let preload = canonical_library.strip_prefix(&session.cwd).unwrap();
+        let sources = out.join("component");
+        fs::create_dir(&sources).unwrap();
+        fs::write(
+            sources.join("controller.rs"),
+            include_str!("trust_compiler.rs"),
+        )
+        .unwrap();
+        fs::write(sources.join("json.rs"), include_str!("json.rs")).unwrap();
+        fs::write(sources.join("trust_compiler_observer.rs"), super::SOURCE).unwrap();
+        fs::write(
+            sources.join("probe.rs"),
+            include_str!("../../scripts/fixtures/compiler_install_close_probe.rs"),
+        )
+        .unwrap();
+        let catalog = include_str!("catalog_build.rs");
+        let start = catalog.find("pub fn environment(").unwrap();
+        let tail = &catalog[start..];
+        let end = tail.find("\nfn command(").unwrap();
+        fs::write(sources.join("base_environment.rs"), &tail[..end]).unwrap();
+        let helper = sources.join("probe");
+        let built = Command::new("rustc")
+            .args(["--edition=2021", "--crate-name", "install_close_component"])
+            .arg(sources.join("probe.rs"))
+            .arg("-o")
+            .arg(&helper)
+            .env_clear()
+            .envs(base.iter().cloned())
+            .output()
+            .unwrap();
+        assert!(built.status.success(), "{built:?}");
+        fn fields(line: &str) -> std::collections::BTreeMap<&str, u64> {
+            let mut result = std::collections::BTreeMap::new();
+            for item in line.split_ascii_whitespace().skip(1) {
+                let (key, value) = item.split_once('=').unwrap();
+                assert!(result.insert(key, value.parse().unwrap()).is_none());
+            }
+            result
+        }
+        for (mode, inject, scarce) in [
+            ("baseline", false, false),
+            ("scarce", true, true),
+            ("pass", true, false),
+        ] {
+            let case = out.join(mode);
+            let target = case.join("target");
+            fs::create_dir_all(&target).unwrap();
+            let trace = case.join("trace");
+            let mut command = Command::new(&helper);
+            command
+                .arg(&case)
+                .arg(out.join("cargo-home"))
+                .arg(if scarce { "scarce" } else { "pass" })
+                .current_dir(&session.cwd)
+                .env_clear()
+                .envs(base.iter().cloned())
+                .env(
+                    "ARCHOGEN_TEST_CLOSE_ROOT",
+                    fs::canonicalize(&target).unwrap(),
+                )
+                .env("ARCHOGEN_TEST_CLOSE_TRACE", &trace)
+                .env("ARCHOGEN_TEST_CLOSE_SCARCE", if scarce { "1" } else { "0" });
+            if inject {
+                command.env("DYLD_INSERT_LIBRARIES", preload);
+            }
+            let result = command.output().unwrap();
+            assert!(result.status.success(), "{mode}: {result:?}");
+            assert!(result.stderr.is_empty(), "{mode}: {result:?}");
+            let prepared = directories(&case.join("compiler-provenance"));
+            assert_eq!(prepared.len(), 1);
+            let prepared = prepared[0].join("observer");
+            let image = fs::read(&prepared).unwrap();
+            assert!(!image.is_empty());
+            let sessions = directories(&target.join(".archogen-provenance"));
+            assert_eq!(sessions.len(), 2);
+            for directory in &sessions {
+                let installed = directory.join("observer");
+                assert_eq!(fs::read(&installed).unwrap(), image);
+                let metadata = fs::symlink_metadata(&installed).unwrap();
+                assert!(metadata.is_file());
+                assert_eq!(
+                    metadata.permissions().mode(),
+                    fs::metadata(&prepared).unwrap().permissions().mode()
+                );
+            }
+            assert_eq!(
+                fs::read(target.join("release")).unwrap(),
+                b"owned fixture release"
+            );
+            let events = if inject {
+                fs::read_to_string(&trace).unwrap()
+            } else {
+                assert!(!trace.exists());
+                String::new()
+            };
+            if inject {
+                assert_eq!(events.matches("loaded\n").count(), 1);
+                assert_eq!(events.matches("permissions\n").count(), 2);
+            }
+            let mut boundary = None;
+            if scarce {
+                let filled = events
+                    .lines()
+                    .find(|line| line.starts_with("filled "))
+                    .unwrap();
+                let released = events
+                    .lines()
+                    .find(|line| line.starts_with("released "))
+                    .unwrap();
+                assert_eq!(
+                    events
+                        .lines()
+                        .filter(|line| line.starts_with("filled "))
+                        .count(),
+                    1
+                );
+                assert_eq!(
+                    events
+                        .lines()
+                        .filter(|line| line.starts_with("released "))
+                        .count(),
+                    1
+                );
+                let fill = fields(filled);
+                let restore = fields(released);
+                assert_eq!(fill.len(), 7);
+                assert_eq!(restore.len(), 3);
+                assert!((16..=64).contains(&fill["soft"]));
+                assert_eq!(fill["open"], fill["soft"]);
+                assert!(fill["prior"] >= fill["soft"]);
+                assert!(fill["writer"] < fill["soft"]);
+                assert!(fill["fillers"] > 0 && fill["fillers"] < fill["soft"]);
+                assert_eq!(fill["errno"], 24);
+                assert_eq!(restore["closed"], fill["fillers"]);
+                assert_eq!(restore["soft"], fill["prior"]);
+                assert_eq!(restore["hard"], fill["hard"]);
+                boundary = Some((
+                    fill["writer"],
+                    events.find(filled).unwrap(),
+                    events.find(released).unwrap(),
+                ));
+            } else if inject {
+                assert!(!events.contains("filled "));
+                assert_eq!(events.matches("release-pass\n").count(), 1);
+            }
+            // Judge allocation only after proving the actual resource state and cleanup.
+            assert_eq!(
+                result.stdout, b"accepted\nquery-ok\nrecovery-ok\n",
+                "{mode}"
+            );
+            for directory in &sessions {
+                assert_eq!(directories(&directory.join("records")).len(), 1);
+            }
+            if let Some((writer, filled, released)) = boundary {
+                let inode = fs::metadata(sessions[0].join("observer")).unwrap().ino();
+                let read = format!("readback fd={writer} inode={inode}\n");
+                let read = events.find(&read).unwrap();
+                assert!(filled < read && read < released);
+                let recovery = fs::metadata(sessions[1].join("observer")).unwrap().ino();
+                let recovered = events
+                    .lines()
+                    .find(|line| {
+                        line.starts_with("readback ")
+                            && line.ends_with(&format!(" inode={recovery}"))
+                    })
+                    .unwrap();
+                assert!(released < events.find(recovered).unwrap());
+            }
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
     fn actual_installed_observer_corruption_is_refused_before_use_and_recovers() {
         crate::trust_test_process::bounded!(
             actual_installed_observer_corruption_is_refused_before_use_and_recovers

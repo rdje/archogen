@@ -3953,6 +3953,14 @@ retain their original leaf/work-unit identities and route to this full ledger.
 | 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.1.1` | `ARCHOGEN-M3-0773 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.1.1)` | current raw/source/producer/caller bindings, historical labels corrected, full integration12 pass and exact original/prior-copy restoration; prerequisites seal exactly, book/live sync; observer native population next |
 | 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.1` | `ARCHOGEN-M3-0774 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.1)` | full observer16 native14K2S/exit1; all1091 originals/copies restore,28 bindings/37 pins/11 false receipts bind; exact qualification seal and seven historical rows in book; P1 sync then P2 close owned next |
 | 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.2` | `ARCHOGEN-M3-0775 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.2)` | calibrated actual sync fault/pinned query/partial evidence/recovery; native1K/full177 and catalogue2K with intended name,1093 original/copy restoration/29 bindings/37 pins/11 falsifiers; production/prior controls exact, seal/book/live/focused gates; close assessment next |
+| 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.3` | `ARCHOGEN-M3-0776 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.3)` | source/API/caller close proof, actual omission/error protocol and deliberate timing difference; guarded per-file1E/full177,1096 restored/31 bindings/37 pins/11 falsifiers;47 tools, prior bytes/seal/book/live gates; complete observer replay next |
+| 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.4` | `ARCHOGEN-M3-0777 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.4)` | complete observer16/full177:15 named K/1 scoped E, strict0;1097 original/copy restoration,31 bindings/37 pins/12 false receipts, production/control/reason bytes exact; close leaf/287 older archives exact, book/live sync; controller next |
+| 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.5` | `ARCHOGEN-M3-0779 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.5)` | complete controller124/full177:89K/24S/11U strict1;24 concrete owners,1099 restored/31 bindings/37 pins/12 false receipts; code/reasons exact, prior seal/289 archives exact, full book/live sync; P1 preparation next |
+| 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.1` | `ARCHOGEN-M3-0780 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.1)` | actual controller/base-env/native callee calibration and pinned recovery; new parent/catalogue3K/native3K full178,1102 restoration/33 bindings/37 pins/12 falsifiers; production/prior bodies/reasons exact, measurement seal/290 archives exact, book/live/focused gates; record positions next |
+| 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.2` | `ARCHOGEN-M3-0781 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.2)` | real multi-record original/literal calibration and every-file refusals/recovery; native14K/full179,1103 restored/33 bindings/37 pins/12 false receipts; stale index epoch reconciled to held tree, prior controller except new test/relative fixture exact;291 archives/new seal and six ledger notes preserved, focused/book/live gates; internal NUL next |
+| 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.3` | `ARCHOGEN-M3-0782 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.3)` | actual compilation-record internal-NUL original/literal calibration, permanent refusal/evidence/recovery; native2K/full180,1104 restored/33 bindings/37 pins/12 falsifiers; prior source/control/catalogue/reason bytes exact, record-position seal/292 archives exact; focused/book/live gates; exact emit marker next |
+| 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.4` | `ARCHOGEN-M3-0783 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.4)` | real compilation-record exact-prefix/equals original/literal calibration and permanent refusal/evidence/recovery; native2K/full181,1105 restored/33 bindings/37 pins/12 falsifiers; prior source/control/catalogue/reason bytes exact, internal-NUL seal/293 archives exact; focused/book/live gates; installed-byte verification next |
+| 2026-10-19 | `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.5` | `ARCHOGEN-M3-0784 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.5)` | actual controller/native installed-byte original/literal corruption and pinned recovery; permanent macOS parent/native1K full182,1108 restored/35 bindings/37 pins/12 falsifiers; prior source/control/catalogue/reason bytes exact, emit-marker seal/294 archives exact; focused/book/live gates; installation close next |
 
 ### Complete native compiler observer measurement
 
@@ -4898,3 +4906,124 @@ Supplemental audit SHA-256:
 Final focused/book/doctrine checks close this slice. Installation's explicit close is assessed
 next; the observer's path-only close proof does not transfer to this later readback allocation.
 
+### Installation writer lifetime and readback allocation
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.6.6`: installation's explicit `drop(file)`
+is observably needed by a supported native resource case. It is a killed lifetime obligation.
+The observer's earlier path-only close equivalence does not transfer: installation subsequently
+reads the installed image, which needs another file descriptor.
+
+The [File contract](https://doc.rust-lang.org/std/fs/struct.File.html) describes closure at
+scope exit, and [the read convenience function](https://doc.rust-lang.org/std/fs/fn.read.html)
+opens and reads a file. [The resource-limit API](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/getrlimit.2.html)
+controls a process's open-file budget, with a soft value adjustable within its hard value.
+The online Rust pages are newer than the pinned toolchain; they supply general API context,
+not pinned implementation evidence. The actual source variants and queries execute the
+[recorded pinned compiler](ledger.md#rust-toolchain).
+
+The control compiles the actual controller, JSON, embedded observer and real environment
+constructor in an isolated helper. A macOS native fixture runs after successful installation
+permissions, while the writer is still open. It identifies that actual writer descriptor,
+temporarily lowers only the helper's soft open-file allowance, and allocates its own
+close-on-exec filler descriptors until the kernel returns `EMFILE`. A separate descriptor
+census requires the available table to be full. A trace descriptor was reserved before
+scarcity, so logging requires no new open operation at this boundary.
+
+The read-only operating-system dependency `/dev/null` supplies real native filler descriptors.
+It is needed to exercise the kernel allocation boundary; it stores no project data.
+All project files and traces remain on the repository volume. The fixture never closes the
+installation writer and does not interpose close.
+
+The helper returns from the actual session attempt, then changes permissions on a prepared
+fixture release marker. That test-only callback closes exactly its recorded fillers,
+checks that those descriptors are closed, and restores the precise previous soft and hard
+resource values before any query or fresh-session recovery. The hard value is never lowered.
+The helper's compiler and observer children do not inherit the native fixture loader or
+filler descriptors. Other processes' resource values remain untouched.
+
+| Case | Required behavior |
+| --- | --- |
+| Baseline, no library | Install exact bytes, complete a pinned query and a fresh recovery query |
+| Loaded pass mode | Preserve the same image, query and recovery behavior |
+| Scarcity | Explicit close frees the writer slot; real readback reuses it, installation succeeds, cleanup restores the budget, and both query checks succeed |
+
+The parent independently checks every installed image against the prepared image, regular-file
+state and permissions, precise fixture trace fields, complete resource-table occupancy,
+owned-filler cleanup, restored values and exact query stdout. The scarcity trace must order
+exhaustion, readback on the original writer's descriptor, release and fresh-session readback.
+Both successful sessions must retain their real query records.
+
+`2026-10-19`: final actual-source calibration retains all six controller/mode combinations.
+The measured scarcity case has soft value 64, prior soft value 4096, and 59 owned fillers.
+The original closes its writer and completes readback on that released descriptor. The
+literal omission keeps the writer live, returns the kernel's too-many-open-files error,
+and leaves that first session without a records directory. Both variants preserve every
+installed byte, restore the prior resource values, and complete valid fresh-session recovery.
+Baseline and loaded-pass cases succeed for both variants.
+
+This is a controlled per-process descriptor-allocation witness on macOS. It establishes a
+concrete observable difference, not universal timing behavior or an equivalence judgment.
+Production already has the required explicit close. The host-neutral catalogue and observer
+close reason remain unchanged.
+
+The permanent parent is
+`trust::compiler::tests::actual_installation_closes_its_writer_before_readback_allocation`.
+Its fixtures are `scripts/fixtures/compiler_install_close.c` and
+`scripts/fixtures/compiler_install_close_probe.rs`.
+
+```sh
+cargo test -p xtask trust::compiler::tests::actual_installation_closes_its_writer_before_readback_allocation -- --exact
+bash scripts/mutation_sweep.sh xtask/src/trust_compiler.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L119.stmt.15
+```
+
+The permanent control passes directly in 2.52 seconds. The native replay confirms the explicit-close regression.
+
+`2026-10-19`: native baseline 54 seconds; the actual drop omission finishes killed by only
+the new parent against all 183 current macOS trust parents, strict exit 0. There is no timeout,
+unjudged result, compiler refusal or equivalence judgment in this selected replay.
+
+`2026-10-19`: all 1111 original/current-copy inputs restore by bytes, modes and independent
+Python/system hashes. All 37 direct bindings and 37 public source pins agree. Twelve altered
+source/scope/replacement/name/outcome/count/exit/population receipts reject. The independent
+native calibration audit checks each retained controller/mode case against its actual bytes,
+inode trace, descriptor fields, records and query output. Removing the new parent reconstructs
+the entire previous controller exactly. Other production, prior tests, catalogue and reasons
+are unchanged. The committed installed-byte body seals exactly, and all 295 earlier archives
+retain their bytes.
+
+Held native tree `415072dd0e305c2b54f46f8e0b1f30ca63d51ee5` precedes completion documentation
+and final focused staging. Raw calibration, API observations and receipts are under
+`target/compiler-install-close/`. Supplemental audit SHA-256:
+`b193d51e65b3cf922a3f0d390bde46332916010d0b7b3edf2fa9ea872261d9f0`.
+Eight completed private notes also move verbatim to the compiler-provenance ledger; original
+identities and every other private commit row are preserved, with lost-note, duplicate-record
+and changed-identity controls.
+`2026-10-19`: four staging/check requests and app inspection failed automatic review
+before execution, reporting capacity or a deadline rather than an unsafe-action determination.
+The director confirmed that **Ask for approval** was selected, while requests still selected
+automatic review. After the prior run ended, the active execution policy changed to manual
+review and explicit staging of the intended files succeeded. The delayed uptake has no
+established root cause; the observed recovery is not a general guarantee. Final focused
+verification and staged doctrine gates precede commit. Record-presence state follows closure
+and the director restoring the default permission, before the full controller replay.
+
+`2026-10-19`: the director requires an immediate, prominent approval-blocker alert carrying
+the project name, blocked operation, exact cause, verified user steps and the next action.
+The canonical agent instruction is in `TOOLBOX.md`. For this automatic-review failure, the
+documented manual-review setting is **Ask for approval** in the permissions control; resume
+so the command can receive human review. This changes the reviewer while retaining the
+workspace sandbox. See [the official permission controls](https://learn.chatgpt.com/docs/permission-modes).
+Official [troubleshooting](https://learn.chatgpt.com/docs/reference/troubleshooting) also
+recommends a new focused chat for stuck states; if needed, use this same working directory
+and read the saved resume pointer and dirty owning leaf before any change. Do not create a
+worktree from `HEAD` and lose the uncommitted slice.
+
+
+`2026-10-19`: the director sets **Approve for me** as the default. Whenever a permission
+change is needed, issue the prominent `ARCHOGEN` alert and block until the director reacts.
+After finishing the work that needs the temporary permission, pause again so the director
+can restore **Approve for me**; await that reaction before continuing the next-task loop. Record both
+waiting states durably. This instruction governs the current approval recovery too.
