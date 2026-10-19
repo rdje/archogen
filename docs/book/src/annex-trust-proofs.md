@@ -5481,6 +5481,14 @@ ledger does not project earlier measurements to the current source or replace th
 | `M3.6.9.6.3.2.2.11.2.8` | `ARCHOGEN-M3-0712 (leaf M3.6.9.6.3.2.2.11.2.8)` | **hard proposal cleanup**: ordinary refusal/new report beside protected readable old proposal reproduced with writable sibling output; checked remove_file now returns attributed Err before report replacement, preserves old files and supports refusal/valid retries; public controls/native finishing kills and complete restoration hold the boundary; gate/tests reconstructed, catalogue append-only, trust.rs/E unchanged; canonical/book/live sync, historical .9.4 status corrected, fixed ceilings retained; focused 3/3 and book pass, exact stamp/staged gates bind commit; actual-candidate flag proofs next |
 | `M3.6.9.6.3.2.2.11.2.4.1` | `ARCHOGEN-M3-0713 (leaf M3.6.9.6.3.2.2.11.2.4.1)` | **lint-level actual-edit proofs**: eight consuming-bit switches compile beside original helper; actual pinned Cargo argv and literal normalized outputs, eight valid separate-argument counterexamples, consumed-value and wrong-oracle controls precede per-key E; native 8 S strict1 to 8 scoped E strict0 with altered-evidence refusal; 26 operator tests pass, original/current copy restore, older bodies/E prefix exact and production/catalogue unchanged; canonical/book/live sync, tight book ceilings trigger owned annex containment before cap/color |
 | `M3.6.9.6.3.2.2.11.2.4.4` | `ARCHOGEN-M3-0714 (leaf M3.6.9.6.3.2.2.11.2.4.4)` | **book proof annex**: compiler/normalization and closed mutation-measurement blocks move byte-exact from ledger/trust into Annex C; old entry anchors link onward, all source entries/rules/counts/examples/limits retained; shorter accurate sidebar caption keeps generated index under its unchanged ceiling; pinned rendering and maintained book gates plus native Git/Python-system hash/HTML checks pass; code/tests/catalogue/E unchanged, live selects cap-lints proof |
+| `M3.6.9.6.3.2.2.11.2.4.2` | `ARCHOGEN-M3-0715 (leaf M3.6.9.6.3.2.2.11.2.4.2)` | **conditional cap-lints proof**: compile actual consuming-bit edit beside original helper, independent real local argv/outputs and successful explicit-cap difference plus consumed-value/wrong-oracle controls precede precise E; native 1 S / strict 1 to 1 scoped E / strict 0 with audit falsifiers; 27 operator tests and all 1021 original/current copy restoration pass; old bodies/E prefix preserved with bounded operand helper extension, Rust/catalogue unchanged; canonical/Annex C/live sync, focused/book/staged gates bind commit, color next |
+| `M3.6.9.6.3.2.2.11.2.4.3.1` | `ARCHOGEN-M3-0716 (leaf M3.6.9.6.3.2.2.11.2.4.3.1)` | **color compatibility boundary**: exact before key survives; pinned Cargo always emits compiler JSON, so ordinary separate-color probes refuse and cannot count as successful falsifiers; direct compiler and published test-owned RUSTC forwarding override succeed with real consumed artifact, raw/forwarded args distinct; source/artifact hashes and all 1026 original/current copy restoration agree; exploratory adapters qualified, no E/code/test/catalogue change; canonical/Annex C/live sync, permanent controls next |
+| `M3.6.9.6.3.2.2.11.2.4.3.2` | `ARCHOGEN-M3-0717 (leaf M3.6.9.6.3.2.2.11.2.4.3.2)` | **permanent color proof**: actual consuming-bit variant compiled against independent ordinary/raw/physical argv, valid public-override builds for every supported color, real library consumers and JSON/consumed-value/three wrong-oracle controls before precise E; native 1 S / strict 1 to 1 scoped E / strict 0 with audit falsifiers; 28 operator tests and all 1026 original/current copy restoration pass, old bodies/E prefix exact, Rust/catalogue unchanged; canonical/Annex C/live sync, proof/producer parents close; focused/staged gates bind commit, final table replay and integration owned next |
+| `M3.6.9.6.3.2.2.11.3` | `ARCHOGEN-M3-0718 (leaf M3.6.9.6.3.2.2.11.3)` | **final bounded flag table**: all 14 actual edits bind original outcomes, 3 named kills/10 scoped E/1 compiler refusal and strict 0; all 11 original survivors resolve on repaired caller, no retrospective E or refusal coverage; all 1026 originals/current copy restore, five altered-evidence arms refuse and production/tests/E/native stay exact; canonical/book/live sync, integration checkpoint owned next |
+| `M3.6.9.6.3.2.2.11.4` | `ARCHOGEN-M3-0719 (leaf M3.6.9.6.3.2.2.11.4)` | **flag milestone checkpoint**: every current local integration stage passes after caller/output repairs and actual-edit proofs, exact unchanged activation stamp matches native Git, all 1026 originals/prior-copy inputs restore and false receipts refuse; code/tests/E unchanged, book/canonical/live sync closes bounded flag group; task-record repair .12 next, full production/review/runner obligations stay open |
+| `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.1` | `ARCHOGEN-M3-0789 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.1)` | one existing test target becomes relative; actual old relocation fails/repaired copy+move preserves payload/hash; original assertions/production exact, native1K/full183/1115 restores/37 pins/four false receipts; measurement seal/299 archives exact; book/live/final staged focused, --test controls next |
+| `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.2` | `ARCHOGEN-M3-0790 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.2)` | single-test flag forwarding and early/middle/final duplicate refusal held by one literal-query/error parent; exact historical5S become native5K/full184 strict0,1116 originals/copies restore/37 pins/five false receipts; prior repair seal/300 archives exact, production/old tests/reasons unchanged; book/live/final staged focused, option values next |
+| `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.3` | `ARCHOGEN-M3-0791 (leaf M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.3)` | nonempty/nonflaglike values for all naming options held with literal queries/exact errors; exact historical4S become native4K/full185 strict0,1118 restored/37 pins/five false receipts; preceding test-flag seal/301 archives exact, production/old tests/reasons unchanged; book/live/final staged focused, exact suffix prefix next |
 
 ### Complete native artifact-binder measurement
 
@@ -5984,3 +5992,100 @@ binds actual source/parent preservation, historical edit identity, native result
 and false receipts. Raw evidence remains in `target/artifact-option-values/`. Final staged
 focused/book/commit gates complete this leaf. Exact `extra-filename=` prefix controls are next;
 the complete current artifact replay and caller adequacy remain separately owned and open.
+
+### Exact extra-filename naming-query boundary
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.4`: a permanent pure naming-helper parent now
+holds the exact `extra-filename=` prefix. It forwards the original `-C` and value unchanged
+for an exact match, including an empty suffix, and excludes nonmatching codegen arguments.
+Production and every previous test remain byte-exact.
+
+| Observed value following `-C` | Required query tail |
+| --- | --- |
+| `extra-filename=-hash` | `-C extra-filename=-hash` |
+| `extra-filename=` | `-C extra-filename=` |
+| `metadata=extra-filename=-bait` | omitted |
+| `extra-filename` | omitted |
+| `extra-filename-other=-hash` | omitted |
+
+Each literal expected query begins `--print=file-names - --crate-name probe`; its returned
+output directory remains `outputs`. These are helper-boundary controls, including malformed
+and nonnaming lookalikes. The test launches no compiler and does not assert that every negative
+example is an argument of a successful supported Cargo compilation.
+
+| Exact helper edit | Initial full measurement | Current native result |
+| --- | --- | --- |
+| `L42.dir.44`, prefix test becomes substring test | S | K, new intended parent |
+| `L42.lit.45`, required equals sign omitted | S | K, new intended parent |
+
+The actual new parent is
+`trust::artifact::tests::naming_query_forwards_only_the_exact_extra_filename_option`.
+It is the only added parent name. Every earlier name, source body and assertion is preserved.
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L42.dir.44 --only L42.lit.45
+```
+
+`2026-10-19`: both selected edits finish killed against all 186 current trust parents, strict
+exit `0`, and the new intended name occurs in each failure list. No selected survivor,
+compiler refusal, equivalent, timeout or unjudged result occurs. All 1119 original/copied
+regular inputs restore with independent Python/system hashes and modes; all 37 direct bindings
+and 37 pinned public producer sources agree. Invented-parent, missing-result, changed-outcome,
+changed-exit and duplicate-result receipts refuse. The committed option-value leaf seals
+exactly and all 302 prior task archive files remain unchanged.
+
+#### Historical caller suffix extraction remains separately owned
+
+The older suffix obligations are **not** the helper edits above. The caller still extracts a
+dep-info filename suffix from adjacent observed arguments with this expression:
+
+```rust
+(w[0] == "-C" && w[1].starts_with("extra-filename="))
+    .then(|| w[1]["extra-filename=".len()..].to_owned())
+```
+
+Exact original/replacement/operator identity, independently rediscovered in the recorded old
+source and current caller, gives this unique mapping:
+
+| Historical caller ID | Current caller ID | Disposition |
+| --- | --- | --- |
+| `L814.dir.284` | `L729.dir.201` | source-bound producer/domain assessment pending |
+| `L814.lit.285` | `L729.lit.202` | source-bound producer/domain assessment pending |
+
+The historical commit is `541ec182f44c1e6013e95ad30f736ae88d3e42e1`, after the permitted
+source boundary, with whole-source SHA-256
+`069d8e598fd9d6c12306fbe0f091635b60f942b747e78e6167e92b41e0ca01ba`.
+Current `xtask/src/trust.rs` remains SHA-256
+`fdc28b267ceb173da133e6b0d287758df703ecba6e7b3ca4453964b1c7aa567c`.
+A missing mapping row and an invented helper-as-caller mapping both refuse. No current caller
+native result, equivalence or retirement is inferred from this identity reconciliation or the
+helper kills. `M3.6.9.6.3.2.2.15.2.1.4.1` owns actual successful-Cargo producer/domain assessment
+after the complete artifact checkpoint and before caller closure, with bounded committed
+controls, repair or proof as its evidence requires.
+
+`2026-10-19`: six retained compiler-queue descriptions still called the historical 83-edit
+source epoch current. Their wording now identifies source069d8e59 as historical; all 20
+queued survivor identities retain their original recorded outcomes and ownership. Independent
+reverse reconstruction recovers the prior text exactly, and identity order/status lines are
+unchanged. Current suffix replay is routed explicitly to its current child. The artifact
+resolution container likewise calls its original cohort measured rather than implying a fresh
+full result after every selected control. This repairs resume/documentation drift without
+relabeling any measurement.
+
+`2026-10-19`: eight additional completed task notes move verbatim into the existing unbounded
+historical book ledger. Reconstructing the private rows is byte-exact and omitted/altered notes
+refuse; an independent comparison retains every previous ledger byte. Every original leaf and
+work-unit identity remains in its private task table. No book-size ceiling is introduced.
+
+Held native tree `4c9ee9eaef77c553d127f834516d2936dc53a524` precedes completion documentation.
+Whole artifact file SHA-256 `b068f48eaf224dd74c37b576fd55275ca69526b91d7c3595d3f1394815d2740b`;
+its production prefix remains exact. Audit SHA-256
+`7d86abe7c1a8a559f32b7fabb43aa0a52e51b81779fbc92cae2673dedf437113`
+binds actual source/parent preservation, historical caller identity, native results, restoration,
+false receipts and note routing. Raw evidence remains in `target/artifact-extra-filename/`,
+including the separate epoch-routing reconstruction. Final staged focused/book/commit gates
+complete this leaf. Joined naming-option spellings and lookalikes are next; the complete
+current artifact replay, retained caller obligations and global adequacy remain open.

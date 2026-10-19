@@ -115,6 +115,7 @@ as `F26`, task-tree leaves — are names, not words, and are not listed.
   Berkeley; archogen's first target. See [Where generated systems run](targets.md).
 - **RP2350** — the microcontroller on the Raspberry Pi Pico 2, with RISC-V cores beside its Arm ones: a part number,
   not an acronym. See [Where generated systems run](targets.md) and [its datasheet's ledger entry](ledger.md#rp2350).
+- **RUSTC** — the Cargo environment variable selecting the Rust compiler program; the provenance collector sets it to `rustc`. See [the pinned toolchain](ledger.md#rust-toolchain) and [the historical records](annex-trust-proofs.md#historical-trust-helper-and-controller-commit-records).
 - **RV32IMAC** — 32-bit RISC-V with the integer base (`I`), multiply and divide (`M`), atomic instructions (`A`) and
   compressed instructions (`C`): the letters name the instruction-set extensions a core implements. See [Where
   generated systems run](targets.md).

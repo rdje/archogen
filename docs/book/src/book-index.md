@@ -209,6 +209,8 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#every-diagnostic-shown-in-this-book-is-a-real-run)
 - Exact compilation emit-marker validation — [Annex C: Trust proof
   records](annex-trust-proofs.md#exact-compilation-emit-marker-validation)
+- Exact extra-filename naming-query boundary — [Annex C: Trust proof
+  records](annex-trust-proofs.md#exact-extra-filename-naming-query-boundary)
 - Exact, always — [Quantities and units](quantities.md#exact-always)
 - Exact-entry measurements — [Generated-sources test adequacy](trust-adequacy.md#exact-entry-measurements)
 - Exactly one primitive is trusted — [Kinds and schemas](kinds.md#exactly-one-primitive-is-trusted)
@@ -525,6 +527,7 @@ a change that leaves it stale, so it is never edited by hand.
   repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - rust-reference — [What this project relies on from outside](ledger.md#rust-reference)
 - rust-toolchain — [What this project relies on from outside](ledger.md#rust-toolchain)
+- **RUSTC** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **RV32IMAC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **RV64** — [definition](glossary.md), [Reading a description](reading.md)
 

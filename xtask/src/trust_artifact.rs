@@ -482,6 +482,36 @@ mod tests {
     }
 
     #[test]
+    fn naming_query_forwards_only_the_exact_extra_filename_option() {
+        for (value, suffix) in [
+            ("extra-filename=-hash", &["-C", "extra-filename=-hash"][..]),
+            ("extra-filename=", &["-C", "extra-filename="][..]),
+            ("metadata=extra-filename=-bait", &[][..]),
+            ("extra-filename", &[][..]),
+            ("extra-filename-other=-hash", &[][..]),
+        ] {
+            let observed: Vec<String> = [
+                "rustc",
+                "--crate-name",
+                "probe",
+                "--out-dir",
+                "outputs",
+                "-C",
+                value,
+            ]
+            .map(str::to_owned)
+            .to_vec();
+            let (query, directory) = naming_arguments(&observed).unwrap();
+            let mut expected = ["--print=file-names", "-", "--crate-name", "probe"]
+                .map(str::to_owned)
+                .to_vec();
+            expected.extend(suffix.iter().map(|value| (*value).to_owned()));
+            assert_eq!(query, expected, "{value:?}");
+            assert_eq!(directory, "outputs");
+        }
+    }
+
+    #[test]
     fn actual_empty_input_query_preserves_build_and_ignores_now_invalid_source() {
         crate::trust_test_process::bounded!(
             actual_empty_input_query_preserves_build_and_ignores_now_invalid_source
