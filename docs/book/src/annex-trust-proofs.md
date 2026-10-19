@@ -8970,3 +8970,239 @@ local and CI pins, actual control-byte renders, old anchors/literals, figure-gat
 and complete integration. The explicit publication refusal is in place while that upstream
 prerequisite remains. Parent compatibility stays open; the deferred prefix proof resumes
 after the committed guard. The book remains unbounded.
+
+
+### Caller dep-info suffix prefix proof after preflight repair
+
+`M3.6.9.6.3.2.2.15.2.1.4.3.1`, `2026-10-19`: this proof concerns only the actual
+`compile` extraction edit from `starts_with("extra-filename=")` to
+`starts_with("extra-filename")`. It does not justify the separate substring matcher,
+which the supported no-suffix/incremental-path regression kills.
+
+The domain is the current Unix inventory caller with the repository's pinned stable
+Cargo `f2d3ce0bd7f24a49f8f72d9000448f8838c4e850` / Rust `1.95.0`, its repaired successful-preflight cache,
+base environment and compiler observer. Finite API/helper agreement is not the proof.
+Changes to these premises require source/producer revalidation before retaining the reason.
+
+
+The recovered draft's full argument is revalidated below after the repaired preflight.
+The old withdrawn text remains preserved above. The lemma assumes actual successful
+invocations by Cargo `f2d3ce0bd7f24a49f8f72d9000448f8838c4e850` / Rust `1.95.0`.
+Other judged-tree toolchain producers and arbitrary argv are outside that conditional domain;
+this record supplies no all-toolchain equivalence claim. A change of producer requires
+fresh source/constructor review, regardless of the toolchain field's spelling in an input tree.
+
+Measured `2026-10-19`: fresh discovery gives `1414` raw current edits, and the exact
+`L729.lit.202` remains unchanged. The actual full semantic command lists the same `200`
+parents and reports `1 survived` before the new reason. Both original and copied inputs
+restore exactly. The stale recovered source guard refuses the repaired production prefix.
+The revalidated permanent control then completes actual compiled originals/edits, full
+ordinary/incremental/mixed producer argv, consumed libraries, literal/constructor/adjacency,
+wider changed-output and short/Unicode panic cases before it fails solely at the deliberately
+absent reason assertion. Only then is its precise per-file reason appended.
+
+#### Producer and every compile route
+
+Source-reviewed `2026-10-19`: there are two production call sites. Role builds select binary/library or comparison-test
+targets; generated-source entry points select binary/library/example targets after the
+same manifest/dynamic-target preflight. Every route uses fixed `build` or `test --no-run`
+commands with release/locked/offline/no-default-features/JSON/package arguments. None uses
+`cargo rustc` or supplies trailing compiler arguments.
+
+The Cargo environment is cleared and rebuilt from the allowlist. Cargo homes are reset and
+configuration is alias-only, including ancestor checks. User flags/compiler/workspace wrappers
+are excluded. Exact manifest admissions do not bypass unconditional build-script/procedural-macro
+metadata preflight; the default manifest rule is not itself used as an unconditional premise.
+The stable Cargo feature gate prevents admitted profile rustflags from becoming arbitrary
+compiler arguments. Cargo's `extra_args_for` supplies trailing `rustc`/`rustdoc` arguments,
+absent in both guarded callers. The observer forwards the immutable native argument tail,
+without adding compiler flags. Only successful, current-session compilation records with
+crate name/out-dir/emit are passed to extraction; recognized queries are excluded.
+
+The published producer source identities are maintained in
+`docs/specs/trust/flag-normalization-domain.md` and reverified for this checkpoint.
+Relevant constructors in
+[compiler/mod.rs](https://github.com/rust-lang/cargo/blob/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/compiler/mod.rs)
+are `prepare_rustc`, `build_base_args`, `lto_args`, `build_deps_args`, `extern_args`,
+`add_cap_lints` and the runtime native/custom-flag appenders. The optional suffix comes from
+[compilation_files.rs](https://github.com/rust-lang/cargo/blob/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/compiler/build_runner/compilation_files.rs),
+SHA-256 `5ab7f5e394d69a042c13229d59689c3b037eef966bfb0bad8098a713bc82d910`:
+`Option<UnitHash>` emits either no operand or the complete
+`extra-filename=-` followed by a sixteen-digit hexadecimal `UnitHash`.
+
+| Construction | Relevant adjacent tokens and boundary |
+| --- | --- |
+| Scalar/boolean/codegen profiles | After literal `-C`, keys are `prefer-dynamic`, `opt-level`, `panic`, `lto`, `linker-plugin-lto`, `embed-bitcode`, `codegen-units`, `debuginfo`, `split-debuginfo`, `debug-assertions`, `overflow-checks`, `metadata`, `rpath` or `strip`. Dynamic values follow a fixed key and cannot change its initial bytes. |
+| Optional suffix | Only the complete `extra-filename=` constructor has the shortened prefix; the optional absent branch introduces no matching operand. |
+| Directories/link configuration | Cargo constructs `--out-dir` with its output directory, `-L dependency=…` and optionally fixed `linker=…` / `incremental=…` codegen keys. Directory text containing the prefix does not change any initial key. |
+| Crate identity/source/type | Names/types have their Cargo constructors; the source argument is followed by fixed diagnostic arguments. Unconditional preflight requires source roots with the `rs` extension. No source/path/name argument can create an unguarded matching adjacent pair. |
+| Manifest lints/features | Joined lint flags begin with `--`. Feature and generated check-cfg operands retain their fixed prefixes. Custom check-cfg strings are paired with `--check-cfg`: even if an operand were literal `-C`, its successor is another fixed option, not an arbitrary suffix operand. This accounts for incidental data tokens rather than assuming every `-C` is a codegen flag. |
+| Dependencies/lint caps | Extern values contain their name/path delimiter or fixed `proc_macro`; search paths have `dependency=`; cap values are fixed levels. These introduce no matching incidental pair. |
+| Build-script/native runtime appenders | Hard dynamic-target preflight excludes these routes. Their fixed `link-arg=` codegen key is also distinct; arbitrary raw custom cfg/native flags are not silently assumed absent without that preflight. |
+| Arbitrary extra/profile/unit flags | Trailing compiler args are absent; alias-only/fresh-home/cleared environment excludes config/environment rustflags; the pinned stable feature gate excludes profile rustflags. These are required premises, not conclusions inferred from sample builds. |
+
+#### Consequence for the actual extraction
+
+For every adjacent pair satisfying `w[0] == "-C"`, either both prefix predicates are false,
+or the same operand begins with the complete ASCII `extra-filename=` prefix. The source
+construction and boundary argument above establish this implication for all values in the
+stated caller domain, independently of the finite controls.
+
+Both predicates therefore choose the same first pair. For a chosen pair, the unchanged
+fifteen-byte slice starts after that complete ASCII prefix, at a valid UTF-8 boundary;
+the extracted string is identical. With no chosen pair, both use the same empty default.
+Subsequent dep-info paths, errors, units and source hashes are unchanged. No arbitrary-argv
+equivalence or compiler-refusal coverage is claimed.
+
+#### Permanent controls and falsification
+
+The maintained control in `xtask/mutation_sweep_tests.py` guards complete production prefixes
+of collector/controller/observer/base build code, the toolchain file and alias configuration,
+plus the transitive configuration/manifest/metadata/tree/grammar readers, module and
+dependency wiring, and actual Cargo commit identity. Altered bytes in each source/pin/config
+or wiring premise and a changed producer identity refuse. These proof gates remain outside the semantic native cohort.
+
+It compiles the exact actual original/edited extraction, not a reimplementation. Independently
+specified literals cover the first match, empty/missing operands, complete prefix, Unicode
+suffixes, all other codegen key families and incidental check-cfg adjacency. Actual ordinary,
+incremental and mixed-rlib/dylib Cargo commands have independently expected complete argv;
+the mixed case emits literal `flagproof.d` without a suffix. All three real library consumers
+print `37`.
+
+Wider synthetic inputs explicitly disprove arbitrary-domain equivalence: after `-C`,
+`extra-filenameX=tail` changes the returned suffix, bare `extra-filename` panics only in
+the edit, and `extra-filenameé=tail` makes its byte slice cross a UTF-8 character boundary.
+A synthetic incidental-data pair also distinguishes the edit. These are helper-boundary
+counterexamples, not successful Cargo inputs. Wrong supported/wider/literal output oracles
+refuse independently.
+
+The first new direct-Cargo expectation omitted `embed-bitcode=no` and refused before a reason
+existed. Pinned
+[lto.rs](https://github.com/rust-lang/cargo/blob/f2d3ce0bd7f24a49f8f72d9000448f8838c4e850/src/cargo/core/compiler/lto.rs),
+SHA-256 `97652b448f525af54f1baee199722cd1534768927a2d4deeae924504cade64d6`,
+selects `OnlyObject` for the default false profile; `lto_args` supplies that operand.
+Fresh current inventory records independently confirm it. The corrected new control requires
+the complete actual argv. Historical diagnostic command shapes are not inherited as current
+producer expectations. Completed compiled/false controls precede adding the exact reason;
+final reason/native replay and checkpoint evidence are recorded in the task tree and book.
+
+#### Exact implementation and wiring premises
+
+The permanent control is
+`DiagnosticFlagTests.test_caller_suffix_prefix_requires_the_complete_pinned_constructor`
+in `xtask/mutation_sweep_tests.py`, outside the semantic native cohort.
+Algorithm modules use the production prefix before `#[cfg(test)]`. The entry modules use
+whole-file bytes because a test-only module declaration occurs before later wiring; manifests,
+lock and pin/config files also use whole bytes. The complete expected premise map is:
+
+| Repository path | Bound bytes | SHA-256 |
+| --- | --- | --- |
+| `xtask/src/trust.rs` | production prefix | `51af305a7198e25bb793f1d24a24628082f6b0479704b6e65a488497d9c4502d` |
+| `xtask/src/trust_compiler.rs` | production prefix | `634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70` |
+| `xtask/src/trust_compiler_observer.rs` | production prefix | `c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f` |
+| `xtask/src/catalog_build.rs` | production prefix | `a3ec83b4f8ae870ea7a301dd8acc61d0eb42bb20a5b561c673fa8bb2a23d4864` |
+| `xtask/src/catalog_check.rs` | production prefix | `8a24ca8a5423ea31d18ad46c477553c441b03f6b9de027fa3ccbc49a4dc1d14a` |
+| `xtask/src/json.rs` | production prefix | `224d05f9f4ac43c9670883d5f4ed06665697e475d831a8c397c248a735485701` |
+| `crates/archogen-catalog/src/package.rs` | production prefix | `a270b7ead993fafbd2dc7b783ea107b66fb378073aab6581647cd59f39afd226` |
+| `crates/archogen-catalog/src/manifest.rs` | production prefix | `110c489a0e9d59435c0df770e32d7ab600c4de5cac3a9f0ca1706c25792de01b` |
+| `crates/archogen-catalog/src/tree.rs` | production prefix | `5bb9030f10feecadd27f02b0d476901b4cec958196c492947290fb8318c1ad78` |
+| `crates/archogen-catalog/src/grammar.rs` | production prefix | `6b60d509abf08334f308e7fef00b711203288e48e5786802a5c153e50f9bf43f` |
+| `xtask/src/main.rs` | whole file | `9d83a570b177d7cd5a95730e7ee2e655494e1cf9b8a6c3bfef05b13fd2a1807e` |
+| `crates/archogen-catalog/src/lib.rs` | whole file | `1e299ccfab838708b41afc6ba366bb890a09dc5195957bb6690cef509312703a` |
+| `xtask/Cargo.toml` | whole file | `6ee1cf3699670f97a13b3c49a37013f29270b80bf458ed22835bdc9b99be9f9f` |
+| `crates/archogen-catalog/Cargo.toml` | whole file | `1e8266bd7987f766565e66ddca4d6fbc277bfc853771dfec61fa8050fea0629d` |
+| `Cargo.toml` | whole file | `523ef1fdc14883302cf62d951526ae83d78cb38153caf4f9c4f9927f2c986510` |
+| `Cargo.lock` | whole file | `5164fe99ab7234dc8346121de7ee3f8b16599c31d585433c93809104676a6f64` |
+| `rust-toolchain.toml` | whole file | `4706b7b407427c38a3b63860b2e131cacc9eb57569a6755a39e81756cca676cd` |
+| `.cargo/config.toml` | whole file | `48296b18a2b27cc7268cf489fc37bdcf24e04d79b914c2237c248e4db1f6fa79` |
+
+Measured `2026-10-19`: every altered source/pin/wiring field and the altered actual Cargo
+identity refuse, totaling `19` false-premise controls. The compiled Rust controls also refuse
+the wrong supported-inequality, wider-equality and literal-output oracles independently.
+Complete original/edit extraction is compiled from actual source, preserving its window order
+and fixed slice; its expected literal outputs and real artifact consumers are independently
+specified. The precise reason covers only this prefix edit. The separate substring matcher
+remains held by its supported no-suffix/incremental-path killing regression.
+
+The first permanent invocation selected a method placed in the wrong test class and refused
+before any proof execution. Moving that exact method into `DiagnosticFlagTests` preserves
+every earlier operator body; this selection failure supplies no passing-control claim.
+The corrected permanent run completes all controls before the absent-reason failure and then
+passes with the precise reason present. Full operator, guarded native, preservation, focused
+and publication results are required for the final checkpoint record.
+
+
+#### Current prefix checkpoint and verification boundary
+
+Measured `2026-10-19`, `ARCHOGEN-M3-0810`: the exact current prefix edit changes from
+unreasoned `1 survived`, strict exit `1`, to guarded `1 equivalent`, strict exit `0`,
+against the same complete `200` semantic parents. The unmutated copied source passes in
+both runs. The guarded native held tree is `f4c0e82e93c520b40730accd016360bfe0ff736c`;
+the earlier unreasoned tree is `824443f72937faeea4be168a093f5f5ce8cc855c`.
+All production Rust and older semantic parents remain exact; the only operator addition is
+the new proof control. The full operator suite passes `49` tests in `150.536s`.
+
+The reason file retains its complete preceding bytes and adds only the exact prefix record.
+Its previous `22` reasons remain text-exact and mapped; the current `23` keys all map to
+actual current edits. Only the new prefix reason is natively remeasured in this slice.
+The new reason file SHA-256 is
+`ab341a3d5780a98352d39acdb45f6745163ec7740b9298b830fbf3e87fe1e511`.
+The new method SHA-256, excluding surrounding blank lines, is
+`638b6cfcd13693d260e214561037e0a72db83a78498761c997665a942351f1b8`.
+The unchanged complete trust source is
+`c02f30e133a9ef8b54f237dd5aa2cb0c8b55041fbdd304290d5109d65277aa49`;
+its production prefix is
+`51af305a7198e25bb793f1d24a24628082f6b0479704b6e65a488497d9c4502d`.
+
+Measured `2026-10-19`: both before/after runs restore all `1139` original and copied
+regular inputs; the opaque gitlink is checked through metadata only. The final binding map
+checks `48` direct source inputs, the preceding `37` pinned Cargo sources, and the separately
+pinned optional-suffix/LTO sources. Earlier operator bytes reconstruct exactly after removing
+only the new method; all earlier source/semantic bodies remain exact. The audit independently
+rejects `13` false native/reason/binding receipts and `3` false history assertions.
+All `319` earlier task archives remain exact; the completed publication guard is the
+`320`th archive and reconstructs its original committed span with its separating LF.
+Filesystem, Git-plus-new-path and digest-index archive sets agree.
+
+The combined audit SHA-256 is
+`95c68c811b03a6358317d56fa24965a440a971f875f055e086f6be288753e65b`.
+Supplementary records under `target/caller-suffix-current/` retain original/guarded plans,
+native logs and strict exits, complete parent names, source/producer bindings, input/restoration
+manifests, proof ordering and false controls. The source argument, premise map and permanent
+proof control are committed; a fresh session does not need ignored scratch to recover the work.
+
+Maintained commands from the repository root include:
+
+```bash
+python3 -I -B xtask/mutation_sweep_tests.py "$PWD" DiagnosticFlagTests.test_caller_suffix_prefix_requires_the_complete_pinned_constructor
+python3 -I -B xtask/mutation_sweep_tests.py "$PWD"
+bash scripts/mutation_sweep.sh xtask/src/trust.rs --package xtask --timeout 600 \
+  --filter=trust:: --filter=trust_generated:: --filter=trust_gate:: \
+  --filter=--skip --filter=route_tests --timeouts-fail \
+  --equivalents xtask/trust.equivalents --only L729.lit.202
+make focused
+```
+
+The native command mutates/restores its owned copied tree; the supplementary replay wraps it
+in the repository-volume native sandbox and checks complete original/copied inputs. Re-discover
+the ID before a future replay if production changes. Final staged focused and publication
+checks are mandatory before this commit. Source/hash guards remain outside the semantic cohort
+and grant no semantic kill.
+
+This closes only the exact conditional prefix proof. The complete changed-cache/current-reason
+checkpoint is next, followed by the bounded caller suffix checkpoint. Whole-production sweeps,
+independent review and F30/M3 closure remain open. Corrected stable renderer adoption stays
+owned separately. The public book has no size or chapter ceiling.
+
+
+#### Required changelog rollover
+
+Measured `2026-10-19` UTC: `COMMIT.md` requires a rollover at the live changelog threshold.
+The prior `40` entries reconstruct exactly as the kept `20` followed by the sealed `20`
+in `docs/history/changelog/0032.md`, with all bytes and separators preserved.
+The sealed payload is `14998` bytes; its SHA-256 is
+`127b6d911b2b6e2c07e8393b06c515eb374ca063af19f687f85ec965426833ad`.
+Every earlier ledger segment remains exact. Removing only the added index row reconstructs
+the previous index; truncated, modified and extra-newline payloads all refuse.
+`target/caller-suffix-current/ledger-seal.json` retains the supplementary receipt.
+This bounds the private live log while preserving its history; the public book is unbounded.

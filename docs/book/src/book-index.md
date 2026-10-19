@@ -43,7 +43,8 @@ a change that leaves it stale, so it is never edited by hand.
   keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Artifact hash checks under escaped paths — [Annex C: Trust proof
   records](annex-trust-proofs.md#artifact-hash-checks-under-escaped-paths)
-- **ASCII** — [definition](glossary.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
+- **ASCII** — [definition](glossary.md), [Annex B: The checks that keep the repository honest](annex-repository.md),
+  [Annex C: Trust proof records](annex-trust-proofs.md)
 - **assembly** — [definition](glossary.md), [Modules and composition](modules.md), [Where the engine's knowledge comes
   from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
   decisions, not actions](runtime.md), [Verifying the toolchain](verification.md), [What this project relies on from
@@ -68,6 +69,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 - Caller binding and first checkpoint result — [Annex C: Trust proof
   records](annex-trust-proofs.md#caller-binding-and-first-checkpoint-result)
+- Caller dep-info suffix prefix proof after preflight repair — [Annex C: Trust proof
+  records](annex-trust-proofs.md#caller-dep-info-suffix-prefix-proof-after-preflight-repair)
 - Caller suffix producer assessment — [Annex C: Trust proof
   records](annex-trust-proofs.md#caller-suffix-producer-assessment)
 - Canonical form — [Reading a description](reading.md#canonical-form)
@@ -364,6 +367,7 @@ a change that leaves it stale, so it is never edited by hand.
 - **LLVM** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Local build storage — [Where the engine's knowledge comes from: the catalog](catalog.md#local-build-storage)
 - --locked is refused, not ignored — [The S0 early generation path](s0.md#--locked-is-refused-not-ignored)
+- **LTO** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 
 ## M
 
@@ -694,6 +698,7 @@ a change that leaves it stale, so it is never edited by hand.
 
 - **UART** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where generated systems
   run](targets.md)
+- **UTC** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **UTF-8** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Verifying
   the toolchain](verification.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C:
   Trust proof records](annex-trust-proofs.md)

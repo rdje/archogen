@@ -34,3 +34,11 @@ retain this implementation’s premise revalidation, controls and checkpoint sco
 `Rules::manifests` caches only complete package judgments that add no refusal.
 Every failed visit must block every later target; successful immutable judgments and
 accepted site counts remain once-only. [Repair, evidence and continuation](../../book/src/annex-trust-proofs.md#repeated-generator-preflight-refusals).
+
+
+## Caller dep-info suffix prefix proof
+
+With the actual pinned Unix producer and repaired preflight, shortening the suffix
+predicate preserves the complete constructor and fixed slice. Source, transitive-reader
+and wiring guards delimit this conditional lemma; wider argv and other producers are
+outside it. [Complete source argument and controls](../../book/src/annex-trust-proofs.md#caller-dep-info-suffix-prefix-proof-after-preflight-repair).

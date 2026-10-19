@@ -77,6 +77,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
 - **LF** — line feed: the control character used as a newline on Unix, also preserved inside native arguments.
   See [Compiler provenance](annex-trust-proofs.md#compiler-provenance-contract-and-prototype).
 - **LLVM** — the compiler infrastructure named in the historical wider-argument controls, where options are passed to Rust’s compiler backend. See [the retained records](annex-trust-proofs.md#supported-regression-commit-note-routing).
+- **LTO** — link time optimization: compiler optimization across modules when they are linked together.
+  See [the pinned compiler argument proof](annex-trust-proofs.md#caller-dep-info-suffix-prefix-proof-after-preflight-repair).
 - **MCP** — Model Context Protocol: the protocol through which an AI agent calls a tool; archogen's server speaks it.
   See [The engine API](engine-api.md) and [the specification's ledger entry](ledger.md#mcp-specification).
 - **MEI**, **MSI**, **MTI** — Machine External, Software and Timer Interrupt: RISC-V's interrupts for its most
@@ -139,6 +141,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
   acronym. See [What this project relies on from outside](ledger.md).
 - **UART** — Universal Asynchronous Receiver-Transmitter: a serial port, the simplest way a small board talks. See
   [Where generated systems run](targets.md).
+- **UTC** — Coordinated Universal Time: the time reference used for explicitly marked measurement dates.
+  See [the dated proof checkpoint](annex-trust-proofs.md#current-prefix-checkpoint-and-verification-boundary).
 - **UTF-8** — the common way of writing Unicode text as bytes, a character taking one byte or several; the
   generated-file recogniser reads each invalid sequence in a file as the replacement character, `U+FFFD`. See [Checks
   that must not share a mistake: the trust gate](trust.md).

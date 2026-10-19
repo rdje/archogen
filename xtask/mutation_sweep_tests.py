@@ -1460,6 +1460,224 @@ os.execvp("rustc", ["rustc"] + arguments)
         self.assertIn(key, records, "the actual color proof requires its per-file reason")
 
 
+    @unittest.skipUnless(os.name == "posix", "the pinned producer/caller proof is Unix")
+    def test_caller_suffix_prefix_requires_the_complete_pinned_constructor(self):
+        """Exact extraction edit: source proof is conditional, wider argv is deliberately different."""
+        # The transitive readers and module/dependency wiring enforce the
+        # configuration and preflight premises, so their bytes are guarded too.
+        production_prefixes = {
+            'xtask/src/trust.rs',
+            'xtask/src/trust_compiler.rs',
+            'xtask/src/trust_compiler_observer.rs',
+            'xtask/src/catalog_build.rs',
+            'xtask/src/catalog_check.rs',
+            'xtask/src/json.rs',
+            'crates/archogen-catalog/src/package.rs',
+            'crates/archogen-catalog/src/manifest.rs',
+            'crates/archogen-catalog/src/tree.rs',
+            'crates/archogen-catalog/src/grammar.rs',
+        }
+        paths = [
+            'xtask/src/trust.rs',
+            'xtask/src/trust_compiler.rs',
+            'xtask/src/trust_compiler_observer.rs',
+            'xtask/src/catalog_build.rs',
+            'xtask/src/catalog_check.rs',
+            'xtask/src/json.rs',
+            'crates/archogen-catalog/src/package.rs',
+            'crates/archogen-catalog/src/manifest.rs',
+            'crates/archogen-catalog/src/tree.rs',
+            'crates/archogen-catalog/src/grammar.rs',
+            'xtask/src/main.rs',
+            'crates/archogen-catalog/src/lib.rs',
+            'xtask/Cargo.toml',
+            'crates/archogen-catalog/Cargo.toml',
+            'Cargo.toml',
+            'Cargo.lock',
+            'rust-toolchain.toml',
+            '.cargo/config.toml',
+        ]
+        inputs = {path: (ROOT / path).read_bytes() for path in paths}
+        expected = {
+            'xtask/src/trust.rs': '51af305a7198e25bb793f1d24a24628082f6b0479704b6e65a488497d9c4502d',
+            'xtask/src/trust_compiler.rs': '634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70',
+            'xtask/src/trust_compiler_observer.rs': 'c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f',
+            'xtask/src/catalog_build.rs': 'a3ec83b4f8ae870ea7a301dd8acc61d0eb42bb20a5b561c673fa8bb2a23d4864',
+            'xtask/src/catalog_check.rs': '8a24ca8a5423ea31d18ad46c477553c441b03f6b9de027fa3ccbc49a4dc1d14a',
+            'xtask/src/json.rs': '224d05f9f4ac43c9670883d5f4ed06665697e475d831a8c397c248a735485701',
+            'crates/archogen-catalog/src/package.rs': 'a270b7ead993fafbd2dc7b783ea107b66fb378073aab6581647cd59f39afd226',
+            'crates/archogen-catalog/src/manifest.rs': '110c489a0e9d59435c0df770e32d7ab600c4de5cac3a9f0ca1706c25792de01b',
+            'crates/archogen-catalog/src/tree.rs': '5bb9030f10feecadd27f02b0d476901b4cec958196c492947290fb8318c1ad78',
+            'crates/archogen-catalog/src/grammar.rs': '6b60d509abf08334f308e7fef00b711203288e48e5786802a5c153e50f9bf43f',
+            'xtask/src/main.rs': '9d83a570b177d7cd5a95730e7ee2e655494e1cf9b8a6c3bfef05b13fd2a1807e',
+            'crates/archogen-catalog/src/lib.rs': '1e299ccfab838708b41afc6ba366bb890a09dc5195957bb6690cef509312703a',
+            'xtask/Cargo.toml': '6ee1cf3699670f97a13b3c49a37013f29270b80bf458ed22835bdc9b99be9f9f',
+            'crates/archogen-catalog/Cargo.toml': '1e8266bd7987f766565e66ddca4d6fbc277bfc853771dfec61fa8050fea0629d',
+            'Cargo.toml': '523ef1fdc14883302cf62d951526ae83d78cb38153caf4f9c4f9927f2c986510',
+            'Cargo.lock': '5164fe99ab7234dc8346121de7ee3f8b16599c31d585433c93809104676a6f64',
+            'rust-toolchain.toml': '4706b7b407427c38a3b63860b2e131cacc9eb57569a6755a39e81756cca676cd',
+            '.cargo/config.toml': '48296b18a2b27cc7268cf489fc37bdcf24e04d79b914c2237c248e4db1f6fa79',
+        }
+        version = self.bounded(["cargo", "--version", "--verbose"])
+        commit = "commit-hash: f2d3ce0bd7f24a49f8f72d9000448f8838c4e850"
+
+        def premises(values, producer):
+            actual = {path: hashlib.sha256(data.split(b"#[cfg(test)]", 1)[0]
+                       if path in production_prefixes else data).hexdigest()
+                      for path, data in values.items()}
+            self.assertEqual(actual, expected, "caller suffix source premise requires revalidation")
+            self.assertIn(commit, producer, "caller suffix producer premise requires revalidation")
+
+        premises(inputs, version)
+        for path in paths:
+            altered = dict(inputs)
+            altered[path] = b"// changed premise\n" + altered[path]
+            with self.assertRaisesRegex(AssertionError, "source premise requires revalidation"):
+                premises(altered, version)
+        with self.assertRaisesRegex(AssertionError, "producer premise requires revalidation"):
+            premises(inputs, version.replace(commit, "commit-hash: changed", 1))
+
+        source = inputs["xtask/src/trust.rs"].decode()
+        namespace, literals = self.discovery(source, "lit")
+        key = ('(w[0] == "-C" && w[1].starts_with("extra-filename="))',
+               '(w[0] == "-C" && w[1].starts_with("extra-filename"))')
+        family = [candidate for candidate in literals if namespace["mutation_key"](candidate) == key]
+        self.assertEqual(len(family), 1, "one exact actual caller edit")
+
+        def module(text, name):
+            start = text.index("        let extra = tokens\n")
+            end = text.index("        // The unit's package", start)
+            body = text[start:end]
+            self.assertEqual(body.count(".windows(2)"), 1)
+            return f"mod {name} {{ pub fn collect(tokens: &[String]) -> String {{\n{body}extra\n}} }}\n"
+
+        modules = module(source, "baseline") + module(namespace["apply_mutant"](family[0]), "variant")
+        ordinary = self.producer_argv("caller-suffix-ordinary", library_source="pub fn c() -> u32 { 37 }\n")
+        incremental = self.producer_argv("caller-suffix-incremental",
+                                       library_source="pub fn c() -> u32 { 37 }\n",
+                                       release_incremental=True)
+
+        # This distinct, real producer exercises Cargo's optional no-suffix branch.
+        project = self.base / "producer-caller-extra-filename=inside"
+        (project / "src").mkdir(parents=True)
+        (project / "Cargo.toml").write_text(
+            '[workspace]\n[package]\nname = "flagproof"\nversion = "0.1.0"\nedition = "2021"\n'
+            '[lib]\ncrate-type = ["rlib", "dylib"]\n[profile.release]\nincremental = true\n')
+        (project / "src/lib.rs").write_text("pub fn c() -> u32 { 37 }\n")
+        target = project / "target"
+        env = {name: os.environ[name] for name in ("PATH", "HOME")}
+        env.update(RUSTUP_HOME=os.environ.get("RUSTUP_HOME", str(Path(env["HOME"]) / ".rustup")),
+                   RUSTUP_TOOLCHAIN="1.95.0", RUSTC="rustc", CARGO_HOME=str(project / "cargo-home"),
+                   CARGO_TARGET_DIR=str(target), TMPDIR=str(self.base), TMP=str(self.base), TEMP=str(self.base))
+
+        def cargo(arguments):
+            process = subprocess.Popen(["cargo"] + arguments, cwd=project, env=env,
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       text=True, start_new_session=True)
+            try:
+                stdout, stderr = process.communicate(timeout=60)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.communicate()
+                self.fail("actual optional-suffix Cargo producer timed out")
+            self.assertEqual(process.returncode, 0, stdout + stderr)
+            return stderr
+
+        cargo(["generate-lockfile", "--offline"])
+        stderr = cargo(["build", "--lib", "--release", "--locked", "--offline", "--no-default-features",
+                        "--message-format=json", "-v", "-p", "flagproof"])
+        commands = [line.strip()[len("Running `"):-1] for line in stderr.splitlines()
+                    if line.strip().startswith("Running `rustc ") and line.strip().endswith("`")]
+        self.assertEqual(len(commands), 1, stderr)
+        mixed = shlex.split(commands[0])
+        metadata = [arg for arg in mixed if re.fullmatch(r"metadata=[0-9a-f]{16}", arg)]
+        self.assertEqual(len(metadata), 1)
+        expected_mixed = ["rustc", "--crate-name", "flagproof", "--edition=2021", "src/lib.rs",
+                          "--error-format=json", "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+                          "--crate-type", "rlib", "--crate-type", "dylib", "--emit=dep-info,link",
+                          "-C", "opt-level=3", "-C", "embed-bitcode=no", "--check-cfg", "cfg(docsrs,test)", "--check-cfg",
+                          "cfg(feature, values())", "-C", metadata[0], "--out-dir", str(target / "release/deps"),
+                          "-C", "incremental=" + str(target / "release/incremental"),
+                          "-C", "strip=debuginfo", "-L", "dependency=" + str(target / "release/deps")]
+        self.assertEqual(mixed, expected_mixed, "independent complete optional-suffix producer argv")
+        self.assertEqual(sorted(path.name for path in (target / "release/deps").glob("*.d")), ["flagproof.d"])
+        self.assertIn("src/lib.rs", (target / "release/deps/flagproof.d").read_text())
+
+        actual = []
+        for label, argv, base in [("ordinary", ordinary, self.base / "producer-caller-suffix-ordinary"),
+                                 ("incremental", incremental, self.base / "producer-caller-suffix-incremental"),
+                                 ("mixed", mixed, project)]:
+            operands = [value for left, value in zip(argv, argv[1:]) if left == "-C"
+                        and re.fullmatch(r"extra-filename=-[0-9a-f]{16}", value)]
+            self.assertEqual(len(operands), 0 if label == "mixed" else 1)
+            suffix = operands[0].split("=", 1)[1] if operands else ""
+            library = base / "target/release/deps" / ("libflagproof" + suffix + ".rlib")
+            self.assertTrue(library.read_bytes().startswith(b"!<arch>\n"))
+            consumer, binary = base / "consumer.rs", base / "consumer"
+            consumer.write_text('fn main() { println!("{}", flagproof::c()); }\n')
+            self.bounded(["rustc", "--edition=2021", "--crate-name", "caller_suffix_consumer", str(consumer),
+                          "--extern", "flagproof=" + str(library), "-o", str(binary)])
+            self.assertEqual(self.bounded([str(binary)]), "37\n")
+            actual.append((label, argv, suffix))
+
+        vector = lambda values: ("vec![" + ", ".join(json.dumps(value, ensure_ascii=False) + ".to_owned()"
+                                                    for value in values) + "]"
+                                 if values else "Vec::<String>::new()")
+        checks = []
+        for label, argv, suffix in actual:
+            for name in ["baseline", "variant"]:
+                checks.append(f'assert_eq!({name}::collect(&{vector(argv)}), {json.dumps(suffix)}, "{label}");')
+        literal = [([], ""), (["-C"], ""), (["rustc", "extra-filenameX=tail"], ""),
+                   (["-C", "extra-filename="], ""),
+                   (["-C", "extra-filename=-0123456789abcdef"], "-0123456789abcdef"),
+                   (["-C", "extra-filename=-é"], "-é"),
+                   (["-C", "extra-filename=-first", "-C", "extra-filename=-second"], "-first"),
+                   (["-C", "incremental=cache/extra-filenameX=tail"], ""),
+                   (["-C", "metadata=extra-filenameX=tail"], ""),
+                   (["--out-dir", "-C", "--error-format=json"], "")]
+        # These are constructor/adjacency controls, not additional successful Cargo inputs.
+        for operand in ["prefer-dynamic", "rpath", "lto", "linker-plugin-lto"] + [
+                name + "=extra-filenameX=tail" for name in [
+                    "opt-level", "panic", "lto", "embed-bitcode", "codegen-units", "debuginfo",
+                    "split-debuginfo", "debug-assertions", "overflow-checks", "metadata", "linker",
+                    "incremental", "strip", "link-arg"]]:
+            literal.append((["-C", operand], ""))
+        literal.append((["--check-cfg", "-C", "-C", "extra-filename=-held"], "-held"))
+        for argv, suffix in literal:
+            for name in ["baseline", "variant"]:
+                checks.append(f'assert_eq!({name}::collect(&{vector(argv)}), '
+                              f'{json.dumps(suffix, ensure_ascii=False)}, "literal suffix");')
+        wider = ["-C", "extra-filenameX=tail"]
+        incidental = ["--out-dir", "-C", "extra-filenameX=tail"]
+        for argv in [wider, incidental]:
+            checks += [f'assert_eq!(baseline::collect(&{vector(argv)}), "");',
+                       f'assert_eq!(variant::collect(&{vector(argv)}), "=tail");']
+        for value in ["extra-filename", "extra-filenameé=tail"]:
+            argv = vector(["-C", value])
+            checks += [f'assert_eq!(baseline::collect(&{argv}), "");',
+                       f'assert!(std::panic::catch_unwind(|| variant::collect(&{argv})).is_err());']
+        main = ("fn main() {\n" + "\n".join(checks)
+                + '\nmatch std::env::args().nth(1).as_deref() {\n'
+                + f' Some("wrong-positive") => assert_eq!(baseline::collect(&{vector(wider)}), '
+                + f'variant::collect(&{vector(wider)}), "wrong wider equality"),\n'
+                + f' Some("wrong-negative") => assert_ne!(baseline::collect(&{vector(ordinary)}), '
+                + f'variant::collect(&{vector(ordinary)}), "wrong supported inequality"),\n'
+                + ' Some("wrong-literal") => assert_eq!(baseline::collect(&vec!["-C".into(), '
+                + '"extra-filename=-held".into()]), "-changed", "wrong literal suffix"),\n'
+                + ' _ => {}\n}\nprintln!("caller suffix controls: literal, actual, wider and panic domains held");\n}\n')
+        program, binary = self.base / "caller-suffix.rs", self.base / "caller-suffix"
+        program.write_text(modules + main)
+        self.bounded(["rustc", "--edition=2021", str(program), "-o", str(binary)])
+        self.assertIn("literal, actual, wider and panic domains held", self.bounded([str(binary)]))
+        for argument, message in [("wrong-positive", "wrong wider equality"),
+                                  ("wrong-negative", "wrong supported inequality"),
+                                  ("wrong-literal", "wrong literal suffix")]:
+            with self.assertRaisesRegex(AssertionError, message):
+                self.bounded([str(binary), argument])
+        print("caller suffix compiled controls complete; checking the precise reason", flush=True)
+        records = namespace["load_equivalents"](ROOT / "xtask/trust.equivalents")
+        self.assertTrue(key in records, "the completed caller proof requires its exact per-file reason")
+
 class BasenameComparisonTests(DiscoveryFixture):
     def test_actual_basename_comparison_uses_distinct_same_string_positions(self):
         source = (ROOT / "xtask/src/trust.rs").read_text()
