@@ -6089,3 +6089,60 @@ false receipts and note routing. Raw evidence remains in `target/artifact-extra-
 including the separate epoch-routing reconstruction. Final staged focused/book/commit gates
 complete this leaf. Joined naming-option spellings and lookalikes are next; the complete
 current artifact replay, retained caller obligations and global adequacy remain open.
+
+### Complete joined-option refusal and ordinary lookalikes
+
+`2026-10-19`, leaf `.15.2.1.3.3.3.2.8.5`: a permanent pure naming-helper parent now
+holds every unsupported joined naming spelling and preserves ordinary source strings containing
+those spellings later in their path. Production and every previous test remain byte-exact.
+
+| Joined argument: must refuse | Ordinary path lookalike: must retain the base query |
+| --- | --- |
+| `--crate-name=joined` | `src/look--crate-name=joined.rs` |
+| `--crate-type=rlib` | `src/look--crate-type=rlib.rs` |
+| `--target=host` | `src/look--target=host.rs` |
+| `--out-dir=outputs` | `src/look--out-dir=outputs.rs` |
+| `-Cextra-filename=-hash` | `src/look-Cextra-filename=-hash.rs` |
+
+Each joined form must return exactly `unsupported observed naming option <argument>`, retaining
+its complete spelling. Each lookalike, plus an ordinary `source.rs` control, must produce the
+literal query `--print=file-names - --crate-name probe` and output directory `outputs`.
+The parent is finite and launches no compiler or fixture process. It holds the helper's lexical
+boundary, not successful Cargo builds for every path. The earlier source-bound pinned compiler
+filename control already accepted a file containing `--target=`; that separate experiment
+remains under `target/compiler-artifact-full/joined-option-calibration/` with its explicit scope.
+
+| Exact current edit | Initial full measurement | Current native result |
+| --- | --- | --- |
+| `L58.dir.51`, joined prefix check becomes substring check | S | K, new intended parent |
+| `L57.chain.113`, joined-family population truncated to its first element | S | K, new intended parent |
+
+The exact new parent is
+`trust::artifact::tests::naming_query_refuses_each_joined_option_but_allows_source_lookalikes`.
+It is the only added parent name; every earlier name remains. Literal expected queries and
+messages do not call the helper to calculate their oracle.
+
+```bash
+bash scripts/mutation_sweep.sh xtask/src/trust_artifact.rs \
+  --package xtask --timeout 600 --filter=trust:: --filter=trust_generated:: \
+  --filter=trust_gate:: --filter=--skip --filter=route_tests --timeouts-fail \
+  --only L58.dir.51 --only L57.chain.113
+```
+
+`2026-10-19`: both selected edits finish killed against all 187 current trust parents, strict
+exit `0`, with the new intended parent in each failure list. No selected survivor, compiler
+refusal, equivalent, timeout or unjudged result occurs. All 1120 original/copied regular
+inputs restore with independent Python/system hashes and modes. All 37 direct bindings and
+37 pinned public producer sources agree. Invented-parent, missing-result, changed-outcome,
+changed-exit and duplicate-result receipts refuse. The committed exact-prefix leaf seals
+exactly; all 303 previous task archive files remain unchanged.
+
+Held native tree `50ad1f847af3be30b840b74dfb5187c881fd7543` precedes completion documentation.
+Whole artifact file SHA-256 `c3285ddddad646b5b0f89b6dc2234f86953b533f37963165cea116e9d6348af4`;
+the production prefix remains exact. Audit SHA-256
+`3946b27a676e50b72435335371ba1b064ea4cb3a404c4300f0f3a15de074a78d`
+binds historical/current edit identity, source/parent preservation, native results, restoration
+and false receipts. Raw evidence remains in `target/artifact-joined-options/`. Final staged
+focused/book/commit gates complete this leaf; complete output visitation and selection positions
+are next. A final complete current artifact replay remains separately owned, so these selected
+kills establish no new full-file, caller or global adequacy result.

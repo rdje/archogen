@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold every joined naming-option boundary
+
+`ARCHOGEN-M3-0793` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.5`), `2026-10-19`.
+
+- Add one pure parent holding exact refusals for every joined naming family and literal
+  ordinary/lookalike queries; preserve production and every previous test.
+- Exact historical2S become native2K/full187 strict0 with new intended name in both failure
+  lists;1120 originals/copies restored,37 bindings/37 pins/five false receipts hold.
+- Exact-prefix seal/303 prior archives exact; book/live sync and final staged focused gates.
+  Output visitation/selection positions next; full artifact/caller adequacy remains open.
+
 ## archogen — hold exact extra-filename query forwarding
 
 `ARCHOGEN-M3-0792` (leaf `M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.4`), `2026-10-19`.

@@ -133,6 +133,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#complete-diagnostic-region-replay)
 - Complete guarded run_cargo measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-guarded-run_cargo-measurement)
+- Complete joined-option refusal and ordinary lookalikes — [Annex C: Trust proof
+  records](annex-trust-proofs.md#complete-joined-option-refusal-and-ordinary-lookalikes)
 - Complete native artifact-binder measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-native-artifact-binder-measurement)
 - Complete native compiler controller measurement — [Annex C: Trust proof

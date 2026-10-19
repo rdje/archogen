@@ -512,6 +512,51 @@ mod tests {
     }
 
     #[test]
+    fn naming_query_refuses_each_joined_option_but_allows_source_lookalikes() {
+        let query = |extra| {
+            let observed = [
+                "rustc",
+                "--crate-name",
+                "probe",
+                "--out-dir",
+                "outputs",
+                extra,
+            ]
+            .map(str::to_owned)
+            .to_vec();
+            naming_arguments(&observed)
+        };
+        for joined in [
+            "--crate-name=joined",
+            "--crate-type=rlib",
+            "--target=host",
+            "--out-dir=outputs",
+            "-Cextra-filename=-hash",
+        ] {
+            assert_eq!(
+                query(joined).unwrap_err(),
+                format!("unsupported observed naming option {joined}")
+            );
+        }
+        for source in [
+            "source.rs",
+            "src/look--crate-name=joined.rs",
+            "src/look--crate-type=rlib.rs",
+            "src/look--target=host.rs",
+            "src/look--out-dir=outputs.rs",
+            "src/look-Cextra-filename=-hash.rs",
+        ] {
+            let (actual, directory) = query(source).unwrap();
+            assert_eq!(
+                actual,
+                ["--print=file-names", "-", "--crate-name", "probe"],
+                "{source:?}"
+            );
+            assert_eq!(directory, "outputs");
+        }
+    }
+
+    #[test]
     fn actual_empty_input_query_preserves_build_and_ignores_now_invalid_source() {
         crate::trust_test_process::bounded!(
             actual_empty_input_query_preserves_build_and_ignores_now_invalid_source
