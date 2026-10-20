@@ -58612,3 +58612,22468 @@ print('Final permanent-control audit: pass;50 operator,329 prior/new330th archiv
 ~~~
 
 </details>
+
+### Proved environment-tail removal
+
+The [proved redundant tail](#environment-loop-tail-control-proof) is now removed from `xtask/src/trust.rs`. The Rust change is exactly one line. Environment normalization, record/refusal ordering and subsequent dependency handling keep the same behavior for the complete source domain proved earlier. All semantic test bodies and both trust/observer reason files remain byte-identical. No generic continue reason is added.
+
+Whole source SHA-256 changes from `9616b59ff2bc394e6471570bfaf857971671fda4a12c4fb745e557d2d21a1751` to `527f68d5787b16b5e7f9e31942772bcc548f735d017ef95a5e30180a5012a9b5`. Its production prefix is now `080a15a2d2509caf4ea79c557dced56942e20c2fb1599ee0e3e414b3fa66992e`. The normalizer and allowlist, every preceding/following statement and the complete Rust test section are preserved. The source proof establishes retirement; the absence of a mutation candidate does not establish equivalence.
+
+#### Source-guard revalidation before refresh
+
+The maintained terminal-scope control passes on cleaned production before any old hash is refreshed. Both complete-prefix guards then correctly refuse their old source bindings. After those two bindings are updated, the full50 operator suite catches a third binding in the [observer explicit-close proof](#observer-explicit-close-assessment): it hashes the caller prefix without the newline immediately before the test attribute. Its actual compiled close timing/protocol control passes, while its old source-premise guard refuses. The complete failed run and restored inputs are retained below.
+
+The additional guard is qualified against the exact proved removal and unchanged observer/controller source and reason files. Its new newline-trimmed caller digest is `6a210d1810a3dbd5adecf861f77200a9846887f51f9dee8f6683ab16b8a88118`. Only three hash literals change in the Python controls. The same complete50-test suite then passes: actual pinned Cargo suffix controls, absolute-cwd and close-protocol controls, all prior operator cases and the new terminal-scope proof. The source/guard inverse reconstructs both prior files exactly; no old test assertion is weakened.
+
+#### Complete current candidate reconciliation
+
+Fresh loaded discovery and the actual native CLI list agree on1413 current production candidates, against1414 before cleanup. Exactly `L772.stmt.221` is retired. All other operator kinds, original text and physical span movements bind one to one. Some native replacement bytes intentionally change: the maintained generator derives fresh identifier prefixes from physical line numbers. A draft byte-equality assumption refused this difference; inspection of the native `loop_header` generator identified its complete cause.
+
+There are303 such replacements:201 iterator and102 guard candidates. Each changes only a bijective prefix rename of `it/k/first/last`; its old/new fresh prefixes are absent from the corresponding complete source, preventing capture. Every other replacement byte is exact. Four altered mapping controls are refused, including an incorrect generated prefix. The complete mappings and native-list identity are durable below, without projecting any current native outcome from historical results.
+
+| Bound property | Before | Cleaned current |
+| --- | ---: | ---: |
+| Raw production candidates | 1414 | 1413 |
+| Physical generic continue-key sites | 22 | 21 |
+| Existing reason records and their matched sites | 23 | 23 |
+
+All23 current reason sites persist. The historically killed non-tail continue `L1310.stmt.452` maps to `L1309.stmt.451`. The next separate checkpoint must execute that current candidate and every current reason against all current semantic parents, with strict justified outcomes and complete original/copied-input/name restoration. This leaf does not claim a fresh kill or E, and does not close the environment parent, full compiler scope, caller/global sweeps or independent review.
+
+#### Final commit gate and retained evidence
+
+The final focused tier is `make focused`. This commit is made only after that tier passes on the complete staged tree and its stamp names the same tree, with the pinned book build and doctrine gates also passing. The commit message records that staged-tree identity. All330 prior archives and the exact new permanent-control seal remain intact. Three task states reconstruct from the retained input commit; false identities and a truncated seal are rejected. Staging review corrected the new audit adapter’s intended-file list to include the separately byte-verified new seal; no older archive changed. The commit hook also refused a shortened log entry: its required work-unit/leaf prefix is now restored and checked before the final tier. Every previous book byte is retained.
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.5.1.2`
+  Status: `active` — remove the proved redundant environment tail
+  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-implementation-contracts) retained verbatim.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.5.1.2`
+  Status: `done` — proved tail removal and source-guard revalidation
+  [Full evidence](../book/src/annex-trust-proofs.md#proved-environment-tail-removal).
+  Acceptance:
+  - [x] ROOT CAUSE: `python3 -I -B target/environment-tail-cleanup/audit-mapping.py`,
+    exit code 0:1413 current edits reconciled;303 exact fresh-name renames; tail alone retired.
+  - [x] ADDRESSED: `python3 -I -B target/environment-tail-cleanup/audit-cleanup.py`,
+    exit code 0: exact1-line Rust/3 hash-binding changes; full50 compiled controls pass;
+    old guards refused first, semantic test source/all reasons preserved.
+  - [x] NO REGRESSION: `python3 -I -B target/environment-tail-cleanup/final-audit.py`,
+    exit code 0: history/task/source evidence exact; final focused stamp/book/gates required.
+  Verification: full book/adapters; .2 owns strict current24 replay; .1/.5 remain open.
+  Commit: `ARCHOGEN-M3-0820`
+
+```
+
+<details>
+<summary>Exact proved source removal</summary>
+
+```json
+{
+  "status": "removed-exact-proved-tail",
+  "base_commit": "4437c10d59552703b343933f763c23d4af52d75c",
+  "source_before_sha256": "9616b59ff2bc394e6471570bfaf857971671fda4a12c4fb745e557d2d21a1751",
+  "source_after_sha256": "527f68d5787b16b5e7f9e31942772bcc548f735d017ef95a5e30180a5012a9b5",
+  "production_after_sha256": "080a15a2d2509caf4ea79c557dced56942e20c2fb1599ee0e3e414b3fa66992e",
+  "before_loop_sha256": "80e6db30d3affc38de38e1a0d3a2f2ab1330cb3caba9f7612809b7735a1f159b",
+  "after_loop_sha256": "c21a74dd0ccb9d0ac902e8ecf1e304e72ca53a6476689a2081aae55ce3d9579a",
+  "removed_line": "                continue;\n",
+  "source_prefix_bytes": 29471,
+  "unchanged_suffix_sha256": "a76ca56465c60a0ce2b15a17ac2ddc8ffce117c5982963f82c6679915327b721",
+  "scope": "Only the separately proved redundant line is removed; no reason/guard change yet."
+}
+```
+
+</details>
+
+<details>
+<summary>Actual clean-shape and old-guard refusals</summary>
+
+```json
+{
+  "status": "passed",
+  "scope": "Clean source shape verified before either old production-prefix guard is updated; both old guards correctly refuse pending revalidation.",
+  "runs": [
+    {
+      "label": "clean-shape-control",
+      "command": [
+        "python3",
+        "-I",
+        "-B",
+        "xtask/mutation_sweep_tests.py",
+        "<runtime-repository-root>",
+        "EnvironmentTailTests.test_environment_tail_fallthrough_requires_the_complete_terminal_scope"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ".\n----------------------------------------------------------------------\nRan 1 test in 1.738s\n\nOK\n",
+      "raw_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_stderr_sha256": "8512364f48467d43b9336be4645f45b82c300a7d394be9f8d0544366db697f1b",
+      "path_rendering": "Only the current runtime repository-root prefix is removed from published text; raw SHA-256 identifies retained local logs."
+    },
+    {
+      "label": "old-guards-refuse",
+      "command": [
+        "python3",
+        "-I",
+        "-B",
+        "xtask/mutation_sweep_tests.py",
+        "<runtime-repository-root>",
+        "DiagnosticFlagTests.test_caller_suffix_prefix_requires_the_complete_pinned_constructor",
+        "IteratorTests.test_cargo_absolute_prefix_edits_preserve_line_selection"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "FF\n======================================================================\nFAIL: test_caller_suffix_prefix_requires_the_complete_pinned_constructor (__main__.DiagnosticFlagTests.test_caller_suffix_prefix_requires_the_complete_pinned_constructor)\nExact extraction edit: source proof is conditional, wider argv is deliberately different.\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"xtask/mutation_sweep_tests.py\", line 1531, in test_caller_suffix_prefix_requires_the_complete_pinned_constructor\n    premises(inputs, version)\n    ~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"xtask/mutation_sweep_tests.py\", line 1528, in premises\n    self.assertEqual(actual, expected, \"caller suffix source premise requires revalidation\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: {'xta[14 chars]s': '080a15a2d2509caf4ea79c557dced56942e20c2fb[1684 chars]a79'} != {'xta[14 chars]s': '51af305a7198e25bb793f1d24a24628082f6b0479[1684 chars]a79'}\nDiff is 1901 characters long. Set self.maxDiff to None to see it. : caller suffix source premise requires revalidation\n\n======================================================================\nFAIL: test_cargo_absolute_prefix_edits_preserve_line_selection (__main__.IteratorTests.test_cargo_absolute_prefix_edits_preserve_line_selection)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"xtask/mutation_sweep_tests.py\", line 1988, in test_cargo_absolute_prefix_edits_preserve_line_selection\n    root_function = premises(source, gate, main)\n  File \"xtask/mutation_sweep_tests.py\", line 1984, in premises\n    self.assertEqual(hashlib.sha256(text.encode()).hexdigest(), expected,\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                     \"revalidate absolute cwd proof: \" + label)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: '080a15a2d2509caf4ea79c557dced56942e20c2fb1599ee0e3e414b3fa66992e' != '51af305a7198e25bb793f1d24a24628082f6b0479704b6e65a488497d9c4502d'\n- 080a15a2d2509caf4ea79c557dced56942e20c2fb1599ee0e3e414b3fa66992e\n+ 51af305a7198e25bb793f1d24a24628082f6b0479704b6e65a488497d9c4502d\n : revalidate absolute cwd proof: trust production\n\n----------------------------------------------------------------------\nRan 2 tests in 0.056s\n\nFAILED (failures=2)\n",
+      "raw_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_stderr_sha256": "83a46b3aa465176058a16e5c8111050d383ff2be3c52c4639cedf266e0a35a21",
+      "path_rendering": "Only the current runtime repository-root prefix is removed from published text; raw SHA-256 identifies retained local logs."
+    }
+  ],
+  "old_guard_source_sha256": "e042f4a5f0a8d2600d0db65a33ed8ed153827638b3700e69259820223b2be5c7"
+}
+```
+
+</details>
+
+<details>
+<summary>Two complete-prefix guard refreshes</summary>
+
+```json
+{
+  "status": "refreshed-after-source-proof-and-both-real-refusals",
+  "records": 2,
+  "old_production_sha256": "51af305a7198e25bb793f1d24a24628082f6b0479704b6e65a488497d9c4502d",
+  "new_production_sha256": "080a15a2d2509caf4ea79c557dced56942e20c2fb1599ee0e3e414b3fa66992e",
+  "source_before_sha256": "e042f4a5f0a8d2600d0db65a33ed8ed153827638b3700e69259820223b2be5c7",
+  "source_after_sha256": "3130f7d59d3852478244ace888bd571ac7d2afe8ec8cc2c7123b5f23b6b3c4a5",
+  "scope": "Only the two current production-prefix guard literals change; full actual proof/producer suite must pass next."
+}
+```
+
+</details>
+
+<details>
+<summary>Qualified close-caller guard refresh</summary>
+
+```json
+{
+  "status": "refreshed-after-exact-caller-proof-and-real-refusal",
+  "owner": "M3.6.9.6.3.2.2.15.2.1.5.1.2",
+  "scope": "The close protocol caller is unchanged in behavior by the all-domain local no-op; observer/controller sources and both reason files remain byte-identical. Full50 actual compiled control replay is required next.",
+  "hash_boundary": "split at newline + cfg(test) + newline, excluding the preceding newline; distinct from the two complete production-prefix guards.",
+  "before": {
+    "xtask/src/trust_compiler_observer.rs": "58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98",
+    "xtask/src/trust_compiler.rs": "1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973",
+    "xtask/src/trust.rs": "401c7abd874b00bd53d5d0d9801c6d34f2ee7e19b1d4ed6042bede9c7704b041"
+  },
+  "after": {
+    "xtask/src/trust_compiler_observer.rs": "58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98",
+    "xtask/src/trust_compiler.rs": "1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973",
+    "xtask/src/trust.rs": "6a210d1810a3dbd5adecf861f77200a9846887f51f9dee8f6683ab16b8a88118"
+  },
+  "old_guard_source_sha256": "3130f7d59d3852478244ace888bd571ac7d2afe8ec8cc2c7123b5f23b6b3c4a5",
+  "new_guard_source_sha256": "2b5a74cf834af8df0690e9da21bc870053f3876111857f4f9995f2577cad96b3",
+  "retained_initial_suite": {
+    "operator_tests": 50,
+    "failures": 1,
+    "all_inputs_restored": true,
+    "actual_close_protocol_test_passed": true
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Native fresh-name diagnostic</summary>
+
+```json
+{
+  "changed_operator_counts": {
+    "iter": 201,
+    "guard": 102
+  },
+  "examples": {
+    "iter": {
+      "before": {
+        "id": "L775.iter.222",
+        "span": [
+          774,
+          775
+        ],
+        "operator": "iter",
+        "original": "        for raw in dependency_files(&text, &d, &scratch, &canonical_scratch)? {",
+        "replacement": "        let mut __archogen_sweep_775_it = (dependency_files(&text, &d, &scratch, &canonical_scratch)?).into_iter().peekable(); let mut __archogen_sweep_775_k = 0usize; while let Some(raw) = __archogen_sweep_775_it.next() { let (__archogen_sweep_775_first, __archogen_sweep_775_last) = (__archogen_sweep_775_k == 0, __archogen_sweep_775_it.peek().is_none()); __archogen_sweep_775_k += 1; if !__archogen_sweep_775_first { continue; }"
+      },
+      "after": {
+        "id": "L774.iter.221",
+        "span": [
+          773,
+          774
+        ],
+        "operator": "iter",
+        "original": "        for raw in dependency_files(&text, &d, &scratch, &canonical_scratch)? {",
+        "replacement": "        let mut __archogen_sweep_774_it = (dependency_files(&text, &d, &scratch, &canonical_scratch)?).into_iter().peekable(); let mut __archogen_sweep_774_k = 0usize; while let Some(raw) = __archogen_sweep_774_it.next() { let (__archogen_sweep_774_first, __archogen_sweep_774_last) = (__archogen_sweep_774_k == 0, __archogen_sweep_774_it.peek().is_none()); __archogen_sweep_774_k += 1; if !__archogen_sweep_774_first { continue; }"
+      }
+    },
+    "guard": {
+      "before": {
+        "id": "L775.guard.225",
+        "span": [
+          774,
+          781
+        ],
+        "operator": "guard",
+        "original": "        for raw in dependency_files(&text, &d, &scratch, &canonical_scratch)? {\n            let rel = if let Some(r) = raw\n                .strip_prefix(&scratch)\n                .or_else(|| raw.strip_prefix(&canonical_scratch))\n            {\n                r.to_owned()\n            } else if raw.starts_with('/') {",
+        "replacement": "        let mut __archogen_sweep_775_it = (dependency_files(&text, &d, &scratch, &canonical_scratch)?).into_iter().peekable(); let mut __archogen_sweep_775_k = 0usize; while let Some(raw) = __archogen_sweep_775_it.next() { let (__archogen_sweep_775_first, __archogen_sweep_775_last) = (__archogen_sweep_775_k == 0, __archogen_sweep_775_it.peek().is_none()); __archogen_sweep_775_k += 1;\n            let rel = if let Some(r) = raw\n                .strip_prefix(&scratch)\n                .or_else(|| raw.strip_prefix(&canonical_scratch))\n            {\n                r.to_owned()\n            } else if (raw.starts_with('/')) && __archogen_sweep_775_first {"
+      },
+      "after": {
+        "id": "L774.guard.224",
+        "span": [
+          773,
+          780
+        ],
+        "operator": "guard",
+        "original": "        for raw in dependency_files(&text, &d, &scratch, &canonical_scratch)? {\n            let rel = if let Some(r) = raw\n                .strip_prefix(&scratch)\n                .or_else(|| raw.strip_prefix(&canonical_scratch))\n            {\n                r.to_owned()\n            } else if raw.starts_with('/') {",
+        "replacement": "        let mut __archogen_sweep_774_it = (dependency_files(&text, &d, &scratch, &canonical_scratch)?).into_iter().peekable(); let mut __archogen_sweep_774_k = 0usize; while let Some(raw) = __archogen_sweep_774_it.next() { let (__archogen_sweep_774_first, __archogen_sweep_774_last) = (__archogen_sweep_774_k == 0, __archogen_sweep_774_it.peek().is_none()); __archogen_sweep_774_k += 1;\n            let rel = if let Some(r) = raw\n                .strip_prefix(&scratch)\n                .or_else(|| raw.strip_prefix(&canonical_scratch))\n            {\n                r.to_owned()\n            } else if (raw.starts_with('/')) && __archogen_sweep_774_first {"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Complete current candidate reconciliation</summary>
+
+```json
+{
+  "status": "passed",
+  "scope": "Exact source/candidate reconciliation and final replay selection only, not current native outcomes.",
+  "base_commit": "4437c10d59552703b343933f763c23d4af52d75c",
+  "source_before_sha256": "9616b59ff2bc394e6471570bfaf857971671fda4a12c4fb745e557d2d21a1751",
+  "source_after_sha256": "527f68d5787b16b5e7f9e31942772bcc548f735d017ef95a5e30180a5012a9b5",
+  "listed_before": 1414,
+  "listed_after": 1413,
+  "production_range_before": [
+    146,
+    2592
+  ],
+  "production_range_after": [
+    146,
+    2591
+  ],
+  "retired": {
+    "id": "L772.stmt.221",
+    "span": [
+      771,
+      772
+    ],
+    "operator": "stmt",
+    "original": "                continue;",
+    "replacement": "                // continue;"
+  },
+  "retirement_proof": "docs/book/src/annex-trust-proofs.md#environment-loop-tail-control-proof",
+  "all_other_operators_original_text_and_relative_positions_exact": true,
+  "generated_fresh_prefix_renames": 303,
+  "replacement_rule": "Byte-identical except exact bijective renaming of the native line-derived it/k/first/last fresh identifiers, each absent from its complete source; all other bytes exact.",
+  "mapping": [
+    {
+      "old_id": "L149.eq.0",
+      "new_id": "L149.eq.0",
+      "old_span": [
+        148,
+        149
+      ],
+      "new_span": [
+        148,
+        149
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L188.cond.1",
+      "new_id": "L188.cond.1",
+      "old_span": [
+        187,
+        188
+      ],
+      "new_span": [
+        187,
+        188
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L188.cond.2",
+      "new_id": "L188.cond.2",
+      "old_span": [
+        187,
+        188
+      ],
+      "new_span": [
+        187,
+        188
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L199.iter.3",
+      "new_id": "L199.iter.3",
+      "old_span": [
+        198,
+        199
+      ],
+      "new_span": [
+        198,
+        199
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L199.iter.4",
+      "new_id": "L199.iter.4",
+      "old_span": [
+        198,
+        199
+      ],
+      "new_span": [
+        198,
+        199
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L199.iter.5",
+      "new_id": "L199.iter.5",
+      "old_span": [
+        198,
+        199
+      ],
+      "new_span": [
+        198,
+        199
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L199.guard.6",
+      "new_id": "L199.guard.6",
+      "old_span": [
+        198,
+        200
+      ],
+      "new_span": [
+        198,
+        200
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L199.guard.7",
+      "new_id": "L199.guard.7",
+      "old_span": [
+        198,
+        200
+      ],
+      "new_span": [
+        198,
+        200
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L199.guard.8",
+      "new_id": "L199.guard.8",
+      "old_span": [
+        198,
+        200
+      ],
+      "new_span": [
+        198,
+        200
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L200.eq.9",
+      "new_id": "L200.eq.9",
+      "old_span": [
+        199,
+        200
+      ],
+      "new_span": [
+        199,
+        200
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L200.cond.10",
+      "new_id": "L200.cond.10",
+      "old_span": [
+        199,
+        200
+      ],
+      "new_span": [
+        199,
+        200
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L200.cond.11",
+      "new_id": "L200.cond.11",
+      "old_span": [
+        199,
+        200
+      ],
+      "new_span": [
+        199,
+        200
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L201.stmt.12",
+      "new_id": "L201.stmt.12",
+      "old_span": [
+        200,
+        201
+      ],
+      "new_span": [
+        200,
+        201
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L202.stmt.13",
+      "new_id": "L202.stmt.13",
+      "old_span": [
+        201,
+        202
+      ],
+      "new_span": [
+        201,
+        202
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L214.stmt.14",
+      "new_id": "L214.stmt.14",
+      "old_span": [
+        213,
+        214
+      ],
+      "new_span": [
+        213,
+        214
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L215.stmt.15",
+      "new_id": "L215.stmt.15",
+      "old_span": [
+        214,
+        215
+      ],
+      "new_span": [
+        214,
+        215
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L222.eq.16",
+      "new_id": "L222.eq.16",
+      "old_span": [
+        221,
+        222
+      ],
+      "new_span": [
+        221,
+        222
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L228.eq.17",
+      "new_id": "L228.eq.17",
+      "old_span": [
+        227,
+        228
+      ],
+      "new_span": [
+        227,
+        228
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L237.logic.18",
+      "new_id": "L237.logic.18",
+      "old_span": [
+        236,
+        237
+      ],
+      "new_span": [
+        236,
+        237
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L237.logic.19",
+      "new_id": "L237.logic.19",
+      "old_span": [
+        236,
+        237
+      ],
+      "new_span": [
+        236,
+        237
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L237.logic.20",
+      "new_id": "L237.logic.20",
+      "old_span": [
+        236,
+        237
+      ],
+      "new_span": [
+        236,
+        237
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L237.cond.21",
+      "new_id": "L237.cond.21",
+      "old_span": [
+        236,
+        237
+      ],
+      "new_span": [
+        236,
+        237
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L237.cond.22",
+      "new_id": "L237.cond.22",
+      "old_span": [
+        236,
+        237
+      ],
+      "new_span": [
+        236,
+        237
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L237.not.23",
+      "new_id": "L237.not.23",
+      "old_span": [
+        236,
+        237
+      ],
+      "new_span": [
+        236,
+        237
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L241.iter.24",
+      "new_id": "L241.iter.24",
+      "old_span": [
+        240,
+        241
+      ],
+      "new_span": [
+        240,
+        241
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L241.iter.25",
+      "new_id": "L241.iter.25",
+      "old_span": [
+        240,
+        241
+      ],
+      "new_span": [
+        240,
+        241
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L241.iter.26",
+      "new_id": "L241.iter.26",
+      "old_span": [
+        240,
+        241
+      ],
+      "new_span": [
+        240,
+        241
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L241.guard.27",
+      "new_id": "L241.guard.27",
+      "old_span": [
+        240,
+        247
+      ],
+      "new_span": [
+        240,
+        247
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L241.guard.28",
+      "new_id": "L241.guard.28",
+      "old_span": [
+        240,
+        247
+      ],
+      "new_span": [
+        240,
+        247
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L241.guard.29",
+      "new_id": "L241.guard.29",
+      "old_span": [
+        240,
+        247
+      ],
+      "new_span": [
+        240,
+        247
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L241.guard.30",
+      "new_id": "L241.guard.30",
+      "old_span": [
+        240,
+        252
+      ],
+      "new_span": [
+        240,
+        252
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L241.guard.31",
+      "new_id": "L241.guard.31",
+      "old_span": [
+        240,
+        252
+      ],
+      "new_span": [
+        240,
+        252
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L241.guard.32",
+      "new_id": "L241.guard.32",
+      "old_span": [
+        240,
+        252
+      ],
+      "new_span": [
+        240,
+        252
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L247.cond.33",
+      "new_id": "L247.cond.33",
+      "old_span": [
+        246,
+        247
+      ],
+      "new_span": [
+        246,
+        247
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L247.cond.34",
+      "new_id": "L247.cond.34",
+      "old_span": [
+        246,
+        247
+      ],
+      "new_span": [
+        246,
+        247
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L247.not.35",
+      "new_id": "L247.not.35",
+      "old_span": [
+        246,
+        247
+      ],
+      "new_span": [
+        246,
+        247
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L252.cond.36",
+      "new_id": "L252.cond.36",
+      "old_span": [
+        251,
+        252
+      ],
+      "new_span": [
+        251,
+        252
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L252.cond.37",
+      "new_id": "L252.cond.37",
+      "old_span": [
+        251,
+        252
+      ],
+      "new_span": [
+        251,
+        252
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L252.not.38",
+      "new_id": "L252.not.38",
+      "old_span": [
+        251,
+        252
+      ],
+      "new_span": [
+        251,
+        252
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L259.eq.39",
+      "new_id": "L259.eq.39",
+      "old_span": [
+        258,
+        259
+      ],
+      "new_span": [
+        258,
+        259
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L260.eq.40",
+      "new_id": "L260.eq.40",
+      "old_span": [
+        259,
+        260
+      ],
+      "new_span": [
+        259,
+        260
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L269.stmt.41",
+      "new_id": "L269.stmt.41",
+      "old_span": [
+        268,
+        269
+      ],
+      "new_span": [
+        268,
+        269
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L270.stmt.42",
+      "new_id": "L270.stmt.42",
+      "old_span": [
+        269,
+        270
+      ],
+      "new_span": [
+        269,
+        270
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L272.cond.43",
+      "new_id": "L272.cond.43",
+      "old_span": [
+        271,
+        272
+      ],
+      "new_span": [
+        271,
+        272
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L272.cond.44",
+      "new_id": "L272.cond.44",
+      "old_span": [
+        271,
+        272
+      ],
+      "new_span": [
+        271,
+        272
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L272.not.45",
+      "new_id": "L272.not.45",
+      "old_span": [
+        271,
+        272
+      ],
+      "new_span": [
+        271,
+        272
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L304.stmt.46",
+      "new_id": "L304.stmt.46",
+      "old_span": [
+        303,
+        304
+      ],
+      "new_span": [
+        303,
+        304
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L323.stmt.47",
+      "new_id": "L323.stmt.47",
+      "old_span": [
+        322,
+        323
+      ],
+      "new_span": [
+        322,
+        323
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L331.int.48",
+      "new_id": "L331.int.48",
+      "old_span": [
+        330,
+        331
+      ],
+      "new_span": [
+        330,
+        331
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L331.int.49",
+      "new_id": "L331.int.49",
+      "old_span": [
+        330,
+        331
+      ],
+      "new_span": [
+        330,
+        331
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L334.stmt.50",
+      "new_id": "L334.stmt.50",
+      "old_span": [
+        333,
+        334
+      ],
+      "new_span": [
+        333,
+        334
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L343.iter.51",
+      "new_id": "L343.iter.51",
+      "old_span": [
+        342,
+        343
+      ],
+      "new_span": [
+        342,
+        343
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L343.iter.52",
+      "new_id": "L343.iter.52",
+      "old_span": [
+        342,
+        343
+      ],
+      "new_span": [
+        342,
+        343
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L343.iter.53",
+      "new_id": "L343.iter.53",
+      "old_span": [
+        342,
+        343
+      ],
+      "new_span": [
+        342,
+        343
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L343.guard.54",
+      "new_id": "L343.guard.54",
+      "old_span": [
+        342,
+        357
+      ],
+      "new_span": [
+        342,
+        357
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L343.guard.55",
+      "new_id": "L343.guard.55",
+      "old_span": [
+        342,
+        357
+      ],
+      "new_span": [
+        342,
+        357
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L343.guard.56",
+      "new_id": "L343.guard.56",
+      "old_span": [
+        342,
+        357
+      ],
+      "new_span": [
+        342,
+        357
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L345.iter.57",
+      "new_id": "L345.iter.57",
+      "old_span": [
+        344,
+        345
+      ],
+      "new_span": [
+        344,
+        345
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L345.iter.58",
+      "new_id": "L345.iter.58",
+      "old_span": [
+        344,
+        345
+      ],
+      "new_span": [
+        344,
+        345
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L345.iter.59",
+      "new_id": "L345.iter.59",
+      "old_span": [
+        344,
+        345
+      ],
+      "new_span": [
+        344,
+        345
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L346.not.60",
+      "new_id": "L346.not.60",
+      "old_span": [
+        345,
+        346
+      ],
+      "new_span": [
+        345,
+        346
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L349.eq.61",
+      "new_id": "L349.eq.61",
+      "old_span": [
+        348,
+        349
+      ],
+      "new_span": [
+        348,
+        349
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L349.logic.62",
+      "new_id": "L349.logic.62",
+      "old_span": [
+        348,
+        349
+      ],
+      "new_span": [
+        348,
+        349
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L357.eq.63",
+      "new_id": "L357.eq.63",
+      "old_span": [
+        356,
+        357
+      ],
+      "new_span": [
+        356,
+        357
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L357.cond.64",
+      "new_id": "L357.cond.64",
+      "old_span": [
+        356,
+        357
+      ],
+      "new_span": [
+        356,
+        357
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L357.cond.65",
+      "new_id": "L357.cond.65",
+      "old_span": [
+        356,
+        357
+      ],
+      "new_span": [
+        356,
+        357
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L411.stmt.66",
+      "new_id": "L411.stmt.66",
+      "old_span": [
+        410,
+        411
+      ],
+      "new_span": [
+        410,
+        411
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L414.stmt.67",
+      "new_id": "L414.stmt.67",
+      "old_span": [
+        413,
+        414
+      ],
+      "new_span": [
+        413,
+        414
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L415.logic.68",
+      "new_id": "L415.logic.68",
+      "old_span": [
+        414,
+        415
+      ],
+      "new_span": [
+        414,
+        415
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L415.logic.69",
+      "new_id": "L415.logic.69",
+      "old_span": [
+        414,
+        415
+      ],
+      "new_span": [
+        414,
+        415
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L415.logic.70",
+      "new_id": "L415.logic.70",
+      "old_span": [
+        414,
+        415
+      ],
+      "new_span": [
+        414,
+        415
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L415.cond.71",
+      "new_id": "L415.cond.71",
+      "old_span": [
+        414,
+        415
+      ],
+      "new_span": [
+        414,
+        415
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L415.cond.72",
+      "new_id": "L415.cond.72",
+      "old_span": [
+        414,
+        415
+      ],
+      "new_span": [
+        414,
+        415
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L415.dir.73",
+      "new_id": "L415.dir.73",
+      "old_span": [
+        414,
+        415
+      ],
+      "new_span": [
+        414,
+        415
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L416.stmt.74",
+      "new_id": "L416.stmt.74",
+      "old_span": [
+        415,
+        416
+      ],
+      "new_span": [
+        415,
+        416
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L420.dir.75",
+      "new_id": "L420.dir.75",
+      "old_span": [
+        419,
+        420
+      ],
+      "new_span": [
+        419,
+        420
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L424.stmt.76",
+      "new_id": "L424.stmt.76",
+      "old_span": [
+        423,
+        424
+      ],
+      "new_span": [
+        423,
+        424
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L425.stmt.77",
+      "new_id": "L425.stmt.77",
+      "old_span": [
+        424,
+        425
+      ],
+      "new_span": [
+        424,
+        425
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L427.cond.78",
+      "new_id": "L427.cond.78",
+      "old_span": [
+        426,
+        427
+      ],
+      "new_span": [
+        426,
+        427
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L427.cond.79",
+      "new_id": "L427.cond.79",
+      "old_span": [
+        426,
+        427
+      ],
+      "new_span": [
+        426,
+        427
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L452.bool.80",
+      "new_id": "L452.bool.80",
+      "old_span": [
+        451,
+        452
+      ],
+      "new_span": [
+        451,
+        452
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L453.bool.81",
+      "new_id": "L453.bool.81",
+      "old_span": [
+        452,
+        453
+      ],
+      "new_span": [
+        452,
+        453
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L454.bool.82",
+      "new_id": "L454.bool.82",
+      "old_span": [
+        453,
+        454
+      ],
+      "new_span": [
+        453,
+        454
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L455.bool.83",
+      "new_id": "L455.bool.83",
+      "old_span": [
+        454,
+        455
+      ],
+      "new_span": [
+        454,
+        455
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L456.bool.84",
+      "new_id": "L456.bool.84",
+      "old_span": [
+        455,
+        456
+      ],
+      "new_span": [
+        455,
+        456
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L457.bool.85",
+      "new_id": "L457.bool.85",
+      "old_span": [
+        456,
+        457
+      ],
+      "new_span": [
+        456,
+        457
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L458.bool.86",
+      "new_id": "L458.bool.86",
+      "old_span": [
+        457,
+        458
+      ],
+      "new_span": [
+        457,
+        458
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L459.bool.87",
+      "new_id": "L459.bool.87",
+      "old_span": [
+        458,
+        459
+      ],
+      "new_span": [
+        458,
+        459
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L460.bool.88",
+      "new_id": "L460.bool.88",
+      "old_span": [
+        459,
+        460
+      ],
+      "new_span": [
+        459,
+        460
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L461.bool.89",
+      "new_id": "L461.bool.89",
+      "old_span": [
+        460,
+        461
+      ],
+      "new_span": [
+        460,
+        461
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L462.bool.90",
+      "new_id": "L462.bool.90",
+      "old_span": [
+        461,
+        462
+      ],
+      "new_span": [
+        461,
+        462
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L463.bool.91",
+      "new_id": "L463.bool.91",
+      "old_span": [
+        462,
+        463
+      ],
+      "new_span": [
+        462,
+        463
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L464.bool.92",
+      "new_id": "L464.bool.92",
+      "old_span": [
+        463,
+        464
+      ],
+      "new_span": [
+        463,
+        464
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L465.stmt.93",
+      "new_id": "L465.stmt.93",
+      "old_span": [
+        464,
+        465
+      ],
+      "new_span": [
+        464,
+        465
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L478.stmt.94",
+      "new_id": "L478.stmt.94",
+      "old_span": [
+        477,
+        478
+      ],
+      "new_span": [
+        477,
+        478
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L484.cmp.95",
+      "new_id": "L484.cmp.95",
+      "old_span": [
+        483,
+        484
+      ],
+      "new_span": [
+        483,
+        484
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L484.cond.96",
+      "new_id": "L484.cond.96",
+      "old_span": [
+        483,
+        484
+      ],
+      "new_span": [
+        483,
+        484
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L486.eq.97",
+      "new_id": "L486.eq.97",
+      "old_span": [
+        485,
+        486
+      ],
+      "new_span": [
+        485,
+        486
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L487.stmt.98",
+      "new_id": "L487.stmt.98",
+      "old_span": [
+        486,
+        487
+      ],
+      "new_span": [
+        486,
+        487
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L488.stmt.99",
+      "new_id": "L488.stmt.99",
+      "old_span": [
+        487,
+        488
+      ],
+      "new_span": [
+        487,
+        488
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L490.cond.100",
+      "new_id": "L490.cond.100",
+      "old_span": [
+        489,
+        490
+      ],
+      "new_span": [
+        489,
+        490
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L490.cond.101",
+      "new_id": "L490.cond.101",
+      "old_span": [
+        489,
+        490
+      ],
+      "new_span": [
+        489,
+        490
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L490.dir.102",
+      "new_id": "L490.dir.102",
+      "old_span": [
+        489,
+        490
+      ],
+      "new_span": [
+        489,
+        490
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L491.int.103",
+      "new_id": "L491.int.103",
+      "old_span": [
+        490,
+        491
+      ],
+      "new_span": [
+        490,
+        491
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L491.int.104",
+      "new_id": "L491.int.104",
+      "old_span": [
+        490,
+        491
+      ],
+      "new_span": [
+        490,
+        491
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L491.stmt.105",
+      "new_id": "L491.stmt.105",
+      "old_span": [
+        490,
+        491
+      ],
+      "new_span": [
+        490,
+        491
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L492.stmt.106",
+      "new_id": "L492.stmt.106",
+      "old_span": [
+        491,
+        492
+      ],
+      "new_span": [
+        491,
+        492
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L494.eq.107",
+      "new_id": "L494.eq.107",
+      "old_span": [
+        493,
+        494
+      ],
+      "new_span": [
+        493,
+        494
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L494.cond.108",
+      "new_id": "L494.cond.108",
+      "old_span": [
+        493,
+        494
+      ],
+      "new_span": [
+        493,
+        494
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L494.cond.109",
+      "new_id": "L494.cond.109",
+      "old_span": [
+        493,
+        494
+      ],
+      "new_span": [
+        493,
+        494
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L495.int.110",
+      "new_id": "L495.int.110",
+      "old_span": [
+        494,
+        495
+      ],
+      "new_span": [
+        494,
+        495
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L495.int.111",
+      "new_id": "L495.int.111",
+      "old_span": [
+        494,
+        495
+      ],
+      "new_span": [
+        494,
+        495
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L497.dir.112",
+      "new_id": "L497.dir.112",
+      "old_span": [
+        496,
+        497
+      ],
+      "new_span": [
+        496,
+        497
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L497.lit.113",
+      "new_id": "L497.lit.113",
+      "old_span": [
+        496,
+        497
+      ],
+      "new_span": [
+        496,
+        497
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L497.lit.114",
+      "new_id": "L497.lit.114",
+      "old_span": [
+        496,
+        497
+      ],
+      "new_span": [
+        496,
+        497
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L498.logic.115",
+      "new_id": "L498.logic.115",
+      "old_span": [
+        497,
+        498
+      ],
+      "new_span": [
+        497,
+        498
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L498.dir.116",
+      "new_id": "L498.dir.116",
+      "old_span": [
+        497,
+        498
+      ],
+      "new_span": [
+        497,
+        498
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L498.lit.117",
+      "new_id": "L498.lit.117",
+      "old_span": [
+        497,
+        498
+      ],
+      "new_span": [
+        497,
+        498
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L498.lit.118",
+      "new_id": "L498.lit.118",
+      "old_span": [
+        497,
+        498
+      ],
+      "new_span": [
+        497,
+        498
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L499.logic.119",
+      "new_id": "L499.logic.119",
+      "old_span": [
+        498,
+        499
+      ],
+      "new_span": [
+        498,
+        499
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L499.dir.120",
+      "new_id": "L499.dir.120",
+      "old_span": [
+        498,
+        499
+      ],
+      "new_span": [
+        498,
+        499
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L499.lit.121",
+      "new_id": "L499.lit.121",
+      "old_span": [
+        498,
+        499
+      ],
+      "new_span": [
+        498,
+        499
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L499.lit.122",
+      "new_id": "L499.lit.122",
+      "old_span": [
+        498,
+        499
+      ],
+      "new_span": [
+        498,
+        499
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L501.int.123",
+      "new_id": "L501.int.123",
+      "old_span": [
+        500,
+        501
+      ],
+      "new_span": [
+        500,
+        501
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L501.int.124",
+      "new_id": "L501.int.124",
+      "old_span": [
+        500,
+        501
+      ],
+      "new_span": [
+        500,
+        501
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L501.stmt.125",
+      "new_id": "L501.stmt.125",
+      "old_span": [
+        500,
+        501
+      ],
+      "new_span": [
+        500,
+        501
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L502.stmt.126",
+      "new_id": "L502.stmt.126",
+      "old_span": [
+        501,
+        502
+      ],
+      "new_span": [
+        501,
+        502
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L504.stmt.127",
+      "new_id": "L504.stmt.127",
+      "old_span": [
+        503,
+        504
+      ],
+      "new_span": [
+        503,
+        504
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L505.int.128",
+      "new_id": "L505.int.128",
+      "old_span": [
+        504,
+        505
+      ],
+      "new_span": [
+        504,
+        505
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L505.int.129",
+      "new_id": "L505.int.129",
+      "old_span": [
+        504,
+        505
+      ],
+      "new_span": [
+        504,
+        505
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L505.stmt.130",
+      "new_id": "L505.stmt.130",
+      "old_span": [
+        504,
+        505
+      ],
+      "new_span": [
+        504,
+        505
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L506.stmt.131",
+      "new_id": "L506.stmt.131",
+      "old_span": [
+        505,
+        506
+      ],
+      "new_span": [
+        505,
+        506
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L509.eq.132",
+      "new_id": "L509.eq.132",
+      "old_span": [
+        508,
+        509
+      ],
+      "new_span": [
+        508,
+        509
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L509.cond.133",
+      "new_id": "L509.cond.133",
+      "old_span": [
+        508,
+        509
+      ],
+      "new_span": [
+        508,
+        509
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L509.cond.134",
+      "new_id": "L509.cond.134",
+      "old_span": [
+        508,
+        509
+      ],
+      "new_span": [
+        508,
+        509
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L510.int.135",
+      "new_id": "L510.int.135",
+      "old_span": [
+        509,
+        510
+      ],
+      "new_span": [
+        509,
+        510
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L510.int.136",
+      "new_id": "L510.int.136",
+      "old_span": [
+        509,
+        510
+      ],
+      "new_span": [
+        509,
+        510
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L511.dir.137",
+      "new_id": "L511.dir.137",
+      "old_span": [
+        510,
+        511
+      ],
+      "new_span": [
+        510,
+        511
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L512.dir.138",
+      "new_id": "L512.dir.138",
+      "old_span": [
+        511,
+        512
+      ],
+      "new_span": [
+        511,
+        512
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L514.cmp.139",
+      "new_id": "L514.cmp.139",
+      "old_span": [
+        513,
+        514
+      ],
+      "new_span": [
+        513,
+        514
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L519.stmt.140",
+      "new_id": "L519.stmt.140",
+      "old_span": [
+        518,
+        519
+      ],
+      "new_span": [
+        518,
+        519
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L520.int.141",
+      "new_id": "L520.int.141",
+      "old_span": [
+        519,
+        520
+      ],
+      "new_span": [
+        519,
+        520
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L520.int.142",
+      "new_id": "L520.int.142",
+      "old_span": [
+        519,
+        520
+      ],
+      "new_span": [
+        519,
+        520
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L520.stmt.143",
+      "new_id": "L520.stmt.143",
+      "old_span": [
+        519,
+        520
+      ],
+      "new_span": [
+        519,
+        520
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L521.stmt.144",
+      "new_id": "L521.stmt.144",
+      "old_span": [
+        520,
+        521
+      ],
+      "new_span": [
+        520,
+        521
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L524.stmt.145",
+      "new_id": "L524.stmt.145",
+      "old_span": [
+        523,
+        524
+      ],
+      "new_span": [
+        523,
+        524
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L525.int.146",
+      "new_id": "L525.int.146",
+      "old_span": [
+        524,
+        525
+      ],
+      "new_span": [
+        524,
+        525
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L525.int.147",
+      "new_id": "L525.int.147",
+      "old_span": [
+        524,
+        525
+      ],
+      "new_span": [
+        524,
+        525
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L525.stmt.148",
+      "new_id": "L525.stmt.148",
+      "old_span": [
+        524,
+        525
+      ],
+      "new_span": [
+        524,
+        525
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L533.dir.149",
+      "new_id": "L533.dir.149",
+      "old_span": [
+        532,
+        533
+      ],
+      "new_span": [
+        532,
+        533
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L533.iter.150",
+      "new_id": "L533.iter.150",
+      "old_span": [
+        532,
+        533
+      ],
+      "new_span": [
+        532,
+        533
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L533.iter.151",
+      "new_id": "L533.iter.151",
+      "old_span": [
+        532,
+        533
+      ],
+      "new_span": [
+        532,
+        533
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L533.iter.152",
+      "new_id": "L533.iter.152",
+      "old_span": [
+        532,
+        533
+      ],
+      "new_span": [
+        532,
+        533
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L537.stmt.153",
+      "new_id": "L537.stmt.153",
+      "old_span": [
+        536,
+        537
+      ],
+      "new_span": [
+        536,
+        537
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L567.not.154",
+      "new_id": "L567.not.154",
+      "old_span": [
+        566,
+        567
+      ],
+      "new_span": [
+        566,
+        567
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L576.eq.155",
+      "new_id": "L576.eq.155",
+      "old_span": [
+        575,
+        576
+      ],
+      "new_span": [
+        575,
+        576
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L585.iter.156",
+      "new_id": "L585.iter.156",
+      "old_span": [
+        584,
+        585
+      ],
+      "new_span": [
+        584,
+        585
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L585.iter.157",
+      "new_id": "L585.iter.157",
+      "old_span": [
+        584,
+        585
+      ],
+      "new_span": [
+        584,
+        585
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L585.iter.158",
+      "new_id": "L585.iter.158",
+      "old_span": [
+        584,
+        585
+      ],
+      "new_span": [
+        584,
+        585
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L587.iter.159",
+      "new_id": "L587.iter.159",
+      "old_span": [
+        586,
+        587
+      ],
+      "new_span": [
+        586,
+        587
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L587.iter.160",
+      "new_id": "L587.iter.160",
+      "old_span": [
+        586,
+        587
+      ],
+      "new_span": [
+        586,
+        587
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L587.iter.161",
+      "new_id": "L587.iter.161",
+      "old_span": [
+        586,
+        587
+      ],
+      "new_span": [
+        586,
+        587
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L588.iter.162",
+      "new_id": "L588.iter.162",
+      "old_span": [
+        587,
+        588
+      ],
+      "new_span": [
+        587,
+        588
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L588.iter.163",
+      "new_id": "L588.iter.163",
+      "old_span": [
+        587,
+        588
+      ],
+      "new_span": [
+        587,
+        588
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L588.iter.164",
+      "new_id": "L588.iter.164",
+      "old_span": [
+        587,
+        588
+      ],
+      "new_span": [
+        587,
+        588
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L588.guard.165",
+      "new_id": "L588.guard.165",
+      "old_span": [
+        587,
+        590
+      ],
+      "new_span": [
+        587,
+        590
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L588.guard.166",
+      "new_id": "L588.guard.166",
+      "old_span": [
+        587,
+        590
+      ],
+      "new_span": [
+        587,
+        590
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L588.guard.167",
+      "new_id": "L588.guard.167",
+      "old_span": [
+        587,
+        590
+      ],
+      "new_span": [
+        587,
+        590
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L590.cond.168",
+      "new_id": "L590.cond.168",
+      "old_span": [
+        589,
+        590
+      ],
+      "new_span": [
+        589,
+        590
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L590.cond.169",
+      "new_id": "L590.cond.169",
+      "old_span": [
+        589,
+        590
+      ],
+      "new_span": [
+        589,
+        590
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L591.stmt.170",
+      "new_id": "L591.stmt.170",
+      "old_span": [
+        590,
+        591
+      ],
+      "new_span": [
+        590,
+        591
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L592.stmt.171",
+      "new_id": "L592.stmt.171",
+      "old_span": [
+        591,
+        592
+      ],
+      "new_span": [
+        591,
+        592
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L606.iter.172",
+      "new_id": "L606.iter.172",
+      "old_span": [
+        605,
+        606
+      ],
+      "new_span": [
+        605,
+        606
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L606.iter.173",
+      "new_id": "L606.iter.173",
+      "old_span": [
+        605,
+        606
+      ],
+      "new_span": [
+        605,
+        606
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L606.iter.174",
+      "new_id": "L606.iter.174",
+      "old_span": [
+        605,
+        606
+      ],
+      "new_span": [
+        605,
+        606
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L608.stmt.175",
+      "new_id": "L608.stmt.175",
+      "old_span": [
+        607,
+        608
+      ],
+      "new_span": [
+        607,
+        608
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L614.dir.176",
+      "new_id": "L614.dir.176",
+      "old_span": [
+        613,
+        614
+      ],
+      "new_span": [
+        613,
+        614
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L614.lit.177",
+      "new_id": "L614.lit.177",
+      "old_span": [
+        613,
+        614
+      ],
+      "new_span": [
+        613,
+        614
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L614.lit.178",
+      "new_id": "L614.lit.178",
+      "old_span": [
+        613,
+        614
+      ],
+      "new_span": [
+        613,
+        614
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L615.logic.179",
+      "new_id": "L615.logic.179",
+      "old_span": [
+        614,
+        615
+      ],
+      "new_span": [
+        614,
+        615
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L615.not.180",
+      "new_id": "L615.not.180",
+      "old_span": [
+        614,
+        615
+      ],
+      "new_span": [
+        614,
+        615
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L617.cmp.181",
+      "new_id": "L617.cmp.181",
+      "old_span": [
+        616,
+        617
+      ],
+      "new_span": [
+        616,
+        617
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L617.cmp.182",
+      "new_id": "L617.cmp.182",
+      "old_span": [
+        616,
+        617
+      ],
+      "new_span": [
+        616,
+        617
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L617.logic.183",
+      "new_id": "L617.logic.183",
+      "old_span": [
+        616,
+        617
+      ],
+      "new_span": [
+        616,
+        617
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L632.stmt.184",
+      "new_id": "L632.stmt.184",
+      "old_span": [
+        631,
+        632
+      ],
+      "new_span": [
+        631,
+        632
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L633.iter.185",
+      "new_id": "L633.iter.185",
+      "old_span": [
+        632,
+        633
+      ],
+      "new_span": [
+        632,
+        633
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L633.iter.186",
+      "new_id": "L633.iter.186",
+      "old_span": [
+        632,
+        633
+      ],
+      "new_span": [
+        632,
+        633
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L633.iter.187",
+      "new_id": "L633.iter.187",
+      "old_span": [
+        632,
+        633
+      ],
+      "new_span": [
+        632,
+        633
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L634.stmt.188",
+      "new_id": "L634.stmt.188",
+      "old_span": [
+        633,
+        634
+      ],
+      "new_span": [
+        633,
+        634
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L638.stmt.189",
+      "new_id": "L638.stmt.189",
+      "old_span": [
+        637,
+        638
+      ],
+      "new_span": [
+        637,
+        638
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L642.cond.190",
+      "new_id": "L642.cond.190",
+      "old_span": [
+        641,
+        642
+      ],
+      "new_span": [
+        641,
+        642
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L642.cond.191",
+      "new_id": "L642.cond.191",
+      "old_span": [
+        641,
+        642
+      ],
+      "new_span": [
+        641,
+        642
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L642.not.192",
+      "new_id": "L642.not.192",
+      "old_span": [
+        641,
+        642
+      ],
+      "new_span": [
+        641,
+        642
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L654.stmt.193",
+      "new_id": "L654.stmt.193",
+      "old_span": [
+        653,
+        654
+      ],
+      "new_span": [
+        653,
+        654
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L657.stmt.194",
+      "new_id": "L657.stmt.194",
+      "old_span": [
+        656,
+        657
+      ],
+      "new_span": [
+        656,
+        657
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L696.stmt.195",
+      "new_id": "L696.stmt.195",
+      "old_span": [
+        695,
+        696
+      ],
+      "new_span": [
+        695,
+        696
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L720.eq.196",
+      "new_id": "L720.eq.196",
+      "old_span": [
+        719,
+        720
+      ],
+      "new_span": [
+        719,
+        720
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L721.int.197",
+      "new_id": "L721.int.197",
+      "old_span": [
+        720,
+        721
+      ],
+      "new_span": [
+        720,
+        721
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L721.int.198",
+      "new_id": "L721.int.198",
+      "old_span": [
+        720,
+        721
+      ],
+      "new_span": [
+        720,
+        721
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L729.eq.199",
+      "new_id": "L729.eq.199",
+      "old_span": [
+        728,
+        729
+      ],
+      "new_span": [
+        728,
+        729
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L729.logic.200",
+      "new_id": "L729.logic.200",
+      "old_span": [
+        728,
+        729
+      ],
+      "new_span": [
+        728,
+        729
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L729.dir.201",
+      "new_id": "L729.dir.201",
+      "old_span": [
+        728,
+        729
+      ],
+      "new_span": [
+        728,
+        729
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L729.lit.202",
+      "new_id": "L729.lit.202",
+      "old_span": [
+        728,
+        729
+      ],
+      "new_span": [
+        728,
+        729
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L729.lit.203",
+      "new_id": "L729.lit.203",
+      "old_span": [
+        728,
+        729
+      ],
+      "new_span": [
+        728,
+        729
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L749.stmt.204",
+      "new_id": "L749.stmt.204",
+      "old_span": [
+        748,
+        749
+      ],
+      "new_span": [
+        748,
+        749
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L756.iter.205",
+      "new_id": "L756.iter.205",
+      "old_span": [
+        755,
+        756
+      ],
+      "new_span": [
+        755,
+        756
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L756.iter.206",
+      "new_id": "L756.iter.206",
+      "old_span": [
+        755,
+        756
+      ],
+      "new_span": [
+        755,
+        756
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L756.iter.207",
+      "new_id": "L756.iter.207",
+      "old_span": [
+        755,
+        756
+      ],
+      "new_span": [
+        755,
+        756
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L756.guard.208",
+      "new_id": "L756.guard.208",
+      "old_span": [
+        755,
+        760
+      ],
+      "new_span": [
+        755,
+        760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L756.guard.209",
+      "new_id": "L756.guard.209",
+      "old_span": [
+        755,
+        760
+      ],
+      "new_span": [
+        755,
+        760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L756.guard.210",
+      "new_id": "L756.guard.210",
+      "old_span": [
+        755,
+        760
+      ],
+      "new_span": [
+        755,
+        760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L757.lit.211",
+      "new_id": "L757.lit.211",
+      "old_span": [
+        756,
+        757
+      ],
+      "new_span": [
+        756,
+        757
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L757.lit.212",
+      "new_id": "L757.lit.212",
+      "old_span": [
+        756,
+        757
+      ],
+      "new_span": [
+        756,
+        757
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L759.dir.213",
+      "new_id": "L759.dir.213",
+      "old_span": [
+        758,
+        759
+      ],
+      "new_span": [
+        758,
+        759
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L760.logic.214",
+      "new_id": "L760.logic.214",
+      "old_span": [
+        759,
+        760
+      ],
+      "new_span": [
+        759,
+        760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L760.cond.215",
+      "new_id": "L760.cond.215",
+      "old_span": [
+        759,
+        760
+      ],
+      "new_span": [
+        759,
+        760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L760.cond.216",
+      "new_id": "L760.cond.216",
+      "old_span": [
+        759,
+        760
+      ],
+      "new_span": [
+        759,
+        760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L760.not.217",
+      "new_id": "L760.not.217",
+      "old_span": [
+        759,
+        760
+      ],
+      "new_span": [
+        759,
+        760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L760.dir.218",
+      "new_id": "L760.dir.218",
+      "old_span": [
+        759,
+        760
+      ],
+      "new_span": [
+        759,
+        760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L760.lit.219",
+      "new_id": "L760.lit.219",
+      "old_span": [
+        759,
+        760
+      ],
+      "new_span": [
+        759,
+        760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L760.lit.220",
+      "new_id": "L760.lit.220",
+      "old_span": [
+        759,
+        760
+      ],
+      "new_span": [
+        759,
+        760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L775.iter.222",
+      "new_id": "L774.iter.221",
+      "old_span": [
+        774,
+        775
+      ],
+      "new_span": [
+        773,
+        774
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_775_",
+        "after": "__archogen_sweep_774_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L775.iter.223",
+      "new_id": "L774.iter.222",
+      "old_span": [
+        774,
+        775
+      ],
+      "new_span": [
+        773,
+        774
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_775_",
+        "after": "__archogen_sweep_774_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L775.iter.224",
+      "new_id": "L774.iter.223",
+      "old_span": [
+        774,
+        775
+      ],
+      "new_span": [
+        773,
+        774
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_775_",
+        "after": "__archogen_sweep_774_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L775.guard.225",
+      "new_id": "L774.guard.224",
+      "old_span": [
+        774,
+        781
+      ],
+      "new_span": [
+        773,
+        780
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_775_",
+        "after": "__archogen_sweep_774_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L775.guard.226",
+      "new_id": "L774.guard.225",
+      "old_span": [
+        774,
+        781
+      ],
+      "new_span": [
+        773,
+        780
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_775_",
+        "after": "__archogen_sweep_774_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L775.guard.227",
+      "new_id": "L774.guard.226",
+      "old_span": [
+        774,
+        781
+      ],
+      "new_span": [
+        773,
+        780
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_775_",
+        "after": "__archogen_sweep_774_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L781.cond.228",
+      "new_id": "L780.cond.227",
+      "old_span": [
+        780,
+        781
+      ],
+      "new_span": [
+        779,
+        780
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L781.cond.229",
+      "new_id": "L780.cond.228",
+      "old_span": [
+        780,
+        781
+      ],
+      "new_span": [
+        779,
+        780
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L781.dir.230",
+      "new_id": "L780.dir.229",
+      "old_span": [
+        780,
+        781
+      ],
+      "new_span": [
+        779,
+        780
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L786.stmt.231",
+      "new_id": "L785.stmt.230",
+      "old_span": [
+        785,
+        786
+      ],
+      "new_span": [
+        784,
+        785
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L792.stmt.232",
+      "new_id": "L791.stmt.231",
+      "old_span": [
+        791,
+        792
+      ],
+      "new_span": [
+        790,
+        791
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L800.iter.233",
+      "new_id": "L799.iter.232",
+      "old_span": [
+        799,
+        800
+      ],
+      "new_span": [
+        798,
+        799
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_800_",
+        "after": "__archogen_sweep_799_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L800.iter.234",
+      "new_id": "L799.iter.233",
+      "old_span": [
+        799,
+        800
+      ],
+      "new_span": [
+        798,
+        799
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_800_",
+        "after": "__archogen_sweep_799_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L800.iter.235",
+      "new_id": "L799.iter.234",
+      "old_span": [
+        799,
+        800
+      ],
+      "new_span": [
+        798,
+        799
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_800_",
+        "after": "__archogen_sweep_799_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L800.guard.236",
+      "new_id": "L799.guard.235",
+      "old_span": [
+        799,
+        801
+      ],
+      "new_span": [
+        798,
+        800
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_800_",
+        "after": "__archogen_sweep_799_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L800.guard.237",
+      "new_id": "L799.guard.236",
+      "old_span": [
+        799,
+        801
+      ],
+      "new_span": [
+        798,
+        800
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_800_",
+        "after": "__archogen_sweep_799_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L800.guard.238",
+      "new_id": "L799.guard.237",
+      "old_span": [
+        799,
+        801
+      ],
+      "new_span": [
+        798,
+        800
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_800_",
+        "after": "__archogen_sweep_799_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L801.logic.239",
+      "new_id": "L800.logic.238",
+      "old_span": [
+        800,
+        801
+      ],
+      "new_span": [
+        799,
+        800
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L801.logic.240",
+      "new_id": "L800.logic.239",
+      "old_span": [
+        800,
+        801
+      ],
+      "new_span": [
+        799,
+        800
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L801.logic.241",
+      "new_id": "L800.logic.240",
+      "old_span": [
+        800,
+        801
+      ],
+      "new_span": [
+        799,
+        800
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L801.cond.242",
+      "new_id": "L800.cond.241",
+      "old_span": [
+        800,
+        801
+      ],
+      "new_span": [
+        799,
+        800
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L801.cond.243",
+      "new_id": "L800.cond.242",
+      "old_span": [
+        800,
+        801
+      ],
+      "new_span": [
+        799,
+        800
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L801.dir.244",
+      "new_id": "L800.dir.243",
+      "old_span": [
+        800,
+        801
+      ],
+      "new_span": [
+        799,
+        800
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L801.lit.245",
+      "new_id": "L800.lit.244",
+      "old_span": [
+        800,
+        801
+      ],
+      "new_span": [
+        799,
+        800
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L801.lit.246",
+      "new_id": "L800.lit.245",
+      "old_span": [
+        800,
+        801
+      ],
+      "new_span": [
+        799,
+        800
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L830.eq.247",
+      "new_id": "L829.eq.246",
+      "old_span": [
+        829,
+        830
+      ],
+      "new_span": [
+        828,
+        829
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L830.cond.248",
+      "new_id": "L829.cond.247",
+      "old_span": [
+        829,
+        830
+      ],
+      "new_span": [
+        828,
+        829
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L830.cond.249",
+      "new_id": "L829.cond.248",
+      "old_span": [
+        829,
+        830
+      ],
+      "new_span": [
+        828,
+        829
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L830.not.250",
+      "new_id": "L829.not.249",
+      "old_span": [
+        829,
+        830
+      ],
+      "new_span": [
+        828,
+        829
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L880.iter.251",
+      "new_id": "L879.iter.250",
+      "old_span": [
+        879,
+        880
+      ],
+      "new_span": [
+        878,
+        879
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_880_",
+        "after": "__archogen_sweep_879_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L880.iter.252",
+      "new_id": "L879.iter.251",
+      "old_span": [
+        879,
+        880
+      ],
+      "new_span": [
+        878,
+        879
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_880_",
+        "after": "__archogen_sweep_879_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L880.iter.253",
+      "new_id": "L879.iter.252",
+      "old_span": [
+        879,
+        880
+      ],
+      "new_span": [
+        878,
+        879
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_880_",
+        "after": "__archogen_sweep_879_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L880.guard.254",
+      "new_id": "L879.guard.253",
+      "old_span": [
+        879,
+        902
+      ],
+      "new_span": [
+        878,
+        901
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_880_",
+        "after": "__archogen_sweep_879_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L880.guard.255",
+      "new_id": "L879.guard.254",
+      "old_span": [
+        879,
+        902
+      ],
+      "new_span": [
+        878,
+        901
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_880_",
+        "after": "__archogen_sweep_879_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L880.guard.256",
+      "new_id": "L879.guard.255",
+      "old_span": [
+        879,
+        902
+      ],
+      "new_span": [
+        878,
+        901
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_880_",
+        "after": "__archogen_sweep_879_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L886.dir.257",
+      "new_id": "L885.dir.256",
+      "old_span": [
+        885,
+        886
+      ],
+      "new_span": [
+        884,
+        885
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L889.stmt.258",
+      "new_id": "L888.stmt.257",
+      "old_span": [
+        888,
+        889
+      ],
+      "new_span": [
+        887,
+        888
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L891.eq.259",
+      "new_id": "L890.eq.258",
+      "old_span": [
+        890,
+        891
+      ],
+      "new_span": [
+        889,
+        890
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L891.dir.260",
+      "new_id": "L890.dir.259",
+      "old_span": [
+        890,
+        891
+      ],
+      "new_span": [
+        889,
+        890
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L893.int.261",
+      "new_id": "L892.int.260",
+      "old_span": [
+        892,
+        893
+      ],
+      "new_span": [
+        891,
+        892
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L893.int.262",
+      "new_id": "L892.int.261",
+      "old_span": [
+        892,
+        893
+      ],
+      "new_span": [
+        891,
+        892
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L897.cmp.263",
+      "new_id": "L896.cmp.262",
+      "old_span": [
+        896,
+        897
+      ],
+      "new_span": [
+        895,
+        896
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L898.eq.264",
+      "new_id": "L897.eq.263",
+      "old_span": [
+        897,
+        898
+      ],
+      "new_span": [
+        896,
+        897
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L898.logic.265",
+      "new_id": "L897.logic.264",
+      "old_span": [
+        897,
+        898
+      ],
+      "new_span": [
+        896,
+        897
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L898.logic.266",
+      "new_id": "L897.logic.265",
+      "old_span": [
+        897,
+        898
+      ],
+      "new_span": [
+        896,
+        897
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L900.int.267",
+      "new_id": "L899.int.266",
+      "old_span": [
+        899,
+        900
+      ],
+      "new_span": [
+        898,
+        899
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L900.int.268",
+      "new_id": "L899.int.267",
+      "old_span": [
+        899,
+        900
+      ],
+      "new_span": [
+        898,
+        899
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L900.stmt.269",
+      "new_id": "L899.stmt.268",
+      "old_span": [
+        899,
+        900
+      ],
+      "new_span": [
+        898,
+        899
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L902.eq.270",
+      "new_id": "L901.eq.269",
+      "old_span": [
+        901,
+        902
+      ],
+      "new_span": [
+        900,
+        901
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L902.cond.271",
+      "new_id": "L901.cond.270",
+      "old_span": [
+        901,
+        902
+      ],
+      "new_span": [
+        900,
+        901
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L902.cond.272",
+      "new_id": "L901.cond.271",
+      "old_span": [
+        901,
+        902
+      ],
+      "new_span": [
+        900,
+        901
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L905.iter.273",
+      "new_id": "L904.iter.272",
+      "old_span": [
+        904,
+        905
+      ],
+      "new_span": [
+        903,
+        904
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_905_",
+        "after": "__archogen_sweep_904_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L905.iter.274",
+      "new_id": "L904.iter.273",
+      "old_span": [
+        904,
+        905
+      ],
+      "new_span": [
+        903,
+        904
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_905_",
+        "after": "__archogen_sweep_904_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L905.iter.275",
+      "new_id": "L904.iter.274",
+      "old_span": [
+        904,
+        905
+      ],
+      "new_span": [
+        903,
+        904
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_905_",
+        "after": "__archogen_sweep_904_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L906.stmt.276",
+      "new_id": "L905.stmt.275",
+      "old_span": [
+        905,
+        906
+      ],
+      "new_span": [
+        904,
+        905
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L928.eq.277",
+      "new_id": "L927.eq.276",
+      "old_span": [
+        927,
+        928
+      ],
+      "new_span": [
+        926,
+        927
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L928.dir.278",
+      "new_id": "L927.dir.277",
+      "old_span": [
+        927,
+        928
+      ],
+      "new_span": [
+        926,
+        927
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L930.int.279",
+      "new_id": "L929.int.278",
+      "old_span": [
+        929,
+        930
+      ],
+      "new_span": [
+        928,
+        929
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L930.int.280",
+      "new_id": "L929.int.279",
+      "old_span": [
+        929,
+        930
+      ],
+      "new_span": [
+        928,
+        929
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L932.stmt.281",
+      "new_id": "L931.stmt.280",
+      "old_span": [
+        931,
+        932
+      ],
+      "new_span": [
+        930,
+        931
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L935.eq.282",
+      "new_id": "L934.eq.281",
+      "old_span": [
+        934,
+        935
+      ],
+      "new_span": [
+        933,
+        934
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L940.iter.283",
+      "new_id": "L939.iter.282",
+      "old_span": [
+        939,
+        940
+      ],
+      "new_span": [
+        938,
+        939
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_940_",
+        "after": "__archogen_sweep_939_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L940.iter.284",
+      "new_id": "L939.iter.283",
+      "old_span": [
+        939,
+        940
+      ],
+      "new_span": [
+        938,
+        939
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_940_",
+        "after": "__archogen_sweep_939_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L940.iter.285",
+      "new_id": "L939.iter.284",
+      "old_span": [
+        939,
+        940
+      ],
+      "new_span": [
+        938,
+        939
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_940_",
+        "after": "__archogen_sweep_939_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L940.guard.286",
+      "new_id": "L939.guard.285",
+      "old_span": [
+        939,
+        941
+      ],
+      "new_span": [
+        938,
+        940
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_940_",
+        "after": "__archogen_sweep_939_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L940.guard.287",
+      "new_id": "L939.guard.286",
+      "old_span": [
+        939,
+        941
+      ],
+      "new_span": [
+        938,
+        940
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_940_",
+        "after": "__archogen_sweep_939_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L940.guard.288",
+      "new_id": "L939.guard.287",
+      "old_span": [
+        939,
+        941
+      ],
+      "new_span": [
+        938,
+        940
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_940_",
+        "after": "__archogen_sweep_939_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L941.eq.289",
+      "new_id": "L940.eq.288",
+      "old_span": [
+        940,
+        941
+      ],
+      "new_span": [
+        939,
+        940
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L941.cond.290",
+      "new_id": "L940.cond.289",
+      "old_span": [
+        940,
+        941
+      ],
+      "new_span": [
+        939,
+        940
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L941.cond.291",
+      "new_id": "L940.cond.290",
+      "old_span": [
+        940,
+        941
+      ],
+      "new_span": [
+        939,
+        940
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L942.stmt.292",
+      "new_id": "L941.stmt.291",
+      "old_span": [
+        941,
+        942
+      ],
+      "new_span": [
+        940,
+        941
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L950.stmt.293",
+      "new_id": "L949.stmt.292",
+      "old_span": [
+        949,
+        950
+      ],
+      "new_span": [
+        948,
+        949
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L951.stmt.294",
+      "new_id": "L950.stmt.293",
+      "old_span": [
+        950,
+        951
+      ],
+      "new_span": [
+        949,
+        950
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L956.cond.295",
+      "new_id": "L955.cond.294",
+      "old_span": [
+        955,
+        956
+      ],
+      "new_span": [
+        954,
+        955
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L956.cond.296",
+      "new_id": "L955.cond.295",
+      "old_span": [
+        955,
+        956
+      ],
+      "new_span": [
+        954,
+        955
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L956.not.297",
+      "new_id": "L955.not.296",
+      "old_span": [
+        955,
+        956
+      ],
+      "new_span": [
+        954,
+        955
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L963.eq.298",
+      "new_id": "L962.eq.297",
+      "old_span": [
+        962,
+        963
+      ],
+      "new_span": [
+        961,
+        962
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L966.int.299",
+      "new_id": "L965.int.298",
+      "old_span": [
+        965,
+        966
+      ],
+      "new_span": [
+        964,
+        965
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L966.int.300",
+      "new_id": "L965.int.299",
+      "old_span": [
+        965,
+        966
+      ],
+      "new_span": [
+        964,
+        965
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L969.int.301",
+      "new_id": "L968.int.300",
+      "old_span": [
+        968,
+        969
+      ],
+      "new_span": [
+        967,
+        968
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L969.int.302",
+      "new_id": "L968.int.301",
+      "old_span": [
+        968,
+        969
+      ],
+      "new_span": [
+        967,
+        968
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L976.cmp.303",
+      "new_id": "L975.cmp.302",
+      "old_span": [
+        975,
+        976
+      ],
+      "new_span": [
+        974,
+        975
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L977.logic.304",
+      "new_id": "L976.logic.303",
+      "old_span": [
+        976,
+        977
+      ],
+      "new_span": [
+        975,
+        976
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L977.alt.305",
+      "new_id": "L976.alt.304",
+      "old_span": [
+        976,
+        977
+      ],
+      "new_span": [
+        975,
+        976
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L977.alt.306",
+      "new_id": "L976.alt.305",
+      "old_span": [
+        976,
+        977
+      ],
+      "new_span": [
+        975,
+        976
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L978.logic.307",
+      "new_id": "L977.logic.306",
+      "old_span": [
+        977,
+        978
+      ],
+      "new_span": [
+        976,
+        977
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L979.int.308",
+      "new_id": "L978.int.307",
+      "old_span": [
+        978,
+        979
+      ],
+      "new_span": [
+        977,
+        978
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L979.int.309",
+      "new_id": "L978.int.308",
+      "old_span": [
+        978,
+        979
+      ],
+      "new_span": [
+        977,
+        978
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L980.alt.310",
+      "new_id": "L979.alt.309",
+      "old_span": [
+        979,
+        980
+      ],
+      "new_span": [
+        978,
+        979
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L980.alt.311",
+      "new_id": "L979.alt.310",
+      "old_span": [
+        979,
+        980
+      ],
+      "new_span": [
+        978,
+        979
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L984.cmp.312",
+      "new_id": "L983.cmp.311",
+      "old_span": [
+        983,
+        984
+      ],
+      "new_span": [
+        982,
+        983
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L984.cond.313",
+      "new_id": "L983.cond.312",
+      "old_span": [
+        983,
+        984
+      ],
+      "new_span": [
+        982,
+        983
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L990.int.314",
+      "new_id": "L989.int.313",
+      "old_span": [
+        989,
+        990
+      ],
+      "new_span": [
+        988,
+        989
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L990.int.315",
+      "new_id": "L989.int.314",
+      "old_span": [
+        989,
+        990
+      ],
+      "new_span": [
+        988,
+        989
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L992.stmt.316",
+      "new_id": "L991.stmt.315",
+      "old_span": [
+        991,
+        992
+      ],
+      "new_span": [
+        990,
+        991
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L996.cmp.317",
+      "new_id": "L995.cmp.316",
+      "old_span": [
+        995,
+        996
+      ],
+      "new_span": [
+        994,
+        995
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L996.cond.318",
+      "new_id": "L995.cond.317",
+      "old_span": [
+        995,
+        996
+      ],
+      "new_span": [
+        994,
+        995
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L999.stmt.319",
+      "new_id": "L998.stmt.318",
+      "old_span": [
+        998,
+        999
+      ],
+      "new_span": [
+        997,
+        998
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1000.int.320",
+      "new_id": "L999.int.319",
+      "old_span": [
+        999,
+        1000
+      ],
+      "new_span": [
+        998,
+        999
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1000.int.321",
+      "new_id": "L999.int.320",
+      "old_span": [
+        999,
+        1000
+      ],
+      "new_span": [
+        998,
+        999
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1000.stmt.322",
+      "new_id": "L999.stmt.321",
+      "old_span": [
+        999,
+        1000
+      ],
+      "new_span": [
+        998,
+        999
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1003.stmt.323",
+      "new_id": "L1002.stmt.322",
+      "old_span": [
+        1002,
+        1003
+      ],
+      "new_span": [
+        1001,
+        1002
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1004.stmt.324",
+      "new_id": "L1003.stmt.323",
+      "old_span": [
+        1003,
+        1004
+      ],
+      "new_span": [
+        1002,
+        1003
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1007.stmt.325",
+      "new_id": "L1006.stmt.324",
+      "old_span": [
+        1006,
+        1007
+      ],
+      "new_span": [
+        1005,
+        1006
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1008.int.326",
+      "new_id": "L1007.int.325",
+      "old_span": [
+        1007,
+        1008
+      ],
+      "new_span": [
+        1006,
+        1007
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1008.int.327",
+      "new_id": "L1007.int.326",
+      "old_span": [
+        1007,
+        1008
+      ],
+      "new_span": [
+        1006,
+        1007
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1008.stmt.328",
+      "new_id": "L1007.stmt.327",
+      "old_span": [
+        1007,
+        1008
+      ],
+      "new_span": [
+        1006,
+        1007
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1011.stmt.329",
+      "new_id": "L1010.stmt.328",
+      "old_span": [
+        1010,
+        1011
+      ],
+      "new_span": [
+        1009,
+        1010
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1012.stmt.330",
+      "new_id": "L1011.stmt.329",
+      "old_span": [
+        1011,
+        1012
+      ],
+      "new_span": [
+        1010,
+        1011
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1015.stmt.331",
+      "new_id": "L1014.stmt.330",
+      "old_span": [
+        1014,
+        1015
+      ],
+      "new_span": [
+        1013,
+        1014
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1016.int.332",
+      "new_id": "L1015.int.331",
+      "old_span": [
+        1015,
+        1016
+      ],
+      "new_span": [
+        1014,
+        1015
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1016.int.333",
+      "new_id": "L1015.int.332",
+      "old_span": [
+        1015,
+        1016
+      ],
+      "new_span": [
+        1014,
+        1015
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1016.stmt.334",
+      "new_id": "L1015.stmt.333",
+      "old_span": [
+        1015,
+        1016
+      ],
+      "new_span": [
+        1014,
+        1015
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1031.eq.335",
+      "new_id": "L1030.eq.334",
+      "old_span": [
+        1030,
+        1031
+      ],
+      "new_span": [
+        1029,
+        1030
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1034.logic.336",
+      "new_id": "L1033.logic.335",
+      "old_span": [
+        1033,
+        1034
+      ],
+      "new_span": [
+        1032,
+        1033
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1040.logic.337",
+      "new_id": "L1039.logic.336",
+      "old_span": [
+        1039,
+        1040
+      ],
+      "new_span": [
+        1038,
+        1039
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1041.bool.338",
+      "new_id": "L1040.bool.337",
+      "old_span": [
+        1040,
+        1041
+      ],
+      "new_span": [
+        1039,
+        1040
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1044.eq.339",
+      "new_id": "L1043.eq.338",
+      "old_span": [
+        1043,
+        1044
+      ],
+      "new_span": [
+        1042,
+        1043
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1044.eq.340",
+      "new_id": "L1043.eq.339",
+      "old_span": [
+        1043,
+        1044
+      ],
+      "new_span": [
+        1042,
+        1043
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1044.logic.341",
+      "new_id": "L1043.logic.340",
+      "old_span": [
+        1043,
+        1044
+      ],
+      "new_span": [
+        1042,
+        1043
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1046.logic.342",
+      "new_id": "L1045.logic.341",
+      "old_span": [
+        1045,
+        1046
+      ],
+      "new_span": [
+        1044,
+        1045
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1059.cmp.343",
+      "new_id": "L1058.cmp.342",
+      "old_span": [
+        1058,
+        1059
+      ],
+      "new_span": [
+        1057,
+        1058
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1059.int.344",
+      "new_id": "L1058.int.343",
+      "old_span": [
+        1058,
+        1059
+      ],
+      "new_span": [
+        1057,
+        1058
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1059.int.345",
+      "new_id": "L1058.int.344",
+      "old_span": [
+        1058,
+        1059
+      ],
+      "new_span": [
+        1057,
+        1058
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1064.iter.346",
+      "new_id": "L1063.iter.345",
+      "old_span": [
+        1063,
+        1064
+      ],
+      "new_span": [
+        1062,
+        1063
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1064_",
+        "after": "__archogen_sweep_1063_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1064.iter.347",
+      "new_id": "L1063.iter.346",
+      "old_span": [
+        1063,
+        1064
+      ],
+      "new_span": [
+        1062,
+        1063
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1064_",
+        "after": "__archogen_sweep_1063_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1064.iter.348",
+      "new_id": "L1063.iter.347",
+      "old_span": [
+        1063,
+        1064
+      ],
+      "new_span": [
+        1062,
+        1063
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1064_",
+        "after": "__archogen_sweep_1063_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1064.guard.349",
+      "new_id": "L1063.guard.348",
+      "old_span": [
+        1063,
+        1065
+      ],
+      "new_span": [
+        1062,
+        1064
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1064_",
+        "after": "__archogen_sweep_1063_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1064.guard.350",
+      "new_id": "L1063.guard.349",
+      "old_span": [
+        1063,
+        1065
+      ],
+      "new_span": [
+        1062,
+        1064
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1064_",
+        "after": "__archogen_sweep_1063_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1064.guard.351",
+      "new_id": "L1063.guard.350",
+      "old_span": [
+        1063,
+        1065
+      ],
+      "new_span": [
+        1062,
+        1064
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1064_",
+        "after": "__archogen_sweep_1063_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1065.eq.352",
+      "new_id": "L1064.eq.351",
+      "old_span": [
+        1064,
+        1065
+      ],
+      "new_span": [
+        1063,
+        1064
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1065.cond.353",
+      "new_id": "L1064.cond.352",
+      "old_span": [
+        1064,
+        1065
+      ],
+      "new_span": [
+        1063,
+        1064
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1065.cond.354",
+      "new_id": "L1064.cond.353",
+      "old_span": [
+        1064,
+        1065
+      ],
+      "new_span": [
+        1063,
+        1064
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1065.bool.355",
+      "new_id": "L1064.bool.354",
+      "old_span": [
+        1064,
+        1065
+      ],
+      "new_span": [
+        1063,
+        1064
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1066.stmt.356",
+      "new_id": "L1065.stmt.355",
+      "old_span": [
+        1065,
+        1066
+      ],
+      "new_span": [
+        1064,
+        1065
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1071.eq.357",
+      "new_id": "L1070.eq.356",
+      "old_span": [
+        1070,
+        1071
+      ],
+      "new_span": [
+        1069,
+        1070
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1073.int.358",
+      "new_id": "L1072.int.357",
+      "old_span": [
+        1072,
+        1073
+      ],
+      "new_span": [
+        1071,
+        1072
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1073.int.359",
+      "new_id": "L1072.int.358",
+      "old_span": [
+        1072,
+        1073
+      ],
+      "new_span": [
+        1071,
+        1072
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1078.eq.360",
+      "new_id": "L1077.eq.359",
+      "old_span": [
+        1077,
+        1078
+      ],
+      "new_span": [
+        1076,
+        1077
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1079.int.361",
+      "new_id": "L1078.int.360",
+      "old_span": [
+        1078,
+        1079
+      ],
+      "new_span": [
+        1077,
+        1078
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1079.int.362",
+      "new_id": "L1078.int.361",
+      "old_span": [
+        1078,
+        1079
+      ],
+      "new_span": [
+        1077,
+        1078
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1087.eq.363",
+      "new_id": "L1086.eq.362",
+      "old_span": [
+        1086,
+        1087
+      ],
+      "new_span": [
+        1085,
+        1086
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1089.stmt.364",
+      "new_id": "L1088.stmt.363",
+      "old_span": [
+        1088,
+        1089
+      ],
+      "new_span": [
+        1087,
+        1088
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1117.stmt.365",
+      "new_id": "L1116.stmt.364",
+      "old_span": [
+        1116,
+        1117
+      ],
+      "new_span": [
+        1115,
+        1116
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1118.iter.366",
+      "new_id": "L1117.iter.365",
+      "old_span": [
+        1117,
+        1118
+      ],
+      "new_span": [
+        1116,
+        1117
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1118_",
+        "after": "__archogen_sweep_1117_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1118.iter.367",
+      "new_id": "L1117.iter.366",
+      "old_span": [
+        1117,
+        1118
+      ],
+      "new_span": [
+        1116,
+        1117
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1118_",
+        "after": "__archogen_sweep_1117_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1118.iter.368",
+      "new_id": "L1117.iter.367",
+      "old_span": [
+        1117,
+        1118
+      ],
+      "new_span": [
+        1116,
+        1117
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1118_",
+        "after": "__archogen_sweep_1117_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1119.stmt.369",
+      "new_id": "L1118.stmt.368",
+      "old_span": [
+        1118,
+        1119
+      ],
+      "new_span": [
+        1117,
+        1118
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1142.cond.370",
+      "new_id": "L1141.cond.369",
+      "old_span": [
+        1141,
+        1142
+      ],
+      "new_span": [
+        1140,
+        1141
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1142.cond.371",
+      "new_id": "L1141.cond.370",
+      "old_span": [
+        1141,
+        1142
+      ],
+      "new_span": [
+        1140,
+        1141
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1142.not.372",
+      "new_id": "L1141.not.371",
+      "old_span": [
+        1141,
+        1142
+      ],
+      "new_span": [
+        1140,
+        1141
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1143.stmt.373",
+      "new_id": "L1142.stmt.372",
+      "old_span": [
+        1142,
+        1143
+      ],
+      "new_span": [
+        1141,
+        1142
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1145.iter.374",
+      "new_id": "L1144.iter.373",
+      "old_span": [
+        1144,
+        1145
+      ],
+      "new_span": [
+        1143,
+        1144
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1145_",
+        "after": "__archogen_sweep_1144_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1145.iter.375",
+      "new_id": "L1144.iter.374",
+      "old_span": [
+        1144,
+        1145
+      ],
+      "new_span": [
+        1143,
+        1144
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1145_",
+        "after": "__archogen_sweep_1144_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1145.iter.376",
+      "new_id": "L1144.iter.375",
+      "old_span": [
+        1144,
+        1145
+      ],
+      "new_span": [
+        1143,
+        1144
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1145_",
+        "after": "__archogen_sweep_1144_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1145.guard.377",
+      "new_id": "L1144.guard.376",
+      "old_span": [
+        1144,
+        1148
+      ],
+      "new_span": [
+        1143,
+        1147
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1145_",
+        "after": "__archogen_sweep_1144_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1145.guard.378",
+      "new_id": "L1144.guard.377",
+      "old_span": [
+        1144,
+        1148
+      ],
+      "new_span": [
+        1143,
+        1147
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1145_",
+        "after": "__archogen_sweep_1144_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1145.guard.379",
+      "new_id": "L1144.guard.378",
+      "old_span": [
+        1144,
+        1148
+      ],
+      "new_span": [
+        1143,
+        1147
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1145_",
+        "after": "__archogen_sweep_1144_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1147.eq.380",
+      "new_id": "L1146.eq.379",
+      "old_span": [
+        1146,
+        1147
+      ],
+      "new_span": [
+        1145,
+        1146
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1147.eq.381",
+      "new_id": "L1146.eq.380",
+      "old_span": [
+        1146,
+        1147
+      ],
+      "new_span": [
+        1145,
+        1146
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1147.eq.382",
+      "new_id": "L1146.eq.381",
+      "old_span": [
+        1146,
+        1147
+      ],
+      "new_span": [
+        1145,
+        1146
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1147.eq.383",
+      "new_id": "L1146.eq.382",
+      "old_span": [
+        1146,
+        1147
+      ],
+      "new_span": [
+        1145,
+        1146
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1147.logic.384",
+      "new_id": "L1146.logic.383",
+      "old_span": [
+        1146,
+        1147
+      ],
+      "new_span": [
+        1145,
+        1146
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1147.logic.385",
+      "new_id": "L1146.logic.384",
+      "old_span": [
+        1146,
+        1147
+      ],
+      "new_span": [
+        1145,
+        1146
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1147.logic.386",
+      "new_id": "L1146.logic.385",
+      "old_span": [
+        1146,
+        1147
+      ],
+      "new_span": [
+        1145,
+        1146
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1147.stmt.387",
+      "new_id": "L1146.stmt.386",
+      "old_span": [
+        1146,
+        1147
+      ],
+      "new_span": [
+        1145,
+        1146
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1148.eq.388",
+      "new_id": "L1147.eq.387",
+      "old_span": [
+        1147,
+        1148
+      ],
+      "new_span": [
+        1146,
+        1147
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1148.logic.389",
+      "new_id": "L1147.logic.388",
+      "old_span": [
+        1147,
+        1148
+      ],
+      "new_span": [
+        1146,
+        1147
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1148.logic.390",
+      "new_id": "L1147.logic.389",
+      "old_span": [
+        1147,
+        1148
+      ],
+      "new_span": [
+        1146,
+        1147
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1148.logic.391",
+      "new_id": "L1147.logic.390",
+      "old_span": [
+        1147,
+        1148
+      ],
+      "new_span": [
+        1146,
+        1147
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1148.logic.392",
+      "new_id": "L1147.logic.391",
+      "old_span": [
+        1147,
+        1148
+      ],
+      "new_span": [
+        1146,
+        1147
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1148.logic.393",
+      "new_id": "L1147.logic.392",
+      "old_span": [
+        1147,
+        1148
+      ],
+      "new_span": [
+        1146,
+        1147
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1148.cond.394",
+      "new_id": "L1147.cond.393",
+      "old_span": [
+        1147,
+        1148
+      ],
+      "new_span": [
+        1146,
+        1147
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1148.cond.395",
+      "new_id": "L1147.cond.394",
+      "old_span": [
+        1147,
+        1148
+      ],
+      "new_span": [
+        1146,
+        1147
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1148.not.396",
+      "new_id": "L1147.not.395",
+      "old_span": [
+        1147,
+        1148
+      ],
+      "new_span": [
+        1146,
+        1147
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1149.stmt.397",
+      "new_id": "L1148.stmt.396",
+      "old_span": [
+        1148,
+        1149
+      ],
+      "new_span": [
+        1147,
+        1148
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1164.eq.398",
+      "new_id": "L1163.eq.397",
+      "old_span": [
+        1163,
+        1164
+      ],
+      "new_span": [
+        1162,
+        1163
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1169.iter.399",
+      "new_id": "L1168.iter.398",
+      "old_span": [
+        1168,
+        1169
+      ],
+      "new_span": [
+        1167,
+        1168
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1169_",
+        "after": "__archogen_sweep_1168_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1169.iter.400",
+      "new_id": "L1168.iter.399",
+      "old_span": [
+        1168,
+        1169
+      ],
+      "new_span": [
+        1167,
+        1168
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1169_",
+        "after": "__archogen_sweep_1168_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1169.iter.401",
+      "new_id": "L1168.iter.400",
+      "old_span": [
+        1168,
+        1169
+      ],
+      "new_span": [
+        1167,
+        1168
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1169_",
+        "after": "__archogen_sweep_1168_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1169.guard.402",
+      "new_id": "L1168.guard.401",
+      "old_span": [
+        1168,
+        1190
+      ],
+      "new_span": [
+        1167,
+        1189
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1169_",
+        "after": "__archogen_sweep_1168_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1169.guard.403",
+      "new_id": "L1168.guard.402",
+      "old_span": [
+        1168,
+        1190
+      ],
+      "new_span": [
+        1167,
+        1189
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1169_",
+        "after": "__archogen_sweep_1168_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1169.guard.404",
+      "new_id": "L1168.guard.403",
+      "old_span": [
+        1168,
+        1190
+      ],
+      "new_span": [
+        1167,
+        1189
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1169_",
+        "after": "__archogen_sweep_1168_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1171.eq.405",
+      "new_id": "L1170.eq.404",
+      "old_span": [
+        1170,
+        1171
+      ],
+      "new_span": [
+        1169,
+        1170
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1172.eq.406",
+      "new_id": "L1171.eq.405",
+      "old_span": [
+        1171,
+        1172
+      ],
+      "new_span": [
+        1170,
+        1171
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1172.logic.407",
+      "new_id": "L1171.logic.406",
+      "old_span": [
+        1171,
+        1172
+      ],
+      "new_span": [
+        1170,
+        1171
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1173.eq.408",
+      "new_id": "L1172.eq.407",
+      "old_span": [
+        1172,
+        1173
+      ],
+      "new_span": [
+        1171,
+        1172
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1173.logic.409",
+      "new_id": "L1172.logic.408",
+      "old_span": [
+        1172,
+        1173
+      ],
+      "new_span": [
+        1171,
+        1172
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1174.eq.410",
+      "new_id": "L1173.eq.409",
+      "old_span": [
+        1173,
+        1174
+      ],
+      "new_span": [
+        1172,
+        1173
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1174.logic.411",
+      "new_id": "L1173.logic.410",
+      "old_span": [
+        1173,
+        1174
+      ],
+      "new_span": [
+        1172,
+        1173
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1184.eq.412",
+      "new_id": "L1183.eq.411",
+      "old_span": [
+        1183,
+        1184
+      ],
+      "new_span": [
+        1182,
+        1183
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1184.eq.413",
+      "new_id": "L1183.eq.412",
+      "old_span": [
+        1183,
+        1184
+      ],
+      "new_span": [
+        1182,
+        1183
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1184.eq.414",
+      "new_id": "L1183.eq.413",
+      "old_span": [
+        1183,
+        1184
+      ],
+      "new_span": [
+        1182,
+        1183
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1184.logic.415",
+      "new_id": "L1183.logic.414",
+      "old_span": [
+        1183,
+        1184
+      ],
+      "new_span": [
+        1182,
+        1183
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1184.logic.416",
+      "new_id": "L1183.logic.415",
+      "old_span": [
+        1183,
+        1184
+      ],
+      "new_span": [
+        1182,
+        1183
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1188.stmt.417",
+      "new_id": "L1187.stmt.416",
+      "old_span": [
+        1187,
+        1188
+      ],
+      "new_span": [
+        1186,
+        1187
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1190.cond.418",
+      "new_id": "L1189.cond.417",
+      "old_span": [
+        1189,
+        1190
+      ],
+      "new_span": [
+        1188,
+        1189
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1190.cond.419",
+      "new_id": "L1189.cond.418",
+      "old_span": [
+        1189,
+        1190
+      ],
+      "new_span": [
+        1188,
+        1189
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1210.stmt.420",
+      "new_id": "L1209.stmt.419",
+      "old_span": [
+        1209,
+        1210
+      ],
+      "new_span": [
+        1208,
+        1209
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1215.not.421",
+      "new_id": "L1214.not.420",
+      "old_span": [
+        1214,
+        1215
+      ],
+      "new_span": [
+        1213,
+        1214
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1237.stmt.422",
+      "new_id": "L1236.stmt.421",
+      "old_span": [
+        1236,
+        1237
+      ],
+      "new_span": [
+        1235,
+        1236
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1238.stmt.423",
+      "new_id": "L1237.stmt.422",
+      "old_span": [
+        1237,
+        1238
+      ],
+      "new_span": [
+        1236,
+        1237
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1271.int.424",
+      "new_id": "L1270.int.423",
+      "old_span": [
+        1270,
+        1271
+      ],
+      "new_span": [
+        1269,
+        1270
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1271.int.425",
+      "new_id": "L1270.int.424",
+      "old_span": [
+        1270,
+        1271
+      ],
+      "new_span": [
+        1269,
+        1270
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1271.stmt.426",
+      "new_id": "L1270.stmt.425",
+      "old_span": [
+        1270,
+        1271
+      ],
+      "new_span": [
+        1269,
+        1270
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1277.cond.427",
+      "new_id": "L1276.cond.426",
+      "old_span": [
+        1276,
+        1277
+      ],
+      "new_span": [
+        1275,
+        1276
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1277.cond.428",
+      "new_id": "L1276.cond.427",
+      "old_span": [
+        1276,
+        1277
+      ],
+      "new_span": [
+        1275,
+        1276
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1278.int.429",
+      "new_id": "L1277.int.428",
+      "old_span": [
+        1277,
+        1278
+      ],
+      "new_span": [
+        1276,
+        1277
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1278.int.430",
+      "new_id": "L1277.int.429",
+      "old_span": [
+        1277,
+        1278
+      ],
+      "new_span": [
+        1276,
+        1277
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1278.stmt.431",
+      "new_id": "L1277.stmt.430",
+      "old_span": [
+        1277,
+        1278
+      ],
+      "new_span": [
+        1276,
+        1277
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1280.stmt.432",
+      "new_id": "L1279.stmt.431",
+      "old_span": [
+        1279,
+        1280
+      ],
+      "new_span": [
+        1278,
+        1279
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1296.iter.433",
+      "new_id": "L1295.iter.432",
+      "old_span": [
+        1295,
+        1296
+      ],
+      "new_span": [
+        1294,
+        1295
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1296_",
+        "after": "__archogen_sweep_1295_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1296.iter.434",
+      "new_id": "L1295.iter.433",
+      "old_span": [
+        1295,
+        1296
+      ],
+      "new_span": [
+        1294,
+        1295
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1296_",
+        "after": "__archogen_sweep_1295_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1296.iter.435",
+      "new_id": "L1295.iter.434",
+      "old_span": [
+        1295,
+        1296
+      ],
+      "new_span": [
+        1294,
+        1295
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1296_",
+        "after": "__archogen_sweep_1295_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1296.guard.436",
+      "new_id": "L1295.guard.435",
+      "old_span": [
+        1295,
+        1309
+      ],
+      "new_span": [
+        1294,
+        1308
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1296_",
+        "after": "__archogen_sweep_1295_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1296.guard.437",
+      "new_id": "L1295.guard.436",
+      "old_span": [
+        1295,
+        1309
+      ],
+      "new_span": [
+        1294,
+        1308
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1296_",
+        "after": "__archogen_sweep_1295_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1296.guard.438",
+      "new_id": "L1295.guard.437",
+      "old_span": [
+        1295,
+        1309
+      ],
+      "new_span": [
+        1294,
+        1308
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1296_",
+        "after": "__archogen_sweep_1295_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1296.guard.439",
+      "new_id": "L1295.guard.438",
+      "old_span": [
+        1295,
+        1343
+      ],
+      "new_span": [
+        1294,
+        1342
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1296_",
+        "after": "__archogen_sweep_1295_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1296.guard.440",
+      "new_id": "L1295.guard.439",
+      "old_span": [
+        1295,
+        1343
+      ],
+      "new_span": [
+        1294,
+        1342
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1296_",
+        "after": "__archogen_sweep_1295_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1296.guard.441",
+      "new_id": "L1295.guard.440",
+      "old_span": [
+        1295,
+        1343
+      ],
+      "new_span": [
+        1294,
+        1342
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1296_",
+        "after": "__archogen_sweep_1295_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1296.guard.442",
+      "new_id": "L1295.guard.441",
+      "old_span": [
+        1295,
+        1360
+      ],
+      "new_span": [
+        1294,
+        1359
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1296_",
+        "after": "__archogen_sweep_1295_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1296.guard.443",
+      "new_id": "L1295.guard.442",
+      "old_span": [
+        1295,
+        1360
+      ],
+      "new_span": [
+        1294,
+        1359
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1296_",
+        "after": "__archogen_sweep_1295_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1296.guard.444",
+      "new_id": "L1295.guard.443",
+      "old_span": [
+        1295,
+        1360
+      ],
+      "new_span": [
+        1294,
+        1359
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1296_",
+        "after": "__archogen_sweep_1295_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1301.iter.445",
+      "new_id": "L1300.iter.444",
+      "old_span": [
+        1300,
+        1301
+      ],
+      "new_span": [
+        1299,
+        1300
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1301_",
+        "after": "__archogen_sweep_1300_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1301.iter.446",
+      "new_id": "L1300.iter.445",
+      "old_span": [
+        1300,
+        1301
+      ],
+      "new_span": [
+        1299,
+        1300
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1301_",
+        "after": "__archogen_sweep_1300_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1301.iter.447",
+      "new_id": "L1300.iter.446",
+      "old_span": [
+        1300,
+        1301
+      ],
+      "new_span": [
+        1299,
+        1300
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1301_",
+        "after": "__archogen_sweep_1300_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1304.eq.448",
+      "new_id": "L1303.eq.447",
+      "old_span": [
+        1303,
+        1304
+      ],
+      "new_span": [
+        1302,
+        1303
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1306.stmt.449",
+      "new_id": "L1305.stmt.448",
+      "old_span": [
+        1305,
+        1306
+      ],
+      "new_span": [
+        1304,
+        1305
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1309.cond.450",
+      "new_id": "L1308.cond.449",
+      "old_span": [
+        1308,
+        1309
+      ],
+      "new_span": [
+        1307,
+        1308
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1309.cond.451",
+      "new_id": "L1308.cond.450",
+      "old_span": [
+        1308,
+        1309
+      ],
+      "new_span": [
+        1307,
+        1308
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1310.stmt.452",
+      "new_id": "L1309.stmt.451",
+      "old_span": [
+        1309,
+        1310
+      ],
+      "new_span": [
+        1308,
+        1309
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1312.iter.453",
+      "new_id": "L1311.iter.452",
+      "old_span": [
+        1311,
+        1312
+      ],
+      "new_span": [
+        1310,
+        1311
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1312_",
+        "after": "__archogen_sweep_1311_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1312.iter.454",
+      "new_id": "L1311.iter.453",
+      "old_span": [
+        1311,
+        1312
+      ],
+      "new_span": [
+        1310,
+        1311
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1312_",
+        "after": "__archogen_sweep_1311_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1312.iter.455",
+      "new_id": "L1311.iter.454",
+      "old_span": [
+        1311,
+        1312
+      ],
+      "new_span": [
+        1310,
+        1311
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1312_",
+        "after": "__archogen_sweep_1311_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1313.iter.456",
+      "new_id": "L1312.iter.455",
+      "old_span": [
+        1312,
+        1313
+      ],
+      "new_span": [
+        1311,
+        1312
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1313_",
+        "after": "__archogen_sweep_1312_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1313.iter.457",
+      "new_id": "L1312.iter.456",
+      "old_span": [
+        1312,
+        1313
+      ],
+      "new_span": [
+        1311,
+        1312
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1313_",
+        "after": "__archogen_sweep_1312_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1313.iter.458",
+      "new_id": "L1312.iter.457",
+      "old_span": [
+        1312,
+        1313
+      ],
+      "new_span": [
+        1311,
+        1312
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1313_",
+        "after": "__archogen_sweep_1312_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1313.guard.459",
+      "new_id": "L1312.guard.458",
+      "old_span": [
+        1312,
+        1314
+      ],
+      "new_span": [
+        1311,
+        1313
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1313_",
+        "after": "__archogen_sweep_1312_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1313.guard.460",
+      "new_id": "L1312.guard.459",
+      "old_span": [
+        1312,
+        1314
+      ],
+      "new_span": [
+        1311,
+        1313
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1313_",
+        "after": "__archogen_sweep_1312_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1313.guard.461",
+      "new_id": "L1312.guard.460",
+      "old_span": [
+        1312,
+        1314
+      ],
+      "new_span": [
+        1311,
+        1313
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1313_",
+        "after": "__archogen_sweep_1312_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1314.eq.462",
+      "new_id": "L1313.eq.461",
+      "old_span": [
+        1313,
+        1314
+      ],
+      "new_span": [
+        1312,
+        1313
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1314.eq.463",
+      "new_id": "L1313.eq.462",
+      "old_span": [
+        1313,
+        1314
+      ],
+      "new_span": [
+        1312,
+        1313
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1314.logic.464",
+      "new_id": "L1313.logic.463",
+      "old_span": [
+        1313,
+        1314
+      ],
+      "new_span": [
+        1312,
+        1313
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1314.logic.465",
+      "new_id": "L1313.logic.464",
+      "old_span": [
+        1313,
+        1314
+      ],
+      "new_span": [
+        1312,
+        1313
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1314.logic.466",
+      "new_id": "L1313.logic.465",
+      "old_span": [
+        1313,
+        1314
+      ],
+      "new_span": [
+        1312,
+        1313
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1314.cond.467",
+      "new_id": "L1313.cond.466",
+      "old_span": [
+        1313,
+        1314
+      ],
+      "new_span": [
+        1312,
+        1313
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1314.cond.468",
+      "new_id": "L1313.cond.467",
+      "old_span": [
+        1313,
+        1314
+      ],
+      "new_span": [
+        1312,
+        1313
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1336.int.469",
+      "new_id": "L1335.int.468",
+      "old_span": [
+        1335,
+        1336
+      ],
+      "new_span": [
+        1334,
+        1335
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1336.int.470",
+      "new_id": "L1335.int.469",
+      "old_span": [
+        1335,
+        1336
+      ],
+      "new_span": [
+        1334,
+        1335
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1336.stmt.471",
+      "new_id": "L1335.stmt.470",
+      "old_span": [
+        1335,
+        1336
+      ],
+      "new_span": [
+        1334,
+        1335
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1343.cond.472",
+      "new_id": "L1342.cond.471",
+      "old_span": [
+        1342,
+        1343
+      ],
+      "new_span": [
+        1341,
+        1342
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1343.cond.473",
+      "new_id": "L1342.cond.472",
+      "old_span": [
+        1342,
+        1343
+      ],
+      "new_span": [
+        1341,
+        1342
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1344.int.474",
+      "new_id": "L1343.int.473",
+      "old_span": [
+        1343,
+        1344
+      ],
+      "new_span": [
+        1342,
+        1343
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1344.int.475",
+      "new_id": "L1343.int.474",
+      "old_span": [
+        1343,
+        1344
+      ],
+      "new_span": [
+        1342,
+        1343
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1344.stmt.476",
+      "new_id": "L1343.stmt.475",
+      "old_span": [
+        1343,
+        1344
+      ],
+      "new_span": [
+        1342,
+        1343
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1346.stmt.477",
+      "new_id": "L1345.stmt.476",
+      "old_span": [
+        1345,
+        1346
+      ],
+      "new_span": [
+        1344,
+        1345
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1360.eq.478",
+      "new_id": "L1359.eq.477",
+      "old_span": [
+        1359,
+        1360
+      ],
+      "new_span": [
+        1358,
+        1359
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1360.cond.479",
+      "new_id": "L1359.cond.478",
+      "old_span": [
+        1359,
+        1360
+      ],
+      "new_span": [
+        1358,
+        1359
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1360.cond.480",
+      "new_id": "L1359.cond.479",
+      "old_span": [
+        1359,
+        1360
+      ],
+      "new_span": [
+        1358,
+        1359
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1361.stmt.481",
+      "new_id": "L1360.stmt.480",
+      "old_span": [
+        1360,
+        1361
+      ],
+      "new_span": [
+        1359,
+        1360
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1370.iter.482",
+      "new_id": "L1369.iter.481",
+      "old_span": [
+        1369,
+        1370
+      ],
+      "new_span": [
+        1368,
+        1369
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1370_",
+        "after": "__archogen_sweep_1369_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1370.iter.483",
+      "new_id": "L1369.iter.482",
+      "old_span": [
+        1369,
+        1370
+      ],
+      "new_span": [
+        1368,
+        1369
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1370_",
+        "after": "__archogen_sweep_1369_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1370.iter.484",
+      "new_id": "L1369.iter.483",
+      "old_span": [
+        1369,
+        1370
+      ],
+      "new_span": [
+        1368,
+        1369
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1370_",
+        "after": "__archogen_sweep_1369_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1370.guard.485",
+      "new_id": "L1369.guard.484",
+      "old_span": [
+        1369,
+        1371
+      ],
+      "new_span": [
+        1368,
+        1370
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1370_",
+        "after": "__archogen_sweep_1369_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1370.guard.486",
+      "new_id": "L1369.guard.485",
+      "old_span": [
+        1369,
+        1371
+      ],
+      "new_span": [
+        1368,
+        1370
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1370_",
+        "after": "__archogen_sweep_1369_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1370.guard.487",
+      "new_id": "L1369.guard.486",
+      "old_span": [
+        1369,
+        1371
+      ],
+      "new_span": [
+        1368,
+        1370
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1370_",
+        "after": "__archogen_sweep_1369_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1370.guard.488",
+      "new_id": "L1369.guard.487",
+      "old_span": [
+        1369,
+        1375
+      ],
+      "new_span": [
+        1368,
+        1374
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1370_",
+        "after": "__archogen_sweep_1369_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1370.guard.489",
+      "new_id": "L1369.guard.488",
+      "old_span": [
+        1369,
+        1375
+      ],
+      "new_span": [
+        1368,
+        1374
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1370_",
+        "after": "__archogen_sweep_1369_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1370.guard.490",
+      "new_id": "L1369.guard.489",
+      "old_span": [
+        1369,
+        1375
+      ],
+      "new_span": [
+        1368,
+        1374
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1370_",
+        "after": "__archogen_sweep_1369_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1370.guard.491",
+      "new_id": "L1369.guard.490",
+      "old_span": [
+        1369,
+        1387
+      ],
+      "new_span": [
+        1368,
+        1386
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1370_",
+        "after": "__archogen_sweep_1369_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1370.guard.492",
+      "new_id": "L1369.guard.491",
+      "old_span": [
+        1369,
+        1387
+      ],
+      "new_span": [
+        1368,
+        1386
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1370_",
+        "after": "__archogen_sweep_1369_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1370.guard.493",
+      "new_id": "L1369.guard.492",
+      "old_span": [
+        1369,
+        1387
+      ],
+      "new_span": [
+        1368,
+        1386
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1370_",
+        "after": "__archogen_sweep_1369_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1371.cond.494",
+      "new_id": "L1370.cond.493",
+      "old_span": [
+        1370,
+        1371
+      ],
+      "new_span": [
+        1369,
+        1370
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1371.cond.495",
+      "new_id": "L1370.cond.494",
+      "old_span": [
+        1370,
+        1371
+      ],
+      "new_span": [
+        1369,
+        1370
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1371.not.496",
+      "new_id": "L1370.not.495",
+      "old_span": [
+        1370,
+        1371
+      ],
+      "new_span": [
+        1369,
+        1370
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1375.cond.497",
+      "new_id": "L1374.cond.496",
+      "old_span": [
+        1374,
+        1375
+      ],
+      "new_span": [
+        1373,
+        1374
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1375.cond.498",
+      "new_id": "L1374.cond.497",
+      "old_span": [
+        1374,
+        1375
+      ],
+      "new_span": [
+        1373,
+        1374
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1379.stmt.499",
+      "new_id": "L1378.stmt.498",
+      "old_span": [
+        1378,
+        1379
+      ],
+      "new_span": [
+        1377,
+        1378
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1385.stmt.500",
+      "new_id": "L1384.stmt.499",
+      "old_span": [
+        1384,
+        1385
+      ],
+      "new_span": [
+        1383,
+        1384
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1387.eq.501",
+      "new_id": "L1386.eq.500",
+      "old_span": [
+        1386,
+        1387
+      ],
+      "new_span": [
+        1385,
+        1386
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1387.cond.502",
+      "new_id": "L1386.cond.501",
+      "old_span": [
+        1386,
+        1387
+      ],
+      "new_span": [
+        1385,
+        1386
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1387.cond.503",
+      "new_id": "L1386.cond.502",
+      "old_span": [
+        1386,
+        1387
+      ],
+      "new_span": [
+        1385,
+        1386
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1392.not.504",
+      "new_id": "L1391.not.503",
+      "old_span": [
+        1391,
+        1392
+      ],
+      "new_span": [
+        1390,
+        1391
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1400.iter.505",
+      "new_id": "L1399.iter.504",
+      "old_span": [
+        1399,
+        1400
+      ],
+      "new_span": [
+        1398,
+        1399
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1400_",
+        "after": "__archogen_sweep_1399_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1400.iter.506",
+      "new_id": "L1399.iter.505",
+      "old_span": [
+        1399,
+        1400
+      ],
+      "new_span": [
+        1398,
+        1399
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1400_",
+        "after": "__archogen_sweep_1399_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1400.iter.507",
+      "new_id": "L1399.iter.506",
+      "old_span": [
+        1399,
+        1400
+      ],
+      "new_span": [
+        1398,
+        1399
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1400_",
+        "after": "__archogen_sweep_1399_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1401.int.508",
+      "new_id": "L1400.int.507",
+      "old_span": [
+        1400,
+        1401
+      ],
+      "new_span": [
+        1399,
+        1400
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1401.int.509",
+      "new_id": "L1400.int.508",
+      "old_span": [
+        1400,
+        1401
+      ],
+      "new_span": [
+        1399,
+        1400
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1401.stmt.510",
+      "new_id": "L1400.stmt.509",
+      "old_span": [
+        1400,
+        1401
+      ],
+      "new_span": [
+        1399,
+        1400
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1425.iter.511",
+      "new_id": "L1424.iter.510",
+      "old_span": [
+        1424,
+        1425
+      ],
+      "new_span": [
+        1423,
+        1424
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1425_",
+        "after": "__archogen_sweep_1424_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1425.iter.512",
+      "new_id": "L1424.iter.511",
+      "old_span": [
+        1424,
+        1425
+      ],
+      "new_span": [
+        1423,
+        1424
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1425_",
+        "after": "__archogen_sweep_1424_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1425.iter.513",
+      "new_id": "L1424.iter.512",
+      "old_span": [
+        1424,
+        1425
+      ],
+      "new_span": [
+        1423,
+        1424
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1425_",
+        "after": "__archogen_sweep_1424_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1425.guard.514",
+      "new_id": "L1424.guard.513",
+      "old_span": [
+        1424,
+        1435
+      ],
+      "new_span": [
+        1423,
+        1434
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1425_",
+        "after": "__archogen_sweep_1424_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1425.guard.515",
+      "new_id": "L1424.guard.514",
+      "old_span": [
+        1424,
+        1435
+      ],
+      "new_span": [
+        1423,
+        1434
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1425_",
+        "after": "__archogen_sweep_1424_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1425.guard.516",
+      "new_id": "L1424.guard.515",
+      "old_span": [
+        1424,
+        1435
+      ],
+      "new_span": [
+        1423,
+        1434
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1425_",
+        "after": "__archogen_sweep_1424_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1425.guard.517",
+      "new_id": "L1424.guard.516",
+      "old_span": [
+        1424,
+        1443
+      ],
+      "new_span": [
+        1423,
+        1442
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1425_",
+        "after": "__archogen_sweep_1424_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1425.guard.518",
+      "new_id": "L1424.guard.517",
+      "old_span": [
+        1424,
+        1443
+      ],
+      "new_span": [
+        1423,
+        1442
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1425_",
+        "after": "__archogen_sweep_1424_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1425.guard.519",
+      "new_id": "L1424.guard.518",
+      "old_span": [
+        1424,
+        1443
+      ],
+      "new_span": [
+        1423,
+        1442
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1425_",
+        "after": "__archogen_sweep_1424_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1429.iter.520",
+      "new_id": "L1428.iter.519",
+      "old_span": [
+        1428,
+        1429
+      ],
+      "new_span": [
+        1427,
+        1428
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1429_",
+        "after": "__archogen_sweep_1428_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1429.iter.521",
+      "new_id": "L1428.iter.520",
+      "old_span": [
+        1428,
+        1429
+      ],
+      "new_span": [
+        1427,
+        1428
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1429_",
+        "after": "__archogen_sweep_1428_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1429.iter.522",
+      "new_id": "L1428.iter.521",
+      "old_span": [
+        1428,
+        1429
+      ],
+      "new_span": [
+        1427,
+        1428
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1429_",
+        "after": "__archogen_sweep_1428_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1430.stmt.523",
+      "new_id": "L1429.stmt.522",
+      "old_span": [
+        1429,
+        1430
+      ],
+      "new_span": [
+        1428,
+        1429
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1435.eq.524",
+      "new_id": "L1434.eq.523",
+      "old_span": [
+        1434,
+        1435
+      ],
+      "new_span": [
+        1433,
+        1434
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1435.eq.525",
+      "new_id": "L1434.eq.524",
+      "old_span": [
+        1434,
+        1435
+      ],
+      "new_span": [
+        1433,
+        1434
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1435.logic.526",
+      "new_id": "L1434.logic.525",
+      "old_span": [
+        1434,
+        1435
+      ],
+      "new_span": [
+        1433,
+        1434
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1435.logic.527",
+      "new_id": "L1434.logic.526",
+      "old_span": [
+        1434,
+        1435
+      ],
+      "new_span": [
+        1433,
+        1434
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1435.logic.528",
+      "new_id": "L1434.logic.527",
+      "old_span": [
+        1434,
+        1435
+      ],
+      "new_span": [
+        1433,
+        1434
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1435.cond.529",
+      "new_id": "L1434.cond.528",
+      "old_span": [
+        1434,
+        1435
+      ],
+      "new_span": [
+        1433,
+        1434
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1435.cond.530",
+      "new_id": "L1434.cond.529",
+      "old_span": [
+        1434,
+        1435
+      ],
+      "new_span": [
+        1433,
+        1434
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1436.iter.531",
+      "new_id": "L1435.iter.530",
+      "old_span": [
+        1435,
+        1436
+      ],
+      "new_span": [
+        1434,
+        1435
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1436_",
+        "after": "__archogen_sweep_1435_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1436.iter.532",
+      "new_id": "L1435.iter.531",
+      "old_span": [
+        1435,
+        1436
+      ],
+      "new_span": [
+        1434,
+        1435
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1436_",
+        "after": "__archogen_sweep_1435_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1436.iter.533",
+      "new_id": "L1435.iter.532",
+      "old_span": [
+        1435,
+        1436
+      ],
+      "new_span": [
+        1434,
+        1435
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1436_",
+        "after": "__archogen_sweep_1435_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1437.iter.534",
+      "new_id": "L1436.iter.533",
+      "old_span": [
+        1436,
+        1437
+      ],
+      "new_span": [
+        1435,
+        1436
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1437_",
+        "after": "__archogen_sweep_1436_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1437.iter.535",
+      "new_id": "L1436.iter.534",
+      "old_span": [
+        1436,
+        1437
+      ],
+      "new_span": [
+        1435,
+        1436
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1437_",
+        "after": "__archogen_sweep_1436_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1437.iter.536",
+      "new_id": "L1436.iter.535",
+      "old_span": [
+        1436,
+        1437
+      ],
+      "new_span": [
+        1435,
+        1436
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1437_",
+        "after": "__archogen_sweep_1436_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1438.stmt.537",
+      "new_id": "L1437.stmt.536",
+      "old_span": [
+        1437,
+        1438
+      ],
+      "new_span": [
+        1436,
+        1437
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1443.cmp.538",
+      "new_id": "L1442.cmp.537",
+      "old_span": [
+        1442,
+        1443
+      ],
+      "new_span": [
+        1441,
+        1442
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1443.cond.539",
+      "new_id": "L1442.cond.538",
+      "old_span": [
+        1442,
+        1443
+      ],
+      "new_span": [
+        1441,
+        1442
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1443.cond.540",
+      "new_id": "L1442.cond.539",
+      "old_span": [
+        1442,
+        1443
+      ],
+      "new_span": [
+        1441,
+        1442
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1444.iter.541",
+      "new_id": "L1443.iter.540",
+      "old_span": [
+        1443,
+        1444
+      ],
+      "new_span": [
+        1442,
+        1443
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1444_",
+        "after": "__archogen_sweep_1443_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1444.iter.542",
+      "new_id": "L1443.iter.541",
+      "old_span": [
+        1443,
+        1444
+      ],
+      "new_span": [
+        1442,
+        1443
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1444_",
+        "after": "__archogen_sweep_1443_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1444.iter.543",
+      "new_id": "L1443.iter.542",
+      "old_span": [
+        1443,
+        1444
+      ],
+      "new_span": [
+        1442,
+        1443
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1444_",
+        "after": "__archogen_sweep_1443_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1444.guard.544",
+      "new_id": "L1443.guard.543",
+      "old_span": [
+        1443,
+        1445
+      ],
+      "new_span": [
+        1442,
+        1444
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1444_",
+        "after": "__archogen_sweep_1443_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1444.guard.545",
+      "new_id": "L1443.guard.544",
+      "old_span": [
+        1443,
+        1445
+      ],
+      "new_span": [
+        1442,
+        1444
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1444_",
+        "after": "__archogen_sweep_1443_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1444.guard.546",
+      "new_id": "L1443.guard.545",
+      "old_span": [
+        1443,
+        1445
+      ],
+      "new_span": [
+        1442,
+        1444
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1444_",
+        "after": "__archogen_sweep_1443_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1445.eq.547",
+      "new_id": "L1444.eq.546",
+      "old_span": [
+        1444,
+        1445
+      ],
+      "new_span": [
+        1443,
+        1444
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1445.cond.548",
+      "new_id": "L1444.cond.547",
+      "old_span": [
+        1444,
+        1445
+      ],
+      "new_span": [
+        1443,
+        1444
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1445.cond.549",
+      "new_id": "L1444.cond.548",
+      "old_span": [
+        1444,
+        1445
+      ],
+      "new_span": [
+        1443,
+        1444
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1446.stmt.550",
+      "new_id": "L1445.stmt.549",
+      "old_span": [
+        1445,
+        1446
+      ],
+      "new_span": [
+        1444,
+        1445
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1448.stmt.551",
+      "new_id": "L1447.stmt.550",
+      "old_span": [
+        1447,
+        1448
+      ],
+      "new_span": [
+        1446,
+        1447
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1452.stmt.552",
+      "new_id": "L1451.stmt.551",
+      "old_span": [
+        1451,
+        1452
+      ],
+      "new_span": [
+        1450,
+        1451
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1490.stmt.553",
+      "new_id": "L1489.stmt.552",
+      "old_span": [
+        1489,
+        1490
+      ],
+      "new_span": [
+        1488,
+        1489
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1497.eq.554",
+      "new_id": "L1496.eq.553",
+      "old_span": [
+        1496,
+        1497
+      ],
+      "new_span": [
+        1495,
+        1496
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1497.eq.555",
+      "new_id": "L1496.eq.554",
+      "old_span": [
+        1496,
+        1497
+      ],
+      "new_span": [
+        1495,
+        1496
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1497.eq.556",
+      "new_id": "L1496.eq.555",
+      "old_span": [
+        1496,
+        1497
+      ],
+      "new_span": [
+        1495,
+        1496
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1497.logic.557",
+      "new_id": "L1496.logic.556",
+      "old_span": [
+        1496,
+        1497
+      ],
+      "new_span": [
+        1495,
+        1496
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1497.logic.558",
+      "new_id": "L1496.logic.557",
+      "old_span": [
+        1496,
+        1497
+      ],
+      "new_span": [
+        1495,
+        1496
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1501.cond.559",
+      "new_id": "L1500.cond.558",
+      "old_span": [
+        1500,
+        1501
+      ],
+      "new_span": [
+        1499,
+        1500
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1501.cond.560",
+      "new_id": "L1500.cond.559",
+      "old_span": [
+        1500,
+        1501
+      ],
+      "new_span": [
+        1499,
+        1500
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1501.not.561",
+      "new_id": "L1500.not.560",
+      "old_span": [
+        1500,
+        1501
+      ],
+      "new_span": [
+        1499,
+        1500
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1509.eq.562",
+      "new_id": "L1508.eq.561",
+      "old_span": [
+        1508,
+        1509
+      ],
+      "new_span": [
+        1507,
+        1508
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1521.iter.563",
+      "new_id": "L1520.iter.562",
+      "old_span": [
+        1520,
+        1521
+      ],
+      "new_span": [
+        1519,
+        1520
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1521_",
+        "after": "__archogen_sweep_1520_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1521.iter.564",
+      "new_id": "L1520.iter.563",
+      "old_span": [
+        1520,
+        1521
+      ],
+      "new_span": [
+        1519,
+        1520
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1521_",
+        "after": "__archogen_sweep_1520_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1521.iter.565",
+      "new_id": "L1520.iter.564",
+      "old_span": [
+        1520,
+        1521
+      ],
+      "new_span": [
+        1519,
+        1520
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1521_",
+        "after": "__archogen_sweep_1520_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1522.iter.566",
+      "new_id": "L1521.iter.565",
+      "old_span": [
+        1521,
+        1522
+      ],
+      "new_span": [
+        1520,
+        1521
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1522_",
+        "after": "__archogen_sweep_1521_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1522.iter.567",
+      "new_id": "L1521.iter.566",
+      "old_span": [
+        1521,
+        1522
+      ],
+      "new_span": [
+        1520,
+        1521
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1522_",
+        "after": "__archogen_sweep_1521_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1522.iter.568",
+      "new_id": "L1521.iter.567",
+      "old_span": [
+        1521,
+        1522
+      ],
+      "new_span": [
+        1520,
+        1521
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1522_",
+        "after": "__archogen_sweep_1521_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1522.guard.569",
+      "new_id": "L1521.guard.568",
+      "old_span": [
+        1521,
+        1523
+      ],
+      "new_span": [
+        1520,
+        1522
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1522_",
+        "after": "__archogen_sweep_1521_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1522.guard.570",
+      "new_id": "L1521.guard.569",
+      "old_span": [
+        1521,
+        1523
+      ],
+      "new_span": [
+        1520,
+        1522
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1522_",
+        "after": "__archogen_sweep_1521_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1522.guard.571",
+      "new_id": "L1521.guard.570",
+      "old_span": [
+        1521,
+        1523
+      ],
+      "new_span": [
+        1520,
+        1522
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1522_",
+        "after": "__archogen_sweep_1521_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1523.logic.572",
+      "new_id": "L1522.logic.571",
+      "old_span": [
+        1522,
+        1523
+      ],
+      "new_span": [
+        1521,
+        1522
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1523.logic.573",
+      "new_id": "L1522.logic.572",
+      "old_span": [
+        1522,
+        1523
+      ],
+      "new_span": [
+        1521,
+        1522
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1523.logic.574",
+      "new_id": "L1522.logic.573",
+      "old_span": [
+        1522,
+        1523
+      ],
+      "new_span": [
+        1521,
+        1522
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1523.cond.575",
+      "new_id": "L1522.cond.574",
+      "old_span": [
+        1522,
+        1523
+      ],
+      "new_span": [
+        1521,
+        1522
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1523.cond.576",
+      "new_id": "L1522.cond.575",
+      "old_span": [
+        1522,
+        1523
+      ],
+      "new_span": [
+        1521,
+        1522
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1533.stmt.577",
+      "new_id": "L1532.stmt.576",
+      "old_span": [
+        1532,
+        1533
+      ],
+      "new_span": [
+        1531,
+        1532
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1556.cond.578",
+      "new_id": "L1555.cond.577",
+      "old_span": [
+        1555,
+        1556
+      ],
+      "new_span": [
+        1554,
+        1555
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1556.cond.579",
+      "new_id": "L1555.cond.578",
+      "old_span": [
+        1555,
+        1556
+      ],
+      "new_span": [
+        1554,
+        1555
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1556.not.580",
+      "new_id": "L1555.not.579",
+      "old_span": [
+        1555,
+        1556
+      ],
+      "new_span": [
+        1554,
+        1555
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1580.iter.581",
+      "new_id": "L1579.iter.580",
+      "old_span": [
+        1579,
+        1580
+      ],
+      "new_span": [
+        1578,
+        1579
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1580_",
+        "after": "__archogen_sweep_1579_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1580.iter.582",
+      "new_id": "L1579.iter.581",
+      "old_span": [
+        1579,
+        1580
+      ],
+      "new_span": [
+        1578,
+        1579
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1580_",
+        "after": "__archogen_sweep_1579_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1580.iter.583",
+      "new_id": "L1579.iter.582",
+      "old_span": [
+        1579,
+        1580
+      ],
+      "new_span": [
+        1578,
+        1579
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1580_",
+        "after": "__archogen_sweep_1579_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1600.iter.584",
+      "new_id": "L1599.iter.583",
+      "old_span": [
+        1599,
+        1600
+      ],
+      "new_span": [
+        1598,
+        1599
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1600_",
+        "after": "__archogen_sweep_1599_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1600.iter.585",
+      "new_id": "L1599.iter.584",
+      "old_span": [
+        1599,
+        1600
+      ],
+      "new_span": [
+        1598,
+        1599
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1600_",
+        "after": "__archogen_sweep_1599_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1600.iter.586",
+      "new_id": "L1599.iter.585",
+      "old_span": [
+        1599,
+        1600
+      ],
+      "new_span": [
+        1598,
+        1599
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1600_",
+        "after": "__archogen_sweep_1599_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1620.iter.587",
+      "new_id": "L1619.iter.586",
+      "old_span": [
+        1619,
+        1620
+      ],
+      "new_span": [
+        1618,
+        1619
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1620_",
+        "after": "__archogen_sweep_1619_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1620.iter.588",
+      "new_id": "L1619.iter.587",
+      "old_span": [
+        1619,
+        1620
+      ],
+      "new_span": [
+        1618,
+        1619
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1620_",
+        "after": "__archogen_sweep_1619_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1620.iter.589",
+      "new_id": "L1619.iter.588",
+      "old_span": [
+        1619,
+        1620
+      ],
+      "new_span": [
+        1618,
+        1619
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1620_",
+        "after": "__archogen_sweep_1619_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1627.stmt.590",
+      "new_id": "L1626.stmt.589",
+      "old_span": [
+        1626,
+        1627
+      ],
+      "new_span": [
+        1625,
+        1626
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1638.stmt.591",
+      "new_id": "L1637.stmt.590",
+      "old_span": [
+        1637,
+        1638
+      ],
+      "new_span": [
+        1636,
+        1637
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1640.stmt.592",
+      "new_id": "L1639.stmt.591",
+      "old_span": [
+        1639,
+        1640
+      ],
+      "new_span": [
+        1638,
+        1639
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1641.stmt.593",
+      "new_id": "L1640.stmt.592",
+      "old_span": [
+        1640,
+        1641
+      ],
+      "new_span": [
+        1639,
+        1640
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1667.iter.594",
+      "new_id": "L1666.iter.593",
+      "old_span": [
+        1666,
+        1667
+      ],
+      "new_span": [
+        1665,
+        1666
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1667_",
+        "after": "__archogen_sweep_1666_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1667.iter.595",
+      "new_id": "L1666.iter.594",
+      "old_span": [
+        1666,
+        1667
+      ],
+      "new_span": [
+        1665,
+        1666
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1667_",
+        "after": "__archogen_sweep_1666_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1667.iter.596",
+      "new_id": "L1666.iter.595",
+      "old_span": [
+        1666,
+        1667
+      ],
+      "new_span": [
+        1665,
+        1666
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1667_",
+        "after": "__archogen_sweep_1666_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1668.iter.597",
+      "new_id": "L1667.iter.596",
+      "old_span": [
+        1667,
+        1668
+      ],
+      "new_span": [
+        1666,
+        1667
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1668_",
+        "after": "__archogen_sweep_1667_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1668.iter.598",
+      "new_id": "L1667.iter.597",
+      "old_span": [
+        1667,
+        1668
+      ],
+      "new_span": [
+        1666,
+        1667
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1668_",
+        "after": "__archogen_sweep_1667_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1668.iter.599",
+      "new_id": "L1667.iter.598",
+      "old_span": [
+        1667,
+        1668
+      ],
+      "new_span": [
+        1666,
+        1667
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1668_",
+        "after": "__archogen_sweep_1667_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1668.guard.600",
+      "new_id": "L1667.guard.599",
+      "old_span": [
+        1667,
+        1669
+      ],
+      "new_span": [
+        1666,
+        1668
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1668_",
+        "after": "__archogen_sweep_1667_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1668.guard.601",
+      "new_id": "L1667.guard.600",
+      "old_span": [
+        1667,
+        1669
+      ],
+      "new_span": [
+        1666,
+        1668
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1668_",
+        "after": "__archogen_sweep_1667_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1668.guard.602",
+      "new_id": "L1667.guard.601",
+      "old_span": [
+        1667,
+        1669
+      ],
+      "new_span": [
+        1666,
+        1668
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1668_",
+        "after": "__archogen_sweep_1667_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1669.cond.603",
+      "new_id": "L1668.cond.602",
+      "old_span": [
+        1668,
+        1669
+      ],
+      "new_span": [
+        1667,
+        1668
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1669.cond.604",
+      "new_id": "L1668.cond.603",
+      "old_span": [
+        1668,
+        1669
+      ],
+      "new_span": [
+        1667,
+        1668
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1669.not.605",
+      "new_id": "L1668.not.604",
+      "old_span": [
+        1668,
+        1669
+      ],
+      "new_span": [
+        1667,
+        1668
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1676.iter.606",
+      "new_id": "L1675.iter.605",
+      "old_span": [
+        1675,
+        1676
+      ],
+      "new_span": [
+        1674,
+        1675
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1676_",
+        "after": "__archogen_sweep_1675_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1676.iter.607",
+      "new_id": "L1675.iter.606",
+      "old_span": [
+        1675,
+        1676
+      ],
+      "new_span": [
+        1674,
+        1675
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1676_",
+        "after": "__archogen_sweep_1675_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1676.iter.608",
+      "new_id": "L1675.iter.607",
+      "old_span": [
+        1675,
+        1676
+      ],
+      "new_span": [
+        1674,
+        1675
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1676_",
+        "after": "__archogen_sweep_1675_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1676.guard.609",
+      "new_id": "L1675.guard.608",
+      "old_span": [
+        1675,
+        1691
+      ],
+      "new_span": [
+        1674,
+        1690
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1676_",
+        "after": "__archogen_sweep_1675_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1676.guard.610",
+      "new_id": "L1675.guard.609",
+      "old_span": [
+        1675,
+        1691
+      ],
+      "new_span": [
+        1674,
+        1690
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1676_",
+        "after": "__archogen_sweep_1675_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1676.guard.611",
+      "new_id": "L1675.guard.610",
+      "old_span": [
+        1675,
+        1691
+      ],
+      "new_span": [
+        1674,
+        1690
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1676_",
+        "after": "__archogen_sweep_1675_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1678.stmt.612",
+      "new_id": "L1677.stmt.611",
+      "old_span": [
+        1677,
+        1678
+      ],
+      "new_span": [
+        1676,
+        1677
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1688.eq.613",
+      "new_id": "L1687.eq.612",
+      "old_span": [
+        1687,
+        1688
+      ],
+      "new_span": [
+        1686,
+        1687
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1688.eq.614",
+      "new_id": "L1687.eq.613",
+      "old_span": [
+        1687,
+        1688
+      ],
+      "new_span": [
+        1686,
+        1687
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1688.logic.615",
+      "new_id": "L1687.logic.614",
+      "old_span": [
+        1687,
+        1688
+      ],
+      "new_span": [
+        1686,
+        1687
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1688.logic.616",
+      "new_id": "L1687.logic.615",
+      "old_span": [
+        1687,
+        1688
+      ],
+      "new_span": [
+        1686,
+        1687
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1689.eq.617",
+      "new_id": "L1688.eq.616",
+      "old_span": [
+        1688,
+        1689
+      ],
+      "new_span": [
+        1687,
+        1688
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1689.logic.618",
+      "new_id": "L1688.logic.617",
+      "old_span": [
+        1688,
+        1689
+      ],
+      "new_span": [
+        1687,
+        1688
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1691.cond.619",
+      "new_id": "L1690.cond.618",
+      "old_span": [
+        1690,
+        1691
+      ],
+      "new_span": [
+        1689,
+        1690
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1691.cond.620",
+      "new_id": "L1690.cond.619",
+      "old_span": [
+        1690,
+        1691
+      ],
+      "new_span": [
+        1689,
+        1690
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1691.not.621",
+      "new_id": "L1690.not.620",
+      "old_span": [
+        1690,
+        1691
+      ],
+      "new_span": [
+        1689,
+        1690
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1700.cond.622",
+      "new_id": "L1699.cond.621",
+      "old_span": [
+        1699,
+        1700
+      ],
+      "new_span": [
+        1698,
+        1699
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1700.cond.623",
+      "new_id": "L1699.cond.622",
+      "old_span": [
+        1699,
+        1700
+      ],
+      "new_span": [
+        1698,
+        1699
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1700.not.624",
+      "new_id": "L1699.not.623",
+      "old_span": [
+        1699,
+        1700
+      ],
+      "new_span": [
+        1698,
+        1699
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1716.iter.625",
+      "new_id": "L1715.iter.624",
+      "old_span": [
+        1715,
+        1716
+      ],
+      "new_span": [
+        1714,
+        1715
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1716_",
+        "after": "__archogen_sweep_1715_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1716.iter.626",
+      "new_id": "L1715.iter.625",
+      "old_span": [
+        1715,
+        1716
+      ],
+      "new_span": [
+        1714,
+        1715
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1716_",
+        "after": "__archogen_sweep_1715_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1716.iter.627",
+      "new_id": "L1715.iter.626",
+      "old_span": [
+        1715,
+        1716
+      ],
+      "new_span": [
+        1714,
+        1715
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1716_",
+        "after": "__archogen_sweep_1715_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1721.iter.628",
+      "new_id": "L1720.iter.627",
+      "old_span": [
+        1720,
+        1721
+      ],
+      "new_span": [
+        1719,
+        1720
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1721_",
+        "after": "__archogen_sweep_1720_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1721.iter.629",
+      "new_id": "L1720.iter.628",
+      "old_span": [
+        1720,
+        1721
+      ],
+      "new_span": [
+        1719,
+        1720
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1721_",
+        "after": "__archogen_sweep_1720_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1721.iter.630",
+      "new_id": "L1720.iter.629",
+      "old_span": [
+        1720,
+        1721
+      ],
+      "new_span": [
+        1719,
+        1720
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1721_",
+        "after": "__archogen_sweep_1720_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1727.stmt.631",
+      "new_id": "L1726.stmt.630",
+      "old_span": [
+        1726,
+        1727
+      ],
+      "new_span": [
+        1725,
+        1726
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1733.stmt.632",
+      "new_id": "L1732.stmt.631",
+      "old_span": [
+        1732,
+        1733
+      ],
+      "new_span": [
+        1731,
+        1732
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1747.stmt.633",
+      "new_id": "L1746.stmt.632",
+      "old_span": [
+        1746,
+        1747
+      ],
+      "new_span": [
+        1745,
+        1746
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1752.iter.634",
+      "new_id": "L1751.iter.633",
+      "old_span": [
+        1751,
+        1752
+      ],
+      "new_span": [
+        1750,
+        1751
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1752_",
+        "after": "__archogen_sweep_1751_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1752.iter.635",
+      "new_id": "L1751.iter.634",
+      "old_span": [
+        1751,
+        1752
+      ],
+      "new_span": [
+        1750,
+        1751
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1752_",
+        "after": "__archogen_sweep_1751_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1752.iter.636",
+      "new_id": "L1751.iter.635",
+      "old_span": [
+        1751,
+        1752
+      ],
+      "new_span": [
+        1750,
+        1751
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1752_",
+        "after": "__archogen_sweep_1751_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1756.cond.637",
+      "new_id": "L1755.cond.636",
+      "old_span": [
+        1755,
+        1756
+      ],
+      "new_span": [
+        1754,
+        1755
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1756.cond.638",
+      "new_id": "L1755.cond.637",
+      "old_span": [
+        1755,
+        1756
+      ],
+      "new_span": [
+        1754,
+        1755
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1756.not.639",
+      "new_id": "L1755.not.638",
+      "old_span": [
+        1755,
+        1756
+      ],
+      "new_span": [
+        1754,
+        1755
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1757.stmt.640",
+      "new_id": "L1756.stmt.639",
+      "old_span": [
+        1756,
+        1757
+      ],
+      "new_span": [
+        1755,
+        1756
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1759.iter.641",
+      "new_id": "L1758.iter.640",
+      "old_span": [
+        1758,
+        1759
+      ],
+      "new_span": [
+        1757,
+        1758
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1759_",
+        "after": "__archogen_sweep_1758_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1759.iter.642",
+      "new_id": "L1758.iter.641",
+      "old_span": [
+        1758,
+        1759
+      ],
+      "new_span": [
+        1757,
+        1758
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1759_",
+        "after": "__archogen_sweep_1758_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1759.iter.643",
+      "new_id": "L1758.iter.642",
+      "old_span": [
+        1758,
+        1759
+      ],
+      "new_span": [
+        1757,
+        1758
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1759_",
+        "after": "__archogen_sweep_1758_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1759.guard.644",
+      "new_id": "L1758.guard.643",
+      "old_span": [
+        1758,
+        1761
+      ],
+      "new_span": [
+        1757,
+        1760
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1759_",
+        "after": "__archogen_sweep_1758_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1759.guard.645",
+      "new_id": "L1758.guard.644",
+      "old_span": [
+        1758,
+        1761
+      ],
+      "new_span": [
+        1757,
+        1760
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1759_",
+        "after": "__archogen_sweep_1758_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1759.guard.646",
+      "new_id": "L1758.guard.645",
+      "old_span": [
+        1758,
+        1761
+      ],
+      "new_span": [
+        1757,
+        1760
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1759_",
+        "after": "__archogen_sweep_1758_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1760.eq.647",
+      "new_id": "L1759.eq.646",
+      "old_span": [
+        1759,
+        1760
+      ],
+      "new_span": [
+        1758,
+        1759
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1760.eq.648",
+      "new_id": "L1759.eq.647",
+      "old_span": [
+        1759,
+        1760
+      ],
+      "new_span": [
+        1758,
+        1759
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1760.eq.649",
+      "new_id": "L1759.eq.648",
+      "old_span": [
+        1759,
+        1760
+      ],
+      "new_span": [
+        1758,
+        1759
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1760.logic.650",
+      "new_id": "L1759.logic.649",
+      "old_span": [
+        1759,
+        1760
+      ],
+      "new_span": [
+        1758,
+        1759
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1760.logic.651",
+      "new_id": "L1759.logic.650",
+      "old_span": [
+        1759,
+        1760
+      ],
+      "new_span": [
+        1758,
+        1759
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1761.eq.652",
+      "new_id": "L1760.eq.651",
+      "old_span": [
+        1760,
+        1761
+      ],
+      "new_span": [
+        1759,
+        1760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1761.logic.653",
+      "new_id": "L1760.logic.652",
+      "old_span": [
+        1760,
+        1761
+      ],
+      "new_span": [
+        1759,
+        1760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1761.logic.654",
+      "new_id": "L1760.logic.653",
+      "old_span": [
+        1760,
+        1761
+      ],
+      "new_span": [
+        1759,
+        1760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1761.logic.655",
+      "new_id": "L1760.logic.654",
+      "old_span": [
+        1760,
+        1761
+      ],
+      "new_span": [
+        1759,
+        1760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1761.logic.656",
+      "new_id": "L1760.logic.655",
+      "old_span": [
+        1760,
+        1761
+      ],
+      "new_span": [
+        1759,
+        1760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1761.logic.657",
+      "new_id": "L1760.logic.656",
+      "old_span": [
+        1760,
+        1761
+      ],
+      "new_span": [
+        1759,
+        1760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1761.cond.658",
+      "new_id": "L1760.cond.657",
+      "old_span": [
+        1760,
+        1761
+      ],
+      "new_span": [
+        1759,
+        1760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1761.cond.659",
+      "new_id": "L1760.cond.658",
+      "old_span": [
+        1760,
+        1761
+      ],
+      "new_span": [
+        1759,
+        1760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1761.not.660",
+      "new_id": "L1760.not.659",
+      "old_span": [
+        1760,
+        1761
+      ],
+      "new_span": [
+        1759,
+        1760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1762.stmt.661",
+      "new_id": "L1761.stmt.660",
+      "old_span": [
+        1761,
+        1762
+      ],
+      "new_span": [
+        1760,
+        1761
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1766.stmt.662",
+      "new_id": "L1765.stmt.661",
+      "old_span": [
+        1765,
+        1766
+      ],
+      "new_span": [
+        1764,
+        1765
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1768.cond.663",
+      "new_id": "L1767.cond.662",
+      "old_span": [
+        1767,
+        1768
+      ],
+      "new_span": [
+        1766,
+        1767
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1768.cond.664",
+      "new_id": "L1767.cond.663",
+      "old_span": [
+        1767,
+        1768
+      ],
+      "new_span": [
+        1766,
+        1767
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1768.not.665",
+      "new_id": "L1767.not.664",
+      "old_span": [
+        1767,
+        1768
+      ],
+      "new_span": [
+        1766,
+        1767
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1778.iter.666",
+      "new_id": "L1777.iter.665",
+      "old_span": [
+        1777,
+        1778
+      ],
+      "new_span": [
+        1776,
+        1777
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1778_",
+        "after": "__archogen_sweep_1777_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1778.iter.667",
+      "new_id": "L1777.iter.666",
+      "old_span": [
+        1777,
+        1778
+      ],
+      "new_span": [
+        1776,
+        1777
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1778_",
+        "after": "__archogen_sweep_1777_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1778.iter.668",
+      "new_id": "L1777.iter.667",
+      "old_span": [
+        1777,
+        1778
+      ],
+      "new_span": [
+        1776,
+        1777
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1778_",
+        "after": "__archogen_sweep_1777_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1779.stmt.669",
+      "new_id": "L1778.stmt.668",
+      "old_span": [
+        1778,
+        1779
+      ],
+      "new_span": [
+        1777,
+        1778
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1794.stmt.670",
+      "new_id": "L1793.stmt.669",
+      "old_span": [
+        1793,
+        1794
+      ],
+      "new_span": [
+        1792,
+        1793
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1802.iter.671",
+      "new_id": "L1801.iter.670",
+      "old_span": [
+        1801,
+        1802
+      ],
+      "new_span": [
+        1800,
+        1801
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1802_",
+        "after": "__archogen_sweep_1801_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1802.iter.672",
+      "new_id": "L1801.iter.671",
+      "old_span": [
+        1801,
+        1802
+      ],
+      "new_span": [
+        1800,
+        1801
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1802_",
+        "after": "__archogen_sweep_1801_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1802.iter.673",
+      "new_id": "L1801.iter.672",
+      "old_span": [
+        1801,
+        1802
+      ],
+      "new_span": [
+        1800,
+        1801
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1802_",
+        "after": "__archogen_sweep_1801_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1803.iter.674",
+      "new_id": "L1802.iter.673",
+      "old_span": [
+        1802,
+        1803
+      ],
+      "new_span": [
+        1801,
+        1802
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1803_",
+        "after": "__archogen_sweep_1802_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1803.iter.675",
+      "new_id": "L1802.iter.674",
+      "old_span": [
+        1802,
+        1803
+      ],
+      "new_span": [
+        1801,
+        1802
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1803_",
+        "after": "__archogen_sweep_1802_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1803.iter.676",
+      "new_id": "L1802.iter.675",
+      "old_span": [
+        1802,
+        1803
+      ],
+      "new_span": [
+        1801,
+        1802
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1803_",
+        "after": "__archogen_sweep_1802_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1804.iter.677",
+      "new_id": "L1803.iter.676",
+      "old_span": [
+        1803,
+        1804
+      ],
+      "new_span": [
+        1802,
+        1803
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1804_",
+        "after": "__archogen_sweep_1803_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1804.iter.678",
+      "new_id": "L1803.iter.677",
+      "old_span": [
+        1803,
+        1804
+      ],
+      "new_span": [
+        1802,
+        1803
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1804_",
+        "after": "__archogen_sweep_1803_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1804.iter.679",
+      "new_id": "L1803.iter.678",
+      "old_span": [
+        1803,
+        1804
+      ],
+      "new_span": [
+        1802,
+        1803
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1804_",
+        "after": "__archogen_sweep_1803_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1805.stmt.680",
+      "new_id": "L1804.stmt.679",
+      "old_span": [
+        1804,
+        1805
+      ],
+      "new_span": [
+        1803,
+        1804
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1809.stmt.681",
+      "new_id": "L1808.stmt.680",
+      "old_span": [
+        1808,
+        1809
+      ],
+      "new_span": [
+        1807,
+        1808
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1814.iter.682",
+      "new_id": "L1813.iter.681",
+      "old_span": [
+        1813,
+        1814
+      ],
+      "new_span": [
+        1812,
+        1813
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1814_",
+        "after": "__archogen_sweep_1813_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1814.iter.683",
+      "new_id": "L1813.iter.682",
+      "old_span": [
+        1813,
+        1814
+      ],
+      "new_span": [
+        1812,
+        1813
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1814_",
+        "after": "__archogen_sweep_1813_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1814.iter.684",
+      "new_id": "L1813.iter.683",
+      "old_span": [
+        1813,
+        1814
+      ],
+      "new_span": [
+        1812,
+        1813
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1814_",
+        "after": "__archogen_sweep_1813_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1822.eq.685",
+      "new_id": "L1821.eq.684",
+      "old_span": [
+        1821,
+        1822
+      ],
+      "new_span": [
+        1820,
+        1821
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1822.logic.686",
+      "new_id": "L1821.logic.685",
+      "old_span": [
+        1821,
+        1822
+      ],
+      "new_span": [
+        1820,
+        1821
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1827.eq.687",
+      "new_id": "L1826.eq.686",
+      "old_span": [
+        1826,
+        1827
+      ],
+      "new_span": [
+        1825,
+        1826
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1827.eq.688",
+      "new_id": "L1826.eq.687",
+      "old_span": [
+        1826,
+        1827
+      ],
+      "new_span": [
+        1825,
+        1826
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1827.logic.689",
+      "new_id": "L1826.logic.688",
+      "old_span": [
+        1826,
+        1827
+      ],
+      "new_span": [
+        1825,
+        1826
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1828.cond.690",
+      "new_id": "L1827.cond.689",
+      "old_span": [
+        1827,
+        1828
+      ],
+      "new_span": [
+        1826,
+        1827
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1828.cond.691",
+      "new_id": "L1827.cond.690",
+      "old_span": [
+        1827,
+        1828
+      ],
+      "new_span": [
+        1826,
+        1827
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1829.stmt.692",
+      "new_id": "L1828.stmt.691",
+      "old_span": [
+        1828,
+        1829
+      ],
+      "new_span": [
+        1827,
+        1828
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1831.iter.693",
+      "new_id": "L1830.iter.692",
+      "old_span": [
+        1830,
+        1831
+      ],
+      "new_span": [
+        1829,
+        1830
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1831_",
+        "after": "__archogen_sweep_1830_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1831.iter.694",
+      "new_id": "L1830.iter.693",
+      "old_span": [
+        1830,
+        1831
+      ],
+      "new_span": [
+        1829,
+        1830
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1831_",
+        "after": "__archogen_sweep_1830_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1831.iter.695",
+      "new_id": "L1830.iter.694",
+      "old_span": [
+        1830,
+        1831
+      ],
+      "new_span": [
+        1829,
+        1830
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1831_",
+        "after": "__archogen_sweep_1830_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1831.guard.696",
+      "new_id": "L1830.guard.695",
+      "old_span": [
+        1830,
+        1832
+      ],
+      "new_span": [
+        1829,
+        1831
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1831_",
+        "after": "__archogen_sweep_1830_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1831.guard.697",
+      "new_id": "L1830.guard.696",
+      "old_span": [
+        1830,
+        1832
+      ],
+      "new_span": [
+        1829,
+        1831
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1831_",
+        "after": "__archogen_sweep_1830_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1831.guard.698",
+      "new_id": "L1830.guard.697",
+      "old_span": [
+        1830,
+        1832
+      ],
+      "new_span": [
+        1829,
+        1831
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1831_",
+        "after": "__archogen_sweep_1830_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1832.cond.699",
+      "new_id": "L1831.cond.698",
+      "old_span": [
+        1831,
+        1832
+      ],
+      "new_span": [
+        1830,
+        1831
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1832.cond.700",
+      "new_id": "L1831.cond.699",
+      "old_span": [
+        1831,
+        1832
+      ],
+      "new_span": [
+        1830,
+        1831
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1842.cond.701",
+      "new_id": "L1841.cond.700",
+      "old_span": [
+        1841,
+        1842
+      ],
+      "new_span": [
+        1840,
+        1841
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1842.cond.702",
+      "new_id": "L1841.cond.701",
+      "old_span": [
+        1841,
+        1842
+      ],
+      "new_span": [
+        1840,
+        1841
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1842.not.703",
+      "new_id": "L1841.not.702",
+      "old_span": [
+        1841,
+        1842
+      ],
+      "new_span": [
+        1840,
+        1841
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1845.cond.704",
+      "new_id": "L1844.cond.703",
+      "old_span": [
+        1844,
+        1845
+      ],
+      "new_span": [
+        1843,
+        1844
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1845.cond.705",
+      "new_id": "L1844.cond.704",
+      "old_span": [
+        1844,
+        1845
+      ],
+      "new_span": [
+        1843,
+        1844
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1845.not.706",
+      "new_id": "L1844.not.705",
+      "old_span": [
+        1844,
+        1845
+      ],
+      "new_span": [
+        1843,
+        1844
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1871.cond.707",
+      "new_id": "L1870.cond.706",
+      "old_span": [
+        1870,
+        1871
+      ],
+      "new_span": [
+        1869,
+        1870
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1871.cond.708",
+      "new_id": "L1870.cond.707",
+      "old_span": [
+        1870,
+        1871
+      ],
+      "new_span": [
+        1869,
+        1870
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1871.not.709",
+      "new_id": "L1870.not.708",
+      "old_span": [
+        1870,
+        1871
+      ],
+      "new_span": [
+        1869,
+        1870
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1898.iter.710",
+      "new_id": "L1897.iter.709",
+      "old_span": [
+        1897,
+        1898
+      ],
+      "new_span": [
+        1896,
+        1897
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1898_",
+        "after": "__archogen_sweep_1897_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1898.iter.711",
+      "new_id": "L1897.iter.710",
+      "old_span": [
+        1897,
+        1898
+      ],
+      "new_span": [
+        1896,
+        1897
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1898_",
+        "after": "__archogen_sweep_1897_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1898.iter.712",
+      "new_id": "L1897.iter.711",
+      "old_span": [
+        1897,
+        1898
+      ],
+      "new_span": [
+        1896,
+        1897
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1898_",
+        "after": "__archogen_sweep_1897_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1899.iter.713",
+      "new_id": "L1898.iter.712",
+      "old_span": [
+        1898,
+        1899
+      ],
+      "new_span": [
+        1897,
+        1898
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1899_",
+        "after": "__archogen_sweep_1898_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1899.iter.714",
+      "new_id": "L1898.iter.713",
+      "old_span": [
+        1898,
+        1899
+      ],
+      "new_span": [
+        1897,
+        1898
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1899_",
+        "after": "__archogen_sweep_1898_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1899.iter.715",
+      "new_id": "L1898.iter.714",
+      "old_span": [
+        1898,
+        1899
+      ],
+      "new_span": [
+        1897,
+        1898
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1899_",
+        "after": "__archogen_sweep_1898_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1900.stmt.716",
+      "new_id": "L1899.stmt.715",
+      "old_span": [
+        1899,
+        1900
+      ],
+      "new_span": [
+        1898,
+        1899
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1910.eq.717",
+      "new_id": "L1909.eq.716",
+      "old_span": [
+        1909,
+        1910
+      ],
+      "new_span": [
+        1908,
+        1909
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1910.eq.718",
+      "new_id": "L1909.eq.717",
+      "old_span": [
+        1909,
+        1910
+      ],
+      "new_span": [
+        1908,
+        1909
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1910.logic.719",
+      "new_id": "L1909.logic.718",
+      "old_span": [
+        1909,
+        1910
+      ],
+      "new_span": [
+        1908,
+        1909
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1917.iter.720",
+      "new_id": "L1916.iter.719",
+      "old_span": [
+        1916,
+        1917
+      ],
+      "new_span": [
+        1915,
+        1916
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1917_",
+        "after": "__archogen_sweep_1916_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1917.iter.721",
+      "new_id": "L1916.iter.720",
+      "old_span": [
+        1916,
+        1917
+      ],
+      "new_span": [
+        1915,
+        1916
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1917_",
+        "after": "__archogen_sweep_1916_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1917.iter.722",
+      "new_id": "L1916.iter.721",
+      "old_span": [
+        1916,
+        1917
+      ],
+      "new_span": [
+        1915,
+        1916
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1917_",
+        "after": "__archogen_sweep_1916_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1923.iter.723",
+      "new_id": "L1922.iter.722",
+      "old_span": [
+        1922,
+        1923
+      ],
+      "new_span": [
+        1921,
+        1922
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1923_",
+        "after": "__archogen_sweep_1922_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1923.iter.724",
+      "new_id": "L1922.iter.723",
+      "old_span": [
+        1922,
+        1923
+      ],
+      "new_span": [
+        1921,
+        1922
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1923_",
+        "after": "__archogen_sweep_1922_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1923.iter.725",
+      "new_id": "L1922.iter.724",
+      "old_span": [
+        1922,
+        1923
+      ],
+      "new_span": [
+        1921,
+        1922
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1923_",
+        "after": "__archogen_sweep_1922_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1923.guard.726",
+      "new_id": "L1922.guard.725",
+      "old_span": [
+        1922,
+        1959
+      ],
+      "new_span": [
+        1921,
+        1958
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1923_",
+        "after": "__archogen_sweep_1922_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1923.guard.727",
+      "new_id": "L1922.guard.726",
+      "old_span": [
+        1922,
+        1959
+      ],
+      "new_span": [
+        1921,
+        1958
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1923_",
+        "after": "__archogen_sweep_1922_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1923.guard.728",
+      "new_id": "L1922.guard.727",
+      "old_span": [
+        1922,
+        1959
+      ],
+      "new_span": [
+        1921,
+        1958
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1923_",
+        "after": "__archogen_sweep_1922_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1927.iter.729",
+      "new_id": "L1926.iter.728",
+      "old_span": [
+        1926,
+        1927
+      ],
+      "new_span": [
+        1925,
+        1926
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1927_",
+        "after": "__archogen_sweep_1926_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1927.iter.730",
+      "new_id": "L1926.iter.729",
+      "old_span": [
+        1926,
+        1927
+      ],
+      "new_span": [
+        1925,
+        1926
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1927_",
+        "after": "__archogen_sweep_1926_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1927.iter.731",
+      "new_id": "L1926.iter.730",
+      "old_span": [
+        1926,
+        1927
+      ],
+      "new_span": [
+        1925,
+        1926
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1927_",
+        "after": "__archogen_sweep_1926_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1929.iter.732",
+      "new_id": "L1928.iter.731",
+      "old_span": [
+        1928,
+        1929
+      ],
+      "new_span": [
+        1927,
+        1928
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1929_",
+        "after": "__archogen_sweep_1928_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1929.iter.733",
+      "new_id": "L1928.iter.732",
+      "old_span": [
+        1928,
+        1929
+      ],
+      "new_span": [
+        1927,
+        1928
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1929_",
+        "after": "__archogen_sweep_1928_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1929.iter.734",
+      "new_id": "L1928.iter.733",
+      "old_span": [
+        1928,
+        1929
+      ],
+      "new_span": [
+        1927,
+        1928
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1929_",
+        "after": "__archogen_sweep_1928_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1930.iter.735",
+      "new_id": "L1929.iter.734",
+      "old_span": [
+        1929,
+        1930
+      ],
+      "new_span": [
+        1928,
+        1929
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1930_",
+        "after": "__archogen_sweep_1929_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1930.iter.736",
+      "new_id": "L1929.iter.735",
+      "old_span": [
+        1929,
+        1930
+      ],
+      "new_span": [
+        1928,
+        1929
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1930_",
+        "after": "__archogen_sweep_1929_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1930.iter.737",
+      "new_id": "L1929.iter.736",
+      "old_span": [
+        1929,
+        1930
+      ],
+      "new_span": [
+        1928,
+        1929
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1930_",
+        "after": "__archogen_sweep_1929_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1930.guard.738",
+      "new_id": "L1929.guard.737",
+      "old_span": [
+        1929,
+        1931
+      ],
+      "new_span": [
+        1928,
+        1930
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1930_",
+        "after": "__archogen_sweep_1929_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1930.guard.739",
+      "new_id": "L1929.guard.738",
+      "old_span": [
+        1929,
+        1931
+      ],
+      "new_span": [
+        1928,
+        1930
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1930_",
+        "after": "__archogen_sweep_1929_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1930.guard.740",
+      "new_id": "L1929.guard.739",
+      "old_span": [
+        1929,
+        1931
+      ],
+      "new_span": [
+        1928,
+        1930
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1930_",
+        "after": "__archogen_sweep_1929_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1931.cond.741",
+      "new_id": "L1930.cond.740",
+      "old_span": [
+        1930,
+        1931
+      ],
+      "new_span": [
+        1929,
+        1930
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1931.cond.742",
+      "new_id": "L1930.cond.741",
+      "old_span": [
+        1930,
+        1931
+      ],
+      "new_span": [
+        1929,
+        1930
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1931.not.743",
+      "new_id": "L1930.not.742",
+      "old_span": [
+        1930,
+        1931
+      ],
+      "new_span": [
+        1929,
+        1930
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1932.stmt.744",
+      "new_id": "L1931.stmt.743",
+      "old_span": [
+        1931,
+        1932
+      ],
+      "new_span": [
+        1930,
+        1931
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1952.iter.745",
+      "new_id": "L1951.iter.744",
+      "old_span": [
+        1951,
+        1952
+      ],
+      "new_span": [
+        1950,
+        1951
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1952_",
+        "after": "__archogen_sweep_1951_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1952.iter.746",
+      "new_id": "L1951.iter.745",
+      "old_span": [
+        1951,
+        1952
+      ],
+      "new_span": [
+        1950,
+        1951
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1952_",
+        "after": "__archogen_sweep_1951_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1952.iter.747",
+      "new_id": "L1951.iter.746",
+      "old_span": [
+        1951,
+        1952
+      ],
+      "new_span": [
+        1950,
+        1951
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1952_",
+        "after": "__archogen_sweep_1951_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1959.cond.748",
+      "new_id": "L1958.cond.747",
+      "old_span": [
+        1958,
+        1959
+      ],
+      "new_span": [
+        1957,
+        1958
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1959.cond.749",
+      "new_id": "L1958.cond.748",
+      "old_span": [
+        1958,
+        1959
+      ],
+      "new_span": [
+        1957,
+        1958
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1959.not.750",
+      "new_id": "L1958.not.749",
+      "old_span": [
+        1958,
+        1959
+      ],
+      "new_span": [
+        1957,
+        1958
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1960.stmt.751",
+      "new_id": "L1959.stmt.750",
+      "old_span": [
+        1959,
+        1960
+      ],
+      "new_span": [
+        1958,
+        1959
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1962.iter.752",
+      "new_id": "L1961.iter.751",
+      "old_span": [
+        1961,
+        1962
+      ],
+      "new_span": [
+        1960,
+        1961
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1962_",
+        "after": "__archogen_sweep_1961_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1962.iter.753",
+      "new_id": "L1961.iter.752",
+      "old_span": [
+        1961,
+        1962
+      ],
+      "new_span": [
+        1960,
+        1961
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1962_",
+        "after": "__archogen_sweep_1961_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1962.iter.754",
+      "new_id": "L1961.iter.753",
+      "old_span": [
+        1961,
+        1962
+      ],
+      "new_span": [
+        1960,
+        1961
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1962_",
+        "after": "__archogen_sweep_1961_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1962.guard.755",
+      "new_id": "L1961.guard.754",
+      "old_span": [
+        1961,
+        1982
+      ],
+      "new_span": [
+        1960,
+        1981
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1962_",
+        "after": "__archogen_sweep_1961_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1962.guard.756",
+      "new_id": "L1961.guard.755",
+      "old_span": [
+        1961,
+        1982
+      ],
+      "new_span": [
+        1960,
+        1981
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1962_",
+        "after": "__archogen_sweep_1961_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1962.guard.757",
+      "new_id": "L1961.guard.756",
+      "old_span": [
+        1961,
+        1982
+      ],
+      "new_span": [
+        1960,
+        1981
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1962_",
+        "after": "__archogen_sweep_1961_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1962.guard.758",
+      "new_id": "L1961.guard.757",
+      "old_span": [
+        1961,
+        1988
+      ],
+      "new_span": [
+        1960,
+        1987
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1962_",
+        "after": "__archogen_sweep_1961_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1962.guard.759",
+      "new_id": "L1961.guard.758",
+      "old_span": [
+        1961,
+        1988
+      ],
+      "new_span": [
+        1960,
+        1987
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1962_",
+        "after": "__archogen_sweep_1961_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1962.guard.760",
+      "new_id": "L1961.guard.759",
+      "old_span": [
+        1961,
+        1988
+      ],
+      "new_span": [
+        1960,
+        1987
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1962_",
+        "after": "__archogen_sweep_1961_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1967.eq.761",
+      "new_id": "L1966.eq.760",
+      "old_span": [
+        1966,
+        1967
+      ],
+      "new_span": [
+        1965,
+        1966
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1967.logic.762",
+      "new_id": "L1966.logic.761",
+      "old_span": [
+        1966,
+        1967
+      ],
+      "new_span": [
+        1965,
+        1966
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1968.eq.763",
+      "new_id": "L1967.eq.762",
+      "old_span": [
+        1967,
+        1968
+      ],
+      "new_span": [
+        1966,
+        1967
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1968.logic.764",
+      "new_id": "L1967.logic.763",
+      "old_span": [
+        1967,
+        1968
+      ],
+      "new_span": [
+        1966,
+        1967
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1969.eq.765",
+      "new_id": "L1968.eq.764",
+      "old_span": [
+        1968,
+        1969
+      ],
+      "new_span": [
+        1967,
+        1968
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1969.eq.766",
+      "new_id": "L1968.eq.765",
+      "old_span": [
+        1968,
+        1969
+      ],
+      "new_span": [
+        1967,
+        1968
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1969.eq.767",
+      "new_id": "L1968.eq.766",
+      "old_span": [
+        1968,
+        1969
+      ],
+      "new_span": [
+        1967,
+        1968
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1969.logic.768",
+      "new_id": "L1968.logic.767",
+      "old_span": [
+        1968,
+        1969
+      ],
+      "new_span": [
+        1967,
+        1968
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1969.logic.769",
+      "new_id": "L1968.logic.768",
+      "old_span": [
+        1968,
+        1969
+      ],
+      "new_span": [
+        1967,
+        1968
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1969.logic.770",
+      "new_id": "L1968.logic.769",
+      "old_span": [
+        1968,
+        1969
+      ],
+      "new_span": [
+        1967,
+        1968
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1972.iter.771",
+      "new_id": "L1971.iter.770",
+      "old_span": [
+        1971,
+        1972
+      ],
+      "new_span": [
+        1970,
+        1971
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1972_",
+        "after": "__archogen_sweep_1971_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1972.iter.772",
+      "new_id": "L1971.iter.771",
+      "old_span": [
+        1971,
+        1972
+      ],
+      "new_span": [
+        1970,
+        1971
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1972_",
+        "after": "__archogen_sweep_1971_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1972.iter.773",
+      "new_id": "L1971.iter.772",
+      "old_span": [
+        1971,
+        1972
+      ],
+      "new_span": [
+        1970,
+        1971
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1972_",
+        "after": "__archogen_sweep_1971_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1973.iter.774",
+      "new_id": "L1972.iter.773",
+      "old_span": [
+        1972,
+        1973
+      ],
+      "new_span": [
+        1971,
+        1972
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1973_",
+        "after": "__archogen_sweep_1972_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1973.iter.775",
+      "new_id": "L1972.iter.774",
+      "old_span": [
+        1972,
+        1973
+      ],
+      "new_span": [
+        1971,
+        1972
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1973_",
+        "after": "__archogen_sweep_1972_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1973.iter.776",
+      "new_id": "L1972.iter.775",
+      "old_span": [
+        1972,
+        1973
+      ],
+      "new_span": [
+        1971,
+        1972
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_1973_",
+        "after": "__archogen_sweep_1972_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L1980.stmt.777",
+      "new_id": "L1979.stmt.776",
+      "old_span": [
+        1979,
+        1980
+      ],
+      "new_span": [
+        1978,
+        1979
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1982.cond.778",
+      "new_id": "L1981.cond.777",
+      "old_span": [
+        1981,
+        1982
+      ],
+      "new_span": [
+        1980,
+        1981
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1982.cond.779",
+      "new_id": "L1981.cond.778",
+      "old_span": [
+        1981,
+        1982
+      ],
+      "new_span": [
+        1980,
+        1981
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1982.not.780",
+      "new_id": "L1981.not.779",
+      "old_span": [
+        1981,
+        1982
+      ],
+      "new_span": [
+        1980,
+        1981
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1983.stmt.781",
+      "new_id": "L1982.stmt.780",
+      "old_span": [
+        1982,
+        1983
+      ],
+      "new_span": [
+        1981,
+        1982
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1987.stmt.782",
+      "new_id": "L1986.stmt.781",
+      "old_span": [
+        1986,
+        1987
+      ],
+      "new_span": [
+        1985,
+        1986
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1988.cmp.783",
+      "new_id": "L1987.cmp.782",
+      "old_span": [
+        1987,
+        1988
+      ],
+      "new_span": [
+        1986,
+        1987
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1988.cond.784",
+      "new_id": "L1987.cond.783",
+      "old_span": [
+        1987,
+        1988
+      ],
+      "new_span": [
+        1986,
+        1987
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1988.cond.785",
+      "new_id": "L1987.cond.784",
+      "old_span": [
+        1987,
+        1988
+      ],
+      "new_span": [
+        1986,
+        1987
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1996.stmt.786",
+      "new_id": "L1995.stmt.785",
+      "old_span": [
+        1995,
+        1996
+      ],
+      "new_span": [
+        1994,
+        1995
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2013.iter.787",
+      "new_id": "L2012.iter.786",
+      "old_span": [
+        2012,
+        2013
+      ],
+      "new_span": [
+        2011,
+        2012
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2013_",
+        "after": "__archogen_sweep_2012_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2013.iter.788",
+      "new_id": "L2012.iter.787",
+      "old_span": [
+        2012,
+        2013
+      ],
+      "new_span": [
+        2011,
+        2012
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2013_",
+        "after": "__archogen_sweep_2012_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2013.iter.789",
+      "new_id": "L2012.iter.788",
+      "old_span": [
+        2012,
+        2013
+      ],
+      "new_span": [
+        2011,
+        2012
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2013_",
+        "after": "__archogen_sweep_2012_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2014.iter.790",
+      "new_id": "L2013.iter.789",
+      "old_span": [
+        2013,
+        2014
+      ],
+      "new_span": [
+        2012,
+        2013
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2014_",
+        "after": "__archogen_sweep_2013_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2014.iter.791",
+      "new_id": "L2013.iter.790",
+      "old_span": [
+        2013,
+        2014
+      ],
+      "new_span": [
+        2012,
+        2013
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2014_",
+        "after": "__archogen_sweep_2013_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2014.iter.792",
+      "new_id": "L2013.iter.791",
+      "old_span": [
+        2013,
+        2014
+      ],
+      "new_span": [
+        2012,
+        2013
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2014_",
+        "after": "__archogen_sweep_2013_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2027.eq.793",
+      "new_id": "L2026.eq.792",
+      "old_span": [
+        2026,
+        2027
+      ],
+      "new_span": [
+        2025,
+        2026
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2038.iter.794",
+      "new_id": "L2037.iter.793",
+      "old_span": [
+        2037,
+        2038
+      ],
+      "new_span": [
+        2036,
+        2037
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2038_",
+        "after": "__archogen_sweep_2037_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2038.iter.795",
+      "new_id": "L2037.iter.794",
+      "old_span": [
+        2037,
+        2038
+      ],
+      "new_span": [
+        2036,
+        2037
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2038_",
+        "after": "__archogen_sweep_2037_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2038.iter.796",
+      "new_id": "L2037.iter.795",
+      "old_span": [
+        2037,
+        2038
+      ],
+      "new_span": [
+        2036,
+        2037
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2038_",
+        "after": "__archogen_sweep_2037_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2058.stmt.797",
+      "new_id": "L2057.stmt.796",
+      "old_span": [
+        2057,
+        2058
+      ],
+      "new_span": [
+        2056,
+        2057
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2059.cond.798",
+      "new_id": "L2058.cond.797",
+      "old_span": [
+        2058,
+        2059
+      ],
+      "new_span": [
+        2057,
+        2058
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2059.cond.799",
+      "new_id": "L2058.cond.798",
+      "old_span": [
+        2058,
+        2059
+      ],
+      "new_span": [
+        2057,
+        2058
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2059.not.800",
+      "new_id": "L2058.not.799",
+      "old_span": [
+        2058,
+        2059
+      ],
+      "new_span": [
+        2057,
+        2058
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2065.cond.801",
+      "new_id": "L2064.cond.800",
+      "old_span": [
+        2064,
+        2065
+      ],
+      "new_span": [
+        2063,
+        2064
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2065.cond.802",
+      "new_id": "L2064.cond.801",
+      "old_span": [
+        2064,
+        2065
+      ],
+      "new_span": [
+        2063,
+        2064
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2065.not.803",
+      "new_id": "L2064.not.802",
+      "old_span": [
+        2064,
+        2065
+      ],
+      "new_span": [
+        2063,
+        2064
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2079.iter.804",
+      "new_id": "L2078.iter.803",
+      "old_span": [
+        2078,
+        2079
+      ],
+      "new_span": [
+        2077,
+        2078
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2079_",
+        "after": "__archogen_sweep_2078_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2079.iter.805",
+      "new_id": "L2078.iter.804",
+      "old_span": [
+        2078,
+        2079
+      ],
+      "new_span": [
+        2077,
+        2078
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2079_",
+        "after": "__archogen_sweep_2078_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2079.iter.806",
+      "new_id": "L2078.iter.805",
+      "old_span": [
+        2078,
+        2079
+      ],
+      "new_span": [
+        2077,
+        2078
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2079_",
+        "after": "__archogen_sweep_2078_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2079.guard.807",
+      "new_id": "L2078.guard.806",
+      "old_span": [
+        2078,
+        2082
+      ],
+      "new_span": [
+        2077,
+        2081
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2079_",
+        "after": "__archogen_sweep_2078_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2079.guard.808",
+      "new_id": "L2078.guard.807",
+      "old_span": [
+        2078,
+        2082
+      ],
+      "new_span": [
+        2077,
+        2081
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2079_",
+        "after": "__archogen_sweep_2078_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2079.guard.809",
+      "new_id": "L2078.guard.808",
+      "old_span": [
+        2078,
+        2082
+      ],
+      "new_span": [
+        2077,
+        2081
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2079_",
+        "after": "__archogen_sweep_2078_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2082.cond.810",
+      "new_id": "L2081.cond.809",
+      "old_span": [
+        2081,
+        2082
+      ],
+      "new_span": [
+        2080,
+        2081
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2082.cond.811",
+      "new_id": "L2081.cond.810",
+      "old_span": [
+        2081,
+        2082
+      ],
+      "new_span": [
+        2080,
+        2081
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2085.stmt.812",
+      "new_id": "L2084.stmt.811",
+      "old_span": [
+        2084,
+        2085
+      ],
+      "new_span": [
+        2083,
+        2084
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2087.iter.813",
+      "new_id": "L2086.iter.812",
+      "old_span": [
+        2086,
+        2087
+      ],
+      "new_span": [
+        2085,
+        2086
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2087_",
+        "after": "__archogen_sweep_2086_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2087.iter.814",
+      "new_id": "L2086.iter.813",
+      "old_span": [
+        2086,
+        2087
+      ],
+      "new_span": [
+        2085,
+        2086
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2087_",
+        "after": "__archogen_sweep_2086_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2087.iter.815",
+      "new_id": "L2086.iter.814",
+      "old_span": [
+        2086,
+        2087
+      ],
+      "new_span": [
+        2085,
+        2086
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2087_",
+        "after": "__archogen_sweep_2086_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2094.iter.816",
+      "new_id": "L2093.iter.815",
+      "old_span": [
+        2093,
+        2094
+      ],
+      "new_span": [
+        2092,
+        2093
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2094_",
+        "after": "__archogen_sweep_2093_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2094.iter.817",
+      "new_id": "L2093.iter.816",
+      "old_span": [
+        2093,
+        2094
+      ],
+      "new_span": [
+        2092,
+        2093
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2094_",
+        "after": "__archogen_sweep_2093_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2094.iter.818",
+      "new_id": "L2093.iter.817",
+      "old_span": [
+        2093,
+        2094
+      ],
+      "new_span": [
+        2092,
+        2093
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2094_",
+        "after": "__archogen_sweep_2093_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2095.iter.819",
+      "new_id": "L2094.iter.818",
+      "old_span": [
+        2094,
+        2095
+      ],
+      "new_span": [
+        2093,
+        2094
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2095_",
+        "after": "__archogen_sweep_2094_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2095.iter.820",
+      "new_id": "L2094.iter.819",
+      "old_span": [
+        2094,
+        2095
+      ],
+      "new_span": [
+        2093,
+        2094
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2095_",
+        "after": "__archogen_sweep_2094_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2095.iter.821",
+      "new_id": "L2094.iter.820",
+      "old_span": [
+        2094,
+        2095
+      ],
+      "new_span": [
+        2093,
+        2094
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2095_",
+        "after": "__archogen_sweep_2094_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2095.guard.822",
+      "new_id": "L2094.guard.821",
+      "old_span": [
+        2094,
+        2096
+      ],
+      "new_span": [
+        2093,
+        2095
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2095_",
+        "after": "__archogen_sweep_2094_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2095.guard.823",
+      "new_id": "L2094.guard.822",
+      "old_span": [
+        2094,
+        2096
+      ],
+      "new_span": [
+        2093,
+        2095
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2095_",
+        "after": "__archogen_sweep_2094_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2095.guard.824",
+      "new_id": "L2094.guard.823",
+      "old_span": [
+        2094,
+        2096
+      ],
+      "new_span": [
+        2093,
+        2095
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2095_",
+        "after": "__archogen_sweep_2094_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2096.logic.825",
+      "new_id": "L2095.logic.824",
+      "old_span": [
+        2095,
+        2096
+      ],
+      "new_span": [
+        2094,
+        2095
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2096.logic.826",
+      "new_id": "L2095.logic.825",
+      "old_span": [
+        2095,
+        2096
+      ],
+      "new_span": [
+        2094,
+        2095
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2096.logic.827",
+      "new_id": "L2095.logic.826",
+      "old_span": [
+        2095,
+        2096
+      ],
+      "new_span": [
+        2094,
+        2095
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2096.logic.828",
+      "new_id": "L2095.logic.827",
+      "old_span": [
+        2095,
+        2096
+      ],
+      "new_span": [
+        2094,
+        2095
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2096.logic.829",
+      "new_id": "L2095.logic.828",
+      "old_span": [
+        2095,
+        2096
+      ],
+      "new_span": [
+        2094,
+        2095
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2096.cond.830",
+      "new_id": "L2095.cond.829",
+      "old_span": [
+        2095,
+        2096
+      ],
+      "new_span": [
+        2094,
+        2095
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2096.cond.831",
+      "new_id": "L2095.cond.830",
+      "old_span": [
+        2095,
+        2096
+      ],
+      "new_span": [
+        2094,
+        2095
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2096.not.832",
+      "new_id": "L2095.not.831",
+      "old_span": [
+        2095,
+        2096
+      ],
+      "new_span": [
+        2094,
+        2095
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2096.not.833",
+      "new_id": "L2095.not.832",
+      "old_span": [
+        2095,
+        2096
+      ],
+      "new_span": [
+        2094,
+        2095
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2105.cond.834",
+      "new_id": "L2104.cond.833",
+      "old_span": [
+        2104,
+        2105
+      ],
+      "new_span": [
+        2103,
+        2104
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2105.cond.835",
+      "new_id": "L2104.cond.834",
+      "old_span": [
+        2104,
+        2105
+      ],
+      "new_span": [
+        2103,
+        2104
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2105.not.836",
+      "new_id": "L2104.not.835",
+      "old_span": [
+        2104,
+        2105
+      ],
+      "new_span": [
+        2103,
+        2104
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2118.lit.837",
+      "new_id": "L2117.lit.836",
+      "old_span": [
+        2117,
+        2118
+      ],
+      "new_span": [
+        2116,
+        2117
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2118.lit.838",
+      "new_id": "L2117.lit.837",
+      "old_span": [
+        2117,
+        2118
+      ],
+      "new_span": [
+        2116,
+        2117
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2135.iter.839",
+      "new_id": "L2134.iter.838",
+      "old_span": [
+        2134,
+        2135
+      ],
+      "new_span": [
+        2133,
+        2134
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2135_",
+        "after": "__archogen_sweep_2134_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2135.iter.840",
+      "new_id": "L2134.iter.839",
+      "old_span": [
+        2134,
+        2135
+      ],
+      "new_span": [
+        2133,
+        2134
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2135_",
+        "after": "__archogen_sweep_2134_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2135.iter.841",
+      "new_id": "L2134.iter.840",
+      "old_span": [
+        2134,
+        2135
+      ],
+      "new_span": [
+        2133,
+        2134
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2135_",
+        "after": "__archogen_sweep_2134_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2135.guard.842",
+      "new_id": "L2134.guard.841",
+      "old_span": [
+        2134,
+        2147
+      ],
+      "new_span": [
+        2133,
+        2146
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2135_",
+        "after": "__archogen_sweep_2134_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2135.guard.843",
+      "new_id": "L2134.guard.842",
+      "old_span": [
+        2134,
+        2147
+      ],
+      "new_span": [
+        2133,
+        2146
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2135_",
+        "after": "__archogen_sweep_2134_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2135.guard.844",
+      "new_id": "L2134.guard.843",
+      "old_span": [
+        2134,
+        2147
+      ],
+      "new_span": [
+        2133,
+        2146
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2135_",
+        "after": "__archogen_sweep_2134_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2137.eq.845",
+      "new_id": "L2136.eq.844",
+      "old_span": [
+        2136,
+        2137
+      ],
+      "new_span": [
+        2135,
+        2136
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2137.eq.846",
+      "new_id": "L2136.eq.845",
+      "old_span": [
+        2136,
+        2137
+      ],
+      "new_span": [
+        2135,
+        2136
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2137.logic.847",
+      "new_id": "L2136.logic.846",
+      "old_span": [
+        2136,
+        2137
+      ],
+      "new_span": [
+        2135,
+        2136
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2138.eq.848",
+      "new_id": "L2137.eq.847",
+      "old_span": [
+        2137,
+        2138
+      ],
+      "new_span": [
+        2136,
+        2137
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2138.bool.849",
+      "new_id": "L2137.bool.848",
+      "old_span": [
+        2137,
+        2138
+      ],
+      "new_span": [
+        2136,
+        2137
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2139.eq.850",
+      "new_id": "L2138.eq.849",
+      "old_span": [
+        2138,
+        2139
+      ],
+      "new_span": [
+        2137,
+        2138
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2140.dir.851",
+      "new_id": "L2139.dir.850",
+      "old_span": [
+        2139,
+        2140
+      ],
+      "new_span": [
+        2138,
+        2139
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2141.eq.852",
+      "new_id": "L2140.eq.851",
+      "old_span": [
+        2140,
+        2141
+      ],
+      "new_span": [
+        2139,
+        2140
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2141.eq.853",
+      "new_id": "L2140.eq.852",
+      "old_span": [
+        2140,
+        2141
+      ],
+      "new_span": [
+        2139,
+        2140
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2141.logic.854",
+      "new_id": "L2140.logic.853",
+      "old_span": [
+        2140,
+        2141
+      ],
+      "new_span": [
+        2139,
+        2140
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2143.bool.855",
+      "new_id": "L2142.bool.854",
+      "old_span": [
+        2142,
+        2143
+      ],
+      "new_span": [
+        2141,
+        2142
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2145.bool.856",
+      "new_id": "L2144.bool.855",
+      "old_span": [
+        2144,
+        2145
+      ],
+      "new_span": [
+        2143,
+        2144
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2147.cond.857",
+      "new_id": "L2146.cond.856",
+      "old_span": [
+        2146,
+        2147
+      ],
+      "new_span": [
+        2145,
+        2146
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2147.cond.858",
+      "new_id": "L2146.cond.857",
+      "old_span": [
+        2146,
+        2147
+      ],
+      "new_span": [
+        2145,
+        2146
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2148.stmt.859",
+      "new_id": "L2147.stmt.858",
+      "old_span": [
+        2147,
+        2148
+      ],
+      "new_span": [
+        2146,
+        2147
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2152.stmt.860",
+      "new_id": "L2151.stmt.859",
+      "old_span": [
+        2151,
+        2152
+      ],
+      "new_span": [
+        2150,
+        2151
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2156.stmt.861",
+      "new_id": "L2155.stmt.860",
+      "old_span": [
+        2155,
+        2156
+      ],
+      "new_span": [
+        2154,
+        2155
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2164.iter.862",
+      "new_id": "L2163.iter.861",
+      "old_span": [
+        2163,
+        2164
+      ],
+      "new_span": [
+        2162,
+        2163
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2164_",
+        "after": "__archogen_sweep_2163_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2164.iter.863",
+      "new_id": "L2163.iter.862",
+      "old_span": [
+        2163,
+        2164
+      ],
+      "new_span": [
+        2162,
+        2163
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2164_",
+        "after": "__archogen_sweep_2163_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2164.iter.864",
+      "new_id": "L2163.iter.863",
+      "old_span": [
+        2163,
+        2164
+      ],
+      "new_span": [
+        2162,
+        2163
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2164_",
+        "after": "__archogen_sweep_2163_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2180.eq.865",
+      "new_id": "L2179.eq.864",
+      "old_span": [
+        2179,
+        2180
+      ],
+      "new_span": [
+        2178,
+        2179
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2181.logic.866",
+      "new_id": "L2180.logic.865",
+      "old_span": [
+        2180,
+        2181
+      ],
+      "new_span": [
+        2179,
+        2180
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2182.eq.867",
+      "new_id": "L2181.eq.866",
+      "old_span": [
+        2181,
+        2182
+      ],
+      "new_span": [
+        2180,
+        2181
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2182.eq.868",
+      "new_id": "L2181.eq.867",
+      "old_span": [
+        2181,
+        2182
+      ],
+      "new_span": [
+        2180,
+        2181
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2182.eq.869",
+      "new_id": "L2181.eq.868",
+      "old_span": [
+        2181,
+        2182
+      ],
+      "new_span": [
+        2180,
+        2181
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2182.logic.870",
+      "new_id": "L2181.logic.869",
+      "old_span": [
+        2181,
+        2182
+      ],
+      "new_span": [
+        2180,
+        2181
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2182.logic.871",
+      "new_id": "L2181.logic.870",
+      "old_span": [
+        2181,
+        2182
+      ],
+      "new_span": [
+        2180,
+        2181
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2182.logic.872",
+      "new_id": "L2181.logic.871",
+      "old_span": [
+        2181,
+        2182
+      ],
+      "new_span": [
+        2180,
+        2181
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2248.stmt.873",
+      "new_id": "L2247.stmt.872",
+      "old_span": [
+        2247,
+        2248
+      ],
+      "new_span": [
+        2246,
+        2247
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2254.iter.874",
+      "new_id": "L2253.iter.873",
+      "old_span": [
+        2253,
+        2254
+      ],
+      "new_span": [
+        2252,
+        2253
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2254_",
+        "after": "__archogen_sweep_2253_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2254.iter.875",
+      "new_id": "L2253.iter.874",
+      "old_span": [
+        2253,
+        2254
+      ],
+      "new_span": [
+        2252,
+        2253
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2254_",
+        "after": "__archogen_sweep_2253_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2254.iter.876",
+      "new_id": "L2253.iter.875",
+      "old_span": [
+        2253,
+        2254
+      ],
+      "new_span": [
+        2252,
+        2253
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2254_",
+        "after": "__archogen_sweep_2253_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2255.int.877",
+      "new_id": "L2254.int.876",
+      "old_span": [
+        2254,
+        2255
+      ],
+      "new_span": [
+        2253,
+        2254
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2255.int.878",
+      "new_id": "L2254.int.877",
+      "old_span": [
+        2254,
+        2255
+      ],
+      "new_span": [
+        2253,
+        2254
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2255.iter.879",
+      "new_id": "L2254.iter.878",
+      "old_span": [
+        2254,
+        2255
+      ],
+      "new_span": [
+        2253,
+        2254
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2255_",
+        "after": "__archogen_sweep_2254_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2255.iter.880",
+      "new_id": "L2254.iter.879",
+      "old_span": [
+        2254,
+        2255
+      ],
+      "new_span": [
+        2253,
+        2254
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2255_",
+        "after": "__archogen_sweep_2254_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2255.iter.881",
+      "new_id": "L2254.iter.880",
+      "old_span": [
+        2254,
+        2255
+      ],
+      "new_span": [
+        2253,
+        2254
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2255_",
+        "after": "__archogen_sweep_2254_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2255.guard.882",
+      "new_id": "L2254.guard.881",
+      "old_span": [
+        2254,
+        2263
+      ],
+      "new_span": [
+        2253,
+        2262
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2255_",
+        "after": "__archogen_sweep_2254_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2255.guard.883",
+      "new_id": "L2254.guard.882",
+      "old_span": [
+        2254,
+        2263
+      ],
+      "new_span": [
+        2253,
+        2262
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2255_",
+        "after": "__archogen_sweep_2254_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2255.guard.884",
+      "new_id": "L2254.guard.883",
+      "old_span": [
+        2254,
+        2263
+      ],
+      "new_span": [
+        2253,
+        2262
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2255_",
+        "after": "__archogen_sweep_2254_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2261.eq.885",
+      "new_id": "L2260.eq.884",
+      "old_span": [
+        2260,
+        2261
+      ],
+      "new_span": [
+        2259,
+        2260
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2261.eq.886",
+      "new_id": "L2260.eq.885",
+      "old_span": [
+        2260,
+        2261
+      ],
+      "new_span": [
+        2259,
+        2260
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2261.logic.887",
+      "new_id": "L2260.logic.886",
+      "old_span": [
+        2260,
+        2261
+      ],
+      "new_span": [
+        2259,
+        2260
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2263.logic.888",
+      "new_id": "L2262.logic.887",
+      "old_span": [
+        2262,
+        2263
+      ],
+      "new_span": [
+        2261,
+        2262
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2263.logic.889",
+      "new_id": "L2262.logic.888",
+      "old_span": [
+        2262,
+        2263
+      ],
+      "new_span": [
+        2261,
+        2262
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2263.logic.890",
+      "new_id": "L2262.logic.889",
+      "old_span": [
+        2262,
+        2263
+      ],
+      "new_span": [
+        2261,
+        2262
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2263.cond.891",
+      "new_id": "L2262.cond.890",
+      "old_span": [
+        2262,
+        2263
+      ],
+      "new_span": [
+        2261,
+        2262
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2263.cond.892",
+      "new_id": "L2262.cond.891",
+      "old_span": [
+        2262,
+        2263
+      ],
+      "new_span": [
+        2261,
+        2262
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2264.stmt.893",
+      "new_id": "L2263.stmt.892",
+      "old_span": [
+        2263,
+        2264
+      ],
+      "new_span": [
+        2262,
+        2263
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2277.eq.894",
+      "new_id": "L2276.eq.893",
+      "old_span": [
+        2276,
+        2277
+      ],
+      "new_span": [
+        2275,
+        2276
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2277.eq.895",
+      "new_id": "L2276.eq.894",
+      "old_span": [
+        2276,
+        2277
+      ],
+      "new_span": [
+        2275,
+        2276
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2277.eq.896",
+      "new_id": "L2276.eq.895",
+      "old_span": [
+        2276,
+        2277
+      ],
+      "new_span": [
+        2275,
+        2276
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2277.eq.897",
+      "new_id": "L2276.eq.896",
+      "old_span": [
+        2276,
+        2277
+      ],
+      "new_span": [
+        2275,
+        2276
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2277.logic.898",
+      "new_id": "L2276.logic.897",
+      "old_span": [
+        2276,
+        2277
+      ],
+      "new_span": [
+        2275,
+        2276
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2277.logic.899",
+      "new_id": "L2276.logic.898",
+      "old_span": [
+        2276,
+        2277
+      ],
+      "new_span": [
+        2275,
+        2276
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2277.logic.900",
+      "new_id": "L2276.logic.899",
+      "old_span": [
+        2276,
+        2277
+      ],
+      "new_span": [
+        2275,
+        2276
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2283.stmt.901",
+      "new_id": "L2282.stmt.900",
+      "old_span": [
+        2282,
+        2283
+      ],
+      "new_span": [
+        2281,
+        2282
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2285.iter.902",
+      "new_id": "L2284.iter.901",
+      "old_span": [
+        2284,
+        2285
+      ],
+      "new_span": [
+        2283,
+        2284
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2285_",
+        "after": "__archogen_sweep_2284_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2285.iter.903",
+      "new_id": "L2284.iter.902",
+      "old_span": [
+        2284,
+        2285
+      ],
+      "new_span": [
+        2283,
+        2284
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2285_",
+        "after": "__archogen_sweep_2284_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2285.iter.904",
+      "new_id": "L2284.iter.903",
+      "old_span": [
+        2284,
+        2285
+      ],
+      "new_span": [
+        2283,
+        2284
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2285_",
+        "after": "__archogen_sweep_2284_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2290.eq.905",
+      "new_id": "L2289.eq.904",
+      "old_span": [
+        2289,
+        2290
+      ],
+      "new_span": [
+        2288,
+        2289
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2291.logic.906",
+      "new_id": "L2290.logic.905",
+      "old_span": [
+        2290,
+        2291
+      ],
+      "new_span": [
+        2289,
+        2290
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2292.eq.907",
+      "new_id": "L2291.eq.906",
+      "old_span": [
+        2291,
+        2292
+      ],
+      "new_span": [
+        2290,
+        2291
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2292.logic.908",
+      "new_id": "L2291.logic.907",
+      "old_span": [
+        2291,
+        2292
+      ],
+      "new_span": [
+        2290,
+        2291
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2293.eq.909",
+      "new_id": "L2292.eq.908",
+      "old_span": [
+        2292,
+        2293
+      ],
+      "new_span": [
+        2291,
+        2292
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2293.eq.910",
+      "new_id": "L2292.eq.909",
+      "old_span": [
+        2292,
+        2293
+      ],
+      "new_span": [
+        2291,
+        2292
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2293.logic.911",
+      "new_id": "L2292.logic.910",
+      "old_span": [
+        2292,
+        2293
+      ],
+      "new_span": [
+        2291,
+        2292
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2293.logic.912",
+      "new_id": "L2292.logic.911",
+      "old_span": [
+        2292,
+        2293
+      ],
+      "new_span": [
+        2291,
+        2292
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2302.eq.913",
+      "new_id": "L2301.eq.912",
+      "old_span": [
+        2301,
+        2302
+      ],
+      "new_span": [
+        2300,
+        2301
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2324.eq.914",
+      "new_id": "L2323.eq.913",
+      "old_span": [
+        2323,
+        2324
+      ],
+      "new_span": [
+        2322,
+        2323
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2330.eq.915",
+      "new_id": "L2329.eq.914",
+      "old_span": [
+        2329,
+        2330
+      ],
+      "new_span": [
+        2328,
+        2329
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2335.stmt.916",
+      "new_id": "L2334.stmt.915",
+      "old_span": [
+        2334,
+        2335
+      ],
+      "new_span": [
+        2333,
+        2334
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2337.stmt.917",
+      "new_id": "L2336.stmt.916",
+      "old_span": [
+        2336,
+        2337
+      ],
+      "new_span": [
+        2335,
+        2336
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2349.stmt.918",
+      "new_id": "L2348.stmt.917",
+      "old_span": [
+        2348,
+        2349
+      ],
+      "new_span": [
+        2347,
+        2348
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2369.iter.919",
+      "new_id": "L2368.iter.918",
+      "old_span": [
+        2368,
+        2369
+      ],
+      "new_span": [
+        2367,
+        2368
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2369_",
+        "after": "__archogen_sweep_2368_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2369.iter.920",
+      "new_id": "L2368.iter.919",
+      "old_span": [
+        2368,
+        2369
+      ],
+      "new_span": [
+        2367,
+        2368
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2369_",
+        "after": "__archogen_sweep_2368_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2369.iter.921",
+      "new_id": "L2368.iter.920",
+      "old_span": [
+        2368,
+        2369
+      ],
+      "new_span": [
+        2367,
+        2368
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2369_",
+        "after": "__archogen_sweep_2368_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2369.guard.922",
+      "new_id": "L2368.guard.921",
+      "old_span": [
+        2368,
+        2370
+      ],
+      "new_span": [
+        2367,
+        2369
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2369_",
+        "after": "__archogen_sweep_2368_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2369.guard.923",
+      "new_id": "L2368.guard.922",
+      "old_span": [
+        2368,
+        2370
+      ],
+      "new_span": [
+        2367,
+        2369
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2369_",
+        "after": "__archogen_sweep_2368_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2369.guard.924",
+      "new_id": "L2368.guard.923",
+      "old_span": [
+        2368,
+        2370
+      ],
+      "new_span": [
+        2367,
+        2369
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2369_",
+        "after": "__archogen_sweep_2368_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2370.cond.925",
+      "new_id": "L2369.cond.924",
+      "old_span": [
+        2369,
+        2370
+      ],
+      "new_span": [
+        2368,
+        2369
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2370.cond.926",
+      "new_id": "L2369.cond.925",
+      "old_span": [
+        2369,
+        2370
+      ],
+      "new_span": [
+        2368,
+        2369
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2370.not.927",
+      "new_id": "L2369.not.926",
+      "old_span": [
+        2369,
+        2370
+      ],
+      "new_span": [
+        2368,
+        2369
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2375.stmt.928",
+      "new_id": "L2374.stmt.927",
+      "old_span": [
+        2374,
+        2375
+      ],
+      "new_span": [
+        2373,
+        2374
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2380.stmt.929",
+      "new_id": "L2379.stmt.928",
+      "old_span": [
+        2379,
+        2380
+      ],
+      "new_span": [
+        2378,
+        2379
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2381.iter.930",
+      "new_id": "L2380.iter.929",
+      "old_span": [
+        2380,
+        2381
+      ],
+      "new_span": [
+        2379,
+        2380
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2381_",
+        "after": "__archogen_sweep_2380_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2381.iter.931",
+      "new_id": "L2380.iter.930",
+      "old_span": [
+        2380,
+        2381
+      ],
+      "new_span": [
+        2379,
+        2380
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2381_",
+        "after": "__archogen_sweep_2380_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2381.iter.932",
+      "new_id": "L2380.iter.931",
+      "old_span": [
+        2380,
+        2381
+      ],
+      "new_span": [
+        2379,
+        2380
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2381_",
+        "after": "__archogen_sweep_2380_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2381.guard.933",
+      "new_id": "L2380.guard.932",
+      "old_span": [
+        2380,
+        2382
+      ],
+      "new_span": [
+        2379,
+        2381
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2381_",
+        "after": "__archogen_sweep_2380_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2381.guard.934",
+      "new_id": "L2380.guard.933",
+      "old_span": [
+        2380,
+        2382
+      ],
+      "new_span": [
+        2379,
+        2381
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2381_",
+        "after": "__archogen_sweep_2380_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2381.guard.935",
+      "new_id": "L2380.guard.934",
+      "old_span": [
+        2380,
+        2382
+      ],
+      "new_span": [
+        2379,
+        2381
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2381_",
+        "after": "__archogen_sweep_2380_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2382.cond.936",
+      "new_id": "L2381.cond.935",
+      "old_span": [
+        2381,
+        2382
+      ],
+      "new_span": [
+        2380,
+        2381
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2382.cond.937",
+      "new_id": "L2381.cond.936",
+      "old_span": [
+        2381,
+        2382
+      ],
+      "new_span": [
+        2380,
+        2381
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2382.not.938",
+      "new_id": "L2381.not.937",
+      "old_span": [
+        2381,
+        2382
+      ],
+      "new_span": [
+        2380,
+        2381
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2383.stmt.939",
+      "new_id": "L2382.stmt.938",
+      "old_span": [
+        2382,
+        2383
+      ],
+      "new_span": [
+        2381,
+        2382
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2386.iter.940",
+      "new_id": "L2385.iter.939",
+      "old_span": [
+        2385,
+        2386
+      ],
+      "new_span": [
+        2384,
+        2385
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2386_",
+        "after": "__archogen_sweep_2385_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2386.iter.941",
+      "new_id": "L2385.iter.940",
+      "old_span": [
+        2385,
+        2386
+      ],
+      "new_span": [
+        2384,
+        2385
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2386_",
+        "after": "__archogen_sweep_2385_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2386.iter.942",
+      "new_id": "L2385.iter.941",
+      "old_span": [
+        2385,
+        2386
+      ],
+      "new_span": [
+        2384,
+        2385
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2386_",
+        "after": "__archogen_sweep_2385_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2386.guard.943",
+      "new_id": "L2385.guard.942",
+      "old_span": [
+        2385,
+        2387
+      ],
+      "new_span": [
+        2384,
+        2386
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2386_",
+        "after": "__archogen_sweep_2385_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2386.guard.944",
+      "new_id": "L2385.guard.943",
+      "old_span": [
+        2385,
+        2387
+      ],
+      "new_span": [
+        2384,
+        2386
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2386_",
+        "after": "__archogen_sweep_2385_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2386.guard.945",
+      "new_id": "L2385.guard.944",
+      "old_span": [
+        2385,
+        2387
+      ],
+      "new_span": [
+        2384,
+        2386
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2386_",
+        "after": "__archogen_sweep_2385_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2387.cond.946",
+      "new_id": "L2386.cond.945",
+      "old_span": [
+        2386,
+        2387
+      ],
+      "new_span": [
+        2385,
+        2386
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2387.cond.947",
+      "new_id": "L2386.cond.946",
+      "old_span": [
+        2386,
+        2387
+      ],
+      "new_span": [
+        2385,
+        2386
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2387.not.948",
+      "new_id": "L2386.not.947",
+      "old_span": [
+        2386,
+        2387
+      ],
+      "new_span": [
+        2385,
+        2386
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2388.stmt.949",
+      "new_id": "L2387.stmt.948",
+      "old_span": [
+        2387,
+        2388
+      ],
+      "new_span": [
+        2386,
+        2387
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2391.iter.950",
+      "new_id": "L2390.iter.949",
+      "old_span": [
+        2390,
+        2391
+      ],
+      "new_span": [
+        2389,
+        2390
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2391_",
+        "after": "__archogen_sweep_2390_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2391.iter.951",
+      "new_id": "L2390.iter.950",
+      "old_span": [
+        2390,
+        2391
+      ],
+      "new_span": [
+        2389,
+        2390
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2391_",
+        "after": "__archogen_sweep_2390_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2391.iter.952",
+      "new_id": "L2390.iter.951",
+      "old_span": [
+        2390,
+        2391
+      ],
+      "new_span": [
+        2389,
+        2390
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2391_",
+        "after": "__archogen_sweep_2390_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2391.guard.953",
+      "new_id": "L2390.guard.952",
+      "old_span": [
+        2390,
+        2392
+      ],
+      "new_span": [
+        2389,
+        2391
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2391_",
+        "after": "__archogen_sweep_2390_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2391.guard.954",
+      "new_id": "L2390.guard.953",
+      "old_span": [
+        2390,
+        2392
+      ],
+      "new_span": [
+        2389,
+        2391
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2391_",
+        "after": "__archogen_sweep_2390_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2391.guard.955",
+      "new_id": "L2390.guard.954",
+      "old_span": [
+        2390,
+        2392
+      ],
+      "new_span": [
+        2389,
+        2391
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2391_",
+        "after": "__archogen_sweep_2390_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2392.eq.956",
+      "new_id": "L2391.eq.955",
+      "old_span": [
+        2391,
+        2392
+      ],
+      "new_span": [
+        2390,
+        2391
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2392.logic.957",
+      "new_id": "L2391.logic.956",
+      "old_span": [
+        2391,
+        2392
+      ],
+      "new_span": [
+        2390,
+        2391
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2392.logic.958",
+      "new_id": "L2391.logic.957",
+      "old_span": [
+        2391,
+        2392
+      ],
+      "new_span": [
+        2390,
+        2391
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2392.logic.959",
+      "new_id": "L2391.logic.958",
+      "old_span": [
+        2391,
+        2392
+      ],
+      "new_span": [
+        2390,
+        2391
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2392.logic.960",
+      "new_id": "L2391.logic.959",
+      "old_span": [
+        2391,
+        2392
+      ],
+      "new_span": [
+        2390,
+        2391
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2392.logic.961",
+      "new_id": "L2391.logic.960",
+      "old_span": [
+        2391,
+        2392
+      ],
+      "new_span": [
+        2390,
+        2391
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2392.cond.962",
+      "new_id": "L2391.cond.961",
+      "old_span": [
+        2391,
+        2392
+      ],
+      "new_span": [
+        2390,
+        2391
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2392.cond.963",
+      "new_id": "L2391.cond.962",
+      "old_span": [
+        2391,
+        2392
+      ],
+      "new_span": [
+        2390,
+        2391
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2392.not.964",
+      "new_id": "L2391.not.963",
+      "old_span": [
+        2391,
+        2392
+      ],
+      "new_span": [
+        2390,
+        2391
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2392.not.965",
+      "new_id": "L2391.not.964",
+      "old_span": [
+        2391,
+        2392
+      ],
+      "new_span": [
+        2390,
+        2391
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2397.stmt.966",
+      "new_id": "L2396.stmt.965",
+      "old_span": [
+        2396,
+        2397
+      ],
+      "new_span": [
+        2395,
+        2396
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2432.stmt.967",
+      "new_id": "L2431.stmt.966",
+      "old_span": [
+        2431,
+        2432
+      ],
+      "new_span": [
+        2430,
+        2431
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2437.stmt.968",
+      "new_id": "L2436.stmt.967",
+      "old_span": [
+        2436,
+        2437
+      ],
+      "new_span": [
+        2435,
+        2436
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2448.iter.969",
+      "new_id": "L2447.iter.968",
+      "old_span": [
+        2447,
+        2448
+      ],
+      "new_span": [
+        2446,
+        2447
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2448_",
+        "after": "__archogen_sweep_2447_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2448.iter.970",
+      "new_id": "L2447.iter.969",
+      "old_span": [
+        2447,
+        2448
+      ],
+      "new_span": [
+        2446,
+        2447
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2448_",
+        "after": "__archogen_sweep_2447_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2448.iter.971",
+      "new_id": "L2447.iter.970",
+      "old_span": [
+        2447,
+        2448
+      ],
+      "new_span": [
+        2446,
+        2447
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2448_",
+        "after": "__archogen_sweep_2447_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2453.stmt.972",
+      "new_id": "L2452.stmt.971",
+      "old_span": [
+        2452,
+        2453
+      ],
+      "new_span": [
+        2451,
+        2452
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2504.eq.973",
+      "new_id": "L2503.eq.972",
+      "old_span": [
+        2503,
+        2504
+      ],
+      "new_span": [
+        2502,
+        2503
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2504.not.974",
+      "new_id": "L2503.not.973",
+      "old_span": [
+        2503,
+        2504
+      ],
+      "new_span": [
+        2502,
+        2503
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2511.stmt.975",
+      "new_id": "L2510.stmt.974",
+      "old_span": [
+        2510,
+        2511
+      ],
+      "new_span": [
+        2509,
+        2510
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2512.stmt.976",
+      "new_id": "L2511.stmt.975",
+      "old_span": [
+        2511,
+        2512
+      ],
+      "new_span": [
+        2510,
+        2511
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2513.stmt.977",
+      "new_id": "L2512.stmt.976",
+      "old_span": [
+        2512,
+        2513
+      ],
+      "new_span": [
+        2511,
+        2512
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2522.cmp.978",
+      "new_id": "L2521.cmp.977",
+      "old_span": [
+        2521,
+        2522
+      ],
+      "new_span": [
+        2520,
+        2521
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2522.cond.979",
+      "new_id": "L2521.cond.978",
+      "old_span": [
+        2521,
+        2522
+      ],
+      "new_span": [
+        2520,
+        2521
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2523.int.980",
+      "new_id": "L2522.int.979",
+      "old_span": [
+        2522,
+        2523
+      ],
+      "new_span": [
+        2521,
+        2522
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2523.int.981",
+      "new_id": "L2522.int.980",
+      "old_span": [
+        2522,
+        2523
+      ],
+      "new_span": [
+        2521,
+        2522
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2527.stmt.982",
+      "new_id": "L2526.stmt.981",
+      "old_span": [
+        2526,
+        2527
+      ],
+      "new_span": [
+        2525,
+        2526
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2531.int.983",
+      "new_id": "L2530.int.982",
+      "old_span": [
+        2530,
+        2531
+      ],
+      "new_span": [
+        2529,
+        2530
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2531.int.984",
+      "new_id": "L2530.int.983",
+      "old_span": [
+        2530,
+        2531
+      ],
+      "new_span": [
+        2529,
+        2530
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2531.stmt.985",
+      "new_id": "L2530.stmt.984",
+      "old_span": [
+        2530,
+        2531
+      ],
+      "new_span": [
+        2529,
+        2530
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2551.iter.986",
+      "new_id": "L2550.iter.985",
+      "old_span": [
+        2550,
+        2551
+      ],
+      "new_span": [
+        2549,
+        2550
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2551_",
+        "after": "__archogen_sweep_2550_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2551.iter.987",
+      "new_id": "L2550.iter.986",
+      "old_span": [
+        2550,
+        2551
+      ],
+      "new_span": [
+        2549,
+        2550
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2551_",
+        "after": "__archogen_sweep_2550_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2551.iter.988",
+      "new_id": "L2550.iter.987",
+      "old_span": [
+        2550,
+        2551
+      ],
+      "new_span": [
+        2549,
+        2550
+      ],
+      "generated_prefix_rename": {
+        "before": "__archogen_sweep_2551_",
+        "after": "__archogen_sweep_2550_",
+        "symbol_suffixes": [
+          "first",
+          "it",
+          "k",
+          "last"
+        ]
+      }
+    },
+    {
+      "old_id": "L2552.stmt.989",
+      "new_id": "L2551.stmt.988",
+      "old_span": [
+        2551,
+        2552
+      ],
+      "new_span": [
+        2550,
+        2551
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2561.stmt.990",
+      "new_id": "L2560.stmt.989",
+      "old_span": [
+        2560,
+        2561
+      ],
+      "new_span": [
+        2559,
+        2560
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2572.eq.991",
+      "new_id": "L2571.eq.990",
+      "old_span": [
+        2571,
+        2572
+      ],
+      "new_span": [
+        2570,
+        2571
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2585.eq.992",
+      "new_id": "L2584.eq.991",
+      "old_span": [
+        2584,
+        2585
+      ],
+      "new_span": [
+        2583,
+        2584
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L149.chain.993",
+      "new_id": "L149.chain.992",
+      "old_span": [
+        148,
+        149
+      ],
+      "new_span": [
+        148,
+        149
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L149.chain.994",
+      "new_id": "L149.chain.993",
+      "old_span": [
+        148,
+        149
+      ],
+      "new_span": [
+        148,
+        149
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L162.chain.995",
+      "new_id": "L162.chain.994",
+      "old_span": [
+        161,
+        162
+      ],
+      "new_span": [
+        161,
+        162
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L162.chain.996",
+      "new_id": "L162.chain.995",
+      "old_span": [
+        161,
+        162
+      ],
+      "new_span": [
+        161,
+        162
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L222.chain.997",
+      "new_id": "L222.chain.996",
+      "old_span": [
+        221,
+        222
+      ],
+      "new_span": [
+        221,
+        222
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L222.chain.998",
+      "new_id": "L222.chain.997",
+      "old_span": [
+        221,
+        222
+      ],
+      "new_span": [
+        221,
+        222
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L241.chain.999",
+      "new_id": "L241.chain.998",
+      "old_span": [
+        240,
+        241
+      ],
+      "new_span": [
+        240,
+        241
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L241.chain.1000",
+      "new_id": "L241.chain.999",
+      "old_span": [
+        240,
+        241
+      ],
+      "new_span": [
+        240,
+        241
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L247.contains.1001",
+      "new_id": "L247.contains.1000",
+      "old_span": [
+        246,
+        247
+      ],
+      "new_span": [
+        246,
+        247
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L247.contains.1002",
+      "new_id": "L247.contains.1001",
+      "old_span": [
+        246,
+        247
+      ],
+      "new_span": [
+        246,
+        247
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L247.contains.1003",
+      "new_id": "L247.contains.1002",
+      "old_span": [
+        246,
+        247
+      ],
+      "new_span": [
+        246,
+        247
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L247.contains.1004",
+      "new_id": "L247.contains.1003",
+      "old_span": [
+        246,
+        247
+      ],
+      "new_span": [
+        246,
+        247
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L269.chain.1005",
+      "new_id": "L269.chain.1004",
+      "old_span": [
+        268,
+        269
+      ],
+      "new_span": [
+        268,
+        269
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L269.chain.1006",
+      "new_id": "L269.chain.1005",
+      "old_span": [
+        268,
+        269
+      ],
+      "new_span": [
+        268,
+        269
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L272.contains.1007",
+      "new_id": "L272.contains.1006",
+      "old_span": [
+        271,
+        272
+      ],
+      "new_span": [
+        271,
+        272
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L272.contains.1008",
+      "new_id": "L272.contains.1007",
+      "old_span": [
+        271,
+        272
+      ],
+      "new_span": [
+        271,
+        272
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L272.contains.1009",
+      "new_id": "L272.contains.1008",
+      "old_span": [
+        271,
+        272
+      ],
+      "new_span": [
+        271,
+        272
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L272.contains.1010",
+      "new_id": "L272.contains.1009",
+      "old_span": [
+        271,
+        272
+      ],
+      "new_span": [
+        271,
+        272
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L306.contains.1011",
+      "new_id": "L306.contains.1010",
+      "old_span": [
+        305,
+        306
+      ],
+      "new_span": [
+        305,
+        306
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L306.contains.1012",
+      "new_id": "L306.contains.1011",
+      "old_span": [
+        305,
+        306
+      ],
+      "new_span": [
+        305,
+        306
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L306.contains.1013",
+      "new_id": "L306.contains.1012",
+      "old_span": [
+        305,
+        306
+      ],
+      "new_span": [
+        305,
+        306
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L306.contains.1014",
+      "new_id": "L306.contains.1013",
+      "old_span": [
+        305,
+        306
+      ],
+      "new_span": [
+        305,
+        306
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L318.chain.1015",
+      "new_id": "L318.chain.1014",
+      "old_span": [
+        317,
+        318
+      ],
+      "new_span": [
+        317,
+        318
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L318.chain.1016",
+      "new_id": "L318.chain.1015",
+      "old_span": [
+        317,
+        318
+      ],
+      "new_span": [
+        317,
+        318
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L348.chain.1017",
+      "new_id": "L348.chain.1016",
+      "old_span": [
+        347,
+        348
+      ],
+      "new_span": [
+        347,
+        348
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L348.chain.1018",
+      "new_id": "L348.chain.1017",
+      "old_span": [
+        347,
+        348
+      ],
+      "new_span": [
+        347,
+        348
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L419.chain.1019",
+      "new_id": "L419.chain.1018",
+      "old_span": [
+        418,
+        419
+      ],
+      "new_span": [
+        418,
+        419
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L419.chain.1020",
+      "new_id": "L419.chain.1019",
+      "old_span": [
+        418,
+        419
+      ],
+      "new_span": [
+        418,
+        419
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L486.chain.1021",
+      "new_id": "L486.chain.1020",
+      "old_span": [
+        485,
+        486
+      ],
+      "new_span": [
+        485,
+        486
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L486.chain.1022",
+      "new_id": "L486.chain.1021",
+      "old_span": [
+        485,
+        486
+      ],
+      "new_span": [
+        485,
+        486
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L490.chain.1023",
+      "new_id": "L490.chain.1022",
+      "old_span": [
+        489,
+        490
+      ],
+      "new_span": [
+        489,
+        490
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L490.chain.1024",
+      "new_id": "L490.chain.1023",
+      "old_span": [
+        489,
+        490
+      ],
+      "new_span": [
+        489,
+        490
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L564.chain.1025",
+      "new_id": "L564.chain.1024",
+      "old_span": [
+        563,
+        564
+      ],
+      "new_span": [
+        563,
+        564
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L564.chain.1026",
+      "new_id": "L564.chain.1025",
+      "old_span": [
+        563,
+        564
+      ],
+      "new_span": [
+        563,
+        564
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L564.chain.1027",
+      "new_id": "L564.chain.1026",
+      "old_span": [
+        563,
+        564
+      ],
+      "new_span": [
+        563,
+        564
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L564.chain.1028",
+      "new_id": "L564.chain.1027",
+      "old_span": [
+        563,
+        564
+      ],
+      "new_span": [
+        563,
+        564
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L564.chain.1029",
+      "new_id": "L564.chain.1028",
+      "old_span": [
+        563,
+        564
+      ],
+      "new_span": [
+        563,
+        564
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L566.chain.1030",
+      "new_id": "L566.chain.1029",
+      "old_span": [
+        565,
+        566
+      ],
+      "new_span": [
+        565,
+        566
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L566.chain.1031",
+      "new_id": "L566.chain.1030",
+      "old_span": [
+        565,
+        566
+      ],
+      "new_span": [
+        565,
+        566
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L567.chain.1032",
+      "new_id": "L567.chain.1031",
+      "old_span": [
+        566,
+        567
+      ],
+      "new_span": [
+        566,
+        567
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L567.chain.1033",
+      "new_id": "L567.chain.1032",
+      "old_span": [
+        566,
+        567
+      ],
+      "new_span": [
+        566,
+        567
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L567.chain.1034",
+      "new_id": "L567.chain.1033",
+      "old_span": [
+        566,
+        567
+      ],
+      "new_span": [
+        566,
+        567
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L567.contains.1035",
+      "new_id": "L567.contains.1034",
+      "old_span": [
+        566,
+        567
+      ],
+      "new_span": [
+        566,
+        567
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L567.contains.1036",
+      "new_id": "L567.contains.1035",
+      "old_span": [
+        566,
+        567
+      ],
+      "new_span": [
+        566,
+        567
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L567.contains.1037",
+      "new_id": "L567.contains.1036",
+      "old_span": [
+        566,
+        567
+      ],
+      "new_span": [
+        566,
+        567
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L567.contains.1038",
+      "new_id": "L567.contains.1037",
+      "old_span": [
+        566,
+        567
+      ],
+      "new_span": [
+        566,
+        567
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L576.chain.1039",
+      "new_id": "L576.chain.1038",
+      "old_span": [
+        575,
+        576
+      ],
+      "new_span": [
+        575,
+        576
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L576.chain.1040",
+      "new_id": "L576.chain.1039",
+      "old_span": [
+        575,
+        576
+      ],
+      "new_span": [
+        575,
+        576
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L587.chain.1041",
+      "new_id": "L587.chain.1040",
+      "old_span": [
+        586,
+        587
+      ],
+      "new_span": [
+        586,
+        587
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L590.contains.1042",
+      "new_id": "L590.contains.1041",
+      "old_span": [
+        589,
+        590
+      ],
+      "new_span": [
+        589,
+        590
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L590.contains.1043",
+      "new_id": "L590.contains.1042",
+      "old_span": [
+        589,
+        590
+      ],
+      "new_span": [
+        589,
+        590
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L590.contains.1044",
+      "new_id": "L590.contains.1043",
+      "old_span": [
+        589,
+        590
+      ],
+      "new_span": [
+        589,
+        590
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L590.contains.1045",
+      "new_id": "L590.contains.1044",
+      "old_span": [
+        589,
+        590
+      ],
+      "new_span": [
+        589,
+        590
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L598.chain.1046",
+      "new_id": "L598.chain.1045",
+      "old_span": [
+        597,
+        598
+      ],
+      "new_span": [
+        597,
+        598
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L598.chain.1047",
+      "new_id": "L598.chain.1046",
+      "old_span": [
+        597,
+        598
+      ],
+      "new_span": [
+        597,
+        598
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L616.chain.1048",
+      "new_id": "L616.chain.1047",
+      "old_span": [
+        615,
+        616
+      ],
+      "new_span": [
+        615,
+        616
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L616.chain.1049",
+      "new_id": "L616.chain.1048",
+      "old_span": [
+        615,
+        616
+      ],
+      "new_span": [
+        615,
+        616
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L697.chain.1050",
+      "new_id": "L697.chain.1049",
+      "old_span": [
+        696,
+        697
+      ],
+      "new_span": [
+        696,
+        697
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L697.chain.1051",
+      "new_id": "L697.chain.1050",
+      "old_span": [
+        696,
+        697
+      ],
+      "new_span": [
+        696,
+        697
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L719.chain.1052",
+      "new_id": "L719.chain.1051",
+      "old_span": [
+        718,
+        719
+      ],
+      "new_span": [
+        718,
+        719
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L719.chain.1053",
+      "new_id": "L719.chain.1052",
+      "old_span": [
+        718,
+        719
+      ],
+      "new_span": [
+        718,
+        719
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L737.chain.1054",
+      "new_id": "L737.chain.1053",
+      "old_span": [
+        736,
+        737
+      ],
+      "new_span": [
+        736,
+        737
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L737.chain.1055",
+      "new_id": "L737.chain.1054",
+      "old_span": [
+        736,
+        737
+      ],
+      "new_span": [
+        736,
+        737
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L741.chain.1056",
+      "new_id": "L741.chain.1055",
+      "old_span": [
+        740,
+        741
+      ],
+      "new_span": [
+        740,
+        741
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L741.chain.1057",
+      "new_id": "L741.chain.1056",
+      "old_span": [
+        740,
+        741
+      ],
+      "new_span": [
+        740,
+        741
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L760.contains.1058",
+      "new_id": "L760.contains.1057",
+      "old_span": [
+        759,
+        760
+      ],
+      "new_span": [
+        759,
+        760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L760.contains.1059",
+      "new_id": "L760.contains.1058",
+      "old_span": [
+        759,
+        760
+      ],
+      "new_span": [
+        759,
+        760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L760.contains.1060",
+      "new_id": "L760.contains.1059",
+      "old_span": [
+        759,
+        760
+      ],
+      "new_span": [
+        759,
+        760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L760.contains.1061",
+      "new_id": "L760.contains.1060",
+      "old_span": [
+        759,
+        760
+      ],
+      "new_span": [
+        759,
+        760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L801.contains.1062",
+      "new_id": "L800.contains.1061",
+      "old_span": [
+        800,
+        801
+      ],
+      "new_span": [
+        799,
+        800
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L801.contains.1063",
+      "new_id": "L800.contains.1062",
+      "old_span": [
+        800,
+        801
+      ],
+      "new_span": [
+        799,
+        800
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L801.contains.1064",
+      "new_id": "L800.contains.1063",
+      "old_span": [
+        800,
+        801
+      ],
+      "new_span": [
+        799,
+        800
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L801.contains.1065",
+      "new_id": "L800.contains.1064",
+      "old_span": [
+        800,
+        801
+      ],
+      "new_span": [
+        799,
+        800
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L830.chain.1066",
+      "new_id": "L829.chain.1065",
+      "old_span": [
+        829,
+        830
+      ],
+      "new_span": [
+        828,
+        829
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L830.chain.1067",
+      "new_id": "L829.chain.1066",
+      "old_span": [
+        829,
+        830
+      ],
+      "new_span": [
+        828,
+        829
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L934.chain.1068",
+      "new_id": "L933.chain.1067",
+      "old_span": [
+        933,
+        934
+      ],
+      "new_span": [
+        932,
+        933
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L934.chain.1069",
+      "new_id": "L933.chain.1068",
+      "old_span": [
+        933,
+        934
+      ],
+      "new_span": [
+        932,
+        933
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L940.chain.1070",
+      "new_id": "L939.chain.1069",
+      "old_span": [
+        939,
+        940
+      ],
+      "new_span": [
+        938,
+        939
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L940.chain.1071",
+      "new_id": "L939.chain.1070",
+      "old_span": [
+        939,
+        940
+      ],
+      "new_span": [
+        938,
+        939
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L962.chain.1072",
+      "new_id": "L961.chain.1071",
+      "old_span": [
+        961,
+        962
+      ],
+      "new_span": [
+        960,
+        961
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L962.chain.1073",
+      "new_id": "L961.chain.1072",
+      "old_span": [
+        961,
+        962
+      ],
+      "new_span": [
+        960,
+        961
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1039.chain.1074",
+      "new_id": "L1038.chain.1073",
+      "old_span": [
+        1038,
+        1039
+      ],
+      "new_span": [
+        1037,
+        1038
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1039.chain.1075",
+      "new_id": "L1038.chain.1074",
+      "old_span": [
+        1038,
+        1039
+      ],
+      "new_span": [
+        1037,
+        1038
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1043.chain.1076",
+      "new_id": "L1042.chain.1075",
+      "old_span": [
+        1042,
+        1043
+      ],
+      "new_span": [
+        1041,
+        1042
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1043.chain.1077",
+      "new_id": "L1042.chain.1076",
+      "old_span": [
+        1042,
+        1043
+      ],
+      "new_span": [
+        1041,
+        1042
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1064.chain.1078",
+      "new_id": "L1063.chain.1077",
+      "old_span": [
+        1063,
+        1064
+      ],
+      "new_span": [
+        1062,
+        1063
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1064.chain.1079",
+      "new_id": "L1063.chain.1078",
+      "old_span": [
+        1063,
+        1064
+      ],
+      "new_span": [
+        1062,
+        1063
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1105.chain.1080",
+      "new_id": "L1104.chain.1079",
+      "old_span": [
+        1104,
+        1105
+      ],
+      "new_span": [
+        1103,
+        1104
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1105.chain.1081",
+      "new_id": "L1104.chain.1080",
+      "old_span": [
+        1104,
+        1105
+      ],
+      "new_span": [
+        1103,
+        1104
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1112.chain.1082",
+      "new_id": "L1111.chain.1081",
+      "old_span": [
+        1111,
+        1112
+      ],
+      "new_span": [
+        1110,
+        1111
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1112.chain.1083",
+      "new_id": "L1111.chain.1082",
+      "old_span": [
+        1111,
+        1112
+      ],
+      "new_span": [
+        1110,
+        1111
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1148.contains.1084",
+      "new_id": "L1147.contains.1083",
+      "old_span": [
+        1147,
+        1148
+      ],
+      "new_span": [
+        1146,
+        1147
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1148.contains.1085",
+      "new_id": "L1147.contains.1084",
+      "old_span": [
+        1147,
+        1148
+      ],
+      "new_span": [
+        1146,
+        1147
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1148.contains.1086",
+      "new_id": "L1147.contains.1085",
+      "old_span": [
+        1147,
+        1148
+      ],
+      "new_span": [
+        1146,
+        1147
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1148.contains.1087",
+      "new_id": "L1147.contains.1086",
+      "old_span": [
+        1147,
+        1148
+      ],
+      "new_span": [
+        1146,
+        1147
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1163.chain.1088",
+      "new_id": "L1162.chain.1087",
+      "old_span": [
+        1162,
+        1163
+      ],
+      "new_span": [
+        1161,
+        1162
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1163.chain.1089",
+      "new_id": "L1162.chain.1088",
+      "old_span": [
+        1162,
+        1163
+      ],
+      "new_span": [
+        1161,
+        1162
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1164.chain.1090",
+      "new_id": "L1163.chain.1089",
+      "old_span": [
+        1163,
+        1164
+      ],
+      "new_span": [
+        1162,
+        1163
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1164.chain.1091",
+      "new_id": "L1163.chain.1090",
+      "old_span": [
+        1163,
+        1164
+      ],
+      "new_span": [
+        1162,
+        1163
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1164.chain.1092",
+      "new_id": "L1163.chain.1091",
+      "old_span": [
+        1163,
+        1164
+      ],
+      "new_span": [
+        1162,
+        1163
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1165.chain.1093",
+      "new_id": "L1164.chain.1092",
+      "old_span": [
+        1164,
+        1165
+      ],
+      "new_span": [
+        1163,
+        1164
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1165.chain.1094",
+      "new_id": "L1164.chain.1093",
+      "old_span": [
+        1164,
+        1165
+      ],
+      "new_span": [
+        1163,
+        1164
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1170.chain.1095",
+      "new_id": "L1169.chain.1094",
+      "old_span": [
+        1169,
+        1170
+      ],
+      "new_span": [
+        1168,
+        1169
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1170.chain.1096",
+      "new_id": "L1169.chain.1095",
+      "old_span": [
+        1169,
+        1170
+      ],
+      "new_span": [
+        1168,
+        1169
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1178.chain.1097",
+      "new_id": "L1177.chain.1096",
+      "old_span": [
+        1177,
+        1178
+      ],
+      "new_span": [
+        1176,
+        1177
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1178.chain.1098",
+      "new_id": "L1177.chain.1097",
+      "old_span": [
+        1177,
+        1178
+      ],
+      "new_span": [
+        1176,
+        1177
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1179.chain.1099",
+      "new_id": "L1178.chain.1098",
+      "old_span": [
+        1178,
+        1179
+      ],
+      "new_span": [
+        1177,
+        1178
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1179.chain.1100",
+      "new_id": "L1178.chain.1099",
+      "old_span": [
+        1178,
+        1179
+      ],
+      "new_span": [
+        1177,
+        1178
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1179.chain.1101",
+      "new_id": "L1178.chain.1100",
+      "old_span": [
+        1178,
+        1179
+      ],
+      "new_span": [
+        1177,
+        1178
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1179.contains.1102",
+      "new_id": "L1178.contains.1101",
+      "old_span": [
+        1178,
+        1179
+      ],
+      "new_span": [
+        1177,
+        1178
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1179.contains.1103",
+      "new_id": "L1178.contains.1102",
+      "old_span": [
+        1178,
+        1179
+      ],
+      "new_span": [
+        1177,
+        1178
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1179.contains.1104",
+      "new_id": "L1178.contains.1103",
+      "old_span": [
+        1178,
+        1179
+      ],
+      "new_span": [
+        1177,
+        1178
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1179.contains.1105",
+      "new_id": "L1178.contains.1104",
+      "old_span": [
+        1178,
+        1179
+      ],
+      "new_span": [
+        1177,
+        1178
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1183.chain.1106",
+      "new_id": "L1182.chain.1105",
+      "old_span": [
+        1182,
+        1183
+      ],
+      "new_span": [
+        1181,
+        1182
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1183.chain.1107",
+      "new_id": "L1182.chain.1106",
+      "old_span": [
+        1182,
+        1183
+      ],
+      "new_span": [
+        1181,
+        1182
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1196.chain.1108",
+      "new_id": "L1195.chain.1107",
+      "old_span": [
+        1195,
+        1196
+      ],
+      "new_span": [
+        1194,
+        1195
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1196.chain.1109",
+      "new_id": "L1195.chain.1108",
+      "old_span": [
+        1195,
+        1196
+      ],
+      "new_span": [
+        1194,
+        1195
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1214.chain.1110",
+      "new_id": "L1213.chain.1109",
+      "old_span": [
+        1213,
+        1214
+      ],
+      "new_span": [
+        1212,
+        1213
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1214.chain.1111",
+      "new_id": "L1213.chain.1110",
+      "old_span": [
+        1213,
+        1214
+      ],
+      "new_span": [
+        1212,
+        1213
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1215.chain.1112",
+      "new_id": "L1214.chain.1111",
+      "old_span": [
+        1214,
+        1215
+      ],
+      "new_span": [
+        1213,
+        1214
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1215.chain.1113",
+      "new_id": "L1214.chain.1112",
+      "old_span": [
+        1214,
+        1215
+      ],
+      "new_span": [
+        1213,
+        1214
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1215.chain.1114",
+      "new_id": "L1214.chain.1113",
+      "old_span": [
+        1214,
+        1215
+      ],
+      "new_span": [
+        1213,
+        1214
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1215.contains.1115",
+      "new_id": "L1214.contains.1114",
+      "old_span": [
+        1214,
+        1215
+      ],
+      "new_span": [
+        1213,
+        1214
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1215.contains.1116",
+      "new_id": "L1214.contains.1115",
+      "old_span": [
+        1214,
+        1215
+      ],
+      "new_span": [
+        1213,
+        1214
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1215.contains.1117",
+      "new_id": "L1214.contains.1116",
+      "old_span": [
+        1214,
+        1215
+      ],
+      "new_span": [
+        1213,
+        1214
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1215.contains.1118",
+      "new_id": "L1214.contains.1117",
+      "old_span": [
+        1214,
+        1215
+      ],
+      "new_span": [
+        1213,
+        1214
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1301.chain.1119",
+      "new_id": "L1300.chain.1118",
+      "old_span": [
+        1300,
+        1301
+      ],
+      "new_span": [
+        1299,
+        1300
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1301.chain.1120",
+      "new_id": "L1300.chain.1119",
+      "old_span": [
+        1300,
+        1301
+      ],
+      "new_span": [
+        1299,
+        1300
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1309.contains.1121",
+      "new_id": "L1308.contains.1120",
+      "old_span": [
+        1308,
+        1309
+      ],
+      "new_span": [
+        1307,
+        1308
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1309.contains.1122",
+      "new_id": "L1308.contains.1121",
+      "old_span": [
+        1308,
+        1309
+      ],
+      "new_span": [
+        1307,
+        1308
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1309.contains.1123",
+      "new_id": "L1308.contains.1122",
+      "old_span": [
+        1308,
+        1309
+      ],
+      "new_span": [
+        1307,
+        1308
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1309.contains.1124",
+      "new_id": "L1308.contains.1123",
+      "old_span": [
+        1308,
+        1309
+      ],
+      "new_span": [
+        1307,
+        1308
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1312.chain.1125",
+      "new_id": "L1311.chain.1124",
+      "old_span": [
+        1311,
+        1312
+      ],
+      "new_span": [
+        1310,
+        1311
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1312.chain.1126",
+      "new_id": "L1311.chain.1125",
+      "old_span": [
+        1311,
+        1312
+      ],
+      "new_span": [
+        1310,
+        1311
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1374.chain.1127",
+      "new_id": "L1373.chain.1126",
+      "old_span": [
+        1373,
+        1374
+      ],
+      "new_span": [
+        1372,
+        1373
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1374.chain.1128",
+      "new_id": "L1373.chain.1127",
+      "old_span": [
+        1373,
+        1374
+      ],
+      "new_span": [
+        1372,
+        1373
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1375.contains.1129",
+      "new_id": "L1374.contains.1128",
+      "old_span": [
+        1374,
+        1375
+      ],
+      "new_span": [
+        1373,
+        1374
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1375.contains.1130",
+      "new_id": "L1374.contains.1129",
+      "old_span": [
+        1374,
+        1375
+      ],
+      "new_span": [
+        1373,
+        1374
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1375.contains.1131",
+      "new_id": "L1374.contains.1130",
+      "old_span": [
+        1374,
+        1375
+      ],
+      "new_span": [
+        1373,
+        1374
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1375.contains.1132",
+      "new_id": "L1374.contains.1131",
+      "old_span": [
+        1374,
+        1375
+      ],
+      "new_span": [
+        1373,
+        1374
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1496.chain.1133",
+      "new_id": "L1495.chain.1132",
+      "old_span": [
+        1495,
+        1496
+      ],
+      "new_span": [
+        1494,
+        1495
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1496.chain.1134",
+      "new_id": "L1495.chain.1133",
+      "old_span": [
+        1495,
+        1496
+      ],
+      "new_span": [
+        1494,
+        1495
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1508.chain.1135",
+      "new_id": "L1507.chain.1134",
+      "old_span": [
+        1507,
+        1508
+      ],
+      "new_span": [
+        1506,
+        1507
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1508.chain.1136",
+      "new_id": "L1507.chain.1135",
+      "old_span": [
+        1507,
+        1508
+      ],
+      "new_span": [
+        1506,
+        1507
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1509.chain.1137",
+      "new_id": "L1508.chain.1136",
+      "old_span": [
+        1508,
+        1509
+      ],
+      "new_span": [
+        1507,
+        1508
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1509.chain.1138",
+      "new_id": "L1508.chain.1137",
+      "old_span": [
+        1508,
+        1509
+      ],
+      "new_span": [
+        1507,
+        1508
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1509.chain.1139",
+      "new_id": "L1508.chain.1138",
+      "old_span": [
+        1508,
+        1509
+      ],
+      "new_span": [
+        1507,
+        1508
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1523.contains.1140",
+      "new_id": "L1522.contains.1139",
+      "old_span": [
+        1522,
+        1523
+      ],
+      "new_span": [
+        1521,
+        1522
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1523.contains.1141",
+      "new_id": "L1522.contains.1140",
+      "old_span": [
+        1522,
+        1523
+      ],
+      "new_span": [
+        1521,
+        1522
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1523.contains.1142",
+      "new_id": "L1522.contains.1141",
+      "old_span": [
+        1522,
+        1523
+      ],
+      "new_span": [
+        1521,
+        1522
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1523.contains.1143",
+      "new_id": "L1522.contains.1142",
+      "old_span": [
+        1522,
+        1523
+      ],
+      "new_span": [
+        1521,
+        1522
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1553.chain.1144",
+      "new_id": "L1552.chain.1143",
+      "old_span": [
+        1552,
+        1553
+      ],
+      "new_span": [
+        1551,
+        1552
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1553.chain.1145",
+      "new_id": "L1552.chain.1144",
+      "old_span": [
+        1552,
+        1553
+      ],
+      "new_span": [
+        1551,
+        1552
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1616.chain.1146",
+      "new_id": "L1615.chain.1145",
+      "old_span": [
+        1615,
+        1616
+      ],
+      "new_span": [
+        1614,
+        1615
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1616.chain.1147",
+      "new_id": "L1615.chain.1146",
+      "old_span": [
+        1615,
+        1616
+      ],
+      "new_span": [
+        1614,
+        1615
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1626.chain.1148",
+      "new_id": "L1625.chain.1147",
+      "old_span": [
+        1625,
+        1626
+      ],
+      "new_span": [
+        1624,
+        1625
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1626.chain.1149",
+      "new_id": "L1625.chain.1148",
+      "old_span": [
+        1625,
+        1626
+      ],
+      "new_span": [
+        1624,
+        1625
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1626.contains.1150",
+      "new_id": "L1625.contains.1149",
+      "old_span": [
+        1625,
+        1626
+      ],
+      "new_span": [
+        1624,
+        1625
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1626.contains.1151",
+      "new_id": "L1625.contains.1150",
+      "old_span": [
+        1625,
+        1626
+      ],
+      "new_span": [
+        1624,
+        1625
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1626.contains.1152",
+      "new_id": "L1625.contains.1151",
+      "old_span": [
+        1625,
+        1626
+      ],
+      "new_span": [
+        1624,
+        1625
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1626.contains.1153",
+      "new_id": "L1625.contains.1152",
+      "old_span": [
+        1625,
+        1626
+      ],
+      "new_span": [
+        1624,
+        1625
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1635.chain.1154",
+      "new_id": "L1634.chain.1153",
+      "old_span": [
+        1634,
+        1635
+      ],
+      "new_span": [
+        1633,
+        1634
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1635.chain.1155",
+      "new_id": "L1634.chain.1154",
+      "old_span": [
+        1634,
+        1635
+      ],
+      "new_span": [
+        1633,
+        1634
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1647.chain.1156",
+      "new_id": "L1646.chain.1155",
+      "old_span": [
+        1646,
+        1647
+      ],
+      "new_span": [
+        1645,
+        1646
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1647.chain.1157",
+      "new_id": "L1646.chain.1156",
+      "old_span": [
+        1646,
+        1647
+      ],
+      "new_span": [
+        1645,
+        1646
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1652.chain.1158",
+      "new_id": "L1651.chain.1157",
+      "old_span": [
+        1651,
+        1652
+      ],
+      "new_span": [
+        1650,
+        1651
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1652.chain.1159",
+      "new_id": "L1651.chain.1158",
+      "old_span": [
+        1651,
+        1652
+      ],
+      "new_span": [
+        1650,
+        1651
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1652.chain.1160",
+      "new_id": "L1651.chain.1159",
+      "old_span": [
+        1651,
+        1652
+      ],
+      "new_span": [
+        1650,
+        1651
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1656.chain.1161",
+      "new_id": "L1655.chain.1160",
+      "old_span": [
+        1655,
+        1663
+      ],
+      "new_span": [
+        1654,
+        1662
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1656.chain.1162",
+      "new_id": "L1655.chain.1161",
+      "old_span": [
+        1655,
+        1656
+      ],
+      "new_span": [
+        1654,
+        1655
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1656.chain.1163",
+      "new_id": "L1655.chain.1162",
+      "old_span": [
+        1655,
+        1656
+      ],
+      "new_span": [
+        1654,
+        1655
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1660.chain.1164",
+      "new_id": "L1659.chain.1163",
+      "old_span": [
+        1659,
+        1660
+      ],
+      "new_span": [
+        1658,
+        1659
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1660.chain.1165",
+      "new_id": "L1659.chain.1164",
+      "old_span": [
+        1659,
+        1660
+      ],
+      "new_span": [
+        1658,
+        1659
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1660.chain.1166",
+      "new_id": "L1659.chain.1165",
+      "old_span": [
+        1659,
+        1660
+      ],
+      "new_span": [
+        1658,
+        1659
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1685.chain.1167",
+      "new_id": "L1684.chain.1166",
+      "old_span": [
+        1684,
+        1685
+      ],
+      "new_span": [
+        1683,
+        1684
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1685.chain.1168",
+      "new_id": "L1684.chain.1167",
+      "old_span": [
+        1684,
+        1685
+      ],
+      "new_span": [
+        1683,
+        1684
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1687.chain.1169",
+      "new_id": "L1686.chain.1168",
+      "old_span": [
+        1686,
+        1687
+      ],
+      "new_span": [
+        1685,
+        1686
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1687.chain.1170",
+      "new_id": "L1686.chain.1169",
+      "old_span": [
+        1686,
+        1687
+      ],
+      "new_span": [
+        1685,
+        1686
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1761.contains.1171",
+      "new_id": "L1760.contains.1170",
+      "old_span": [
+        1760,
+        1761
+      ],
+      "new_span": [
+        1759,
+        1760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1761.contains.1172",
+      "new_id": "L1760.contains.1171",
+      "old_span": [
+        1760,
+        1761
+      ],
+      "new_span": [
+        1759,
+        1760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1761.contains.1173",
+      "new_id": "L1760.contains.1172",
+      "old_span": [
+        1760,
+        1761
+      ],
+      "new_span": [
+        1759,
+        1760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1761.contains.1174",
+      "new_id": "L1760.contains.1173",
+      "old_span": [
+        1760,
+        1761
+      ],
+      "new_span": [
+        1759,
+        1760
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1818.chain.1175",
+      "new_id": "L1817.chain.1174",
+      "old_span": [
+        1817,
+        1818
+      ],
+      "new_span": [
+        1816,
+        1817
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1818.chain.1176",
+      "new_id": "L1817.chain.1175",
+      "old_span": [
+        1817,
+        1818
+      ],
+      "new_span": [
+        1816,
+        1817
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1821.chain.1177",
+      "new_id": "L1820.chain.1176",
+      "old_span": [
+        1820,
+        1821
+      ],
+      "new_span": [
+        1819,
+        1820
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1821.chain.1178",
+      "new_id": "L1820.chain.1177",
+      "old_span": [
+        1820,
+        1821
+      ],
+      "new_span": [
+        1819,
+        1820
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1822.chain.1179",
+      "new_id": "L1821.chain.1178",
+      "old_span": [
+        1821,
+        1822
+      ],
+      "new_span": [
+        1820,
+        1821
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1822.chain.1180",
+      "new_id": "L1821.chain.1179",
+      "old_span": [
+        1821,
+        1822
+      ],
+      "new_span": [
+        1820,
+        1821
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1822.chain.1181",
+      "new_id": "L1821.chain.1180",
+      "old_span": [
+        1821,
+        1822
+      ],
+      "new_span": [
+        1820,
+        1821
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1832.contains.1182",
+      "new_id": "L1831.contains.1181",
+      "old_span": [
+        1831,
+        1832
+      ],
+      "new_span": [
+        1830,
+        1831
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1832.contains.1183",
+      "new_id": "L1831.contains.1182",
+      "old_span": [
+        1831,
+        1832
+      ],
+      "new_span": [
+        1830,
+        1831
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1832.contains.1184",
+      "new_id": "L1831.contains.1183",
+      "old_span": [
+        1831,
+        1832
+      ],
+      "new_span": [
+        1830,
+        1831
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1832.contains.1185",
+      "new_id": "L1831.contains.1184",
+      "old_span": [
+        1831,
+        1832
+      ],
+      "new_span": [
+        1830,
+        1831
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1853.chain.1186",
+      "new_id": "L1852.chain.1185",
+      "old_span": [
+        1852,
+        1853
+      ],
+      "new_span": [
+        1851,
+        1852
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1853.chain.1187",
+      "new_id": "L1852.chain.1186",
+      "old_span": [
+        1852,
+        1853
+      ],
+      "new_span": [
+        1851,
+        1852
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1858.chain.1188",
+      "new_id": "L1857.chain.1187",
+      "old_span": [
+        1857,
+        1858
+      ],
+      "new_span": [
+        1856,
+        1857
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1858.chain.1189",
+      "new_id": "L1857.chain.1188",
+      "old_span": [
+        1857,
+        1858
+      ],
+      "new_span": [
+        1856,
+        1857
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1861.chain.1190",
+      "new_id": "L1860.chain.1189",
+      "old_span": [
+        1860,
+        1861
+      ],
+      "new_span": [
+        1859,
+        1860
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1861.chain.1191",
+      "new_id": "L1860.chain.1190",
+      "old_span": [
+        1860,
+        1861
+      ],
+      "new_span": [
+        1859,
+        1860
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1862.chain.1192",
+      "new_id": "L1861.chain.1191",
+      "old_span": [
+        1861,
+        1862
+      ],
+      "new_span": [
+        1860,
+        1861
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1862.chain.1193",
+      "new_id": "L1861.chain.1192",
+      "old_span": [
+        1861,
+        1862
+      ],
+      "new_span": [
+        1860,
+        1861
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1863.chain.1194",
+      "new_id": "L1862.chain.1193",
+      "old_span": [
+        1862,
+        1863
+      ],
+      "new_span": [
+        1861,
+        1862
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1863.chain.1195",
+      "new_id": "L1862.chain.1194",
+      "old_span": [
+        1862,
+        1863
+      ],
+      "new_span": [
+        1861,
+        1862
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1863.chain.1196",
+      "new_id": "L1862.chain.1195",
+      "old_span": [
+        1862,
+        1863
+      ],
+      "new_span": [
+        1861,
+        1862
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1877.chain.1197",
+      "new_id": "L1876.chain.1196",
+      "old_span": [
+        1876,
+        1877
+      ],
+      "new_span": [
+        1875,
+        1876
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1877.chain.1198",
+      "new_id": "L1876.chain.1197",
+      "old_span": [
+        1876,
+        1877
+      ],
+      "new_span": [
+        1875,
+        1876
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1898.chain.1199",
+      "new_id": "L1897.chain.1198",
+      "old_span": [
+        1897,
+        1898
+      ],
+      "new_span": [
+        1896,
+        1897
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1898.chain.1200",
+      "new_id": "L1897.chain.1199",
+      "old_span": [
+        1897,
+        1898
+      ],
+      "new_span": [
+        1896,
+        1897
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1898.chain.1201",
+      "new_id": "L1897.chain.1200",
+      "old_span": [
+        1897,
+        1898
+      ],
+      "new_span": [
+        1896,
+        1897
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1898.chain.1202",
+      "new_id": "L1897.chain.1201",
+      "old_span": [
+        1897,
+        1898
+      ],
+      "new_span": [
+        1896,
+        1897
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1898.chain.1203",
+      "new_id": "L1897.chain.1202",
+      "old_span": [
+        1897,
+        1898
+      ],
+      "new_span": [
+        1896,
+        1897
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1909.chain.1204",
+      "new_id": "L1908.chain.1203",
+      "old_span": [
+        1908,
+        1909
+      ],
+      "new_span": [
+        1907,
+        1908
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1909.chain.1205",
+      "new_id": "L1908.chain.1204",
+      "old_span": [
+        1908,
+        1909
+      ],
+      "new_span": [
+        1907,
+        1908
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1910.chain.1206",
+      "new_id": "L1909.chain.1205",
+      "old_span": [
+        1909,
+        1910
+      ],
+      "new_span": [
+        1908,
+        1909
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1910.chain.1207",
+      "new_id": "L1909.chain.1206",
+      "old_span": [
+        1909,
+        1910
+      ],
+      "new_span": [
+        1908,
+        1909
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1910.chain.1208",
+      "new_id": "L1909.chain.1207",
+      "old_span": [
+        1909,
+        1910
+      ],
+      "new_span": [
+        1908,
+        1909
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1920.chain.1209",
+      "new_id": "L1919.chain.1208",
+      "old_span": [
+        1919,
+        1920
+      ],
+      "new_span": [
+        1918,
+        1919
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1920.chain.1210",
+      "new_id": "L1919.chain.1209",
+      "old_span": [
+        1919,
+        1920
+      ],
+      "new_span": [
+        1918,
+        1919
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1921.chain.1211",
+      "new_id": "L1920.chain.1210",
+      "old_span": [
+        1920,
+        1921
+      ],
+      "new_span": [
+        1919,
+        1920
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1921.chain.1212",
+      "new_id": "L1920.chain.1211",
+      "old_span": [
+        1920,
+        1921
+      ],
+      "new_span": [
+        1919,
+        1920
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1921.chain.1213",
+      "new_id": "L1920.chain.1212",
+      "old_span": [
+        1920,
+        1921
+      ],
+      "new_span": [
+        1919,
+        1920
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1921.contains.1214",
+      "new_id": "L1920.contains.1213",
+      "old_span": [
+        1920,
+        1921
+      ],
+      "new_span": [
+        1919,
+        1920
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1921.contains.1215",
+      "new_id": "L1920.contains.1214",
+      "old_span": [
+        1920,
+        1921
+      ],
+      "new_span": [
+        1919,
+        1920
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1921.contains.1216",
+      "new_id": "L1920.contains.1215",
+      "old_span": [
+        1920,
+        1921
+      ],
+      "new_span": [
+        1919,
+        1920
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1921.contains.1217",
+      "new_id": "L1920.contains.1216",
+      "old_span": [
+        1920,
+        1921
+      ],
+      "new_span": [
+        1919,
+        1920
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1930.chain.1218",
+      "new_id": "L1929.chain.1217",
+      "old_span": [
+        1929,
+        1930
+      ],
+      "new_span": [
+        1928,
+        1929
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1930.chain.1219",
+      "new_id": "L1929.chain.1218",
+      "old_span": [
+        1929,
+        1930
+      ],
+      "new_span": [
+        1928,
+        1929
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1931.contains.1220",
+      "new_id": "L1930.contains.1219",
+      "old_span": [
+        1930,
+        1931
+      ],
+      "new_span": [
+        1929,
+        1930
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1931.contains.1221",
+      "new_id": "L1930.contains.1220",
+      "old_span": [
+        1930,
+        1931
+      ],
+      "new_span": [
+        1929,
+        1930
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1931.contains.1222",
+      "new_id": "L1930.contains.1221",
+      "old_span": [
+        1930,
+        1931
+      ],
+      "new_span": [
+        1929,
+        1930
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1931.contains.1223",
+      "new_id": "L1930.contains.1222",
+      "old_span": [
+        1930,
+        1931
+      ],
+      "new_span": [
+        1929,
+        1930
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1941.chain.1224",
+      "new_id": "L1940.chain.1223",
+      "old_span": [
+        1940,
+        1941
+      ],
+      "new_span": [
+        1939,
+        1940
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1941.chain.1225",
+      "new_id": "L1940.chain.1224",
+      "old_span": [
+        1940,
+        1941
+      ],
+      "new_span": [
+        1939,
+        1940
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1947.chain.1226",
+      "new_id": "L1946.chain.1225",
+      "old_span": [
+        1946,
+        1947
+      ],
+      "new_span": [
+        1945,
+        1946
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1947.chain.1227",
+      "new_id": "L1946.chain.1226",
+      "old_span": [
+        1946,
+        1947
+      ],
+      "new_span": [
+        1945,
+        1946
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1949.chain.1228",
+      "new_id": "L1948.chain.1227",
+      "old_span": [
+        1948,
+        1949
+      ],
+      "new_span": [
+        1947,
+        1948
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1949.chain.1229",
+      "new_id": "L1948.chain.1228",
+      "old_span": [
+        1948,
+        1949
+      ],
+      "new_span": [
+        1947,
+        1948
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1949.chain.1230",
+      "new_id": "L1948.chain.1229",
+      "old_span": [
+        1948,
+        1949
+      ],
+      "new_span": [
+        1947,
+        1948
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1949.contains.1231",
+      "new_id": "L1948.contains.1230",
+      "old_span": [
+        1948,
+        1949
+      ],
+      "new_span": [
+        1947,
+        1948
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1949.contains.1232",
+      "new_id": "L1948.contains.1231",
+      "old_span": [
+        1948,
+        1949
+      ],
+      "new_span": [
+        1947,
+        1948
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1949.contains.1233",
+      "new_id": "L1948.contains.1232",
+      "old_span": [
+        1948,
+        1949
+      ],
+      "new_span": [
+        1947,
+        1948
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1949.contains.1234",
+      "new_id": "L1948.contains.1233",
+      "old_span": [
+        1948,
+        1949
+      ],
+      "new_span": [
+        1947,
+        1948
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1965.chain.1235",
+      "new_id": "L1964.chain.1234",
+      "old_span": [
+        1964,
+        1965
+      ],
+      "new_span": [
+        1963,
+        1964
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1965.chain.1236",
+      "new_id": "L1964.chain.1235",
+      "old_span": [
+        1964,
+        1965
+      ],
+      "new_span": [
+        1963,
+        1964
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2050.chain.1237",
+      "new_id": "L2049.chain.1236",
+      "old_span": [
+        2049,
+        2050
+      ],
+      "new_span": [
+        2048,
+        2049
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2050.chain.1238",
+      "new_id": "L2049.chain.1237",
+      "old_span": [
+        2049,
+        2050
+      ],
+      "new_span": [
+        2048,
+        2049
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2054.chain.1239",
+      "new_id": "L2053.chain.1238",
+      "old_span": [
+        2053,
+        2054
+      ],
+      "new_span": [
+        2052,
+        2053
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2054.chain.1240",
+      "new_id": "L2053.chain.1239",
+      "old_span": [
+        2053,
+        2054
+      ],
+      "new_span": [
+        2052,
+        2053
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2073.chain.1241",
+      "new_id": "L2072.chain.1240",
+      "old_span": [
+        2072,
+        2073
+      ],
+      "new_span": [
+        2071,
+        2072
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2073.chain.1242",
+      "new_id": "L2072.chain.1241",
+      "old_span": [
+        2072,
+        2073
+      ],
+      "new_span": [
+        2071,
+        2072
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2080.contains.1243",
+      "new_id": "L2079.contains.1242",
+      "old_span": [
+        2079,
+        2080
+      ],
+      "new_span": [
+        2078,
+        2079
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2080.contains.1244",
+      "new_id": "L2079.contains.1243",
+      "old_span": [
+        2079,
+        2080
+      ],
+      "new_span": [
+        2078,
+        2079
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2080.contains.1245",
+      "new_id": "L2079.contains.1244",
+      "old_span": [
+        2079,
+        2080
+      ],
+      "new_span": [
+        2078,
+        2079
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2080.contains.1246",
+      "new_id": "L2079.contains.1245",
+      "old_span": [
+        2079,
+        2080
+      ],
+      "new_span": [
+        2078,
+        2079
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2096.contains.1247",
+      "new_id": "L2095.contains.1246",
+      "old_span": [
+        2095,
+        2096
+      ],
+      "new_span": [
+        2094,
+        2095
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2096.contains.1248",
+      "new_id": "L2095.contains.1247",
+      "old_span": [
+        2095,
+        2096
+      ],
+      "new_span": [
+        2094,
+        2095
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2096.contains.1249",
+      "new_id": "L2095.contains.1248",
+      "old_span": [
+        2095,
+        2096
+      ],
+      "new_span": [
+        2094,
+        2095
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2096.contains.1250",
+      "new_id": "L2095.contains.1249",
+      "old_span": [
+        2095,
+        2096
+      ],
+      "new_span": [
+        2094,
+        2095
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2127.chain.1251",
+      "new_id": "L2126.chain.1250",
+      "old_span": [
+        2126,
+        2127
+      ],
+      "new_span": [
+        2125,
+        2126
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2127.chain.1252",
+      "new_id": "L2126.chain.1251",
+      "old_span": [
+        2126,
+        2127
+      ],
+      "new_span": [
+        2125,
+        2126
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2141.chain.1253",
+      "new_id": "L2140.chain.1252",
+      "old_span": [
+        2140,
+        2141
+      ],
+      "new_span": [
+        2139,
+        2140
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2141.chain.1254",
+      "new_id": "L2140.chain.1253",
+      "old_span": [
+        2140,
+        2141
+      ],
+      "new_span": [
+        2139,
+        2140
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2166.chain.1255",
+      "new_id": "L2165.chain.1254",
+      "old_span": [
+        2165,
+        2166
+      ],
+      "new_span": [
+        2164,
+        2165
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2166.chain.1256",
+      "new_id": "L2165.chain.1255",
+      "old_span": [
+        2165,
+        2166
+      ],
+      "new_span": [
+        2164,
+        2165
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2170.chain.1257",
+      "new_id": "L2169.chain.1256",
+      "old_span": [
+        2169,
+        2170
+      ],
+      "new_span": [
+        2168,
+        2169
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2170.chain.1258",
+      "new_id": "L2169.chain.1257",
+      "old_span": [
+        2169,
+        2170
+      ],
+      "new_span": [
+        2168,
+        2169
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2178.chain.1259",
+      "new_id": "L2177.chain.1258",
+      "old_span": [
+        2177,
+        2178
+      ],
+      "new_span": [
+        2176,
+        2177
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2178.chain.1260",
+      "new_id": "L2177.chain.1259",
+      "old_span": [
+        2177,
+        2178
+      ],
+      "new_span": [
+        2176,
+        2177
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2179.chain.1261",
+      "new_id": "L2178.chain.1260",
+      "old_span": [
+        2178,
+        2183
+      ],
+      "new_span": [
+        2177,
+        2182
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2179.chain.1262",
+      "new_id": "L2178.chain.1261",
+      "old_span": [
+        2178,
+        2183
+      ],
+      "new_span": [
+        2177,
+        2182
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2179.chain.1263",
+      "new_id": "L2178.chain.1262",
+      "old_span": [
+        2178,
+        2183
+      ],
+      "new_span": [
+        2177,
+        2182
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2181.contains.1264",
+      "new_id": "L2180.contains.1263",
+      "old_span": [
+        2180,
+        2181
+      ],
+      "new_span": [
+        2179,
+        2180
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2181.contains.1265",
+      "new_id": "L2180.contains.1264",
+      "old_span": [
+        2180,
+        2181
+      ],
+      "new_span": [
+        2179,
+        2180
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2181.contains.1266",
+      "new_id": "L2180.contains.1265",
+      "old_span": [
+        2180,
+        2181
+      ],
+      "new_span": [
+        2179,
+        2180
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2181.contains.1267",
+      "new_id": "L2180.contains.1266",
+      "old_span": [
+        2180,
+        2181
+      ],
+      "new_span": [
+        2179,
+        2180
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2200.chain.1268",
+      "new_id": "L2199.chain.1267",
+      "old_span": [
+        2199,
+        2200
+      ],
+      "new_span": [
+        2198,
+        2199
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2200.chain.1269",
+      "new_id": "L2199.chain.1268",
+      "old_span": [
+        2199,
+        2200
+      ],
+      "new_span": [
+        2198,
+        2199
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2218.chain.1270",
+      "new_id": "L2217.chain.1269",
+      "old_span": [
+        2217,
+        2218
+      ],
+      "new_span": [
+        2216,
+        2217
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2218.chain.1271",
+      "new_id": "L2217.chain.1270",
+      "old_span": [
+        2217,
+        2218
+      ],
+      "new_span": [
+        2216,
+        2217
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2227.chain.1272",
+      "new_id": "L2226.chain.1271",
+      "old_span": [
+        2226,
+        2227
+      ],
+      "new_span": [
+        2225,
+        2226
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2227.chain.1273",
+      "new_id": "L2226.chain.1272",
+      "old_span": [
+        2226,
+        2227
+      ],
+      "new_span": [
+        2225,
+        2226
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2238.chain.1274",
+      "new_id": "L2237.chain.1273",
+      "old_span": [
+        2237,
+        2238
+      ],
+      "new_span": [
+        2236,
+        2237
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2238.chain.1275",
+      "new_id": "L2237.chain.1274",
+      "old_span": [
+        2237,
+        2238
+      ],
+      "new_span": [
+        2236,
+        2237
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2253.chain.1276",
+      "new_id": "L2252.chain.1275",
+      "old_span": [
+        2252,
+        2253
+      ],
+      "new_span": [
+        2251,
+        2252
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2253.chain.1277",
+      "new_id": "L2252.chain.1276",
+      "old_span": [
+        2252,
+        2253
+      ],
+      "new_span": [
+        2251,
+        2252
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2254.chain.1278",
+      "new_id": "L2253.chain.1277",
+      "old_span": [
+        2253,
+        2254
+      ],
+      "new_span": [
+        2252,
+        2253
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2254.chain.1279",
+      "new_id": "L2253.chain.1278",
+      "old_span": [
+        2253,
+        2254
+      ],
+      "new_span": [
+        2252,
+        2253
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2255.chain.1280",
+      "new_id": "L2254.chain.1279",
+      "old_span": [
+        2254,
+        2255
+      ],
+      "new_span": [
+        2253,
+        2254
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2255.chain.1281",
+      "new_id": "L2254.chain.1280",
+      "old_span": [
+        2254,
+        2255
+      ],
+      "new_span": [
+        2253,
+        2254
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2269.chain.1282",
+      "new_id": "L2268.chain.1281",
+      "old_span": [
+        2268,
+        2269
+      ],
+      "new_span": [
+        2267,
+        2268
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2269.chain.1283",
+      "new_id": "L2268.chain.1282",
+      "old_span": [
+        2268,
+        2269
+      ],
+      "new_span": [
+        2267,
+        2268
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2275.chain.1284",
+      "new_id": "L2274.chain.1283",
+      "old_span": [
+        2274,
+        2275
+      ],
+      "new_span": [
+        2273,
+        2274
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2275.chain.1285",
+      "new_id": "L2274.chain.1284",
+      "old_span": [
+        2274,
+        2275
+      ],
+      "new_span": [
+        2273,
+        2274
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2288.chain.1286",
+      "new_id": "L2287.chain.1285",
+      "old_span": [
+        2287,
+        2288
+      ],
+      "new_span": [
+        2286,
+        2287
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2288.chain.1287",
+      "new_id": "L2287.chain.1286",
+      "old_span": [
+        2287,
+        2288
+      ],
+      "new_span": [
+        2286,
+        2287
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2289.chain.1288",
+      "new_id": "L2288.chain.1287",
+      "old_span": [
+        2288,
+        2294
+      ],
+      "new_span": [
+        2287,
+        2293
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2289.chain.1289",
+      "new_id": "L2288.chain.1288",
+      "old_span": [
+        2288,
+        2294
+      ],
+      "new_span": [
+        2287,
+        2293
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2289.chain.1290",
+      "new_id": "L2288.chain.1289",
+      "old_span": [
+        2288,
+        2294
+      ],
+      "new_span": [
+        2287,
+        2293
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2291.contains.1291",
+      "new_id": "L2290.contains.1290",
+      "old_span": [
+        2290,
+        2291
+      ],
+      "new_span": [
+        2289,
+        2290
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2291.contains.1292",
+      "new_id": "L2290.contains.1291",
+      "old_span": [
+        2290,
+        2291
+      ],
+      "new_span": [
+        2289,
+        2290
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2291.contains.1293",
+      "new_id": "L2290.contains.1292",
+      "old_span": [
+        2290,
+        2291
+      ],
+      "new_span": [
+        2289,
+        2290
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2291.contains.1294",
+      "new_id": "L2290.contains.1293",
+      "old_span": [
+        2290,
+        2291
+      ],
+      "new_span": [
+        2289,
+        2290
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2301.chain.1295",
+      "new_id": "L2300.chain.1294",
+      "old_span": [
+        2300,
+        2301
+      ],
+      "new_span": [
+        2299,
+        2300
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2301.chain.1296",
+      "new_id": "L2300.chain.1295",
+      "old_span": [
+        2300,
+        2301
+      ],
+      "new_span": [
+        2299,
+        2300
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2302.chain.1297",
+      "new_id": "L2301.chain.1296",
+      "old_span": [
+        2301,
+        2302
+      ],
+      "new_span": [
+        2300,
+        2301
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2302.chain.1298",
+      "new_id": "L2301.chain.1297",
+      "old_span": [
+        2301,
+        2302
+      ],
+      "new_span": [
+        2300,
+        2301
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2302.chain.1299",
+      "new_id": "L2301.chain.1298",
+      "old_span": [
+        2301,
+        2302
+      ],
+      "new_span": [
+        2300,
+        2301
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2303.chain.1300",
+      "new_id": "L2302.chain.1299",
+      "old_span": [
+        2302,
+        2303
+      ],
+      "new_span": [
+        2301,
+        2302
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2303.chain.1301",
+      "new_id": "L2302.chain.1300",
+      "old_span": [
+        2302,
+        2303
+      ],
+      "new_span": [
+        2301,
+        2302
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2306.chain.1302",
+      "new_id": "L2305.chain.1301",
+      "old_span": [
+        2305,
+        2306
+      ],
+      "new_span": [
+        2304,
+        2305
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2306.chain.1303",
+      "new_id": "L2305.chain.1302",
+      "old_span": [
+        2305,
+        2306
+      ],
+      "new_span": [
+        2304,
+        2305
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2309.chain.1304",
+      "new_id": "L2308.chain.1303",
+      "old_span": [
+        2308,
+        2309
+      ],
+      "new_span": [
+        2307,
+        2308
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2309.chain.1305",
+      "new_id": "L2308.chain.1304",
+      "old_span": [
+        2308,
+        2309
+      ],
+      "new_span": [
+        2307,
+        2308
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2310.chain.1306",
+      "new_id": "L2309.chain.1305",
+      "old_span": [
+        2309,
+        2310
+      ],
+      "new_span": [
+        2308,
+        2309
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2310.chain.1307",
+      "new_id": "L2309.chain.1306",
+      "old_span": [
+        2309,
+        2310
+      ],
+      "new_span": [
+        2308,
+        2309
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2310.chain.1308",
+      "new_id": "L2309.chain.1307",
+      "old_span": [
+        2309,
+        2310
+      ],
+      "new_span": [
+        2308,
+        2309
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2310.contains.1309",
+      "new_id": "L2309.contains.1308",
+      "old_span": [
+        2309,
+        2310
+      ],
+      "new_span": [
+        2308,
+        2309
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2310.contains.1310",
+      "new_id": "L2309.contains.1309",
+      "old_span": [
+        2309,
+        2310
+      ],
+      "new_span": [
+        2308,
+        2309
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2310.contains.1311",
+      "new_id": "L2309.contains.1310",
+      "old_span": [
+        2309,
+        2310
+      ],
+      "new_span": [
+        2308,
+        2309
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2310.contains.1312",
+      "new_id": "L2309.contains.1311",
+      "old_span": [
+        2309,
+        2310
+      ],
+      "new_span": [
+        2308,
+        2309
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2322.chain.1313",
+      "new_id": "L2321.chain.1312",
+      "old_span": [
+        2321,
+        2322
+      ],
+      "new_span": [
+        2320,
+        2321
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2322.chain.1314",
+      "new_id": "L2321.chain.1313",
+      "old_span": [
+        2321,
+        2322
+      ],
+      "new_span": [
+        2320,
+        2321
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2323.chain.1315",
+      "new_id": "L2322.chain.1314",
+      "old_span": [
+        2322,
+        2323
+      ],
+      "new_span": [
+        2321,
+        2322
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2323.chain.1316",
+      "new_id": "L2322.chain.1315",
+      "old_span": [
+        2322,
+        2323
+      ],
+      "new_span": [
+        2321,
+        2322
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2323.chain.1317",
+      "new_id": "L2322.chain.1316",
+      "old_span": [
+        2322,
+        2323
+      ],
+      "new_span": [
+        2321,
+        2322
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2324.chain.1318",
+      "new_id": "L2323.chain.1317",
+      "old_span": [
+        2323,
+        2324
+      ],
+      "new_span": [
+        2322,
+        2323
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2324.chain.1319",
+      "new_id": "L2323.chain.1318",
+      "old_span": [
+        2323,
+        2324
+      ],
+      "new_span": [
+        2322,
+        2323
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2324.chain.1320",
+      "new_id": "L2323.chain.1319",
+      "old_span": [
+        2323,
+        2324
+      ],
+      "new_span": [
+        2322,
+        2323
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2325.chain.1321",
+      "new_id": "L2324.chain.1320",
+      "old_span": [
+        2324,
+        2325
+      ],
+      "new_span": [
+        2323,
+        2324
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2325.chain.1322",
+      "new_id": "L2324.chain.1321",
+      "old_span": [
+        2324,
+        2325
+      ],
+      "new_span": [
+        2323,
+        2324
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2329.chain.1323",
+      "new_id": "L2328.chain.1322",
+      "old_span": [
+        2328,
+        2329
+      ],
+      "new_span": [
+        2327,
+        2328
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2329.chain.1324",
+      "new_id": "L2328.chain.1323",
+      "old_span": [
+        2328,
+        2329
+      ],
+      "new_span": [
+        2327,
+        2328
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2330.chain.1325",
+      "new_id": "L2329.chain.1324",
+      "old_span": [
+        2329,
+        2330
+      ],
+      "new_span": [
+        2328,
+        2329
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2330.chain.1326",
+      "new_id": "L2329.chain.1325",
+      "old_span": [
+        2329,
+        2330
+      ],
+      "new_span": [
+        2328,
+        2329
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2330.chain.1327",
+      "new_id": "L2329.chain.1326",
+      "old_span": [
+        2329,
+        2330
+      ],
+      "new_span": [
+        2328,
+        2329
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2347.chain.1328",
+      "new_id": "L2346.chain.1327",
+      "old_span": [
+        2346,
+        2347
+      ],
+      "new_span": [
+        2345,
+        2346
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2347.chain.1329",
+      "new_id": "L2346.chain.1328",
+      "old_span": [
+        2346,
+        2347
+      ],
+      "new_span": [
+        2345,
+        2346
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2348.chain.1330",
+      "new_id": "L2347.chain.1329",
+      "old_span": [
+        2347,
+        2348
+      ],
+      "new_span": [
+        2346,
+        2347
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2348.chain.1331",
+      "new_id": "L2347.chain.1330",
+      "old_span": [
+        2347,
+        2348
+      ],
+      "new_span": [
+        2346,
+        2347
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2356.chain.1332",
+      "new_id": "L2355.chain.1331",
+      "old_span": [
+        2355,
+        2356
+      ],
+      "new_span": [
+        2354,
+        2355
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2356.chain.1333",
+      "new_id": "L2355.chain.1332",
+      "old_span": [
+        2355,
+        2356
+      ],
+      "new_span": [
+        2354,
+        2355
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2357.chain.1334",
+      "new_id": "L2356.chain.1333",
+      "old_span": [
+        2356,
+        2357
+      ],
+      "new_span": [
+        2355,
+        2356
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2357.chain.1335",
+      "new_id": "L2356.chain.1334",
+      "old_span": [
+        2356,
+        2357
+      ],
+      "new_span": [
+        2355,
+        2356
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2358.chain.1336",
+      "new_id": "L2357.chain.1335",
+      "old_span": [
+        2357,
+        2358
+      ],
+      "new_span": [
+        2356,
+        2357
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2358.chain.1337",
+      "new_id": "L2357.chain.1336",
+      "old_span": [
+        2357,
+        2358
+      ],
+      "new_span": [
+        2356,
+        2357
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2358.chain.1338",
+      "new_id": "L2357.chain.1337",
+      "old_span": [
+        2357,
+        2358
+      ],
+      "new_span": [
+        2356,
+        2357
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2364.chain.1339",
+      "new_id": "L2363.chain.1338",
+      "old_span": [
+        2363,
+        2364
+      ],
+      "new_span": [
+        2362,
+        2363
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2364.chain.1340",
+      "new_id": "L2363.chain.1339",
+      "old_span": [
+        2363,
+        2364
+      ],
+      "new_span": [
+        2362,
+        2363
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2365.chain.1341",
+      "new_id": "L2364.chain.1340",
+      "old_span": [
+        2364,
+        2365
+      ],
+      "new_span": [
+        2363,
+        2364
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2365.chain.1342",
+      "new_id": "L2364.chain.1341",
+      "old_span": [
+        2364,
+        2365
+      ],
+      "new_span": [
+        2363,
+        2364
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2365.chain.1343",
+      "new_id": "L2364.chain.1342",
+      "old_span": [
+        2364,
+        2365
+      ],
+      "new_span": [
+        2363,
+        2364
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2366.chain.1344",
+      "new_id": "L2365.chain.1343",
+      "old_span": [
+        2365,
+        2366
+      ],
+      "new_span": [
+        2364,
+        2365
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2366.chain.1345",
+      "new_id": "L2365.chain.1344",
+      "old_span": [
+        2365,
+        2366
+      ],
+      "new_span": [
+        2364,
+        2365
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2366.chain.1346",
+      "new_id": "L2365.chain.1345",
+      "old_span": [
+        2365,
+        2366
+      ],
+      "new_span": [
+        2364,
+        2365
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2366.contains.1347",
+      "new_id": "L2365.contains.1346",
+      "old_span": [
+        2365,
+        2366
+      ],
+      "new_span": [
+        2364,
+        2365
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2366.contains.1348",
+      "new_id": "L2365.contains.1347",
+      "old_span": [
+        2365,
+        2366
+      ],
+      "new_span": [
+        2364,
+        2365
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2366.contains.1349",
+      "new_id": "L2365.contains.1348",
+      "old_span": [
+        2365,
+        2366
+      ],
+      "new_span": [
+        2364,
+        2365
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2366.contains.1350",
+      "new_id": "L2365.contains.1349",
+      "old_span": [
+        2365,
+        2366
+      ],
+      "new_span": [
+        2364,
+        2365
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2367.chain.1351",
+      "new_id": "L2366.chain.1350",
+      "old_span": [
+        2366,
+        2367
+      ],
+      "new_span": [
+        2365,
+        2366
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2367.chain.1352",
+      "new_id": "L2366.chain.1351",
+      "old_span": [
+        2366,
+        2367
+      ],
+      "new_span": [
+        2365,
+        2366
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2370.contains.1353",
+      "new_id": "L2369.contains.1352",
+      "old_span": [
+        2369,
+        2370
+      ],
+      "new_span": [
+        2368,
+        2369
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2370.contains.1354",
+      "new_id": "L2369.contains.1353",
+      "old_span": [
+        2369,
+        2370
+      ],
+      "new_span": [
+        2368,
+        2369
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2370.contains.1355",
+      "new_id": "L2369.contains.1354",
+      "old_span": [
+        2369,
+        2370
+      ],
+      "new_span": [
+        2368,
+        2369
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2370.contains.1356",
+      "new_id": "L2369.contains.1355",
+      "old_span": [
+        2369,
+        2370
+      ],
+      "new_span": [
+        2368,
+        2369
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2417.chain.1357",
+      "new_id": "L2416.chain.1356",
+      "old_span": [
+        2416,
+        2417
+      ],
+      "new_span": [
+        2415,
+        2416
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2417.chain.1358",
+      "new_id": "L2416.chain.1357",
+      "old_span": [
+        2416,
+        2417
+      ],
+      "new_span": [
+        2415,
+        2416
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2418.chain.1359",
+      "new_id": "L2417.chain.1358",
+      "old_span": [
+        2417,
+        2418
+      ],
+      "new_span": [
+        2416,
+        2417
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2418.chain.1360",
+      "new_id": "L2417.chain.1359",
+      "old_span": [
+        2417,
+        2418
+      ],
+      "new_span": [
+        2416,
+        2417
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2426.chain.1361",
+      "new_id": "L2425.chain.1360",
+      "old_span": [
+        2425,
+        2426
+      ],
+      "new_span": [
+        2424,
+        2425
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2426.chain.1362",
+      "new_id": "L2425.chain.1361",
+      "old_span": [
+        2425,
+        2426
+      ],
+      "new_span": [
+        2424,
+        2425
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2446.chain.1363",
+      "new_id": "L2445.chain.1362",
+      "old_span": [
+        2445,
+        2446
+      ],
+      "new_span": [
+        2444,
+        2445
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2446.chain.1364",
+      "new_id": "L2445.chain.1363",
+      "old_span": [
+        2445,
+        2446
+      ],
+      "new_span": [
+        2444,
+        2445
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2446.chain.1365",
+      "new_id": "L2445.chain.1364",
+      "old_span": [
+        2445,
+        2446
+      ],
+      "new_span": [
+        2444,
+        2445
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2446.chain.1366",
+      "new_id": "L2445.chain.1365",
+      "old_span": [
+        2445,
+        2446
+      ],
+      "new_span": [
+        2444,
+        2445
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2447.chain.1367",
+      "new_id": "L2446.chain.1366",
+      "old_span": [
+        2446,
+        2447
+      ],
+      "new_span": [
+        2445,
+        2446
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2447.chain.1368",
+      "new_id": "L2446.chain.1367",
+      "old_span": [
+        2446,
+        2447
+      ],
+      "new_span": [
+        2445,
+        2446
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2447.chain.1369",
+      "new_id": "L2446.chain.1368",
+      "old_span": [
+        2446,
+        2447
+      ],
+      "new_span": [
+        2445,
+        2446
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2447.chain.1370",
+      "new_id": "L2446.chain.1369",
+      "old_span": [
+        2446,
+        2447
+      ],
+      "new_span": [
+        2445,
+        2446
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2447.chain.1371",
+      "new_id": "L2446.chain.1370",
+      "old_span": [
+        2446,
+        2447
+      ],
+      "new_span": [
+        2445,
+        2446
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2461.chain.1372",
+      "new_id": "L2460.chain.1371",
+      "old_span": [
+        2460,
+        2461
+      ],
+      "new_span": [
+        2459,
+        2460
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2461.chain.1373",
+      "new_id": "L2460.chain.1372",
+      "old_span": [
+        2460,
+        2461
+      ],
+      "new_span": [
+        2459,
+        2460
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2503.chain.1374",
+      "new_id": "L2502.chain.1373",
+      "old_span": [
+        2502,
+        2503
+      ],
+      "new_span": [
+        2501,
+        2502
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2503.chain.1375",
+      "new_id": "L2502.chain.1374",
+      "old_span": [
+        2502,
+        2503
+      ],
+      "new_span": [
+        2501,
+        2502
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2504.chain.1376",
+      "new_id": "L2503.chain.1375",
+      "old_span": [
+        2503,
+        2504
+      ],
+      "new_span": [
+        2502,
+        2503
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2504.chain.1377",
+      "new_id": "L2503.chain.1376",
+      "old_span": [
+        2503,
+        2504
+      ],
+      "new_span": [
+        2502,
+        2503
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2504.chain.1378",
+      "new_id": "L2503.chain.1377",
+      "old_span": [
+        2503,
+        2504
+      ],
+      "new_span": [
+        2502,
+        2503
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2504.chain.1379",
+      "new_id": "L2503.chain.1378",
+      "old_span": [
+        2503,
+        2504
+      ],
+      "new_span": [
+        2502,
+        2503
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2504.chain.1380",
+      "new_id": "L2503.chain.1379",
+      "old_span": [
+        2503,
+        2504
+      ],
+      "new_span": [
+        2502,
+        2503
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2537.chain.1381",
+      "new_id": "L2536.chain.1380",
+      "old_span": [
+        2536,
+        2537
+      ],
+      "new_span": [
+        2535,
+        2536
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2537.chain.1382",
+      "new_id": "L2536.chain.1381",
+      "old_span": [
+        2536,
+        2537
+      ],
+      "new_span": [
+        2535,
+        2536
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L349.clogic.1383",
+      "new_id": "L349.clogic.1382",
+      "old_span": [
+        348,
+        349
+      ],
+      "new_span": [
+        348,
+        349
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L349.clogic.1384",
+      "new_id": "L349.clogic.1383",
+      "old_span": [
+        348,
+        349
+      ],
+      "new_span": [
+        348,
+        349
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L617.clogic.1385",
+      "new_id": "L617.clogic.1384",
+      "old_span": [
+        616,
+        617
+      ],
+      "new_span": [
+        616,
+        617
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L617.clogic.1386",
+      "new_id": "L617.clogic.1385",
+      "old_span": [
+        616,
+        617
+      ],
+      "new_span": [
+        616,
+        617
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1034.clogic.1387",
+      "new_id": "L1033.clogic.1386",
+      "old_span": [
+        1033,
+        1034
+      ],
+      "new_span": [
+        1032,
+        1033
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1034.clogic.1388",
+      "new_id": "L1033.clogic.1387",
+      "old_span": [
+        1033,
+        1034
+      ],
+      "new_span": [
+        1032,
+        1033
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1040.clogic.1389",
+      "new_id": "L1039.clogic.1388",
+      "old_span": [
+        1039,
+        1040
+      ],
+      "new_span": [
+        1038,
+        1039
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1040.clogic.1390",
+      "new_id": "L1039.clogic.1389",
+      "old_span": [
+        1039,
+        1040
+      ],
+      "new_span": [
+        1038,
+        1039
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1044.clogic.1391",
+      "new_id": "L1043.clogic.1390",
+      "old_span": [
+        1043,
+        1044
+      ],
+      "new_span": [
+        1042,
+        1043
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1044.clogic.1392",
+      "new_id": "L1043.clogic.1391",
+      "old_span": [
+        1043,
+        1044
+      ],
+      "new_span": [
+        1042,
+        1043
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1184.clogic.1393",
+      "new_id": "L1183.clogic.1392",
+      "old_span": [
+        1183,
+        1184
+      ],
+      "new_span": [
+        1182,
+        1183
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1184.clogic.1394",
+      "new_id": "L1183.clogic.1393",
+      "old_span": [
+        1183,
+        1184
+      ],
+      "new_span": [
+        1182,
+        1183
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1184.clogic.1395",
+      "new_id": "L1183.clogic.1394",
+      "old_span": [
+        1183,
+        1184
+      ],
+      "new_span": [
+        1182,
+        1183
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1497.clogic.1396",
+      "new_id": "L1496.clogic.1395",
+      "old_span": [
+        1496,
+        1497
+      ],
+      "new_span": [
+        1495,
+        1496
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1497.clogic.1397",
+      "new_id": "L1496.clogic.1396",
+      "old_span": [
+        1496,
+        1497
+      ],
+      "new_span": [
+        1495,
+        1496
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1688.clogic.1398",
+      "new_id": "L1687.clogic.1397",
+      "old_span": [
+        1687,
+        1688
+      ],
+      "new_span": [
+        1686,
+        1687
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1688.clogic.1399",
+      "new_id": "L1687.clogic.1398",
+      "old_span": [
+        1687,
+        1688
+      ],
+      "new_span": [
+        1686,
+        1687
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1822.clogic.1400",
+      "new_id": "L1821.clogic.1399",
+      "old_span": [
+        1821,
+        1822
+      ],
+      "new_span": [
+        1820,
+        1821
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1822.clogic.1401",
+      "new_id": "L1821.clogic.1400",
+      "old_span": [
+        1821,
+        1822
+      ],
+      "new_span": [
+        1820,
+        1821
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1827.clogic.1402",
+      "new_id": "L1826.clogic.1401",
+      "old_span": [
+        1826,
+        1827
+      ],
+      "new_span": [
+        1825,
+        1826
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1827.clogic.1403",
+      "new_id": "L1826.clogic.1402",
+      "old_span": [
+        1826,
+        1827
+      ],
+      "new_span": [
+        1825,
+        1826
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1910.clogic.1404",
+      "new_id": "L1909.clogic.1403",
+      "old_span": [
+        1909,
+        1910
+      ],
+      "new_span": [
+        1908,
+        1909
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L1910.clogic.1405",
+      "new_id": "L1909.clogic.1404",
+      "old_span": [
+        1909,
+        1910
+      ],
+      "new_span": [
+        1908,
+        1909
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2261.clogic.1406",
+      "new_id": "L2260.clogic.1405",
+      "old_span": [
+        2260,
+        2261
+      ],
+      "new_span": [
+        2259,
+        2260
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2261.clogic.1407",
+      "new_id": "L2260.clogic.1406",
+      "old_span": [
+        2260,
+        2261
+      ],
+      "new_span": [
+        2259,
+        2260
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2302.clogic.1408",
+      "new_id": "L2301.clogic.1407",
+      "old_span": [
+        2301,
+        2302
+      ],
+      "new_span": [
+        2300,
+        2301
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2302.clogic.1409",
+      "new_id": "L2301.clogic.1408",
+      "old_span": [
+        2301,
+        2302
+      ],
+      "new_span": [
+        2300,
+        2301
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2324.clogic.1410",
+      "new_id": "L2323.clogic.1409",
+      "old_span": [
+        2323,
+        2324
+      ],
+      "new_span": [
+        2322,
+        2323
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2324.clogic.1411",
+      "new_id": "L2323.clogic.1410",
+      "old_span": [
+        2323,
+        2324
+      ],
+      "new_span": [
+        2322,
+        2323
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2330.clogic.1412",
+      "new_id": "L2329.clogic.1411",
+      "old_span": [
+        2329,
+        2330
+      ],
+      "new_span": [
+        2328,
+        2329
+      ],
+      "generated_prefix_rename": null
+    },
+    {
+      "old_id": "L2330.clogic.1413",
+      "new_id": "L2329.clogic.1412",
+      "old_span": [
+        2329,
+        2330
+      ],
+      "new_span": [
+        2328,
+        2329
+      ],
+      "generated_prefix_rename": null
+    }
+  ],
+  "current_equivalent_candidates": [
+    {
+      "id": "L345.iter.59",
+      "span": [
+        344,
+        345
+      ],
+      "operator": "iter",
+      "original": "        for x in [a, b] {",
+      "replacement": "        let mut __archogen_sweep_345_it = ([a, b]).into_iter().peekable(); let mut __archogen_sweep_345_k = 0usize; while let Some(x) = __archogen_sweep_345_it.next() { let (__archogen_sweep_345_first, __archogen_sweep_345_last) = (__archogen_sweep_345_k == 0, __archogen_sweep_345_it.peek().is_none()); __archogen_sweep_345_k += 1; if !(__archogen_sweep_345_first || __archogen_sweep_345_last) { continue; }"
+    },
+    {
+      "id": "L455.bool.83",
+      "span": [
+        454,
+        455
+      ],
+      "operator": "bool",
+      "original": "    (\"--cap-lints\", true),",
+      "replacement": "    (\"--cap-lints\", false),"
+    },
+    {
+      "id": "L456.bool.84",
+      "span": [
+        455,
+        456
+      ],
+      "operator": "bool",
+      "original": "    (\"-W\", true),",
+      "replacement": "    (\"-W\", false),"
+    },
+    {
+      "id": "L457.bool.85",
+      "span": [
+        456,
+        457
+      ],
+      "operator": "bool",
+      "original": "    (\"-A\", true),",
+      "replacement": "    (\"-A\", false),"
+    },
+    {
+      "id": "L458.bool.86",
+      "span": [
+        457,
+        458
+      ],
+      "operator": "bool",
+      "original": "    (\"-D\", true),",
+      "replacement": "    (\"-D\", false),"
+    },
+    {
+      "id": "L459.bool.87",
+      "span": [
+        458,
+        459
+      ],
+      "operator": "bool",
+      "original": "    (\"-F\", true),",
+      "replacement": "    (\"-F\", false),"
+    },
+    {
+      "id": "L460.bool.88",
+      "span": [
+        459,
+        460
+      ],
+      "operator": "bool",
+      "original": "    (\"--warn\", true),",
+      "replacement": "    (\"--warn\", false),"
+    },
+    {
+      "id": "L461.bool.89",
+      "span": [
+        460,
+        461
+      ],
+      "operator": "bool",
+      "original": "    (\"--allow\", true),",
+      "replacement": "    (\"--allow\", false),"
+    },
+    {
+      "id": "L462.bool.90",
+      "span": [
+        461,
+        462
+      ],
+      "operator": "bool",
+      "original": "    (\"--deny\", true),",
+      "replacement": "    (\"--deny\", false),"
+    },
+    {
+      "id": "L463.bool.91",
+      "span": [
+        462,
+        463
+      ],
+      "operator": "bool",
+      "original": "    (\"--forbid\", true),",
+      "replacement": "    (\"--forbid\", false),"
+    },
+    {
+      "id": "L464.bool.92",
+      "span": [
+        463,
+        464
+      ],
+      "operator": "bool",
+      "original": "    (\"--color\", true),",
+      "replacement": "    (\"--color\", false),"
+    },
+    {
+      "id": "L497.dir.112",
+      "span": [
+        496,
+        497
+      ],
+      "operator": "dir",
+      "original": "                if v.starts_with(\"metadata=\")",
+      "replacement": "                if v.contains(\"metadata=\")"
+    },
+    {
+      "id": "L497.lit.113",
+      "span": [
+        496,
+        497
+      ],
+      "operator": "lit",
+      "original": "                if v.starts_with(\"metadata=\")",
+      "replacement": "                if v.starts_with(\"metadata\")"
+    },
+    {
+      "id": "L498.dir.116",
+      "span": [
+        497,
+        498
+      ],
+      "operator": "dir",
+      "original": "                    || v.starts_with(\"extra-filename=\")",
+      "replacement": "                    || v.contains(\"extra-filename=\")"
+    },
+    {
+      "id": "L498.lit.117",
+      "span": [
+        497,
+        498
+      ],
+      "operator": "lit",
+      "original": "                    || v.starts_with(\"extra-filename=\")",
+      "replacement": "                    || v.starts_with(\"extra-filename\")"
+    },
+    {
+      "id": "L499.dir.120",
+      "span": [
+        498,
+        499
+      ],
+      "operator": "dir",
+      "original": "                    || v.starts_with(\"incremental=\")",
+      "replacement": "                    || v.contains(\"incremental=\")"
+    },
+    {
+      "id": "L499.lit.121",
+      "span": [
+        498,
+        499
+      ],
+      "operator": "lit",
+      "original": "                    || v.starts_with(\"incremental=\")",
+      "replacement": "                    || v.starts_with(\"incremental\")"
+    },
+    {
+      "id": "L514.cmp.139",
+      "span": [
+        513,
+        514
+      ],
+      "operator": "cmp",
+      "original": "                    (Some(dash), Some(dot)) if dash < dot => {",
+      "replacement": "                    (Some(dash), Some(dot)) if dash <= dot => {"
+    },
+    {
+      "id": "L585.iter.158",
+      "span": [
+        584,
+        585
+      ],
+      "operator": "iter",
+      "original": "    for path in paths {",
+      "replacement": "    let mut __archogen_sweep_585_it = (paths).into_iter().peekable(); let mut __archogen_sweep_585_k = 0usize; while let Some(path) = __archogen_sweep_585_it.next() { let (__archogen_sweep_585_first, __archogen_sweep_585_last) = (__archogen_sweep_585_k == 0, __archogen_sweep_585_it.peek().is_none()); __archogen_sweep_585_k += 1; if !(__archogen_sweep_585_first || __archogen_sweep_585_last) { continue; }"
+    },
+    {
+      "id": "L587.iter.161",
+      "span": [
+        586,
+        587
+      ],
+      "operator": "iter",
+      "original": "        for spelling in std::iter::once(path).chain(canonical) {",
+      "replacement": "        let mut __archogen_sweep_587_it = (std::iter::once(path).chain(canonical)).into_iter().peekable(); let mut __archogen_sweep_587_k = 0usize; while let Some(spelling) = __archogen_sweep_587_it.next() { let (__archogen_sweep_587_first, __archogen_sweep_587_last) = (__archogen_sweep_587_k == 0, __archogen_sweep_587_it.peek().is_none()); __archogen_sweep_587_k += 1; if !(__archogen_sweep_587_first || __archogen_sweep_587_last) { continue; }"
+    },
+    {
+      "id": "L590.cond.168",
+      "span": [
+        589,
+        590
+      ],
+      "operator": "cond",
+      "original": "                if prefix.contains('\\n') {",
+      "replacement": "                if true {"
+    },
+    {
+      "id": "L617.cmp.181",
+      "span": [
+        616,
+        617
+      ],
+      "operator": "cmp",
+      "original": "                .any(|&(begin, end)| begin <= start && start < end)",
+      "replacement": "                .any(|&(begin, end)| begin < start && start < end)"
+    },
+    {
+      "id": "L729.lit.202",
+      "span": [
+        728,
+        729
+      ],
+      "operator": "lit",
+      "original": "                (w[0] == \"-C\" && w[1].starts_with(\"extra-filename=\"))",
+      "replacement": "                (w[0] == \"-C\" && w[1].starts_with(\"extra-filename\"))"
+    }
+  ],
+  "unchanged_reason_records": [
+    {
+      "original": "for x in [a, b] {",
+      "replacement": "let mut __archogen_sweep_345_it = ([a, b]).into_iter().peekable(); let mut __archogen_sweep_345_k = 0usize; while let Some(x) = __archogen_sweep_345_it.next() { let (__archogen_sweep_345_first, __archogen_sweep_345_last) = (__archogen_sweep_345_k == 0, __archogen_sweep_345_it.peek().is_none()); __archogen_sweep_345_k += 1; if !(__archogen_sweep_345_first || __archogen_sweep_345_last) { continue; }",
+      "reason": "check_pairs borrows a and b from Program.pair: Option<(String, String)> and visits the fixed [a, b] array. Both positions are ends, so the rewrite visits a then b and preserves early returns and duplicate/aliased references. The counter advances at most twice; peek moves only shared String references, with no user callback or destructor effect. The body and its outcome/diagnostics are unchanged. Compiled actual-candidate controls hold order and early returns, and refuse first/last-only and wider-array equivalence claims (leaf M3.6.9.6.3.2.2.8.2)."
+    },
+    {
+      "original": "(\"-W\", true),",
+      "replacement": "(\"-W\", false),",
+      "reason": "The separate -W key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "(\"-A\", true),",
+      "replacement": "(\"-A\", false),",
+      "reason": "The separate -A key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "(\"-D\", true),",
+      "replacement": "(\"-D\", false),",
+      "reason": "The separate -D key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "(\"-F\", true),",
+      "replacement": "(\"-F\", false),",
+      "reason": "The separate -F key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "(\"--warn\", true),",
+      "replacement": "(\"--warn\", false),",
+      "reason": "The separate --warn key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "(\"--allow\", true),",
+      "replacement": "(\"--allow\", false),",
+      "reason": "The separate --allow key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "(\"--deny\", true),",
+      "replacement": "(\"--deny\", false),",
+      "reason": "The separate --deny key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "(\"--forbid\", true),",
+      "replacement": "(\"--forbid\", false),",
+      "reason": "The separate --forbid key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "(\"--cap-lints\", true),",
+      "replacement": "(\"--cap-lints\", false),",
+      "reason": "The separate --cap-lints key is not visited in the current pinned successful inventory caller. Cargo f2d3ce0 add_cap_lints emits a cap only when show_warnings is false or is_local is false. Compiled units here are path-source and non-stdlib: checked fresh offline homes cannot provide fetched Git/registry units, no build-std route is supplied, and Unit::is_local is path-source and not is_std. Local units always show warnings, so both cap branches are false. Cleared environment, alias-only configuration, stable profile-feature gates, hard dynamic-target preflight and compile's lack of trailing rustc arguments exclude injected caps. Other operand consumers remain unchanged for this single table edit. Permanent actual-candidate controls require independent local producer argv/normalized outputs and refute a broader claim with successful cargo rustc -- --cap-lints allow: the changed helper leaks allow. Consumed-value and wrong positive/negative controls hold the scope. Source/caller proof and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer/pin, package-source/stdlib/warning premises, environment/configuration/mode/arguments or consumers require revalidation. No arbitrary-argv or every-release claim (leaf M3.6.9.6.3.2.2.11.2.4.2). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "(\"--color\", true),",
+      "replacement": "(\"--color\", false),",
+      "reason": "The separate --color key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 add_error_format_and_color constructs joined JSON/error-format/width options and emits no separate color key. Compile supplies build or test/no-run with no trailing rustc args; cleared environment, alias-only configuration, checked fresh Cargo homes, stable profile-feature gates and hard dynamic-target preflight exclude injected flags. Fixed RUSTC=rustc also excludes replacement compiler programs. Other consumers remain unchanged per single edit, so any bare-key operand they consume is not visited. Changing this key's consuming bit therefore changes no output in that domain. Permanent controls compile this actual edit with independently expected ordinary argv/configuration. Plain Cargo color-plus-JSON refusal is not counted as a successful falsifier: a published test-owned RUSTC forwarding override provides successful Cargo builds and actual no-JSON compiler argv for always/never/auto. Raw requests and forwarded args are checked separately, real libraries consumed by an independent compiler, and variants retain each color operand outside the fixed caller. Consumed-value and wrong positive/negative/forwarded-argv oracles limit the claim. Source/premise/revalidation record: docs/specs/trust/flag-normalization-domain.md. Changed producer/pin, selector/formatter, arguments/environment/configuration/profile/preflight or operand consumers require revalidation; no arbitrary-argv or every-release equivalence (leaf M3.6.9.6.3.2.2.11.2.4.3.2). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "if v.starts_with(\"metadata=\")",
+      "replacement": "if v.contains(\"metadata=\")",
+      "reason": "In the current pinned successful inventory caller, Cargo f2d3ce0 constructs the metadata operand with the literal metadata= prefix; it and the unchanged extra-filename=/incremental= operands are already discarded. All other visited -C operands come from Cargo constants or profile scalars accepted by Cargo/rustc and cannot contain metadata=. This includes strip: Cargo forwards a string, but rustc only accepts none/debuginfo/symbols; a rejected value makes run_cargo return before command normalization. Alias-only configuration and the cleared environment exclude linker paths and rustflags, stable feature gates exclude profile rustflags, hard preflight excludes build-script linker arguments, and build/test-no-run supplies no trailing compiler args. Other consumers remain unchanged and prevent operands from masquerading as visited -C tokens. Thus this single contains edit changes no result in that domain. Permanent controls compile the actual edit, assert literal real producer argv and normalized values, consume both produced libraries with value37, and refute wider equivalence with successful cargo rustc -C llvm-args=--pass-remarks=metadata=inside. Refused strip and synthetic key controls are explicitly outside the successful compiler domain; wrong argv/positive/negative/helper oracles fail. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md. Changed pin, constructors, arguments/environment/configuration/admissions/preflight or consumers require revalidation; no arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.13.2.4.2.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "if v.starts_with(\"metadata=\")",
+      "replacement": "if v.starts_with(\"metadata\")",
+      "reason": "In the current pinned successful inventory caller, Cargo f2d3ce0 emits metadata= followed by its metadata value; no other Cargo-constructed visited -C key starts with metadata. Other codegen keys have distinct literal prefixes, and arbitrary rustflags/linker/build-script/trailing-argument routes are excluded by the checked environment, alias-only/fresh-home configuration, stable feature gate, dynamic-target preflight and build/test-no-run caller. Other consumers are unchanged, so source/cfg/path/extern operands cannot introduce a visited synthetic -C key. Removing this equals delimiter therefore changes no normalization result in that domain. Permanent controls compile this exact literal edit with independently expected actual Cargo argv/configuration, real libraries consumed with value37, valid wider LLVM input retained by this edit, and explicit metadataX=inside helper-boundary falsification of arbitrary-token equivalence. The synthetic key and compiler-refused strip are not valid successful-producer coverage. Wrong argv/positive/negative/helper oracles fail. Exact pinned constructors, successful scalar validation, caller premises and triggers: docs/specs/trust/flag-normalization-domain.md. Changed producer/pin, arguments/environment/configuration/admissions/preflight or token consumers require revalidation; no arbitrary-argv or every-release claim (leaf M3.6.9.6.3.2.2.13.2.4.2.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "|| v.starts_with(\"extra-filename=\")",
+      "replacement": "|| v.contains(\"extra-filename=\")",
+      "reason": "In the current pinned successful inventory caller, Cargo f2d3ce0 emits extra-filename=- followed by its suffix when this operand is present, so the original discards it. Metadata and incremental operands are also already discarded by unchanged guards, including an incremental path containing extra-filename=. Retained -C scalars use accepted Cargo/rustc value domains without that marker; raw strip strings carrying it are compiler-refused, and run_cargo returns before normalization on failure. Explicit linker paths, build-script arguments, arbitrary rustflags and trailing compiler arguments are excluded by checked alias-only/fresh-home configuration, cleared environment, stable feature gate, hard target preflight and build/test-no-run selection. Other consumers still prevent a data operand from masquerading as visited -C. This single contains edit therefore preserves output in that domain. Permanent controls compile the actual native edit, hold independent real Cargo argv/configuration and libraries consumed with value37, and refute broader equivalence with successful cargo rustc -C llvm-args=--pass-remarks=extra-filename=inside. Refused strip and synthetic key controls are not successful-producer coverage; wrong forwarded-argv/positive/negative/helper oracles fail. Source/constructor/caller record and revalidation triggers: docs/specs/trust/flag-normalization-domain.md. Changed producer/pin, arguments/environment/configuration/admissions/preflight or consumers require revalidation; no arbitrary-argv claim (leaf M3.6.9.6.3.2.2.13.2.4.2.2). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "|| v.starts_with(\"extra-filename=\")",
+      "replacement": "|| v.starts_with(\"extra-filename\")",
+      "reason": "The current pinned successful inventory caller only visits this Cargo f2d3ce0 key with its literal extra-filename= delimiter when present. Other generated -C keys have distinct literal prefixes, and the caller excludes arbitrary linker/flag/script/trailing-argument routes through checked configuration/environment, stable profile feature gates, hard preflight and build/test-no-run commands. Unchanged operand consumers rule out a synthetic visited -C key in another argument. Removing this delimiter changes no output in that domain. Permanent controls compile the exact native literal edit, require independently expected real Cargo argv/configuration and consumed library value37, and retain the complete valid wider LLVM operand in both original and literal variants. Synthetic extra-filenameX=inside exposes arbitrary-helper inequivalence but is not claimed as a successful compiler producer; the strip marker case is explicitly compiler-refused. Wrong forwarded-argv/positive/negative/helper oracles fail. Complete source and successful-value/caller premises: docs/specs/trust/flag-normalization-domain.md. Changed pin/constructors, arguments/environment/configuration/admissions/preflight or consumers require revalidation; no every-release or arbitrary-argv claim (leaf M3.6.9.6.3.2.2.13.2.4.2.2). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "|| v.starts_with(\"incremental=\")",
+      "replacement": "|| v.contains(\"incremental=\")",
+      "reason": "In the current pinned successful inventory caller, Cargo f2d3ce0 emits the literal incremental= prefix followed by its cache directory when the profile enables this operand, so both versions discard it. Unchanged metadata/extra-filename guards already discard their operands. All remaining visited -C operands have successful Cargo/rustc scalar domains without incremental=; raw strip strings containing it are compiler-refused, and run_cargo returns before normalization on failure. Alias-only/fresh-home configuration, cleared environment, stable profile feature gates, hard metadata preflight and build/test-no-run selection exclude explicit linker paths, script linker arguments, arbitrary rustflags and trailing compiler arguments. Other consumers stay unchanged, preventing a data operand from creating a visited -C key. This single contains edit therefore preserves output in that domain. Permanent controls enable a real incremental release profile, assert the independent complete producer argv/cache path and populated local cache, compile the actual variant and consume both libraries with value37. Successful cargo rustc -C llvm-args=--pass-remarks=incremental=inside refutes arbitrary-domain equivalence. Refused strip and synthetic key controls are not successful-producer coverage; wrong forwarded-argv/positive/negative/helper oracles fail. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md. Changed pin/constructors, arguments/environment/configuration/admissions/preflight or consumers require revalidation; no arbitrary-argv claim (leaf M3.6.9.6.3.2.2.13.2.4.2.3). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "|| v.starts_with(\"incremental=\")",
+      "replacement": "|| v.starts_with(\"incremental\")",
+      "reason": "The current pinned successful inventory caller only visits this Cargo f2d3ce0 key as incremental= followed by its cache path when enabled. Other generated -C keys have distinct literal prefixes; arbitrary linker/flag/script/trailing-argument routes are excluded by the checked configuration/environment, stable profile feature gate, hard preflight and build/test-no-run caller. Unchanged consumers exclude a synthetic visited -C token in another operand. Removing this equals delimiter changes no result in that domain. Permanent controls enable a real release incremental profile and populated explicit local cache, compile this exact native edit, independently require real producer argv/configuration and consumed library value37, and retain the complete successful wider LLVM operand in original/literal variants. Synthetic incrementalX=inside exposes arbitrary-helper inequivalence but is not a valid compiler producer; the strip marker is explicitly refused. Wrong argv/positive/negative/helper oracles fail. Source, successful-value and caller record: docs/specs/trust/flag-normalization-domain.md. Changed producer/pin, arguments/environment/configuration/admissions/preflight or consumers require revalidation; no every-release or arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.13.2.4.2.3). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+    },
+    {
+      "original": "(Some(dash), Some(dot)) if dash < dot => {",
+      "replacement": "(Some(dash), Some(dot)) if dash <= dot => {",
+      "reason": "In normalise, both indices come from the same immutable file string via rfind of the distinct nonempty ASCII characters '-' and '.'. If both are Some, their match positions cannot be equal: one byte position cannot match both characters. Thus dash < dot and dash <= dot have identical truth values for every defined Rust string input here; all other Option cases, branch work, outputs and index progress stay unchanged. This is a source-context proof, not survival-based inference or a claim that arbitrary integer comparisons are interchangeable. Permanent controls compile this exact native edit beside the original with independent literal basenames for rlib/rmeta, paths, empty/missing/reversed/multiple punctuation and Unicode, plus a bounded 5461-string helper grid and unequal-index predicate observations. The finite grid supplements the universal distinct-search argument and is not an exhaustive-universe claim. A same-character search refutes that predicate premise only, without claiming a wider final-string counterexample; equal-index and wrong-negative oracles fail. Revalidate if search patterns/receivers, comparison/context, or relevant string contracts change. Canonical proof: docs/specs/trust/flag-normalization-domain.md (leaf M3.6.9.6.3.2.2.13.2.5)."
+    },
+    {
+      "original": "for path in paths {",
+      "replacement": "let mut __archogen_sweep_585_it = (paths).into_iter().peekable(); let mut __archogen_sweep_585_k = 0usize; while let Some(path) = __archogen_sweep_585_it.next() { let (__archogen_sweep_585_first, __archogen_sweep_585_last) = (__archogen_sweep_585_k == 0, __archogen_sweep_585_it.peek().is_none()); __archogen_sweep_585_k += 1; if !(__archogen_sweep_585_first || __archogen_sweep_585_last) { continue; }",
+      "reason": "cargo_error_line constructs the owned paths Vec with exactly cwd and at most one target selected by rfind; the entire constructor is bound by the permanent proof control. Thus its length is one or two, so every position is first or last and both versions run the unchanged body in the same order. The rewrite counter advances at most twice; peek only moves a concrete PathBuf and invokes no user iterator or filesystem callback. Canonicalization and prefix insertion retain their ordering and values. Actual helper/trace variants cover absent/present targets, aliases, missing paths, relative targets and repeated values; same-edit wider Vec controls lose the middle and wrong positive/negative oracles fail. This source-cardinality argument, not those finite examples, establishes equivalence. Revalidate after constructor, type, iterator or body changes; no arbitrary-vector claim (leaf M3.6.9.6.3.2.2.14.3.2.2.2.1)."
+    },
+    {
+      "original": "for spelling in std::iter::once(path).chain(canonical) {",
+      "replacement": "let mut __archogen_sweep_587_it = (std::iter::once(path).chain(canonical)).into_iter().peekable(); let mut __archogen_sweep_587_k = 0usize; while let Some(spelling) = __archogen_sweep_587_it.next() { let (__archogen_sweep_587_first, __archogen_sweep_587_last) = (__archogen_sweep_587_k == 0, __archogen_sweep_587_it.peek().is_none()); __archogen_sweep_587_k += 1; if !(__archogen_sweep_587_first || __archogen_sweep_587_last) { continue; }",
+      "reason": "cargo_error_line computes canonical as fs::canonicalize(&path).ok(), an Option<PathBuf>, before iterating std::iter::once(path).chain(canonical). This concrete chain has exactly one or two elements. Each is an end, so the actual ends rewrite visits every raw/canonical spelling in the same order and cannot overflow its at-most-two counter. Peeking moves the optional owned PathBuf without a filesystem call or user iterator callback; the unchanged ancestor/prefix body sees identical spellings. Permanent source-constructor guards, actual compiled helper/ordered traces and successful/missing canonical paths hold the premises; a wider Vec-backed chain compiles and loses its middle, and wrong wider/positive/negative oracles fail. Finite examples supplement the universal cardinality proof. Revalidate after constructor, type, iterator or body changes; no arbitrary-chain claim (leaf M3.6.9.6.3.2.2.14.3.2.2.2.1)."
+    },
+    {
+      "original": "if prefix.contains('\\n') {",
+      "replacement": "if true {",
+      "reason": "On supported Unix Cargo-built callers, cwd is absolute: inventory/baseline derive from Cargo's absolute manifest root, the repaired gate canonicalizes its repository before output joins, inventory joins out/tree, and compile is the sole production run_cargo caller. The helper retains absolute targets or joins relative targets to that cwd; raw/canonical ancestors, lossy conversion and apostrophe quoting preserve a leading slash. The unconditional guard adds only prefixes with no newline. Such a match cannot straddle a physical line start (byte zero or after newline), and at begin equality its slash disagrees with the candidate's error prefix. It therefore suppresses no additional candidate for any stderr/environment in this domain; returned bytes and empty result remain unchanged. This is a universal prefix/line-boundary proof, not finite-example inference. Permanent exact production/caller guards, actual compiled original/edit, literal and generated records, native Cargo root through relative manifest/alias, relative wider witnesses, altered-premise and wrong-oracle controls bind scope. Revalidate guarded source, callers/root/constructors, conversion, line framing or Unix/toolchain contract changes; no relative-cwd or producer-boundary claim. Canonical proof: docs/specs/trust/decision_trust-inventory.md, Absolute Cargo diagnostic-prefix proof (leaf M3.6.9.6.3.2.2.14.3.2.2.2.2.5)."
+    },
+    {
+      "original": ".any(|&(begin, end)| begin <= start && start < end)",
+      "replacement": ".any(|&(begin, end)| begin < start && start < end)",
+      "reason": "On supported Unix Cargo-built callers, all raw paths are absolute from the guarded CLI/gate/inventory/compile chain; target resolution, successful canonicalization, ancestors, lossy conversion and apostrophe quoting preserve their leading slash. Every recorded prefix thus begins with slash. The edited comparison differs only at begin == start, but a candidate there begins with error and cannot simultaneously begin a slash-prefixed match. Every original containing span already has begin < start, so membership, selection and returned bytes agree for any stderr/environment with absolute cwd. This universal first-byte argument is independent of Cargo's diagnostic grammar; finite records only support it. Permanent exact production/caller guards, actual compiled helper/edit, independent literals/aliases/relative targets/line endings and generated records, native Cargo-root control, relative wider witness, altered-premise and wrong-oracle controls delimit the domain. Revalidate source/callers/root/constructors, prefix conversion, line/predicate or Unix/toolchain contracts; no arbitrary relative-cwd equivalence. Canonical proof: docs/specs/trust/decision_trust-inventory.md, Absolute Cargo diagnostic-prefix proof (leaf M3.6.9.6.3.2.2.14.3.2.2.2.2.5)."
+    },
+    {
+      "original": "(w[0] == \"-C\" && w[1].starts_with(\"extra-filename=\"))",
+      "replacement": "(w[0] == \"-C\" && w[1].starts_with(\"extra-filename\"))",
+      "reason": "For the current Unix inventory caller with pinned stable Cargo f2d3ce0bd7f24a49f8f72d9000448f8838c4e850 / Rust 1.95.0, every adjacent pair whose first token is -C either has no extra-filename prefix or has the complete ASCII extra-filename= constructor. Cargo emits the optional suffix as extra-filename=- plus a sixteen-hex UnitHash, or omits it. All other codegen constructors retain distinct initial keys for any value. Both role/test and generated-entry compile routes use fixed build or test/no-run commands without trailing compiler args; cleared allowlisted environment, reset Cargo homes and alias-only ancestor-checked config exclude arbitrary flags/wrappers, hard metadata preflight excludes dynamic package code independently of manifest admissions, and the pinned stable gate excludes profile rustflags. Source/name/type, lint/check-cfg, dependency and directory constructors cannot introduce a distinguishing incidental adjacent pair; in particular arbitrary custom check-cfg values are followed by fixed option tokens, not arbitrary suffix operands. The observer forwards immutable native argv and the consumer selects only successful current compilation records after Cargo succeeds. Thus both predicates choose the same first pair or the same empty default; the unchanged fifteen-byte slice starts after the same complete ASCII prefix at a valid UTF-8 boundary and returns identical bytes, preserving dep-info selection and subsequent behavior. Permanent exact production/controller/observer/base/configuration/metadata/parser/tree/module/dependency/pin guards outside semantic tests, actual compiled original/edit, complete real ordinary/incremental/mixed argv and three consumed libraries, literal/constructor/adjacency controls, wider changed-output and short/Unicode panic witnesses, nineteen altered-premise controls and three wrong-oracle controls delimit the proof. Wider argv is explicitly not equivalent; finite producer agreement is not the proof. This conditional lemma covers actual successful invocations by that pinned producer; other judged-tree toolchain producers are outside it. Revalidate producer/pin, both callers, environment/config/admissions/preflight, transitive readers/module/dependency wiring, constructors/adjacency, record filter or extraction/slicing changes. Canonical proof: docs/specs/trust/compiler-provenance-contract.md, Caller dep-info suffix prefix proof; full source argument: docs/book/src/annex-trust-proofs.md#caller-dep-info-suffix-prefix-proof-after-preflight-repair (leaf M3.6.9.6.3.2.2.15.2.1.4.3.1)."
+    }
+  ],
+  "known_other_continue_mapping": {
+    "old_id": "L1310.stmt.452",
+    "new_id": "L1309.stmt.451",
+    "old_span": [
+      1309,
+      1310
+    ],
+    "new_span": [
+      1308,
+      1309
+    ],
+    "generated_prefix_rename": null
+  },
+  "known_other_continue_candidate": {
+    "id": "L1309.stmt.451",
+    "span": [
+      1308,
+      1309
+    ],
+    "operator": "stmt",
+    "original": "                continue;",
+    "replacement": "                // continue;"
+  },
+  "current_shared_continue_sites": 21,
+  "negative_controls": [
+    "missing-candidate",
+    "duplicate-candidate",
+    "wrong-replacement",
+    "wrong-generated-prefix"
+  ],
+  "actual_cli_listing": {
+    "sha256": "022d3691ad8d85a0c950c5d51044bfea9e03bc3f0748f86c1755eeb307907a67",
+    "bytes": 422710
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Complete recovered50 operator suite</summary>
+
+```json
+{
+  "status": "passed",
+  "command": [
+    "python3",
+    "-I",
+    "-B",
+    "xtask/mutation_sweep_tests.py",
+    "<runtime-repository-root>"
+  ],
+  "exit": 0,
+  "stdout": "closure probes: 37 actual candidates and 16 baselines compile; 159 value-selection observations\ncontains type probes: 16 candidates, 6 viable, 10 type refusals; 120 observations\ncontains receiver probes: 32 candidates, 16 viable, 16 type refusals; 288 observations\ncaller suffix compiled controls complete; checking the precise reason\nlogic probes: 12 actual candidates and four baselines compile; 128 truth-table observations\n",
+  "stderr": "..................................................\n----------------------------------------------------------------------\nRan 50 tests in 165.766s\n\nOK\n",
+  "seconds": 165.88064645894337,
+  "before": {
+    "xtask/mutation_sweep_tests.py": "2b5a74cf834af8df0690e9da21bc870053f3876111857f4f9995f2577cad96b3",
+    "xtask/src/trust.rs": "527f68d5787b16b5e7f9e31942772bcc548f735d017ef95a5e30180a5012a9b5",
+    "xtask/src/catalog_build.rs": "ead6752d2c5aa9a6c289c43b35c66ff4ee1e1b6b748ba9e20e1f68578fe093d5",
+    "xtask/trust.equivalents": "ab341a3d5780a98352d39acdb45f6745163ec7740b9298b830fbf3e87fe1e511",
+    "scripts/mutation_sweep.sh": "8043cddad18b8ddf54c5863b55a8238039054f202ddc69e073389528870e78bd"
+  },
+  "after": {
+    "xtask/mutation_sweep_tests.py": "2b5a74cf834af8df0690e9da21bc870053f3876111857f4f9995f2577cad96b3",
+    "xtask/src/trust.rs": "527f68d5787b16b5e7f9e31942772bcc548f735d017ef95a5e30180a5012a9b5",
+    "xtask/src/catalog_build.rs": "ead6752d2c5aa9a6c289c43b35c66ff4ee1e1b6b748ba9e20e1f68578fe093d5",
+    "xtask/trust.equivalents": "ab341a3d5780a98352d39acdb45f6745163ec7740b9298b830fbf3e87fe1e511",
+    "scripts/mutation_sweep.sh": "8043cddad18b8ddf54c5863b55a8238039054f202ddc69e073389528870e78bd"
+  },
+  "profile_sha256": "2b3fbe199bddb4ba84c453a23334c7025308b06127ce3cc96f74b2a17680eedd"
+}
+```
+
+</details>
+
+<details>
+<summary>Complete cleanup/source audit</summary>
+
+```json
+{
+  "status": "passed",
+  "scope": "Exact no-op source cleanup and revalidated controls; current24-candidate native reason/other-site replay is planned separately, not measured here.",
+  "base_commit": "4437c10d59552703b343933f763c23d4af52d75c",
+  "source_sha256": "527f68d5787b16b5e7f9e31942772bcc548f735d017ef95a5e30180a5012a9b5",
+  "production_sha256": "080a15a2d2509caf4ea79c557dced56942e20c2fb1599ee0e3e414b3fa66992e",
+  "close_guard_prefix_sha256": "6a210d1810a3dbd5adecf861f77200a9846887f51f9dee8f6683ab16b8a88118",
+  "rust_delta": "Only the exact proved redundant continue line removed",
+  "python_delta": "Only two complete production-prefix hash literals and one close-proof newline-trimmed caller hash updated",
+  "semantic_test_source_exact": true,
+  "all50_operator_tests_pass": true,
+  "all_reason_files_exact": true,
+  "unchanged23_current_reason_candidates": true,
+  "all1413_candidate_positions_reconciled": true,
+  "generated_fresh_prefix_renames": 303,
+  "known_other_continue": "L1309.stmt.451",
+  "restored_initial_failed_suite": true,
+  "source_falsifiers": [
+    "unchanged-original",
+    "wrong-tail",
+    "extra-change"
+  ],
+  "mapping_falsifiers": [
+    "missing-candidate",
+    "duplicate-candidate",
+    "wrong-replacement",
+    "wrong-generated-prefix"
+  ],
+  "final_native_replay_candidates": 24
+}
+```
+
+</details>
+
+<details>
+<summary>Exact cleanup task-state reconstruction</summary>
+
+```json
+{
+  "base_commit": "4437c10d59552703b343933f763c23d4af52d75c",
+  "base_file": "docs/tasks/M3.md",
+  "base_sha256": "c98857d6ad8dc011752a6a78b78b1b6603835e99f8f29945a396a03e63c50f1e",
+  "snapshots": {
+    "task-active-before-seal.md": {
+      "sha256": "5973aae8c3ab8e4cb47bc40abafb82a4a2bf3d8055c7922afeef42d3a4f09008",
+      "bytes": 292080,
+      "changes": [
+        {
+          "start_line": 1525,
+          "end_line": 1526,
+          "before_sha256": "eb7d620333b21aec23c1ef7d4aeb4e4b9b6c00dc863fe2097ed8e1631fe7bbfa",
+          "replacement": "  Status: \u0060active\u0060 \u2014 remove the proved redundant environment tail\n"
+        }
+      ]
+    },
+    "task-before-completion.md": {
+      "sha256": "946d131cd857b5f2306351afc0490d41db01078458805514b4f5fa5b07766aca",
+      "bytes": 291250,
+      "changes": [
+        {
+          "start_line": 1510,
+          "end_line": 1523,
+          "before_sha256": "d59e85c6bbff014873c93d56d0bbee5ae17799795d47c1da7d88834897506877",
+          "replacement": "  Status: \u0060done\u0060 \u2014 sealed in [\u0060M3/M3.6.9.6.3.2.2.15.2.1.5.1.1.md\u0060](../task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.1.1.md); commit \u0060ARCHOGEN-M3-0819\u0060\n"
+        },
+        {
+          "start_line": 1525,
+          "end_line": 1526,
+          "before_sha256": "eb7d620333b21aec23c1ef7d4aeb4e4b9b6c00dc863fe2097ed8e1631fe7bbfa",
+          "replacement": "  Status: \u0060active\u0060 \u2014 remove the proved redundant environment tail\n"
+        }
+      ]
+    },
+    "task-after-completion.md": {
+      "sha256": "27f81e4580d132f0ab04ee824b946e3e052b3dd1eb1cd8a67e88d7aeb3f91a12",
+      "bytes": 292362,
+      "changes": [
+        {
+          "start_line": 1510,
+          "end_line": 1523,
+          "before_sha256": "d59e85c6bbff014873c93d56d0bbee5ae17799795d47c1da7d88834897506877",
+          "replacement": "  Status: \u0060done\u0060 \u2014 sealed in [\u0060M3/M3.6.9.6.3.2.2.15.2.1.5.1.1.md\u0060](../task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.1.1.md); commit \u0060ARCHOGEN-M3-0819\u0060\n"
+        },
+        {
+          "start_line": 1525,
+          "end_line": 1529,
+          "before_sha256": "e9e01a17973e41c4e246d673a24da94b49ab6e566cb3e2b44c3237ad3c26ba62",
+          "replacement": "  Status: \u0060done\u0060 \u2014 proved tail removal and source-guard revalidation\n  [Full evidence](../book/src/annex-trust-proofs.md#proved-environment-tail-removal).\n  Acceptance:\n  - [x] ROOT CAUSE: \u0060python3 -I -B target/environment-tail-cleanup/audit-mapping.py\u0060,\n    exit code 0:1413 current edits reconciled;303 exact fresh-name renames; tail alone retired.\n  - [x] ADDRESSED: \u0060python3 -I -B target/environment-tail-cleanup/audit-cleanup.py\u0060,\n    exit code 0: exact1-line Rust/3 hash-binding changes; full50 compiled controls pass;\n    old guards refused first, semantic test source/all reasons preserved.\n  - [x] NO REGRESSION: \u0060python3 -I -B target/environment-tail-cleanup/final-audit.py\u0060,\n    exit code 0: history/task/source evidence exact; final focused stamp/book/gates required.\n  Verification: full book/adapters; .2 owns strict current24 replay; .1/.5 remain open.\n  Commit: \u0060ARCHOGEN-M3-0820\u0060\n"
+        },
+        {
+          "start_line": 1798,
+          "end_line": 1799,
+          "before_sha256": "2243e7f6e2e952ad2394286637df5dd9b0e3e7d77b47dd4bf022384f069ecb3f",
+          "replacement": "| 1 | \u0060M3.6\u0060 | \u0060active\u0060 | the trust inventory and gate, F30: \u0060.3\u0060's six slices and \u0060.4\u0060, the chapter, done; \u0060.3.2.1\u0060's baseline committed from the runner, its repaired-key compatibility in \u0060.3.2.1.1\u0060 waiting on the runner, \u0060.5\u0060 on the director; \u0060.6.2\u0060 and \u0060.6.3\u0060 done, the generated-sources instrument and its chapter; \u0060.6\u0060, generated sources, done, \u0060.6.4\u0060's review closed; \u0060.8\u0060, the mutation catalogue's breadth, done; \u0060.9\u0060, the parent's tests', design accepted; \u0060.9.5\u0060 initial measurements complete; \u0060.9.6.3.2.2\u0060 bounded survivor assessments in progress, next \u0060.9.6.3.2.2.15.2.1.5.2\u0060 complete environment-tail/current-reason checkpoint |\n"
+        },
+        {
+          "start_line": 2039,
+          "end_line": 2039,
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "replacement": "| \u00602026-10-20\u0060 | \u0060M3.6.9.6.3.2.2.15.2.1.5.1.2\u0060 | Exact1-line/3-guard delta; full50 proof/operator; complete1413 discovery/reconciliation | Pass; current24 native replay remains .2; final focused/book/gates required |\n"
+        },
+        {
+          "start_line": 2383,
+          "end_line": 2383,
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "replacement": "| \u0060M3.6.9.6.3.2.2.15.2.1.5.1.2\u0060 | \u0060ARCHOGEN-M3-0820 (leaf M3.6.9.6.3.2.2.15.2.1.5.1.2)\u0060 | [Proved cleanup](../book/src/annex-trust-proofs.md#proved-environment-tail-removal); reasons unchanged; complete current checkpoint next |\n"
+        }
+      ]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Complete initial50 guard-refusal run with relative traceback paths</summary>
+
+```json
+{
+  "status": "failed",
+  "command": [
+    "python3",
+    "-I",
+    "-B",
+    "xtask/mutation_sweep_tests.py",
+    "<runtime-repository-root>"
+  ],
+  "exit": 1,
+  "stdout": "closure probes: 37 actual candidates and 16 baselines compile; 159 value-selection observations\ncontains type probes: 16 candidates, 6 viable, 10 type refusals; 120 observations\ncontains receiver probes: 32 candidates, 16 viable, 16 type refusals; 288 observations\ncaller suffix compiled controls complete; checking the precise reason\nlogic probes: 12 actual candidates and four baselines compile; 128 truth-table observations\n",
+  "stderr": "......................................F...........\n======================================================================\nFAIL: test_close_reason_requires_current_production_and_caller_premises (__main__.ObserverCloseTests.test_close_reason_requires_current_production_and_caller_premises)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"xtask/mutation_sweep_tests.py\", line 550, in test_close_reason_requires_current_production_and_caller_premises\n    verify(inputs)\n    ~~~~~~^^^^^^^^\n  File \"xtask/mutation_sweep_tests.py\", line 547, in verify\n    self.assertEqual(hashlib.sha256(production.encode()).hexdigest(), digest,\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                     'changed close-proof source/caller requires revalidation: ' + path)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: '6a210d1810a3dbd5adecf861f77200a9846887f51f9dee8f6683ab16b8a88118' != '401c7abd874b00bd53d5d0d9801c6d34f2ee7e19b1d4ed6042bede9c7704b041'\n- 6a210d1810a3dbd5adecf861f77200a9846887f51f9dee8f6683ab16b8a88118\n+ 401c7abd874b00bd53d5d0d9801c6d34f2ee7e19b1d4ed6042bede9c7704b041\n : changed close-proof source/caller requires revalidation: xtask/src/trust.rs\n\n----------------------------------------------------------------------\nRan 50 tests in 161.798s\n\nFAILED (failures=1)\n",
+  "seconds": 161.90774262498599,
+  "before": {
+    "xtask/mutation_sweep_tests.py": "3130f7d59d3852478244ace888bd571ac7d2afe8ec8cc2c7123b5f23b6b3c4a5",
+    "xtask/src/trust.rs": "527f68d5787b16b5e7f9e31942772bcc548f735d017ef95a5e30180a5012a9b5",
+    "xtask/src/catalog_build.rs": "ead6752d2c5aa9a6c289c43b35c66ff4ee1e1b6b748ba9e20e1f68578fe093d5",
+    "xtask/trust.equivalents": "ab341a3d5780a98352d39acdb45f6745163ec7740b9298b830fbf3e87fe1e511",
+    "scripts/mutation_sweep.sh": "8043cddad18b8ddf54c5863b55a8238039054f202ddc69e073389528870e78bd"
+  },
+  "after": {
+    "xtask/mutation_sweep_tests.py": "3130f7d59d3852478244ace888bd571ac7d2afe8ec8cc2c7123b5f23b6b3c4a5",
+    "xtask/src/trust.rs": "527f68d5787b16b5e7f9e31942772bcc548f735d017ef95a5e30180a5012a9b5",
+    "xtask/src/catalog_build.rs": "ead6752d2c5aa9a6c289c43b35c66ff4ee1e1b6b748ba9e20e1f68578fe093d5",
+    "xtask/trust.equivalents": "ab341a3d5780a98352d39acdb45f6745163ec7740b9298b830fbf3e87fe1e511",
+    "scripts/mutation_sweep.sh": "8043cddad18b8ddf54c5863b55a8238039054f202ddc69e073389528870e78bd"
+  },
+  "profile_sha256": "2b3fbe199bddb4ba84c453a23334c7025308b06127ce3cc96f74b2a17680eedd",
+  "raw_stderr_sha256": "79e49936cea0c3fe02f6728b183df22e500de7b97b0157b1624d40e2944e51dc",
+  "path_rendering": "Only runtime repository-root prefixes removed from traceback paths; raw log identity retained."
+}
+```
+
+</details>
+
+The retained input commit is `4437c10d59552703b343933f763c23d4af52d75c`. Together with the exact one-line deletion and three literal substitutions, it reconstructs all source inputs without an ignored-only dependency. The native list can be regenerated from that source and the unchanged native generator; its SHA-256 binds the actual list observed here. Reproduction adapters and their repo-only write profile are retained verbatim. Compiler/OS inputs are necessary read-only host dependencies. Initial failure tracebacks use repository-relative rendering; their raw byte digest is separately identified.
+
+<details>
+<summary>Exact volume.sb</summary>
+
+~~~scheme
+(version 1)
+(allow default)
+(deny file-write*)
+(allow file-write* (subpath (param "WRITABLE_ROOT")))
+(allow file-write-data (literal "/dev/null"))
+~~~
+
+</details>
+
+<details>
+<summary>Exact remove-tail.py</summary>
+
+~~~python
+from pathlib import Path
+import hashlib,json,subprocess
+
+out=Path('target/environment-tail-cleanup');base='4437c10d59552703b343933f763c23d4af52d75c'
+path=Path('xtask/src/trust.rs');before=path.read_text()
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+assert sha(before.encode())=='9616b59ff2bc394e6471570bfaf857971671fda4a12c4fb745e557d2d21a1751'
+start='        let mut env_deps = Vec::new();\n        for l in text.lines() {\n';stop='        for raw in dependency_files(&text, &d, &scratch, &canonical_scratch)? {'
+a=before.index(start);z=before.index(stop,a);loop=before[a:z]
+assert sha(loop.encode())=='80e6db30d3affc38de38e1a0d3a2f2ab1330cb3caba9f7612809b7735a1f159b'
+tail='                continue;\n';assert loop.count(tail)==1
+clean=loop.replace(tail,'',1);after=before[:a]+clean+before[z:]
+assert sha(clean.encode())=='c21a74dd0ccb9d0ac902e8ecf1e304e72ca53a6476689a2081aae55ce3d9579a'
+assert sha(after.encode())=='527f68d5787b16b5e7f9e31942772bcc548f735d017ef95a5e30180a5012a9b5'
+assert before.encode()==subprocess.check_output(['git','show',base+':'+str(path)])
+path.write_text(after)
+record=dict(status='removed-exact-proved-tail',base_commit=base,source_before_sha256=sha(before.encode()),source_after_sha256=sha(after.encode()),production_after_sha256=sha(after.split('#[cfg(test)]',1)[0].encode()),before_loop_sha256=sha(loop.encode()),after_loop_sha256=sha(clean.encode()),removed_line=tail,source_prefix_bytes=len(before[:a].encode()),unchanged_suffix_sha256=sha(before[z:].encode()),scope='Only the separately proved redundant line is removed; no reason/guard change yet.')
+(out/'removal.json').write_text(json.dumps(record,indent=2)+'\n')
+print(json.dumps(record))
+~~~
+
+</details>
+
+<details>
+<summary>Exact qualify-before-guards.py</summary>
+
+~~~python
+from pathlib import Path
+import hashlib,json,os,subprocess
+
+root=Path.cwd();out=Path('target/environment-tail-cleanup');rows=[]
+profile=out/'volume.sb';profile.write_bytes(Path('target/environment-tail-proof/volume.sb').read_bytes())
+source=Path('xtask/mutation_sweep_tests.py').read_bytes();assert source.count(b'51af305a7198e25bb793f1d24a24628082f6b0479704b6e65a488497d9c4502d')==2
+def run(label,tests,expected):
+ command=['python3','-I','-B','xtask/mutation_sweep_tests.py',str(root),*tests]
+ result=subprocess.run(['/usr/bin/sandbox-exec','-D','WRITABLE_ROOT='+str(root),'-f',str(profile),*command],stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=dict(os.environ),timeout=180)
+ (out/(label+'.stdout')).write_bytes(result.stdout);(out/(label+'.stderr')).write_bytes(result.stderr)
+ # Harness/compiler panic paths are runtime-derived; publish a root-relative rendering
+ # and the raw byte identities, retaining the exact raw files only in local evidence.
+ row=dict(label=label,command=command[:4]+['<runtime-repository-root>']+tests,exit=result.returncode,stdout=result.stdout.decode().replace(str(root)+'/', ''),stderr=result.stderr.decode().replace(str(root)+'/', ''),raw_stdout_sha256=hashlib.sha256(result.stdout).hexdigest(),raw_stderr_sha256=hashlib.sha256(result.stderr).hexdigest(),path_rendering='Only the current runtime repository-root prefix is removed from published text; raw SHA-256 identifies retained local logs.')
+ rows.append(row);assert result.returncode==expected,row
+ return row
+run('clean-shape-control',['EnvironmentTailTests.test_environment_tail_fallthrough_requires_the_complete_terminal_scope'],0)
+old=run('old-guards-refuse',['DiagnosticFlagTests.test_caller_suffix_prefix_requires_the_complete_pinned_constructor','IteratorTests.test_cargo_absolute_prefix_edits_preserve_line_selection'],1)
+assert 'FAILED (failures=2)' in old['stderr'] and 'caller suffix source premise requires revalidation' in old['stderr'] and 'revalidate absolute cwd proof: trust production' in old['stderr']
+assert Path('xtask/mutation_sweep_tests.py').read_bytes()==source
+record=dict(status='passed',scope='Clean source shape verified before either old production-prefix guard is updated; both old guards correctly refuse pending revalidation.',runs=rows,old_guard_source_sha256=hashlib.sha256(source).hexdigest())
+(out/'before-guards.json').write_text(json.dumps(record,indent=2)+'\n')
+print('Before guard refresh: clean source proof passes; both old production guards correctly refuse; guard source unchanged')
+~~~
+
+</details>
+
+<details>
+<summary>Exact refresh-close-guard.py</summary>
+
+~~~python
+from pathlib import Path
+import ast,hashlib,json,subprocess
+
+out=Path('target/environment-tail-cleanup');base='4437c10d59552703b343933f763c23d4af52d75c'
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+failed=json.loads((out/'initial-suite-results.json').read_text())
+assert failed['exit']==1 and failed['before']==failed['after'] and 'FAILED (failures=1)' in failed['stderr']
+assert 'changed close-proof source/caller requires revalidation: xtask/src/trust.rs' in failed['stderr']
+path=Path('xtask/mutation_sweep_tests.py');text=path.read_text()
+tree=ast.parse(text);cls=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='ObserverCloseTests')
+method=next(n for n in cls.body if isinstance(n,ast.FunctionDef) and n.name=='test_close_reason_requires_current_production_and_caller_premises')
+assignment=next(n for n in method.body if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='expected' for t in n.targets));expected=ast.literal_eval(assignment.value)
+before={};after={}
+for name in expected:
+ original=subprocess.check_output(['git','show',base+':'+name]);current=Path(name).read_bytes()
+ before[name]=sha(original.decode().split('\n#[cfg(test)]\n',1)[0].encode());after[name]=sha(current.decode().split('\n#[cfg(test)]\n',1)[0].encode())
+ if name!='xtask/src/trust.rs':assert current==original
+assert before==expected
+source=Path('xtask/src/trust.rs').read_text();old_source=(out/'trust.rs.before').read_text()
+start='        let mut env_deps = Vec::new();\n        for l in text.lines() {\n';stop='        for raw in dependency_files(&text, &d, &scratch, &canonical_scratch)? {'
+a=old_source.index(start);z=old_source.index(stop,a);loop=old_source[a:z]
+assert source==old_source[:a]+loop.replace('                continue;\n','',1)+old_source[z:]
+old=expected['xtask/src/trust.rs'];new=after['xtask/src/trust.rs'];assert old=='401c7abd874b00bd53d5d0d9801c6d34f2ee7e19b1d4ed6042bede9c7704b041' and new=='6a210d1810a3dbd5adecf861f77200a9846887f51f9dee8f6683ab16b8a88118'
+assert text.count(old)==1 and text.count(new)==0
+for name in ['xtask/trust_compiler_observer.equivalents','xtask/trust.equivalents']:assert Path(name).read_bytes()==subprocess.check_output(['git','show',base+':'+name])
+path.write_text(text.replace(old,new,1))
+record=dict(status='refreshed-after-exact-caller-proof-and-real-refusal',owner='M3.6.9.6.3.2.2.15.2.1.5.1.2',scope='The close protocol caller is unchanged in behavior by the all-domain local no-op; observer/controller sources and both reason files remain byte-identical. Full50 actual compiled control replay is required next.',hash_boundary='split at newline + cfg(test) + newline, excluding the preceding newline; distinct from the two complete production-prefix guards.',before=before,after=after,old_guard_source_sha256=sha(text.encode()),new_guard_source_sha256=sha(path.read_bytes()),retained_initial_suite=dict(operator_tests=50,failures=1,all_inputs_restored=True,actual_close_protocol_test_passed=True))
+(out/'close-guard-refresh.json').write_text(json.dumps(record,indent=2)+'\n')
+print('Qualified third close-caller hash by exact removal, unchanged observer/controller/reasons and retained refusal; full50 replay required next')
+~~~
+
+</details>
+
+<details>
+<summary>Exact run-suite.py</summary>
+
+~~~python
+from pathlib import Path
+import hashlib,json,os,subprocess,time
+
+root=Path.cwd();out=Path('target/environment-tail-cleanup')
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+names=['xtask/mutation_sweep_tests.py','xtask/src/trust.rs','xtask/src/catalog_build.rs','xtask/trust.equivalents','scripts/mutation_sweep.sh']
+before={name:sha(Path(name).read_bytes()) for name in names}
+profile=out/'volume.sb';profile.write_bytes(Path('target/environment-tail-proof/volume.sb').read_bytes())
+command=['python3','-I','-B','xtask/mutation_sweep_tests.py',str(root)]
+started=time.monotonic()
+result=subprocess.run(['/usr/bin/sandbox-exec','-D','WRITABLE_ROOT='+str(root),'-f',str(profile),*command],stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=dict(os.environ),timeout=900)
+(out/'suite.stdout').write_bytes(result.stdout);(out/'suite.stderr').write_bytes(result.stderr)
+after={name:sha(Path(name).read_bytes()) for name in names}
+receipt=dict(status='passed' if result.returncode==0 else 'failed',command=['python3','-I','-B','xtask/mutation_sweep_tests.py','<runtime-repository-root>'],exit=result.returncode,stdout=result.stdout.decode(),stderr=result.stderr.decode(),seconds=time.monotonic()-started,before=before,after=after,profile_sha256=sha(profile.read_bytes()))
+(out/'suite-results.json').write_text(json.dumps(receipt,indent=2)+'\n')
+assert result.returncode==0 and before==after,receipt
+assert 'Ran 50 tests' in receipt['stderr'] and receipt['stderr'].rstrip().endswith('OK'),receipt
+print('Full operator suite:50 tests pass; inputs restored; seconds',round(receipt['seconds'],3))
+~~~
+
+</details>
+
+<details>
+<summary>Exact audit-mapping.py</summary>
+
+~~~python
+from pathlib import Path
+import ast,bisect,copy,hashlib,importlib.util,json,re,subprocess
+
+out=Path('target/environment-tail-cleanup');base='4437c10d59552703b343933f763c23d4af52d75c';file='xtask/src/trust.rs'
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+spec=importlib.util.spec_from_file_location('adequacy','scripts/trust_adequacy.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+before=subprocess.check_output(['git','show',base+':'+file]).decode();after=Path(file).read_text();script=Path('scripts/mutation_sweep.sh').read_text()
+old,_,old_scope=m.discover(script,before);new,listing,scope=m.discover(script,after)
+retired=next(c for c in old if c['id']=='L772.stmt.221');surviving=[c for c in old if c['id']!=retired['id']]
+assert len(old)==1414 and len(new)==len(surviving)==1413
+def bind_pair(left,right):
+ assert all(left[key]==right[key] for key in ['operator','original']),(left,right)
+ expected=[v-(1 if v>771 else 0) for v in left['span']]
+ assert right['span']==expected,(left,right)
+ rename=None
+ if left['replacement']!=right['replacement']:
+  assert left['operator'] in {'iter','guard'} and re.match(r"^\s*(?:'\w+:\s*)?for\b",left['original'])
+  old_prefix='__archogen_sweep_'+str(left['span'][0]+1)+'_';new_prefix='__archogen_sweep_'+str(right['span'][0]+1)+'_'
+  assert old_prefix!=new_prefix and old_prefix not in before and new_prefix not in after
+  assert left['replacement'].replace(old_prefix,new_prefix)==right['replacement']
+  symbols=set(re.findall(re.escape(old_prefix)+r'([a-z]+)',left['replacement']))
+  assert symbols=={'it','k','first','last'}
+  rename=dict(before=old_prefix,after=new_prefix,symbol_suffixes=sorted(symbols))
+ return dict(old_id=left['id'],new_id=right['id'],old_span=left['span'],new_span=right['span'],generated_prefix_rename=rename)
+mapping=[bind_pair(left,right) for left,right in zip(surviving,new)]
+actual=subprocess.check_output(['bash','scripts/mutation_sweep.sh',file,'--package','xtask','--list'],text=True)
+m.verify_listing(actual,listing,file,scope);(out/'listing.log').write_text(actual)
+code=script.split("<<'PY'\n",1)[1].rsplit('\nPY',1)[0]
+ns=dict(re=re,json=json,bisect=bisect,lines=after.split('\n'),first=scope[0],last=scope[1])
+exec(compile(ast.Module(body=[n for n in ast.parse(code).body if isinstance(n,ast.FunctionDef)],type_ignores=[]),'scripts/mutation_sweep.sh','exec'),ns)
+reasons=ns['load_equivalents'](Path('xtask/trust.equivalents'));assert len(reasons)==23
+assert Path('xtask/trust.equivalents').read_bytes()==subprocess.check_output(['git','show',base+':xtask/trust.equivalents'])
+selected=[c for c in new if (c['original'].strip(),c['replacement'].strip()) in reasons];assert len(selected)==23
+old_by_id={c['id']:c for c in old};new_by_id={c['id']:c for c in new}
+known_map=next(r for r in mapping if r['old_id']=='L1310.stmt.452');known=new_by_id[known_map['new_id']]
+assert known['original'].strip()=='continue;' and known['replacement'].strip()=='// continue;'
+key=(known['original'].strip(),known['replacement'].strip());assert key not in reasons
+matches=[c for c in new if (c['original'].strip(),c['replacement'].strip())==key];assert len(matches)==21
+false=[]
+renamed=next(i for i,row in enumerate(mapping) if row['generated_prefix_rename'])
+wrong_prefix=copy.deepcopy(new);wrong_prefix[renamed]['replacement']=wrong_prefix[renamed]['replacement'].replace('__archogen_sweep_','__wrong_sweep_')
+for label,proposal in [('missing-candidate',new[:-1]),('duplicate-candidate',new+[new[0]]),('wrong-replacement',[dict(new[0],replacement='wrong')]+new[1:]),('wrong-generated-prefix',wrong_prefix)]:
+ try:
+  assert len(proposal)==len(surviving)
+  for left,right in zip(surviving,proposal):bind_pair(left,right)
+ except AssertionError:false.append(label)
+ else:raise AssertionError(label+' accepted')
+record=dict(status='passed',scope='Exact source/candidate reconciliation and final replay selection only, not current native outcomes.',base_commit=base,source_before_sha256=sha(before.encode()),source_after_sha256=sha(after.encode()),listed_before=1414,listed_after=1413,production_range_before=old_scope,production_range_after=scope,retired=retired,retirement_proof='docs/book/src/annex-trust-proofs.md#environment-loop-tail-control-proof',all_other_operators_original_text_and_relative_positions_exact=True,generated_fresh_prefix_renames=sum(row['generated_prefix_rename'] is not None for row in mapping),replacement_rule='Byte-identical except exact bijective renaming of the native line-derived it/k/first/last fresh identifiers, each absent from its complete source; all other bytes exact.',mapping=mapping,current_equivalent_candidates=selected,unchanged_reason_records=[dict(original=key[0],replacement=key[1],reason=why) for key,why in reasons.items()],known_other_continue_mapping=known_map,known_other_continue_candidate=known,current_shared_continue_sites=21,negative_controls=false)
+record['actual_cli_listing']=dict(sha256=sha(actual.encode()),bytes=len(actual.encode()))
+(out/'candidate-mapping.json').write_text(json.dumps(record,indent=2)+'\n')
+print('Exact mapping:1414 to1413; only proved tail retired;',record['generated_fresh_prefix_renames'],'native hygienic prefix renames;23 unchanged reason sites; known other continue',known['id'],'remains;4 altered mappings refuse')
+~~~
+
+</details>
+
+<details>
+<summary>Exact audit-cleanup.py</summary>
+
+~~~python
+from pathlib import Path
+import copy,hashlib,json,subprocess
+
+out=Path('target/environment-tail-cleanup');base='4437c10d59552703b343933f763c23d4af52d75c'
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+def read(name):return json.loads((out/name).read_text())
+def prior(name):return subprocess.check_output(['git','show',base+':'+name])
+removal=read('removal.json');mapping=read('candidate-mapping.json');suite=read('suite-results.json')
+assert suite['status']=='passed' and suite['exit']==0 and suite['before']==suite['after']
+assert 'Ran 50 tests' in suite['stderr'] and suite['stderr'].rstrip().endswith('OK')
+for name,digest in suite['after'].items():assert sha(Path(name).read_bytes())==digest,name
+source=Path('xtask/src/trust.rs').read_bytes();old=prior('xtask/src/trust.rs');assert sha(source)==removal['source_after_sha256']==mapping['source_after_sha256']
+start=b'        let mut env_deps = Vec::new();\n        for l in text.lines() {\n';stop=b'        for raw in dependency_files(&text, &d, &scratch, &canonical_scratch)? {'
+a=old.index(start);z=old.index(stop,a);loop=old[a:z];tail=b'                continue;\n';assert loop.count(tail)==1
+assert source==old[:a]+loop.replace(tail,b'',1)+old[z:]
+assert source.split(b'#[cfg(test)]',1)[1]==old.split(b'#[cfg(test)]',1)[1]
+tests=Path('xtask/mutation_sweep_tests.py').read_bytes();prior_tests=prior('xtask/mutation_sweep_tests.py')
+old_full=b'51af305a7198e25bb793f1d24a24628082f6b0479704b6e65a488497d9c4502d';new_full=b'080a15a2d2509caf4ea79c557dced56942e20c2fb1599ee0e3e414b3fa66992e'
+old_close=b'401c7abd874b00bd53d5d0d9801c6d34f2ee7e19b1d4ed6042bede9c7704b041';new_close=b'6a210d1810a3dbd5adecf861f77200a9846887f51f9dee8f6683ab16b8a88118'
+assert tests.count(new_full)==2 and tests.count(new_close)==1
+assert tests.replace(new_full,old_full).replace(new_close,old_close)==prior_tests
+for name in ['xtask/trust.equivalents','xtask/trust_compiler_observer.equivalents','xtask/src/trust_compiler.rs','xtask/src/trust_compiler_observer.rs','xtask/src/catalog_build.rs','xtask/src/trust_generated.rs','xtask/src/trust_gate.rs','scripts/mutation_sweep.sh']:assert Path(name).read_bytes()==prior(name),name
+assert read('before-guards.json')['status']=='passed' and read('close-guard-refresh.json')['status']=='refreshed-after-exact-caller-proof-and-real-refusal'
+initial=read('initial-suite-results.json');assert initial['exit']==1 and initial['before']==initial['after'] and 'FAILED (failures=1)' in initial['stderr']
+assert mapping['listed_before']==1414 and mapping['listed_after']==1413 and len(mapping['mapping'])==1413
+assert len(mapping['current_equivalent_candidates'])==len(mapping['unchanged_reason_records'])==23
+assert mapping['generated_fresh_prefix_renames']==303
+diagnostic=read('mapping-diagnostic.json');assert diagnostic['changed_operator_counts']=={'iter':201,'guard':102}
+assert mapping['known_other_continue_candidate']['id']=='L1309.stmt.451' and mapping['current_shared_continue_sites']==21
+for raw,digest in [(source,removal['source_after_sha256']),(source.split(b'#[cfg(test)]',1)[0],new_full.decode()),(source.decode().split('\n#[cfg(test)]\n',1)[0].encode(),new_close.decode())]:
+ assert sha(raw)==subprocess.check_output(['shasum','-a','256'],input=raw).decode().split()[0]==digest
+false=[]
+for label,bad in [('unchanged-original',old),('wrong-tail',old.replace(tail,b'',1)),('extra-change',source+b'\n')]:
+ try:assert bad==old[:a]+loop.replace(tail,b'',1)+old[z:]
+ except AssertionError:false.append(label)
+ else:raise AssertionError(label+' accepted')
+result=dict(status='passed',scope='Exact no-op source cleanup and revalidated controls; current24-candidate native reason/other-site replay is planned separately, not measured here.',base_commit=base,source_sha256=sha(source),production_sha256=new_full.decode(),close_guard_prefix_sha256=new_close.decode(),rust_delta='Only the exact proved redundant continue line removed',python_delta='Only two complete production-prefix hash literals and one close-proof newline-trimmed caller hash updated',semantic_test_source_exact=True,all50_operator_tests_pass=True,all_reason_files_exact=True,unchanged23_current_reason_candidates=True,all1413_candidate_positions_reconciled=True,generated_fresh_prefix_renames=303,known_other_continue='L1309.stmt.451',restored_initial_failed_suite=True,source_falsifiers=false,mapping_falsifiers=mapping['negative_controls'],final_native_replay_candidates=24)
+(out/'cleanup-audit.json').write_text(json.dumps(result,indent=2)+'\n')
+print('Cleanup audit: exact1-line Rust/3 hash-literal delta; full50 pass;1413 reconciled/23 reasons unchanged; current24 native replay still pending; sha256',sha((out/'cleanup-audit.json').read_bytes()))
+~~~
+
+</details>
+
+<details>
+<summary>Exact progress.py</summary>
+
+~~~python
+from pathlib import Path
+import difflib,hashlib,json,re,subprocess
+
+out=Path('target/environment-tail-cleanup');B=chr(96);base='4437c10d59552703b343933f763c23d4af52d75c'
+identity='M3.6.9.6.3.2.2.15.2.1.5.1.2';next_id='M3.6.9.6.3.2.2.15.2.1.5.2'
+assert json.loads((out/'cleanup-audit.json').read_text())['status']=='passed'
+subject='ARCHOGEN-M3-0820 (leaf '+identity+'): remove the proved redundant environment tail'
+leaf='''- ID: {b}{identity}{b}
+  Status: {b}done{b} — proved tail removal and source-guard revalidation
+  [Full evidence](../book/src/annex-trust-proofs.md#proved-environment-tail-removal).
+  Acceptance:
+  - [x] ROOT CAUSE: {b}python3 -I -B target/environment-tail-cleanup/audit-mapping.py{b},
+    exit code 0:1413 current edits reconciled;303 exact fresh-name renames; tail alone retired.
+  - [x] ADDRESSED: {b}python3 -I -B target/environment-tail-cleanup/audit-cleanup.py{b},
+    exit code 0: exact1-line Rust/3 hash-binding changes; full50 compiled controls pass;
+    old guards refused first, semantic test source/all reasons preserved.
+  - [x] NO REGRESSION: {b}python3 -I -B target/environment-tail-cleanup/final-audit.py{b},
+    exit code 0: history/task/source evidence exact; final focused stamp/book/gates required.
+  Verification: full book/adapters; .2 owns strict current24 replay; .1/.5 remain open.
+  Commit: {b}ARCHOGEN-M3-0820{b}
+
+'''.format(b=B,identity=identity)
+path=Path('docs/tasks/M3.md');snapshot=out/'task-before-completion.md'
+text=snapshot.read_text() if snapshot.exists() else path.read_text();snapshot.write_text(text)
+a=text.index('- ID: '+B+identity+B);z=text.index('\n- ID: ',a+1)+1;(out/'planned-leaf.md').write_text(text[a:z]);text=text[:a]+leaf+text[z:];(out/'completed-leaf.md').write_text(leaf)
+old='next '+B+'.9.6.3.2.2.15.2.1.5.1.2'+B+' proved environment-tail cleanup and guard revalidation';new='next '+B+'.9.6.3.2.2.15.2.1.5.2'+B+' complete environment-tail/current-reason checkpoint'
+assert text.count(old)==1;text=text.replace(old,new,1)
+def append_table(data,heading,row):
+ a=data.index(heading)+len(heading);m=re.search(r'(?m)^## ',data[a:]);z=a+m.start() if m else len(data)
+ rows=list(re.finditer(r'(?m)^\|.*\|\n',data[a:z]));end=a+rows[-1].end();return data[:end]+row+data[end:]
+text=append_table(text,'## Verification Log\n','| '+B+'2026-10-20'+B+' | '+B+identity+B+' | Exact1-line/3-guard delta; full50 proof/operator; complete1413 discovery/reconciliation | Pass; current24 native replay remains .2; final focused/book/gates required |\n')
+text=append_table(text,'## Commit Log\n','| '+B+identity+B+' | '+B+'ARCHOGEN-M3-0820 (leaf '+identity+')'+B+' | [Proved cleanup](../book/src/annex-trust-proofs.md#proved-environment-tail-removal); reasons unchanged; complete current checkpoint next |\n')
+(out/'task-after-completion.md').write_text(text);updates={str(path):text}
+for name in ['LIVE_STATUS.md','docs/TASK_TREE.md']:
+ data=subprocess.check_output(['git','show',base+':'+name]).decode();old=B+'.9.6.3.2.2.15.2.1.5.1.2'+B+' proved environment-tail cleanup and guard revalidation';new=B+'.9.6.3.2.2.15.2.1.5.2'+B+' complete environment-tail/current-reason checkpoint'
+ assert data.count(old)==1;updates[name]=data.replace(old,new,1)
+data=subprocess.check_output(['git','show',base+':MEMORY.md']).decode();old='remove the proved redundant environment tail in\n  '+B+identity+B+' and revalidate source guards; then commit the full current-reason checkpoint.'
+new='run the complete current environment-tail/reason checkpoint in\n  '+B+next_id+B+'; reconcile proved retirement, all23 reasons and the mapped non-tail continue kill.'
+assert data.count(old)==1;updates['MEMORY.md']=data.replace(old,new,1)
+data=subprocess.check_output(['git','show',base+':CHANGELOG.md']).decode();a=data.index('## archogen — ')
+entry='''## archogen — remove the proved redundant environment tail
+
+{b}ARCHOGEN-M3-0820{b} (leaf {b}{identity}{b}), {b}2026-10-20{b}.
+
+- Remove only the separately proved terminal continue. Preserve every semantic test,
+  normalizer/allowlist, caller statement and reason record; no file-wide continue reason.
+- Qualify both full-prefix guard refusals and the additionally caught newline-trimmed
+  close-caller guard. Update only3 hash literals; re-run all50 actual proof/operator controls.
+- Reconcile1414 to1413 current mutations: tail alone retired;303 exact fresh-name
+  renames follow physical lines. All23 reason sites persist; L1309.stmt.451 is retained
+  for fresh native replay, with no projected current kill. Four altered mappings refuse.
+- Preserve330 prior archives/new permanent-control seal, exact source/task evidence and
+  the complete failed/recovered controls in the unbounded book. Final focused staged-tree
+  stamp, book and doctrine gates precede this commit; the current24 native checkpoint is next.
+
+
+'''.format(b=B,identity=identity)
+updates['CHANGELOG.md']=data[:a]+entry+data[a:]
+original=subprocess.check_output(['git','show',base+':docs/tasks/M3.md']);lines=original.decode().splitlines(keepends=True);snapshots={}
+for name in ['task-active-before-seal.md','task-before-completion.md','task-after-completion.md']:
+ raw=(out/name).read_bytes();updated=raw.decode().splitlines(keepends=True);changes=[]
+ for op,a,z,x,y in difflib.SequenceMatcher(None,lines,updated,autojunk=False).get_opcodes():
+  if op!='equal':changes.append(dict(start_line=a,end_line=z,before_sha256=hashlib.sha256(''.join(lines[a:z]).encode()).hexdigest(),replacement=''.join(updated[x:y])))
+ snapshots[name]=dict(sha256=hashlib.sha256(raw).hexdigest(),bytes=len(raw),changes=changes)
+(out/'task-reconstruction.json').write_text(json.dumps(dict(base_commit=base,base_file='docs/tasks/M3.md',base_sha256=hashlib.sha256(original).hexdigest(),snapshots=snapshots),indent=2)+'\n')
+(out/'completion-updates.json').write_text(json.dumps(updates,indent=2)+'\n')
+total=sum(p.stat().st_size for p in Path('docs/tasks').rglob('*') if p.is_file())+len(text.encode())-path.stat().st_size
+assert total<=819200,total
+(out/'commit-message.txt').write_text(subject+'\n\n- Remove only the source-proved no-op continue and qualify all three\n  affected source guards against actual compiled controls.\n- Preserve semantic tests and every reason, pass all 50 operator tests,\n  and reconcile complete discovery including native fresh-name changes.\n- Retain exact history and failed/recovered evidence in the unbounded\n  book; the complete current reason/other-site native replay stays next.\n')
+print('Prepared cleanup completion; private task bytes',total,'no maintained docs changed')
+~~~
+
+</details>
+
+<details>
+<summary>Exact run-focused.py</summary>
+
+~~~python
+from pathlib import Path
+import hashlib,json,os,re,subprocess
+
+root=Path.cwd();out=Path('target/environment-tail-cleanup')
+subprocess.run(['git','diff','--quiet'],check=True)
+tree=subprocess.check_output(['git','write-tree'],text=True).strip()
+profile=out/'volume.sb'
+with (out/'focused.log').open('wb') as log:
+ result=subprocess.run(['/usr/bin/sandbox-exec','-D','WRITABLE_ROOT='+str(root),'-f',str(profile),'make','focused'],stdout=log,stderr=subprocess.STDOUT,env=dict(os.environ),timeout=900)
+raw=(out/'focused.log').read_bytes();text=raw.decode();after=subprocess.check_output(['git','write-tree'],text=True).strip()
+record=dict(status='passed' if result.returncode==0 else 'failed',command=['make','focused'],exit=result.returncode,staged_tree_before=tree,staged_tree_after=after,log_sha256=hashlib.sha256(raw).hexdigest(),stamp='target/verify-stamps/focused/'+tree)
+(out/'focused-results.json').write_text(json.dumps(record,indent=2)+'\n')
+assert result.returncode==0 and after==tree and 'tier focused: passed' in text,record
+assert Path(record['stamp']).read_text()=='tier focused: passed on tree '+tree+'\n'
+subprocess.run(['git','diff','--quiet'],check=True)
+print('Focused tier: passed on exact staged tree',tree,'with matching local stamp')
+~~~
+
+</details>
+
+<details>
+<summary>Exact publish.py</summary>
+
+~~~python
+from pathlib import Path
+import copy,hashlib,json,subprocess,sys
+
+out=Path('target/environment-tail-cleanup');base='4437c10d59552703b343933f763c23d4af52d75c';B=chr(96);fence=B*3
+def read(name):return json.loads((out/name).read_text())
+assert read('cleanup-audit.json')['status']=='passed'
+path=Path('docs/book/src/annex-trust-proofs.md');before=subprocess.check_output(['git','show',base+':'+str(path)]).decode()
+if '--refresh' in sys.argv:assert path.read_text()==before+(out/'book-fragment.md').read_text()
+else:assert path.read_text()==before
+(out/'book-before.md').write_text(before)
+parts=['\n### Proved environment-tail removal\n\n']
+parts.append('The [proved redundant tail](#environment-loop-tail-control-proof) is now removed from '
+ +B+'xtask/src/trust.rs'+B+'. The Rust change is exactly one line. Environment normalization, '
+ 'record/refusal ordering and subsequent dependency handling keep the same behavior for the '
+ 'complete source domain proved earlier. All semantic test bodies and both trust/observer reason '
+ 'files remain byte-identical. No generic continue reason is added.\n\n')
+parts.append('Whole source SHA-256 changes from '+B+'9616b59ff2bc394e6471570bfaf857971671fda4a12c4fb745e557d2d21a1751'+B
+ +' to '+B+'527f68d5787b16b5e7f9e31942772bcc548f735d017ef95a5e30180a5012a9b5'+B
+ +'. Its production prefix is now '+B+'080a15a2d2509caf4ea79c557dced56942e20c2fb1599ee0e3e414b3fa66992e'+B
+ +'. The normalizer and allowlist, every preceding/following statement and the complete Rust '
+ 'test section are preserved. The source proof establishes retirement; the absence of a mutation '
+ 'candidate does not establish equivalence.\n\n')
+parts.append('#### Source-guard revalidation before refresh\n\n'
+ 'The maintained terminal-scope control passes on cleaned production before any old hash is '
+ 'refreshed. Both complete-prefix guards then correctly refuse their old source bindings. After '
+ 'those two bindings are updated, the full50 operator suite catches a third binding in the '
+ '[observer explicit-close proof](#observer-explicit-close-assessment): it hashes the caller '
+ 'prefix without the newline immediately before the test attribute. Its actual compiled close '
+ 'timing/protocol control passes, while its old source-premise guard refuses. The complete '
+ 'failed run and restored inputs are retained below.\n\n')
+parts.append('The additional guard is qualified against the exact proved removal and unchanged '
+ 'observer/controller source and reason files. Its new newline-trimmed caller digest is '
+ +B+'6a210d1810a3dbd5adecf861f77200a9846887f51f9dee8f6683ab16b8a88118'+B
+ +'. Only three hash literals change in the Python controls. The same complete50-test suite '
+ 'then passes: actual pinned Cargo suffix controls, absolute-cwd and close-protocol controls, '
+ 'all prior operator cases and the new terminal-scope proof. The source/guard inverse reconstructs '
+ 'both prior files exactly; no old test assertion is weakened.\n\n')
+parts.append('#### Complete current candidate reconciliation\n\n'
+ 'Fresh loaded discovery and the actual native CLI list agree on1413 current production '
+ 'candidates, against1414 before cleanup. Exactly '+B+'L772.stmt.221'+B+' is retired. All other '
+ 'operator kinds, original text and physical span movements bind one to one. Some native '
+ 'replacement bytes intentionally change: the maintained generator derives fresh identifier '
+ 'prefixes from physical line numbers. A draft byte-equality assumption refused this difference; '
+ 'inspection of the native '+B+'loop_header'+B+' generator identified its complete cause.\n\n')
+parts.append('There are303 such replacements:201 iterator and102 guard candidates. Each changes '
+ 'only a bijective prefix rename of '+B+'it/k/first/last'+B+'; its old/new fresh prefixes are '
+ 'absent from the corresponding complete source, preventing capture. Every other replacement '
+ 'byte is exact. Four altered mapping controls are refused, including an incorrect generated '
+ 'prefix. The complete mappings and native-list identity are durable below, without projecting '
+ 'any current native outcome from historical results.\n\n')
+parts.append('| Bound property | Before | Cleaned current |\n| --- | ---: | ---: |\n'
+ '| Raw production candidates | 1414 | 1413 |\n'
+ '| Physical generic continue-key sites | 22 | 21 |\n'
+ '| Existing reason records and their matched sites | 23 | 23 |\n\n')
+parts.append('All23 current reason sites persist. The historically killed non-tail continue '
+ +B+'L1310.stmt.452'+B+' maps to '+B+'L1309.stmt.451'+B+'. The next separate checkpoint must '
+ 'execute that current candidate and every current reason against all current semantic parents, '
+ 'with strict justified outcomes and complete original/copied-input/name restoration. This leaf '
+ 'does not claim a fresh kill or E, and does not close the environment parent, full compiler '
+ 'scope, caller/global sweeps or independent review.\n\n')
+parts.append('#### Final commit gate and retained evidence\n\n'
+ 'The final focused tier is '+B+'make focused'+B+'. This commit is made only after that tier '
+ 'passes on the complete staged tree and its stamp names the same tree, with the pinned book '
+ 'build and doctrine gates also passing. The commit message records that staged-tree identity. '
+ 'All330 prior archives and the exact new permanent-control seal remain intact. Three task '
+ 'states reconstruct from the retained input commit; false identities and a truncated seal '
+ 'are rejected. Staging review corrected the new audit adapter’s intended-file list to include '
+ 'the separately byte-verified new seal; no older archive changed. The commit hook also refused '
+ 'a shortened log entry: its required work-unit/leaf prefix is now restored and checked before '
+ 'the final tier. Every previous book byte is retained.\n\n')
+for name in ['planned-leaf.md','completed-leaf.md']:parts.append(fence+'markdown\n'+(out/name).read_text()+fence+'\n\n')
+payloads=[]
+def payload(title,data):
+ encoded=json.dumps(data,indent=2).replace(B,'\\u0060');assert json.loads(encoded)==data
+ parts.append('<details>\n<summary>'+title+'</summary>\n\n'+fence+'json\n'+encoded+'\n'+fence+'\n\n</details>\n\n');payloads.append(dict(title=title,data=data))
+for title,name in [('Exact proved source removal','removal.json'),('Actual clean-shape and old-guard refusals','before-guards.json'),('Two complete-prefix guard refreshes','guard-refresh.json'),('Qualified close-caller guard refresh','close-guard-refresh.json'),('Native fresh-name diagnostic','mapping-diagnostic.json'),('Complete current candidate reconciliation','candidate-mapping.json'),('Complete recovered50 operator suite','suite-results.json'),('Complete cleanup/source audit','cleanup-audit.json'),('Exact cleanup task-state reconstruction','task-reconstruction.json')]:payload(title,read(name))
+initial=copy.deepcopy(read('initial-suite-results.json'));initial['stderr']=initial['stderr'].replace(str(Path.cwd())+'/', '')
+initial['raw_stderr_sha256']=hashlib.sha256((out/'initial-suite.stderr').read_bytes()).hexdigest();initial['path_rendering']='Only runtime repository-root prefixes removed from traceback paths; raw log identity retained.'
+payload('Complete initial50 guard-refusal run with relative traceback paths',initial)
+parts.append('The retained input commit is '+B+base+B+'. Together with the exact one-line deletion '
+ 'and three literal substitutions, it reconstructs all source inputs without an ignored-only '
+ 'dependency. The native list can be regenerated from that source and the unchanged native '
+ 'generator; its SHA-256 binds the actual list observed here. Reproduction adapters and their '
+ 'repo-only write profile are retained verbatim. Compiler/OS inputs are necessary read-only '
+ 'host dependencies. Initial failure tracebacks use repository-relative rendering; their raw '
+ 'byte digest is separately identified.\n\n')
+for name,lang in [('volume.sb','scheme'),('remove-tail.py','python'),('qualify-before-guards.py','python'),('refresh-close-guard.py','python'),('run-suite.py','python'),('audit-mapping.py','python'),('audit-cleanup.py','python'),('progress.py','python'),('run-focused.py','python'),('publish.py','python'),('final-audit.py','python')]:
+ parts.append('<details>\n<summary>Exact '+name+'</summary>\n\n~~~'+lang+'\n'+(out/name).read_text()+'~~~\n\n</details>\n\n')
+fragment=''.join(parts).rstrip('\n')+'\n';(out/'book-fragment.md').write_text(fragment);(out/'published-payloads.json').write_text(json.dumps(payloads,indent=2)+'\n')
+for name,text in read('completion-updates.json').items():Path(name).write_text(text)
+path.write_text(before+fragment);Path('git_message_brief.txt').write_text((out/'commit-message.txt').read_text())
+print('Published exact cleanup/source/guard evidence:',len(fragment.encode()),'new book bytes;10 exact JSON payloads')
+~~~
+
+</details>
+
+<details>
+<summary>Exact final-audit.py</summary>
+
+~~~python
+from pathlib import Path
+import copy,hashlib,json,re,subprocess,sys
+
+out=Path('target/environment-tail-cleanup');base='4437c10d59552703b343933f763c23d4af52d75c';B=chr(96);fence=B*3
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+def read(name):return json.loads((out/name).read_text())
+def prior(name):return subprocess.check_output(['git','show',base+':'+name])
+core=read('cleanup-audit.json');assert core['status']=='passed' and core['all50_operator_tests_pass']
+assert sha(Path('xtask/src/trust.rs').read_bytes())==core['source_sha256']
+assert read('suite-results.json')['after']['xtask/mutation_sweep_tests.py']==sha(Path('xtask/mutation_sweep_tests.py').read_bytes())
+mapping=read('candidate-mapping.json');listing=(out/'listing.log').read_bytes()
+assert sha(listing)==mapping['actual_cli_listing']['sha256'] and len(listing)==mapping['actual_cli_listing']['bytes']
+archives={}
+for row in subprocess.check_output(['git','ls-tree','-r','-z',base,'docs/task-history']).split(b'\0'):
+ if not row:continue
+ header,name=row.split(b'\t',1);name=name.decode()
+ if len(Path(name).parts)!=4 or not name.endswith('.md'):continue
+ mode,kind,oid=header.split();assert mode==b'100644' and kind==b'blob';archives[name]=oid.decode()
+assert len(archives)==330
+for name,oid in archives.items():
+ raw=Path(name).read_bytes();assert hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==oid,name
+identity='M3.6.9.6.3.2.2.15.2.1.5.1.1';archive=Path('docs/task-history/M3/'+identity+'.md');old=prior('docs/tasks/M3.md')
+a=old.index(('- ID: '+B+identity+B).encode());m=re.search(rb'(?m)^- ID: |^## ',old[a+1:]);z=a+1+m.start();expected=old[a:z];assert archive.read_bytes()+b'\n'==expected
+actual={str(p) for p in Path('docs/task-history').glob('*/*.md')};assert actual==set(archives)|{str(archive)} and len(actual)==331
+index=Path('docs/task-history/INDEX.md').read_text();row=next(line for line in index.splitlines(keepends=True) if line.startswith('| '+B+identity+B+' |'));assert index.replace(row,'',1).encode()==prior('docs/task-history/INDEX.md')
+data=read('task-reconstruction.json');assert data['base_commit']==base and data['base_sha256']==sha(old);lines=old.decode().splitlines(keepends=True)
+def reconstruct(snapshot):
+ at=0;chunks=[]
+ for change in snapshot['changes']:
+  a,z=change['start_line'],change['end_line'];assert type(a) is int and type(z) is int and at<=a<=z<=len(lines)
+  assert sha(''.join(lines[a:z]).encode())==change['before_sha256'];chunks.extend(lines[at:a]);chunks.append(change['replacement']);at=z
+ chunks.extend(lines[at:]);raw=''.join(chunks).encode();assert len(raw)==snapshot['bytes'] and sha(raw)==snapshot['sha256'];return raw
+false=[]
+for name,snapshot in data['snapshots'].items():
+ assert reconstruct(snapshot)==(out/name).read_bytes()
+ bad=copy.deepcopy(snapshot);bad['sha256']='0'*64
+ try:reconstruct(bad)
+ except AssertionError:false.append(name+':false-digest')
+ else:raise AssertionError('false snapshot accepted')
+assert archive.read_bytes()[:-1]+b'\n'!=expected;false.append('truncated-seal')
+book=Path('docs/book/src/annex-trust-proofs.md').read_text();before=(out/'book-before.md').read_text();fragment=(out/'book-fragment.md').read_text();assert before.encode()==prior('docs/book/src/annex-trust-proofs.md') and book==before+fragment
+def payload(title):
+ marker='<summary>'+title+'</summary>';assert fragment.count(marker)==1
+ a=fragment.index(marker)+len(marker);m=re.match(r'\s*'+re.escape(fence)+r'json\n',fragment[a:]);assert m
+ a+=m.end();z=fragment.index('\n'+fence,a);return json.loads(fragment[a:z])
+published=read('published-payloads.json')
+for row in published:assert payload(row['title'])==row['data']
+for name in ['remove-tail.py','qualify-before-guards.py','refresh-close-guard.py','run-suite.py','audit-mapping.py','audit-cleanup.py','progress.py','run-focused.py','publish.py','final-audit.py','volume.sb','planned-leaf.md','completed-leaf.md']:assert (out/name).read_text() in fragment,name
+for name,text in read('completion-updates.json').items():assert Path(name).read_text()==text,name
+assert Path('docs/tasks/M3.md').read_bytes()==reconstruct(data['snapshots']['task-after-completion.md'])
+total=sum(p.stat().st_size for p in Path('docs/tasks').rglob('*') if p.is_file());assert total<=819200,total
+allowed=set(read('completion-updates.json'))|{str(archive),'xtask/src/trust.rs','xtask/mutation_sweep_tests.py','docs/book/src/annex-trust-proofs.md','docs/book/src/book-index.md','docs/task-history/INDEX.md'}
+assert set(subprocess.check_output(['git','diff','--name-only',base],text=True).splitlines())<=allowed
+pending='--pending-focused' in sys.argv
+focused=None
+if not pending:
+ focused=read('focused-results.json');assert focused['status']=='passed' and focused['exit']==0
+ tree=subprocess.check_output(['git','write-tree'],text=True).strip();assert focused['staged_tree_before']==focused['staged_tree_after']==tree
+ assert Path(focused['stamp']).read_text()=='tier focused: passed on tree '+tree+'\n'
+ subprocess.run(['git','diff','--quiet'],check=True)
+record=dict(status='source-publication-passed-focused-pending' if pending else 'passed',scope='Proved source cleanup/guard revalidation; complete current24 native checkpoint remains next.',base_commit=base,source_sha256=core['source_sha256'],production_sha256=core['production_sha256'],all50_operator_tests_pass=True,all_reason_files_exact=True,previous_archives=330,current_archives=331,new_permanent_control_seal_exact=True,prior_book_bytes_exact=True,exact_task_states=3,published_json_payloads=len(published),task_history_falsifiers=false,private_task_bytes=total,focused=focused,cleanup_audit_sha256=sha((out/'cleanup-audit.json').read_bytes()))
+(out/'final-audit.json').write_text(json.dumps(record,indent=2)+'\n')
+print('Final cleanup audit:',record['status'],';50 operator;330 prior/new331st archive;3 states/4 history refusals; sha256',sha((out/'final-audit.json').read_bytes()))
+~~~
+
+</details>

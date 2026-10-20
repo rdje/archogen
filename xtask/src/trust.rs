@@ -769,7 +769,6 @@ fn compile(
                     &scratch,
                     &canonical_scratch,
                 ));
-                continue;
             }
         }
         for raw in dependency_files(&text, &d, &scratch, &canonical_scratch)? {

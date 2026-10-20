@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — remove the proved redundant environment tail
+
+`ARCHOGEN-M3-0820` (leaf `M3.6.9.6.3.2.2.15.2.1.5.1.2`), `2026-10-20`.
+
+- Remove only the separately proved terminal continue. Preserve every semantic test,
+  normalizer/allowlist, caller statement and reason record; no file-wide continue reason.
+- Qualify both full-prefix guard refusals and the additionally caught newline-trimmed
+  close-caller guard. Update only3 hash literals; re-run all50 actual proof/operator controls.
+- Reconcile1414 to1413 current mutations: tail alone retired;303 exact fresh-name
+  renames follow physical lines. All23 reason sites persist; L1309.stmt.451 is retained
+  for fresh native replay, with no projected current kill. Four altered mappings refuse.
+- Preserve330 prior archives/new permanent-control seal, exact source/task evidence and
+  the complete failed/recovered controls in the unbounded book. Final focused staged-tree
+  stamp, book and doctrine gates precede this commit; the current24 native checkpoint is next.
+
+
 ## archogen — retain permanent environment-tail proof controls
 
 `ARCHOGEN-M3-0819` (leaf `M3.6.9.6.3.2.2.15.2.1.5.1.1`), `2026-10-20`.

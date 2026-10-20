@@ -499,6 +499,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md)
 - **PROGRAM** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Promised narrowing spellings — [Generated-sources test adequacy](trust-adequacy.md#promised-narrowing-spellings)
+- Proved environment-tail removal — [Annex C: Trust proof
+  records](annex-trust-proofs.md#proved-environment-tail-removal)
 - **provenance** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What a report may
   claim](evidence.md), [Checks that must not share a mistake: the trust gate](trust.md), [Generated-sources test
   adequacy](trust-adequacy.md), [The S0 early generation path](s0.md), [What is versioned, and what changing it
