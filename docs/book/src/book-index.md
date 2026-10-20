@@ -41,6 +41,8 @@ a change that leaves it stale, so it is never edited by hand.
   not actions](runtime.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying the
   toolchain](verification.md), [What is versioned, and what changing it costs](versions.md), [Annex B: The checks that
   keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- Approved disposable fixture verification — [Annex C: Trust proof
+  records](annex-trust-proofs.md#approved-disposable-fixture-verification)
 - Artifact hash checks under escaped paths — [Annex C: Trust proof
   records](annex-trust-proofs.md#artifact-hash-checks-under-escaped-paths)
 - **ASCII** — [definition](glossary.md), [Annex B: The checks that keep the repository honest](annex-repository.md),

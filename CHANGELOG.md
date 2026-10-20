@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — verify the approved disposable fixture workflow
+
+`ARCHOGEN-M3-0823` (leaf `M3.6.9.6.3.2.2.15.2.1.6.3`), `2026-10-20`.
+
+- Verify the director-approved ignored target fixtures through actual boundary9/0
+  controls and the normal hook-route check; five false receipts refuse.
+- Confirm ignored/untracked fixture paths, unchanged policy/checker sources and a
+  clean main tree after execution. Normal assessment commit hooks passed; no bypass.
+- Retain complete commands/output, approval and auditor in the unbounded book;
+  close only this policy verification and resume dependency-path survivor witnesses.
+
+
 ## archogen — assess absolute dependency paths
 
 `ARCHOGEN-M3-0822` (leaf `M3.6.9.6.3.2.2.15.2.1.6.0`), `2026-10-20`.

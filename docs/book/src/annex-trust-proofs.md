@@ -107466,3 +107466,269 @@ print('Publication audit passed;4S/full201 strict1 unmet;1153 restored;332 prior
 ~~~
 
 </details>
+
+### Approved disposable fixture verification
+
+The director-approved fixture exception is verified. Actual execution of the unchanged repository-boundary self-test gives **nine passing arms and zero failures**, including real synthetic-commit/branch, moved-pin, created-file and modified-file refusals. The actual normal `scripts/check_readme_routes.sh` path passes and judges24 governed destinations. All temporary Git repositories created by these controls belong to this project under ignored target directories; maintained external repositories and submodules retain their read-only boundary. The real main tree is clean after both controls.
+
+The [literal director ruling](#disposable-fixture-exception) is unchanged. Actual ignore output still binds both fixture locations to `.gitignore:2:/target`, and the index contains no target files. The bootstrap, boundary decision, ignore rule and two checked scripts match input commit `6f5788821e63c0b24009221673b1eb19c669e755` exactly. Its normal commit-hook log confirms every doctrine passed without a bypass. The checker remains a vendored-checkout test and a scoped policy rule; this is not a new operating-system enforcement mechanism for arbitrary filesystem locations. Five altered execution/source receipts are rejected.
+
+This closes only `M3.6.9.6.3.2.2.15.2.1.6.3`. The four dependency-path survivors remain unmet and owned by .6.1; no production/test/reason changes or new adequacy claims are made here. The book and normal commit gates remain required for this documentation commit.
+
+#### Full verification receipts
+
+<details>
+<summary>Actual fixture control commands and output</summary>
+
+```json
+{
+  "base_commit": "6f5788821e63c0b24009221673b1eb19c669e755",
+  "owner": "M3.6.9.6.3.2.2.15.2.1.6.3",
+  "results": [
+    {
+      "name": "boundary",
+      "command": [
+        "bash",
+        "scripts/check_repository_boundary.sh",
+        "--self-test"
+      ],
+      "exit_code": 0,
+      "output": "  \u2705 a clean checkout at its pin passes\n  \u2705 a fetched tag is not a local commit\n  \u2705 a commit made inside the vendored checkout is refused\n  \u2705 a commit on a local branch is refused even with HEAD back at the pin\n  \u2705 a checkout moved off its pin is refused\n  \u2705 a file created inside the vendored checkout is refused\n  \u2705 a modified tracked file is refused\n  \u2705 a submodule that is not checked out passes, and says so\n  \u2705 the real tree's vendored checkouts pass\nrepository-boundary self-test: 9 pass / 0 fail (9 arms)\n"
+    },
+    {
+      "name": "normal-hook-route",
+      "command": [
+        "bash",
+        "scripts/check_readme_routes.sh"
+      ],
+      "exit_code": 0,
+      "output": "readme-routes: OK (24 destination(s) governed)\n"
+    }
+  ],
+  "source_sha256": {
+    "scripts/check_repository_boundary.sh": "84f7f14b27ac6c096ae894ac5d7ed433182ac1bd5f26bc5851781a7f980b5c01",
+    "scripts/check_readme_routes.sh": "0a6384bafa8b3108d5432cb1c96d798ad075c0607c8d1bf315fecddacaf1f7d0",
+    ".gitignore": "45b6aaf8f67ea1689faa81b0f30dfb64c79c92d918c9a97f66f1b43f57c2cf43",
+    "CLAUDE.md": "d191c50945ede73aadef837c2204316ad23b07fe941e946b08c3b4b7e823b990",
+    "docs/decisions/decision_repository-boundary-read-only.md": "7c20fd26d6ccb81748350cbe7ecbf9ba8032215ccfe2b4abe26e992f0c677857"
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Fixture verification audit and false controls</summary>
+
+```json
+{
+  "status": "passed",
+  "base_commit": "6f5788821e63c0b24009221673b1eb19c669e755",
+  "owner": "M3.6.9.6.3.2.2.15.2.1.6.3",
+  "actual_boundary_arms": 9,
+  "boundary_failures": 0,
+  "normal_hook_route_exit": 0,
+  "ignored_target_exact": true,
+  "target_files_tracked": 0,
+  "main_tree_clean_after_controls": true,
+  "previous_commit_normal_hooks_passed": true,
+  "rejected_false_receipts": [
+    "wrong-parent",
+    "missing-arm",
+    "false-summary",
+    "wrong-exit",
+    "false-policy-binding"
+  ],
+  "source_sha256": {
+    "scripts/check_repository_boundary.sh": "84f7f14b27ac6c096ae894ac5d7ed433182ac1bd5f26bc5851781a7f980b5c01",
+    "scripts/check_readme_routes.sh": "0a6384bafa8b3108d5432cb1c96d798ad075c0607c8d1bf315fecddacaf1f7d0",
+    ".gitignore": "45b6aaf8f67ea1689faa81b0f30dfb64c79c92d918c9a97f66f1b43f57c2cf43",
+    "CLAUDE.md": "d191c50945ede73aadef837c2204316ad23b07fe941e946b08c3b4b7e823b990",
+    "docs/decisions/decision_repository-boundary-read-only.md": "7c20fd26d6ccb81748350cbe7ecbf9ba8032215ccfe2b4abe26e992f0c677857"
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Director approval and exact ignore output</summary>
+
+```json
+{
+  "status": "authorized",
+  "date": "2026-10-20",
+  "owner": "M3.6.9.6.3.2.2.15.2.1.6.3",
+  "user_reply": "\"May these project-owned fixtures be an exception\", if that's what you want or need, then I have no issue with that. I guess target/ is a gitignored directory, correct ?",
+  "scope": "Disposable project-owned Git repositories created for tests, hooks and diagnostics under this repository ignored target/ may be initialized, populated, committed, recreated and removed. Maintained external repositories and submodules remain read-only, even when linked or placed under target/. Same-volume and sealed-evaluation rules remain binding.",
+  "permissions_mode_change_required": false,
+  "ignore_command": [
+    "git",
+    "check-ignore",
+    "-v",
+    "target/trust-tests/clean/repo/.git/HEAD",
+    "target/doctrine_scratch/readme_routes/live_snapshots_hint/example"
+  ],
+  "ignore_output": ".gitignore:2:/target\ttarget/trust-tests/clean/repo/.git/HEAD\n.gitignore:2:/target\ttarget/doctrine_scratch/readme_routes/live_snapshots_hint/example\n",
+  "tracked_target_files": []
+}
+```
+
+</details>
+
+<details>
+<summary>Previous normal assessment commit hook output</summary>
+
+```json
+{
+  "log": "=== doctrine enforcement (13 checks) ===\n  \u2705 MEMORY-ARCH            durable 4-layer memory architecture invariants (MEMORY_ARCHITECTURE.md)\n  \u2705 DOCPATH                tracked .md files carry no checkout-specific absolute paths\n  \u2705 TASK-TREE-OWNERSHIP    every staged code change is owned by a task-tree leaf\n  \u2705 README-STABILITY       README.md stays a stable landing page \u2014 a line cap AND a byte cap (README_POLICY.md)\n  \u2705 WAIVER-ROUTING         a task leaf saying a gate does not apply names the leaf that owns fixing it\n  \u2705 TASK-ACCEPTANCE        a staged code change is owned by a leaf whose ticked checklist carries tool output IN each box\n  \u2705 LIVE-DOC-CURRENCY      no tracked document reports its own currency (Last updated: \u2026) \u2014 git carries it, a hand-kept date is false the day after\n  \u2705 LESSON-PROMOTION       a new dated lesson in DEV_NOTES.md is PROMOTED to the retrievable layer (docs/knowledge or a decisions record gaining answers:) or EXPLICITLY DECLINED in its leaf \u2014 never silently dropped\n  \u2705 ROUTING-EVIDENCE       a task leaf that routes a finding OUT to another tree records a ROUTING EVIDENCE section \u2014 what was measured, and whether the finding reproduces outside the family it is sent to\n  \u2705 GAP-CLAIM-CENSUS       a task leaf that ADDS a nothing-checks-X claim records the census it rests on, in the same section \u2014 such a sentence quantifies over the whole tree and is false the moment one reader exists\n  \u2705 TABLE-ARITY-RATCHET    a staged markdown file may not RAISE the number of table rows whose cell count disagrees with their header \u2014 GFM silently drops the extra cells or pads the missing ones\n  \u2705 KNOWLEDGE-MAP          the derived Knowledge Map is in sync with its sources\n  \u2705 PROJECT-SPECIFIC       this project's own doctrine checks\n=== all doctrines green ===\ncatalog-gate: no catalog in the index and nothing untracked under catalog/: nothing to judge\n[main 6f57888] ARCHOGEN-M3-0822 (leaf M3.6.9.6.3.2.2.15.2.1.6.0): assess absolute dependency paths\n 12 files changed, 15639 insertions(+), 74 deletions(-)\n create mode 100644 docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.md\n"
+}
+```
+
+</details>
+
+#### Exact task transition
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.6.3`
+  Status: `active` — director exception approved; verification next
+  Goal: verify ignored repository-local disposable Git fixtures and the actual normal
+    hook under the director's 2026-10-20 ruling. Keep maintained external repositories
+    and submodules read-only; same-volume and sealed-evaluation rules still apply.
+    Retain literal approval, ignore evidence and actual controls in the unbounded book.
+    Commit this bounded verification before survivor repair .6.1.
+  Verification: [approval](../book/src/annex-trust-proofs.md#disposable-fixture-exception);
+    actual hook/control verification `pending`.
+  Commit: `pending`
+
+```
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.6.3`
+  Status: `done` — director fixture exception verified
+  Goal: [approved fixture workflow](../book/src/annex-trust-proofs.md#approved-disposable-fixture-verification).
+  Verification: boundary9/0, actual normal-hook route0; ignore evidence exact; main
+    tree clean after controls; five altered receipts refused. Approved exception and
+    external boundary persist; normal assessment commit hooks passed without bypass.
+  Commit: `ARCHOGEN-M3-0823`
+
+```
+
+#### Executable verification adapter
+
+Reproduce the two commands in the first receipt using the repository-local shell environment from `TOOLBOX.md`, save their exact output/exit codes and source hashes to `target/disposable-fixture-verification/verification.json`, then run the adapter before publication. Its policy/input commit is immutable; update the owning task before a later rerun.
+
+~~~python
+from pathlib import Path
+import copy,hashlib,json,re,subprocess
+
+out=Path('target/disposable-fixture-verification');base='6f5788821e63c0b24009221673b1eb19c669e755';leaf='M3.6.9.6.3.2.2.15.2.1.6.3';B=chr(96);fence=B*3
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+def prior(path):return subprocess.check_output(['git','show',base+':'+path])
+def node(text,identity):
+ a=text.index('- ID: '+B+identity+B+'\n');ends=[a+1+m.start() for m in re.finditer(r'(?m)^- ID: |^## ',text[a+1:])];return text[a:min(ends) if ends else len(text)]
+record=json.loads((out/'verification.json').read_text());assert record['base_commit']==base and record['owner']==leaf
+names=['a clean checkout at its pin passes','a fetched tag is not a local commit','a commit made inside the vendored checkout is refused','a commit on a local branch is refused even with HEAD back at the pin','a checkout moved off its pin is refused','a file created inside the vendored checkout is refused','a modified tracked file is refused','a submodule that is not checked out passes, and says so',"the real tree's vendored checkouts pass"]
+def validate(data):
+ assert data['base_commit']==base and data['owner']==leaf and len(data['results'])==2
+ for row in data['results']:assert row['exit_code']==0
+ boundary,normal=data['results'];assert boundary['command']==['bash','scripts/check_repository_boundary.sh','--self-test'] and normal['command']==['bash','scripts/check_readme_routes.sh']
+ assert re.findall(r'^  ✅ (.+)$',boundary['output'],re.M)==names
+ assert boundary['output'].splitlines()[-1]=='repository-boundary self-test: 9 pass / 0 fail (9 arms)'
+ assert normal['output']=='readme-routes: OK (24 destination(s) governed)\n'
+ for path,digest in data['source_sha256'].items():assert sha(prior(path))==sha(Path(path).read_bytes())==digest,path
+validate(record)
+false=[]
+for label,change in [('wrong-parent',lambda d:d.__setitem__('base_commit','0'*40)),('missing-arm',lambda d:d['results'][0].__setitem__('output',d['results'][0]['output'].replace('  ✅ '+names[0]+'\n','',1))),('false-summary',lambda d:d['results'][0].__setitem__('output',d['results'][0]['output'].replace('9 pass / 0 fail','8 pass / 1 fail',1))),('wrong-exit',lambda d:d['results'][1].__setitem__('exit_code',1)),('false-policy-binding',lambda d:d['source_sha256'].__setitem__('CLAUDE.md','0'*64))]:
+ bad=copy.deepcopy(record);change(bad)
+ try:validate(bad)
+ except AssertionError:false.append(label)
+ else:raise AssertionError(label+' accepted')
+approval=json.loads(Path('target/dependency-absolute-assessment/fixture-approval.json').read_text());assert approval['status']=='authorized'
+actual=subprocess.check_output(approval['ignore_command'],text=True);assert actual==approval['ignore_output']
+assert not subprocess.check_output(['git','ls-files','--','target'])
+log=Path('target/dependency-absolute-assessment/commit.log').read_text();assert '=== all doctrines green ===' in log and '[main 6f57888]' in log
+assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==base and not subprocess.check_output(['git','status','--porcelain'])
+task=Path('docs/tasks/M3.md');before=task.read_text();old=node(before,leaf);assert 'Status: `active`' in old
+done='''- ID: `M3.6.9.6.3.2.2.15.2.1.6.3`
+  Status: `done` — director fixture exception verified
+  Goal: [approved fixture workflow](../book/src/annex-trust-proofs.md#approved-disposable-fixture-verification).
+  Verification: boundary9/0, actual normal-hook route0; ignore evidence exact; main
+    tree clean after controls; five altered receipts refused. Approved exception and
+    external boundary persist; normal assessment commit hooks passed without bypass.
+  Commit: `ARCHOGEN-M3-0823`
+
+'''
+after=before.replace(old,done,1).replace('Status: `active` — dependency absolute paths, P1; verify approved fixture exception first','Status: `active` — dependency absolute paths, P1; survivor witnesses .6.1 next',1)
+after=after.replace('next `.9.6.3.2.2.15.2.1.6.3`, verify approved disposable-fixture exception; four dependency survivors owned by `.6.1`','next `.9.6.3.2.2.15.2.1.6.1`, dependency absolute-path witnesses; approved fixture exception verified',1)
+v='| `2026-10-20` | `'+leaf+'` | [Approved fixture verification](../book/src/annex-trust-proofs.md#approved-disposable-fixture-verification): existing boundary self-test9/0, normal hook-route0, ignore/main-tree checks, five false receipts | approved scope verified; ordinary commit hooks passed; dependency survivors next |\n'
+after=after.replace('\n## Commit Log\n',v+'\n## Commit Log\n',1)
+c='| `'+leaf+'` | `ARCHOGEN-M3-0823 (leaf '+leaf+')` | [Fixture verification](../book/src/annex-trust-proofs.md#approved-disposable-fixture-verification); approved scope verified; dependency witnesses next |\n'
+after=after.replace('\n## Changelog\n',c+'\n## Changelog\n',1)
+updates={'docs/tasks/M3.md':after}
+memory=Path('MEMORY.md').read_text();a=memory.index('- **Next action:**');z=memory.index('  Corrected renderer',a)
+updates['MEMORY.md']=memory[:a]+'''- **Next action:** establish supported dependency-path witnesses and address the
+  four survivors in `M3.6.9.6.3.2.2.15.2.1.6.1`; split controls/repairs before changes.
+  Disposable project-owned Git fixtures under ignored `target/` are approved;
+  maintained external repositories and submodules stay read-only.
+'''+memory[z:]
+updates['LIVE_STATUS.md']=Path('LIVE_STATUS.md').read_text().replace('`.9.6.3.2.2.15.2.1.6.3` verifies the approved disposable-fixture exception; dependency-path survivors follow','`.9.6.3.2.2.15.2.1.6.1` dependency absolute-path witnesses; fixture exception verified',1)
+updates['docs/TASK_TREE.md']=Path('docs/TASK_TREE.md').read_text().replace('`.9.6.3.2.2.15.2.1.6.3` verifies the approved disposable-fixture exception','`.9.6.3.2.2.15.2.1.6.1` dependency absolute-path witnesses',1)
+change=Path('CHANGELOG.md').read_text();at=change.index('\n## archogen —')
+updates['CHANGELOG.md']=change[:at]+'''
+## archogen — verify the approved disposable fixture workflow
+
+`ARCHOGEN-M3-0823` (leaf `M3.6.9.6.3.2.2.15.2.1.6.3`), `2026-10-20`.
+
+- Verify the director-approved ignored target fixtures through actual boundary9/0
+  controls and the normal hook-route check; five false receipts refuse.
+- Confirm ignored/untracked fixture paths, unchanged policy/checker sources and a
+  clean main tree after execution. Normal assessment commit hooks passed; no bypass.
+- Retain complete commands/output, approval and auditor in the unbounded book;
+  close only this policy verification and resume dependency-path survivor witnesses.
+
+'''+change[at:]
+receipt=dict(status='passed',base_commit=base,owner=leaf,actual_boundary_arms=9,boundary_failures=0,normal_hook_route_exit=0,ignored_target_exact=True,target_files_tracked=0,main_tree_clean_after_controls=True,previous_commit_normal_hooks_passed=True,rejected_false_receipts=false,source_sha256=record['source_sha256'])
+(out/'audit.json').write_text(json.dumps(receipt,indent=2)+'\n')
+book=Path('docs/book/src/annex-trust-proofs.md');original=prior(str(book)).decode();assert book.read_text()==original
+parts=['\n### Approved disposable fixture verification\n\n',
+ 'The director-approved fixture exception is verified. Actual execution of the unchanged repository-boundary self-test gives '
+ '**nine passing arms and zero failures**, including real synthetic-commit/branch, moved-pin, created-file and modified-file refusals. '
+ 'The actual normal '+B+'scripts/check_readme_routes.sh'+B+' path passes and judges24 governed destinations. All temporary Git '
+ 'repositories created by these controls belong to this project under ignored target directories; maintained external repositories '
+ 'and submodules retain their read-only boundary. The real main tree is clean after both controls.\n\n',
+ 'The [literal director ruling](#disposable-fixture-exception) is unchanged. Actual ignore output still binds both fixture locations '
+ 'to '+B+'.gitignore:2:/target'+B+', and the index contains no target files. The bootstrap, boundary decision, ignore rule and two '
+ 'checked scripts match input commit '+B+base+B+' exactly. Its normal commit-hook log confirms every doctrine passed without a bypass. '
+ 'The checker remains a vendored-checkout test and a scoped policy rule; this is not a new operating-system enforcement mechanism '
+ 'for arbitrary filesystem locations. Five altered execution/source receipts are rejected.\n\n',
+ 'This closes only '+B+leaf+B+'. The four dependency-path survivors remain unmet and owned by .6.1; no production/test/reason '
+ 'changes or new adequacy claims are made here. The book and normal commit gates remain required for this documentation commit.\n\n',
+ '#### Full verification receipts\n\n']
+for title,data in [('Actual fixture control commands and output',record),('Fixture verification audit and false controls',receipt),('Director approval and exact ignore output',approval),('Previous normal assessment commit hook output',dict(log=log))]:
+ encoded=json.dumps(data,indent=2).replace(B,'\\u0060');assert json.loads(encoded)==data
+ parts.append('<details>\n<summary>'+title+'</summary>\n\n'+fence+'json\n'+encoded+'\n'+fence+'\n\n</details>\n\n')
+parts.append('#### Exact task transition\n\n'+fence+'markdown\n'+old+fence+'\n\n'+fence+'markdown\n'+done+fence+'\n\n')
+parts.append('#### Executable verification adapter\n\n'
+ 'Reproduce the two commands in the first receipt using the repository-local shell environment from '+B+'TOOLBOX.md'+B
+ +', save their exact output/exit codes and source hashes to '+B+'target/disposable-fixture-verification/verification.json'+B
+ +', then run the adapter before publication. Its policy/input commit is immutable; update the owning task before a later rerun.\n\n'
+ +'~~~python\n'+Path(__file__).read_text()+'~~~\n\n')
+fragment=''.join(parts).rstrip('\n')+'\n';(out/'book-fragment.md').write_text(fragment);(out/'task-before.md').write_text(before);(out/'task-after.md').write_text(after)
+for path,text in updates.items():Path(path).write_text(text)
+book.write_text(original+fragment)
+assert book.read_text().startswith(original)
+assert after.replace(done,old,1)!=before # frontier/log changes are independently visible, not hidden in routing.
+assert sum(p.stat().st_size for p in Path('docs/tasks').rglob('*') if p.is_file())<=819200
+message='''ARCHOGEN-M3-0823 (leaf M3.6.9.6.3.2.2.15.2.1.6.3): verify approved disposable Git fixtures
+
+- Pass all nine repository-boundary controls and the actual normal
+  hook-route check using only ignored project-owned Git fixtures.
+- Confirm exact ignore/policy bindings, unchanged maintained checkers,
+  and a clean main tree; reject five altered verification receipts.
+- Preserve complete evidence in the unbounded book and resume the
+  separately owned dependency absolute-path survivor witnesses.
+'''
+Path('git_message_brief.txt').write_text(message)
+print('Fixture exception verification complete;9/0, normal route0,5 false receipts; book appended',len(fragment.encode()),'bytes; audit SHA256',sha((out/'audit.json').read_bytes()))
+~~~
