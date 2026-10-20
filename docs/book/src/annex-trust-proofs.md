@@ -55693,3 +55693,2225 @@ print('actual49K/28S/6U strict1 published; all28 survivors exactly owned, enviro
 ```
 
 </details>
+
+### Environment-loop tail control proof
+
+The exact environment-record tail is redundant. Removing its `continue;` is eligible as a bounded source cleanup, but this proof commit leaves production and all 23 equivalence reasons unchanged. Permanent controls, cleanup with source-guard revalidation, and the final strict current checkpoint are separately owned below. The earlier 1S/full201 measurement remains an initial survivor receipt; this chapter does not rewrite it as an E or claim wider adequacy.
+
+#### Complete local source argument
+
+The [Rust Reference on loops](https://doc.rust-lang.org/reference/expressions/loop-expr.html#continue-expressions) specifies that normal for-body completion and an unlabeled continue return to that loop’s head. The [drop-scope rules](https://doc.rust-lang.org/reference/destructors.html#drop-scopes) order exited nested scopes from inner to outer. This proof reads the pages shipped with pinned1.95.0, identified in the [source ledger](ledger.md#rust-reference); the online links provide navigation and can evolve.
+
+Bind the whole loop from `let mut env_deps = Vec::new();` through its closing brace immediately before the dependency-file loop. Its SHA-256 is `80e6db30d3affc38de38e1a0d3a2f2ab1330cb3caba9f7612809b7735a1f159b`. The actual native edit `L772.stmt.221` comments out just the tail line. The prospective cleanup removes that complete line. Both have the same local effect.
+
+For each possible line, a prefix mismatch executes neither branch in every form. A match executes the same variable split, allowlist check, possible refusal append, normalizer call and environment append, in the same order with the same arguments. There is no reachable statement after the continue within either the if body or for body. Normal fallthrough therefore reaches the same next iterator call. This reasoning applies to arbitrary valid text, scratch strings, canonical scratch strings, crate/producer names and prior refusal contents; the proof does not assume that every record is accepted or that input is nonempty.
+
+At this point `l`, `dep` and `var` are borrowed strings; none has a custom destructor. The returned owned normalized string is already in the outer environment vector. Both paths leave the same branch and iteration scopes before the next iterator call, and leave the outer iterator only at exhaustion. No ownership or borrow crosses a different boundary. Any earlier panic or allocation failure occurs in the identical preceding work; the removed control statement itself performs none of that work. The function has no source-location macro or caller-location dependency on this line. The claim concerns inventory behavior, including ordering/refusals/normalization; it does not assert identical debug metadata, binary bytes or timing.
+
+The loop induction starts with the same empty environment vector and existing refusal vector; the equal per-line transition preserves both through exhaustion. Subsequent dependency collection sees the same values and iterator-independent state. This complete source argument establishes the local no-op result. Finite input agreement and Clippy are supplemental observations.
+
+#### Actual compiler controls and proof boundaries
+
+The actual extracted loop, actual normalizer and actual three-entry catalog allowlist compile under Rust1.95.0, edition2021, at optimization levels0 and3. Seventeen independently written literal cases run in each original/comment/clean form: empty/nonrecord input, accepted and refused variables, namespace lookalikes, first/middle/last records, duplicates, prior refusals, CRLF, Unicode, extra equals, unset records, and raw/canonical/encoded scratch prefixes. The two positive runs contain 102 literal form executions.
+
+A supplemental iterator and line wrapper with real destructors checks a literal sequence of iterator calls and drops in original and clean forms at both optimization levels. These wrappers exercise an even stronger fixture than production’s borrowed-string items; they do not silently change the actual production type claim. An actual compiled added-suffix example distinguishes the forms: the original skips the new observation on environment lines, the cleaned variant performs it. Thus a future reachable suffix invalidates this proof. Four changed source premises are rejected, and four deliberately wrong output/refusal/drop/suffix oracles at each optimization level all fail with exit101 and the intended diagnostic.
+
+Pinned Clippy independently emits two redundant-continue diagnostics, for the original plain collector and destructor fixture. It does not emit that diagnostic for the distinguishing suffix. The extraction also produces14 needless-borrow warnings because probe scratch parameters are already string references; production scratch values are owned strings. This is an observation, not a lint-clean build claim. Preparation’s draft Clippy marker initially omitted the diagnostic’s backticks; reading actual stderr corrected the parser. The draft edit audit initially omitted the native applier’s line join; inspection of the maintained applier corrected it before publication. The actual compiler controls passed throughout.
+
+#### Scope decision and separately committed implementation
+
+The existing text key matches22 physical continue sites and includes a real known other-site kill in the [initial assessment](#environment-loop-tail-initial-assessment). A local proof cannot justify a file-wide reason. The chosen resolution is the separately proved no-op source cleanup, preserving all23 reasons. The final checkpoint must explicitly reconcile this retired physical site, replay every current reason and a distinguishing non-tail continue, revalidate affected source/producer guards and restore the complete original/copied inputs. Absence of a candidate is not the proof. Full compiler/caller/global sweeps, review and later dependency-path work stay open.
+
+#### Environment tail container contracts
+
+The following active contracts are routed verbatim from private tracking into this unbounded public book. Compact live pointers preserve task ownership; the exact inverse and independently reconstructible task states are recorded below.
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15`
+  Status: `active` — ownership census then bounded evidence-directed assessments
+  Goal: reconcile all initial540 rows with completed evidence, current exact candidates and retired
+    edits; own every unresolved current obligation before the final strict complete-file sweep.
+    A historical ownership count is never a current outcome or equivalent classification.
+  Children: .1 complete ownership/source census; .2 onward bounded assessments/controls/repairs
+    split and committed according to actual census evidence, with native full-parent replays.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2`
+  Status: `active` — complete compiler measurement then owned resolution
+  Goal: Compile command, ownership, dependency and normalized configuration inputs; own all48 assigned initial rows and every current mutation shape
+    in this scope. Initial source069d8e59 listed159 candidates for that historical lane.
+    Re-discover before each execution; a changed source requires fresh binding, never projected outcomes.
+    Bind full parents, own each survivor/defect in bounded children, commit verified evidence;
+    final current-scope replay/restoration and broader gates precede closure. No timeout/unjudged
+    equivalent; whole-file criterion remains separate.
+  Scope: xtask/src/trust.rs::compile plus cargo_commands and dependency_files.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1`
+  Status: `active` — compiler measurement child, then evidence-directed resolution
+  Goal: resolve historical compile-function83 measurement, with fresh scopes rederived, against
+    trust:: trust_generated:: trust_gate:: --skip route_tests with strict timeouts/unjudged.
+    Re-derive the full current listing/selection, exact E applicability and full parent names;
+    hold complete original inputs, use installed same-volume write guard and copied native sweep.
+    Audit every ID/raw replacement/finishing name/operator total/strict exit and full restoration.
+    Own each actual remaining obligation in .15.2.1 children before classifications/repairs.
+    Commit measured results before resolution; a complete failing criterion is recorded as such.
+  Children: .1 complete current83 native measurement; subsequent independently committed children
+    resolve actual outcomes, followed by complete replay and warranted integration before closure.
+  Follow-up: separately committed evidence-directed controls/proofs/repairs, complete replay and
+    warranted integration; then .15.2.2 command framing and .15.2.3 dependency records.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+#### Environment tail implementation contracts
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.5.1.1`
+  Status: `pending` — permanent environment-tail proof controls
+  Goal: Add a maintained operator proof guard outside the semantic mutation population. Bind exact historical and prospective clean loop shapes, actual normalizer/allowlist and suffix boundary. Compile source forms against independent literal outputs/refusals and drop order, with a distinguishing reachable suffix, altered premises and wrong oracles refused. Pass focused operator controls, preserving the 201 semantic parents, production and reasons. Commit before cleanup.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.5.1.2`
+  Status: `pending` — remove the proved redundant environment tail
+  Goal: After committed proof controls, remove only the one redundant continue line. Re-derive production/source identities and all candidate mappings; run permanent controls before updating existing production-prefix guards, and rerun those actual producer proofs afterward. Keep all23 reasons and existing semantic parents exact; focused tier plus appropriate operator checks and complete source/input preservation. Commit before final native replay.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.5.2`
+  Status: `pending` — complete current environment-tail checkpoint after cleanup
+  Goal: retain exact historical/current before mapping and the all-domain tail proof;
+    rederive current discovery/201 semantic parent names after committed cleanup and controls.
+    Explicitly reconcile the retired tail as a proved no-op removal, never infer E from absence.
+    Replay every current reason and a known distinguishing non-tail continue with strict
+    justified finishing outcomes, no S/TO/unjudged; exact old/new reason text and full
+    original/copied-input/name restoration. Revalidate affected source/producer guards.
+    Close .1/.5 only after their separate leaves and complete bounded checkpoint commit.
+    Later dependency/caller/global/review and warranted integration remain separate.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+#### Exact proof task and executable evidence
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.5.1.0`
+  Status: `active` — establish tail-control proof and cleanup eligibility
+  Goal: read primary Rust control/drop contracts; bind the complete current loop and
+    actual deletion; compile originals/edits with independent literal observations,
+    drop/control-flow and wrong-premise/oracle controls. Determine whether a bounded
+    no-op source cleanup is valid, keeping the shared reason file unchanged.
+    No maintained source/guard/reason change here; register separate permanent-control,
+    cleanup/revalidation and final-checkpoint slices before implementation.
+  Acceptance: complete source/drop argument, actual compiler controls and false arms,
+    durable evidence/full contracts, exact prior archive/input reconstruction and commit.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.5.1.0`
+  Status: `done` — exact tail proof and cleanup eligibility
+  [Full proof/contracts](../book/src/annex-trust-proofs.md#environment-loop-tail-control-proof).
+  Acceptance:
+  - [x] ROOT CAUSE: `python3 -I -B target/environment-tail-proof/prepare-probe.py`,
+    exit code 0: exact loop/edit, primary pinned control/drop contracts and source argument.
+  - [x] ADDRESSED: `python3 -I -B target/environment-tail-proof/run-probe.py`,
+    exit code 0:17 literal cases/3 forms at O0/O3, drop and distinguishing suffix;
+    all8 wrong oracles fail101. Cleanup eligible; maintained source/reasons unchanged.
+  - [x] NO REGRESSION: `python3 -I -B target/environment-tail-proof/final-audit.py`,
+    exit code 0: prior inputs/archives and lossless contracts; book/gates before commit.
+  Verification: full evidence/adapters in book; .1.1/.1.2/.2 separately own implementation/replay.
+  Commit: `ARCHOGEN-M3-0818`
+
+```
+
+<details>
+<summary>Complete source/probe audit</summary>
+
+```json
+{
+  "status": "passed",
+  "scope": "Complete exact local source/control/drop proof with supplemental actual compiler controls; cleanup eligible but not implemented; historical/current initial1S remains an initial measurement, not E.",
+  "base_commit": "0663022a9a9e2b38d5d3b6fbae6bfbdad23a7ac0",
+  "current_source_sha256": "9616b59ff2bc394e6471570bfaf857971671fda4a12c4fb745e557d2d21a1751",
+  "source_loop_sha256": "80e6db30d3affc38de38e1a0d3a2f2ab1330cb3caba9f7612809b7735a1f159b",
+  "native_candidate": {
+    "id": "L772.stmt.221",
+    "span": [
+      771,
+      772
+    ],
+    "operator": "stmt",
+    "original": "                continue;",
+    "replacement": "                // continue;"
+  },
+  "complete_discovery": 1414,
+  "clean_loop_sha256": "c21a74dd0ccb9d0ac902e8ecf1e304e72ca53a6476689a2081aae55ce3d9579a",
+  "prospective_source_sha256": "527f68d5787b16b5e7f9e31942772bcc548f735d017ef95a5e30180a5012a9b5",
+  "cases": 17,
+  "forms": 3,
+  "optimizations": [
+    "0",
+    "3"
+  ],
+  "positive_literal_form_executions": 102,
+  "positive_drop_form_executions": 4,
+  "positive_distinguishing_suffix_executions": 2,
+  "wrong_oracle_executions": 8,
+  "source_premise_falsifiers": [
+    "reachable-suffix",
+    "wrong-target",
+    "wrong-normalizer",
+    "wrong-record-prefix"
+  ],
+  "pinned_clippy_redundant_tail_diagnostics": 2,
+  "clippy_fixture_needless_borrow_warnings": "14 expected extraction-context warnings: scratch parameters are str references rather than production Strings; no lint-clean or semantic mutation claim.",
+  "references": {
+    "status": "captured-local-pinned-reference",
+    "records": [
+      {
+        "source_kind": "required-pinned-toolchain-read-only",
+        "source_relative_to_runtime_sysroot": "share/doc/rust/html/reference/expressions/loop-expr.html",
+        "available": true,
+        "local": "target/environment-tail-proof/reference/loop-expr.html",
+        "bytes": 73181,
+        "sha256": "9557c8f7721de48768ca20dff48be250fb5c7de369c0a2df730809c19a0f6c4f"
+      },
+      {
+        "source_kind": "required-pinned-toolchain-read-only",
+        "source_relative_to_runtime_sysroot": "share/doc/rust/html/reference/destructors.html",
+        "available": true,
+        "local": "target/environment-tail-proof/reference/destructors.html",
+        "bytes": 75230,
+        "sha256": "6813f53a9061e1dd20f58c87eac237868497bdbe760e29239b359a89e8adea09"
+      }
+    ],
+    "scope": "Read-only installed toolchain reference; outputs on repository volume; sysroot derived at runtime"
+  },
+  "maintained_sources_and_reasons_unchanged": true
+}
+```
+
+</details>
+
+<details>
+<summary>Exact probe preparation</summary>
+
+```json
+{
+  "status": "prepared",
+  "scope": "Actual current loop and normalizer/allowlist; actual comment edit and candidate cleanup; independent literal/drop/suffix controls only, not equivalence from finite agreement.",
+  "source_sha256": "9616b59ff2bc394e6471570bfaf857971671fda4a12c4fb745e557d2d21a1751",
+  "before_loop_sha256": "80e6db30d3affc38de38e1a0d3a2f2ab1330cb3caba9f7612809b7735a1f159b",
+  "comment_loop_sha256": "7bb0bed875c05cf6a51afff2822da6d03eff5029494ed70907d8d806f8a9c927",
+  "clean_loop_sha256": "c21a74dd0ccb9d0ac902e8ecf1e304e72ca53a6476689a2081aae55ce3d9579a",
+  "prospective_source_sha256": "527f68d5787b16b5e7f9e31942772bcc548f735d017ef95a5e30180a5012a9b5",
+  "prospective_production_sha256": "080a15a2d2509caf4ea79c557dced56942e20c2fb1599ee0e3e414b3fa66992e",
+  "cases": 17,
+  "collector_forms": [
+    "collect_before",
+    "collect_comment",
+    "collect_clean"
+  ],
+  "drop_forms": [
+    "drop_before",
+    "drop_clean"
+  ],
+  "wrong_oracles": [
+    "wrong-env",
+    "wrong-refusal",
+    "wrong-suffix-equality",
+    "wrong-drop-order"
+  ],
+  "source_function": "normalise_dependency_environment",
+  "source_allowlist": "catalog_build::ENV_ALLOWED",
+  "probe_sha256": "f378342a73365a3393c45e992ead7f13b68083a80a460203aba4487e7e7abbfb"
+}
+```
+
+</details>
+
+<details>
+<summary>Independent literal cases</summary>
+
+```json
+[
+  {
+    "name": "empty",
+    "text": "",
+    "env": [],
+    "refused": [],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "non-records",
+    "text": "plain\n # env-dep:CARGO_PKG_NAME=x\n# Env-dep:CARGO_PKG_NAME=x\n",
+    "env": [],
+    "refused": [],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "one-accepted",
+    "text": "# env-dep:CARGO_PKG_NAME=alpha\n",
+    "env": [
+      "CARGO_PKG_NAME=alpha"
+    ],
+    "refused": [],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "allowed-non-package",
+    "text": "# env-dep:CARGO_CRATE_NAME=fixture\n",
+    "env": [
+      "CARGO_CRATE_NAME=fixture"
+    ],
+    "refused": [],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "foreign",
+    "text": "# env-dep:UNHELD=x\n",
+    "env": [
+      "UNHELD=x"
+    ],
+    "refused": [
+      "trust-undeclared-input: \u0060fixture\u0060 in \u0060producer\u0060 depends on the environment variable \u0060UNHELD\u0060, which the commit does not hold"
+    ],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "empty-dependency",
+    "text": "# env-dep:\n",
+    "env": [
+      ""
+    ],
+    "refused": [
+      "trust-undeclared-input: \u0060fixture\u0060 in \u0060producer\u0060 depends on the environment variable \u0060\u0060, which the commit does not hold"
+    ],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "lookalike",
+    "text": "# env-dep:CARGO_PKGX_NAME=x\n",
+    "env": [
+      "CARGO_PKGX_NAME=x"
+    ],
+    "refused": [
+      "trust-undeclared-input: \u0060fixture\u0060 in \u0060producer\u0060 depends on the environment variable \u0060CARGO_PKGX_NAME\u0060, which the commit does not hold"
+    ],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "first-middle-last",
+    "text": "# env-dep:CARGO_PKG_NAME=first\nplain\n# env-dep:UNHELD=x\n# env-dep:CARGO_PKG_NAME=last\n",
+    "env": [
+      "CARGO_PKG_NAME=first",
+      "UNHELD=x",
+      "CARGO_PKG_NAME=last"
+    ],
+    "refused": [
+      "trust-undeclared-input: \u0060fixture\u0060 in \u0060producer\u0060 depends on the environment variable \u0060UNHELD\u0060, which the commit does not hold"
+    ],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "duplicates",
+    "text": "# env-dep:CARGO_PKG_NAME=a\n# env-dep:UNHELD=x\n# env-dep:CARGO_PKG_NAME=a\n# env-dep:UNHELD=x",
+    "env": [
+      "CARGO_PKG_NAME=a",
+      "UNHELD=x",
+      "CARGO_PKG_NAME=a",
+      "UNHELD=x"
+    ],
+    "refused": [
+      "trust-undeclared-input: \u0060fixture\u0060 in \u0060producer\u0060 depends on the environment variable \u0060UNHELD\u0060, which the commit does not hold",
+      "trust-undeclared-input: \u0060fixture\u0060 in \u0060producer\u0060 depends on the environment variable \u0060UNHELD\u0060, which the commit does not hold"
+    ],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "prior-refusal",
+    "text": "# env-dep:UNHELD=x\n",
+    "env": [
+      "UNHELD=x"
+    ],
+    "refused": [
+      "prior refusal",
+      "trust-undeclared-input: \u0060fixture\u0060 in \u0060producer\u0060 depends on the environment variable \u0060UNHELD\u0060, which the commit does not hold"
+    ],
+    "prior": [
+      "prior refusal"
+    ],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "crlf",
+    "text": "# env-dep:CARGO_PKG_NAME=a\r\nplain\r\n# env-dep:CARGO_PKG_NAME=b\r\n",
+    "env": [
+      "CARGO_PKG_NAME=a",
+      "CARGO_PKG_NAME=b"
+    ],
+    "refused": [],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "unicode",
+    "text": "# env-dep:CARGO_PKG_DESCRIPTION=\u00e9tude\ud83d\udca1\n",
+    "env": [
+      "CARGO_PKG_DESCRIPTION=\u00e9tude\ud83d\udca1"
+    ],
+    "refused": [],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "equals-in-value",
+    "text": "# env-dep:CARGO_PKG_DESCRIPTION=a=b=c\n",
+    "env": [
+      "CARGO_PKG_DESCRIPTION=a=b=c"
+    ],
+    "refused": [],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "unset-record",
+    "text": "# env-dep:CARGO_PKG_NAME\n",
+    "env": [
+      "CARGO_PKG_NAME"
+    ],
+    "refused": [],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "scratch",
+    "text": "# env-dep:CARGO_MANIFEST_DIR=__SCRATCH__/crate\n",
+    "env": [
+      "CARGO_MANIFEST_DIR=/crate"
+    ],
+    "refused": [],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "canonical",
+    "text": "# env-dep:CARGO_MANIFEST_PATH=__CANON__/Cargo.toml\n",
+    "env": [
+      "CARGO_MANIFEST_PATH=/Cargo.toml"
+    ],
+    "refused": [],
+    "prior": [],
+    "scratch": "__SCRATCH__",
+    "canonical": "__CANON__"
+  },
+  {
+    "name": "encoded-prefix",
+    "text": "# env-dep:CARGO_PKG_DESCRIPTION=work\\\\dir\\nline/x\n",
+    "env": [
+      "CARGO_PKG_DESCRIPTION=/x"
+    ],
+    "refused": [],
+    "prior": [],
+    "scratch": "work\\dir\nline",
+    "canonical": "__CANON__"
+  }
+]
+```
+
+</details>
+
+<details>
+<summary>Complete compiler commands and outputs</summary>
+
+```json
+{
+  "status": "passed",
+  "scope": "Pinned actual compiler observations support the complete source argument; finite cases alone are not equivalence proof.",
+  "profile_sha256": "2b3fbe199bddb4ba84c453a23334c7025308b06127ce3cc96f74b2a17680eedd",
+  "probe_sha256": "f378342a73365a3393c45e992ead7f13b68083a80a460203aba4487e7e7abbfb",
+  "runs": [
+    {
+      "label": "rustc-version",
+      "command": [
+        "rustc",
+        "--version",
+        "--verbose"
+      ],
+      "exit": 0,
+      "stdout": "rustc 1.95.0 (59807616e 2026-04-14)\nbinary: rustc\ncommit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860\ncommit-date: 2026-04-14\nhost: aarch64-apple-darwin\nrelease: 1.95.0\nLLVM version: 22.1.2\n",
+      "stderr": ""
+    },
+    {
+      "label": "clippy-version",
+      "command": [
+        "clippy-driver",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "clippy 0.1.95 (59807616e1 2026-04-14)\n",
+      "stderr": ""
+    },
+    {
+      "label": "compile-O0",
+      "command": [
+        "rustc",
+        "--edition=2021",
+        "-C",
+        "opt-level=0",
+        "target/environment-tail-proof/probe.rs",
+        "-o",
+        "target/environment-tail-proof/probe-O0"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "positive-O0",
+      "command": [
+        "target/environment-tail-proof/probe-O0"
+      ],
+      "exit": 0,
+      "stdout": "tail-proof: passed 17 literal cases in3 forms; drop and distinguishing-suffix controls\n",
+      "stderr": ""
+    },
+    {
+      "label": "wrong-env-O0",
+      "command": [
+        "target/environment-tail-proof/probe-O0",
+        "wrong-env"
+      ],
+      "exit": 101,
+      "stdout": "",
+      "stderr": "\nthread 'main' (1227987022) panicked at target/environment-tail-proof/probe.rs:329:58:\nassertion \u0060left == right\u0060 failed: wrong env literal\n  left: [\"ARGO_PKG_NAME=alpha\"]\n right: [\"WRONG\"]\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n"
+    },
+    {
+      "label": "wrong-refusal-O0",
+      "command": [
+        "target/environment-tail-proof/probe-O0",
+        "wrong-refusal"
+      ],
+      "exit": 101,
+      "stdout": "",
+      "stderr": "\nthread 'main' (1227987037) panicked at target/environment-tail-proof/probe.rs:330:146:\nwrong refusal literal\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n"
+    },
+    {
+      "label": "wrong-suffix-equality-O0",
+      "command": [
+        "target/environment-tail-proof/probe-O0",
+        "wrong-suffix-equality"
+      ],
+      "exit": 101,
+      "stdout": "",
+      "stderr": "\nthread 'main' (1227987050) panicked at target/environment-tail-proof/probe.rs:331:40:\nassertion \u0060left == right\u0060 failed: wrong suffix equality\n  left: [\"plain\"]\n right: [\"# env-dep:CARGO_PKG_NAME=a\", \"plain\"]\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n"
+    },
+    {
+      "label": "wrong-drop-order-O0",
+      "command": [
+        "target/environment-tail-proof/probe-O0",
+        "wrong-drop-order"
+      ],
+      "exit": 101,
+      "stdout": "",
+      "stderr": "\nthread 'main' (1227987062) panicked at target/environment-tail-proof/probe.rs:332:148:\nassertion \u0060left == right\u0060 failed: wrong drop order\n  left: [\"lines\", \"next\", \"drop-line\", \"next\", \"drop-iterator\"]\n right: [\"drop-iterator\", \"next\"]\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n"
+    },
+    {
+      "label": "compile-O3",
+      "command": [
+        "rustc",
+        "--edition=2021",
+        "-C",
+        "opt-level=3",
+        "target/environment-tail-proof/probe.rs",
+        "-o",
+        "target/environment-tail-proof/probe-O3"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "positive-O3",
+      "command": [
+        "target/environment-tail-proof/probe-O3"
+      ],
+      "exit": 0,
+      "stdout": "tail-proof: passed 17 literal cases in3 forms; drop and distinguishing-suffix controls\n",
+      "stderr": ""
+    },
+    {
+      "label": "wrong-env-O3",
+      "command": [
+        "target/environment-tail-proof/probe-O3",
+        "wrong-env"
+      ],
+      "exit": 101,
+      "stdout": "",
+      "stderr": "\nthread 'main' (1227988941) panicked at target/environment-tail-proof/probe.rs:329:58:\nassertion \u0060left == right\u0060 failed: wrong env literal\n  left: [\"ARGO_PKG_NAME=alpha\"]\n right: [\"WRONG\"]\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n"
+    },
+    {
+      "label": "wrong-refusal-O3",
+      "command": [
+        "target/environment-tail-proof/probe-O3",
+        "wrong-refusal"
+      ],
+      "exit": 101,
+      "stdout": "",
+      "stderr": "\nthread 'main' (1227988956) panicked at target/environment-tail-proof/probe.rs:330:146:\nwrong refusal literal\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n"
+    },
+    {
+      "label": "wrong-suffix-equality-O3",
+      "command": [
+        "target/environment-tail-proof/probe-O3",
+        "wrong-suffix-equality"
+      ],
+      "exit": 101,
+      "stdout": "",
+      "stderr": "\nthread 'main' (1227988969) panicked at target/environment-tail-proof/probe.rs:331:40:\nassertion \u0060left == right\u0060 failed: wrong suffix equality\n  left: [\"plain\"]\n right: [\"# env-dep:CARGO_PKG_NAME=a\", \"plain\"]\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n"
+    },
+    {
+      "label": "wrong-drop-order-O3",
+      "command": [
+        "target/environment-tail-proof/probe-O3",
+        "wrong-drop-order"
+      ],
+      "exit": 101,
+      "stdout": "",
+      "stderr": "\nthread 'main' (1227988982) panicked at target/environment-tail-proof/probe.rs:332:148:\nassertion \u0060left == right\u0060 failed: wrong drop order\n  left: [\"lines\", \"next\", \"drop-line\", \"next\", \"drop-iterator\"]\n right: [\"drop-iterator\", \"next\"]\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n"
+    },
+    {
+      "label": "clippy-observation",
+      "command": [
+        "clippy-driver",
+        "--edition=2021",
+        "--emit=metadata",
+        "-W",
+        "clippy::needless_continue",
+        "target/environment-tail-proof/probe.rs",
+        "-o",
+        "target/environment-tail-proof/clippy.rmeta"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "warning: this \u0060continue\u0060 expression is redundant\n  --> target/environment-tail-proof/probe.rs:55:17\n   |\n55 |                 continue;\n   |                 ^^^^^^^^\n   |\n   = help: consider dropping the \u0060continue\u0060 expression\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_continue\n   = note: requested on the command line with \u0060-W clippy::needless-continue\u0060\n\nwarning: this expression creates a reference which is immediately dereferenced by the compiler\n  --> target/environment-tail-proof/probe.rs:52:21\n   |\n52 |                     &scratch,\n   |                     ^^^^^^^^ help: change this to: \u0060scratch\u0060\n   |\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrow\n   = note: \u0060#[warn(clippy::needless_borrow)]\u0060 on by default\n\nwarning: this expression creates a reference which is immediately dereferenced by the compiler\n  --> target/environment-tail-proof/probe.rs:53:21\n   |\n53 |                     &canonical_scratch,\n   |                     ^^^^^^^^^^^^^^^^^^ help: change this to: \u0060canonical_scratch\u0060\n   |\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrow\n\nwarning: this expression creates a reference which is immediately dereferenced by the compiler\n  --> target/environment-tail-proof/probe.rs:77:21\n   |\n77 |                     &scratch,\n   |                     ^^^^^^^^ help: change this to: \u0060scratch\u0060\n   |\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrow\n\nwarning: this expression creates a reference which is immediately dereferenced by the compiler\n  --> target/environment-tail-proof/probe.rs:78:21\n   |\n78 |                     &canonical_scratch,\n   |                     ^^^^^^^^^^^^^^^^^^ help: change this to: \u0060canonical_scratch\u0060\n   |\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrow\n\nwarning: this expression creates a reference which is immediately dereferenced by the compiler\n   --> target/environment-tail-proof/probe.rs:102:21\n    |\n102 |                     &scratch,\n    |                     ^^^^^^^^ help: change this to: \u0060scratch\u0060\n    |\n    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrow\n\nwarning: this expression creates a reference which is immediately dereferenced by the compiler\n   --> target/environment-tail-proof/probe.rs:103:21\n    |\n103 |                     &canonical_scratch,\n    |                     ^^^^^^^^^^^^^^^^^^ help: change this to: \u0060canonical_scratch\u0060\n    |\n    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrow\n\nwarning: this \u0060continue\u0060 expression is redundant\n   --> target/environment-tail-proof/probe.rs:130:17\n    |\n130 |                 continue;\n    |                 ^^^^^^^^\n    |\n    = help: consider dropping the \u0060continue\u0060 expression\n    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_continue\n\nwarning: this expression creates a reference which is immediately dereferenced by the compiler\n   --> target/environment-tail-proof/probe.rs:127:21\n    |\n127 |                     &scratch,\n    |                     ^^^^^^^^ help: change this to: \u0060scratch\u0060\n    |\n    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrow\n\nwarning: this expression creates a reference which is immediately dereferenced by the compiler\n   --> target/environment-tail-proof/probe.rs:128:21\n    |\n128 |                     &canonical_scratch,\n    |                     ^^^^^^^^^^^^^^^^^^ help: change this to: \u0060canonical_scratch\u0060\n    |\n    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrow\n\nwarning: this expression creates a reference which is immediately dereferenced by the compiler\n   --> target/environment-tail-proof/probe.rs:154:21\n    |\n154 |                     &scratch,\n    |                     ^^^^^^^^ help: change this to: \u0060scratch\u0060\n    |\n    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrow\n\nwarning: this expression creates a reference which is immediately dereferenced by the compiler\n   --> target/environment-tail-proof/probe.rs:155:21\n    |\n155 |                     &canonical_scratch,\n    |                     ^^^^^^^^^^^^^^^^^^ help: change this to: \u0060canonical_scratch\u0060\n    |\n    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrow\n\nwarning: this expression creates a reference which is immediately dereferenced by the compiler\n   --> target/environment-tail-proof/probe.rs:180:21\n    |\n180 |                     &scratch,\n    |                     ^^^^^^^^ help: change this to: \u0060scratch\u0060\n    |\n    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrow\n\nwarning: this expression creates a reference which is immediately dereferenced by the compiler\n   --> target/environment-tail-proof/probe.rs:181:21\n    |\n181 |                     &canonical_scratch,\n    |                     ^^^^^^^^^^^^^^^^^^ help: change this to: \u0060canonical_scratch\u0060\n    |\n    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrow\n\nwarning: this expression creates a reference which is immediately dereferenced by the compiler\n   --> target/environment-tail-proof/probe.rs:207:21\n    |\n207 |                     &scratch,\n    |                     ^^^^^^^^ help: change this to: \u0060scratch\u0060\n    |\n    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrow\n\nwarning: this expression creates a reference which is immediately dereferenced by the compiler\n   --> target/environment-tail-proof/probe.rs:208:21\n    |\n208 |                     &canonical_scratch,\n    |                     ^^^^^^^^^^^^^^^^^^ help: change this to: \u0060canonical_scratch\u0060\n    |\n    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrow\n\nwarning: 16 warnings emitted\n\n"
+    }
+  ],
+  "optimizations": [
+    "0",
+    "3"
+  ],
+  "literal_cases_per_form": 17,
+  "forms": 3,
+  "drop_forms": 2,
+  "wrong_oracle_executions": 8,
+  "clippy_needless_continue_observed": true
+}
+```
+
+</details>
+
+<details>
+<summary>Pinned Reference source identities</summary>
+
+```json
+{
+  "status": "captured-local-pinned-reference",
+  "records": [
+    {
+      "source_kind": "required-pinned-toolchain-read-only",
+      "source_relative_to_runtime_sysroot": "share/doc/rust/html/reference/expressions/loop-expr.html",
+      "available": true,
+      "local": "target/environment-tail-proof/reference/loop-expr.html",
+      "bytes": 73181,
+      "sha256": "9557c8f7721de48768ca20dff48be250fb5c7de369c0a2df730809c19a0f6c4f"
+    },
+    {
+      "source_kind": "required-pinned-toolchain-read-only",
+      "source_relative_to_runtime_sysroot": "share/doc/rust/html/reference/destructors.html",
+      "available": true,
+      "local": "target/environment-tail-proof/reference/destructors.html",
+      "bytes": 75230,
+      "sha256": "6813f53a9061e1dd20f58c87eac237868497bdbe760e29239b359a89e8adea09"
+    }
+  ],
+  "scope": "Read-only installed toolchain reference; outputs on repository volume; sysroot derived at runtime"
+}
+```
+
+</details>
+
+<details>
+<summary>Exact task-state reconstruction and full contracts</summary>
+
+```json
+{
+  "schema": "archogen-environment-tail-task-routing/1",
+  "base_commit": "0663022a9a9e2b38d5d3b6fbae6bfbdad23a7ac0",
+  "base_sha256": "5dd255f054665dca794c8c77953ed4602df88288d5725a5eb0bb0681e1a22a89",
+  "base_file": "docs/tasks/M3.md",
+  "snapshots": {
+    "task-active-before-seal.md": {
+      "sha256": "3d49ed182cfa626a5142e86ebb0fb2fb570f5d040b6e6fb2ef3376e9869b6b82",
+      "bytes": 292184,
+      "changes": [
+        {
+          "start_line": 1531,
+          "end_line": 1532,
+          "before_sha256": "7498cea0abd9277e6a9387e09169db904a468a193a890312339e12962d6de314",
+          "replacement": "  Status: \u0060active\u0060 \u2014 environment-tail source proof and controls\n"
+        }
+      ]
+    },
+    "task-before-proof.md": {
+      "sha256": "7c3fcc7e4be07691f3ca27fd46c9b42c8fd3a7bddea51d7eb8fce0a73871d55f",
+      "bytes": 291982,
+      "changes": [
+        {
+          "start_line": 1514,
+          "end_line": 1529,
+          "before_sha256": "c0ed4d2a612c81c081cfdde612086ae68d8762203a564afad72e945b5223337c",
+          "replacement": "  Status: \u0060done\u0060 \u2014 sealed in [\u0060M3/M3.6.9.6.3.2.2.15.2.1.5.0.md\u0060](../task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.0.md); commit \u0060ARCHOGEN-M3-0817\u0060\n"
+        },
+        {
+          "start_line": 1531,
+          "end_line": 1532,
+          "before_sha256": "7498cea0abd9277e6a9387e09169db904a468a193a890312339e12962d6de314",
+          "replacement": "  Status: \u0060active\u0060 \u2014 environment-tail source proof and controls\n"
+        },
+        {
+          "start_line": 1534,
+          "end_line": 1534,
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "replacement": "  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.1.0\u0060\n  Status: \u0060active\u0060 \u2014 establish tail-control proof and cleanup eligibility\n  Goal: read primary Rust control/drop contracts; bind the complete current loop and\n    actual deletion; compile originals/edits with independent literal observations,\n    drop/control-flow and wrong-premise/oracle controls. Determine whether a bounded\n    no-op source cleanup is valid, keeping the shared reason file unchanged.\n    No maintained source/guard/reason change here; register separate permanent-control,\n    cleanup/revalidation and final-checkpoint slices before implementation.\n  Acceptance: complete source/drop argument, actual compiler controls and false arms,\n    durable evidence/full contracts, exact prior archive/input reconstruction and commit.\n"
+        }
+      ]
+    },
+    "task-before-routing.md": {
+      "sha256": "7c3fcc7e4be07691f3ca27fd46c9b42c8fd3a7bddea51d7eb8fce0a73871d55f",
+      "bytes": 291982,
+      "changes": [
+        {
+          "start_line": 1514,
+          "end_line": 1529,
+          "before_sha256": "c0ed4d2a612c81c081cfdde612086ae68d8762203a564afad72e945b5223337c",
+          "replacement": "  Status: \u0060done\u0060 \u2014 sealed in [\u0060M3/M3.6.9.6.3.2.2.15.2.1.5.0.md\u0060](../task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.0.md); commit \u0060ARCHOGEN-M3-0817\u0060\n"
+        },
+        {
+          "start_line": 1531,
+          "end_line": 1532,
+          "before_sha256": "7498cea0abd9277e6a9387e09169db904a468a193a890312339e12962d6de314",
+          "replacement": "  Status: \u0060active\u0060 \u2014 environment-tail source proof and controls\n"
+        },
+        {
+          "start_line": 1534,
+          "end_line": 1534,
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "replacement": "  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.1.0\u0060\n  Status: \u0060active\u0060 \u2014 establish tail-control proof and cleanup eligibility\n  Goal: read primary Rust control/drop contracts; bind the complete current loop and\n    actual deletion; compile originals/edits with independent literal observations,\n    drop/control-flow and wrong-premise/oracle controls. Determine whether a bounded\n    no-op source cleanup is valid, keeping the shared reason file unchanged.\n    No maintained source/guard/reason change here; register separate permanent-control,\n    cleanup/revalidation and final-checkpoint slices before implementation.\n  Acceptance: complete source/drop argument, actual compiler controls and false arms,\n    durable evidence/full contracts, exact prior archive/input reconstruction and commit.\n"
+        }
+      ]
+    },
+    "task-after-routing.md": {
+      "sha256": "300967875cca364028a2efd33e1cdf39611043ea18c4cf0ca9268efbec330071",
+      "bytes": 290332,
+      "changes": [
+        {
+          "start_line": 1160,
+          "end_line": 1166,
+          "before_sha256": "8b3a314768cf1cb7eec1dddaa8d92762946aa928365c242b9d3a47706237cddc",
+          "replacement": "  Status: \u0060active\u0060 \u2014 current survivor-assessment container\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-container-contracts) retained verbatim.\n  Complete current-scope native outcomes/restoration and owned child resolution precede closure.\n"
+        },
+        {
+          "start_line": 1174,
+          "end_line": 1182,
+          "before_sha256": "5425f8d6257ede07ac6b13ab12000fc28e0a89a14039c3efcdffe3121391e165",
+          "replacement": "  Status: \u0060active\u0060 \u2014 current compiler-input container\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-container-contracts) retained verbatim.\n  Complete current-scope native outcomes/restoration and owned child resolution precede closure.\n"
+        },
+        {
+          "start_line": 1186,
+          "end_line": 1198,
+          "before_sha256": "d4c36113619fa09b8f9a80d9f5d3e5d595326c88223726dd5d41d6ead0fbe0eb",
+          "replacement": "  Status: \u0060active\u0060 \u2014 current compile-function container\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-container-contracts) retained verbatim.\n  Complete current-scope native outcomes/restoration and owned child resolution precede closure.\n"
+        },
+        {
+          "start_line": 1514,
+          "end_line": 1529,
+          "before_sha256": "c0ed4d2a612c81c081cfdde612086ae68d8762203a564afad72e945b5223337c",
+          "replacement": "  Status: \u0060done\u0060 \u2014 sealed in [\u0060M3/M3.6.9.6.3.2.2.15.2.1.5.0.md\u0060](../task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.0.md); commit \u0060ARCHOGEN-M3-0817\u0060\n"
+        },
+        {
+          "start_line": 1531,
+          "end_line": 1532,
+          "before_sha256": "7498cea0abd9277e6a9387e09169db904a468a193a890312339e12962d6de314",
+          "replacement": "  Status: \u0060active\u0060 \u2014 environment-tail source proof and controls\n"
+        },
+        {
+          "start_line": 1534,
+          "end_line": 1534,
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "replacement": "  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.1.0\u0060\n  Status: \u0060active\u0060 \u2014 establish tail-control proof and cleanup eligibility\n  Goal: read primary Rust control/drop contracts; bind the complete current loop and\n    actual deletion; compile originals/edits with independent literal observations,\n    drop/control-flow and wrong-premise/oracle controls. Determine whether a bounded\n    no-op source cleanup is valid, keeping the shared reason file unchanged.\n    No maintained source/guard/reason change here; register separate permanent-control,\n    cleanup/revalidation and final-checkpoint slices before implementation.\n  Acceptance: complete source/drop argument, actual compiler controls and false arms,\n    durable evidence/full contracts, exact prior archive/input reconstruction and commit.\n"
+        }
+      ]
+    },
+    "task-after-completion.md": {
+      "sha256": "624acdf46f0493f9662c960ed9949a918cc58da8cbbea72f2ab23d12033bb0b1",
+      "bytes": 291519,
+      "changes": [
+        {
+          "start_line": 1160,
+          "end_line": 1166,
+          "before_sha256": "8b3a314768cf1cb7eec1dddaa8d92762946aa928365c242b9d3a47706237cddc",
+          "replacement": "  Status: \u0060active\u0060 \u2014 current survivor-assessment container\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-container-contracts) retained verbatim.\n  Complete current-scope native outcomes/restoration and owned child resolution precede closure.\n"
+        },
+        {
+          "start_line": 1174,
+          "end_line": 1182,
+          "before_sha256": "5425f8d6257ede07ac6b13ab12000fc28e0a89a14039c3efcdffe3121391e165",
+          "replacement": "  Status: \u0060active\u0060 \u2014 current compiler-input container\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-container-contracts) retained verbatim.\n  Complete current-scope native outcomes/restoration and owned child resolution precede closure.\n"
+        },
+        {
+          "start_line": 1186,
+          "end_line": 1198,
+          "before_sha256": "d4c36113619fa09b8f9a80d9f5d3e5d595326c88223726dd5d41d6ead0fbe0eb",
+          "replacement": "  Status: \u0060active\u0060 \u2014 current compile-function container\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-container-contracts) retained verbatim.\n  Complete current-scope native outcomes/restoration and owned child resolution precede closure.\n"
+        },
+        {
+          "start_line": 1514,
+          "end_line": 1529,
+          "before_sha256": "c0ed4d2a612c81c081cfdde612086ae68d8762203a564afad72e945b5223337c",
+          "replacement": "  Status: \u0060done\u0060 \u2014 sealed in [\u0060M3/M3.6.9.6.3.2.2.15.2.1.5.0.md\u0060](../task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.0.md); commit \u0060ARCHOGEN-M3-0817\u0060\n"
+        },
+        {
+          "start_line": 1531,
+          "end_line": 1532,
+          "before_sha256": "7498cea0abd9277e6a9387e09169db904a468a193a890312339e12962d6de314",
+          "replacement": "  Status: \u0060active\u0060 \u2014 environment-tail source proof and controls\n"
+        },
+        {
+          "start_line": 1537,
+          "end_line": 1537,
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "replacement": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.1.0\u0060\n  Status: \u0060done\u0060 \u2014 exact tail proof and cleanup eligibility\n  [Full proof/contracts](../book/src/annex-trust-proofs.md#environment-loop-tail-control-proof).\n  Acceptance:\n  - [x] ROOT CAUSE: \u0060python3 -I -B target/environment-tail-proof/prepare-probe.py\u0060,\n    exit code 0: exact loop/edit, primary pinned control/drop contracts and source argument.\n  - [x] ADDRESSED: \u0060python3 -I -B target/environment-tail-proof/run-probe.py\u0060,\n    exit code 0:17 literal cases/3 forms at O0/O3, drop and distinguishing suffix;\n    all8 wrong oracles fail101. Cleanup eligible; maintained source/reasons unchanged.\n  - [x] NO REGRESSION: \u0060python3 -I -B target/environment-tail-proof/final-audit.py\u0060,\n    exit code 0: prior inputs/archives and lossless contracts; book/gates before commit.\n  Verification: full evidence/adapters in book; .1.1/.1.2/.2 separately own implementation/replay.\n  Commit: \u0060ARCHOGEN-M3-0818\u0060\n\n- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.1.1\u0060\n  Status: \u0060pending\u0060 \u2014 permanent environment-tail proof controls\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-implementation-contracts) retained verbatim.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.1.2\u0060\n  Status: \u0060pending\u0060 \u2014 remove the proved redundant environment tail\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-implementation-contracts) retained verbatim.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n"
+        },
+        {
+          "start_line": 1538,
+          "end_line": 1541,
+          "before_sha256": "a9065b5eb30ce5998e926760d04d598610bf5d3fa5ccec080d67e90bc2d9afe6",
+          "replacement": "  Status: \u0060pending\u0060 \u2014 complete current environment-tail checkpoint after cleanup\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-implementation-contracts) retained verbatim.\n  Reconcile proved retirement; all current reasons/known other-site kill, full restoration.\n"
+        },
+        {
+          "start_line": 1805,
+          "end_line": 1806,
+          "before_sha256": "cd3514bb5320da94ec11339df252492e42162d5ced647920dd044c1eb6b35636",
+          "replacement": "| 1 | \u0060M3.6\u0060 | \u0060active\u0060 | the trust inventory and gate, F30: \u0060.3\u0060's six slices and \u0060.4\u0060, the chapter, done; \u0060.3.2.1\u0060's baseline committed from the runner, its repaired-key compatibility in \u0060.3.2.1.1\u0060 waiting on the runner, \u0060.5\u0060 on the director; \u0060.6.2\u0060 and \u0060.6.3\u0060 done, the generated-sources instrument and its chapter; \u0060.6\u0060, generated sources, done, \u0060.6.4\u0060's review closed; \u0060.8\u0060, the mutation catalogue's breadth, done; \u0060.9\u0060, the parent's tests', design accepted; \u0060.9.5\u0060 initial measurements complete; \u0060.9.6.3.2.2\u0060 bounded survivor assessments in progress, next \u0060.9.6.3.2.2.15.2.1.5.1.1\u0060 permanent environment-tail proof controls |\n"
+        },
+        {
+          "start_line": 2044,
+          "end_line": 2044,
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "replacement": "| \u00602026-10-20\u0060 | \u0060M3.6.9.6.3.2.2.15.2.1.5.1.0\u0060 | Pinned Reference/source proof; actual O0/O3 literal/drop/suffix and8 wrong-oracle runs; exact archive/routing audit | Cleanup eligible only at this tail; production/reasons unchanged; book/gates required |\n"
+        },
+        {
+          "start_line": 2386,
+          "end_line": 2386,
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "replacement": "| \u0060M3.6.9.6.3.2.2.15.2.1.5.1.0\u0060 | \u0060ARCHOGEN-M3-0818 (leaf M3.6.9.6.3.2.2.15.2.1.5.1.0): prove the environment-loop tail cleanup\u0060 | [Complete proof](../book/src/annex-trust-proofs.md#environment-loop-tail-control-proof); permanent controls, cleanup and final replay separately owned |\n"
+        }
+      ]
+    }
+  },
+  "records": {
+    "M3.6.9.6.3.2.2.15": {
+      "full": "- ID: \u0060M3.6.9.6.3.2.2.15\u0060\n  Status: \u0060active\u0060 \u2014 ownership census then bounded evidence-directed assessments\n  Goal: reconcile all initial540 rows with completed evidence, current exact candidates and retired\n    edits; own every unresolved current obligation before the final strict complete-file sweep.\n    A historical ownership count is never a current outcome or equivalent classification.\n  Children: .1 complete ownership/source census; .2 onward bounded assessments/controls/repairs\n    split and committed according to actual census evidence, with native full-parent replays.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n",
+      "compact": "- ID: \u0060M3.6.9.6.3.2.2.15\u0060\n  Status: \u0060active\u0060 \u2014 current survivor-assessment container\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-container-contracts) retained verbatim.\n  Complete current-scope native outcomes/restoration and owned child resolution precede closure.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n"
+    },
+    "M3.6.9.6.3.2.2.15.2": {
+      "full": "- ID: \u0060M3.6.9.6.3.2.2.15.2\u0060\n  Status: \u0060active\u0060 \u2014 complete compiler measurement then owned resolution\n  Goal: Compile command, ownership, dependency and normalized configuration inputs; own all48 assigned initial rows and every current mutation shape\n    in this scope. Initial source069d8e59 listed159 candidates for that historical lane.\n    Re-discover before each execution; a changed source requires fresh binding, never projected outcomes.\n    Bind full parents, own each survivor/defect in bounded children, commit verified evidence;\n    final current-scope replay/restoration and broader gates precede closure. No timeout/unjudged\n    equivalent; whole-file criterion remains separate.\n  Scope: xtask/src/trust.rs::compile plus cargo_commands and dependency_files.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n",
+      "compact": "- ID: \u0060M3.6.9.6.3.2.2.15.2\u0060\n  Status: \u0060active\u0060 \u2014 current compiler-input container\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-container-contracts) retained verbatim.\n  Complete current-scope native outcomes/restoration and owned child resolution precede closure.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n"
+    },
+    "M3.6.9.6.3.2.2.15.2.1": {
+      "full": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1\u0060\n  Status: \u0060active\u0060 \u2014 compiler measurement child, then evidence-directed resolution\n  Goal: resolve historical compile-function83 measurement, with fresh scopes rederived, against\n    trust:: trust_generated:: trust_gate:: --skip route_tests with strict timeouts/unjudged.\n    Re-derive the full current listing/selection, exact E applicability and full parent names;\n    hold complete original inputs, use installed same-volume write guard and copied native sweep.\n    Audit every ID/raw replacement/finishing name/operator total/strict exit and full restoration.\n    Own each actual remaining obligation in .15.2.1 children before classifications/repairs.\n    Commit measured results before resolution; a complete failing criterion is recorded as such.\n  Children: .1 complete current83 native measurement; subsequent independently committed children\n    resolve actual outcomes, followed by complete replay and warranted integration before closure.\n  Follow-up: separately committed evidence-directed controls/proofs/repairs, complete replay and\n    warranted integration; then .15.2.2 command framing and .15.2.3 dependency records.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n",
+      "compact": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1\u0060\n  Status: \u0060active\u0060 \u2014 current compile-function container\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-container-contracts) retained verbatim.\n  Complete current-scope native outcomes/restoration and owned child resolution precede closure.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n"
+    },
+    "M3.6.9.6.3.2.2.15.2.1.5.1.1": {
+      "full": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.1.1\u0060\n  Status: \u0060pending\u0060 \u2014 permanent environment-tail proof controls\n  Goal: Add a maintained operator proof guard outside the semantic mutation population. Bind exact historical and prospective clean loop shapes, actual normalizer/allowlist and suffix boundary. Compile source forms against independent literal outputs/refusals and drop order, with a distinguishing reachable suffix, altered premises and wrong oracles refused. Pass focused operator controls, preserving the 201 semantic parents, production and reasons. Commit before cleanup.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n",
+      "compact": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.1.1\u0060\n  Status: \u0060pending\u0060 \u2014 permanent environment-tail proof controls\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-implementation-contracts) retained verbatim.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n"
+    },
+    "M3.6.9.6.3.2.2.15.2.1.5.1.2": {
+      "full": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.1.2\u0060\n  Status: \u0060pending\u0060 \u2014 remove the proved redundant environment tail\n  Goal: After committed proof controls, remove only the one redundant continue line. Re-derive production/source identities and all candidate mappings; run permanent controls before updating existing production-prefix guards, and rerun those actual producer proofs afterward. Keep all23 reasons and existing semantic parents exact; focused tier plus appropriate operator checks and complete source/input preservation. Commit before final native replay.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n",
+      "compact": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.1.2\u0060\n  Status: \u0060pending\u0060 \u2014 remove the proved redundant environment tail\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-implementation-contracts) retained verbatim.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n"
+    },
+    "M3.6.9.6.3.2.2.15.2.1.5.2": {
+      "previous": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.2\u0060\n  Status: \u0060pending\u0060 \u2014 complete current environment-tail checkpoint\n  [Full task](../book/src/annex-trust-proofs.md#environment-loop-tail-final-checkpoint-task) retained verbatim.\n  After committed controls, strict justified outcomes/full restoration; later review separate.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n",
+      "full": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.2\u0060\n  Status: \u0060pending\u0060 \u2014 complete current environment-tail checkpoint after cleanup\n  Goal: retain exact historical/current before mapping and the all-domain tail proof;\n    rederive current discovery/201 semantic parent names after committed cleanup and controls.\n    Explicitly reconcile the retired tail as a proved no-op removal, never infer E from absence.\n    Replay every current reason and a known distinguishing non-tail continue with strict\n    justified finishing outcomes, no S/TO/unjudged; exact old/new reason text and full\n    original/copied-input/name restoration. Revalidate affected source/producer guards.\n    Close .1/.5 only after their separate leaves and complete bounded checkpoint commit.\n    Later dependency/caller/global/review and warranted integration remain separate.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n",
+      "compact": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.2\u0060\n  Status: \u0060pending\u0060 \u2014 complete current environment-tail checkpoint after cleanup\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-implementation-contracts) retained verbatim.\n  Reconcile proved retirement; all current reasons/known other-site kill, full restoration.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n"
+    }
+  },
+  "saved_container_bytes": 1650,
+  "planned_leaf": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.1.0\u0060\n  Status: \u0060active\u0060 \u2014 establish tail-control proof and cleanup eligibility\n  Goal: read primary Rust control/drop contracts; bind the complete current loop and\n    actual deletion; compile originals/edits with independent literal observations,\n    drop/control-flow and wrong-premise/oracle controls. Determine whether a bounded\n    no-op source cleanup is valid, keeping the shared reason file unchanged.\n    No maintained source/guard/reason change here; register separate permanent-control,\n    cleanup/revalidation and final-checkpoint slices before implementation.\n  Acceptance: complete source/drop argument, actual compiler controls and false arms,\n    durable evidence/full contracts, exact prior archive/input reconstruction and commit.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n",
+  "completed_leaf": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.5.1.0\u0060\n  Status: \u0060done\u0060 \u2014 exact tail proof and cleanup eligibility\n  [Full proof/contracts](../book/src/annex-trust-proofs.md#environment-loop-tail-control-proof).\n  Acceptance:\n  - [x] ROOT CAUSE: \u0060python3 -I -B target/environment-tail-proof/prepare-probe.py\u0060,\n    exit code 0: exact loop/edit, primary pinned control/drop contracts and source argument.\n  - [x] ADDRESSED: \u0060python3 -I -B target/environment-tail-proof/run-probe.py\u0060,\n    exit code 0:17 literal cases/3 forms at O0/O3, drop and distinguishing suffix;\n    all8 wrong oracles fail101. Cleanup eligible; maintained source/reasons unchanged.\n  - [x] NO REGRESSION: \u0060python3 -I -B target/environment-tail-proof/final-audit.py\u0060,\n    exit code 0: prior inputs/archives and lossless contracts; book/gates before commit.\n  Verification: full evidence/adapters in book; .1.1/.1.2/.2 separately own implementation/replay.\n  Commit: \u0060ARCHOGEN-M3-0818\u0060\n\n"
+}
+```
+
+</details>
+
+<details>
+<summary>Previous archive identities</summary>
+
+```json
+{
+  "docs/task-history/M1/M1.38.md": "660dd1084f7a697fe87243303450f8dbfebdcf28b57fd9e0c1be1b2d32f8bbbe",
+  "docs/task-history/M1/M1.29.1.md": "210bac807e5a0a1ed4075ba2f3d37f7facc45cdb54923f5c69687d4e4ab4c703",
+  "docs/task-history/M1/M1.28.md": "5faf05df98645944d300144cdc4a5126beecf65432d9253333c0bccb1c6cf4a7",
+  "docs/task-history/M1/M1.18.md": "5a47d57c1abf42d50196d3f3ab5b50654a45d1aa85d9dfa18b96a4996fdbd56c",
+  "docs/task-history/M1/M1.8.md": "352ba08459304d5dcdd049c1116cd6849f902f7ef8cfc7e10c73b6a758a315d8",
+  "docs/task-history/M1/M1.12.4.md": "df1889f92a063bbce9c6175a5082c4c73d6bb5fb528a843cfcb8f3868f0694d0",
+  "docs/task-history/M1/M1.19.md": "796c687e98da12f9c8162f8d189ba531498a5c236bfcb162db1e6ba2aeb73ff5",
+  "docs/task-history/M1/M1.9.md": "2ba65f414efa9f42f3e6e429b787fe25a02ddbda035cfaf6fbf49d8995b366da",
+  "docs/task-history/M1/M1.12.5.md": "dad2d10660e2ddd386cc2b968086aeb10e9dc2254d4f3d4d11a644abb87fc7d2",
+  "docs/task-history/M1/M1.39.md": "e73260421d9e085b200366483e53d6043a66dc9bf4117ad56972373ff6ff336e",
+  "docs/task-history/M1/M1.12.1.md": "4c5b9fd4a2096127a306d9c5bfae9bdd8751bebaca4c8eafdad2bbd1b5cef1d3",
+  "docs/task-history/M1/M1.32.md": "3756547974169ae6c47f6395a76d4978a911f7b7227405c51662af2389be1c99",
+  "docs/task-history/M1/M1.6.md": "fba14c88bc6003e19fc518aa98d6b48f22ed6ed7237d72580846e9066245ffa2",
+  "docs/task-history/M1/M1.22.md": "7ea3db2998e7edaf458b1d574e1a766bf20b1b6773f8b2490cb79768ea4933bc",
+  "docs/task-history/M1/M1.16.md": "0b5ef32772bec963905c6dfdb1ddde5170db1219e42026611c25f9e02a72f70f",
+  "docs/task-history/M1/M1.36.md": "898292c31082ece82232b2f3e2138e52fad71714a9a806967c886daa503dc6f5",
+  "docs/task-history/M1/M1.2.md": "9d32c26f32d70de04af6244a671742c245db0ff1ff34d6351217486d499e404b",
+  "docs/task-history/M1/M1.26.md": "75c73dfd8cb1af34aff7fc1cd624b4401eac385e981d45d6b15df6f91b6d67fa",
+  "docs/task-history/M1/M1.37.md": "8718925c474efb2b69139aaee751272b95c4faad0a1beca120c1c37d76c98ae8",
+  "docs/task-history/M1/M1.3.md": "0202e2d3ed4edff2f68a034aaae6ef25af46a569c9fd6cd704d649b3852d0110",
+  "docs/task-history/M1/M1.13.md": "eb8ed49c6877183084497ca3fcf9943b6d513113728dae8cf2a77b9d4d2f1e07",
+  "docs/task-history/M1/M1.27.md": "39cd26d738db6a0a7e3033b612ecd6e48fe2d4cd88d9e38bca12d877214b9d9f",
+  "docs/task-history/M1/M1.33.md": "5cd6b59b7561c00dad3c8a3d28493ce5b5b494b8abaade3d62a1ed7e20a72459",
+  "docs/task-history/M1/M1.7.md": "668f41d17a980002a6e25f02c69f3606d965b33289832d0a4c9a74414a93c082",
+  "docs/task-history/M1/M1.23.md": "bbc1371d404ff5fc1906ce6dff6bc8fd3da26687d238ca8403ee42b05de8bb5a",
+  "docs/task-history/M1/M1.17.md": "e567da4aeb7727e16bdb4e6aac1feddef30b5f4cfb21cf230e96329c589515fb",
+  "docs/task-history/M1/M1.34.md": "5d9380c10973c76413fc6fe7f033173f3a84a7c9af65fc411cadb4d04aa83b63",
+  "docs/task-history/M1/M1.10.md": "a4b0a5ce2d998e7ef339af691d8141f081325bbc841bec637c632146b1a766d5",
+  "docs/task-history/M1/M1.41.md": "fd031f154a0f2b94c62f27b5220e190dc10763eeeed2967f3bae183ecba3a504",
+  "docs/task-history/M1/M1.24.md": "c65f120eadf6c92dc13faad858dbcb61d230a0cbcd24963841fe51618e06552a",
+  "docs/task-history/M1/M1.30.md": "2a610972c62443db34b450072c3e0ab99b72c690cbfd59d50f97f4acc33e55e5",
+  "docs/task-history/M1/M1.4.md": "0813acb48914b555a326902c74890c5bc8da001ad4e7699c32ec263b2b810bf7",
+  "docs/task-history/M1/M1.20.md": "a2d802bd9b951bebc7744906c7fcb56d738e96c86b740bf475c114be066c38e4",
+  "docs/task-history/M1/M1.14.md": "bfa45fbc875f0c1cc7ababbbefbbe8c862b296f33a580f70a1152995e31d1110",
+  "docs/task-history/M1/M1.31.md": "908a5c60581ecf6024a5f904a478c27cdad66e00477e071d32b45a2e1cd63e4c",
+  "docs/task-history/M1/M1.5.md": "53a937a3471937de40f2651b5bd9d00c09ba61e9c98de421453792677f4653b9",
+  "docs/task-history/M1/M1.21.md": "188384c97b5a65cdbbad8090759b88cf56d7722059a865e7958e1725bc81d23c",
+  "docs/task-history/M1/M1.15.md": "99196ff8c626753c50a1cdfe6a9dc8b5ca9a60c04efd9bf753c2e8a790efbef7",
+  "docs/task-history/M1/M1.35.md": "17717d936b433db97038ef183479ce332fe710dd8c92d067dc54f19fb43492fb",
+  "docs/task-history/M1/M1.1.md": "3449b538fb7f8c7a31433fec669cbf111a7f9f12cf68c04d12fd02158733478b",
+  "docs/task-history/M1/M1.11.md": "37707e032b3593b15a1f50de3367719e633196711fb7a193097218d199ed9808",
+  "docs/task-history/M1/M1.40.md": "15e29ee9907d21a8038def1dbb2a3d8bdb30ddcec77851dc4012987a23a26c72",
+  "docs/task-history/M1/M1.25.md": "71b8e8c541f2b081ecd386512f7d2db566397b6b37237a0ed3721eb0b1433fac",
+  "docs/task-history/M1/M1.29.3.md": "dfd04eb8fdf53b9c89ddfda761294c132ab2798da26141340b452d8c1e6a744b",
+  "docs/task-history/M1/M1.12.2.md": "d7fa3ebaf785e2c281c6f85ff247b355df5ae896513670c87addd0296199dc66",
+  "docs/task-history/M1/M1.29.2.md": "f71997701417a20f0d029daa1aebcfd16db0ed4f70768b5446bcd4a0f7f618ba",
+  "docs/task-history/M0/M0.7.md": "58c2cb1fb4b7f6b9a0724d577e580a6f37f26007e4f4b03437e01a37f50becd5",
+  "docs/task-history/M0/M0.3.md": "ba13f5af47b518ae1ef1a23fb065dfbc98024db573dd5c68fac5936e59fe6d41",
+  "docs/task-history/M0/M0.2.md": "0157eac5cbcd8136cd44c79eaee118bc7c315750c5db07b0a677e7e0ebb017b9",
+  "docs/task-history/M0/M0.6.md": "7eac7321a5bb25fb7638d72039038b7a18c9218253629173e7627f2c7b205bda",
+  "docs/task-history/M0/M0.1.md": "839bf5346b0f8919ffc7d4e88bbefce49541e6d042446b4c3a766196ccdca7b2",
+  "docs/task-history/M0/M0.5.md": "db0961d879c1a007351ad1e3421f21ca6cd7d8888c5cf9b1da61869e9d1e91b2",
+  "docs/task-history/M0/M0.4.md": "df46ccd8c35cd1dcedf196fdde4d8bef4b6665dd39f02da5e66c6cdb85581a10",
+  "docs/task-history/S0/S0.2.md": "34f4d490aa0c52653320eacdbc5308c8ff70a67f4717141e63813f367afc0de8",
+  "docs/task-history/S0/S0.6.md": "26ebb98dcf631e746d00093c36781d974df179a5c9c9840e931272d37a4ea906",
+  "docs/task-history/S0/S0.7.md": "ea0b1cda5e2ea9dd918750c5d4966e21e27e827098139e5cf20d6370115be573",
+  "docs/task-history/S0/S0.3.md": "0cf143747cabca2aec58d6ffa05a500778dca424f0244f015f90bf15474e3a0f",
+  "docs/task-history/S0/S0.8.md": "c4d9fad26fa8b454a0da972d077d9ec052f4439c1f530d82203f81ea7a76559f",
+  "docs/task-history/S0/S0.4.md": "486b31f48fe1962cbf023407070bc41548c51d68555c6744fa1179f0cddb5a5c",
+  "docs/task-history/S0/S0.1.md": "d9f27bda4aa6a23910e1bcee6b1837615a56e605dde060fcfe790e9fc99fcaa3",
+  "docs/task-history/S0/S0.5.md": "ada234e53f688f321c264efa0a38d16f801682d5ee7654e57bfa5e0b611bc324",
+  "docs/task-history/M2/M2.16.md": "19ea650d019ffe136bd9146d525eef5e0d63dea4b2c7a2caac7d9a840d7f9dfe",
+  "docs/task-history/M2/M2.22.md": "05756f9c7ea957d3b0482b371ccde01ef94c884c56ea16540ba4706fe0b11eff",
+  "docs/task-history/M2/M2.7.3.md": "d51575b1f75157985de6631cf8bdb43179de21f1965c42baea840e55afa7e154",
+  "docs/task-history/M2/M2.7.4.4.md": "00ae976a5ebc68e6d0225b7be72fb4991d563e288312b31f4f15e1a284f533b8",
+  "docs/task-history/M2/M2.12.md": "0c20ea780f67abaac723a3a30d38d15878dd01c883acbe80ca66627d64fd34f6",
+  "docs/task-history/M2/M2.7.6.2.md": "0b2551ae34f7bacc1e3188a02636eda2b584781a1d79b198e620f1800cab94cf",
+  "docs/task-history/M2/M2.13.md": "49ee111e5ab9be27d1b6df1c9734c6fd38f43eb72e5b29d43e1d91ce0ead59ed",
+  "docs/task-history/M2/M2.7.6.3.md": "3bb3e3e6951a29bdbf5af44b2a7ace3f5cae760ffe2d93121a63cddcad6e53d5",
+  "docs/task-history/M2/M2.7.4.1.md": "5befafa8f8979b7f5ad40c7db4523ada48d0431d63410194c40a7d4f9961b401",
+  "docs/task-history/M2/M2.17.md": "0682bc09329df3a0a8176f528450e05e07554dc521d5875790bd18894e924a8d",
+  "docs/task-history/M2/M2.7.2.md": "d080864f62f06d7a6116337b2beed9d1623003b3ff0fd7283c03d04d9672d563",
+  "docs/task-history/M2/M2.1.md": "27385ffb1d8dcf22180230910d45c0dd8c85671dbfd5310b53bb833bede9dc8a",
+  "docs/task-history/M2/M2.18.md": "c809bacefcb42a5c5093aa341c7de0abf32b58ee59d6877c395fc7ce8f023b36",
+  "docs/task-history/M2/M2.5.md": "3b19f75b4891f52600918e5556b098d4c2069570599db241ac6b35f2b9873365",
+  "docs/task-history/M2/M2.19.md": "f60f5eb24ab9504ddb3436ca1ce6ab215f4cbaa5bd5b6f4c044a0926ede7e78e",
+  "docs/task-history/M2/M2.4.md": "1aea0da152a8e2657c87d68684badb3ee7bb0870f9e049a81c48025b9d171998",
+  "docs/task-history/M2/M2.3.md": "0bd6963ac2ad47aa2b3418010c2d4424f87193cfea223235eb423e43173521ff",
+  "docs/task-history/M2/M2.2.md": "223fa1926dffee68989b33825797616bbdc295d2b051fe59b2f2d9e9148a60ac",
+  "docs/task-history/M2/M2.6.md": "2cc1a9c0ad3ae33f07fc1a890e088ed74548052d0832dedfdc406e2bd89b2562",
+  "docs/task-history/M2/M2.10.md": "f89f1ec25b6a425f46a659ac7c9157816e3698b495944d6b8f8b0ac9c3e7c61c",
+  "docs/task-history/M2/M2.14.md": "21b9b8fa8e2a883a590283fcfe3cb7ead82f290a502ec2c98b7322b47909436b",
+  "docs/task-history/M2/M2.7.4.2.md": "e4d03e8322e6bfaf9cbccb6e1c08c605c0a496b8be678d1945317e967f5ac916",
+  "docs/task-history/M2/M2.20.md": "cbe0f81cf6e4dac9f44e31072172b3db02de61852d9846bb79b2de56f4ccc627",
+  "docs/task-history/M2/M2.7.1.md": "a5739120ca167b387dd48605d56b039ccd87024e9551f27c20a971fb894f6abb",
+  "docs/task-history/M2/M2.9.md": "599f7cab751ff79a9f6f4fc0e813504116570c394121e014c1f528ceda4c244a",
+  "docs/task-history/M2/M2.15.md": "063ece8e2d3fdf5277d8236baf68ac8ddcfb7ed5b7f0cc6a00f3257007bc2b9d",
+  "docs/task-history/M2/M2.7.4.3.md": "7cca9a87d4ad834be2e2be4a63e620a53739ca9886815acb4805943a78d33887",
+  "docs/task-history/M2/M2.8.md": "82beaf8704c044e50034b46df889988cb4003bbebb9bd94938e88abd854c38f3",
+  "docs/task-history/M2/M2.11.md": "f9bf66a9c6075121b04ae7bc3df52761051e85053c6b076ef8c9eebd006a4253",
+  "docs/task-history/M2/M2.7.6.1.md": "f1d9b46ca04541d7ccb0c1f45c419a6eafabefcc29b90379e4e0ef07523c4734",
+  "docs/task-history/PROGRAM/PROGRAM.59.md": "0cc9401bf8db51c34f372c20ed1409a8ed1999d608ee4d0bf722cdf9d07e266a",
+  "docs/task-history/PROGRAM/PROGRAM.83.1.md": "9d39cd99504e6bcdc2dc4625acce99a62417ec3206a83588f6dd865c30333da2",
+  "docs/task-history/PROGRAM/PROGRAM.49.md": "21533ef05cf17c1efd1b85c26b329c3ccc566c7a80ae40e523df847ed1a66962",
+  "docs/task-history/PROGRAM/PROGRAM.18.md": "3dbd7dec9445df82ba470f2746d76afdd59d57b45ec5390a2dbca55d2602cee4",
+  "docs/task-history/PROGRAM/PROGRAM.38.md": "8cd5f44b860435fb4c1e3f05d98c10aeb2e0d7642d56135dc91431a238b02979",
+  "docs/task-history/PROGRAM/PROGRAM.69.md": "5b6f2c7dabb4ed4538a1a84887630650c4918ad0c7f504ffd7e0c7dc4d3a5699",
+  "docs/task-history/PROGRAM/PROGRAM.3.md": "057ffc2b2c7deb74b583c8ea3abe6696f2e8e5cfc8a7d77e05e8374bcd97533e",
+  "docs/task-history/PROGRAM/PROGRAM.79.md": "849917ed1204a6deac67699eab2aab00c5c5834490b68e803354be66729a2a63",
+  "docs/task-history/PROGRAM/PROGRAM.28.md": "eb29ab230b1bbbea29f882c7d67c36d4afba5f4afc52c74a83369b9ae6854608",
+  "docs/task-history/PROGRAM/PROGRAM.39.md": "f1387ce428b7ccd81cb92c1a99ebfe6c9f3b4f9ec853e02a9d60d0806210efeb",
+  "docs/task-history/PROGRAM/PROGRAM.68.md": "0a93355a828658fd33b11755cbbe87d15230d090f7c49a68b5b4de638de01765",
+  "docs/task-history/PROGRAM/PROGRAM.2.md": "26bf0f5e269d77da9ac9b3d1cec7891d0e42c005f423c237ecda38e4cfda4525",
+  "docs/task-history/PROGRAM/PROGRAM.29.md": "69bb4535d2169eb0221d54b8cd1b145e92963f42819826d3e0ea08f5916f4909",
+  "docs/task-history/PROGRAM/PROGRAM.58.md": "576112aedb6e211329026561276e12fae73e4d87beb617a5008ec4ed986b56f7",
+  "docs/task-history/PROGRAM/PROGRAM.6.md": "e8fde3eaf80c3446e4935249e83e92b390e6d1f765506eaad44af2ee977869ce",
+  "docs/task-history/PROGRAM/PROGRAM.48.md": "5922097c3eb942c77b428de5b85c7d5831b4861f7390e4f1bb2648377338e14a",
+  "docs/task-history/PROGRAM/PROGRAM.19.md": "5f40a6e7cf570884520a29abab66c3a0863f78b1f890556134184da06b411c97",
+  "docs/task-history/PROGRAM/PROGRAM.53.md": "298fee01b1dbdeb4a4f1de4594f1d859efa0316e5316c5d68d4419cd7b3746e1",
+  "docs/task-history/PROGRAM/PROGRAM.94.md": "e9d71c423401856facf92b33fb5ddf22d0b48f7a4946ab53b16e4237d612aa89",
+  "docs/task-history/PROGRAM/PROGRAM.89.1.md": "0a5cb2c55efeb34007e6426dd3ac455925540139d1cbcbf1c4e9bbc1568ff6ac",
+  "docs/task-history/PROGRAM/PROGRAM.67.md": "0005db30cb0f8b0c270151fdcb07a242ab825b9ba823522296a9d9dd27317664",
+  "docs/task-history/PROGRAM/PROGRAM.36.md": "d53beefbf5f999328b0a89d7fc67db472c00178252c71d026e79e0d6933bd10d",
+  "docs/task-history/PROGRAM/PROGRAM.26.md": "6ecc14d7931f4a8e850bbc8b85ffe4ac01d86212b90be14d52fa39b258614fdd",
+  "docs/task-history/PROGRAM/PROGRAM.77.md": "3e20f9e951553d031f72cc949ced90813894b73ecb5bd931c2c6b4dba2242f11",
+  "docs/task-history/PROGRAM/PROGRAM.84.md": "96ddaa4fd64e80620883af7889c50e1a2fbed9b81b3c85616bb87afc29095cee",
+  "docs/task-history/PROGRAM/PROGRAM.43.md": "94ceac9c40774195d6d0cf23e476f6d682b4d15d4cce17d1925445a7fe3a1f2a",
+  "docs/task-history/PROGRAM/PROGRAM.12.md": "d03814e36e1ee672b29fa34c270611aa375cf93b6a54dfc2a18f2d4ba4ea692e",
+  "docs/task-history/PROGRAM/PROGRAM.90.md": "53a67a2bcf1de086bacaf058ab1d5d7912d88ae0cd8ccc2032b227f164adb16c",
+  "docs/task-history/PROGRAM/PROGRAM.32.md": "02e406bd45e9612c83c7d44f1df38dd99b8adaa89a33bb2e84a9e9c3a10e0211",
+  "docs/task-history/PROGRAM/PROGRAM.63.md": "39b454e3f60777f335db2d2118730d97673801a3d7bd2da58a8147488d209edb",
+  "docs/task-history/PROGRAM/PROGRAM.57.md": "5555a5401959354e5782e506af6f896ad4ac66fcef646b3a7702d9977bfffa7e",
+  "docs/task-history/PROGRAM/PROGRAM.16.md": "ed661ea8b44b38b047fee38ff880fa6d6fd190bb571e3a4fe042b5e766f95fe7",
+  "docs/task-history/PROGRAM/PROGRAM.47.md": "61f8a1a003d1e7c40f3a2894ac408f38a5b32669e9c4ddb1bd488c4584902c10",
+  "docs/task-history/PROGRAM/PROGRAM.9.md": "4b5d87c5ec01bf66c9ec00af430ea357b2fae8ca88bfe044f018a143649e9839",
+  "docs/task-history/PROGRAM/PROGRAM.22.md": "266afcead639a3e0fd6f341f0b9a36bcf10f57124694ad86938da83e4fe4c11e",
+  "docs/task-history/PROGRAM/PROGRAM.80.md": "2c1d2497e3c6278a0acc805b77bb3dd0ff38b12fc69f48c0fa64343c46e40d52",
+  "docs/task-history/PROGRAM/PROGRAM.91.md": "de11002206b9f1bdc05caa04955d6e6d141068af059df6d7514e949371e86373",
+  "docs/task-history/PROGRAM/PROGRAM.33.md": "e9df92ef94741c93d46b86f32d4121841c80dcf75482ec39ecc465c2602f4aaf",
+  "docs/task-history/PROGRAM/PROGRAM.62.md": "4fec27346a7877f246b352adff4314bf9097b50b6e2532e1049626e667533250",
+  "docs/task-history/PROGRAM/PROGRAM.56.md": "5b648c1d7276aad8e780dc8bb0058abc022312ff4ed0b5b153f6c16303031dee",
+  "docs/task-history/PROGRAM/PROGRAM.17.md": "5e54b16e78a735b71346324c5b90e53b79dd2638f6579947e855689e4dfc94db",
+  "docs/task-history/PROGRAM/PROGRAM.46.md": "8abea442f822809deeae8b5b6d0845837cbc85031c3f8c06402894f3b62e6236",
+  "docs/task-history/PROGRAM/PROGRAM.23.md": "8d536ec738b8ab492da300261ad04c145f1fe0fc5fcf84b2a72b3b7152fa5c7d",
+  "docs/task-history/PROGRAM/PROGRAM.81.md": "581409cbf2573c2d50935b478de175d725bf75a5f532b25d7d7e2d0d5ca52416",
+  "docs/task-history/PROGRAM/PROGRAM.52.md": "153a977e225db550982f007473d6437473edf4d96092b5c455064dd46933dd8d",
+  "docs/task-history/PROGRAM/PROGRAM.66.md": "9d96f296f3e3387b5ccb6efc73724dc41518e29edb96c025ded781c48982686b",
+  "docs/task-history/PROGRAM/PROGRAM.37.md": "f3a78bc0d84f6b48a70be1a46ccb11cb7465788b44febd33d0279b8e7b7d9b82",
+  "docs/task-history/PROGRAM/PROGRAM.27.md": "b6005432ae053e6f3ea7926aab45915a0290dae8aeb86f3be161a067ed782c7e",
+  "docs/task-history/PROGRAM/PROGRAM.76.md": "5df047cd3f7caf1a188cf11db58a55feab0c15504b3eec9df7e0aca3a734c5f4",
+  "docs/task-history/PROGRAM/PROGRAM.85.md": "1b8e944a15d16ee075ed0c8ec8c12c4aefa376af3c10b6aef57a558cca1e49d3",
+  "docs/task-history/PROGRAM/PROGRAM.42.md": "07c26d2115d37650f32968b066619d7cc12fa7fb9da4671e6fa1c777b0205221",
+  "docs/task-history/PROGRAM/PROGRAM.13.md": "d8702d3a7cdcf7b28eee70f1bd90d50c42cf78460827f6a2c6abb262086d3b8e",
+  "docs/task-history/PROGRAM/PROGRAM.61.md": "8f002d0e4db6fb94df07682b5f551c33a2286f94925ac9467d7092f02ae15109",
+  "docs/task-history/PROGRAM/PROGRAM.30.md": "b7a549042664366d2158a716d8516664f84a5563a7b47ae9985425999d05e312",
+  "docs/task-history/PROGRAM/PROGRAM.92.md": "346ac20a2de28f89503c25cb231ec4b788a25308c0720238d692629bac271118",
+  "docs/task-history/PROGRAM/PROGRAM.55.md": "7d11ceb6781300fcd36e709797328b76d7c35fd71e43e6018af8b45e9c3a05d9",
+  "docs/task-history/PROGRAM/PROGRAM.45.md": "2fb7381014308512fb431a0eeead331fb7fb09713b06800dffde83ccab12b7cf",
+  "docs/task-history/PROGRAM/PROGRAM.82.md": "3a8e59b75a1cd51242b0b06fa2ee8a0fd19854fc678168e4cac9ffee66c23d8e",
+  "docs/task-history/PROGRAM/PROGRAM.20.md": "f132de104d975077c0fe16078314c1bb3c433f10d6ca507a2ae58dc9fea50619",
+  "docs/task-history/PROGRAM/PROGRAM.51.md": "10daffaf2235e874900ce934862c77d1a5630609f75d5ee3452f5ac3e9f394ec",
+  "docs/task-history/PROGRAM/PROGRAM.65.md": "4386badd6deb93398ef5174363c808735720164a58fcae556b5ae7363fb72569",
+  "docs/task-history/PROGRAM/PROGRAM.86.md": "0a68b722c15637cdab36a24289c16a72c50552cca3cdf55c70734253492b43b1",
+  "docs/task-history/PROGRAM/PROGRAM.75.md": "0852952756e540048856a29ee82a40d9e2afd7e44803fd30723dba8ef4e2624d",
+  "docs/task-history/PROGRAM/PROGRAM.24.md": "59713a35643461fc79901c7aa694b857abd4e24cfa4a4a5d29f4742c9ea9805c",
+  "docs/task-history/PROGRAM/PROGRAM.10.md": "adc992a31bbfb9e7849228acd0ee19c2de6f501e2fdd044ef7ea370cf959c373",
+  "docs/task-history/PROGRAM/PROGRAM.41.md": "ddbcb949faf86bec30e0da75fc1d473e352d0e87087008e2cf7227d021ca30b2",
+  "docs/task-history/PROGRAM/PROGRAM.50.md": "e13246cced9fb7fa022472bb5090e4263cf1678cbc496e16d8c4f51d1e0bb4a8",
+  "docs/task-history/PROGRAM/PROGRAM.35.md": "00df0e47c37aa56d86a5d8b8ce4b2f23ed56117ef3e3d94f374d5f32d42b4c69",
+  "docs/task-history/PROGRAM/PROGRAM.64.md": "897862e9b627e8225b35fa2afa4c9bc447f659a7fc5ef1a26a921dea7a762144",
+  "docs/task-history/PROGRAM/PROGRAM.87.md": "aa48a35695356810dc97b600559684727b3d64aa6cfd65473a937fb7d1c3b4d1",
+  "docs/task-history/PROGRAM/PROGRAM.74.md": "98d1108613b7f57b143b50a2a482cd2eab889ef8b6986712bada76c987fb17af",
+  "docs/task-history/PROGRAM/PROGRAM.25.md": "28b0af0eda3d70e5ef6c5067796f5664199ed95157ce3186775fdb1cf6fd70bb",
+  "docs/task-history/PROGRAM/PROGRAM.11.md": "ef4203ed02e2009365dffccbd8eb5e0c6b233f670bf3c6c8374af032c127c685",
+  "docs/task-history/PROGRAM/PROGRAM.40.md": "ebac99d507ea67388d01e2f69214c7e03b35c1f3ae117710e0afe1740a2cf3e0",
+  "docs/task-history/PROGRAM/PROGRAM.60.md": "f323baeed87852506f5311cb1f008661f0d5b6e8b9f04aed70fab5574efdbdc3",
+  "docs/task-history/PROGRAM/PROGRAM.31.md": "a5cdcc1fb3dea756ff54bc369378958d6800244578264e1a0412f908fa2dc9f9",
+  "docs/task-history/PROGRAM/PROGRAM.93.md": "5c253c03713b0b40822f056e064dba4bfbda83a0fd71b31eef7626958509fbed",
+  "docs/task-history/PROGRAM/PROGRAM.54.md": "da1180f047e7da8397f84713a4fee5f7e5ddf858d6cb972daffb121c1da474cf",
+  "docs/task-history/PROGRAM/PROGRAM.44.md": "532f60c28d1675d13b07a1b148c14f536dc71e098462b1a324f479060bc04471",
+  "docs/task-history/PROGRAM/PROGRAM.15.md": "ff66972611f2996b5f399880c35cb2bd44eb5f3c118b9c0a4099936fb542d0d7",
+  "docs/task-history/PROGRAM/PROGRAM.83.md": "02b06ab9329013c10ba384e411de6f0ca371a3e4a73a0f0bb0b1012a0fbd7624",
+  "docs/task-history/PROGRAM/PROGRAM.21.md": "bc464cbfe1bf4c7dcd608b10081554e64ac5ba65cec8006c68ad61e42b3176a4",
+  "docs/task-history/PROGRAM/PROGRAM.70.md": "1bfe9de30de2792d305111b9f70172c48b810d192c5b06337d997fbecd3eaa50",
+  "docs/task-history/PROGRAM/PROGRAM.1.md": "93001611f38f8e3b363d827e31bc729241968020fdfcc82795614866b7d0bf82",
+  "docs/task-history/PROGRAM/PROGRAM.88.md": "e603ceb6cd9d90a14755c127a571fd1b3761c82ea6db285ddbc66b31a6cb1a49",
+  "docs/task-history/PROGRAM/PROGRAM.5.md": "f52e97e65d91f2666b458504417be4b0719e52340a5d2c9ce87b723a6597e9f1",
+  "docs/task-history/PROGRAM/PROGRAM.4.md": "fe2175796bfd4dd82088b24ecf83bf5711f1a5f230985899a85ac297ddbcedf6",
+  "docs/task-history/PROGRAM/PROGRAM.89.md": "49f87c303443e8cd7197eb8dc5b22b56bf23706af34ea49ca5b03a0d0bd371cc",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.4.md": "49e5df1a4148de704e30fad0fc7e4fa06947ce8e7efb953b0097f651732c7dbb",
+  "docs/task-history/M3/M3.6.9.6.3.1.md": "672a02a1a91e7961c23bec475d5251a0306006c7fc867c630110f83134ea7071",
+  "docs/task-history/M3/M3.6.3.7.md": "c091f95bde7b7729d76f929ce1f717c61c6dceaf36bf6ef60b6641b03fcbcab5",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.1.md": "ab7f21b000545e569205a23118ac3d287dfcd45aad2e2901f7dafebc1d4a87f9",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.4.2.1.md": "c96bbf9180b2eda8080ee0d181441620ad921eba3f7749097f650935cc29d36c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.4.md": "b437b80916987c9b4c63d4a0346abc4612f0b76515b4c58a5ce45b3b0fcfbfd9",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.2.1.md": "d471efc54eaaf903037f37281ca7066c3bfb89b6d700593061c75a3f427b574f",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.6.md": "d7c922df908c82b213fbddda2af3de9f3f7ed8f22b066a277932303c4c7eae0a",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.5.md": "54c48af915daed4bc52371c37cd65dccbbf973d2dc78800054d06ab48880c879",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.1.md": "939d4db0cc79634f2d312d0edecabb19210ba923e75fd3a94749e078b18c1b29",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.3.1.md": "9140137068faaf14c8901f29b0810fd5a647adfced42676c9e9797009eef6e62",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.md": "c716d980cddac47179a7e29a4d88539125cacc640a63e4ff9c71215fa7470e34",
+  "docs/task-history/M3/M3.6.3.3.md": "67a371a2c06c6fbedfe689e111884dfc9b84d1a90cbd17b75a84279df2461c50",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.1.md": "c77ebcda6c919535254a64898c66c428aae69b55dc8e2a3f6fb37bbc9be31221",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.1.md": "8be88e0f0193d994ad303900fe734d3b212a655d2fa5518dff1ea743ce6a3008",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.2.md": "ca973946356128d61b082029b6753b03271c48a8eba136f39806cf6d08c79053",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.6.1.md": "f64609bf452705b36fadb7d8e08ca3659aa82d99429641cee31b0b904358e3c3",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.1.md": "0eb717efdf38eb2491f166932d118400494d3b3dc86fa21130c311168f4c7e26",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.5.md": "87084d75555192bd3f90f2be0110a1a1efca2caf1cc41a0ed5911b1999a14bbc",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.2.md": "398fac58e318519482f94ea9b06aab5704386aebd2d34640780b74f9781809cb",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.0.md": "ae76e2dce61c5d19ec9dfc39b00b6ae9d9f5e6de02a5d27b2ebcd4d478a97330",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.1.md": "1124815fecd7c413e150ddb2bbe8926bb26bbf456c443bc8e78d70a78da3bcef",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.1.md": "5d6c96dc4b3d41104e88c807d1bfe041ea2c032935ce38b40b543a2dc6eb9c14",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.1.md": "1bbc1251c57a70db6b178fe6ee8e258c77395fbdf4a949f900db8804363a9738",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.10.3.3.1.md": "69e855a5bbb328a89b08ec863a2c071afeb190f01157b0d0370eed580b8daf8c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.1.md": "f758686185746a771f58fbee7c6a86d59211d06e98ef326a503d919f5056c7f8",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.3.md": "698f66aa6cbffa7c0236d8922163edd47c1095119674bb0175f41e4cbeb9b255",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.9.1.md": "db0b53f63730e6713a539856bcab73a914cff9d0fce57ff54b315e074ce2fd60",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.2.1.md": "db7704c7165414ff3376815c8794611f6c14f4f31375b700c7e129d1ce2fddb3",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.4.md": "de9147d9aa1e6c9a6165a63738b948cca05887fba7b33b658ab08c5b1198b3bf",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.5.md": "6152d3e7b9f484e53d2ddba2a879573c0e9ef495610b1109ed901e304aae3a00",
+  "docs/task-history/M3/M3.6.9.6.3.2.1.2.md": "4ae7ea23d723038fa0cc466b70eb33cd7b756f29dde16a4b256b6279621a29c4",
+  "docs/task-history/M3/M3.6.3.6.md": "e42e598823d6e4d044ba5a33a76e2b27727c143a5e40ce88da14c07f967ab1ce",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.md": "7fed8ae66164b9202a4109b70fea6a72ffb595834a3b711faa896796a068fdb1",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.5.md": "64e71516e75f3661a1c22ea13f05adfa1467cf76662536af619bde8e43977ab8",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.2.0.md": "01eba06d58972d7d4052fea3e41cd2e290f3df1d6c7bae63a69d3299d68b6d9f",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.7.md": "724eae5e030dcdf310581b74be43dff28b002039ed19d783a3004594f2640fb5",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.1.md": "cfa456f7b255b0be059597c6d2317f7f576cae8ac384268bf5d3161ff418ce84",
+  "docs/task-history/M3/M3.6.9.6.2.md": "92ef4602123c6e469c828b46417a60c3014f328ff75043c12594640b85a02640",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.9.5.md": "735f5095619988af0acde04849f7bf61ee9eb4e3ad67d2454ef8dd5a4926d197",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.2.md": "757945cb7b16d09b0c4b277df51237356e15c52f61b3d2c06c00d9a0ee679882",
+  "docs/task-history/M3/M3.6.9.2.1.md": "76ca26b922672dc4ce9b7ec68bff4eb9e25823f60ae989454cb32b717a95ba01",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.md": "e7e9278022d4ae4fbcceb35f78e5ae10f489e96c43ee8156c34893e9bd5452b9",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.1.md": "31058c46b1f2908577467b00252c509b654c03be84fb6f0541e77d3668b08e55",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.2.md": "274b43ffe3f7e5b8c12eea2564d9a0e5246c45a2798b6c9a6c9f1ddc9cb2c17b",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.10.3.md": "2ce56ff2ec26587a8a45e1aab02de42f60e1d1958f001391283b5bce76930688",
+  "docs/task-history/M3/M3.6.9.3.md": "ed97dd6c84ad1e7b0b9adee27acc268c21cefa22f7d0d12542647e01fb49f14d",
+  "docs/task-history/M3/M3.6.9.2.2.1.md": "b8ed162af64ce057b8e874f08d25aee145ec739e34e1388b9c04a4e2a10941c0",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.12.md": "f6d57a2e1ab21876ddee01c19b3d3921d9ba89b54e3fe38a1436b66ae3bdc8f4",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.1.md": "abe1d1a0820e9c4efa66b4acd47b3bbce5b6b287908fcf6eaf24511cdc1c300f",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.0.0.md": "bbf402ae9b567882288d8bd30a455bde419eff5905104473523bbbb597d29184",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.4.md": "7f939d27ca3251c77f10efa9fb74239515404d701e68282a6c09e4dce7369eb7",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.md": "060fecdfad41eb032edf5fbf649734b3df85dfd7ec7733bf2c76b9981cf85cc4",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.10.3.2.md": "832e787c2d640bb26af1523502769d5d0aaa56399c22b264de61c3d4ed30c408",
+  "docs/task-history/M3/M3.6.4.md": "d57d7e61e85670ccac4489976e3ef063d442a770b39f2b172218fbdcb0434e2e",
+  "docs/task-history/M3/M3.6.9.2.md": "59b01e4c8295943b764cb31b04e4d100bdbdd189189ac855e6eb315a0e60343c",
+  "docs/task-history/M3/M3.6.6.1.md": "aba616b0e4c21535709504ee6a9a9bad88b32f10eb2e20ff137ae0acdf185f2c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.md": "7a1f51c909c66caf6856dd26f9e9e9a5826bbfb60ac83b4a1e30a6f281fd3c0a",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.4.1.md": "d4131a7dca5fa1754cf3bd0ed335cfe2038ce4c680d0625af166ceea55d0d3ee",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.13.md": "a5b1ddcb9be453214ed2565a91e089818b4fe4979d20c65a5176139157308bf8",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.0.md": "4261345115218fd903980ffc3e6fdb75ef15af9b9c9ce72f3dc3a9bed2c1f0a9",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.0.1.md": "1288602e4ef5fff5754428280d4e54ec4a7d46e9dc51d780c8a6050d1dee8a91",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.4.0.md": "758b5a71365a36a04a820a721cbce55dd21a2d4a366f8d5acd1cace48b651a4c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.1.md": "828c6fd6ab3d3eb32bb15bde420deca516931e818d507e2cafe993cea6798b85",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.7.md": "5e2e1dbb119ebc9635b8480c072a1ee3681e2ab0cc46cabe467e51be8f3ae21f",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.13.1.md": "e169b14c79e7dc5c4ed0fc06eb496427df70cae0fbdbef9f516a868d62f98402",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.10.md": "ffa73cada04797ff20c0b57ced04cd4c5153d0c70a14d2ab1a9136d94de59ffe",
+  "docs/task-history/M3/M3.1.md": "4984a8cbde1ec3c8cb095258c808fffafd2cfbb7a907f408888a4fe2da8a4e4e",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.3.md": "a8deff571df9efd6dbb02c1910d1e8720b5026f07e672adf58ca809d2619a889",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.1.md": "2e6a679b7d5554a91c8d6c1049ccdafbbe55a078b6f1135da1ea6b266f374116",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.10.2.md": "51115b114483f560a847186ef494b578760118cf7ad4d2cd5342d35ff24e524c",
+  "docs/task-history/M3/M3.6.1.md": "9fc01c3eaeac018f827afc86def76c1e67a041d5ab8852b1ecf03ddf4a44d873",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.8.md": "e9ced08902198b2c26426ec738d2755cbebbfd390204b463e404777bd0941888",
+  "docs/task-history/M3/M3.6.9.1.md": "3c7ead6b2aacc18d7703683b73d248697f58fc13f92e4931e9678d790f8afc5a",
+  "docs/task-history/M3/M3.6.6.2.md": "7382311eb6459530179f1b99a236c75238330746a0fdb1121af2a1a353715544",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.10.md": "ff3aa38640035efd71f108fa71215bfa3d46ca1beefd99618e09bdf6f716b3d0",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.8.md": "687bb71767f95cc0f205207aba4ce5730ae36bc6266961031ecf56f3c29e6b50",
+  "docs/task-history/M3/M3.6.9.2.2.2.1.md": "d98688325dcae6db38c6ef6c35564a67ba82f38f427173385819bac0b181cb1b",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.2.md": "562241fca274828d2056bda61e3a010b7a28eb8ecfce7b4131902651ac0b68a0",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.4.md": "c8a6619806f18e7d4694b982316ce2d40293ec608b2138633fa66952230fc5a4",
+  "docs/task-history/M3/M3.6.6.md": "794af4f8bd43635318eff84a7f42e0774ca101302bbd8853a668a9ea66c94e96",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.13.md": "9ef937410f8bcf80f6cf2bceb946bdc84a183d2134a41a292f2dc85fe604bcb3",
+  "docs/task-history/M3/M3.6.9.5.md": "597fa2bee4b5a97cd7e4082c1a78dcf19a2a95f0b2690ff55f37f67f679b84ca",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.14.md": "fc75284a254291cd7ca069b5e3a57b82eb4cd970489029ae5c4cd0d6ec5bca4c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.10.1.md": "f6f8c7818f8a880b568a1c5c17578a529324ca357d3ec80b77cf99a5c47ebcb6",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.2.md": "267c8a8f48edde99886477d9c8902034df762f4dedcbebf7ea0cd3621d39f620",
+  "docs/task-history/M3/M3.6.2.md": "d990cb7c824857437716fce88133cffce4c4819e3a8b9ff687e46d48358463d8",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.1.md": "4c4925c527a8a2818a0bb50b6512150817ecefba3f498eeb4628e7a26a414309",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.12.md": "0e0422d6f74efc6f57b0ec552986db7a194c485e621ed9c3cc9e067c8d015e43",
+  "docs/task-history/M3/M3.6.9.4.md": "434ecacc65297372715db91de78a8b09c8f4f4b99d5e087add8c40f13ea0b92b",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.1.md": "f2504cd685eb365473ef6fb54561cb284540bea7332e18eb0e133bedd197888a",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.1.md": "b9d9883537a9153ba31e28bcde6353b8319a50de38ca3d283135560d3d4597bb",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.9.md": "5cec30e4192e010dff0685e8efd0399051c68896d085fed916f47283c3c43173",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.6.1.md": "f804daa597ffa5501040f26a58f8dee8c78494250dfde6f4872585a95ed52f69",
+  "docs/task-history/M3/M3.6.6.3.md": "5568a4cbe4942525a186c37a33241bdc06a26372f7a9a300d1e4da0073ea6481",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.11.md": "2843204f95a22d22e511ca6f609311887a5a8a82ab67cc5a9d0339ca83196e71",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.9.md": "acdbd9e8cb314276b208cea1ab19abe500889c3874052976798aab446ae72c6f",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.8.md": "1ef93c76d58116c55b552b8398015664c5dae35e5d6879a2eb644d3ba84965f4",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.10.3.1.md": "ebd327d7c8dd0b3d505211438683cb01c8441c69566b5a739dc0f10f8e15b2b7",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.5.md": "ec09e50bf8ba1354c945b5e0944d43d0ca3ed41afaf2640c5ae7b6031db29c9e",
+  "docs/task-history/M3/M3.6.7.md": "bb8c0a5ebe205b51683003cd08e73b048b957c2bd50912faf5674edac168cebc",
+  "docs/task-history/M3/M3.6.3.1.md": "3ab6ccd8551aa3ff205bc410f6bb31f9ca4210df4cca86974040125b95026ad1",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.1.md": "6d3ec24a1cd27d9f6996b25f5845372a2ace2924fd772f82e3a7f4a5b81c4e94",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.2.md": "11877f9e9e941f56a80fe9667c844f6a5986a55070f712fd6cdae9c401c5bcd1",
+  "docs/task-history/M3/M3.6.9.6.3.2.1.md": "d42d62b8304c61ec609b7679d3a383d79eb175485b5a9b95ed74e9a60ad16614",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.3.md": "e4b4840e5173145145771136a1750675388dd0457daaa4d8d04cb2b552e93ffc",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.2.md": "29864cce91a9d5e649861f8670703d3e01c107f9c17b3cae0c799eb44e67877d",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.2.md": "72819483b96dddd55a03dfb97288200274b2ed871895dd33f61033d111e18502",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.1.md": "d64e4c1ae70f894e10a4be187de6b2470b0608554d02fa161e23c504502ab7af",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.9.2.md": "d9022fdec2d854fa63f0350725b6f39f90b8ca799f77d4c4fef96603cd98aaf1",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.3.md": "659996a65de82625da417cabfcbe8808aff656718206e105eccd625767295447",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.6.md": "5b23939f4dd1a5f39d5e0dffd028e59abafc534dc73deb73ca74a70ffa8d648c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.1.md": "e9f201e460d1c381ce69ed488861f7e45757f20fe6ab1d28ef4f601fb7057154",
+  "docs/task-history/M3/M3.6.3.5.md": "1f29930ea1737acced115bada0e37d4977f8c3764ad202b870b018d2c17ac843",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.4.1.md": "037bfd79f867205fd1365cf8bc91da3ce74f9a79a999ef648d5d1d0d5143fc12",
+  "docs/task-history/M3/M3.6.9.6.3.2.1.1.md": "d928e89339a23ef6bcdcb9afb7d28a633ed60ef0e796fdfbc256a345f2297de8",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.6.md": "65e1ef96b3ee457e6267a6a56f708ba6d75bf2e799a7b7d5887334f2fd40868c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.1.md": "828bced4dbde1d8787003a7368877580f59e6a59b46238f8ffb8cd52a290fab5",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.4.md": "b6230dd5a582bd700fa6ebced938e9b16fe754aab57c9cf82244036c88b90177",
+  "docs/task-history/M3/M3.6.8.md": "fd4371a4f8511643c2c3a921e0fd820454225fb07d32fbb0fded61b14390d494",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.3.md": "3622b151ceb0319bd02712b0838efda0b9e91505f9e460ea983986642721a66e",
+  "docs/task-history/M3/M3.6.9.6.1.md": "2ef7e9cd5dd3424771f9bddce19a9b18563a82382b4c266414511bd2c404db63",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.7.md": "ad266e6d9f73a562c27317cfc767da612db0a002821708b36362e185f34eff24",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.7.md": "379204399e618284c6e6467bfb1c1a2a82425104b739049c9b4d5c4cdbb17b7c",
+  "docs/task-history/M3/M3.6.3.4.md": "83102ff2d2f2305fb1bb9d2800d95418ba8239c018cc44eecc2c020bdc7482bb",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.2.md": "2a6b256e402fd54a213e7365db0648c9bc6d7a8e9dde382f94fe575072c9e4db",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.7.md": "cea14d95b3b07c31c6a413a8532718122bcd993008c2d13e4fe33ad580256d2a",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.5.md": "0d667920092fcde4fc57bf29c1afd957eaad008f493829a10c4a74a096709b32",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.2.2.md": "d50d089613c2ef4091e3f4c767584d1179c69e691a992e20b7a12800893d5b9d",
+  "docs/task-history/M3/M3.6.6.2.1.md": "371a9e400c662daf6d04bd58784e657fc5d2a10d6bd54c9b0f5ab5169c858295",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.2.md": "76c2b661340ad23c230a1f9118127275dee7e33068ff934d4b2eb3a66e73f263",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.3.2.md": "503c1ce75740b4381e8ca9c1f1694403f41504b7671eefec372d716a8b09b3f7",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.6.md": "91ee0ca2d4d1ed3b0fac1531d867665df3d99787b5f8677e8bbaff8c9ac93bae",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.4.4.md": "2342b78d24530cad5f208bbecfa7bd6d80ad5b07ed02ad9e1c5786bf64d1a379",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.3.md": "c067088876ec657bdd23160fe1f731cc568df679d70773739909d4521afadc71",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.2.md": "65d8d155006274d9e0102e22438004e7e019cd99b4f1264155da470795477de5",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.2.md": "0c583845e90e4a78aee39f41d94c88ed2510d1f20fe7d8c9ac20c2b24fa1fe9c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.3.md": "abd12835236c20ab07b8127dfd847465081fb1f2b7bdc4a10f595d574bf3eb58",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.3.md": "b947f6ade93c0b4a91eb918abe31a7b58788c520305630b8a48671f1765ddfad",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.1.md": "73c24e67833a2625ecb1f6e35917b80c40eb85a899de6a14eb9d0160910503f9",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.6.md": "fdb6ccbbbc33119c6227208a9713c990d1726b99459e288a10d338866dad1482",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.2.md": "8d8ed0183076d619d87bdee40c1e09a8dd61ec475a163d86e8de229e8779a3dc",
+  "docs/task-history/API/API.2.md": "dbc25c7faf9fd365ba317b378ee3e97a3daa1efde2b54b9216a20efa0fe242b4",
+  "docs/task-history/API/API.6.md": "4ac41ac66bdb9f6546c7c63b2ab96e8deddad8838b66f0dbeb1ec3683ef70ff9",
+  "docs/task-history/API/API.7.md": "3b987992fa09fc7769b542c94bcf2a20f39b54b270c2e8908426485f4d8465b2",
+  "docs/task-history/API/API.3.md": "7e05e87946400e49ebedd8e4aeac1b9db98b95a41a46b26a762cb397fffb44e5",
+  "docs/task-history/API/API.4.md": "a2a708efecbc1081506357a47630569f1beb6e9ee07d6f9d61dc8e6c8b5397db",
+  "docs/task-history/API/API.1.md": "3bb282091697399282dfbff8613471a6824405e717dd899302ca5c4df9acbb55",
+  "docs/task-history/API/API.5.md": "ae826aac09dc32f8e04ca24f3c14fa675302e3be9824c5646ab02118414c14c4"
+}
+```
+
+</details>
+
+The executable source below is sufficient to reconstruct the probe from the retained input commit `0663022a9a9e2b38d5d3b6fbae6bfbdad23a7ac0`. After a later source change, materialize only `xtask/src/trust.rs` and `xtask/src/catalog_build.rs` from that commit into a plain repository-local directory, then pass that directory to `prepare-probe.py`. Do not create another Git repository. The run adapter uses only repository-local outputs and a write guard; toolchain/reference inputs are necessary read-only host dependencies. Complete current-input native mutation replay is deliberately reserved for the final checkpoint.
+
+<details>
+<summary>Exact loop-before.rs.txt</summary>
+
+~~~rust
+        let mut env_deps = Vec::new();
+        for l in text.lines() {
+            if let Some(dep) = l.strip_prefix("# env-dep:") {
+                // Only cargo's own variables, which the commit's manifests decide: the catalog's list (R8 remark 22).
+                let var = dep.split('=').next().unwrap_or_default();
+                if !(var.starts_with("CARGO_PKG_") || ENV_ALLOWED.contains(&var)) {
+                    refused.push(format!(
+                        "trust-undeclared-input: `{crate_name}` in `{}` depends on the environment variable `{var}`, \
+                         which the commit does not hold",
+                        who
+                    ));
+                }
+                env_deps.push(normalise_dependency_environment(
+                    dep,
+                    &scratch,
+                    &canonical_scratch,
+                ));
+                continue;
+            }
+        }
+~~~
+
+</details>
+
+<details>
+<summary>Exact loop-comment.rs.txt</summary>
+
+~~~rust
+        let mut env_deps = Vec::new();
+        for l in text.lines() {
+            if let Some(dep) = l.strip_prefix("# env-dep:") {
+                // Only cargo's own variables, which the commit's manifests decide: the catalog's list (R8 remark 22).
+                let var = dep.split('=').next().unwrap_or_default();
+                if !(var.starts_with("CARGO_PKG_") || ENV_ALLOWED.contains(&var)) {
+                    refused.push(format!(
+                        "trust-undeclared-input: `{crate_name}` in `{}` depends on the environment variable `{var}`, \
+                         which the commit does not hold",
+                        who
+                    ));
+                }
+                env_deps.push(normalise_dependency_environment(
+                    dep,
+                    &scratch,
+                    &canonical_scratch,
+                ));
+                // continue;
+            }
+        }
+~~~
+
+</details>
+
+<details>
+<summary>Exact loop-clean.rs.txt</summary>
+
+~~~rust
+        let mut env_deps = Vec::new();
+        for l in text.lines() {
+            if let Some(dep) = l.strip_prefix("# env-dep:") {
+                // Only cargo's own variables, which the commit's manifests decide: the catalog's list (R8 remark 22).
+                let var = dep.split('=').next().unwrap_or_default();
+                if !(var.starts_with("CARGO_PKG_") || ENV_ALLOWED.contains(&var)) {
+                    refused.push(format!(
+                        "trust-undeclared-input: `{crate_name}` in `{}` depends on the environment variable `{var}`, \
+                         which the commit does not hold",
+                        who
+                    ));
+                }
+                env_deps.push(normalise_dependency_environment(
+                    dep,
+                    &scratch,
+                    &canonical_scratch,
+                ));
+            }
+        }
+~~~
+
+</details>
+
+<details>
+<summary>Exact probe.rs</summary>
+
+~~~rust
+pub(crate) const ENV_ALLOWED: [&str; 3] = [
+    "CARGO_CRATE_NAME",
+    "CARGO_MANIFEST_DIR",
+    "CARGO_MANIFEST_PATH",
+];
+fn normalise_dependency_environment(dep: &str, scratch: &str, canonical_scratch: &str) -> String {
+    let encode = |path: &str| {
+        path.replace('\\', "\\\\")
+            .replace('\n', "\\n")
+            .replace('\r', "\\r")
+    };
+    dep.replace(&encode(scratch), "")
+        .replace(&encode(canonical_scratch), "")
+}
+
+struct TraceText<'a> { input: &'a str, events: std::rc::Rc<std::cell::RefCell<Vec<&'static str>>> }
+struct TraceLines<'a> { lines: std::str::Lines<'a>, events: std::rc::Rc<std::cell::RefCell<Vec<&'static str>>> }
+struct TraceLine<'a> { text: &'a str, events: std::rc::Rc<std::cell::RefCell<Vec<&'static str>>> }
+impl TraceText<'_> {
+    fn lines(&self) -> TraceLines<'_> {
+        self.events.borrow_mut().push("lines");
+        TraceLines { lines:self.input.lines(), events:self.events.clone() }
+    }
+}
+impl<'a> Iterator for TraceLines<'a> {
+    type Item=TraceLine<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.events.borrow_mut().push("next");
+        self.lines.next().map(|text| TraceLine { text, events:self.events.clone() })
+    }
+}
+impl std::ops::Deref for TraceLine<'_> { type Target=str; fn deref(&self) -> &str { self.text } }
+impl Drop for TraceLine<'_> { fn drop(&mut self) { self.events.borrow_mut().push("drop-line"); } }
+impl Drop for TraceLines<'_> { fn drop(&mut self) { self.events.borrow_mut().push("drop-iterator"); } }
+#[inline(never)]
+fn collect_before(input: &str, scratch: &str, canonical_scratch: &str, who: &str, crate_name: &str, refused: &mut Vec<String>) -> Vec<String> {
+    let text=input;
+        let mut env_deps = Vec::new();
+        for l in text.lines() {
+            if let Some(dep) = l.strip_prefix("# env-dep:") {
+                // Only cargo's own variables, which the commit's manifests decide: the catalog's list (R8 remark 22).
+                let var = dep.split('=').next().unwrap_or_default();
+                if !(var.starts_with("CARGO_PKG_") || ENV_ALLOWED.contains(&var)) {
+                    refused.push(format!(
+                        "trust-undeclared-input: `{crate_name}` in `{}` depends on the environment variable `{var}`, \
+                         which the commit does not hold",
+                        who
+                    ));
+                }
+                env_deps.push(normalise_dependency_environment(
+                    dep,
+                    &scratch,
+                    &canonical_scratch,
+                ));
+                continue;
+            }
+        }
+    env_deps
+}
+#[inline(never)]
+fn collect_comment(input: &str, scratch: &str, canonical_scratch: &str, who: &str, crate_name: &str, refused: &mut Vec<String>) -> Vec<String> {
+    let text=input;
+        let mut env_deps = Vec::new();
+        for l in text.lines() {
+            if let Some(dep) = l.strip_prefix("# env-dep:") {
+                // Only cargo's own variables, which the commit's manifests decide: the catalog's list (R8 remark 22).
+                let var = dep.split('=').next().unwrap_or_default();
+                if !(var.starts_with("CARGO_PKG_") || ENV_ALLOWED.contains(&var)) {
+                    refused.push(format!(
+                        "trust-undeclared-input: `{crate_name}` in `{}` depends on the environment variable `{var}`, \
+                         which the commit does not hold",
+                        who
+                    ));
+                }
+                env_deps.push(normalise_dependency_environment(
+                    dep,
+                    &scratch,
+                    &canonical_scratch,
+                ));
+                // continue;
+            }
+        }
+    env_deps
+}
+#[inline(never)]
+fn collect_clean(input: &str, scratch: &str, canonical_scratch: &str, who: &str, crate_name: &str, refused: &mut Vec<String>) -> Vec<String> {
+    let text=input;
+        let mut env_deps = Vec::new();
+        for l in text.lines() {
+            if let Some(dep) = l.strip_prefix("# env-dep:") {
+                // Only cargo's own variables, which the commit's manifests decide: the catalog's list (R8 remark 22).
+                let var = dep.split('=').next().unwrap_or_default();
+                if !(var.starts_with("CARGO_PKG_") || ENV_ALLOWED.contains(&var)) {
+                    refused.push(format!(
+                        "trust-undeclared-input: `{crate_name}` in `{}` depends on the environment variable `{var}`, \
+                         which the commit does not hold",
+                        who
+                    ));
+                }
+                env_deps.push(normalise_dependency_environment(
+                    dep,
+                    &scratch,
+                    &canonical_scratch,
+                ));
+            }
+        }
+    env_deps
+}
+#[inline(never)]
+fn drop_before(input: &str, scratch: &str, canonical_scratch: &str, who: &str, crate_name: &str, refused: &mut Vec<String>) -> (Vec<String>, Vec<&'static str>) {
+    let events=std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
+    let text=TraceText { input, events:events.clone() };
+        let mut env_deps = Vec::new();
+        for l in text.lines() {
+            if let Some(dep) = l.strip_prefix("# env-dep:") {
+                // Only cargo's own variables, which the commit's manifests decide: the catalog's list (R8 remark 22).
+                let var = dep.split('=').next().unwrap_or_default();
+                if !(var.starts_with("CARGO_PKG_") || ENV_ALLOWED.contains(&var)) {
+                    refused.push(format!(
+                        "trust-undeclared-input: `{crate_name}` in `{}` depends on the environment variable `{var}`, \
+                         which the commit does not hold",
+                        who
+                    ));
+                }
+                env_deps.push(normalise_dependency_environment(
+                    dep,
+                    &scratch,
+                    &canonical_scratch,
+                ));
+                continue;
+            }
+        }
+    let snapshot=events.borrow().clone();
+    (env_deps, snapshot)
+}
+#[inline(never)]
+fn drop_clean(input: &str, scratch: &str, canonical_scratch: &str, who: &str, crate_name: &str, refused: &mut Vec<String>) -> (Vec<String>, Vec<&'static str>) {
+    let events=std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
+    let text=TraceText { input, events:events.clone() };
+        let mut env_deps = Vec::new();
+        for l in text.lines() {
+            if let Some(dep) = l.strip_prefix("# env-dep:") {
+                // Only cargo's own variables, which the commit's manifests decide: the catalog's list (R8 remark 22).
+                let var = dep.split('=').next().unwrap_or_default();
+                if !(var.starts_with("CARGO_PKG_") || ENV_ALLOWED.contains(&var)) {
+                    refused.push(format!(
+                        "trust-undeclared-input: `{crate_name}` in `{}` depends on the environment variable `{var}`, \
+                         which the commit does not hold",
+                        who
+                    ));
+                }
+                env_deps.push(normalise_dependency_environment(
+                    dep,
+                    &scratch,
+                    &canonical_scratch,
+                ));
+            }
+        }
+    let snapshot=events.borrow().clone();
+    (env_deps, snapshot)
+}
+#[inline(never)]
+fn suffix_before(input: &str, scratch: &str, canonical_scratch: &str, who: &str, crate_name: &str, refused: &mut Vec<String>) -> (Vec<String>, Vec<String>) {
+    let text=input;
+    let mut suffix=Vec::new();
+        let mut env_deps = Vec::new();
+        for l in text.lines() {
+            if let Some(dep) = l.strip_prefix("# env-dep:") {
+                // Only cargo's own variables, which the commit's manifests decide: the catalog's list (R8 remark 22).
+                let var = dep.split('=').next().unwrap_or_default();
+                if !(var.starts_with("CARGO_PKG_") || ENV_ALLOWED.contains(&var)) {
+                    refused.push(format!(
+                        "trust-undeclared-input: `{crate_name}` in `{}` depends on the environment variable `{var}`, \
+                         which the commit does not hold",
+                        who
+                    ));
+                }
+                env_deps.push(normalise_dependency_environment(
+                    dep,
+                    &scratch,
+                    &canonical_scratch,
+                ));
+                continue;
+            }
+            suffix.push(l.to_owned());
+        }
+    (env_deps, suffix)
+}
+#[inline(never)]
+fn suffix_clean(input: &str, scratch: &str, canonical_scratch: &str, who: &str, crate_name: &str, refused: &mut Vec<String>) -> (Vec<String>, Vec<String>) {
+    let text=input;
+    let mut suffix=Vec::new();
+        let mut env_deps = Vec::new();
+        for l in text.lines() {
+            if let Some(dep) = l.strip_prefix("# env-dep:") {
+                // Only cargo's own variables, which the commit's manifests decide: the catalog's list (R8 remark 22).
+                let var = dep.split('=').next().unwrap_or_default();
+                if !(var.starts_with("CARGO_PKG_") || ENV_ALLOWED.contains(&var)) {
+                    refused.push(format!(
+                        "trust-undeclared-input: `{crate_name}` in `{}` depends on the environment variable `{var}`, \
+                         which the commit does not hold",
+                        who
+                    ));
+                }
+                env_deps.push(normalise_dependency_environment(
+                    dep,
+                    &scratch,
+                    &canonical_scratch,
+                ));
+            }
+            suffix.push(l.to_owned());
+        }
+    (env_deps, suffix)
+}
+fn main() {
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, Vec::<String>::new(), "env:empty:collect_before"); assert_eq!(refused, Vec::<String>::new(), "refusal:empty:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, Vec::<String>::new(), "env:empty:collect_comment"); assert_eq!(refused, Vec::<String>::new(), "refusal:empty:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, Vec::<String>::new(), "env:empty:collect_clean"); assert_eq!(refused, Vec::<String>::new(), "refusal:empty:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![112,108,97,105,110,10,32,35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,120,10,35,32,69,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,120,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, Vec::<String>::new(), "env:non-records:collect_before"); assert_eq!(refused, Vec::<String>::new(), "refusal:non-records:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![112,108,97,105,110,10,32,35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,120,10,35,32,69,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,120,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, Vec::<String>::new(), "env:non-records:collect_comment"); assert_eq!(refused, Vec::<String>::new(), "refusal:non-records:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![112,108,97,105,110,10,32,35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,120,10,35,32,69,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,120,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, Vec::<String>::new(), "env:non-records:collect_clean"); assert_eq!(refused, Vec::<String>::new(), "refusal:non-records:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,108,112,104,97,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,108,112,104,97]).unwrap()], "env:one-accepted:collect_before"); assert_eq!(refused, Vec::<String>::new(), "refusal:one-accepted:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,108,112,104,97,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,108,112,104,97]).unwrap()], "env:one-accepted:collect_comment"); assert_eq!(refused, Vec::<String>::new(), "refusal:one-accepted:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,108,112,104,97,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,108,112,104,97]).unwrap()], "env:one-accepted:collect_clean"); assert_eq!(refused, Vec::<String>::new(), "refusal:one-accepted:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,67,82,65,84,69,95,78,65,77,69,61,102,105,120,116,117,114,101,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,67,82,65,84,69,95,78,65,77,69,61,102,105,120,116,117,114,101]).unwrap()], "env:allowed-non-package:collect_before"); assert_eq!(refused, Vec::<String>::new(), "refusal:allowed-non-package:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,67,82,65,84,69,95,78,65,77,69,61,102,105,120,116,117,114,101,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,67,82,65,84,69,95,78,65,77,69,61,102,105,120,116,117,114,101]).unwrap()], "env:allowed-non-package:collect_comment"); assert_eq!(refused, Vec::<String>::new(), "refusal:allowed-non-package:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,67,82,65,84,69,95,78,65,77,69,61,102,105,120,116,117,114,101,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,67,82,65,84,69,95,78,65,77,69,61,102,105,120,116,117,114,101]).unwrap()], "env:allowed-non-package:collect_clean"); assert_eq!(refused, Vec::<String>::new(), "refusal:allowed-non-package:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap()], "env:foreign:collect_before"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:foreign:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap()], "env:foreign:collect_comment"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:foreign:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap()], "env:foreign:collect_clean"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:foreign:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![]).unwrap()], "env:empty-dependency:collect_before"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:empty-dependency:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![]).unwrap()], "env:empty-dependency:collect_comment"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:empty-dependency:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![]).unwrap()], "env:empty-dependency:collect_clean"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:empty-dependency:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,88,95,78,65,77,69,61,120,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,88,95,78,65,77,69,61,120]).unwrap()], "env:lookalike:collect_before"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,67,65,82,71,79,95,80,75,71,88,95,78,65,77,69,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:lookalike:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,88,95,78,65,77,69,61,120,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,88,95,78,65,77,69,61,120]).unwrap()], "env:lookalike:collect_comment"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,67,65,82,71,79,95,80,75,71,88,95,78,65,77,69,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:lookalike:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,88,95,78,65,77,69,61,120,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,88,95,78,65,77,69,61,120]).unwrap()], "env:lookalike:collect_clean"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,67,65,82,71,79,95,80,75,71,88,95,78,65,77,69,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:lookalike:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,102,105,114,115,116,10,112,108,97,105,110,10,35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120,10,35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,108,97,115,116,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,102,105,114,115,116]).unwrap(),String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap(),String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,108,97,115,116]).unwrap()], "env:first-middle-last:collect_before"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:first-middle-last:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,102,105,114,115,116,10,112,108,97,105,110,10,35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120,10,35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,108,97,115,116,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,102,105,114,115,116]).unwrap(),String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap(),String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,108,97,115,116]).unwrap()], "env:first-middle-last:collect_comment"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:first-middle-last:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,102,105,114,115,116,10,112,108,97,105,110,10,35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120,10,35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,108,97,115,116,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,102,105,114,115,116]).unwrap(),String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap(),String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,108,97,115,116]).unwrap()], "env:first-middle-last:collect_clean"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:first-middle-last:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,10,35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120,10,35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,10,35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97]).unwrap(),String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap(),String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97]).unwrap(),String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap()], "env:duplicates:collect_before"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap(),String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:duplicates:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,10,35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120,10,35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,10,35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97]).unwrap(),String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap(),String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97]).unwrap(),String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap()], "env:duplicates:collect_comment"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap(),String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:duplicates:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,10,35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120,10,35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,10,35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97]).unwrap(),String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap(),String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97]).unwrap(),String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap()], "env:duplicates:collect_clean"); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap(),String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:duplicates:collect_clean"); }
+    { let mut refused=vec![String::from_utf8(vec![112,114,105,111,114,32,114,101,102,117,115,97,108]).unwrap()]; let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap()], "env:prior-refusal:collect_before"); assert_eq!(refused, vec![String::from_utf8(vec![112,114,105,111,114,32,114,101,102,117,115,97,108]).unwrap(),String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:prior-refusal:collect_before"); }
+    { let mut refused=vec![String::from_utf8(vec![112,114,105,111,114,32,114,101,102,117,115,97,108]).unwrap()]; let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap()], "env:prior-refusal:collect_comment"); assert_eq!(refused, vec![String::from_utf8(vec![112,114,105,111,114,32,114,101,102,117,115,97,108]).unwrap(),String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:prior-refusal:collect_comment"); }
+    { let mut refused=vec![String::from_utf8(vec![112,114,105,111,114,32,114,101,102,117,115,97,108]).unwrap()]; let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap()], "env:prior-refusal:collect_clean"); assert_eq!(refused, vec![String::from_utf8(vec![112,114,105,111,114,32,114,101,102,117,115,97,108]).unwrap(),String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()], "refusal:prior-refusal:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,13,10,112,108,97,105,110,13,10,35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,98,13,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97]).unwrap(),String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,98]).unwrap()], "env:crlf:collect_before"); assert_eq!(refused, Vec::<String>::new(), "refusal:crlf:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,13,10,112,108,97,105,110,13,10,35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,98,13,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97]).unwrap(),String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,98]).unwrap()], "env:crlf:collect_comment"); assert_eq!(refused, Vec::<String>::new(), "refusal:crlf:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,13,10,112,108,97,105,110,13,10,35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,98,13,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97]).unwrap(),String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,98]).unwrap()], "env:crlf:collect_clean"); assert_eq!(refused, Vec::<String>::new(), "refusal:crlf:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,195,169,116,117,100,101,240,159,146,161,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,195,169,116,117,100,101,240,159,146,161]).unwrap()], "env:unicode:collect_before"); assert_eq!(refused, Vec::<String>::new(), "refusal:unicode:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,195,169,116,117,100,101,240,159,146,161,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,195,169,116,117,100,101,240,159,146,161]).unwrap()], "env:unicode:collect_comment"); assert_eq!(refused, Vec::<String>::new(), "refusal:unicode:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,195,169,116,117,100,101,240,159,146,161,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,195,169,116,117,100,101,240,159,146,161]).unwrap()], "env:unicode:collect_clean"); assert_eq!(refused, Vec::<String>::new(), "refusal:unicode:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,97,61,98,61,99,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,97,61,98,61,99]).unwrap()], "env:equals-in-value:collect_before"); assert_eq!(refused, Vec::<String>::new(), "refusal:equals-in-value:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,97,61,98,61,99,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,97,61,98,61,99]).unwrap()], "env:equals-in-value:collect_comment"); assert_eq!(refused, Vec::<String>::new(), "refusal:equals-in-value:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,97,61,98,61,99,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,97,61,98,61,99]).unwrap()], "env:equals-in-value:collect_clean"); assert_eq!(refused, Vec::<String>::new(), "refusal:equals-in-value:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69]).unwrap()], "env:unset-record:collect_before"); assert_eq!(refused, Vec::<String>::new(), "refusal:unset-record:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69]).unwrap()], "env:unset-record:collect_comment"); assert_eq!(refused, Vec::<String>::new(), "refusal:unset-record:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69]).unwrap()], "env:unset-record:collect_clean"); assert_eq!(refused, Vec::<String>::new(), "refusal:unset-record:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,77,65,78,73,70,69,83,84,95,68,73,82,61,95,95,83,67,82,65,84,67,72,95,95,47,99,114,97,116,101,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,77,65,78,73,70,69,83,84,95,68,73,82,61,47,99,114,97,116,101]).unwrap()], "env:scratch:collect_before"); assert_eq!(refused, Vec::<String>::new(), "refusal:scratch:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,77,65,78,73,70,69,83,84,95,68,73,82,61,95,95,83,67,82,65,84,67,72,95,95,47,99,114,97,116,101,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,77,65,78,73,70,69,83,84,95,68,73,82,61,47,99,114,97,116,101]).unwrap()], "env:scratch:collect_comment"); assert_eq!(refused, Vec::<String>::new(), "refusal:scratch:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,77,65,78,73,70,69,83,84,95,68,73,82,61,95,95,83,67,82,65,84,67,72,95,95,47,99,114,97,116,101,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,77,65,78,73,70,69,83,84,95,68,73,82,61,47,99,114,97,116,101]).unwrap()], "env:scratch:collect_clean"); assert_eq!(refused, Vec::<String>::new(), "refusal:scratch:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,77,65,78,73,70,69,83,84,95,80,65,84,72,61,95,95,67,65,78,79,78,95,95,47,67,97,114,103,111,46,116,111,109,108,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,77,65,78,73,70,69,83,84,95,80,65,84,72,61,47,67,97,114,103,111,46,116,111,109,108]).unwrap()], "env:canonical:collect_before"); assert_eq!(refused, Vec::<String>::new(), "refusal:canonical:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,77,65,78,73,70,69,83,84,95,80,65,84,72,61,95,95,67,65,78,79,78,95,95,47,67,97,114,103,111,46,116,111,109,108,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,77,65,78,73,70,69,83,84,95,80,65,84,72,61,47,67,97,114,103,111,46,116,111,109,108]).unwrap()], "env:canonical:collect_comment"); assert_eq!(refused, Vec::<String>::new(), "refusal:canonical:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,77,65,78,73,70,69,83,84,95,80,65,84,72,61,95,95,67,65,78,79,78,95,95,47,67,97,114,103,111,46,116,111,109,108,10]).unwrap(), &String::from_utf8(vec![95,95,83,67,82,65,84,67,72,95,95]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,77,65,78,73,70,69,83,84,95,80,65,84,72,61,47,67,97,114,103,111,46,116,111,109,108]).unwrap()], "env:canonical:collect_clean"); assert_eq!(refused, Vec::<String>::new(), "refusal:canonical:collect_clean"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,119,111,114,107,92,92,100,105,114,92,110,108,105,110,101,47,120,10]).unwrap(), &String::from_utf8(vec![119,111,114,107,92,100,105,114,10,108,105,110,101]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,47,120]).unwrap()], "env:encoded-prefix:collect_before"); assert_eq!(refused, Vec::<String>::new(), "refusal:encoded-prefix:collect_before"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_comment(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,119,111,114,107,92,92,100,105,114,92,110,108,105,110,101,47,120,10]).unwrap(), &String::from_utf8(vec![119,111,114,107,92,100,105,114,10,108,105,110,101]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,47,120]).unwrap()], "env:encoded-prefix:collect_comment"); assert_eq!(refused, Vec::<String>::new(), "refusal:encoded-prefix:collect_comment"); }
+    { let mut refused=Vec::<String>::new(); let have=collect_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,119,111,114,107,92,92,100,105,114,92,110,108,105,110,101,47,120,10]).unwrap(), &String::from_utf8(vec![119,111,114,107,92,100,105,114,10,108,105,110,101]).unwrap(), &String::from_utf8(vec![95,95,67,65,78,79,78,95,95]).unwrap(), "producer", "fixture", &mut refused);
+      assert_eq!(have, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,68,69,83,67,82,73,80,84,73,79,78,61,47,120]).unwrap()], "env:encoded-prefix:collect_clean"); assert_eq!(refused, Vec::<String>::new(), "refusal:encoded-prefix:collect_clean"); }
+    { let mut refused=Vec::new(); let (env,events)=drop_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,10,112,108,97,105,110,10,35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120,10]).unwrap(), "__SCRATCH__", "__CANON__", "producer", "fixture", &mut refused);
+      assert_eq!(env, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97]).unwrap(),String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap()]); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()]);
+      assert_eq!(events, vec!["lines","next","drop-line","next","drop-line","next","drop-line","next","drop-iterator"], "literal drop/next order:drop_before"); }
+    { let mut refused=Vec::new(); let (env,events)=drop_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,10,112,108,97,105,110,10,35,32,101,110,118,45,100,101,112,58,85,78,72,69,76,68,61,120,10]).unwrap(), "__SCRATCH__", "__CANON__", "producer", "fixture", &mut refused);
+      assert_eq!(env, vec![String::from_utf8(vec![67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97]).unwrap(),String::from_utf8(vec![85,78,72,69,76,68,61,120]).unwrap()]); assert_eq!(refused, vec![String::from_utf8(vec![116,114,117,115,116,45,117,110,100,101,99,108,97,114,101,100,45,105,110,112,117,116,58,32,96,102,105,120,116,117,114,101,96,32,105,110,32,96,112,114,111,100,117,99,101,114,96,32,100,101,112,101,110,100,115,32,111,110,32,116,104,101,32,101,110,118,105,114,111,110,109,101,110,116,32,118,97,114,105,97,98,108,101,32,96,85,78,72,69,76,68,96,44,32,119,104,105,99,104,32,116,104,101,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100]).unwrap()]);
+      assert_eq!(events, vec!["lines","next","drop-line","next","drop-line","next","drop-line","next","drop-iterator"], "literal drop/next order:drop_clean"); }
+    let mut left_refused=Vec::new(); let mut right_refused=Vec::new();
+    let left=suffix_before(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,10,112,108,97,105,110,10]).unwrap(), "S", "C", "producer", "fixture", &mut left_refused);
+    let right=suffix_clean(&String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97,10,112,108,97,105,110,10]).unwrap(), "S", "C", "producer", "fixture", &mut right_refused);
+    assert_eq!(left.1, vec![String::from_utf8(vec![112,108,97,105,110]).unwrap()]); assert_eq!(right.1, vec![String::from_utf8(vec![35,32,101,110,118,45,100,101,112,58,67,65,82,71,79,95,80,75,71,95,78,65,77,69,61,97]).unwrap(),String::from_utf8(vec![112,108,97,105,110]).unwrap()]); assert_ne!(left.1,right.1,"reachable suffix is distinguishing");
+    match std::env::args().nth(1).as_deref() {
+      Some("wrong-env") => { let mut refused=Vec::new(); assert_eq!(collect_clean("# env-dep:CARGO_PKG_NAME=alpha", "S", "C", "producer", "fixture", &mut refused), vec![String::from_utf8(vec![87,82,79,78,71]).unwrap()], "wrong env literal"); },
+      Some("wrong-refusal") => { let mut refused=Vec::new(); collect_clean("# env-dep:UNHELD=x", "S", "C", "producer", "fixture", &mut refused); assert!(refused.is_empty(),"wrong refusal literal"); },
+      Some("wrong-suffix-equality") => assert_eq!(left.1,right.1,"wrong suffix equality"),
+      Some("wrong-drop-order") => { let mut refused=Vec::new(); let (_,events)=drop_clean("plain", "S", "C", "producer", "fixture", &mut refused); assert_eq!(events,vec!["drop-iterator","next"],"wrong drop order"); },
+      _ => {}
+    }
+    println!("tail-proof: passed 17 literal cases in3 forms; drop and distinguishing-suffix controls");
+}
+~~~
+
+</details>
+
+<details>
+<summary>Exact volume.sb</summary>
+
+~~~scheme
+(version 1)
+(allow default)
+(deny file-write*)
+(allow file-write* (subpath (param "WRITABLE_ROOT")))
+(allow file-write-data (literal "/dev/null"))
+~~~
+
+</details>
+
+<details>
+<summary>Exact prepare-probe.py</summary>
+
+~~~python
+from pathlib import Path
+import hashlib,json,re,subprocess,sys
+
+out=Path('target/environment-tail-proof');input_root=Path(sys.argv[1]) if len(sys.argv)>1 else Path('.')
+source=(input_root/'xtask/src/trust.rs').read_text()
+def sha(data):return hashlib.sha256(data).hexdigest()
+assert sha(source.encode())=='9616b59ff2bc394e6471570bfaf857971671fda4a12c4fb745e557d2d21a1751'
+start='        let mut env_deps = Vec::new();\n        for l in text.lines() {\n'
+end='        for raw in dependency_files(&text, &d, &scratch, &canonical_scratch)? {'
+assert source.count(start)==source.count(end)==1
+a=source.index(start);z=source.index(end,a);before=source[a:z]
+assert sha(before.encode())=='80e6db30d3affc38de38e1a0d3a2f2ab1330cb3caba9f7612809b7735a1f159b'
+tail='                continue;\n';assert before.count(tail)==1
+commented=before.replace(tail,'                // continue;\n',1)
+cleaned=before.replace(tail,'',1)
+assert before.endswith(tail+'            }\n        }\n')
+normal_start=source.index('fn normalise_dependency_environment(');normal_stop=source.index('\n}',normal_start)+2
+normalizer=source[normal_start:normal_stop]
+catalog=(input_root/'xtask/src/catalog_build.rs').read_text();c=catalog.index('pub(crate) const ENV_ALLOWED:');d=catalog.index('];',c)+2
+allowed=catalog[c:d]
+who='producer';crate_name='fixture'
+unheld='trust-undeclared-input: `fixture` in `producer` depends on the environment variable `UNHELD`, which the commit does not hold'
+empty='trust-undeclared-input: `fixture` in `producer` depends on the environment variable ``, which the commit does not hold'
+lookalike='trust-undeclared-input: `fixture` in `producer` depends on the environment variable `CARGO_PKGX_NAME`, which the commit does not hold'
+cases=[]
+def case(name,text,env,refused,*,prior=None,scratch='__SCRATCH__',canonical='__CANON__'):
+ cases.append(dict(name=name,text=text,env=env,refused=refused,prior=[] if prior is None else prior,scratch=scratch,canonical=canonical))
+case('empty','',[],[])
+case('non-records','plain\n # env-dep:CARGO_PKG_NAME=x\n# Env-dep:CARGO_PKG_NAME=x\n',[],[])
+case('one-accepted','# env-dep:CARGO_PKG_NAME=alpha\n',['CARGO_PKG_NAME=alpha'],[])
+case('allowed-non-package','# env-dep:CARGO_CRATE_NAME=fixture\n',['CARGO_CRATE_NAME=fixture'],[])
+case('foreign','# env-dep:UNHELD=x\n',['UNHELD=x'],[unheld])
+case('empty-dependency','# env-dep:\n',[''],[empty])
+case('lookalike','# env-dep:CARGO_PKGX_NAME=x\n',['CARGO_PKGX_NAME=x'],[lookalike])
+case('first-middle-last','# env-dep:CARGO_PKG_NAME=first\nplain\n# env-dep:UNHELD=x\n# env-dep:CARGO_PKG_NAME=last\n',['CARGO_PKG_NAME=first','UNHELD=x','CARGO_PKG_NAME=last'],[unheld])
+case('duplicates','# env-dep:CARGO_PKG_NAME=a\n# env-dep:UNHELD=x\n# env-dep:CARGO_PKG_NAME=a\n# env-dep:UNHELD=x',['CARGO_PKG_NAME=a','UNHELD=x','CARGO_PKG_NAME=a','UNHELD=x'],[unheld,unheld])
+case('prior-refusal','# env-dep:UNHELD=x\n',['UNHELD=x'],['prior refusal',unheld],prior=['prior refusal'])
+case('crlf','# env-dep:CARGO_PKG_NAME=a\r\nplain\r\n# env-dep:CARGO_PKG_NAME=b\r\n',['CARGO_PKG_NAME=a','CARGO_PKG_NAME=b'],[])
+case('unicode','# env-dep:CARGO_PKG_DESCRIPTION=étude💡\n',['CARGO_PKG_DESCRIPTION=étude💡'],[])
+case('equals-in-value','# env-dep:CARGO_PKG_DESCRIPTION=a=b=c\n',['CARGO_PKG_DESCRIPTION=a=b=c'],[])
+case('unset-record','# env-dep:CARGO_PKG_NAME\n',['CARGO_PKG_NAME'],[])
+case('scratch','# env-dep:CARGO_MANIFEST_DIR=__SCRATCH__/crate\n',['CARGO_MANIFEST_DIR=/crate'],[])
+case('canonical','# env-dep:CARGO_MANIFEST_PATH=__CANON__/Cargo.toml\n',['CARGO_MANIFEST_PATH=/Cargo.toml'],[])
+case('encoded-prefix','# env-dep:CARGO_PKG_DESCRIPTION=work\\\\dir\\nline/x\n',['CARGO_PKG_DESCRIPTION=/x'],[],scratch='work\\dir\nline')
+(out/'cases.json').write_text(json.dumps(cases,ensure_ascii=False,indent=2)+'\n')
+
+def string(value):
+ return 'String::from_utf8(vec!['+','.join(map(str,value.encode()))+']).unwrap()'
+def vector(values):
+ return 'vec!['+','.join(string(v) for v in values)+']' if values else 'Vec::<String>::new()'
+def collect(name,body,*,trace=False,suffix=False):
+ header='#[inline(never)]\nfn '+name+'(input: &str, scratch: &str, canonical_scratch: &str, who: &str, crate_name: &str, refused: &mut Vec<String>)'
+ if trace:
+  header+=' -> (Vec<String>, Vec<&\'static str>) {\n    let events=std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));\n    let text=TraceText { input, events:events.clone() };\n'
+ else:header+=' -> '+('(Vec<String>, Vec<String>)' if suffix else 'Vec<String>')+' {\n    let text=input;\n'
+ if suffix:
+  needle='            }\n        }\n';assert body.count(needle)==1
+  body=body.replace(needle,'            }\n            suffix.push(l.to_owned());\n        }\n',1)
+  header+='    let mut suffix=Vec::new();\n'
+ ending='    let snapshot=events.borrow().clone();\n    (env_deps, snapshot)\n' if trace else ('    (env_deps, suffix)\n' if suffix else '    env_deps\n')
+ return header+body+ending+'}\n'
+
+trace_source='''
+struct TraceText<'a> { input: &'a str, events: std::rc::Rc<std::cell::RefCell<Vec<&'static str>>> }
+struct TraceLines<'a> { lines: std::str::Lines<'a>, events: std::rc::Rc<std::cell::RefCell<Vec<&'static str>>> }
+struct TraceLine<'a> { text: &'a str, events: std::rc::Rc<std::cell::RefCell<Vec<&'static str>>> }
+impl TraceText<'_> {
+    fn lines(&self) -> TraceLines<'_> {
+        self.events.borrow_mut().push("lines");
+        TraceLines { lines:self.input.lines(), events:self.events.clone() }
+    }
+}
+impl<'a> Iterator for TraceLines<'a> {
+    type Item=TraceLine<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.events.borrow_mut().push("next");
+        self.lines.next().map(|text| TraceLine { text, events:self.events.clone() })
+    }
+}
+impl std::ops::Deref for TraceLine<'_> { type Target=str; fn deref(&self) -> &str { self.text } }
+impl Drop for TraceLine<'_> { fn drop(&mut self) { self.events.borrow_mut().push("drop-line"); } }
+impl Drop for TraceLines<'_> { fn drop(&mut self) { self.events.borrow_mut().push("drop-iterator"); } }
+'''
+program=allowed+'\n'+normalizer+'\n'+trace_source
+for name,body in [('collect_before',before),('collect_comment',commented),('collect_clean',cleaned)]:program+=collect(name,body)
+for name,body in [('drop_before',before),('drop_clean',cleaned)]:program+=collect(name,body,trace=True)
+for name,body in [('suffix_before',before),('suffix_clean',cleaned)]:program+=collect(name,body,suffix=True)
+checks=[]
+for row in cases:
+ for name in ['collect_before','collect_comment','collect_clean']:
+  checks.append('    { let mut refused='+vector(row['prior'])+'; let have='+name+'(&'+string(row['text'])+', &'+string(row['scratch'])+', &'+string(row['canonical'])+', "producer", "fixture", &mut refused);\n'
+   +'      assert_eq!(have, '+vector(row['env'])+', "env:'+row['name']+':'+name+'"); assert_eq!(refused, '+vector(row['refused'])+', "refusal:'+row['name']+':'+name+'"); }\n')
+drop_input='# env-dep:CARGO_PKG_NAME=a\nplain\n# env-dep:UNHELD=x\n'
+drop_expected=['lines','next','drop-line','next','drop-line','next','drop-line','next','drop-iterator']
+for name in ['drop_before','drop_clean']:
+ checks.append('    { let mut refused=Vec::new(); let (env,events)='+name+'(&'+string(drop_input)+', "__SCRATCH__", "__CANON__", "producer", "fixture", &mut refused);\n'
+  +'      assert_eq!(env, '+vector(['CARGO_PKG_NAME=a','UNHELD=x'])+'); assert_eq!(refused, '+vector([unheld])+');\n'
+  +'      assert_eq!(events, vec!['+','.join(json.dumps(e) for e in drop_expected)+'], "literal drop/next order:'+name+'"); }\n')
+suffix_input='# env-dep:CARGO_PKG_NAME=a\nplain\n'
+checks.append('    let mut left_refused=Vec::new(); let mut right_refused=Vec::new();\n'
+ '    let left=suffix_before(&'+string(suffix_input)+', "S", "C", "producer", "fixture", &mut left_refused);\n'
+ '    let right=suffix_clean(&'+string(suffix_input)+', "S", "C", "producer", "fixture", &mut right_refused);\n'
+ '    assert_eq!(left.1, '+vector(['plain'])+'); assert_eq!(right.1, '+vector(['# env-dep:CARGO_PKG_NAME=a','plain'])+'); assert_ne!(left.1,right.1,"reachable suffix is distinguishing");\n')
+checks.append('    match std::env::args().nth(1).as_deref() {\n'
+ '      Some("wrong-env") => { let mut refused=Vec::new(); assert_eq!(collect_clean("# env-dep:CARGO_PKG_NAME=alpha", "S", "C", "producer", "fixture", &mut refused), '+vector(['WRONG'])+', "wrong env literal"); },\n'
+ '      Some("wrong-refusal") => { let mut refused=Vec::new(); collect_clean("# env-dep:UNHELD=x", "S", "C", "producer", "fixture", &mut refused); assert!(refused.is_empty(),"wrong refusal literal"); },\n'
+ '      Some("wrong-suffix-equality") => assert_eq!(left.1,right.1,"wrong suffix equality"),\n'
+ '      Some("wrong-drop-order") => { let mut refused=Vec::new(); let (_,events)=drop_clean("plain", "S", "C", "producer", "fixture", &mut refused); assert_eq!(events,vec!["drop-iterator","next"],"wrong drop order"); },\n'
+ '      _ => {}\n    }\n')
+program+='fn main() {\n'+''.join(checks)+'    println!("tail-proof: passed '+str(len(cases))+' literal cases in3 forms; drop and distinguishing-suffix controls");\n}\n'
+(out/'probe.rs').write_text(program)
+after_source=source[:a]+cleaned+source[z:]
+assert after_source.count('                continue;\n')==source.count('                continue;\n')-1
+receipt=dict(status='prepared',scope='Actual current loop and normalizer/allowlist; actual comment edit and candidate cleanup; independent literal/drop/suffix controls only, not equivalence from finite agreement.',source_sha256=sha(source.encode()),before_loop_sha256=sha(before.encode()),comment_loop_sha256=sha(commented.encode()),clean_loop_sha256=sha(cleaned.encode()),prospective_source_sha256=sha(after_source.encode()),prospective_production_sha256=sha(after_source.split('#[cfg(test)]',1)[0].encode()),cases=len(cases),collector_forms=['collect_before','collect_comment','collect_clean'],drop_forms=['drop_before','drop_clean'],wrong_oracles=['wrong-env','wrong-refusal','wrong-suffix-equality','wrong-drop-order'],source_function='normalise_dependency_environment',source_allowlist='catalog_build::ENV_ALLOWED',probe_sha256=sha(program.encode()))
+(out/'probe-preparation.json').write_text(json.dumps(receipt,indent=2)+'\n')
+for name,data in [('loop-before.rs.txt',before),('loop-comment.rs.txt',commented),('loop-clean.rs.txt',cleaned),('prospective-source.rs.txt',after_source)]:
+ (out/name).write_text(data)
+print(json.dumps(receipt))
+~~~
+
+</details>
+
+<details>
+<summary>Exact run-probe.py</summary>
+
+~~~python
+from pathlib import Path
+import hashlib,json,os,subprocess
+
+root=Path.cwd();out=Path('target/environment-tail-proof')
+def sha(data):return hashlib.sha256(data).hexdigest()
+profile=out/'volume.sb'
+profile.write_text('(version 1)\n(allow default)\n(deny file-write*)\n(allow file-write* (subpath (param "WRITABLE_ROOT")))\n(allow file-write-data (literal "/dev/null"))\n')
+rows=[]
+def run(label,command,expected=0,marker=None):
+    actual=['/usr/bin/sandbox-exec','-D','WRITABLE_ROOT='+str(root),'-f',str(profile),*command]
+    p=subprocess.run(actual,stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=dict(os.environ),timeout=120)
+    (out/(label+'.stdout')).write_bytes(p.stdout);(out/(label+'.stderr')).write_bytes(p.stderr)
+    row=dict(label=label,command=command,exit=p.returncode,stdout=p.stdout.decode(),stderr=p.stderr.decode())
+    rows.append(row)
+    assert p.returncode==expected,(label,row)
+    if marker:assert marker in row['stdout']+row['stderr'],(label,marker,row)
+    return row
+run('rustc-version',['rustc','--version','--verbose'])
+run('clippy-version',['clippy-driver','--version'])
+for opt in ['0','3']:
+    binary=str(out/('probe-O'+opt))
+    run('compile-O'+opt,['rustc','--edition=2021','-C','opt-level='+opt,str(out/'probe.rs'),'-o',binary])
+    run('positive-O'+opt,[binary],marker='passed 17 literal cases')
+    for arm,marker in [('wrong-env','wrong env literal'),('wrong-refusal','wrong refusal literal'),('wrong-suffix-equality','wrong suffix equality'),('wrong-drop-order','wrong drop order')]:
+        run(arm+'-O'+opt,[binary,arm],101,marker)
+run('clippy-observation',['clippy-driver','--edition=2021','--emit=metadata','-W','clippy::needless_continue',str(out/'probe.rs'),'-o',str(out/'clippy.rmeta')])
+assert sha(Path('xtask/src/trust.rs').read_bytes())=='9616b59ff2bc394e6471570bfaf857971671fda4a12c4fb745e557d2d21a1751'
+receipt=dict(status='passed',scope='Pinned actual compiler observations support the complete source argument; finite cases alone are not equivalence proof.',profile_sha256=sha(profile.read_bytes()),probe_sha256=sha((out/'probe.rs').read_bytes()),runs=rows,optimizations=['0','3'],literal_cases_per_form=17,forms=3,drop_forms=2,wrong_oracle_executions=8,clippy_needless_continue_observed='this '+chr(96)+'continue'+chr(96)+' expression is redundant' in rows[-1]['stderr'])
+(out/'probe-results.json').write_text(json.dumps(receipt,indent=2)+'\n')
+print(json.dumps({k:v for k,v in receipt.items() if k!='runs'}))
+~~~
+
+</details>
+
+<details>
+<summary>Exact audit-proof.py</summary>
+
+~~~python
+from pathlib import Path
+import copy,hashlib,importlib.util,json,re,subprocess
+
+out=Path('target/environment-tail-proof');base='0663022a9a9e2b38d5d3b6fbae6bfbdad23a7ac0'
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+def read(name):return json.loads((out/name).read_text())
+def system_sha(path):return subprocess.check_output(['shasum','-a','256',str(path)],text=True).split()[0]
+prep=read('probe-preparation.json');result=read('probe-results.json');assert result['status']=='passed'
+for name,digest in [('xtask/src/trust.rs',prep['source_sha256']),('target/environment-tail-proof/probe.rs',prep['probe_sha256'])]:
+ assert sha(Path(name).read_bytes())==system_sha(Path(name))==digest,name
+for name in ['xtask/src/trust.rs','xtask/src/catalog_build.rs','xtask/mutation_sweep_tests.py','xtask/trust.equivalents']:
+ assert Path(name).read_bytes()==subprocess.check_output(['git','show',base+':'+name]),name
+source=Path('xtask/src/trust.rs').read_text();before=(out/'loop-before.rs.txt').read_text();clean=(out/'loop-clean.rs.txt').read_text();comment=(out/'loop-comment.rs.txt').read_text()
+assert source.count(before)==1 and before.count('                continue;\n')==1
+assert clean==before.replace('                continue;\n','',1)
+assert comment==before.replace('                continue;\n','                // continue;\n',1)
+assert before.endswith('                continue;\n            }\n        }\n')
+spec=importlib.util.spec_from_file_location('adequacy','scripts/trust_adequacy.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+discovery,_,_=m.discover(Path('scripts/mutation_sweep.sh').read_text(),source)
+candidate=next(c for c in discovery if c['id']=='L772.stmt.221')
+assert candidate['original'].strip()=='continue;' and candidate['replacement'].strip()=='// continue;'
+lines=source.split('\n');lo,hi=candidate['span'];mutated='\n'.join(lines[:lo]+candidate['replacement'].split('\n')+lines[hi:])
+assert mutated==source.replace(before,comment,1)
+assert (out/'prospective-source.rs.txt').read_text()==source.replace(before,clean,1)
+rows=result['runs'];assert len(rows)==15,len(rows)
+assert rows[0]['stdout'].startswith('rustc 1.95.0 ') and rows[1]['stdout'].startswith('clippy 0.1.95 ')
+for row in rows:
+ label=row['label'];expected=101 if label.startswith('wrong-') else 0
+ assert row['exit']==expected
+ for stream in ['stdout','stderr']:assert row[stream].encode()==(out/(label+'.'+stream)).read_bytes()
+assert result['optimizations']==['0','3'] and result['wrong_oracle_executions']==8 and result['forms']==3
+clippy=rows[-1]['stderr'];marker='this '+chr(96)+'continue'+chr(96)+' expression is redundant'
+assert clippy.count(marker)==2 and result['clippy_needless_continue_observed']
+assert ':55:17' in clippy and ':130:17' in clippy
+false=[]
+def bind_loop(value):
+ assert sha(value.encode())==prep['before_loop_sha256']
+ assert value.endswith('                continue;\n            }\n        }\n')
+for label,value in [('reachable-suffix',before[:-10]+'            observe();\n        }\n'),('wrong-target',before.replace('continue;','continue \'outer;',1)),('wrong-normalizer',before.replace('normalise_dependency_environment','other_normalizer',1)),('wrong-record-prefix',before.replace('# env-dep:','# ENV-dep:',1))]:
+ try:bind_loop(value)
+ except AssertionError:false.append(label)
+ else:raise AssertionError(label+' accepted')
+refs=read('reference-capture.json')
+for row in refs['records']:
+ raw=Path(row['local']).read_bytes();assert len(raw)==row['bytes'] and sha(raw)==system_sha(Path(row['local']))==row['sha256']
+record=dict(status='passed',scope='Complete exact local source/control/drop proof with supplemental actual compiler controls; cleanup eligible but not implemented; historical/current initial1S remains an initial measurement, not E.',base_commit=base,current_source_sha256=prep['source_sha256'],source_loop_sha256=prep['before_loop_sha256'],native_candidate=candidate,complete_discovery=len(discovery),clean_loop_sha256=prep['clean_loop_sha256'],prospective_source_sha256=prep['prospective_source_sha256'],cases=17,forms=3,optimizations=['0','3'],positive_literal_form_executions=102,positive_drop_form_executions=4,positive_distinguishing_suffix_executions=2,wrong_oracle_executions=8,source_premise_falsifiers=false,pinned_clippy_redundant_tail_diagnostics=2,clippy_fixture_needless_borrow_warnings='14 expected extraction-context warnings: scratch parameters are str references rather than production Strings; no lint-clean or semantic mutation claim.',references=refs,maintained_sources_and_reasons_unchanged=True)
+(out/'proof-audit.json').write_text(json.dumps(record,indent=2)+'\n')
+print('Proof audit: passed; exact native edit/source, O0/O3 controls,8 wrong oracles,4 changed premises; cleanup eligible; no maintained source/reason change')
+~~~
+
+</details>
+
+<details>
+<summary>Exact progress.py</summary>
+
+~~~python
+from pathlib import Path
+import difflib,hashlib,json,re,subprocess
+
+out=Path('target/environment-tail-proof');B=chr(96)
+base='0663022a9a9e2b38d5d3b6fbae6bfbdad23a7ac0';stem='M3.6.9.6.3.2.2.15.2.1.5'
+identity=stem+'.1.0';next_id=stem+'.1.1'
+def sha(data):return hashlib.sha256(data).hexdigest()
+def node(text,identity):
+ a=text.index('- ID: '+B+identity+B);m=re.search(r'(?m)^- ID: |^## ',text[a+1:]);return a,a+1+m.start() if m else len(text)
+result=json.loads((out/'probe-results.json').read_text());assert result['status']=='passed' and result['clippy_needless_continue_observed']
+path=Path('docs/tasks/M3.md');text=path.read_text();before=text
+(out/'task-before-routing.md').write_text(text)
+records={}
+for suffix,title in [('', 'Current survivor-assessment container'),('.2','Current compiler-input container'),('.2.1','Current compile-function container')]:
+ ident='M3.6.9.6.3.2.2.15'+suffix;a,z=node(text,ident);original=text[a:z]
+ compact='- ID: '+B+ident+B+'\n  Status: '+B+'active'+B+' — '+title.lower()+'\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-container-contracts) retained verbatim.\n  Complete current-scope native outcomes/restoration and owned child resolution precede closure.\n  Verification: '+B+'pending'+B+'\n  Commit: '+B+'pending'+B+'\n\n'
+ records[ident]={'full':original,'compact':compact};text=text[:a]+compact+text[z:]
+(out/'task-after-routing.md').write_text(text)
+saved=len(before.encode())-len(text.encode());assert saved>1200,saved
+a,z=node(text,identity);planned=text[a:z];(out/'planned-leaf.md').write_text(planned)
+subject='ARCHOGEN-M3-0818 (leaf '+identity+'): prove the environment-loop tail cleanup'
+leaf='''- ID: {b}{identity}{b}
+  Status: {b}done{b} — exact tail proof and cleanup eligibility
+  [Full proof/contracts](../book/src/annex-trust-proofs.md#environment-loop-tail-control-proof).
+  Acceptance:
+  - [x] ROOT CAUSE: {b}python3 -I -B target/environment-tail-proof/prepare-probe.py{b},
+    exit code 0: exact loop/edit, primary pinned control/drop contracts and source argument.
+  - [x] ADDRESSED: {b}python3 -I -B target/environment-tail-proof/run-probe.py{b},
+    exit code 0:17 literal cases/3 forms at O0/O3, drop and distinguishing suffix;
+    all8 wrong oracles fail101. Cleanup eligible; maintained source/reasons unchanged.
+  - [x] NO REGRESSION: {b}python3 -I -B target/environment-tail-proof/final-audit.py{b},
+    exit code 0: prior inputs/archives and lossless contracts; book/gates before commit.
+  Verification: full evidence/adapters in book; .1.1/.1.2/.2 separately own implementation/replay.
+  Commit: {b}ARCHOGEN-M3-0818{b}
+
+'''.format(b=B,identity=identity)
+text=text[:a]+leaf+text[z:];(out/'completed-leaf.md').write_text(leaf)
+children=[]
+for tail,title,goal in [
+ ('1.1','permanent environment-tail proof controls','Add a maintained operator proof guard outside the semantic mutation population. Bind exact historical and prospective clean loop shapes, actual normalizer/allowlist and suffix boundary. Compile source forms against independent literal outputs/refusals and drop order, with a distinguishing reachable suffix, altered premises and wrong oracles refused. Pass focused operator controls, preserving the 201 semantic parents, production and reasons. Commit before cleanup.'),
+ ('1.2','remove the proved redundant environment tail','After committed proof controls, remove only the one redundant continue line. Re-derive production/source identities and all candidate mappings; run permanent controls before updating existing production-prefix guards, and rerun those actual producer proofs afterward. Keep all23 reasons and existing semantic parents exact; focused tier plus appropriate operator checks and complete source/input preservation. Commit before final native replay.')]:
+ ident=stem+'.'+tail
+ full='- ID: '+B+ident+B+'\n  Status: '+B+'pending'+B+' — '+title+'\n  Goal: '+goal+'\n  Verification: '+B+'pending'+B+'\n  Commit: '+B+'pending'+B+'\n\n'
+ short='- ID: '+B+ident+B+'\n  Status: '+B+'pending'+B+' — '+title+'\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-implementation-contracts) retained verbatim.\n  Verification: '+B+'pending'+B+'\n  Commit: '+B+'pending'+B+'\n\n'
+ records[ident]={'full':full,'compact':short};children.append(short)
+a,z=node(text,stem+'.2');old_final=text[a:z];(out/'final-task-before.md').write_text(old_final)
+full_final='''- ID: {b}{stem}.2{b}
+  Status: {b}pending{b} — complete current environment-tail checkpoint after cleanup
+  Goal: retain exact historical/current before mapping and the all-domain tail proof;
+    rederive current discovery/201 semantic parent names after committed cleanup and controls.
+    Explicitly reconcile the retired tail as a proved no-op removal, never infer E from absence.
+    Replay every current reason and a known distinguishing non-tail continue with strict
+    justified finishing outcomes, no S/TO/unjudged; exact old/new reason text and full
+    original/copied-input/name restoration. Revalidate affected source/producer guards.
+    Close .1/.5 only after their separate leaves and complete bounded checkpoint commit.
+    Later dependency/caller/global/review and warranted integration remain separate.
+  Verification: {b}pending{b}
+  Commit: {b}pending{b}
+
+'''.format(b=B,stem=stem)
+short_final='- ID: '+B+stem+'.2'+B+'\n  Status: '+B+'pending'+B+' — complete current environment-tail checkpoint after cleanup\n  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-implementation-contracts) retained verbatim.\n  Reconcile proved retirement; all current reasons/known other-site kill, full restoration.\n  Verification: '+B+'pending'+B+'\n  Commit: '+B+'pending'+B+'\n\n'
+records[stem+'.2']={'previous':old_final,'full':full_final,'compact':short_final}
+text=text[:a]+''.join(children)+short_final+text[z:]
+old='next '+B+'.9.6.3.2.2.15.2.1.5.1'+B+' environment-tail proof and sound reason scope'
+new='next '+B+'.9.6.3.2.2.15.2.1.5.1.1'+B+' permanent environment-tail proof controls'
+assert text.count(old)==1;text=text.replace(old,new,1)
+def append_table(data,heading,row):
+ a=data.index(heading)+len(heading);m=re.search(r'(?m)^## ',data[a:]);z=a+m.start() if m else len(data)
+ rows=list(re.finditer(r'(?m)^\|.*\|\n',data[a:z]));assert rows
+ end=a+rows[-1].end();return data[:end]+row+data[end:]
+text=append_table(text,'## Verification Log\n','| '+B+'2026-10-20'+B+' | '+B+identity+B+' | Pinned Reference/source proof; actual O0/O3 literal/drop/suffix and8 wrong-oracle runs; exact archive/routing audit | Cleanup eligible only at this tail; production/reasons unchanged; book/gates required |\n')
+text=append_table(text,'## Commit Log\n','| '+B+identity+B+' | '+B+subject+B+' | [Complete proof](../book/src/annex-trust-proofs.md#environment-loop-tail-control-proof); permanent controls, cleanup and final replay separately owned |\n')
+(out/'task-after-completion.md').write_text(text)
+total=sum(p.stat().st_size for p in Path('docs/tasks').rglob('*') if p.is_file())+len(text.encode())-path.stat().st_size
+assert total<=819200,total
+updates={str(path):text}
+for name in ['LIVE_STATUS.md','docs/TASK_TREE.md']:
+ data=Path(name).read_text();old=B+'.9.6.3.2.2.15.2.1.5.1'+B+' environment-tail proof and sound reason scope';new=B+'.9.6.3.2.2.15.2.1.5.1.1'+B+' permanent environment-tail proof controls'
+ assert data.count(old)==1,name;updates[name]=data.replace(old,new,1)
+data=Path('MEMORY.md').read_text();old='establish the environment-tail proof and sound local reason scope in\n  '+B+stem+'.1'+B+'; keep the shared continue key from applying a local proof to other sites.'
+new='add permanent environment-tail proof controls in\n  '+B+next_id+B+'; then separately commit the proved no-op cleanup and full current-reason checkpoint.'
+assert data.count(old)==1;updates['MEMORY.md']=data.replace(old,new,1)
+data=Path('CHANGELOG.md').read_text();a=data.index('## archogen — ')
+entry='''## archogen — prove the environment-loop tail cleanup
+
+{b}ARCHOGEN-M3-0818{b} (leaf {b}{identity}{b}), {b}2026-10-20{b}.
+
+- Prove the complete local loop has the same next-iteration and exited drop scopes
+  with its tail continue, actual comment edit or removed line, from pinned Rust contracts.
+- Actual pinned compiler O0/O3:17 independent literal cases in3 forms, exact drop traces,
+  a distinguishing reachable-suffix counterexample, and all8 wrong oracles fail101.
+  Clippy1.95 independently flags the original tail; finite agreement is not the proof.
+- Keep production,201 semantic parents and all23 reasons unchanged. Separately own
+  permanent controls, source cleanup/guard revalidation and strict current-reason replay.
+- Preserve328 prior archives/new exact assessment seal and route full active container
+  contracts verbatim to the unbounded book, with independently reconstructible task states.
+
+
+'''.format(b=B,identity=identity)
+updates['CHANGELOG.md']=data[:a]+entry+data[a:]
+ledger=Path('docs/book/src/ledger.md').read_text()
+old='the chapters "Inline assembly" and "Code generation attributes"';new=old+', plus "Loops and other breakable expressions" and "Destructors"'
+assert ledger.count(old)==1;ledger=ledger.replace(old,new,1)
+old='`2026-10-02`, read from the installed `1.95.0` toolchain\'s documentation directory';new=old+'; loop/drop pages read `2026-10-20`'
+assert ledger.count(old)==1;ledger=ledger.replace(old,new,1)
+old='of the code-generation attributes chapter\'s page, as shipped';new=old+'; loop page `9557c8f7721de48768ca20dff48be250fb5c7de369c0a2df730809c19a0f6c4f`, destructor page `6813f53a9061e1dd20f58c87eac237868497bdbe760e29239b359a89e8adea09`'
+assert ledger.count(old)==1;ledger=ledger.replace(old,new,1)
+old='that `#[track_caller]` adds an implicit parameter to the function ABI';new=old+'; normal for-body completion and an unlabeled continue target the loop head, and exited nested drop scopes order inner to outer, as used by the [environment-tail proof](annex-trust-proofs.md#environment-loop-tail-control-proof)'
+assert ledger.count(old)==1;ledger=ledger.replace(old,new,1);updates['docs/book/src/ledger.md']=ledger
+original=subprocess.check_output(['git','show',base+':docs/tasks/M3.md']);lines=original.decode().splitlines(keepends=True)
+snapshots={}
+for name in ['task-active-before-seal.md','task-before-proof.md','task-before-routing.md','task-after-routing.md','task-after-completion.md']:
+ raw=(out/name).read_bytes();updated=raw.decode().splitlines(keepends=True);changes=[]
+ for op,a,z,x,y in difflib.SequenceMatcher(None,lines,updated,autojunk=False).get_opcodes():
+  if op!='equal':changes.append(dict(start_line=a,end_line=z,before_sha256=sha(''.join(lines[a:z]).encode()),replacement=''.join(updated[x:y])))
+ snapshots[name]=dict(sha256=sha(raw),bytes=len(raw),changes=changes)
+evidence=dict(schema='archogen-environment-tail-task-routing/1',base_commit=base,base_sha256=sha(original),base_file='docs/tasks/M3.md',snapshots=snapshots,records=records,saved_container_bytes=saved,planned_leaf=planned,completed_leaf=leaf)
+(out/'routing-evidence.json').write_text(json.dumps(evidence,indent=2)+'\n')
+(out/'completion-updates.json').write_text(json.dumps(updates,indent=2)+'\n')
+message=subject+'\n\n- Establish exact local control-flow and drop equivalence from pinned\n  Rust contracts, with actual compiler and rejecting oracle controls.\n- Retain source/reasons unchanged and own permanent controls, no-op\n  cleanup, source-guard revalidation and the final current-reason replay.\n- Preserve exact archives and reconstructible active contracts in the\n  unbounded book before implementing the separately tracked leaves.\n'
+(out/'commit-message.txt').write_text(message)
+print('Prepared proof completion/next contracts; private task bytes',total,'container bytes routed',saved,'no maintained file changed')
+~~~
+
+</details>
+
+<details>
+<summary>Exact publish.py</summary>
+
+~~~python
+from pathlib import Path
+import json,subprocess,sys
+
+out=Path('target/environment-tail-proof');base='0663022a9a9e2b38d5d3b6fbae6bfbdad23a7ac0';B=chr(96);fence=B*3
+def read(name):return json.loads((out/name).read_text())
+assert read('proof-audit.json')['status']=='passed';routing=read('routing-evidence.json')
+path=Path('docs/book/src/annex-trust-proofs.md');before=subprocess.check_output(['git','show',base+':'+str(path)]).decode()
+if '--refresh' in sys.argv:assert path.read_text()==before+(out/'book-fragment.md').read_text()
+else:assert path.read_text()==before
+(out/'book-before.md').write_text(before)
+parts=['\n### Environment-loop tail control proof\n\n']
+parts.append('The exact environment-record tail is redundant. Removing its '+B+'continue;'+B+' is eligible '
+ 'as a bounded source cleanup, but this proof commit leaves production and all 23 equivalence reasons '
+ 'unchanged. Permanent controls, cleanup with source-guard revalidation, and the final strict current '
+ 'checkpoint are separately owned below. The earlier 1S/full201 measurement remains an initial survivor '
+ 'receipt; this chapter does not rewrite it as an E or claim wider adequacy.\n\n')
+parts.append('#### Complete local source argument\n\n'
+ 'The [Rust Reference on loops](https://doc.rust-lang.org/reference/expressions/loop-expr.html#continue-expressions) '
+ 'specifies that normal for-body completion and an unlabeled continue return to that loop’s head. '
+ 'The [drop-scope rules](https://doc.rust-lang.org/reference/destructors.html#drop-scopes) order exited '
+ 'nested scopes from inner to outer. This proof reads the pages shipped with pinned1.95.0, identified '
+ 'in the [source ledger](ledger.md#rust-reference); the online links provide navigation and can evolve.\n\n')
+parts.append('Bind the whole loop from '+B+'let mut env_deps = Vec::new();'+B+' through its closing brace '
+ 'immediately before the dependency-file loop. Its SHA-256 is '
+ +B+'80e6db30d3affc38de38e1a0d3a2f2ab1330cb3caba9f7612809b7735a1f159b'+B
+ +'. The actual native edit '+B+'L772.stmt.221'+B+' comments out just the tail line. The prospective '
+ 'cleanup removes that complete line. Both have the same local effect.\n\n')
+parts.append('For each possible line, a prefix mismatch executes neither branch in every form. A match '
+ 'executes the same variable split, allowlist check, possible refusal append, normalizer call and '
+ 'environment append, in the same order with the same arguments. There is no reachable statement '
+ 'after the continue within either the if body or for body. Normal fallthrough therefore reaches '
+ 'the same next iterator call. This reasoning applies to arbitrary valid text, scratch strings, '
+ 'canonical scratch strings, crate/producer names and prior refusal contents; the proof does not '
+ 'assume that every record is accepted or that input is nonempty.\n\n')
+parts.append('At this point '+B+'l'+B+', '+B+'dep'+B+' and '+B+'var'+B+' are borrowed strings; none has '
+ 'a custom destructor. The returned owned normalized string is already in the outer environment '
+ 'vector. Both paths leave the same branch and iteration scopes before the next iterator call, '
+ 'and leave the outer iterator only at exhaustion. No ownership or borrow crosses a different '
+ 'boundary. Any earlier panic or allocation failure occurs in the identical preceding work; '
+ 'the removed control statement itself performs none of that work. The function has no source-location '
+ 'macro or caller-location dependency on this line. The claim concerns inventory behavior, including '
+ 'ordering/refusals/normalization; it does not assert identical debug metadata, binary bytes or timing.\n\n')
+parts.append('The loop induction starts with the same empty environment vector and existing refusal '
+ 'vector; the equal per-line transition preserves both through exhaustion. Subsequent dependency '
+ 'collection sees the same values and iterator-independent state. This complete source argument '
+ 'establishes the local no-op result. Finite input agreement and Clippy are supplemental observations.\n\n')
+parts.append('#### Actual compiler controls and proof boundaries\n\n'
+ 'The actual extracted loop, actual normalizer and actual three-entry catalog allowlist compile '
+ 'under Rust1.95.0, edition2021, at optimization levels0 and3. Seventeen independently written '
+ 'literal cases run in each original/comment/clean form: empty/nonrecord input, accepted and refused '
+ 'variables, namespace lookalikes, first/middle/last records, duplicates, prior refusals, CRLF, Unicode, '
+ 'extra equals, unset records, and raw/canonical/encoded scratch prefixes. The two positive runs '
+ 'contain 102 literal form executions.\n\n')
+parts.append('A supplemental iterator and line wrapper with real destructors checks a literal sequence '
+ 'of iterator calls and drops in original and clean forms at both optimization levels. These wrappers '
+ 'exercise an even stronger fixture than production’s borrowed-string items; they do not silently '
+ 'change the actual production type claim. An actual compiled added-suffix example distinguishes '
+ 'the forms: the original skips the new observation on environment lines, the cleaned variant '
+ 'performs it. Thus a future reachable suffix invalidates this proof. Four changed source premises '
+ 'are rejected, and four deliberately wrong output/refusal/drop/suffix oracles at each optimization '
+ 'level all fail with exit101 and the intended diagnostic.\n\n')
+parts.append('Pinned Clippy independently emits two redundant-continue diagnostics, for the original '
+ 'plain collector and destructor fixture. It does not emit that diagnostic for the distinguishing '
+ 'suffix. The extraction also produces14 needless-borrow warnings because probe scratch parameters '
+ 'are already string references; production scratch values are owned strings. This is an observation, '
+ 'not a lint-clean build claim. Preparation’s draft Clippy marker initially omitted the diagnostic’s '
+ 'backticks; reading actual stderr corrected the parser. The draft edit audit initially omitted the '
+ 'native applier’s line join; inspection of the maintained applier corrected it before publication. '
+ 'The actual compiler controls passed throughout.\n\n')
+parts.append('#### Scope decision and separately committed implementation\n\n'
+ 'The existing text key matches22 physical continue sites and includes a real known other-site kill '
+ 'in the [initial assessment](#environment-loop-tail-initial-assessment). A local proof cannot justify '
+ 'a file-wide reason. The chosen resolution is the separately proved no-op source cleanup, preserving '
+ 'all23 reasons. The final checkpoint must explicitly reconcile this retired physical site, replay '
+ 'every current reason and a distinguishing non-tail continue, revalidate affected source/producer '
+ 'guards and restore the complete original/copied inputs. Absence of a candidate is not the proof. '
+ 'Full compiler/caller/global sweeps, review and later dependency-path work stay open.\n\n')
+parts.append('#### Environment tail container contracts\n\n'
+ 'The following active contracts are routed verbatim from private tracking into this unbounded '
+ 'public book. Compact live pointers preserve task ownership; the exact inverse and independently '
+ 'reconstructible task states are recorded below.\n\n')
+for identity,row in routing['records'].items():
+ if not identity.startswith('M3.6.9.6.3.2.2.15.2.1.5.'):
+  parts.append(fence+'markdown\n'+row['full']+fence+'\n\n')
+parts.append('#### Environment tail implementation contracts\n\n')
+for identity,row in routing['records'].items():
+ if identity.startswith('M3.6.9.6.3.2.2.15.2.1.5.'):
+  parts.append(fence+'markdown\n'+row['full']+fence+'\n\n')
+parts.append('#### Exact proof task and executable evidence\n\n')
+for key in ['planned_leaf','completed_leaf']:parts.append(fence+'markdown\n'+routing[key]+fence+'\n\n')
+payloads=[]
+def payload(title,data):
+ encoded=json.dumps(data,indent=2).replace(B,'\\u0060');assert json.loads(encoded)==data
+ parts.append('<details>\n<summary>'+title+'</summary>\n\n'+fence+'json\n'+encoded+'\n'+fence+'\n\n</details>\n\n');payloads.append(dict(title=title,data=data))
+for title,name in [('Complete source/probe audit','proof-audit.json'),('Exact probe preparation','probe-preparation.json'),('Independent literal cases','cases.json'),('Complete compiler commands and outputs','probe-results.json'),('Pinned Reference source identities','reference-capture.json'),('Exact task-state reconstruction and full contracts','routing-evidence.json'),('Previous archive identities','history-before.json')]:payload(title,read(name))
+parts.append('The executable source below is sufficient to reconstruct the probe from the retained '
+ 'input commit '+B+base+B+'. After a later source change, materialize only '
+ +B+'xtask/src/trust.rs'+B+' and '+B+'xtask/src/catalog_build.rs'+B+' from that commit into a plain '
+ 'repository-local directory, then pass that directory to '+B+'prepare-probe.py'+B+'. Do not create '
+ 'another Git repository. The run adapter uses only repository-local outputs and a write guard; '
+ 'toolchain/reference inputs are necessary read-only host dependencies. Complete current-input '
+ 'native mutation replay is deliberately reserved for the final checkpoint.\n\n')
+for name,lang in [('loop-before.rs.txt','rust'),('loop-comment.rs.txt','rust'),('loop-clean.rs.txt','rust'),('probe.rs','rust'),('volume.sb','scheme'),('prepare-probe.py','python'),('run-probe.py','python'),('audit-proof.py','python'),('progress.py','python'),('publish.py','python'),('final-audit.py','python')]:
+ parts.append('<details>\n<summary>Exact '+name+'</summary>\n\n~~~'+lang+'\n'+(out/name).read_text()+'~~~\n\n</details>\n\n')
+fragment=''.join(parts).rstrip('\n')+'\n';(out/'book-fragment.md').write_text(fragment);(out/'published-payloads.json').write_text(json.dumps(payloads,indent=2)+'\n')
+updates=read('completion-updates.json')
+for name,text in updates.items():Path(name).write_text(text)
+path.write_text(before+fragment);Path('git_message_brief.txt').write_text((out/'commit-message.txt').read_text())
+print('Published proof and full contracts:',len(fragment.encode()),'new book bytes;',len(payloads),'exact JSON payloads; maintained production/reasons unchanged')
+~~~
+
+</details>
+
+<details>
+<summary>Exact final-audit.py</summary>
+
+~~~python
+from pathlib import Path
+import copy,hashlib,json,re,subprocess
+
+out=Path('target/environment-tail-proof');base='0663022a9a9e2b38d5d3b6fbae6bfbdad23a7ac0';B=chr(96);fence=B*3
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+def read(name):return json.loads((out/name).read_text())
+def prior(name):return subprocess.check_output(['git','show',base+':'+name])
+assert read('proof-audit.json')['status']=='passed'
+for name in ['xtask/src/trust.rs','xtask/src/catalog_build.rs','xtask/mutation_sweep_tests.py','xtask/trust.equivalents']:
+ assert Path(name).read_bytes()==prior(name),name
+history=read('history-before.json');assert len(history)==328
+for name,digest in history.items():assert sha(Path(name).read_bytes())==digest,name
+identity='M3.6.9.6.3.2.2.15.2.1.5.0';archive=Path('docs/task-history/M3/'+identity+'.md');original=prior('docs/tasks/M3.md')
+a=original.index(('- ID: '+B+identity+B).encode());m=re.search(rb'(?m)^- ID: |^## ',original[a+1:]);z=a+1+m.start()
+assert archive.read_bytes()+b'\n'==original[a:z]
+actual={str(p) for p in Path('docs/task-history').glob('*/*.md')};assert actual==set(history)|{str(archive)} and len(actual)==329
+index=Path('docs/task-history/INDEX.md').read_text();row=next(line for line in index.splitlines(keepends=True) if line.startswith('| '+B+identity+B+' |'))
+assert index.replace(row,'',1).encode()==prior('docs/task-history/INDEX.md')
+data=read('routing-evidence.json');assert data['base_commit']==base and data['base_sha256']==sha(original)
+lines=original.decode().splitlines(keepends=True)
+def reconstruct(snapshot):
+ at=0;chunks=[]
+ for change in snapshot['changes']:
+  a,z=change['start_line'],change['end_line'];assert type(a) is int and type(z) is int and at<=a<=z<=len(lines)
+  assert sha(''.join(lines[a:z]).encode())==change['before_sha256']
+  chunks.extend(lines[at:a]);chunks.append(change['replacement']);at=z
+ chunks.extend(lines[at:]);raw=''.join(chunks).encode();assert len(raw)==snapshot['bytes'] and sha(raw)==snapshot['sha256'];return raw
+for name,snapshot in data['snapshots'].items():assert reconstruct(snapshot)==(out/name).read_bytes(),name
+pre=(out/'task-before-routing.md').read_text();post=(out/'task-after-routing.md').read_text();restored=post
+for identity,record in data['records'].items():
+ if not identity.startswith('M3.6.9.6.3.2.2.15.2.1.5.'):
+  assert restored.count(record['compact'])==1;restored=restored.replace(record['compact'],record['full'],1)
+assert restored==pre and len(pre.encode())-len(post.encode())==data['saved_container_bytes']
+false=[]
+for name,snapshot in data['snapshots'].items():
+ bad=copy.deepcopy(snapshot);bad['sha256']='0'*64
+ try:reconstruct(bad)
+ except AssertionError:false.append(name+':false-digest')
+ else:raise AssertionError('bad snapshot accepted')
+assert archive.read_bytes()[:-1]+b'\n'!=original[original.index(('- ID: '+B+'M3.6.9.6.3.2.2.15.2.1.5.0'+B).encode()):original.index(('- ID: '+B+'M3.6.9.6.3.2.2.15.2.1.5.1'+B).encode())]
+false.append('truncated-new-seal')
+book=Path('docs/book/src/annex-trust-proofs.md').read_text();before=(out/'book-before.md').read_text();fragment=(out/'book-fragment.md').read_text()
+assert before.encode()==prior('docs/book/src/annex-trust-proofs.md') and book==before+fragment
+def payload(title):
+ marker='<summary>'+title+'</summary>';assert fragment.count(marker)==1,title
+ a=fragment.index(marker)+len(marker);m=re.match(r'\s*'+re.escape(fence)+r'json\n',fragment[a:]);assert m,title
+ a+=m.end();z=fragment.index('\n'+fence,a);return json.loads(fragment[a:z])
+published=read('published-payloads.json')
+for row in published:assert payload(row['title'])==row['data'],row['title']
+for name in ['prepare-probe.py','run-probe.py','audit-proof.py','progress.py','publish.py','final-audit.py','probe.rs','volume.sb']:
+ assert (out/name).read_text() in fragment,name
+assert data['planned_leaf'] in fragment and data['completed_leaf'] in fragment
+for record in data['records'].values():assert record['full'] in fragment
+for name,expected in read('completion-updates.json').items():assert Path(name).read_text()==expected,name
+assert Path('docs/tasks/M3.md').read_bytes()==reconstruct(data['snapshots']['task-after-completion.md'])
+changed=subprocess.check_output(['git','diff','--name-only',base],text=True).splitlines()
+allowed=set(read('completion-updates.json'))|{'docs/book/src/annex-trust-proofs.md','docs/book/src/book-index.md','docs/task-history/INDEX.md'}
+assert set(changed)<=allowed,changed
+total=sum(p.stat().st_size for p in Path('docs/tasks').rglob('*') if p.is_file());assert total<=819200,total
+receipt=dict(status='passed',scope='Proof/control eligibility only; production/reasons unchanged, permanent control and cleanup implementation/final current replay remain separately owned.',base_commit=base,previous_archives=328,current_archives=329,new_assessment_seal_exact=True,all_previous_book_bytes_retained=True,published_json_payloads=len(published),exact_task_states=len(data['snapshots']),full_routed_records=len(data['records']),routed_container_bytes=data['saved_container_bytes'],routing_history_falsifiers=false,private_task_bytes=total,proof_audit_sha256=sha((out/'proof-audit.json').read_bytes()))
+(out/'final-audit.json').write_text(json.dumps(receipt,indent=2)+'\n')
+print('Final tail-proof audit: passed;328 prior/new329th archive exact,5 exact task states,6 routing/history refusals; production/reasons unchanged; sha256',sha((out/'final-audit.json').read_bytes()))
+~~~
+
+</details>

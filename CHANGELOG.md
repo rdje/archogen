@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — prove the environment-loop tail cleanup
+
+`ARCHOGEN-M3-0818` (leaf `M3.6.9.6.3.2.2.15.2.1.5.1.0`), `2026-10-20`.
+
+- Prove the complete local loop has the same next-iteration and exited drop scopes
+  with its tail continue, actual comment edit or removed line, from pinned Rust contracts.
+- Actual pinned compiler O0/O3:17 independent literal cases in3 forms, exact drop traces,
+  a distinguishing reachable-suffix counterexample, and all8 wrong oracles fail101.
+  Clippy1.95 independently flags the original tail; finite agreement is not the proof.
+- Keep production,201 semantic parents and all23 reasons unchanged. Separately own
+  permanent controls, source cleanup/guard revalidation and strict current-reason replay.
+- Preserve328 prior archives/new exact assessment seal and route full active container
+  contracts verbatim to the unbounded book, with independently reconstructible task states.
+
+
 ## archogen — assess the current environment-loop tail
 
 `ARCHOGEN-M3-0817` (leaf `M3.6.9.6.3.2.2.15.2.1.5.0`), `2026-10-20`.

@@ -230,6 +230,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md)
 - engine — [What is versioned, and what changing it costs](versions.md#engine)
 - engine-api — [What is versioned, and what changing it costs](versions.md#engine-api)
+- Environment-loop tail control proof — [Annex C: Trust proof
+  records](annex-trust-proofs.md#environment-loop-tail-control-proof)
 - Environment-loop tail initial assessment — [Annex C: Trust proof
   records](annex-trust-proofs.md#environment-loop-tail-initial-assessment)
 - Every crate is in this book — [Annex B: The checks that keep the repository
