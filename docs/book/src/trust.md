@@ -329,6 +329,15 @@ producer order and the four initial branch mutations killed by this parent. Othe
 raw/canonical geometry and the complete dependency-block checkpoint remain separately owned;
 this bounded result does not establish full mutation adequacy.
 
+⚠️ Measured limit (`2026-10-20`): the pinned compiler writes a prerequisite's spaces as
+backslash-space and every other byte literally, so one dependency record can be read two ways.
+With a space in the written tree's path, an outside input whose name ends in a backslash,
+followed by an in-tree prerequisite, was read as one in-tree path: the inventory was written
+and named a decoy blob. Outside inputs with spaces were refused under fragment names. Until
+`M3.6.9.6.3.2.2.15.2.1.6.1.1.1` repairs the reading by refusal, the guarantee above holds for
+the ordinary domain only; the [assessment record](annex-trust-proofs.md#dependency-path-domain-assessment)
+retains every probe.
+
 ### Codegen options retain their operands
 
 A `-C` compiler option and its following operand are recorded together as one configuration entry.

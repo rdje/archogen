@@ -200,6 +200,10 @@ a change that leaves it stale, so it is never edited by hand.
   and what changing it costs](versions.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Dependency path assessment contracts — [Annex C: Trust proof
   records](annex-trust-proofs.md#dependency-path-assessment-contracts)
+- Dependency path-domain assessment — [Annex C: Trust proof
+  records](annex-trust-proofs.md#dependency-path-domain-assessment)
+- Dependency path-domain contracts — [Annex C: Trust proof
+  records](annex-trust-proofs.md#dependency-path-domain-contracts)
 - Dependency refusal witness contracts — [Annex C: Trust proof
   records](annex-trust-proofs.md#dependency-refusal-witness-contracts)
 - **description** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a

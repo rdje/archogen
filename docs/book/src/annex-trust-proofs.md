@@ -118312,3 +118312,10425 @@ result=dict(status='passed',scope='Bounded literal refusal witness only; focused
 ~~~
 
 </details>
+
+### Dependency path-domain assessment
+
+Six probe variants of the permanent parent `trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused` ran with the real pinned Cargo on the project-owned plain copy at the maintained sweep layout on `2026-10-20`, with production, every test and every reason unchanged (`xtask/src/trust.rs` at `d7c9403d2cf27a345b151fae86fc92c7a106b3be13f98569f12d577baa8999f4`). Ordinary outside inputs are refused exactly under the raw output root and under a symlinked output root. The leaf’s P0 hypothesis is now an observed outcome: with a space in the written tree’s path, an outside input whose name ends in a backslash, followed by an in-tree prerequisite, was read as one escaped in-tree path; the inventory was **written where a refusal was due**, omitted the outside input and named a decoy blob. Outside inputs with spaces are refused, but under fragment names. A final prerequisite ending in a backslash makes the pinned Cargo refuse its own dependency record, so the inventory returns an error and writes nothing. This is a bounded assessment: no repair is claimed, and the ambiguity repair and the terminal-backslash control are separately owned below.
+
+#### Actual producer records and outcomes
+
+The pinned rustc writes each prerequisite of the first dependency rule with its spaces as backslash-space and every other byte literally, then one per-file phony target per line. The inventory’s reader, `dependency_files` in `xtask/src/trust.rs`, consumes a known raw or canonical scratch prefix, escaped the same way, before splitting the remainder at the next space. One first-rule text can therefore name two different prerequisite lists, and the reader keeps the in-tree reading. The retained compiler-output text replaces only the runtime repository root with a declared placeholder; the published receipts apply the same replacement to the fixture file contents, and the audit records both digests.
+
+| Variant | Outside inputs | Output root | Cargo exit | Outcome |
+| --- | --- | --- | --- | --- |
+| `ordinary` | `a.txt`, `m.txt`, `z.txt` | `out` | 0 | refused: exact outside-tree refusals; no inventory |
+| `prefix-collision` | `prefix\` | `prefix crates/b/src` | 101 | written twice where a refusal was due; the outside input omitted; the decoy blob named |
+| `spaces` | `a with space.txt`, `m with space.txt`, `z with space.txt` | `out` | 101 | refused under fragment names; two fragments classified as missing blobs |
+| `alias-ascii` | `a.txt`, `m.txt`, `z.txt` | `output-alias` | 0 | refused: exact outside-tree refusals under the symlinked root; the canonical inside input accepted |
+| `alias-spaces` | `a with space.txt`, `m with space.txt`, `z with space.txt` | `output-alias` | 101 | refused under fragment names, as spaces |
+| `terminal-backslashes` | `a\`, `m\`, `z\` | `out` | 101 | error: the pinned Cargo refuses its own dependency record; nothing written, no refusal list |
+
+#### Measured defects
+
+**D1, P0, observed; owner `M3.6.9.6.3.2.2.15.2.1.6.1.1.1`.** Reproduction: the `prefix-collision` variant names the outside input `<run>/prefix\` from an admitted include site, tracks `<tree>/crates/b/src/tree/data.txt` through a second admitted site, holds a decoy `data.txt` at the tree root with the same bytes, and writes into the output root `prefix crates/b/src`. The first rule reads `crates/b/src/lib.rs <run>/prefix\ crates/b/src/tree/data.txt` while the phony targets list `<run>/prefix\:` and `crates/b/src/tree/data.txt:` on separate lines. The escaped scratch prefix is `<run>/prefix\ crates/b/src/tree/`, so the reader consumes the outside input, the field separator and the tree prefix together and keeps the residue `data.txt`, the decoy. Both runs wrote an inventory whose `chk` unit lists the library root and the decoy digest only; after the outside payload changed, the artifact digest changed while the recorded inputs did not. The pinned Cargo’s own rewritten `libb.d` reads the same text as one escaped in-tree path, so its fingerprint tracks the decoy too: the encoding, not this reader alone, is ambiguous. Impact: inventory written on both runs; the outside input omitted; the decoy blob at the tree root recorded; the artifact digest changes while the recorded inputs do not; the identity claim is false while the gate passes. Preconditions: a space in the written tree path; a host file named by the prefix before that space with a trailing backslash; an in-tree prerequisite spelled by the rest. Safe next repair: refusal, never a cleverer split: read the per-file phony targets as the line-delimited prerequisite list, require the first rule to agree, refuse any residual backslash outside the known prefixes naming the raw record, keep the spaced and line-broken scratch-root controls passing.
+
+**D2, P1; same owner.** Reproduction: the `spaces` and `alias-spaces` variants name `a with space.txt`, `m with space.txt` and `z with space.txt` outside the tree; rustc writes each as `<run>/external/a\ with\ space.txt`. An outside prerequisite is split at each escaped space because only the known scratch prefixes are consumed intact. Outcome: refused, but under the fragments a-backslash, m-backslash, z-backslash, space.txt and with-backslash; the relative fragments are classified as missing blobs. The literal oracle expected the three complete paths. The outcome stays a refusal, so no inventory was written, but the diagnostics are false. Repair: the same refusal rule names the raw record text.
+
+**D3, P2; owner `M3.6.9.6.3.2.2.15.2.1.6.1.1.2`.** Reproduction: the `terminal-backslashes` variant names `a\`, `m\` and `z\` outside the tree; rustc writes the rule ending in a literal backslash. The pinned Cargo refuses a dependency record whose final prerequisite ends in a backslash before the inventory reads anything: `error: could not parse/generate dep info at: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/b-20572edba3a82d76.d`. Outcome: the inventory returns the build error; nothing written; neither a written nor a refused outcome. Next: retain the exact rejecting constraint as a permanent control; decide whether the error is reported as a refusal.
+
+Positive findings: ordinary outside inputs are refused exactly under the raw output root; under a symlinked output root rustc spells the first target with the raw alias and the manifest-reached inside input with the canonical root; the reader strips either, accepts the inside input and refuses the outside inputs exactly; the raw/canonical output-root geometry is not implicated in D1, D2 or D3. The literal oracle derives every expected refusal from the declared input names, so a passing variant is a complete refusal list and not a containment.
+
+#### Restoration and continuity
+
+All1156 regular inputs of the main tree restore against the probe’s manifest, by the probe’s own check and by a fresh re-derivation with `scripts/trust_adequacy.py --check-inputs`; the one Gitlink stays opaque pin metadata. The plain copy restores against the same manifest with the maintained `regular_input` reader and borrowed index identities. The production source digest `d7c9403d2cf27a345b151fae86fc92c7a106b3be13f98569f12d577baa8999f4` is the committed one; the reason file is unchanged; nothing under `xtask/` is staged. The staged seal of the literal refusal witness is byte for byte its leaf as the input commit held it, with one new index row, and all335 earlier archives are exact. The audit rejects 28 altered receipts, among them a refused outcome claimed for the collision, a dropped phony target, a false decoy digest, exact refusals claimed for the spaced variant, a parsed record claimed for the terminal backslash and a modified restoration. Four task states are reconstructible from the input commit by exact deltas. No Rust, test or reason changes, so the focused tier is not required by this commit; normal commit hooks remain binding.
+
+### Dependency path-domain contracts
+
+The parent contract keeps its pre-routing status text, the two children own the measured defects, and the later checkpoint contract follows; their complete bodies are retained here verbatim while the tree holds compact pointers, with inverse routing and false-content controls in the final audit.
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.6.1.1`
+  Status: `active` — path-domain follow-up; isolated actual-producer assessment first
+  Goal: establish the actual outside-tree path quoting and raw/canonical boundaries;
+    resolve every measured defect under separate safe children before the full .6.2
+    checkpoint. No reachability or equivalence follows from the initial four survivors.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.6.1.1.1`
+  Status: `pending` — P0: ambiguous dependency-record readings are refused
+  Goal: the pinned rustc writes a prerequisite's spaces as backslash-space and every
+    other byte literally, so one first-rule text can name two prerequisite lists. The
+    measured prefix collision reads an outside input ending in a backslash, followed by
+    an in-tree prerequisite, as one escaped in-tree path, writes the inventory and
+    records a decoy blob; spaced outside paths are refused under fragment names, and
+    the pinned Cargo's own rewritten record reads the text the same way. Repair by
+    refusal, never by a cleverer split: read rustc's per-file phony targets as the
+    line-delimited prerequisite list, require the first rule's reading to agree with
+    it, and refuse any residual backslash outside the known scratch prefixes, naming
+    the raw record text. Keep the existing spaced and line-broken scratch-root controls
+    passing. Replay the retained prefix-collision, spaces and alias-spaces variants as
+    permanent controls with independent literal expectations; require intended finishing
+    kills for the dependency-block edits, unchanged reasons and complete restoration.
+  Priority: P0, observed `2026-10-20` ([record](../book/src/annex-trust-proofs.md#dependency-path-domain-assessment)).
+  Impact: an inventory can omit an outside input and misattribute its bytes to a tracked
+    blob, so the identity claim is false while the gate passes. Preconditions: a space in
+    the written tree's path, a host file named by the prefix before that space with a
+    trailing backslash, and an in-tree prerequisite spelled by the rest.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.6.1.1.2`
+  Status: `pending` — P2: Cargo's terminal-backslash refusal retained as a control
+  Goal: a final prerequisite ending in a backslash makes the pinned Cargo refuse its own
+    dependency record before the inventory reads anything; the inventory returns the
+    build error and writes nothing, neither a written nor a refused outcome. Retain that
+    exact rejecting constraint as a permanent control naming Cargo's message, decide
+    whether the error is reported as a refusal, and keep the outcome unjudged rather
+    than passed until decided. After .1.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.6.2`
+  Status: `pending` — P1, after .6.1
+  Goal: re-discover the complete current dependency block; reconcile every historical
+    obligation and neighboring edit with exact outcomes, real compiler qualification for
+    U and guarded source proofs for any E; full current parents and restoration. Commit
+    the bounded checkpoint before configuration paths; broader adequacy stays open.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+#### Completed assessment leaf
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.6.1.1.0`
+  Status: `done` — path-domain assessment; P0 prefix collision observed, repairs owned
+  Goal: [bounded assessment record](../book/src/annex-trust-proofs.md#dependency-path-domain-assessment).
+  Verification: `python3 -I -B target/dependency-path-domain-assessment/audit.py`: exit code 0; six
+    variants, production/tests/reasons unchanged; ordinary/aliased exact; collision written where a
+    refusal was due; spaced fragments; Cargo terminal-backslash refusal;1156 inputs restored;28 receipts rejected.
+  Commit: `ARCHOGEN-M3-0825`
+
+```
+
+<details>
+<summary>Complete dependency path-domain audit</summary>
+
+```json
+{
+  "schema": "archogen-dependency-path-domain-assessment/1",
+  "status": "passed",
+  "base_commit": "39b16e963690e0d3b8a6f2ec99b7d8ce020bedaf",
+  "source_sha256": "d7c9403d2cf27a345b151fae86fc92c7a106b3be13f98569f12d577baa8999f4",
+  "parent": "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "--offline",
+    "-q",
+    "-p",
+    "xtask",
+    "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+    "--",
+    "--exact"
+  ],
+  "scope": "Bounded path-domain assessment of the public-inventory refusal parent on the plain copy; production, tests and reasons unchanged. The ambiguity repair and the terminal-backslash control are separately owned; the full dependency-block checkpoint, compiler/caller/global sweeps and review remain open.",
+  "production_span": [
+    183444,
+    185325
+  ],
+  "variants": [
+    {
+      "case": "ordinary",
+      "outside_inputs": [
+        "a.txt",
+        "m.txt",
+        "z.txt"
+      ],
+      "output_root": "out",
+      "cargo_exit": 0,
+      "outcome": "refused: exact outside-tree refusals; no inventory",
+      "parent_sha256": "14f456964960b233571efaca06b204a209e2dbb0a648627f4bfdd8d57e9aa40b",
+      "copy_source_sha256": "d7c9403d2cf27a345b151fae86fc92c7a106b3be13f98569f12d577baa8999f4",
+      "fixture_commit": "e50f22cebe79dd4172dcac9383ad433399fd8d80"
+    },
+    {
+      "case": "prefix-collision",
+      "outside_inputs": [
+        "prefix\\"
+      ],
+      "output_root": "prefix crates/b/src",
+      "cargo_exit": 101,
+      "outcome": "written twice where a refusal was due; the outside input omitted; the decoy blob named",
+      "parent_sha256": "77ddeeb6068090ee224468adec75b8b08f3b7b77ee9e3f3cddda11b8b0da8577",
+      "copy_source_sha256": "b3d825e9075f2d67cabd16e01fa2c416a05ff94f04615a85369f903f0cd57a0e",
+      "fixture_commit": "c46126369e2720c5b221682f7ccafd8e230b88bb"
+    },
+    {
+      "case": "spaces",
+      "outside_inputs": [
+        "a with space.txt",
+        "m with space.txt",
+        "z with space.txt"
+      ],
+      "output_root": "out",
+      "cargo_exit": 101,
+      "outcome": "refused under fragment names; two fragments classified as missing blobs",
+      "parent_sha256": "403e56bd9adb4f07ba1f528d283bd56e4aa6dccdba36e767698f14f256add144",
+      "copy_source_sha256": "e6d2a1888e55a2f790481541400e93b6baafdce7762382c33d2dbffc742bf71d",
+      "fixture_commit": "8dca8aefa08fb38ef307d949e43939425d290cb6"
+    },
+    {
+      "case": "alias-ascii",
+      "outside_inputs": [
+        "a.txt",
+        "m.txt",
+        "z.txt"
+      ],
+      "output_root": "output-alias",
+      "cargo_exit": 0,
+      "outcome": "refused: exact outside-tree refusals under the symlinked root; the canonical inside input accepted",
+      "parent_sha256": "4a3ce40f1ff371e8b39eb512c814077b8897d3c70742be023806e5179a13506c",
+      "copy_source_sha256": "63fbbbb728a931b9e55db3c5d0ad2ce5b0162dcf5088821ad249557fba49e4ba",
+      "fixture_commit": "73d30d2ee6cae410857089da42993afb0e246f7d"
+    },
+    {
+      "case": "alias-spaces",
+      "outside_inputs": [
+        "a with space.txt",
+        "m with space.txt",
+        "z with space.txt"
+      ],
+      "output_root": "output-alias",
+      "cargo_exit": 101,
+      "outcome": "refused under fragment names, as spaces",
+      "parent_sha256": "e0d087e70433439b5592eb95bd5608362bf94cdd9f369a959b133710b71e0eb7",
+      "copy_source_sha256": "94417e52146bba2164bb1e8a9b5c47c99e65681bef0ba169101027649613d762",
+      "fixture_commit": "86d7b59d50c39964c4c21fec47a6c385fdf4eb76"
+    },
+    {
+      "case": "terminal-backslashes",
+      "outside_inputs": [
+        "a\\",
+        "m\\",
+        "z\\"
+      ],
+      "output_root": "out",
+      "cargo_exit": 101,
+      "outcome": "error: the pinned Cargo refuses its own dependency record; nothing written, no refusal list",
+      "parent_sha256": "55cea9674f9cd941c4ec3498b2c9f33304cb9738727aff2b5a0ea340e8af8513",
+      "copy_source_sha256": "7c4c027bee6fba93dab79f37ddbb3ba1fddd7edd7e3d124785cd39fc61de15ae",
+      "fixture_commit": "7b3b4581eac55f17aca5880d38b6618536ecc6eb"
+    }
+  ],
+  "defects": [
+    {
+      "id": "D1",
+      "priority": "P0",
+      "variant": "prefix-collision",
+      "mechanism": "the escaped scratch prefix equals an outside input ending in a backslash, the field separator and the in-tree prefix; the reader consumes it and keeps the residue data.txt",
+      "outcome": "inventory written on both runs; the outside input omitted; the decoy blob at the tree root recorded; the artifact digest changes while the recorded inputs do not",
+      "preconditions": "a space in the written tree path; a host file named by the prefix before that space with a trailing backslash; an in-tree prerequisite spelled by the rest",
+      "cargo_agrees": "the pinned Cargo rewrote the same text as one escaped in-tree path",
+      "owner": "M3.6.9.6.3.2.2.15.2.1.6.1.1.1",
+      "repair": "refusal, never a cleverer split: read the per-file phony targets as the line-delimited prerequisite list, require the first rule to agree, refuse any residual backslash outside the known prefixes naming the raw record, keep the spaced and line-broken scratch-root controls passing"
+    },
+    {
+      "id": "D2",
+      "priority": "P1",
+      "variant": "spaces, alias-spaces",
+      "mechanism": "an outside prerequisite is split at each escaped space because only the known scratch prefixes are consumed intact",
+      "outcome": "refused, but under the fragments a-backslash, m-backslash, z-backslash, space.txt and with-backslash; the relative fragments are classified as missing blobs",
+      "preconditions": "a space in an outside input path",
+      "owner": "M3.6.9.6.3.2.2.15.2.1.6.1.1.1",
+      "repair": "the same refusal rule names the raw record text"
+    },
+    {
+      "id": "D3",
+      "priority": "P2",
+      "variant": "terminal-backslashes",
+      "mechanism": "the pinned Cargo refuses a dependency record whose final prerequisite ends in a backslash before the inventory reads anything",
+      "outcome": "the inventory returns the build error; nothing written; neither a written nor a refused outcome",
+      "exact_constraint": "error: could not parse/generate dep info at: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/b-20572edba3a82d76.d",
+      "owner": "M3.6.9.6.3.2.2.15.2.1.6.1.1.2",
+      "repair": "retain the exact rejecting constraint as a permanent control; decide whether the error is reported as a refusal"
+    }
+  ],
+  "positives": [
+    "ordinary outside inputs are refused exactly under the raw output root",
+    "under a symlinked output root rustc spells the first target with the raw alias and the manifest-reached inside input with the canonical root; the reader strips either, accepts the inside input and refuses the outside inputs exactly",
+    "the raw/canonical output-root geometry is not implicated in D1, D2 or D3"
+  ],
+  "restoration": {
+    "main_regular": 1156,
+    "main_gitlinks": 1,
+    "copy_regular": 1156,
+    "recheck": "restored",
+    "manifest_sha256": "20bc301da9641dc791f4be29a1811f115211e4146c375f08a2509cad38434743"
+  },
+  "bindings": {
+    "staged": [
+      "docs/task-history/INDEX.md",
+      "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.6.1.0.md",
+      "docs/tasks/M3.md"
+    ],
+    "earlier_archives": 335,
+    "staged_seal": "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.6.1.0.md",
+    "task_sha256": "190967323e1e60cf2d03738725838f6f8995e59107145f2fe73764d1c3bb325e"
+  },
+  "falsifiers": [
+    "false-outcome:prefix-collision",
+    "dropped-phony-target:prefix-collision",
+    "separate-fields-claimed:prefix-collision",
+    "false-decoy-digest:prefix-collision",
+    "tree-data-claimed:prefix-collision",
+    "unchanged-artifact:prefix-collision",
+    "cargo-record-disagrees:prefix-collision",
+    "exact-refusals-claimed:spaces",
+    "escaped-backslash-claimed:alias-spaces",
+    "false-exit:ordinary",
+    "false-exit:terminal-backslashes",
+    "cargo-refusal-missing:terminal-backslashes",
+    "escaped-backslash-claimed:terminal-backslashes",
+    "inside-input-dropped:alias-ascii",
+    "false-parent-digest:alias-ascii",
+    "false-source-binding:spaces",
+    "foreign-parent-text:prefix-collision",
+    "wider-span-claimed",
+    "changed-source",
+    "false-restoration:main",
+    "false-restoration:recheck",
+    "false-restoration:copy",
+    "foreign-manifest",
+    "stale-manifest-commit",
+    "extra-staged-path",
+    "altered-archive",
+    "altered-seal",
+    "missing-log-case"
+  ],
+  "published": {
+    "published-qualified.json": {
+      "source": "qualified-results.json",
+      "raw_sha256": "ab4f967beaff626f5a1b6682882a0789d418cc4adf311c7fae510ba1f4fd5421",
+      "published_sha256": "be07d6f0a6627f1cfc4d67d8c47dbbbae15248fec1ba873f23e9652dff4c8ce9",
+      "normalization": "the runtime repository root replaced by <repository-root> in every string, including fixture file contents"
+    },
+    "published-initial.json": {
+      "source": "results.json",
+      "raw_sha256": "b1e0f8e81f02c9933a011e015926e804cbff0995333baf569adbed15ab838c0f",
+      "published_sha256": "3ce02944e2b186697065a8c07f7905dfcd25582e9ff9135d1334656281e7ddff",
+      "normalization": "the runtime repository root replaced by <repository-root> in every string, including fixture file contents"
+    }
+  },
+  "digests": {
+    "results.json": "b1e0f8e81f02c9933a011e015926e804cbff0995333baf569adbed15ab838c0f",
+    "qualified-results.json": "ab4f967beaff626f5a1b6682882a0789d418cc4adf311c7fae510ba1f4fd5421",
+    "main-inputs.json": "20bc301da9641dc791f4be29a1811f115211e4146c375f08a2509cad38434743",
+    "main-restoration.json": "52b9402be87609945d8f7c53c5298eee05e86e350d88beee6d03976a02adffed",
+    "main-restoration-recheck.json": "52b9402be87609945d8f7c53c5298eee05e86e350d88beee6d03976a02adffed",
+    "copy-restoration.json": "1a3504ea7d782c9078cf61b01c97464d76bf9ce691dead3bf9f68e81491e6628",
+    "probe.py": "69ff5a28159effaffee7847cf23dbec6ab117318a7e3b0f36d851e90e47149d0",
+    "probe.log": "288114cc9fbf07bfdcbe21521e27e5dab517284d0b846d3dbe33cc08b677df72",
+    "qualified.log": "a0fb5aeee5a2721529eda82f985ec0ddaceb471ca116202dd1aac282fad50c8c",
+    "history-before.json": "80681af95c4e09d6fc967462d8e4ebee198dffefab40398c87b22ddd90af15da"
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Qualified dependency path-domain receipts</summary>
+
+```json
+[
+  {
+    "case": "ordinary",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-q",
+      "-p",
+      "xtask",
+      "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+      "--",
+      "--exact"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 2.4922803749796003,
+    "oracle": "Complete literal outside-input refusals derived from the declared filenames, plus no inventory.",
+    "inputs": [
+      [
+        "FIRST",
+        "a.txt",
+        "first external input\n"
+      ],
+      [
+        "MIDDLE",
+        "m.txt",
+        "middle external input\n"
+      ],
+      [
+        "LAST",
+        "z.txt",
+        "last external input\n"
+      ]
+    ],
+    "output": "out",
+    "source_sha256": "d7c9403d2cf27a345b151fae86fc92c7a106b3be13f98569f12d577baa8999f4",
+    "parent_sha256": "14f456964960b233571efaca06b204a209e2dbb0a648627f4bfdd8d57e9aa40b",
+    "stdout": "\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.16s\n\n",
+    "stderr": "",
+    "captured": {
+      "out/target/chk/release/deps/b-20572edba3a82d76.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/libb-20572edba3a82d76.rlib: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/libb-20572edba3a82d76.rmeta: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt\n\ncrates/b/src/lib.rs:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt:\n",
+      "out/target/chk/release/libb.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/libb.rlib: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/tree/crates/b/src/lib.rs\n",
+      "out/target/gen/release/a.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/a: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/tree/crates/a/src/main.rs\n",
+      "out/target/gen/release/deps/a-ea31e1b4fa6d99dc.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/deps/a-ea31e1b4fa6d99dc.d: crates/a/src/main.rs\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/deps/a-ea31e1b4fa6d99dc: crates/a/src/main.rs\n\ncrates/a/src/main.rs:\n"
+    },
+    "fixture_files": {
+      ".cargo/config.toml": "# \u0060cargo xtask \u2026\u0060 runs the repository's own verification runner (ROADMAP.md \u00a74.2, \u00a714.3).\n# Committed deliberately: a tier that only works if each developer remembers an incantation is a\n# tier nobody runs.\n[alias]\nxtask = \"run --quiet --package xtask --\"\n",
+      "Cargo.lock": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"b\"\nversion = \"0.1.0\"\n",
+      "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n",
+      "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/a/src/main.rs": "fn main() {}\n",
+      "crates/b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/b/src/lib.rs": "pub const FIRST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt\");\npub const MIDDLE: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt\");\npub const LAST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt\");\n",
+      "rust-toolchain.toml": "[toolchain]\nchannel = \"1.95.0\"\n",
+      "trust/roots.eadl": "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n(defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"972216889d284dffe87816e753f7c2c3063ecb935b0151da5003b00e23147c34\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"a96d71233bc7801ea232693f70a0124f946893a22458ddf567ca4c29beca3505\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"4a40b498d8d4e5b57e2ee5d3284e832feac75190d5ce8c9b439be551b60447aa\") (reason \"a fixture\"))\n"
+    },
+    "fixture_commit": "e50f22cebe79dd4172dcac9383ad433399fd8d80"
+  },
+  {
+    "case": "prefix-collision",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-q",
+      "-p",
+      "xtask",
+      "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+      "--",
+      "--exact"
+    ],
+    "exit_code": 101,
+    "elapsed_seconds": 3.7292207500431687,
+    "oracle": "Complete literal outside-input refusals derived from the declared filenames, plus no inventory.",
+    "inputs": [
+      [
+        "OUTSIDE",
+        "prefix\\",
+        "outside first payload\n"
+      ]
+    ],
+    "output": "prefix crates/b/src",
+    "source_sha256": "b3d825e9075f2d67cabd16e01fa2c416a05ff94f04615a85369f903f0cd57a0e",
+    "parent_sha256": "77ddeeb6068090ee224468adec75b8b08f3b7b77ee9e3f3cddda11b8b0da8577",
+    "stdout": "\nrunning 1 test\ntrust::tests::every_absolute_dependency_outside_the_written_tree_is_refused --- FAILED\n\nfailures:\n\n---- trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused stdout ----\n\nthread 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused' (1268807651) panicked at xtask/src/trust_test_process.rs:56:73:\ntrust::tests::every_absolute_dependency_outside_the_written_tree_is_refused: child failed (exit status: 101); stdout \"\\nrunning 1 test\\ntest trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused ... FAILED\\n\\nfailures:\\n\\n---- trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused stdout ----\\n\\nthread 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused' (1268807655) panicked at xtask/src/trust.rs:3034:36:\\nwritten where a refusal was due\\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\\n\\n\\nfailures:\\n    trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused\\n\\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 330 filtered out; finished in 2.17s\\n\\n\"; stderr \"\"\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n\n\nfailures:\n    trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 330 filtered out; finished in 2.18s\n\n",
+    "stderr": "error: test failed, to rerun pass \u0060-p xtask --bin xtask\u0060\n",
+    "captured": {
+      "prefix crates/b/src/target/chk/release/deps/b-20572edba3a82d76.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix crates/b/src/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix\\ crates/b/src/tree/data.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix crates/b/src/target/chk/release/deps/libb-20572edba3a82d76.rlib: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix\\ crates/b/src/tree/data.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix crates/b/src/target/chk/release/deps/libb-20572edba3a82d76.rmeta: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix\\ crates/b/src/tree/data.txt\n\ncrates/b/src/lib.rs:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix\\:\ncrates/b/src/tree/data.txt:\n",
+      "prefix crates/b/src/target/chk/release/libb.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix\\ crates/b/src/target/chk/release/libb.rlib: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix\\ crates/b/src/tree/crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix\\ crates/b/src/tree/data.txt\n",
+      "prefix crates/b/src/target/gen/release/a.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix\\ crates/b/src/target/gen/release/a: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix\\ crates/b/src/tree/crates/a/src/main.rs\n",
+      "prefix crates/b/src/target/gen/release/deps/a-ea31e1b4fa6d99dc.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix crates/b/src/target/gen/release/deps/a-ea31e1b4fa6d99dc.d: crates/a/src/main.rs\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix crates/b/src/target/gen/release/deps/a-ea31e1b4fa6d99dc: crates/a/src/main.rs\n\ncrates/a/src/main.rs:\n",
+      "first-inventory.json": "{\"admissions-unused\":[],\"build-configuration\":{\"profiles\":[],\"toolchain\":\"rustc 1.95.0 (59807616e 2026-04-14)\\nbinary: rustc\\ncommit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860\\ncommit-date: 2026-04-14\\nhost: aarch64-apple-darwin\\nrelease: 1.95.0\\nLLVM version: 22.1.2\"},\"classifications-unused\":[],\"format\":\"archogen-trust-inventory/0\",\"generated-marked\":[],\"generated-unread\":[],\"identity\":{\".cargo/config.toml\":\"48296b18a2b27cc7268cf489fc37bdcf24e04d79b914c2237c248e4db1f6fa79\",\"Cargo.lock\":\"e68eb3855fe7c99357bf242b2600874c6ee9b6923017b4d9082489e7a02b4d33\",\"Cargo.toml\":\"4f2c696f8ba696bd3633c54f9738345c17711c5d7edf028ece484e939463a4e0\",\"cargo\":\"cargo 1.95.0 (f2d3ce0bd 2026-03-21)\",\"commit\":\"c46126369e2720c5b221682f7ccafd8e230b88bb\",\"host\":\"aarch64-apple-darwin\",\"linker\":\"Apple clang version 21.0.0 (clang-2100.3.34.2)\",\"rust-toolchain.toml\":\"696c2536031250a4fa61a1ec4daeba2e8ea2b1c5b725e659e19bf12be076c5f3\",\"rustc\":\"rustc 1.95.0 (59807616e 2026-04-14)\\nbinary: rustc\\ncommit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860\\ncommit-date: 2026-04-14\\nhost: aarch64-apple-darwin\\nrelease: 1.95.0\\nLLVM version: 22.1.2\",\"tree\":\"646ce05d9079a32cb082d8635437b595049552f6\"},\"program-targets\":[{\"kind\":\"bin\",\"name\":\"a\",\"package\":\"crates/a\",\"role-packages\":[\"crates/a\"],\"status\":\"root gen\"}],\"programs\":[{\"artifact\":{\"path\":\"release/deps/a-ea31e1b4fa6d99dc\",\"sha256\":\"f2363e28e14f9b02b09403d603b19b7880ce48dc3005647a52808975071bad1c\"},\"data\":{},\"name\":\"gen\",\"packages\":[{\"edges\":[],\"manifest\":\"bee352617ddaac885c3b64ff8c2611f646299752d3f027c180f97c6e66b1deef\",\"package\":\"crates/a\"}],\"pair\":[],\"provenance\":{},\"role\":\"generator\",\"units\":[{\"configuration\":[\"--crate-name\",\"a\",\"--edition=2021\",\"crates/a/src/main.rs\",\"--crate-type\",\"bin\",\"--emit=dep-info,link\",\"-C opt-level=3\",\"-C embed-bitcode=no\",\"-C strip=debuginfo\"],\"crate\":\"a\",\"env\":[],\"files\":{\"crates/a/src/main.rs\":\"536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4\"},\"package\":\"crates/a\"}]},{\"artifact\":{\"path\":\"release/deps/libb-20572edba3a82d76.rlib\",\"sha256\":\"6a613fc8a643a7373975084d6586f718ed21b373dcc8e3d7ec30ff66ad90bdd8\"},\"data\":{},\"name\":\"chk\",\"packages\":[{\"edges\":[],\"manifest\":\"0f3a9590634516aca990089cabbffcc9514a4e173aa66f5d0c20d2d932a9b87a\",\"package\":\"crates/b\"}],\"pair\":[],\"provenance\":{},\"role\":\"scheduling-checker\",\"units\":[{\"configuration\":[\"--crate-name\",\"b\",\"--edition=2021\",\"crates/b/src/lib.rs\",\"--crate-type\",\"lib\",\"--emit=dep-info,metadata,link\",\"-C opt-level=3\",\"-C embed-bitcode=no\",\"-C strip=debuginfo\"],\"crate\":\"b\",\"env\":[],\"files\":{\"crates/b/src/lib.rs\":\"5ef01da4ab40113219ac7b95d3714c8e7ac487f6189b1d0ada29162268e81640\",\"data.txt\":\"e3869f07b1cc1f506cca950eac6112006a2725c8f93e8bc77a3d1b542b7072b2\"},\"package\":\"crates/b\"}]}],\"refused-sites\":\"2\",\"shared\":[{\"items\":[{\"content\":{\"profiles\":[],\"toolchain\":\"rustc 1.95.0 (59807616e 2026-04-14)\\nbinary: rustc\\ncommit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860\\ncommit-date: 2026-04-14\\nhost: aarch64-apple-darwin\\nrelease: 1.95.0\\nLLVM version: 22.1.2\"},\"kind\":\"build-configuration\"}],\"pair\":[\"gen\",\"chk\"]}]}",
+      "second-inventory.json": "{\"admissions-unused\":[],\"build-configuration\":{\"profiles\":[],\"toolchain\":\"rustc 1.95.0 (59807616e 2026-04-14)\\nbinary: rustc\\ncommit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860\\ncommit-date: 2026-04-14\\nhost: aarch64-apple-darwin\\nrelease: 1.95.0\\nLLVM version: 22.1.2\"},\"classifications-unused\":[],\"format\":\"archogen-trust-inventory/0\",\"generated-marked\":[],\"generated-unread\":[],\"identity\":{\".cargo/config.toml\":\"48296b18a2b27cc7268cf489fc37bdcf24e04d79b914c2237c248e4db1f6fa79\",\"Cargo.lock\":\"e68eb3855fe7c99357bf242b2600874c6ee9b6923017b4d9082489e7a02b4d33\",\"Cargo.toml\":\"4f2c696f8ba696bd3633c54f9738345c17711c5d7edf028ece484e939463a4e0\",\"cargo\":\"cargo 1.95.0 (f2d3ce0bd 2026-03-21)\",\"commit\":\"c46126369e2720c5b221682f7ccafd8e230b88bb\",\"host\":\"aarch64-apple-darwin\",\"linker\":\"Apple clang version 21.0.0 (clang-2100.3.34.2)\",\"rust-toolchain.toml\":\"696c2536031250a4fa61a1ec4daeba2e8ea2b1c5b725e659e19bf12be076c5f3\",\"rustc\":\"rustc 1.95.0 (59807616e 2026-04-14)\\nbinary: rustc\\ncommit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860\\ncommit-date: 2026-04-14\\nhost: aarch64-apple-darwin\\nrelease: 1.95.0\\nLLVM version: 22.1.2\",\"tree\":\"646ce05d9079a32cb082d8635437b595049552f6\"},\"program-targets\":[{\"kind\":\"bin\",\"name\":\"a\",\"package\":\"crates/a\",\"role-packages\":[\"crates/a\"],\"status\":\"root gen\"}],\"programs\":[{\"artifact\":{\"path\":\"release/deps/a-ea31e1b4fa6d99dc\",\"sha256\":\"f2363e28e14f9b02b09403d603b19b7880ce48dc3005647a52808975071bad1c\"},\"data\":{},\"name\":\"gen\",\"packages\":[{\"edges\":[],\"manifest\":\"bee352617ddaac885c3b64ff8c2611f646299752d3f027c180f97c6e66b1deef\",\"package\":\"crates/a\"}],\"pair\":[],\"provenance\":{},\"role\":\"generator\",\"units\":[{\"configuration\":[\"--crate-name\",\"a\",\"--edition=2021\",\"crates/a/src/main.rs\",\"--crate-type\",\"bin\",\"--emit=dep-info,link\",\"-C opt-level=3\",\"-C embed-bitcode=no\",\"-C strip=debuginfo\"],\"crate\":\"a\",\"env\":[],\"files\":{\"crates/a/src/main.rs\":\"536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4\"},\"package\":\"crates/a\"}]},{\"artifact\":{\"path\":\"release/deps/libb-20572edba3a82d76.rlib\",\"sha256\":\"cbf5ed110d7b24e3fd069d88f8e4c752096506ef23c0ea6572e731d949d6bdda\"},\"data\":{},\"name\":\"chk\",\"packages\":[{\"edges\":[],\"manifest\":\"0f3a9590634516aca990089cabbffcc9514a4e173aa66f5d0c20d2d932a9b87a\",\"package\":\"crates/b\"}],\"pair\":[],\"provenance\":{},\"role\":\"scheduling-checker\",\"units\":[{\"configuration\":[\"--crate-name\",\"b\",\"--edition=2021\",\"crates/b/src/lib.rs\",\"--crate-type\",\"lib\",\"--emit=dep-info,metadata,link\",\"-C opt-level=3\",\"-C embed-bitcode=no\",\"-C strip=debuginfo\"],\"crate\":\"b\",\"env\":[],\"files\":{\"crates/b/src/lib.rs\":\"5ef01da4ab40113219ac7b95d3714c8e7ac487f6189b1d0ada29162268e81640\",\"data.txt\":\"e3869f07b1cc1f506cca950eac6112006a2725c8f93e8bc77a3d1b542b7072b2\"},\"package\":\"crates/b\"}]}],\"refused-sites\":\"2\",\"shared\":[{\"items\":[{\"content\":{\"profiles\":[],\"toolchain\":\"rustc 1.95.0 (59807616e 2026-04-14)\\nbinary: rustc\\ncommit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860\\ncommit-date: 2026-04-14\\nhost: aarch64-apple-darwin\\nrelease: 1.95.0\\nLLVM version: 22.1.2\"},\"kind\":\"build-configuration\"}],\"pair\":[\"gen\",\"chk\"]}]}",
+      "observed-outcomes.txt": "first=written\nsecond=written\n",
+      "prefix crates/b/src/trust-dependencies.json": "{\"admissions-unused\":[],\"build-configuration\":{\"profiles\":[],\"toolchain\":\"rustc 1.95.0 (59807616e 2026-04-14)\\nbinary: rustc\\ncommit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860\\ncommit-date: 2026-04-14\\nhost: aarch64-apple-darwin\\nrelease: 1.95.0\\nLLVM version: 22.1.2\"},\"classifications-unused\":[],\"format\":\"archogen-trust-inventory/0\",\"generated-marked\":[],\"generated-unread\":[],\"identity\":{\".cargo/config.toml\":\"48296b18a2b27cc7268cf489fc37bdcf24e04d79b914c2237c248e4db1f6fa79\",\"Cargo.lock\":\"e68eb3855fe7c99357bf242b2600874c6ee9b6923017b4d9082489e7a02b4d33\",\"Cargo.toml\":\"4f2c696f8ba696bd3633c54f9738345c17711c5d7edf028ece484e939463a4e0\",\"cargo\":\"cargo 1.95.0 (f2d3ce0bd 2026-03-21)\",\"commit\":\"c46126369e2720c5b221682f7ccafd8e230b88bb\",\"host\":\"aarch64-apple-darwin\",\"linker\":\"Apple clang version 21.0.0 (clang-2100.3.34.2)\",\"rust-toolchain.toml\":\"696c2536031250a4fa61a1ec4daeba2e8ea2b1c5b725e659e19bf12be076c5f3\",\"rustc\":\"rustc 1.95.0 (59807616e 2026-04-14)\\nbinary: rustc\\ncommit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860\\ncommit-date: 2026-04-14\\nhost: aarch64-apple-darwin\\nrelease: 1.95.0\\nLLVM version: 22.1.2\",\"tree\":\"646ce05d9079a32cb082d8635437b595049552f6\"},\"program-targets\":[{\"kind\":\"bin\",\"name\":\"a\",\"package\":\"crates/a\",\"role-packages\":[\"crates/a\"],\"status\":\"root gen\"}],\"programs\":[{\"artifact\":{\"path\":\"release/deps/a-ea31e1b4fa6d99dc\",\"sha256\":\"f2363e28e14f9b02b09403d603b19b7880ce48dc3005647a52808975071bad1c\"},\"data\":{},\"name\":\"gen\",\"packages\":[{\"edges\":[],\"manifest\":\"bee352617ddaac885c3b64ff8c2611f646299752d3f027c180f97c6e66b1deef\",\"package\":\"crates/a\"}],\"pair\":[],\"provenance\":{},\"role\":\"generator\",\"units\":[{\"configuration\":[\"--crate-name\",\"a\",\"--edition=2021\",\"crates/a/src/main.rs\",\"--crate-type\",\"bin\",\"--emit=dep-info,link\",\"-C opt-level=3\",\"-C embed-bitcode=no\",\"-C strip=debuginfo\"],\"crate\":\"a\",\"env\":[],\"files\":{\"crates/a/src/main.rs\":\"536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4\"},\"package\":\"crates/a\"}]},{\"artifact\":{\"path\":\"release/deps/libb-20572edba3a82d76.rlib\",\"sha256\":\"cbf5ed110d7b24e3fd069d88f8e4c752096506ef23c0ea6572e731d949d6bdda\"},\"data\":{},\"name\":\"chk\",\"packages\":[{\"edges\":[],\"manifest\":\"0f3a9590634516aca990089cabbffcc9514a4e173aa66f5d0c20d2d932a9b87a\",\"package\":\"crates/b\"}],\"pair\":[],\"provenance\":{},\"role\":\"scheduling-checker\",\"units\":[{\"configuration\":[\"--crate-name\",\"b\",\"--edition=2021\",\"crates/b/src/lib.rs\",\"--crate-type\",\"lib\",\"--emit=dep-info,metadata,link\",\"-C opt-level=3\",\"-C embed-bitcode=no\",\"-C strip=debuginfo\"],\"crate\":\"b\",\"env\":[],\"files\":{\"crates/b/src/lib.rs\":\"5ef01da4ab40113219ac7b95d3714c8e7ac487f6189b1d0ada29162268e81640\",\"data.txt\":\"e3869f07b1cc1f506cca950eac6112006a2725c8f93e8bc77a3d1b542b7072b2\"},\"package\":\"crates/b\"}]}],\"refused-sites\":\"2\",\"shared\":[{\"items\":[{\"content\":{\"profiles\":[],\"toolchain\":\"rustc 1.95.0 (59807616e 2026-04-14)\\nbinary: rustc\\ncommit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860\\ncommit-date: 2026-04-14\\nhost: aarch64-apple-darwin\\nrelease: 1.95.0\\nLLVM version: 22.1.2\"},\"kind\":\"build-configuration\"}],\"pair\":[\"gen\",\"chk\"]}]}"
+    },
+    "fixture_files": {
+      ".cargo/config.toml": "# \u0060cargo xtask \u2026\u0060 runs the repository's own verification runner (ROADMAP.md \u00a74.2, \u00a714.3).\n# Committed deliberately: a tier that only works if each developer remembers an incantation is a\n# tier nobody runs.\n[alias]\nxtask = \"run --quiet --package xtask --\"\n",
+      "Cargo.lock": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"b\"\nversion = \"0.1.0\"\n",
+      "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n",
+      "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/a/src/main.rs": "fn main() {}\n",
+      "crates/b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/b/src/lib.rs": "pub const OUTSIDE: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/prefix\\\\\");\npub const INSIDE: &str = include_str!(\"tree/data.txt\");\n",
+      "crates/b/src/tree/data.txt": "held decoy bytes\n",
+      "data.txt": "held decoy bytes\n",
+      "rust-toolchain.toml": "[toolchain]\nchannel = \"1.95.0\"\n",
+      "trust/roots.eadl": "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n(defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"441f40836b25b858c26dddf10e120ffad38b2fbd4297541f4e0f3fe44c732702\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"c5fec310dcb3f7062f621bfdeb508b5a2b97f19c9ba7421db41b72577f1e07c7\") (reason \"a fixture\"))\n"
+    },
+    "fixture_commit": "c46126369e2720c5b221682f7ccafd8e230b88bb"
+  },
+  {
+    "case": "spaces",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-q",
+      "-p",
+      "xtask",
+      "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+      "--",
+      "--exact"
+    ],
+    "exit_code": 101,
+    "elapsed_seconds": 2.733854958903976,
+    "oracle": "Complete literal outside-input refusals derived from the declared filenames, plus no inventory.",
+    "inputs": [
+      [
+        "FIRST",
+        "a with space.txt",
+        "first external input\n"
+      ],
+      [
+        "MIDDLE",
+        "m with space.txt",
+        "middle external input\n"
+      ],
+      [
+        "LAST",
+        "z with space.txt",
+        "last external input\n"
+      ]
+    ],
+    "output": "out",
+    "source_sha256": "e6d2a1888e55a2f790481541400e93b6baafdce7762382c33d2dbffc742bf71d",
+    "parent_sha256": "403e56bd9adb4f07ba1f528d283bd56e4aa6dccdba36e767698f14f256add144",
+    "stdout": "\nrunning 1 test\ntrust::tests::every_absolute_dependency_outside_the_written_tree_is_refused --- FAILED\n\nfailures:\n\n---- trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused stdout ----\n\nthread 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused' (1268811295) panicked at xtask/src/trust_test_process.rs:56:73:\ntrust::tests::every_absolute_dependency_outside_the_written_tree_is_refused: child failed (exit status: 101); stdout \"\\nrunning 1 test\\ntest trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused ... FAILED\\n\\nfailures:\\n\\n---- trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused stdout ----\\n\\nthread 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused' (1268811299) panicked at xtask/src/trust.rs:4591:9:\\nassertion \u0060left == right\u0060 failed\\n  left: [\\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\\\\\\\\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\\\\\\\\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\\\\\\\\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060space.txt\u0060, which is not a blob of the commit\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060with\\\\\\\\\u0060, which is not a blob of the commit\\\"]\\n right: [\\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a with space.txt\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m with space.txt\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z with space.txt\u0060, outside the written tree\\\"]\\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\\n\\n\\nfailures:\\n    trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused\\n\\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.16s\\n\\n\"; stderr \"\"\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n\n\nfailures:\n    trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.25s\n\n",
+    "stderr": "error: test failed, to rerun pass \u0060-p xtask --bin xtask\u0060\n",
+    "captured": {
+      "out/target/chk/release/deps/b-20572edba3a82d76.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/libb-20572edba3a82d76.rlib: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/libb-20572edba3a82d76.rmeta: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt\n\ncrates/b/src/lib.rs:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt:\n",
+      "out/target/chk/release/libb.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/libb.rlib: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/tree/crates/b/src/lib.rs\n",
+      "out/target/gen/release/a.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/a: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/tree/crates/a/src/main.rs\n",
+      "out/target/gen/release/deps/a-ea31e1b4fa6d99dc.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/deps/a-ea31e1b4fa6d99dc.d: crates/a/src/main.rs\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/deps/a-ea31e1b4fa6d99dc: crates/a/src/main.rs\n\ncrates/a/src/main.rs:\n"
+    },
+    "fixture_files": {
+      ".cargo/config.toml": "# \u0060cargo xtask \u2026\u0060 runs the repository's own verification runner (ROADMAP.md \u00a74.2, \u00a714.3).\n# Committed deliberately: a tier that only works if each developer remembers an incantation is a\n# tier nobody runs.\n[alias]\nxtask = \"run --quiet --package xtask --\"\n",
+      "Cargo.lock": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"b\"\nversion = \"0.1.0\"\n",
+      "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n",
+      "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/a/src/main.rs": "fn main() {}\n",
+      "crates/b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/b/src/lib.rs": "pub const FIRST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a with space.txt\");\npub const MIDDLE: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m with space.txt\");\npub const LAST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z with space.txt\");\n",
+      "rust-toolchain.toml": "[toolchain]\nchannel = \"1.95.0\"\n",
+      "trust/roots.eadl": "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n(defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"0eff318c68cb32707dfd605c1340e4828a1621296c03139256f65bde118279f8\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"a20d0562040aad172440ac1cf04edd592f213501f28ead11e9bbc01742fbb958\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"5fae9aa44f3a11eb132b426a9f8550678dbc2712473f5a5df4c254cfb9b57438\") (reason \"a fixture\"))\n"
+    },
+    "fixture_commit": "8dca8aefa08fb38ef307d949e43939425d290cb6"
+  },
+  {
+    "case": "alias-ascii",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-q",
+      "-p",
+      "xtask",
+      "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+      "--",
+      "--exact"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 2.4732987080933526,
+    "oracle": "Complete literal outside-input refusals derived from the declared filenames, plus no inventory.",
+    "inputs": [
+      [
+        "FIRST",
+        "a.txt",
+        "first external input\n"
+      ],
+      [
+        "MIDDLE",
+        "m.txt",
+        "middle external input\n"
+      ],
+      [
+        "LAST",
+        "z.txt",
+        "last external input\n"
+      ]
+    ],
+    "output": "output-alias",
+    "source_sha256": "63fbbbb728a931b9e55db3c5d0ad2ce5b0162dcf5088821ad249557fba49e4ba",
+    "parent_sha256": "4a3ce40f1ff371e8b39eb512c814077b8897d3c70742be023806e5179a13506c",
+    "stdout": "\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.14s\n\n",
+    "stderr": "",
+    "captured": {
+      "physical-output/target/chk/release/deps/b-20572edba3a82d76.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/deps/libb-20572edba3a82d76.rlib: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/deps/libb-20572edba3a82d76.rmeta: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt\n\ncrates/b/src/lib.rs:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt:\n\n# env-dep:CARGO_MANIFEST_DIR=<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b\n",
+      "physical-output/target/chk/release/libb.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/libb.rlib: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/lib.rs\n",
+      "physical-output/target/gen/release/a.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/gen/release/a: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/a/src/main.rs\n",
+      "physical-output/target/gen/release/deps/a-ea31e1b4fa6d99dc.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/gen/release/deps/a-ea31e1b4fa6d99dc.d: crates/a/src/main.rs\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/gen/release/deps/a-ea31e1b4fa6d99dc: crates/a/src/main.rs\n\ncrates/a/src/main.rs:\n"
+    },
+    "fixture_files": {
+      ".cargo/config.toml": "# \u0060cargo xtask \u2026\u0060 runs the repository's own verification runner (ROADMAP.md \u00a74.2, \u00a714.3).\n# Committed deliberately: a tier that only works if each developer remembers an incantation is a\n# tier nobody runs.\n[alias]\nxtask = \"run --quiet --package xtask --\"\n",
+      "Cargo.lock": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"b\"\nversion = \"0.1.0\"\n",
+      "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n",
+      "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/a/src/main.rs": "fn main() {}\n",
+      "crates/b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/b/src/inside.txt": "inside tracked input\n",
+      "crates/b/src/lib.rs": "pub const FIRST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt\");\npub const MIDDLE: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt\");\npub const LAST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt\");\npub const INSIDE: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/src/inside.txt\"));\n",
+      "rust-toolchain.toml": "[toolchain]\nchannel = \"1.95.0\"\n",
+      "trust/roots.eadl": "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n(defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"972216889d284dffe87816e753f7c2c3063ecb935b0151da5003b00e23147c34\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"a96d71233bc7801ea232693f70a0124f946893a22458ddf567ca4c29beca3505\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"4a40b498d8d4e5b57e2ee5d3284e832feac75190d5ce8c9b439be551b60447aa\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"7ec4bbc1f06bdd4ed2dd6c5513683b7e04637fb03df46107a7f7d82ec522251f\") (reason \"a fixture\"))\n"
+    },
+    "fixture_commit": "73d30d2ee6cae410857089da42993afb0e246f7d"
+  },
+  {
+    "case": "alias-spaces",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-q",
+      "-p",
+      "xtask",
+      "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+      "--",
+      "--exact"
+    ],
+    "exit_code": 101,
+    "elapsed_seconds": 2.455125708016567,
+    "oracle": "Complete literal outside-input refusals derived from the declared filenames, plus no inventory.",
+    "inputs": [
+      [
+        "FIRST",
+        "a with space.txt",
+        "first external input\n"
+      ],
+      [
+        "MIDDLE",
+        "m with space.txt",
+        "middle external input\n"
+      ],
+      [
+        "LAST",
+        "z with space.txt",
+        "last external input\n"
+      ]
+    ],
+    "output": "output-alias",
+    "source_sha256": "94417e52146bba2164bb1e8a9b5c47c99e65681bef0ba169101027649613d762",
+    "parent_sha256": "e0d087e70433439b5592eb95bd5608362bf94cdd9f369a959b133710b71e0eb7",
+    "stdout": "\nrunning 1 test\ntrust::tests::every_absolute_dependency_outside_the_written_tree_is_refused --- FAILED\n\nfailures:\n\n---- trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused stdout ----\n\nthread 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused' (1268815324) panicked at xtask/src/trust_test_process.rs:56:73:\ntrust::tests::every_absolute_dependency_outside_the_written_tree_is_refused: child failed (exit status: 101); stdout \"\\nrunning 1 test\\ntest trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused ... FAILED\\n\\nfailures:\\n\\n---- trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused stdout ----\\n\\nthread 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused' (1268815328) panicked at xtask/src/trust.rs:4595:9:\\nassertion \u0060left == right\u0060 failed\\n  left: [\\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\\\\\\\\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\\\\\\\\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\\\\\\\\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060space.txt\u0060, which is not a blob of the commit\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060with\\\\\\\\\u0060, which is not a blob of the commit\\\"]\\n right: [\\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a with space.txt\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m with space.txt\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z with space.txt\u0060, outside the written tree\\\"]\\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\\n\\n\\nfailures:\\n    trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused\\n\\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.06s\\n\\n\"; stderr \"\"\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n\n\nfailures:\n    trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.16s\n\n",
+    "stderr": "error: test failed, to rerun pass \u0060-p xtask --bin xtask\u0060\n",
+    "captured": {
+      "physical-output/target/chk/release/deps/b-20572edba3a82d76.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/deps/libb-20572edba3a82d76.rlib: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/deps/libb-20572edba3a82d76.rmeta: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt\n\ncrates/b/src/lib.rs:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt:\n\n# env-dep:CARGO_MANIFEST_DIR=<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b\n",
+      "physical-output/target/chk/release/libb.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/libb.rlib: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/lib.rs\n",
+      "physical-output/target/gen/release/a.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/gen/release/a: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/a/src/main.rs\n",
+      "physical-output/target/gen/release/deps/a-ea31e1b4fa6d99dc.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/gen/release/deps/a-ea31e1b4fa6d99dc.d: crates/a/src/main.rs\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/gen/release/deps/a-ea31e1b4fa6d99dc: crates/a/src/main.rs\n\ncrates/a/src/main.rs:\n"
+    },
+    "fixture_files": {
+      ".cargo/config.toml": "# \u0060cargo xtask \u2026\u0060 runs the repository's own verification runner (ROADMAP.md \u00a74.2, \u00a714.3).\n# Committed deliberately: a tier that only works if each developer remembers an incantation is a\n# tier nobody runs.\n[alias]\nxtask = \"run --quiet --package xtask --\"\n",
+      "Cargo.lock": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"b\"\nversion = \"0.1.0\"\n",
+      "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n",
+      "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/a/src/main.rs": "fn main() {}\n",
+      "crates/b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/b/src/inside.txt": "inside tracked input\n",
+      "crates/b/src/lib.rs": "pub const FIRST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a with space.txt\");\npub const MIDDLE: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m with space.txt\");\npub const LAST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z with space.txt\");\npub const INSIDE: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/src/inside.txt\"));\n",
+      "rust-toolchain.toml": "[toolchain]\nchannel = \"1.95.0\"\n",
+      "trust/roots.eadl": "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n(defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"0eff318c68cb32707dfd605c1340e4828a1621296c03139256f65bde118279f8\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"a20d0562040aad172440ac1cf04edd592f213501f28ead11e9bbc01742fbb958\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"5fae9aa44f3a11eb132b426a9f8550678dbc2712473f5a5df4c254cfb9b57438\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"7ec4bbc1f06bdd4ed2dd6c5513683b7e04637fb03df46107a7f7d82ec522251f\") (reason \"a fixture\"))\n"
+    },
+    "fixture_commit": "86d7b59d50c39964c4c21fec47a6c385fdf4eb76"
+  },
+  {
+    "case": "terminal-backslashes",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-q",
+      "-p",
+      "xtask",
+      "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+      "--",
+      "--exact"
+    ],
+    "exit_code": 101,
+    "elapsed_seconds": 2.373846207978204,
+    "oracle": "Complete literal outside-input refusals derived from the declared filenames, plus no inventory.",
+    "inputs": [
+      [
+        "FIRST",
+        "a\\",
+        "first external input\n"
+      ],
+      [
+        "MIDDLE",
+        "m\\",
+        "middle external input\n"
+      ],
+      [
+        "LAST",
+        "z\\",
+        "last external input\n"
+      ]
+    ],
+    "output": "out",
+    "source_sha256": "7c4c027bee6fba93dab79f37ddbb3ba1fddd7edd7e3d124785cd39fc61de15ae",
+    "parent_sha256": "55cea9674f9cd941c4ec3498b2c9f33304cb9738727aff2b5a0ea340e8af8513",
+    "stdout": "\nrunning 1 test\ntrust::tests::every_absolute_dependency_outside_the_written_tree_is_refused --- FAILED\n\nfailures:\n\n---- trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused stdout ----\n\nthread 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused' (1268817626) panicked at xtask/src/trust_test_process.rs:56:73:\ntrust::tests::every_absolute_dependency_outside_the_written_tree_is_refused: child failed (exit status: 101); stdout \"\\nrunning 1 test\\ntest trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused ... FAILED\\n\\nfailures:\\n\\n---- trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused stdout ----\\n\\nthread 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused' (1268817630) panicked at xtask/src/trust.rs:3018:14:\\ncalled \u0060Result::unwrap()\u0060 on an \u0060Err\u0060 value: \\\"\u0060cargo build --lib --release --locked --offline --no-default-features --message-format=json -v -p b\u0060 failed: error: could not parse/generate dep info at: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/b-20572edba3a82d76.d\\\"\\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\\n\\n\\nfailures:\\n    trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused\\n\\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.03s\\n\\n\"; stderr \"\"\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n\n\nfailures:\n    trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.04s\n\n",
+    "stderr": "error: test failed, to rerun pass \u0060-p xtask --bin xtask\u0060\n",
+    "captured": {
+      "out/target/chk/release/deps/b-20572edba3a82d76.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/libb-20572edba3a82d76.rlib: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/libb-20572edba3a82d76.rmeta: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\\n\ncrates/b/src/lib.rs:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\:\n",
+      "out/target/gen/release/a.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/a: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/tree/crates/a/src/main.rs\n",
+      "out/target/gen/release/deps/a-ea31e1b4fa6d99dc.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/deps/a-ea31e1b4fa6d99dc.d: crates/a/src/main.rs\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/deps/a-ea31e1b4fa6d99dc: crates/a/src/main.rs\n\ncrates/a/src/main.rs:\n"
+    },
+    "fixture_files": {
+      ".cargo/config.toml": "# \u0060cargo xtask \u2026\u0060 runs the repository's own verification runner (ROADMAP.md \u00a74.2, \u00a714.3).\n# Committed deliberately: a tier that only works if each developer remembers an incantation is a\n# tier nobody runs.\n[alias]\nxtask = \"run --quiet --package xtask --\"\n",
+      "Cargo.lock": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"b\"\nversion = \"0.1.0\"\n",
+      "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n",
+      "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/a/src/main.rs": "fn main() {}\n",
+      "crates/b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/b/src/lib.rs": "pub const FIRST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\\\\");\npub const MIDDLE: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\\\\");\npub const LAST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\\\\");\n",
+      "rust-toolchain.toml": "[toolchain]\nchannel = \"1.95.0\"\n",
+      "trust/roots.eadl": "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n(defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"7d537e340827bf18c7bdb69fcabcb64835893374b713f9b709085b699b31908f\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"6e79975e27d479a144e9775d03f83ab48ff680e97cbfb3531cb9cf5a54033ed6\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"cd41d2a9f087479584544b8f747c06ba182c4fd420bf9ef40a6a4205c0c9b7a9\") (reason \"a fixture\"))\n"
+    },
+    "fixture_commit": "7b3b4581eac55f17aca5880d38b6618536ecc6eb"
+  }
+]
+```
+
+</details>
+
+<details>
+<summary>Initial dependency path-domain receipts</summary>
+
+```json
+[
+  {
+    "case": "ordinary",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-q",
+      "-p",
+      "xtask",
+      "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+      "--",
+      "--exact"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 2.8377356249839067,
+    "oracle": "Complete literal outside-input refusals derived from the declared filenames, plus no inventory.",
+    "inputs": [
+      [
+        "FIRST",
+        "a.txt",
+        "first external input\n"
+      ],
+      [
+        "MIDDLE",
+        "m.txt",
+        "middle external input\n"
+      ],
+      [
+        "LAST",
+        "z.txt",
+        "last external input\n"
+      ]
+    ],
+    "output": "out",
+    "source_sha256": "d7c9403d2cf27a345b151fae86fc92c7a106b3be13f98569f12d577baa8999f4",
+    "parent_sha256": "14f456964960b233571efaca06b204a209e2dbb0a648627f4bfdd8d57e9aa40b",
+    "stdout": "\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.36s\n\n",
+    "stderr": "",
+    "captured": {
+      "out/target/chk/release/deps/b-20572edba3a82d76.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/libb-20572edba3a82d76.rlib: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/libb-20572edba3a82d76.rmeta: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt\n\ncrates/b/src/lib.rs:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt:\n",
+      "out/target/chk/release/libb.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/libb.rlib: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/tree/crates/b/src/lib.rs\n",
+      "out/target/gen/release/a.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/a: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/tree/crates/a/src/main.rs\n",
+      "out/target/gen/release/deps/a-ea31e1b4fa6d99dc.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/deps/a-ea31e1b4fa6d99dc.d: crates/a/src/main.rs\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/deps/a-ea31e1b4fa6d99dc: crates/a/src/main.rs\n\ncrates/a/src/main.rs:\n"
+    },
+    "fixture_files": {
+      ".cargo/config.toml": "# \u0060cargo xtask \u2026\u0060 runs the repository's own verification runner (ROADMAP.md \u00a74.2, \u00a714.3).\n# Committed deliberately: a tier that only works if each developer remembers an incantation is a\n# tier nobody runs.\n[alias]\nxtask = \"run --quiet --package xtask --\"\n",
+      "Cargo.lock": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"b\"\nversion = \"0.1.0\"\n",
+      "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n",
+      "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/a/src/main.rs": "fn main() {}\n",
+      "crates/b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/b/src/lib.rs": "pub const FIRST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt\");\npub const MIDDLE: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt\");\npub const LAST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt\");\n",
+      "rust-toolchain.toml": "[toolchain]\nchannel = \"1.95.0\"\n",
+      "trust/roots.eadl": "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n(defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"972216889d284dffe87816e753f7c2c3063ecb935b0151da5003b00e23147c34\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"a96d71233bc7801ea232693f70a0124f946893a22458ddf567ca4c29beca3505\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"4a40b498d8d4e5b57e2ee5d3284e832feac75190d5ce8c9b439be551b60447aa\") (reason \"a fixture\"))\n"
+    },
+    "fixture_commit": "709357290f360af5ac1f43e1ed03315931543810"
+  },
+  {
+    "case": "prefix-collision",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-q",
+      "-p",
+      "xtask",
+      "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+      "--",
+      "--exact"
+    ],
+    "exit_code": 101,
+    "elapsed_seconds": 0.5518750830087811,
+    "oracle": "Complete literal outside-input refusals derived from the declared filenames, plus no inventory.",
+    "inputs": [
+      [
+        "OUTSIDE",
+        "prefix\\",
+        "outside first payload\n"
+      ]
+    ],
+    "output": "prefix crates/b/src",
+    "source_sha256": "e29c02ef9b4e78dcff92e091bd0f0243689582ecced1eaa23e3e08da02f41336",
+    "parent_sha256": "d3d3f7d5c1b0e74ecb524c7284b9c581a1dc3b207fabf54aa225e44c96e8c0ab",
+    "stdout": "",
+    "stderr": "error[E0277]: \u0060trust::Outcome\u0060 doesn't implement \u0060Debug\u0060\n    --> xtask/src/trust.rs:4595:77\n     |\n4595 |         std::fs::write(f.base.join(\"observed-outcomes.txt\"), format!(\"first={first:?}\\nsecond={second:?}\\n\")).unwrap();\n     |                                                                             ^^^^^^^^^ \u0060trust::Outcome\u0060 cannot be formatted using \u0060{:?}\u0060 because it doesn't implement \u0060Debug\u0060\n     |\n     = help: the trait \u0060Debug\u0060 is not implemented for \u0060trust::Outcome\u0060\n     = note: add \u0060#[derive(Debug)]\u0060 to \u0060trust::Outcome\u0060 or manually \u0060impl Debug for trust::Outcome\u0060\nhelp: consider annotating \u0060trust::Outcome\u0060 with \u0060#[derive(Debug)]\u0060\n     |\n1226 + #[derive(Debug)]\n1227 | pub enum Outcome {\n     |\n\nFor more information about this error, try \u0060rustc --explain E0277\u0060.\nerror: could not compile \u0060xtask\u0060 (bin \"xtask\" test) due to 1 previous error\n",
+    "captured": {
+      "out/target/chk/release/deps/b-20572edba3a82d76.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/libb-20572edba3a82d76.rlib: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/libb-20572edba3a82d76.rmeta: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt\n\ncrates/b/src/lib.rs:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt:\n",
+      "out/target/chk/release/libb.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/libb.rlib: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/tree/crates/b/src/lib.rs\n",
+      "out/target/gen/release/a.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/a: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/tree/crates/a/src/main.rs\n",
+      "out/target/gen/release/deps/a-ea31e1b4fa6d99dc.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/deps/a-ea31e1b4fa6d99dc.d: crates/a/src/main.rs\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/deps/a-ea31e1b4fa6d99dc: crates/a/src/main.rs\n\ncrates/a/src/main.rs:\n"
+    },
+    "fixture_files": {
+      ".cargo/config.toml": "# \u0060cargo xtask \u2026\u0060 runs the repository's own verification runner (ROADMAP.md \u00a74.2, \u00a714.3).\n# Committed deliberately: a tier that only works if each developer remembers an incantation is a\n# tier nobody runs.\n[alias]\nxtask = \"run --quiet --package xtask --\"\n",
+      "Cargo.lock": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"b\"\nversion = \"0.1.0\"\n",
+      "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n",
+      "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/a/src/main.rs": "fn main() {}\n",
+      "crates/b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/b/src/lib.rs": "pub const FIRST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt\");\npub const MIDDLE: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt\");\npub const LAST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt\");\n",
+      "rust-toolchain.toml": "[toolchain]\nchannel = \"1.95.0\"\n",
+      "trust/roots.eadl": "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n(defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"972216889d284dffe87816e753f7c2c3063ecb935b0151da5003b00e23147c34\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"a96d71233bc7801ea232693f70a0124f946893a22458ddf567ca4c29beca3505\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"4a40b498d8d4e5b57e2ee5d3284e832feac75190d5ce8c9b439be551b60447aa\") (reason \"a fixture\"))\n"
+    },
+    "fixture_commit": "709357290f360af5ac1f43e1ed03315931543810"
+  },
+  {
+    "case": "spaces",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-q",
+      "-p",
+      "xtask",
+      "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+      "--",
+      "--exact"
+    ],
+    "exit_code": 101,
+    "elapsed_seconds": 2.584194374969229,
+    "oracle": "Complete literal outside-input refusals derived from the declared filenames, plus no inventory.",
+    "inputs": [
+      [
+        "FIRST",
+        "a with space.txt",
+        "first external input\n"
+      ],
+      [
+        "MIDDLE",
+        "m with space.txt",
+        "middle external input\n"
+      ],
+      [
+        "LAST",
+        "z with space.txt",
+        "last external input\n"
+      ]
+    ],
+    "output": "out",
+    "source_sha256": "e6d2a1888e55a2f790481541400e93b6baafdce7762382c33d2dbffc742bf71d",
+    "parent_sha256": "403e56bd9adb4f07ba1f528d283bd56e4aa6dccdba36e767698f14f256add144",
+    "stdout": "\nrunning 1 test\ntrust::tests::every_absolute_dependency_outside_the_written_tree_is_refused --- FAILED\n\nfailures:\n\n---- trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused stdout ----\n\nthread 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused' (1268762580) panicked at xtask/src/trust_test_process.rs:56:73:\ntrust::tests::every_absolute_dependency_outside_the_written_tree_is_refused: child failed (exit status: 101); stdout \"\\nrunning 1 test\\ntest trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused ... FAILED\\n\\nfailures:\\n\\n---- trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused stdout ----\\n\\nthread 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused' (1268762584) panicked at xtask/src/trust.rs:4591:9:\\nassertion \u0060left == right\u0060 failed\\n  left: [\\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\\\\\\\\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\\\\\\\\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\\\\\\\\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060space.txt\u0060, which is not a blob of the commit\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060with\\\\\\\\\u0060, which is not a blob of the commit\\\"]\\n right: [\\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a with space.txt\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m with space.txt\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z with space.txt\u0060, outside the written tree\\\"]\\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\\n\\n\\nfailures:\\n    trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused\\n\\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.08s\\n\\n\"; stderr \"\"\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n\n\nfailures:\n    trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.15s\n\n",
+    "stderr": "error: test failed, to rerun pass \u0060-p xtask --bin xtask\u0060\n",
+    "captured": {
+      "out/target/chk/release/deps/b-20572edba3a82d76.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/libb-20572edba3a82d76.rlib: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/libb-20572edba3a82d76.rmeta: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt\n\ncrates/b/src/lib.rs:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt:\n",
+      "out/target/chk/release/libb.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/libb.rlib: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/tree/crates/b/src/lib.rs\n",
+      "out/target/gen/release/a.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/a: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/tree/crates/a/src/main.rs\n",
+      "out/target/gen/release/deps/a-ea31e1b4fa6d99dc.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/deps/a-ea31e1b4fa6d99dc.d: crates/a/src/main.rs\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/deps/a-ea31e1b4fa6d99dc: crates/a/src/main.rs\n\ncrates/a/src/main.rs:\n"
+    },
+    "fixture_files": {
+      ".cargo/config.toml": "# \u0060cargo xtask \u2026\u0060 runs the repository's own verification runner (ROADMAP.md \u00a74.2, \u00a714.3).\n# Committed deliberately: a tier that only works if each developer remembers an incantation is a\n# tier nobody runs.\n[alias]\nxtask = \"run --quiet --package xtask --\"\n",
+      "Cargo.lock": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"b\"\nversion = \"0.1.0\"\n",
+      "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n",
+      "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/a/src/main.rs": "fn main() {}\n",
+      "crates/b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/b/src/lib.rs": "pub const FIRST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a with space.txt\");\npub const MIDDLE: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m with space.txt\");\npub const LAST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z with space.txt\");\n",
+      "rust-toolchain.toml": "[toolchain]\nchannel = \"1.95.0\"\n",
+      "trust/roots.eadl": "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n(defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"0eff318c68cb32707dfd605c1340e4828a1621296c03139256f65bde118279f8\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"a20d0562040aad172440ac1cf04edd592f213501f28ead11e9bbc01742fbb958\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"5fae9aa44f3a11eb132b426a9f8550678dbc2712473f5a5df4c254cfb9b57438\") (reason \"a fixture\"))\n"
+    },
+    "fixture_commit": "2192ffccc6ba36dfa2c9020e0814a3f2baebf420"
+  },
+  {
+    "case": "alias-ascii",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-q",
+      "-p",
+      "xtask",
+      "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+      "--",
+      "--exact"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 2.512517208000645,
+    "oracle": "Complete literal outside-input refusals derived from the declared filenames, plus no inventory.",
+    "inputs": [
+      [
+        "FIRST",
+        "a.txt",
+        "first external input\n"
+      ],
+      [
+        "MIDDLE",
+        "m.txt",
+        "middle external input\n"
+      ],
+      [
+        "LAST",
+        "z.txt",
+        "last external input\n"
+      ]
+    ],
+    "output": "output-alias",
+    "source_sha256": "63fbbbb728a931b9e55db3c5d0ad2ce5b0162dcf5088821ad249557fba49e4ba",
+    "parent_sha256": "4a3ce40f1ff371e8b39eb512c814077b8897d3c70742be023806e5179a13506c",
+    "stdout": "\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.15s\n\n",
+    "stderr": "",
+    "captured": {
+      "physical-output/target/chk/release/deps/b-20572edba3a82d76.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/deps/libb-20572edba3a82d76.rlib: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/deps/libb-20572edba3a82d76.rmeta: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt\n\ncrates/b/src/lib.rs:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt:\n\n# env-dep:CARGO_MANIFEST_DIR=<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b\n",
+      "physical-output/target/chk/release/libb.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/libb.rlib: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/lib.rs\n",
+      "physical-output/target/gen/release/a.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/gen/release/a: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/a/src/main.rs\n",
+      "physical-output/target/gen/release/deps/a-ea31e1b4fa6d99dc.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/gen/release/deps/a-ea31e1b4fa6d99dc.d: crates/a/src/main.rs\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/gen/release/deps/a-ea31e1b4fa6d99dc: crates/a/src/main.rs\n\ncrates/a/src/main.rs:\n"
+    },
+    "fixture_files": {
+      ".cargo/config.toml": "# \u0060cargo xtask \u2026\u0060 runs the repository's own verification runner (ROADMAP.md \u00a74.2, \u00a714.3).\n# Committed deliberately: a tier that only works if each developer remembers an incantation is a\n# tier nobody runs.\n[alias]\nxtask = \"run --quiet --package xtask --\"\n",
+      "Cargo.lock": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"b\"\nversion = \"0.1.0\"\n",
+      "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n",
+      "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/a/src/main.rs": "fn main() {}\n",
+      "crates/b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/b/src/inside.txt": "inside tracked input\n",
+      "crates/b/src/lib.rs": "pub const FIRST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a.txt\");\npub const MIDDLE: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m.txt\");\npub const LAST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z.txt\");\npub const INSIDE: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/src/inside.txt\"));\n",
+      "rust-toolchain.toml": "[toolchain]\nchannel = \"1.95.0\"\n",
+      "trust/roots.eadl": "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n(defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"972216889d284dffe87816e753f7c2c3063ecb935b0151da5003b00e23147c34\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"a96d71233bc7801ea232693f70a0124f946893a22458ddf567ca4c29beca3505\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"4a40b498d8d4e5b57e2ee5d3284e832feac75190d5ce8c9b439be551b60447aa\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"7ec4bbc1f06bdd4ed2dd6c5513683b7e04637fb03df46107a7f7d82ec522251f\") (reason \"a fixture\"))\n"
+    },
+    "fixture_commit": "76ffd44e6e7877c606cf34df51039ce4d3c39c97"
+  },
+  {
+    "case": "alias-spaces",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-q",
+      "-p",
+      "xtask",
+      "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+      "--",
+      "--exact"
+    ],
+    "exit_code": 101,
+    "elapsed_seconds": 2.5006695829797536,
+    "oracle": "Complete literal outside-input refusals derived from the declared filenames, plus no inventory.",
+    "inputs": [
+      [
+        "FIRST",
+        "a with space.txt",
+        "first external input\n"
+      ],
+      [
+        "MIDDLE",
+        "m with space.txt",
+        "middle external input\n"
+      ],
+      [
+        "LAST",
+        "z with space.txt",
+        "last external input\n"
+      ]
+    ],
+    "output": "output-alias",
+    "source_sha256": "94417e52146bba2164bb1e8a9b5c47c99e65681bef0ba169101027649613d762",
+    "parent_sha256": "e0d087e70433439b5592eb95bd5608362bf94cdd9f369a959b133710b71e0eb7",
+    "stdout": "\nrunning 1 test\ntrust::tests::every_absolute_dependency_outside_the_written_tree_is_refused --- FAILED\n\nfailures:\n\n---- trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused stdout ----\n\nthread 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused' (1268766615) panicked at xtask/src/trust_test_process.rs:56:73:\ntrust::tests::every_absolute_dependency_outside_the_written_tree_is_refused: child failed (exit status: 101); stdout \"\\nrunning 1 test\\ntest trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused ... FAILED\\n\\nfailures:\\n\\n---- trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused stdout ----\\n\\nthread 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused' (1268766619) panicked at xtask/src/trust.rs:4595:9:\\nassertion \u0060left == right\u0060 failed\\n  left: [\\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\\\\\\\\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\\\\\\\\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\\\\\\\\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060space.txt\u0060, which is not a blob of the commit\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060with\\\\\\\\\u0060, which is not a blob of the commit\\\"]\\n right: [\\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a with space.txt\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m with space.txt\u0060, outside the written tree\\\", \\\"trust-undeclared-input: \u0060chk\u0060 reads \u0060<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z with space.txt\u0060, outside the written tree\\\"]\\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\\n\\n\\nfailures:\\n    trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused\\n\\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.13s\\n\\n\"; stderr \"\"\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n\n\nfailures:\n    trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.16s\n\n",
+    "stderr": "error: test failed, to rerun pass \u0060-p xtask --bin xtask\u0060\n",
+    "captured": {
+      "physical-output/target/chk/release/deps/b-20572edba3a82d76.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/deps/libb-20572edba3a82d76.rlib: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/deps/libb-20572edba3a82d76.rmeta: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt\n\ncrates/b/src/lib.rs:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt:\n\n# env-dep:CARGO_MANIFEST_DIR=<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b\n",
+      "physical-output/target/chk/release/libb.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/chk/release/libb.rlib: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\ with\\ space.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/inside.txt <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/b/src/lib.rs\n",
+      "physical-output/target/gen/release/a.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/gen/release/a: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/physical-output/tree/crates/a/src/main.rs\n",
+      "physical-output/target/gen/release/deps/a-ea31e1b4fa6d99dc.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/gen/release/deps/a-ea31e1b4fa6d99dc.d: crates/a/src/main.rs\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/output-alias/target/gen/release/deps/a-ea31e1b4fa6d99dc: crates/a/src/main.rs\n\ncrates/a/src/main.rs:\n"
+    },
+    "fixture_files": {
+      ".cargo/config.toml": "# \u0060cargo xtask \u2026\u0060 runs the repository's own verification runner (ROADMAP.md \u00a74.2, \u00a714.3).\n# Committed deliberately: a tier that only works if each developer remembers an incantation is a\n# tier nobody runs.\n[alias]\nxtask = \"run --quiet --package xtask --\"\n",
+      "Cargo.lock": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"b\"\nversion = \"0.1.0\"\n",
+      "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n",
+      "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/a/src/main.rs": "fn main() {}\n",
+      "crates/b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/b/src/inside.txt": "inside tracked input\n",
+      "crates/b/src/lib.rs": "pub const FIRST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a with space.txt\");\npub const MIDDLE: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m with space.txt\");\npub const LAST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z with space.txt\");\npub const INSIDE: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/src/inside.txt\"));\n",
+      "rust-toolchain.toml": "[toolchain]\nchannel = \"1.95.0\"\n",
+      "trust/roots.eadl": "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n(defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"0eff318c68cb32707dfd605c1340e4828a1621296c03139256f65bde118279f8\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"a20d0562040aad172440ac1cf04edd592f213501f28ead11e9bbc01742fbb958\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"5fae9aa44f3a11eb132b426a9f8550678dbc2712473f5a5df4c254cfb9b57438\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"7ec4bbc1f06bdd4ed2dd6c5513683b7e04637fb03df46107a7f7d82ec522251f\") (reason \"a fixture\"))\n"
+    },
+    "fixture_commit": "9a0c4e088961e8e974146e458c4f9388863f76e6"
+  },
+  {
+    "case": "terminal-backslashes",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-q",
+      "-p",
+      "xtask",
+      "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+      "--",
+      "--exact"
+    ],
+    "exit_code": 101,
+    "elapsed_seconds": 2.506206125020981,
+    "oracle": "Complete literal outside-input refusals derived from the declared filenames, plus no inventory.",
+    "inputs": [
+      [
+        "FIRST",
+        "a\\",
+        "first external input\n"
+      ],
+      [
+        "MIDDLE",
+        "m\\",
+        "middle external input\n"
+      ],
+      [
+        "LAST",
+        "z\\",
+        "last external input\n"
+      ]
+    ],
+    "output": "out",
+    "source_sha256": "7c4c027bee6fba93dab79f37ddbb3ba1fddd7edd7e3d124785cd39fc61de15ae",
+    "parent_sha256": "55cea9674f9cd941c4ec3498b2c9f33304cb9738727aff2b5a0ea340e8af8513",
+    "stdout": "\nrunning 1 test\ntrust::tests::every_absolute_dependency_outside_the_written_tree_is_refused --- FAILED\n\nfailures:\n\n---- trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused stdout ----\n\nthread 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused' (1268768583) panicked at xtask/src/trust_test_process.rs:56:73:\ntrust::tests::every_absolute_dependency_outside_the_written_tree_is_refused: child failed (exit status: 101); stdout \"\\nrunning 1 test\\ntest trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused ... FAILED\\n\\nfailures:\\n\\n---- trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused stdout ----\\n\\nthread 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused' (1268768587) panicked at xtask/src/trust.rs:3018:14:\\ncalled \u0060Result::unwrap()\u0060 on an \u0060Err\u0060 value: \\\"\u0060cargo build --lib --release --locked --offline --no-default-features --message-format=json -v -p b\u0060 failed: error: could not parse/generate dep info at: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/b-20572edba3a82d76.d\\\"\\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\\n\\n\\nfailures:\\n    trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused\\n\\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.07s\\n\\n\"; stderr \"\"\nnote: run with \u0060RUST_BACKTRACE=1\u0060 environment variable to display a backtrace\n\n\nfailures:\n    trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 330 filtered out; finished in 1.15s\n\n",
+    "stderr": "error: test failed, to rerun pass \u0060-p xtask --bin xtask\u0060\n",
+    "captured": {
+      "out/target/chk/release/deps/b-20572edba3a82d76.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/libb-20572edba3a82d76.rlib: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/chk/release/deps/libb-20572edba3a82d76.rmeta: crates/b/src/lib.rs <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\ <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\ <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\\n\ncrates/b/src/lib.rs:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\:\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\:\n",
+      "out/target/gen/release/a.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/a: <repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/tree/crates/a/src/main.rs\n",
+      "out/target/gen/release/deps/a-ea31e1b4fa6d99dc.d": "<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/deps/a-ea31e1b4fa6d99dc.d: crates/a/src/main.rs\n\n<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/out/target/gen/release/deps/a-ea31e1b4fa6d99dc: crates/a/src/main.rs\n\ncrates/a/src/main.rs:\n"
+    },
+    "fixture_files": {
+      ".cargo/config.toml": "# \u0060cargo xtask \u2026\u0060 runs the repository's own verification runner (ROADMAP.md \u00a74.2, \u00a714.3).\n# Committed deliberately: a tier that only works if each developer remembers an incantation is a\n# tier nobody runs.\n[alias]\nxtask = \"run --quiet --package xtask --\"\n",
+      "Cargo.lock": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"b\"\nversion = \"0.1.0\"\n",
+      "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n",
+      "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/a/src/main.rs": "fn main() {}\n",
+      "crates/b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n",
+      "crates/b/src/lib.rs": "pub const FIRST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/a\\\\\");\npub const MIDDLE: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/m\\\\\");\npub const LAST: &str = include_str!(\"<repository-root>/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals/external/z\\\\\");\n",
+      "rust-toolchain.toml": "[toolchain]\nchannel = \"1.95.0\"\n",
+      "trust/roots.eadl": "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n(defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"7d537e340827bf18c7bdb69fcabcb64835893374b713f9b709085b699b31908f\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"6e79975e27d479a144e9775d03f83ab48ff680e97cbfb3531cb9cf5a54033ed6\") (reason \"a fixture\"))\n(defadmit (file \"crates/b/src/lib.rs\") (rule \"include_str\") (sha256 \"cd41d2a9f087479584544b8f747c06ba182c4fd420bf9ef40a6a4205c0c9b7a9\") (reason \"a fixture\"))\n"
+    },
+    "fixture_commit": "bf42939610ac32a8711c2ba799c71f55eda39dcd"
+  }
+]
+```
+
+</details>
+
+<details>
+<summary>Complete dependency path-domain held-input manifest</summary>
+
+```json
+{
+  "schema": "archogen-tracked-inputs/1",
+  "source_commit": "39b16e963690e0d3b8a6f2ec99b7d8ce020bedaf",
+  "producer_sha256": "8d11a12788b158741d533caaa994eadab9c7c55a18190017c488dc25dfd83515",
+  "regular": {
+    ".cargo/config.toml": {
+      "index_mode": "100644",
+      "index_oid": "9ed67f9e7c21d620f858a079ce8b30b5e4aec376",
+      "mode": 420,
+      "size": 260,
+      "sha256": "48296b18a2b27cc7268cf489fc37bdcf24e04d79b914c2237c248e4db1f6fa79"
+    },
+    ".doctrine/README.md": {
+      "index_mode": "100644",
+      "index_oid": "0955e3d6ab180c8f723e187e9afd1b002e63cc6b",
+      "mode": 420,
+      "size": 2425,
+      "sha256": "8c22d4f276517605b206ac7ef68afee4da880ac85675d7440128ce6b258e0c57"
+    },
+    ".doctrine/code_paths.txt": {
+      "index_mode": "100644",
+      "index_oid": "868f214aaa9c6cd2e8eeae1a7f5a51dcf5b83b83",
+      "mode": 420,
+      "size": 1537,
+      "sha256": "6acc247d36d8cbd06d48f24f55cca67c155350c92db716dcd7a0f693d1c04f3c"
+    },
+    ".doctrine/commit_message_file": {
+      "index_mode": "100644",
+      "index_oid": "35ce0e4a7c7cafb09afe14680dfb545ccb5e6be9",
+      "mode": 420,
+      "size": 1459,
+      "sha256": "8df17ae0fb70e113c422b809a2552c35064d3064508f0f2d667bc9639c9683ea"
+    },
+    ".doctrine/evidence_tokens.txt": {
+      "index_mode": "100644",
+      "index_oid": "04943c73360eb3a692e879a9eb2ea535a37174fc",
+      "mode": 420,
+      "size": 977,
+      "sha256": "881017a38b37c39655cbe5f1ba59bd0140b8d30f82576fcc9c29d3038e4fc59e"
+    },
+    ".gitattributes": {
+      "index_mode": "100644",
+      "index_oid": "6c581c243fbe34e8feb8897ef688eb4ff080b6b9",
+      "mode": 420,
+      "size": 634,
+      "sha256": "4d58c6d55e8b7e84bc61ecfd575df00b952bdb16f3259d0d8119c587282f47fe"
+    },
+    ".githooks/commit-msg": {
+      "index_mode": "100755",
+      "index_oid": "d13568318a787334a4d4fa960d892ef929486b46",
+      "mode": 493,
+      "size": 1668,
+      "sha256": "62fb773b1682a7035974d8c437e864cfdfb24fd0b8e28611d1e74399e9a192f4"
+    },
+    ".githooks/post-commit": {
+      "index_mode": "100755",
+      "index_oid": "96532121bda086f99c47f7d5a6aa368dfb9471f3",
+      "mode": 493,
+      "size": 441,
+      "sha256": "85f6419ca72666f7cee2e8c786b7f9fbadac2a533e68adac6aceb6348e76a9d0"
+    },
+    ".githooks/pre-commit": {
+      "index_mode": "100755",
+      "index_oid": "bcbe003f5c865d13cf3c230f164d278ff60c74ba",
+      "mode": 493,
+      "size": 1422,
+      "sha256": "ed1d9cfe6053c981f9f85a219e867769801dd58332e6f71e23ca743ce65d8e96"
+    },
+    ".githooks/pre-merge-commit": {
+      "index_mode": "100755",
+      "index_oid": "c6575c124d330a8ed4447d79260fce6ab75a7ad6",
+      "mode": 493,
+      "size": 549,
+      "sha256": "faebfbd724c39fcbe2c734243755a9f7c268034c04135f3f39c137d57cfad45e"
+    },
+    ".github/ci-tools.env": {
+      "index_mode": "100644",
+      "index_oid": "8e3130f4d58ef0673ef1d3b9a986772ed8e5bf6e",
+      "mode": 420,
+      "size": 1156,
+      "sha256": "6bb92d775801e8adaf0bdcb66ebcac1da8b9844d373957bcab9f742d94247a4a"
+    },
+    ".github/workflows/catalog-check.yml": {
+      "index_mode": "100644",
+      "index_oid": "5fdb1078ce3d3154aef7e8f373a2a0634523d072",
+      "mode": 420,
+      "size": 3092,
+      "sha256": "4038c9ef55f5c06f7566cd81e191d989009c75cd9090a2c97756efaf550ee9ee"
+    },
+    ".github/workflows/doctrines.yml": {
+      "index_mode": "100644",
+      "index_oid": "83a6d0f622f2848f5f6bc936d665682fcb6f854b",
+      "mode": 420,
+      "size": 1333,
+      "sha256": "eed176ba326638386ed361e9bad9d89a0f7f4fc26526cf753d4be82d4d4e4270"
+    },
+    ".github/workflows/rust.yml": {
+      "index_mode": "100644",
+      "index_oid": "94a8a09a46e3db1f6dbc4a8986e5595bfb3d48f9",
+      "mode": 420,
+      "size": 3028,
+      "sha256": "7daef6916b11ee8e26c8dbd055104381c7425161922cc26b8f12cf0c48c88d56"
+    },
+    ".github/workflows/trust-gate.yml": {
+      "index_mode": "100644",
+      "index_oid": "a9614276d8108e6e59838950ad6e5c871ee824f4",
+      "mode": 420,
+      "size": 4363,
+      "sha256": "e9e4211b631c0e6d876ae1aa596e57608ea85a1f1894d0713e825fdf247b05fa"
+    },
+    ".gitignore": {
+      "index_mode": "100644",
+      "index_oid": "92520ef773c42a51bfddd6d341b20ab0370e2720",
+      "mode": 420,
+      "size": 2134,
+      "sha256": "45b6aaf8f67ea1689faa81b0f30dfb64c79c92d918c9a97f66f1b43f57c2cf43"
+    },
+    ".gitmodules": {
+      "index_mode": "100644",
+      "index_oid": "4fe7844ac620a2c54dca5806c68baebd63f3c5c6",
+      "mode": 420,
+      "size": 100,
+      "sha256": "bff74665217537b5f349bfcd8ae7afaf8528deef1ff93f192b88dc0e5c1867c7"
+    },
+    "AGENTS.md": {
+      "index_mode": "100644",
+      "index_oid": "c15f5510e04fd5a8af2697dde4e027f31983f800",
+      "mode": 420,
+      "size": 798,
+      "sha256": "c9d1f1b8ead5533c45a7d62e248c802377ec1cee81253aa433b0f0957cf2afb5"
+    },
+    "CHANGELOG.md": {
+      "index_mode": "100644",
+      "index_oid": "4be5b2ed784c31c5eed75d001895e43e63c4b388",
+      "mode": 420,
+      "size": 29282,
+      "sha256": "09c369379ee5ec1dc84dd6179a6c77272c5243cc9ac36856334b9d7ee4f55374"
+    },
+    "CLAUDE.md": {
+      "index_mode": "100644",
+      "index_oid": "7f1e38197547e777375dae5e2086949f65298876",
+      "mode": 420,
+      "size": 6094,
+      "sha256": "d191c50945ede73aadef837c2204316ad23b07fe941e946b08c3b4b7e823b990"
+    },
+    "COMMIT.md": {
+      "index_mode": "100644",
+      "index_oid": "9df912e1dcb4d51f75abe5d20869865df0cd1180",
+      "mode": 420,
+      "size": 7222,
+      "sha256": "4198dd73c3094123d3222a3d84afa61346c22033234100ffb5b0125d36094edf"
+    },
+    "Cargo.lock": {
+      "index_mode": "100644",
+      "index_oid": "64eabe030a21c982220d71ba9daabb431aef4b40",
+      "mode": 420,
+      "size": 1358,
+      "sha256": "5164fe99ab7234dc8346121de7ee3f8b16599c31d585433c93809104676a6f64"
+    },
+    "Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "314035780f9c907b8f5b88e93e4a98e4121528b4",
+      "mode": 420,
+      "size": 2438,
+      "sha256": "523ef1fdc14883302cf62d951526ae83d78cb38153caf4f9c4f9927f2c986510"
+    },
+    "DEV_NOTES.md": {
+      "index_mode": "100644",
+      "index_oid": "a1de498e1c349253f5459142d24197d302c3d56d",
+      "mode": 420,
+      "size": 42240,
+      "sha256": "bb85817627f305abf4d402921b18f86ed409f066b3d0566bbc7903109ab22a03"
+    },
+    "DOCTRINE_ENFORCEMENT.md": {
+      "index_mode": "100644",
+      "index_oid": "0ed1c02c454ec5ff0b3ec5643471296a7e932a6c",
+      "mode": 420,
+      "size": 36743,
+      "sha256": "6f6949caacf11f0789efae8121aeff6f783d6859b5ba0c8d65d3c4d429edf7af"
+    },
+    "DOCTRINE_VERSION": {
+      "index_mode": "100644",
+      "index_oid": "765845120685348dfaf0f653944d06ccc89fa6d5",
+      "mode": 420,
+      "size": 24,
+      "sha256": "3da9ac61fd458c24a9a96a2468582b4f18ae57bcb9f4d67a6ef5046cb4171f00"
+    },
+    "KNOWLEDGE_MAP.md": {
+      "index_mode": "100644",
+      "index_oid": "fea32feec20a1d15fddc11a4185f61acb7b78820",
+      "mode": 420,
+      "size": 17615,
+      "sha256": "820f9b3026c14ee37d1e41c1c9e6f3b6f95fa01c425edceeecfe7bf0caaff50b"
+    },
+    "LIVE_DOCUMENT_SIZE_CONTAINMENT.md": {
+      "index_mode": "100644",
+      "index_oid": "b22c8e01a7b9485cb399cb97cd36bedff6e39f15",
+      "mode": 420,
+      "size": 30275,
+      "sha256": "bdf143b8ef34637c6d0905e6c76413c9051f8154b81f16665a567d36c08387fa"
+    },
+    "LIVE_STATUS.md": {
+      "index_mode": "100644",
+      "index_oid": "9913087eee13c82f19c0f64c8e36cfb073eeeb1d",
+      "mode": 420,
+      "size": 2702,
+      "sha256": "16f2c8f393407447d7090cfe2a1dc8c1b0a44b19b2051ce5437f0dbd0df89c47"
+    },
+    "MEMORY.md": {
+      "index_mode": "100644",
+      "index_oid": "e879e348383a9f3d609721a763533505ba0dccdf",
+      "mode": 420,
+      "size": 2293,
+      "sha256": "148b6f063eff93e82d357d3707c5a238c9b7e37b8e1396494606b6f86f88e0ad"
+    },
+    "MEMORY_ARCHITECTURE.md": {
+      "index_mode": "100644",
+      "index_oid": "7f001a38f3a776d7f52f8ad61fbd0611782c38e9",
+      "mode": 420,
+      "size": 24573,
+      "sha256": "54a000265859a49757df5a4ce457fe3685628fa03cd8ad27900a125394c03a94"
+    },
+    "Makefile": {
+      "index_mode": "100644",
+      "index_oid": "25d1885f45ea4d9c8321a9deef8c7d9ddb2b9031",
+      "mode": 420,
+      "size": 1920,
+      "sha256": "3ff04dd9788095fe71b718fa4a2f60abdc86d6b3f035ec0cc5046e0d057bb366"
+    },
+    "README.md": {
+      "index_mode": "100644",
+      "index_oid": "867f7efb9b44854c4966eb0d1cf37ba6d2f4edb6",
+      "mode": 420,
+      "size": 4454,
+      "sha256": "5793dc4d20949bcf6fdb1c42c55e2b56dbda950d9b6899f322bdab824a40f07d"
+    },
+    "README_POLICY.md": {
+      "index_mode": "100644",
+      "index_oid": "3ba7b1655de0a7205e5c31b0a15ce08d6a04d4ad",
+      "mode": 420,
+      "size": 16166,
+      "sha256": "79861c72fb4d54cf754a94ea560920a5ac3808fc5b082518cccfba6676031c0b"
+    },
+    "ROADMAP.md": {
+      "index_mode": "100644",
+      "index_oid": "ac2b571f667f005c4c0c7f59d2e28f970fb2008e",
+      "mode": 420,
+      "size": 106000,
+      "sha256": "0f48bef4c3ee5c113fe44f560e411f429f8d15064fab4c696dc741cde027e2c5"
+    },
+    "TOOLBOX.md": {
+      "index_mode": "100644",
+      "index_oid": "72e4caa504c9a42512ddeecef995b628e5520339",
+      "mode": 420,
+      "size": 28653,
+      "sha256": "fa609a879e5ed92f5d43118c28c588a50775e1d58cd8ab142a9346f1c8aa435f"
+    },
+    "VISIBILITY.md": {
+      "index_mode": "100644",
+      "index_oid": "a5abbfd3c0b04ff55b029b4255002972b1e577ad",
+      "mode": 420,
+      "size": 3495,
+      "sha256": "949b7e434ab75b199dc4ecdb5b2faf8b84b099f6de9c04c2ae966b10b30805a1"
+    },
+    "book/.nojekyll": {
+      "index_mode": "100644",
+      "index_oid": "f17311098f5409ae228c219da906eee48d1c4b8f",
+      "mode": 420,
+      "size": 72,
+      "sha256": "235d4f83c4c71612f43995dbda167720cd0c5384bf9ea64f9328b187c409b51d"
+    },
+    "book/404.html": {
+      "index_mode": "100644",
+      "index_oid": "eb1836f4272a929ad9367355d7ea3a87272dea50",
+      "mode": 420,
+      "size": 17588,
+      "sha256": "82d3c88df74aaadae3fd50b7d940c64ca5df9411e6c9c7f23ffae3d95c093d2d"
+    },
+    "book/ayu-highlight-3fdfc3ac.css": {
+      "index_mode": "100644",
+      "index_oid": "dba94b095d4428ad795b020cefa98adb01eaaf1c",
+      "mode": 420,
+      "size": 907,
+      "sha256": "3fdfc3ac5e435e0cef96dafee74da487e4846ffce4dff5973bb45d68b678dd7f"
+    },
+    "book/book-a0b12cfe.js": {
+      "index_mode": "100644",
+      "index_oid": "62d7c4cc87c84267a5e314a5baa5b7cac3f6c070",
+      "mode": 420,
+      "size": 30019,
+      "sha256": "a0b12cfedf44851aa23bbfd6c39a0df8f9c34fdb919d6d22913dcd2041d0b2fa"
+    },
+    "book/clipboard-1626706a.min.js": {
+      "index_mode": "100644",
+      "index_oid": "02c549e35c86460e357a4fcebc61e1556929632f",
+      "mode": 420,
+      "size": 10754,
+      "sha256": "1626706afc88d95ebe1173b553ec732c6dc82a576989315fdf5e7779af738a44"
+    },
+    "book/css/chrome-ae938929.css": {
+      "index_mode": "100644",
+      "index_oid": "bab38894f4ca225da55b54a7b6b1f51cf53be14a",
+      "mode": 420,
+      "size": 17520,
+      "sha256": "ae938929f0ed38ef640230278d20e79cfe10cb451dc42f92ea2972f451b742e1"
+    },
+    "book/css/general-2459343d.css": {
+      "index_mode": "100644",
+      "index_oid": "df8a3efe2b6ec26558dd18ceb086c8ada91aaf10",
+      "mode": 420,
+      "size": 9913,
+      "sha256": "2459343d18b7083f873fd33db852a95eddf965bb3ec179859e218c6af4f48d36"
+    },
+    "book/css/print-9e4910d8.css": {
+      "index_mode": "100644",
+      "index_oid": "2004384d3878893fdd647aa663115e33e9515911",
+      "mode": 420,
+      "size": 689,
+      "sha256": "9e4910d8eb508863172430c60d49fd3b442e9e7f5963a18cd1d655c386ffeae9"
+    },
+    "book/css/variables-8adf115d.css": {
+      "index_mode": "100644",
+      "index_oid": "af5023bc3ee99d4a72f4fc0fb8a989d652f24118",
+      "mode": 420,
+      "size": 10422,
+      "sha256": "8adf115df892369c90b830767c4651a9e058b79273e219935f7c8a96c6eab9c0"
+    },
+    "book/elasticlunr-ef4e11c1.min.js": {
+      "index_mode": "100644",
+      "index_oid": "94b20dd2ef4609847e67314f19aa04ba5fa9dcef",
+      "mode": 420,
+      "size": 18051,
+      "sha256": "ef4e11c157b1e2e89782d30bd726f2d5ff7834ea5e26ad02474325f8b1f126c9"
+    },
+    "book/favicon-8114d1fc.png": {
+      "index_mode": "100644",
+      "index_oid": "a5b1aa16c4dcb6c872cb5af799bfc9b5552c7b9e",
+      "mode": 420,
+      "size": 5679,
+      "sha256": "8114d1fc74f4b5621ad9afde7746ed9cf7e420be317a6e29023d2298d58aa15b"
+    },
+    "book/favicon-de23e50b.svg": {
+      "index_mode": "100644",
+      "index_oid": "90e0ea58bdb1e54b8847b802697aa69a0b490bfa",
+      "mode": 420,
+      "size": 1835,
+      "sha256": "de23e50b1c4dd6e052b3e21d444fcd4b13568b3840ac3c99d9be4e9263c0ef59"
+    },
+    "book/fonts/OPEN-SANS-LICENSE.txt": {
+      "index_mode": "100644",
+      "index_oid": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "mode": 420,
+      "size": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    "book/fonts/SOURCE-CODE-PRO-LICENSE.txt": {
+      "index_mode": "100644",
+      "index_oid": "366206f549504e758eae3c1b0416667af51dd3fe",
+      "mode": 420,
+      "size": 4528,
+      "sha256": "d1e6d465a83ba1a3be52db6484868cf5812ae9bbf91abdad3900ba0165afcf93"
+    },
+    "book/fonts/fonts-9644e21d.css": {
+      "index_mode": "100644",
+      "index_oid": "ce32fdc89281a538257867f3dcbd4712a4f82911",
+      "mode": 420,
+      "size": 3818,
+      "sha256": "94b5131beb9b75a55f9649fcf12de167350feae0fab2bab26c2703cd75c0c781"
+    },
+    "book/fonts/open-sans-v17-all-charsets-300-7736aa35.woff2": {
+      "index_mode": "100644",
+      "index_oid": "9f51be370fa913ce6de2922b580c262c4822b337",
+      "mode": 420,
+      "size": 44352,
+      "sha256": "7736aa3596c468515c3209f2f9d68cfae96d94c05689bcc11a5dce426a6ee2e8"
+    },
+    "book/fonts/open-sans-v17-all-charsets-300italic-2c7b95c0.woff2": {
+      "index_mode": "100644",
+      "index_oid": "2f545448418cba6668a2e7d49e9616e8c69dfd15",
+      "mode": 420,
+      "size": 40656,
+      "sha256": "2c7b95c08df0d228caec6d4bfed06da0f7ab6b76ea5cc3f75b5c6ae416bc571b"
+    },
+    "book/fonts/open-sans-v17-all-charsets-600-486c6759.woff2": {
+      "index_mode": "100644",
+      "index_oid": "f503d558d58dbd4dee1f6b962d23002c85893573",
+      "mode": 420,
+      "size": 44936,
+      "sha256": "486c67592731a0b36a89dba1fd0b97aeb73f236bbf60dbf28d7c6b5723c07989"
+    },
+    "book/fonts/open-sans-v17-all-charsets-600italic-1a3e8659.woff2": {
+      "index_mode": "100644",
+      "index_oid": "c99aabe80340fd88a6aeb5729251e76c9a6f35ec",
+      "mode": 420,
+      "size": 42120,
+      "sha256": "1a3e865977024f444834a75a1b33b89b93134c93007ae3d6e14f24e6c88d8dfb"
+    },
+    "book/fonts/open-sans-v17-all-charsets-700-c22fe8c7.woff2": {
+      "index_mode": "100644",
+      "index_oid": "421a1ab25fa88105ab776552d7201205f7899841",
+      "mode": 420,
+      "size": 44988,
+      "sha256": "c22fe8c70c36f1d862903b772eaed864d3a8fa849473c9caff224fdb852428e4"
+    },
+    "book/fonts/open-sans-v17-all-charsets-700italic-238ae959.woff2": {
+      "index_mode": "100644",
+      "index_oid": "12ce3d20d1ce2288206e8b4f31c20f76452efe37",
+      "mode": 420,
+      "size": 40800,
+      "sha256": "238ae9593944112bee8dd65f8ebc5f3d3862160a8a245fbe1ee3150bc9a2fd81"
+    },
+    "book/fonts/open-sans-v17-all-charsets-800-3d2c812a.woff2": {
+      "index_mode": "100644",
+      "index_oid": "c94a223b03321d4a6701f0f8f7bc16bc75081aab",
+      "mode": 420,
+      "size": 44536,
+      "sha256": "3d2c812adf74deb36fead3ff8469800d3c0b23eb2c858ae49310291f89490146"
+    },
+    "book/fonts/open-sans-v17-all-charsets-800italic-ba1521ec.woff2": {
+      "index_mode": "100644",
+      "index_oid": "eed7d3c63d1f9bff356497c0b0fb79c50ac4dede",
+      "mode": 420,
+      "size": 40812,
+      "sha256": "ba1521ec219db9bc5bfec0e3e7a897369d98b30d4e853ee4aa525322784428b8"
+    },
+    "book/fonts/open-sans-v17-all-charsets-italic-6c9463f7.woff2": {
+      "index_mode": "100644",
+      "index_oid": "398b68a0853fbf6368758deb1da49d347e3e7d89",
+      "mode": 420,
+      "size": 41076,
+      "sha256": "6c9463f7096c0b9d610e095ed248ac1e8a8da7e92d17e9be544f3baced7b62b2"
+    },
+    "book/fonts/open-sans-v17-all-charsets-regular-2e3b1d34.woff2": {
+      "index_mode": "100644",
+      "index_oid": "8383e94c65478622baf43553262e0e31b8725e2b",
+      "mode": 420,
+      "size": 43236,
+      "sha256": "2e3b1d34ac67763ab50652da19305d4b3694c6b6e6bf35f4b98411ce4af646d2"
+    },
+    "book/fonts/source-code-pro-v11-all-charsets-500-2bdd9410.woff2": {
+      "index_mode": "100644",
+      "index_oid": "722245682f59dfbf16d8cd95834db381ce022ebc",
+      "mode": 420,
+      "size": 59140,
+      "sha256": "2bdd9410b0141db3cbbf4cfc3818cc6fad279e8e63940940e06cd6af76ccbfcf"
+    },
+    "book/highlight-493f70e1.css": {
+      "index_mode": "100644",
+      "index_oid": "352c79b9617cf0b41151ddd22805011b226b1111",
+      "mode": 420,
+      "size": 1209,
+      "sha256": "493f70e1527d895653b5ac7157abba8e2c656e43698da93b6c1997e2855a5059"
+    },
+    "book/highlight-abc7f01d.js": {
+      "index_mode": "100644",
+      "index_oid": "18d24345bdd0128cc4226fba20a853499b508da2",
+      "mode": 420,
+      "size": 137537,
+      "sha256": "abc7f01d0ce8c64e4ba9e131d651e48ae1a567b2a1254fea8aab03502288de58"
+    },
+    "book/index.html": {
+      "index_mode": "100644",
+      "index_oid": "c3d2f50231652b611b35ecb83acff2e59ee3f9cd",
+      "mode": 420,
+      "size": 18647,
+      "sha256": "c461421a81bb3d0293d64f9ef3b3e6602baf5b34d192f5cb05c22b834b08433f"
+    },
+    "book/mark-09e88c2c.min.js": {
+      "index_mode": "100644",
+      "index_oid": "163623188347268fd81b325e21d0163ae3fdf63d",
+      "mode": 420,
+      "size": 17320,
+      "sha256": "09e88c2cfaf23ea8a37b5681433eafea97033af632ecc948c8c1ee9944647743"
+    },
+    "book/p.html": {
+      "index_mode": "100644",
+      "index_oid": "c3d2f50231652b611b35ecb83acff2e59ee3f9cd",
+      "mode": 420,
+      "size": 18647,
+      "sha256": "c461421a81bb3d0293d64f9ef3b3e6602baf5b34d192f5cb05c22b834b08433f"
+    },
+    "book/print.html": {
+      "index_mode": "100644",
+      "index_oid": "7b65cba9ae972864ccb9b654712504f382cfaecd",
+      "mode": 420,
+      "size": 18840,
+      "sha256": "16e976d1213122ce4658c069bab9c58e870e97f677b7d35ae1258a9d47afe59d"
+    },
+    "book/searcher-c2a407aa.js": {
+      "index_mode": "100644",
+      "index_oid": "1de4b490bbd12d703f44c08c99f763eb331c5896",
+      "mode": 420,
+      "size": 20094,
+      "sha256": "07f5db0b2e14f163736d22c19bb6ed6a1b20f3eb911c561423bc312a8249f02e"
+    },
+    "book/searchindex-ea126cf5.js": {
+      "index_mode": "100644",
+      "index_oid": "81c43013aa91d52a211c5f0bd2d2f0ca50ffef84",
+      "mode": 420,
+      "size": 12020,
+      "sha256": "ea126cf5853f13dda4c2eff68659b0a82f6c8e3de385ce9751de0f1b370d82cc"
+    },
+    "book/toc-799a8315.js": {
+      "index_mode": "100644",
+      "index_oid": "9768835a517772cd418c2180a5039a05507a0358",
+      "mode": 420,
+      "size": 19287,
+      "sha256": "799a8315980b26828b21cd79b09e6ec1ae328492a78347de2914325bf53336cc"
+    },
+    "book/toc.html": {
+      "index_mode": "100644",
+      "index_oid": "22c08decf475cb4b9caf8e450b0e9cffa4935561",
+      "mode": 420,
+      "size": 1662,
+      "sha256": "e3436755a5aa6ad9659272e462c754c52256eeab6820088e92250783bb43f551"
+    },
+    "book/tomorrow-night-4c0ae647.css": {
+      "index_mode": "100644",
+      "index_oid": "11752b8a8c7be2b78e61395c11200b961fd3a460",
+      "mode": 420,
+      "size": 1694,
+      "sha256": "4c0ae647a06ef1699806fb9b4b6d0ef72de026708c6e8581362641c9298cb5f7"
+    },
+    "cargo-generate.toml": {
+      "index_mode": "100644",
+      "index_oid": "ebe7f707bc45d3271dc746204fe5dbca0f82af58",
+      "mode": 420,
+      "size": 751,
+      "sha256": "3c80d79a43f7c6aff70be7079fef538ec9f4c02b3c1eadf2133021f832060d95"
+    },
+    "crates/archogen-api/Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "f505ca5248a610874cfaadb7caa27c151009946e",
+      "mode": 420,
+      "size": 624,
+      "sha256": "d488fdfe9373a3d015047ac927b785793dcb804a4c087358d0668c0680015be8"
+    },
+    "crates/archogen-api/examples/in_memory.rs": {
+      "index_mode": "100644",
+      "index_oid": "46ee817bdc9e20a1304aaad75ba4fd80f76f18e9",
+      "mode": 420,
+      "size": 2128,
+      "sha256": "7796c2921facd9447bd7f5c7f7168c69627852f53390e806ac35e765da52dab9"
+    },
+    "crates/archogen-api/src/lib.rs": {
+      "index_mode": "100644",
+      "index_oid": "23e7b5c04749fc88e82106a6aa1b277194998e90",
+      "mode": 420,
+      "size": 25376,
+      "sha256": "ea42b9b50adfe6d1fbd6e63ccdc65872905b38109939a30a4482ba9c6855ba95"
+    },
+    "crates/archogen-api/src/status.rs": {
+      "index_mode": "100644",
+      "index_oid": "8fc511d0b71a058e04e267b1dd4c29b4bcdf1ec2",
+      "mode": 420,
+      "size": 8876,
+      "sha256": "4f42f83deaf566abb2cf05a5a971ab6dccc3be3949a874928d78f2bd6cbdba15"
+    },
+    "crates/archogen-api/tests/book_example.rs": {
+      "index_mode": "100644",
+      "index_oid": "cec82c2309771a472c3af5b89ffd0959bebae8ed",
+      "mode": 420,
+      "size": 1367,
+      "sha256": "3280bed68b887def67ea7bfe68de086d50fbb5cf4e6557e4251d330f5cb9215b"
+    },
+    "crates/archogen-api/tests/budget.rs": {
+      "index_mode": "100644",
+      "index_oid": "374295ed70cf12ccdf5420050d030551381414c8",
+      "mode": 420,
+      "size": 4423,
+      "sha256": "cbca5fa20cc72e16b2fa1e13573eeaec321f0d84081ffa4457663205caf81847"
+    },
+    "crates/archogen-api/tests/check.rs": {
+      "index_mode": "100644",
+      "index_oid": "7edb101e07a29ce2153af5b42b978b6c9fe8ce10",
+      "mode": 420,
+      "size": 11372,
+      "sha256": "78a5626953411a8f734fb25e73eb33f70ecff55827bda8f1b82184c98da5f855"
+    },
+    "crates/archogen-catalog/Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "51ef567eb42345c6e0b8c97d27e575e39dd3d647",
+      "mode": 420,
+      "size": 931,
+      "sha256": "1e8266bd7987f766565e66ddca4d6fbc277bfc853771dfec61fa8050fea0629d"
+    },
+    "crates/archogen-catalog/src/assembly.rs": {
+      "index_mode": "100644",
+      "index_oid": "d896ab68efccb28416340bf3b97c7aef7072b75e",
+      "mode": 420,
+      "size": 32086,
+      "sha256": "c085ea4ff9296b83b6c98a1744e4341b2c69bc565a314e341a3e5c4c15dbe8de"
+    },
+    "crates/archogen-catalog/src/claim.rs": {
+      "index_mode": "100644",
+      "index_oid": "3201620545e515d197b5da64ef7a762429aa055f",
+      "mode": 420,
+      "size": 19214,
+      "sha256": "0fca916a373bba4c8af671c25e0890a92a386c7ea83a808b8614b0884c0a226d"
+    },
+    "crates/archogen-catalog/src/dialect.rs": {
+      "index_mode": "100644",
+      "index_oid": "64ca4151e2909e562687caa28d4773b28267241e",
+      "mode": 420,
+      "size": 5315,
+      "sha256": "298bd802d3c06c52692250e77069cc65a8b9b311df2d16fe728c670c3dd5d525"
+    },
+    "crates/archogen-catalog/src/grammar.rs": {
+      "index_mode": "100644",
+      "index_oid": "3c21a5ed3a93df02f635bed0f8e554e39afdbf03",
+      "mode": 420,
+      "size": 9365,
+      "sha256": "2036f0a3446f682951a6fa917402298f9bf40a6778c6ab15c0133db24278ac71"
+    },
+    "crates/archogen-catalog/src/hash.rs": {
+      "index_mode": "100644",
+      "index_oid": "3fe6106e4f2ab28b434195772dffca16d001ac32",
+      "mode": 420,
+      "size": 51191,
+      "sha256": "0053b78304cff8ed9597a952be277c27babeeaa2448b094eea682d6b00a5fce4"
+    },
+    "crates/archogen-catalog/src/history.rs": {
+      "index_mode": "100644",
+      "index_oid": "d694dc2e46561a4752a7ec5a26c8121bee25b58d",
+      "mode": 420,
+      "size": 4990,
+      "sha256": "235bfe00b2c460225c5591813723a396926f439fc9734c06a4889298808523b2"
+    },
+    "crates/archogen-catalog/src/invalidation.rs": {
+      "index_mode": "100644",
+      "index_oid": "394a54ec2765d3e107f919bae93c28ce513cd5f6",
+      "mode": 420,
+      "size": 8052,
+      "sha256": "bb675bd4f35960eccbfe7f7e3a8377207ade8f62a965d9d5a97ba5fe22f4379e"
+    },
+    "crates/archogen-catalog/src/ledger.rs": {
+      "index_mode": "100644",
+      "index_oid": "33d56d8a506715ed220711acf6ad89a76627c3ce",
+      "mode": 420,
+      "size": 10062,
+      "sha256": "358df35b1b0137000625a4146997fb3184131b3ec2f559b8caf2efd2417dd38b"
+    },
+    "crates/archogen-catalog/src/lib.rs": {
+      "index_mode": "100644",
+      "index_oid": "d023085375cb27eab834e98695742f19f749c5e2",
+      "mode": 420,
+      "size": 3044,
+      "sha256": "1e299ccfab838708b41afc6ba366bb890a09dc5195957bb6690cef509312703a"
+    },
+    "crates/archogen-catalog/src/load.rs": {
+      "index_mode": "100644",
+      "index_oid": "cffbddd46f9d87b539882c05cfefad8fd9583124",
+      "mode": 420,
+      "size": 1885,
+      "sha256": "2fe624ce076cbc863d826140dc63750e944f0b78fbace53174ea1755a17f1ac4"
+    },
+    "crates/archogen-catalog/src/lock.rs": {
+      "index_mode": "100644",
+      "index_oid": "5ca259f1514c6c9d11962253ee4e8f1e9d2db012",
+      "mode": 420,
+      "size": 22003,
+      "sha256": "3da42c5bad610751f9e39ad566f2a505084131a05e48bc07b1a4876691c8728e"
+    },
+    "crates/archogen-catalog/src/manifest.rs": {
+      "index_mode": "100644",
+      "index_oid": "0f7f5e7f3b93da623cfa33f663b80a5567809dee",
+      "mode": 420,
+      "size": 13790,
+      "sha256": "dfd4f0a4d1de6cc086a7ceff6cc5fb48bc58013b87d02b6336869e05a3d6620b"
+    },
+    "crates/archogen-catalog/src/package.rs": {
+      "index_mode": "100644",
+      "index_oid": "53f8f10b12de5e6f4ec512b4afbea4b56cb02196",
+      "mode": 420,
+      "size": 19844,
+      "sha256": "a270b7ead993fafbd2dc7b783ea107b66fb378073aab6581647cd59f39afd226"
+    },
+    "crates/archogen-catalog/src/production.rs": {
+      "index_mode": "100644",
+      "index_oid": "075b1aa3822f3d35cecf6b7fdbe966fc869a8f4d",
+      "mode": 420,
+      "size": 5936,
+      "sha256": "3842357524cca20f3629f781790fc086138fab51abcacc1b6d22bdc3fe5d63f2"
+    },
+    "crates/archogen-catalog/src/record.rs": {
+      "index_mode": "100644",
+      "index_oid": "085ee2cc32f84d5546ae72a106a0389e65d5edd1",
+      "mode": 420,
+      "size": 78421,
+      "sha256": "5429ce254b53fc0aca97c72e9b1243625f03d2ccc28277d3a9ac158b3cd5188c"
+    },
+    "crates/archogen-catalog/src/refusal.rs": {
+      "index_mode": "100644",
+      "index_oid": "10d41135d3a4fdf274af6f2cd261ca795e0b3619",
+      "mode": 420,
+      "size": 5925,
+      "sha256": "54cc72dcd6d0d79a6503ccb2fd6aac103ecb6de31670b7aa87267137136f8487"
+    },
+    "crates/archogen-catalog/src/replay.rs": {
+      "index_mode": "100644",
+      "index_oid": "a4ebf76447c4e0fbdcb4ff818d3d46e175a727da",
+      "mode": 420,
+      "size": 17484,
+      "sha256": "f1a380f0eb4ee52a94d060df2cda50ab91a91fe08829c5ea379dbf3ef2b4d6a3"
+    },
+    "crates/archogen-catalog/src/selection.rs": {
+      "index_mode": "100644",
+      "index_oid": "40261b3055c1c77f847e38eab83d1d1da61de0fb",
+      "mode": 420,
+      "size": 15026,
+      "sha256": "165edfc99bad4842781bda09538a3a1bd9f39a74d2ee379132b558e2bd706791"
+    },
+    "crates/archogen-catalog/src/statement.rs": {
+      "index_mode": "100644",
+      "index_oid": "40d5ceb077e93e0c60822b3e47c67d78522e4a0a",
+      "mode": 420,
+      "size": 6053,
+      "sha256": "7bcf8ecb6a23ab72106b4631aaad685f04c7879b328540de850b275131764e02"
+    },
+    "crates/archogen-catalog/src/status.rs": {
+      "index_mode": "100644",
+      "index_oid": "e3bc5a48f4fbcd73a8b9183526b77aa574c4f0c8",
+      "mode": 420,
+      "size": 18747,
+      "sha256": "617b43728ae2631ff6bbea17eff6a0ff978ce806b6a5872aed6cb8021a4880d6"
+    },
+    "crates/archogen-catalog/src/tree.rs": {
+      "index_mode": "100644",
+      "index_oid": "5e742a15e3c03cace86b1f5d1f7848bd9fa3ea9c",
+      "mode": 420,
+      "size": 4368,
+      "sha256": "a466acb5a2a0fb113ed04525478dd5147897c082c397135bfeeb4ffa797a5e26"
+    },
+    "crates/archogen-catalog/tests/assembly.rs": {
+      "index_mode": "100644",
+      "index_oid": "a7cff04dd679ad27ec447093e55f1f3180b2dcb5",
+      "mode": 420,
+      "size": 18826,
+      "sha256": "7169b9d0ef5e02a47392eba1d81067017aecdc6e00421aed80e84a620c61dabc"
+    },
+    "crates/archogen-catalog/tests/assembly_scan.rs": {
+      "index_mode": "100644",
+      "index_oid": "2d3a8b650fb69119c9d84857638e78c01ed929f3",
+      "mode": 420,
+      "size": 23379,
+      "sha256": "fca31f104ce809d2d372c6981139d0fa153ef0aa06bb8dc6de1ddc26ea48ad34"
+    },
+    "crates/archogen-catalog/tests/claim.rs": {
+      "index_mode": "100644",
+      "index_oid": "17a4782c88b63818979b5083458a17041a36ac0e",
+      "mode": 420,
+      "size": 23745,
+      "sha256": "d9aedf36ed51af3fc89d75ed4cda1e70ad6f6c5b7fca9abd04c901ffa65200e3"
+    },
+    "crates/archogen-catalog/tests/common/mod.rs": {
+      "index_mode": "100644",
+      "index_oid": "c9f1a2ee6e3f22b90b7c54675f6b436ad2c72196",
+      "mode": 420,
+      "size": 11135,
+      "sha256": "93098f651eebcdcf29194d0eb3d475369cb009ccd120ee1f905797ad3400e7bc"
+    },
+    "crates/archogen-catalog/tests/hash.rs": {
+      "index_mode": "100644",
+      "index_oid": "adce6771c9207dac46c0996c1ead15ec34f80463",
+      "mode": 420,
+      "size": 6631,
+      "sha256": "cc14e17d01eaa6d59474c86121dd4865c78ca1b528ba896bdb3983edbe9c7e20"
+    },
+    "crates/archogen-catalog/tests/history.rs": {
+      "index_mode": "100644",
+      "index_oid": "b1335fe6fdb13f72ce58c0856a36a5ef5326fc4b",
+      "mode": 420,
+      "size": 19292,
+      "sha256": "1aa523e8c960096764a3e719a729c9224dcdae6490c7071cb9f994b000db0fb7"
+    },
+    "crates/archogen-catalog/tests/invalidation.rs": {
+      "index_mode": "100644",
+      "index_oid": "21081c0cc5daa3225eb29757a052d99e0f978a99",
+      "mode": 420,
+      "size": 12924,
+      "sha256": "d5d2480e10990d6c4bdd2b53640b88b6da4435464355d4454deb5bade366c4a8"
+    },
+    "crates/archogen-catalog/tests/ledger.rs": {
+      "index_mode": "100644",
+      "index_oid": "25cc5b0e424cab1c0188e66af88e474880b55a79",
+      "mode": 420,
+      "size": 12916,
+      "sha256": "052f53244a6e697a17c9a99c5cdfe614eedf52f04c21c77fdeea64e9b4e51605"
+    },
+    "crates/archogen-catalog/tests/lock.rs": {
+      "index_mode": "100644",
+      "index_oid": "f89e5fc2f4173ce27cfb40d1cce4fcdd080886b8",
+      "mode": 420,
+      "size": 17605,
+      "sha256": "2382c00dcbd6b06d91a60a443783c72b57e09009ee1c3759a06e90f5835ef786"
+    },
+    "crates/archogen-catalog/tests/names.rs": {
+      "index_mode": "100644",
+      "index_oid": "9cea4f44004cb33c903ecfd0a1b62b4d7d5e2031",
+      "mode": 420,
+      "size": 6944,
+      "sha256": "5fa8e293014689aabaf6b7088b150f62816e5798c2c525b72d700336348a24ba"
+    },
+    "crates/archogen-catalog/tests/package.rs": {
+      "index_mode": "100644",
+      "index_oid": "8c82dad9d62f777462f60215032cb71d90c9f6b1",
+      "mode": 420,
+      "size": 11905,
+      "sha256": "2dc77f89d0d3b8a523061fb0434525db8b98ce1055980ea29c72b62625a8c8d2"
+    },
+    "crates/archogen-catalog/tests/production.rs": {
+      "index_mode": "100644",
+      "index_oid": "684d7362b05c2447682e6c4091c60c39dc2b20ce",
+      "mode": 420,
+      "size": 8328,
+      "sha256": "f276c0c90be7161ae811aaf6a53c0dbe64ce72abe72dc437738f69511bec0a2e"
+    },
+    "crates/archogen-catalog/tests/record.rs": {
+      "index_mode": "100644",
+      "index_oid": "17e9033cffbd032f6cc5b66a7a0fe69e3bb76cbe",
+      "mode": 420,
+      "size": 19836,
+      "sha256": "35275a33851fd006882f0d19b6dd0dcb87e243d6cab58533df0daf5fb4e6ddb0"
+    },
+    "crates/archogen-catalog/tests/selection.rs": {
+      "index_mode": "100644",
+      "index_oid": "f78f000ae549b3d6aea6ff59daaf2afd9eb0092f",
+      "mode": 420,
+      "size": 12744,
+      "sha256": "fa0a199ce3cc48938f82c46d48c501350caf9201807e9e0a4853610450db8b2f"
+    },
+    "crates/archogen-catalog/tests/sets.rs": {
+      "index_mode": "100644",
+      "index_oid": "0d2d42fe998e7f91e773fcabece8728699218aaf",
+      "mode": 420,
+      "size": 20263,
+      "sha256": "04a2c8bcbb171191aaf9e9c0a7d846b389f238d668474b34870d7d9675e0e38d"
+    },
+    "crates/archogen-catalog/tests/statement.rs": {
+      "index_mode": "100644",
+      "index_oid": "33cb3479612f4612a10d10d51c3120c55c66346c",
+      "mode": 420,
+      "size": 23347,
+      "sha256": "43f67cf87baa50299ef0e4295e9a6f959f0e80bffb9289cdf7f043b796ca944d"
+    },
+    "crates/archogen-catalog/tests/status.rs": {
+      "index_mode": "100644",
+      "index_oid": "dc5adcabdf08ed4518a8929a4a41a6e53072a248",
+      "mode": 420,
+      "size": 37223,
+      "sha256": "ad13b4b566d60e34170d98be8b98f9d815668df97f7c02f0a5b4b6aebc032c05"
+    },
+    "crates/archogen-cli/Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "4e41c69d20648e2bd87011f58a3532acf845a7e6",
+      "mode": 420,
+      "size": 779,
+      "sha256": "6ec575084466de2e968e6324081af8aa4ccfbea56de9a337e162c09beb5b0d8f"
+    },
+    "crates/archogen-cli/src/build_cmd.rs": {
+      "index_mode": "100644",
+      "index_oid": "165855f611564bd825a2827a2ecaae6096ed5684",
+      "mode": 420,
+      "size": 7064,
+      "sha256": "e5d69d40a9490cbd57314ae49f1de20a2c2f29c197a985aa2bf1df0f5aad00bf"
+    },
+    "crates/archogen-cli/src/check_cmd.rs": {
+      "index_mode": "100644",
+      "index_oid": "0574a3a0013c964637b29758b7fe1055735837bd",
+      "mode": 420,
+      "size": 6411,
+      "sha256": "7f3124f56b56bfe517631148d0ad28974f3563d632128dadfeb9257a6ce740e3"
+    },
+    "crates/archogen-cli/src/cli.rs": {
+      "index_mode": "100644",
+      "index_oid": "d1967977bc0082bea70ac763df100e36064aac8d",
+      "mode": 420,
+      "size": 12230,
+      "sha256": "2c6c3f07ab9cc74620d366311138c9bcaf13161134c487749e9dc8bb95bfecd4"
+    },
+    "crates/archogen-cli/src/json.rs": {
+      "index_mode": "100644",
+      "index_oid": "73901fe4fefcfdfee01208f5838fd71208c1b332",
+      "mode": 420,
+      "size": 32496,
+      "sha256": "5a07b8ea1276833327ad1aed1fc6c323f052f4d0552e6a7b77a600b645317010"
+    },
+    "crates/archogen-cli/src/lib.rs": {
+      "index_mode": "100644",
+      "index_oid": "2c78cea61d774d11f2f3742526d92b3354333efd",
+      "mode": 420,
+      "size": 14010,
+      "sha256": "bb4a428f3b1ceb9e28731fc44bd0dcedaf47833aebb80ce5715b6cc998dc612b"
+    },
+    "crates/archogen-cli/src/main.rs": {
+      "index_mode": "100644",
+      "index_oid": "1f5ac365af97d92d990d1c81f2ae2ee047196c7d",
+      "mode": 420,
+      "size": 1073,
+      "sha256": "cec1de728afe1328e81189df0f99584e770be1a672a49f16cf67efb2f6e8f57a"
+    },
+    "crates/archogen-cli/src/mcp.rs": {
+      "index_mode": "100644",
+      "index_oid": "4a4fff7631b7e4dee3d2369923f0de322a40b529",
+      "mode": 420,
+      "size": 50628,
+      "sha256": "e1f4d0a328d0eb3d641cc03dd37634c136eb08312838a517bde1ce3dc0fa480a"
+    },
+    "crates/archogen-cli/src/spec.rs": {
+      "index_mode": "100644",
+      "index_oid": "2e9a43b9c8666c5015e70ed93872a2bdb2d0ba66",
+      "mode": 420,
+      "size": 17578,
+      "sha256": "46631235f9fbde0573ad06ecbef7457a5800ad63f79299b28717cf4fe27c9929"
+    },
+    "crates/archogen-cli/src/status.rs": {
+      "index_mode": "100644",
+      "index_oid": "1bd5ea4cbcb971bf24a4cc11581bc9e65defc0a7",
+      "mode": 420,
+      "size": 318,
+      "sha256": "6e2bd83bf732fb382324da465677270204701153f3a68e25ea6fae177275d486"
+    },
+    "crates/archogen-cli/tests/api_parity.rs": {
+      "index_mode": "100644",
+      "index_oid": "5fca6ed7f376b9442e210c41b45ad795a9f82819",
+      "mode": 420,
+      "size": 12799,
+      "sha256": "58e78f40c353bd7f9538e22aaa4913f0a6b4963f0b9171721740a6b1d67d75d0"
+    },
+    "crates/archogen-cli/tests/book_tour.rs": {
+      "index_mode": "100644",
+      "index_oid": "bf44201bed08b9163486c680f764591fb4897a4f",
+      "mode": 420,
+      "size": 5621,
+      "sha256": "07c69780e54fc4b1945709c93a4a39cd34b6aeae50925ce8215e43f1b7f90548"
+    },
+    "crates/archogen-cli/tests/book_transcripts.rs": {
+      "index_mode": "100644",
+      "index_oid": "519bc6fd69bfd2cd5a10b8f7d8704f014f9e63a8",
+      "mode": 420,
+      "size": 14109,
+      "sha256": "ae7c77814ca24e0c5f4500b0e13fd873755a03b2b608e3a6b116f596f33fc158"
+    },
+    "crates/archogen-cli/tests/closure_report.rs": {
+      "index_mode": "100644",
+      "index_oid": "e63ef236462fa0c705ff70f95a16c29b6b0ede95",
+      "mode": 420,
+      "size": 5573,
+      "sha256": "23319be5ef069286fdf2f425398f89a4f5a7cc455a5d449acbf0a7b44faa6110"
+    },
+    "crates/archogen-cli/tests/fires_on.rs": {
+      "index_mode": "100644",
+      "index_oid": "fb1fc204f3b766ac255fc01ab796279a5d76479d",
+      "mode": 420,
+      "size": 16395,
+      "sha256": "ff1fb7c6821436ccdb95fbc21a7e6a354951b339ef0f47a76d1569b135acbce7"
+    },
+    "crates/archogen-cli/tests/format_golden.rs": {
+      "index_mode": "100644",
+      "index_oid": "ccf5377252745eec147eea0627231104708cd309",
+      "mode": 420,
+      "size": 7784,
+      "sha256": "9f60fd7a3d810f55ad6ecee9db9d3700493f9f17cd8d6b923a30ce81694f08c8"
+    },
+    "crates/archogen-cli/tests/goldens/archogen-provenance-1.golden": {
+      "index_mode": "100644",
+      "index_oid": "6d9062a3e95b9a4228ad4d3c4d7a35c30882e8f3",
+      "mode": 420,
+      "size": 543,
+      "sha256": "6e00e75369158a4a32c6d30e2ddd878d805e31a1a0eecb92fb7d8c0bc6fa1b7a"
+    },
+    "crates/archogen-cli/tests/kind_modules.rs": {
+      "index_mode": "100644",
+      "index_oid": "434200d690bf0f8104be53cd8519aabaeb231637",
+      "mode": 420,
+      "size": 12283,
+      "sha256": "0b05330ba47ebd400848ecc4ed8bd15fa012c02790622bef2d6625531174bc06"
+    },
+    "crates/archogen-cli/tests/mcp_stdio.rs": {
+      "index_mode": "100644",
+      "index_oid": "2e300d2479fcd8f93118e747e56c2572a0af6ac1",
+      "mode": 420,
+      "size": 11470,
+      "sha256": "32f2df9a8ba21788521665ea6459854b8852e9039cb674d069ad178af7152be1"
+    },
+    "crates/archogen-cli/tests/module_cases.rs": {
+      "index_mode": "100644",
+      "index_oid": "9540c6a132191961056ab703070303ef02409764",
+      "mode": 420,
+      "size": 13972,
+      "sha256": "1cba9b6fa1af75fb8a856bd47efcdcbb1c37c3ecc333229d79267a6645a90657"
+    },
+    "crates/archogen-cli/tests/module_files.rs": {
+      "index_mode": "100644",
+      "index_oid": "56dc599e2c5f363b15e9abef129cd3b1d2768da4",
+      "mode": 420,
+      "size": 10839,
+      "sha256": "ee491bf4a8287431bffcc1408ec51c8f73ce24849e3328e4913925ccce2f7a8c"
+    },
+    "crates/archogen-cli/tests/reader_contract.rs": {
+      "index_mode": "100644",
+      "index_oid": "2f2e4c3b0d4789581a551e4d075bb716ded2386d",
+      "mode": 420,
+      "size": 1955,
+      "sha256": "131aaaeafada3bdbad676a43dbb939aca34993cb6e79d73df2fcf2e8fac9894a"
+    },
+    "crates/archogen-cli/tests/s0_build.rs": {
+      "index_mode": "100644",
+      "index_oid": "5837707fe3f8f670b544ff26d0be73afaac97943",
+      "mode": 420,
+      "size": 11835,
+      "sha256": "c83fff94d9df0ac0bb781b56b0ebeecf731427c8e92dd4b36ddbed26c385b9cf"
+    },
+    "crates/archogen-cli/tests/s0_chapter.rs": {
+      "index_mode": "100644",
+      "index_oid": "94da11f6fec9e0a3259360186b785423ef042a5e",
+      "mode": 420,
+      "size": 12827,
+      "sha256": "d04c043e553983ccd292858f6830290e172d0c5b81b631279ea47f5965216fa2"
+    },
+    "crates/archogen-cli/tests/s0_oracle.rs": {
+      "index_mode": "100644",
+      "index_oid": "1aba6cf9443d3404231c574ba708ee97a9021ece",
+      "mode": 420,
+      "size": 30212,
+      "sha256": "f945adaa713b2dd4d425e8a8bb9a2d2893981e845dd5f8fc4cf36462971b15bb"
+    },
+    "crates/archogen-cli/tests/s0_provenance.rs": {
+      "index_mode": "100644",
+      "index_oid": "43f44460125b16a82aba4410d624dea4406000d0",
+      "mode": 420,
+      "size": 10908,
+      "sha256": "88516602b9a761020aa3923ac6e75f41ca86aedc2b48eb8151e45c5a211ea6dd"
+    },
+    "crates/archogen-cli/tests/s0_reader.rs": {
+      "index_mode": "100644",
+      "index_oid": "01f583cb5cd0b624bbb6bf88170c3b6c0d9c66dc",
+      "mode": 420,
+      "size": 8238,
+      "sha256": "833072850386eca19ed946261316535db2cc79101c263bc92b247d631cbdbfc0"
+    },
+    "crates/archogen-cli/tests/verdicts.rs": {
+      "index_mode": "100644",
+      "index_oid": "0c02d7dfc132b90a59102fbde0465643f657df9d",
+      "mode": 420,
+      "size": 7810,
+      "sha256": "49b772335a4d87d618c6bb6094ee62d31187a01dd84e9391676e8e789736dc19"
+    },
+    "crates/archogen-cli/tests/verdicts.txt": {
+      "index_mode": "100644",
+      "index_oid": "27cfc657b2a19eb015ee381fd4d1dce7c143c543",
+      "mode": 420,
+      "size": 9642,
+      "sha256": "d612c3885c8663ce3fde815ca4e20afe5652329c17aae78a8798b66cad69e675"
+    },
+    "crates/archogen-evidence/Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "b3e69b9ec0790726d522e0a79bcfc269cc32641a",
+      "mode": 420,
+      "size": 734,
+      "sha256": "67d1766ca28cad55e93566c0435ce1f755da8bc026c89ff8f7d12ca478834d49"
+    },
+    "crates/archogen-evidence/src/bound.rs": {
+      "index_mode": "100644",
+      "index_oid": "1da3b5aff11ce630539952cc354fd165cce03a14",
+      "mode": 420,
+      "size": 12305,
+      "sha256": "921012ba596e21c86ae013c5519f3a8a248fa94d49eb344ba17c8463f85c997c"
+    },
+    "crates/archogen-evidence/src/claim.rs": {
+      "index_mode": "100644",
+      "index_oid": "c09d25d3234fa983bd8238668b7328b3a694a6dc",
+      "mode": 420,
+      "size": 27715,
+      "sha256": "90640c0cbdbb93477d721e4163aa4dcd2f207e8d37faf8b7738c1229e93ee75e"
+    },
+    "crates/archogen-evidence/src/lib.rs": {
+      "index_mode": "100644",
+      "index_oid": "7868e31f451644d1f9d298d6b9ea6c47ce5b1169",
+      "mode": 420,
+      "size": 2061,
+      "sha256": "24314c4b5b18f852ab76f2b4519979fcc7a359715d43d00af8d2e3f92bc41a0e"
+    },
+    "crates/archogen-evidence/src/sha256.rs": {
+      "index_mode": "100644",
+      "index_oid": "0e50272cd9501ad99335bd60f85e869b092b6c2e",
+      "mode": 420,
+      "size": 9986,
+      "sha256": "0f914ae95adfecdc9bf840a7d368c0eade7652cf01391f630c78802fd02905e4"
+    },
+    "crates/archogen-evidence/src/trust.rs": {
+      "index_mode": "100644",
+      "index_oid": "b0c9435804b98f6a2746fa198c520971d1d60712",
+      "mode": 420,
+      "size": 18057,
+      "sha256": "e62cd0b1bf196b6df8ce4926734f89b2761e6dd6e05086031ea6da0acbec6ade"
+    },
+    "crates/archogen-evidence/tests/fixtures/sha256_boundaries.txt": {
+      "index_mode": "100644",
+      "index_oid": "144fa7fc28c7ce2a44331dc08ca46c27d8e99416",
+      "mode": 420,
+      "size": 10286,
+      "sha256": "c73a1d587407fa7d056b333c0b91c4eca7017807b37f6f726edce42aa9206210"
+    },
+    "crates/archogen-evidence/tests/sha256.rs": {
+      "index_mode": "100644",
+      "index_oid": "591d3dd9349df9d64f0edde78fa60f53221fbb70",
+      "mode": 420,
+      "size": 4412,
+      "sha256": "db02646cb3f8c473e038ddc38b7e3e30b0b4a4438552a6848d003538f01d446c"
+    },
+    "crates/archogen-s0/Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "12d99f791df6f3f750aedd408a7c775cf0df5aa3",
+      "mode": 420,
+      "size": 1043,
+      "sha256": "5e90f0f23097e45b371b721ffa57ed30d70aec74276d03902211fc0592a466ef"
+    },
+    "crates/archogen-s0/src/emit.rs": {
+      "index_mode": "100644",
+      "index_oid": "c09a4a0daca00ec9c0e7baab07a56060e74f4819",
+      "mode": 420,
+      "size": 14918,
+      "sha256": "9074050c14c873cf70f99eddc16fac27e6a27980dc720e4e13f64fe16b38bd8f"
+    },
+    "crates/archogen-s0/src/interpret.rs": {
+      "index_mode": "100644",
+      "index_oid": "6aa85f83a703422b936de530891525b0f426b668",
+      "mode": 420,
+      "size": 18813,
+      "sha256": "0a704a64d6cf388c2d3fb012b2a58d859fa8419580366e9a8f531643a3ffe09f"
+    },
+    "crates/archogen-s0/src/lib.rs": {
+      "index_mode": "100644",
+      "index_oid": "29be3d475ab02f8764c6193c804cd752c5d76838",
+      "mode": 420,
+      "size": 2970,
+      "sha256": "ec897d81662eab5c00e0a4bc33ac26a55e2518725fb4153f31b24ea700174662"
+    },
+    "crates/archogen-s0/src/provenance.rs": {
+      "index_mode": "100644",
+      "index_oid": "8b2421e2cd045cfb62779a7f2a7c44622308d3ed",
+      "mode": 420,
+      "size": 8147,
+      "sha256": "6276d4db06730642b6d523098b065d4f13e4abeec2a47878225586318b60361f"
+    },
+    "crates/archogen-s0/src/runtime/mod.rs": {
+      "index_mode": "100644",
+      "index_oid": "b4c3f10819517b0f75923a7755bce56419dcc43f",
+      "mode": 420,
+      "size": 620,
+      "sha256": "77af5c89dbed0a51b02d6300cb3277bfcd97c7dd37ae75ccf29506370aab0d86"
+    },
+    "crates/archogen-s0/src/runtime/rt.rs": {
+      "index_mode": "100644",
+      "index_oid": "90aec6fb0e495463a1ba7560f1d2b62ad92fe299",
+      "mode": 420,
+      "size": 3064,
+      "sha256": "6da449685361f23dcf7ab29e45dd8f2968bc02ca1132b591bc8a07c0d82dd5b3"
+    },
+    "crates/archogen-s0/src/runtime/service.rs": {
+      "index_mode": "100644",
+      "index_oid": "15cfebdfaee5216d16c8f3681dc1850c610f6905",
+      "mode": 420,
+      "size": 884,
+      "sha256": "708e81d21ad6df44755b1d96ab37f25cd2ace6d7c6853abddfdfecfa04ed06a8"
+    },
+    "crates/archogen-wasm/Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "724a3b2ebd77f72428f4fea83acafba7d5a5ffdd",
+      "mode": 420,
+      "size": 653,
+      "sha256": "d70b6e20510eda7b3c5ac323903510c33ea974b5c62c48861edb898df344240a"
+    },
+    "crates/archogen-wasm/examples/answers.rs": {
+      "index_mode": "100644",
+      "index_oid": "34925a804e9f7d7cb93e1703734b39473e46340c",
+      "mode": 420,
+      "size": 2383,
+      "sha256": "014f70109d81afb0e69f66e681f5883f250368fbd3d775bc7b4002d7e6ea9d03"
+    },
+    "crates/archogen-wasm/js/archogen.mjs": {
+      "index_mode": "100644",
+      "index_oid": "3fcaa92cfbbe4adb759afb24dde9f507e4aabcc4",
+      "mode": 420,
+      "size": 2978,
+      "sha256": "6c7cc821d0d055d8d28fda3b1cf8c08dee3aa5c5a0ba31ede02550efca4fdd8e"
+    },
+    "crates/archogen-wasm/page/index.html": {
+      "index_mode": "100644",
+      "index_oid": "c54f3405c7fcca277f5dae3cacb435cbc81b692f",
+      "mode": 420,
+      "size": 2096,
+      "sha256": "b333151450ee6322b238edc04610c8b0a0534facebbac80264fa68e3551c73d7"
+    },
+    "crates/archogen-wasm/page/page.mjs": {
+      "index_mode": "100644",
+      "index_oid": "384898527860515229a197d1e47ba7bd916cfa50",
+      "mode": 420,
+      "size": 2927,
+      "sha256": "463bc3fdfc17f32280be21aaca9783c37e1ec82b38d1701d0c9c3b577c8b900c"
+    },
+    "crates/archogen-wasm/src/json.rs": {
+      "index_mode": "100644",
+      "index_oid": "8c6d7dda8141e130ceccd4b68fcde66b95d40439",
+      "mode": 420,
+      "size": 6902,
+      "sha256": "cfbf6c1a674b2dc954ad72fba7a9edf38da9c749aff0183ecf3dbc8d982a5664"
+    },
+    "crates/archogen-wasm/src/lib.rs": {
+      "index_mode": "100644",
+      "index_oid": "baff6aba2ff65b8fd01539d4c521f47ddd924e8e",
+      "mode": 420,
+      "size": 5251,
+      "sha256": "6708faf2868917c20db510f7e2b3862e1e81667905a554781960b9613ad24d98"
+    },
+    "crates/archogen-wasm/src/request.rs": {
+      "index_mode": "100644",
+      "index_oid": "a8f361fd462f6e015967a03a5756724865a076c8",
+      "mode": 420,
+      "size": 6259,
+      "sha256": "933beb307752e8b6f24ec03e485624706a4a90ccd064346f8e0d6fd9b40c2b68"
+    },
+    "crates/archogen-wasm/tests/binding.rs": {
+      "index_mode": "100644",
+      "index_oid": "2b3b46a7bde8fd289ef626aa36c25a78929cd14d",
+      "mode": 420,
+      "size": 30921,
+      "sha256": "006b2d600ea5236c608923e5af213d48026d39aa235edc8e92ce9665fe7bfebc"
+    },
+    "crates/archogen-wasm/tests/goldens/archogen-wasm-response-1.golden": {
+      "index_mode": "100644",
+      "index_oid": "1d2ccac2e5ad38e972bd73c4262b54ee3783342f",
+      "mode": 420,
+      "size": 1146,
+      "sha256": "af24f59c711af1abe7c3a4b35f3a26eb075ffcd3f44593aa1d96a4361d7ea863"
+    },
+    "crates/eadl-front/Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "3e22f528491fdf36c3ea0a180e50c5f16524006d",
+      "mode": 420,
+      "size": 394,
+      "sha256": "cdaee845302bbb252cd029838e039762f0d9d9d1c42e35bcfa4a7839719438e2"
+    },
+    "crates/eadl-front/examples/diagnose.rs": {
+      "index_mode": "100644",
+      "index_oid": "76eb648f4b9a824d59c7839c5a6a7e4ef6a824bc",
+      "mode": 420,
+      "size": 4346,
+      "sha256": "17502c029a350c4a213cc260135b2d2d6e42505710d85fed9f61be13e6917182"
+    },
+    "crates/eadl-front/examples/language_freeze.rs": {
+      "index_mode": "100644",
+      "index_oid": "cd0423b36d075d8f319ccfde7ac8c6d1d284afab",
+      "mode": 420,
+      "size": 17206,
+      "sha256": "61c9d98801995b5f3eaa02dca7d7cc3b437c9a545fe6953d9e2fe2893b481602"
+    },
+    "crates/eadl-front/examples/literals.rs": {
+      "index_mode": "100644",
+      "index_oid": "25dfb050d2be9397e106605534d57bb8f584e513",
+      "mode": 420,
+      "size": 14210,
+      "sha256": "227b7102baed82668b8e48504bc0e9c33dd9e950095f62bf9b0236e1ee1cc801"
+    },
+    "crates/eadl-front/examples/reader_shape.rs": {
+      "index_mode": "100644",
+      "index_oid": "819050d78cecb2d17ca6730eb4e0a302a408f4a2",
+      "mode": 420,
+      "size": 2192,
+      "sha256": "313de86c8243d8bf60f300b18e1a7c782c8ac7d864d90a4bf5c01e4f187bdce9"
+    },
+    "crates/eadl-front/src/diagnostic.rs": {
+      "index_mode": "100644",
+      "index_oid": "5f71cc11606033ebf57856a0acd159ea764a8be6",
+      "mode": 420,
+      "size": 29612,
+      "sha256": "f451aa1fef168383254b0729a31b9a18a3cdc7a979dca947c02f322aea5515f9"
+    },
+    "crates/eadl-front/src/form.rs": {
+      "index_mode": "100644",
+      "index_oid": "09aaf1b57b957754a67b647b16e19f5647ef7fb6",
+      "mode": 420,
+      "size": 19746,
+      "sha256": "175e48bf21249ab63f4e719981c7e21ef56d9aa395c8367caf16a1fd085491be"
+    },
+    "crates/eadl-front/src/language_version.rs": {
+      "index_mode": "100644",
+      "index_oid": "aec02f3b485502badd48dd48bfff301986df43c9",
+      "mode": 420,
+      "size": 19275,
+      "sha256": "8e843c8afd0bf0cf4deeae73bf23888064d3fbc67653992bed07be9f51fd72ee"
+    },
+    "crates/eadl-front/src/lib.rs": {
+      "index_mode": "100644",
+      "index_oid": "8734311c9bbab3e953efdefca7c0655473582d48",
+      "mode": 420,
+      "size": 1584,
+      "sha256": "c18e85b212e77ed5e5048293c3d509e06685e38e95c2701768fe045c86be2918"
+    },
+    "crates/eadl-front/src/module.rs": {
+      "index_mode": "100644",
+      "index_oid": "b4f03796296e5793b25e9422e800333791c11986",
+      "mode": 420,
+      "size": 47733,
+      "sha256": "750fb929479c84185abcdfc85493f60e16aff351496f299de6fe33df07faa734"
+    },
+    "crates/eadl-front/src/reader.rs": {
+      "index_mode": "100644",
+      "index_oid": "e1ca10ba2a8d009e7af784723dccc0cede374df9",
+      "mode": 420,
+      "size": 54743,
+      "sha256": "b32ebeafbd74308207f1a2f1dfee2b2fcc0f56dfa5af4d1a5e35cc60f9d8e71e"
+    },
+    "crates/eadl-front/src/source.rs": {
+      "index_mode": "100644",
+      "index_oid": "86b6e11bd11198102359abd7b4279da4b12466a0",
+      "mode": 420,
+      "size": 10335,
+      "sha256": "1b67ec2b27a1170a463955723d3d3ce1eb77dbdf86bfff666e3f7c797c360157"
+    },
+    "crates/eadl-front/tests/common/baseline.rs": {
+      "index_mode": "100644",
+      "index_oid": "b9d4be894f8f08414339f224eb02a69de1245dc2",
+      "mode": 420,
+      "size": 9730,
+      "sha256": "b3076403d3ce02da4bcfef9871a537badfc24e3eaf40d21bad73c2e15392ab35"
+    },
+    "crates/eadl-front/tests/common/mod.rs": {
+      "index_mode": "100644",
+      "index_oid": "1f4cd811484c91ee1a2c89fae0e23f7dc6b90074",
+      "mode": 420,
+      "size": 619,
+      "sha256": "914d257a4a1c675cb67029da2cfefa4369c578e8092519efc89d57852831ac21"
+    },
+    "crates/eadl-front/tests/common/reference_table.rs": {
+      "index_mode": "100644",
+      "index_oid": "71744ef518d49a54b674529436505a5c22fd4c7b",
+      "mode": 420,
+      "size": 13294,
+      "sha256": "173ac89de448138e348da1b4b7dda4e6dfe770e12fdfe8494f031077cdfd01f3"
+    },
+    "crates/eadl-front/tests/common/suite.rs": {
+      "index_mode": "100644",
+      "index_oid": "9ccd8ffe23273dca050881ba5824f15cf6a66ef2",
+      "mode": 420,
+      "size": 18719,
+      "sha256": "ee033791d295c4fda283a0c4fd51de3a4d0fa2445d495e651f4285d3a7ee428f"
+    },
+    "crates/eadl-front/tests/conformance.rs": {
+      "index_mode": "100644",
+      "index_oid": "7a61ae55f93e487ca3a905945781dd749c78cb01",
+      "mode": 420,
+      "size": 53675,
+      "sha256": "4f5ce852bfedfa7e18b12a222c6ae7b1e0668c98e1dfe7bcb56a5815e2f826ca"
+    },
+    "crates/eadl-front/tests/conformance_suite.rs": {
+      "index_mode": "100644",
+      "index_oid": "9810135f0d2a8c43406f16fa71ae357728223f63",
+      "mode": 420,
+      "size": 20244,
+      "sha256": "0ab615b6696de8015bbb21b5b5c2662a3e5d39cef35347043a97156288a32e5d"
+    },
+    "crates/eadl-front/tests/corpus.rs": {
+      "index_mode": "100644",
+      "index_oid": "735fd43e2167bb389c4b53c351533134216f29ac",
+      "mode": 420,
+      "size": 30693,
+      "sha256": "2c4ab412d670635fcc7e7035f8cbe1ddba27745df39431afdbcad48494b00cb4"
+    },
+    "crates/eadl-front/tests/f01_f02_modules.rs": {
+      "index_mode": "100644",
+      "index_oid": "eb9cf218d71ee5d99d2150ed584fd065af9e8d28",
+      "mode": 420,
+      "size": 28285,
+      "sha256": "edac8c66bb6b1e02c87abb26d286165888fda62fdbf1c8b118bcdc1495cedd13"
+    },
+    "crates/eadl-front/tests/language_baseline.rs": {
+      "index_mode": "100644",
+      "index_oid": "4933f6e1a21eac86df8e60924218060218f6b5b4",
+      "mode": 420,
+      "size": 9750,
+      "sha256": "a2064af9446f59697c7cfbb87eb775dec5d27e6415de4e52bd4a59aee9d74712"
+    },
+    "crates/eadl-front/tests/module_limits.rs": {
+      "index_mode": "100644",
+      "index_oid": "1fae291755c81e3f03a702ceb36babd5b7c8d12c",
+      "mode": 420,
+      "size": 4192,
+      "sha256": "29c8fe248a359897f572192fb037c844423bb286df14fa7296daf66f6882fe3d"
+    },
+    "crates/eadl-front/tests/reference.rs": {
+      "index_mode": "100644",
+      "index_oid": "172b9e53dc12ee46b3afa2d00fac70d5401a6f87",
+      "mode": 420,
+      "size": 117064,
+      "sha256": "a32bfcadea9bbbca643a7b2153f5b71a26014222f786abd1e5a306a491216800"
+    },
+    "crates/eadl-model/Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "c4c197e98800913b810b4ba8c88f0376f6d07068",
+      "mode": 420,
+      "size": 462,
+      "sha256": "8394ae09aeb33de02477420abe5e5e7c18d19ad32b8ae15e50d52b3a6bf95319"
+    },
+    "crates/eadl-model/src/boundary.rs": {
+      "index_mode": "100644",
+      "index_oid": "648ddafe81d134f65b8f84eb0df39a5467098c81",
+      "mode": 420,
+      "size": 17812,
+      "sha256": "d4f3e9fa6f2fb8a76d5ccb570241ce3bc2f3c7ee61104569d5b8a0f446db5da5"
+    },
+    "crates/eadl-model/src/check.rs": {
+      "index_mode": "100644",
+      "index_oid": "594217872aa9d96416d491116b2517d8bc342a71",
+      "mode": 420,
+      "size": 22916,
+      "sha256": "24a0d2cb0909afd9f064ab6d175752de1b3788255336ebb54960c071e53d51b0"
+    },
+    "crates/eadl-model/src/kind.rs": {
+      "index_mode": "100644",
+      "index_oid": "3ac62dba2196e4071f8b3b7682ec1de185c2ba8c",
+      "mode": 420,
+      "size": 36604,
+      "sha256": "e15c424a74d7ae88bbd5b8339bb42d314dc04365044cab6f4c4710be38329817"
+    },
+    "crates/eadl-model/src/lib.rs": {
+      "index_mode": "100644",
+      "index_oid": "ea6a4832986becec1f3e2cdc8472867185a7abe5",
+      "mode": 420,
+      "size": 1098,
+      "sha256": "1f08a9f338e7b244048cc22ae2fe448b8e599971cd642d085775c5fa0fa97f74"
+    },
+    "crates/eadl-model/src/presence.rs": {
+      "index_mode": "100644",
+      "index_oid": "767e60ef1bd217d755a5b6844e89d5b2dc3c2dbe",
+      "mode": 420,
+      "size": 24866,
+      "sha256": "62ac77f50d7596a4abf666299f01793f1fe3a309e306b7ef2558a789fc0c6185"
+    },
+    "crates/eadl-model/src/profile.rs": {
+      "index_mode": "100644",
+      "index_oid": "2cb0b9aa32d169841a5ea306126789a2108d9cf4",
+      "mode": 420,
+      "size": 22259,
+      "sha256": "2541bf05392028f544001437f6445e238c8876d97e65af7355e2472a18d0b01e"
+    },
+    "crates/eadl-model/src/quantity.rs": {
+      "index_mode": "100644",
+      "index_oid": "0d23a65eff72008507875f62298402715f569983",
+      "mode": 420,
+      "size": 17845,
+      "sha256": "eb70bb0dca92dd840379af292d0f30a96dafe6cba3000893f166278a3b9d75e0"
+    },
+    "crates/eadl-model/src/rational.rs": {
+      "index_mode": "100644",
+      "index_oid": "e5c885094c87b537a4aa3c309f251004b77dd3ea",
+      "mode": 420,
+      "size": 19696,
+      "sha256": "4c9f1ca18bc8cd88924655ea4a52ca0cf7b6c0d97eb77d19ddcd1aed9a8a64af"
+    },
+    "crates/eadl-model/src/refinement.rs": {
+      "index_mode": "100644",
+      "index_oid": "6117ea07035e0a8bac9f84f3ddd3dd8dca0e6330",
+      "mode": 420,
+      "size": 29955,
+      "sha256": "9036a4059232568e429b3719c3db41d9dc1636a25291f5894dbb632ce2622828"
+    },
+    "crates/eadl-model/src/workload.rs": {
+      "index_mode": "100644",
+      "index_oid": "369c1e8dbeb2dc4489d7342d7638148ab5f0d088",
+      "mode": 420,
+      "size": 24580,
+      "sha256": "d6457bb1739c3a2a46dba8a6df5664983f0cab8fd9fa1d6f0cc97e722ecd7d9f"
+    },
+    "crates/eadl-model/tests/examples.rs": {
+      "index_mode": "100644",
+      "index_oid": "5da89478f1cb884383bda6b26b375f2f8057a050",
+      "mode": 420,
+      "size": 11381,
+      "sha256": "4f59982c0d0da508347a7ab6001600a88387dfa7f05c95f27fa78aa3cb87559f"
+    },
+    "crates/eadl-model/tests/f03_units.rs": {
+      "index_mode": "100644",
+      "index_oid": "14b745b54db5c5a6c4b4be019f58eae894797896",
+      "mode": 420,
+      "size": 19352,
+      "sha256": "91a371473dd07e0763cad27ab23661dcc4d5861aa9387cca3b8473c16b77ff00"
+    },
+    "crates/eadl-model/tests/f04_f06_presence.rs": {
+      "index_mode": "100644",
+      "index_oid": "326acf91362dd402027162499f5cb05406df0f6a",
+      "mode": 420,
+      "size": 9400,
+      "sha256": "6b3e0768ea524c3740abae16d8ece10b686c70280faa6a4f7cdfac4bb18421d3"
+    },
+    "crates/eadl-model/tests/f07_refinement.rs": {
+      "index_mode": "100644",
+      "index_oid": "3613ca087ea66d86c64defcc4ef97b0853cbbd5a",
+      "mode": 420,
+      "size": 16354,
+      "sha256": "5eacabe94ecb7a7bca4c0619486b9b5814e0f572ebeafd586a68a9468f528f08"
+    },
+    "crates/eadl-model/tests/f27_boundary.rs": {
+      "index_mode": "100644",
+      "index_oid": "139e786b00db02116cef4e832c5360bc08261093",
+      "mode": 420,
+      "size": 15416,
+      "sha256": "fded8461f1ccdf529a52d52ba69f0e9a9982e938f7c66d6a3b6b5c98c9976323"
+    },
+    "crates/eadl-model/tests/fuzz.rs": {
+      "index_mode": "100644",
+      "index_oid": "44759fdf50e034dc68b8d1b0b6d76398760d2c60",
+      "mode": 420,
+      "size": 24101,
+      "sha256": "a10daef9ab3a1bd2f5738df1b2daf9d0b18e107cc8ffb335cf41185c5abdad5f"
+    },
+    "crates/eadl-model/tests/kinds.rs": {
+      "index_mode": "100644",
+      "index_oid": "00f5212e8bc402f255fa6684feacff99cd24df7a",
+      "mode": 420,
+      "size": 54238,
+      "sha256": "48650e302210084fb9b6dc1230c6bab1d289f4d3ccc27ed7e2771a694873830a"
+    },
+    "crates/eadl-model/tests/rendering.rs": {
+      "index_mode": "100644",
+      "index_oid": "be2cca2bdd39cfb893f0d72b9fb018d83486c81c",
+      "mode": 420,
+      "size": 7016,
+      "sha256": "3bbf56d85a37a1040d025a82f5614c1ca52eb217ae5ffa0840532a332d581746"
+    },
+    "crates/eadl-model/tests/semantic_corpus.rs": {
+      "index_mode": "100644",
+      "index_oid": "cd6ed175971488f02e75e8cf723c13dba29e432f",
+      "mode": 420,
+      "size": 26847,
+      "sha256": "980f856f50f70299681bbbd1d542c1f8b19242c5212efe8d74fb710e696d74e5"
+    },
+    "crates/eadl-resolve/Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "c56c3e640ba704dc69776487ba201e7e24e6ac1f",
+      "mode": 420,
+      "size": 675,
+      "sha256": "7d92f9ddb3f3a76d4a9cdf2debd55ec51e6181a04fb74d944954684b7d970b69"
+    },
+    "crates/eadl-resolve/src/lib.rs": {
+      "index_mode": "100644",
+      "index_oid": "717a70d9444b48c4c6056250977ae2a8fde8042d",
+      "mode": 420,
+      "size": 1623,
+      "sha256": "40da9a87f9fd326079021170abcfae9d5d97b0157c1d0bcabfba0d4192870019"
+    },
+    "crates/eadl-resolve/src/model/judge.rs": {
+      "index_mode": "100644",
+      "index_oid": "342b22fa89f0ae4ef2e7eaedbf15e85c3049c5e0",
+      "mode": 420,
+      "size": 9328,
+      "sha256": "8e85c59bcf94df788a8ee783af22b338845886f3d9ca2aea6598610b8be4f451"
+    },
+    "crates/eadl-resolve/src/model/mod.rs": {
+      "index_mode": "100644",
+      "index_oid": "6a758dcf40c99304ae8d57132280fc6c2e6b6e7e",
+      "mode": 420,
+      "size": 1796,
+      "sha256": "d16f6d09aa04af3d3b0da870361b3c19adb7cfef66f47188ad139d1a7a9da027"
+    },
+    "crates/eadl-resolve/src/model/provider.rs": {
+      "index_mode": "100644",
+      "index_oid": "312f7044ab126c7107ee24605a4a375cebcc4921",
+      "mode": 420,
+      "size": 14799,
+      "sha256": "5d52878d0a0fb36a3a803d8fd39b837d491d8f2c8e3a8c227a1f9d50ff46cf5a"
+    },
+    "crates/eadl-resolve/src/model/requirement.rs": {
+      "index_mode": "100644",
+      "index_oid": "4cad5c7833d7a21080dd52b2718fbd7811081319",
+      "mode": 420,
+      "size": 22651,
+      "sha256": "10f617b23186a68191780be4368f2593dc9dc16ccec5672ad1b73c23b59c186d"
+    },
+    "crates/eadl-resolve/src/model/value.rs": {
+      "index_mode": "100644",
+      "index_oid": "1d62dcc7fee3c33657d49250c5009f4dab98052f",
+      "mode": 420,
+      "size": 16178,
+      "sha256": "695366df87019131fc614a762f9663fda7c55df2f61ace13c092228fab53c76d"
+    },
+    "crates/eadl-resolve/src/model/vocab.rs": {
+      "index_mode": "100644",
+      "index_oid": "580402fa4df8732403c06c9d2cc6e7dafa6d0193",
+      "mode": 420,
+      "size": 7764,
+      "sha256": "781e382c7af6f4530c4eaf5a3d69c96a0e1274a9fdcf62d6e0abef97e844dde7"
+    },
+    "crates/eadl-resolve/src/offer.rs": {
+      "index_mode": "100644",
+      "index_oid": "bcab0206258278c0a60278b3e1961a8438aad4a3",
+      "mode": 420,
+      "size": 20334,
+      "sha256": "a5390515fa1b746e6b92fb5ed73bb9d8383e597c0a1c42c1ffd782f939d55bab"
+    },
+    "crates/eadl-resolve/src/refusal.rs": {
+      "index_mode": "100644",
+      "index_oid": "6daa68125d2c2551f2462d1c7ac45807df45ea6b",
+      "mode": 420,
+      "size": 11400,
+      "sha256": "ad0a88ce9269fdb69f01e67c598fbb6b46651d32704788d79a3e3d916381fb31"
+    },
+    "crates/eadl-resolve/src/relation.rs": {
+      "index_mode": "100644",
+      "index_oid": "8c3daa93a76844dfae0a8cc2b5f5b70f322e62c6",
+      "mode": 420,
+      "size": 12364,
+      "sha256": "ec9cc63e04c4e514ba3357cd6f688433dcb681a05008083392c3b466ddc64c2d"
+    },
+    "crates/eadl-resolve/src/requirement.rs": {
+      "index_mode": "100644",
+      "index_oid": "b9b3b19afa27c1577cfa5195681a33e7e33390c5",
+      "mode": 420,
+      "size": 25378,
+      "sha256": "1b5b327613fa6cad39917ede5406f5338684db7392478186d42362aeb6416acc"
+    },
+    "crates/eadl-resolve/src/value.rs": {
+      "index_mode": "100644",
+      "index_oid": "91190c359f1d4caac4c1770853c27443d6f609f1",
+      "mode": 420,
+      "size": 13546,
+      "sha256": "a374818a714c023c0147fc0c109798c93ca061558744aa562eb6edd8934c702b"
+    },
+    "crates/eadl-resolve/src/vocabulary.rs": {
+      "index_mode": "100644",
+      "index_oid": "0aa266b16599891c384cec244bd087ced96a44cb",
+      "mode": 420,
+      "size": 31387,
+      "sha256": "61d193a3523ead1df80b9c6e7fe5b746f898638a10734b2c1167ac1e3bfd33a0"
+    },
+    "crates/eadl-resolve/tests/checker.rs": {
+      "index_mode": "100644",
+      "index_oid": "a7e0245b9b55928e1ff7b824ac38fa47d80c148f",
+      "mode": 420,
+      "size": 61107,
+      "sha256": "8adeaab760e23b20add46e119db964686a6737b5f483efe154a414068e2ebb1b"
+    },
+    "crates/eadl-resolve/tests/common/mod.rs": {
+      "index_mode": "100644",
+      "index_oid": "fbca9dcda29996b1d1490606d914efc7656fec6d",
+      "mode": 420,
+      "size": 688,
+      "sha256": "fdad2782543b0afd426c2e4b035a90772b9dfc961a515b5672f58c38d3a0d1d3"
+    },
+    "crates/eadl-resolve/tests/common/universe.rs": {
+      "index_mode": "100644",
+      "index_oid": "60dd9a948acd6489b2b236a268363f5c24ada03e",
+      "mode": 420,
+      "size": 27913,
+      "sha256": "5db930cd3673588d8e13a66b8e3394c291994aa532fccbf747081d493cf7109a"
+    },
+    "crates/eadl-resolve/tests/corpus.rs": {
+      "index_mode": "100644",
+      "index_oid": "af40f4b9ce830cb8be06480e3353170460a0ca16",
+      "mode": 420,
+      "size": 48868,
+      "sha256": "07450315d7f982557ae18dc92c1b18f3d4d9e63454ecadfb2d72ddc4d656fa5c"
+    },
+    "crates/eadl-resolve/tests/declarations.rs": {
+      "index_mode": "100644",
+      "index_oid": "a2790af93b356e884b0c345d715c96c1476a8811",
+      "mode": 420,
+      "size": 4235,
+      "sha256": "94b481997e0059b9c87359042f69477f2af73d2ced67a3c21296f65a4835688c"
+    },
+    "crates/eadl-resolve/tests/diagnostics.rs": {
+      "index_mode": "100644",
+      "index_oid": "3766d2a6a107d5e3f2af4da6cde814d8611b960f",
+      "mode": 420,
+      "size": 3416,
+      "sha256": "7ff384d7cbd637cf8154bf026f03f1bfa72d611f5e5b33d8c61ec8bc04333a42"
+    },
+    "crates/eadl-resolve/tests/production.rs": {
+      "index_mode": "100644",
+      "index_oid": "a11c67ed9655c0d70c29394334521d310087e42d",
+      "mode": 420,
+      "size": 20891,
+      "sha256": "3f59764e1f6f46b21ebe7ade72f0a3e2a77ef88c77e68b464dbbaf3ff7927afe"
+    },
+    "crates/eadl-resolve/tests/timer_cases.rs": {
+      "index_mode": "100644",
+      "index_oid": "fc9d24a9284f4f887754a5f43fe50e1f8b2a0ce4",
+      "mode": 420,
+      "size": 11555,
+      "sha256": "32c1827437dde99ef6d44efca0474d224b19e7e0b3c47301f7e80f1ffe69aba5"
+    },
+    "crates/eadl-resolve/tests/values.rs": {
+      "index_mode": "100644",
+      "index_oid": "9a9e3a6f4d077b370f53a19f4505f9890af79374",
+      "mode": 420,
+      "size": 11457,
+      "sha256": "d824bf8ad5ee085545441788c33e269726962aaf9ca98788037a3449ad742973"
+    },
+    "crates/eadl-resolve/tests/vocabulary.rs": {
+      "index_mode": "100644",
+      "index_oid": "5153dd620db9d7c94ed080b507bca59ab5f63c55",
+      "mode": 420,
+      "size": 14500,
+      "sha256": "0797dd4052b470809181241d959e572aa531a7579127e7d8ff0f7922f4f141b1"
+    },
+    "crates/rt-analysis/Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "cd7bd43406fa8ad7430da33ad37d559dabf5151a",
+      "mode": 420,
+      "size": 440,
+      "sha256": "50662dd91950d7a7e12e36b44928fcafd61e3560973033b2711b71e81dd30036"
+    },
+    "crates/rt-analysis/src/compose.rs": {
+      "index_mode": "100644",
+      "index_oid": "d7b2fa9583affd0f354ac316a670baf7cf5dc8ff",
+      "mode": 420,
+      "size": 68035,
+      "sha256": "0b185953f033557610e3708533401369e7b7ce22fec858c156e66c01ad298d87"
+    },
+    "crates/rt-analysis/src/cost.rs": {
+      "index_mode": "100644",
+      "index_oid": "782f804a35e000d98ee9fae569eac6f47ce21c04",
+      "mode": 420,
+      "size": 23433,
+      "sha256": "6064e523232e9e91cbea9c24232e4efd3d679dd6e62d098207f55e9febc1018e"
+    },
+    "crates/rt-analysis/src/lib.rs": {
+      "index_mode": "100644",
+      "index_oid": "cd531d20e99b9b511f13a1e3287a774e82957ff6",
+      "mode": 420,
+      "size": 2336,
+      "sha256": "e87f9ec1bc07721097036fe2ec89d8568117a334d51dbe8f9ee56b5eb3608056"
+    },
+    "crates/rt-analysis/src/model.rs": {
+      "index_mode": "100644",
+      "index_oid": "ec3d709d5a261204d10447bc76f22351c534ea31",
+      "mode": 420,
+      "size": 9372,
+      "sha256": "4ba75c28eee2953fd0c8358713ebb2459ebefa69f00b5c8ca89dff1965a0bbc8"
+    },
+    "crates/rt-analysis/src/response.rs": {
+      "index_mode": "100644",
+      "index_oid": "7312f74d73c7536ec06e413d9710523aecc2fe7b",
+      "mode": 420,
+      "size": 19076,
+      "sha256": "b5032dd3fb13b9ed2add44e5c35e96b8630b9f70f0f257951333a2154804d40a"
+    },
+    "crates/rt-analysis/src/runtime.rs": {
+      "index_mode": "100644",
+      "index_oid": "8d0a534c294ee9179fb6e1b543ddc6a6d574de16",
+      "mode": 420,
+      "size": 40505,
+      "sha256": "ae5462adc8824d4307cfd6cf3fbbb95b6d93a71641443166214f8bb5707047e3"
+    },
+    "crates/rt-analysis/src/trace.rs": {
+      "index_mode": "100644",
+      "index_oid": "84b3500f02bf707600442d03b4d923a792d066c8",
+      "mode": 420,
+      "size": 10859,
+      "sha256": "323443bdafebf20f509d237df3e4e19b0376f6277b4d9b9dc69e4523f6b16d3b"
+    },
+    "crates/rt-analysis/tests/compose.rs": {
+      "index_mode": "100644",
+      "index_oid": "416015859b7800cdf70436abca2ea095f8410a3e",
+      "mode": 420,
+      "size": 53140,
+      "sha256": "dbd273eac20655fef4bdc7dbe5064b09f2c7c9cafa13fd878ca842fa0f6808f4"
+    },
+    "crates/rt-analysis/tests/f17_refusal.rs": {
+      "index_mode": "100644",
+      "index_oid": "005f69eb4e48579f343a84ba483008a55c5e7e77",
+      "mode": 420,
+      "size": 9053,
+      "sha256": "532bc6927273a844a2bae8e5f0ce4d67b15bd1c133d6abb06ab928b5f74d7115"
+    },
+    "crates/rt-analysis/tests/f18_baseline.rs": {
+      "index_mode": "100644",
+      "index_oid": "96768b7f3be6f237e70b0905dffb1736e81d28f7",
+      "mode": 420,
+      "size": 8904,
+      "sha256": "f19723cba6ccc0a76dc621f2943e2c4561f7131dc6f0985dbddcdcd42e3816bb"
+    },
+    "crates/rt-analysis/tests/f29_preemption.rs": {
+      "index_mode": "100644",
+      "index_oid": "788581f88b962ec23a2dd623d605aab68c58529b",
+      "mode": 420,
+      "size": 14997,
+      "sha256": "097073d75e3282a07008936a63d920706d1c1374a4fba48ec5643c1cd8d1d5ed"
+    },
+    "crates/rt-analysis/tests/fixtures/runtime_expected.txt": {
+      "index_mode": "100644",
+      "index_oid": "6373d259c9e29faf85664c2dc3638f479991e9aa",
+      "mode": 420,
+      "size": 11024,
+      "sha256": "86f91e8fcf5da89f884ca5f2dca3e9bfdb9f1fdf58d845e49acef90de4670d6e"
+    },
+    "crates/rt-analysis/tests/format_golden.rs": {
+      "index_mode": "100644",
+      "index_oid": "4c8813898cd48a7212057c37f405e1d1774305a6",
+      "mode": 420,
+      "size": 4958,
+      "sha256": "e2202ae6f881e7650be3a0188439454203649b21acc5b2b6675ebb291594d3bc"
+    },
+    "crates/rt-analysis/tests/goldens/cost-accounting-1.golden": {
+      "index_mode": "100644",
+      "index_oid": "f99d7624fcb250695cee6320e1460c07aec1fff8",
+      "mode": 420,
+      "size": 1880,
+      "sha256": "884be0503e8ffcbcc649b27846ea3d49e15ac22bc7c4118db531bef63e4533e8"
+    },
+    "crates/rt-analysis/tests/runtime_expected.rs": {
+      "index_mode": "100644",
+      "index_oid": "e047558e2d32a761b9dd950843ee66e0f4b45af9",
+      "mode": 420,
+      "size": 13262,
+      "sha256": "04e13c2af674436c0e9f8fa6ffa7f919d0abaf6827404ab11d7e2eef5c1f5eda"
+    },
+    "crates/rt-analysis/tests/runtime_variant.rs": {
+      "index_mode": "100644",
+      "index_oid": "b44fc36399aed1c171d8255e25a71c72532ec629",
+      "mode": 420,
+      "size": 20562,
+      "sha256": "dd2124819eee2a0e1fabc82b356c8b08b6671797c9989d9f608d3e7d83c5c5a1"
+    },
+    "crates/rt-core/Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "13d182d725e27b420e2ab348b16e3a1a0a0a38a3",
+      "mode": 420,
+      "size": 820,
+      "sha256": "e127a8169096080352dff990cbd7ac6e38ac9ae1f6ee53f899b8e816fef9de13"
+    },
+    "crates/rt-core/src/fault.rs": {
+      "index_mode": "100644",
+      "index_oid": "f28009cd02067832e1d47a051138aa2743150a68",
+      "mode": 420,
+      "size": 6931,
+      "sha256": "e79fe02098d83f97827bc78e7f12702ec864b07c84b5e4102c4dfc35f75e1e7c"
+    },
+    "crates/rt-core/src/lib.rs": {
+      "index_mode": "100644",
+      "index_oid": "d7269cf9a33447e4e19ea7fa26d5b5fb85387aa8",
+      "mode": 420,
+      "size": 3282,
+      "sha256": "1a288ae82ca8cf0c0c0f79d6321a658e7d46adabe536b7a4c63375e820e5887f"
+    },
+    "crates/rt-core/src/scheduler.rs": {
+      "index_mode": "100644",
+      "index_oid": "8c8e5418b04049d55491252d9bd1a498d8927b9c",
+      "mode": 420,
+      "size": 28621,
+      "sha256": "2832f8f5ea87c08a6bfaa918735cbabfb52883cdf02549d2ecadf77cff2fcdaf"
+    },
+    "crates/rt-core/tests/differential.rs": {
+      "index_mode": "100644",
+      "index_oid": "d10bd474daaf676a5ab5c189d8c5c2306b5dfbd6",
+      "mode": 420,
+      "size": 48522,
+      "sha256": "8e68ceeef05b6ff2b81e6a65678f0def7df3c79fd440662e5b682c2e4552a947"
+    },
+    "crates/rt-core/tests/lifecycle.rs": {
+      "index_mode": "100644",
+      "index_oid": "7ffb6666e3210dbd19c680479df32116dd9782ed",
+      "mode": 420,
+      "size": 30765,
+      "sha256": "07a0d9b401dcc2041658d646a396146c9b820063a6e5641b55cb0ddf8a0f748e"
+    },
+    "crates/rt-reference/Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "f3a8de1a6b28ea86de2b3aa0e9242648f5838a25",
+      "mode": 420,
+      "size": 1032,
+      "sha256": "8098bc07eec79c8dda00f38dc9acf03f608e84254d178189fb03d728301b8a28"
+    },
+    "crates/rt-reference/src/lib.rs": {
+      "index_mode": "100644",
+      "index_oid": "066839370fc002e58e9905299cb8535f300566a1",
+      "mode": 420,
+      "size": 241531,
+      "sha256": "b68f4d05a8177ce0ba6bc9987e1348d436fff94288a95fc95b427b277bb93e7a"
+    },
+    "docs/ARTIFACT_CLEANUP.md": {
+      "index_mode": "100644",
+      "index_oid": "368edac410aa72f082b1ad49e29659cc8b2689a7",
+      "mode": 420,
+      "size": 551,
+      "sha256": "36d572923ce96912ce1759284ed11293a07d61f84eceac8cfe673210f62d61d0"
+    },
+    "docs/CLAIM_VERIFICATION.md": {
+      "index_mode": "100644",
+      "index_oid": "6d47c05a3021a06d1161e67f17b0967e287eded0",
+      "mode": 420,
+      "size": 27263,
+      "sha256": "ff6547fac7c8e12830f26e507f969a415fb755f54f57e6535ba182db069c1c5b"
+    },
+    "docs/TASK_TREE.md": {
+      "index_mode": "100644",
+      "index_oid": "35ac24de55c3071c7d0111f64ae752286584969b",
+      "mode": 420,
+      "size": 4894,
+      "sha256": "f5a4f6f38432911ff9f55a0daff75072959b02f2a8110c278f95147f4c7d2d89"
+    },
+    "docs/TASK_TREE_README.md": {
+      "index_mode": "100644",
+      "index_oid": "eaa3b9f829003027ca4595c0a22a357fdf7c22a9",
+      "mode": 420,
+      "size": 1509,
+      "sha256": "690eabd2129513c155352aad6fa6a63b6c7df536eef1fa483ffaa83ff944e324"
+    },
+    "docs/analysis/cost-accounting-v1.md": {
+      "index_mode": "100644",
+      "index_oid": "1f69d78419839e5f23d823a91800fbdf6e76c39d",
+      "mode": 420,
+      "size": 4747,
+      "sha256": "6e6c175c94090568ee2597fd107a9dbf3abfb6af348eb2d3a0195fb2de1013dc"
+    },
+    "docs/book/book.toml": {
+      "index_mode": "100644",
+      "index_oid": "e7dc98e97a28ae3d0b3d34f91e0db941afe06f74",
+      "mode": 420,
+      "size": 316,
+      "sha256": "bacb48d9a6f3add256cd09244878cf1cf74a3c71e0e3e398617fc641df2f1335"
+    },
+    "docs/book/src/SUMMARY.md": {
+      "index_mode": "100644",
+      "index_oid": "6c846f5e7986555763cc38b69150495f4640a1d5",
+      "mode": 420,
+      "size": 1660,
+      "sha256": "087c2d09e92bc944fb9782d97fa99660ef174d1438355e07d99864cfed0458ab"
+    },
+    "docs/book/src/analysis.md": {
+      "index_mode": "100644",
+      "index_oid": "f331182815bb8a1fda82401bb5c78bd8eecb781d",
+      "mode": 420,
+      "size": 16964,
+      "sha256": "e52b3698fba19df1ddf3f6fd3c04b0f27d0946e38199d3f4e12072c0cc0e201d"
+    },
+    "docs/book/src/annex-repository.md": {
+      "index_mode": "100644",
+      "index_oid": "a37e56a3c32c7e02cd098d43ac880ab5b9bb839f",
+      "mode": 420,
+      "size": 93990,
+      "sha256": "74f7cf727bfc1953ec99a5ba3e475ab025b8241111f30e3cdf26e014c9b53744"
+    },
+    "docs/book/src/annex-runtime.md": {
+      "index_mode": "100644",
+      "index_oid": "ca8891dca0e37453478a86bfafbaf4d38c995534",
+      "mode": 420,
+      "size": 8648,
+      "sha256": "3a1df923685f76e93f8b9e96fae5e40e92aabd592e473043822a5e66e08b9d83"
+    },
+    "docs/book/src/annex-trust-proofs.md": {
+      "index_mode": "100644",
+      "index_oid": "a52c5c77369f3e054b3263ed95c6e37393230d25",
+      "mode": 420,
+      "size": 10084565,
+      "sha256": "6d1d1bf03ddc9676e7d9b4daba50b49556630b36ad277f7e6570bfd5c449d4c0"
+    },
+    "docs/book/src/book-index.md": {
+      "index_mode": "100644",
+      "index_oid": "9923d239460729568da790b466231e8805fceadb",
+      "mode": 420,
+      "size": 67143,
+      "sha256": "2363c24b35f17d58f29ab4f3f456aa9f0abdc092dc275a60b48acf2681708a9d"
+    },
+    "docs/book/src/boundary.md": {
+      "index_mode": "100644",
+      "index_oid": "3f9969b4b0eb483a53d5a25426691d95e45665d0",
+      "mode": 420,
+      "size": 9293,
+      "sha256": "b1be1fb19ab20c54781a04e035b5128e9d06cd8a14e280298f10821a3ccecb11"
+    },
+    "docs/book/src/catalog.md": {
+      "index_mode": "100644",
+      "index_oid": "2b1a7e432619c1e0095f252e8f1d79fd7fabce35",
+      "mode": 420,
+      "size": 14540,
+      "sha256": "a48342ec6230ad9c5633b8e1fbee29abfa8a692dd62978eb08af16fafb0203f2"
+    },
+    "docs/book/src/checking.md": {
+      "index_mode": "100644",
+      "index_oid": "49c31396c362fd359bce2de451ba7dd6a54cab7c",
+      "mode": 420,
+      "size": 16246,
+      "sha256": "04d717c70cc3ff0aee48d944bd49fcd063b56b1e392cb199c3f9c49fbd8484ac"
+    },
+    "docs/book/src/cli.md": {
+      "index_mode": "100644",
+      "index_oid": "5deb4c6cdf0497c3afa659090e64a7c28cfbfae8",
+      "mode": 420,
+      "size": 9357,
+      "sha256": "6902b718fbf48ae9cec4f6e9226206640acaaf6588c2510b4d2cb3aeb3b72404"
+    },
+    "docs/book/src/engine-api.md": {
+      "index_mode": "100644",
+      "index_oid": "0c6d8006c20e8413c79676a808897c2a10382d49",
+      "mode": 420,
+      "size": 18773,
+      "sha256": "3bde660455c62c0736bccf835eedbfb7a1fdc0b0dff12760235dcae26bb52808"
+    },
+    "docs/book/src/evidence.md": {
+      "index_mode": "100644",
+      "index_oid": "2abb19a90ea16eea6956ea8819a114a2aa15c210",
+      "mode": 420,
+      "size": 8028,
+      "sha256": "018bae2dd69dea72025fe9ce0dbd973fb14c0c991db544da128d4e84010e8370"
+    },
+    "docs/book/src/glossary.md": {
+      "index_mode": "100644",
+      "index_oid": "2dd2a61d2302aff9c9b982ca02c9687af662e7c3",
+      "mode": 420,
+      "size": 19642,
+      "sha256": "f1403699132a02195008d1a675fe5c0dc0f3ba6c756402f9586edc4ba02c2399"
+    },
+    "docs/book/src/introduction.md": {
+      "index_mode": "100644",
+      "index_oid": "09ea950d34efba59bf9bce83a09e0f7bb0389a48",
+      "mode": 420,
+      "size": 5871,
+      "sha256": "be47cb9115f426925a38a776c06c71a62fc7e81f3e1ba0518416cbafa1880b2a"
+    },
+    "docs/book/src/kinds.md": {
+      "index_mode": "100644",
+      "index_oid": "99a5d448ff39acc11f453e10496a678e28069498",
+      "mode": 420,
+      "size": 8841,
+      "sha256": "5730701cda35365baabbb0bcd80dd727394d6bcfba66b17bae8f38c2092f065f"
+    },
+    "docs/book/src/ledger.md": {
+      "index_mode": "100644",
+      "index_oid": "7c7c752e9dfef8bf3f1aabe2c5e528de322ecf00",
+      "mode": 420,
+      "size": 35509,
+      "sha256": "e6868aaa656cf91b3e855c68ad46c48cf1abeb828ec37a3a362db9197f2c8914"
+    },
+    "docs/book/src/matching.md": {
+      "index_mode": "100644",
+      "index_oid": "86b496c6f03f8463075701ac9dc86f7a789e2587",
+      "mode": 420,
+      "size": 13165,
+      "sha256": "c78c1bda19b084be04d48fc5ba8ab7dfb1aca645c8ad3809a7bffecb43d50361"
+    },
+    "docs/book/src/modules.md": {
+      "index_mode": "100644",
+      "index_oid": "941b8d69a0cb071d0bf3740a746dac107a5e5bb8",
+      "mode": 420,
+      "size": 14622,
+      "sha256": "4a509b864afe17f32563a6a1e4a097b9eada36b07b62aca7b5fd3612089cf8a2"
+    },
+    "docs/book/src/presence.md": {
+      "index_mode": "100644",
+      "index_oid": "f46d164944ada102732c9133540a5ee77f422b12",
+      "mode": 420,
+      "size": 8025,
+      "sha256": "a5c0b3d7b29edc810b417b3f91ae9535b0325b5032418f1da29265a965dfd99d"
+    },
+    "docs/book/src/profile.md": {
+      "index_mode": "100644",
+      "index_oid": "57bb4c194e67cfd6a7acde8fcbdb61bb279c1972",
+      "mode": 420,
+      "size": 5677,
+      "sha256": "70b32d6426135d1933fda3bdbba367ef14c89ae5d6319f8ea4cddbd28a6483fa"
+    },
+    "docs/book/src/quantities.md": {
+      "index_mode": "100644",
+      "index_oid": "320cf98b2a05effc25061a4524c89c44d75ed0bc",
+      "mode": 420,
+      "size": 10134,
+      "sha256": "f87c18fab40b79b0310131e901bb85314755e5c0bb3a9b161d29d7146eb5d7cc"
+    },
+    "docs/book/src/reading.md": {
+      "index_mode": "100644",
+      "index_oid": "6ef451f9e504c72dae511d17ff4751d41bf387cd",
+      "mode": 420,
+      "size": 16422,
+      "sha256": "e13bc46ef47b011470666db2830794ec8ed2589c907ac41cae8c5a8e74313258"
+    },
+    "docs/book/src/refinement.md": {
+      "index_mode": "100644",
+      "index_oid": "08b0379b4607bd4d5651e7101de711f0e1b90a8f",
+      "mode": 420,
+      "size": 6615,
+      "sha256": "8f421d3189eafb8c2b4ce4577e99060fc78d1a5604184b799bf7f216d611ee45"
+    },
+    "docs/book/src/runtime.md": {
+      "index_mode": "100644",
+      "index_oid": "5284bb54ee22d17b90b625d99c98c430b0a3bcaa",
+      "mode": 420,
+      "size": 12792,
+      "sha256": "b987c5735b5a8144ceb0c77954be881a6466e5b5435a0cd74dfdf205e8d8542f"
+    },
+    "docs/book/src/s0.md": {
+      "index_mode": "100644",
+      "index_oid": "7cb0ae2b9402e6dd8f7f408e819ee985e2db54e2",
+      "mode": 420,
+      "size": 19391,
+      "sha256": "4417bfee7e8e730b457c45d278ef567b44a729142474d4253de7d44354f90f9a"
+    },
+    "docs/book/src/targets.md": {
+      "index_mode": "100644",
+      "index_oid": "3a828c733c4f6ad423da52e383867effb3465994",
+      "mode": 420,
+      "size": 10864,
+      "sha256": "b0eadd64f73a72695780d8f36f124d1b90bd24c883545ef8ecc80da3e24e3ead"
+    },
+    "docs/book/src/tour.md": {
+      "index_mode": "100644",
+      "index_oid": "1a3290daba45d35b9fbb1b74514906428ac28623",
+      "mode": 420,
+      "size": 12277,
+      "sha256": "388f664bdc962d1c2e49925864f1513fa68b1104e0a2e5aab549076f5b19627f"
+    },
+    "docs/book/src/trust-adequacy.md": {
+      "index_mode": "100644",
+      "index_oid": "a808d374de4bff716ae5cb2de2fa8bba4dbebdc9",
+      "mode": 420,
+      "size": 49082,
+      "sha256": "1eea6868d32c2649685f56321b1a623c4a828ce5d0e0860fb2d52a63beb9b603"
+    },
+    "docs/book/src/trust.md": {
+      "index_mode": "100644",
+      "index_oid": "2ff61700c5ea783949fe5245e83eee6cfc5bddd9",
+      "mode": 420,
+      "size": 48827,
+      "sha256": "36f60b1fc61c2c293523e811a2c7bc2fe643cac06dd880ac4a05c52cde272b5d"
+    },
+    "docs/book/src/usecases.md": {
+      "index_mode": "100644",
+      "index_oid": "b16e7433e2311cc463dc964404cfee27646511e4",
+      "mode": 420,
+      "size": 7097,
+      "sha256": "f9c88ddc90448d9b23d5e842da9456ae3697968bcf4ef7a73dd303e9d7ac5e73"
+    },
+    "docs/book/src/verification.md": {
+      "index_mode": "100644",
+      "index_oid": "3023edd73bc0ec498380637c75dceaad37bf180b",
+      "mode": 420,
+      "size": 59525,
+      "sha256": "a425a297fc14bdf1321d9f678260404f914264a454713d1b3b45588d3bd0e006"
+    },
+    "docs/book/src/versions.md": {
+      "index_mode": "100644",
+      "index_oid": "8a39749a6d70e89cbfa6fcfe79a3246a44c5f81c",
+      "mode": 420,
+      "size": 13615,
+      "sha256": "f9d02a291bc8fd005eba0c839ec07990b08f81a5b885412ed091a500d99be9f1"
+    },
+    "docs/book/src/workload.md": {
+      "index_mode": "100644",
+      "index_oid": "749b2ce49ff75532ebe07f54a3216b2b17bbd02c",
+      "mode": 420,
+      "size": 8678,
+      "sha256": "92eee78d3441f022339f37af319cb8674a66d8ab7f726dd2fd82ed3f722347cd"
+    },
+    "docs/decision-history/INDEX.md": {
+      "index_mode": "100644",
+      "index_oid": "cd278ca355155e73ae7832c066f05a2e6727a793",
+      "mode": 420,
+      "size": 1475,
+      "sha256": "227c33e55776a77266830dc2ae14f8485fb00d533cdbe4c63678e11b4d1a5590"
+    },
+    "docs/decision-history/decision_findings-for-director-review/02.md": {
+      "index_mode": "100644",
+      "index_oid": "1aecabd53669cf5bd7eb281d8fd4e92a70c27404",
+      "mode": 420,
+      "size": 1578,
+      "sha256": "f145069a0ab90ff207546352ef9155c68951ba1930831407a9b0e0ae26e2feaa"
+    },
+    "docs/decision-history/decision_findings-for-director-review/04.md": {
+      "index_mode": "100644",
+      "index_oid": "0f2db62f757a4b49585ffec0612740e137c2bcb4",
+      "mode": 420,
+      "size": 1543,
+      "sha256": "e3a309b27e3e91b95b1fd27bee6b6db02be43a1971725518036e6d328d94ec31"
+    },
+    "docs/decision-history/decision_findings-for-director-review/08.md": {
+      "index_mode": "100644",
+      "index_oid": "959923bdc8f72f4cb8e8ec65231118d3c46ed115",
+      "mode": 420,
+      "size": 3857,
+      "sha256": "121aff31e0b4ab4b8162f630506bc33303bd41057a13b1240707a3677b06a80b"
+    },
+    "docs/decision-history/decision_findings-for-director-review/10.md": {
+      "index_mode": "100644",
+      "index_oid": "de1acbbf2fe1a5207e9720f30a54ea7affe3b63a",
+      "mode": 420,
+      "size": 2767,
+      "sha256": "9591881df3c96e96aa0fd96ea06a7dbce7d56463688e228bb1b3e059c963e752"
+    },
+    "docs/decisions/INDEX.md": {
+      "index_mode": "100644",
+      "index_oid": "b7dc32a43aebcbc3344cc232e9d75875781eeec7",
+      "mode": 420,
+      "size": 16322,
+      "sha256": "b841c35a26260f2def8de79f441931f547cec961e3e08b01d66d4d35392a8b52"
+    },
+    "docs/decisions/TEMPLATE.md": {
+      "index_mode": "100644",
+      "index_oid": "fa7741c946847cacf25a1590b9e657b1a9e2b238",
+      "mode": 420,
+      "size": 759,
+      "sha256": "b86768db8f472ea1cfd8bafc484cca9776652c35fae3dbd24ce189ddb5582a2e"
+    },
+    "docs/decisions/decision_api-instance.md": {
+      "index_mode": "100644",
+      "index_oid": "e83fd7b3f177ac9aa2b9267f915f7f78d81c91ab",
+      "mode": 420,
+      "size": 3255,
+      "sha256": "a31597ff9c57096b0b64cd12aa01dc6888439792a5064c2a15a53ddeb41704e6"
+    },
+    "docs/decisions/decision_book-in-layers.md": {
+      "index_mode": "100644",
+      "index_oid": "f2fee26f7d97b105f29b38b3da0cd0db6405e79b",
+      "mode": 420,
+      "size": 4650,
+      "sha256": "953fa5efa9761a1b33b7ff03e0d001d65bcf9b21dc947aae8eb14b0e167df427"
+    },
+    "docs/decisions/decision_book-unbounded.md": {
+      "index_mode": "100644",
+      "index_oid": "ed9b907ae27e152b7c96d3100609a34e0402a90e",
+      "mode": 420,
+      "size": 1455,
+      "sha256": "96378fb6a05cf98ee7cfa5b96fdcb16abaa69b5051e08b2f9045ba0fc8a03068"
+    },
+    "docs/decisions/decision_ci-rehearsal-beside-the-repository.md": {
+      "index_mode": "100644",
+      "index_oid": "1ef5c19c316057688c613274c8e7d157f8a889aa",
+      "mode": 420,
+      "size": 3051,
+      "sha256": "e8b489062f4c57f9122f3649c44bb067c4a0d2731ae8c84104763f04665be1fc"
+    },
+    "docs/decisions/decision_decisions-folder-ceiling.md": {
+      "index_mode": "100644",
+      "index_oid": "af579a31e26e4f42419b35a9bc6134b5a4b22e6d",
+      "mode": 420,
+      "size": 8755,
+      "sha256": "3a9def861d3da42aa61ba8fe1a88319f10d84f98b2374f1c604f6980da90a87b"
+    },
+    "docs/decisions/decision_eadl-engine-boundary.md": {
+      "index_mode": "100644",
+      "index_oid": "6c466819e37e0b022c704c36d14704e6877f2e3e",
+      "mode": 420,
+      "size": 6909,
+      "sha256": "0bd0295a060289057ff02e6e26f7183a19a271a49dba64b62eb6f2a671d3d3ba"
+    },
+    "docs/decisions/decision_eadl1-value-domain.md": {
+      "index_mode": "100644",
+      "index_oid": "e23fc305cb5d61b882fcb9d42039f8bee5555b48",
+      "mode": 420,
+      "size": 14172,
+      "sha256": "a455ddb886653c10b45eeebe5f1af3e09460f6ec6b0c3b8668b4253943f07b27"
+    },
+    "docs/decisions/decision_emulator-independence-retained.md": {
+      "index_mode": "100644",
+      "index_oid": "1425d053933da2be362d49e72a2f5baa1f2d5334",
+      "mode": 420,
+      "size": 6803,
+      "sha256": "3f05f11f46b266492694b3a93b34a601cc4d872a6836b66d7f679f1785bf104e"
+    },
+    "docs/decisions/decision_engine-api.md": {
+      "index_mode": "100644",
+      "index_oid": "03dc03f67f91e36e02f1cb88ca8dd31ba8990ce1",
+      "mode": 420,
+      "size": 6768,
+      "sha256": "84796c1b4afacd31ef2d81e9b8ec5076ea95cd8c6c5a98221bab8b3a9a686233"
+    },
+    "docs/decisions/decision_executable-design-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "4ea61aaeeefbdc7da887a3fd6237b3a106461106",
+      "mode": 420,
+      "size": 7417,
+      "sha256": "98c42569f49d1242a6ad43806a01d0420d4fe3a3cd97f7fc841e5a6cf5423072"
+    },
+    "docs/decisions/decision_findings-for-director-review.md": {
+      "index_mode": "100644",
+      "index_oid": "ddcd49b6b670622e6b076e33cdf7226c57a6c2ad",
+      "mode": 420,
+      "size": 31018,
+      "sha256": "10bd1bb474e427f0cf4b5acf2fc8f12fa684ebd2a26ccd4825ba1e4ec150564c"
+    },
+    "docs/decisions/decision_history-ledgers.md": {
+      "index_mode": "100644",
+      "index_oid": "ad18f2e920f5f182ab054c236ba305ef102db4bc",
+      "mode": 420,
+      "size": 5756,
+      "sha256": "d5e7f252dc7715e66e017e4681d7d4f34300bb89f60fc8cbe5e64d1be0f42c9e"
+    },
+    "docs/decisions/decision_incomplete-blocking-policy.md": {
+      "index_mode": "100644",
+      "index_oid": "12b1fa93b3341f888e94457076d29c26dea9853f",
+      "mode": 420,
+      "size": 5404,
+      "sha256": "b86c71369b17728067da7afbe2b33113abc513fef49602f8e64a16f1a49671e4"
+    },
+    "docs/decisions/decision_mcp-server.md": {
+      "index_mode": "100644",
+      "index_oid": "8e8837c011780c377ae4e7792f0a209b11bb483b",
+      "mode": 420,
+      "size": 9230,
+      "sha256": "ee1b2f9e4722627f5783a1dc1e685cfe78a70f5c25710abe04d1e0c1c59676a8"
+    },
+    "docs/decisions/decision_priority-comparison-direction.md": {
+      "index_mode": "100644",
+      "index_oid": "1bd523e2a71ed56363f5d6d01e0ee7a6ddfba8aa",
+      "mode": 420,
+      "size": 7214,
+      "sha256": "8c6bff7ef4aafb3e50930032585ca91745319f1980b6c911668d5564cc0ee952"
+    },
+    "docs/decisions/decision_programmatic-interface.md": {
+      "index_mode": "100644",
+      "index_oid": "88461b29f92ba3207c069e6f78adfdfea302ba47",
+      "mode": 420,
+      "size": 8689,
+      "sha256": "70e7602be0a09048a56e7df3bdf7e183c6ae55f40330dff738fc0543bc66334b"
+    },
+    "docs/decisions/decision_push-cadence.md": {
+      "index_mode": "100644",
+      "index_oid": "c70133e17824deca3eace3ce3e7f9f93ebfa90a1",
+      "mode": 420,
+      "size": 4837,
+      "sha256": "ff11ae8e366eb48f61b92422a989bc833ee7575284b4ec8fcfe49ddb6285513f"
+    },
+    "docs/decisions/decision_repository-boundary-read-only.md": {
+      "index_mode": "100644",
+      "index_oid": "f4a140f7d2e57958e7de635da8b461a689224a52",
+      "mode": 384,
+      "size": 7162,
+      "sha256": "7c20fd26d6ccb81748350cbe7ecbf9ba8032215ccfe2b4abe26e992f0c677857"
+    },
+    "docs/decisions/decision_reviews-folder-ceiling.md": {
+      "index_mode": "100644",
+      "index_oid": "518cf2e520df747736badf29c2019633e9f8dba7",
+      "mode": 420,
+      "size": 4048,
+      "sha256": "dd66e25575f25245fc596aa3d5b18851fe9760a94888eedaeec3268370364dac"
+    },
+    "docs/decisions/decision_runtime-analysis-variant.md": {
+      "index_mode": "100644",
+      "index_oid": "0de3d320127e84c4aed37896bd19dfa351f8d50f",
+      "mode": 420,
+      "size": 38794,
+      "sha256": "2af12ea82264f29fb4b34f8fe0dbae6b77c43de5bc2b3c2b89d11be7cf148dbc"
+    },
+    "docs/decisions/decision_runtime-contract-gaps.md": {
+      "index_mode": "100644",
+      "index_oid": "98ad1d92097855ea42105cf7422e4c9e369af6b7",
+      "mode": 420,
+      "size": 29963,
+      "sha256": "f9d8912704b0b0dccb272d5ba9e314a99d8e13782743d213cd0c900e2f5767d6"
+    },
+    "docs/decisions/decision_s0-retirement.md": {
+      "index_mode": "100644",
+      "index_oid": "794cb8bc98b1c50e9e87fe1ec938c27112e8a552",
+      "mode": 420,
+      "size": 5634,
+      "sha256": "e88f5feddb51d54caea81caec5dcc02e381cea1dba6915900dfb53c7bd5ad9ce"
+    },
+    "docs/decisions/decision_scaffold-updater-adopted.md": {
+      "index_mode": "100644",
+      "index_oid": "92dbf542d3e19463e5f01d11fea07e43934ce9be",
+      "mode": 420,
+      "size": 4774,
+      "sha256": "8867e342071a1ae6b9e7e09ce42b93dded990a28bb4074a0c324713366a500a1"
+    },
+    "docs/decisions/decision_scratch-on-the-repository-volume.md": {
+      "index_mode": "100644",
+      "index_oid": "3491a650780e10569314792dbd5c6dc903797384",
+      "mode": 420,
+      "size": 5997,
+      "sha256": "e2c5958d652996de014cec44a40f164b124c4a0ab69f4080f818c89c1e89e201"
+    },
+    "docs/decisions/decision_specifications-home.md": {
+      "index_mode": "100644",
+      "index_oid": "9808cb411c9ac2dfc391d5b0ab10fcfcf200775f",
+      "mode": 420,
+      "size": 2491,
+      "sha256": "43e43c7b08a5d1e1ab801ba1df8369efefaecaaf9c70395ca5b9d05699eac4ae"
+    },
+    "docs/decisions/decision_specs-folder-ceiling.md": {
+      "index_mode": "100644",
+      "index_oid": "63401236cb4bcd83b5fab39acffa9ab6ad515be5",
+      "mode": 420,
+      "size": 3372,
+      "sha256": "61fc54c2abe6659e3afa8191d404fd5cebe29de74b0aa584d017690fed113e13"
+    },
+    "docs/decisions/decision_substitutability-relation.md": {
+      "index_mode": "100644",
+      "index_oid": "3ed05bcabbc9e88005ab895f5e213388200f6297",
+      "mode": 420,
+      "size": 72044,
+      "sha256": "c106d2a9e0de2602c1ee806f08d4d8c036ee11d49ff6950c680a718159442bb7"
+    },
+    "docs/decisions/decision_target-platform-description.md": {
+      "index_mode": "100644",
+      "index_oid": "85f73c8a148364b74fe7b5e078571f8ddf527a86",
+      "mode": 420,
+      "size": 5458,
+      "sha256": "0f6e2b45cbac79682de9c69252079111ea05c62bc8c8bd2de7324c94f4cd4d9b"
+    },
+    "docs/decisions/decision_task-history-line-ceiling.md": {
+      "index_mode": "100644",
+      "index_oid": "5e346aafb80cf660d6e9b8881def7964c26d8850",
+      "mode": 420,
+      "size": 2336,
+      "sha256": "6f4eade9a4137111441d34a67525a1e8c38cda971759e63d5c43e3d8ff219cae"
+    },
+    "docs/decisions/decision_task-tree-sealing.md": {
+      "index_mode": "100644",
+      "index_oid": "2ff5bf20d2004eaf372bb980e4cfbdab6f2437e2",
+      "mode": 420,
+      "size": 32975,
+      "sha256": "2531d2901d854f67dae674c35bb4f1d63515a33b0d48eebe821c36af93d8c7b9"
+    },
+    "docs/decisions/decision_wasm-binding.md": {
+      "index_mode": "100644",
+      "index_oid": "8cab7b7f029c3167f37714e899b0997fd6a76f5e",
+      "mode": 420,
+      "size": 10889,
+      "sha256": "d60063e907c2843defe3712dcd7b44795e4d7250538e2de56f39e78c0d3d6ea5"
+    },
+    "docs/decisions/decision_zero-dependency-engine-core.md": {
+      "index_mode": "100644",
+      "index_oid": "3c2958b88db0af6bc1489f969ff3c4f68f6396ca",
+      "mode": 420,
+      "size": 3816,
+      "sha256": "98283e1756aec6c3bb7927aab011693852e31e9cec3dd5f79c26a73386fff831"
+    },
+    "docs/decisions/reference_external-document-source-chipdoc.md": {
+      "index_mode": "100644",
+      "index_oid": "17e75d6cd5fa0b077084b3b0904991447b03b234",
+      "mode": 420,
+      "size": 5724,
+      "sha256": "497cbb86b5f44585964a2ba211b472654b505f58b280f8d6da0b99d12d43ed8a"
+    },
+    "docs/decisions/reference_sibling-project-semulith.md": {
+      "index_mode": "100644",
+      "index_oid": "fb4d1b4fccdf1366e98ff7e39331eb9d693e28d8",
+      "mode": 420,
+      "size": 5103,
+      "sha256": "5feb10b8920ad0a3edbfcc70984265cafe9822213c0c62c1e1bff5dea811ae79"
+    },
+    "docs/evaluation/README.md": {
+      "index_mode": "100644",
+      "index_oid": "d31346d2b0701ddd8169ef985d04bc363d00bb12",
+      "mode": 420,
+      "size": 13127,
+      "sha256": "9d227e96252196457b370bc59d5552465de6dde5cb1bbf067bd8ef6a83f97cda"
+    },
+    "docs/evaluation/frozen/MANIFEST.txt": {
+      "index_mode": "100644",
+      "index_oid": "409ac704fa22ce12cbe87041e15d3e8a1a7c1d98",
+      "mode": 420,
+      "size": 1417,
+      "sha256": "b46563555e2f564d2f33f35b35ce355d1331ba2e3ce2e8fa92c36d2a34a72451"
+    },
+    "docs/feedback/README.md": {
+      "index_mode": "100644",
+      "index_oid": "cc37fa6a7b904149a25474bc00500e0d1dbc31d0",
+      "mode": 420,
+      "size": 3412,
+      "sha256": "4e2bcd7d9ff39ebfc1a4cb7ba577a3a9a04c583a58095c6f801fec94fe46044c"
+    },
+    "docs/feedback/bedrock/INDEX.md": {
+      "index_mode": "100644",
+      "index_oid": "8e2cb0efaaeee4a55a5acdad20f1c5f0ac2c08a3",
+      "mode": 420,
+      "size": 1527,
+      "sha256": "25d99425858c40f73a16628037077d2ec522cfbf4dbd8de4085d5bac3e50bda1"
+    },
+    "docs/feedback/bedrock/README.md": {
+      "index_mode": "100644",
+      "index_oid": "97ce519e04c71092175d2df8091a2756019d0c94",
+      "mode": 420,
+      "size": 2412,
+      "sha256": "17dcf0e9becc2fde9310b88ce0fe6639b6fe1bd64b991e4012f613ef2c01298a"
+    },
+    "docs/feedback/bedrock/issues/BR-001-handoff-census-instant/README.md": {
+      "index_mode": "100644",
+      "index_oid": "99a6549200e36b1a4bdd333d96476bd41cbc6454",
+      "mode": 420,
+      "size": 2236,
+      "sha256": "d5e3ee5fd6b247153a6fd4d0e895bbdf4296ccbe88d0c186faf984aa39ebd1a4"
+    },
+    "docs/feedback/bedrock/issues/BR-001-handoff-census-instant/SETUP.md": {
+      "index_mode": "100644",
+      "index_oid": "be56b11ea177ae2a6f269558b3276da77a9c471d",
+      "mode": 420,
+      "size": 794,
+      "sha256": "8f9aad1344abae6f86d3db2bf5f2f46a4d14fdcea6e31c2d22b3e606cde17ea5"
+    },
+    "docs/feedback/bedrock/issues/BR-001-handoff-census-instant/evidence/OBSERVED.txt": {
+      "index_mode": "100644",
+      "index_oid": "8933d2741e7ced3309d3f9875566b8c26a1250f3",
+      "mode": 420,
+      "size": 339,
+      "sha256": "5b06b98e5094f1d879ca7c8c8dde3a988511caffc7d60c9374788f74ecddfe2f"
+    },
+    "docs/feedback/bedrock/issues/BR-001-handoff-census-instant/repro.sh": {
+      "index_mode": "100755",
+      "index_oid": "71faaa126e2273f974edb8155ec25e5df7c8fdbe",
+      "mode": 493,
+      "size": 2162,
+      "sha256": "65293e92e9b9530a90edfb054c0f44b1a23d4af685c0d5b5e2c5f8d1b1722323"
+    },
+    "docs/feedback/linkedspec/INDEX.md": {
+      "index_mode": "100644",
+      "index_oid": "629f714dc55dffecdc0eef2a7c93edd7009d5d77",
+      "mode": 420,
+      "size": 9610,
+      "sha256": "7c78939cd5ed190f3c468b1db1a5d3a8f6c3721baf5f322c273c248671e09ff4"
+    },
+    "docs/feedback/linkedspec/README.md": {
+      "index_mode": "100644",
+      "index_oid": "f49005e2cbfc79a7df48a7e0771cc02118dbf8db",
+      "mode": 420,
+      "size": 8775,
+      "sha256": "18e2dd45eb5bd937d8d212518b46aeb36c1975591a1323690a01fd17becbcdc6"
+    },
+    "docs/feedback/linkedspec/issues/LS-001-cargo-workspace-collision/README.md": {
+      "index_mode": "100644",
+      "index_oid": "90670e6bccbc7bc33b36bab0222fe148090c25ed",
+      "mode": 420,
+      "size": 11683,
+      "sha256": "4affa94753075840d11dc07b8752ac8574f64e28852261b73b820bb5d562ce2b"
+    },
+    "docs/feedback/linkedspec/issues/LS-001-cargo-workspace-collision/SETUP.md": {
+      "index_mode": "100644",
+      "index_oid": "d6fde47e4ed971dd19ca20f27b330f4a0c438cbf",
+      "mode": 420,
+      "size": 4021,
+      "sha256": "c74251487c5fcaa7e17681387bd0798c8058e2c48096d6590b16987db5351375"
+    },
+    "docs/feedback/linkedspec/issues/LS-001-cargo-workspace-collision/evidence/OBSERVED.txt": {
+      "index_mode": "100644",
+      "index_oid": "81569a9940dad50a2b4e0fccccbee042a0c2b49a",
+      "mode": 420,
+      "size": 561,
+      "sha256": "6d146650d10ee6df8eac52a3a123f572eb6c8102c83402655efde8465e4029cf"
+    },
+    "docs/feedback/linkedspec/issues/LS-001-cargo-workspace-collision/evidence/REMEASURED.txt": {
+      "index_mode": "100644",
+      "index_oid": "7b02d5862837b4ad08af5be6a66dfbecbf6ace70",
+      "mode": 420,
+      "size": 5103,
+      "sha256": "14066bc7b28c3e2ec14f9f42ead53f0f99c2c64ed396b0ed499cd911f7a83e5e"
+    },
+    "docs/feedback/linkedspec/issues/LS-001-cargo-workspace-collision/remeasure.sh": {
+      "index_mode": "100755",
+      "index_oid": "c4f231319fe050a82de6b1a53523c760882ee1e3",
+      "mode": 493,
+      "size": 12598,
+      "sha256": "2f8bf9a22395ac068c8290705db52cb4650528afabc66e8a19f6df38604aeba8"
+    },
+    "docs/feedback/linkedspec/issues/LS-001-cargo-workspace-collision/repro.sh": {
+      "index_mode": "100755",
+      "index_oid": "b10886ac38c7514137dae0909e57d61dda493bb4",
+      "mode": 493,
+      "size": 2591,
+      "sha256": "4645187cb04911446f1d41d5c2d2788608ee4762d3c1a4f5c97d8952f0fbddf6"
+    },
+    "docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/README.md": {
+      "index_mode": "100644",
+      "index_oid": "eb128228024da200f8a56ec76552c9b2448a609b",
+      "mode": 420,
+      "size": 12235,
+      "sha256": "95fa8e2e9c6366253d7f54946ef7f42cc6497acf396c8e8d74010069f08b4bb4"
+    },
+    "docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/SETUP.md": {
+      "index_mode": "100644",
+      "index_oid": "8a10a7932eb013b41d864a0b6b9c83e29c8e1e54",
+      "mode": 420,
+      "size": 6754,
+      "sha256": "5b5fddef3d97d141e428e47502e4efdf70feb70272d0d03e5791a86e1389cf47"
+    },
+    "docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/01-multiple-top-level-forms.eadl": {
+      "index_mode": "100644",
+      "index_oid": "233fdf65acd929a8932615f4d5dd29456254ef5a",
+      "mode": 420,
+      "size": 127,
+      "sha256": "d2a4ac9c8e03c76253b9d08afa8da8416e9410f80b640bffeb693f8938644f3c"
+    },
+    "docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/06-unterminated-form.eadl": {
+      "index_mode": "100644",
+      "index_oid": "842982cb8536cf5cdf3190597e8332923920445d",
+      "mode": 420,
+      "size": 50,
+      "sha256": "31b953f141095158263c6eab27c16d2ce7c4c81394248dc622ea536862dbf187"
+    },
+    "docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/07-trailing-garbage.eadl": {
+      "index_mode": "100644",
+      "index_oid": "e34fc2622cd08c5001e92cd0fef2a5d4b985f698",
+      "mode": 420,
+      "size": 57,
+      "sha256": "548cc0fc403d314c40cb1016e204d0aeefb64501a8a4d4e8848394489fccaa5c"
+    },
+    "docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/08-comment-no-newline.eadl": {
+      "index_mode": "100644",
+      "index_oid": "245e5a65b180a4daf836034b65c159e6a5c971d9",
+      "mode": 420,
+      "size": 47,
+      "sha256": "7f74967e6e6efcdc31b9475908b2686202b45ca95e6bb225d6b72ceeac509939"
+    },
+    "docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/09-unbalanced-close.eadl": {
+      "index_mode": "100644",
+      "index_oid": "51130a665612f0d7fa9314a3ca76bd7ea209eed8",
+      "mode": 420,
+      "size": 25,
+      "sha256": "7334bd991611e2f3c4b4331b9067769d2b27c19e86c91ccc654f3c3e19fee88c"
+    },
+    "docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/10-semantically-invalid.eadl": {
+      "index_mode": "100644",
+      "index_oid": "b1e7afa89cc6c99c72fe0203659259020f7eee03",
+      "mode": 420,
+      "size": 50,
+      "sha256": "d9a3447e354d408b216108763704efd869142129ad67a7228d8f5a531f322613"
+    },
+    "docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/12-two-forms-one-line.eadl": {
+      "index_mode": "100644",
+      "index_oid": "9197c7b7955c038f03b458911fad577cd8da6f3d",
+      "mode": 420,
+      "size": 41,
+      "sha256": "d2f86b025edabcb72ff61cb313ace0cf9dccd6f302ea9fda501b7f2b1a63f0fb"
+    },
+    "docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/EXPECTED.txt": {
+      "index_mode": "100644",
+      "index_oid": "ea57f530c916c3c7cd2cfdddf7f24675fcd094ab",
+      "mode": 420,
+      "size": 949,
+      "sha256": "c710175f28e5a35d36c7b071c613a05d1e84b29f432b60e8ce220fd1474b3127"
+    },
+    "docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/REMEASURED.txt": {
+      "index_mode": "100644",
+      "index_oid": "351f546737c5c61e988e2c7839cf07a01062d71a",
+      "mode": 420,
+      "size": 8920,
+      "sha256": "949192c199be58aa1e87e582cfe9cc13756500463171445cc4a23a7bae4a5269"
+    },
+    "docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/system.eadl": {
+      "index_mode": "100644",
+      "index_oid": "aa88760af499e818eee008a9bed7f4096d487750",
+      "mode": 420,
+      "size": 1843,
+      "sha256": "b495ee7066234aa9e6a1a0e391b84ded56b2280c2a2ececed7481cf458a6b048"
+    },
+    "docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/remeasure.sh": {
+      "index_mode": "100755",
+      "index_oid": "85615c6e43646060611a6215ee98dfbaca87a998",
+      "mode": 493,
+      "size": 11047,
+      "sha256": "8e0b8d11be23ba4ffc229a252b7417c50b21eb27e83a8171399e8f860b0d445d"
+    },
+    "docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/repro.sh": {
+      "index_mode": "100755",
+      "index_oid": "99f4b03e2790a508a0dc636bea93c6c13f2be0c4",
+      "mode": 493,
+      "size": 2606,
+      "sha256": "63a7fcdb076fbfaee33da8d929191d70342ffb6827f683b876c57013f3ffd84f"
+    },
+    "docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/README.md": {
+      "index_mode": "100644",
+      "index_oid": "873269256db6f74cdc6af5c849f7111cad4c5b1f",
+      "mode": 420,
+      "size": 9330,
+      "sha256": "9b07cb10e9917d6b698b21408548ba1f1602ba46771adb0e4a4048eec2a5c357"
+    },
+    "docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/SETUP.md": {
+      "index_mode": "100644",
+      "index_oid": "a8adf9e43b4dfb545dbc1d0a665f0eacddc7fde8",
+      "mode": 420,
+      "size": 6732,
+      "sha256": "811c5f82452a772ab22c13a80da987bbe9371bed281a8ebc8d0c2164a8e2f690"
+    },
+    "docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/evidence/03-number-unit-tokens.eadl": {
+      "index_mode": "100644",
+      "index_oid": "82ebd7654858e39cafafe4ebc38074fff3f02e4f",
+      "mode": 420,
+      "size": 44,
+      "sha256": "14eda77862171901d480da4696d410f3a5e4a75992d5b7baca329d9a4041b7bf"
+    },
+    "docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/evidence/04-quoted-string.eadl": {
+      "index_mode": "100644",
+      "index_oid": "f7610f0cf75e8e5579285f9456221aa80ad1c259",
+      "mode": 420,
+      "size": 18,
+      "sha256": "69b8aab7727ee03e37e620964a8402746934563ad048d5fe622c3166f8f76311"
+    },
+    "docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/evidence/05-bare-symbol.eadl": {
+      "index_mode": "100644",
+      "index_oid": "5b6bd45ea3194eb2fe539123029ba91fee2c55bf",
+      "mode": 420,
+      "size": 16,
+      "sha256": "2127d9e0987cb8cc96ad1b628efe223ed06007b698ebfcc32d359223e8f481b4"
+    },
+    "docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/evidence/EXPECTED.txt": {
+      "index_mode": "100644",
+      "index_oid": "037eca16beb6ced15cb3835241ce0e836b4e5e30",
+      "mode": 420,
+      "size": 443,
+      "sha256": "77d1cd8709e411778d051af1c17800cb6fa5d447ce31ba083f3586f81943ecf4"
+    },
+    "docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/evidence/REMEASURED.txt": {
+      "index_mode": "100644",
+      "index_oid": "26de8df77f3235950e5c210d4cfab5ece983e8a4",
+      "mode": 420,
+      "size": 5931,
+      "sha256": "476ef9cafde979e00336f08284f93ff1339b0eab563efe1b0b9f9686d092d007"
+    },
+    "docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/remeasure.sh": {
+      "index_mode": "100755",
+      "index_oid": "c5d22bc999cec16c3ea56fbca123681421e19c85",
+      "mode": 493,
+      "size": 12738,
+      "sha256": "4affd721e0c7968d18821e8052a51b28df4d97bdb0ae964ccea91b4ef7ff187f"
+    },
+    "docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/repro.sh": {
+      "index_mode": "100755",
+      "index_oid": "99b5e2bc1e887014ddc095387c86389c8e264068",
+      "mode": 493,
+      "size": 2606,
+      "sha256": "a9f0f4dcd901ac02542fa0053e56def2127ba9e45a149390dae2c6365a993f53"
+    },
+    "docs/feedback/linkedspec/issues/LS-004-bootstrap-false-success/README.md": {
+      "index_mode": "100644",
+      "index_oid": "3f4a422d326b841293a498258545598f4bfa22df",
+      "mode": 420,
+      "size": 10793,
+      "sha256": "c013bc4ac0f91d53484884ec76804118f5e096d75215c403ae1ce9517f5dc695"
+    },
+    "docs/feedback/linkedspec/issues/LS-004-bootstrap-false-success/SETUP.md": {
+      "index_mode": "100644",
+      "index_oid": "cc5ef78d4f78db5b431fa825497c97c3064cd4fc",
+      "mode": 420,
+      "size": 5466,
+      "sha256": "f3a9f1a13f47c52c8d9a7f8a24d9c4bffc27d598d391fb79def42e34b58a58f7"
+    },
+    "docs/feedback/linkedspec/issues/LS-004-bootstrap-false-success/UPSTREAM.md": {
+      "index_mode": "100644",
+      "index_oid": "1ac9de5a8f6aaaaa92580ed270d4f889c48ae69f",
+      "mode": 420,
+      "size": 4645,
+      "sha256": "661e8fdec916d5215e99f139c6eee092b95a0ca18ddb383a0aec98a2b881e561"
+    },
+    "docs/feedback/linkedspec/issues/LS-004-bootstrap-false-success/evidence/OBSERVED.txt": {
+      "index_mode": "100644",
+      "index_oid": "a7161605aa67801f32fce4554943a312e9c892f0",
+      "mode": 420,
+      "size": 919,
+      "sha256": "beffd680d0e3a63415dcd95f3fa9271c6d50c7e15a225d3eb01d874c6da55014"
+    },
+    "docs/feedback/linkedspec/issues/LS-004-bootstrap-false-success/evidence/REMEASURED.txt": {
+      "index_mode": "100644",
+      "index_oid": "58a215fd6bbdee05cab701f0d32523ff04f3c2f4",
+      "mode": 420,
+      "size": 14842,
+      "sha256": "9c88a58fa533199355942b30d6f6f4c01dde59436ce93d9cb939761088c56bc4"
+    },
+    "docs/feedback/linkedspec/issues/LS-004-bootstrap-false-success/remeasure.sh": {
+      "index_mode": "100755",
+      "index_oid": "23cb70548a45f4d7e6f9867cc11d334d66404c50",
+      "mode": 493,
+      "size": 19991,
+      "sha256": "4773775535f3368d963ccc0d88d3eaffbbc90ef1d040f9c32373f81ebae57b35"
+    },
+    "docs/feedback/linkedspec/issues/LS-004-bootstrap-false-success/repro.sh": {
+      "index_mode": "100755",
+      "index_oid": "a568812886bbe4f7da62134c1911fb62d3eb7c76",
+      "mode": 493,
+      "size": 3205,
+      "sha256": "f409d8401c58ce54a68e54046960b275c15cda2cd16d5a027cfc3f74bc1442ca"
+    },
+    "docs/feedback/linkedspec/issues/LS-005-guide-ordering/README.md": {
+      "index_mode": "100644",
+      "index_oid": "162a558234da640b8fea795db483c82e87f46868",
+      "mode": 420,
+      "size": 7996,
+      "sha256": "5273129fcd767b32f115cfe19c8592f69dea50dfeb3b1ccb7435ffea2ccc9d38"
+    },
+    "docs/feedback/linkedspec/issues/LS-005-guide-ordering/SETUP.md": {
+      "index_mode": "100644",
+      "index_oid": "08bb4dfc915194a29e03d3afee2bcc2f216ede31",
+      "mode": 420,
+      "size": 2808,
+      "sha256": "832a7a97a9a6512fd374c21390f3d0a676be0e56748ecb8dda1bd3e8c09dbc49"
+    },
+    "docs/feedback/linkedspec/issues/LS-005-guide-ordering/evidence/OBSERVED.txt": {
+      "index_mode": "100644",
+      "index_oid": "7d838663f15c1c9af0e36bc4138b19cf7495c12d",
+      "mode": 420,
+      "size": 604,
+      "sha256": "ba93f8c7a02c9b3b052e88afcc8dfd05ed2cc9fa14a87bb8a7dd77c6a2243987"
+    },
+    "docs/feedback/linkedspec/issues/LS-005-guide-ordering/evidence/REMEASURED.txt": {
+      "index_mode": "100644",
+      "index_oid": "d3cd092ce748c6b6e34896541177cfbdc9e6e373",
+      "mode": 420,
+      "size": 4164,
+      "sha256": "5270ef75700298574ab290bdb62a50d74055f0df73135b8aef6b25eef664ca53"
+    },
+    "docs/feedback/linkedspec/issues/LS-005-guide-ordering/remeasure.sh": {
+      "index_mode": "100755",
+      "index_oid": "bbe3aaf5f3c559fe93cd60566695513db82f672d",
+      "mode": 493,
+      "size": 10234,
+      "sha256": "7e42be2d576473c798c90b1c33d0f2e4d71f9bfe48313170d98e534e64e1e97b"
+    },
+    "docs/feedback/linkedspec/issues/LS-005-guide-ordering/repro.sh": {
+      "index_mode": "100755",
+      "index_oid": "6840e442fbb8d5ab78cd5d09e2253684014d6b1d",
+      "mode": 493,
+      "size": 2277,
+      "sha256": "90853e0883026254dde14d45b01435e6c899f2f8942075e7633f8bf0f1dc4bf5"
+    },
+    "docs/feedback/linkedspec/issues/LS-006-hex-underscore-withdrawn/README.md": {
+      "index_mode": "100644",
+      "index_oid": "b353ef7681314657970aa43268870a0c964713d5",
+      "mode": 420,
+      "size": 2867,
+      "sha256": "4c9cd3c729fde06a5dabd2ad9bad9115d58b57ba6c830308fb51201f56009793"
+    },
+    "docs/feedback/linkedspec/issues/LS-006-hex-underscore-withdrawn/SETUP.md": {
+      "index_mode": "100644",
+      "index_oid": "ed8e3f51b1f3a2243cacac8168bf44ec479f6add",
+      "mode": 420,
+      "size": 3131,
+      "sha256": "fbd27fa9c34d39de13faf8d53c1320ee52abd9ccfa35a23f96a0857b7a898b70"
+    },
+    "docs/feedback/linkedspec/issues/LS-006-hex-underscore-withdrawn/evidence/02-hex-literal-underscore.eadl": {
+      "index_mode": "100644",
+      "index_oid": "f2e4daf3b55cfb4e8d081751181b50ff2d0549b8",
+      "mode": 420,
+      "size": 41,
+      "sha256": "65b50fc1adb60d7fb4dc62c023b5118c9885a02fe0c5234d727235bc7fdfb670"
+    },
+    "docs/feedback/linkedspec/issues/LS-006-hex-underscore-withdrawn/evidence/EXPECTED.txt": {
+      "index_mode": "100644",
+      "index_oid": "af1310d3f0ead77980778ddd34c58b5aca3345a7",
+      "mode": 420,
+      "size": 310,
+      "sha256": "acc1eafac6f0971bc917360ad8bbc827a4e817aad2c428c33c88aa89ddcd1114"
+    },
+    "docs/feedback/linkedspec/issues/LS-006-hex-underscore-withdrawn/repro.sh": {
+      "index_mode": "100755",
+      "index_oid": "055d35fe7b885d96a579836a3dd3fab27f191cd4",
+      "mode": 493,
+      "size": 2606,
+      "sha256": "f7b0407ec554a77a95120d844d07f0eba089cb8406d484dc8abf03a7d4849090"
+    },
+    "docs/feedback/linkedspec/issues/LS-007-adjacent-fragment-join/README.md": {
+      "index_mode": "100644",
+      "index_oid": "9ab2f57421e93ecaa0efbdcb744656744f1a481e",
+      "mode": 420,
+      "size": 2875,
+      "sha256": "ea48a7b8081c1fb8e12e72c0da4dd77bf99a4d27dedae93d592dd03179b106ea"
+    },
+    "docs/feedback/linkedspec/issues/LS-007-adjacent-fragment-join/SETUP.md": {
+      "index_mode": "100644",
+      "index_oid": "0db911d314028663b9a5cc4b1de1c99e83d00c37",
+      "mode": 420,
+      "size": 3131,
+      "sha256": "b19ba276b669ace92fb998486c170403bb200b24080fb4c75ecf0b8e87a3bda9"
+    },
+    "docs/feedback/linkedspec/issues/LS-007-adjacent-fragment-join/evidence/11-adjacent-fragment-join.eadl": {
+      "index_mode": "100644",
+      "index_oid": "ed53f0aa3dca2ee418cab06e661628a8ffe68f0a",
+      "mode": 420,
+      "size": 14,
+      "sha256": "78b3bc394ab9790b9883b8da4e21b71b7d22a09f0121fa87dfdea0293e9a0591"
+    },
+    "docs/feedback/linkedspec/issues/LS-007-adjacent-fragment-join/evidence/EXPECTED.txt": {
+      "index_mode": "100644",
+      "index_oid": "f809ce5a54280692182ce94d13700b8920901f16",
+      "mode": 420,
+      "size": 271,
+      "sha256": "cf4c6ddafbf050a68797d48127f531d3b1d60a337b14c7829aa1f387c1fc6f24"
+    },
+    "docs/feedback/linkedspec/issues/LS-007-adjacent-fragment-join/repro.sh": {
+      "index_mode": "100755",
+      "index_oid": "b300b9e206231a0de90516e7c2ff4569ad5c3a82",
+      "mode": 493,
+      "size": 2606,
+      "sha256": "7c48b6404a7f9f013f9dc0988cf1d6f3c92cc5824236fe97dc6a0c2c5d10433b"
+    },
+    "docs/feedback/linkedspec/issues/LS-008-preparation-log-volume/README.md": {
+      "index_mode": "100644",
+      "index_oid": "db9019a7762e6988e7d357936833de039d69989c",
+      "mode": 420,
+      "size": 3671,
+      "sha256": "243e1c77d61fc1b110c6673e048d06280b1a44a56c4ad715953abab5db192467"
+    },
+    "docs/feedback/linkedspec/issues/LS-008-preparation-log-volume/SETUP.md": {
+      "index_mode": "100644",
+      "index_oid": "1af28fb8ccb9a459d6d2d167c44bc226d4cf81a1",
+      "mode": 420,
+      "size": 2962,
+      "sha256": "99d9bbb4c2ff011f5cb31761d33fda140bad59ce37ae799c5dc3037adb28bb21"
+    },
+    "docs/feedback/linkedspec/issues/LS-008-preparation-log-volume/evidence/MEASURED.txt": {
+      "index_mode": "100644",
+      "index_oid": "143fc1d383c1f149d70125fd0fbf160fe88113f2",
+      "mode": 420,
+      "size": 2481,
+      "sha256": "e2e17ecae7b1763b8fa6a98769e7da193c01e84a0c9bd612437a3fb3b602b11c"
+    },
+    "docs/feedback/linkedspec/issues/LS-008-preparation-log-volume/repro.sh": {
+      "index_mode": "100755",
+      "index_oid": "1e3f24b0ce773bee99cad037fe25fa0df559b0b0",
+      "mode": 493,
+      "size": 6791,
+      "sha256": "65c36aebf65f6d26df291c3c8468042913ac93ec423556acab4b2755eabe9d9e"
+    },
+    "docs/figures.md": {
+      "index_mode": "100644",
+      "index_oid": "fa07395ed6c7ad9d826b9c609ff20a2e3ab3549e",
+      "mode": 420,
+      "size": 13009,
+      "sha256": "bca3e354c4a0158694b0f8af166bb1dba5809900a7d33dd314f684feaabf40d4"
+    },
+    "docs/history/INDEX.md": {
+      "index_mode": "100644",
+      "index_oid": "30013c77f45a5cc0ac6d1a745e7ad44aea9964cd",
+      "mode": 420,
+      "size": 6597,
+      "sha256": "18d310999ca71b0387e42792bf00129372d30f066cd217849760ff9689f7786c"
+    },
+    "docs/history/changelog/0001.md": {
+      "index_mode": "100644",
+      "index_oid": "1885becefe1adb6c60d2b17a4de1348387655890",
+      "mode": 420,
+      "size": 37750,
+      "sha256": "7a00002bca6abfffae6833cd539755395f4e9fa5e71a51aeec3534c34ed529d5"
+    },
+    "docs/history/changelog/0002.md": {
+      "index_mode": "100644",
+      "index_oid": "869761405fbe22431579aebdf9396770f6955f1c",
+      "mode": 420,
+      "size": 49032,
+      "sha256": "784f56d088d43a44a0fde8b5e6a341ffd35ee25779930847c01a3f119694318b"
+    },
+    "docs/history/changelog/0003.md": {
+      "index_mode": "100644",
+      "index_oid": "7c13cfcc1ecaf7c4440b0fec3e19dcac0d585915",
+      "mode": 420,
+      "size": 72112,
+      "sha256": "7a459c541b8ee3389e1fa5f5b4157ca26aac86a09d7fa1fb390a33eb5f4b99cb"
+    },
+    "docs/history/changelog/0004.md": {
+      "index_mode": "100644",
+      "index_oid": "cde238695577247e48ffc61f3f7b029e1418f41f",
+      "mode": 420,
+      "size": 82280,
+      "sha256": "68ca2ee9f1157e7b90bb15dc7df74a7b1d49ff182be10ced3019304aefd8d587"
+    },
+    "docs/history/changelog/0005.md": {
+      "index_mode": "100644",
+      "index_oid": "b1275ac3e026a32812aada162860f872f5e0f20b",
+      "mode": 420,
+      "size": 23774,
+      "sha256": "a7a5e3d0aa897c985b592fa868ff7d5c25bc08144148e5caa02511dbed554687"
+    },
+    "docs/history/changelog/0006.md": {
+      "index_mode": "100644",
+      "index_oid": "c1451c94ea72ce0264ba04b84052701fb45cebb6",
+      "mode": 420,
+      "size": 16088,
+      "sha256": "33efd9d9ae7c38340fb97bafb82576643db394c8c3ec2aa0650f39705aa58736"
+    },
+    "docs/history/changelog/0007.md": {
+      "index_mode": "100644",
+      "index_oid": "d22184ab13833daa5b4fbbf02931e10340cc5603",
+      "mode": 420,
+      "size": 14811,
+      "sha256": "318c8e0911f2b79dc5bc1c2065047086297284394bcc113bc76b206ff22d7f2a"
+    },
+    "docs/history/changelog/0008.md": {
+      "index_mode": "100644",
+      "index_oid": "e5927787c5f9ca815d2d08f27ee5243adda42cd0",
+      "mode": 420,
+      "size": 20852,
+      "sha256": "884604cbbbac3cbe6e92ad39b72ac5499352ab9f6ec4475b27c55532e9dadebe"
+    },
+    "docs/history/changelog/0009.md": {
+      "index_mode": "100644",
+      "index_oid": "b8e12d8da45da948abd05bc13dd787aa22736c5b",
+      "mode": 420,
+      "size": 19565,
+      "sha256": "ee49731606175949515ac26ddb69f66bc4620e1ae38b422180f99d95f9350773"
+    },
+    "docs/history/changelog/0010.md": {
+      "index_mode": "100644",
+      "index_oid": "8c2ac71d26fdf1a616edad9299bfee1ce3cf2ec9",
+      "mode": 420,
+      "size": 20386,
+      "sha256": "aafcab4e456ff82f5ef573da698e4e2d95cc05ecb0323adc3db43083a77fd874"
+    },
+    "docs/history/changelog/0011.md": {
+      "index_mode": "100644",
+      "index_oid": "6aba3887e6432b6b748ac70c7fed2731a499f155",
+      "mode": 420,
+      "size": 13247,
+      "sha256": "d3aea1265d74f9fbc827f244baca981f459d502ddbb95b7be4ae5d14fb25b516"
+    },
+    "docs/history/changelog/0012.md": {
+      "index_mode": "100644",
+      "index_oid": "384b3fef3beb02d56ec64c4e85b0f357c0395a17",
+      "mode": 420,
+      "size": 10619,
+      "sha256": "55fd5f111283488dd59b4b63a9a096111b4e7e1e615ce5154237e10b92e4ed9a"
+    },
+    "docs/history/changelog/0013.md": {
+      "index_mode": "100644",
+      "index_oid": "bd5dc85c46e3848976d06a86620933a1a626e1ea",
+      "mode": 420,
+      "size": 9115,
+      "sha256": "230383e71dcd40179ec38fbe18e52ce184890fc0c028faec409b2b20e8ca6679"
+    },
+    "docs/history/changelog/0014.md": {
+      "index_mode": "100644",
+      "index_oid": "03f51ada1959fdda62b11e4227ee056b1e47a36b",
+      "mode": 420,
+      "size": 10564,
+      "sha256": "1f690242d1437821814ead85b348656d95821e7de1cf81300067564af1bf36e8"
+    },
+    "docs/history/changelog/0015.md": {
+      "index_mode": "100644",
+      "index_oid": "6b65c6fb38eae5d14972d7cc46e28ff0cc6a89b5",
+      "mode": 420,
+      "size": 11546,
+      "sha256": "d4ddb48d81392ba61140dac3745644fe85279611c5cde05ed53021a8d65d1a50"
+    },
+    "docs/history/changelog/0016.md": {
+      "index_mode": "100644",
+      "index_oid": "377082df086aab666e5c44dd486c2dfe2f0d4094",
+      "mode": 420,
+      "size": 14749,
+      "sha256": "01946829ad1902fa77a186285b476ed7b932be32a3d95aa6d7271a2af305d2ed"
+    },
+    "docs/history/changelog/0017.md": {
+      "index_mode": "100644",
+      "index_oid": "3bc3b6397ce9a3c9cf890280897b62972e457a09",
+      "mode": 420,
+      "size": 10440,
+      "sha256": "64392fceedff79aa9c19517626461d855eea5983384a12f8f1d563ce5a8cd7c7"
+    },
+    "docs/history/changelog/0018.md": {
+      "index_mode": "100644",
+      "index_oid": "579678d6f74c0fcca0df4598d2d8f24f8d3a7b09",
+      "mode": 420,
+      "size": 11087,
+      "sha256": "78db9dfe0903d76c7c0373c7b3d1fe8d0b6200e2fbe857100b402e97d11eec0e"
+    },
+    "docs/history/changelog/0019.md": {
+      "index_mode": "100644",
+      "index_oid": "b4db15d306252d7a0804e0ebd9b3163556870d64",
+      "mode": 420,
+      "size": 11530,
+      "sha256": "fa797a320c32a73216cf2cd0fc9775be35319de9cd192cb56066a27966aa28b6"
+    },
+    "docs/history/changelog/0020.md": {
+      "index_mode": "100644",
+      "index_oid": "58ef94ff5680f43c9312acde51166fc130d7d554",
+      "mode": 420,
+      "size": 16200,
+      "sha256": "953a5a83c5668ad1868645d9b2da14ff4ab79e973c34290b2a9912b895bf17f9"
+    },
+    "docs/history/changelog/0021.md": {
+      "index_mode": "100644",
+      "index_oid": "ba7063a9cf71b1b688089cf0d0f8c1e0c983c6f8",
+      "mode": 420,
+      "size": 15281,
+      "sha256": "11cfd70c00075ff34fcbca1410b84eac7cd7df0ba3b246d7c5a578984146bb1e"
+    },
+    "docs/history/changelog/0022.md": {
+      "index_mode": "100644",
+      "index_oid": "4d5638813c55bcf55ae8638af23ee23e7d58542e",
+      "mode": 420,
+      "size": 16041,
+      "sha256": "72c60561cf516390702c784b8035c33cbcb536a7b3cf551018bc7860c8a525bb"
+    },
+    "docs/history/changelog/0023.md": {
+      "index_mode": "100644",
+      "index_oid": "d0479fe5ad87966c64eb77e8871b295bb7cc06fa",
+      "mode": 420,
+      "size": 17788,
+      "sha256": "4cf37c2ff3832ee88977f27c65c2aa35168d8d0edaff7548521a971291bed13b"
+    },
+    "docs/history/changelog/0024.md": {
+      "index_mode": "100644",
+      "index_oid": "e9340fe0448a1fab11892d83e3c4e936485db51e",
+      "mode": 420,
+      "size": 20147,
+      "sha256": "cb8fe56317f379fba7d26b94c9d99e5bfdc50094d500b72aa065ce761a4b4bb2"
+    },
+    "docs/history/changelog/0025.md": {
+      "index_mode": "100644",
+      "index_oid": "0b11758fadf6407c8f99f215ff4e015e456def97",
+      "mode": 420,
+      "size": 24084,
+      "sha256": "53e9f975ccd67cf857abc3fba6bbc97fffd81c8a2ddaa16bbd1c3335dd7c59bb"
+    },
+    "docs/history/changelog/0026.md": {
+      "index_mode": "100644",
+      "index_oid": "645973463b1735215399716ed9924b6b696c6fc6",
+      "mode": 420,
+      "size": 19922,
+      "sha256": "7c9aea6df9701c088e81911623b1f87fd46f4d142283790098e4906bbb751b5a"
+    },
+    "docs/history/changelog/0027.md": {
+      "index_mode": "100644",
+      "index_oid": "7a69a2e81868d2238f7d2248300436828d12dfca",
+      "mode": 420,
+      "size": 20577,
+      "sha256": "eaf87684c0796eb776e17d19aee60f210a5f58b190463601f7fdeffcdf7c70c3"
+    },
+    "docs/history/changelog/0028.md": {
+      "index_mode": "100644",
+      "index_oid": "f591cdca4f734a6dbbe1350fdda755625f9ecc85",
+      "mode": 420,
+      "size": 17539,
+      "sha256": "5b97b4062317685cf67a8d4b7006ba16187a19a8ea52863ea8bc99b44b216848"
+    },
+    "docs/history/changelog/0029.md": {
+      "index_mode": "100644",
+      "index_oid": "6ee08534dc6435315dead36138d251b012d7a652",
+      "mode": 420,
+      "size": 18717,
+      "sha256": "ecbc00753de3503f84a97bd96195d14e40de2e10066df24004bc10341eb11bd0"
+    },
+    "docs/history/changelog/0030.md": {
+      "index_mode": "100644",
+      "index_oid": "8792fd4852d0e1b61b2671842607f7c92cc9e59d",
+      "mode": 420,
+      "size": 16098,
+      "sha256": "4c944cd9863681f6ecd573b32fccd5c578f059e43e0225c09fc0c3b639a0785d"
+    },
+    "docs/history/changelog/0031.md": {
+      "index_mode": "100644",
+      "index_oid": "16b454ff5f4b5418c7a084d8afd4e50a2dee9329",
+      "mode": 420,
+      "size": 16396,
+      "sha256": "d28d193e887270f6a8d324003c9a3aff97b650259e06747572491dbacc7bcc21"
+    },
+    "docs/history/changelog/0032.md": {
+      "index_mode": "100644",
+      "index_oid": "88568a5205c1e4a5dbd678ac44ab4ad85e1e05da",
+      "mode": 420,
+      "size": 14998,
+      "sha256": "127b6d911b2b6e2c07e8393b06c515eb374ca063af19f687f85ec965426833ad"
+    },
+    "docs/history/dev-notes/0001.md": {
+      "index_mode": "100644",
+      "index_oid": "a350d77878b37ce793809188875d788b9e16a4b8",
+      "mode": 420,
+      "size": 11571,
+      "sha256": "5389a5a78e424788467eab02e6db034d1ca0ca0e4978a73c92246083c82cb9a3"
+    },
+    "docs/history/dev-notes/0002.md": {
+      "index_mode": "100644",
+      "index_oid": "91d8e30ee90c9abb10554e9e6654ff8ef6c32489",
+      "mode": 420,
+      "size": 18835,
+      "sha256": "7df1b95f0adc2f5826b54ec87861a6ad89c2d42aac20e54e24b5c39114b2b7f4"
+    },
+    "docs/history/dev-notes/0003.md": {
+      "index_mode": "100644",
+      "index_oid": "c83071463f98eb89c532f1778089a15fb73abec2",
+      "mode": 420,
+      "size": 28638,
+      "sha256": "ec4711680c571aae8c1fd948febe78ffe4ee3fc6ac99875ab001860eb287b67c"
+    },
+    "docs/history/dev-notes/0004.md": {
+      "index_mode": "100644",
+      "index_oid": "3ad30b7867406dca642bf15067ef1da3c818882a",
+      "mode": 420,
+      "size": 32716,
+      "sha256": "56e78ea3ade53e9bdc472033e9eae9a3bd4c192625e07b2d826995a1b84970bf"
+    },
+    "docs/knowledge/INDEX.md": {
+      "index_mode": "100644",
+      "index_oid": "2a815d43d7f526f71eed6276109e7f5817719f2f",
+      "mode": 420,
+      "size": 6676,
+      "sha256": "b00e31e9c0323ef17b61865eb9a434651b6629dc109ed6ed20482e905d53df27"
+    },
+    "docs/knowledge/a-byte-offset-is-not-a-character.md": {
+      "index_mode": "100644",
+      "index_oid": "69c3bdf511b53bf5ddd57746cd9682c51271aa8a",
+      "mode": 420,
+      "size": 2451,
+      "sha256": "2a3bc73a1f2a58cb345c66dce10b120703eeac581cf58a9bf39bc371f4298f8e"
+    },
+    "docs/knowledge/a-fix-that-adds-a-route-does-not-retire-the-old-one.md": {
+      "index_mode": "100644",
+      "index_oid": "aa730e2bb09dcf369e46d8e71c58ac5c5725d138",
+      "mode": 420,
+      "size": 4433,
+      "sha256": "fdb58d868b3476e0ecaa8eee65459223ebe256f54a3a650401bed0e2da950102"
+    },
+    "docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md": {
+      "index_mode": "100644",
+      "index_oid": "3ecb1f07a14428625861919e6f2d778e48dffad8",
+      "mode": 420,
+      "size": 8976,
+      "sha256": "e945e2d6a465290bba9ecbda6f6fcfc7f5284f4f645b0dd733aaa7a86bcf9ace"
+    },
+    "docs/knowledge/a-leafs-claims-about-the-repository-are-hypotheses.md": {
+      "index_mode": "100644",
+      "index_oid": "11e5a82787044f1e028ff6a3c9e27c09d83b0f76",
+      "mode": 420,
+      "size": 7945,
+      "sha256": "2633dd01104b5da1de860484f9b4440081eb433227f4c97cb2cdd3e5dc182a6c"
+    },
+    "docs/knowledge/a-moved-measurement-needs-a-census-of-its-copies.md": {
+      "index_mode": "100644",
+      "index_oid": "14d7fa80ca4da4faa23e0f5389c3a96c0080776d",
+      "mode": 420,
+      "size": 11194,
+      "sha256": "4e580dfff217c9b853cc1bfb7fbe684e52f45368b8a911d6c20874d684201b34"
+    },
+    "docs/knowledge/a-negative-pid-is-an-option-to-the-kill-program.md": {
+      "index_mode": "100644",
+      "index_oid": "ff568f545eda981e5809c2cae198889b969cbc2f",
+      "mode": 420,
+      "size": 2980,
+      "sha256": "f3ee2ea07722466f8ded9ca82d7c60f03d873f529b8ddbc4f06716f292cc50c4"
+    },
+    "docs/knowledge/a-rule-only-in-the-prompt-is-enforced-nowhere.md": {
+      "index_mode": "100644",
+      "index_oid": "770b550e620dc38c68db39069f9d579456e678a1",
+      "mode": 384,
+      "size": 5503,
+      "sha256": "191decd36b37dd61ddbdd4714f442002107fcd12c063436c92b78f4210a9c54e"
+    },
+    "docs/knowledge/a-verified-row-must-name-what-you-still-owe.md": {
+      "index_mode": "100644",
+      "index_oid": "0321a7ddd3d0d2a4e61054aa2e08721e81de4fa3",
+      "mode": 420,
+      "size": 4579,
+      "sha256": "9af801f71f287afac9bada2bd2d5cf17a7d25f0bc9fe9e6bb6c5081287353056"
+    },
+    "docs/knowledge/an-answer-to-a-review-must-keep-what-earlier-answers-carried.md": {
+      "index_mode": "100644",
+      "index_oid": "b8b66885571bbd27f71a5dcc6579db383ad30070",
+      "mode": 420,
+      "size": 4093,
+      "sha256": "0afd3bca352059bbe17ade19a7d5a23bcf63184035aea62e724dfbb6eac92f52"
+    },
+    "docs/knowledge/an-existence-census-cannot-see-a-discarded-result.md": {
+      "index_mode": "100644",
+      "index_oid": "aca393932fe547078838b725247593ad757da7b7",
+      "mode": 420,
+      "size": 7909,
+      "sha256": "a3cf929b11c1306507d6b5d5443c61d1c9b8f75a7e56822450ef4ffa770b18ae"
+    },
+    "docs/knowledge/an-oracle-is-independent-by-construction.md": {
+      "index_mode": "100644",
+      "index_oid": "58cee41e3ada011c1e6cfff7e65ed26169702138",
+      "mode": 420,
+      "size": 7729,
+      "sha256": "38d640898626aa7103d099b5bd6d376d02824d3703e5862fe2e264976345c074"
+    },
+    "docs/knowledge/closing-a-leaf-whose-work-landed-elsewhere.md": {
+      "index_mode": "100644",
+      "index_oid": "e9ce258473214e2c5d365f8fbbba99f5ce155793",
+      "mode": 420,
+      "size": 2820,
+      "sha256": "129693953aaaf1d5f555f935347b79c0c677942c856bd585de1fa699e93e5391"
+    },
+    "docs/knowledge/cross-tree-lockstep-and-commit-scope.md": {
+      "index_mode": "100644",
+      "index_oid": "5d16ce05f1494c11d443508ea89307afe312f0b9",
+      "mode": 420,
+      "size": 4407,
+      "sha256": "1779649972b77389bdcacf3a28be38f3ada66fbba5512e63a05705e74ed4f31b"
+    },
+    "docs/knowledge/doctrine-seams-vs-forking-a-check.md": {
+      "index_mode": "100644",
+      "index_oid": "eac280e8579fee6dbaad0f88e356f2ebf1d8f8fb",
+      "mode": 420,
+      "size": 2777,
+      "sha256": "153bb52f6099280dc9553e4d7abbe95622a619982cdf282ae5bdca7d766e7e4f"
+    },
+    "docs/knowledge/enumerate-the-population-from-the-specification.md": {
+      "index_mode": "100644",
+      "index_oid": "e989fc5a1e1f980eba1d64f9c39d179c65a6067c",
+      "mode": 420,
+      "size": 8445,
+      "sha256": "017ba69683243adb6c597ee0068b067b869b292f86419f32523134eb3e23548d"
+    },
+    "docs/knowledge/frozen-reproducers-measure-change-not-repair.md": {
+      "index_mode": "100644",
+      "index_oid": "c3cee7a13096c8d1a3a83b72c8eb09c2eea00fc8",
+      "mode": 420,
+      "size": 4339,
+      "sha256": "341b2eb3660d72727fd2440303ac250d99f886299227b6a7f3fbe1c327fcfeea"
+    },
+    "docs/knowledge/make-the-rule-a-constructor-precondition.md": {
+      "index_mode": "100644",
+      "index_oid": "d25cc7d2fe7681d62a01c4dd016d37751eab8407",
+      "mode": 420,
+      "size": 3718,
+      "sha256": "1332945243f6bf7497e9c34679b8264ed922a88144be63ca17ff598b70946041"
+    },
+    "docs/knowledge/pin-the-vendor-head-and-measure-the-delta.md": {
+      "index_mode": "100644",
+      "index_oid": "17c029a20647d9a2322360eb415e4d2c13e495fe",
+      "mode": 384,
+      "size": 4308,
+      "sha256": "25d11a169cd0ec97a083bff50b5e59bad08df8b95189f255ff483d2cf1dcf019"
+    },
+    "docs/knowledge/presence-checks-cannot-see-an-extra-key.md": {
+      "index_mode": "100644",
+      "index_oid": "d0b4a85ea1589c03817113c5e430be92b8d64de6",
+      "mode": 420,
+      "size": 4759,
+      "sha256": "c96e77a421a4a3df61742e16af199452d4e8289b4c3f5e158ecc77c49d0b3407"
+    },
+    "docs/knowledge/prose-beside-data-goes-unenforced.md": {
+      "index_mode": "100644",
+      "index_oid": "3a31ae3a27a6ac21ddf459b620eea5710700a8d0",
+      "mode": 420,
+      "size": 3175,
+      "sha256": "a3717302c9987914aa14553d6573ef269d3b9070c222180209ccb3136a49e78e"
+    },
+    "docs/knowledge/prove-the-artifact-was-regenerated-not-just-present.md": {
+      "index_mode": "100644",
+      "index_oid": "cac75741fc04968a1308e16db65ad06383762625",
+      "mode": 420,
+      "size": 4576,
+      "sha256": "df64f98f16726536d59ebe7842e90a5c76f29f977980a06f9e29f9e84e6ad84c"
+    },
+    "docs/knowledge/scope-a-census-by-the-rule-not-by-the-folder.md": {
+      "index_mode": "100644",
+      "index_oid": "7dbc9e4b733dd0a76add5fd7e8fcbbe82bb09b25",
+      "mode": 420,
+      "size": 2507,
+      "sha256": "859f1a436b13be13f46f118f8ad62cade76132d61931eac73fc7f87601eb0c18"
+    },
+    "docs/knowledge/verify-the-mutation-applied.md": {
+      "index_mode": "100644",
+      "index_oid": "07cad30ae76756715f38b663cf46dbf01da9c0f0",
+      "mode": 420,
+      "size": 11911,
+      "sha256": "583e7be56b199a032b6c8a0437ec61833b984b3576f5ceb940ee2385ebf04146"
+    },
+    "docs/profiles/rt-static-up-v1-faults-observation.md": {
+      "index_mode": "100644",
+      "index_oid": "ec59c6c041bf569759535f98198bbf8d266fbd79",
+      "mode": 420,
+      "size": 17256,
+      "sha256": "1e76fc19644c340f269d51f6d94e594be8d67f1c27add4a8bc82006b0c3a9774"
+    },
+    "docs/profiles/rt-static-up-v1-faults.md": {
+      "index_mode": "100644",
+      "index_oid": "1755f77af1343a3d1e0356029fb4a2f2b60a456b",
+      "mode": 420,
+      "size": 54520,
+      "sha256": "6f38f5026d489ed379fd313660319137e538e9ea8e116eb5c6c08e3746d57464"
+    },
+    "docs/profiles/rt-static-up-v1.md": {
+      "index_mode": "100644",
+      "index_oid": "ce6251d38d29610caa8fd55611f092a11aad2d7d",
+      "mode": 420,
+      "size": 7282,
+      "sha256": "54bd59b227536c00d19119f1741b4ceb41574317af6d154eb6dcb842c583bea4"
+    },
+    "docs/review-history/INDEX.md": {
+      "index_mode": "100644",
+      "index_oid": "f5bcd084e213793f101225bebb2ea3c24efb7b08",
+      "mode": 420,
+      "size": 2962,
+      "sha256": "5c97a2beb6ea8e3f9475dd4d96f8a8dd298560fdc4a0e5327c8a35b6cc826674"
+    },
+    "docs/review-history/decision-history-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "20ba93a0d9d1a1159bc62a30cba745e46f7ddd03",
+      "mode": 420,
+      "size": 5379,
+      "sha256": "6f85f76ee26efc72dcdaeeee8b8205268f0bfb522dfd3007a348138d37d592f9"
+    },
+    "docs/review-history/decision_catalog-records-port-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "66b91783bba03d97d9df471afd5d9264fa19d8d3",
+      "mode": 420,
+      "size": 28075,
+      "sha256": "3ba9dd5d3d70a6b56cef1ca49621899835ec8e6d42c185ade7012c74e9beee99"
+    },
+    "docs/review-history/decision_catalog-records-port-statement-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "6b042dce651e76bb9673fd84b96c776e8c721e69",
+      "mode": 420,
+      "size": 31550,
+      "sha256": "ab2d8a6ede55bc579d2516ffa528c74b2d19f29badc9c7989301b655396497cf"
+    },
+    "docs/review-history/decision_catalog-records-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "964abd0ccec28daac3bdc16fd9d30c56ea36204e",
+      "mode": 420,
+      "size": 75383,
+      "sha256": "d4fbec48d178a9c74e3e47de1df287f9ac6092a98208449bc7f85a20fa3cd811"
+    },
+    "docs/review-history/decision_decisions-folder-ceiling-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "df9a62e2ba159fded807251f8e052852b52245f4",
+      "mode": 420,
+      "size": 4560,
+      "sha256": "590b12df8d1d64461b13121481d9c960eddb61d4afb04dc0c359887f1a4d8802"
+    },
+    "docs/review-history/decision_runtime-composite-inputs-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "209c92f766b2926b4e17bb47db596a88d3209bbf",
+      "mode": 420,
+      "size": 34860,
+      "sha256": "81443a606b74fe913f7528c103b83ec680d4d5bac14bacc264c0d075e510f0a6"
+    },
+    "docs/review-history/decision_substitutability-relation-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "63f821bd6df742286e507af1bdf6ed192729a105",
+      "mode": 420,
+      "size": 91093,
+      "sha256": "bfdba54dfcaaa28ac9a9ed39cf3ea21260d85ef12cbdb39096ca2a94e25b40a2"
+    },
+    "docs/review-history/decision_task-tree-sealing-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "4e4ffd8266ecb38c45f3e286ffc441ecc8ec34f6",
+      "mode": 420,
+      "size": 98522,
+      "sha256": "cd1cc1848fc647e53181223329ff87937d884cc9169f53eaafc926d17d5beb6d"
+    },
+    "docs/review-history/decision_trust-generated-adequacy-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "30adae87ce9779e07495903f14c4f87649c1d4c7",
+      "mode": 420,
+      "size": 9565,
+      "sha256": "c73b4efcce7966c892052418c205ed52127dd891b838670f4aeb6638247a9b8e"
+    },
+    "docs/review-history/decision_trust-generated-refusals-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "c3081c4f4c22474c44225a10f251a000e5b51811",
+      "mode": 420,
+      "size": 42568,
+      "sha256": "4d3db586e1b1ee54582596622bc757187a0d5d2fc122fb8810b2d6f8593316fb"
+    },
+    "docs/review-history/decision_trust-generated-sources-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "27d3ff5ba5737a6fb9c5b34c6f6d649d95c34e24",
+      "mode": 420,
+      "size": 55702,
+      "sha256": "047051cb5759a5fc084e6fd70704909e2c75e98745ff8549720ddfa9b598716e"
+    },
+    "docs/review-history/decision_trust-inventory-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "9972cf382118de838dea0686f97502e32d6e3c7d",
+      "mode": 420,
+      "size": 38300,
+      "sha256": "23b043196156b3db33ed0a726a5646343926f7c0a3152257b47a62ccf8f0e764"
+    },
+    "docs/review-history/review-history-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "a8ed418f59427b797961c7f14d99a7a21026898c",
+      "mode": 420,
+      "size": 5040,
+      "sha256": "6480f641ef6c9e11d1bb0c420bb221daa6b84492fe5374d8125a659f7c8f944c"
+    },
+    "docs/review-history/rt-static-up-v1-faults-observation-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "257699ee87b91da6b8e2afea73a919e3547c7315",
+      "mode": 420,
+      "size": 21087,
+      "sha256": "16a11c4162bc141d65c97de6bfbb87fee66b6c9c53fa75e04761983ca579a53f"
+    },
+    "docs/review-history/rt-static-up-v1-faults-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "b482b460b25d85abb8b47a6640115de976247649",
+      "mode": 420,
+      "size": 44524,
+      "sha256": "5df5e66854f18b152bdc544d3af856f88986804112404e17ce7e603aa1ced7b9"
+    },
+    "docs/reviews/INDEX.md": {
+      "index_mode": "100644",
+      "index_oid": "784f56b70034637c2bb547a4d87e0486e62f0eaa",
+      "mode": 420,
+      "size": 6584,
+      "sha256": "befe6d0bdfe3f0aa487fe0c9f3b0b825274e49381b6b989c2bc63f98890b5b44"
+    },
+    "docs/reviews/catalog-check-protection-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "ef9e6dfbd347559086c4e78c093a14b5199eb831",
+      "mode": 420,
+      "size": 6017,
+      "sha256": "d3cebbd0639ca652ae03249d11a5abaf0dc52fb983c492947bf81253ee1812fd"
+    },
+    "docs/reviews/decision-history-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "01f742b795d881b589bdc84ca912f9e8ce23e4cd",
+      "mode": 420,
+      "size": 239,
+      "sha256": "7f3b441aeda22f9fed3e01a57552e16cded90743f919474c3f3b5eaf7f58eff4"
+    },
+    "docs/reviews/decision_catalog-records-port-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "781bb1e110923ac252b01703b91ecafec832419a",
+      "mode": 420,
+      "size": 268,
+      "sha256": "72c8bb7c7baadec455a1b93aa3a3b98d00419c3dca73d1eb738e930a4dccf856"
+    },
+    "docs/reviews/decision_catalog-records-port-statement-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "23b5324f142f3a5ed64da45bc6be701142af5be0",
+      "mode": 420,
+      "size": 282,
+      "sha256": "3ffb698d456856141eb168d05a043be84d61f09b0f0d39cc434abab3ed531dfe"
+    },
+    "docs/reviews/decision_catalog-records-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "d2df096d1e1e1d7939d6b1f93a00102999c18974",
+      "mode": 420,
+      "size": 247,
+      "sha256": "85c7a833e8b5eb75f3bf9df6162342e594599f4a9c8ac2ef99f17191da8b4fcf"
+    },
+    "docs/reviews/decision_decisions-folder-ceiling-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "59285c064cbd96b1fda0fe1a846a3c42ccca499f",
+      "mode": 420,
+      "size": 279,
+      "sha256": "1bdb605d367661c2e8f6fd676888aca448ccfbbc138e8cb6dcf86533397fe44e"
+    },
+    "docs/reviews/decision_runtime-analysis-variant-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "4bc8cb67ca8e3de1ea0981b4b3daaf920e9c6c58",
+      "mode": 420,
+      "size": 32501,
+      "sha256": "e97892742a4b757a445cf33212379da24226d8a190017bf039d29cd810736081"
+    },
+    "docs/reviews/decision_runtime-composite-inputs-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "aac18c5df698688040cf839d7e757e9960b5593f",
+      "mode": 420,
+      "size": 288,
+      "sha256": "9567f82adda0fe0cd2d08115ddcb6d43088165e935fd12ff9247175e96f9ac5c"
+    },
+    "docs/reviews/decision_substitutability-relation-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "568a6c54be0bb90055944d9c17ec2b8740da1673",
+      "mode": 420,
+      "size": 281,
+      "sha256": "8da79cbb91d021ba868d23dc89c09b0575658dbaee955d8b4bb0a2f73af2b1a2"
+    },
+    "docs/reviews/decision_task-tree-sealing-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "e629068102e000979b97c47678050ee43974d6a8",
+      "mode": 420,
+      "size": 258,
+      "sha256": "48bd056dd7f57a5cdf53c8cb350ad761283c6ebbb614cc780d3e132b08e4f322"
+    },
+    "docs/reviews/decision_trust-generated-adequacy-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "09aab30458ddee7cc4476d1978d01bd0e569815c",
+      "mode": 420,
+      "size": 302,
+      "sha256": "ceb4531d05cdb25552c04bf1d26ec7c8cfb021d90de64128cb5f7426f49c479a"
+    },
+    "docs/reviews/decision_trust-generated-refusals-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "e08e0d483d289f84689214092a348580e1a5fec3",
+      "mode": 420,
+      "size": 300,
+      "sha256": "5968c2e67108710eacb147e71f11bc00411558bd7ae5a8b720fd6fe98be1b1fc"
+    },
+    "docs/reviews/decision_trust-generated-sources-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "143dd05ac0b92276c4d5b0432ca606b738943d50",
+      "mode": 420,
+      "size": 275,
+      "sha256": "b394a0af1a5d4725c044c973cca76b09dd69d3a2bad214c1143df577dd512ed8"
+    },
+    "docs/reviews/decision_trust-inventory-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "49a1356b62ce2e3cd36c59f0926cb1606dba5fe2",
+      "mode": 420,
+      "size": 262,
+      "sha256": "c2708c644128b1e1aab85055912a0601421f5f504930e4c67ed3db9d030118b4"
+    },
+    "docs/reviews/review-history-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "b90f1a170a40c95ebb32ac1dee639e4f8f69d848",
+      "mode": 420,
+      "size": 244,
+      "sha256": "7038a3d55d2c2a804c44cfb1c976216698116e7d4e18513dbe24b029817fa332"
+    },
+    "docs/reviews/rt-static-up-v1-faults-observation-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "7c3a68c3adc179ea99af4a5112f002d87241a32e",
+      "mode": 420,
+      "size": 287,
+      "sha256": "4fd71edae1a8cee6c91ed0204a1388f79aeb1c9c5c1423cbac6591ec4591eaf4"
+    },
+    "docs/reviews/rt-static-up-v1-faults-reviews.md": {
+      "index_mode": "100644",
+      "index_oid": "6d2a8c49732aa82b0a9dbb6843effc5f43ab6bd3",
+      "mode": 420,
+      "size": 252,
+      "sha256": "d958ba25f1a4ec314d24445ed6cee40aab5ebb2c48fa7e7d7ee2b9e6cdeb5f74"
+    },
+    "docs/semantics/BASELINE.txt": {
+      "index_mode": "100644",
+      "index_oid": "ba2e9b30d98a3d54f39fdebf8a0ce59d78c7efcf",
+      "mode": 420,
+      "size": 15422,
+      "sha256": "bb54705d2fa0a79b4ae2f3a8ca52f926c362aafbf18366fda7dc31c984133574"
+    },
+    "docs/semantics/boundary/README.md": {
+      "index_mode": "100644",
+      "index_oid": "54668417e2fefe54d2de0b299436a4a806b446fa",
+      "mode": 420,
+      "size": 9496,
+      "sha256": "9daaead146694f8ce15ced397f2205b1b194c6f360d76be65a98d32aefd1432b"
+    },
+    "docs/semantics/boundary/accept/absolute-deadline-service.eadl": {
+      "index_mode": "100644",
+      "index_oid": "9dc638437696692c938142c1a5eb0ba3d2fdb563",
+      "mode": 420,
+      "size": 619,
+      "sha256": "00c5b1ba2a79fef8e9515cdf90b0a5861bc8a729d14416c3109a937d3b71702e"
+    },
+    "docs/semantics/boundary/accept/access-authority.eadl": {
+      "index_mode": "100644",
+      "index_oid": "3a71b8fd98b364b365e424e9876de6bfec1bd0f9",
+      "mode": 420,
+      "size": 538,
+      "sha256": "a23c9e00eff083d7421da2a22e5b7afd9a6f27c0e4bfbf6b11ca0fbbd0d23a35"
+    },
+    "docs/semantics/boundary/accept/addressable-region.eadl": {
+      "index_mode": "100644",
+      "index_oid": "4650bc39fa07f380c84c98743afe9be1ba79f7a2",
+      "mode": 420,
+      "size": 947,
+      "sha256": "3ce039444e00a72e85eac377146a323dd8973c0827ada1b91a35612578f1dc16"
+    },
+    "docs/semantics/boundary/accept/atomic-observation.eadl": {
+      "index_mode": "100644",
+      "index_oid": "d2a7fd747b9e8d6f15c0580a8fcadb5b81b03ff2",
+      "mode": 420,
+      "size": 526,
+      "sha256": "341953004e8c551ed368ac434b9357bc9a481b1b56d6f06860b1c1a4e77333a0"
+    },
+    "docs/semantics/boundary/accept/counter-width-and-rate.eadl": {
+      "index_mode": "100644",
+      "index_oid": "e2cc13b117eba964aea77086f461e7f9f133796f",
+      "mode": 420,
+      "size": 1023,
+      "sha256": "043425cae5890dab77795ba51bf6af9f0fc50afd3f4a5665664f59354187ca9a"
+    },
+    "docs/semantics/boundary/accept/fixed-priority-execution.eadl": {
+      "index_mode": "100644",
+      "index_oid": "570ebf80b013e4ea7bb72e9817c7a20bcf39acdc",
+      "mode": 420,
+      "size": 558,
+      "sha256": "ade5f124a3c115332ec6e75b561768ab358788a89165b090c73bdb836c83aa6f"
+    },
+    "docs/semantics/boundary/accept/interface-units-and-ranges.eadl": {
+      "index_mode": "100644",
+      "index_oid": "3caef9d396378ba3a7855486c3098ec4477ea981",
+      "mode": 420,
+      "size": 501,
+      "sha256": "55799972c0594b0ec1ff67aaeb552d4eccebd0c86bd65b455afa0141e47e31f6"
+    },
+    "docs/semantics/boundary/accept/power-state-availability.eadl": {
+      "index_mode": "100644",
+      "index_oid": "b43a89e6e60d93e7b487b63f7b5cfeed82f42025",
+      "mode": 420,
+      "size": 538,
+      "sha256": "83b8c58da17960d81253b597e39643298f8eb6b335f4ae11826c34b9b7536199"
+    },
+    "docs/semantics/boundary/accept/required-ordering-guarantee.eadl": {
+      "index_mode": "100644",
+      "index_oid": "ee21be7de5a5a8da0adb3c25cc3cde758e12ab41",
+      "mode": 420,
+      "size": 605,
+      "sha256": "3e6154f984393a600902cfacbed6982c33cc7fd2f85d2bd4bb5c4f8a2a74b40c"
+    },
+    "docs/semantics/boundary/accept/time-horizon.eadl": {
+      "index_mode": "100644",
+      "index_oid": "120a0c2d5bc6b988ff9e288d9085e6b5e08b9e63",
+      "mode": 420,
+      "size": 551,
+      "sha256": "29dc86e826c3e28cc02a645bfd81b549804f5e1789c07bd72ed10e923945e53c"
+    },
+    "docs/semantics/boundary/reject/application-entry-point.eadl": {
+      "index_mode": "100644",
+      "index_oid": "cdd82554f7e055df24795668b39a6f479f07c10d",
+      "mode": 420,
+      "size": 1216,
+      "sha256": "6584b7668f0fc8509572e386a7a1f8405df12802e137fbf8b3200ffbbe42ceda"
+    },
+    "docs/semantics/boundary/reject/atomic-read-retry-loop.eadl": {
+      "index_mode": "100644",
+      "index_oid": "fde2d87962ba5530bbfda527a7b3553f75139a59",
+      "mode": 420,
+      "size": 1027,
+      "sha256": "ccfb25a9e55c6681843a89c12b53ed9496d23f14215efb4b9fc6672dc991ee20"
+    },
+    "docs/semantics/boundary/reject/code-provider-selection.eadl": {
+      "index_mode": "100644",
+      "index_oid": "ca260c7ecb570e08f61b07332bcf9f1ab1da943e",
+      "mode": 420,
+      "size": 750,
+      "sha256": "ba83f326a47996ac30a02cd486cc2c734bb0afd54df82de43b96a54b0cb36d07"
+    },
+    "docs/semantics/boundary/reject/context-save-layout.eadl": {
+      "index_mode": "100644",
+      "index_oid": "2cb581d7d5058ae9713812a7d82a7219654d8ebb",
+      "mode": 420,
+      "size": 891,
+      "sha256": "9f1c62d0b326ba0f1af4aaac55fa421b2269320cd1efd8c3268710e016c4d3f7"
+    },
+    "docs/semantics/boundary/reject/execution-bound.eadl": {
+      "index_mode": "100644",
+      "index_oid": "ad640cbf6fb7f4be6485a7f893a619663b16832f",
+      "mode": 420,
+      "size": 1188,
+      "sha256": "e2123cd62951681df7ea2d6719bf5f8f1653b82eb12abaa8932632ae3de65433"
+    },
+    "docs/semantics/boundary/reject/initialization-order.eadl": {
+      "index_mode": "100644",
+      "index_oid": "dc07af69970ac2f5a5d7525e70f18b9d039d8d4f",
+      "mode": 420,
+      "size": 1088,
+      "sha256": "8dca56997cab84d847abe2e942c4694a914152917466267053154e224cc9b3da"
+    },
+    "docs/semantics/boundary/reject/lowering-instruction.eadl": {
+      "index_mode": "100644",
+      "index_oid": "f1806682c30a93b5eaaca9d6385f26b7d4cfb92c",
+      "mode": 420,
+      "size": 593,
+      "sha256": "2d5bb9b96600ddbcb78cc0913369785425e08e88d74f05e2f2bc2d8cf48abb69"
+    },
+    "docs/semantics/boundary/reject/ready-queue-structure.eadl": {
+      "index_mode": "100644",
+      "index_oid": "c68d4b55fe8953af8515e955ee37fedeeae28be2",
+      "mode": 420,
+      "size": 691,
+      "sha256": "85866b0e062aed9cc9d38d48fb0353bd764e38e34de45d228a7c64e7eadd36cd"
+    },
+    "docs/semantics/boundary/reject/register-programming-sequence.eadl": {
+      "index_mode": "100644",
+      "index_oid": "fdce5a19d033978e0ff1f1c8d38b0cc3d2f92115",
+      "mode": 420,
+      "size": 752,
+      "sha256": "85faf61c9b8ceb256560241b44e828c2591e5444e0a8ac115da635fbd3fac064"
+    },
+    "docs/semantics/boundary/reject/retry-permitted.eadl": {
+      "index_mode": "100644",
+      "index_oid": "da8112075e4705d9755062d13d318e0a9279b514",
+      "mode": 420,
+      "size": 953,
+      "sha256": "7a452b6ef546ffe33c508dab8f6effe24e1926374f4e3a612c5f6d73000fc50a"
+    },
+    "docs/semantics/boundary/reject/rollover-algorithm.eadl": {
+      "index_mode": "100644",
+      "index_oid": "1fed0421f9bd746e0175139190258d696722d928",
+      "mode": 420,
+      "size": 802,
+      "sha256": "3413204d65cdc56b60f1151cf393882d6d1c9208eb51975e3d5f041cb0afe886"
+    },
+    "docs/semantics/boundary/reject/simulator-model-body.eadl": {
+      "index_mode": "100644",
+      "index_oid": "aea75b8d12b262878f63ef74de40d7743079f806",
+      "mode": 420,
+      "size": 703,
+      "sha256": "a5683878f4e57899fa7251fb0ba0fefcca1e8aab7004a2fc89bc6ae33c454b51"
+    },
+    "docs/semantics/boundary/reject/stack-allocation.eadl": {
+      "index_mode": "100644",
+      "index_oid": "2f615b9481222fc81e014306c8baeab42047e4df",
+      "mode": 420,
+      "size": 1243,
+      "sha256": "425f54be464c9316181d38f446423010e836a2405b73777001a04fc68469c179"
+    },
+    "docs/semantics/cases/infeasible-refinement-adds-exclusion.eadl": {
+      "index_mode": "100644",
+      "index_oid": "e425943f0d72092b3ad16ed2853d26221bf56e85",
+      "mode": 420,
+      "size": 395,
+      "sha256": "8bad55d04657e316d8405de2f86004faba9adf80c6f00e184e365517688716a8"
+    },
+    "docs/semantics/cases/infeasible-refinement-drops-guarantee.eadl": {
+      "index_mode": "100644",
+      "index_oid": "4cfebfd1e3a11159d4f69fbb41d4932e4d378192",
+      "mode": 420,
+      "size": 319,
+      "sha256": "e528986598cda16b8826f3625f5496fd064c707d3377b4a8f361b7645c69751e"
+    },
+    "docs/semantics/cases/infeasible-required-absence.eadl": {
+      "index_mode": "100644",
+      "index_oid": "d5aa3cdd70ef695548eed5dccf64d2d529ab83a5",
+      "mode": 420,
+      "size": 622,
+      "sha256": "906cfb755ae6fae671a7ddbd70c5ab7b3b2d6e88ae1945ae023bff416b7f396b"
+    },
+    "docs/semantics/cases/invalid-contradictory-presence.eadl": {
+      "index_mode": "100644",
+      "index_oid": "a0b187a0cc8cb023cb7268353553788d1f974398",
+      "mode": 420,
+      "size": 302,
+      "sha256": "e3085fd35d2121e902c611c2ac524866dfe4be7e5828961f9e9a78c5ec782f7f"
+    },
+    "docs/semantics/cases/invalid-duplicate-name.eadl": {
+      "index_mode": "100644",
+      "index_oid": "d6f4bd29427b334416b7c21c0c6b1f828899dfb0",
+      "mode": 420,
+      "size": 336,
+      "sha256": "a29e519e5af0aed63b11a30dd416d3d913e759a02f70bdf24ba7fc3893d7a8d8"
+    },
+    "docs/semantics/cases/invalid-execution-bound-in-task.eadl": {
+      "index_mode": "100644",
+      "index_oid": "b008670aa8de38f9ce6de4b257325a9ecb3e9313",
+      "mode": 420,
+      "size": 354,
+      "sha256": "223f75de1714ec9756aed619b9081ba6940b3219de5589a5007a28f4c7ddff78"
+    },
+    "docs/semantics/cases/invalid-implementation-in-description.eadl": {
+      "index_mode": "100644",
+      "index_oid": "71090a3bde1bfdec92ee1f0f34b0527d71a58143",
+      "mode": 420,
+      "size": 318,
+      "sha256": "c513c7b50e1fd66705adb966e83e8ea270faff822d7093791a2725e1cb8dae81"
+    },
+    "docs/semantics/cases/invalid-missing-name.eadl": {
+      "index_mode": "100644",
+      "index_oid": "fd866036a27d0f298ee8fc36179021f344c55e2e",
+      "mode": 420,
+      "size": 201,
+      "sha256": "86933aafe3b1ad610b0bb5a0fa026d3b973038604182892517a6adc9620a15ad"
+    },
+    "docs/semantics/cases/invalid-missing-required-clause.eadl": {
+      "index_mode": "100644",
+      "index_oid": "4179bae64f1738ea308ef59c978fbf9f16177ee1",
+      "mode": 420,
+      "size": 261,
+      "sha256": "bb5e0da13f4c91118d19289de9c52a2bd2d7108a6ed15f1b8bdb8973a5c7fd83"
+    },
+    "docs/semantics/cases/invalid-priority-below-one.eadl": {
+      "index_mode": "100644",
+      "index_oid": "23a66931deb35725bbc20032b1ce3919e7b7751a",
+      "mode": 420,
+      "size": 250,
+      "sha256": "7425bd299071295ef2c9e3bdbcd01e7f210cf8ced091d985286cc725bfcba690"
+    },
+    "docs/semantics/cases/invalid-quantity-without-unit.eadl": {
+      "index_mode": "100644",
+      "index_oid": "4226690363d452e92482e282322e66f2192556d4",
+      "mode": 420,
+      "size": 364,
+      "sha256": "13db035dd82aab70ce4753b1bfded2d07b1ac7c76fd3d2619591e2310d0ca13a"
+    },
+    "docs/semantics/cases/invalid-repeated-at-most-one.eadl": {
+      "index_mode": "100644",
+      "index_oid": "f6f4c82221e0bfeddcd353a23d1bef44bb163039",
+      "mode": 420,
+      "size": 268,
+      "sha256": "e36cf8a298fbfb470cf0e626640c2febcbebbbec3cbd79b400980574ea687c0f"
+    },
+    "docs/semantics/cases/invalid-two-release-models.eadl": {
+      "index_mode": "100644",
+      "index_oid": "715ee3abfbadf0ecdfe688a8909c5fd6dd8dc006",
+      "mode": 420,
+      "size": 925,
+      "sha256": "1ee8d8c6c9624e92f175a9da5edfa9a6ad5bfcfa86f2f1d3b0aac7584d93eb43"
+    },
+    "docs/semantics/cases/invalid-unknown-clause.eadl": {
+      "index_mode": "100644",
+      "index_oid": "77d13843989982a365bd78e73336c4842f4c1700",
+      "mode": 420,
+      "size": 235,
+      "sha256": "fd8f06db0505bb9a1c0f3e1437a4af136fd6ed1eba15e6801c69e71f36887cd8"
+    },
+    "docs/semantics/cases/invalid-unknown-kind.eadl": {
+      "index_mode": "100644",
+      "index_oid": "00341f6f7a55746d1989a1843010655d419d6c6b",
+      "mode": 420,
+      "size": 178,
+      "sha256": "861c9b4bc0bfa77d24c3ebf0ff9673e9c4f00e879ff62d6b1d6fb7ba991a2a9c"
+    },
+    "docs/semantics/cases/invalid-unknown-unit.eadl": {
+      "index_mode": "100644",
+      "index_oid": "0f214727fea55b28bd06271f94e14f0a2c95fd07",
+      "mode": 420,
+      "size": 365,
+      "sha256": "9e8a2442351a5aa327ce1d3c711113892050fe1d43fba509365a973195567f47"
+    },
+    "docs/semantics/cases/invalid-wrong-value-type.eadl": {
+      "index_mode": "100644",
+      "index_oid": "c1bd48ab28770c4420280e596a10ae5f2fdbe0c2",
+      "mode": 420,
+      "size": 191,
+      "sha256": "62d88f35b62af700f726a38f6723590c4c72a6b90efc557f279fe38edc0b2a06"
+    },
+    "docs/semantics/cases/invalid-zero-clock-frequency.eadl": {
+      "index_mode": "100644",
+      "index_oid": "c6e3181fb5d2a9eb10288090ab08c56faa8fe4a7",
+      "mode": 420,
+      "size": 379,
+      "sha256": "064832e57c31c855e8931b0a52efca1796735632fcfe21f3fa13039daa849bf6"
+    },
+    "docs/semantics/cases/missing-refinement-target.eadl": {
+      "index_mode": "100644",
+      "index_oid": "7693eff0ac75c149014a8c0ed77db1cb364aa176",
+      "mode": 420,
+      "size": 266,
+      "sha256": "00c1f0e333feb4825e4e31767b27c794137f2c13a8fe304e5ced224a0c7322b4"
+    },
+    "docs/semantics/cases/missing-release-model.eadl": {
+      "index_mode": "100644",
+      "index_oid": "8925e9622966dd57f451e3f5bbd037a697e85436",
+      "mode": 420,
+      "size": 928,
+      "sha256": "89f1a0dfca94dcbe4edef8e3d4e5f015a652b857e9391052f2ad6ff4825038aa"
+    },
+    "docs/semantics/cases/missing-relevant-fact.eadl": {
+      "index_mode": "100644",
+      "index_oid": "3222f8fbca184422645a309d97582eb77b68819d",
+      "mode": 420,
+      "size": 532,
+      "sha256": "e73ad87ce5c4b49c7a17f3ddf327b313e828646577a1df85f1000cd5967efcb0"
+    },
+    "docs/semantics/cases/positive-decimal-quantity.eadl": {
+      "index_mode": "100644",
+      "index_oid": "bccce7d285eed067ecfb3beaf109ab2aa1897010",
+      "mode": 420,
+      "size": 1425,
+      "sha256": "c5062b319384b27603a4ce28334c3b8b07e8d1994d8a65aec0d7b5716c114036"
+    },
+    "docs/semantics/cases/positive-explicit-absence-unused.eadl": {
+      "index_mode": "100644",
+      "index_oid": "043abef34f3a1e59c12f30f4dd5c9bd6bca15202",
+      "mode": 420,
+      "size": 599,
+      "sha256": "fddcaae602674c0dc62494964233207fae566151c3a4f02781b1c437079fa487"
+    },
+    "docs/semantics/cases/positive-minimal-system.eadl": {
+      "index_mode": "100644",
+      "index_oid": "2ea9bda6d75c68037974e3ad9dd280c3a127dfd2",
+      "mode": 420,
+      "size": 688,
+      "sha256": "07506e9655b599b878b2105cd1fe911b23d0a1c6b084d4c5772469b0747fd2d6"
+    },
+    "docs/semantics/cases/positive-skip-late-job.eadl": {
+      "index_mode": "100644",
+      "index_oid": "4fb3572076eeaee69eff8cdc870fb3fd7095a74e",
+      "mode": 420,
+      "size": 809,
+      "sha256": "20899a86490e06d928e300cb7f4f57f60ab85478c7d383450a386d0048220307"
+    },
+    "docs/semantics/cases/positive-sporadic-release.eadl": {
+      "index_mode": "100644",
+      "index_oid": "ba768af3972e47309591abef1613ce3fd467ee37",
+      "mode": 420,
+      "size": 651,
+      "sha256": "c27b4464c31356e51e7ebc0d014c3ea74e4f25dd1c01a82933253f0889acc30b"
+    },
+    "docs/semantics/cases/positive-unrelated-unknown.eadl": {
+      "index_mode": "100644",
+      "index_oid": "d6b62ea1f7742d889dfe61fcc46ea01c64043056",
+      "mode": 420,
+      "size": 647,
+      "sha256": "0cba9496e98b8fb0a9c854aebfb3e375d2c0f742df4dfbd6414ab74bf99a69a1"
+    },
+    "docs/semantics/cases/positive-valid-refinement.eadl": {
+      "index_mode": "100644",
+      "index_oid": "87a5310f758190c37673fa1ac19d61a76cecedbe",
+      "mode": 420,
+      "size": 359,
+      "sha256": "a19bcdf95353dd71d458fbce8eecedb012dd5b3cb36157db19d04dd8567398ed"
+    },
+    "docs/semantics/cases/unsupported-application-mutex.eadl": {
+      "index_mode": "100644",
+      "index_oid": "0e5b5d05fde81cf96ca7eec64b6ad7d1f43cc522",
+      "mode": 420,
+      "size": 288,
+      "sha256": "17c2fe5b1d129adb025945328245ac19103a8d8e432461846db868ea0e04f95e"
+    },
+    "docs/semantics/cases/unsupported-arbitrary-deadline.eadl": {
+      "index_mode": "100644",
+      "index_oid": "1be8e147ee6ae8d0dbdf72d025071782e187333a",
+      "mode": 420,
+      "size": 847,
+      "sha256": "21e373fcab2c0a3436da4f6fd2a92cbe56953cdf232cbbc050fd1d8026c781bb"
+    },
+    "docs/semantics/cases/unsupported-duplicate-priority.eadl": {
+      "index_mode": "100644",
+      "index_oid": "becd706eca41fed6de0dd64eec0fda723d6309e9",
+      "mode": 420,
+      "size": 856,
+      "sha256": "9202fb07f5cfe0ec1cf10a23a36475c6a12d59e0cbe16d8f86cb6621fa04371f"
+    },
+    "docs/semantics/cases/unsupported-dynamic-task-creation.eadl": {
+      "index_mode": "100644",
+      "index_oid": "c5103a9eedba06833b7dd93a3556b45091e9abc0",
+      "mode": 420,
+      "size": 242,
+      "sha256": "4cebd49939122910e0a22dccb794409309d980d3e05152a4304ccc617d04b25a"
+    },
+    "docs/semantics/cases/unsupported-general-ipc.eadl": {
+      "index_mode": "100644",
+      "index_oid": "a8de2f2e709f53046d1808e433b35ed49d191357",
+      "mode": 420,
+      "size": 670,
+      "sha256": "c40e3ed2b071cabf4748383c350acbfe04fcba849934ec42a2b507f4692ee7e0"
+    },
+    "docs/semantics/cases/unsupported-multicore.eadl": {
+      "index_mode": "100644",
+      "index_oid": "c8f146fc2f01c1c393d68d0bc3c25630ebf7f43b",
+      "mode": 420,
+      "size": 260,
+      "sha256": "6f24476365b7183faf205a75efcb710314d9b0455ff8857dd3917147dd7d3e52"
+    },
+    "docs/semantics/cases/unsupported-overrun-policy.eadl": {
+      "index_mode": "100644",
+      "index_oid": "a443948ad1fe510f99bfc054fa9038a70ea7ab15",
+      "mode": 420,
+      "size": 489,
+      "sha256": "c27d9486c57129462c0e32c44509238fa2813c7cc0c2918fdd0e0fc939b416cd"
+    },
+    "docs/semantics/cases/unsupported-precedence-over-missing-fact.eadl": {
+      "index_mode": "100644",
+      "index_oid": "1b4534a7da401c6743da33d0cb397d06bd6e9732",
+      "mode": 420,
+      "size": 732,
+      "sha256": "ad93cbd49891467afe09ec4ecfd34fea8a14b69e683c42aa2aadf960c6259b57"
+    },
+    "docs/semantics/conformance.md": {
+      "index_mode": "100644",
+      "index_oid": "d4fdba2c055a38e37aec9a1128cc4b2747e8d51d",
+      "mode": 420,
+      "size": 11149,
+      "sha256": "1db1f38da6498ada0d60b918e82dd71e7c9f51d8018f65ca0c781dbc1d11592b"
+    },
+    "docs/semantics/grammar.md": {
+      "index_mode": "100644",
+      "index_oid": "c8bdf727a086a18ec7d9a315037d6ddf0b78b619",
+      "mode": 420,
+      "size": 14162,
+      "sha256": "777e599aafa82caadb13b8f032470b725d90eca241acdcdcaf2c338b0f3c01cc"
+    },
+    "docs/semantics/kinds/core.eadl": {
+      "index_mode": "100644",
+      "index_oid": "25809f492716ac19eefd95e61e8cc3c1ec357b0d",
+      "mode": 420,
+      "size": 5059,
+      "sha256": "679324e95be3d7b0afb138edaa0f4347462bc44f7db7e9ce4e52a9928b887fa3"
+    },
+    "docs/semantics/kinds/deffact.eadl": {
+      "index_mode": "100644",
+      "index_oid": "c39ae0ffb6c9e4e53066f05ac781236ea561e1b9",
+      "mode": 420,
+      "size": 3394,
+      "sha256": "e31f98df994ade6ecc5aa3d22ed0c85530960592438562820eca17902598d909"
+    },
+    "docs/semantics/kinds/os-rt.eadl": {
+      "index_mode": "100644",
+      "index_oid": "f4e5aec943a23243060c4fb090fda1da941285bb",
+      "mode": 420,
+      "size": 4281,
+      "sha256": "c11834d4cea5f29c305eb4e7e8e5d6590a89f641deaafe5f9ee94d54c877f70f"
+    },
+    "docs/semantics/migrations/README.md": {
+      "index_mode": "100644",
+      "index_oid": "0db65abe84a5f1f43b7426ae8ffd128a56ae48ee",
+      "mode": 420,
+      "size": 6178,
+      "sha256": "b14a935b39a4448b2761b4cc4eea2113d4df9bad0844e76b16983a8909cbcad5"
+    },
+    "docs/semantics/migrations/eadl-1-a-list-nests-at-most-256-deep.md": {
+      "index_mode": "100644",
+      "index_oid": "3eaa156f231f525ede0e6d329ba616ee15d14327",
+      "mode": 420,
+      "size": 2268,
+      "sha256": "1966a5741aa66528731cb55a3b34a1d727b0db1ec719c6784a67c381f92a3297"
+    },
+    "docs/semantics/migrations/eadl-1-a-module-tree-is-bounded.md": {
+      "index_mode": "100644",
+      "index_oid": "768c25d64c90e8d2636fdf04c28094ea413eee9e",
+      "mode": 420,
+      "size": 1994,
+      "sha256": "4b30e974215ab480db1c0becb1c2f9b29fb2c0ce313f3f05f07466eb2e2fc019"
+    },
+    "docs/semantics/migrations/eadl-1-a-name-is-declared-once.md": {
+      "index_mode": "100644",
+      "index_oid": "cfc5072241daddaa9e9d9925b5aac0747b53d3bc",
+      "mode": 420,
+      "size": 1666,
+      "sha256": "a06c8b6c2e354c65695d58ca2ee4a99028961067f3792f1b2c7a3cd2305ef0b9"
+    },
+    "docs/semantics/migrations/eadl-1-a-priority-is-a-rank-from-one.md": {
+      "index_mode": "100644",
+      "index_oid": "82168288d9338f2797013fc54f4c53617abce88f",
+      "mode": 420,
+      "size": 2853,
+      "sha256": "cd4aacb7231a3173039fa59a55a1a4a4c6c849118ccafd6eab949480d4ca4756"
+    },
+    "docs/semantics/migrations/eadl-1-a-string-ends-at-a-delimiter.md": {
+      "index_mode": "100644",
+      "index_oid": "060177d8989c0f436061bf1881ead69e0ea77950",
+      "mode": 420,
+      "size": 2205,
+      "sha256": "ba78d2d8bda36475fb8f20b222f23d968e380e57a3b5bce57fd3a563afa11867"
+    },
+    "docs/semantics/migrations/eadl-1-an-overrun-policy-is-one-the-runtime-performs.md": {
+      "index_mode": "100644",
+      "index_oid": "9c293d49ca66a8a8087a582dc28578a511e32c52",
+      "mode": 420,
+      "size": 2534,
+      "sha256": "c50eecf14393319343e8af1818f454bd8aa7763e6c2e85e9dc3b1c4c4eeddf53"
+    },
+    "docs/semantics/migrations/eadl-1-an-undeclared-refinement-target-is-missing.md": {
+      "index_mode": "100644",
+      "index_oid": "91ef6f2a8e94c2e2d46e1d05846e4bf13c0d1218",
+      "mode": 420,
+      "size": 2528,
+      "sha256": "29ef03abdc4ce5739ffb2f430d8b3bab6830a5d2e89bce9320502405c896c212"
+    },
+    "docs/semantics/migrations/eadl-1-diagnostics-fire-on.md": {
+      "index_mode": "100644",
+      "index_oid": "deb74c23b44e4ecae4d3897aee1a75ef6adff000",
+      "mode": 420,
+      "size": 2088,
+      "sha256": "bc29fb4f8eff84256e6d69202193e0bf7eca0acd28a3acc4ffd2f66a3aeab765"
+    },
+    "docs/semantics/migrations/eadl-1-module-path-and-cases.md": {
+      "index_mode": "100644",
+      "index_oid": "b29376bdcf10e142e2ef47a0341217315777dd9b",
+      "mode": 420,
+      "size": 4663,
+      "sha256": "b4768cabb755c5223e6b2674d039d91c1d17a13a2833a7b1ba8d8aad86c0f93a"
+    },
+    "docs/semantics/migrations/eadl-1-name-resolution.md": {
+      "index_mode": "100644",
+      "index_oid": "a87023f007327861b9ccb9a448795cbe003f870b",
+      "mode": 420,
+      "size": 2317,
+      "sha256": "9c0e102ad380f03d6674f036bb42cc9ac210aeb5075e12cb305de81f3472d460"
+    },
+    "docs/semantics/migrations/eadl-1-quantity-value-type.md": {
+      "index_mode": "100644",
+      "index_oid": "21fe966895dbd0058527cad76101768f04f68f5f",
+      "mode": 420,
+      "size": 5206,
+      "sha256": "53099e28cdcd9e241799056e339f7d3259abf22d507078d80ecdae0731c0b0cf"
+    },
+    "docs/semantics/migrations/eadl-1-the-capability-vocabulary.md": {
+      "index_mode": "100644",
+      "index_oid": "dc172e0fa900e52cced6f9cc009d08073d77fbd1",
+      "mode": 420,
+      "size": 2665,
+      "sha256": "b045f14edf26b0aa99c2f3086b21d2eaadaa1d408edd8a2afd21d78ee2d0defe"
+    },
+    "docs/semantics/model.md": {
+      "index_mode": "100644",
+      "index_oid": "adc973260abddb5c8827cbdf11e76536cd9ef49c",
+      "mode": 420,
+      "size": 22305,
+      "sha256": "8a33a63412c26454ee5ea61e14aba82b83d2e7255995c05c266e63376a2498d1"
+    },
+    "docs/semantics/modules/app.sibling.eadl": {
+      "index_mode": "100644",
+      "index_oid": "b2f7ddba2f5ab0edbcdf3f5f78c09eaea274a9bd",
+      "mode": 420,
+      "size": 357,
+      "sha256": "3bd44803846e041a7b1ee3446b90485ec3275182bc53b8768067d1d5e8fd5437"
+    },
+    "docs/semantics/modules/app.system.eadl": {
+      "index_mode": "100644",
+      "index_oid": "85c8f0ca050f9d6ca82e77fa61518fc4c4ea225e",
+      "mode": 420,
+      "size": 415,
+      "sha256": "0fcf5232db66cd2bbc2934a15e646e4843a9471f1a63ee46a30c78ed3c4c4010"
+    },
+    "docs/semantics/modules/app.two-timers.eadl": {
+      "index_mode": "100644",
+      "index_oid": "cc2ce44f64207609292b2a1982577af48288c0a5",
+      "mode": 420,
+      "size": 428,
+      "sha256": "009b3327ace6b77dc4654e4ec9b6f5f47328d3d7d5a0bf3c16da49d9a5534af5"
+    },
+    "docs/semantics/modules/bad.bad-alias.eadl": {
+      "index_mode": "100644",
+      "index_oid": "155901f002c8b87dc8e4b50578fc631e8d70bc5e",
+      "mode": 420,
+      "size": 212,
+      "sha256": "470ea4bb4ae6b646b57d5d7ebb96183f3d2ebd4dc4027847229d2b830db6a56b"
+    },
+    "docs/semantics/modules/bad.bad-argument.eadl": {
+      "index_mode": "100644",
+      "index_oid": "bd7604fe797d0b5b7bb438ae2f133ed13fd5fee6",
+      "mode": 420,
+      "size": 231,
+      "sha256": "fb705dab15e2a8b61ef6c0f4394c05882b903a42337fc246cbe30044396c29d9"
+    },
+    "docs/semantics/modules/bad.bad-export.eadl": {
+      "index_mode": "100644",
+      "index_oid": "db608d6cbfdfab6661bd9503442fcfbf7ba60d03",
+      "mode": 420,
+      "size": 202,
+      "sha256": "ae2185630b4fce216ddb61b5dfd982eeee83b3c4d36d5dfd689ba69f4bdddf44"
+    },
+    "docs/semantics/modules/bad.bad-import-name.eadl": {
+      "index_mode": "100644",
+      "index_oid": "f46c4359ab1411751b17d7e5b9619fd720a6a2fc",
+      "mode": 420,
+      "size": 258,
+      "sha256": "ac3db58f36da9132c2d2073f7d6df521a99c2fc5cfd113897ce170085692f60b"
+    },
+    "docs/semantics/modules/bad.bad-import.eadl": {
+      "index_mode": "100644",
+      "index_oid": "ad12c43bb30a3531ccfe5566473a161ca7750047",
+      "mode": 420,
+      "size": 207,
+      "sha256": "3bb66b7f952cd0c3ed13e782b84fa2460afc488f12c90cc66c400a1e80821dc4"
+    },
+    "docs/semantics/modules/bad.bad-param.eadl": {
+      "index_mode": "100644",
+      "index_oid": "e456042ff997325b7833f33f4b7033c6f86a2352",
+      "mode": 420,
+      "size": 216,
+      "sha256": "cbfe4025390577156f03fdba985246c686dd8365987bccc61fcccd173c9618b8"
+    },
+    "docs/semantics/modules/bad.bad-version-requirement.eadl": {
+      "index_mode": "100644",
+      "index_oid": "b99ce08921b94a83cc649010c8a32d7b8df7ee88",
+      "mode": 420,
+      "size": 275,
+      "sha256": "99b721c3e6096e4bb72d3f52835470373b6c0c99634ad3bea2f00c4dc3d2847b"
+    },
+    "docs/semantics/modules/bad.bad-version.eadl": {
+      "index_mode": "100644",
+      "index_oid": "61f4487c8fe70f2dea48a5ddc65e7ef4bdaafd50",
+      "mode": 420,
+      "size": 197,
+      "sha256": "ebd1e4210aff3c8d4a4c55f39e8cdb839fb07f362d8462b4178ee090003367bf"
+    },
+    "docs/semantics/modules/bad.bare-form.eadl": {
+      "index_mode": "100644",
+      "index_oid": "cff7b2d2ad300d8e893ac291369cd5f650a5f482",
+      "mode": 420,
+      "size": 216,
+      "sha256": "916fe02fd9f966c84aeca3a54f1a07fdfd48eddf69abe4a062cd3d92e4faf5b9"
+    },
+    "docs/semantics/modules/bad.circular-import.eadl": {
+      "index_mode": "100644",
+      "index_oid": "0d7f2f00f7d1f662fdd7b9251a0936fa0bf15038",
+      "mode": 420,
+      "size": 251,
+      "sha256": "7367e5136f54b10b0857db9a30d97cc53aa47578c058c9c05bbe4fad06cfa2b9"
+    },
+    "docs/semantics/modules/bad.conflicting-alias.eadl": {
+      "index_mode": "100644",
+      "index_oid": "daea842139d508837816dde65170d20b87b1fcc1",
+      "mode": 420,
+      "size": 256,
+      "sha256": "dfa80d5e1a8cb4771f19ca727f89cbc955f1ab5e44f832de1ef77b5a1dc32986"
+    },
+    "docs/semantics/modules/bad.conflicting-export.eadl": {
+      "index_mode": "100644",
+      "index_oid": "e0aef1a717d1214235bc5cf6196c1c9be3012e52",
+      "mode": 420,
+      "size": 304,
+      "sha256": "ebc31241ab666ffeeac7f8fc597468b1ef4926e558c0306b3fa011b1d1f87bdb"
+    },
+    "docs/semantics/modules/bad.dangling-export.eadl": {
+      "index_mode": "100644",
+      "index_oid": "4cc0e294dd9a48764b93a32a73e9d66b7920e220",
+      "mode": 420,
+      "size": 269,
+      "sha256": "96abeedbe088e597ffea73b60dcafc715758da960eec5211a67c5962ad77b97a"
+    },
+    "docs/semantics/modules/bad.empty.eadl": {
+      "index_mode": "100644",
+      "index_oid": "516d064ac9c7a97292813a47cd673d841c1c856d",
+      "mode": 420,
+      "size": 211,
+      "sha256": "c2a2230711c7d672af7fc8b147a22232488a3946df57ab0c560b921253b1c9ff"
+    },
+    "docs/semantics/modules/bad.incompatible-version.eadl": {
+      "index_mode": "100644",
+      "index_oid": "7a27269b98e4e6ec621c58a451305be8233dbdd6",
+      "mode": 420,
+      "size": 272,
+      "sha256": "837c1a3a65931080367d9769bae55d4ef645afc2c8840b37b351b744778ce082"
+    },
+    "docs/semantics/modules/bad.missing-argument.eadl": {
+      "index_mode": "100644",
+      "index_oid": "8a8e1fd0265c149dc2306f31064ba73235676ada",
+      "mode": 420,
+      "size": 234,
+      "sha256": "ff95b6ce300aeee792c4bd7e8ed0790f110d0687910b7308b7b70d3c5fd1450b"
+    },
+    "docs/semantics/modules/bad.missing-name.eadl": {
+      "index_mode": "100644",
+      "index_oid": "af320eca63adbf5150f3df07e4ce8476793a4a56",
+      "mode": 420,
+      "size": 188,
+      "sha256": "bea66ed53525b3956e8bbff7e2c4999d3cbf7720aaab964b6c774a366b729316"
+    },
+    "docs/semantics/modules/bad.missing-version.eadl": {
+      "index_mode": "100644",
+      "index_oid": "798cee29ab075c783e724d4b9ce52daa577764f3",
+      "mode": 420,
+      "size": 271,
+      "sha256": "45bca09efcade50da1be9a94c532bd4b4df7f021c0ffc9b3eb90a54d6f0629e3"
+    },
+    "docs/semantics/modules/bad.multiple-forms.eadl": {
+      "index_mode": "100644",
+      "index_oid": "a40a296674b82ac92d95cf63ce5d55920810c38f",
+      "mode": 420,
+      "size": 248,
+      "sha256": "4734fbd53051ef3cf2b0a38d548f8af057b43a3dc3cdb0025d0f283b24901dae"
+    },
+    "docs/semantics/modules/bad.name-collision.eadl": {
+      "index_mode": "100644",
+      "index_oid": "8ac8a312ef384d8cfe89c15cd48c7a6eb25efdde",
+      "mode": 420,
+      "size": 371,
+      "sha256": "79e0725a0c52ebbf70e681fee9474d4eac6ae0532048af7fa023e77c0eed105a"
+    },
+    "docs/semantics/modules/bad.name-mismatch.eadl": {
+      "index_mode": "100644",
+      "index_oid": "67927ecccced95706a1290e9759884b35518b0b6",
+      "mode": 420,
+      "size": 247,
+      "sha256": "de7c519610ab0b0479ce85c1b69014f58a2afc1afa22ae12ce2c9bde059d5e7f"
+    },
+    "docs/semantics/modules/bad.not-a-module.eadl": {
+      "index_mode": "100644",
+      "index_oid": "c3eba42eafb4b541fa5063cebfbdad4f249c6198",
+      "mode": 420,
+      "size": 237,
+      "sha256": "6e34832bf9d8f0bf50f5e75baa0587543dc3fd31acb7c99aea13290ec94a656e"
+    },
+    "docs/semantics/modules/bad.not-exported-transitive.eadl": {
+      "index_mode": "100644",
+      "index_oid": "1908f2c25d932439318d83666f5b8771e0f726c7",
+      "mode": 420,
+      "size": 383,
+      "sha256": "9b3bb861490472c3ab30f83504731a4e60802e34be3aa3efcbbe784c0d34633c"
+    },
+    "docs/semantics/modules/bad.not-exported.eadl": {
+      "index_mode": "100644",
+      "index_oid": "e195579187bd41b3947614a3d8d5f490b262b242",
+      "mode": 420,
+      "size": 360,
+      "sha256": "8291905b11d171e7b977160f28f04c588a8a176b46184c0f6203c42910171abc"
+    },
+    "docs/semantics/modules/bad.not-found.eadl": {
+      "index_mode": "100644",
+      "index_oid": "c88fac015170856336caac3510fd4d73d8e8fa10",
+      "mode": 420,
+      "size": 215,
+      "sha256": "7183ea40396acd73fb21f68f8f9699e26275506d8eb4fe810508630aa9729891"
+    },
+    "docs/semantics/modules/bad.unknown-import-clause.eadl": {
+      "index_mode": "100644",
+      "index_oid": "983089ddfca28d7db03cf92f15eaed46ec1b27be",
+      "mode": 420,
+      "size": 276,
+      "sha256": "298167a540d12b53e4689606bbd5c878f25d3620ff914a5adcbed18149f6e6ae"
+    },
+    "docs/semantics/modules/bad.unknown-parameter.eadl": {
+      "index_mode": "100644",
+      "index_oid": "49c3e4ab3342598ce047da1447b47a589d1ac917",
+      "mode": 420,
+      "size": 285,
+      "sha256": "8a009781847d1ab7e54b2494344ae95a5d1bf4cdc274fea558114863740453dc"
+    },
+    "docs/semantics/modules/cycle.b.eadl": {
+      "index_mode": "100644",
+      "index_oid": "1e61fe26e70a766d21b4abf8b74e1535ff88232f",
+      "mode": 420,
+      "size": 216,
+      "sha256": "9b2782616d8da8f8a7006d019265f6a783d263d8697c9799bb46624ae15c328a"
+    },
+    "docs/semantics/modules/cycle.c.eadl": {
+      "index_mode": "100644",
+      "index_oid": "67f9d753f6f78dd0ec31d47bef228002987cbccd",
+      "mode": 420,
+      "size": 258,
+      "sha256": "5f6160eb6db342a8577353c33e08eed043d81fe9e51d23e81eb539e4dc0dda51"
+    },
+    "docs/semantics/modules/hw.bus.eadl": {
+      "index_mode": "100644",
+      "index_oid": "5c5b353066874ad7200ec6242455f68eb17df995",
+      "mode": 420,
+      "size": 590,
+      "sha256": "cfb7ee839946720806721985327b598ba52bfc522038270041d04abc01ae068a"
+    },
+    "docs/semantics/modules/hw.misnamed.eadl": {
+      "index_mode": "100644",
+      "index_oid": "e7e8659d128f15f110327e0fb7da1ae888f6c5a6",
+      "mode": 420,
+      "size": 224,
+      "sha256": "5ce02c37fbce2158e8bf594a80905690e5fa4d1b3179d44c9d7dbc5acdee6e4f"
+    },
+    "docs/semantics/modules/hw.nothing.eadl": {
+      "index_mode": "100644",
+      "index_oid": "5a7eae641586e55e5811a543ad716e4c50a94097",
+      "mode": 420,
+      "size": 168,
+      "sha256": "0b7e295e7361ffad47c89ace394e075ddda29f3d910d791a5db7efb7991064a7"
+    },
+    "docs/semantics/modules/hw.plain.eadl": {
+      "index_mode": "100644",
+      "index_oid": "5c7e9e4475955ffdd80a3fcd48d6ceb37da883b3",
+      "mode": 420,
+      "size": 220,
+      "sha256": "c89ebaf25c97110a95c137f6748685e70edd2ca86d804c217b7cc4b8cc125d37"
+    },
+    "docs/semantics/modules/hw.private.eadl": {
+      "index_mode": "100644",
+      "index_oid": "270046c8da3835f9e5a55869bab76987b5dbd0b8",
+      "mode": 420,
+      "size": 332,
+      "sha256": "a9cc5c3b5572fe50002e1dd0942ced75d74bf505664030811699bd02dccdc962"
+    },
+    "docs/semantics/modules/hw.sized.eadl": {
+      "index_mode": "100644",
+      "index_oid": "01336154ef7407f88c4ab4213394ec2505bd6999",
+      "mode": 420,
+      "size": 237,
+      "sha256": "2580467b2b0e393b105607d4f1911be8f62b719dcea541dd5d937d78eefbd30a"
+    },
+    "docs/semantics/modules/hw.soc.eadl": {
+      "index_mode": "100644",
+      "index_oid": "ec491f4b63626700b06269d424412f1187b4ed7c",
+      "mode": 420,
+      "size": 383,
+      "sha256": "157e6400fcd7c9e8a23264b299260cb6ae988c6874d0af3a60116654ce0044b1"
+    },
+    "docs/semantics/modules/hw.timer.eadl": {
+      "index_mode": "100644",
+      "index_oid": "2a95737871247bd6acb6bfee60e0c2ac8dded9b1",
+      "mode": 420,
+      "size": 352,
+      "sha256": "dcbf7d33907c86b8bb1fe241d552a4ca445d95b58e5fcfd3cf77dde6cfb20548"
+    },
+    "docs/semantics/modules/os.time.eadl": {
+      "index_mode": "100644",
+      "index_oid": "92a62bd42849fd76e06e8bf553ab6006a6c7023c",
+      "mode": 420,
+      "size": 313,
+      "sha256": "e6392de665b4b163d05096000e8a42aa8fe5301ed0361be6b370e6e496a17c0b"
+    },
+    "docs/semantics/reference.md": {
+      "index_mode": "100644",
+      "index_oid": "8a872047821e3f0bd8f38d898b22dd0807ca3fdc",
+      "mode": 420,
+      "size": 70416,
+      "sha256": "4194ac9070b123322fca46f8b3736f2158ed2cae5ee878bf21745f74e2e160cd"
+    },
+    "docs/semantics/third-opinion.txt": {
+      "index_mode": "100644",
+      "index_oid": "b606c6cd8ec8fa7738c166d830f3c37c07f688a6",
+      "mode": 420,
+      "size": 7810,
+      "sha256": "5c47a97704559f2bb19eb3a70a4df467f3a6141a4fc5101819738ac2e2f6bd77"
+    },
+    "docs/semantics/vocabulary/vocabulary.eadl": {
+      "index_mode": "100644",
+      "index_oid": "196ad92c3777d18829a7949897bdd0aed38000d6",
+      "mode": 420,
+      "size": 7971,
+      "sha256": "d59464a7540f8e602c4a0979ae04ecbc736b8860865d0f6bd4f652d6ffae37f9"
+    },
+    "docs/specs/catalog/decision_catalog-records-example.md": {
+      "index_mode": "100644",
+      "index_oid": "999a4fa3d28a2ab57634cb9dc4e88917734fd653",
+      "mode": 420,
+      "size": 8735,
+      "sha256": "16f26050d085a4abd9822af0efeb60e2d3323c77b5999f50452334400772d6d2"
+    },
+    "docs/specs/catalog/decision_catalog-records-hashes.md": {
+      "index_mode": "100644",
+      "index_oid": "1118e0f3531b5c3d8ccb320a0f368aa18c287414",
+      "mode": 420,
+      "size": 23842,
+      "sha256": "a9bc0881e2b26c17db3c60d3a53beaf51e1464f739d0dc7ca63af56997e57fd4"
+    },
+    "docs/specs/catalog/decision_catalog-records-limits.md": {
+      "index_mode": "100644",
+      "index_oid": "4a015523a75c7219fcf2419b53abf1d9333ef130",
+      "mode": 420,
+      "size": 9977,
+      "sha256": "26cb7c248fa14d48b32a8d574f3c8c9b1190bfe11a92ff56e44fc7b512f151c2"
+    },
+    "docs/specs/catalog/decision_catalog-records-port.md": {
+      "index_mode": "100644",
+      "index_oid": "91f83052678927f9a3526a4a3ef86652074e2df0",
+      "mode": 420,
+      "size": 55233,
+      "sha256": "5e687c8d68d8fb4bdbf4fe7e9f5d0a0e93b34b3027b48d8dd56a7497476e075b"
+    },
+    "docs/specs/catalog/decision_catalog-records-variant-inputs.md": {
+      "index_mode": "100644",
+      "index_oid": "1f64fdde3173519a78b48a0b757e1fc9c2783785",
+      "mode": 420,
+      "size": 21140,
+      "sha256": "ba46c2e09c8dca7618bed8a87d59b7ba4f3917016e4602c0a2dbdd1384b3e4f9"
+    },
+    "docs/specs/catalog/decision_catalog-records.md": {
+      "index_mode": "100644",
+      "index_oid": "ac7cee06afc1047792153eb888c2e6595a0a8cd2",
+      "mode": 420,
+      "size": 80085,
+      "sha256": "11f60eabb7cde9482293c82c653ee3e3684ebde62ef4fea742e6982d39f18d23"
+    },
+    "docs/specs/catalog/decision_runtime-composite-inputs.md": {
+      "index_mode": "100644",
+      "index_oid": "9d500f1d469721e6515f5c5da95e49db0dc6dc5a",
+      "mode": 420,
+      "size": 55253,
+      "sha256": "05ef905d722445616b3151f5807dccfbdc1c7e07a04bb61806bd75ede79dee3b"
+    },
+    "docs/specs/trust/compiler-provenance-contract.md": {
+      "index_mode": "100644",
+      "index_oid": "8d9d92542bcc1601e94afb0535c3019f9a04a901",
+      "mode": 420,
+      "size": 4726,
+      "sha256": "149e0b97acb30461a66f1650b75cbb80c5801e3dd10ec90c32b723a7093dcab0"
+    },
+    "docs/specs/trust/decision_trust-generated-adequacy.md": {
+      "index_mode": "100644",
+      "index_oid": "01a4e8277f3a69de827ec96e710834676cadc24d",
+      "mode": 420,
+      "size": 28331,
+      "sha256": "f5206145f24da20e33073a99fc12c3118a4f98009fbb3b382484fe189ca3ac6e"
+    },
+    "docs/specs/trust/decision_trust-generated-refusals.md": {
+      "index_mode": "100644",
+      "index_oid": "5fe86294af3f6578ccffb3a432ac21c394a4b066",
+      "mode": 420,
+      "size": 25495,
+      "sha256": "9972ec0a25edcb6a0571c4b1bb7c4de48ea6fadb418ff4bc9fc8af1f9c549c47"
+    },
+    "docs/specs/trust/decision_trust-generated-sources.md": {
+      "index_mode": "100644",
+      "index_oid": "b57334771f2480e629f49c999dd57cfa91b2115f",
+      "mode": 420,
+      "size": 52069,
+      "sha256": "52e78240609c611df9478542c7c69bea93993795f565e37d98f240cd4daa4b06"
+    },
+    "docs/specs/trust/decision_trust-inventory.md": {
+      "index_mode": "100644",
+      "index_oid": "9bf2c911ef3f256b5fc7d6005bee418e27cff2b6",
+      "mode": 420,
+      "size": 95477,
+      "sha256": "27238b04e5071d30ac518bc413d42cf1e84e324efeb66adcc938cc644bce1eb5"
+    },
+    "docs/specs/trust/flag-normalization-domain.md": {
+      "index_mode": "100644",
+      "index_oid": "4a3c7436fbf5b9fb5996ab1cd246a8c01d852ad8",
+      "mode": 420,
+      "size": 63581,
+      "sha256": "7d8dc4a3e36c264d1adeddbf107cf1cfb0fb54a6cbb33dafee1520756d1c08fa"
+    },
+    "docs/targets/first-target.md": {
+      "index_mode": "100644",
+      "index_oid": "dc559b7bc38a8d1e4ae118080d83448e0d90c81e",
+      "mode": 420,
+      "size": 8285,
+      "sha256": "f608bf73e0c5eebccf78a13828c5dca55da958c9f1ff6239c54bc96e6e351d21"
+    },
+    "docs/targets/riscv-virt-up.dtb": {
+      "index_mode": "100644",
+      "index_oid": "c02077bd5a20b57903367c39a985f1e5d0f8e765",
+      "mode": 420,
+      "size": 5044,
+      "sha256": "bc8aa05fe48ac3539f6167dda2573d8a9e74f5666fbe85395fc8426481cc03ff"
+    },
+    "docs/targets/riscv-virt-up.dtb.summary.md": {
+      "index_mode": "100644",
+      "index_oid": "1223aa67cecf59277e1cd0d2dd24cfffeab60b7f",
+      "mode": 420,
+      "size": 8890,
+      "sha256": "239d17ba958b79c10e1729834fd2f3f865cf58759bd9d8b37dfc1e1f1b11de4b"
+    },
+    "docs/task-history/API/API.1.md": {
+      "index_mode": "100644",
+      "index_oid": "2e0fb460a45400e9fd87d068042ba8a9ad81c567",
+      "mode": 420,
+      "size": 5103,
+      "sha256": "3bb282091697399282dfbff8613471a6824405e717dd899302ca5c4df9acbb55"
+    },
+    "docs/task-history/API/API.2.md": {
+      "index_mode": "100644",
+      "index_oid": "e8f88950522494e3b63ee56f60a3c4a4776f9e87",
+      "mode": 420,
+      "size": 4710,
+      "sha256": "dbc25c7faf9fd365ba317b378ee3e97a3daa1efde2b54b9216a20efa0fe242b4"
+    },
+    "docs/task-history/API/API.3.md": {
+      "index_mode": "100644",
+      "index_oid": "38bbfac894d54b74166c51efb6ee3d9ec252edcd",
+      "mode": 420,
+      "size": 15790,
+      "sha256": "7e05e87946400e49ebedd8e4aeac1b9db98b95a41a46b26a762cb397fffb44e5"
+    },
+    "docs/task-history/API/API.4.md": {
+      "index_mode": "100644",
+      "index_oid": "217fad27b2ba3d21b21e59c74464da4bb9c79613",
+      "mode": 420,
+      "size": 9983,
+      "sha256": "a2a708efecbc1081506357a47630569f1beb6e9ee07d6f9d61dc8e6c8b5397db"
+    },
+    "docs/task-history/API/API.5.md": {
+      "index_mode": "100644",
+      "index_oid": "3697b3b66af1b416c35dcdd19d4201d6aab7a6cb",
+      "mode": 420,
+      "size": 17404,
+      "sha256": "ae826aac09dc32f8e04ca24f3c14fa675302e3be9824c5646ab02118414c14c4"
+    },
+    "docs/task-history/API/API.6.md": {
+      "index_mode": "100644",
+      "index_oid": "fa2fe5903c9fc0ad0336c67d60f8e38b9bde9d77",
+      "mode": 420,
+      "size": 20730,
+      "sha256": "4ac41ac66bdb9f6546c7c63b2ab96e8deddad8838b66f0dbeb1ec3683ef70ff9"
+    },
+    "docs/task-history/API/API.7.md": {
+      "index_mode": "100644",
+      "index_oid": "35f82b37781dbcca99fb6fae8a7f8b98a8d8f2e7",
+      "mode": 420,
+      "size": 2074,
+      "sha256": "3b987992fa09fc7769b542c94bcf2a20f39b54b270c2e8908426485f4d8465b2"
+    },
+    "docs/task-history/INDEX.md": {
+      "index_mode": "100644",
+      "index_oid": "378e19a3d5ef5df4790f2005dcf9b68a4fd549bd",
+      "mode": 420,
+      "size": 42354,
+      "sha256": "cb8f6d7374b706adc7456cad5166f06995fd6bbd0e6d77187cf8507039d0e72a"
+    },
+    "docs/task-history/M0/M0.1.md": {
+      "index_mode": "100644",
+      "index_oid": "e14710c06da908a7dd5d9c44c5715458cbc88c95",
+      "mode": 420,
+      "size": 555,
+      "sha256": "839bf5346b0f8919ffc7d4e88bbefce49541e6d042446b4c3a766196ccdca7b2"
+    },
+    "docs/task-history/M0/M0.2.md": {
+      "index_mode": "100644",
+      "index_oid": "5bc693145fdad669e5526e2b48cca04971ff0805",
+      "mode": 420,
+      "size": 564,
+      "sha256": "0157eac5cbcd8136cd44c79eaee118bc7c315750c5db07b0a677e7e0ebb017b9"
+    },
+    "docs/task-history/M0/M0.3.md": {
+      "index_mode": "100644",
+      "index_oid": "ee5191414b527690b783961f66d2c35359aecbaf",
+      "mode": 420,
+      "size": 3342,
+      "sha256": "ba13f5af47b518ae1ef1a23fb065dfbc98024db573dd5c68fac5936e59fe6d41"
+    },
+    "docs/task-history/M0/M0.4.md": {
+      "index_mode": "100644",
+      "index_oid": "1ded92b7e09edff99e3aa65f56a4da879d4e20de",
+      "mode": 420,
+      "size": 2803,
+      "sha256": "df46ccd8c35cd1dcedf196fdde4d8bef4b6665dd39f02da5e66c6cdb85581a10"
+    },
+    "docs/task-history/M0/M0.5.md": {
+      "index_mode": "100644",
+      "index_oid": "0f3f15f8c6c170883d05845bbfab1b1a489ee338",
+      "mode": 420,
+      "size": 2888,
+      "sha256": "db0961d879c1a007351ad1e3421f21ca6cd7d8888c5cf9b1da61869e9d1e91b2"
+    },
+    "docs/task-history/M0/M0.6.md": {
+      "index_mode": "100644",
+      "index_oid": "2e03d1a3640fc0bedd7210382318f8b1808038e3",
+      "mode": 420,
+      "size": 3631,
+      "sha256": "7eac7321a5bb25fb7638d72039038b7a18c9218253629173e7627f2c7b205bda"
+    },
+    "docs/task-history/M0/M0.7.md": {
+      "index_mode": "100644",
+      "index_oid": "fabfc49e53f89a391fa0de7f9d34f60ab8ea7f96",
+      "mode": 420,
+      "size": 3438,
+      "sha256": "58c2cb1fb4b7f6b9a0724d577e580a6f37f26007e4f4b03437e01a37f50becd5"
+    },
+    "docs/task-history/M1/M1.1.md": {
+      "index_mode": "100644",
+      "index_oid": "2f04753ae769103fd276216080ef51c819eeb95b",
+      "mode": 420,
+      "size": 3463,
+      "sha256": "3449b538fb7f8c7a31433fec669cbf111a7f9f12cf68c04d12fd02158733478b"
+    },
+    "docs/task-history/M1/M1.10.md": {
+      "index_mode": "100644",
+      "index_oid": "e2cc220ae696443cb70559647bf742de35ecc15f",
+      "mode": 420,
+      "size": 3350,
+      "sha256": "a4b0a5ce2d998e7ef339af691d8141f081325bbc841bec637c632146b1a766d5"
+    },
+    "docs/task-history/M1/M1.11.md": {
+      "index_mode": "100644",
+      "index_oid": "eb183a6fbbd5bdbb0abc444cba683311e77c7e36",
+      "mode": 420,
+      "size": 6941,
+      "sha256": "37707e032b3593b15a1f50de3367719e633196711fb7a193097218d199ed9808"
+    },
+    "docs/task-history/M1/M1.12.1.md": {
+      "index_mode": "100644",
+      "index_oid": "9331133fa91788d0446c49f7844b88ac5095cef3",
+      "mode": 420,
+      "size": 9202,
+      "sha256": "4c5b9fd4a2096127a306d9c5bfae9bdd8751bebaca4c8eafdad2bbd1b5cef1d3"
+    },
+    "docs/task-history/M1/M1.12.2.md": {
+      "index_mode": "100644",
+      "index_oid": "1062dca3a04058df53678d19b06c5c65fc2e90d7",
+      "mode": 420,
+      "size": 12798,
+      "sha256": "d7fa3ebaf785e2c281c6f85ff247b355df5ae896513670c87addd0296199dc66"
+    },
+    "docs/task-history/M1/M1.12.4.md": {
+      "index_mode": "100644",
+      "index_oid": "84ffe66a6cc9242b573c62a4407077451902aa34",
+      "mode": 420,
+      "size": 8672,
+      "sha256": "df1889f92a063bbce9c6175a5082c4c73d6bb5fb528a843cfcb8f3868f0694d0"
+    },
+    "docs/task-history/M1/M1.12.5.md": {
+      "index_mode": "100644",
+      "index_oid": "27bedcbf4f30b167d3994ed9683c3e6cad526b92",
+      "mode": 420,
+      "size": 16564,
+      "sha256": "dad2d10660e2ddd386cc2b968086aeb10e9dc2254d4f3d4d11a644abb87fc7d2"
+    },
+    "docs/task-history/M1/M1.13.md": {
+      "index_mode": "100644",
+      "index_oid": "dfa395d2688b7bb766f43373e7fc3e38c0c729d2",
+      "mode": 420,
+      "size": 138922,
+      "sha256": "eb8ed49c6877183084497ca3fcf9943b6d513113728dae8cf2a77b9d4d2f1e07"
+    },
+    "docs/task-history/M1/M1.14.md": {
+      "index_mode": "100644",
+      "index_oid": "7fcf026d43a730fec905d24ba562f65e1f2194fa",
+      "mode": 420,
+      "size": 5152,
+      "sha256": "bfa45fbc875f0c1cc7ababbbefbbe8c862b296f33a580f70a1152995e31d1110"
+    },
+    "docs/task-history/M1/M1.15.md": {
+      "index_mode": "100644",
+      "index_oid": "e53fc7c2e966a2b85b573f56cf1425abc0e96e0e",
+      "mode": 420,
+      "size": 3709,
+      "sha256": "99196ff8c626753c50a1cdfe6a9dc8b5ca9a60c04efd9bf753c2e8a790efbef7"
+    },
+    "docs/task-history/M1/M1.16.md": {
+      "index_mode": "100644",
+      "index_oid": "1efdc1b8a47bd2d607fd1487b60c07f557021e60",
+      "mode": 420,
+      "size": 4904,
+      "sha256": "0b5ef32772bec963905c6dfdb1ddde5170db1219e42026611c25f9e02a72f70f"
+    },
+    "docs/task-history/M1/M1.17.md": {
+      "index_mode": "100644",
+      "index_oid": "fe943d8e933d50bec579652db9ade30e6c035aa9",
+      "mode": 420,
+      "size": 4545,
+      "sha256": "e567da4aeb7727e16bdb4e6aac1feddef30b5f4cfb21cf230e96329c589515fb"
+    },
+    "docs/task-history/M1/M1.18.md": {
+      "index_mode": "100644",
+      "index_oid": "c565aa7044809a3d05bc3a42db6781958ce6185d",
+      "mode": 420,
+      "size": 1909,
+      "sha256": "5a47d57c1abf42d50196d3f3ab5b50654a45d1aa85d9dfa18b96a4996fdbd56c"
+    },
+    "docs/task-history/M1/M1.19.md": {
+      "index_mode": "100644",
+      "index_oid": "b00ba78bb42f23b9212825e237323a7abc5bf17c",
+      "mode": 420,
+      "size": 10626,
+      "sha256": "796c687e98da12f9c8162f8d189ba531498a5c236bfcb162db1e6ba2aeb73ff5"
+    },
+    "docs/task-history/M1/M1.2.md": {
+      "index_mode": "100644",
+      "index_oid": "2870724528de0cdd6da7efa2415a3c93af3c8dd6",
+      "mode": 420,
+      "size": 3545,
+      "sha256": "9d32c26f32d70de04af6244a671742c245db0ff1ff34d6351217486d499e404b"
+    },
+    "docs/task-history/M1/M1.20.md": {
+      "index_mode": "100644",
+      "index_oid": "842fa77b8d0f7e9320d1f4ab7b81794eaa956acd",
+      "mode": 420,
+      "size": 53428,
+      "sha256": "a2d802bd9b951bebc7744906c7fcb56d738e96c86b740bf475c114be066c38e4"
+    },
+    "docs/task-history/M1/M1.21.md": {
+      "index_mode": "100644",
+      "index_oid": "a07843d7b8cb5b4e581ff808bb9ac7fa1ef32bc7",
+      "mode": 420,
+      "size": 5577,
+      "sha256": "188384c97b5a65cdbbad8090759b88cf56d7722059a865e7958e1725bc81d23c"
+    },
+    "docs/task-history/M1/M1.22.md": {
+      "index_mode": "100644",
+      "index_oid": "3e480f3195c568d224fe802ffddf6cb5e49722b2",
+      "mode": 420,
+      "size": 5696,
+      "sha256": "7ea3db2998e7edaf458b1d574e1a766bf20b1b6773f8b2490cb79768ea4933bc"
+    },
+    "docs/task-history/M1/M1.23.md": {
+      "index_mode": "100644",
+      "index_oid": "764f9a688e69709e95feca0216f24045955115a6",
+      "mode": 420,
+      "size": 9866,
+      "sha256": "bbc1371d404ff5fc1906ce6dff6bc8fd3da26687d238ca8403ee42b05de8bb5a"
+    },
+    "docs/task-history/M1/M1.24.md": {
+      "index_mode": "100644",
+      "index_oid": "a928274198fb1ac3873215994d497f1e197add30",
+      "mode": 420,
+      "size": 17204,
+      "sha256": "c65f120eadf6c92dc13faad858dbcb61d230a0cbcd24963841fe51618e06552a"
+    },
+    "docs/task-history/M1/M1.25.md": {
+      "index_mode": "100644",
+      "index_oid": "7c236413ced442c1f58b23bac26c53c63d6102ca",
+      "mode": 420,
+      "size": 9083,
+      "sha256": "71b8e8c541f2b081ecd386512f7d2db566397b6b37237a0ed3721eb0b1433fac"
+    },
+    "docs/task-history/M1/M1.26.md": {
+      "index_mode": "100644",
+      "index_oid": "34559a71de43d13ec7fdaf3b1e47e59c47289694",
+      "mode": 420,
+      "size": 46400,
+      "sha256": "75c73dfd8cb1af34aff7fc1cd624b4401eac385e981d45d6b15df6f91b6d67fa"
+    },
+    "docs/task-history/M1/M1.27.md": {
+      "index_mode": "100644",
+      "index_oid": "03ef364010a27cf4e5991a3a7682e198a9e6e3e7",
+      "mode": 420,
+      "size": 7672,
+      "sha256": "39cd26d738db6a0a7e3033b612ecd6e48fe2d4cd88d9e38bca12d877214b9d9f"
+    },
+    "docs/task-history/M1/M1.28.md": {
+      "index_mode": "100644",
+      "index_oid": "2b5ba7c8e082a50758a82575731191b0cb9339c2",
+      "mode": 420,
+      "size": 38673,
+      "sha256": "5faf05df98645944d300144cdc4a5126beecf65432d9253333c0bccb1c6cf4a7"
+    },
+    "docs/task-history/M1/M1.29.1.md": {
+      "index_mode": "100644",
+      "index_oid": "44cacf988ec6b80d37d9ea7e13d1972375538884",
+      "mode": 420,
+      "size": 8071,
+      "sha256": "210bac807e5a0a1ed4075ba2f3d37f7facc45cdb54923f5c69687d4e4ab4c703"
+    },
+    "docs/task-history/M1/M1.29.2.md": {
+      "index_mode": "100644",
+      "index_oid": "35c1ee5c085e2cb2a50ae698a88f91915023643c",
+      "mode": 420,
+      "size": 11483,
+      "sha256": "f71997701417a20f0d029daa1aebcfd16db0ed4f70768b5446bcd4a0f7f618ba"
+    },
+    "docs/task-history/M1/M1.29.3.md": {
+      "index_mode": "100644",
+      "index_oid": "2181fe6263d61879b4adcf07e14784aecfb80a57",
+      "mode": 420,
+      "size": 8990,
+      "sha256": "dfd04eb8fdf53b9c89ddfda761294c132ab2798da26141340b452d8c1e6a744b"
+    },
+    "docs/task-history/M1/M1.3.md": {
+      "index_mode": "100644",
+      "index_oid": "d03b48d1834969e871d70144fd0f9b93922022c5",
+      "mode": 420,
+      "size": 3084,
+      "sha256": "0202e2d3ed4edff2f68a034aaae6ef25af46a569c9fd6cd704d649b3852d0110"
+    },
+    "docs/task-history/M1/M1.30.md": {
+      "index_mode": "100644",
+      "index_oid": "6decf3ca44cd034aabeac3c61f4acf91afc61977",
+      "mode": 420,
+      "size": 7263,
+      "sha256": "2a610972c62443db34b450072c3e0ab99b72c690cbfd59d50f97f4acc33e55e5"
+    },
+    "docs/task-history/M1/M1.31.md": {
+      "index_mode": "100644",
+      "index_oid": "ed24b0dda895ba1dcdfc72f026dd1a79998cb33b",
+      "mode": 420,
+      "size": 10244,
+      "sha256": "908a5c60581ecf6024a5f904a478c27cdad66e00477e071d32b45a2e1cd63e4c"
+    },
+    "docs/task-history/M1/M1.32.md": {
+      "index_mode": "100644",
+      "index_oid": "0f15a99b15e364ba0236fdaf6383d4f4e5ea54c0",
+      "mode": 420,
+      "size": 5061,
+      "sha256": "3756547974169ae6c47f6395a76d4978a911f7b7227405c51662af2389be1c99"
+    },
+    "docs/task-history/M1/M1.33.md": {
+      "index_mode": "100644",
+      "index_oid": "07a684c885c844ace0a8031eea88d08aea3f4bd8",
+      "mode": 420,
+      "size": 7334,
+      "sha256": "5cd6b59b7561c00dad3c8a3d28493ce5b5b494b8abaade3d62a1ed7e20a72459"
+    },
+    "docs/task-history/M1/M1.34.md": {
+      "index_mode": "100644",
+      "index_oid": "01b8c16b56b3ba908bd5dc11c25d576d4fa384ab",
+      "mode": 420,
+      "size": 5951,
+      "sha256": "5d9380c10973c76413fc6fe7f033173f3a84a7c9af65fc411cadb4d04aa83b63"
+    },
+    "docs/task-history/M1/M1.35.md": {
+      "index_mode": "100644",
+      "index_oid": "91f67cd26e25b6e9812bb78b5256d2f0bd0f8007",
+      "mode": 420,
+      "size": 4327,
+      "sha256": "17717d936b433db97038ef183479ce332fe710dd8c92d067dc54f19fb43492fb"
+    },
+    "docs/task-history/M1/M1.36.md": {
+      "index_mode": "100644",
+      "index_oid": "4d067cdd50f29b3e7e1fb5317a27037aab1dcbb1",
+      "mode": 420,
+      "size": 4278,
+      "sha256": "898292c31082ece82232b2f3e2138e52fad71714a9a806967c886daa503dc6f5"
+    },
+    "docs/task-history/M1/M1.37.md": {
+      "index_mode": "100644",
+      "index_oid": "5acce94e1b0e787b80ef874f56d87a30f4d8367e",
+      "mode": 420,
+      "size": 5391,
+      "sha256": "8718925c474efb2b69139aaee751272b95c4faad0a1beca120c1c37d76c98ae8"
+    },
+    "docs/task-history/M1/M1.38.md": {
+      "index_mode": "100644",
+      "index_oid": "ede593867daca9c2321a7e8958ce12ba15759782",
+      "mode": 420,
+      "size": 5029,
+      "sha256": "660dd1084f7a697fe87243303450f8dbfebdcf28b57fd9e0c1be1b2d32f8bbbe"
+    },
+    "docs/task-history/M1/M1.39.md": {
+      "index_mode": "100644",
+      "index_oid": "0337f6ca086a8290069dd39af30bc3ad78c088f9",
+      "mode": 420,
+      "size": 5275,
+      "sha256": "e73260421d9e085b200366483e53d6043a66dc9bf4117ad56972373ff6ff336e"
+    },
+    "docs/task-history/M1/M1.4.md": {
+      "index_mode": "100644",
+      "index_oid": "fcb8650524ecc5b04090815a73de86db57e4c126",
+      "mode": 420,
+      "size": 3131,
+      "sha256": "0813acb48914b555a326902c74890c5bc8da001ad4e7699c32ec263b2b810bf7"
+    },
+    "docs/task-history/M1/M1.40.md": {
+      "index_mode": "100644",
+      "index_oid": "ffa76237643e355ed2058db427f46c8538cd105f",
+      "mode": 420,
+      "size": 4431,
+      "sha256": "15e29ee9907d21a8038def1dbb2a3d8bdb30ddcec77851dc4012987a23a26c72"
+    },
+    "docs/task-history/M1/M1.41.md": {
+      "index_mode": "100644",
+      "index_oid": "a2b8ad750bb42ae4f18f0df0f98ee5fdb607f098",
+      "mode": 420,
+      "size": 2623,
+      "sha256": "fd031f154a0f2b94c62f27b5220e190dc10763eeeed2967f3bae183ecba3a504"
+    },
+    "docs/task-history/M1/M1.5.md": {
+      "index_mode": "100644",
+      "index_oid": "74c248062d5cc818c26af1fcc3d5a2ab37881a29",
+      "mode": 420,
+      "size": 3182,
+      "sha256": "53a937a3471937de40f2651b5bd9d00c09ba61e9c98de421453792677f4653b9"
+    },
+    "docs/task-history/M1/M1.6.md": {
+      "index_mode": "100644",
+      "index_oid": "2fd162842bec0d117be4aa19dd0f6ed69a266c30",
+      "mode": 420,
+      "size": 2679,
+      "sha256": "fba14c88bc6003e19fc518aa98d6b48f22ed6ed7237d72580846e9066245ffa2"
+    },
+    "docs/task-history/M1/M1.7.md": {
+      "index_mode": "100644",
+      "index_oid": "0e4c2393797615a6ae5c401251461baa5dc78ff8",
+      "mode": 420,
+      "size": 3979,
+      "sha256": "668f41d17a980002a6e25f02c69f3606d965b33289832d0a4c9a74414a93c082"
+    },
+    "docs/task-history/M1/M1.8.md": {
+      "index_mode": "100644",
+      "index_oid": "6ce8f26688de35c89417859d4c0ce8f17c237de7",
+      "mode": 420,
+      "size": 4136,
+      "sha256": "352ba08459304d5dcdd049c1116cd6849f902f7ef8cfc7e10c73b6a758a315d8"
+    },
+    "docs/task-history/M1/M1.9.md": {
+      "index_mode": "100644",
+      "index_oid": "58ad212657137aa15dbd3836bdf823f0d131da23",
+      "mode": 420,
+      "size": 4898,
+      "sha256": "2ba65f414efa9f42f3e6e429b787fe25a02ddbda035cfaf6fbf49d8995b366da"
+    },
+    "docs/task-history/M2/M2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "5ccb6ae0924e25551fbaf1def72b4efaed1b09e6",
+      "mode": 420,
+      "size": 4751,
+      "sha256": "27385ffb1d8dcf22180230910d45c0dd8c85671dbfd5310b53bb833bede9dc8a"
+    },
+    "docs/task-history/M2/M2.10.md": {
+      "index_mode": "100644",
+      "index_oid": "95b23b63d268ef533159f1dd08f0df25561ef9fe",
+      "mode": 420,
+      "size": 20005,
+      "sha256": "f89f1ec25b6a425f46a659ac7c9157816e3698b495944d6b8f8b0ac9c3e7c61c"
+    },
+    "docs/task-history/M2/M2.11.md": {
+      "index_mode": "100644",
+      "index_oid": "21e1d84301e504865d697c2d98eef016037c3a97",
+      "mode": 420,
+      "size": 18488,
+      "sha256": "f9bf66a9c6075121b04ae7bc3df52761051e85053c6b076ef8c9eebd006a4253"
+    },
+    "docs/task-history/M2/M2.12.md": {
+      "index_mode": "100644",
+      "index_oid": "daabc32bb3bf16116faa39fac55b1e9771a07cfa",
+      "mode": 420,
+      "size": 42942,
+      "sha256": "0c20ea780f67abaac723a3a30d38d15878dd01c883acbe80ca66627d64fd34f6"
+    },
+    "docs/task-history/M2/M2.13.md": {
+      "index_mode": "100644",
+      "index_oid": "0aea88e31406183a0d4f9c3f894ed9d8c610d5cd",
+      "mode": 420,
+      "size": 3561,
+      "sha256": "49ee111e5ab9be27d1b6df1c9734c6fd38f43eb72e5b29d43e1d91ce0ead59ed"
+    },
+    "docs/task-history/M2/M2.14.md": {
+      "index_mode": "100644",
+      "index_oid": "46ef3003b2fc0d52a240827d6ea0b80d0b3bd373",
+      "mode": 420,
+      "size": 3547,
+      "sha256": "21b9b8fa8e2a883a590283fcfe3cb7ead82f290a502ec2c98b7322b47909436b"
+    },
+    "docs/task-history/M2/M2.15.md": {
+      "index_mode": "100644",
+      "index_oid": "05249654bdf4c4e7135e2193e83ff02daae1338a",
+      "mode": 420,
+      "size": 7819,
+      "sha256": "063ece8e2d3fdf5277d8236baf68ac8ddcfb7ed5b7f0cc6a00f3257007bc2b9d"
+    },
+    "docs/task-history/M2/M2.16.md": {
+      "index_mode": "100644",
+      "index_oid": "157cc79007306f0cdbe26e13a669f8bb7fa7936b",
+      "mode": 420,
+      "size": 3328,
+      "sha256": "19ea650d019ffe136bd9146d525eef5e0d63dea4b2c7a2caac7d9a840d7f9dfe"
+    },
+    "docs/task-history/M2/M2.17.md": {
+      "index_mode": "100644",
+      "index_oid": "552279e93559ba7814fd0353a90e7154b1656949",
+      "mode": 420,
+      "size": 2032,
+      "sha256": "0682bc09329df3a0a8176f528450e05e07554dc521d5875790bd18894e924a8d"
+    },
+    "docs/task-history/M2/M2.18.md": {
+      "index_mode": "100644",
+      "index_oid": "a315c96b212233ee0d22e4802b79d9771b268811",
+      "mode": 420,
+      "size": 2172,
+      "sha256": "c809bacefcb42a5c5093aa341c7de0abf32b58ee59d6877c395fc7ce8f023b36"
+    },
+    "docs/task-history/M2/M2.19.md": {
+      "index_mode": "100644",
+      "index_oid": "5eb58361847e1e4424ee2f5f58b1dde0f4339017",
+      "mode": 420,
+      "size": 2580,
+      "sha256": "f60f5eb24ab9504ddb3436ca1ce6ab215f4cbaa5bd5b6f4c044a0926ede7e78e"
+    },
+    "docs/task-history/M2/M2.2.md": {
+      "index_mode": "100644",
+      "index_oid": "a8c3b7425100fff76852d56d84e822a9c5cb1416",
+      "mode": 420,
+      "size": 5108,
+      "sha256": "223fa1926dffee68989b33825797616bbdc295d2b051fe59b2f2d9e9148a60ac"
+    },
+    "docs/task-history/M2/M2.20.md": {
+      "index_mode": "100644",
+      "index_oid": "f4dedf6fd0076f01b8983a232187a862596b640f",
+      "mode": 420,
+      "size": 4013,
+      "sha256": "cbe0f81cf6e4dac9f44e31072172b3db02de61852d9846bb79b2de56f4ccc627"
+    },
+    "docs/task-history/M2/M2.22.md": {
+      "index_mode": "100644",
+      "index_oid": "537c08c8e46cb86c1995954b6654e4f58c61290f",
+      "mode": 420,
+      "size": 1601,
+      "sha256": "05756f9c7ea957d3b0482b371ccde01ef94c884c56ea16540ba4706fe0b11eff"
+    },
+    "docs/task-history/M2/M2.3.md": {
+      "index_mode": "100644",
+      "index_oid": "c1fafd4b0841ca888f8fcd36d3ff2a78b7097771",
+      "mode": 420,
+      "size": 4846,
+      "sha256": "0bd6963ac2ad47aa2b3418010c2d4424f87193cfea223235eb423e43173521ff"
+    },
+    "docs/task-history/M2/M2.4.md": {
+      "index_mode": "100644",
+      "index_oid": "90e661f69cce84bbe77c7957ae5bbd8c85ebff7f",
+      "mode": 420,
+      "size": 4484,
+      "sha256": "1aea0da152a8e2657c87d68684badb3ee7bb0870f9e049a81c48025b9d171998"
+    },
+    "docs/task-history/M2/M2.5.md": {
+      "index_mode": "100644",
+      "index_oid": "2600d067bff4be793e89468e0ecccdba136f865d",
+      "mode": 420,
+      "size": 5049,
+      "sha256": "3b19f75b4891f52600918e5556b098d4c2069570599db241ac6b35f2b9873365"
+    },
+    "docs/task-history/M2/M2.6.md": {
+      "index_mode": "100644",
+      "index_oid": "a37b2ace9e1351d2dbe7e17bb29e0f5401d5092a",
+      "mode": 420,
+      "size": 13432,
+      "sha256": "2cc1a9c0ad3ae33f07fc1a890e088ed74548052d0832dedfdc406e2bd89b2562"
+    },
+    "docs/task-history/M2/M2.7.1.md": {
+      "index_mode": "100644",
+      "index_oid": "83ee783c8bfc32709ddf88ae7830e028f1d5cbd5",
+      "mode": 420,
+      "size": 17958,
+      "sha256": "a5739120ca167b387dd48605d56b039ccd87024e9551f27c20a971fb894f6abb"
+    },
+    "docs/task-history/M2/M2.7.2.md": {
+      "index_mode": "100644",
+      "index_oid": "22073b6575b0916e6426f8f66db6c1fda7341152",
+      "mode": 420,
+      "size": 4904,
+      "sha256": "d080864f62f06d7a6116337b2beed9d1623003b3ff0fd7283c03d04d9672d563"
+    },
+    "docs/task-history/M2/M2.7.3.md": {
+      "index_mode": "100644",
+      "index_oid": "a9fa0efa3074a6a603f1c8ef9e026d8277e6da32",
+      "mode": 420,
+      "size": 49602,
+      "sha256": "d51575b1f75157985de6631cf8bdb43179de21f1965c42baea840e55afa7e154"
+    },
+    "docs/task-history/M2/M2.7.4.1.md": {
+      "index_mode": "100644",
+      "index_oid": "1886efd19ff1d235f57bb81d4557498c49788cc6",
+      "mode": 420,
+      "size": 4939,
+      "sha256": "5befafa8f8979b7f5ad40c7db4523ada48d0431d63410194c40a7d4f9961b401"
+    },
+    "docs/task-history/M2/M2.7.4.2.md": {
+      "index_mode": "100644",
+      "index_oid": "c69ecf24a4bd6392c2cb8703650100fb67f3b0d6",
+      "mode": 420,
+      "size": 5964,
+      "sha256": "e4d03e8322e6bfaf9cbccb6e1c08c605c0a496b8be678d1945317e967f5ac916"
+    },
+    "docs/task-history/M2/M2.7.4.3.md": {
+      "index_mode": "100644",
+      "index_oid": "a5ae68232343f88730dfc94427e05caa4653930d",
+      "mode": 420,
+      "size": 6608,
+      "sha256": "7cca9a87d4ad834be2e2be4a63e620a53739ca9886815acb4805943a78d33887"
+    },
+    "docs/task-history/M2/M2.7.4.4.md": {
+      "index_mode": "100644",
+      "index_oid": "910b55a29a0c0826505748cc4a41da09b5a2e82a",
+      "mode": 420,
+      "size": 4938,
+      "sha256": "00ae976a5ebc68e6d0225b7be72fb4991d563e288312b31f4f15e1a284f533b8"
+    },
+    "docs/task-history/M2/M2.7.6.1.md": {
+      "index_mode": "100644",
+      "index_oid": "d8e581c775caf14fe80488d6cf8b05767ee39272",
+      "mode": 420,
+      "size": 3528,
+      "sha256": "f1d9b46ca04541d7ccb0c1f45c419a6eafabefcc29b90379e4e0ef07523c4734"
+    },
+    "docs/task-history/M2/M2.7.6.2.md": {
+      "index_mode": "100644",
+      "index_oid": "485607297e19d2e955c1fdd965a3c728d1c50e8d",
+      "mode": 420,
+      "size": 4490,
+      "sha256": "0b2551ae34f7bacc1e3188a02636eda2b584781a1d79b198e620f1800cab94cf"
+    },
+    "docs/task-history/M2/M2.7.6.3.md": {
+      "index_mode": "100644",
+      "index_oid": "efc829a77bdf96ef2cf8e533e11d8eb1e4899c03",
+      "mode": 420,
+      "size": 3005,
+      "sha256": "3bb3e3e6951a29bdbf5af44b2a7ace3f5cae760ffe2d93121a63cddcad6e53d5"
+    },
+    "docs/task-history/M2/M2.8.md": {
+      "index_mode": "100644",
+      "index_oid": "cdd51c2dea91046483f285d442b2f55578d859fc",
+      "mode": 420,
+      "size": 38008,
+      "sha256": "82beaf8704c044e50034b46df889988cb4003bbebb9bd94938e88abd854c38f3"
+    },
+    "docs/task-history/M2/M2.9.md": {
+      "index_mode": "100644",
+      "index_oid": "5e514b51e88470e12f8016c93b55cad57d2a7708",
+      "mode": 420,
+      "size": 29760,
+      "sha256": "599f7cab751ff79a9f6f4fc0e813504116570c394121e014c1f528ceda4c244a"
+    },
+    "docs/task-history/M3/M3.1.md": {
+      "index_mode": "100644",
+      "index_oid": "4f9d4ad1f8eb85bf1bef0d10fb227caad2e2e861",
+      "mode": 420,
+      "size": 56231,
+      "sha256": "4984a8cbde1ec3c8cb095258c808fffafd2cfbb7a907f408888a4fe2da8a4e4e"
+    },
+    "docs/task-history/M3/M3.6.1.md": {
+      "index_mode": "100644",
+      "index_oid": "3459349bd6649ba63ce09d70bc7b040a69d82a77",
+      "mode": 420,
+      "size": 19650,
+      "sha256": "9fc01c3eaeac018f827afc86def76c1e67a041d5ab8852b1ecf03ddf4a44d873"
+    },
+    "docs/task-history/M3/M3.6.2.md": {
+      "index_mode": "100644",
+      "index_oid": "36230ddd5ecb7b238d245e84b1ece44a4533d2ad",
+      "mode": 420,
+      "size": 11746,
+      "sha256": "d990cb7c824857437716fce88133cffce4c4819e3a8b9ff687e46d48358463d8"
+    },
+    "docs/task-history/M3/M3.6.3.1.md": {
+      "index_mode": "100644",
+      "index_oid": "87bd62a68f630abebb48280bc435ca69b6768b67",
+      "mode": 420,
+      "size": 3454,
+      "sha256": "3ab6ccd8551aa3ff205bc410f6bb31f9ca4210df4cca86974040125b95026ad1"
+    },
+    "docs/task-history/M3/M3.6.3.3.md": {
+      "index_mode": "100644",
+      "index_oid": "3115fa5bd8dc2915061712dcf7b6fb3c770ec069",
+      "mode": 420,
+      "size": 5975,
+      "sha256": "67a371a2c06c6fbedfe689e111884dfc9b84d1a90cbd17b75a84279df2461c50"
+    },
+    "docs/task-history/M3/M3.6.3.4.md": {
+      "index_mode": "100644",
+      "index_oid": "8d61da957c2b3f50e42a741de1bbe35e0ebf7533",
+      "mode": 420,
+      "size": 5919,
+      "sha256": "83102ff2d2f2305fb1bb9d2800d95418ba8239c018cc44eecc2c020bdc7482bb"
+    },
+    "docs/task-history/M3/M3.6.3.5.md": {
+      "index_mode": "100644",
+      "index_oid": "4291740809cef5efbeb6de27d6a3654baac38c48",
+      "mode": 420,
+      "size": 5176,
+      "sha256": "1f29930ea1737acced115bada0e37d4977f8c3764ad202b870b018d2c17ac843"
+    },
+    "docs/task-history/M3/M3.6.3.6.md": {
+      "index_mode": "100644",
+      "index_oid": "9923d66f3b3f28da0af6c2d557f2e8904ca911ce",
+      "mode": 420,
+      "size": 5997,
+      "sha256": "e42e598823d6e4d044ba5a33a76e2b27727c143a5e40ce88da14c07f967ab1ce"
+    },
+    "docs/task-history/M3/M3.6.3.7.md": {
+      "index_mode": "100644",
+      "index_oid": "36fa498a1931779bc0f79fae630af39a9bf684b0",
+      "mode": 420,
+      "size": 3642,
+      "sha256": "c091f95bde7b7729d76f929ce1f717c61c6dceaf36bf6ef60b6641b03fcbcab5"
+    },
+    "docs/task-history/M3/M3.6.4.md": {
+      "index_mode": "100644",
+      "index_oid": "637f3e22967dd87f2e45b8cec78f4a7ed5087ed9",
+      "mode": 420,
+      "size": 1160,
+      "sha256": "d57d7e61e85670ccac4489976e3ef063d442a770b39f2b172218fbdcb0434e2e"
+    },
+    "docs/task-history/M3/M3.6.6.1.md": {
+      "index_mode": "100644",
+      "index_oid": "232aec89c5e73bf20ef9f8affeb8c0d47642f323",
+      "mode": 420,
+      "size": 10410,
+      "sha256": "aba616b0e4c21535709504ee6a9a9bad88b32f10eb2e20ff137ae0acdf185f2c"
+    },
+    "docs/task-history/M3/M3.6.6.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "1a372b0ab62f5f78e06be2c0b3468c79d4ca626f",
+      "mode": 420,
+      "size": 6737,
+      "sha256": "371a9e400c662daf6d04bd58784e657fc5d2a10d6bd54c9b0f5ab5169c858295"
+    },
+    "docs/task-history/M3/M3.6.6.2.md": {
+      "index_mode": "100644",
+      "index_oid": "84aa65145adafdf78e3940f3275a4679fa9b02cc",
+      "mode": 420,
+      "size": 26932,
+      "sha256": "7382311eb6459530179f1b99a236c75238330746a0fdb1121af2a1a353715544"
+    },
+    "docs/task-history/M3/M3.6.6.3.md": {
+      "index_mode": "100644",
+      "index_oid": "58109ff764af190aa85827ee067c058909930ba1",
+      "mode": 420,
+      "size": 8075,
+      "sha256": "5568a4cbe4942525a186c37a33241bdc06a26372f7a9a300d1e4da0073ea6481"
+    },
+    "docs/task-history/M3/M3.6.6.md": {
+      "index_mode": "100644",
+      "index_oid": "c630ca9a839cba76897fe7caa25e59b7ff533861",
+      "mode": 420,
+      "size": 12448,
+      "sha256": "794af4f8bd43635318eff84a7f42e0774ca101302bbd8853a668a9ea66c94e96"
+    },
+    "docs/task-history/M3/M3.6.7.md": {
+      "index_mode": "100644",
+      "index_oid": "c2736a2e2192263de751c8305b112c029b4f91c8",
+      "mode": 420,
+      "size": 2440,
+      "sha256": "bb8c0a5ebe205b51683003cd08e73b048b957c2bd50912faf5674edac168cebc"
+    },
+    "docs/task-history/M3/M3.6.8.md": {
+      "index_mode": "100644",
+      "index_oid": "63feac7430186cea007dd44d72d5e02524fa79d2",
+      "mode": 420,
+      "size": 3465,
+      "sha256": "fd4371a4f8511643c2c3a921e0fd820454225fb07d32fbb0fded61b14390d494"
+    },
+    "docs/task-history/M3/M3.6.9.1.md": {
+      "index_mode": "100644",
+      "index_oid": "c068a63df7e5c47e259c4dd4dd01f4c7102aaafa",
+      "mode": 420,
+      "size": 4274,
+      "sha256": "3c7ead6b2aacc18d7703683b73d248697f58fc13f92e4931e9678d790f8afc5a"
+    },
+    "docs/task-history/M3/M3.6.9.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "2635f19bd0b36635c4b3c7c88d28a790b39fe747",
+      "mode": 420,
+      "size": 4425,
+      "sha256": "76ca26b922672dc4ce9b7ec68bff4eb9e25823f60ae989454cb32b717a95ba01"
+    },
+    "docs/task-history/M3/M3.6.9.2.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "3ef15c9a05c5b11305c22ee464a69441a3c5b55e",
+      "mode": 420,
+      "size": 3435,
+      "sha256": "b8ed162af64ce057b8e874f08d25aee145ec739e34e1388b9c04a4e2a10941c0"
+    },
+    "docs/task-history/M3/M3.6.9.2.2.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "c6d32f31fbe50f0b1a7bf701ab9011f63f366f27",
+      "mode": 420,
+      "size": 3551,
+      "sha256": "d98688325dcae6db38c6ef6c35564a67ba82f38f427173385819bac0b181cb1b"
+    },
+    "docs/task-history/M3/M3.6.9.2.md": {
+      "index_mode": "100644",
+      "index_oid": "bc69fecc52783c334b2e2412e745553299067d17",
+      "mode": 420,
+      "size": 28054,
+      "sha256": "59b01e4c8295943b764cb31b04e4d100bdbdd189189ac855e6eb315a0e60343c"
+    },
+    "docs/task-history/M3/M3.6.9.3.md": {
+      "index_mode": "100644",
+      "index_oid": "701cb6d3c02a0e91c761bd55114605ee77871728",
+      "mode": 420,
+      "size": 11541,
+      "sha256": "ed97dd6c84ad1e7b0b9adee27acc268c21cefa22f7d0d12542647e01fb49f14d"
+    },
+    "docs/task-history/M3/M3.6.9.4.md": {
+      "index_mode": "100644",
+      "index_oid": "adb36387d75d3081976515d63d7c83dd4c9f4034",
+      "mode": 420,
+      "size": 25606,
+      "sha256": "434ecacc65297372715db91de78a8b09c8f4f4b99d5e087add8c40f13ea0b92b"
+    },
+    "docs/task-history/M3/M3.6.9.5.md": {
+      "index_mode": "100644",
+      "index_oid": "171aed70cc4f39637228826ebdf400e9d8b18ab0",
+      "mode": 420,
+      "size": 31606,
+      "sha256": "597fa2bee4b5a97cd7e4082c1a78dcf19a2a95f0b2690ff55f37f67f679b84ca"
+    },
+    "docs/task-history/M3/M3.6.9.6.1.md": {
+      "index_mode": "100644",
+      "index_oid": "739e318a10a1cc834098b48e0d7287f3bee49904",
+      "mode": 420,
+      "size": 3965,
+      "sha256": "2ef7e9cd5dd3424771f9bddce19a9b18563a82382b4c266414511bd2c404db63"
+    },
+    "docs/task-history/M3/M3.6.9.6.2.md": {
+      "index_mode": "100644",
+      "index_oid": "8fb99a1b73f17c7994d65c2b56b5abe46685fbab",
+      "mode": 420,
+      "size": 16752,
+      "sha256": "92ef4602123c6e469c828b46417a60c3014f328ff75043c12594640b85a02640"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.1.md": {
+      "index_mode": "100644",
+      "index_oid": "6d3f1240dcd68d3ee5b2a95752d160c7e2d29f4a",
+      "mode": 420,
+      "size": 12400,
+      "sha256": "672a02a1a91e7961c23bec475d5251a0306006c7fc867c630110f83134ea7071"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.1.1.md": {
+      "index_mode": "100644",
+      "index_oid": "de3cc0ff1fa243e7bb64b804462f659ac28673b6",
+      "mode": 420,
+      "size": 4809,
+      "sha256": "d928e89339a23ef6bcdcb9afb7d28a633ed60ef0e796fdfbc256a345f2297de8"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.1.2.md": {
+      "index_mode": "100644",
+      "index_oid": "79c27adfafe3d0b4119889e35fb29a6594d10349",
+      "mode": 420,
+      "size": 12784,
+      "sha256": "4ae7ea23d723038fa0cc466b70eb33cd7b756f29dde16a4b256b6279621a29c4"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "849594b81c4e56b854e725771bd2c5263d4bc333",
+      "mode": 420,
+      "size": 16855,
+      "sha256": "d42d62b8304c61ec609b7679d3a383d79eb175485b5a9b95ed74e9a60ad16614"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "c0ea917c596e2859027e312c4d0a5f278c495aa3",
+      "mode": 420,
+      "size": 5345,
+      "sha256": "5d6c96dc4b3d41104e88c807d1bfe041ea2c032935ce38b40b543a2dc6eb9c14"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.10.1.md": {
+      "index_mode": "100644",
+      "index_oid": "821068ba20f6dd25817a6c7d64927f841675a82b",
+      "mode": 420,
+      "size": 6115,
+      "sha256": "f6f8c7818f8a880b568a1c5c17578a529324ca357d3ec80b77cf99a5c47ebcb6"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.10.2.md": {
+      "index_mode": "100644",
+      "index_oid": "bdf8c841dede3de1dec9fe854946ac6bad086271",
+      "mode": 420,
+      "size": 7605,
+      "sha256": "51115b114483f560a847186ef494b578760118cf7ad4d2cd5342d35ff24e524c"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.10.3.1.md": {
+      "index_mode": "100644",
+      "index_oid": "2b67fd631cfabbb4aa287bf9b0e20f28728c804c",
+      "mode": 420,
+      "size": 5457,
+      "sha256": "ebd327d7c8dd0b3d505211438683cb01c8441c69566b5a739dc0f10f8e15b2b7"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.10.3.2.md": {
+      "index_mode": "100644",
+      "index_oid": "4540bd08b95cfc71e5f50348724049358f5dd532",
+      "mode": 420,
+      "size": 6473,
+      "sha256": "832e787c2d640bb26af1523502769d5d0aaa56399c22b264de61c3d4ed30c408"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.10.3.3.1.md": {
+      "index_mode": "100644",
+      "index_oid": "7be87e8c07e09def5d189126461252971893d668",
+      "mode": 420,
+      "size": 4750,
+      "sha256": "69e855a5bbb328a89b08ec863a2c071afeb190f01157b0d0370eed580b8daf8c"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.10.3.md": {
+      "index_mode": "100644",
+      "index_oid": "85e21fe930e2283915e794b273f2d30e12bdfdb9",
+      "mode": 420,
+      "size": 72185,
+      "sha256": "2ce56ff2ec26587a8a45e1aab02de42f60e1d1958f001391283b5bce76930688"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.10.md": {
+      "index_mode": "100644",
+      "index_oid": "3d0d5d1e54ba28ccf49aeb5679f5cb1d5b6ab700",
+      "mode": 420,
+      "size": 9599,
+      "sha256": "ffa73cada04797ff20c0b57ced04cd4c5153d0c70a14d2ab1a9136d94de59ffe"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.11.1.md": {
+      "index_mode": "100644",
+      "index_oid": "a2cb3b9ff3c7595d6078532ebe42508b82e52717",
+      "mode": 420,
+      "size": 7544,
+      "sha256": "f2504cd685eb365473ef6fb54561cb284540bea7332e18eb0e133bedd197888a"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "ffb1cfb56f138f9fef44fac92e4e2d53972a8a0d",
+      "mode": 420,
+      "size": 5905,
+      "sha256": "0eb717efdf38eb2491f166932d118400494d3b3dc86fa21130c311168f4c7e26"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.2.md": {
+      "index_mode": "100644",
+      "index_oid": "5e5122f666c336c61dc8b3f4f9665a213e562003",
+      "mode": 420,
+      "size": 6171,
+      "sha256": "8d8ed0183076d619d87bdee40c1e09a8dd61ec475a163d86e8de229e8779a3dc"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.3.md": {
+      "index_mode": "100644",
+      "index_oid": "066074ef768e2cb0abe923c38c8aeb59ffa0201c",
+      "mode": 420,
+      "size": 8560,
+      "sha256": "659996a65de82625da417cabfcbe8808aff656718206e105eccd625767295447"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.4.1.md": {
+      "index_mode": "100644",
+      "index_oid": "d8eb6f326c7c1acb16ac3e3e72f10d4e7fa0a065",
+      "mode": 420,
+      "size": 6735,
+      "sha256": "037bfd79f867205fd1365cf8bc91da3ce74f9a79a999ef648d5d1d0d5143fc12"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.4.4.md": {
+      "index_mode": "100644",
+      "index_oid": "1e14aff102314ad6bdcd014acc7d9abfe92ec19c",
+      "mode": 420,
+      "size": 6104,
+      "sha256": "2342b78d24530cad5f208bbecfa7bd6d80ad5b07ed02ad9e1c5786bf64d1a379"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.5.md": {
+      "index_mode": "100644",
+      "index_oid": "6cf726ea67955b92685e16b5d7ea7c6f05829845",
+      "mode": 420,
+      "size": 13825,
+      "sha256": "54c48af915daed4bc52371c37cd65dccbbf973d2dc78800054d06ab48880c879"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.6.1.md": {
+      "index_mode": "100644",
+      "index_oid": "9dd7f61c7e7966ddbcf3be4d99781af64f2965c6",
+      "mode": 420,
+      "size": 5814,
+      "sha256": "f64609bf452705b36fadb7d8e08ca3659aa82d99429641cee31b0b904358e3c3"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.6.md": {
+      "index_mode": "100644",
+      "index_oid": "0267f5e9e092d475a1b8f52efcb98babd62b3f6b",
+      "mode": 420,
+      "size": 20581,
+      "sha256": "91ee0ca2d4d1ed3b0fac1531d867665df3d99787b5f8677e8bbaff8c9ac93bae"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.7.md": {
+      "index_mode": "100644",
+      "index_oid": "a3fb6315fd051a478f23d98d62d4043367fd3eb5",
+      "mode": 420,
+      "size": 7098,
+      "sha256": "ad266e6d9f73a562c27317cfc767da612db0a002821708b36362e185f34eff24"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.8.md": {
+      "index_mode": "100644",
+      "index_oid": "fe7c092f1b10da654abfad41adbb70e6a8cfb67c",
+      "mode": 420,
+      "size": 8128,
+      "sha256": "1ef93c76d58116c55b552b8398015664c5dae35e5d6879a2eb644d3ba84965f4"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.11.md": {
+      "index_mode": "100644",
+      "index_oid": "016a0330cfacca186c81fd3f44617e10c936e699",
+      "mode": 420,
+      "size": 35026,
+      "sha256": "e7e9278022d4ae4fbcceb35f78e5ae10f489e96c43ee8156c34893e9bd5452b9"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.12.md": {
+      "index_mode": "100644",
+      "index_oid": "b68b6f75bb9ef66658ff214b13e2656f439437ce",
+      "mode": 420,
+      "size": 6752,
+      "sha256": "0e0422d6f74efc6f57b0ec552986db7a194c485e621ed9c3cc9e067c8d015e43"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.13.1.md": {
+      "index_mode": "100644",
+      "index_oid": "7d62b264d13ba0d95ef07e3f8bccb12b39fdc069",
+      "mode": 420,
+      "size": 11731,
+      "sha256": "e169b14c79e7dc5c4ed0fc06eb496427df70cae0fbdbef9f516a868d62f98402"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "9a593ddfbc122449ed04ab44a947a5edfc3f9379",
+      "mode": 420,
+      "size": 523,
+      "sha256": "f758686185746a771f58fbee7c6a86d59211d06e98ef326a503d919f5056c7f8"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.2.md": {
+      "index_mode": "100644",
+      "index_oid": "8ea283cd61ea0826d0046d193f82b031eb6a0ec3",
+      "mode": 420,
+      "size": 6087,
+      "sha256": "72819483b96dddd55a03dfb97288200274b2ed871895dd33f61033d111e18502"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.3.md": {
+      "index_mode": "100644",
+      "index_oid": "0fe3ce4b3d9f4e20a9bc6c3361f350a768db83c8",
+      "mode": 420,
+      "size": 5812,
+      "sha256": "b947f6ade93c0b4a91eb918abe31a7b58788c520305630b8a48671f1765ddfad"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.4.1.md": {
+      "index_mode": "100644",
+      "index_oid": "ec3bf4aec98e5b9f1dae7246af2b728d2fbd050b",
+      "mode": 420,
+      "size": 4779,
+      "sha256": "d4131a7dca5fa1754cf3bd0ed335cfe2038ce4c680d0625af166ceea55d0d3ee"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.4.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "7cb825320c42666f36d88e3a79ba312320c4049f",
+      "mode": 420,
+      "size": 5166,
+      "sha256": "c96bbf9180b2eda8080ee0d181441620ad921eba3f7749097f650935cc29d36c"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.13.md": {
+      "index_mode": "100644",
+      "index_oid": "851634a9113db0d3214e3eced0f2c5f6a76e6f0f",
+      "mode": 420,
+      "size": 28803,
+      "sha256": "9ef937410f8bcf80f6cf2bceb946bdc84a183d2134a41a292f2dc85fe604bcb3"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.1.md": {
+      "index_mode": "100644",
+      "index_oid": "894cd929702ff8d2c994752de49f624f1cc76c7d",
+      "mode": 420,
+      "size": 5324,
+      "sha256": "ab7f21b000545e569205a23118ac3d287dfcd45aad2e2901f7dafebc1d4a87f9"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.2.md": {
+      "index_mode": "100644",
+      "index_oid": "8f9617a2a724e2d531cd3dcea6d6404e810ea6db",
+      "mode": 420,
+      "size": 5195,
+      "sha256": "2a6b256e402fd54a213e7365db0648c9bc6d7a8e9dde382f94fe575072c9e4db"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.1.md": {
+      "index_mode": "100644",
+      "index_oid": "381bd7d86a3509defcc0dba4789773792cbea5b1",
+      "mode": 420,
+      "size": 4619,
+      "sha256": "828bced4dbde1d8787003a7368877580f59e6a59b46238f8ffb8cd52a290fab5"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "82a5a2d529f107c20c570441abb0d7a91778b34b",
+      "mode": 420,
+      "size": 4050,
+      "sha256": "d64e4c1ae70f894e10a4be187de6b2470b0608554d02fa161e23c504502ab7af"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "a88847b93dbe6f54fa4f90bf221536b23bee1139",
+      "mode": 420,
+      "size": 3911,
+      "sha256": "1124815fecd7c413e150ddb2bbe8926bb26bbf456c443bc8e78d70a78da3bcef"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "84c794452f9d8fb22a531539db2cc9f662b7a400",
+      "mode": 420,
+      "size": 3409,
+      "sha256": "31058c46b1f2908577467b00252c509b654c03be84fb6f0541e77d3668b08e55"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "a7815113a6f9eec5b48571c55d48219fdbdce3dc",
+      "mode": 420,
+      "size": 3980,
+      "sha256": "939d4db0cc79634f2d312d0edecabb19210ba923e75fd3a94749e078b18c1b29"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "0aea4dff1577c16d63cc3c08d146196ee523d661",
+      "mode": 420,
+      "size": 4506,
+      "sha256": "db7704c7165414ff3376815c8794611f6c14f4f31375b700c7e129d1ce2fddb3"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.2.md": {
+      "index_mode": "100644",
+      "index_oid": "d3fc61bf60edc393711e32d69fe03813b9fd0c0d",
+      "mode": 420,
+      "size": 9569,
+      "sha256": "76c2b661340ad23c230a1f9118127275dee7e33068ff934d4b2eb3a66e73f263"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.3.md": {
+      "index_mode": "100644",
+      "index_oid": "e4e4dc49a684dd18c7890b84fb582fd80026d0a6",
+      "mode": 420,
+      "size": 3474,
+      "sha256": "3622b151ceb0319bd02712b0838efda0b9e91505f9e460ea983986642721a66e"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.4.md": {
+      "index_mode": "100644",
+      "index_oid": "1e377f3b4b65f08bb76e69471c0bf68a06c8ca3f",
+      "mode": 420,
+      "size": 3792,
+      "sha256": "de9147d9aa1e6c9a6165a63738b948cca05887fba7b33b658ab08c5b1198b3bf"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.5.md": {
+      "index_mode": "100644",
+      "index_oid": "f3a210fad3e04caf7a734bda994d7ed3b5e86d81",
+      "mode": 420,
+      "size": 3155,
+      "sha256": "87084d75555192bd3f90f2be0110a1a1efca2caf1cc41a0ed5911b1999a14bbc"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.6.1.md": {
+      "index_mode": "100644",
+      "index_oid": "58652cf5d91e419a91304caa24295cd762379f4f",
+      "mode": 420,
+      "size": 4005,
+      "sha256": "f804daa597ffa5501040f26a58f8dee8c78494250dfde6f4872585a95ed52f69"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.6.md": {
+      "index_mode": "100644",
+      "index_oid": "721ee855ebeb65057d7bc506981d25258e8fc5c8",
+      "mode": 420,
+      "size": 7480,
+      "sha256": "fdb6ccbbbc33119c6227208a9713c990d1726b99459e288a10d338866dad1482"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.14.md": {
+      "index_mode": "100644",
+      "index_oid": "8dfa5a702fcbe2e1274dcc3dacb01002ab35e746",
+      "mode": 420,
+      "size": 13482,
+      "sha256": "7a1f51c909c66caf6856dd26f9e9e9a5826bbfb60ac83b4a1e30a6f281fd3c0a"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.1.md": {
+      "index_mode": "100644",
+      "index_oid": "d2aa96727b4e01db8810cabaf424d56ac437722c",
+      "mode": 420,
+      "size": 4304,
+      "sha256": "cfa456f7b255b0be059597c6d2317f7f576cae8ac384268bf5d3161ff418ce84"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.1.md": {
+      "index_mode": "100644",
+      "index_oid": "7b5851d815c2ef8935071aed82638cea668d037f",
+      "mode": 420,
+      "size": 3350,
+      "sha256": "4c4925c527a8a2818a0bb50b6512150817ecefba3f498eeb4628e7a26a414309"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.2.md": {
+      "index_mode": "100644",
+      "index_oid": "69e21fc53c9f987ffb1f3bc35021ab6216f4d70e",
+      "mode": 420,
+      "size": 4841,
+      "sha256": "757945cb7b16d09b0c4b277df51237356e15c52f61b3d2c06c00d9a0ee679882"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.1.md": {
+      "index_mode": "100644",
+      "index_oid": "47f94ac4f29959ec9763853a4033a5d6924ed120",
+      "mode": 420,
+      "size": 5272,
+      "sha256": "8be88e0f0193d994ad303900fe734d3b212a655d2fa5518dff1ea743ce6a3008"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.2.md": {
+      "index_mode": "100644",
+      "index_oid": "b7b9ce0a66a0887b20c7394268c112185290c404",
+      "mode": 420,
+      "size": 4567,
+      "sha256": "0c583845e90e4a78aee39f41d94c88ed2510d1f20fe7d8c9ac20c2b24fa1fe9c"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.1.md": {
+      "index_mode": "100644",
+      "index_oid": "43721c152038b5c002ccd125e37393022ce135ed",
+      "mode": 420,
+      "size": 3407,
+      "sha256": "e9f201e460d1c381ce69ed488861f7e45757f20fe6ab1d28ef4f601fb7057154"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "474507254c8fe75fc46a0ad8a5b1c61b5df1e9b5",
+      "mode": 420,
+      "size": 2816,
+      "sha256": "828c6fd6ab3d3eb32bb15bde420deca516931e818d507e2cafe993cea6798b85"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.2.md": {
+      "index_mode": "100644",
+      "index_oid": "cb51656831b451c117072932fffe6cf264685d45",
+      "mode": 420,
+      "size": 3300,
+      "sha256": "562241fca274828d2056bda61e3a010b7a28eb8ecfce7b4131902651ac0b68a0"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.3.1.md": {
+      "index_mode": "100644",
+      "index_oid": "f37e82d3beb5e07cee0e84d29d703c1c53c2709f",
+      "mode": 420,
+      "size": 2501,
+      "sha256": "9140137068faaf14c8901f29b0810fd5a647adfced42676c9e9797009eef6e62"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.3.2.md": {
+      "index_mode": "100644",
+      "index_oid": "a72e3351461634f088ca568d8bbf6c44f507d8e7",
+      "mode": 420,
+      "size": 1618,
+      "sha256": "503c1ce75740b4381e8ca9c1f1694403f41504b7671eefec372d716a8b09b3f7"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.1.md": {
+      "index_mode": "100644",
+      "index_oid": "5b6ff71852e573ce721a0dd1ce9e0aa57528a2cc",
+      "mode": 420,
+      "size": 1524,
+      "sha256": "6d3ec24a1cd27d9f6996b25f5845372a2ace2924fd772f82e3a7f4a5b81c4e94"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.2.md": {
+      "index_mode": "100644",
+      "index_oid": "1dd8a160f20d3a354fd7e41389530dbd3b364b79",
+      "mode": 420,
+      "size": 1384,
+      "sha256": "398fac58e318519482f94ea9b06aab5704386aebd2d34640780b74f9781809cb"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.md": {
+      "index_mode": "100644",
+      "index_oid": "60501a295ec0e46d0782b6bca38a9b1760440471",
+      "mode": 420,
+      "size": 2591,
+      "sha256": "7fed8ae66164b9202a4109b70fea6a72ffb595834a3b711faa896796a068fdb1"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.0.0.md": {
+      "index_mode": "100644",
+      "index_oid": "ec51959f9e58c673fb49c08ffe47d51766b63a33",
+      "mode": 420,
+      "size": 1492,
+      "sha256": "bbf402ae9b567882288d8bd30a455bde419eff5905104473523bbbb597d29184"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.0.1.md": {
+      "index_mode": "100644",
+      "index_oid": "ea4d7d67a9c883731b73b0542ad7ba156c0e0c28",
+      "mode": 420,
+      "size": 1451,
+      "sha256": "1288602e4ef5fff5754428280d4e54ec4a7d46e9dc51d780c8a6050d1dee8a91"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.0.md": {
+      "index_mode": "100644",
+      "index_oid": "4ea474e6b9fa043f508becb649507a5b73e4b652",
+      "mode": 420,
+      "size": 1803,
+      "sha256": "4261345115218fd903980ffc3e6fdb75ef15af9b9c9ce72f3dc3a9bed2c1f0a9"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.1.md": {
+      "index_mode": "100644",
+      "index_oid": "c13f831ae6a95ab4ac1b2db2102fccb14cc80b6d",
+      "mode": 420,
+      "size": 1374,
+      "sha256": "abe1d1a0820e9c4efa66b4acd47b3bbce5b6b287908fcf6eaf24511cdc1c300f"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "6e972dae67cae8e22b7dd8171096ab5986008af9",
+      "mode": 420,
+      "size": 999,
+      "sha256": "b9d9883537a9153ba31e28bcde6353b8319a50de38ca3d283135560d3d4597bb"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.2.md": {
+      "index_mode": "100644",
+      "index_oid": "45fb025a311597738e889d4f07940a5df54542b3",
+      "mode": 420,
+      "size": 1227,
+      "sha256": "274b43ffe3f7e5b8c12eea2564d9a0e5246c45a2798b6c9a6c9f1ddc9cb2c17b"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.3.md": {
+      "index_mode": "100644",
+      "index_oid": "d5973a208c30edd2e13f6bf78af2bf8e0c33bcb6",
+      "mode": 420,
+      "size": 1379,
+      "sha256": "a8deff571df9efd6dbb02c1910d1e8720b5026f07e672adf58ca809d2619a889"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.4.md": {
+      "index_mode": "100644",
+      "index_oid": "91602bcfcde4ea1bc68ca54ba9de20e0c4de5fd4",
+      "mode": 420,
+      "size": 980,
+      "sha256": "c8a6619806f18e7d4694b982316ce2d40293ec608b2138633fa66952230fc5a4"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.5.md": {
+      "index_mode": "100644",
+      "index_oid": "af035f50a8aeca049a3d53519e6b7094dccc0007",
+      "mode": 420,
+      "size": 1113,
+      "sha256": "ec09e50bf8ba1354c945b5e0944d43d0ca3ed41afaf2640c5ae7b6031db29c9e"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.1.md": {
+      "index_mode": "100644",
+      "index_oid": "77784f2448fffb1f1ac04a13bfd5ef28a59d642d",
+      "mode": 420,
+      "size": 1093,
+      "sha256": "73c24e67833a2625ecb1f6e35917b80c40eb85a899de6a14eb9d0160910503f9"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.2.md": {
+      "index_mode": "100644",
+      "index_oid": "58e9ca53c1122712698c140e53afb4a44ee971ff",
+      "mode": 420,
+      "size": 3004,
+      "sha256": "ca973946356128d61b082029b6753b03271c48a8eba136f39806cf6d08c79053"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.3.md": {
+      "index_mode": "100644",
+      "index_oid": "8639c21ac09bdbac6bd5fde5d7bf4f053e743965",
+      "mode": 420,
+      "size": 1739,
+      "sha256": "698f66aa6cbffa7c0236d8922163edd47c1095119674bb0175f41e4cbeb9b255"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.4.md": {
+      "index_mode": "100644",
+      "index_oid": "dc23a59098b4f24a644f0a59260713b995977cab",
+      "mode": 420,
+      "size": 1691,
+      "sha256": "b6230dd5a582bd700fa6ebced938e9b16fe754aab57c9cf82244036c88b90177"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.5.md": {
+      "index_mode": "100644",
+      "index_oid": "897f2516720225776c85a56f84a79a9524ed40cc",
+      "mode": 420,
+      "size": 2346,
+      "sha256": "0d667920092fcde4fc57bf29c1afd957eaad008f493829a10c4a74a096709b32"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.6.md": {
+      "index_mode": "100644",
+      "index_oid": "764a64c305408af45bff3007e0fe47acbf0fea67",
+      "mode": 420,
+      "size": 3632,
+      "sha256": "d7c922df908c82b213fbddda2af3de9f3f7ed8f22b066a277932303c4c7eae0a"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.7.md": {
+      "index_mode": "100644",
+      "index_oid": "6f8d6d1ee9514510df35b579c7141c39399f684a",
+      "mode": 420,
+      "size": 2175,
+      "sha256": "724eae5e030dcdf310581b74be43dff28b002039ed19d783a3004594f2640fb5"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.md": {
+      "index_mode": "100644",
+      "index_oid": "698bcc5ae9eab0fcd8ee9acf27c9901c89363297",
+      "mode": 420,
+      "size": 2430,
+      "sha256": "060fecdfad41eb032edf5fbf649734b3df85dfd7ec7733bf2c76b9981cf85cc4"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.7.md": {
+      "index_mode": "100644",
+      "index_oid": "06d6c7793fcbdfae2b21089689109f9f42b2f950",
+      "mode": 420,
+      "size": 1677,
+      "sha256": "5e2e1dbb119ebc9635b8480c072a1ee3681e2ab0cc46cabe467e51be8f3ae21f"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.1.md": {
+      "index_mode": "100644",
+      "index_oid": "8f0b3b0380c7de4c4f484b58d25ab55528e6b8f5",
+      "mode": 420,
+      "size": 1791,
+      "sha256": "1bbc1251c57a70db6b178fe6ee8e258c77395fbdf4a949f900db8804363a9738"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.10.md": {
+      "index_mode": "100644",
+      "index_oid": "e32e40c0f5e322def52a4aeddfdde75668aefd2c",
+      "mode": 420,
+      "size": 1802,
+      "sha256": "ff3aa38640035efd71f108fa71215bfa3d46ca1beefd99618e09bdf6f716b3d0"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.11.md": {
+      "index_mode": "100644",
+      "index_oid": "032eb162c6e35064a900055dd2d75a341e252a20",
+      "mode": 420,
+      "size": 1967,
+      "sha256": "2843204f95a22d22e511ca6f609311887a5a8a82ab67cc5a9d0339ca83196e71"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.12.md": {
+      "index_mode": "100644",
+      "index_oid": "6ac74e96d9de60151ac035e02421aa3950b6b20b",
+      "mode": 420,
+      "size": 2098,
+      "sha256": "f6d57a2e1ab21876ddee01c19b3d3921d9ba89b54e3fe38a1436b66ae3bdc8f4"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.13.md": {
+      "index_mode": "100644",
+      "index_oid": "2661b4ff5aa53f57995c681bb50250e890bc707f",
+      "mode": 420,
+      "size": 2464,
+      "sha256": "a5b1ddcb9be453214ed2565a91e089818b4fe4979d20c65a5176139157308bf8"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.14.md": {
+      "index_mode": "100644",
+      "index_oid": "97b151905e74c46d876f2bb55dd94985b0df38c4",
+      "mode": 420,
+      "size": 2503,
+      "sha256": "fc75284a254291cd7ca069b5e3a57b82eb4cd970489029ae5c4cd0d6ec5bca4c"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.2.md": {
+      "index_mode": "100644",
+      "index_oid": "cf8ce9f48b781bab44b23f33ef48a34f203a4b1f",
+      "mode": 420,
+      "size": 1746,
+      "sha256": "29864cce91a9d5e649861f8670703d3e01c107f9c17b3cae0c799eb44e67877d"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.3.md": {
+      "index_mode": "100644",
+      "index_oid": "7c63b8d2b6e5dfce9826a66d137728ebf3856f9d",
+      "mode": 420,
+      "size": 1726,
+      "sha256": "abd12835236c20ab07b8127dfd847465081fb1f2b7bdc4a10f595d574bf3eb58"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.4.md": {
+      "index_mode": "100644",
+      "index_oid": "62cc5eea8e119409e1d6120857c4372994e3fc21",
+      "mode": 420,
+      "size": 2293,
+      "sha256": "b437b80916987c9b4c63d4a0346abc4612f0b76515b4c58a5ce45b3b0fcfbfd9"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.5.md": {
+      "index_mode": "100644",
+      "index_oid": "72606699a44785b76f5cf1ddf2a9fe7f6d84003e",
+      "mode": 420,
+      "size": 1718,
+      "sha256": "64e71516e75f3661a1c22ea13f05adfa1467cf76662536af619bde8e43977ab8"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.6.md": {
+      "index_mode": "100644",
+      "index_oid": "1f296306653075a61bafd5fe11e2ada925a0e0e0",
+      "mode": 420,
+      "size": 1789,
+      "sha256": "65e1ef96b3ee457e6267a6a56f708ba6d75bf2e799a7b7d5887334f2fd40868c"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.7.md": {
+      "index_mode": "100644",
+      "index_oid": "c89c719a63c11bf2a7b2d89f52f6772c544dd1eb",
+      "mode": 420,
+      "size": 2068,
+      "sha256": "cea14d95b3b07c31c6a413a8532718122bcd993008c2d13e4fe33ad580256d2a"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.8.md": {
+      "index_mode": "100644",
+      "index_oid": "b4ff2c35f117418b73b726075e8da8434ae3740a",
+      "mode": 420,
+      "size": 2363,
+      "sha256": "e9ced08902198b2c26426ec738d2755cbebbfd390204b463e404777bd0941888"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.9.md": {
+      "index_mode": "100644",
+      "index_oid": "9f8ac675de8520654cf75ab2a1c6f4647d4faa25",
+      "mode": 420,
+      "size": 1796,
+      "sha256": "5cec30e4192e010dff0685e8efd0399051c68896d085fed916f47283c3c43173"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.md": {
+      "index_mode": "100644",
+      "index_oid": "d999be1749783d47942f2cab14f29319f0bdbcc1",
+      "mode": 420,
+      "size": 3117,
+      "sha256": "c716d980cddac47179a7e29a4d88539125cacc640a63e4ff9c71215fa7470e34"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.1.md": {
+      "index_mode": "100644",
+      "index_oid": "4901e88632444051e2def5d38710ada4c5bd03cc",
+      "mode": 420,
+      "size": 3483,
+      "sha256": "2e6a679b7d5554a91c8d6c1049ccdafbbe55a078b6f1135da1ea6b266f374116"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.2.md": {
+      "index_mode": "100644",
+      "index_oid": "345ee3d35bb428cedae3c60b81ae149c8c8dac91",
+      "mode": 420,
+      "size": 7736,
+      "sha256": "267c8a8f48edde99886477d9c8902034df762f4dedcbebf7ea0cd3621d39f620"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.0.md": {
+      "index_mode": "100644",
+      "index_oid": "3c44092d316269aac2ade3b1545a1e34def68c18",
+      "mode": 420,
+      "size": 4652,
+      "sha256": "ae76e2dce61c5d19ec9dfc39b00b6ae9d9f5e6de02a5d27b2ebcd4d478a97330"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.1.md": {
+      "index_mode": "100644",
+      "index_oid": "b2e35deb2923cb35d7eb91d9c3f017ad89e56934",
+      "mode": 420,
+      "size": 1814,
+      "sha256": "c77ebcda6c919535254a64898c66c428aae69b55dc8e2a3f6fb37bbc9be31221"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.2.0.md": {
+      "index_mode": "100644",
+      "index_oid": "c9aa91850c83b41f2fe71b6758ab1196cd824c89",
+      "mode": 420,
+      "size": 873,
+      "sha256": "01eba06d58972d7d4052fea3e41cd2e290f3df1d6c7bae63a69d3299d68b6d9f"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.2.1.md": {
+      "index_mode": "100644",
+      "index_oid": "41222915593cddba0cc96f88ff609863677c4f04",
+      "mode": 420,
+      "size": 1278,
+      "sha256": "d471efc54eaaf903037f37281ca7066c3bfb89b6d700593061c75a3f427b574f"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.2.2.md": {
+      "index_mode": "100644",
+      "index_oid": "dd17dc43a7b6ce6f9d3d5679014c0655e247d5d9",
+      "mode": 420,
+      "size": 1103,
+      "sha256": "d50d089613c2ef4091e3f4c767584d1179c69e691a992e20b7a12800893d5b9d"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.2.md": {
+      "index_mode": "100644",
+      "index_oid": "4e78658c5bcc883d5d84ddca643c7fab6a2a6ce9",
+      "mode": 420,
+      "size": 1716,
+      "sha256": "65d8d155006274d9e0102e22438004e7e019cd99b4f1264155da470795477de5"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.3.md": {
+      "index_mode": "100644",
+      "index_oid": "0e0dfa0fa548524f06a6dcd33e763e458891c5a6",
+      "mode": 420,
+      "size": 1158,
+      "sha256": "e4b4840e5173145145771136a1750675388dd0457daaa4d8d04cb2b552e93ffc"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.4.0.md": {
+      "index_mode": "100644",
+      "index_oid": "5a0dd3c47f3924f2d03cceff0587e75b1d0e311d",
+      "mode": 420,
+      "size": 1376,
+      "sha256": "758b5a71365a36a04a820a721cbce55dd21a2d4a366f8d5acd1cace48b651a4c"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.4.md": {
+      "index_mode": "100644",
+      "index_oid": "03102b56d29a905fe3c38d20c52c09e5f80e9384",
+      "mode": 420,
+      "size": 1196,
+      "sha256": "7f939d27ca3251c77f10efa9fb74239515404d701e68282a6c09e4dce7369eb7"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.0.md": {
+      "index_mode": "100644",
+      "index_oid": "8a66b4d3615d1e766032b77345b82f4cdfae41f4",
+      "mode": 420,
+      "size": 1209,
+      "sha256": "bf68c7ca84e9c33c3a2e7c7a3d8c45352c5ffa9297c9284534f21df678661674"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.1.0.md": {
+      "index_mode": "100644",
+      "index_oid": "945dd752539731195956a0fcc5366bf8067e96ad",
+      "mode": 420,
+      "size": 937,
+      "sha256": "b48b3a57a83e40a473eb6e70d8db8788761b50040c89955dfa2085ff05ae91bc"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.1.1.md": {
+      "index_mode": "100644",
+      "index_oid": "de6854e1069ed143a5c4fe035423abe6a38acb12",
+      "mode": 420,
+      "size": 1013,
+      "sha256": "c9e869c567ae032f0b140ee011883f3818100674de12dbb9444475e991e67f6f"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.1.2.md": {
+      "index_mode": "100644",
+      "index_oid": "4a73e7fac257771da493df351010121e22d3f605",
+      "mode": 420,
+      "size": 935,
+      "sha256": "23bcec451b89ae58772d5ea468ec03e8766caa63d4e8053dbb23b8f8c23dfa3f"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.md": {
+      "index_mode": "100644",
+      "index_oid": "a74e5f254f22e54dc76638ed13acfe4cc08be421",
+      "mode": 420,
+      "size": 1453,
+      "sha256": "122041bd0f74832c4f2b89207d0007415d5e48f9a59efabcec24e13cb93be7f7"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.6.0.md": {
+      "index_mode": "100644",
+      "index_oid": "eae68cfcd707d4aa743b92bd1dd48d49dc9c37bf",
+      "mode": 420,
+      "size": 510,
+      "sha256": "d96d95330f315910cdb91c17f6af24077ffeef48a3020e47662158b9ee0f78ac"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.6.1.0.md": {
+      "index_mode": "100644",
+      "index_oid": "2c74737b925c840fe5de4ee382ab3dcaa527e6c3",
+      "mode": 420,
+      "size": 1250,
+      "sha256": "cc6aaa5cb4653884d20b54deaa24c78fc64fb0abdde5dddae27567f506883293"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.6.3.md": {
+      "index_mode": "100644",
+      "index_oid": "ab97901b64a6b0941375d36718b8b67c4b5ca2f5",
+      "mode": 420,
+      "size": 487,
+      "sha256": "ffb0b21de60f84cf3e9dbbcdb8e948b362860332487d50f46d9ae394aa35a338"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.2.md": {
+      "index_mode": "100644",
+      "index_oid": "0cfe29e87d46f6ec57e9e05f2ab2cc4077e8c507",
+      "mode": 420,
+      "size": 5568,
+      "sha256": "11877f9e9e941f56a80fe9667c844f6a5986a55070f712fd6cdae9c401c5bcd1"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.3.md": {
+      "index_mode": "100644",
+      "index_oid": "f6f6744049e2d76623b03a0e4f885f79d84707aa",
+      "mode": 420,
+      "size": 6218,
+      "sha256": "c067088876ec657bdd23160fe1f731cc568df679d70773739909d4521afadc71"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.4.md": {
+      "index_mode": "100644",
+      "index_oid": "bf9827c6520a70978688098953106602c5faed5f",
+      "mode": 420,
+      "size": 5127,
+      "sha256": "49e5df1a4148de704e30fad0fc7e4fa06947ce8e7efb953b0097f651732c7dbb"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.5.md": {
+      "index_mode": "100644",
+      "index_oid": "62302402b8c7363e31d4dae825b4efbdb7e1c6c5",
+      "mode": 420,
+      "size": 6981,
+      "sha256": "6152d3e7b9f484e53d2ddba2a879573c0e9ef495610b1109ed901e304aae3a00"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.6.md": {
+      "index_mode": "100644",
+      "index_oid": "34f882130b1e0388d7361af83eec7bb65d52dea4",
+      "mode": 420,
+      "size": 5842,
+      "sha256": "5b23939f4dd1a5f39d5e0dffd028e59abafc534dc73deb73ca74a70ffa8d648c"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.7.md": {
+      "index_mode": "100644",
+      "index_oid": "35ef5182bf693f76c956c3004b512248aff5aac9",
+      "mode": 420,
+      "size": 7040,
+      "sha256": "379204399e618284c6e6467bfb1c1a2a82425104b739049c9b4d5c4cdbb17b7c"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.8.md": {
+      "index_mode": "100644",
+      "index_oid": "69f90e441ae95f682fffee0a5926fa49761d65e9",
+      "mode": 420,
+      "size": 14691,
+      "sha256": "687bb71767f95cc0f205207aba4ce5730ae36bc6266961031ecf56f3c29e6b50"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.9.1.md": {
+      "index_mode": "100644",
+      "index_oid": "3f5e355b2964f63b68ee7c12d2f7abf4a0c1e28d",
+      "mode": 420,
+      "size": 6015,
+      "sha256": "db0b53f63730e6713a539856bcab73a914cff9d0fce57ff54b315e074ce2fd60"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.9.2.md": {
+      "index_mode": "100644",
+      "index_oid": "9f1bf5dd19fd67c00800edb60b55782e21487e44",
+      "mode": 420,
+      "size": 9544,
+      "sha256": "d9022fdec2d854fa63f0350725b6f39f90b8ca799f77d4c4fef96603cd98aaf1"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.9.5.md": {
+      "index_mode": "100644",
+      "index_oid": "d2bcecab4ff168c2f6c04ee510c0739bb6390684",
+      "mode": 420,
+      "size": 5124,
+      "sha256": "735f5095619988af0acde04849f7bf61ee9eb4e3ad67d2454ef8dd5a4926d197"
+    },
+    "docs/task-history/M3/M3.6.9.6.3.2.2.9.md": {
+      "index_mode": "100644",
+      "index_oid": "24a3689ca257faa76223a8ede274f74e64c214c7",
+      "mode": 420,
+      "size": 48627,
+      "sha256": "acdbd9e8cb314276b208cea1ab19abe500889c3874052976798aab446ae72c6f"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.1.md": {
+      "index_mode": "100644",
+      "index_oid": "548bb977de041f87ae2ffddfcb0fe00fc9645804",
+      "mode": 420,
+      "size": 2615,
+      "sha256": "93001611f38f8e3b363d827e31bc729241968020fdfcc82795614866b7d0bf82"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.10.md": {
+      "index_mode": "100644",
+      "index_oid": "b8e226f5a6512c1d69fc9c46813d8f48f24bf6fe",
+      "mode": 420,
+      "size": 33088,
+      "sha256": "adc992a31bbfb9e7849228acd0ee19c2de6f501e2fdd044ef7ea370cf959c373"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.11.md": {
+      "index_mode": "100644",
+      "index_oid": "679dd1fa01ddeac3888fe2ccef224418303ffce4",
+      "mode": 420,
+      "size": 8845,
+      "sha256": "ef4203ed02e2009365dffccbd8eb5e0c6b233f670bf3c6c8374af032c127c685"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.12.md": {
+      "index_mode": "100644",
+      "index_oid": "ec980abeb478cc3e609761d55d03c80213c0959d",
+      "mode": 420,
+      "size": 4357,
+      "sha256": "d03814e36e1ee672b29fa34c270611aa375cf93b6a54dfc2a18f2d4ba4ea692e"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.13.md": {
+      "index_mode": "100644",
+      "index_oid": "127cd2f8f737782a468037bd7eed6c934cbbcade",
+      "mode": 420,
+      "size": 3093,
+      "sha256": "d8702d3a7cdcf7b28eee70f1bd90d50c42cf78460827f6a2c6abb262086d3b8e"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.15.md": {
+      "index_mode": "100644",
+      "index_oid": "20baefcd762269f5a27bda83ec452164c196ff52",
+      "mode": 420,
+      "size": 5564,
+      "sha256": "ff66972611f2996b5f399880c35cb2bd44eb5f3c118b9c0a4099936fb542d0d7"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.16.md": {
+      "index_mode": "100644",
+      "index_oid": "97c24658276a0e95e0febd90edefb05d28f6fcbc",
+      "mode": 420,
+      "size": 8236,
+      "sha256": "ed661ea8b44b38b047fee38ff880fa6d6fd190bb571e3a4fe042b5e766f95fe7"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.17.md": {
+      "index_mode": "100644",
+      "index_oid": "d5fd7e350a8fcdbe71bf360db2cd74022bae101a",
+      "mode": 420,
+      "size": 11305,
+      "sha256": "5e54b16e78a735b71346324c5b90e53b79dd2638f6579947e855689e4dfc94db"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.18.md": {
+      "index_mode": "100644",
+      "index_oid": "f254fbca09a374436c6a1a52b954f523dc950f1e",
+      "mode": 420,
+      "size": 12701,
+      "sha256": "3dbd7dec9445df82ba470f2746d76afdd59d57b45ec5390a2dbca55d2602cee4"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.19.md": {
+      "index_mode": "100644",
+      "index_oid": "745422bba1759fb072e80a0e485ac34d5138da4a",
+      "mode": 420,
+      "size": 24096,
+      "sha256": "5f40a6e7cf570884520a29abab66c3a0863f78b1f890556134184da06b411c97"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.2.md": {
+      "index_mode": "100644",
+      "index_oid": "d9655540a3e6d8dc7319b9a95464dbf4cc022479",
+      "mode": 420,
+      "size": 8310,
+      "sha256": "26bf0f5e269d77da9ac9b3d1cec7891d0e42c005f423c237ecda38e4cfda4525"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.20.md": {
+      "index_mode": "100644",
+      "index_oid": "61d73b4056fcc95fa6607b88bf066c45d3f474f7",
+      "mode": 420,
+      "size": 32731,
+      "sha256": "f132de104d975077c0fe16078314c1bb3c433f10d6ca507a2ae58dc9fea50619"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.21.md": {
+      "index_mode": "100644",
+      "index_oid": "7679f25fc1fe771873481ef2c35b472fe3af1e5f",
+      "mode": 420,
+      "size": 20149,
+      "sha256": "bc464cbfe1bf4c7dcd608b10081554e64ac5ba65cec8006c68ad61e42b3176a4"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.22.md": {
+      "index_mode": "100644",
+      "index_oid": "6eb8de04855b6cdeeac92088945a415b15474ab4",
+      "mode": 420,
+      "size": 2274,
+      "sha256": "266afcead639a3e0fd6f341f0b9a36bcf10f57124694ad86938da83e4fe4c11e"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.23.md": {
+      "index_mode": "100644",
+      "index_oid": "40ba2ed1c6c29a3788a78fcb1aee3b80ed454099",
+      "mode": 420,
+      "size": 5564,
+      "sha256": "8d536ec738b8ab492da300261ad04c145f1fe0fc5fcf84b2a72b3b7152fa5c7d"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.24.md": {
+      "index_mode": "100644",
+      "index_oid": "4c5776ebc887bf3264b423eca6bc0a2cedee9694",
+      "mode": 420,
+      "size": 9074,
+      "sha256": "59713a35643461fc79901c7aa694b857abd4e24cfa4a4a5d29f4742c9ea9805c"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.25.md": {
+      "index_mode": "100644",
+      "index_oid": "24cc8e562b21ef74360a3336f4f3096e06b9aa28",
+      "mode": 420,
+      "size": 5014,
+      "sha256": "28b0af0eda3d70e5ef6c5067796f5664199ed95157ce3186775fdb1cf6fd70bb"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.26.md": {
+      "index_mode": "100644",
+      "index_oid": "0aef47308d7bbcebebc3ee90f10de0285804d94b",
+      "mode": 420,
+      "size": 8691,
+      "sha256": "6ecc14d7931f4a8e850bbc8b85ffe4ac01d86212b90be14d52fa39b258614fdd"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.27.md": {
+      "index_mode": "100644",
+      "index_oid": "5422b8e55f0be296b562590f3f7b05589a071d22",
+      "mode": 420,
+      "size": 12132,
+      "sha256": "b6005432ae053e6f3ea7926aab45915a0290dae8aeb86f3be161a067ed782c7e"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.28.md": {
+      "index_mode": "100644",
+      "index_oid": "4e8f881f87c2390b19015be82ad837afeba96ad0",
+      "mode": 420,
+      "size": 4887,
+      "sha256": "eb29ab230b1bbbea29f882c7d67c36d4afba5f4afc52c74a83369b9ae6854608"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.29.md": {
+      "index_mode": "100644",
+      "index_oid": "f6ba0bc2798dedac47e0bf5e4ae8c9efcbefb03a",
+      "mode": 420,
+      "size": 8694,
+      "sha256": "69bb4535d2169eb0221d54b8cd1b145e92963f42819826d3e0ea08f5916f4909"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.3.md": {
+      "index_mode": "100644",
+      "index_oid": "7dbb571474fcf72c1567a6cafd44b1c8c4824063",
+      "mode": 420,
+      "size": 6209,
+      "sha256": "057ffc2b2c7deb74b583c8ea3abe6696f2e8e5cfc8a7d77e05e8374bcd97533e"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.30.md": {
+      "index_mode": "100644",
+      "index_oid": "83877d560c5ab08f50d9f54003575ae10ce5c408",
+      "mode": 420,
+      "size": 5466,
+      "sha256": "b7a549042664366d2158a716d8516664f84a5563a7b47ae9985425999d05e312"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.31.md": {
+      "index_mode": "100644",
+      "index_oid": "7d657e2980a6eb23ffc724cbfc8e22f285d00174",
+      "mode": 420,
+      "size": 5677,
+      "sha256": "a5cdcc1fb3dea756ff54bc369378958d6800244578264e1a0412f908fa2dc9f9"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.32.md": {
+      "index_mode": "100644",
+      "index_oid": "c8f38aef24936f70b9fc083380a754534fa600b5",
+      "mode": 420,
+      "size": 12416,
+      "sha256": "02e406bd45e9612c83c7d44f1df38dd99b8adaa89a33bb2e84a9e9c3a10e0211"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.33.md": {
+      "index_mode": "100644",
+      "index_oid": "76cfad40e8b94ac414fa84804d6168d0e2c242b9",
+      "mode": 420,
+      "size": 3607,
+      "sha256": "e9df92ef94741c93d46b86f32d4121841c80dcf75482ec39ecc465c2602f4aaf"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.35.md": {
+      "index_mode": "100644",
+      "index_oid": "e4a65993a259875645a81fccf4886a4bdab47598",
+      "mode": 420,
+      "size": 11454,
+      "sha256": "00df0e47c37aa56d86a5d8b8ce4b2f23ed56117ef3e3d94f374d5f32d42b4c69"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.36.md": {
+      "index_mode": "100644",
+      "index_oid": "5cb49a8f6f9951ffab39cf68b38ce5cc4d3a2d13",
+      "mode": 420,
+      "size": 4446,
+      "sha256": "d53beefbf5f999328b0a89d7fc67db472c00178252c71d026e79e0d6933bd10d"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.37.md": {
+      "index_mode": "100644",
+      "index_oid": "e43eb94c4d408c827ff592ae4b14bd1befa430c8",
+      "mode": 420,
+      "size": 3164,
+      "sha256": "f3a78bc0d84f6b48a70be1a46ccb11cb7465788b44febd33d0279b8e7b7d9b82"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.38.md": {
+      "index_mode": "100644",
+      "index_oid": "67fe610c14da267101e273c89c478a97d6c59755",
+      "mode": 420,
+      "size": 2522,
+      "sha256": "8cd5f44b860435fb4c1e3f05d98c10aeb2e0d7642d56135dc91431a238b02979"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.39.md": {
+      "index_mode": "100644",
+      "index_oid": "c95dd4733dbc660661184557b5d13e279a442460",
+      "mode": 420,
+      "size": 4085,
+      "sha256": "f1387ce428b7ccd81cb92c1a99ebfe6c9f3b4f9ec853e02a9d60d0806210efeb"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.4.md": {
+      "index_mode": "100644",
+      "index_oid": "98664eb2ea424070c2ec66682cb4e7d1d98cffae",
+      "mode": 420,
+      "size": 4224,
+      "sha256": "fe2175796bfd4dd82088b24ecf83bf5711f1a5f230985899a85ac297ddbcedf6"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.40.md": {
+      "index_mode": "100644",
+      "index_oid": "9a570b4f8ff7e9899f328a72e3c1344079f26e09",
+      "mode": 420,
+      "size": 2443,
+      "sha256": "ebac99d507ea67388d01e2f69214c7e03b35c1f3ae117710e0afe1740a2cf3e0"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.41.md": {
+      "index_mode": "100644",
+      "index_oid": "2f080d001a76c6c4c42f8eef4f403ff91a95760d",
+      "mode": 420,
+      "size": 7104,
+      "sha256": "ddbcb949faf86bec30e0da75fc1d473e352d0e87087008e2cf7227d021ca30b2"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.42.md": {
+      "index_mode": "100644",
+      "index_oid": "8b68cc46e73d7b46cc90d305c54231b86b649592",
+      "mode": 420,
+      "size": 3356,
+      "sha256": "07c26d2115d37650f32968b066619d7cc12fa7fb9da4671e6fa1c777b0205221"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.43.md": {
+      "index_mode": "100644",
+      "index_oid": "ed297d46ff6415bbd166a67780591cb4a01af1ad",
+      "mode": 420,
+      "size": 3388,
+      "sha256": "94ceac9c40774195d6d0cf23e476f6d682b4d15d4cce17d1925445a7fe3a1f2a"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.44.md": {
+      "index_mode": "100644",
+      "index_oid": "6a52f6d567f56acae98851bfed7139f63682abe3",
+      "mode": 420,
+      "size": 2670,
+      "sha256": "532f60c28d1675d13b07a1b148c14f536dc71e098462b1a324f479060bc04471"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.45.md": {
+      "index_mode": "100644",
+      "index_oid": "ea5dade2c747494a7328c737a310c6e3e01d5b70",
+      "mode": 420,
+      "size": 2314,
+      "sha256": "2fb7381014308512fb431a0eeead331fb7fb09713b06800dffde83ccab12b7cf"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.46.md": {
+      "index_mode": "100644",
+      "index_oid": "5a6e80d04775e2883bd12804275af946c8104619",
+      "mode": 420,
+      "size": 2492,
+      "sha256": "8abea442f822809deeae8b5b6d0845837cbc85031c3f8c06402894f3b62e6236"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.47.md": {
+      "index_mode": "100644",
+      "index_oid": "75f8845deb5ee72b064f9330cd844c3a215bc6d2",
+      "mode": 420,
+      "size": 32063,
+      "sha256": "61f8a1a003d1e7c40f3a2894ac408f38a5b32669e9c4ddb1bd488c4584902c10"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.48.md": {
+      "index_mode": "100644",
+      "index_oid": "a6011837e8f6fac08576a9888fb84699b6ac5883",
+      "mode": 420,
+      "size": 1009,
+      "sha256": "5922097c3eb942c77b428de5b85c7d5831b4861f7390e4f1bb2648377338e14a"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.49.md": {
+      "index_mode": "100644",
+      "index_oid": "3fd99ad027a6ebd1c08a48a88b2c2d5f9260b062",
+      "mode": 420,
+      "size": 1323,
+      "sha256": "21533ef05cf17c1efd1b85c26b329c3ccc566c7a80ae40e523df847ed1a66962"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.5.md": {
+      "index_mode": "100644",
+      "index_oid": "8daa8db9db61004307b15884319c0449a6a9875b",
+      "mode": 420,
+      "size": 5564,
+      "sha256": "f52e97e65d91f2666b458504417be4b0719e52340a5d2c9ce87b723a6597e9f1"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.50.md": {
+      "index_mode": "100644",
+      "index_oid": "fcb5997090ef24974c58258cda7d8d41d37fb49a",
+      "mode": 420,
+      "size": 1740,
+      "sha256": "e13246cced9fb7fa022472bb5090e4263cf1678cbc496e16d8c4f51d1e0bb4a8"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.51.md": {
+      "index_mode": "100644",
+      "index_oid": "8809867bfbd9648cb148288c699345eb438bed16",
+      "mode": 420,
+      "size": 3437,
+      "sha256": "10daffaf2235e874900ce934862c77d1a5630609f75d5ee3452f5ac3e9f394ec"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.52.md": {
+      "index_mode": "100644",
+      "index_oid": "66bd5121644ed1b0a1db9d40480a07d79cd9836f",
+      "mode": 420,
+      "size": 4677,
+      "sha256": "153a977e225db550982f007473d6437473edf4d96092b5c455064dd46933dd8d"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.53.md": {
+      "index_mode": "100644",
+      "index_oid": "08f9813884438327f67dbcf56f702823b7759345",
+      "mode": 420,
+      "size": 3451,
+      "sha256": "298fee01b1dbdeb4a4f1de4594f1d859efa0316e5316c5d68d4419cd7b3746e1"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.54.md": {
+      "index_mode": "100644",
+      "index_oid": "f1d5e29b935625f2d95ce2315b243db88f553966",
+      "mode": 420,
+      "size": 3249,
+      "sha256": "da1180f047e7da8397f84713a4fee5f7e5ddf858d6cb972daffb121c1da474cf"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.55.md": {
+      "index_mode": "100644",
+      "index_oid": "bb22ce36a9354e4de815ddeb3fa29c5b0c8142bc",
+      "mode": 420,
+      "size": 5849,
+      "sha256": "7d11ceb6781300fcd36e709797328b76d7c35fd71e43e6018af8b45e9c3a05d9"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.56.md": {
+      "index_mode": "100644",
+      "index_oid": "00b579a105e88ea4940e37b6327aebdd55798dbe",
+      "mode": 420,
+      "size": 2513,
+      "sha256": "5b648c1d7276aad8e780dc8bb0058abc022312ff4ed0b5b153f6c16303031dee"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.57.md": {
+      "index_mode": "100644",
+      "index_oid": "5a3c6287566f7d13309af929b9d6f2da9d2c3c63",
+      "mode": 420,
+      "size": 6467,
+      "sha256": "5555a5401959354e5782e506af6f896ad4ac66fcef646b3a7702d9977bfffa7e"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.58.md": {
+      "index_mode": "100644",
+      "index_oid": "0001982cec104d2c71caa8ad3decbc0cdbea8fa0",
+      "mode": 420,
+      "size": 5804,
+      "sha256": "576112aedb6e211329026561276e12fae73e4d87beb617a5008ec4ed986b56f7"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.59.md": {
+      "index_mode": "100644",
+      "index_oid": "41e79905ba726779df2ae70eb56c091e59b22e2d",
+      "mode": 420,
+      "size": 2466,
+      "sha256": "0cc9401bf8db51c34f372c20ed1409a8ed1999d608ee4d0bf722cdf9d07e266a"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.6.md": {
+      "index_mode": "100644",
+      "index_oid": "5e33ac9658023290a76a643a3d374d6bfa7d2560",
+      "mode": 420,
+      "size": 13634,
+      "sha256": "e8fde3eaf80c3446e4935249e83e92b390e6d1f765506eaad44af2ee977869ce"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.60.md": {
+      "index_mode": "100644",
+      "index_oid": "b17553bd6a017cf117fa0cd504d6695750944bd1",
+      "mode": 420,
+      "size": 3527,
+      "sha256": "f323baeed87852506f5311cb1f008661f0d5b6e8b9f04aed70fab5574efdbdc3"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.61.md": {
+      "index_mode": "100644",
+      "index_oid": "ecb9b628327b7ce4efcfc8b656cdd82de4f99225",
+      "mode": 420,
+      "size": 2397,
+      "sha256": "8f002d0e4db6fb94df07682b5f551c33a2286f94925ac9467d7092f02ae15109"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.62.md": {
+      "index_mode": "100644",
+      "index_oid": "06e445642916c683f5cfe7ade85ae30c6f99f2bc",
+      "mode": 420,
+      "size": 1844,
+      "sha256": "4fec27346a7877f246b352adff4314bf9097b50b6e2532e1049626e667533250"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.63.md": {
+      "index_mode": "100644",
+      "index_oid": "a996e78066db735766d0f7d6ffc4b2001047d9c6",
+      "mode": 420,
+      "size": 3173,
+      "sha256": "39b454e3f60777f335db2d2118730d97673801a3d7bd2da58a8147488d209edb"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.64.md": {
+      "index_mode": "100644",
+      "index_oid": "6b83e2bad450a6fafb075a46b118948c46a83766",
+      "mode": 420,
+      "size": 4588,
+      "sha256": "897862e9b627e8225b35fa2afa4c9bc447f659a7fc5ef1a26a921dea7a762144"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.65.md": {
+      "index_mode": "100644",
+      "index_oid": "646f2897eb3ec187ce8cc9ce8b6ad80f20436401",
+      "mode": 420,
+      "size": 5261,
+      "sha256": "4386badd6deb93398ef5174363c808735720164a58fcae556b5ae7363fb72569"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.66.md": {
+      "index_mode": "100644",
+      "index_oid": "193f5f1fd06915c654c9f22961ad055f8a393f68",
+      "mode": 420,
+      "size": 3035,
+      "sha256": "9d96f296f3e3387b5ccb6efc73724dc41518e29edb96c025ded781c48982686b"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.67.md": {
+      "index_mode": "100644",
+      "index_oid": "df97d50b65cb834fef0d1ff5892e333c80ba9967",
+      "mode": 420,
+      "size": 3553,
+      "sha256": "0005db30cb0f8b0c270151fdcb07a242ab825b9ba823522296a9d9dd27317664"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.68.md": {
+      "index_mode": "100644",
+      "index_oid": "d20026abd23f930331c6e387e1da7aa6f90be56f",
+      "mode": 420,
+      "size": 5273,
+      "sha256": "0a93355a828658fd33b11755cbbe87d15230d090f7c49a68b5b4de638de01765"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.69.md": {
+      "index_mode": "100644",
+      "index_oid": "325b6c4aef99068b2ed16fed9f4c07b30da47cbe",
+      "mode": 420,
+      "size": 37501,
+      "sha256": "5b6f2c7dabb4ed4538a1a84887630650c4918ad0c7f504ffd7e0c7dc4d3a5699"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.70.md": {
+      "index_mode": "100644",
+      "index_oid": "5227d7b26f14127b94c85d0581cf945d0a360a89",
+      "mode": 420,
+      "size": 6655,
+      "sha256": "1bfe9de30de2792d305111b9f70172c48b810d192c5b06337d997fbecd3eaa50"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.74.md": {
+      "index_mode": "100644",
+      "index_oid": "b82d913beefd4bce3c91b3d97933206167227972",
+      "mode": 420,
+      "size": 1711,
+      "sha256": "98d1108613b7f57b143b50a2a482cd2eab889ef8b6986712bada76c987fb17af"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.75.md": {
+      "index_mode": "100644",
+      "index_oid": "aebd2dd8d9d393863b370fa1dccb41481e959f6f",
+      "mode": 420,
+      "size": 2727,
+      "sha256": "0852952756e540048856a29ee82a40d9e2afd7e44803fd30723dba8ef4e2624d"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.76.md": {
+      "index_mode": "100644",
+      "index_oid": "c5b3ead2c7d0bb417d17e7561b129c5d575b511e",
+      "mode": 420,
+      "size": 22823,
+      "sha256": "5df047cd3f7caf1a188cf11db58a55feab0c15504b3eec9df7e0aca3a734c5f4"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.77.md": {
+      "index_mode": "100644",
+      "index_oid": "191a97e560af83dabedfbd749db6e32de14b8a13",
+      "mode": 420,
+      "size": 4691,
+      "sha256": "3e20f9e951553d031f72cc949ced90813894b73ecb5bd931c2c6b4dba2242f11"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.79.md": {
+      "index_mode": "100644",
+      "index_oid": "55ab5a5a444311152eaf1065e86cdeeeebd03401",
+      "mode": 420,
+      "size": 1116,
+      "sha256": "849917ed1204a6deac67699eab2aab00c5c5834490b68e803354be66729a2a63"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.80.md": {
+      "index_mode": "100644",
+      "index_oid": "17a0328de708095884ff548852180724cbf4128d",
+      "mode": 420,
+      "size": 4415,
+      "sha256": "2c1d2497e3c6278a0acc805b77bb3dd0ff38b12fc69f48c0fa64343c46e40d52"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.81.md": {
+      "index_mode": "100644",
+      "index_oid": "a752bcb1ad78482b928b678b9506b6c3a807ca46",
+      "mode": 420,
+      "size": 3657,
+      "sha256": "581409cbf2573c2d50935b478de175d725bf75a5f532b25d7d7e2d0d5ca52416"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.82.md": {
+      "index_mode": "100644",
+      "index_oid": "ec65c5bf1b49398a1fc27b90688f038882215da9",
+      "mode": 420,
+      "size": 3523,
+      "sha256": "3a8e59b75a1cd51242b0b06fa2ee8a0fd19854fc678168e4cac9ffee66c23d8e"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.83.1.md": {
+      "index_mode": "100644",
+      "index_oid": "dde42492eaba3ea9899c03a69895a89d869a3eee",
+      "mode": 420,
+      "size": 1041,
+      "sha256": "9d39cd99504e6bcdc2dc4625acce99a62417ec3206a83588f6dd865c30333da2"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.83.md": {
+      "index_mode": "100644",
+      "index_oid": "9358539971c81d356e54ed5f802e96dab9b4086c",
+      "mode": 420,
+      "size": 2136,
+      "sha256": "02b06ab9329013c10ba384e411de6f0ca371a3e4a73a0f0bb0b1012a0fbd7624"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.84.md": {
+      "index_mode": "100644",
+      "index_oid": "2f5e041baf03edbef8c1cb92247a40a63035cfda",
+      "mode": 420,
+      "size": 5640,
+      "sha256": "96ddaa4fd64e80620883af7889c50e1a2fbed9b81b3c85616bb87afc29095cee"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.85.md": {
+      "index_mode": "100644",
+      "index_oid": "fcec0c6793b317c9d2a3b85d027ced0be79b9199",
+      "mode": 420,
+      "size": 4893,
+      "sha256": "1b8e944a15d16ee075ed0c8ec8c12c4aefa376af3c10b6aef57a558cca1e49d3"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.86.md": {
+      "index_mode": "100644",
+      "index_oid": "d3aaced9f4e47a5cccab7673591a67706f46e4ec",
+      "mode": 420,
+      "size": 5278,
+      "sha256": "0a68b722c15637cdab36a24289c16a72c50552cca3cdf55c70734253492b43b1"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.87.md": {
+      "index_mode": "100644",
+      "index_oid": "8088bb4eae4258bc88c79a0868994d5218f2b4de",
+      "mode": 420,
+      "size": 6783,
+      "sha256": "aa48a35695356810dc97b600559684727b3d64aa6cfd65473a937fb7d1c3b4d1"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.88.md": {
+      "index_mode": "100644",
+      "index_oid": "eebda58d258156b1e605f9f3285067ddd42ed478",
+      "mode": 420,
+      "size": 4163,
+      "sha256": "e603ceb6cd9d90a14755c127a571fd1b3761c82ea6db285ddbc66b31a6cb1a49"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.89.1.md": {
+      "index_mode": "100644",
+      "index_oid": "033cfa49913b90d4cf0dd53a1460b419844c2991",
+      "mode": 420,
+      "size": 4163,
+      "sha256": "0a5cb2c55efeb34007e6426dd3ac455925540139d1cbcbf1c4e9bbc1568ff6ac"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.89.md": {
+      "index_mode": "100644",
+      "index_oid": "01ed46757e26ab33e4fe8a7bf820fdd3c3aafe44",
+      "mode": 420,
+      "size": 7106,
+      "sha256": "49f87c303443e8cd7197eb8dc5b22b56bf23706af34ea49ca5b03a0d0bd371cc"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.9.md": {
+      "index_mode": "100644",
+      "index_oid": "b526f0ebee7e771e196ccefd4d510735c30a6d91",
+      "mode": 420,
+      "size": 17122,
+      "sha256": "4b5d87c5ec01bf66c9ec00af430ea357b2fae8ca88bfe044f018a143649e9839"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.90.md": {
+      "index_mode": "100644",
+      "index_oid": "fd613af63f01e2178663f78cbfae4aed5a19c393",
+      "mode": 420,
+      "size": 3198,
+      "sha256": "53a67a2bcf1de086bacaf058ab1d5d7912d88ae0cd8ccc2032b227f164adb16c"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.91.md": {
+      "index_mode": "100644",
+      "index_oid": "869a2445c9a4630e5c363a54b2814a3839766a70",
+      "mode": 420,
+      "size": 2905,
+      "sha256": "de11002206b9f1bdc05caa04955d6e6d141068af059df6d7514e949371e86373"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.92.md": {
+      "index_mode": "100644",
+      "index_oid": "8f0553a0ad43d18d3f4f485a6ef27d9d0884363c",
+      "mode": 420,
+      "size": 4181,
+      "sha256": "346ac20a2de28f89503c25cb231ec4b788a25308c0720238d692629bac271118"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.93.md": {
+      "index_mode": "100644",
+      "index_oid": "d375181c5d2cb77a2ae55642d86d593b5279618f",
+      "mode": 420,
+      "size": 1786,
+      "sha256": "5c253c03713b0b40822f056e064dba4bfbda83a0fd71b31eef7626958509fbed"
+    },
+    "docs/task-history/PROGRAM/PROGRAM.94.md": {
+      "index_mode": "100644",
+      "index_oid": "665f147f06d8187589f16551480c3b10ea299f9e",
+      "mode": 420,
+      "size": 1071,
+      "sha256": "e9d71c423401856facf92b33fb5ddf22d0b48f7a4946ab53b16e4237d612aa89"
+    },
+    "docs/task-history/S0/S0.1.md": {
+      "index_mode": "100644",
+      "index_oid": "912d7369708f84e166b2d2d849779b385c06b4ec",
+      "mode": 420,
+      "size": 5300,
+      "sha256": "d9f27bda4aa6a23910e1bcee6b1837615a56e605dde060fcfe790e9fc99fcaa3"
+    },
+    "docs/task-history/S0/S0.2.md": {
+      "index_mode": "100644",
+      "index_oid": "35651dc32c52b60961e71aae12118d79491e07a6",
+      "mode": 420,
+      "size": 4142,
+      "sha256": "34f4d490aa0c52653320eacdbc5308c8ff70a67f4717141e63813f367afc0de8"
+    },
+    "docs/task-history/S0/S0.3.md": {
+      "index_mode": "100644",
+      "index_oid": "2a0c5702c00f410155285751dee39948463e8569",
+      "mode": 420,
+      "size": 6384,
+      "sha256": "0cf143747cabca2aec58d6ffa05a500778dca424f0244f015f90bf15474e3a0f"
+    },
+    "docs/task-history/S0/S0.4.md": {
+      "index_mode": "100644",
+      "index_oid": "6e172ee672aa75cc907b2bdba46404c5b416fe48",
+      "mode": 420,
+      "size": 5213,
+      "sha256": "486b31f48fe1962cbf023407070bc41548c51d68555c6744fa1179f0cddb5a5c"
+    },
+    "docs/task-history/S0/S0.5.md": {
+      "index_mode": "100644",
+      "index_oid": "351783c790aa120fefb882f2d0123b90d6c003c3",
+      "mode": 420,
+      "size": 4852,
+      "sha256": "ada234e53f688f321c264efa0a38d16f801682d5ee7654e57bfa5e0b611bc324"
+    },
+    "docs/task-history/S0/S0.6.md": {
+      "index_mode": "100644",
+      "index_oid": "572af1673316315c60874ddf4d13bf3be5b9c1c7",
+      "mode": 420,
+      "size": 4104,
+      "sha256": "26ebb98dcf631e746d00093c36781d974df179a5c9c9840e931272d37a4ea906"
+    },
+    "docs/task-history/S0/S0.7.md": {
+      "index_mode": "100644",
+      "index_oid": "b8c06dd04fbab2fc8468e646a6dbc5ddc0a41b59",
+      "mode": 420,
+      "size": 5852,
+      "sha256": "ea0b1cda5e2ea9dd918750c5d4966e21e27e827098139e5cf20d6370115be573"
+    },
+    "docs/task-history/S0/S0.8.md": {
+      "index_mode": "100644",
+      "index_oid": "47e4906f74b2035b5a9e54fd85b696adb7f83ed6",
+      "mode": 420,
+      "size": 7751,
+      "sha256": "c4d9fad26fa8b454a0da972d077d9ec052f4439c1f530d82203f81ea7a76559f"
+    },
+    "docs/tasks/API.md": {
+      "index_mode": "100644",
+      "index_oid": "49e5bab02a10be3f4186f3833cd017f5cbd2c392",
+      "mode": 420,
+      "size": 19993,
+      "sha256": "95280d2304b3c737e839dc835e19c5e36b71cbc291d95f462a1bafee8b9a68a1"
+    },
+    "docs/tasks/BOOTSTRAP.md": {
+      "index_mode": "100644",
+      "index_oid": "c0bbf5ebaaf063024dae0ef75f3f57827d9ca60a",
+      "mode": 420,
+      "size": 2383,
+      "sha256": "1779363e1e566b8cc7cd0b8df2e18fa30c2efcf2b871ea69d9dd6399f1695b1b"
+    },
+    "docs/tasks/M0.md": {
+      "index_mode": "100644",
+      "index_oid": "90aa0ba6b241093b8de285f80e740a133661af9d",
+      "mode": 420,
+      "size": 10530,
+      "sha256": "1ff44741ee99473c8ebdc614f125177c6e4afa812bdecd4f05709ca13be0a697"
+    },
+    "docs/tasks/M1.md": {
+      "index_mode": "100644",
+      "index_oid": "3c84f1fa4961a87523ad0192e722b90bbd4ea5ee",
+      "mode": 420,
+      "size": 155380,
+      "sha256": "79295fa17973a529e229c2e46b94a1c5215d3e3834da77a654c9a30c33ed251c"
+    },
+    "docs/tasks/M2.md": {
+      "index_mode": "100644",
+      "index_oid": "054d1ab48e3bb18f83787c3972d37ffefe846f41",
+      "mode": 420,
+      "size": 99777,
+      "sha256": "e041003b7601a16e1b475b117c561c74d0ae639d11a8658ce0bdc1a6b4e8a21b"
+    },
+    "docs/tasks/M3.md": {
+      "index_mode": "100644",
+      "index_oid": "38ea1399f0111b1ea9fd93b32050a4d560edd2fc",
+      "mode": 420,
+      "size": 291948,
+      "sha256": "190967323e1e60cf2d03738725838f6f8995e59107145f2fe73764d1c3bb325e"
+    },
+    "docs/tasks/M4.md": {
+      "index_mode": "100644",
+      "index_oid": "42a83b67d47e09450081e8877c510e0ac3a27f3f",
+      "mode": 420,
+      "size": 14518,
+      "sha256": "7e798a59257f92ea13647dd9a35f230a9090de53ba08a31d0d4297adb502ccf3"
+    },
+    "docs/tasks/M5.md": {
+      "index_mode": "100644",
+      "index_oid": "44985802ffaa8a6cfaa7520bd96e0c2dd3f2ce5a",
+      "mode": 420,
+      "size": 4623,
+      "sha256": "a1135b91dbc75eabf6f52b7c3d57d17d456f953de71ecf81186802cd6d68707c"
+    },
+    "docs/tasks/M6.md": {
+      "index_mode": "100644",
+      "index_oid": "2e98c1784bcf17cf4efcc0f0ec5de153e007ba96",
+      "mode": 420,
+      "size": 4707,
+      "sha256": "14de5ba06f73468cfd1a13fba20702729bcc9ce8c4f77ee208e29520e7b20a69"
+    },
+    "docs/tasks/M7.md": {
+      "index_mode": "100644",
+      "index_oid": "073c9dd054eb119a834023c95aaed3302b159746",
+      "mode": 420,
+      "size": 3985,
+      "sha256": "09ac58d95f156544a21c442bdca0bc410de94cb512b41ec37dc25f38eae6c34b"
+    },
+    "docs/tasks/PROGRAM.md": {
+      "index_mode": "100644",
+      "index_oid": "9b88efc4d92d224502926d3bd40ab411325ca227",
+      "mode": 420,
+      "size": 172952,
+      "sha256": "358b84196584a8b8be47dd29acc9278967b73ba277914cb11087a39e77cd8adf"
+    },
+    "docs/tasks/S0.md": {
+      "index_mode": "100644",
+      "index_oid": "daeb170da0a2e7e75c3a24b2648571e222bfe452",
+      "mode": 420,
+      "size": 13202,
+      "sha256": "0724495df6ab42f1ea977da09c87dd18e1e771633519276a850ae0f066210d08"
+    },
+    "docs/tasks/TEMPLATE-REFS.md": {
+      "index_mode": "100644",
+      "index_oid": "36b19b61bd23a6121e110786d2aba8fe1859104c",
+      "mode": 420,
+      "size": 5774,
+      "sha256": "b4aad44539a4f462309a54f8266d270a06c4b3e9da89495addf999dd64813bf5"
+    },
+    "docs/tasks/TEMPLATE.md": {
+      "index_mode": "100644",
+      "index_oid": "1276fcd92f0012c3f5467ef1f936dacf2142a8d6",
+      "mode": 420,
+      "size": 2812,
+      "sha256": "c142f4bfce184e4a0b32dc6db3e221570ad0256100a879ce0d4217f056612260"
+    },
+    "docs/tasks/artifacts/task_acceptance/run_task_acceptance_probes.sh": {
+      "index_mode": "100755",
+      "index_oid": "6137ced965f3fccd22e174b07c3512353278f864",
+      "mode": 493,
+      "size": 8468,
+      "sha256": "24e98817dfa0bb6c60472d5ce97c691699999041b9dff4c83cfa595844c3a045"
+    },
+    "docs/tasks/artifacts/waiver_routing/run_waiver_routing_probes.sh": {
+      "index_mode": "100755",
+      "index_oid": "c425d2c5fb858b3cfc9c5e09412fc3f4d5da9568",
+      "mode": 493,
+      "size": 7729,
+      "sha256": "1530482fbcdca60b409ae3a525169e34c02b1df09888b6066f3dcde5a0041b7c"
+    },
+    "docs/usecases/README.md": {
+      "index_mode": "100644",
+      "index_oid": "ca788386dab7df5974f48bab7efab8a442189a0f",
+      "mode": 420,
+      "size": 3473,
+      "sha256": "afe97e739b6d8c06b2bc0aa932b4199ea6cbbc6b812695deecc26753920fc315"
+    },
+    "docs/usecases/uc1-periodic-three.md": {
+      "index_mode": "100644",
+      "index_oid": "00b0cce71b25d06c20dc8ca975e4d3794538084b",
+      "mode": 420,
+      "size": 2137,
+      "sha256": "2f8cb41e337632b9f4dec3658a887af905d0b2c2a7bb1e024ece2aeff3b6ae90"
+    },
+    "docs/usecases/uc2-high-interference.md": {
+      "index_mode": "100644",
+      "index_oid": "be14c21e6692027a484f5e255d8361a4e4d668ad",
+      "mode": 420,
+      "size": 2377,
+      "sha256": "8eb375238f4116d93705121ad656d19c9930be8f9545c2e196821cd0aa483db9"
+    },
+    "docs/usecases/uc3-alternative-timer.md": {
+      "index_mode": "100644",
+      "index_oid": "06972e806cdc7782c386659b46180ad673ccc6d8",
+      "mode": 420,
+      "size": 2780,
+      "sha256": "663c9d71344841efce39279387acc24961645939f6f7a91095fa5d3cae91f0ca"
+    },
+    "docs/usecases/uc4-bounded-queue.md": {
+      "index_mode": "100644",
+      "index_oid": "4784c234845dedff057a7359210563fbce4afc0a",
+      "mode": 420,
+      "size": 2330,
+      "sha256": "bc92e5d94c7442bc70ff8c2b575f8ef92f73d88daffee08fc7d975f7bbd008c0"
+    },
+    "examples/README.md": {
+      "index_mode": "100644",
+      "index_oid": "b521e6e3cf901c400759be5c4630378761fb3ba3",
+      "mode": 420,
+      "size": 3676,
+      "sha256": "b43b390aede47e77443b40a8b538438f583cda150975a1a7a9de7802b0ef4897"
+    },
+    "examples/alternative-timer/system.eadl": {
+      "index_mode": "100644",
+      "index_oid": "ee697ea80de1ce450a1d58c66227e56a2ffdde02",
+      "mode": 420,
+      "size": 3060,
+      "sha256": "6e56d0f4904d133027f5051322113122af96cc28be7fb4a39ccd222d81e35191"
+    },
+    "examples/bounded-queue/system.eadl": {
+      "index_mode": "100644",
+      "index_oid": "656310ff4cef445e343e219be1003af1904f8b25",
+      "mode": 420,
+      "size": 2164,
+      "sha256": "31dd0ac08c5f797186b103193a8eb55e90f9c6ac25e0ae0ed125b4a5c5589ac0"
+    },
+    "examples/high-interference/system.eadl": {
+      "index_mode": "100644",
+      "index_oid": "c1acba0dc7185f704db8baea1ab5cd4cdbc98d4a",
+      "mode": 420,
+      "size": 2585,
+      "sha256": "2a73d820580beaacd65c9a7ab253fe2b44913cc54b05ec6a05440aab607fcb08"
+    },
+    "examples/periodic-three/system.eadl": {
+      "index_mode": "100644",
+      "index_oid": "45d4900cb1dc44865c94a6bc4981177d61be58d5",
+      "mode": 420,
+      "size": 2177,
+      "sha256": "9e044d86d42e9c5b975cf4d8db0059a67f09f6480d1214f76efe9eb3a664fd04"
+    },
+    "examples/s0-heartbeat/README.md": {
+      "index_mode": "100644",
+      "index_oid": "9d36db4a26041e5c84e33a09bd79c1b17f5d3161",
+      "mode": 420,
+      "size": 7041,
+      "sha256": "8ddf58eb19f169b7dac682ae5fe11bf7b04709f1eceb8c3c8f05789c04a128a4"
+    },
+    "examples/s0-heartbeat/expected/system-changed.txt": {
+      "index_mode": "100644",
+      "index_oid": "959954cfd46421bcef6a58da416c09eeb3aa698b",
+      "mode": 420,
+      "size": 566,
+      "sha256": "9ebd499294965e19e107e65ec7d04f58523067c26cba0ff79a314949a8f46bf8"
+    },
+    "examples/s0-heartbeat/expected/system-unsupported.txt": {
+      "index_mode": "100644",
+      "index_oid": "913e90ade835a0d9cfb295cd891de0702230ffd4",
+      "mode": 420,
+      "size": 760,
+      "sha256": "6cbd06d9c51d8b9b29cf35d6c58cd71d3dbd761948c8c651080bdcb649a71007"
+    },
+    "examples/s0-heartbeat/expected/system.txt": {
+      "index_mode": "100644",
+      "index_oid": "15e593e040bd038be1993244e0d0aec92c1510c8",
+      "mode": 420,
+      "size": 590,
+      "sha256": "2edb2ca989a32b6092dfc57335e66eb09a6946cc2f589860bb5f1818eebcc2c3"
+    },
+    "examples/s0-heartbeat/system-changed.eadl": {
+      "index_mode": "100644",
+      "index_oid": "799fdd8f817f5b8ce3479536f550696de2161cf0",
+      "mode": 420,
+      "size": 1751,
+      "sha256": "2332995037eeca29a9f8df1c2b65929353718f23e875099572c4c18c95f8531a"
+    },
+    "examples/s0-heartbeat/system-non-harmonic.eadl": {
+      "index_mode": "100644",
+      "index_oid": "7ed7ba898b84d28e52a4134c048999c0cd2d0188",
+      "mode": 420,
+      "size": 2131,
+      "sha256": "4cc39ec7a4e280dc2b48c2134319888ac3aca7561e27315d031f9bf76aa3f7b8"
+    },
+    "examples/s0-heartbeat/system-unsupported.eadl": {
+      "index_mode": "100644",
+      "index_oid": "3ccf08bbda062978f36cc10fd51dc86f7090da4a",
+      "mode": 420,
+      "size": 2118,
+      "sha256": "a3798b2ce343c81246289990220af02350d9b93cea23e3b74a64754cc8a298c2"
+    },
+    "examples/s0-heartbeat/system.eadl": {
+      "index_mode": "100644",
+      "index_oid": "e4563f239f33c29f30cc6341007e5914cfd60843",
+      "mode": 420,
+      "size": 1866,
+      "sha256": "3b371091958b993ff14d73c2018d6dde185f40e394bd7dc38eca23ac41f8bf63"
+    },
+    "knowledge-map/scripts/check_knowledge_map.sh": {
+      "index_mode": "100755",
+      "index_oid": "788e0d76747942e01850a6083a344c787467cdd5",
+      "mode": 493,
+      "size": 958,
+      "sha256": "8b1bca14b300010c142c97a13489b61c279bf3b48341fab954d04e9eb7f152a0"
+    },
+    "knowledge-map/scripts/gen_knowledge_map.sh": {
+      "index_mode": "100755",
+      "index_oid": "2d0865e7f2454e0a27f84fdf1c7ec0c67f4521ef",
+      "mode": 493,
+      "size": 1710,
+      "sha256": "50cee3e852ccb763e69f334d01b64b6c9d381dfde068dae73d632acd41fc6149"
+    },
+    "knowledge-map/subsystems.md": {
+      "index_mode": "100644",
+      "index_oid": "464e3e164a078dd30248d47991c82725a0b767de",
+      "mode": 420,
+      "size": 14023,
+      "sha256": "39cbb0ac5103b48eba3f608172d2a0d8d83e20d53b595330a21925ea9547b02b"
+    },
+    "rust-toolchain.toml": {
+      "index_mode": "100644",
+      "index_oid": "d821934bf655b033a452ef03b2b3cc631e02ddd7",
+      "mode": 420,
+      "size": 573,
+      "sha256": "4706b7b407427c38a3b63860b2e131cacc9eb57569a6755a39e81756cca676cd"
+    },
+    "scripts/bootstrap.sh": {
+      "index_mode": "100755",
+      "index_oid": "d0b4bd62bd5b526e70e2ed377f0c84d68ef73329",
+      "mode": 493,
+      "size": 9952,
+      "sha256": "5427d299e458929445c8fe21ee4f774f8f5c137b0543ea6df486b5123f459ead"
+    },
+    "scripts/build_book.sh": {
+      "index_mode": "100755",
+      "index_oid": "5ca811f06929df2e9fc1e34189d5449d7ccd5f18",
+      "mode": 493,
+      "size": 4170,
+      "sha256": "e4da431cb03d180c2912004dadac4460dd91594307ece8e633a69b0d34c230fb"
+    },
+    "scripts/catalog_check.sh": {
+      "index_mode": "100755",
+      "index_oid": "f4a19b8ab0f10e72ba22cfa6d59a58a2df2d6c00",
+      "mode": 493,
+      "size": 23574,
+      "sha256": "a1b85140a49fec17d9d642c5c3dccc1e6208fb4bffbbc56ec09f68ea2874d65d"
+    },
+    "scripts/catalog_gate.sh": {
+      "index_mode": "100755",
+      "index_oid": "fb3f7133ccc1812a1571af1d11b555ab6925c8d8",
+      "mode": 493,
+      "size": 8831,
+      "sha256": "9d12026bf6b5851ac9b59e50d8ccba699041474c85ccf465bf69f147b98bdc5d"
+    },
+    "scripts/check_book_anchors.sh": {
+      "index_mode": "100755",
+      "index_oid": "2ede795d75ea3e4a6da8ac0b15d71a82555a92c8",
+      "mode": 493,
+      "size": 10263,
+      "sha256": "ed2aa524868c677e4ff102d6cb83a836fbdf39b17656c27a0842f3e9ddf3f23b"
+    },
+    "scripts/check_book_coverage.sh": {
+      "index_mode": "100755",
+      "index_oid": "367c73e3605f28fbd443cda6e322163bc30cc5e1",
+      "mode": 493,
+      "size": 7715,
+      "sha256": "531667f54ea755694cb761b0b347768c6835c706512ef777653c0230577adca5"
+    },
+    "scripts/check_book_glossary.sh": {
+      "index_mode": "100755",
+      "index_oid": "6f25656c667045355234d85c255ea59b4edbc1dc",
+      "mode": 493,
+      "size": 8454,
+      "sha256": "8167597241fd92243c9e134187682d43fc2802fc60b10715717fdcbcb7b2a9bc"
+    },
+    "scripts/check_book_index.sh": {
+      "index_mode": "100755",
+      "index_oid": "2042cf8b19a03f788d3bdfd38e4fb04179ae0b68",
+      "mode": 493,
+      "size": 11490,
+      "sha256": "63d606cce8071fbc057124cec7b5fb10a04d83ba0e9f926f5ea2c0b5220c365e"
+    },
+    "scripts/check_book_sources.py": {
+      "index_mode": "100644",
+      "index_oid": "079644c7d5cb2e95867fbfa1d4785fd86f19dc05",
+      "mode": 420,
+      "size": 8315,
+      "sha256": "14f46f05669b0e30cdc64100e7ea1668f43072efc10760da4ecdfb3f68d01980"
+    },
+    "scripts/check_commit_log_rows.sh": {
+      "index_mode": "100755",
+      "index_oid": "b915f275f663890ba58db2fd2e0ecc7f6ab22f9f",
+      "mode": 493,
+      "size": 15902,
+      "sha256": "db489af40c4196b144f5626a802fb6089c3710b667ba32fb356378eaa112d5ad"
+    },
+    "scripts/check_decision_history.sh": {
+      "index_mode": "100755",
+      "index_oid": "cc54bb4b8f5df53d5749995c3ed13495fe8bd5f0",
+      "mode": 493,
+      "size": 40537,
+      "sha256": "b1e696b1f63725146d1b96bd171ac35e98f4a7875edfe3d8475dd1e315b6364b"
+    },
+    "scripts/check_decision_index.sh": {
+      "index_mode": "100755",
+      "index_oid": "66b00c198c8ef9f2b2fbb79327f4c522caa83404",
+      "mode": 493,
+      "size": 5162,
+      "sha256": "27eda1fd7d25b11a6f08d121a6fb89103704b1376a1d45b17864123e5b2ca444"
+    },
+    "scripts/check_docpaths.sh": {
+      "index_mode": "100755",
+      "index_oid": "d1ee5c29c6626a3c76bd52054f93ed62d9b4ea63",
+      "mode": 493,
+      "size": 924,
+      "sha256": "65462d50962b991caae31157cad22c566217db52c22d8b36a645f319ab9accd8"
+    },
+    "scripts/check_doctrines.project.sh": {
+      "index_mode": "100755",
+      "index_oid": "fbab5226c0899c8a71284b321ba8e41f7b2046e7",
+      "mode": 493,
+      "size": 8224,
+      "sha256": "6590d26a28f1bbda4304083cd9a56dc0105036ffeb8a5a076b6b6ab1ef53e4f7"
+    },
+    "scripts/check_doctrines.sh": {
+      "index_mode": "100755",
+      "index_oid": "a53335f7359c5fac5f9a4c0d00f13f1cb54db9f4",
+      "mode": 493,
+      "size": 4254,
+      "sha256": "022e7501263935200d97c64dadb193ef71d702397d1977be47a85e229d532d9a"
+    },
+    "scripts/check_feedback_register.sh": {
+      "index_mode": "100755",
+      "index_oid": "0eefbec871f76422e668441ec29d0faba638f261",
+      "mode": 493,
+      "size": 15582,
+      "sha256": "c7a9885c456305dcdebc57837e7aa29c8fce2a732cfae79e80cfb2ce5b4b1372"
+    },
+    "scripts/check_feedback_self_contained.sh": {
+      "index_mode": "100755",
+      "index_oid": "3a2122fdce276d4aace2d7664455670a18b98b41",
+      "mode": 493,
+      "size": 6255,
+      "sha256": "a9074c985e41016d9c461e5722d8f2818d3369159d7bd3460553bb00c771e629"
+    },
+    "scripts/check_figure_register.sh": {
+      "index_mode": "100755",
+      "index_oid": "5b16d4cc65240da9ca2db07e8bd67787f2713f41",
+      "mode": 493,
+      "size": 14193,
+      "sha256": "3b93837df5652c122f60e8bd0cc68e11646686f9c55077db27c881bfb326fd7e"
+    },
+    "scripts/check_frozen_evaluation.sh": {
+      "index_mode": "100755",
+      "index_oid": "6afe5b174f10393abe2b2779aada6774b40e44db",
+      "mode": 493,
+      "size": 75218,
+      "sha256": "0f741687b8d37b30dc19b4643100977a4961fa9786738952dd93d192d2f04634"
+    },
+    "scripts/check_gap_claims.sh": {
+      "index_mode": "100755",
+      "index_oid": "10e22536a36bbee019828e393bf561f7099064f2",
+      "mode": 493,
+      "size": 13789,
+      "sha256": "6a6760522d731087ac0d38dda08b151d0eaada49930aa9dd34c07828d05ad515"
+    },
+    "scripts/check_handoff_ledger.sh": {
+      "index_mode": "100755",
+      "index_oid": "f5e78b2257b2c765c2b5c8c0cb4f04329debcccb",
+      "mode": 493,
+      "size": 12709,
+      "sha256": "f6353bd90614bc02d4555e07cb3914056e3efcbab2e5c494f3a69faa63ad25af"
+    },
+    "scripts/check_history_ledgers.sh": {
+      "index_mode": "100755",
+      "index_oid": "3838d0d5d11e2517e1c3ffbbdb50e1bafcac8e84",
+      "mode": 493,
+      "size": 19783,
+      "sha256": "930371fb6bcfc2fe9de91cb3531c35fed942ee43ff70c5b63d7f25a57b638a2c"
+    },
+    "scripts/check_language_freeze.sh": {
+      "index_mode": "100755",
+      "index_oid": "c26a92ea4a7e5b8ba74f51683aaf9c2b9497e38b",
+      "mode": 493,
+      "size": 23816,
+      "sha256": "d1e428ee78d0505fca2049d39656892bdaf0086a801bed81ad76bfef4c251d8e"
+    },
+    "scripts/check_lesson_promotion.sh": {
+      "index_mode": "100755",
+      "index_oid": "6676e48826eb4ceba653a412545f46d8e641b586",
+      "mode": 493,
+      "size": 6913,
+      "sha256": "ec23000b2688035c6d096bd5e1c966aa30ed959228d8afb6022d2c4f63aec764"
+    },
+    "scripts/check_live_doc_currency.sh": {
+      "index_mode": "100755",
+      "index_oid": "b63da808b1b295c260002d7ae98d87f34326c54f",
+      "mode": 493,
+      "size": 3590,
+      "sha256": "a8b521fc4f1d046011480feb14e36d98820896c5b803cc761d8aa0adebe24256"
+    },
+    "scripts/check_live_snapshots.sh": {
+      "index_mode": "100755",
+      "index_oid": "2c13fc5f49196dbcebe98377a366784a32936915",
+      "mode": 493,
+      "size": 8560,
+      "sha256": "13c9f94708e829fdc2aad4cc06773a1526f79d1320b29533c2804cc898932571"
+    },
+    "scripts/check_memory_architecture.sh": {
+      "index_mode": "100755",
+      "index_oid": "4d065971731b51d7db09244238f9f6dde0662c98",
+      "mode": 493,
+      "size": 3272,
+      "sha256": "7c44b603c4b6de207b7446bded2c0ae817b40eb96bbbe829757ae685d813b6a7"
+    },
+    "scripts/check_no_background_jobs.sh": {
+      "index_mode": "100755",
+      "index_oid": "80e45506e3a82f22dd78a6ffb4c02decdf9b7374",
+      "mode": 493,
+      "size": 6417,
+      "sha256": "98cfbc15e3fcbf94b1c5e0ed7261f28bbd7cd35e039b271c7da859735db2240b"
+    },
+    "scripts/check_no_subprocess.sh": {
+      "index_mode": "100755",
+      "index_oid": "1a718240d2c51d3d6d0ab14ec4a508d7504cfcba",
+      "mode": 493,
+      "size": 6974,
+      "sha256": "936498fe4011819d32b7780e86f1392b2b50ffeba257c30c371f7888b7f90e6f"
+    },
+    "scripts/check_readme_routes.sh": {
+      "index_mode": "100755",
+      "index_oid": "2a630f20e85474a8f545f8647a8ef1b431ae9eb6",
+      "mode": 493,
+      "size": 33080,
+      "sha256": "0a6384bafa8b3108d5432cb1c96d798ad075c0607c8d1bf315fecddacaf1f7d0"
+    },
+    "scripts/check_readme_stability.sh": {
+      "index_mode": "100755",
+      "index_oid": "277fd8b383f5273527642f398001186e1a2f8f94",
+      "mode": 493,
+      "size": 5424,
+      "sha256": "d50f56a42d3bc927bbf3998cb030e6fc543301ccda9fdac306a1519c3080150a"
+    },
+    "scripts/check_repository_boundary.sh": {
+      "index_mode": "100755",
+      "index_oid": "95cedc065600d8876c1d46cdb126b5f14315a5a7",
+      "mode": 493,
+      "size": 9013,
+      "sha256": "84f7f14b27ac6c096ae894ac5d7ed433182ac1bd5f26bc5851781a7f980b5c01"
+    },
+    "scripts/check_review_counts.sh": {
+      "index_mode": "100755",
+      "index_oid": "80b26badeda3ff7c84fc889c434b6c200028aff3",
+      "mode": 493,
+      "size": 51925,
+      "sha256": "a78a886bc707ab4e7bbe79ba9c00034b99740d7a5ff469ca45ae90affd9adde5"
+    },
+    "scripts/check_review_history.sh": {
+      "index_mode": "100755",
+      "index_oid": "ba8f8ff549dc8d0a4cde241bd0c376a6f11b7452",
+      "mode": 493,
+      "size": 40127,
+      "sha256": "2ef6fc71d18c9bf8e83996c7a760e414b85e0b760107f0adef05c0e462b0c857"
+    },
+    "scripts/check_routing_evidence.sh": {
+      "index_mode": "100755",
+      "index_oid": "56d035954f93bdbe21ececf42e736a61343a6c59",
+      "mode": 493,
+      "size": 5032,
+      "sha256": "506250f2cfa25862a056acb76599eb0eb8bf560a7d29ff1d7949c477941d920c"
+    },
+    "scripts/check_rust_format.sh": {
+      "index_mode": "100755",
+      "index_oid": "b5b109a544e666c214024e607d9efa6e5cce338f",
+      "mode": 493,
+      "size": 7190,
+      "sha256": "ddaac8e6c07fd9b80823c37ae4bba0c06f9de7e0ffbfa85799a46ee8e60db66e"
+    },
+    "scripts/check_s0_retirement.sh": {
+      "index_mode": "100755",
+      "index_oid": "d8fb39defa3b35982c942e543c1b5503e226e8cb",
+      "mode": 493,
+      "size": 8700,
+      "sha256": "97b1237804abed45e59ea3ecffc516e9145b5e05bf202028b6ff0d0933a07be7"
+    },
+    "scripts/check_scratch_locality.sh": {
+      "index_mode": "100755",
+      "index_oid": "46077315cee0ca30f35454f6caea8945964eb25d",
+      "mode": 493,
+      "size": 10342,
+      "sha256": "bf57960e12cbf37230d8444a452bb0054fbe2ce16afca24874190b86448182bb"
+    },
+    "scripts/check_source_ledger.sh": {
+      "index_mode": "100755",
+      "index_oid": "356d3ab15c2c8c08b735979ce74997791a8f7564",
+      "mode": 493,
+      "size": 17648,
+      "sha256": "a4a794cfe4876bb2a4ea6264438e68d0d5bf676c24b9651dbefe852875057935"
+    },
+    "scripts/check_stated_order.sh": {
+      "index_mode": "100755",
+      "index_oid": "8f52ebdcbfd61f57e63bcd58ba83a82763c6b971",
+      "mode": 493,
+      "size": 11333,
+      "sha256": "8b2dedca33fe772d9ca21399d1e5a2bce9d6deeaf7d9abb070caca5db3c02de3"
+    },
+    "scripts/check_table_arity.sh": {
+      "index_mode": "100755",
+      "index_oid": "9745a685158ee340a4e472723f2729018294b006",
+      "mode": 493,
+      "size": 6019,
+      "sha256": "ac61cfe1af1b0f087ae4aa41e1a1a576fff85553981428cafc1a7dea835359d2"
+    },
+    "scripts/check_task_acceptance.sh": {
+      "index_mode": "100755",
+      "index_oid": "9acf9665a2a95a7e32745c881e2c0176795a2776",
+      "mode": 493,
+      "size": 25050,
+      "sha256": "ad7ab8597479f32acc70d5808f47b0153610ed8083f91515569ffe8cb880132d"
+    },
+    "scripts/check_task_history.sh": {
+      "index_mode": "100755",
+      "index_oid": "37f21b7d49419e02b835dce4b59c8693f0e4ff04",
+      "mode": 493,
+      "size": 121730,
+      "sha256": "c751fe5aea21e18a097e5ee1649c95954d4556d8d3163edf32c501f0d5556b61"
+    },
+    "scripts/check_task_tree_ownership.sh": {
+      "index_mode": "100755",
+      "index_oid": "209cd1d99251a4b9cc0f4b303277a4dd8fcfcd7f",
+      "mode": 493,
+      "size": 1516,
+      "sha256": "5d8afcddd117971155ad65e0838a52de5355f0d5e43a751e6fe3c7678ee562e7"
+    },
+    "scripts/check_untracked_code.sh": {
+      "index_mode": "100755",
+      "index_oid": "19f2dfb8dd5b70c8d2a7e0b97276fa99c5bc37ab",
+      "mode": 493,
+      "size": 10982,
+      "sha256": "48186958dc2cd37db1a87c49925c1fa2faccad496bc78c87ee3bda49adf5b917"
+    },
+    "scripts/check_version_register.sh": {
+      "index_mode": "100755",
+      "index_oid": "bfd9b16a808740751c4426045dd707508930007d",
+      "mode": 493,
+      "size": 12815,
+      "sha256": "c3a8eba067078e2c7d8eab3d5c28a1c1b892c3291b93e27634bc688a9c223594"
+    },
+    "scripts/check_waiver_routing.sh": {
+      "index_mode": "100755",
+      "index_oid": "041b5eb9303ea2cc74d147e2f56b288b545c1f19",
+      "mode": 493,
+      "size": 7328,
+      "sha256": "10a90a615f4eb1093d7155ade6505438c0333d9f041b7b8e1aae670d8632ea3f"
+    },
+    "scripts/check_workflow_tokens.sh": {
+      "index_mode": "100755",
+      "index_oid": "c4ca401b1e3c9727981544aeddc39eeea92c2af4",
+      "mode": 493,
+      "size": 17511,
+      "sha256": "d2924c4891e37933bc9af49bffd8507189c92c9c9e510f5bad3e72f334de7a3b"
+    },
+    "scripts/ci_integration.sh": {
+      "index_mode": "100755",
+      "index_oid": "8c09a26e77eab8777159f4e2b78784f7c7792f8d",
+      "mode": 493,
+      "size": 7051,
+      "sha256": "052668492ad059311a39ff3fc7265e3312d79f339a6043d1a55417551101b23e"
+    },
+    "scripts/ci_provision.sh": {
+      "index_mode": "100755",
+      "index_oid": "d2a3743b0f46a5b03ce5f5e0ae13de70c2d8a1a9",
+      "mode": 493,
+      "size": 9089,
+      "sha256": "d3a5b7a597e6aec00500d20a3a57c332b44126037edfbfcc085c791c137c142b"
+    },
+    "scripts/ci_rehearse.sh": {
+      "index_mode": "100755",
+      "index_oid": "e336d60c45b8db110f2ed41061c9ed132883bbc0",
+      "mode": 493,
+      "size": 5743,
+      "sha256": "b574cc470e77f5321fa6c2f5e723b499421fd2bef114187500eb348cc182787f"
+    },
+    "scripts/extended_fuzz.sh": {
+      "index_mode": "100755",
+      "index_oid": "06e9706e5b0824666cad9c1ec63a7871a9312557",
+      "mode": 493,
+      "size": 2237,
+      "sha256": "f52e6078ccac690c1e9427f6eb81493853f62166cef87dfe51ad7009d690561f"
+    },
+    "scripts/extended_miri.sh": {
+      "index_mode": "100755",
+      "index_oid": "b88ef04a31d05612da9a981f1cf7420c57d9f1f8",
+      "mode": 493,
+      "size": 9294,
+      "sha256": "88e880e2068509c12dcd0c03a99097cdd8959b523753d4a95f5956ca76dfa100"
+    },
+    "scripts/fixtures/artifact_output_pipe.py": {
+      "index_mode": "100644",
+      "index_oid": "727e787de3acc792f16f2097290d18626f6a5819",
+      "mode": 420,
+      "size": 2591,
+      "sha256": "45b3cbfe9115136cc999e832e0117420a0d3bd4c7ae2c2a441485c4c3f9cca36"
+    },
+    "scripts/fixtures/compiler_install_close.c": {
+      "index_mode": "100644",
+      "index_oid": "a6cdcba383ad6339280452f1823498988218000c",
+      "mode": 420,
+      "size": 5242,
+      "sha256": "8575a576da1acc0ef6da61580a8a432a8cb3e287a2332e8179dfb8f2025826b8"
+    },
+    "scripts/fixtures/compiler_install_close_probe.rs": {
+      "index_mode": "100644",
+      "index_oid": "8c6a09fde5d095cf8acc0b6f1ebb86493284d681",
+      "mode": 420,
+      "size": 2300,
+      "sha256": "76da47fb9eae5fa494b13725190abec4d08bd2e552fe988030e1da1f307cfae6"
+    },
+    "scripts/fixtures/compiler_install_readback.c": {
+      "index_mode": "100644",
+      "index_oid": "9c37cdafb4cc3468a0dbb48f8144846de6182ee9",
+      "mode": 420,
+      "size": 2948,
+      "sha256": "d8e2aa9098078aa3535931953129bb94f4cf4e0c0ce7b5306ad53f4dcdb9ba1e"
+    },
+    "scripts/fixtures/compiler_install_readback_probe.rs": {
+      "index_mode": "100644",
+      "index_oid": "9a914f2f0578dda360103a1916f406c99c2f7220",
+      "mode": 420,
+      "size": 1982,
+      "sha256": "8474745a7e14a2b929e5054d7bf6e38365ff11fde60ca7348993d569943a3be6"
+    },
+    "scripts/fixtures/compiler_preparation_callee.c": {
+      "index_mode": "100644",
+      "index_oid": "eef393337f04d51982f8f16174376ef6e2110691",
+      "mode": 420,
+      "size": 3816,
+      "sha256": "a5578531091b10d2ea82f39987b995d590e447a59ab6500145ceece07a839abe"
+    },
+    "scripts/fixtures/compiler_preparation_probe.rs": {
+      "index_mode": "100644",
+      "index_oid": "a4426d358f4bb7494819de2c7e05b049184ecb9c",
+      "mode": 420,
+      "size": 2997,
+      "sha256": "84de8b9afa09bf2068356fc9b1176a49066c98360f7d792ef60b2ce084323ef2"
+    },
+    "scripts/fixtures/compiler_provenance_audit.py": {
+      "index_mode": "100644",
+      "index_oid": "f8667a61aa8494da6af1c0cf0eaf1ccd859f50a8",
+      "mode": 420,
+      "size": 5554,
+      "sha256": "68c07566f34aa41426b4be2f1994ba90ed5145fdb6a610e07ebc4352a87ad128"
+    },
+    "scripts/fixtures/compiler_provenance_close.c": {
+      "index_mode": "100644",
+      "index_oid": "7a5cba98734b615277a7cbd0c90bee8d2fae7e92",
+      "mode": 420,
+      "size": 3739,
+      "sha256": "0409dea34463f3c5a5001e30a3f872b7eabd20ec036e49a88fee64f5a7ea1d48"
+    },
+    "scripts/fixtures/compiler_provenance_collision.c": {
+      "index_mode": "100644",
+      "index_oid": "4128d35db4295a3350fa756d16adbf72f1636a37",
+      "mode": 420,
+      "size": 724,
+      "sha256": "157d75cdf4a15e74878db309f43e6e58e5837796c83bd8535f0c1d3e78109da8"
+    },
+    "scripts/fixtures/compiler_provenance_io_fault.c": {
+      "index_mode": "100644",
+      "index_oid": "a31873ce71db13106eae66305c9441b78df30723",
+      "mode": 420,
+      "size": 3479,
+      "sha256": "9725b8eb72b1ce19c9540cfc0119d38d3fb252ef7dba0ee35feeffafaa178f0e"
+    },
+    "scripts/fixtures/compiler_provenance_observer.rs": {
+      "index_mode": "100644",
+      "index_oid": "a8768f15ab4761fd8ea2513488adb089a99237d5",
+      "mode": 420,
+      "size": 2704,
+      "sha256": "50148c12a09d8bf5059a465dce2d3ed73433d7daa3edb9abaf913becc688d708"
+    },
+    "scripts/fixtures/compiler_provenance_receiver.c": {
+      "index_mode": "100644",
+      "index_oid": "b0490eac91515376ce910b5afa7041cf57dd06cd",
+      "mode": 420,
+      "size": 661,
+      "sha256": "127e6f559180a247c00d19371bb77d5dadeadf5518a94d67be7ebf1fe3cad005"
+    },
+    "scripts/fixtures/trust_witness_effects_initial.json": {
+      "index_mode": "100644",
+      "index_oid": "9f7e94d6a56d4c19cbb6fd0d8e8568b6d1e202bc",
+      "mode": 420,
+      "size": 18856,
+      "sha256": "1f1723aea1c0f4613998ca3f484caf1ba7496a4004fe88617c6e01d6023e03b4"
+    },
+    "scripts/handoff_census.sh": {
+      "index_mode": "100644",
+      "index_oid": "b52f01908cac5c10c8f2e02d22316d3d2b7a5ef0",
+      "mode": 420,
+      "size": 12796,
+      "sha256": "4b6da72df24c659995e2bb4dcf1d2bcb3c29d6c5b680526952eff69911770969"
+    },
+    "scripts/language_baseline.sh": {
+      "index_mode": "100755",
+      "index_oid": "ce3cd8d70372cc3a4ac1631388e135fc2cce219c",
+      "mode": 493,
+      "size": 6816,
+      "sha256": "c228960be632fdc43554d07147d1637ad8873f4cb36a86d6437111a5b6ab5471"
+    },
+    "scripts/linkedspec_eval.sh": {
+      "index_mode": "100755",
+      "index_oid": "e7f0a8c89e620b003b1cf0d197c4169a369687c0",
+      "mode": 493,
+      "size": 8162,
+      "sha256": "1136e0a4bb2202737259b30fa512c7a2248c8847e7e9514b4f4f11dd1a93f17a"
+    },
+    "scripts/mutation_sweep.sh": {
+      "index_mode": "100755",
+      "index_oid": "4e52cfd6f7de55e8a9f48ea90d1a668b12c81b9a",
+      "mode": 493,
+      "size": 44056,
+      "sha256": "8043cddad18b8ddf54c5863b55a8238039054f202ddc69e073389528870e78bd"
+    },
+    "scripts/no_std_build.sh": {
+      "index_mode": "100755",
+      "index_oid": "7b7ce9ab9808d81651cdee71afa03f7c7b67fce2",
+      "mode": 493,
+      "size": 974,
+      "sha256": "4190ccef14fb845c849ffa06503e04bdc54ebd1b70b5da6ae69bdfcb9c8e131d"
+    },
+    "scripts/push_cadence.sh": {
+      "index_mode": "100755",
+      "index_oid": "6f2bc4eb691661b4a8b1b86359240b7cccd8c201",
+      "mode": 493,
+      "size": 6168,
+      "sha256": "9a1c717272a9a1f6bbff6f0d599122b60760e3d91d4b2f79f6c3abebda10af7a"
+    },
+    "scripts/run_self_tests.sh": {
+      "index_mode": "100755",
+      "index_oid": "f856bdad1695b1b8045ec2d692627a77362c5f24",
+      "mode": 493,
+      "size": 6550,
+      "sha256": "bd699170fccb6a908ca8de9b410a102ee5e180377d3b5f0cb657b40ee61c9241"
+    },
+    "scripts/selftest_spine.sh": {
+      "index_mode": "100755",
+      "index_oid": "5d22c2e75d962ea7895b221d03d90e345585a742",
+      "mode": 493,
+      "size": 15444,
+      "sha256": "0e6de8778d9bc02e4282e2ecce9fb4cbdfda8bb366d40acaa5c9bba796990d99"
+    },
+    "scripts/sha256_fixture.sh": {
+      "index_mode": "100755",
+      "index_oid": "7a809437d6ba9df1fae9c270c72a158a60287eb6",
+      "mode": 493,
+      "size": 2556,
+      "sha256": "eb1560e43ca6cc861b4371c03730ca2755fccf6ba25c7be4439421e1fec31e39"
+    },
+    "scripts/target_emulator.sh": {
+      "index_mode": "100755",
+      "index_oid": "acd368fd1b428dc30aefcf8f16d6709d71a5cc84",
+      "mode": 493,
+      "size": 13048,
+      "sha256": "3abe2d02f577a4e95510b6b3d82fdeafd265fc091e8b873967dfc63413e74248"
+    },
+    "scripts/target_spike.sh": {
+      "index_mode": "100755",
+      "index_oid": "c04849e70b5657e2c7dcd1eea61d9edd70d27b81",
+      "mode": 493,
+      "size": 4865,
+      "sha256": "44a990e458369a85dfcc3e083677a2b290d51b96ac62cdb0f0107e522960ef52"
+    },
+    "scripts/third_opinion.sh": {
+      "index_mode": "100755",
+      "index_oid": "113f0ff0ba40fb44fc179dbb5069f3ab22f56e21",
+      "mode": 493,
+      "size": 8169,
+      "sha256": "2a19f2a778cf352dda29533379691de9e04277cd9129e559e0af6927b7bae563"
+    },
+    "scripts/trust_adequacy.py": {
+      "index_mode": "100644",
+      "index_oid": "4960ec24425bda8d824cd844512145efdaff5f22",
+      "mode": 420,
+      "size": 68047,
+      "sha256": "8d11a12788b158741d533caaa994eadab9c7c55a18190017c488dc25dfd83515"
+    },
+    "scripts/trust_adequacy.sh": {
+      "index_mode": "100644",
+      "index_oid": "11459b530e6f04cc1c416819ec2b7732b68162f1",
+      "mode": 420,
+      "size": 200,
+      "sha256": "0f51584849cba24bd2077734d770d13c212f31cafc2dd44df29675c2e754dfaa"
+    },
+    "scripts/trust_compiler_provenance_probe.py": {
+      "index_mode": "100644",
+      "index_oid": "a1437af5f73f95cca613a267c2a33df0b6272a85",
+      "mode": 420,
+      "size": 20558,
+      "sha256": "2cb627faa9c5a0137616e18ac345b89ac16d506e56bf482db66b1b7942c3f6b3"
+    },
+    "scripts/trust_witness.py": {
+      "index_mode": "100644",
+      "index_oid": "bd4b7eb083695f3c9ea950b30f8ee48baa946cdf",
+      "mode": 420,
+      "size": 14669,
+      "sha256": "af7ee4bf0017a9d4b017d749d0e32369bc55b4786cbe86f071883528da585f55"
+    },
+    "scripts/trust_witness.sh": {
+      "index_mode": "100644",
+      "index_oid": "e62a1529fb0e9382e45aa52f1d48f41800cfb277",
+      "mode": 420,
+      "size": 182,
+      "sha256": "460714b7ccb262bc264f925c77b40a2a230a5b23eb68e548e5beebdd1df8b76e"
+    },
+    "scripts/trust_witness_effects.py": {
+      "index_mode": "100644",
+      "index_oid": "4cf0d551d709f441eac1c739eff2058611aeb6e4",
+      "mode": 420,
+      "size": 24242,
+      "sha256": "5e275934bb70bc0d73384f91f0f710fba0e3045dbebfa279d77e8e92739873b3"
+    },
+    "scripts/trust_witness_effects.sh": {
+      "index_mode": "100644",
+      "index_oid": "89524e80844c478742a9427c06d889e38e0e90fe",
+      "mode": 420,
+      "size": 194,
+      "sha256": "24ed866989782d6fe04691235885b1af62203eb4f76012094034efe015214276"
+    },
+    "scripts/update_scaffold.sh": {
+      "index_mode": "100755",
+      "index_oid": "5b2827be407e666792e33f9e53ac795a11abed5c",
+      "mode": 493,
+      "size": 10669,
+      "sha256": "85a82aa4eec19f77075d9eadccd6b4e0ac161a0b3b41c331b52142510debbe22"
+    },
+    "scripts/wasm_binding.mjs": {
+      "index_mode": "100644",
+      "index_oid": "09ec81b503234c58367631461b97dd4f570e377e",
+      "mode": 420,
+      "size": 6484,
+      "sha256": "6ffe12d5c71ececd628de2986b32ced3e3e7da797fa8b395535fa0737b7ff41c"
+    },
+    "scripts/wasm_binding.sh": {
+      "index_mode": "100755",
+      "index_oid": "9b6341ac680aafc08b3e10efb23bc58293210cf1",
+      "mode": 493,
+      "size": 10720,
+      "sha256": "b6ef1a1aa369ededb728fa06f1670b06ed1395a02d6ae20070e478689b129304"
+    },
+    "scripts/wasm_build.sh": {
+      "index_mode": "100755",
+      "index_oid": "7f20e6ab526b4c4803ee920e91a1e14f74b0be86",
+      "mode": 493,
+      "size": 6731,
+      "sha256": "685108993a21ab956d55f94a4d17dfbec72c4f922bc496baf9701de4da0c04e1"
+    },
+    "targets/riscv-virt-up.eadl": {
+      "index_mode": "100644",
+      "index_oid": "edf7beb1ff81787e589863f92982a95beb9ff2c0",
+      "mode": 420,
+      "size": 1145,
+      "sha256": "7c2ba1a7224878c8b0209d3784767642d26375f25d0cc8b28e55c67c83fcf678"
+    },
+    "targets/riscv-virt-up.env": {
+      "index_mode": "100644",
+      "index_oid": "a1896282f47d79ba96f383189ef85ba35e9b815f",
+      "mode": 420,
+      "size": 4155,
+      "sha256": "c064c8d5f5b30752c22f543c1779b3e6b4c2f42732b4ad100d2e0db4cf34bb34"
+    },
+    "targets/riscv-virt-up/spike/Cargo.lock": {
+      "index_mode": "100644",
+      "index_oid": "ede5c235d68eb07076c24429b17149ce284a42db",
+      "mode": 420,
+      "size": 160,
+      "sha256": "80eaa3510778b5c0c6303cd94c2bff0486f1a24c905c25cc619d9a30a5e6dce4"
+    },
+    "targets/riscv-virt-up/spike/Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "c16d11f949cce65d003e2f7d2706f06592c3f033",
+      "mode": 420,
+      "size": 833,
+      "sha256": "657323071034198ccc6a3a6bfd7fe2ce5498b72d19ed2c26d0523c42d3721d97"
+    },
+    "targets/riscv-virt-up/spike/link.x": {
+      "index_mode": "100644",
+      "index_oid": "ca630814a33905a52edb830ea4f1ac43ad2352d1",
+      "mode": 420,
+      "size": 582,
+      "sha256": "395f0bd4169f3330601f1183343c693485d97a5fd062fd8b94137a7cf2bca5de"
+    },
+    "targets/riscv-virt-up/spike/src/main.rs": {
+      "index_mode": "100644",
+      "index_oid": "7b5cf53a24852870afa43cc289f1613bfb2a4fb0",
+      "mode": 420,
+      "size": 7604,
+      "sha256": "57edf0df2d9419c47ce542e5c23fa3e1b690652de73e72092975e48b61d2e024"
+    },
+    "trust/baseline.eadl": {
+      "index_mode": "100644",
+      "index_oid": "ec39a88313c6b73197526e221e4fe9610adc3324",
+      "mode": 420,
+      "size": 3535,
+      "sha256": "10f298e633252b094c2d0248c7c7aadbe77c699668bea23b6b28907913db6224"
+    },
+    "trust/roots.eadl": {
+      "index_mode": "100644",
+      "index_oid": "49d24bcd9b1a5a7894b51ca628628022dbdfd24c",
+      "mode": 420,
+      "size": 7798,
+      "sha256": "d47ff3acbc753c0f575ca10c502cbc9b35f61c5db7e9094f3e17114967ce09cb"
+    },
+    "xtask/Cargo.toml": {
+      "index_mode": "100644",
+      "index_oid": "a7054d48f957660e5bfc90e8f27cc58352c5fc74",
+      "mode": 420,
+      "size": 696,
+      "sha256": "6ee1cf3699670f97a13b3c49a37013f29270b80bf458ed22835bdc9b99be9f9f"
+    },
+    "xtask/generated_header.equivalents": {
+      "index_mode": "100644",
+      "index_oid": "287437c172349b45ed92b5efe01533e2bd259181",
+      "mode": 420,
+      "size": 1116,
+      "sha256": "5346a8e7da26d8f70b881d05f0afcea1894f10f4a09dae90e51f21f3c693bce9"
+    },
+    "xtask/mutation_sweep_tests.py": {
+      "index_mode": "100644",
+      "index_oid": "05fdca69313607d5e7dbf2558565c5fca8c602a1",
+      "mode": 420,
+      "size": 192964,
+      "sha256": "2b5a74cf834af8df0690e9da21bc870053f3876111857f4f9995f2577cad96b3"
+    },
+    "xtask/mutations.txt": {
+      "index_mode": "100644",
+      "index_oid": "645cf7042ff86acafbac3214cc4e9b5182352f51",
+      "mode": 420,
+      "size": 228668,
+      "sha256": "b752d88337ee77922eef955f6e81f348f1b204941ab0716a215bc821c40bca19"
+    },
+    "xtask/src/catalog_build.rs": {
+      "index_mode": "100644",
+      "index_oid": "19c76ff1962772f0c884c775922b3133e8f41cd3",
+      "mode": 420,
+      "size": 66557,
+      "sha256": "ead6752d2c5aa9a6c289c43b35c66ff4ee1e1b6b748ba9e20e1f68578fe093d5"
+    },
+    "xtask/src/catalog_check.rs": {
+      "index_mode": "100644",
+      "index_oid": "e60bccecc74e3e26585e1895cc39e790a64f812d",
+      "mode": 420,
+      "size": 43690,
+      "sha256": "22b709b2db814eec888caa3c429628bb99b4c48c50782d241cedeafdbcc760d1"
+    },
+    "xtask/src/dtb.rs": {
+      "index_mode": "100644",
+      "index_oid": "4475304dc4b7c716499d1d65383d95b41ff9f116",
+      "mode": 420,
+      "size": 14598,
+      "sha256": "74ef7f1764525eeddb21d901955c16992393ab3909b04a872802ae06af12035a"
+    },
+    "xtask/src/elf.rs": {
+      "index_mode": "100644",
+      "index_oid": "da34c08a61abe505634802805b5405a28df3c976",
+      "mode": 420,
+      "size": 14695,
+      "sha256": "d3caab3949c6d63d4d7467c34f3a1aa287f9ef6f18ae12ccf92310f9f71fe805"
+    },
+    "xtask/src/generated_header.rs": {
+      "index_mode": "100644",
+      "index_oid": "516ce17f8f6f7ebe2537500ed204be78dafa73a7",
+      "mode": 420,
+      "size": 44909,
+      "sha256": "f5592b1c4c8ee7cca7e7c28727e36513364fccb2c4acb375b7b98237c631ad0c"
+    },
+    "xtask/src/json.rs": {
+      "index_mode": "100644",
+      "index_oid": "27fce7f669582ed6dfa7fc3c4666faf8e962c208",
+      "mode": 420,
+      "size": 20357,
+      "sha256": "6f3a3d5fc86fa5fa315313e6fce0ee053527b46ab47ebe1678ef437e0e86fe75"
+    },
+    "xtask/src/main.rs": {
+      "index_mode": "100644",
+      "index_oid": "a3b7171651f3fa19df73de50e5c919c2631c8707",
+      "mode": 420,
+      "size": 60827,
+      "sha256": "9d83a570b177d7cd5a95730e7ee2e655494e1cf9b8a6c3bfef05b13fd2a1807e"
+    },
+    "xtask/src/mutation.rs": {
+      "index_mode": "100644",
+      "index_oid": "463dd1d77e527f2bac10ff6264f57ea406fc1fa3",
+      "mode": 420,
+      "size": 45195,
+      "sha256": "ad2201040eeda07f9673f8711456b9eca07829b72238e0cf711e8d0cd46e0baa"
+    },
+    "xtask/src/premises.rs": {
+      "index_mode": "100644",
+      "index_oid": "bf23fe85a414d4cb83e5cfe5c25fdc9734dc0888",
+      "mode": 420,
+      "size": 39977,
+      "sha256": "68f238b03cfde487527c7697e3dc53c250cd0eef1ef825f0f251ee299339f77b"
+    },
+    "xtask/src/target.rs": {
+      "index_mode": "100644",
+      "index_oid": "ca65315626d458280258a7ddca8e7d794d526c72",
+      "mode": 420,
+      "size": 20630,
+      "sha256": "48294320c23453040d9353251df349652b71e5a10c3086c6d4f91f8d95ad2754"
+    },
+    "xtask/src/trust.rs": {
+      "index_mode": "100644",
+      "index_oid": "b6f1e0ace94f506be70c192832c7125c7a10bcb9",
+      "mode": 420,
+      "size": 342811,
+      "sha256": "d7c9403d2cf27a345b151fae86fc92c7a106b3be13f98569f12d577baa8999f4"
+    },
+    "xtask/src/trust_adequacy_parent_tests.rs": {
+      "index_mode": "100644",
+      "index_oid": "c7f0deb8dac6804914f74a24ad9cab2a2a30af32",
+      "mode": 420,
+      "size": 19435,
+      "sha256": "cd45f4b810d69762af363bc4a94e463844b23894198bef6fecc8af993d122823"
+    },
+    "xtask/src/trust_adequacy_tests.rs": {
+      "index_mode": "100644",
+      "index_oid": "6625fa847c469b778ebe28ec57a009fdd9bf0da9",
+      "mode": 420,
+      "size": 12108,
+      "sha256": "b4d72e964cd4ed9130e70fa336fd20b6599077fbebe1f75ddde11dd6fbf5086b"
+    },
+    "xtask/src/trust_artifact.rs": {
+      "index_mode": "100644",
+      "index_oid": "6495885e7e1d5db42298f074020247258b3084c1",
+      "mode": 420,
+      "size": 58072,
+      "sha256": "f3c8b408ec1733cdf5828123ad5e1f6db1d205995fffe30f0e9bc1acfd30d673"
+    },
+    "xtask/src/trust_compiler.rs": {
+      "index_mode": "100644",
+      "index_oid": "e90e408ed43a7d0c41c6787308557d87d5ef27ca",
+      "mode": 420,
+      "size": 91913,
+      "sha256": "28565b71d0a9471a855335b4037685a8a0a11449a8fe955a10c031e502e6d766"
+    },
+    "xtask/src/trust_compiler_observer.rs": {
+      "index_mode": "100644",
+      "index_oid": "028d9f9120195e11cc437b4d37c18b57a86fd895",
+      "mode": 420,
+      "size": 3197,
+      "sha256": "64b8376bf404a32f3097071f7737a721e789133f716d16e05f8d0ceeb3e38475"
+    },
+    "xtask/src/trust_gate.rs": {
+      "index_mode": "100644",
+      "index_oid": "7e6ae3bb4558d197ad92ca8c9ee7eb6ef2f2b915",
+      "mode": 420,
+      "size": 86122,
+      "sha256": "de176ca75a6a7efbe8ce4b3fb730e6f9dbb3c3242e9fc0305660336c6225d480"
+    },
+    "xtask/src/trust_generated.rs": {
+      "index_mode": "100644",
+      "index_oid": "189fd57aea49d87c11158d6f2b0cf9d27aa1912a",
+      "mode": 420,
+      "size": 143687,
+      "sha256": "28bc126a229bb5171a8148d1e77e55ef38789ce17188dd49abba2ae5d844dcbd"
+    },
+    "xtask/src/trust_generated_adequacy_tests.rs": {
+      "index_mode": "100644",
+      "index_oid": "03cee2b8bae9381202f4e74a1dde8bdc7f32d5f5",
+      "mode": 420,
+      "size": 7691,
+      "sha256": "7666fb52f3b21b488d6dc9381406858a816911d4072a8a596eda5f6b7196a8f5"
+    },
+    "xtask/src/trust_test_process.rs": {
+      "index_mode": "100644",
+      "index_oid": "e05d2d4f7716ecf14ffef33e1530ab5279786f08",
+      "mode": 420,
+      "size": 5105,
+      "sha256": "691b9ed50f1ad09e7fe1ed0d67e76efd311db060c58b40ceb09fe71088fdb9fe"
+    },
+    "xtask/src/trust_verify.rs": {
+      "index_mode": "100644",
+      "index_oid": "2c792b93d0b04d2684d676950dd5b952d79dae39",
+      "mode": 420,
+      "size": 19964,
+      "sha256": "b707d621b63f4b61341e862b1382f15ddc3e810659f7a1ad2a5e3ed2380b7109"
+    },
+    "xtask/trust.equivalents": {
+      "index_mode": "100644",
+      "index_oid": "882063d9e313cbaaee1d00eedb6c4c3497678690",
+      "mode": 420,
+      "size": 39061,
+      "sha256": "ab341a3d5780a98352d39acdb45f6745163ec7740b9298b830fbf3e87fe1e511"
+    },
+    "xtask/trust.retired-equivalents": {
+      "index_mode": "100644",
+      "index_oid": "28ac81c5b70a6edb4e5069d63d0fb673c93bc019",
+      "mode": 420,
+      "size": 2941,
+      "sha256": "6547f58d8918dff924d48a81099eb3072c54d19555c7a9becf58663532cab99e"
+    },
+    "xtask/trust_artifact.equivalents": {
+      "index_mode": "100644",
+      "index_oid": "bdc600c74f622684ab1486fa3aefb86427a01067",
+      "mode": 420,
+      "size": 1551,
+      "sha256": "591981f27cd23cb1c40f63c71554ef01208ed1c07a191d63e66ed82d66678435"
+    },
+    "xtask/trust_compiler_observer.equivalents": {
+      "index_mode": "100644",
+      "index_oid": "f45225a1856161e7597ce4cb2557825b4231715e",
+      "mode": 420,
+      "size": 1649,
+      "sha256": "f7acc0fab5bc79a22da8ade228cd526d96d9cbb9fc440f40b849a4b4b2b78101"
+    }
+  },
+  "gitlinks": {
+    "vendor/linkedspec": "2ac834913d85c32f532be9b0aab63644838a577a"
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Exact dependency path-domain task states</summary>
+
+```json
+{
+  "base_commit": "39b16e963690e0d3b8a6f2ec99b7d8ce020bedaf",
+  "base_sha256": "90b68d8fed47246a259e721ed767f69b6a6941a4574a775b0400258a690100f2",
+  "snapshots": {
+    "task-before.md": {
+      "bytes": 291686,
+      "sha256": "90b68d8fed47246a259e721ed767f69b6a6941a4574a775b0400258a690100f2",
+      "changes": []
+    },
+    "task-active-before-seal.md": {
+      "bytes": 292488,
+      "sha256": "44ef575cdd3cd1d711a0884fcd033d398c2a2c8713a4c9f7790465f5de01e55d",
+      "changes": [
+        {
+          "start_line": 1539,
+          "end_line": 1540,
+          "before_sha256": "9063472fbd033815c4ef9ed44192f1682e2c989bcbd36cbec5bddc7c269aca63",
+          "replacement": "  Status: \u0060active\u0060 \u2014 path-domain follow-up; isolated actual-producer assessment first\n"
+        },
+        {
+          "start_line": 1543,
+          "end_line": 1543,
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "replacement": "  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n- ID: \u0060M3.6.9.6.3.2.2.15.2.1.6.1.1.0\u0060\n  Status: \u0060active\u0060 \u2014 actual dependency-path domain assessment\n  Goal: use a project-owned plain copy at the maintained sweep layout, with real Cargo\n    and the existing public-inventory parent, to bind ordinary/escaped outside paths and\n    distinct raw/canonical output roots. Keep main Rust/tests/reasons unchanged; actual\n    negative probes remain isolated. Derive expected complete literal refusals from the\n    declared input files, retain actual dependency bytes with portable root normalization,\n    and verify the main input set is restored. Own every measured defect with reproduction,\n    impact, priority and safe next repair before committing this bounded assessment.\n"
+        }
+      ]
+    },
+    "task-opened.md": {
+      "bytes": 291948,
+      "sha256": "190967323e1e60cf2d03738725838f6f8995e59107145f2fe73764d1c3bb325e",
+      "changes": [
+        {
+          "start_line": 1524,
+          "end_line": 1537,
+          "before_sha256": "ee6dd206cec2c04330c577d06f8c3804cdcaf5ba7a8b9bc0f00611ec56900211",
+          "replacement": "  Status: \u0060done\u0060 \u2014 sealed in [\u0060M3/M3.6.9.6.3.2.2.15.2.1.6.1.0.md\u0060](../task-history/M3/M3.6.9.6.3.2.2.15.2.1.6.1.0.md); commit \u0060ARCHOGEN-M3-0824\u0060\n"
+        },
+        {
+          "start_line": 1539,
+          "end_line": 1540,
+          "before_sha256": "9063472fbd033815c4ef9ed44192f1682e2c989bcbd36cbec5bddc7c269aca63",
+          "replacement": "  Status: \u0060active\u0060 \u2014 path-domain follow-up; isolated actual-producer assessment first\n"
+        },
+        {
+          "start_line": 1543,
+          "end_line": 1543,
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "replacement": "  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n- ID: \u0060M3.6.9.6.3.2.2.15.2.1.6.1.1.0\u0060\n  Status: \u0060active\u0060 \u2014 actual dependency-path domain assessment\n  Goal: use a project-owned plain copy at the maintained sweep layout, with real Cargo\n    and the existing public-inventory parent, to bind ordinary/escaped outside paths and\n    distinct raw/canonical output roots. Keep main Rust/tests/reasons unchanged; actual\n    negative probes remain isolated. Derive expected complete literal refusals from the\n    declared input files, retain actual dependency bytes with portable root normalization,\n    and verify the main input set is restored. Own every measured defect with reproduction,\n    impact, priority and safe next repair before committing this bounded assessment.\n  Risk to resolve first (P0 hypothesis, not an observed exploit): an outside path ending\n    in a backslash plus the next relative prerequisite might match an escaped scratch\n    prefix across a field boundary. Probe actual producer order/encoding with an output\n    directory shaped as prefix-space-crates/b/src, an outside prefix-backslash file, a\n    tracked crates/b/src/tree/data.txt and decoy data.txt. Determine whether the caller\n    can omit an outside compiler input; otherwise retain the exact rejecting constraint.\n"
+        }
+      ]
+    },
+    "task-after-completion.md": {
+      "bytes": 292024,
+      "sha256": "e99008659358a1ccdc453015b114b69556aba8d67bf0dd5706e491bb8b4112cd",
+      "changes": [
+        {
+          "start_line": 1524,
+          "end_line": 1537,
+          "before_sha256": "ee6dd206cec2c04330c577d06f8c3804cdcaf5ba7a8b9bc0f00611ec56900211",
+          "replacement": "  Status: \u0060done\u0060 \u2014 sealed in [\u0060M3/M3.6.9.6.3.2.2.15.2.1.6.1.0.md\u0060](../task-history/M3/M3.6.9.6.3.2.2.15.2.1.6.1.0.md); commit \u0060ARCHOGEN-M3-0824\u0060\n"
+        },
+        {
+          "start_line": 1539,
+          "end_line": 1543,
+          "before_sha256": "701bbc3b76ab3c8cb13b99759fb14ebbf73b8c4e3b6891840ccb0d386539ceee",
+          "replacement": "  Status: \u0060active\u0060 \u2014 assessment done; P0 ambiguity repair .1 next, then control .2\n  [Full contract](../book/src/annex-trust-proofs.md#dependency-path-domain-contracts) retained verbatim.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n- ID: \u0060M3.6.9.6.3.2.2.15.2.1.6.1.1.0\u0060\n  Status: \u0060done\u0060 \u2014 path-domain assessment; P0 prefix collision observed, repairs owned\n  Goal: [bounded assessment record](../book/src/annex-trust-proofs.md#dependency-path-domain-assessment).\n  Verification: \u0060python3 -I -B target/dependency-path-domain-assessment/audit.py\u0060: exit code 0; six\n    variants, production/tests/reasons unchanged; ordinary/aliased exact; collision written where a\n    refusal was due; spaced fragments; Cargo terminal-backslash refusal;1156 inputs restored;28 receipts rejected.\n  Commit: \u0060ARCHOGEN-M3-0825\u0060\n\n- ID: \u0060M3.6.9.6.3.2.2.15.2.1.6.1.1.1\u0060\n  Status: \u0060pending\u0060 \u2014 P0: ambiguous dependency-record readings refused; owns D1 and D2\n  [Full contract](../book/src/annex-trust-proofs.md#dependency-path-domain-contracts) retained verbatim.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n- ID: \u0060M3.6.9.6.3.2.2.15.2.1.6.1.1.2\u0060\n  Status: \u0060pending\u0060 \u2014 P2: Cargo's terminal-backslash refusal kept as a control; owns D3; after .1\n  [Full contract](../book/src/annex-trust-proofs.md#dependency-path-domain-contracts) retained verbatim.\n"
+        },
+        {
+          "start_line": 1548,
+          "end_line": 1552,
+          "before_sha256": "7547e68e09a13ba22605805702486489f8d956d25f83b0783ae1b98927ded6bf",
+          "replacement": "  [Full contract](../book/src/annex-trust-proofs.md#dependency-path-domain-contracts) retained verbatim.\n"
+        },
+        {
+          "start_line": 1769,
+          "end_line": 1770,
+          "before_sha256": "c94d091183f2ddc5fb3bc19877a0cf8edc0b35bc717247a74d8f1b42675b58db",
+          "replacement": "| 1 | \u0060M3.6\u0060 | \u0060active\u0060 | the trust inventory and gate, F30: \u0060.3\u0060's six slices and \u0060.4\u0060, the chapter, done; \u0060.3.2.1\u0060's baseline committed from the runner, its repaired-key compatibility in \u0060.3.2.1.1\u0060 waiting on the runner, \u0060.5\u0060 on the director; \u0060.6.2\u0060 and \u0060.6.3\u0060 done, the generated-sources instrument and its chapter; \u0060.6\u0060, generated sources, done, \u0060.6.4\u0060's review closed; \u0060.8\u0060, the mutation catalogue's breadth, done; \u0060.9\u0060, the parent's tests', design accepted; \u0060.9.5\u0060 initial measurements complete; \u0060.9.6.3.2.2\u0060 bounded survivor assessments in progress, next \u0060.9.6.3.2.2.15.2.1.6.1.1.1\u0060, the dependency-record ambiguity repair; path-domain assessment done |\n"
+        },
+        {
+          "start_line": 2015,
+          "end_line": 2015,
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "replacement": "| \u00602026-10-20\u0060 | \u0060M3.6.9.6.3.2.2.15.2.1.6.1.1.0\u0060 | [Path-domain assessment](../book/src/annex-trust-proofs.md#dependency-path-domain-assessment): six real-Cargo variants; production/tests/reasons unchanged;28 receipts rejected;1156 restore | ordinary/aliased exact; collision written where a refusal was due (P0, .6.1.1.1); spaced fragments (P1); Cargo terminal backslash (P2, .6.1.1.2) |\n"
+        },
+        {
+          "start_line": 2364,
+          "end_line": 2364,
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "replacement": "| \u0060M3.6.9.6.3.2.2.15.2.1.6.1.1.0\u0060 | \u0060ARCHOGEN-M3-0825 (leaf M3.6.9.6.3.2.2.15.2.1.6.1.1.0)\u0060 | [Path-domain assessment](../book/src/annex-trust-proofs.md#dependency-path-domain-assessment); P0 collision observed; repair next |\n"
+        }
+      ]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Previous exact assessment archives</summary>
+
+```json
+{
+  "docs/task-history/M1/M1.38.md": "660dd1084f7a697fe87243303450f8dbfebdcf28b57fd9e0c1be1b2d32f8bbbe",
+  "docs/task-history/M1/M1.29.1.md": "210bac807e5a0a1ed4075ba2f3d37f7facc45cdb54923f5c69687d4e4ab4c703",
+  "docs/task-history/M1/M1.28.md": "5faf05df98645944d300144cdc4a5126beecf65432d9253333c0bccb1c6cf4a7",
+  "docs/task-history/M1/M1.18.md": "5a47d57c1abf42d50196d3f3ab5b50654a45d1aa85d9dfa18b96a4996fdbd56c",
+  "docs/task-history/M1/M1.8.md": "352ba08459304d5dcdd049c1116cd6849f902f7ef8cfc7e10c73b6a758a315d8",
+  "docs/task-history/M1/M1.12.4.md": "df1889f92a063bbce9c6175a5082c4c73d6bb5fb528a843cfcb8f3868f0694d0",
+  "docs/task-history/M1/M1.19.md": "796c687e98da12f9c8162f8d189ba531498a5c236bfcb162db1e6ba2aeb73ff5",
+  "docs/task-history/M1/M1.9.md": "2ba65f414efa9f42f3e6e429b787fe25a02ddbda035cfaf6fbf49d8995b366da",
+  "docs/task-history/M1/M1.12.5.md": "dad2d10660e2ddd386cc2b968086aeb10e9dc2254d4f3d4d11a644abb87fc7d2",
+  "docs/task-history/M1/M1.39.md": "e73260421d9e085b200366483e53d6043a66dc9bf4117ad56972373ff6ff336e",
+  "docs/task-history/M1/M1.12.1.md": "4c5b9fd4a2096127a306d9c5bfae9bdd8751bebaca4c8eafdad2bbd1b5cef1d3",
+  "docs/task-history/M1/M1.32.md": "3756547974169ae6c47f6395a76d4978a911f7b7227405c51662af2389be1c99",
+  "docs/task-history/M1/M1.6.md": "fba14c88bc6003e19fc518aa98d6b48f22ed6ed7237d72580846e9066245ffa2",
+  "docs/task-history/M1/M1.22.md": "7ea3db2998e7edaf458b1d574e1a766bf20b1b6773f8b2490cb79768ea4933bc",
+  "docs/task-history/M1/M1.16.md": "0b5ef32772bec963905c6dfdb1ddde5170db1219e42026611c25f9e02a72f70f",
+  "docs/task-history/M1/M1.36.md": "898292c31082ece82232b2f3e2138e52fad71714a9a806967c886daa503dc6f5",
+  "docs/task-history/M1/M1.2.md": "9d32c26f32d70de04af6244a671742c245db0ff1ff34d6351217486d499e404b",
+  "docs/task-history/M1/M1.26.md": "75c73dfd8cb1af34aff7fc1cd624b4401eac385e981d45d6b15df6f91b6d67fa",
+  "docs/task-history/M1/M1.37.md": "8718925c474efb2b69139aaee751272b95c4faad0a1beca120c1c37d76c98ae8",
+  "docs/task-history/M1/M1.3.md": "0202e2d3ed4edff2f68a034aaae6ef25af46a569c9fd6cd704d649b3852d0110",
+  "docs/task-history/M1/M1.13.md": "eb8ed49c6877183084497ca3fcf9943b6d513113728dae8cf2a77b9d4d2f1e07",
+  "docs/task-history/M1/M1.27.md": "39cd26d738db6a0a7e3033b612ecd6e48fe2d4cd88d9e38bca12d877214b9d9f",
+  "docs/task-history/M1/M1.33.md": "5cd6b59b7561c00dad3c8a3d28493ce5b5b494b8abaade3d62a1ed7e20a72459",
+  "docs/task-history/M1/M1.7.md": "668f41d17a980002a6e25f02c69f3606d965b33289832d0a4c9a74414a93c082",
+  "docs/task-history/M1/M1.23.md": "bbc1371d404ff5fc1906ce6dff6bc8fd3da26687d238ca8403ee42b05de8bb5a",
+  "docs/task-history/M1/M1.17.md": "e567da4aeb7727e16bdb4e6aac1feddef30b5f4cfb21cf230e96329c589515fb",
+  "docs/task-history/M1/M1.34.md": "5d9380c10973c76413fc6fe7f033173f3a84a7c9af65fc411cadb4d04aa83b63",
+  "docs/task-history/M1/M1.10.md": "a4b0a5ce2d998e7ef339af691d8141f081325bbc841bec637c632146b1a766d5",
+  "docs/task-history/M1/M1.41.md": "fd031f154a0f2b94c62f27b5220e190dc10763eeeed2967f3bae183ecba3a504",
+  "docs/task-history/M1/M1.24.md": "c65f120eadf6c92dc13faad858dbcb61d230a0cbcd24963841fe51618e06552a",
+  "docs/task-history/M1/M1.30.md": "2a610972c62443db34b450072c3e0ab99b72c690cbfd59d50f97f4acc33e55e5",
+  "docs/task-history/M1/M1.4.md": "0813acb48914b555a326902c74890c5bc8da001ad4e7699c32ec263b2b810bf7",
+  "docs/task-history/M1/M1.20.md": "a2d802bd9b951bebc7744906c7fcb56d738e96c86b740bf475c114be066c38e4",
+  "docs/task-history/M1/M1.14.md": "bfa45fbc875f0c1cc7ababbbefbbe8c862b296f33a580f70a1152995e31d1110",
+  "docs/task-history/M1/M1.31.md": "908a5c60581ecf6024a5f904a478c27cdad66e00477e071d32b45a2e1cd63e4c",
+  "docs/task-history/M1/M1.5.md": "53a937a3471937de40f2651b5bd9d00c09ba61e9c98de421453792677f4653b9",
+  "docs/task-history/M1/M1.21.md": "188384c97b5a65cdbbad8090759b88cf56d7722059a865e7958e1725bc81d23c",
+  "docs/task-history/M1/M1.15.md": "99196ff8c626753c50a1cdfe6a9dc8b5ca9a60c04efd9bf753c2e8a790efbef7",
+  "docs/task-history/M1/M1.35.md": "17717d936b433db97038ef183479ce332fe710dd8c92d067dc54f19fb43492fb",
+  "docs/task-history/M1/M1.1.md": "3449b538fb7f8c7a31433fec669cbf111a7f9f12cf68c04d12fd02158733478b",
+  "docs/task-history/M1/M1.11.md": "37707e032b3593b15a1f50de3367719e633196711fb7a193097218d199ed9808",
+  "docs/task-history/M1/M1.40.md": "15e29ee9907d21a8038def1dbb2a3d8bdb30ddcec77851dc4012987a23a26c72",
+  "docs/task-history/M1/M1.25.md": "71b8e8c541f2b081ecd386512f7d2db566397b6b37237a0ed3721eb0b1433fac",
+  "docs/task-history/M1/M1.29.3.md": "dfd04eb8fdf53b9c89ddfda761294c132ab2798da26141340b452d8c1e6a744b",
+  "docs/task-history/M1/M1.12.2.md": "d7fa3ebaf785e2c281c6f85ff247b355df5ae896513670c87addd0296199dc66",
+  "docs/task-history/M1/M1.29.2.md": "f71997701417a20f0d029daa1aebcfd16db0ed4f70768b5446bcd4a0f7f618ba",
+  "docs/task-history/M0/M0.7.md": "58c2cb1fb4b7f6b9a0724d577e580a6f37f26007e4f4b03437e01a37f50becd5",
+  "docs/task-history/M0/M0.3.md": "ba13f5af47b518ae1ef1a23fb065dfbc98024db573dd5c68fac5936e59fe6d41",
+  "docs/task-history/M0/M0.2.md": "0157eac5cbcd8136cd44c79eaee118bc7c315750c5db07b0a677e7e0ebb017b9",
+  "docs/task-history/M0/M0.6.md": "7eac7321a5bb25fb7638d72039038b7a18c9218253629173e7627f2c7b205bda",
+  "docs/task-history/M0/M0.1.md": "839bf5346b0f8919ffc7d4e88bbefce49541e6d042446b4c3a766196ccdca7b2",
+  "docs/task-history/M0/M0.5.md": "db0961d879c1a007351ad1e3421f21ca6cd7d8888c5cf9b1da61869e9d1e91b2",
+  "docs/task-history/M0/M0.4.md": "df46ccd8c35cd1dcedf196fdde4d8bef4b6665dd39f02da5e66c6cdb85581a10",
+  "docs/task-history/S0/S0.2.md": "34f4d490aa0c52653320eacdbc5308c8ff70a67f4717141e63813f367afc0de8",
+  "docs/task-history/S0/S0.6.md": "26ebb98dcf631e746d00093c36781d974df179a5c9c9840e931272d37a4ea906",
+  "docs/task-history/S0/S0.7.md": "ea0b1cda5e2ea9dd918750c5d4966e21e27e827098139e5cf20d6370115be573",
+  "docs/task-history/S0/S0.3.md": "0cf143747cabca2aec58d6ffa05a500778dca424f0244f015f90bf15474e3a0f",
+  "docs/task-history/S0/S0.8.md": "c4d9fad26fa8b454a0da972d077d9ec052f4439c1f530d82203f81ea7a76559f",
+  "docs/task-history/S0/S0.4.md": "486b31f48fe1962cbf023407070bc41548c51d68555c6744fa1179f0cddb5a5c",
+  "docs/task-history/S0/S0.1.md": "d9f27bda4aa6a23910e1bcee6b1837615a56e605dde060fcfe790e9fc99fcaa3",
+  "docs/task-history/S0/S0.5.md": "ada234e53f688f321c264efa0a38d16f801682d5ee7654e57bfa5e0b611bc324",
+  "docs/task-history/M2/M2.16.md": "19ea650d019ffe136bd9146d525eef5e0d63dea4b2c7a2caac7d9a840d7f9dfe",
+  "docs/task-history/M2/M2.22.md": "05756f9c7ea957d3b0482b371ccde01ef94c884c56ea16540ba4706fe0b11eff",
+  "docs/task-history/M2/M2.7.3.md": "d51575b1f75157985de6631cf8bdb43179de21f1965c42baea840e55afa7e154",
+  "docs/task-history/M2/M2.7.4.4.md": "00ae976a5ebc68e6d0225b7be72fb4991d563e288312b31f4f15e1a284f533b8",
+  "docs/task-history/M2/M2.12.md": "0c20ea780f67abaac723a3a30d38d15878dd01c883acbe80ca66627d64fd34f6",
+  "docs/task-history/M2/M2.7.6.2.md": "0b2551ae34f7bacc1e3188a02636eda2b584781a1d79b198e620f1800cab94cf",
+  "docs/task-history/M2/M2.13.md": "49ee111e5ab9be27d1b6df1c9734c6fd38f43eb72e5b29d43e1d91ce0ead59ed",
+  "docs/task-history/M2/M2.7.6.3.md": "3bb3e3e6951a29bdbf5af44b2a7ace3f5cae760ffe2d93121a63cddcad6e53d5",
+  "docs/task-history/M2/M2.7.4.1.md": "5befafa8f8979b7f5ad40c7db4523ada48d0431d63410194c40a7d4f9961b401",
+  "docs/task-history/M2/M2.17.md": "0682bc09329df3a0a8176f528450e05e07554dc521d5875790bd18894e924a8d",
+  "docs/task-history/M2/M2.7.2.md": "d080864f62f06d7a6116337b2beed9d1623003b3ff0fd7283c03d04d9672d563",
+  "docs/task-history/M2/M2.1.md": "27385ffb1d8dcf22180230910d45c0dd8c85671dbfd5310b53bb833bede9dc8a",
+  "docs/task-history/M2/M2.18.md": "c809bacefcb42a5c5093aa341c7de0abf32b58ee59d6877c395fc7ce8f023b36",
+  "docs/task-history/M2/M2.5.md": "3b19f75b4891f52600918e5556b098d4c2069570599db241ac6b35f2b9873365",
+  "docs/task-history/M2/M2.19.md": "f60f5eb24ab9504ddb3436ca1ce6ab215f4cbaa5bd5b6f4c044a0926ede7e78e",
+  "docs/task-history/M2/M2.4.md": "1aea0da152a8e2657c87d68684badb3ee7bb0870f9e049a81c48025b9d171998",
+  "docs/task-history/M2/M2.3.md": "0bd6963ac2ad47aa2b3418010c2d4424f87193cfea223235eb423e43173521ff",
+  "docs/task-history/M2/M2.2.md": "223fa1926dffee68989b33825797616bbdc295d2b051fe59b2f2d9e9148a60ac",
+  "docs/task-history/M2/M2.6.md": "2cc1a9c0ad3ae33f07fc1a890e088ed74548052d0832dedfdc406e2bd89b2562",
+  "docs/task-history/M2/M2.10.md": "f89f1ec25b6a425f46a659ac7c9157816e3698b495944d6b8f8b0ac9c3e7c61c",
+  "docs/task-history/M2/M2.14.md": "21b9b8fa8e2a883a590283fcfe3cb7ead82f290a502ec2c98b7322b47909436b",
+  "docs/task-history/M2/M2.7.4.2.md": "e4d03e8322e6bfaf9cbccb6e1c08c605c0a496b8be678d1945317e967f5ac916",
+  "docs/task-history/M2/M2.20.md": "cbe0f81cf6e4dac9f44e31072172b3db02de61852d9846bb79b2de56f4ccc627",
+  "docs/task-history/M2/M2.7.1.md": "a5739120ca167b387dd48605d56b039ccd87024e9551f27c20a971fb894f6abb",
+  "docs/task-history/M2/M2.9.md": "599f7cab751ff79a9f6f4fc0e813504116570c394121e014c1f528ceda4c244a",
+  "docs/task-history/M2/M2.15.md": "063ece8e2d3fdf5277d8236baf68ac8ddcfb7ed5b7f0cc6a00f3257007bc2b9d",
+  "docs/task-history/M2/M2.7.4.3.md": "7cca9a87d4ad834be2e2be4a63e620a53739ca9886815acb4805943a78d33887",
+  "docs/task-history/M2/M2.8.md": "82beaf8704c044e50034b46df889988cb4003bbebb9bd94938e88abd854c38f3",
+  "docs/task-history/M2/M2.11.md": "f9bf66a9c6075121b04ae7bc3df52761051e85053c6b076ef8c9eebd006a4253",
+  "docs/task-history/M2/M2.7.6.1.md": "f1d9b46ca04541d7ccb0c1f45c419a6eafabefcc29b90379e4e0ef07523c4734",
+  "docs/task-history/PROGRAM/PROGRAM.59.md": "0cc9401bf8db51c34f372c20ed1409a8ed1999d608ee4d0bf722cdf9d07e266a",
+  "docs/task-history/PROGRAM/PROGRAM.83.1.md": "9d39cd99504e6bcdc2dc4625acce99a62417ec3206a83588f6dd865c30333da2",
+  "docs/task-history/PROGRAM/PROGRAM.49.md": "21533ef05cf17c1efd1b85c26b329c3ccc566c7a80ae40e523df847ed1a66962",
+  "docs/task-history/PROGRAM/PROGRAM.18.md": "3dbd7dec9445df82ba470f2746d76afdd59d57b45ec5390a2dbca55d2602cee4",
+  "docs/task-history/PROGRAM/PROGRAM.38.md": "8cd5f44b860435fb4c1e3f05d98c10aeb2e0d7642d56135dc91431a238b02979",
+  "docs/task-history/PROGRAM/PROGRAM.69.md": "5b6f2c7dabb4ed4538a1a84887630650c4918ad0c7f504ffd7e0c7dc4d3a5699",
+  "docs/task-history/PROGRAM/PROGRAM.3.md": "057ffc2b2c7deb74b583c8ea3abe6696f2e8e5cfc8a7d77e05e8374bcd97533e",
+  "docs/task-history/PROGRAM/PROGRAM.79.md": "849917ed1204a6deac67699eab2aab00c5c5834490b68e803354be66729a2a63",
+  "docs/task-history/PROGRAM/PROGRAM.28.md": "eb29ab230b1bbbea29f882c7d67c36d4afba5f4afc52c74a83369b9ae6854608",
+  "docs/task-history/PROGRAM/PROGRAM.39.md": "f1387ce428b7ccd81cb92c1a99ebfe6c9f3b4f9ec853e02a9d60d0806210efeb",
+  "docs/task-history/PROGRAM/PROGRAM.68.md": "0a93355a828658fd33b11755cbbe87d15230d090f7c49a68b5b4de638de01765",
+  "docs/task-history/PROGRAM/PROGRAM.2.md": "26bf0f5e269d77da9ac9b3d1cec7891d0e42c005f423c237ecda38e4cfda4525",
+  "docs/task-history/PROGRAM/PROGRAM.29.md": "69bb4535d2169eb0221d54b8cd1b145e92963f42819826d3e0ea08f5916f4909",
+  "docs/task-history/PROGRAM/PROGRAM.58.md": "576112aedb6e211329026561276e12fae73e4d87beb617a5008ec4ed986b56f7",
+  "docs/task-history/PROGRAM/PROGRAM.6.md": "e8fde3eaf80c3446e4935249e83e92b390e6d1f765506eaad44af2ee977869ce",
+  "docs/task-history/PROGRAM/PROGRAM.48.md": "5922097c3eb942c77b428de5b85c7d5831b4861f7390e4f1bb2648377338e14a",
+  "docs/task-history/PROGRAM/PROGRAM.19.md": "5f40a6e7cf570884520a29abab66c3a0863f78b1f890556134184da06b411c97",
+  "docs/task-history/PROGRAM/PROGRAM.53.md": "298fee01b1dbdeb4a4f1de4594f1d859efa0316e5316c5d68d4419cd7b3746e1",
+  "docs/task-history/PROGRAM/PROGRAM.94.md": "e9d71c423401856facf92b33fb5ddf22d0b48f7a4946ab53b16e4237d612aa89",
+  "docs/task-history/PROGRAM/PROGRAM.89.1.md": "0a5cb2c55efeb34007e6426dd3ac455925540139d1cbcbf1c4e9bbc1568ff6ac",
+  "docs/task-history/PROGRAM/PROGRAM.67.md": "0005db30cb0f8b0c270151fdcb07a242ab825b9ba823522296a9d9dd27317664",
+  "docs/task-history/PROGRAM/PROGRAM.36.md": "d53beefbf5f999328b0a89d7fc67db472c00178252c71d026e79e0d6933bd10d",
+  "docs/task-history/PROGRAM/PROGRAM.26.md": "6ecc14d7931f4a8e850bbc8b85ffe4ac01d86212b90be14d52fa39b258614fdd",
+  "docs/task-history/PROGRAM/PROGRAM.77.md": "3e20f9e951553d031f72cc949ced90813894b73ecb5bd931c2c6b4dba2242f11",
+  "docs/task-history/PROGRAM/PROGRAM.84.md": "96ddaa4fd64e80620883af7889c50e1a2fbed9b81b3c85616bb87afc29095cee",
+  "docs/task-history/PROGRAM/PROGRAM.43.md": "94ceac9c40774195d6d0cf23e476f6d682b4d15d4cce17d1925445a7fe3a1f2a",
+  "docs/task-history/PROGRAM/PROGRAM.12.md": "d03814e36e1ee672b29fa34c270611aa375cf93b6a54dfc2a18f2d4ba4ea692e",
+  "docs/task-history/PROGRAM/PROGRAM.90.md": "53a67a2bcf1de086bacaf058ab1d5d7912d88ae0cd8ccc2032b227f164adb16c",
+  "docs/task-history/PROGRAM/PROGRAM.32.md": "02e406bd45e9612c83c7d44f1df38dd99b8adaa89a33bb2e84a9e9c3a10e0211",
+  "docs/task-history/PROGRAM/PROGRAM.63.md": "39b454e3f60777f335db2d2118730d97673801a3d7bd2da58a8147488d209edb",
+  "docs/task-history/PROGRAM/PROGRAM.57.md": "5555a5401959354e5782e506af6f896ad4ac66fcef646b3a7702d9977bfffa7e",
+  "docs/task-history/PROGRAM/PROGRAM.16.md": "ed661ea8b44b38b047fee38ff880fa6d6fd190bb571e3a4fe042b5e766f95fe7",
+  "docs/task-history/PROGRAM/PROGRAM.47.md": "61f8a1a003d1e7c40f3a2894ac408f38a5b32669e9c4ddb1bd488c4584902c10",
+  "docs/task-history/PROGRAM/PROGRAM.9.md": "4b5d87c5ec01bf66c9ec00af430ea357b2fae8ca88bfe044f018a143649e9839",
+  "docs/task-history/PROGRAM/PROGRAM.22.md": "266afcead639a3e0fd6f341f0b9a36bcf10f57124694ad86938da83e4fe4c11e",
+  "docs/task-history/PROGRAM/PROGRAM.80.md": "2c1d2497e3c6278a0acc805b77bb3dd0ff38b12fc69f48c0fa64343c46e40d52",
+  "docs/task-history/PROGRAM/PROGRAM.91.md": "de11002206b9f1bdc05caa04955d6e6d141068af059df6d7514e949371e86373",
+  "docs/task-history/PROGRAM/PROGRAM.33.md": "e9df92ef94741c93d46b86f32d4121841c80dcf75482ec39ecc465c2602f4aaf",
+  "docs/task-history/PROGRAM/PROGRAM.62.md": "4fec27346a7877f246b352adff4314bf9097b50b6e2532e1049626e667533250",
+  "docs/task-history/PROGRAM/PROGRAM.56.md": "5b648c1d7276aad8e780dc8bb0058abc022312ff4ed0b5b153f6c16303031dee",
+  "docs/task-history/PROGRAM/PROGRAM.17.md": "5e54b16e78a735b71346324c5b90e53b79dd2638f6579947e855689e4dfc94db",
+  "docs/task-history/PROGRAM/PROGRAM.46.md": "8abea442f822809deeae8b5b6d0845837cbc85031c3f8c06402894f3b62e6236",
+  "docs/task-history/PROGRAM/PROGRAM.23.md": "8d536ec738b8ab492da300261ad04c145f1fe0fc5fcf84b2a72b3b7152fa5c7d",
+  "docs/task-history/PROGRAM/PROGRAM.81.md": "581409cbf2573c2d50935b478de175d725bf75a5f532b25d7d7e2d0d5ca52416",
+  "docs/task-history/PROGRAM/PROGRAM.52.md": "153a977e225db550982f007473d6437473edf4d96092b5c455064dd46933dd8d",
+  "docs/task-history/PROGRAM/PROGRAM.66.md": "9d96f296f3e3387b5ccb6efc73724dc41518e29edb96c025ded781c48982686b",
+  "docs/task-history/PROGRAM/PROGRAM.37.md": "f3a78bc0d84f6b48a70be1a46ccb11cb7465788b44febd33d0279b8e7b7d9b82",
+  "docs/task-history/PROGRAM/PROGRAM.27.md": "b6005432ae053e6f3ea7926aab45915a0290dae8aeb86f3be161a067ed782c7e",
+  "docs/task-history/PROGRAM/PROGRAM.76.md": "5df047cd3f7caf1a188cf11db58a55feab0c15504b3eec9df7e0aca3a734c5f4",
+  "docs/task-history/PROGRAM/PROGRAM.85.md": "1b8e944a15d16ee075ed0c8ec8c12c4aefa376af3c10b6aef57a558cca1e49d3",
+  "docs/task-history/PROGRAM/PROGRAM.42.md": "07c26d2115d37650f32968b066619d7cc12fa7fb9da4671e6fa1c777b0205221",
+  "docs/task-history/PROGRAM/PROGRAM.13.md": "d8702d3a7cdcf7b28eee70f1bd90d50c42cf78460827f6a2c6abb262086d3b8e",
+  "docs/task-history/PROGRAM/PROGRAM.61.md": "8f002d0e4db6fb94df07682b5f551c33a2286f94925ac9467d7092f02ae15109",
+  "docs/task-history/PROGRAM/PROGRAM.30.md": "b7a549042664366d2158a716d8516664f84a5563a7b47ae9985425999d05e312",
+  "docs/task-history/PROGRAM/PROGRAM.92.md": "346ac20a2de28f89503c25cb231ec4b788a25308c0720238d692629bac271118",
+  "docs/task-history/PROGRAM/PROGRAM.55.md": "7d11ceb6781300fcd36e709797328b76d7c35fd71e43e6018af8b45e9c3a05d9",
+  "docs/task-history/PROGRAM/PROGRAM.45.md": "2fb7381014308512fb431a0eeead331fb7fb09713b06800dffde83ccab12b7cf",
+  "docs/task-history/PROGRAM/PROGRAM.82.md": "3a8e59b75a1cd51242b0b06fa2ee8a0fd19854fc678168e4cac9ffee66c23d8e",
+  "docs/task-history/PROGRAM/PROGRAM.20.md": "f132de104d975077c0fe16078314c1bb3c433f10d6ca507a2ae58dc9fea50619",
+  "docs/task-history/PROGRAM/PROGRAM.51.md": "10daffaf2235e874900ce934862c77d1a5630609f75d5ee3452f5ac3e9f394ec",
+  "docs/task-history/PROGRAM/PROGRAM.65.md": "4386badd6deb93398ef5174363c808735720164a58fcae556b5ae7363fb72569",
+  "docs/task-history/PROGRAM/PROGRAM.86.md": "0a68b722c15637cdab36a24289c16a72c50552cca3cdf55c70734253492b43b1",
+  "docs/task-history/PROGRAM/PROGRAM.75.md": "0852952756e540048856a29ee82a40d9e2afd7e44803fd30723dba8ef4e2624d",
+  "docs/task-history/PROGRAM/PROGRAM.24.md": "59713a35643461fc79901c7aa694b857abd4e24cfa4a4a5d29f4742c9ea9805c",
+  "docs/task-history/PROGRAM/PROGRAM.10.md": "adc992a31bbfb9e7849228acd0ee19c2de6f501e2fdd044ef7ea370cf959c373",
+  "docs/task-history/PROGRAM/PROGRAM.41.md": "ddbcb949faf86bec30e0da75fc1d473e352d0e87087008e2cf7227d021ca30b2",
+  "docs/task-history/PROGRAM/PROGRAM.50.md": "e13246cced9fb7fa022472bb5090e4263cf1678cbc496e16d8c4f51d1e0bb4a8",
+  "docs/task-history/PROGRAM/PROGRAM.35.md": "00df0e47c37aa56d86a5d8b8ce4b2f23ed56117ef3e3d94f374d5f32d42b4c69",
+  "docs/task-history/PROGRAM/PROGRAM.64.md": "897862e9b627e8225b35fa2afa4c9bc447f659a7fc5ef1a26a921dea7a762144",
+  "docs/task-history/PROGRAM/PROGRAM.87.md": "aa48a35695356810dc97b600559684727b3d64aa6cfd65473a937fb7d1c3b4d1",
+  "docs/task-history/PROGRAM/PROGRAM.74.md": "98d1108613b7f57b143b50a2a482cd2eab889ef8b6986712bada76c987fb17af",
+  "docs/task-history/PROGRAM/PROGRAM.25.md": "28b0af0eda3d70e5ef6c5067796f5664199ed95157ce3186775fdb1cf6fd70bb",
+  "docs/task-history/PROGRAM/PROGRAM.11.md": "ef4203ed02e2009365dffccbd8eb5e0c6b233f670bf3c6c8374af032c127c685",
+  "docs/task-history/PROGRAM/PROGRAM.40.md": "ebac99d507ea67388d01e2f69214c7e03b35c1f3ae117710e0afe1740a2cf3e0",
+  "docs/task-history/PROGRAM/PROGRAM.60.md": "f323baeed87852506f5311cb1f008661f0d5b6e8b9f04aed70fab5574efdbdc3",
+  "docs/task-history/PROGRAM/PROGRAM.31.md": "a5cdcc1fb3dea756ff54bc369378958d6800244578264e1a0412f908fa2dc9f9",
+  "docs/task-history/PROGRAM/PROGRAM.93.md": "5c253c03713b0b40822f056e064dba4bfbda83a0fd71b31eef7626958509fbed",
+  "docs/task-history/PROGRAM/PROGRAM.54.md": "da1180f047e7da8397f84713a4fee5f7e5ddf858d6cb972daffb121c1da474cf",
+  "docs/task-history/PROGRAM/PROGRAM.44.md": "532f60c28d1675d13b07a1b148c14f536dc71e098462b1a324f479060bc04471",
+  "docs/task-history/PROGRAM/PROGRAM.15.md": "ff66972611f2996b5f399880c35cb2bd44eb5f3c118b9c0a4099936fb542d0d7",
+  "docs/task-history/PROGRAM/PROGRAM.83.md": "02b06ab9329013c10ba384e411de6f0ca371a3e4a73a0f0bb0b1012a0fbd7624",
+  "docs/task-history/PROGRAM/PROGRAM.21.md": "bc464cbfe1bf4c7dcd608b10081554e64ac5ba65cec8006c68ad61e42b3176a4",
+  "docs/task-history/PROGRAM/PROGRAM.70.md": "1bfe9de30de2792d305111b9f70172c48b810d192c5b06337d997fbecd3eaa50",
+  "docs/task-history/PROGRAM/PROGRAM.1.md": "93001611f38f8e3b363d827e31bc729241968020fdfcc82795614866b7d0bf82",
+  "docs/task-history/PROGRAM/PROGRAM.88.md": "e603ceb6cd9d90a14755c127a571fd1b3761c82ea6db285ddbc66b31a6cb1a49",
+  "docs/task-history/PROGRAM/PROGRAM.5.md": "f52e97e65d91f2666b458504417be4b0719e52340a5d2c9ce87b723a6597e9f1",
+  "docs/task-history/PROGRAM/PROGRAM.4.md": "fe2175796bfd4dd82088b24ecf83bf5711f1a5f230985899a85ac297ddbcedf6",
+  "docs/task-history/PROGRAM/PROGRAM.89.md": "49f87c303443e8cd7197eb8dc5b22b56bf23706af34ea49ca5b03a0d0bd371cc",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.4.md": "49e5df1a4148de704e30fad0fc7e4fa06947ce8e7efb953b0097f651732c7dbb",
+  "docs/task-history/M3/M3.6.9.6.3.1.md": "672a02a1a91e7961c23bec475d5251a0306006c7fc867c630110f83134ea7071",
+  "docs/task-history/M3/M3.6.3.7.md": "c091f95bde7b7729d76f929ce1f717c61c6dceaf36bf6ef60b6641b03fcbcab5",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.1.md": "ab7f21b000545e569205a23118ac3d287dfcd45aad2e2901f7dafebc1d4a87f9",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.4.2.1.md": "c96bbf9180b2eda8080ee0d181441620ad921eba3f7749097f650935cc29d36c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.4.md": "b437b80916987c9b4c63d4a0346abc4612f0b76515b4c58a5ce45b3b0fcfbfd9",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.2.1.md": "d471efc54eaaf903037f37281ca7066c3bfb89b6d700593061c75a3f427b574f",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.6.md": "d7c922df908c82b213fbddda2af3de9f3f7ed8f22b066a277932303c4c7eae0a",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.5.md": "54c48af915daed4bc52371c37cd65dccbbf973d2dc78800054d06ab48880c879",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.1.md": "939d4db0cc79634f2d312d0edecabb19210ba923e75fd3a94749e078b18c1b29",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.3.1.md": "9140137068faaf14c8901f29b0810fd5a647adfced42676c9e9797009eef6e62",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.md": "c716d980cddac47179a7e29a4d88539125cacc640a63e4ff9c71215fa7470e34",
+  "docs/task-history/M3/M3.6.3.3.md": "67a371a2c06c6fbedfe689e111884dfc9b84d1a90cbd17b75a84279df2461c50",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.1.md": "c77ebcda6c919535254a64898c66c428aae69b55dc8e2a3f6fb37bbc9be31221",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.1.md": "8be88e0f0193d994ad303900fe734d3b212a655d2fa5518dff1ea743ce6a3008",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.2.md": "ca973946356128d61b082029b6753b03271c48a8eba136f39806cf6d08c79053",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.6.1.md": "f64609bf452705b36fadb7d8e08ca3659aa82d99429641cee31b0b904358e3c3",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.1.md": "0eb717efdf38eb2491f166932d118400494d3b3dc86fa21130c311168f4c7e26",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.5.md": "87084d75555192bd3f90f2be0110a1a1efca2caf1cc41a0ed5911b1999a14bbc",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.2.md": "398fac58e318519482f94ea9b06aab5704386aebd2d34640780b74f9781809cb",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.0.md": "ae76e2dce61c5d19ec9dfc39b00b6ae9d9f5e6de02a5d27b2ebcd4d478a97330",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.1.md": "1124815fecd7c413e150ddb2bbe8926bb26bbf456c443bc8e78d70a78da3bcef",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.1.md": "5d6c96dc4b3d41104e88c807d1bfe041ea2c032935ce38b40b543a2dc6eb9c14",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.1.md": "1bbc1251c57a70db6b178fe6ee8e258c77395fbdf4a949f900db8804363a9738",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.10.3.3.1.md": "69e855a5bbb328a89b08ec863a2c071afeb190f01157b0d0370eed580b8daf8c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.1.md": "f758686185746a771f58fbee7c6a86d59211d06e98ef326a503d919f5056c7f8",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.3.md": "698f66aa6cbffa7c0236d8922163edd47c1095119674bb0175f41e4cbeb9b255",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.9.1.md": "db0b53f63730e6713a539856bcab73a914cff9d0fce57ff54b315e074ce2fd60",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.2.1.md": "db7704c7165414ff3376815c8794611f6c14f4f31375b700c7e129d1ce2fddb3",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.4.md": "de9147d9aa1e6c9a6165a63738b948cca05887fba7b33b658ab08c5b1198b3bf",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.5.md": "6152d3e7b9f484e53d2ddba2a879573c0e9ef495610b1109ed901e304aae3a00",
+  "docs/task-history/M3/M3.6.9.6.3.2.1.2.md": "4ae7ea23d723038fa0cc466b70eb33cd7b756f29dde16a4b256b6279621a29c4",
+  "docs/task-history/M3/M3.6.3.6.md": "e42e598823d6e4d044ba5a33a76e2b27727c143a5e40ce88da14c07f967ab1ce",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.md": "7fed8ae66164b9202a4109b70fea6a72ffb595834a3b711faa896796a068fdb1",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.5.md": "64e71516e75f3661a1c22ea13f05adfa1467cf76662536af619bde8e43977ab8",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.2.0.md": "01eba06d58972d7d4052fea3e41cd2e290f3df1d6c7bae63a69d3299d68b6d9f",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.7.md": "724eae5e030dcdf310581b74be43dff28b002039ed19d783a3004594f2640fb5",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.1.md": "cfa456f7b255b0be059597c6d2317f7f576cae8ac384268bf5d3161ff418ce84",
+  "docs/task-history/M3/M3.6.9.6.2.md": "92ef4602123c6e469c828b46417a60c3014f328ff75043c12594640b85a02640",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.9.5.md": "735f5095619988af0acde04849f7bf61ee9eb4e3ad67d2454ef8dd5a4926d197",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.2.md": "757945cb7b16d09b0c4b277df51237356e15c52f61b3d2c06c00d9a0ee679882",
+  "docs/task-history/M3/M3.6.9.2.1.md": "76ca26b922672dc4ce9b7ec68bff4eb9e25823f60ae989454cb32b717a95ba01",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.md": "e7e9278022d4ae4fbcceb35f78e5ae10f489e96c43ee8156c34893e9bd5452b9",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.1.1.md": "c9e869c567ae032f0b140ee011883f3818100674de12dbb9444475e991e67f6f",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.1.md": "31058c46b1f2908577467b00252c509b654c03be84fb6f0541e77d3668b08e55",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.2.md": "274b43ffe3f7e5b8c12eea2564d9a0e5246c45a2798b6c9a6c9f1ddc9cb2c17b",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.10.3.md": "2ce56ff2ec26587a8a45e1aab02de42f60e1d1958f001391283b5bce76930688",
+  "docs/task-history/M3/M3.6.9.3.md": "ed97dd6c84ad1e7b0b9adee27acc268c21cefa22f7d0d12542647e01fb49f14d",
+  "docs/task-history/M3/M3.6.9.2.2.1.md": "b8ed162af64ce057b8e874f08d25aee145ec739e34e1388b9c04a4e2a10941c0",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.12.md": "f6d57a2e1ab21876ddee01c19b3d3921d9ba89b54e3fe38a1436b66ae3bdc8f4",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.1.md": "abe1d1a0820e9c4efa66b4acd47b3bbce5b6b287908fcf6eaf24511cdc1c300f",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.0.0.md": "bbf402ae9b567882288d8bd30a455bde419eff5905104473523bbbb597d29184",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.4.md": "7f939d27ca3251c77f10efa9fb74239515404d701e68282a6c09e4dce7369eb7",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.md": "060fecdfad41eb032edf5fbf649734b3df85dfd7ec7733bf2c76b9981cf85cc4",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.10.3.2.md": "832e787c2d640bb26af1523502769d5d0aaa56399c22b264de61c3d4ed30c408",
+  "docs/task-history/M3/M3.6.4.md": "d57d7e61e85670ccac4489976e3ef063d442a770b39f2b172218fbdcb0434e2e",
+  "docs/task-history/M3/M3.6.9.2.md": "59b01e4c8295943b764cb31b04e4d100bdbdd189189ac855e6eb315a0e60343c",
+  "docs/task-history/M3/M3.6.6.1.md": "aba616b0e4c21535709504ee6a9a9bad88b32f10eb2e20ff137ae0acdf185f2c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.md": "7a1f51c909c66caf6856dd26f9e9e9a5826bbfb60ac83b4a1e30a6f281fd3c0a",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.4.1.md": "d4131a7dca5fa1754cf3bd0ed335cfe2038ce4c680d0625af166ceea55d0d3ee",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.13.md": "a5b1ddcb9be453214ed2565a91e089818b4fe4979d20c65a5176139157308bf8",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.6.3.md": "ffb0b21de60f84cf3e9dbbcdb8e948b362860332487d50f46d9ae394aa35a338",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.0.md": "4261345115218fd903980ffc3e6fdb75ef15af9b9c9ce72f3dc3a9bed2c1f0a9",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.0.1.md": "1288602e4ef5fff5754428280d4e54ec4a7d46e9dc51d780c8a6050d1dee8a91",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.4.0.md": "758b5a71365a36a04a820a721cbce55dd21a2d4a366f8d5acd1cace48b651a4c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.1.md": "828c6fd6ab3d3eb32bb15bde420deca516931e818d507e2cafe993cea6798b85",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.7.md": "5e2e1dbb119ebc9635b8480c072a1ee3681e2ab0cc46cabe467e51be8f3ae21f",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.13.1.md": "e169b14c79e7dc5c4ed0fc06eb496427df70cae0fbdbef9f516a868d62f98402",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.10.md": "ffa73cada04797ff20c0b57ced04cd4c5153d0c70a14d2ab1a9136d94de59ffe",
+  "docs/task-history/M3/M3.1.md": "4984a8cbde1ec3c8cb095258c808fffafd2cfbb7a907f408888a4fe2da8a4e4e",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.0.md": "bf68c7ca84e9c33c3a2e7c7a3d8c45352c5ffa9297c9284534f21df678661674",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.1.0.md": "b48b3a57a83e40a473eb6e70d8db8788761b50040c89955dfa2085ff05ae91bc",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.3.md": "a8deff571df9efd6dbb02c1910d1e8720b5026f07e672adf58ca809d2619a889",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.1.md": "2e6a679b7d5554a91c8d6c1049ccdafbbe55a078b6f1135da1ea6b266f374116",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.10.2.md": "51115b114483f560a847186ef494b578760118cf7ad4d2cd5342d35ff24e524c",
+  "docs/task-history/M3/M3.6.1.md": "9fc01c3eaeac018f827afc86def76c1e67a041d5ab8852b1ecf03ddf4a44d873",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.8.md": "e9ced08902198b2c26426ec738d2755cbebbfd390204b463e404777bd0941888",
+  "docs/task-history/M3/M3.6.9.1.md": "3c7ead6b2aacc18d7703683b73d248697f58fc13f92e4931e9678d790f8afc5a",
+  "docs/task-history/M3/M3.6.6.2.md": "7382311eb6459530179f1b99a236c75238330746a0fdb1121af2a1a353715544",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.6.0.md": "d96d95330f315910cdb91c17f6af24077ffeef48a3020e47662158b9ee0f78ac",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.10.md": "ff3aa38640035efd71f108fa71215bfa3d46ca1beefd99618e09bdf6f716b3d0",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.8.md": "687bb71767f95cc0f205207aba4ce5730ae36bc6266961031ecf56f3c29e6b50",
+  "docs/task-history/M3/M3.6.9.2.2.2.1.md": "d98688325dcae6db38c6ef6c35564a67ba82f38f427173385819bac0b181cb1b",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.2.md": "562241fca274828d2056bda61e3a010b7a28eb8ecfce7b4131902651ac0b68a0",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.4.md": "c8a6619806f18e7d4694b982316ce2d40293ec608b2138633fa66952230fc5a4",
+  "docs/task-history/M3/M3.6.6.md": "794af4f8bd43635318eff84a7f42e0774ca101302bbd8853a668a9ea66c94e96",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.13.md": "9ef937410f8bcf80f6cf2bceb946bdc84a183d2134a41a292f2dc85fe604bcb3",
+  "docs/task-history/M3/M3.6.9.5.md": "597fa2bee4b5a97cd7e4082c1a78dcf19a2a95f0b2690ff55f37f67f679b84ca",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.14.md": "fc75284a254291cd7ca069b5e3a57b82eb4cd970489029ae5c4cd0d6ec5bca4c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.10.1.md": "f6f8c7818f8a880b568a1c5c17578a529324ca357d3ec80b77cf99a5c47ebcb6",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.2.md": "267c8a8f48edde99886477d9c8902034df762f4dedcbebf7ea0cd3621d39f620",
+  "docs/task-history/M3/M3.6.2.md": "d990cb7c824857437716fce88133cffce4c4819e3a8b9ff687e46d48358463d8",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.1.md": "4c4925c527a8a2818a0bb50b6512150817ecefba3f498eeb4628e7a26a414309",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.12.md": "0e0422d6f74efc6f57b0ec552986db7a194c485e621ed9c3cc9e067c8d015e43",
+  "docs/task-history/M3/M3.6.9.4.md": "434ecacc65297372715db91de78a8b09c8f4f4b99d5e087add8c40f13ea0b92b",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.1.md": "f2504cd685eb365473ef6fb54561cb284540bea7332e18eb0e133bedd197888a",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.1.2.md": "23bcec451b89ae58772d5ea468ec03e8766caa63d4e8053dbb23b8f8c23dfa3f",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.1.md": "b9d9883537a9153ba31e28bcde6353b8319a50de38ca3d283135560d3d4597bb",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.9.md": "5cec30e4192e010dff0685e8efd0399051c68896d085fed916f47283c3c43173",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.6.1.md": "f804daa597ffa5501040f26a58f8dee8c78494250dfde6f4872585a95ed52f69",
+  "docs/task-history/M3/M3.6.6.3.md": "5568a4cbe4942525a186c37a33241bdc06a26372f7a9a300d1e4da0073ea6481",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.md": "122041bd0f74832c4f2b89207d0007415d5e48f9a59efabcec24e13cb93be7f7",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.11.md": "2843204f95a22d22e511ca6f609311887a5a8a82ab67cc5a9d0339ca83196e71",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.9.md": "acdbd9e8cb314276b208cea1ab19abe500889c3874052976798aab446ae72c6f",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.8.md": "1ef93c76d58116c55b552b8398015664c5dae35e5d6879a2eb644d3ba84965f4",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.10.3.1.md": "ebd327d7c8dd0b3d505211438683cb01c8441c69566b5a739dc0f10f8e15b2b7",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.5.md": "ec09e50bf8ba1354c945b5e0944d43d0ca3ed41afaf2640c5ae7b6031db29c9e",
+  "docs/task-history/M3/M3.6.7.md": "bb8c0a5ebe205b51683003cd08e73b048b957c2bd50912faf5674edac168cebc",
+  "docs/task-history/M3/M3.6.3.1.md": "3ab6ccd8551aa3ff205bc410f6bb31f9ca4210df4cca86974040125b95026ad1",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.3.3.1.md": "6d3ec24a1cd27d9f6996b25f5845372a2ace2924fd772f82e3a7f4a5b81c4e94",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.2.md": "11877f9e9e941f56a80fe9667c844f6a5986a55070f712fd6cdae9c401c5bcd1",
+  "docs/task-history/M3/M3.6.9.6.3.2.1.md": "d42d62b8304c61ec609b7679d3a383d79eb175485b5a9b95ed74e9a60ad16614",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.3.md": "e4b4840e5173145145771136a1750675388dd0457daaa4d8d04cb2b552e93ffc",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.2.md": "29864cce91a9d5e649861f8670703d3e01c107f9c17b3cae0c799eb44e67877d",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.2.md": "72819483b96dddd55a03dfb97288200274b2ed871895dd33f61033d111e18502",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.1.md": "d64e4c1ae70f894e10a4be187de6b2470b0608554d02fa161e23c504502ab7af",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.9.2.md": "d9022fdec2d854fa63f0350725b6f39f90b8ca799f77d4c4fef96603cd98aaf1",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.3.md": "659996a65de82625da417cabfcbe8808aff656718206e105eccd625767295447",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.6.md": "5b23939f4dd1a5f39d5e0dffd028e59abafc534dc73deb73ca74a70ffa8d648c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.1.md": "e9f201e460d1c381ce69ed488861f7e45757f20fe6ab1d28ef4f601fb7057154",
+  "docs/task-history/M3/M3.6.3.5.md": "1f29930ea1737acced115bada0e37d4977f8c3764ad202b870b018d2c17ac843",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.4.1.md": "037bfd79f867205fd1365cf8bc91da3ce74f9a79a999ef648d5d1d0d5143fc12",
+  "docs/task-history/M3/M3.6.9.6.3.2.1.1.md": "d928e89339a23ef6bcdcb9afb7d28a633ed60ef0e796fdfbc256a345f2297de8",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.6.md": "65e1ef96b3ee457e6267a6a56f708ba6d75bf2e799a7b7d5887334f2fd40868c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.1.md": "828bced4dbde1d8787003a7368877580f59e6a59b46238f8ffb8cd52a290fab5",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.4.md": "b6230dd5a582bd700fa6ebced938e9b16fe754aab57c9cf82244036c88b90177",
+  "docs/task-history/M3/M3.6.8.md": "fd4371a4f8511643c2c3a921e0fd820454225fb07d32fbb0fded61b14390d494",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.3.md": "3622b151ceb0319bd02712b0838efda0b9e91505f9e460ea983986642721a66e",
+  "docs/task-history/M3/M3.6.9.6.1.md": "2ef7e9cd5dd3424771f9bddce19a9b18563a82382b4c266414511bd2c404db63",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.7.md": "ad266e6d9f73a562c27317cfc767da612db0a002821708b36362e185f34eff24",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.7.md": "379204399e618284c6e6467bfb1c1a2a82425104b739049c9b4d5c4cdbb17b7c",
+  "docs/task-history/M3/M3.6.3.4.md": "83102ff2d2f2305fb1bb9d2800d95418ba8239c018cc44eecc2c020bdc7482bb",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.2.md": "2a6b256e402fd54a213e7365db0648c9bc6d7a8e9dde382f94fe575072c9e4db",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.7.md": "cea14d95b3b07c31c6a413a8532718122bcd993008c2d13e4fe33ad580256d2a",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.5.md": "0d667920092fcde4fc57bf29c1afd957eaad008f493829a10c4a74a096709b32",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.2.2.md": "d50d089613c2ef4091e3f4c767584d1179c69e691a992e20b7a12800893d5b9d",
+  "docs/task-history/M3/M3.6.6.2.1.md": "371a9e400c662daf6d04bd58784e657fc5d2a10d6bd54c9b0f5ab5169c858295",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.2.md": "76c2b661340ad23c230a1f9118127275dee7e33068ff934d4b2eb3a66e73f263",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.2.3.2.md": "503c1ce75740b4381e8ca9c1f1694403f41504b7671eefec372d716a8b09b3f7",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.6.md": "91ee0ca2d4d1ed3b0fac1531d867665df3d99787b5f8677e8bbaff8c9ac93bae",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.4.4.md": "2342b78d24530cad5f208bbecfa7bd6d80ad5b07ed02ad9e1c5786bf64d1a379",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.3.md": "c067088876ec657bdd23160fe1f731cc568df679d70773739909d4521afadc71",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.4.3.2.md": "65d8d155006274d9e0102e22438004e7e019cd99b4f1264155da470795477de5",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.2.md": "0c583845e90e4a78aee39f41d94c88ed2510d1f20fe7d8c9ac20c2b24fa1fe9c",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.8.3.md": "abd12835236c20ab07b8127dfd847465081fb1f2b7bdc4a10f595d574bf3eb58",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.13.2.3.md": "b947f6ade93c0b4a91eb918abe31a7b58788c520305630b8a48671f1765ddfad",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.15.2.1.3.3.3.2.6.1.md": "73c24e67833a2625ecb1f6e35917b80c40eb85a899de6a14eb9d0160910503f9",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.14.3.2.2.2.2.6.md": "fdb6ccbbbc33119c6227208a9713c990d1726b99459e288a10d338866dad1482",
+  "docs/task-history/M3/M3.6.9.6.3.2.2.11.2.2.md": "8d8ed0183076d619d87bdee40c1e09a8dd61ec475a163d86e8de229e8779a3dc",
+  "docs/task-history/API/API.2.md": "dbc25c7faf9fd365ba317b378ee3e97a3daa1efde2b54b9216a20efa0fe242b4",
+  "docs/task-history/API/API.6.md": "4ac41ac66bdb9f6546c7c63b2ab96e8deddad8838b66f0dbeb1ec3683ef70ff9",
+  "docs/task-history/API/API.7.md": "3b987992fa09fc7769b542c94bcf2a20f39b54b270c2e8908426485f4d8465b2",
+  "docs/task-history/API/API.3.md": "7e05e87946400e49ebedd8e4aeac1b9db98b95a41a46b26a762cb397fffb44e5",
+  "docs/task-history/API/API.4.md": "a2a708efecbc1081506357a47630569f1beb6e9ee07d6f9d61dc8e6c8b5397db",
+  "docs/task-history/API/API.1.md": "3bb282091697399282dfbff8613471a6824405e717dd899302ca5c4df9acbb55",
+  "docs/task-history/API/API.5.md": "ae826aac09dc32f8e04ca24f3c14fa675302e3be9824c5646ab02118414c14c4"
+}
+```
+
+</details>
+
+<details>
+<summary>Lossless dependency path-domain live contracts</summary>
+
+```json
+{
+  "routes": [
+    {
+      "identity": "M3.6.9.6.3.2.2.15.2.1.6.1.1",
+      "original": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.6.1.1\u0060\n  Status: \u0060active\u0060 \u2014 path-domain follow-up; isolated actual-producer assessment first\n  Goal: establish the actual outside-tree path quoting and raw/canonical boundaries;\n    resolve every measured defect under separate safe children before the full .6.2\n    checkpoint. No reachability or equivalence follows from the initial four survivors.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n",
+      "compact": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.6.1.1\u0060\n  Status: \u0060active\u0060 \u2014 assessment done; P0 ambiguity repair .1 next, then control .2\n  [Full contract](../book/src/annex-trust-proofs.md#dependency-path-domain-contracts) retained verbatim.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n"
+    },
+    {
+      "identity": "M3.6.9.6.3.2.2.15.2.1.6.1.1.1",
+      "original": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.6.1.1.1\u0060\n  Status: \u0060pending\u0060 \u2014 P0: ambiguous dependency-record readings are refused\n  Goal: the pinned rustc writes a prerequisite's spaces as backslash-space and every\n    other byte literally, so one first-rule text can name two prerequisite lists. The\n    measured prefix collision reads an outside input ending in a backslash, followed by\n    an in-tree prerequisite, as one escaped in-tree path, writes the inventory and\n    records a decoy blob; spaced outside paths are refused under fragment names, and\n    the pinned Cargo's own rewritten record reads the text the same way. Repair by\n    refusal, never by a cleverer split: read rustc's per-file phony targets as the\n    line-delimited prerequisite list, require the first rule's reading to agree with\n    it, and refuse any residual backslash outside the known scratch prefixes, naming\n    the raw record text. Keep the existing spaced and line-broken scratch-root controls\n    passing. Replay the retained prefix-collision, spaces and alias-spaces variants as\n    permanent controls with independent literal expectations; require intended finishing\n    kills for the dependency-block edits, unchanged reasons and complete restoration.\n  Priority: P0, observed \u00602026-10-20\u0060 ([record](../book/src/annex-trust-proofs.md#dependency-path-domain-assessment)).\n  Impact: an inventory can omit an outside input and misattribute its bytes to a tracked\n    blob, so the identity claim is false while the gate passes. Preconditions: a space in\n    the written tree's path, a host file named by the prefix before that space with a\n    trailing backslash, and an in-tree prerequisite spelled by the rest.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n",
+      "compact": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.6.1.1.1\u0060\n  Status: \u0060pending\u0060 \u2014 P0: ambiguous dependency-record readings refused; owns D1 and D2\n  [Full contract](../book/src/annex-trust-proofs.md#dependency-path-domain-contracts) retained verbatim.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n"
+    },
+    {
+      "identity": "M3.6.9.6.3.2.2.15.2.1.6.1.1.2",
+      "original": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.6.1.1.2\u0060\n  Status: \u0060pending\u0060 \u2014 P2: Cargo's terminal-backslash refusal retained as a control\n  Goal: a final prerequisite ending in a backslash makes the pinned Cargo refuse its own\n    dependency record before the inventory reads anything; the inventory returns the\n    build error and writes nothing, neither a written nor a refused outcome. Retain that\n    exact rejecting constraint as a permanent control naming Cargo's message, decide\n    whether the error is reported as a refusal, and keep the outcome unjudged rather\n    than passed until decided. After .1.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n",
+      "compact": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.6.1.1.2\u0060\n  Status: \u0060pending\u0060 \u2014 P2: Cargo's terminal-backslash refusal kept as a control; owns D3; after .1\n  [Full contract](../book/src/annex-trust-proofs.md#dependency-path-domain-contracts) retained verbatim.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n"
+    },
+    {
+      "identity": "M3.6.9.6.3.2.2.15.2.1.6.2",
+      "original": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.6.2\u0060\n  Status: \u0060pending\u0060 \u2014 P1, after .6.1\n  Goal: re-discover the complete current dependency block; reconcile every historical\n    obligation and neighboring edit with exact outcomes, real compiler qualification for\n    U and guarded source proofs for any E; full current parents and restoration. Commit\n    the bounded checkpoint before configuration paths; broader adequacy stays open.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n",
+      "compact": "- ID: \u0060M3.6.9.6.3.2.2.15.2.1.6.2\u0060\n  Status: \u0060pending\u0060 \u2014 P1, after .6.1\n  [Full contract](../book/src/annex-trust-proofs.md#dependency-path-domain-contracts) retained verbatim.\n  Verification: \u0060pending\u0060\n  Commit: \u0060pending\u0060\n\n"
+    }
+  ],
+  "saved_bytes": 2204
+}
+```
+
+</details>
+
+<details>
+<summary>Dependency path-domain input restoration</summary>
+
+```json
+{
+  "main": {
+    "schema": "archogen-tracked-input-check/1",
+    "status": "restored",
+    "snapshot": "target/dependency-path-domain-assessment/main-inputs.json",
+    "snapshot_sha256": "20bc301da9641dc791f4be29a1811f115211e4146c375f08a2509cad38434743",
+    "regular_count": 1156,
+    "gitlink_count": 1,
+    "source_commit": "39b16e963690e0d3b8a6f2ec99b7d8ce020bedaf",
+    "producer_sha256": "8d11a12788b158741d533caaa994eadab9c7c55a18190017c488dc25dfd83515"
+  },
+  "recheck": {
+    "schema": "archogen-tracked-input-check/1",
+    "status": "restored",
+    "snapshot": "target/dependency-path-domain-assessment/main-inputs.json",
+    "snapshot_sha256": "20bc301da9641dc791f4be29a1811f115211e4146c375f08a2509cad38434743",
+    "regular_count": 1156,
+    "gitlink_count": 1,
+    "source_commit": "39b16e963690e0d3b8a6f2ec99b7d8ce020bedaf",
+    "producer_sha256": "8d11a12788b158741d533caaa994eadab9c7c55a18190017c488dc25dfd83515"
+  },
+  "copy": {
+    "status": "restored",
+    "regular_count": 1156,
+    "qualification": "Plain-copy bytes/modes checked with maintained regular_input and borrowed main index identities; no copied index or submodule-content claim.",
+    "manifest_sha256": "20bc301da9641dc791f4be29a1811f115211e4146c375f08a2509cad38434743"
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Dependency path-domain probe output</summary>
+
+```json
+{
+  "probe.log": "Plain copy refreshed: 1156 regular inputs; no copied Git index; one opaque gitlink omitted\nordinary: Cargo exit 0; 4 captured dependency/outcome files; 2.84s\nprefix-collision: Cargo exit 101; 4 captured dependency/outcome files; 0.55s\nspaces: Cargo exit 101; 4 captured dependency/outcome files; 2.58s\nalias-ascii: Cargo exit 0; 4 captured dependency/outcome files; 2.51s\nalias-spaces: Cargo exit 101; 4 captured dependency/outcome files; 2.50s\nterminal-backslashes: Cargo exit 101; 3 captured dependency/outcome files; 2.51s\ntrust-adequacy: restored 1156 regular inputs; Python/system hashes agree; 1 gitlink identities, metadata only\nAll original/copied regular inputs restored: 1156\n",
+  "qualified.log": "Plain copy refreshed: 1156 regular inputs; no copied Git index; one opaque gitlink omitted\nordinary: Cargo exit 0; 4 captured dependency/outcome files; 2.49s\nprefix-collision: Cargo exit 101; 8 captured dependency/outcome files; 3.73s\nspaces: Cargo exit 101; 4 captured dependency/outcome files; 2.73s\nalias-ascii: Cargo exit 0; 4 captured dependency/outcome files; 2.47s\nalias-spaces: Cargo exit 101; 4 captured dependency/outcome files; 2.46s\nterminal-backslashes: Cargo exit 101; 3 captured dependency/outcome files; 2.37s\ntrust-adequacy: restored 1156 regular inputs; Python/system hashes agree; 1 gitlink identities, metadata only\nAll original/copied regular inputs restored: 1156\n"
+}
+```
+
+</details>
+
+#### Executable assessment adapters
+
+Prepare the repository-local environment in `TOOLBOX.md`. The probe refreshes the plain copy from the retained manifest, substitutes each variant into the copy’s parent, runs the exact Cargo command, captures the dependency records and outcomes, restores the copy and checks the main inputs. The audit re-derives every claim above from the retained receipts and rejects the altered ones; the remaining adapters write the records and the book. Host toolchain and operating-system dependencies are necessary read-only inputs. Scripts are historical recipes for these exact inputs, not permission to alter the fixture exception or maintained external repositories.
+
+<details>
+<summary>Exact dependency path-domain probe.py</summary>
+
+~~~python
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
+import hashlib, importlib.util, json, os, re, shutil, stat, subprocess, tempfile, time
+
+root = Path.cwd().resolve()
+out = root / 'target/dependency-path-domain-assessment'
+copy = root / 'target/mutation-sweep/tree'
+spec = importlib.util.spec_from_file_location('adequacy', root / 'scripts/trust_adequacy.py')
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+snapshot = m.load_input_snapshot((out / 'main-inputs.json').read_bytes())
+source = (root / 'xtask/src/trust.rs').read_text()
+start = source.index('    #[test]\n    fn every_absolute_dependency_outside_the_written_tree_is_refused()')
+end = source.index("    fn package_item<'a>", start)
+body = source[start:end]
+name = 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused'
+command = ['cargo', 'test', '--locked', '--offline', '-q', '-p', 'xtask', name, '--', '--exact']
+env = dict(os.environ, CARGO_TARGET_DIR=str(root / 'target/mutation-sweep/target'),
+           ARCHOGEN_SWEEP_SOURCE=str(root))
+sha = lambda raw: hashlib.sha256(raw).hexdigest()
+norm = lambda value: value.replace(str(root), '<repository-root>')
+
+def save(path, value):
+    path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + '\n')
+
+def safe(path):
+    assert path.is_relative_to(root / 'target')
+    for part in [path, *path.parents]:
+        if part == root:
+            break
+        assert not part.is_symlink(), str(part)
+        if part.exists():
+            assert part.stat().st_dev == root.stat().st_dev, str(part)
+
+safe(copy)
+assert not (copy / '.git').exists() and not (copy / '.git').is_symlink()
+copy.mkdir(parents=True, exist_ok=True)
+for relative, entry in snapshot['regular'].items():
+    src, dst = root / relative, copy / relative
+    assert sha(src.read_bytes()) == entry['sha256']
+    safe(dst)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=dst.parent, delete=False) as handle:
+        temporary = Path(handle.name)
+    try:
+        shutil.copy2(src, temporary)
+        temporary.replace(dst)
+    finally:
+        temporary.unlink(missing_ok=True)
+assert (copy / 'xtask/src/trust.rs').read_text() == source
+print('Plain copy refreshed:', len(snapshot['regular']), 'regular inputs; no copied Git index; one opaque gitlink omitted', flush=True)
+
+def variant(kind):
+    text = body
+    inputs = [('FIRST', 'a.txt', 'first external input\n'),
+              ('MIDDLE', 'm.txt', 'middle external input\n'),
+              ('LAST', 'z.txt', 'last external input\n')]
+    additions = []
+    output = 'out'
+    if kind in ('spaces', 'alias-spaces'):
+        inputs = [(constant, file.replace('.txt', ' with space.txt'), data) for constant, file, data in inputs]
+    if kind == 'terminal-backslashes':
+        inputs = [(constant, file[0] + '\\', data) for constant, file, data in inputs]
+    if kind == 'prefix-collision':
+        text = text.replace('.join(name)\n            .join("external");', '.join(name);', 1)
+        inputs = [('OUTSIDE', 'prefix\\', 'outside first payload\n')]
+        additions = [('crates/b/src/tree/data.txt', 'held decoy bytes\n'), ('data.txt', 'held decoy bytes\n')]
+        inside = 'pub const INSIDE: &str = include_str!("tree/data.txt");'
+        output = 'prefix crates/b/src'
+    elif kind.startswith('alias-'):
+        additions = [('crates/b/src/inside.txt', 'inside tracked input\n')]
+        inside = 'pub const INSIDE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/inside.txt"));'
+        output = 'output-alias'
+    if additions:
+        text = text.replace('let lines: Vec<_>', 'let mut lines: Vec<_>', 1)
+        text = text.replace('        let admissions: String', '        lines.push(' + json.dumps(inside) + '.to_owned());\n        let admissions: String', 1)
+        extra = ', '.join('(' + json.dumps(path) + ', ' + json.dumps(data) + '.to_owned())' for path, data in additions)
+        old = '&[("trust/roots.eadl", format!("{ROOTS}{admissions}"))]'
+        assert text.count(old) == 1
+        text = text.replace(old, '&[("trust/roots.eadl", format!("{ROOTS}{admissions}")), ' + extra + ']', 1)
+    array = '        let inputs = [\n' + ''.join('            (' + ', '.join(json.dumps(x) for x in row) + '),\n' for row in inputs) + '        ];'
+    text, n = re.subn(r'        let inputs = \[.*?\n        \];', lambda _: array, text, count=1, flags=re.S)
+    assert n == 1
+    run = 'f.run()' if output == 'out' else 'f.run_into(' + json.dumps(output) + ')'
+    prefix = ''
+    if kind.startswith('alias-'):
+        prefix = '''        let physical = f.base.join("physical-output");
+        std::fs::create_dir_all(&physical).unwrap();
+        std::os::unix::fs::symlink(&physical, f.base.join("output-alias")).unwrap();
+'''
+    if kind == 'prefix-collision':
+        prefix += '        let first = ' + run + ';\n'
+        prefix += '        let inventory = f.base.join(' + json.dumps(output + '/trust-dependencies.json') + ');\n'
+        prefix += '        if inventory.exists() { std::fs::copy(&inventory, f.base.join("first-inventory.json")).unwrap(); }\n'
+        prefix += '        std::fs::write(external.join("prefix\\\\"), "outside second payload changed\\n").unwrap();\n'
+        prefix += '        let second = ' + run + ';\n'
+        prefix += '        if inventory.exists() { std::fs::copy(&inventory, f.base.join("second-inventory.json")).unwrap(); }\n'
+        prefix += '        let shape = |value: &Outcome| match value { Outcome::Written(_) => "written", Outcome::Refused(_) => "refused" };\n'
+        prefix += '        std::fs::write(f.base.join("observed-outcomes.txt"), format!("first={}\\nsecond={}\\n", shape(&first), shape(&second))).unwrap();\n'
+        run = 'first'
+    original = '        assert_eq!(refused(f.run()), expected);\n        assert!(!f.base.join("out/trust-dependencies.json").exists());'
+    assert text.count(original) == 1
+    text = text.replace(original, prefix + '        assert_eq!(refused(' + run + '), expected);\n        assert!(!f.base.join(' + json.dumps(output + '/trust-dependencies.json') + ').exists());', 1)
+    return text, inputs, output
+
+records = []
+error = None
+try:
+    (out / 'qualified').mkdir()
+    for kind in ['ordinary', 'prefix-collision', 'spaces', 'alias-ascii', 'alias-spaces', 'terminal-backslashes']:
+        case = out / 'qualified' / kind
+        assert not case.exists(), 'Do not overwrite completed case: ' + kind
+        case.mkdir()
+        changed, inputs, output = variant(kind)
+        (case / 'parent.rs').write_text(changed)
+        (copy / 'xtask/src/trust.rs').write_text(source[:start] + changed + source[end:])
+        began = time.monotonic()
+        result = subprocess.run(command, cwd=copy, env=env, capture_output=True, timeout=600)
+        elapsed = time.monotonic() - began
+        (case / 'stdout.log').write_bytes(result.stdout)
+        (case / 'stderr.log').write_bytes(result.stderr)
+        base = copy / 'target/trust-tests/absolute-dependency-refusals'
+        captured = {}
+        for path in sorted(base.rglob('*.d')):
+            if path.is_file() and not path.is_symlink():
+                captured[str(path.relative_to(base))] = norm(path.read_text())
+        for file in ['first-inventory.json', 'second-inventory.json', 'observed-outcomes.txt', output + '/trust-dependencies.json']:
+            path = base / file
+            if path.is_file():
+                captured[file] = norm(path.read_text())
+        held = {}
+        if (base / 'repo/.git').is_dir():
+            tracked = subprocess.check_output(['git', 'ls-files', '-z'], cwd=base / 'repo').decode().strip('\0').split('\0')
+            held = {file: (base / 'repo' / file).read_text() for file in tracked}
+        row = dict(case=kind, command=command, exit_code=result.returncode, elapsed_seconds=elapsed,
+                   oracle='Complete literal outside-input refusals derived from the declared filenames, plus no inventory.',
+                   inputs=inputs, output=output, source_sha256=sha((copy / 'xtask/src/trust.rs').read_bytes()),
+                   parent_sha256=sha(changed.encode()), stdout=norm(result.stdout.decode()), stderr=norm(result.stderr.decode()),
+                   captured=captured, fixture_files=held,
+                   fixture_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=base / 'repo', text=True).strip() if held else None)
+        save(case / 'record.json', row)
+        records.append(row)
+        save(out / 'qualified-results.json', records)
+        print(kind + ': Cargo exit ' + str(result.returncode) + '; ' + str(len(captured)) + ' captured dependency/outcome files; %.2fs' % elapsed, flush=True)
+except BaseException as caught:
+    error = caught
+finally:
+    (copy / 'xtask/src/trust.rs').write_text(source)
+    subprocess.run(['python3', '-I', '-B', 'scripts/trust_adequacy.py', '--check-inputs', str(out.relative_to(root) / 'main-inputs.json'),
+                    '--output', str(out.relative_to(root) / 'main-restoration.json')], cwd=root, check=True)
+    entries = [(name, {'index_mode': entry['index_mode'], 'index_oid': entry['index_oid']}) for name, entry in snapshot['regular'].items()]
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        actual = dict(pool.map(lambda item: m.regular_input(copy, item), entries))
+    assert actual == snapshot['regular']
+    save(out / 'copy-restoration.json', dict(status='restored', regular_count=len(actual),
+         qualification='Plain-copy bytes/modes checked with maintained regular_input and borrowed main index identities; no copied index or submodule-content claim.',
+         manifest_sha256=sha((out / 'main-inputs.json').read_bytes())))
+    print('All original/copied regular inputs restored:', len(actual), flush=True)
+if error is not None:
+    raise error
+~~~
+
+</details>
+
+<details>
+<summary>Exact dependency path-domain audit.py</summary>
+
+~~~python
+from pathlib import Path
+import copy, hashlib, json, re, subprocess
+
+out = Path('target/dependency-path-domain-assessment'); B = chr(96)
+root = Path.cwd().resolve(); tag = '<repository-root>'
+base = tag + '/target/mutation-sweep/tree/target/trust-tests/absolute-dependency-refusals'
+exits = {'ordinary': 0, 'prefix-collision': 101, 'spaces': 101, 'alias-ascii': 0, 'alias-spaces': 101, 'terminal-backslashes': 101}
+order = list(exits)
+parent = 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused'
+command = ['cargo', 'test', '--locked', '--offline', '-q', '-p', 'xtask', parent, '--', '--exact']
+source_sha = 'd7c9403d2cf27a345b151fae86fc92c7a106b3be13f98569f12d577baa8999f4'
+decoy_sha = hashlib.sha256(b'held decoy bytes\n').hexdigest()
+d_key = 'out/target/chk/release/deps/b-20572edba3a82d76.d'
+alias_key = 'physical-output/target/chk/release/deps/b-20572edba3a82d76.d'
+prefix_key = 'prefix crates/b/src/target/chk/release/deps/b-20572edba3a82d76.d'
+prefix_lib_key = 'prefix crates/b/src/target/chk/release/libb.d'
+seal_leaf = 'M3.6.9.6.3.2.2.15.2.1.6.1.0'; seal_file = 'docs/task-history/M3/' + seal_leaf + '.md'
+externals = {'ordinary': ['a.txt', 'm.txt', 'z.txt'], 'spaces': ['a with space.txt', 'm with space.txt', 'z with space.txt'], 'terminal-backslashes': ['a\\', 'm\\', 'z\\']}
+passed_text = 'test result: ok. 1 passed; 0 failed'
+cargo_refusal = 'could not parse/generate dep info at: ' + base + '/' + d_key
+
+def sha(raw): return hashlib.sha256(raw).hexdigest()
+def read(name): return json.loads((out / name).read_text())
+def git(*args): return subprocess.check_output(['git', *args])
+class Refused(AssertionError): pass
+def need(condition, why):
+    if not condition: raise Refused(why)
+def normalise(value):
+    if isinstance(value, str): return value.replace(str(root), tag)
+    if isinstance(value, list): return [normalise(v) for v in value]
+    if isinstance(value, dict): return {k: normalise(v) for k, v in value.items()}
+    return value
+def rule(text): return text.split('\n')[0]
+def escaped(path): return path.replace(' ', '\\ ')
+def refusal(path, why): return 'trust-undeclared-input: ' + B + 'chk' + B + ' reads ' + B + path + B + ', ' + why
+def rendered(text):
+    # the child's Debug rendering of a refusal, rendered again by the wrapper's Debug of the child's stdout
+    for _ in range(2): text = text.replace('\\', '\\\\').replace('"', '\\"')
+    return text
+def vector(stdout, label, stop):
+    a = stdout.index(label + ': [\\"') + len(label + ': [\\"'); z = stdout.index('\\"]\\n' + stop, a)
+    return stdout[a:z].split('\\", \\"')
+def node(raw, identity):
+    a = raw.index(('- ID: ' + B + identity + B + '\n').encode()); ends = [a + 1 + m.start() for m in re.finditer(rb'(?m)^- ID: |^## ', raw[a + 1:])]
+    return raw[a:min(ends) if ends else len(raw)]
+
+def judge(d):
+    q, i = d['qualified'], d['initial']
+    need([r['case'] for r in q] == order and [r['case'] for r in i] == order, 'both receipts hold the six variants in order')
+    for rows, label in [(i, 'initial'), (q, 'qualified')]:
+        for r in rows:
+            need(r['command'] == command, label + ' command: ' + r['case'])
+            need(r['exit_code'] == exits[r['case']], label + ' exit: ' + r['case'])
+            text = d['parent_texts'][label][r['case']]
+            need(r['parent_sha256'] == sha(text.encode()), label + ' parent digest: ' + r['case'])
+            need(r['source_sha256'] == sha((d['source_head_text'][:d['span'][0]] + text + d['source_head_text'][d['span'][1]:]).encode()), label + ' copy source is the committed source with that one span replaced: ' + r['case'])
+            need(r['oracle'].startswith('Complete literal outside-input refusals'), label + ' oracle: ' + r['case'])
+            need(r['fixture_commit'] and r['fixture_files']['crates/b/src/lib.rs'], label + ' fixture: ' + r['case'])
+    by = {r['case']: r for r in q}
+    for case in order:
+        need(d['records'][case] == by[case], 'record.json is the qualified row: ' + case)
+        need(d['parents'][case] == by[case]['parent_sha256'], 'parent.rs digest: ' + case)
+    need(d['parent_texts']['qualified']['ordinary'] == d['source_head_text'][d['span'][0]:d['span'][1]], 'the ordinary variant is the committed parent verbatim')
+    ext = lambda names: ' '.join(base + '/external/' + escaped(f) for f in names)
+    # ordinary: exact refusals, source first then the three outside inputs
+    o = by['ordinary']; need(passed_text in o['stdout'] and o['stderr'] == '', 'ordinary passes')
+    need(rule(o['captured'][d_key]) == base + '/' + d_key + ': crates/b/src/lib.rs ' + ext(externals['ordinary']), 'ordinary producer order source0/external1,2,3')
+    need(o['output'] == 'out' and [row[1] for row in o['inputs']] == externals['ordinary'], 'ordinary inputs')
+    # alias-ascii: raw alias target, canonical manifest input, exact outside refusals
+    a = by['alias-ascii']; need(passed_text in a['stdout'] and a['stderr'] == '' and a['output'] == 'output-alias', 'alias-ascii passes under the symlinked root')
+    inside = base + '/physical-output/tree/crates/b/src/inside.txt'
+    need(rule(a['captured'][alias_key]) == base + '/output-alias/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs ' + ext(externals['ordinary']) + ' ' + inside, 'alias-ascii: raw alias target, outside inputs, then the canonical inside input')
+    need('# env-dep:CARGO_MANIFEST_DIR=' + base + '/physical-output/tree/crates/b' in a['captured'][alias_key].split('\n'), 'alias-ascii: canonical manifest directory')
+    need('std::os::unix::fs::symlink(&physical, f.base.join("output-alias")).unwrap();' in d['parent_texts']['qualified']['alias-ascii'], 'alias-ascii parent builds the alias')
+    # spaces and alias-spaces: escaped spaces, literal backslashes, fragment refusals
+    frag_left = [rendered(refusal(base + '/external/' + c + '\\', 'outside the written tree')) for c in 'amz'] + [rendered(refusal(f, 'which is not a blob of the commit')) for f in ['space.txt', 'with\\']]
+    frag_right = [rendered(refusal(base + '/external/' + f, 'outside the written tree')) for f in externals['spaces']]
+    for case, key in [('spaces', d_key), ('alias-spaces', alias_key)]:
+        s = by[case]; text = s['captured'][key]
+        need(rule(text).startswith(base + '/' + ('out' if case == 'spaces' else 'output-alias') + '/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs ' + ext(externals['spaces'])), case + ': each space written as backslash-space, the backslash literal')
+        need(all(base + '/external/' + escaped(f) + ':' in text.split('\n') for f in externals['spaces']), case + ': one phony target per outside input')
+        need(vector(s['stdout'], 'left', ' right: [') == frag_left, case + ': the observed refusals are the five fragments')
+        need(vector(s['stdout'], 'right', 'note:') == frag_right, case + ': the literal oracle names the three complete paths')
+        need('assertion ' + B + 'left == right' + B + ' failed' in s['stdout'] and 'test result: FAILED. 0 passed; 1 failed' in s['stdout'], case + ': refused, but not as expected')
+    # prefix-collision: the escaped scratch prefix consumed across a field boundary
+    p = by['prefix-collision']; text = p['captured'][prefix_key]; outside = base + '/prefix\\'
+    need(p['output'] == 'prefix crates/b/src' and p['inputs'] == [['OUTSIDE', 'prefix\\', 'outside first payload\n']], 'prefix-collision inputs and output root')
+    need(rule(text) == base + '/' + prefix_key + ': crates/b/src/lib.rs ' + outside + ' crates/b/src/tree/data.txt', 'prefix-collision first rule: the outside input, a field separator, the in-tree prerequisite')
+    phony = text.split('\n'); need(outside + ':' in phony and 'crates/b/src/tree/data.txt:' in phony and 'crates/b/src/lib.rs:' in phony, 'prefix-collision phony targets name the outside input and the tree data separately')
+    scratch = base + '/prefix crates/b/src/tree/'; token = outside + ' crates/b/src/tree/data.txt'
+    need(token.startswith(escaped(scratch)) and token[len(escaped(scratch)):] == 'data.txt', 'the escaped scratch prefix equals the outside input plus the separator plus the tree prefix; the residue is data.txt')
+    need(p['captured']['observed-outcomes.txt'] == 'first=written\nsecond=written\n', 'both runs wrote an inventory')
+    need('written where a refusal was due' in p['stdout'] and 'test result: FAILED. 0 passed; 1 failed' in p['stdout'], 'the literal oracle refused the written inventory')
+    inv1 = json.loads(p['captured']['first-inventory.json']); inv2 = json.loads(p['captured']['second-inventory.json'])
+    need(p['captured']['prefix crates/b/src/trust-dependencies.json'] == p['captured']['second-inventory.json'], 'the final inventory is the second run')
+    chk1 = next(pr for pr in inv1['programs'] if pr['name'] == 'chk'); chk2 = next(pr for pr in inv2['programs'] if pr['name'] == 'chk')
+    files = chk1['units'][0]['files']
+    need(files == {'crates/b/src/lib.rs': sha(p['fixture_files']['crates/b/src/lib.rs'].encode()), 'data.txt': decoy_sha}, 'the inventory names the decoy blob and omits both the outside input and the tree data')
+    need(chk2['units'][0]['files'] == files and chk1['artifact']['sha256'] != chk2['artifact']['sha256'], 'the changed outside payload changed the artifact while the recorded inputs are identical')
+    need(inv1['identity']['commit'] == inv2['identity']['commit'] == p['fixture_commit'] and p['fixture_files']['crates/b/src/tree/data.txt'] == p['fixture_files']['data.txt'] == 'held decoy bytes\n', 'one commit, two decoy copies')
+    need(p['captured'][prefix_lib_key] == escaped(base + '/prefix crates/b/src/target/chk/release/libb.rlib') + ': ' + escaped(scratch) + 'crates/b/src/lib.rs ' + escaped(scratch) + 'data.txt\n', 'the pinned Cargo rewrote the same text as one escaped in-tree path')
+    # terminal-backslashes: the pinned Cargo refuses its own record; an error, neither written nor refused
+    t = by['terminal-backslashes']; text = t['captured'][d_key]
+    need(rule(text) == base + '/' + d_key + ': crates/b/src/lib.rs ' + ext(externals['terminal-backslashes']), 'terminal backslashes written literally; the rule ends in a backslash')
+    need(cargo_refusal in t['stdout'] and 'called ' + B + 'Result::unwrap()' + B + ' on an ' + B + 'Err' + B + ' value' in t['stdout'] and 'panicked at xtask/src/trust.rs:3018:14' in t['stdout'], 'the inventory returned an error from the failed build')
+    need('written where a refusal was due' not in t['stdout'] and 'trust-undeclared-input' not in t['stdout'] and len(t['captured']) == 3 and 'out/target/chk/release/libb.d' not in t['captured'], 'nothing written, no refusal list, no Cargo-rewritten record')
+    # restoration and bindings
+    for name in ['restoration', 'recheck']:
+        r = d[name]; need(r['status'] == 'restored' and r['regular_count'] == 1156 and r['gitlink_count'] == 1 and r['snapshot_sha256'] == d['manifest_sha256'] and r['source_commit'] == d['head'] and r['schema'] == 'archogen-tracked-input-check/1', name + ': main inputs restored against the retained manifest')
+    c = d['copied']; need(c['status'] == 'restored' and c['regular_count'] == 1156 and c['manifest_sha256'] == d['manifest_sha256'], 'plain copy restored against the same manifest')
+    need(d['manifest_regular'] == 1156 and d['manifest_gitlinks'] == 1 and d['manifest_has_seal'] and d['manifest_source_commit'] == d['head'], 'manifest covers the staged tree')
+    need(d['task_sha'] == d['manifest_task_sha'] == d['index_task_sha'], 'the tree file is the snapshotted and indexed one')
+    need(d['source_now'] == source_sha == d['source_head'] and d['equivalents_unchanged'], 'production, tests and reasons unchanged')
+    need(d['staged'] == ['docs/task-history/INDEX.md', seal_file, 'docs/tasks/M3.md'] and d['unstaged'] == [], 'only the seal and the opened leaves are staged')
+    need(d['history_count'] == 335 and d['history_exact'] and d['seal_exact'] and d['index_one_row'], 'earlier archives exact; the staged seal is its leaf; one new index row')
+    for log in ['probe_log', 'qualified_log']:
+        for case in order: need(case + ': Cargo exit ' + str(exits[case]) + ';' in d[log], log + ' names ' + case)
+        need('All original/copied regular inputs restored: 1156' in d[log], log + ' records the copy restoration')
+    need(d['task_before_is_head'] and d['opened_adds_children'], 'task states bound')
+
+def falsifiers(data):
+    labels = []
+    def arm(label, mutate):
+        bad = copy.deepcopy(data); mutate(bad)
+        try: judge(bad)
+        except Refused: labels.append(label)
+        else: raise AssertionError('false receipt accepted: ' + label)
+    def q(d, case): return next(r for r in d['qualified'] if r['case'] == case)
+    def cap(d, case, key, value): q(d, case)['captured'][key] = value
+    def swap(d, case, key, old, new):
+        text = q(d, case)['captured'][key]; assert text.count(old) >= 1, old; cap(d, case, key, text.replace(old, new))
+    arm('false-outcome:prefix-collision', lambda d: cap(d, 'prefix-collision', 'observed-outcomes.txt', 'first=refused\nsecond=refused\n'))
+    arm('dropped-phony-target:prefix-collision', lambda d: swap(d, 'prefix-collision', prefix_key, base + '/prefix\\:\n', ''))
+    arm('separate-fields-claimed:prefix-collision', lambda d: swap(d, 'prefix-collision', prefix_key, 'prefix\\ crates', 'prefix\\\\ crates'))
+    def decoy(d):
+        inv = json.loads(q(d, 'prefix-collision')['captured']['first-inventory.json'])
+        next(pr for pr in inv['programs'] if pr['name'] == 'chk')['units'][0]['files']['data.txt'] = '0' * 64
+        cap(d, 'prefix-collision', 'first-inventory.json', json.dumps(inv, separators=(',', ':')))
+    arm('false-decoy-digest:prefix-collision', decoy)
+    def tree_data(d):
+        inv = json.loads(q(d, 'prefix-collision')['captured']['first-inventory.json'])
+        next(pr for pr in inv['programs'] if pr['name'] == 'chk')['units'][0]['files']['crates/b/src/tree/data.txt'] = decoy_sha
+        cap(d, 'prefix-collision', 'first-inventory.json', json.dumps(inv, separators=(',', ':')))
+    arm('tree-data-claimed:prefix-collision', tree_data)
+    def same_artifact(d):
+        inv = json.loads(q(d, 'prefix-collision')['captured']['second-inventory.json']); first = json.loads(q(d, 'prefix-collision')['captured']['first-inventory.json'])
+        next(pr for pr in inv['programs'] if pr['name'] == 'chk')['artifact'] = next(pr for pr in first['programs'] if pr['name'] == 'chk')['artifact']
+        text = json.dumps(inv, separators=(',', ':')); cap(d, 'prefix-collision', 'second-inventory.json', text); cap(d, 'prefix-collision', 'prefix crates/b/src/trust-dependencies.json', text)
+    arm('unchanged-artifact:prefix-collision', same_artifact)
+    arm('cargo-record-disagrees:prefix-collision', lambda d: swap(d, 'prefix-collision', prefix_lib_key, 'tree/data.txt', 'tree/crates/b/src/tree/data.txt'))
+    arm('exact-refusals-claimed:spaces', lambda d: q(d, 'spaces').__setitem__('stdout', q(d, 'spaces')['stdout'].replace('/a\\\\\\\\' + B + ', outside', '/a with space.txt' + B + ', outside')))
+    arm('escaped-backslash-claimed:alias-spaces', lambda d: swap(d, 'alias-spaces', alias_key, 'a\\ with\\ space.txt', 'a\\\\ with\\\\ space.txt'))
+    arm('false-exit:ordinary', lambda d: q(d, 'ordinary').__setitem__('exit_code', 101))
+    arm('false-exit:terminal-backslashes', lambda d: q(d, 'terminal-backslashes').__setitem__('exit_code', 0))
+    arm('cargo-refusal-missing:terminal-backslashes', lambda d: q(d, 'terminal-backslashes').__setitem__('stdout', q(d, 'terminal-backslashes')['stdout'].replace('could not parse/generate dep info', 'parsed dep info')))
+    arm('escaped-backslash-claimed:terminal-backslashes', lambda d: swap(d, 'terminal-backslashes', d_key, 'external/z\\\n', 'external/z\\\\\n'))
+    arm('inside-input-dropped:alias-ascii', lambda d: swap(d, 'alias-ascii', alias_key, ' ' + base + '/physical-output/tree/crates/b/src/inside.txt\n', '\n'))
+    arm('false-parent-digest:alias-ascii', lambda d: d['parents'].__setitem__('alias-ascii', '0' * 64))
+    arm('false-source-binding:spaces', lambda d: q(d, 'spaces').__setitem__('source_sha256', '0' * 64))
+    arm('foreign-parent-text:prefix-collision', lambda d: d['parent_texts']['qualified'].__setitem__('prefix-collision', d['parent_texts']['qualified']['prefix-collision'] + '\n'))
+    arm('wider-span-claimed', lambda d: d.__setitem__('span', (d['span'][0] - 1, d['span'][1])))
+    arm('changed-source', lambda d: d.__setitem__('source_now', '0' * 64))
+    arm('false-restoration:main', lambda d: d['restoration'].__setitem__('status', 'modified'))
+    arm('false-restoration:recheck', lambda d: d['recheck'].__setitem__('regular_count', 1155))
+    arm('false-restoration:copy', lambda d: d['copied'].__setitem__('manifest_sha256', '0' * 64))
+    arm('foreign-manifest', lambda d: d.__setitem__('manifest_sha256', '0' * 64))
+    arm('stale-manifest-commit', lambda d: d.__setitem__('manifest_source_commit', '0' * 40))
+    arm('extra-staged-path', lambda d: d['staged'].append('xtask/src/trust.rs'))
+    arm('altered-archive', lambda d: d.__setitem__('history_exact', False))
+    arm('altered-seal', lambda d: d.__setitem__('seal_exact', False))
+    arm('missing-log-case', lambda d: d.__setitem__('probe_log', d['probe_log'].replace('prefix-collision: Cargo exit 101;', 'prefix-collision: Cargo exit 0;')))
+    return labels
+
+head = git('rev-parse', 'HEAD').decode().strip()
+source_head_text = git('show', 'HEAD:xtask/src/trust.rs').decode()
+span = (source_head_text.index('    #[test]\n    fn every_absolute_dependency_outside_the_written_tree_is_refused()'), source_head_text.index("    fn package_item<'a>"))
+history = read('history-before.json')
+head_task = git('show', 'HEAD:docs/tasks/M3.md'); index_seal = git('show', ':' + seal_file); index_rows = git('show', ':docs/task-history/INDEX.md').decode()
+row = next(line for line in index_rows.splitlines(keepends=True) if line.startswith('| ' + B + seal_leaf + B + ' |'))
+manifest = read('main-inputs.json')
+data = dict(
+    initial=read('results.json'), qualified=read('qualified-results.json'),
+    records={case: json.loads((out / 'qualified' / case / 'record.json').read_text()) for case in order},
+    parents={case: sha((out / 'qualified' / case / 'parent.rs').read_bytes()) for case in order},
+    parent_texts={'initial': {case: (out / case / 'parent.rs').read_text() for case in order}, 'qualified': {case: (out / 'qualified' / case / 'parent.rs').read_text() for case in order}},
+    source_head_text=source_head_text, span=span,
+    restoration=read('main-restoration.json'), recheck=read('main-restoration-recheck.json'), copied=read('copy-restoration.json'),
+    manifest_sha256=sha((out / 'main-inputs.json').read_bytes()), manifest_regular=len(manifest['regular']), manifest_gitlinks=len(manifest['gitlinks']),
+    manifest_has_seal=seal_file in manifest['regular'], manifest_source_commit=manifest['source_commit'], manifest_task_sha=manifest['regular']['docs/tasks/M3.md']['sha256'],
+    task_sha=sha(Path('docs/tasks/M3.md').read_bytes()), index_task_sha=sha(git('show', ':docs/tasks/M3.md')),
+    source_now=sha(Path('xtask/src/trust.rs').read_bytes()), source_head=sha(git('show', 'HEAD:xtask/src/trust.rs')),
+    equivalents_unchanged=Path('xtask/trust.equivalents').read_bytes() == git('show', 'HEAD:xtask/trust.equivalents'),
+    head=head, staged=git('diff', '--cached', '--name-only').decode().split(), unstaged=git('diff', '--name-only').decode().split(),
+    history_count=len(history), history_exact=all(sha(Path(name).read_bytes()) == digest for name, digest in history.items()),
+    seal_exact=index_seal == node(head_task, seal_leaf)[:-1] and seal_file not in history,
+    index_one_row=index_rows.replace(row, '', 1).encode() == git('show', 'HEAD:docs/task-history/INDEX.md'),
+    probe_log=(out / 'probe.log').read_text(), qualified_log=(out / 'qualified.log').read_text(),
+    task_before_is_head=(out / 'task-before.md').read_bytes() == head_task,
+    opened_adds_children=('- ID: ' + B + 'M3.6.9.6.3.2.2.15.2.1.6.1.1.0' + B).encode() in index_seal + git('show', ':docs/tasks/M3.md') and ('- ID: ' + B + 'M3.6.9.6.3.2.2.15.2.1.6.1.1.0' + B).encode() not in head_task,
+)
+judge(data)
+labels = falsifiers(data)
+published = {}
+for name, source in [('published-qualified.json', 'qualified-results.json'), ('published-initial.json', 'results.json')]:
+    rows = normalise(read(source)); text = json.dumps(rows, indent=2, ensure_ascii=False) + '\n'
+    assert not re.search(r'/(Users|home|Volumes)/', text), name
+    (out / name).write_text(text); published[name] = dict(source=source, raw_sha256=sha((out / source).read_bytes()), published_sha256=sha(text.encode()), normalization='the runtime repository root replaced by <repository-root> in every string, including fixture file contents')
+outcomes = {
+    'ordinary': 'refused: exact outside-tree refusals; no inventory',
+    'prefix-collision': 'written twice where a refusal was due; the outside input omitted; the decoy blob named',
+    'spaces': 'refused under fragment names; two fragments classified as missing blobs',
+    'alias-ascii': 'refused: exact outside-tree refusals under the symlinked root; the canonical inside input accepted',
+    'alias-spaces': 'refused under fragment names, as spaces',
+    'terminal-backslashes': 'error: the pinned Cargo refuses its own dependency record; nothing written, no refusal list',
+}
+result = dict(
+    schema='archogen-dependency-path-domain-assessment/1', status='passed', base_commit=head, source_sha256=source_sha, parent=parent, command=command,
+    scope='Bounded path-domain assessment of the public-inventory refusal parent on the plain copy; production, tests and reasons unchanged. The ambiguity repair and the terminal-backslash control are separately owned; the full dependency-block checkpoint, compiler/caller/global sweeps and review remain open.',
+    production_span=list(span), variants=[dict(case=case, outside_inputs=[row[1] for row in data['records'][case]['inputs']], output_root=data['records'][case]['output'], cargo_exit=data['records'][case]['exit_code'], outcome=outcomes[case], parent_sha256=data['parents'][case], copy_source_sha256=data['records'][case]['source_sha256'], fixture_commit=data['records'][case]['fixture_commit']) for case in order],
+    defects=[
+        dict(id='D1', priority='P0', variant='prefix-collision', mechanism='the escaped scratch prefix equals an outside input ending in a backslash, the field separator and the in-tree prefix; the reader consumes it and keeps the residue data.txt', outcome='inventory written on both runs; the outside input omitted; the decoy blob at the tree root recorded; the artifact digest changes while the recorded inputs do not', preconditions='a space in the written tree path; a host file named by the prefix before that space with a trailing backslash; an in-tree prerequisite spelled by the rest', cargo_agrees='the pinned Cargo rewrote the same text as one escaped in-tree path', owner='M3.6.9.6.3.2.2.15.2.1.6.1.1.1', repair='refusal, never a cleverer split: read the per-file phony targets as the line-delimited prerequisite list, require the first rule to agree, refuse any residual backslash outside the known prefixes naming the raw record, keep the spaced and line-broken scratch-root controls passing'),
+        dict(id='D2', priority='P1', variant='spaces, alias-spaces', mechanism='an outside prerequisite is split at each escaped space because only the known scratch prefixes are consumed intact', outcome='refused, but under the fragments a-backslash, m-backslash, z-backslash, space.txt and with-backslash; the relative fragments are classified as missing blobs', preconditions='a space in an outside input path', owner='M3.6.9.6.3.2.2.15.2.1.6.1.1.1', repair='the same refusal rule names the raw record text'),
+        dict(id='D3', priority='P2', variant='terminal-backslashes', mechanism='the pinned Cargo refuses a dependency record whose final prerequisite ends in a backslash before the inventory reads anything', outcome='the inventory returns the build error; nothing written; neither a written nor a refused outcome', exact_constraint='error: ' + cargo_refusal, owner='M3.6.9.6.3.2.2.15.2.1.6.1.1.2', repair='retain the exact rejecting constraint as a permanent control; decide whether the error is reported as a refusal'),
+    ],
+    positives=['ordinary outside inputs are refused exactly under the raw output root', 'under a symlinked output root rustc spells the first target with the raw alias and the manifest-reached inside input with the canonical root; the reader strips either, accepts the inside input and refuses the outside inputs exactly', 'the raw/canonical output-root geometry is not implicated in D1, D2 or D3'],
+    restoration=dict(main_regular=1156, main_gitlinks=1, copy_regular=1156, recheck='restored', manifest_sha256=data['manifest_sha256']),
+    bindings=dict(staged=data['staged'], earlier_archives=data['history_count'], staged_seal=seal_file, task_sha256=data['task_sha']),
+    falsifiers=labels, published=published,
+    digests={name: sha((out / name).read_bytes()) for name in ['results.json', 'qualified-results.json', 'main-inputs.json', 'main-restoration.json', 'main-restoration-recheck.json', 'copy-restoration.json', 'probe.py', 'probe.log', 'qualified.log', 'history-before.json']},
+)
+(out / 'audit.json').write_text(json.dumps(result, indent=2) + '\n')
+print('Path-domain audit: passed; six variants, ordinary/alias exact, prefix collision written where a refusal was due, spaced fragments, Cargo terminal-backslash refusal; 1156 main/copy inputs restored;', len(labels), 'altered receipts rejected; SHA256', sha((out / 'audit.json').read_bytes()))
+~~~
+
+</details>
+
+<details>
+<summary>Exact dependency path-domain complete-records.py</summary>
+
+~~~python
+from pathlib import Path
+import json, re, subprocess
+
+out = Path('target/dependency-path-domain-assessment'); leaf = 'M3.6.9.6.3.2.2.15.2.1.6.1.1.0'; B = chr(96)
+audit = json.loads((out / 'audit.json').read_text()); assert audit['status'] == 'passed'
+refusals = len(audit['falsifiers'])
+def node(text, identity):
+    a = text.index('- ID: ' + B + identity + B + '\n'); ends = [a + 1 + m.start() for m in re.finditer(r'(?m)^- ID: |^## ', text[a + 1:])]; return text[a:min(ends) if ends else len(text)]
+task = Path('docs/tasks/M3.md'); text = task.read_text()
+assert text == subprocess.check_output(['git', 'show', ':docs/tasks/M3.md'], text=True); (out / 'task-opened.md').write_text(text)
+old = node(text, leaf); assert old.endswith('  Commit: `pending`\n\n'), repr(old[-40:])
+completed = '''- ID: `M3.6.9.6.3.2.2.15.2.1.6.1.1.0`
+  Status: `done` — path-domain assessment; P0 prefix collision observed, repairs owned
+  Goal: [bounded assessment record](../book/src/annex-trust-proofs.md#dependency-path-domain-assessment).
+  Verification: `python3 -I -B target/dependency-path-domain-assessment/audit.py`: exit code 0; six
+    variants, production/tests/reasons unchanged; ordinary/aliased exact; collision written where a
+    refusal was due; spaced fragments; Cargo terminal-backslash refusal;1156 inputs restored;''' + str(refusals) + ''' receipts rejected.
+  Commit: `ARCHOGEN-M3-0825`
+
+'''
+children = '''- ID: `M3.6.9.6.3.2.2.15.2.1.6.1.1.1`
+  Status: `pending` — P0: ambiguous dependency-record readings are refused
+  Goal: the pinned rustc writes a prerequisite's spaces as backslash-space and every
+    other byte literally, so one first-rule text can name two prerequisite lists. The
+    measured prefix collision reads an outside input ending in a backslash, followed by
+    an in-tree prerequisite, as one escaped in-tree path, writes the inventory and
+    records a decoy blob; spaced outside paths are refused under fragment names, and
+    the pinned Cargo's own rewritten record reads the text the same way. Repair by
+    refusal, never by a cleverer split: read rustc's per-file phony targets as the
+    line-delimited prerequisite list, require the first rule's reading to agree with
+    it, and refuse any residual backslash outside the known scratch prefixes, naming
+    the raw record text. Keep the existing spaced and line-broken scratch-root controls
+    passing. Replay the retained prefix-collision, spaces and alias-spaces variants as
+    permanent controls with independent literal expectations; require intended finishing
+    kills for the dependency-block edits, unchanged reasons and complete restoration.
+  Priority: P0, observed `2026-10-20` ([record](../book/src/annex-trust-proofs.md#dependency-path-domain-assessment)).
+  Impact: an inventory can omit an outside input and misattribute its bytes to a tracked
+    blob, so the identity claim is false while the gate passes. Preconditions: a space in
+    the written tree's path, a host file named by the prefix before that space with a
+    trailing backslash, and an in-tree prerequisite spelled by the rest.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `M3.6.9.6.3.2.2.15.2.1.6.1.1.2`
+  Status: `pending` — P2: Cargo's terminal-backslash refusal retained as a control
+  Goal: a final prerequisite ending in a backslash makes the pinned Cargo refuse its own
+    dependency record before the inventory reads anything; the inventory returns the
+    build error and writes nothing, neither a written nor a refused outcome. Retain that
+    exact rejecting constraint as a permanent control naming Cargo's message, decide
+    whether the error is reported as a refusal, and keep the outcome unjudged rather
+    than passed until decided. After .1.
+  Verification: `pending`
+  Commit: `pending`
+
+'''
+compact = '''- ID: `M3.6.9.6.3.2.2.15.2.1.6.1.1.1`
+  Status: `pending` — P0: ambiguous dependency-record readings refused; owns D1 and D2
+  [Full contract](../book/src/annex-trust-proofs.md#dependency-path-domain-contracts) retained verbatim.
+  Verification: `pending`
+  Commit: `pending`
+
+- ID: `M3.6.9.6.3.2.2.15.2.1.6.1.1.2`
+  Status: `pending` — P2: Cargo's terminal-backslash refusal kept as a control; owns D3; after .1
+  [Full contract](../book/src/annex-trust-proofs.md#dependency-path-domain-contracts) retained verbatim.
+  Verification: `pending`
+  Commit: `pending`
+
+'''
+text = text.replace(old, completed + compact, 1)
+parent_original = node(text, 'M3.6.9.6.3.2.2.15.2.1.6.1.1'); assert parent_original.endswith('  Commit: `pending`\n\n') and 'Goal: establish the actual outside-tree path quoting' in parent_original
+parent_compact = '''- ID: `M3.6.9.6.3.2.2.15.2.1.6.1.1`
+  Status: `active` — assessment done; P0 ambiguity repair .1 next, then control .2
+  [Full contract](../book/src/annex-trust-proofs.md#dependency-path-domain-contracts) retained verbatim.
+  Verification: `pending`
+  Commit: `pending`
+
+'''
+text = text.replace(parent_original, parent_compact, 1)
+children_nodes = children.split('\n\n- ID: '); children_nodes = [children_nodes[0] + '\n\n', '- ID: ' + children_nodes[1]]
+compact_nodes = compact.split('\n\n- ID: '); compact_nodes = [compact_nodes[0] + '\n\n', '- ID: ' + compact_nodes[1]]
+routes = [dict(identity='M3.6.9.6.3.2.2.15.2.1.6.1.1', original=parent_original, compact=parent_compact)]
+for original, short in zip(children_nodes, compact_nodes):
+    identity = original.split(B)[1]; assert short.split(B)[1] == identity; routes.append(dict(identity=identity, original=original, compact=short))
+later = node(text, 'M3.6.9.6.3.2.2.15.2.1.6.2'); assert later.endswith('  Commit: `pending`\n\n') and 'Goal: re-discover the complete current dependency block' in later
+later_compact = '''- ID: `M3.6.9.6.3.2.2.15.2.1.6.2`
+  Status: `pending` — P1, after .6.1
+  [Full contract](../book/src/annex-trust-proofs.md#dependency-path-domain-contracts) retained verbatim.
+  Verification: `pending`
+  Commit: `pending`
+
+'''
+text = text.replace(later, later_compact, 1); routes.append(dict(identity='M3.6.9.6.3.2.2.15.2.1.6.2', original=later, compact=later_compact))
+for route in routes: assert text.count(route['compact']) == 1 and route['original'] not in text
+(out / 'contract-routing.json').write_text(json.dumps(dict(routes=routes, saved_bytes=sum(len(r['original'].encode()) - len(r['compact'].encode()) for r in routes)), indent=2) + '\n')
+(out / 'children-compact.md').write_text(compact)
+old_frontier = 'next `.9.6.3.2.2.15.2.1.6.1.1`, dependency path-domain follow-up; literal refusal witness done'; assert text.count(old_frontier) == 1
+text = text.replace(old_frontier, 'next `.9.6.3.2.2.15.2.1.6.1.1.1`, the dependency-record ambiguity repair; path-domain assessment done', 1)
+v = '| `2026-10-20` | `' + leaf + '` | [Path-domain assessment](../book/src/annex-trust-proofs.md#dependency-path-domain-assessment): six real-Cargo variants; production/tests/reasons unchanged;' + str(refusals) + ' receipts rejected;1156 restore | ordinary/aliased exact; collision written where a refusal was due (P0, .6.1.1.1); spaced fragments (P1); Cargo terminal backslash (P2, .6.1.1.2) |\n'
+assert text.count('\n## Commit Log\n') == 1; text = text.replace('\n## Commit Log\n', v + '\n## Commit Log\n', 1)
+c = '| `' + leaf + '` | `ARCHOGEN-M3-0825 (leaf ' + leaf + ')` | [Path-domain assessment](../book/src/annex-trust-proofs.md#dependency-path-domain-assessment); P0 collision observed; repair next |\n'
+assert text.count('\n## Changelog\n') == 1; text = text.replace('\n## Changelog\n', c + '\n## Changelog\n', 1)
+updates = {'docs/tasks/M3.md': text}; (out / 'completed-leaf.md').write_text(completed); (out / 'children-leaves.md').write_text(children); (out / 'task-after-completion.md').write_text(text)
+memory = Path('MEMORY.md').read_text(); a = memory.index('- **Next action:**'); z = memory.index('  Corrected renderer', a)
+updates['MEMORY.md'] = memory[:a] + '''- **Next action:** repair the ambiguous dependency-record reading by refusal in
+  `M3.6.9.6.3.2.2.15.2.1.6.1.1.1` (P0, observed `2026-10-20`), then the terminal-backslash
+  control `.6.1.1.2` and the full dependency-block checkpoint `.6.2`.
+  Disposable project-owned Git fixtures under ignored `target/` are approved;
+  maintained external repositories and submodules stay read-only.
+''' + memory[z:]
+live = Path('LIVE_STATUS.md').read_text(); old_live = '`.9.6.3.2.2.15.2.1.6.1.1` dependency path-domain follow-up'; assert live.count(old_live) == 1
+updates['LIVE_STATUS.md'] = live.replace(old_live, '`.9.6.3.2.2.15.2.1.6.1.1.1` dependency-record ambiguity repair, P0', 1)
+index = Path('docs/TASK_TREE.md').read_text(); assert index.count(old_live) == 1
+updates['docs/TASK_TREE.md'] = index.replace(old_live, '`.9.6.3.2.2.15.2.1.6.1.1.1` dependency-record ambiguity repair, P0', 1)
+changelog = Path('CHANGELOG.md').read_text(); at = changelog.index('\n## archogen —')
+updates['CHANGELOG.md'] = changelog[:at] + '''
+## archogen — assess the dependency path domain
+
+`ARCHOGEN-M3-0825` (leaf `M3.6.9.6.3.2.2.15.2.1.6.1.1.0`), `2026-10-20`.
+
+- Probe six outside-path variants of the public-inventory refusal parent with real pinned
+  Cargo on the plain copy; production, every test and every reason stay unchanged.
+- Ordinary and symlinked output roots refuse exactly. The P0 prefix collision is observed:
+  a trailing-backslash outside input read as an in-tree path, the inventory written twice
+  and naming a decoy blob. Spaced outside paths refuse under fragment names; the pinned
+  Cargo refuses a terminal backslash before the inventory reads anything.
+- Restore all1156 main and copied inputs; retain receipts, audit, falsifiers and adapters
+  in the unbounded book. Own the refusal repair and the terminal-backslash control as
+  separate children; no repair is claimed here.
+
+''' + changelog[at:]
+book = Path('docs/book/src/trust.md'); chapter = book.read_text(); marker = 'this bounded result does not establish full mutation adequacy.\n'; assert chapter.count(marker) == 1
+limit = marker + '''
+⚠️ Measured limit (`2026-10-20`): the pinned compiler writes a prerequisite's spaces as
+backslash-space and every other byte literally, so one dependency record can be read two ways.
+With a space in the written tree's path, an outside input whose name ends in a backslash,
+followed by an in-tree prerequisite, was read as one in-tree path: the inventory was written
+and named a decoy blob. Outside inputs with spaces were refused under fragment names. Until
+`M3.6.9.6.3.2.2.15.2.1.6.1.1.1` repairs the reading by refusal, the guarantee above holds for
+the ordinary domain only; the [assessment record](annex-trust-proofs.md#dependency-path-domain-assessment)
+retains every probe.
+'''
+updates[str(book)] = chapter.replace(marker, limit, 1)
+for path, content in updates.items(): Path(path).write_text(content)
+(out / 'completion-updates.json').write_text(json.dumps(updates, indent=2) + '\n')
+message = '''ARCHOGEN-M3-0825 (leaf M3.6.9.6.3.2.2.15.2.1.6.1.1.0): assess the dependency path domain
+
+- Probe six outside-path variants with real Cargo on the plain copy: ordinary
+  and symlinked roots refuse exactly; spaced outside paths refuse under
+  fragment names; Cargo itself refuses a terminal backslash.
+- Observe the P0 prefix collision: a trailing-backslash outside input is read
+  as an in-tree file, the inventory is written twice and names a decoy blob.
+- Keep production, tests and reasons unchanged; restore all 1156 inputs; own
+  the refusal repair and the terminal-backslash control as separate children.
+'''
+(out / 'commit-message.txt').write_text(message); Path('git_message_brief.txt').write_text(message)
+print('Completed path-domain assessment records; ambiguity repair .6.1.1.1 next;', refusals, 'rejected receipts cited')
+~~~
+
+</details>
+
+<details>
+<summary>Exact dependency path-domain publish.py</summary>
+
+~~~python
+from pathlib import Path
+import difflib, hashlib, json, subprocess, sys
+
+out = Path('target/dependency-path-domain-assessment'); B = chr(96); fence = B * 3
+def read(name): return json.loads((out / name).read_text())
+def sha(raw): return hashlib.sha256(raw).hexdigest()
+audit = read('audit.json'); assert audit['status'] == 'passed'; base = audit['base_commit']
+book = Path('docs/book/src/annex-trust-proofs.md'); before = subprocess.check_output(['git', 'show', 'HEAD:' + str(book)]).decode()
+assert book.read_text() == before + ((out / 'book-fragment.md').read_text() if '--refresh' in sys.argv else '')
+original_task = subprocess.check_output(['git', 'show', 'HEAD:docs/tasks/M3.md']); lines = original_task.decode().splitlines(keepends=True); states = {}
+for name in ['task-before.md', 'task-active-before-seal.md', 'task-opened.md', 'task-after-completion.md']:
+    raw = (out / name).read_bytes(); after = raw.decode().splitlines(keepends=True); changes = []
+    for op, a, z, b, y in difflib.SequenceMatcher(a=lines, b=after, autojunk=False).get_opcodes():
+        if op != 'equal': changes.append(dict(start_line=a, end_line=z, before_sha256=sha(''.join(lines[a:z]).encode()), replacement=''.join(after[b:y])))
+    states[name] = dict(bytes=len(raw), sha256=sha(raw), changes=changes)
+(out / 'task-reconstruction.json').write_text(json.dumps(dict(base_commit=base, base_sha256=sha(original_task), snapshots=states), indent=2) + '\n')
+assert Path('docs/tasks/M3.md').read_bytes() == (out / 'task-after-completion.md').read_bytes()
+d1, d2, d3 = audit['defects']; refusals = len(audit['falsifiers'])
+rows = ''.join('| ' + B + v['case'] + B + ' | ' + ', '.join(B + x + B for x in v['outside_inputs']) + ' | ' + B + v['output_root'] + B + ' | ' + str(v['cargo_exit']) + ' | ' + v['outcome'] + ' |\n' for v in audit['variants'])
+parts = ['\n### Dependency path-domain assessment\n\n',
+ 'Six probe variants of the permanent parent ' + B + audit['parent'] + B + ' ran with the real pinned Cargo on the project-owned plain copy '
+ 'at the maintained sweep layout on ' + B + '2026-10-20' + B + ', with production, every test and every reason unchanged (' + B + 'xtask/src/trust.rs' + B + ' at ' + B + audit['source_sha256'] + B + '). '
+ 'Ordinary outside inputs are refused exactly under the raw output root and under a symlinked output root. The leaf’s P0 hypothesis is now an observed outcome: '
+ 'with a space in the written tree’s path, an outside input whose name ends in a backslash, followed by an in-tree prerequisite, was read as one escaped in-tree path; '
+ 'the inventory was **written where a refusal was due**, omitted the outside input and named a decoy blob. Outside inputs with spaces are refused, but under fragment names. '
+ 'A final prerequisite ending in a backslash makes the pinned Cargo refuse its own dependency record, so the inventory returns an error and writes nothing. '
+ 'This is a bounded assessment: no repair is claimed, and the ambiguity repair and the terminal-backslash control are separately owned below.\n\n',
+ '#### Actual producer records and outcomes\n\n',
+ 'The pinned rustc writes each prerequisite of the first dependency rule with its spaces as backslash-space and every other byte literally, then one per-file phony target per line. '
+ 'The inventory’s reader, ' + B + 'dependency_files' + B + ' in ' + B + 'xtask/src/trust.rs' + B + ', consumes a known raw or canonical scratch prefix, escaped the same way, before splitting the remainder at the next space. '
+ 'One first-rule text can therefore name two different prerequisite lists, and the reader keeps the in-tree reading. The retained compiler-output text replaces only the runtime repository root with a declared placeholder; '
+ 'the published receipts apply the same replacement to the fixture file contents, and the audit records both digests.\n\n',
+ '| Variant | Outside inputs | Output root | Cargo exit | Outcome |\n| --- | --- | --- | --- | --- |\n' + rows + '\n',
+ '#### Measured defects\n\n',
+ '**D1, P0, observed; owner ' + B + d1['owner'] + B + '.** Reproduction: the ' + B + 'prefix-collision' + B + ' variant names the outside input ' + B + '<run>/prefix\\' + B + ' from an admitted include site, '
+ 'tracks ' + B + '<tree>/crates/b/src/tree/data.txt' + B + ' through a second admitted site, holds a decoy ' + B + 'data.txt' + B + ' at the tree root with the same bytes, and writes into the output root ' + B + 'prefix crates/b/src' + B + '. '
+ 'The first rule reads ' + B + 'crates/b/src/lib.rs <run>/prefix\\ crates/b/src/tree/data.txt' + B + ' while the phony targets list ' + B + '<run>/prefix\\:' + B + ' and ' + B + 'crates/b/src/tree/data.txt:' + B + ' on separate lines. '
+ 'The escaped scratch prefix is ' + B + '<run>/prefix\\ crates/b/src/tree/' + B + ', so the reader consumes the outside input, the field separator and the tree prefix together and keeps the residue ' + B + 'data.txt' + B + ', the decoy. '
+ 'Both runs wrote an inventory whose ' + B + 'chk' + B + ' unit lists the library root and the decoy digest only; after the outside payload changed, the artifact digest changed while the recorded inputs did not. '
+ 'The pinned Cargo’s own rewritten ' + B + 'libb.d' + B + ' reads the same text as one escaped in-tree path, so its fingerprint tracks the decoy too: the encoding, not this reader alone, is ambiguous. '
+ 'Impact: ' + d1['outcome'] + '; the identity claim is false while the gate passes. Preconditions: ' + d1['preconditions'] + '. Safe next repair: ' + d1['repair'] + '.\n\n',
+ '**D2, P1; same owner.** Reproduction: the ' + B + 'spaces' + B + ' and ' + B + 'alias-spaces' + B + ' variants name ' + B + 'a with space.txt' + B + ', ' + B + 'm with space.txt' + B + ' and ' + B + 'z with space.txt' + B + ' outside the tree; '
+ 'rustc writes each as ' + B + '<run>/external/a\\ with\\ space.txt' + B + '. ' + d2['mechanism'][0].upper() + d2['mechanism'][1:] + '. Outcome: ' + d2['outcome'] + '. The literal oracle expected the three complete paths. The outcome stays a refusal, so no inventory was written, but the diagnostics are false. Repair: ' + d2['repair'] + '.\n\n',
+ '**D3, P2; owner ' + B + d3['owner'] + B + '.** Reproduction: the ' + B + 'terminal-backslashes' + B + ' variant names ' + B + 'a\\' + B + ', ' + B + 'm\\' + B + ' and ' + B + 'z\\' + B + ' outside the tree; rustc writes the rule ending in a literal backslash. '
+ + d3['mechanism'][0].upper() + d3['mechanism'][1:] + ': ' + B + d3['exact_constraint'] + B + '. Outcome: ' + d3['outcome'] + '. Next: ' + d3['repair'] + '.\n\n',
+ 'Positive findings: ' + '; '.join(audit['positives']) + '. The literal oracle derives every expected refusal from the declared input names, so a passing variant is a complete refusal list and not a containment.\n\n',
+ '#### Restoration and continuity\n\n',
+ 'All1156 regular inputs of the main tree restore against the probe’s manifest, by the probe’s own check and by a fresh re-derivation with ' + B + 'scripts/trust_adequacy.py --check-inputs' + B + '; the one Gitlink stays opaque pin metadata. '
+ 'The plain copy restores against the same manifest with the maintained ' + B + 'regular_input' + B + ' reader and borrowed index identities. The production source digest ' + B + audit['source_sha256'] + B + ' is the committed one; '
+ 'the reason file is unchanged; nothing under ' + B + 'xtask/' + B + ' is staged. The staged seal of the literal refusal witness is byte for byte its leaf as the input commit held it, with one new index row, and all335 earlier archives are exact. '
+ 'The audit rejects ' + str(refusals) + ' altered receipts, among them a refused outcome claimed for the collision, a dropped phony target, a false decoy digest, exact refusals claimed for the spaced variant, a parsed record claimed for the terminal backslash and a modified restoration. '
+ 'Four task states are reconstructible from the input commit by exact deltas. No Rust, test or reason changes, so the focused tier is not required by this commit; normal commit hooks remain binding.\n\n',
+ '### Dependency path-domain contracts\n\n',
+ 'The parent contract keeps its pre-routing status text, the two children own the measured defects, and the later checkpoint contract follows; their complete bodies are retained here verbatim while the tree holds compact pointers, with inverse routing and false-content controls in the final audit.\n\n']
+for route in read('contract-routing.json')['routes']: parts.append(fence + 'markdown\n' + route['original'] + fence + '\n\n')
+parts.extend([
+ '#### Completed assessment leaf\n\n' + fence + 'markdown\n' + (out / 'completed-leaf.md').read_text() + fence + '\n\n'])
+payloads = []
+def payload(title, data):
+    encoded = json.dumps(data, indent=2).replace(B, '\\u0060'); assert json.loads(encoded) == data
+    parts.append('<details>\n<summary>' + title + '</summary>\n\n' + fence + 'json\n' + encoded + '\n' + fence + '\n\n</details>\n\n'); payloads.append(dict(title=title, data=data))
+for title, name in [('Complete dependency path-domain audit', 'audit.json'), ('Qualified dependency path-domain receipts', 'published-qualified.json'), ('Initial dependency path-domain receipts', 'published-initial.json'),
+                    ('Complete dependency path-domain held-input manifest', 'main-inputs.json'), ('Exact dependency path-domain task states', 'task-reconstruction.json'), ('Previous exact assessment archives', 'history-before.json')]:
+    payload(title, read(name))
+payload('Lossless dependency path-domain live contracts', read('contract-routing.json'))
+payload('Dependency path-domain input restoration', dict(main=read('main-restoration.json'), recheck=read('main-restoration-recheck.json'), copy=read('copy-restoration.json')))
+payload('Dependency path-domain probe output', {name: (out / name).read_text() for name in ['probe.log', 'qualified.log']})
+parts.append('#### Executable assessment adapters\n\n'
+ 'Prepare the repository-local environment in ' + B + 'TOOLBOX.md' + B + '. The probe refreshes the plain copy from the retained manifest, substitutes each variant into the copy’s parent, runs the exact Cargo command, captures the dependency records and outcomes, restores the copy and checks the main inputs. '
+ 'The audit re-derives every claim above from the retained receipts and rejects the altered ones; the remaining adapters write the records and the book. Host toolchain and operating-system dependencies are necessary read-only inputs. '
+ 'Scripts are historical recipes for these exact inputs, not permission to alter the fixture exception or maintained external repositories.\n\n')
+for name in ['probe.py', 'audit.py', 'complete-records.py', 'publish.py', 'final-audit.py']:
+    parts.append('<details>\n<summary>Exact dependency path-domain ' + name + '</summary>\n\n~~~python\n' + (out / name).read_text() + '~~~\n\n</details>\n\n')
+fragment = ''.join(parts).rstrip('\n') + '\n'
+assert '\r' not in fragment and '\t' not in fragment
+(out / 'book-fragment.md').write_text(fragment); (out / 'published-payloads.json').write_text(json.dumps(payloads, indent=2) + '\n'); book.write_text(before + fragment)
+print('Published bounded path-domain assessment:', len(fragment.encode()), 'new unbounded book bytes;', len(payloads), 'JSON payloads; ambiguity repair and terminal-backslash control remain explicit')
+~~~
+
+</details>
+
+<details>
+<summary>Exact dependency path-domain final-audit.py</summary>
+
+~~~python
+from pathlib import Path
+import hashlib, json, re, subprocess
+
+out = Path('target/dependency-path-domain-assessment'); B = chr(96); fence = B * 3
+seal_leaf = 'M3.6.9.6.3.2.2.15.2.1.6.1.0'; seal_file = 'docs/task-history/M3/' + seal_leaf + '.md'
+def read(name): return json.loads((out / name).read_text())
+def sha(raw): return hashlib.sha256(raw).hexdigest()
+def prior(name): return subprocess.check_output(['git', 'show', 'HEAD:' + name])
+def node(raw, identity):
+    a = raw.index(('- ID: ' + B + identity + B + '\n').encode()); ends = [a + 1 + m.start() for m in re.finditer(rb'(?m)^- ID: |^## ', raw[a + 1:])]; return raw[a:min(ends) if ends else len(raw)]
+audit = read('audit.json'); assert audit['status'] == 'passed' and audit['base_commit'] == subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+assert sha(Path('xtask/src/trust.rs').read_bytes()) == audit['source_sha256'] and Path('xtask/src/trust.rs').read_bytes() == prior('xtask/src/trust.rs')
+assert Path('xtask/trust.equivalents').read_bytes() == prior('xtask/trust.equivalents')
+book = Path('docs/book/src/annex-trust-proofs.md').read_text(); fragment = (out / 'book-fragment.md').read_text(); assert book.encode() == prior('docs/book/src/annex-trust-proofs.md') + fragment.encode()
+def payload(title):
+    marker = '<summary>' + title + '</summary>'; assert fragment.count(marker) == 1; a = fragment.index(marker) + len(marker)
+    match = re.match(r'\s*' + re.escape(fence) + r'json\n', fragment[a:]); assert match; a += match.end(); z = fragment.index('\n' + fence, a); return json.loads(fragment[a:z])
+published = read('published-payloads.json')
+for row in published: assert payload(row['title']) == row['data'], row['title']
+assert payload('Complete dependency path-domain audit') == audit
+for name in ['published-qualified.json', 'published-initial.json']:
+    assert sha((out / name).read_bytes()) == audit['published'][name]['published_sha256'] and sha((out / audit['published'][name]['source']).read_bytes()) == audit['published'][name]['raw_sha256'], name
+manifest = payload('Complete dependency path-domain held-input manifest'); assert len(manifest['regular']) == 1156 and len(manifest['gitlinks']) == 1 and sha((json.dumps(manifest, indent=2) + '\n').encode()) == audit['restoration']['manifest_sha256']
+task = prior('docs/tasks/M3.md'); lines = task.decode().splitlines(keepends=True); states = read('task-reconstruction.json'); assert sha(task) == states['base_sha256']
+def reconstruct(entry):
+    at = 0; chunks = []
+    for change in entry['changes']:
+        a, z = change['start_line'], change['end_line']; assert type(a) is int and type(z) is int and at <= a <= z <= len(lines); assert sha(''.join(lines[a:z]).encode()) == change['before_sha256']; chunks.extend(lines[at:a]); chunks.append(change['replacement']); at = z
+    chunks.extend(lines[at:]); raw = ''.join(chunks).encode(); assert sha(raw) == entry['sha256'] and len(raw) == entry['bytes']; return raw
+false = []
+for name, entry in states['snapshots'].items():
+    assert reconstruct(entry) == (out / name).read_bytes(); bad = dict(entry, sha256='0' * 64)
+    try: reconstruct(bad)
+    except AssertionError: false.append('false-task-digest:' + name)
+    else: raise AssertionError('false task accepted')
+assert reconstruct(states['snapshots']['task-after-completion.md']) == Path('docs/tasks/M3.md').read_bytes()
+history = read('history-before.json'); assert len(history) == 335
+for name, digest in history.items(): assert sha(Path(name).read_bytes()) == digest, name
+expected = node(task, seal_leaf)[:-1]; assert Path(seal_file).read_bytes() == expected and expected[:-1] != expected; false.append('truncated-seal:' + seal_leaf)
+assert {str(p) for p in Path('docs/task-history').glob('*/*.md')} == set(history) | {seal_file}
+index = Path('docs/task-history/INDEX.md').read_text(); row = next(line for line in index.splitlines(keepends=True) if line.startswith('| ' + B + seal_leaf + B + ' |')); assert index.replace(row, '', 1).encode() == prior('docs/task-history/INDEX.md')
+for name in ['probe.py', 'audit.py', 'complete-records.py', 'publish.py', 'final-audit.py']: assert (out / name).read_text() in fragment, name
+assert (out / 'completed-leaf.md').read_text() in fragment
+route = read('contract-routing.json'); tree = Path('docs/tasks/M3.md').read_text(); full = tree
+for row in route['routes']:
+    assert tree.count(row['compact']) == 1 and row['original'] not in tree and row['original'] in fragment, row['identity']; full = full.replace(row['compact'], row['original'], 1)
+assert len(full.encode()) - len(tree.encode()) == route['saved_bytes'] and payload('Lossless dependency path-domain live contracts') == route
+for row in route['routes']:
+    for label, wrong in [('truncated-contract', row['original'][:-1]), ('extra-contract-newline', row['original'] + '\n')]:
+        bad = tree
+        for other in route['routes']: bad = bad.replace(other['compact'], wrong if other['identity'] == row['identity'] else other['original'], 1)
+        assert bad != full; false.append(label + ':' + row['identity'])
+assert (out / 'children-compact.md').read_text() in tree and ''.join(r['original'] for r in route['routes'][1:3]) == (out / 'children-leaves.md').read_text() and [r['identity'] for r in route['routes']] == ['M3.6.9.6.3.2.2.15.2.1.6.1.1', 'M3.6.9.6.3.2.2.15.2.1.6.1.1.1', 'M3.6.9.6.3.2.2.15.2.1.6.1.1.2', 'M3.6.9.6.3.2.2.15.2.1.6.2']
+current = Path('docs/tasks/M3.md').read_bytes()
+for identity in ['M3.6.9.6.3.2.2.15.2.1.6.1.1.0', 'M3.6.9.6.3.2.2.15.2.1.6.1.1.1', 'M3.6.9.6.3.2.2.15.2.1.6.1.1.2']: assert current.count(('- ID: ' + B + identity + B + '\n').encode()) == 1, identity
+assert node(current, 'M3.6.9.6.3.2.2.15.2.1.6.1.1.0').decode() == (out / 'completed-leaf.md').read_text()
+updates = read('completion-updates.json')
+for name, text in updates.items(): assert Path(name).read_text() == text, name
+chapter = prior('docs/book/src/trust.md').decode(); marker = 'this bounded result does not establish full mutation adequacy.\n'; assert updates['docs/book/src/trust.md'].replace(marker, '', 1).replace('\n⚠️ Measured limit', 'LIMIT', 1).count('LIMIT') == 1
+assert len(updates['docs/book/src/trust.md']) > len(chapter) and updates['docs/book/src/trust.md'].startswith(chapter[:chapter.index(marker) + len(marker)])
+allowed = set(updates) | {seal_file, 'docs/task-history/INDEX.md', 'docs/book/src/annex-trust-proofs.md', 'docs/book/src/book-index.md'}
+changed = set(subprocess.check_output(['git', 'diff', '--name-only', 'HEAD'], text=True).split()); assert changed <= allowed, changed - allowed
+assert not subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=all', '--', 'xtask', 'crates', 'scripts'], text=True).strip()
+total = sum(p.stat().st_size for p in Path('docs/tasks').rglob('*') if p.is_file()); print('docs/tasks aggregate bytes', total, 'of the 819200 ceiling'); assert total <= 819200, total
+assert current.count(b'\n') <= 3000 and len(current) <= 327680
+memory = Path('MEMORY.md').read_bytes(); assert memory.count(b'\n') <= 50 and len(memory) <= 7168 and max(len(l) for l in memory.split(b'\n')) <= 200
+for name, cap in [('LIVE_STATUS.md', 320), ('docs/TASK_TREE.md', 320)]: assert max(len(l) for l in Path(name).read_bytes().split(b'\n')) <= cap, name
+result = dict(status='passed', scope='Bounded path-domain assessment only; production, tests and reasons unchanged; the ambiguity repair and the terminal-backslash control are owned children; the full dependency-block checkpoint, compiler/caller/global sweeps and review remain open.',
+    base_commit=audit['base_commit'], variants=len(audit['variants']), defects=[d['id'] + ':' + d['priority'] for d in audit['defects']], regular_inputs=1156, opaque_gitlinks=1, source_unchanged=True, previous_book_bytes_exact=True,
+    published_json_payloads=len(published), task_states=len(states['snapshots']), routed_contracts=len(route['routes']), routed_saved_bytes=route['saved_bytes'], prior_archives=335, current_archives=336, staged_seal_exact=True, audit_refusals=len(audit['falsifiers']), reconstruction_falsifiers=false, private_task_bytes=total, audit_sha256=sha((out / 'audit.json').read_bytes()))
+(out / 'final-audit.json').write_text(json.dumps(result, indent=2) + '\n')
+print('Final path-domain publication audit: six variants, D1 P0/D2 P1/D3 P2 owned; 1156 restore; 335 prior/new336 archives;', len(false), 'task/history refusals; SHA256', sha((out / 'final-audit.json').read_bytes()))
+~~~
+
+</details>

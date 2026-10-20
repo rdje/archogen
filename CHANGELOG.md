@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — assess the dependency path domain
+
+`ARCHOGEN-M3-0825` (leaf `M3.6.9.6.3.2.2.15.2.1.6.1.1.0`), `2026-10-20`.
+
+- Probe six outside-path variants of the public-inventory refusal parent with real pinned
+  Cargo on the plain copy; production, every test and every reason stay unchanged.
+- Ordinary and symlinked output roots refuse exactly. The P0 prefix collision is observed:
+  a trailing-backslash outside input read as an in-tree path, the inventory written twice
+  and naming a decoy blob. Spaced outside paths refuse under fragment names; the pinned
+  Cargo refuses a terminal backslash before the inventory reads anything.
+- Restore all1156 main and copied inputs; retain receipts, audit, falsifiers and adapters
+  in the unbounded book. Own the refusal repair and the terminal-backslash control as
+  separate children; no repair is claimed here.
+
+
 ## archogen — hold every outside-tree dependency refusal
 
 `ARCHOGEN-M3-0824` (leaf `M3.6.9.6.3.2.2.15.2.1.6.1.0`), `2026-10-20`.
