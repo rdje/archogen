@@ -5,6 +5,23 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — refuse ambiguous dependency records
+
+`ARCHOGEN-M3-0826` (leaf `M3.6.9.6.3.2.2.15.2.1.6.1.1.1`), `2026-10-20`.
+
+- Repair the inventory's dependency-record reader by refusal: mark only the written tree's known
+  raw and canonical prefixes before splitting a rule, refuse a backslash anywhere else, and require
+  rustc's per-file targets to re-spell exactly the list read. A record that fails is refused naming
+  the raw rule, and no inventory is written.
+- Replay the prefix collision, the spaced outside inputs under the raw and a symbolic output root
+  and the aliased in-tree inputs as permanent real-Cargo controls with literal expectations, and
+  the record grammar as a synthetic control; re-bind the catalogue entry that quotes the reader.
+- Every mutant of the changed production lines is killed by an intended control or refused by the
+  compiler against the full parent population; reasons unchanged and the retained proofs' pinned
+  premises re-bound; all1156 inputs restored. The terminal-backslash control and the
+  dependency-block checkpoint stay separately owned.
+
+
 ## archogen — assess the dependency path domain
 
 `ARCHOGEN-M3-0825` (leaf `M3.6.9.6.3.2.2.15.2.1.6.1.1.0`), `2026-10-20`.

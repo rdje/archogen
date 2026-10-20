@@ -204,6 +204,7 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#dependency-path-domain-assessment)
 - Dependency path-domain contracts — [Annex C: Trust proof
   records](annex-trust-proofs.md#dependency-path-domain-contracts)
+- Dependency path-domain repair — [Annex C: Trust proof records](annex-trust-proofs.md#dependency-path-domain-repair)
 - Dependency refusal witness contracts — [Annex C: Trust proof
   records](annex-trust-proofs.md#dependency-refusal-witness-contracts)
 - **description** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
@@ -251,6 +252,7 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#environment-loop-tail-control-proof)
 - Environment-loop tail initial assessment — [Annex C: Trust proof
   records](annex-trust-proofs.md#environment-loop-tail-initial-assessment)
+- **EOF** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Every crate is in this book — [Annex B: The checks that keep the repository
   honest](annex-repository.md#every-crate-is-in-this-book)
 - Every diagnostic shown in this book is a real run — [Annex B: The checks that keep the repository

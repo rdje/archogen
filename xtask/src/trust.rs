@@ -388,41 +388,62 @@ fn unit_configuration(u: &Unit) -> String {
     ]))
 }
 
+/// What one unit's dependency record names: its prerequisites, or the raw first rule and the way that text names
+/// two prerequisite lists at once, which the inventory refuses rather than choosing one.
+enum Prerequisites {
+    Read(Vec<String>),
+    Ambiguous { raw: String, why: &'static str },
+}
+
 /// Read rustc's first dependency rule, matching its known raw output target before interpreting separators.
 /// A source path inside the written tree has the catalog's ASCII grammar; only its scratch prefix can contain
-/// spaces or line breaks. Rustc escapes spaces in prerequisites, but writes line breaks literally. Consume each
-/// known escaped prefix intact before splitting its path suffix. This is not a general Makefile parser.
+/// spaces or line breaks. Rustc escapes a prerequisite's spaces as backslash-space and writes every other byte
+/// literally, repeats the prerequisites in one rule per output, each followed by a blank line, then lists one
+/// phony target per prerequisite on a line of its own, then, after a blank line, its `# env-dep:` records. A
+/// name ending in a backslash followed by the next prerequisite spells the same text as one escaped path, so one
+/// rule can name two lists: mark each known escaped prefix at a prerequisite's start before splitting at spaces,
+/// refuse a backslash anywhere else, and require the phony targets to re-spell exactly the list read, naming the
+/// raw rule otherwise. This is not a general Makefile parser.
 fn dependency_files(
     text: &str,
     dependency_file: &Path,
     scratch: &str,
     canonical_scratch: &str,
-) -> Result<Vec<String>, String> {
+) -> Result<Prerequisites, String> {
     let target = format!("{}: ", dependency_file.display());
-    let mut rest = text.strip_prefix(&target).ok_or_else(|| {
+    let rules = text.strip_prefix(&target).ok_or_else(|| {
         format!(
             "{}: missing expected first dependency target",
             dependency_file.display()
         )
     })?;
-    let prefixes = [
-        scratch.replace(' ', "\\ "),
-        canonical_scratch.replace(' ', "\\ "),
-    ];
+    // A path never holds a NUL, so a marked prefix is one token however many spaces or line breaks it holds.
+    let raw_prefix = scratch.replace(' ', "\\ ");
+    let canonical_prefix = canonical_scratch.replace(' ', "\\ ");
+    let marked = format!(" {rules}")
+        .replace(&format!(" {raw_prefix}"), " \0r")
+        .replace(&format!(" {canonical_prefix}"), " \0c");
+    let rule = marked
+        .split_once('\n')
+        .map_or(marked.as_str(), |(rule, _)| rule);
+    let raw = rule
+        .replace("\0r", &raw_prefix)
+        .replace("\0c", &canonical_prefix)[1..]
+        .to_owned();
+    let rest = &rules[raw.len()..];
     let mut files = Vec::new();
-    loop {
-        rest = rest.trim_start_matches(' ');
-        if rest.is_empty() || rest.starts_with(['\n', '\r']) {
-            break;
+    for token in rule.split(' ').filter(|t| !t.is_empty()) {
+        let (prefix, suffix) = [("\0r", scratch), ("\0c", canonical_scratch)]
+            .into_iter()
+            .find_map(|(mark, prefix)| token.strip_prefix(mark).map(|s| (prefix, s)))
+            .unwrap_or(("", token));
+        if suffix.contains('\\') {
+            return Ok(Prerequisites::Ambiguous {
+                raw,
+                why: "a backslash outside the written tree's prefixes",
+            });
         }
-        let prefix = prefixes
-            .iter()
-            .find(|p| rest.starts_with(p.as_str()))
-            .map_or(0, String::len);
-        let suffix = &rest[prefix..];
-        let end = prefix + suffix.find([' ', '\n', '\r']).unwrap_or(suffix.len());
-        files.push(rest[..end].replace("\\ ", " "));
-        rest = &rest[end..];
+        files.push(format!("{prefix}{suffix}"));
     }
     if files.is_empty() {
         return Err(format!(
@@ -430,7 +451,28 @@ fn dependency_files(
             dependency_file.display()
         ));
     }
-    Ok(files)
+    let phony: String = files
+        .iter()
+        .map(|f| format!("{}:\n", f.replace(' ', "\\ ")))
+        .collect();
+    let repeated = format!(": {raw}\n\n");
+    let agreed = rest
+        .strip_prefix("\n\n")
+        .and_then(|t| t.rsplit(&repeated).next())
+        .and_then(|t| t.strip_prefix(&phony))
+        .is_some_and(|env| {
+            env.is_empty()
+                || env
+                    .strip_prefix('\n')
+                    .is_some_and(|records| records.lines().all(|l| l.starts_with("# env-dep:")))
+        });
+    if !agreed {
+        return Ok(Prerequisites::Ambiguous {
+            raw,
+            why: "its per-file targets spell the prerequisites otherwise",
+        });
+    }
+    Ok(Prerequisites::Read(files))
 }
 
 /// Keep rustc's encoded environment records intact; encode only the scratch prefixes before replacing them.
@@ -771,7 +813,17 @@ fn compile(
                 ));
             }
         }
-        for raw in dependency_files(&text, &d, &scratch, &canonical_scratch)? {
+        let raws = match dependency_files(&text, &d, &scratch, &canonical_scratch)? {
+            Prerequisites::Read(raws) => raws,
+            Prerequisites::Ambiguous { raw, why } => {
+                refused.push(format!(
+                    "trust-undeclared-input: `{}` reads `{raw}` ambiguously: {why}",
+                    who
+                ));
+                Vec::new()
+            }
+        };
+        for raw in raws {
             let rel = if let Some(r) = raw
                 .strip_prefix(&scratch)
                 .or_else(|| raw.strip_prefix(&canonical_scratch))
@@ -4592,6 +4644,201 @@ version = "0.1.0"
         assert!(!f.base.join("out/trust-dependencies.json").exists());
     }
 
+    /// The written tree's path holds a space, an outside input is named by the text before that space with a
+    /// trailing backslash, and an in-tree prerequisite follows it: rustc's first rule spells the two as one escaped
+    /// in-tree path while its per-file targets spell them apart. The inventory refuses the raw rule instead of
+    /// reading the decoy blob held at the tree root (`M3.6.9.6.3.2.2.15.2.1.6.1.1.1`, D1).
+    #[test]
+    fn a_trailing_backslash_before_an_in_tree_prerequisite_is_refused_as_ambiguous() {
+        crate::trust_test_process::bounded!(
+            a_trailing_backslash_before_an_in_tree_prerequisite_is_refused_as_ambiguous
+        );
+        let name = "dependency-prefix-collision";
+        let outside = real_root()
+            .join("target/trust-tests")
+            .join(name)
+            .join("prefix\\");
+        let lines = [
+            format!(
+                "pub const OUTSIDE: &str = include_str!({:?});",
+                outside.to_str().unwrap()
+            ),
+            "pub const INSIDE: &str = include_str!(\"tree/data.txt\");".to_owned(),
+        ];
+        let admissions: String = lines
+            .iter()
+            .map(|line| admit("crates/b/src/lib.rs", "include_str", line))
+            .collect();
+        let f = two_roots(
+            name,
+            "fn main() {}\n",
+            &(lines.join("\n") + "\n"),
+            &[
+                ("trust/roots.eadl", format!("{ROOTS}{admissions}")),
+                (
+                    "crates/b/src/tree/data.txt",
+                    "held decoy bytes\n".to_owned(),
+                ),
+                ("data.txt", "held decoy bytes\n".to_owned()),
+            ],
+        );
+        std::fs::write(&outside, "outside payload\n").unwrap();
+        let out = "prefix crates/b/src";
+        let expected = format!(
+            "trust-undeclared-input: `chk` reads `crates/b/src/lib.rs {} crates/b/src/tree/data.txt` ambiguously: \
+             its per-file targets spell the prerequisites otherwise",
+            outside.display()
+        );
+        assert_eq!(refused(f.run_into(out)), [expected]);
+        assert!(!f.base.join(out).join("trust-dependencies.json").exists());
+    }
+
+    /// Three outside inputs whose names hold spaces: rustc escapes each space as backslash-space, so a backslash
+    /// outside the written tree's known prefixes may be an escape or a name's own byte. The inventory refuses the
+    /// raw rule rather than splitting it, under the raw output root and under a symbolic link to it (D2).
+    #[cfg(unix)]
+    #[test]
+    fn outside_inputs_with_spaces_are_refused_by_their_raw_rule() {
+        crate::trust_test_process::bounded!(
+            outside_inputs_with_spaces_are_refused_by_their_raw_rule
+        );
+        for (name, out) in [
+            ("dependency-spaced-refusals", "out"),
+            ("dependency-spaced-alias-refusals", "output-alias"),
+        ] {
+            let base = real_root().join("target/trust-tests").join(name);
+            let external = base.join("external");
+            let inputs = [
+                ("FIRST", "a with space.txt", "first external input\n"),
+                ("MIDDLE", "m with space.txt", "middle external input\n"),
+                ("LAST", "z with space.txt", "last external input\n"),
+            ];
+            let mut lines: Vec<_> = inputs
+                .iter()
+                .map(|(constant, file, _)| {
+                    format!(
+                        "pub const {constant}: &str = include_str!({:?});",
+                        external.join(file).to_str().unwrap()
+                    )
+                })
+                .collect();
+            let mut extra = vec![];
+            if out != "out" {
+                lines.push("pub const INSIDE: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/src/inside.txt\"));".to_owned());
+                extra.push((
+                    "crates/b/src/inside.txt",
+                    "inside tracked input\n".to_owned(),
+                ));
+            }
+            let admissions: String = lines
+                .iter()
+                .map(|line| admit("crates/b/src/lib.rs", "include_str", line))
+                .collect();
+            extra.push(("trust/roots.eadl", format!("{ROOTS}{admissions}")));
+            let f = two_roots(name, "fn main() {}\n", &(lines.join("\n") + "\n"), &extra);
+            std::fs::create_dir_all(&external).unwrap();
+            for (_, file, contents) in inputs {
+                std::fs::write(external.join(file), contents).unwrap();
+            }
+            let mut rule = vec!["crates/b/src/lib.rs".to_owned()];
+            rule.extend(inputs.iter().map(|(_, file, _)| {
+                external
+                    .join(file)
+                    .display()
+                    .to_string()
+                    .replace(' ', "\\ ")
+            }));
+            if out != "out" {
+                let physical = base.join("physical-output");
+                std::fs::create_dir_all(&physical).unwrap();
+                std::os::unix::fs::symlink(&physical, base.join(out)).unwrap();
+                rule.push(
+                    std::fs::canonicalize(&physical)
+                        .unwrap()
+                        .join("tree/crates/b/src/inside.txt")
+                        .display()
+                        .to_string(),
+                );
+            }
+            let expected = format!(
+                "trust-undeclared-input: `chk` reads `{}` ambiguously: a backslash outside the written tree's \
+                 prefixes",
+                rule.join(" ")
+            );
+            assert_eq!(refused(f.run_into(out)), [expected], "{name}");
+            assert!(!f.base.join(out).join("trust-dependencies.json").exists());
+        }
+    }
+
+    /// A symbolic link as the output root: rustc spells an in-tree input by the raw root when its site names it so
+    /// and by the canonical root when the manifest directory reaches it. Both are the written tree, the input is
+    /// accepted once, and the three outside inputs are refused exactly.
+    #[cfg(unix)]
+    #[test]
+    fn a_symbolic_output_root_accepts_raw_and_canonical_in_tree_inputs() {
+        crate::trust_test_process::bounded!(
+            a_symbolic_output_root_accepts_raw_and_canonical_in_tree_inputs
+        );
+        let name = "dependency-alias-refusals";
+        let base = real_root().join("target/trust-tests").join(name);
+        let external = base.join("external");
+        let inputs = [
+            ("FIRST", "a.txt", "first external input\n"),
+            ("MIDDLE", "m.txt", "middle external input\n"),
+            ("LAST", "z.txt", "last external input\n"),
+        ];
+        let mut lines: Vec<_> = inputs
+            .iter()
+            .map(|(constant, file, _)| {
+                format!(
+                    "pub const {constant}: &str = include_str!({:?});",
+                    external.join(file).to_str().unwrap()
+                )
+            })
+            .collect();
+        lines.push(format!(
+            "pub const RAW: &str = include_str!({:?});",
+            base.join("output-alias/tree/crates/b/src/inside.txt")
+                .to_str()
+                .unwrap()
+        ));
+        lines.push("pub const CANONICAL: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/src/inside.txt\"));".to_owned());
+        let admissions: String = lines
+            .iter()
+            .map(|line| admit("crates/b/src/lib.rs", "include_str", line))
+            .collect();
+        let f = two_roots(
+            name,
+            "fn main() {}\n",
+            &(lines.join("\n") + "\n"),
+            &[
+                ("trust/roots.eadl", format!("{ROOTS}{admissions}")),
+                (
+                    "crates/b/src/inside.txt",
+                    "inside tracked input\n".to_owned(),
+                ),
+            ],
+        );
+        std::fs::create_dir_all(&external).unwrap();
+        for (_, file, contents) in inputs {
+            std::fs::write(external.join(file), contents).unwrap();
+        }
+        let physical = base.join("physical-output");
+        std::fs::create_dir_all(&physical).unwrap();
+        std::os::unix::fs::symlink(&physical, base.join("output-alias")).unwrap();
+        let expected: Vec<_> = inputs
+            .iter()
+            .map(|(_, file, _)| {
+                format!(
+                    "trust-undeclared-input: `chk` reads `{}`, outside the written tree",
+                    external.join(file).display()
+                )
+            })
+            .collect();
+        assert_eq!(refused(f.run_into("output-alias")), expected);
+        assert!(!f.base.join("output-alias/trust-dependencies.json").exists());
+    }
+
     fn package_item<'a>(all: &'a [(String, Json)], package: &str) -> &'a Json {
         &all.iter()
             .find(|(_, i)| {
@@ -5445,10 +5692,10 @@ version = "0.1.0"
             let text = fs::read_to_string(d).unwrap();
             let scratch = format!("{}/", f.repo.display());
             let canonical = format!("{}/", fs::canonicalize(&f.repo).unwrap().display());
-            let files: BTreeSet<_> = super::dependency_files(&text, d, &scratch, &canonical)
-                .unwrap()
-                .into_iter()
-                .collect();
+            let files: BTreeSet<_> =
+                read(super::dependency_files(&text, d, &scratch, &canonical).unwrap())
+                    .into_iter()
+                    .collect();
             let expected = BTreeSet::from([
                 "crates/a/src/main.rs".to_owned(),
                 format!("{}crates/a/src/data.txt", scratch),
@@ -5460,12 +5707,28 @@ version = "0.1.0"
         }
     }
 
+    /// The prerequisites a record names, or a panic where its text names two lists.
+    fn read(prerequisites: super::Prerequisites) -> Vec<String> {
+        match prerequisites {
+            super::Prerequisites::Read(files) => files,
+            super::Prerequisites::Ambiguous { raw, why } => panic!("ambiguous `{raw}`: {why}"),
+        }
+    }
+
+    /// The raw rule and the reason a record is refused, or a panic where it was read.
+    fn ambiguous(prerequisites: super::Prerequisites) -> (String, &'static str) {
+        match prerequisites {
+            super::Prerequisites::Read(files) => panic!("read {files:?} where a refusal was due"),
+            super::Prerequisites::Ambiguous { raw, why } => (raw, why),
+        }
+    }
+
     #[test]
     fn dependency_information_requires_its_known_nonempty_target() {
         let file = std::path::Path::new("target/with: space.d");
-        let text = "target/with: space.d: crates/a/src/main.rs\n\n";
+        let text = "target/with: space.d: crates/a/src/main.rs\n\ncrates/a/src/main.rs:\n";
         assert_eq!(
-            super::dependency_files(text, file, "tree/", "canonical/").unwrap(),
+            read(super::dependency_files(text, file, "tree/", "canonical/").unwrap()),
             ["crates/a/src/main.rs"]
         );
         for malformed in [
@@ -5477,6 +5740,86 @@ version = "0.1.0"
             assert!(
                 super::dependency_files(malformed, file, "tree/", "canonical/").is_err(),
                 "malformed dependency target: {malformed:?}"
+            );
+        }
+    }
+
+    /// One first-rule text can spell two prerequisite lists: the per-file targets decide, and a rule they do not
+    /// re-spell, a backslash outside the known prefixes, or a line after them that is no environment record, is
+    /// refused naming the raw rule (`M3.6.9.6.3.2.2.15.2.1.6.1.1.1`).
+    #[test]
+    fn an_ambiguous_dependency_record_is_refused_by_its_raw_rule() {
+        let file = std::path::Path::new("out/b.d");
+        let scratch = "/run/prefix crates/b/src/tree/";
+        let record = |rule: &str, rest: &str| {
+            super::dependency_files(
+                &format!("out/b.d: {rule}{rest}"),
+                file,
+                scratch,
+                "/canonical/",
+            )
+        };
+        let collision = "crates/b/src/lib.rs /run/prefix\\ crates/b/src/tree/data.txt";
+        let targets = "its per-file targets spell the prerequisites otherwise";
+        let backslash = "a backslash outside the written tree's prefixes";
+        // The targets spell the outside name and the in-tree prerequisite apart: refused, never the decoy.
+        assert_eq!(
+            ambiguous(
+                record(
+                    collision,
+                    "\n\ncrates/b/src/lib.rs:\n/run/prefix\\:\ncrates/b/src/tree/data.txt:\n"
+                )
+                .unwrap()
+            ),
+            (collision.to_owned(), targets)
+        );
+        // The same rule whose targets spell one in-tree path is read as that path.
+        assert_eq!(
+            read(
+                record(
+                    collision,
+                    "\n\ncrates/b/src/lib.rs:\n/run/prefix\\ crates/b/src/tree/data.txt:\n"
+                )
+                .unwrap()
+            ),
+            [
+                "crates/b/src/lib.rs",
+                "/run/prefix crates/b/src/tree/data.txt"
+            ]
+        );
+        for (rule, why) in [
+            ("a /ext/x\\ y.txt", backslash),
+            ("a /ext/x\\y.txt", backslash),
+            ("a /run/prefix\\ crates/b/src/tree/x\\y.txt", backslash),
+        ] {
+            let spelled: String = rule.split(' ').map(|t| format!("{t}:\n")).collect();
+            assert_eq!(
+                ambiguous(record(rule, &format!("\n\n{spelled}")).unwrap()),
+                (rule.to_owned(), why),
+                "{rule}"
+            );
+        }
+        for rest in [
+            "\n\nout/libb.rlib: a b\n\na:\nb:\n\n# env-dep:X=1\n# env-dep:Y\n",
+            "\n\nout/libb.rlib: a b\n\nout/libb.rmeta: a b\n\na:\nb:\n",
+        ] {
+            assert_eq!(read(record("a b", rest).unwrap()), ["a", "b"], "{rest:?}");
+        }
+        for rest in [
+            "\n\na:\n",
+            "\n\na:\nb:\nc:\n",
+            "\na:\nb:\n",
+            "\n\nout/libb.rlib: a c\n\na:\nb:\n",
+            "\n\nout/libb.rlib: a b\n\nb:\na:\n",
+            "\n\na:\nb:\n\n# env-dep X # env-dep:Y\n",
+            "\n\na:\nb:\n# env-dep:X=1\n",
+            "\n\na:\nb:\nextra\n",
+            "",
+        ] {
+            assert_eq!(
+                ambiguous(record("a b", rest).unwrap()),
+                ("a b".to_owned(), targets),
+                "{rest:?}"
             );
         }
     }

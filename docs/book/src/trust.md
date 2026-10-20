@@ -329,14 +329,27 @@ producer order and the four initial branch mutations killed by this parent. Othe
 raw/canonical geometry and the complete dependency-block checkpoint remain separately owned;
 this bounded result does not establish full mutation adequacy.
 
-⚠️ Measured limit (`2026-10-20`): the pinned compiler writes a prerequisite's spaces as
-backslash-space and every other byte literally, so one dependency record can be read two ways.
-With a space in the written tree's path, an outside input whose name ends in a backslash,
-followed by an in-tree prerequisite, was read as one in-tree path: the inventory was written
-and named a decoy blob. Outside inputs with spaces were refused under fragment names. Until
-`M3.6.9.6.3.2.2.15.2.1.6.1.1.1` repairs the reading by refusal, the guarantee above holds for
-the ordinary domain only; the [assessment record](annex-trust-proofs.md#dependency-path-domain-assessment)
-retains every probe.
+Ambiguous records are refused (`2026-10-20`): the pinned compiler writes a prerequisite's spaces as
+backslash-space and every other byte literally, so one dependency record can spell two prerequisite
+lists. With a space in the written tree's path, an outside input whose name ends in a backslash,
+followed by an in-tree prerequisite, reads as one escaped in-tree path. The inventory marks only the
+written tree's known raw and canonical prefixes before splitting a rule, refuses a backslash anywhere
+else, and requires the compiler's per-file targets, one per line, to re-spell exactly the list it
+read. A record that fails either test is refused naming the raw rule, and no inventory is written:
+
+```text
+trust-undeclared-input: `chk` reads `crates/b/src/lib.rs <run>/prefix\ crates/b/src/tree/data.txt` ambiguously: its per-file targets spell the prerequisites otherwise
+trust-undeclared-input: `chk` reads `crates/b/src/lib.rs <run>/external/a\ with\ space.txt <run>/external/m\ with\ space.txt <run>/external/z\ with\ space.txt` ambiguously: a backslash outside the written tree's prefixes
+```
+
+The permanent controls `trust::tests::a_trailing_backslash_before_an_in_tree_prerequisite_is_refused_as_ambiguous`,
+`trust::tests::outside_inputs_with_spaces_are_refused_by_their_raw_rule`, under the raw output root and
+under a symbolic link to it, and `trust::tests::a_symbolic_output_root_accepts_raw_and_canonical_in_tree_inputs`
+hold these with real Cargo builds; `trust::tests::an_ambiguous_dependency_record_is_refused_by_its_raw_rule`
+holds the record grammar on synthetic records. A final prerequisite ending in a backslash is refused by
+the pinned Cargo before the inventory reads anything; that control is owned by
+`M3.6.9.6.3.2.2.15.2.1.6.1.1.2`. The [repair record](annex-trust-proofs.md#dependency-path-domain-repair)
+retains the measurement.
 
 ### Codegen options retain their operands
 

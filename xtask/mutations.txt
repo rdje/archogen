@@ -5421,32 +5421,41 @@ from
         dependency_file: &Path,
         scratch: &str,
         canonical_scratch: &str,
-    ) -> Result<Vec<String>, String> {
+    ) -> Result<Prerequisites, String> {
         let target = format!("{}: ", dependency_file.display());
-        let mut rest = text.strip_prefix(&target).ok_or_else(|| {
+        let rules = text.strip_prefix(&target).ok_or_else(|| {
             format!(
                 "{}: missing expected first dependency target",
                 dependency_file.display()
             )
         })?;
-        let prefixes = [
-            scratch.replace(' ', "\\ "),
-            canonical_scratch.replace(' ', "\\ "),
-        ];
+        // A path never holds a NUL, so a marked prefix is one token however many spaces or line breaks it holds.
+        let raw_prefix = scratch.replace(' ', "\\ ");
+        let canonical_prefix = canonical_scratch.replace(' ', "\\ ");
+        let marked = format!(" {rules}")
+            .replace(&format!(" {raw_prefix}"), " \0r")
+            .replace(&format!(" {canonical_prefix}"), " \0c");
+        let rule = marked
+            .split_once('\n')
+            .map_or(marked.as_str(), |(rule, _)| rule);
+        let raw = rule
+            .replace("\0r", &raw_prefix)
+            .replace("\0c", &canonical_prefix)[1..]
+            .to_owned();
+        let rest = &rules[raw.len()..];
         let mut files = Vec::new();
-        loop {
-            rest = rest.trim_start_matches(' ');
-            if rest.is_empty() || rest.starts_with(['\n', '\r']) {
-                break;
+        for token in rule.split(' ').filter(|t| !t.is_empty()) {
+            let (prefix, suffix) = [("\0r", scratch), ("\0c", canonical_scratch)]
+                .into_iter()
+                .find_map(|(mark, prefix)| token.strip_prefix(mark).map(|s| (prefix, s)))
+                .unwrap_or(("", token));
+            if suffix.contains('\\') {
+                return Ok(Prerequisites::Ambiguous {
+                    raw,
+                    why: "a backslash outside the written tree's prefixes",
+                });
             }
-            let prefix = prefixes
-                .iter()
-                .find(|p| rest.starts_with(p.as_str()))
-                .map_or(0, String::len);
-            let suffix = &rest[prefix..];
-            let end = prefix + suffix.find([' ', '\n', '\r']).unwrap_or(suffix.len());
-            files.push(rest[..end].replace("\\ ", " "));
-            rest = &rest[end..];
+            files.push(format!("{prefix}{suffix}"));
         }
         if files.is_empty() {
             return Err(format!(
@@ -5454,25 +5463,44 @@ from
                 dependency_file.display()
             ));
         }
-        Ok(files)
+        let phony: String = files
+            .iter()
+            .map(|f| format!("{}:\n", f.replace(' ', "\\ ")))
+            .collect();
+        let repeated = format!(": {raw}\n\n");
+        let agreed = rest
+            .strip_prefix("\n\n")
+            .and_then(|t| t.rsplit(&repeated).next())
+            .and_then(|t| t.strip_prefix(&phony))
+            .is_some_and(|env| {
+                env.is_empty()
+                    || env
+                        .strip_prefix('\n')
+                        .is_some_and(|records| records.lines().all(|l| l.starts_with("# env-dep:")))
+            });
+        if !agreed {
+            return Ok(Prerequisites::Ambiguous {
+                raw,
+                why: "its per-file targets spell the prerequisites otherwise",
+            });
+        }
+        Ok(Prerequisites::Read(files))
     }
-
 to
     fn dependency_files(
         text: &str,
         dependency_file: &Path,
         scratch: &str,
         canonical_scratch: &str,
-    ) -> Result<Vec<String>, String> {
+    ) -> Result<Prerequisites, String> {
         let _ = (dependency_file, scratch, canonical_scratch);
         let first = text
             .lines()
             .find(|line| !line.is_empty() && !line.starts_with("# env-dep:"))
             .unwrap_or_default();
         let rest = first.split_once(": ").map(|(_,rest)| rest).unwrap_or_default();
-        Ok(rest.split(' ').filter(|s| !s.is_empty()).map(|s| s.replace("\\ ", " ")).collect())
+        Ok(Prerequisites::Read(rest.split(' ').filter(|s| !s.is_empty()).map(|s| s.replace("\\ ", " ")).collect()))
     }
-
 end
 
 mutation trust-dependency-environment-prefix-unescaped
