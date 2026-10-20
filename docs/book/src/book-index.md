@@ -158,6 +158,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Complete output visitation and rlib selection positions — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-output-visitation-and-rlib-selection-positions)
 - Complete prefix/helper replay — [Annex C: Trust proof records](annex-trust-proofs.md#complete-prefixhelper-replay)
+- Complete repaired cache and current-reason replay — [Annex C: Trust proof
+  records](annex-trust-proofs.md#complete-repaired-cache-and-current-reason-replay)
 - Complete repaired Cargo diagnostic measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-repaired-cargo-diagnostic-measurement)
 - **composite input** — [definition](glossary.md), [What the scheduling checker establishes](analysis.md)

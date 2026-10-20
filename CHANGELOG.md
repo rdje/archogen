@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — close the repaired cache and current-reason checkpoint
+
+`ARCHOGEN-M3-0815` (leaf `M3.6.9.6.3.2.2.15.2.1.4.3.2.3`), `2026-10-20`.
+
+- Complete all43 conservative cache/current-reason edits against every current201
+  semantic parent: 18K/23E/2U, strict0; no survivors, timeouts or unjudged outcomes.
+- Retain exact reasons and complete intended finishing names; fresh whole-component
+  baseline/mutant/recovery compilations qualify both U with intended diagnostics.
+- Restore all1146 original/copied inputs; preserve production/reasons,48 source
+  bindings/37+2 producer sources and18 proof premises. Exact held inputs/root tree
+  reconstruct from the retained commit and portable delta, with false controls.
+- Publish complete results, manifests, compiler streams and executable adapters in
+  the unbounded book; retain325 prior archives and the exact new326th cleanup seal.
+  Close only this cache checkpoint and advance to the bounded current suffix replay.
+
+
 ## archogen — remove only idle regenerable compiler caches
 
 `ARCHOGEN-PROGRAM-0814` (leaf `PROGRAM.94`), `2026-10-20`.
