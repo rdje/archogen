@@ -457,6 +457,8 @@ a change that leaves it stale, so it is never edited by hand.
   description](reading.md), [Kinds and schemas](kinds.md), [Quantities and units](quantities.md), [The S0 early
   generation path](s0.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
   costs](versions.md)
+- Permanent environment-tail controls — [Annex C: Trust proof
+  records](annex-trust-proofs.md#permanent-environment-tail-controls)
 - **PGEN** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - pgen — [What this project relies on from outside](ledger.md#pgen)
 - **PID** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)

@@ -57915,3 +57915,700 @@ print('Final tail-proof audit: passed;328 prior/new329th archive exact,5 exact t
 ~~~
 
 </details>
+
+### Permanent environment-tail controls
+
+The [complete local source proof](#environment-loop-tail-control-proof) now has a maintained control in `EnvironmentTailTests.test_environment_tail_fallthrough_requires_the_complete_terminal_scope` in `xtask/mutation_sweep_tests.py`. It runs outside the 201-test semantic parent population. Production source and all23 reason records remain byte-identical. The separately owned no-op cleanup and full current native checkpoint follow this commit.
+
+The guard accepts only the exact original-terminal and cleaned-fallthrough loop shapes, reconstructing the historical preimage after cleanup. It binds the complete terminal scope, borrowed-string origin, actual normalizer and actual catalog allowlist. Seven changed premises are deliberately refused: a reachable suffix, labeled target, iterator change, record prefix, normalizer change, different text source type and changed allowlist. A future change requires the source argument to be revalidated; it cannot silently inherit a broader equivalence.
+
+Actual Rust1.95.0 at optimization0 and3 compiles all three original/comment/clean forms. Each runs17 independent literal environment/refusal cases, including record positions, duplicates, prior refusal state, Unicode/CRLF and encoded scratch paths. Supplemental real destructors hold exact iteration/drop order, and an added suffix distinguishes the forms. All four deliberately wrong output/refusal/drop/suffix oracles fail at both optimization levels. These observations support the source proof; finite agreement alone is not the proof.
+
+The full operator suite passes50 tests in the captured actual execution. Removing only the new class reconstructs the previous file byte for byte: all49 older operator controls are retained. The suite’s source identities restore exactly. No Rust semantic parent was added and no mutation outcome is classified by this leaf.
+
+The initial supplemental drop fixture used canonical prefix `C` while expecting `CARGO_PKG_NAME=a` unchanged. The real normalizer correctly produced `ARGO_PKG_NAME=a`, so its literal assertion failed. This test-fixture defect is fixed with the non-overlapping `__SCRATCH__`/`__CANON__` prefixes used in the independent cases. It is owned and closed by this leaf, with the full50-test run on the corrected maintained source. Production normalization was correct and unchanged.
+
+Run the maintained control or full operator suite from the repository root with its local stores prepared:
+
+```bash
+python3 -I -B xtask/mutation_sweep_tests.py "$PWD" \
+  EnvironmentTailTests.test_environment_tail_fallthrough_requires_the_complete_terminal_scope
+python3 -I -B xtask/mutation_sweep_tests.py "$PWD"
+```
+
+All329 earlier task archives remain at their retained commit’s exact blob identities. The committed proof leaf is sealed as the330th archive, reconstructing its old task span exactly. Three task states reconstruct from the retained input commit and small line deltas; three wrong snapshot identities and a truncated seal are refused. The book retains every previous byte and the complete evidence/adapter source below.
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.5.1.1`
+  Status: `active` — permanent environment-tail proof controls
+  [Full contract](../book/src/annex-trust-proofs.md#environment-tail-implementation-contracts) retained verbatim.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.5.1.1`
+  Status: `done` — permanent source/compiled tail controls
+  [Complete controls](../book/src/annex-trust-proofs.md#permanent-environment-tail-controls).
+  Acceptance:
+  - [x] ROOT CAUSE: `python3 -I -B target/environment-tail-controls/audit-controls.py`,
+    exit code 0: exact old49 test bytes, both proved source shapes and7 changed premises.
+  - [x] ADDRESSED: `python3 -I -B target/environment-tail-controls/run-suite.py`,
+    exit code 0: all50 operator tests; O0/O3 actual literal/drop/suffix controls,
+    all8 wrong oracles fail. Overlapping-prefix fixture error fixed; production unchanged.
+  - [x] NO REGRESSION: `python3 -I -B target/environment-tail-controls/final-audit.py`,
+    exit code 0: exact inputs/old archives/new seal and reconstructible task states;
+    semantic parent sources/all23 reasons exact. Book/gates required before commit.
+  Verification: maintained EnvironmentTailTests; full book evidence/adapters; .1.2 next.
+  Commit: `ARCHOGEN-M3-0819`
+
+```
+
+<details>
+<summary>Complete permanent-control source audit</summary>
+
+```json
+{
+  "status": "passed",
+  "scope": "Maintained proof control outside semantic parents; production and reasons unchanged; cleanup/final native replay still separately owned.",
+  "base_commit": "5f193e932b4141ce0655fef6c3be8eaa85dd58bf",
+  "operator_tests": 50,
+  "older_operator_test_bytes_exact": true,
+  "source_sha256": "e042f4a5f0a8d2600d0db65a33ed8ed153827638b3700e69259820223b2be5c7",
+  "added_class_sha256": "f7cfee97f997bb79795434699880e00e29313753461c494f3d3459abc2a1d7bb",
+  "proved_production_shapes": [
+    "original-terminal-continue",
+    "cleaned-fallthrough"
+  ],
+  "source_premise_refusals": 7,
+  "literal_cases": 17,
+  "forms": 3,
+  "optimizations": [
+    "0",
+    "3"
+  ],
+  "wrong_oracles": 8,
+  "production_and_semantic_parent_sources_exact": true,
+  "all23_reasons_exact": true,
+  "source_preservation_falsifiers": [
+    "missing-new-class",
+    "changed-older-test"
+  ],
+  "fixture_defect": {
+    "status": "fixed-and-verified",
+    "owner": "M3.6.9.6.3.2.2.15.2.1.5.1.1",
+    "reproduction": "Use canonical prefix C in the supplemental drop fixture while expecting CARGO_PKG_NAME unchanged.",
+    "observed": "Literal control fails: actual ARGO_PKG_NAME=a versus expected CARGO_PKG_NAME=a; the production normalizer correctly strips C.",
+    "repair": "Use non-overlapping __SCRATCH__/__CANON__ fixture prefixes; full50 operator suite verifies corrected source.",
+    "impact": "Test fixture expectation only; no production change or semantic witness claim."
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Complete50 operator suite command and outputs</summary>
+
+```json
+{
+  "status": "passed",
+  "command": [
+    "python3",
+    "-I",
+    "-B",
+    "xtask/mutation_sweep_tests.py",
+    "<runtime-repository-root>"
+  ],
+  "exit": 0,
+  "stdout": "closure probes: 37 actual candidates and 16 baselines compile; 159 value-selection observations\ncontains type probes: 16 candidates, 6 viable, 10 type refusals; 120 observations\ncontains receiver probes: 32 candidates, 16 viable, 16 type refusals; 288 observations\ncaller suffix compiled controls complete; checking the precise reason\nlogic probes: 12 actual candidates and four baselines compile; 128 truth-table observations\n",
+  "stderr": "..................................................\n----------------------------------------------------------------------\nRan 50 tests in 163.879s\n\nOK\n",
+  "seconds": 163.9741235829424,
+  "before": {
+    "xtask/mutation_sweep_tests.py": "e042f4a5f0a8d2600d0db65a33ed8ed153827638b3700e69259820223b2be5c7",
+    "xtask/src/trust.rs": "9616b59ff2bc394e6471570bfaf857971671fda4a12c4fb745e557d2d21a1751",
+    "xtask/src/catalog_build.rs": "ead6752d2c5aa9a6c289c43b35c66ff4ee1e1b6b748ba9e20e1f68578fe093d5",
+    "xtask/trust.equivalents": "ab341a3d5780a98352d39acdb45f6745163ec7740b9298b830fbf3e87fe1e511",
+    "scripts/mutation_sweep.sh": "8043cddad18b8ddf54c5863b55a8238039054f202ddc69e073389528870e78bd"
+  },
+  "after": {
+    "xtask/mutation_sweep_tests.py": "e042f4a5f0a8d2600d0db65a33ed8ed153827638b3700e69259820223b2be5c7",
+    "xtask/src/trust.rs": "9616b59ff2bc394e6471570bfaf857971671fda4a12c4fb745e557d2d21a1751",
+    "xtask/src/catalog_build.rs": "ead6752d2c5aa9a6c289c43b35c66ff4ee1e1b6b748ba9e20e1f68578fe093d5",
+    "xtask/trust.equivalents": "ab341a3d5780a98352d39acdb45f6745163ec7740b9298b830fbf3e87fe1e511",
+    "scripts/mutation_sweep.sh": "8043cddad18b8ddf54c5863b55a8238039054f202ddc69e073389528870e78bd"
+  },
+  "profile_sha256": "2b3fbe199bddb4ba84c453a23334c7025308b06127ce3cc96f74b2a17680eedd"
+}
+```
+
+</details>
+
+<details>
+<summary>Exact permanent-control task-state reconstruction</summary>
+
+```json
+{
+  "base_commit": "5f193e932b4141ce0655fef6c3be8eaa85dd58bf",
+  "base_file": "docs/tasks/M3.md",
+  "base_sha256": "624acdf46f0493f9662c960ed9949a918cc58da8cbbea72f2ab23d12033bb0b1",
+  "snapshots": {
+    "task-active-before-seal.md": {
+      "sha256": "5b1a46998aaedeb2ad82e872c1a5703b7831603c3db789253a0391b00916b56a",
+      "bytes": 291518,
+      "changes": [
+        {
+          "start_line": 1521,
+          "end_line": 1522,
+          "before_sha256": "41479726ec42ce95a54055fbf2e27e14803b078f113f9a0400f8edd2dfc5c283",
+          "replacement": "  Status: \u0060active\u0060 \u2014 permanent environment-tail proof controls\n"
+        }
+      ]
+    },
+    "task-before-completion.md": {
+      "sha256": "c46561fbbb8174cce6bdd6acdeb08ac3fc01b8296bdf425daf492f6f1a0020e2",
+      "bytes": 290764,
+      "changes": [
+        {
+          "start_line": 1507,
+          "end_line": 1519,
+          "before_sha256": "393f92ae5fb808400e0ceae5385ef18fa49985335a9b1e0e00dbe9125ee25683",
+          "replacement": "  Status: \u0060done\u0060 \u2014 sealed in [\u0060M3/M3.6.9.6.3.2.2.15.2.1.5.1.0.md\u0060](../task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.1.0.md); commit \u0060ARCHOGEN-M3-0818\u0060\n"
+        },
+        {
+          "start_line": 1521,
+          "end_line": 1522,
+          "before_sha256": "41479726ec42ce95a54055fbf2e27e14803b078f113f9a0400f8edd2dfc5c283",
+          "replacement": "  Status: \u0060active\u0060 \u2014 permanent environment-tail proof controls\n"
+        }
+      ]
+    },
+    "task-after-completion.md": {
+      "sha256": "c98857d6ad8dc011752a6a78b78b1b6603835e99f8f29945a396a03e63c50f1e",
+      "bytes": 292081,
+      "changes": [
+        {
+          "start_line": 1507,
+          "end_line": 1519,
+          "before_sha256": "393f92ae5fb808400e0ceae5385ef18fa49985335a9b1e0e00dbe9125ee25683",
+          "replacement": "  Status: \u0060done\u0060 \u2014 sealed in [\u0060M3/M3.6.9.6.3.2.2.15.2.1.5.1.0.md\u0060](../task-history/M3/M3.6.9.6.3.2.2.15.2.1.5.1.0.md); commit \u0060ARCHOGEN-M3-0818\u0060\n"
+        },
+        {
+          "start_line": 1521,
+          "end_line": 1525,
+          "before_sha256": "e1fd728f0cd46e3dc1b04139b33a6544ff1316992784d0870490e8a0895cf3aa",
+          "replacement": "  Status: \u0060done\u0060 \u2014 permanent source/compiled tail controls\n  [Complete controls](../book/src/annex-trust-proofs.md#permanent-environment-tail-controls).\n  Acceptance:\n  - [x] ROOT CAUSE: \u0060python3 -I -B target/environment-tail-controls/audit-controls.py\u0060,\n    exit code 0: exact old49 test bytes, both proved source shapes and7 changed premises.\n  - [x] ADDRESSED: \u0060python3 -I -B target/environment-tail-controls/run-suite.py\u0060,\n    exit code 0: all50 operator tests; O0/O3 actual literal/drop/suffix controls,\n    all8 wrong oracles fail. Overlapping-prefix fixture error fixed; production unchanged.\n  - [x] NO REGRESSION: \u0060python3 -I -B target/environment-tail-controls/final-audit.py\u0060,\n    exit code 0: exact inputs/old archives/new seal and reconstructible task states;\n    semantic parent sources/all23 reasons exact. Book/gates required before commit.\n  Verification: maintained EnvironmentTailTests; full book evidence/adapters; .1.2 next.\n  Commit: \u0060ARCHOGEN-M3-0819\u0060\n"
+        },
+        {
+          "start_line": 1800,
+          "end_line": 1801,
+          "before_sha256": "85174b482b326041710ffb233f7dad0638f5e5bccdc1faab877cf691f4003cea",
+          "replacement": "| 1 | \u0060M3.6\u0060 | \u0060active\u0060 | the trust inventory and gate, F30: \u0060.3\u0060's six slices and \u0060.4\u0060, the chapter, done; \u0060.3.2.1\u0060's baseline committed from the runner, its repaired-key compatibility in \u0060.3.2.1.1\u0060 waiting on the runner, \u0060.5\u0060 on the director; \u0060.6.2\u0060 and \u0060.6.3\u0060 done, the generated-sources instrument and its chapter; \u0060.6\u0060, generated sources, done, \u0060.6.4\u0060's review closed; \u0060.8\u0060, the mutation catalogue's breadth, done; \u0060.9\u0060, the parent's tests', design accepted; \u0060.9.5\u0060 initial measurements complete; \u0060.9.6.3.2.2\u0060 bounded survivor assessments in progress, next \u0060.9.6.3.2.2.15.2.1.5.1.2\u0060 proved environment-tail cleanup and guard revalidation |\n"
+        },
+        {
+          "start_line": 2040,
+          "end_line": 2040,
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "replacement": "| \u00602026-10-20\u0060 | \u0060M3.6.9.6.3.2.2.15.2.1.5.1.1\u0060 | Full50 operator,7 changed premises, O0/O3 literal/drop/suffix and8 rejecting oracles; exact source/history audit | Pass; old49/production/parents/23 reasons preserved; book/gates required |\n"
+        },
+        {
+          "start_line": 2383,
+          "end_line": 2383,
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "replacement": "| \u0060M3.6.9.6.3.2.2.15.2.1.5.1.1\u0060 | \u0060ARCHOGEN-M3-0819 (leaf M3.6.9.6.3.2.2.15.2.1.5.1.1): retain permanent environment-tail proof controls\u0060 | [Permanent proof controls](../book/src/annex-trust-proofs.md#permanent-environment-tail-controls); source cleanup/guard revalidation next, then complete native checkpoint |\n"
+        }
+      ]
+    }
+  }
+}
+```
+
+</details>
+
+The retained input commit is `5f193e932b4141ce0655fef6c3be8eaa85dd58bf`. Its task-history tree supplies all earlier archive blob identities, so no ignored snapshot is the only copy of a prior archive. The maintained class is reproduced verbatim below. The run adapter permits writes only within the current repository; its fixtures use fake Git or plain workspaces, and create no other Git repository. The Rust toolchain is a necessary read-only host input.
+
+<details>
+<summary>Exact added-class.py.txt</summary>
+
+~~~python
+class EnvironmentTailTests(DiscoveryFixture):
+    """Source proof controls, outside the semantic parent mutation population."""
+
+    def guarded_parts(self, source, catalog):
+        message = "environment-tail source premise requires revalidation"
+        start = "        let mut env_deps = Vec::new();\n        for l in text.lines() {\n"
+        stop = "        for raw in dependency_files(&text, &d, &scratch, &canonical_scratch)? {"
+        self.assertEqual((source.count(start), source.count(stop)), (1, 1), message)
+        a = source.index(start)
+        self.assertTrue(source[:a].endswith(
+            '        let text = fs::read_to_string(&d).map_err(|e| format!("{}: {e}", d.display()))?;\n'
+            '        let mut files = BTreeSet::new();\n'), message)
+        loop = source[a:source.index(stop, a)]
+        tail = "                continue;\n"
+        self.assertIn(loop.count(tail), (0, 1), message)
+        clean = loop.replace(tail, "", 1)
+        self.assertEqual(hashlib.sha256(clean.encode()).hexdigest(),
+                         "c21a74dd0ccb9d0ac902e8ecf1e304e72ca53a6476689a2081aae55ce3d9579a", message)
+        ending = "            }\n        }\n"
+        self.assertTrue(clean.endswith(ending), message)
+        before = clean[:-len(ending)] + tail + ending
+        self.assertEqual(hashlib.sha256(before.encode()).hexdigest(),
+                         "80e6db30d3affc38de38e1a0d3a2f2ab1330cb3caba9f7612809b7735a1f159b", message)
+        normal_start = "fn normalise_dependency_environment("
+        self.assertEqual(source.count(normal_start), 1, message)
+        a = source.index(normal_start)
+        normalizer = source[a:source.index("\n}", a) + 2]
+        self.assertEqual(hashlib.sha256(normalizer.encode()).hexdigest(),
+                         "78d73126518285065bab8249c74e6b6ad0ad14374da048179306d01b4e3571f8", message)
+        allowed_start = "pub(crate) const ENV_ALLOWED:"
+        self.assertEqual(catalog.count(allowed_start), 1, message)
+        a = catalog.index(allowed_start)
+        allowed = catalog[a:catalog.index("];", a) + 2]
+        self.assertEqual(hashlib.sha256(allowed.encode()).hexdigest(),
+                         "f731822faf63efbb30631f7d28194973deb3e6aeed22b464e8f3bf1e37211500", message)
+        return before, before.replace(tail, "                // continue;\n", 1), clean, normalizer, allowed
+
+    def test_environment_tail_fallthrough_requires_the_complete_terminal_scope(self):
+        source = (ROOT / "xtask/src/trust.rs").read_text()
+        catalog = (ROOT / "xtask/src/catalog_build.rs").read_text()
+        before, comment, clean, normalizer, allowed = self.guarded_parts(source, catalog)
+        self.assertIn("rustc 1.95.0 (59807616e 2026-04-14)", self.bounded(["rustc", "--version"]))
+        # A future body suffix, different loop target/type, or changed collector premise
+        # must invalidate this local proof. Accept only its two proved production shapes.
+        actual_loop = before if before in source else clean
+        for proved_loop in [before, clean]:
+            self.assertEqual(self.guarded_parts(source.replace(actual_loop, proved_loop, 1), catalog),
+                             (before, comment, clean, normalizer, allowed))
+        suffix_loop = actual_loop.replace("            }\n        }\n",
+                                          "            }\n            observe();\n        }\n", 1)
+        altered = [
+            (source.replace(actual_loop, suffix_loop, 1), catalog),
+            (source.replace(actual_loop, before.replace("continue;", "continue 'outer;", 1), 1), catalog),
+            (source.replace("for l in text.lines()", "for l in other.lines()", 1), catalog),
+            (source.replace('l.strip_prefix("# env-dep:")', 'l.strip_prefix("# ENV-dep:")', 1), catalog),
+            (source.replace('dep.replace(&encode(scratch), "")', 'dep.replace(&encode(scratch), "x")', 1), catalog),
+            (source.replace("fs::read_to_string(&d)", "read_other_type(&d)", 1), catalog),
+            (source, catalog.replace('"CARGO_CRATE_NAME",', '"OUT_DIR",', 1)),
+        ]
+        for changed_source, changed_catalog in altered:
+            self.assertNotEqual((changed_source, changed_catalog), (source, catalog))
+            with self.assertRaisesRegex(AssertionError, "environment-tail source premise requires revalidation"):
+                self.guarded_parts(changed_source, changed_catalog)
+
+        unheld = ("trust-undeclared-input: `fixture` in `producer` depends on the environment variable "
+                  "`UNHELD`, which the commit does not hold")
+        empty = ("trust-undeclared-input: `fixture` in `producer` depends on the environment variable "
+                 "``, which the commit does not hold")
+        lookalike = ("trust-undeclared-input: `fixture` in `producer` depends on the environment variable "
+                     "`CARGO_PKGX_NAME`, which the commit does not hold")
+        # name, text, expected environment records, expected NEW refusals, prior refusals,
+        # scratch prefix, canonical prefix. Expectations do not come from either variant.
+        cases = [
+            ("empty", "", [], [], []),
+            ("non-records", "plain\n # env-dep:CARGO_PKG_NAME=x\n# Env-dep:CARGO_PKG_NAME=x\n", [], [], []),
+            ("accepted", "# env-dep:CARGO_PKG_NAME=alpha\n", ["CARGO_PKG_NAME=alpha"], [], []),
+            ("allowlist", "# env-dep:CARGO_CRATE_NAME=fixture\n", ["CARGO_CRATE_NAME=fixture"], [], []),
+            ("foreign", "# env-dep:UNHELD=x\n", ["UNHELD=x"], [unheld], []),
+            ("empty-record", "# env-dep:\n", [""], [empty], []),
+            ("lookalike", "# env-dep:CARGO_PKGX_NAME=x\n", ["CARGO_PKGX_NAME=x"], [lookalike], []),
+            ("positions", "# env-dep:CARGO_PKG_NAME=first\nplain\n# env-dep:UNHELD=x\n# env-dep:CARGO_PKG_NAME=last\n",
+             ["CARGO_PKG_NAME=first", "UNHELD=x", "CARGO_PKG_NAME=last"], [unheld], []),
+            ("duplicates", "# env-dep:CARGO_PKG_NAME=a\n# env-dep:UNHELD=x\n# env-dep:CARGO_PKG_NAME=a\n# env-dep:UNHELD=x",
+             ["CARGO_PKG_NAME=a", "UNHELD=x", "CARGO_PKG_NAME=a", "UNHELD=x"], [unheld, unheld], []),
+            ("prior", "# env-dep:UNHELD=x\n", ["UNHELD=x"], [unheld], ["prior refusal"]),
+            ("crlf", "# env-dep:CARGO_PKG_NAME=a\r\nplain\r\n# env-dep:CARGO_PKG_NAME=b\r\n",
+             ["CARGO_PKG_NAME=a", "CARGO_PKG_NAME=b"], [], []),
+            ("unicode", "# env-dep:CARGO_PKG_DESCRIPTION=étude💡\n", ["CARGO_PKG_DESCRIPTION=étude💡"], [], []),
+            ("equals", "# env-dep:CARGO_PKG_DESCRIPTION=a=b=c\n", ["CARGO_PKG_DESCRIPTION=a=b=c"], [], []),
+            ("unset", "# env-dep:CARGO_PKG_NAME\n", ["CARGO_PKG_NAME"], [], []),
+            ("scratch", "# env-dep:CARGO_MANIFEST_DIR=__SCRATCH__/crate\n", ["CARGO_MANIFEST_DIR=/crate"], [], []),
+            ("canonical", "# env-dep:CARGO_MANIFEST_PATH=__CANON__/Cargo.toml\n", ["CARGO_MANIFEST_PATH=/Cargo.toml"], [], []),
+        ]
+        literal = lambda value: json.dumps(value, ensure_ascii=False)
+        vector = lambda values: ("vec![" + ",".join(literal(value) + ".to_owned()" for value in values) + "]"
+                                 if values else "Vec::<String>::new()")
+        cases = [(*row, "__SCRATCH__", "__CANON__") for row in cases]
+        cases.append(("encoded", "# env-dep:CARGO_PKG_DESCRIPTION=work\\\\dir\\nline/x\n",
+                      ["CARGO_PKG_DESCRIPTION=/x"], [], [], "work\\dir\nline", "__CANON__"))
+
+        trace = textwrap.dedent("""
+            struct TraceText<'a> { input: &'a str, events: std::rc::Rc<std::cell::RefCell<Vec<&'static str>>> }
+            struct TraceLines<'a> { lines: std::str::Lines<'a>, events: std::rc::Rc<std::cell::RefCell<Vec<&'static str>>> }
+            struct TraceLine<'a> { text: &'a str, events: std::rc::Rc<std::cell::RefCell<Vec<&'static str>>> }
+            impl TraceText<'_> {
+                fn lines(&self) -> TraceLines<'_> {
+                    self.events.borrow_mut().push("lines");
+                    TraceLines { lines:self.input.lines(), events:self.events.clone() }
+                }
+            }
+            impl<'a> Iterator for TraceLines<'a> {
+                type Item=TraceLine<'a>;
+                fn next(&mut self) -> Option<Self::Item> {
+                    self.events.borrow_mut().push("next");
+                    self.lines.next().map(|text| TraceLine { text, events:self.events.clone() })
+                }
+            }
+            impl std::ops::Deref for TraceLine<'_> { type Target=str; fn deref(&self) -> &str { self.text } }
+            impl Drop for TraceLine<'_> { fn drop(&mut self) { self.events.borrow_mut().push("drop-line"); } }
+            impl Drop for TraceLines<'_> { fn drop(&mut self) { self.events.borrow_mut().push("drop-iterator"); } }
+        """)
+
+        def collector(name, body, *, drops=False, suffix=False):
+            header = ("#[inline(never)]\nfn " + name + "(input: &str, scratch: &str, canonical_scratch: &str, "
+                      "who: &str, crate_name: &str, refused: &mut Vec<String>)")
+            if drops:
+                header += (" -> (Vec<String>, Vec<&'static str>) {\n"
+                           "    let events=std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));\n"
+                           "    let text=TraceText { input, events:events.clone() };\n")
+                finish = "    let snapshot=events.borrow().clone();\n    (env_deps, snapshot)\n"
+            else:
+                header += " -> " + ("(Vec<String>, Vec<String>)" if suffix else "Vec<String>") + " {\n    let text=input;\n"
+                finish = "    (env_deps, suffix)\n" if suffix else "    env_deps\n"
+            if suffix:
+                ending = "            }\n        }\n"
+                self.assertEqual(body.count(ending), 1)
+                body = body.replace(ending, "            }\n            suffix.push(l.to_owned());\n        }\n", 1)
+                header += "    let mut suffix=Vec::new();\n"
+            return header + body + finish + "}\n"
+
+        program = allowed + "\n" + normalizer + trace
+        for name, body in [("before", before), ("comment", comment), ("clean", clean)]:
+            program += collector(name, body)
+        for name, body in [("drop_before", before), ("drop_clean", clean)]:
+            program += collector(name, body, drops=True)
+        for name, body in [("suffix_before", before), ("suffix_clean", clean)]:
+            program += collector(name, body, suffix=True)
+        checks = []
+        for label, text, env, refusal, prior, scratch, canonical in cases:
+            for name in ["before", "comment", "clean"]:
+                checks.append("{ let mut refused=" + vector(prior) + "; let env=" + name + "("
+                              + ",".join(map(literal, [text, scratch, canonical, "producer", "fixture"]))
+                              + ", &mut refused); assert_eq!(env," + vector(env) + ',"env:' + label + ':' + name
+                              + '"); assert_eq!(refused,' + vector(prior + refusal) + ',"refusal:' + label + ':' + name + '"); }')
+        events = '["lines","next","drop-line","next","drop-line","next","drop-line","next","drop-iterator"]'
+        for name in ["drop_before", "drop_clean"]:
+            checks.append('{ let mut refused=Vec::new(); let (env,events)=' + name + '("# env-dep:CARGO_PKG_NAME=a\\nplain\\n# env-dep:UNHELD=x\\n",'
+                          '"__SCRATCH__","__CANON__","producer","fixture",&mut refused); assert_eq!(env,' + vector(["CARGO_PKG_NAME=a", "UNHELD=x"])
+                          + '); assert_eq!(refused,' + vector([unheld]) + '); assert_eq!(events,' + events + '); }')
+        checks.append('let mut refused=Vec::new(); let left=suffix_before("# env-dep:CARGO_PKG_NAME=a\\nplain\\n","S","C","producer","fixture",&mut refused);'
+                      'let right=suffix_clean("# env-dep:CARGO_PKG_NAME=a\\nplain\\n","S","C","producer","fixture",&mut refused);'
+                      'assert_eq!(left.1,' + vector(["plain"]) + '); assert_eq!(right.1,' + vector(["# env-dep:CARGO_PKG_NAME=a", "plain"])
+                      + '); assert_ne!(left.1,right.1);')
+        checks.append('match std::env::args().nth(1).as_deref() { '
+                      'Some("wrong-env") => { let mut r=Vec::new(); assert_eq!(clean("# env-dep:CARGO_PKG_NAME=a","S","C","producer","fixture",&mut r),'
+                      + vector(["WRONG"]) + ',"wrong env literal"); }, '
+                      'Some("wrong-refusal") => { let mut r=Vec::new(); clean("# env-dep:UNHELD=x","S","C","producer","fixture",&mut r); assert!(r.is_empty(),"wrong refusal literal"); }, '
+                      'Some("wrong-suffix") => assert_eq!(left.1,right.1,"wrong suffix equality"), '
+                      'Some("wrong-drop") => { let mut r=Vec::new(); let (_,e)=drop_clean("plain","S","C","producer","fixture",&mut r); assert_eq!(e,["drop-iterator","next"],"wrong drop order"); }, _ => {} }')
+        program += 'fn main() {\n' + '\n'.join(checks) + '\nprintln!("environment-tail controls: 17 literals/3 forms, drops and distinguishing suffix held");\n}\n'
+        path = self.base / "environment-tail.rs"
+        path.write_text(program)
+        for optimization in ["0", "3"]:
+            binary = self.base / ("environment-tail-O" + optimization)
+            self.bounded(["rustc", "--edition=2021", "-C", "opt-level=" + optimization, str(path), "-o", str(binary)])
+            self.assertIn("17 literals/3 forms, drops and distinguishing suffix held", self.bounded([str(binary)]))
+            for argument, message in [("wrong-env", "wrong env literal"), ("wrong-refusal", "wrong refusal literal"),
+                                      ("wrong-suffix", "wrong suffix equality"), ("wrong-drop", "wrong drop order")]:
+                with self.assertRaisesRegex(AssertionError, message):
+                    self.bounded([str(binary), argument])
+
+
+~~~
+
+</details>
+
+<details>
+<summary>Exact volume.sb</summary>
+
+~~~scheme
+(version 1)
+(allow default)
+(deny file-write*)
+(allow file-write* (subpath (param "WRITABLE_ROOT")))
+(allow file-write-data (literal "/dev/null"))
+~~~
+
+</details>
+
+<details>
+<summary>Exact run-suite.py</summary>
+
+~~~python
+from pathlib import Path
+import hashlib,json,os,subprocess,time
+
+root=Path.cwd();out=Path('target/environment-tail-controls')
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+names=['xtask/mutation_sweep_tests.py','xtask/src/trust.rs','xtask/src/catalog_build.rs','xtask/trust.equivalents','scripts/mutation_sweep.sh']
+before={name:sha(Path(name).read_bytes()) for name in names}
+profile=out/'volume.sb';profile.write_bytes(Path('target/environment-tail-proof/volume.sb').read_bytes())
+command=['python3','-I','-B','xtask/mutation_sweep_tests.py',str(root)]
+started=time.monotonic()
+result=subprocess.run(['/usr/bin/sandbox-exec','-D','WRITABLE_ROOT='+str(root),'-f',str(profile),*command],stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=dict(os.environ),timeout=900)
+(out/'suite.stdout').write_bytes(result.stdout);(out/'suite.stderr').write_bytes(result.stderr)
+after={name:sha(Path(name).read_bytes()) for name in names}
+receipt=dict(status='passed' if result.returncode==0 else 'failed',command=['python3','-I','-B','xtask/mutation_sweep_tests.py','<runtime-repository-root>'],exit=result.returncode,stdout=result.stdout.decode(),stderr=result.stderr.decode(),seconds=time.monotonic()-started,before=before,after=after,profile_sha256=sha(profile.read_bytes()))
+(out/'suite-results.json').write_text(json.dumps(receipt,indent=2)+'\n')
+assert result.returncode==0 and before==after,receipt
+assert 'Ran 50 tests' in receipt['stderr'] and receipt['stderr'].rstrip().endswith('OK'),receipt
+print('Full operator suite:50 tests pass; inputs restored; seconds',round(receipt['seconds'],3))
+~~~
+
+</details>
+
+<details>
+<summary>Exact audit-controls.py</summary>
+
+~~~python
+from pathlib import Path
+import ast,hashlib,json,subprocess
+
+out=Path('target/environment-tail-controls');base='5f193e932b4141ce0655fef6c3be8eaa85dd58bf'
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+receipt=json.loads((out/'suite-results.json').read_text());assert receipt['status']=='passed' and receipt['exit']==0
+assert receipt['before']==receipt['after']
+for name,digest in receipt['after'].items():assert sha(Path(name).read_bytes())==digest,name
+source=Path('xtask/mutation_sweep_tests.py').read_text();original=subprocess.check_output(['git','show',base+':xtask/mutation_sweep_tests.py']).decode()
+a=source.index('class EnvironmentTailTests(');z=source.index('class IteratorTests(',a);added=source[a:z]
+assert source[:a]+source[z:]==original
+node=next(n for n in ast.parse(source).body if isinstance(n,ast.ClassDef) and n.name=='EnvironmentTailTests')
+assert [n.name for n in node.body if isinstance(n,ast.FunctionDef)]==['guarded_parts','test_environment_tail_fallthrough_requires_the_complete_terminal_scope']
+for name in ['xtask/src/trust.rs','xtask/src/catalog_build.rs','xtask/src/trust_generated.rs','xtask/src/trust_gate.rs','xtask/trust.equivalents','scripts/mutation_sweep.sh']:
+ assert Path(name).read_bytes()==subprocess.check_output(['git','show',base+':'+name]),name
+assert 'Ran 50 tests' in receipt['stderr'] and receipt['stderr'].rstrip().endswith('OK')
+assert receipt['stdout'].encode()==(out/'suite.stdout').read_bytes() and receipt['stderr'].encode()==(out/'suite.stderr').read_bytes()
+false=[]
+for name,data in [('missing-new-class',source[:a]+source[z:]),('changed-older-test',source.replace('class IteratorTests(', 'class AlteredIteratorTests(',1))]:
+ try:
+  p=data.index('class EnvironmentTailTests(');q=data.index('class IteratorTests(',p)
+  assert data[:p]+data[q:]==original
+ except (ValueError,AssertionError):false.append(name)
+ else:raise AssertionError(name+' accepted')
+(out/'added-class.py.txt').write_text(added)
+result=dict(status='passed',scope='Maintained proof control outside semantic parents; production and reasons unchanged; cleanup/final native replay still separately owned.',base_commit=base,operator_tests=50,older_operator_test_bytes_exact=True,source_sha256=sha(source.encode()),added_class_sha256=sha(added.encode()),proved_production_shapes=['original-terminal-continue','cleaned-fallthrough'],source_premise_refusals=7,literal_cases=17,forms=3,optimizations=['0','3'],wrong_oracles=8,production_and_semantic_parent_sources_exact=True,all23_reasons_exact=True,source_preservation_falsifiers=false,fixture_defect=dict(status='fixed-and-verified',owner='M3.6.9.6.3.2.2.15.2.1.5.1.1',reproduction='Use canonical prefix C in the supplemental drop fixture while expecting CARGO_PKG_NAME unchanged.',observed='Literal control fails: actual ARGO_PKG_NAME=a versus expected CARGO_PKG_NAME=a; the production normalizer correctly strips C.',repair='Use non-overlapping __SCRATCH__/__CANON__ fixture prefixes; full50 operator suite verifies corrected source.',impact='Test fixture expectation only; no production change or semantic witness claim.'))
+(out/'controls-audit.json').write_text(json.dumps(result,indent=2)+'\n')
+print('Controls audit:50 pass; old49 bytes retained;7 premise refusals/8 compiled wrong oracles; production/parents/reasons unchanged; sha256',sha((out/'controls-audit.json').read_bytes()))
+~~~
+
+</details>
+
+<details>
+<summary>Exact progress.py</summary>
+
+~~~python
+from pathlib import Path
+import difflib,hashlib,json,re,subprocess
+
+out=Path('target/environment-tail-controls');B=chr(96);base='5f193e932b4141ce0655fef6c3be8eaa85dd58bf'
+identity='M3.6.9.6.3.2.2.15.2.1.5.1.1'
+assert json.loads((out/'controls-audit.json').read_text())['status']=='passed'
+subject='ARCHOGEN-M3-0819 (leaf '+identity+'): retain permanent environment-tail proof controls'
+leaf='''- ID: {b}{identity}{b}
+  Status: {b}done{b} — permanent source/compiled tail controls
+  [Complete controls](../book/src/annex-trust-proofs.md#permanent-environment-tail-controls).
+  Acceptance:
+  - [x] ROOT CAUSE: {b}python3 -I -B target/environment-tail-controls/audit-controls.py{b},
+    exit code 0: exact old49 test bytes, both proved source shapes and7 changed premises.
+  - [x] ADDRESSED: {b}python3 -I -B target/environment-tail-controls/run-suite.py{b},
+    exit code 0: all50 operator tests; O0/O3 actual literal/drop/suffix controls,
+    all8 wrong oracles fail. Overlapping-prefix fixture error fixed; production unchanged.
+  - [x] NO REGRESSION: {b}python3 -I -B target/environment-tail-controls/final-audit.py{b},
+    exit code 0: exact inputs/old archives/new seal and reconstructible task states;
+    semantic parent sources/all23 reasons exact. Book/gates required before commit.
+  Verification: maintained EnvironmentTailTests; full book evidence/adapters; .1.2 next.
+  Commit: {b}ARCHOGEN-M3-0819{b}
+
+'''.format(b=B,identity=identity)
+path=Path('docs/tasks/M3.md');text=path.read_text();(out/'task-before-completion.md').write_text(text)
+a=text.index('- ID: '+B+identity+B);z=text.index('\n- ID: ',a+1)+1
+(out/'planned-leaf.md').write_text(text[a:z]);text=text[:a]+leaf+text[z:];(out/'completed-leaf.md').write_text(leaf)
+old='next '+B+'.9.6.3.2.2.15.2.1.5.1.1'+B+' permanent environment-tail proof controls';new='next '+B+'.9.6.3.2.2.15.2.1.5.1.2'+B+' proved environment-tail cleanup and guard revalidation'
+assert text.count(old)==1;text=text.replace(old,new,1)
+def append_table(data,heading,row):
+ a=data.index(heading)+len(heading);m=re.search(r'(?m)^## ',data[a:]);z=a+m.start() if m else len(data)
+ rows=list(re.finditer(r'(?m)^\|.*\|\n',data[a:z]));end=a+rows[-1].end();return data[:end]+row+data[end:]
+text=append_table(text,'## Verification Log\n','| '+B+'2026-10-20'+B+' | '+B+identity+B+' | Full50 operator,7 changed premises, O0/O3 literal/drop/suffix and8 rejecting oracles; exact source/history audit | Pass; old49/production/parents/23 reasons preserved; book/gates required |\n')
+text=append_table(text,'## Commit Log\n','| '+B+identity+B+' | '+B+subject+B+' | [Permanent proof controls](../book/src/annex-trust-proofs.md#permanent-environment-tail-controls); source cleanup/guard revalidation next, then complete native checkpoint |\n')
+(out/'task-after-completion.md').write_text(text)
+updates={str(path):text}
+for name in ['LIVE_STATUS.md','docs/TASK_TREE.md']:
+ data=Path(name).read_text();old=B+'.9.6.3.2.2.15.2.1.5.1.1'+B+' permanent environment-tail proof controls';new=B+'.9.6.3.2.2.15.2.1.5.1.2'+B+' proved environment-tail cleanup and guard revalidation'
+ assert data.count(old)==1;updates[name]=data.replace(old,new,1)
+data=Path('MEMORY.md').read_text();old='add permanent environment-tail proof controls in\n  '+B+identity+B+'; then separately commit the proved no-op cleanup and full current-reason checkpoint.'
+new='remove the proved redundant environment tail in\n  '+B+'M3.6.9.6.3.2.2.15.2.1.5.1.2'+B+' and revalidate source guards; then commit the full current-reason checkpoint.'
+assert data.count(old)==1;updates['MEMORY.md']=data.replace(old,new,1)
+data=Path('CHANGELOG.md').read_text();a=data.index('## archogen — ')
+entry='''## archogen — retain permanent environment-tail proof controls
+
+{b}ARCHOGEN-M3-0819{b} (leaf {b}{identity}{b}), {b}2026-10-20{b}.
+
+- Add maintained EnvironmentTailTests outside the semantic population: exact original/
+  clean source shapes, normalizer/allowlist/type boundary and7 rejecting changed premises.
+- Compile17 independent literal cases in3 forms, destructor traces and a distinguishing
+  suffix at O0/O3; all8 wrong oracles fail. Full50 operator tests pass; old49 bytes exact.
+- Fix the initial drop-fixture overlap: canonical C correctly strips CARGO's C;
+  use non-overlapping fixture prefixes. Production,201-parent sources and23 reasons unchanged.
+- Preserve329 prior archives/new exact proof seal and publish complete maintained
+  controls, results and reconstruction adapters in the unbounded book. Cleanup remains next.
+
+
+'''.format(b=B,identity=identity)
+updates['CHANGELOG.md']=data[:a]+entry+data[a:]
+original=subprocess.check_output(['git','show',base+':docs/tasks/M3.md']);lines=original.decode().splitlines(keepends=True)
+snapshots={}
+for name in ['task-active-before-seal.md','task-before-completion.md','task-after-completion.md']:
+ raw=(out/name).read_bytes();updated=raw.decode().splitlines(keepends=True);changes=[]
+ for op,a,z,x,y in difflib.SequenceMatcher(None,lines,updated,autojunk=False).get_opcodes():
+  if op!='equal':changes.append(dict(start_line=a,end_line=z,before_sha256=hashlib.sha256(''.join(lines[a:z]).encode()).hexdigest(),replacement=''.join(updated[x:y])))
+ snapshots[name]=dict(sha256=hashlib.sha256(raw).hexdigest(),bytes=len(raw),changes=changes)
+(out/'task-reconstruction.json').write_text(json.dumps(dict(base_commit=base,base_file='docs/tasks/M3.md',base_sha256=hashlib.sha256(original).hexdigest(),snapshots=snapshots),indent=2)+'\n')
+(out/'completion-updates.json').write_text(json.dumps(updates,indent=2)+'\n')
+total=sum(p.stat().st_size for p in Path('docs/tasks').rglob('*') if p.is_file())+len(text.encode())-path.stat().st_size
+assert total<=819200,total
+(out/'commit-message.txt').write_text(subject+'\n\n- Add permanent exact-source and compiled literal/drop/suffix controls\n  outside the semantic mutation population, with rejecting false arms.\n- Verify both proved loop shapes, retain every older operator test and\n  pass the complete 50-test suite without changing production or reasons.\n- Fix the overlapping-prefix proof fixture and publish complete results\n  and reconstructible task/history evidence before source cleanup.\n')
+print('Prepared permanent-control completion; private task bytes',total,'no maintained docs changed')
+~~~
+
+</details>
+
+<details>
+<summary>Exact publish.py</summary>
+
+~~~python
+from pathlib import Path
+import json,subprocess,sys
+
+out=Path('target/environment-tail-controls');base='5f193e932b4141ce0655fef6c3be8eaa85dd58bf';B=chr(96);fence=B*3
+def read(name):return json.loads((out/name).read_text())
+assert read('controls-audit.json')['status']=='passed'
+path=Path('docs/book/src/annex-trust-proofs.md');before=subprocess.check_output(['git','show',base+':'+str(path)]).decode()
+if '--refresh' in sys.argv:assert path.read_text()==before+(out/'book-fragment.md').read_text()
+else:assert path.read_text()==before
+(out/'book-before.md').write_text(before)
+parts=['\n### Permanent environment-tail controls\n\n']
+parts.append('The [complete local source proof](#environment-loop-tail-control-proof) now has a maintained '
+ 'control in '+B+'EnvironmentTailTests.test_environment_tail_fallthrough_requires_the_complete_terminal_scope'+B
+ +' in '+B+'xtask/mutation_sweep_tests.py'+B+'. It runs outside the 201-test semantic parent population. '
+ 'Production source and all23 reason records remain byte-identical. The separately owned no-op cleanup '
+ 'and full current native checkpoint follow this commit.\n\n')
+parts.append('The guard accepts only the exact original-terminal and cleaned-fallthrough loop shapes, '
+ 'reconstructing the historical preimage after cleanup. It binds the complete terminal scope, '
+ 'borrowed-string origin, actual normalizer and actual catalog allowlist. Seven changed premises '
+ 'are deliberately refused: a reachable suffix, labeled target, iterator change, record prefix, '
+ 'normalizer change, different text source type and changed allowlist. A future change requires '
+ 'the source argument to be revalidated; it cannot silently inherit a broader equivalence.\n\n')
+parts.append('Actual Rust1.95.0 at optimization0 and3 compiles all three original/comment/clean forms. '
+ 'Each runs17 independent literal environment/refusal cases, including record positions, duplicates, '
+ 'prior refusal state, Unicode/CRLF and encoded scratch paths. Supplemental real destructors '
+ 'hold exact iteration/drop order, and an added suffix distinguishes the forms. All four deliberately '
+ 'wrong output/refusal/drop/suffix oracles fail at both optimization levels. These observations '
+ 'support the source proof; finite agreement alone is not the proof.\n\n')
+parts.append('The full operator suite passes50 tests in the captured actual execution. Removing only '
+ 'the new class reconstructs the previous file byte for byte: all49 older operator controls are '
+ 'retained. The suite’s source identities restore exactly. No Rust semantic parent was added '
+ 'and no mutation outcome is classified by this leaf.\n\n')
+parts.append('The initial supplemental drop fixture used canonical prefix '+B+'C'+B+' while expecting '
+ +B+'CARGO_PKG_NAME=a'+B+' unchanged. The real normalizer correctly produced '+B+'ARGO_PKG_NAME=a'+B
+ +', so its literal assertion failed. This test-fixture defect is fixed with the non-overlapping '
+ +B+'__SCRATCH__'+B+'/'+B+'__CANON__'+B+' prefixes used in the independent cases. It is owned and '
+ 'closed by this leaf, with the full50-test run on the corrected maintained source. Production '
+ 'normalization was correct and unchanged.\n\n')
+parts.append('Run the maintained control or full operator suite from the repository root with its '
+ 'local stores prepared:\n\n'+fence+'bash\n'
+ 'python3 -I -B xtask/mutation_sweep_tests.py "$PWD" \\\n'
+ '  EnvironmentTailTests.test_environment_tail_fallthrough_requires_the_complete_terminal_scope\n'
+ 'python3 -I -B xtask/mutation_sweep_tests.py "$PWD"\n'+fence+'\n\n')
+parts.append('All329 earlier task archives remain at their retained commit’s exact blob identities. '
+ 'The committed proof leaf is sealed as the330th archive, reconstructing its old task span '
+ 'exactly. Three task states reconstruct from the retained input commit and small line deltas; '
+ 'three wrong snapshot identities and a truncated seal are refused. The book retains every '
+ 'previous byte and the complete evidence/adapter source below.\n\n')
+for name in ['planned-leaf.md','completed-leaf.md']:parts.append(fence+'markdown\n'+(out/name).read_text()+fence+'\n\n')
+payloads=[]
+def payload(title,data):
+ encoded=json.dumps(data,indent=2).replace(B,'\\u0060');assert json.loads(encoded)==data
+ parts.append('<details>\n<summary>'+title+'</summary>\n\n'+fence+'json\n'+encoded+'\n'+fence+'\n\n</details>\n\n');payloads.append(dict(title=title,data=data))
+for title,name in [('Complete permanent-control source audit','controls-audit.json'),('Complete50 operator suite command and outputs','suite-results.json'),('Exact permanent-control task-state reconstruction','task-reconstruction.json')]:payload(title,read(name))
+parts.append('The retained input commit is '+B+base+B+'. Its task-history tree supplies all earlier '
+ 'archive blob identities, so no ignored snapshot is the only copy of a prior archive. The '
+ 'maintained class is reproduced verbatim below. The run adapter permits writes only within '
+ 'the current repository; its fixtures use fake Git or plain workspaces, and create no other '
+ 'Git repository. The Rust toolchain is a necessary read-only host input.\n\n')
+for name,lang in [('added-class.py.txt','python'),('volume.sb','scheme'),('run-suite.py','python'),('audit-controls.py','python'),('progress.py','python'),('publish.py','python'),('final-audit.py','python')]:
+ parts.append('<details>\n<summary>Exact '+name+'</summary>\n\n~~~'+lang+'\n'+(out/name).read_text()+'~~~\n\n</details>\n\n')
+fragment=''.join(parts).rstrip('\n')+'\n';(out/'book-fragment.md').write_text(fragment);(out/'published-payloads.json').write_text(json.dumps(payloads,indent=2)+'\n')
+for name,text in read('completion-updates.json').items():Path(name).write_text(text)
+path.write_text(before+fragment);Path('git_message_brief.txt').write_text((out/'commit-message.txt').read_text())
+print('Published permanent controls:',len(fragment.encode()),'new book bytes;3 exact JSON payloads')
+~~~
+
+</details>
+
+<details>
+<summary>Exact final-audit.py</summary>
+
+~~~python
+from pathlib import Path
+import copy,hashlib,json,re,subprocess
+
+out=Path('target/environment-tail-controls');base='5f193e932b4141ce0655fef6c3be8eaa85dd58bf';B=chr(96);fence=B*3
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+def read(name):return json.loads((out/name).read_text())
+def prior(name):return subprocess.check_output(['git','show',base+':'+name])
+core=read('controls-audit.json');assert core['status']=='passed' and core['operator_tests']==50
+assert sha(Path('xtask/mutation_sweep_tests.py').read_bytes())==core['source_sha256']
+source=Path('xtask/mutation_sweep_tests.py').read_text();added=(out/'added-class.py.txt').read_text()
+assert source.count(added)==1 and source.replace(added,'',1).encode()==prior('xtask/mutation_sweep_tests.py')
+for name in ['xtask/src/trust.rs','xtask/src/catalog_build.rs','xtask/src/trust_generated.rs','xtask/src/trust_gate.rs','xtask/trust.equivalents','scripts/mutation_sweep.sh']:assert Path(name).read_bytes()==prior(name)
+archive_rows={}
+for row in subprocess.check_output(['git','ls-tree','-r','-z',base,'docs/task-history']).split(b'\0'):
+ if not row:continue
+ header,name=row.split(b'\t',1);name=name.decode()
+ if len(Path(name).parts)!=4 or not name.endswith('.md'):continue
+ mode,kind,oid=header.split();assert mode==b'100644' and kind==b'blob';archive_rows[name]=oid.decode()
+assert len(archive_rows)==329
+for name,oid in archive_rows.items():
+ raw=Path(name).read_bytes();assert hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==oid,name
+identity='M3.6.9.6.3.2.2.15.2.1.5.1.0';archive=Path('docs/task-history/M3/'+identity+'.md');old=prior('docs/tasks/M3.md')
+a=old.index(('- ID: '+B+identity+B).encode());m=re.search(rb'(?m)^- ID: |^## ',old[a+1:]);z=a+1+m.start();expected=old[a:z]
+assert archive.read_bytes()+b'\n'==expected
+assert sha(archive.read_bytes())==subprocess.check_output(['shasum','-a','256',str(archive)],text=True).split()[0]
+actual={str(p) for p in Path('docs/task-history').glob('*/*.md')};assert actual==set(archive_rows)|{str(archive)} and len(actual)==330
+index=Path('docs/task-history/INDEX.md').read_text();row=next(line for line in index.splitlines(keepends=True) if line.startswith('| '+B+identity+B+' |'))
+assert index.replace(row,'',1).encode()==prior('docs/task-history/INDEX.md')
+data=read('task-reconstruction.json');assert data['base_commit']==base and data['base_sha256']==sha(old)
+lines=old.decode().splitlines(keepends=True)
+def reconstruct(snapshot):
+ at=0;chunks=[]
+ for change in snapshot['changes']:
+  a,z=change['start_line'],change['end_line'];assert type(a) is int and type(z) is int and at<=a<=z<=len(lines)
+  assert sha(''.join(lines[a:z]).encode())==change['before_sha256'];chunks.extend(lines[at:a]);chunks.append(change['replacement']);at=z
+ chunks.extend(lines[at:]);raw=''.join(chunks).encode();assert len(raw)==snapshot['bytes'] and sha(raw)==snapshot['sha256'];return raw
+false=[]
+for name,snapshot in data['snapshots'].items():
+ assert reconstruct(snapshot)==(out/name).read_bytes()
+ bad=copy.deepcopy(snapshot);bad['sha256']='0'*64
+ try:reconstruct(bad)
+ except AssertionError:false.append(name+':false-digest')
+ else:raise AssertionError('bad snapshot accepted')
+assert archive.read_bytes()[:-1]+b'\n'!=expected;false.append('truncated-seal')
+book=Path('docs/book/src/annex-trust-proofs.md').read_text();before=(out/'book-before.md').read_text();fragment=(out/'book-fragment.md').read_text()
+assert before.encode()==prior('docs/book/src/annex-trust-proofs.md') and book==before+fragment
+def payload(title):
+ marker='<summary>'+title+'</summary>';assert fragment.count(marker)==1
+ a=fragment.index(marker)+len(marker);m=re.match(r'\s*'+re.escape(fence)+r'json\n',fragment[a:]);assert m
+ a+=m.end();z=fragment.index('\n'+fence,a);return json.loads(fragment[a:z])
+for row in read('published-payloads.json'):assert payload(row['title'])==row['data']
+for name in ['added-class.py.txt','run-suite.py','audit-controls.py','progress.py','publish.py','final-audit.py','volume.sb','planned-leaf.md','completed-leaf.md']:assert (out/name).read_text() in fragment,name
+for name,text in read('completion-updates.json').items():assert Path(name).read_text()==text,name
+assert Path('docs/tasks/M3.md').read_bytes()==reconstruct(data['snapshots']['task-after-completion.md'])
+total=sum(p.stat().st_size for p in Path('docs/tasks').rglob('*') if p.is_file());assert total<=819200,total
+allowed=set(read('completion-updates.json'))|{'xtask/mutation_sweep_tests.py','docs/book/src/annex-trust-proofs.md','docs/book/src/book-index.md','docs/task-history/INDEX.md'}
+assert set(subprocess.check_output(['git','diff','--name-only',base],text=True).splitlines())<=allowed
+result=dict(status='passed',scope='Permanent source/compiler controls only; cleanup/current native replay remain separately owned.',base_commit=base,all50_operator_tests_pass=True,old49_test_bytes_exact=True,production_parents_and23_reasons_exact=True,previous_archives=329,current_archives=330,new_proof_seal_exact=True,previous_book_bytes_exact=True,exact_task_states=3,published_json_payloads=3,task_history_falsifiers=false,private_task_bytes=total,controls_audit_sha256=sha((out/'controls-audit.json').read_bytes()))
+(out/'final-audit.json').write_text(json.dumps(result,indent=2)+'\n')
+print('Final permanent-control audit: pass;50 operator,329 prior/new330th archive,3 task states/4 rejecting history controls; sha256',sha((out/'final-audit.json').read_bytes()))
+~~~
+
+</details>

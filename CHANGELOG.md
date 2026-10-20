@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — retain permanent environment-tail proof controls
+
+`ARCHOGEN-M3-0819` (leaf `M3.6.9.6.3.2.2.15.2.1.5.1.1`), `2026-10-20`.
+
+- Add maintained EnvironmentTailTests outside the semantic population: exact original/
+  clean source shapes, normalizer/allowlist/type boundary and7 rejecting changed premises.
+- Compile17 independent literal cases in3 forms, destructor traces and a distinguishing
+  suffix at O0/O3; all8 wrong oracles fail. Full50 operator tests pass; old49 bytes exact.
+- Fix the initial drop-fixture overlap: canonical C correctly strips CARGO's C;
+  use non-overlapping fixture prefixes. Production,201-parent sources and23 reasons unchanged.
+- Preserve329 prior archives/new exact proof seal and publish complete maintained
+  controls, results and reconstruction adapters in the unbounded book. Cleanup remains next.
+
+
 ## archogen — prove the environment-loop tail cleanup
 
 `ARCHOGEN-M3-0818` (leaf `M3.6.9.6.3.2.2.15.2.1.5.1.0`), `2026-10-20`.

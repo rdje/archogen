@@ -1764,6 +1764,188 @@ fn main() {
                       "the actual basename comparison proof requires its own per-file reason")
 
 
+class EnvironmentTailTests(DiscoveryFixture):
+    """Source proof controls, outside the semantic parent mutation population."""
+
+    def guarded_parts(self, source, catalog):
+        message = "environment-tail source premise requires revalidation"
+        start = "        let mut env_deps = Vec::new();\n        for l in text.lines() {\n"
+        stop = "        for raw in dependency_files(&text, &d, &scratch, &canonical_scratch)? {"
+        self.assertEqual((source.count(start), source.count(stop)), (1, 1), message)
+        a = source.index(start)
+        self.assertTrue(source[:a].endswith(
+            '        let text = fs::read_to_string(&d).map_err(|e| format!("{}: {e}", d.display()))?;\n'
+            '        let mut files = BTreeSet::new();\n'), message)
+        loop = source[a:source.index(stop, a)]
+        tail = "                continue;\n"
+        self.assertIn(loop.count(tail), (0, 1), message)
+        clean = loop.replace(tail, "", 1)
+        self.assertEqual(hashlib.sha256(clean.encode()).hexdigest(),
+                         "c21a74dd0ccb9d0ac902e8ecf1e304e72ca53a6476689a2081aae55ce3d9579a", message)
+        ending = "            }\n        }\n"
+        self.assertTrue(clean.endswith(ending), message)
+        before = clean[:-len(ending)] + tail + ending
+        self.assertEqual(hashlib.sha256(before.encode()).hexdigest(),
+                         "80e6db30d3affc38de38e1a0d3a2f2ab1330cb3caba9f7612809b7735a1f159b", message)
+        normal_start = "fn normalise_dependency_environment("
+        self.assertEqual(source.count(normal_start), 1, message)
+        a = source.index(normal_start)
+        normalizer = source[a:source.index("\n}", a) + 2]
+        self.assertEqual(hashlib.sha256(normalizer.encode()).hexdigest(),
+                         "78d73126518285065bab8249c74e6b6ad0ad14374da048179306d01b4e3571f8", message)
+        allowed_start = "pub(crate) const ENV_ALLOWED:"
+        self.assertEqual(catalog.count(allowed_start), 1, message)
+        a = catalog.index(allowed_start)
+        allowed = catalog[a:catalog.index("];", a) + 2]
+        self.assertEqual(hashlib.sha256(allowed.encode()).hexdigest(),
+                         "f731822faf63efbb30631f7d28194973deb3e6aeed22b464e8f3bf1e37211500", message)
+        return before, before.replace(tail, "                // continue;\n", 1), clean, normalizer, allowed
+
+    def test_environment_tail_fallthrough_requires_the_complete_terminal_scope(self):
+        source = (ROOT / "xtask/src/trust.rs").read_text()
+        catalog = (ROOT / "xtask/src/catalog_build.rs").read_text()
+        before, comment, clean, normalizer, allowed = self.guarded_parts(source, catalog)
+        self.assertIn("rustc 1.95.0 (59807616e 2026-04-14)", self.bounded(["rustc", "--version"]))
+        # A future body suffix, different loop target/type, or changed collector premise
+        # must invalidate this local proof. Accept only its two proved production shapes.
+        actual_loop = before if before in source else clean
+        for proved_loop in [before, clean]:
+            self.assertEqual(self.guarded_parts(source.replace(actual_loop, proved_loop, 1), catalog),
+                             (before, comment, clean, normalizer, allowed))
+        suffix_loop = actual_loop.replace("            }\n        }\n",
+                                          "            }\n            observe();\n        }\n", 1)
+        altered = [
+            (source.replace(actual_loop, suffix_loop, 1), catalog),
+            (source.replace(actual_loop, before.replace("continue;", "continue 'outer;", 1), 1), catalog),
+            (source.replace("for l in text.lines()", "for l in other.lines()", 1), catalog),
+            (source.replace('l.strip_prefix("# env-dep:")', 'l.strip_prefix("# ENV-dep:")', 1), catalog),
+            (source.replace('dep.replace(&encode(scratch), "")', 'dep.replace(&encode(scratch), "x")', 1), catalog),
+            (source.replace("fs::read_to_string(&d)", "read_other_type(&d)", 1), catalog),
+            (source, catalog.replace('"CARGO_CRATE_NAME",', '"OUT_DIR",', 1)),
+        ]
+        for changed_source, changed_catalog in altered:
+            self.assertNotEqual((changed_source, changed_catalog), (source, catalog))
+            with self.assertRaisesRegex(AssertionError, "environment-tail source premise requires revalidation"):
+                self.guarded_parts(changed_source, changed_catalog)
+
+        unheld = ("trust-undeclared-input: `fixture` in `producer` depends on the environment variable "
+                  "`UNHELD`, which the commit does not hold")
+        empty = ("trust-undeclared-input: `fixture` in `producer` depends on the environment variable "
+                 "``, which the commit does not hold")
+        lookalike = ("trust-undeclared-input: `fixture` in `producer` depends on the environment variable "
+                     "`CARGO_PKGX_NAME`, which the commit does not hold")
+        # name, text, expected environment records, expected NEW refusals, prior refusals,
+        # scratch prefix, canonical prefix. Expectations do not come from either variant.
+        cases = [
+            ("empty", "", [], [], []),
+            ("non-records", "plain\n # env-dep:CARGO_PKG_NAME=x\n# Env-dep:CARGO_PKG_NAME=x\n", [], [], []),
+            ("accepted", "# env-dep:CARGO_PKG_NAME=alpha\n", ["CARGO_PKG_NAME=alpha"], [], []),
+            ("allowlist", "# env-dep:CARGO_CRATE_NAME=fixture\n", ["CARGO_CRATE_NAME=fixture"], [], []),
+            ("foreign", "# env-dep:UNHELD=x\n", ["UNHELD=x"], [unheld], []),
+            ("empty-record", "# env-dep:\n", [""], [empty], []),
+            ("lookalike", "# env-dep:CARGO_PKGX_NAME=x\n", ["CARGO_PKGX_NAME=x"], [lookalike], []),
+            ("positions", "# env-dep:CARGO_PKG_NAME=first\nplain\n# env-dep:UNHELD=x\n# env-dep:CARGO_PKG_NAME=last\n",
+             ["CARGO_PKG_NAME=first", "UNHELD=x", "CARGO_PKG_NAME=last"], [unheld], []),
+            ("duplicates", "# env-dep:CARGO_PKG_NAME=a\n# env-dep:UNHELD=x\n# env-dep:CARGO_PKG_NAME=a\n# env-dep:UNHELD=x",
+             ["CARGO_PKG_NAME=a", "UNHELD=x", "CARGO_PKG_NAME=a", "UNHELD=x"], [unheld, unheld], []),
+            ("prior", "# env-dep:UNHELD=x\n", ["UNHELD=x"], [unheld], ["prior refusal"]),
+            ("crlf", "# env-dep:CARGO_PKG_NAME=a\r\nplain\r\n# env-dep:CARGO_PKG_NAME=b\r\n",
+             ["CARGO_PKG_NAME=a", "CARGO_PKG_NAME=b"], [], []),
+            ("unicode", "# env-dep:CARGO_PKG_DESCRIPTION=étude💡\n", ["CARGO_PKG_DESCRIPTION=étude💡"], [], []),
+            ("equals", "# env-dep:CARGO_PKG_DESCRIPTION=a=b=c\n", ["CARGO_PKG_DESCRIPTION=a=b=c"], [], []),
+            ("unset", "# env-dep:CARGO_PKG_NAME\n", ["CARGO_PKG_NAME"], [], []),
+            ("scratch", "# env-dep:CARGO_MANIFEST_DIR=__SCRATCH__/crate\n", ["CARGO_MANIFEST_DIR=/crate"], [], []),
+            ("canonical", "# env-dep:CARGO_MANIFEST_PATH=__CANON__/Cargo.toml\n", ["CARGO_MANIFEST_PATH=/Cargo.toml"], [], []),
+        ]
+        literal = lambda value: json.dumps(value, ensure_ascii=False)
+        vector = lambda values: ("vec![" + ",".join(literal(value) + ".to_owned()" for value in values) + "]"
+                                 if values else "Vec::<String>::new()")
+        cases = [(*row, "__SCRATCH__", "__CANON__") for row in cases]
+        cases.append(("encoded", "# env-dep:CARGO_PKG_DESCRIPTION=work\\\\dir\\nline/x\n",
+                      ["CARGO_PKG_DESCRIPTION=/x"], [], [], "work\\dir\nline", "__CANON__"))
+
+        trace = textwrap.dedent("""
+            struct TraceText<'a> { input: &'a str, events: std::rc::Rc<std::cell::RefCell<Vec<&'static str>>> }
+            struct TraceLines<'a> { lines: std::str::Lines<'a>, events: std::rc::Rc<std::cell::RefCell<Vec<&'static str>>> }
+            struct TraceLine<'a> { text: &'a str, events: std::rc::Rc<std::cell::RefCell<Vec<&'static str>>> }
+            impl TraceText<'_> {
+                fn lines(&self) -> TraceLines<'_> {
+                    self.events.borrow_mut().push("lines");
+                    TraceLines { lines:self.input.lines(), events:self.events.clone() }
+                }
+            }
+            impl<'a> Iterator for TraceLines<'a> {
+                type Item=TraceLine<'a>;
+                fn next(&mut self) -> Option<Self::Item> {
+                    self.events.borrow_mut().push("next");
+                    self.lines.next().map(|text| TraceLine { text, events:self.events.clone() })
+                }
+            }
+            impl std::ops::Deref for TraceLine<'_> { type Target=str; fn deref(&self) -> &str { self.text } }
+            impl Drop for TraceLine<'_> { fn drop(&mut self) { self.events.borrow_mut().push("drop-line"); } }
+            impl Drop for TraceLines<'_> { fn drop(&mut self) { self.events.borrow_mut().push("drop-iterator"); } }
+        """)
+
+        def collector(name, body, *, drops=False, suffix=False):
+            header = ("#[inline(never)]\nfn " + name + "(input: &str, scratch: &str, canonical_scratch: &str, "
+                      "who: &str, crate_name: &str, refused: &mut Vec<String>)")
+            if drops:
+                header += (" -> (Vec<String>, Vec<&'static str>) {\n"
+                           "    let events=std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));\n"
+                           "    let text=TraceText { input, events:events.clone() };\n")
+                finish = "    let snapshot=events.borrow().clone();\n    (env_deps, snapshot)\n"
+            else:
+                header += " -> " + ("(Vec<String>, Vec<String>)" if suffix else "Vec<String>") + " {\n    let text=input;\n"
+                finish = "    (env_deps, suffix)\n" if suffix else "    env_deps\n"
+            if suffix:
+                ending = "            }\n        }\n"
+                self.assertEqual(body.count(ending), 1)
+                body = body.replace(ending, "            }\n            suffix.push(l.to_owned());\n        }\n", 1)
+                header += "    let mut suffix=Vec::new();\n"
+            return header + body + finish + "}\n"
+
+        program = allowed + "\n" + normalizer + trace
+        for name, body in [("before", before), ("comment", comment), ("clean", clean)]:
+            program += collector(name, body)
+        for name, body in [("drop_before", before), ("drop_clean", clean)]:
+            program += collector(name, body, drops=True)
+        for name, body in [("suffix_before", before), ("suffix_clean", clean)]:
+            program += collector(name, body, suffix=True)
+        checks = []
+        for label, text, env, refusal, prior, scratch, canonical in cases:
+            for name in ["before", "comment", "clean"]:
+                checks.append("{ let mut refused=" + vector(prior) + "; let env=" + name + "("
+                              + ",".join(map(literal, [text, scratch, canonical, "producer", "fixture"]))
+                              + ", &mut refused); assert_eq!(env," + vector(env) + ',"env:' + label + ':' + name
+                              + '"); assert_eq!(refused,' + vector(prior + refusal) + ',"refusal:' + label + ':' + name + '"); }')
+        events = '["lines","next","drop-line","next","drop-line","next","drop-line","next","drop-iterator"]'
+        for name in ["drop_before", "drop_clean"]:
+            checks.append('{ let mut refused=Vec::new(); let (env,events)=' + name + '("# env-dep:CARGO_PKG_NAME=a\\nplain\\n# env-dep:UNHELD=x\\n",'
+                          '"__SCRATCH__","__CANON__","producer","fixture",&mut refused); assert_eq!(env,' + vector(["CARGO_PKG_NAME=a", "UNHELD=x"])
+                          + '); assert_eq!(refused,' + vector([unheld]) + '); assert_eq!(events,' + events + '); }')
+        checks.append('let mut refused=Vec::new(); let left=suffix_before("# env-dep:CARGO_PKG_NAME=a\\nplain\\n","S","C","producer","fixture",&mut refused);'
+                      'let right=suffix_clean("# env-dep:CARGO_PKG_NAME=a\\nplain\\n","S","C","producer","fixture",&mut refused);'
+                      'assert_eq!(left.1,' + vector(["plain"]) + '); assert_eq!(right.1,' + vector(["# env-dep:CARGO_PKG_NAME=a", "plain"])
+                      + '); assert_ne!(left.1,right.1);')
+        checks.append('match std::env::args().nth(1).as_deref() { '
+                      'Some("wrong-env") => { let mut r=Vec::new(); assert_eq!(clean("# env-dep:CARGO_PKG_NAME=a","S","C","producer","fixture",&mut r),'
+                      + vector(["WRONG"]) + ',"wrong env literal"); }, '
+                      'Some("wrong-refusal") => { let mut r=Vec::new(); clean("# env-dep:UNHELD=x","S","C","producer","fixture",&mut r); assert!(r.is_empty(),"wrong refusal literal"); }, '
+                      'Some("wrong-suffix") => assert_eq!(left.1,right.1,"wrong suffix equality"), '
+                      'Some("wrong-drop") => { let mut r=Vec::new(); let (_,e)=drop_clean("plain","S","C","producer","fixture",&mut r); assert_eq!(e,["drop-iterator","next"],"wrong drop order"); }, _ => {} }')
+        program += 'fn main() {\n' + '\n'.join(checks) + '\nprintln!("environment-tail controls: 17 literals/3 forms, drops and distinguishing suffix held");\n}\n'
+        path = self.base / "environment-tail.rs"
+        path.write_text(program)
+        for optimization in ["0", "3"]:
+            binary = self.base / ("environment-tail-O" + optimization)
+            self.bounded(["rustc", "--edition=2021", "-C", "opt-level=" + optimization, str(path), "-o", str(binary)])
+            self.assertIn("17 literals/3 forms, drops and distinguishing suffix held", self.bounded([str(binary)]))
+            for argument, message in [("wrong-env", "wrong env literal"), ("wrong-refusal", "wrong refusal literal"),
+                                      ("wrong-suffix", "wrong suffix equality"), ("wrong-drop", "wrong drop order")]:
+                with self.assertRaisesRegex(AssertionError, message):
+                    self.bounded([str(binary), argument])
+
+
 class IteratorTests(DiscoveryFixture):
     def test_cargo_absolute_prefix_edits_preserve_line_selection(self):
         import hashlib
