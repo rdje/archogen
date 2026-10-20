@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — assess the current environment-loop tail
+
+`ARCHOGEN-M3-0817` (leaf `M3.6.9.6.3.2.2.15.2.1.5.0`), `2026-10-20`.
+
+- Bind the exact historical/current complete loop and re-audit the retained old83/153
+  before record; fresh L772.stmt.221 survives all201, raw strict1 remains unmet adequacy.
+- Fix the draft program/report digest confusion: published5899b233 identifies audit.py,
+  report557d838f has its own identity;20 retained receipt digests and8 false bindings verify.
+- The continue text key matches22 sites and a real known other-site kill refuses an
+  unscoped reason. P1 proof/control .1 owns sound site scope before any reason; none added.
+- Restore1148 original/copied inputs and exact held-root reconstruction; preserve
+  source/reasons,48 bindings/37+2 producer sources,327 old archives/new suffix seal and
+  complete parent/future contracts. Full evidence and adapters remain in the unbounded book.
+
+
 ## archogen — close the current caller suffix checkpoint
 
 `ARCHOGEN-M3-0816` (leaf `M3.6.9.6.3.2.2.15.2.1.4.4`), `2026-10-20`.
