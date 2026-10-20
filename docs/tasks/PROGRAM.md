@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.93`, and the sub-leaves each of them names
+  Children: `PROGRAM.1` … `PROGRAM.94`, and the sub-leaves each of them names
 
 - ID: `PROGRAM.1`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.1.md`](../task-history/PROGRAM/PROGRAM.1.md); commit `ARCHOGEN-PROGRAM-0002`
@@ -641,24 +641,24 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.92.md`](../task-history/PROGRAM/PROGRAM.92.md); commit `ARCHOGEN-PROGRAM-0738`
 
 - ID: `PROGRAM.93`
-  Status: `done` — eleventh daily artifact cleanup
-  Goal: inventory the main/wasm and owned native-sweep incremental caches, main debug deps
-    and release; remove only proven regenerable caches, retain all material evidence/stores.
-  Scope: new dated same-volume metadata/native-system inventories; no links or nested Git
-    boundaries; exact identity recheck and native process census before deletion. Verify residue,
-    tracked input restoration and focused/wasm workflows before closure. No shared-cache removal.
-    Run shortly before the daily boundary so the next long controller sweep need not interrupt.
-    Seal committed PROGRAM.92 exactly; resume M3 .15.2.1.3.3.3.2.5 afterward.
-  Defect: root Children summary ended .89 despite existing .90-.92; native ID census
-    reproduces incomplete routing. Update summary through .93 in this leaf and verify coverage.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.93.md`](../task-history/PROGRAM/PROGRAM.93.md); commit `ARCHOGEN-PROGRAM-0778`
+
+- ID: `PROGRAM.94`
+  Status: `done` — twelfth daily artifact cleanup
+  Goal: safe daily cache cleanup; [full evidence/adapters](../book/src/annex-repository.md#daily-artifact-cleanup-on-2026-10-20).
   Acceptance:
-  - [x] ROOT CAUSE: physical/native find-stat census exit code 0; five same-volume/no-link/no-Git locations agree.
-  - [x] ADDRESSED: process/identity/deletion/residue checks exit code 0; only admitted caches,2863 files/929596234 logical bytes,82 bin files; evidence/stores/products retained.
-  - [x] NO REGRESSION:1098 input restoration after deletion and workflows exit code 0; focused3/3 and wasm exit code 0; prior body/288 archives exact (audit exit code 0). Book/final doctrine gates required.
-  Verification: target/artifact-cleanup/2026-10-19/; activation c64735bfcf5bf93f561625a132221cbbb4a35303; focused .60/.16/153.07s.
-    Book retains metadata/native methods and logical-byte/no-full-rebuild/supplemental-adapter limits;
-    later closure docs form a separate epoch. Root child summary verified through .93; M3 controller next.
-  Commit: `ARCHOGEN-PROGRAM-0778`
+  - [x] ROOT CAUSE: `python3 -I -B target/artifact-cleanup/2026-10-20/census.py`,
+    exit code 0: physical/native five-location inventories agree; no links, nested Git
+    boundary or cross-volume entries. Successful process census precedes deletion.
+  - [x] ADDRESSED: `python3 -I -B target/artifact-cleanup/2026-10-20/audit.py`,
+    exit code 0: only2434 idle regenerable files/828209661 logical bytes removed;60 bin,
+    no logs; Python/native residue and176 protected-evidence digests agree.
+  - [x] NO REGRESSION: `make focused`, exit code 0 on final staged tree;1145 inputs
+    restore. All source and retained products exact;323 prior archives/two new seals
+    reconstruct. Book/latest record and M3 continuation synchronized.
+  Verification: `target/artifact-cleanup/2026-10-20/`; focused/final gates required.
+  Commit: `ARCHOGEN-PROGRAM-0814`
+
 
 ## Roadmap coverage map
 
@@ -719,6 +719,7 @@ roadmap item X live?".
 | F28 small description to executable | S0 | [`S0`](S0.md) | `S0.4` |
 | F29 repeated preemption cost ledger | M2 | [`M2`](M2.md) | `M2.5` |
 | F30 trust-dependency drift gate | M3/M4 | [`M3`](M3.md) | `M3.6`; acceptance and its costs `M2.7.6.5`, `M3.6.5`, `M4.7`, `M4.8` |
+
 
 ## Current Frontier
 
@@ -944,6 +945,8 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-18` | `PROGRAM.91` | original maintained unstaged-row fixture, native index readback, pending/history/live/archive and backlog controls; source-function and archive/source parity | old0/new1 unstaged, staged new0;27/0 controls, placement body exact,250 archive/index files and engine/proofs preserved; book/staged gates, M3 integration next |
 | `2026-10-18` | `PROGRAM.92` | actual old delayed-reader8/1 and predicate141; protected replay; final real/bare/delayed controls, metadata and native byte/archive audit |14/0 bare and delayed; acknowledged workers, explicit output file, local temp aliases; production/native/engine exact,253 archives/index exact, normal handoff0; historical scratch limits recorded, full integration next in M3 |
 
+| `2026-10-20` | `PROGRAM.94` | physical/native inventories; identity/process/residue checks; focused tier | 2434 cache files/828209661 logical bytes;1145 inputs restored,176 evidence files unchanged; focused/book gates required |
+
 ## Commit Log
 
 | Leaf | Commit subject or reference | Notes |
@@ -1159,6 +1162,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.91` | `ARCHOGEN-PROGRAM-0736 (leaf PROGRAM.91)` | **Indexed work-unit presence required**: original working-only pending record fails until staged; historical live/archive removals hidden by working copies and untracked new tasks refuse, indexed restored backlog must shrink; prior placement body and250 archive/index files/engine sources exact,27 controls pass; book/doctrine/live sync resumes M3 caller/integration checkpoint |
 | `PROGRAM.92` | `ARCHOGEN-PROGRAM-0738 (leaf PROGRAM.92)` | **Handoff controls use acknowledged sampling**: reproduce expired-before-first worker and large-valid-output SIGPIPE predicate; hold/release/reap real workers by phase, permanent slow reader and evidence/status rejects, file-based matches and local temporary settings; bare/delayed14/0, production/native/engine and253 archive/index files exact; scratch incident/evidence limits and per-shell local-store setup recorded, full M3 integration rerun next |
 | `PROGRAM.93` | `ARCHOGEN-PROGRAM-0778 (leaf PROGRAM.93)` | eleventh cleanup:2863 files/929596234 logical bytes only admitted caches; independent physical/native identities/residue,1098 inputs restored and focused/wasm pass; prior body/288 archives exact, root range repaired; book/latest record sync, M3 controller next |
+| `PROGRAM.94` | `ARCHOGEN-PROGRAM-0814 (leaf PROGRAM.94)` | Daily cleanup:2434 regenerable files/828209661 logical bytes; physical/native identity/process/residue,1145 inputs and176 evidence hashes; focused regeneration; exact seals/book/latest record; resume frozen M3 replay |
 
 ## Changelog
 

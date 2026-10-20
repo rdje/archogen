@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — remove only idle regenerable compiler caches
+
+`ARCHOGEN-PROGRAM-0814` (leaf `PROGRAM.94`), `2026-10-20`.
+
+- Physical/native inventories agree on five same-volume/no-link/no-Git locations.
+  A no-background-job census and immediate identity recheck precede deletion.
+- Remove only main/native-sweep incremental caches:2434 files/828209661 logical bytes,
+  including60 cached bin files; no logs. Retain evidence, stores and build products.
+- Immediate Python/native residue confirms absence; three other inventories remain exact.
+  All176 protected proof files and1145 inputs restore; focused regeneration required.
+- Seal committed prior cleanup/regression exactly and retain every older archive.
+  Synchronize the latest-only record/book; return to M3's frozen complete final replay.
+
+
 ## archogen — guard the middle shared-manifest admission count
 
 `ARCHOGEN-M3-0813` (leaf `M3.6.9.6.3.2.2.15.2.1.4.3.2.2`), `2026-10-20`.

@@ -845,3 +845,388 @@ listed in the test, and the list may shrink but never grow. Each is listed by wh
 error and its first location, and not by the line it sits on. The first version used line numbers, and a
 paragraph added above one of them made the test fail for an example that had not changed (leaf
 `PROGRAM.33`).
+
+
+### Daily artifact cleanup on 2026-10-20
+
+Measured `2026-10-20T00:58:20+00:00`, `PROGRAM.94`. Only idle main and owned native-sweep incremental caches were removed. Physical metadata and independent native find/stat inventories agreed. Immediate identity rechecks and a successful native process census preceded deletion. Raw evidence, dependency stores, final products and the empty wasm cache were retained.
+
+The deletion removed `2434` regular cache files totaling `828209661` logical bytes, including `60` cached `.bin` files. The surveyed locations held no `.log` files. This measures logical size; no allocated-space recovery is claimed.
+
+| Repository-relative location | Regular files | Logical bytes | `.bin` / `.log` | Action |
+| --- | --- | --- | --- | --- |
+| `target/debug/incremental` | 938 | 411763556 | 24 / 0 | Remove idle cache |
+| `target/wasm32-unknown-unknown/debug/incremental` | 0 | 0 | 0 / 0 | Retain |
+| `target/debug/deps` | 800 | 673065094 | 0 / 0 | Retain |
+| `target/release` | 117 | 17080485 | 0 / 0 | Retain |
+| `target/mutation-sweep/target/debug/incremental` | 1496 | 416446105 | 36 / 0 | Remove idle cache |
+
+Immediate Python existence checks and native missing-path statuses confirm both admitted directories gone. The other surveyed locations remain identity/size equal to their inventories. Every protected evidence file retains its captured digest. Maintained Python/system checks restore all `1145` captured regular inputs; the submodule remains opaque metadata.
+
+The focused tier must pass on the final staged cleanup record after cache removal. Existing products may be reused, so this verifies workflow regeneration after incremental removal. The wasm cache was retained and no new wasm-build result is claimed.
+
+
+<details>
+<summary>Exact admitted deletion</summary>
+
+```json
+{
+  "qualification": "Supplemental adapter; every inventoried file/directory identity and same-volume/no-link/no-Git boundary rechecked immediately before removal; only fixed admitted regenerable incremental directories.",
+  "removed": [
+    {
+      "path": "target/debug/incremental",
+      "status": "gone",
+      "files": 938,
+      "logical_bytes": 411763556
+    },
+    {
+      "path": "target/mutation-sweep/target/debug/incremental",
+      "status": "gone",
+      "files": 1496,
+      "logical_bytes": 416446105
+    }
+  ]
+}
+```
+
+</details>
+
+<details>
+<summary>Immediate residue and retention</summary>
+
+```json
+{
+  "status": "verified",
+  "timestamp_utc": "2026-10-20T00:58:20+00:00",
+  "files": 2434,
+  "logical_bytes": 828209661,
+  "residue": [
+    {
+      "path": "target/debug/incremental",
+      "python_absent": true,
+      "native_status": 1,
+      "native_stderr": "stat: target/debug/incremental: stat: No such file or directory\n"
+    },
+    {
+      "path": "target/mutation-sweep/target/debug/incremental",
+      "python_absent": true,
+      "native_status": 1,
+      "native_stderr": "stat: target/mutation-sweep/target/debug/incremental: stat: No such file or directory\n"
+    }
+  ],
+  "retained_evidence_files": 176,
+  "untouched_surveyed_locations": 3,
+  "regenerable_only": true,
+  "qualification": "Logical bytes, not allocated-space recovery; metadata/native inventory, exact identity recheck and successful no-job census precede removal. Focused regeneration required separately."
+}
+```
+
+</details>
+
+<details>
+<summary>Protected evidence digest census</summary>
+
+```json
+{
+  "target/cache-current-checkpoint/apply-publication.py": "c60fc0b2cb899f0e6419b90a97b3005491df20009dc41477e6645e1611aedf6d",
+  "target/cache-current-checkpoint/assessment-book-complete.md": "2e6dd42dd0372228be9b810b06debfd73716193765ae522b8bf95242cd15034c",
+  "target/cache-current-checkpoint/assessment-book-fragment.md": "2a2c33c63db30b3df7a1859736e6d4915a1d5ecbd67fbf41df31b4d541c25fd6",
+  "target/cache-current-checkpoint/assessment-history-before.json": "8cc4a78655c5d02de60332d286ccebc3c6cfc9a4a082162fbc64e2ca4b33eae7",
+  "target/cache-current-checkpoint/audit-native.py": "578cbdc84c5303a46ba327eb7549c8af1221b4fa894df04f511a533f687acac4",
+  "target/cache-current-checkpoint/bindings.json": "b923dba94e54dc9a97b52918982a1c3c64cb6424db772490518ef88490d862d7",
+  "target/cache-current-checkpoint/book-before-publication.md": "84eb5d38e1a47e57f6f694338b74084e6a967e181ce53387a426ac2c96acdce7",
+  "target/cache-current-checkpoint/book.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "target/cache-current-checkpoint/book.log": "4d1971183cdf7dfc0319510ffbc13ed6696c07b84103532678e9a529b98635f7",
+  "target/cache-current-checkpoint/cache-diagnostic-audit.json": "cd10168b50957616f10cac1c59687f2e0e5c21545432cc13a77776e09d5ec580",
+  "target/cache-current-checkpoint/complete-records.py": "e8c09d6e48aa124511656eff772b4cdf659728dc8236d336b8c031c67204ca3a",
+  "target/cache-current-checkpoint/copied-parent-list.log": "decc560e17134ce87d345b03cd2c823f33cf53531ce54cb769d4c8ed99f214d8",
+  "target/cache-current-checkpoint/copy-restoration.json": "b00d5c62f353516f665e83e4a66de8232588fdfb01bad2aa152a5d07755d668a",
+  "target/cache-current-checkpoint/diagnostic-approval-rejection.json": "0926631d6f543f65f6b11d736c8ad62d3b1b5716f6736d0af2c24ccaced55380",
+  "target/cache-current-checkpoint/doctrines.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "target/cache-current-checkpoint/doctrines.log": "939d542fd71db6aa36406a7055d2000b2b2c33037c50fb6d0042a25da374737c",
+  "target/cache-current-checkpoint/execution.json": "0868833d927dc87eaac97c5ea5fd40d21163040775845e40152a2ff866ca1fcb",
+  "target/cache-current-checkpoint/final-audit.json": "8c766015a5fb82fc13f481ac502041555c5f0ab4e3f58cea1e56fa9753756e09",
+  "target/cache-current-checkpoint/final-audit.py": "3d9082f41e5117924945fb79fbbed311cb16beb9aa77aff37452514415280996",
+  "target/cache-current-checkpoint/first-book.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "target/cache-current-checkpoint/first-book.log": "4d1971183cdf7dfc0319510ffbc13ed6696c07b84103532678e9a529b98635f7",
+  "target/cache-current-checkpoint/first-doctrines.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+  "target/cache-current-checkpoint/first-doctrines.log": "a57411771602f5d453bb53859f0a2b4afe023666f4b429cb90fc8946069c7e0c",
+  "target/cache-current-checkpoint/history-before.json": "d9e2f01197a9cdc30d6e7366dafd43d33c21769d3d306ab0109e875afaa4466a",
+  "target/cache-current-checkpoint/input-reconstruction.json": "230fa8e1933751ebe9958e288bdf134e72df118ddb4f9ea1cf777401754fe111",
+  "target/cache-current-checkpoint/listing.log": "c4108906fd550906b7f7c36e6801a71d854827bfa8c198c341f664806c3bcb3c",
+  "target/cache-current-checkpoint/measurement.json": "85cc6df0dc154e212ee2e32db0381fd3e6c52f8be6617d6e1eb36de30d664d5a",
+  "target/cache-current-checkpoint/mutation-volume.sb": "2b3fbe199bddb4ba84c453a23334c7025308b06127ce3cc96f74b2a17680eedd",
+  "target/cache-current-checkpoint/native-audit.json": "c04d444f638ad4a862c9fae4495e5638799b4fbe874c8e3ea30f361c0f0ce3b8",
+  "target/cache-current-checkpoint/native-inputs.json": "e4ce6ccee4f561e4aa8bd6c5ce11968f6d38e6114884910926974d9fc681353e",
+  "target/cache-current-checkpoint/native.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+  "target/cache-current-checkpoint/native.log": "ae457bb5904df32cc9d1f9c56fb35e80f40ed95db1c183d9f3cc2875879e2f06",
+  "target/cache-current-checkpoint/old-source.rs.txt": "90c1078daba457e76f6564dcaf19557013b30e2275921a2fd25ca000c16d10ef",
+  "target/cache-current-checkpoint/original-restoration.json": "57e81c39b1940949a48071dec02ba4f380618420bf67acde8c57ce9a09d7c71b",
+  "target/cache-current-checkpoint/parent-list.log": "decc560e17134ce87d345b03cd2c823f33cf53531ce54cb769d4c8ed99f214d8",
+  "target/cache-current-checkpoint/parent-names.json": "b736917e6e5b7f61defdef98baf2af133dbd6cd691f49a8bcd3f690a03d0ea04",
+  "target/cache-current-checkpoint/plan-audit.json": "a61813d841bafa4189bd6ab0dc1f63e5d1cabc67bb858bfd99bd7d4cad35981f",
+  "target/cache-current-checkpoint/plan-book-fragment.md": "f68191eb8971b2adc12b5f01574c514e66cb2f6f126ac7e97d2c09a2694a10e2",
+  "target/cache-current-checkpoint/plan-verification-pre-native.log": "c60fa2f88b664601d9f1b96e496efc4e5ce15701144c5b6c4ddef7980e1037a4",
+  "target/cache-current-checkpoint/plan.json": "fe8b8f2a06641fa4a4d3b6fa59c718f6ec85c40e8b616b4274b8e6f63f47ff04",
+  "target/cache-current-checkpoint/premise-parent-record-before.md": "7f78b35bcb4feb5f32a6ef32865e5dd26bfaa731e60c00422ee3b1a6b8d462c5",
+  "target/cache-current-checkpoint/premise-parent-record-compact.md": "f185ccdfb31f4b7261fda7dc3dcbd524caac45847869cb7c7efeefe6e4deece3",
+  "target/cache-current-checkpoint/prepare-book.py": "e6ad78012a3c5bb2c12ee83eadad59a649bad2c97339c4174750ea7bfef5d6c5",
+  "target/cache-current-checkpoint/prepare-component.py": "24c267a5fda7778a17654bcb2b36792c1f0167b0652b8e0ed8aad4307066ea51",
+  "target/cache-current-checkpoint/prepare-plan.py": "53b0e11cc3d8427769a6f9c724f545c961cc6a6c99414ca661534f6f7eb18268",
+  "target/cache-current-checkpoint/probe-cache-function-full.py": "7a2a39c612c33b7061b0ed63ce68cd9fa1bfb92955a7c3dcb31281fefa2af0a3",
+  "target/cache-current-checkpoint/probe-cache-function-qualified.py": "8e0de37f7f22cb7b4e3f5cec9d06c4d6924364050fbe29e2a4983123466a2bd4",
+  "target/cache-current-checkpoint/probe-cache-function.py": "9eceb05f4a37d6f464983e94791457e481960cd18625102947da98c34cb1896a",
+  "target/cache-current-checkpoint/producer-bindings.json": "4c43d07e791bd9c7adb5904eb96733367a37bbb3d45dac3dfc083a8655cc4298",
+  "target/cache-current-checkpoint/producer-identity.json": "b25447deebeb0b69164dcffe73d6b2b5797a03129a33a3e054af6116a7cd2d36",
+  "target/cache-current-checkpoint/progress.py": "309a6c6399678fd3c501c18764297e42d6d0fc7dc00311389e33fbc114825e83",
+  "target/cache-current-checkpoint/publication-audit-calibration.json": "43fa7ed9c5024f8726969bae5cae0976d94b004449351eca24b6ae7d146ffa61",
+  "target/cache-current-checkpoint/publication-routing.json": "13c993b6e26279aec7653e53da5a99d0fd05966db78d2037c4364210f104f6ce",
+  "target/cache-current-checkpoint/qualify-cache-graph.py": "c9e2ceb25e5b6228a90a0e174f99c494b7fcb638994d003ad61c0782e7c82287",
+  "target/cache-current-checkpoint/qualify-copied.py": "0b6287b787964f26a80e896cbdf402e4dbd112b3b985bfada495a1246a351e89",
+  "target/cache-current-checkpoint/reconstruct-inputs.py": "7e81b620077926bbe3ff3499768e43dde0ff5bc4b223e0e48d61959bbf1411be",
+  "target/cache-current-checkpoint/repair-task-full.md": "57004b3566dcc7a2bd2df4eb1d711c132d5d8594390a3687f5787ca5e256019c",
+  "target/cache-current-checkpoint/replay-task-full.md": "d7b696b2ae4574e084658cba141a65ecb0cb3daed5985bd961453ba9d56ea8ab",
+  "target/cache-current-checkpoint/run-native.py": "7c74fa6d7e818380a18c45bc26f2b4ae01399dc6b8d1c8b05c56e9e8bf6cd559",
+  "target/cache-current-checkpoint/source-before.rs.txt": "c02f30e133a9ef8b54f237dd5aa2cb0c8b55041fbdd304290d5109d65277aa49",
+  "target/cache-current-checkpoint/task-after-parent-routing.md": "e884dd50d6696abb198b9c70dcc6ddea25529bfcc3c98b75e0ebf826a1087596",
+  "target/cache-current-checkpoint/task-after-routing.md": "db09effe8382afb9c7cc1c5ebc3658795c13262f66b222921e5c76ab4d42d800",
+  "target/cache-current-checkpoint/task-before-parent-routing.md": "6f394854cffad5b74371dd2704d3804d57d050608138317a5996aff16ddd949c",
+  "target/cache-current-checkpoint/task-before-routing.md": "acc6544ec9afb83536e9b3d90ab20a469d64db5906969d20143c7267d05aaf24",
+  "target/cache-current-checkpoint/task-routing.json": "5666177cc765b7f4897fa3a535c9adcd1994ccdf704d922622c0f845df2bf969",
+  "target/cache-current-checkpoint/verify-cache-diagnostic.py": "3788ac5dfefa3f34bcd634fb25e77fc33f41dc481e30a593d687fd751e041596",
+  "target/cache-current-checkpoint/verify-components.py": "057a3662aa57bcb1bac1f24041c6584921565a20c1c1d9cf999cac4115f445c7",
+  "target/cache-current-checkpoint/verify-plan.py": "d6461c20f2b7e069e5b71a901d3e355462b7a1469b6179effcbd022015702723",
+  "target/cache-middle-regression/add-parent.py": "3db4117798a05c27b50c2c7c6baed3db8284a9cb666c16bdcb35b81605e3c803",
+  "target/cache-middle-regression/audit.json": "95ca17332ec5eb15ef26374f9add5a3c1ec9e50fc8fd7c330d0e1cd8b2734a4d",
+  "target/cache-middle-regression/audit.py": "a072ad8ef81f3d41faa58a0f7a27555b8a5f67d7d159383e2691d72bac12ca93",
+  "target/cache-middle-regression/bindings.json": "27bf63ebccdd8a9c7d735fe8e94d46f1958ccbea28f36d3acdb664a4ae96cd05",
+  "target/cache-middle-regression/book-before.md": "f062cef582c1f51e4859c7b41de078acae4498392509ae84101d7bcdf3beeae7",
+  "target/cache-middle-regression/book-fragment.md": "944a8f7f33ea0f225ecc69ab8a8ec6bf122eea8f72a68ccf022e25148e42dcaf",
+  "target/cache-middle-regression/book.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "target/cache-middle-regression/book.log": "4d1971183cdf7dfc0319510ffbc13ed6696c07b84103532678e9a529b98635f7",
+  "target/cache-middle-regression/compiled-fixture": "9bcdc2508b25f319efdacc33bda1799d33aeb59299c559cc3337953fd71fb63c",
+  "target/cache-middle-regression/compiled-fixture.json": "5c1fe2f4d1e7db195799bdf9b1e0a4cc7e59cbd115ebaf777cfa10eae8c234c8",
+  "target/cache-middle-regression/compiled-fixture.rs": "b9ab0f2763cfe8eefa8b965114df2c649a1149afb47da20e87808fa3756fc721",
+  "target/cache-middle-regression/copied-parent-list.log": "86f2f6e72535d15365b37d6f32a02da02fc904f236066086d134e0a526a71cde",
+  "target/cache-middle-regression/copy-adapter-finding.json": "21930fe56ea916a879f04818513025b0bbcb6f2e9c28622d64c09a817e88d741",
+  "target/cache-middle-regression/copy-adapter-parity.json": "c1cfa372f200f336ab167926662d0cf1e206a60d1c2e5148c570093e052bbd24",
+  "target/cache-middle-regression/copy-restoration.json": "ee88385fe92661635b39ff757669ae02568637e6b0ca08f3679bd972b9edc78f",
+  "target/cache-middle-regression/doctrines.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "target/cache-middle-regression/doctrines.log": "939d542fd71db6aa36406a7055d2000b2b2c33037c50fb6d0042a25da374737c",
+  "target/cache-middle-regression/execution.json": "c25764e095fc4c8889cfaf4a51551547b9d94f64552c395b752f702eca95e4ab",
+  "target/cache-middle-regression/final-audit.json": "98db96674600d719d8c3ffa8fdf4d405e9b8f9aa90afd46cfbefb7cc2badf165",
+  "target/cache-middle-regression/final-audit.py": "f8a72f3c46fbc6e60a8ec0255859261f19e4cedef7541fb0fa6190ada5281c20",
+  "target/cache-middle-regression/final-plan.json": "7d957bb57dc36d98cab7d60814b092c555f17ce1ed976d8312cfb5b05f681367",
+  "target/cache-middle-regression/final-task-compact.md": "03cfc06bec0d1697abf81b7b76b554a4a12436ebd82f94856c529679bad7d871",
+  "target/cache-middle-regression/final-task-record.md": "2a40b448f84eddb5fac7e7c6abba48046002f4c352d9ac4e66bae5a6891d9a72",
+  "target/cache-middle-regression/first-compiled-fixture.rs": "5852bf229cbb63dabaf4a122a9867ec9d285354065e180bd025f4f0a61d914f2",
+  "target/cache-middle-regression/first-fixture-compile.stderr": "5ac73ca72862bae2ad2a61d281026b81e8aed75c68c5b559e7a7fcc2891d2ec8",
+  "target/cache-middle-regression/fixture-audit.json": "87eef7ff90db0922c3b1b5a73f789c131a4859a62c67b4f45c0241d9e6d44111",
+  "target/cache-middle-regression/fixture-compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "target/cache-middle-regression/focused-execution.json": "9273274104ab8f6153ab9b17abea7805a34d52330be24b0aae8677bdffb09d90",
+  "target/cache-middle-regression/focused-inputs.json": "baa9786e6f5acf26464933bd58714543dad57f4b55efeceb7d41bb1dd502a427",
+  "target/cache-middle-regression/focused-restoration.json": "5ee94ff37f7bfe0bed4a993363c1545cb12bf3c94a9238437b388dc5ffdf0d1e",
+  "target/cache-middle-regression/focused.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "target/cache-middle-regression/focused.log": "46f3d4c16f963779351b0741a07b50d5c00674831dbe597a6977a8bff92f1402",
+  "target/cache-middle-regression/history-before.json": "12992383d9ce2cb52c28f4524372e3343074e188d34ccbced027a899d91f1e8a",
+  "target/cache-middle-regression/input-reconstruction-delta.json": "29f084acf45657dc6ba8021f95f378d8924eebce77bf5149bf945496cfd2fdd9",
+  "target/cache-middle-regression/input-reconstruction.json": "2e976d20f9106a95fa564a8a821632b9f640445825943ffd4e2cd79401380eb9",
+  "target/cache-middle-regression/legacy-copy-restoration.json": "7eb2f030a8c8b9cee11bc7713d0fdc060f91df72d5581bd013f9101e9f222d60",
+  "target/cache-middle-regression/listing.log": "c4108906fd550906b7f7c36e6801a71d854827bfa8c198c341f664806c3bcb3c",
+  "target/cache-middle-regression/measurement.json": "7080e9d59f399b630f1c55899e505a35bd069df9d591e413928b592e237be33c",
+  "target/cache-middle-regression/mutation-volume.sb": "2b3fbe199bddb4ba84c453a23334c7025308b06127ce3cc96f74b2a17680eedd",
+  "target/cache-middle-regression/native-inputs.json": "b1fde505a14999b360fe72d8137c9c057a693d04d9e4be63af5d2f0944c47419",
+  "target/cache-middle-regression/native.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "target/cache-middle-regression/native.log": "d549c1092ab985192c5891a44773387c67d418265ac5ee78c9fd061a7b3113e2",
+  "target/cache-middle-regression/original-restoration.json": "51a3c493b1d926001f3448797819ddcc93627d140212a2b43a99ec3a66519089",
+  "target/cache-middle-regression/parent-first-compile.log": "b1d9e60ca6467054ebe8edfa40b501a1ee128b8116586582a93cb49bb240ed5d",
+  "target/cache-middle-regression/parent-list.log": "86f2f6e72535d15365b37d6f32a02da02fc904f236066086d134e0a526a71cde",
+  "target/cache-middle-regression/parent-names.json": "546a0333ef79dbb511be1372a29b3cc0453b57796560aed487060d1da01e49b1",
+  "target/cache-middle-regression/parent-unformatted.rs.txt": "4e3c6eda4d437e2e68118b97b619d044b7d880fda56d841654b45028cb330ee1",
+  "target/cache-middle-regression/parent.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "target/cache-middle-regression/parent.log": "25efff3a64ae66cc265511fa93dd07295207827296de60e3391dcd86688461d0",
+  "target/cache-middle-regression/parent.rs.txt": "3e27e1946617c44e7c877aa0a82cd72db73c0e91018a0785ddcd1219ff688ea9",
+  "target/cache-middle-regression/plan.json": "8f6d1f2166214f9fa1f442b8df49cd90a531948c581dca7e99a480c7c4ccca12",
+  "target/cache-middle-regression/preparation-attempt-inputs.json": "b1fde505a14999b360fe72d8137c9c057a693d04d9e4be63af5d2f0944c47419",
+  "target/cache-middle-regression/preparation-refusal.json": "b8d4871f98d98d9d8758f501bb13df415dec259605ffc37356d4f7955176ede8",
+  "target/cache-middle-regression/preparation.json": "2327ce33b722ac24aef62b13aa7ed027b16fa815f21fdecb99fb572a82e9d4e6",
+  "target/cache-middle-regression/prepare.py": "0c5168cf08a65871da049ece417676030dbbfec14dd91ae0cde2dd811b99658e",
+  "target/cache-middle-regression/producer-bindings.json": "4c43d07e791bd9c7adb5904eb96733367a37bbb3d45dac3dfc083a8655cc4298",
+  "target/cache-middle-regression/progress.py": "49e51a1a7e9a2d84ee99a4eb656acc4bfc7010855d4d8e27491cac7746ea3ae5",
+  "target/cache-middle-regression/publish.py": "5ae7b771779a663d54d8099c603819a91dbc37949518fe21698d53db0e23189a",
+  "target/cache-middle-regression/reconstruct-inputs.py": "19fa920492589b16f1247b006762c44cd8e344d634d7801aa6dc30304bac05a6",
+  "target/cache-middle-regression/replay-inputs.py": "cca55dd9dc8a155c43dd758635ab0ef5663bca6262c3f2038d1f53924180a208",
+  "target/cache-middle-regression/replay-task-routing.json": "7d1cbc243d3802b1c2d6b73a66f3738fca4da7495b9b90176d583a91a931cf74",
+  "target/cache-middle-regression/run-focused.py": "441c79d867167cd664681bfbd7860fc34e439668b54977e8dca04d0e516fe38c",
+  "target/cache-middle-regression/run-native.py": "9fac25447f39b926e2fea1350119f893ff883a4cab41b652995582e5e61a507e",
+  "target/cache-middle-regression/shared-copy-input-adapter.py.txt": "1354aa97640a202b7f79f1d05a3953dd5cfc8d338f3c10c30f31d7e5880a5225",
+  "target/cache-middle-regression/source-before.rs.txt": "c02f30e133a9ef8b54f237dd5aa2cb0c8b55041fbdd304290d5109d65277aa49",
+  "target/cache-middle-regression/source-native.rs.txt": "9616b59ff2bc394e6471570bfaf857971671fda4a12c4fb745e557d2d21a1751",
+  "target/cache-middle-regression/task-after-replay-routing.md": "b9197b328583109b46be57dd5100120c1ef924baaa585d5c7c4291b91d6ab1cd",
+  "target/cache-middle-regression/task-before-replay-routing.md": "24764a117131c4b998dad8eff612f5ff2d4b6714b5ee150da0f8ff63761b929d",
+  "target/cache-middle-regression/verify-fixture.py": "399212854d22b93c0671260cb1f52da1227af4ed50537f87657d1c962bbc585f",
+  "target/caller-suffix-assessment/compilation_files.rs.txt": "5ab7f5e394d69a042c13229d59689c3b037eef966bfb0bad8098a713bc82d910",
+  "target/caller-suffix-literal/cargo-lto.rs.txt": "97652b448f525af54f1baee199722cd1534768927a2d4deeae924504cade64d6",
+  "target/cargo-absolute-prefix-proofs/package.rs.txt": "c69d85227b154d36e828acdbc3705ef921a4919775dd2a9e1c0eed912287cff7",
+  "target/cargo-absolute-prefix-proofs/workspace.rs.txt": "fa321dfbd2857f42b4a1dd37054dd749a860f664baa89fc55e76978da32abbd2",
+  "target/compile-command-assessment/pinned/src/cargo/core/compiler/custom_build.rs": "2a2feaff913b3c63152ba5d7dc4328e73c01aeb239f3c9ca570f8fbf39db115e",
+  "target/compile-command-assessment/pinned/src/cargo/core/compiler/job_queue/job_state.rs": "37e47e0d5a1f598318f67e1187ed76fd5f91378cd79786bce0037e437f8ea025",
+  "target/compile-command-assessment/pinned/src/cargo/core/compiler/job_queue/mod.rs": "0cccd1337e007e233670579b1fa2aa236e776bbe72372f97209f9fcfe3e61260",
+  "target/compile-command-assessment/pinned/src/cargo/ops/cargo_doc.rs": "1a18e4baf03c50b51e78382879b9cf8a3ab7de99bb0bf23af5b689650e00f1db",
+  "target/compile-command-assessment/pinned/src/cargo/ops/cargo_run.rs": "50b5800f9fa660be672e7fe3092ff53a649afc232c8e99ed5999c1858e591c51",
+  "target/compile-command-assessment/pinned/src/cargo/ops/cargo_test.rs": "38e2c4236f85caf3de3a63e5d7604c472af914dd40b869555072a21e91efbf72",
+  "target/compile-command-assessment/pinned/src/cargo/sources/git/utils.rs": "7c23a3bd16810eb65001a86c93db14f2302b61b63efec9534ee270cbee23ca96",
+  "target/m369-color-equivalence/environment-variables.md": "6f665b89e5a164da0526f22602105ba9dfb16928d76e028bf2fc4a30e0d37323",
+  "target/m369-flags-domain-completion/build-cli.rs.txt": "10435788c80cc418639d2a649acc58efd1d3fb25818fefb9fc78b9d0a9c0bce2",
+  "target/m369-flags-domain-completion/compile-ops.rs.txt": "e66a00c5fdd1ff9c27f3f3a3d07326226b26355867535d08659ed4ccb379f04f",
+  "target/m369-flags-domain-completion/context.rs.txt": "30310d878bb05ffed2db0c55699619bb1452834d4db5b2166ec2f2aeceebda62",
+  "target/m369-flags-domain-completion/git-source.rs.txt": "aa8e1bd019c845a62b6754f78d7e9f424f56187f31cdf1d6e26db29a6a8a73ce",
+  "target/m369-flags-domain-completion/registry-remote.rs.txt": "01b9bb8e68446ad0d4feceeff02b084913d2afd6e067dc34ca56ce9f89a51b65",
+  "target/m369-flags-domain-completion/registry-source.rs.txt": "20715404e59e0fe47f68de6c016c0ebc6e84aebedc740e046f12657147fd148f",
+  "target/m369-flags-domain-completion/source-config.rs.txt": "f3cbe62254b8b4fb512c64abf8d435a8ed0e7e65397c2e9af4be1133884677c8",
+  "target/m369-flags-domain-completion/standard-lib.rs.txt": "17cbb514863daad6d6e872750401b1f012a7ca416d401989637a480f5960ee94",
+  "target/m369-flags-domain-completion/test-cli.rs.txt": "fe1944aa2e06daadc06fbeb078484b1303e13bb2f31cf2be367a394761e1491d",
+  "target/m369-flags-domain-completion/unit-dependencies.rs.txt": "17563082c4c7f47084272cf838400abc3c904de582da570bc473a1bb94d82896",
+  "target/m369-flags-domain/cargo-build-context.rs.txt": "26ad05905afb9d4946d1087d3291c3bd398468082f77420ed79f2e0610585898",
+  "target/m369-flags-domain/cargo-compilation.rs.txt": "143263b660cd89e6ae2a0ecca33333e23d4254d134f6336a2ae7f36621435753",
+  "target/m369-flags-domain/cargo-compiler.rs.txt": "0676b172894d2d0e8536bb5197019f2c147f9aa3e4587e13909e73512fa9d023",
+  "target/m369-flags-domain/cargo-features.rs.txt": "e07a9570fde7d272c5205579855b9942011275bb1730f56db0b686d6cfe168d6",
+  "target/m369-flags-domain/cargo-manifest.rs.txt": "a4ab9a2e3f7177322b659e21dace551f784b709e1041757412eb107e690fc5f9",
+  "target/m369-flags-domain/cargo-profiles.rs.txt": "df4b7e2d13f25efa7bb892a7efd31c82e549f0c80a138af361f7ab4e4252cfb7",
+  "target/m369-flags-domain/cargo-target-info.rs.txt": "6ea904f8285cda1f8014b4eb2ed92abc61bdf5abc74101da3b802f2f95b6431c",
+  "target/m369-flags-domain/cargo-toml.rs.txt": "0b7e604cabcedb7d9e62942f5004625930220b2b1eef85cc1c71b0c4dfb7bb30",
+  "target/m369-flags-domain/cargo-unit.rs.txt": "edcc3fb5d266cd1de90b2e630cafea34c0bbda6722a860d3614a0f60b0862d8b",
+  "target/m369-flags-domain/cargo-util.rs.txt": "0d11f8f8643282099151a2a28a8505adf7b5bbbcd1760d59e295adcc64fae9cf",
+  "target/m369-flags-domain/cargo-workspace-util.rs.txt": "a8ab44391e698a50d1b8f57a33ff6205866560e7f49520c1334aa8db2f419f83",
+  "target/m369-reset-revalidation/build-config.rs.txt": "e5f4eeac36687832cd19bd958028bd3811b6757a4d39158b2a1e8bca03586a6f",
+  "target/m369-reset-revalidation/cargo-cli.rs.txt": "9648dbe8147e7475ca14b453aba92f0bca9a7741abb9a66d65ee0becc9cae560",
+  "target/m369-reset-revalidation/http-registry.rs.txt": "91b958e7137b894ce8594b961fc76e96f7ead76beaf880dc30f86fe65356faad",
+  "target/m369-reset-revalidation/registry-download.rs.txt": "5c51eb90daf504013b55af13ea4aa04532ee683ce4c87522a78b4e91eb4609c5",
+  "target/m369-reset-revalidation/registry-index.rs.txt": "b5437ca4bdc24a731ff869c1e827412705f1578d4c537639a3a1ba011a45fca7",
+  "target/m369-reset-revalidation/source-id.rs.txt": "fc2c38a770e91f66c45503a3824213c2b0881ffa0a83fef41bb474a1e412d294"
+}
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: census.py</summary>
+
+```python
+from pathlib import Path
+import os,stat,subprocess,json
+root=Path.cwd();out=root/'target/artifact-cleanup/2026-10-20';device=root.stat().st_dev
+locations=['target/debug/incremental','target/wasm32-unknown-unknown/debug/incremental','target/debug/deps','target/release','target/mutation-sweep/target/debug/incremental']
+def metadata(path):
+ info=path.lstat();assert info.st_dev==device and not stat.S_ISLNK(info.st_mode),str(path)
+ assert stat.S_ISREG(info.st_mode) or stat.S_ISDIR(info.st_mode),str(path)
+ return {'path':str(path.relative_to(root)),'device':info.st_dev,'inode':info.st_ino,'mode':stat.S_IMODE(info.st_mode),'bytes':info.st_size,'kind':'file' if stat.S_ISREG(info.st_mode) else 'directory'}
+def inventory(name):
+ base=root/name
+ for n in range(1,len(Path(name).parts)+1):
+  ancestor=root.joinpath(*Path(name).parts[:n])
+  if not os.path.lexists(ancestor):return {'status':'absent','count':0,'bytes':0,'bin_count':0,'log_count':0,'files':[],'directories':[]}
+  info=metadata(ancestor);assert info['kind']=='directory';assert not os.path.lexists(ancestor/'.git'),str(ancestor)
+ files=[];directories=[]
+ for directory,dirs,names in os.walk(base,followlinks=False):
+  assert '.git' not in dirs+names,directory
+  directories.append(metadata(Path(directory)))
+  for entry in dirs+names:
+   p=Path(directory)/entry;info=metadata(p)
+   if info['kind']=='file':files.append(info)
+ sizes=list(map(int,subprocess.check_output(['find',name,'-type','f','-exec','/usr/bin/stat','-f','%z','{}','+'],text=True).splitlines()))
+ assert len(sizes)==len(files) and sum(sizes)==sum(f['bytes'] for f in files),name
+ return {'status':'present','count':len(files),'bytes':sum(sizes),'bin_count':sum(f['path'].endswith('.bin') for f in files),'log_count':sum(f['path'].endswith('.log') for f in files),'independent_system_find_stat_agrees':True,'files':sorted(files,key=lambda r:r['path']),'directories':sorted(directories,key=lambda r:r['path'])}
+if __name__=='__main__':
+ records={name:inventory(name) for name in locations}
+ (out/'before.json').write_text(json.dumps({'qualification':'Ignored supplementary metadata adapter; native system find/stat independently agrees. Only main repository named locations traversed; no links, cross-volume entries or nested Git ancestors/children. Logical bytes, not allocated disk space.','locations':records},indent=2)+'\n')
+ for name,record in records.items():print(name,{k:v for k,v in record.items() if k not in ('files','directories')})
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: delete.py</summary>
+
+```python
+from pathlib import Path
+import importlib.util,json,shutil,os
+out=Path('target/artifact-cleanup/2026-10-20');spec=importlib.util.spec_from_file_location('census',out/'census.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+before=json.loads((out/'before.json').read_text());names=['target/debug/incremental','target/mutation-sweep/target/debug/incremental'];removed=[]
+for name in names:assert m.inventory(name)==before['locations'][name],name
+for name in names:
+ expected=before['locations'][name]
+ if expected['status']=='present':shutil.rmtree(name)
+ assert not os.path.lexists(name),name
+ removed.append({'path':name,'status':'gone','files':expected['count'],'logical_bytes':expected['bytes']})
+(out/'removed.json').write_text(json.dumps({'qualification':'Supplemental adapter; every inventoried file/directory identity and same-volume/no-link/no-Git boundary rechecked immediately before removal; only fixed admitted regenerable incremental directories.','removed':removed},indent=2)+'\n');print(json.dumps(removed))
+```
+
+</details>
+
+Receipts and complete pre-deletion metadata are under `target/artifact-cleanup/2026-10-20/`. These adapters are supplemental; maintained input checks, native system inventories and the focused tier supply primary verification.
+
+<details>
+<summary>Cleanup audit adapter</summary>
+
+```python
+from pathlib import Path
+import copy,hashlib,json,subprocess
+out=Path('target/artifact-cleanup/2026-10-20');base='e56e0af218a9df4e84606a0674540324e4870583'
+def sha(data):return hashlib.sha256(data).hexdigest()
+def prior(name):return subprocess.check_output(['git','show',base+':'+name])
+before=json.loads((out/'before.json').read_text())['locations']
+removed=json.loads((out/'removed.json').read_text())['removed']
+receipt=json.loads((out/'residue.json').read_text())
+assert [r['path'] for r in removed]==['target/debug/incremental','target/mutation-sweep/target/debug/incremental']
+assert sum(r['files'] for r in removed)==receipt['files']==2434
+assert sum(r['logical_bytes'] for r in removed)==receipt['logical_bytes']==828209661
+assert sum(before[r['path']]['bin_count'] for r in removed)==60
+assert all(before[name]['independent_system_find_stat_agrees'] for name in before)
+assert all(before[name]['log_count']==0 for name in before)
+assert all(r['python_absent'] and r['native_status']!=0 and 'No such file' in r['native_stderr'] for r in receipt['residue'])
+assert 'handoff: OK' in (out/'process-before.log').read_text()
+evidence=json.loads((out/'retained-evidence.json').read_text());assert len(evidence)==176
+for name,digest in evidence.items():assert sha(Path(name).read_bytes())==digest,name
+restored=json.loads((out/'restoration.json').read_text())
+assert restored['status'] in ['restored','passed','verified']
+inputs=json.loads((out/'inputs.json').read_text());assert len(inputs['regular'])==1145 and len(inputs['gitlinks'])==1
+paths=set(subprocess.check_output(['git','ls-tree','-r','--name-only',base,'docs/task-history'],text=True).splitlines())-{'docs/task-history/INDEX.md'}
+assert len(paths)==323
+for name in paths:assert Path(name).read_bytes()==prior(name),name
+new=[('PROGRAM','PROGRAM.93'),('M3','M3.6.9.6.3.2.2.15.2.1.4.3.2.2')]
+B=chr(96);false=[]
+for tree,leaf in new:
+ data=prior('docs/tasks/'+tree+'.md')
+ a=data.index(('- ID: '+B+leaf+B).encode())
+ # PROGRAM.93 was the last node immediately before Current Frontier.
+ pos=data.find(b'\n- ID: ',a+1)
+ heading=data.find(b'\n## ',a+1)
+ b=min(n for n in [pos,heading] if n!=-1)+1
+ archive=Path('docs/task-history')/tree/(leaf+'.md');payload=archive.read_bytes()
+ assert payload+b'\n'==data[a:b],leaf
+ for label,bad in [('truncated',payload[:-1]),('altered',payload.replace(b'- ID:',b'- iD:',1))]:
+  assert bad+b'\n'!=data[a:b];false.append(leaf+':'+label)
+current={str(p) for p in Path('docs/task-history').glob('*/*.md')}
+assert current==paths|{'docs/task-history/'+tree+'/'+leaf+'.md' for tree,leaf in new}
+assert len(current)==325
+assert Path('xtask/src/trust.rs').read_bytes()==prior('xtask/src/trust.rs')
+assert sha(Path('xtask/src/trust.rs').read_bytes())=='9616b59ff2bc394e6471570bfaf857971671fda4a12c4fb745e557d2d21a1751'
+book=Path('docs/book/src/annex-repository.md').read_text()
+assert (out/'book-before.md').read_bytes()==prior('docs/book/src/annex-repository.md')
+assert book==(out/'book-before.md').read_text()+(out/'book-fragment.md').read_text()
+for filename in ['census.py','delete.py','audit.py']:assert (out/filename).read_text() in book,filename
+for title,filename in [('Exact admitted deletion','removed.json'),('Immediate residue and retention','residue.json'),('Protected evidence digest census','retained-evidence.json')]:
+ marker='<summary>'+title+'</summary>';a=book.index(marker)+len(marker)
+ opening=__import__('re').match(r'\s*'+B*3+r'json\n',book[a:]);assert opening
+ a+=opening.end();b=book.index('\n'+B*3,a)
+ assert json.loads(book[a:b])==json.loads((out/filename).read_text())
+record=Path('docs/ARTIFACT_CLEANUP.md').read_text()
+assert record.count('- **')==1 and receipt['timestamp_utc'] in record and 'PROGRAM.94' in record
+assert sum(p.stat().st_size for p in Path('docs/tasks').rglob('*') if p.is_file())<=819200
+result=dict(status='passed',scope='Only admitted idle incremental-cache removal; logical bytes, retained products may be reused; focused/book verification required separately',files_removed=2434,logical_bytes=828209661,cached_bin_files=60,logs_removed=0,retained_evidence_files=176,regular_inputs_restored=1145,opaque_gitlinks=1,old_source_unchanged=True,previous_archives=323,current_archives=325,two_seals_exact=True,history_falsifiers=false,latest_only_record_matches=True,previous_book_bytes_retained=True)
+(out/'audit.json').write_text(json.dumps(result,indent=2)+'\n')
+print('Cleanup audit passed:2434/828209661 logical bytes;176 evidence/1145 inputs;323 old archives/two new exact; source unchanged; sha256',sha((out/'audit.json').read_bytes()))
+```
+
+</details>

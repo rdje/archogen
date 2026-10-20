@@ -13,9 +13,7 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M3` → frontier `M3.6`. `PROGRAM` resumes at `PROGRAM.71`. `M2`'s frontier is `M2.7.4`, on the director; `API` is
-  closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
-  `docs/TASK_TREE.md`.
+- **Active tree:** `M3` → frontier `M3.6`; `PROGRAM` resumes at `PROGRAM.71`.
 - **Next action:** execute the frozen complete repaired cache/current-reason replay in
   `M3.6.9.6.3.2.2.15.2.1.4.3.2.3`; require strict justified outcomes and full input restoration.
   Corrected renderer adoption stays owned in `.4.3.4.1`.
