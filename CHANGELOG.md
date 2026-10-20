@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold every outside-tree dependency refusal
+
+`ARCHOGEN-M3-0824` (leaf `M3.6.9.6.3.2.2.15.2.1.6.1.0`), `2026-10-20`.
+
+- Add one real-Cargo/public-inventory parent holding three complete literal outside-tree
+  data refusals and no inventory. Preserve every old test, production byte and reason.
+- Exact initial4S becomes native4K/full202 strict0; the new parent is the sole intended
+  finishing kill for each edit. Restore all1155 original/copied inputs and parent names.
+- Bind actual producer order,48 source bindings and37+2 producer sources; retain full
+  portable evidence, exact two-seal history and verbatim live contracts in the unbounded
+  book. Path-domain/full-block follow-up stays open; focused tier required before commit.
+
+
 ## archogen — verify the approved disposable fixture workflow
 
 `ARCHOGEN-M3-0823` (leaf `M3.6.9.6.3.2.2.15.2.1.6.3`), `2026-10-20`.

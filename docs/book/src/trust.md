@@ -298,6 +298,37 @@ arguments: `trust::tests::cargo_source_paths_with_diagnostic_substrings_remain_i
 sign in a tracked source filename is refused before compilation; equals-bearing untracked build-output
 paths are admitted. These examples establish the tested boundaries, while full mutation adequacy remains open.
 
+### Inputs outside the written tree
+
+Admitting an `include_str!` site lets compilation reach the input inventory. It does not make
+external data part of the commit. Every file the compiler reads must still belong to the written
+tree. The inventory reports each outside-tree dependency and writes no inventory on refusal.
+
+For example, let `<run>` denote a generated test directory. Its written tree is `<run>/out/tree`,
+while three admitted include sites read `<run>/external/a.txt`, `m.txt` and `z.txt`. The library
+root named `chk` must produce the complete refusal list:
+
+```text
+trust-undeclared-input: `chk` reads `<run>/external/a.txt`, outside the written tree
+trust-undeclared-input: `chk` reads `<run>/external/m.txt`, outside the written tree
+trust-undeclared-input: `chk` reads `<run>/external/z.txt`, outside the written tree
+```
+
+The permanent parent `trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused`
+uses successful real Cargo compilation and this complete literal oracle. The actual dependency
+record lists the ordinary source first, followed by those three external files; retaining just
+one outside-tree refusal is insufficient. The existing admitted-site control still establishes
+that a tracked include inside the written tree can be accepted. Run the new control with:
+
+```bash
+cargo test -p xtask trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused -- --exact
+```
+
+The [full witness record](annex-trust-proofs.md#absolute-dependency-refusal-witness) binds the
+producer order and the four initial branch mutations killed by this parent. Other path quoting,
+raw/canonical geometry and the complete dependency-block checkpoint remain separately owned;
+this bounded result does not establish full mutation adequacy.
+
 ### Codegen options retain their operands
 
 A `-C` compiler option and its following operand are recorded together as one configuration entry.

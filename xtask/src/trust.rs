@@ -4540,6 +4540,58 @@ version = "0.1.0"
         );
     }
 
+    #[test]
+    fn every_absolute_dependency_outside_the_written_tree_is_refused() {
+        crate::trust_test_process::bounded!(
+            every_absolute_dependency_outside_the_written_tree_is_refused
+        );
+        let name = "absolute-dependency-refusals";
+        let external = real_root()
+            .join("target/trust-tests")
+            .join(name)
+            .join("external");
+        let inputs = [
+            ("FIRST", "a.txt", "first external input\n"),
+            ("MIDDLE", "m.txt", "middle external input\n"),
+            ("LAST", "z.txt", "last external input\n"),
+        ];
+        let lines: Vec<_> = inputs
+            .iter()
+            .map(|(constant, file, _)| {
+                format!(
+                    "pub const {constant}: &str = include_str!({:?});",
+                    external.join(file).to_str().unwrap()
+                )
+            })
+            .collect();
+        let admissions: String = lines
+            .iter()
+            .map(|line| admit("crates/b/src/lib.rs", "include_str", line))
+            .collect();
+        let f = two_roots(
+            name,
+            "fn main() {}\n",
+            &(lines.join("\n") + "\n"),
+            &[("trust/roots.eadl", format!("{ROOTS}{admissions}"))],
+        );
+        std::fs::create_dir_all(&external).unwrap();
+        for (_, file, contents) in inputs {
+            std::fs::write(external.join(file), contents).unwrap();
+        }
+
+        let expected: Vec<_> = inputs
+            .iter()
+            .map(|(_, file, _)| {
+                format!(
+                    "trust-undeclared-input: `chk` reads `{}`, outside the written tree",
+                    external.join(file).display()
+                )
+            })
+            .collect();
+        assert_eq!(refused(f.run()), expected);
+        assert!(!f.base.join("out/trust-dependencies.json").exists());
+    }
+
     fn package_item<'a>(all: &'a [(String, Json)], package: &str) -> &'a Json {
         &all.iter()
             .find(|(_, i)| {

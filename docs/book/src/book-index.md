@@ -28,6 +28,8 @@ a change that leaves it stale, so it is never edited by hand.
   project relies on from outside](ledger.md)
 - Absence is reported, never skipped — [Where generated systems run](targets.md#absence-is-reported-never-skipped)
 - Absent is a definite answer — [Presence, absence, and relevance](presence.md#absent-is-a-definite-answer)
+- Absolute dependency refusal witness — [Annex C: Trust proof
+  records](annex-trust-proofs.md#absolute-dependency-refusal-witness)
 - Absolute diagnostic-prefix proofs — [Annex C: Trust proof
   records](annex-trust-proofs.md#absolute-diagnostic-prefix-proofs)
 - **ACLINT** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
@@ -198,6 +200,8 @@ a change that leaves it stale, so it is never edited by hand.
   and what changing it costs](versions.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Dependency path assessment contracts — [Annex C: Trust proof
   records](annex-trust-proofs.md#dependency-path-assessment-contracts)
+- Dependency refusal witness contracts — [Annex C: Trust proof
+  records](annex-trust-proofs.md#dependency-refusal-witness-contracts)
 - **description** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [The supported
   profile](profile.md), [The use cases](usecases.md), [Reading a description](reading.md), [Kinds and
@@ -342,6 +346,8 @@ a change that leaves it stale, so it is never edited by hand.
   adequacy](trust-adequacy.md#initial-role-and-build-operator-outcomes)
 - Initial source/provenance operator outcomes — [Generated-sources test
   adequacy](trust-adequacy.md#initial-sourceprovenance-operator-outcomes)
+- Inputs outside the written tree — [Checks that must not share a mistake: the trust
+  gate](trust.md#inputs-outside-the-written-tree)
 - Installation writer lifetime and readback allocation — [Annex C: Trust proof
   records](annex-trust-proofs.md#installation-writer-lifetime-and-readback-allocation)
 - Installed observer byte verification — [Annex C: Trust proof

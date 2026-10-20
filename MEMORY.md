@@ -14,8 +14,8 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.6`; `PROGRAM` resumes at `PROGRAM.71`.
-- **Next action:** establish supported dependency-path witnesses and address the
-  four survivors in `M3.6.9.6.3.2.2.15.2.1.6.1`; split controls/repairs before changes.
+- **Next action:** establish the actual dependency path quoting/raw/canonical domain in
+  `M3.6.9.6.3.2.2.15.2.1.6.1.1`, then the full dependency-block checkpoint `.6.2`.
   Disposable project-owned Git fixtures under ignored `target/` are approved;
   maintained external repositories and submodules stay read-only.
   Corrected renderer adoption stays owned in `.4.3.4.1`.
