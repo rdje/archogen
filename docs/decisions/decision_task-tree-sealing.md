@@ -178,6 +178,9 @@ byte boundaries at EOF; no absent final LF is invented. Invalid path encodings o
 - **Trees:** `M1` and `PROGRAM` first, as ruled. Then any tree whose closed subtrees are the larger part of it, by
   the same tool — and, amended `2026-10-10`, any tree once `docs/tasks/` reaches its ceiling, since finished leaves
   are what that folder overflows (`README_POLICY.md`).
+- *Amended `2026-10-20` (`PROGRAM.95`):* a sealed leaf's log rows follow it. The seal moves every Verification Log and
+  Commit Log row naming a stub into numbered log-row files beside the leaf files, proven and gated the same way
+  ([[decision_task-log-row-sealing]]).
 - Related: [[decision_history-ledgers]], [[decision_findings-for-director-review]] §8 and §10,
   `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`.
 

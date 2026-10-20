@@ -8,6 +8,13 @@
 # where it stood — its `- ID:` line and a `Status: `done`` line that links the sealed file and names the leaf's commit.
 # `docs/task-history/INDEX.md` records each file's leaves, lines, bytes and sha256.
 #
+# A SEALED LEAF'S LOG ROWS FOLLOW IT (`PROGRAM.95`, docs/decisions/decision_task-log-row-sealing.md): every row of the
+# tree's `## Verification Log` and `## Commit Log` whose leaf cell names a stub moves, byte for byte and in the tree's
+# order, into `docs/task-history/<TREE>/rows-NNNN.md`, numbered on per tree, as many files as a budget of ROW_BYTES
+# bytes and ROW_LINES lines a file needs; each file holds, per log, the heading, a blank line, the tree's two header
+# lines and the rows, the logs parted by a blank line. The index lists each under `<TREE> log rows`. A row naming an
+# open leaf, a `done` leaf not yet sealed, no leaf or several stays live; nothing is left where a sealed row stood.
+#
 # THE UNIT is the OUTERMOST CLOSED SUBTREE (`PROGRAM.69`): one of the tree's top-level subtrees when every leaf under it
 # is `done`, and, below a top-level subtree that is still open, the shortest leaf, ancestor or self, whose every leaf is
 # `done`. Below the top level a subtree is a leaf of the tree: two leaves with no common leaf between them and an open
@@ -21,6 +28,7 @@
 #   bash scripts/check_task_history.sh --self-test
 #   bash scripts/check_task_history.sh --census <COMMIT>  # bytes of `done` leaves under open top-level subtrees, and
 #                                                         # in the closed subtrees below them a seal would take (PROGRAM.69)
+#                                                         # and of log rows naming sealed leaves, which a seal would take (PROGRAM.95)
 # Census requires a successful listing and every selected tree blob; a failed read is not an empty tree. On a
 # failed selected read it names the commit/path and exits 1 without a final aggregate, even after per-tree rows.
 # It consumes NUL-delimited UTF-8 paths and counts actual span bytes, including real LFs and physical EOF (R36).
@@ -54,9 +62,16 @@
 #      folder is PROGRAM.72's): new work opens a new subtree
 #      outside it (P6); and a tree file holds only leaves under its own name, each named once, so no leaf is judged in a
 #      tree not its own; the index keeps one table per tree, its header first and its rows under it, one row a file.
+#   7. LOG ROWS (PROGRAM.95): each log-row file's rows, lines, bytes and sha256 are its row's, it is exactly the form the
+#      seal writes, and a tree's files are numbered 1 to n; its table rows are append-only and its files as their
+#      commit wrote them, as legs 3 and 1; and PROVENANCE: the files one commit added to a tree, taken together, hold
+#      rows the tree's same log held just before that commit, in that order and under that log's header, every row
+#      held then that names a sealed leaf is kept at that commit, in order, or sealed — none dropped, none invented —
+#      and every sealed row names one leaf of that tree that is a stub at that commit and was `done` before it. The
+#      seal moves only rows the committed tree holds, so a row not yet committed stays until the next seal.
 #
 # THE SEAL writes nothing unless the tree it would leave, with every new stub replaced by its body from its new sealed
-# file, is the tree as it stood, byte for byte, no entry already takes a sealed file's path, and no link lies on a
+# file, and every moved log row put back at its line, is the tree as it stood, byte for byte, no entry already takes a sealed file's path, and no link lies on a
 # path it writes, nor any entry at a rewritten file's temporary path (R14 D3); and it rolls everything back if the
 # gate then refuses the result, or an error stops it. A stop — any signal but SIGKILL, SIGSTOP, the six fault signals
 # and, on Linux, the C library's own — is held from before the first write until the seal is done (R13 to R18); an
@@ -84,6 +99,12 @@ STATUS_RE = re.compile(r"^  Status: `([^`]+)`")
 STUB_RE = re.compile(r"^  Status: `done` — sealed in \[`([^`]+)`\]\(\.\./task-history/([^)]+)\); commit (.+)$")
 WORK_UNIT = re.compile(r"ARCHOGEN-[A-Z0-9-]*[A-Z0-9]-[0-9]{4}(?![0-9])")
 ROW_RE = re.compile(r"^\| `([^`]+)` \| (\d+) \| (\d+) \| (\d+) \| `([0-9a-f]{64})` \| `(\d{4}-\d{2}-\d{2})` \|$")
+ROWS_RE = re.compile(r"^\| `(rows-\d{4})` \| (\d+) \| (\d+) \| (\d+) \| `([0-9a-f]{64})` \| `(\d{4}-\d{2}-\d{2})` \|$")
+# The two logs a tree keeps, each with the regex of the cell that names its leaf: the Commit Log's first cell, the
+# Verification Log's second (PROGRAM.95, docs/decisions/decision_task-log-row-sealing.md).
+LOGS = (("## Verification Log", re.compile(r"^\| `[^`]*` \| `([^`]+)` \|")), ("## Commit Log", re.compile(r"^\| `([^`]+)` \|")))
+ROW_BYTES = int(os.environ.get("TASK_HISTORY_ROW_BYTES", "131072"))  # a log-row file's budget, under README-ROUTES' 163 840
+ROW_LINES = 1500                                                        # and its 1 800 lines
 fails = []
 
 def note(msg):
@@ -210,22 +231,130 @@ def commit_of(lines, first, bend, leaf_id):
         return "in the tree's Commit Log"
     return "not recorded"
 
+def log_tables(lines):
+    """{heading: (first, header, separator, [(line, text)])} for each log the tree keeps (PROGRAM.95): the heading's
+    line, the table's two header lines — the first `| ` line of the section, prose before it allowed, its separator
+    under it — and its rows, the contiguous `| ` lines under them; a row parted from the table by any other line is
+    not the table's, as COMMIT-LOG-ROWS reads a tree's live rows. A log the tree lacks, or whose section holds no
+    such table, is absent."""
+    out = {}
+    for heading, _ in LOGS:
+        if heading not in lines:
+            continue
+        h = lines.index(heading)
+        z = next((i for i in range(h + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+        head = next((i for i in range(h + 1, z) if lines[i].startswith("| ")), None)
+        if head is None or head + 1 >= z or not lines[head + 1].startswith("| ---"):
+            continue
+        k, table = head + 2, []
+        while k < z and lines[k].startswith("| "):
+            table.append((k, lines[k]))
+            k += 1
+        out[heading] = (h, lines[head], lines[head + 1], table)
+    return out
+
+def row_leaf(heading, text):
+    """The one leaf a log row names, or None: the Commit Log's first cell, the Verification Log's second."""
+    m = dict(LOGS)[heading].match(text)
+    return m.group(1) if m else None
+
+def row_file_text(sections):
+    """A log-row file from [(heading, header, separator, [row texts])]: each log's heading, a blank line, its two
+    header lines and its rows, the logs parted by a blank line, a line end last."""
+    return "\n".join("%s\n\n%s\n%s\n%s\n" % (h, hd, sp, "\n".join(rs)) for h, hd, sp, rs in sections)
+
+def row_file_sections(text, where):
+    """[(heading, header, separator, [row texts])] of a log-row file, or None with the fault noted: exactly the form
+    `row_file_text` writes, the logs in the tree's order, each at most once, each holding a row."""
+    if not text.endswith("\n"):
+        note("%s does not end with a line end — a log-row file is the form the seal writes" % where); return None
+    lines, order = text.split("\n")[:-1], [h for h, _ in LOGS]
+    out, i = [], 0
+    while i < len(lines):
+        heading = lines[i]
+        if heading not in order or (out and order.index(heading) <= order.index(out[-1][0])):
+            note("%s:%d is not a log's heading in the tree's order — a log-row file holds each log once, the Verification Log first" % (where, i + 1)); return None
+        if i + 3 >= len(lines) or lines[i + 1] != "" or not lines[i + 2].startswith("| ") or not lines[i + 3].startswith("| ---"):
+            note("%s:%d: the log does not open with a blank line and its two header lines" % (where, i + 1)); return None
+        k, rs = i + 4, []
+        while k < len(lines) and lines[k].startswith("| `"):
+            rs.append(lines[k])
+            k += 1
+        if not rs:
+            note("%s:%d: the log holds no row — a seal writes a log with its first row" % (where, i + 1)); return None
+        out.append((heading, lines[i + 2], lines[i + 3], rs))
+        if k == len(lines):
+            break
+        if lines[k] != "" or k + 1 == len(lines):
+            note("%s:%d is not the blank line parting two logs" % (where, k + 1)); return None
+        i = k + 1
+    if not out:
+        note("%s holds no log — a seal moves at least one row" % where); return None
+    return out
+
+def plan_rows(text, tree_name, first_number, committed):
+    """The log rows a seal moves out of a tree's text: those naming a leaf that is a stub and held, in the same log, by
+    the tree as committed — a row not yet committed stays until the next seal, as leg 7 proves rows against the commit
+    before the seal — in each log's order, packed into files of at most ROW_BYTES bytes and ROW_LINES lines, numbered
+    from `first_number`. Returns (the text after, {file name: text}, [(line, text, heading)] removed) or None when no
+    row is to be moved."""
+    lines = text.split("\n")
+    stubs = {lid for lid, first, _ in leaves(text)[1] if is_stub(lines, first)}
+    tables, removed = log_tables(lines), []
+    held = log_tables(committed.split("\n")) if committed is not None else {}
+    for heading, _ in LOGS:
+        budget = {}
+        for _, row in held.get(heading, (0, 0, 0, []))[3]:
+            budget[row] = budget.get(row, 0) + 1
+        for k, row in tables.get(heading, (0, 0, 0, []))[3]:
+            lid = row_leaf(heading, row)
+            if lid is not None and lid in stubs and under(lid, tree_name) and budget.get(row, 0) > 0:
+                budget[row] -= 1
+                removed.append((k, row, heading))
+    if not removed:
+        return None
+    def fits(sections):
+        t = row_file_text(sections)
+        return len(t.encode("utf-8")) <= ROW_BYTES and t.count("\n") <= ROW_LINES
+    packed = []  # one list of sections per file
+    for heading, _ in LOGS:
+        _, header, sep, _ = tables.get(heading, (0, "", "", []))
+        for _, row, h in removed:
+            if h != heading:
+                continue
+            if packed and packed[-1][-1][0] == heading:
+                trial = packed[-1][:-1] + [(heading, header, sep, packed[-1][-1][3] + [row])]
+            elif packed:
+                trial = packed[-1] + [(heading, header, sep, [row])]
+            else:
+                trial = None
+            if trial is not None and fits(trial):
+                packed[-1] = trial
+            else:
+                packed.append([(heading, header, sep, [row])])
+    files = {"rows-%04d.md" % (first_number + n): row_file_text(sections) for n, sections in enumerate(packed)}
+    gone = {k for k, _, _ in removed}
+    after = "\n".join(line for n, line in enumerate(lines) if n not in gone)
+    return after, files, removed
+
 def sha(data):
     return hashlib.sha256(data.encode("utf-8")).hexdigest()
 
 def rows(index_text, where):
-    """{tree: [(subtree, leaves, lines, bytes, sha, sealed)]}; a malformed row is a named breach."""
-    out, cur = {}, None
+    """({tree: [(subtree, leaves, lines, bytes, sha, sealed)]}, {tree: [(rows file, rows, lines, bytes, sha, sealed)]})
+    for the two kinds of table; a malformed row is a named breach."""
+    out, logs, cur, kind = {}, {}, None, False
     for n, line in enumerate(index_text.split("\n"), 1):
-        m = re.match(r"^## `([^`]+)`$", line)
+        m = re.match(r"^## `([^`]+)`( log rows)?$", line)
         if m:
-            cur = m.group(1); out.setdefault(cur, []); continue
+            cur, kind = m.group(1), bool(m.group(2)); (logs if kind else out).setdefault(cur, []); continue
         if cur and line.startswith("| `"):
-            r = ROW_RE.match(line)
+            r = (ROWS_RE if kind else ROW_RE).match(line)
             if not r:
-                note("%s:%d is not a row of the form `| `SUBTREE` | leaves | lines | bytes | `sha256` | `date` |`" % (where, n)); continue
-            out[cur].append(r.groups())
-    return out
+                note("%s:%d is not a row of the form `| `%s` | %s | lines | bytes | `sha256` | `date` |`"
+                     % (where, n, "rows-NNNN" if kind else "SUBTREE", "rows" if kind else "leaves")); continue
+            (logs if kind else out)[cur].append(r.groups())
+    return out, logs
 
 HEADER = """# docs/task-history/INDEX.md — closed subtrees sealed out of the task trees
 
@@ -236,33 +365,41 @@ below a top-level subtree still open — moved here byte for byte by
 records the file's leaf count, lines, bytes and sha256, and the day it was sealed. The rows are append-only, and
 `TASK-HISTORY` checks every file against its row, and every leaf against its stub, on every commit.
 
+A sealed leaf's rows in its tree's Verification Log and Commit Log follow it: each seal moves them, byte for byte and
+in the tree's order, into `docs/task-history/<TREE>/rows-NNNN.md`, numbered on per tree, and lists each file under
+`<TREE> log rows` with its row count, lines, bytes, sha256 and day (`docs/decisions/decision_task-log-row-sealing.md`).
+
 To read a closed leaf, follow its stub. To prove a file, compare `sha256sum docs/task-history/<TREE>/<SUBTREE>.md`
 with its row.
 """
 
 TABLE_HEAD = "| Subtree | Leaves | Lines | Bytes | sha256 | Sealed |"
+ROWS_HEAD = "| Rows file | Rows | Lines | Bytes | sha256 | Sealed |"
 TABLE_SEP = "| --- | --- | --- | --- | --- | --- |"
 
 def layout(index_text):
-    """The index as `add_rows` writes it: one table per tree, each opening with its header, its rows contiguous under
-    it — so a row placed in another tree's table, or outside any, is a breach (PROGRAM.69, the mutation sweep)."""
+    """The index as `add_rows` writes it: one table per tree for its sealed subtrees and one for its log-row files,
+    each opening with its header, its rows contiguous under it — so a row placed in another table, or outside any,
+    is a breach (PROGRAM.69, the mutation sweep)."""
     lines = index_text.split("\n")
     seen, in_tables = set(), set()
     for n, line in enumerate(lines):
-        m = re.match(r"^## `([^`]+)`$", line)
+        m = re.match(r"^## `([^`]+)`( log rows)?$", line)
         if not m:
             continue
-        if m.group(1) in seen:
-            note("%s:%d: a second table for %s — a tree has one" % (INDEX, n + 1, m.group(1)))
-        seen.add(m.group(1))
-        if lines[n + 1:n + 4] != ["", TABLE_HEAD, TABLE_SEP]:
-            note("%s:%d: the table of %s does not open with its header" % (INDEX, n + 1, m.group(1)))
+        logs = bool(m.group(2))
+        what = m.group(1) + (" log rows" if logs else "")
+        if (m.group(1), logs) in seen:
+            note("%s:%d: a second table for %s — a tree has one" % (INDEX, n + 1, what))
+        seen.add((m.group(1), logs))
+        if lines[n + 1:n + 4] != ["", ROWS_HEAD if logs else TABLE_HEAD, TABLE_SEP]:
+            note("%s:%d: the table of %s does not open with its header" % (INDEX, n + 1, what))
         k = n + 4
         while k < len(lines) and lines[k].startswith("| `"):
             in_tables.add(k)
             k += 1
         if k == n + 4:
-            note("%s:%d: the table of %s holds no row — a seal writes a table with its first row" % (INDEX, n + 1, m.group(1)))
+            note("%s:%d: the table of %s holds no row — a seal writes a table with its first row" % (INDEX, n + 1, what))
     for n, line in enumerate(lines):
         if line.startswith("| `") and n not in in_tables:
             note("%s:%d: a row outside its tree's table, under its header" % (INDEX, n + 1))
@@ -326,12 +463,20 @@ def current(target):
     except FileNotFoundError:
         return None
 
-def add_rows(tree_name, new_rows):
+def add_rows(tree_name, new_rows, logs=False):
+    """Append rows to a tree's table of sealed subtrees, or, with `logs`, to its table of log-row files, which opens
+    right after the tree's subtree table so a tree's material stays together, or last when it has none."""
     text = read(INDEX) if os.path.exists(INDEX) else HEADER
     lines = text.rstrip("\n").split("\n")
-    head = "## `%s`" % tree_name
+    head = "## `%s`%s" % (tree_name, " log rows" if logs else "")
     if head not in lines:
-        lines += ["", head, "", TABLE_HEAD, TABLE_SEP]
+        at_ = len(lines)
+        if logs and "## `%s`" % tree_name in lines:
+            at_ = next((k for k in range(lines.index("## `%s`" % tree_name) + 1, len(lines)) if lines[k].startswith("## ")), len(lines))
+        if at_ == len(lines):
+            lines += ["", head, "", ROWS_HEAD if logs else TABLE_HEAD, TABLE_SEP]
+        else:
+            lines[at_:at_] = [head, "", ROWS_HEAD, TABLE_SEP, ""]
     start = lines.index(head)
     last = start
     for k in range(start + 1, len(lines)):
@@ -343,17 +488,18 @@ def add_rows(tree_name, new_rows):
     put(INDEX, "\n".join(lines) + "\n")
 
 def gate():
-    """The six legs; returns the number of sealed files checked and of stubs."""
+    """The seven legs; returns the number of sealed files checked, of log-row files, and of stubs."""
     shallow = git("rev-parse", "--is-shallow-repository")
     if shallow is None or shallow.decode().strip() != "false":
         note("the repository is shallow, or git cannot say, so the commits legs 3 and 5 read may be missing — fetch the full history")
-    index = rows(read(INDEX), INDEX) if os.path.exists(INDEX) else {}
+    index, logs_index = rows(read(INDEX), INDEX) if os.path.exists(INDEX) else ({}, {})
     if os.path.exists(INDEX):
         layout(read(INDEX))
     checked, held = 0, {}  # held: leaf id -> sealed file path
     files = {}             # sealed file path -> (tree, subtree)
+    listed_by_tree = {}    # tree -> the file names its tables list, of both kinds
     for tname, trows in index.items():
-        listed = set()
+        listed = listed_by_tree.setdefault(tname, set())
         for key, nleaves, nlines, nbytes, digest, _ in trows:
             fpath = os.path.join(HIST, tname, key + ".md")
             if key + ".md" in listed:
@@ -375,18 +521,46 @@ def gate():
                 if not under(lid, key): note("%s holds %s, which is not in subtree %s" % (fpath, lid, key))
                 if lid in held: note("%s is sealed twice, in %s and %s" % (lid, held[lid], fpath))
                 held[lid] = fpath
+    # Leg 1 for log-row files (PROGRAM.95): each against its row and the form the seal writes, numbered 1 to n.
+    row_files, row_checked = {}, 0  # path -> (tree, key, sections or None)
+    for tname, trows in logs_index.items():
+        listed = listed_by_tree.setdefault(tname, set())
+        numbers = []
+        for key, nrows, nlines, nbytes, digest, _ in trows:
+            fpath = os.path.join(HIST, tname, key + ".md")
+            if key + ".md" in listed:
+                note("%s lists %s twice in %s's tables — one row a file" % (INDEX, key, tname)); continue
+            listed.add(key + ".md")
+            numbers.append(int(key[5:]))
+            if not os.path.exists(fpath):
+                note("%s lists %s, and %s does not exist" % (INDEX, key, fpath)); continue
+            data = read(fpath)
+            row_checked += 1
+            if str(data.count("\n")) != nlines: note("%s has %d lines, and its row says %s — a log-row file changed" % (fpath, data.count("\n"), nlines))
+            if str(len(data.encode("utf-8"))) != nbytes: note("%s has %d bytes, and its row says %s — a log-row file changed" % (fpath, len(data.encode("utf-8")), nbytes))
+            if sha(data) != digest: note("%s's sha256 is not its row's — a log-row file changed" % fpath)
+            sections = row_file_sections(data, fpath)
+            row_files[fpath] = (tname, key, sections)
+            if sections is not None and str(sum(len(rs) for _, _, _, rs in sections)) != nrows:
+                note("%s holds %d rows, and its row says %s" % (fpath, sum(len(rs) for _, _, _, rs in sections), nrows))
+        if sorted(numbers) != list(range(1, len(numbers) + 1)):
+            note("%s's log-row files are numbered %s — a tree's are 1 to n, in the order of its seals"
+                 % (tname, ", ".join(str(n) for n in sorted(numbers))))
+    for tname in sorted(set(index) | set(logs_index)):
         tdir = os.path.join(HIST, tname)
         for name in sorted(os.listdir(tdir)) if os.path.isdir(tdir) else []:
-            if name not in listed: note("%s/%s is in no row of %s — a sealed file must be listed" % (tdir, name, INDEX))
+            if name not in listed_by_tree[tname]: note("%s/%s is in no row of %s — a sealed file must be listed" % (tdir, name, INDEX))
     if os.path.isdir(HIST):
         for name in sorted(os.listdir(HIST)):
             p = os.path.join(HIST, name)
             if os.path.isdir(p):
-                if name not in index: note("%s has no table in %s" % (p, INDEX))
+                if name not in index and name not in logs_index: note("%s has no table in %s" % (p, INDEX))
             elif name != "INDEX.md":
                 note("%s is neither the index nor a tree's folder" % p)
-    # Leg 3, history-wide: every row any committed index held, and every sealed file as the commit that added it wrote it.
+    # Leg 3, history-wide: every row any committed index held, of either kind, and every sealed file as the commit that
+    # added it wrote it.
     current = {t: set(r) for t, r in index.items()}
+    current_logs = {t: set(r) for t, r in logs_index.items()}
     index_log = git("log", "--full-history", "--format=%H", "--", INDEX)
     if index_log is None:
         note("`git log` of %s failed, so leg 3 cannot hold — a failed read is never an empty history" % INDEX)
@@ -399,21 +573,26 @@ def gate():
             elif present:
                 note("%s:%s: historical index blob failed to read — leg 3 cannot hold" % (commit[:12], INDEX))
             continue
-        for tname, trows in rows(old, "%s:%s" % (commit[:12], INDEX)).items():
+        old_sub, old_logs = rows(old, "%s:%s" % (commit[:12], INDEX))
+        for tname, trows in old_sub.items():
             for r in trows:
                 if r not in current.get(tname, set()):
                     note("%s's %s row `%s`, committed in %s, is gone or changed — the index is append-only" % (INDEX, tname, r[0], commit[:12]))
+        for tname, trows in old_logs.items():
+            for r in trows:
+                if r not in current_logs.get(tname, set()):
+                    note("%s's %s log-row table row `%s`, committed in %s, is gone or changed — the index is append-only" % (INDEX, tname, r[0], commit[:12]))
     added = {}
     log = git("log", "--full-history", "--diff-filter=A", "--format=@%H", "--name-only", "--", HIST)
     if log is None:
-        note("`git log` of %s failed, so legs 3 and 5 cannot hold — a failed read is never an empty history" % HIST)
+        note("`git log` of %s failed, so legs 3 and 5 cannot hold, nor leg 7 — a failed read is never an empty history" % HIST)
     commit = None
     for line in (log or b"").decode().split("\n"):
         if line.startswith("@"):
             commit = line[1:]
         elif line.strip():
             added[line.strip()] = commit  # the log runs newest first, so the last one kept is the oldest
-    for fpath in files:
+    for fpath in list(files) + list(row_files):
         c = added.get(fpath)
         if c and at(c, fpath) != read(fpath):
             note("%s is not what %s wrote when it sealed it — a sealed file changed" % (fpath, c[:12]))
@@ -493,18 +672,77 @@ def gate():
         if wrong:
             note("%s seals subtree %s, and in %s's tree its leaves' outermost closed subtree was not %s (%s) — a seal takes the outermost closed subtree, whole"
                  % (fpath, key, base, key, ", ".join(wrong[:4]) + (" …" if len(wrong) > 4 else "")))
-    return checked, len(stubs)
+    # Leg 7, provenance of log rows (PROGRAM.95): the log-row files one commit added to a tree, taken together, against
+    # that tree's logs just before the commit and at it — every sealed row a row the log held then, in that order and
+    # under that log's header; every row held then kept, in order, or sealed; every sealed row a sealed leaf's.
+    groups = {}
+    for fpath, (tname, key, sections) in row_files.items():
+        groups.setdefault((tname, added.get(fpath)), []).append((key, fpath, sections))
+    for (tname, c), members in sorted(groups.items(), key=lambda kv: (kv[0][0], kv[0][1] or "")):
+        members.sort()  # rows-0001 before rows-0002: the order the seal filled them
+        tpath = "%s/%s.md" % (TASKS, tname)
+        base, when = ((c + "^"), c[:12]) if c else ("HEAD", "HEAD")
+        before = at(base, tpath)
+        now = at(c, tpath) if c else (read(tpath) if os.path.exists(tpath) else None)
+        if before is None or now is None:
+            note("%s: %s had no %s to seal log rows from, or %s none to keep the rest in" % (members[0][1], base, tpath, when)); continue
+        blines, bls = leaves(before)
+        nlines_, nls = leaves(now)
+        btables, ntables = log_tables(blines), log_tables(nlines_)
+        done_before = {lid for lid, f, _ in bls if status(blines, f) == "done"}
+        stub_now = {lid for lid, f, _ in nls if is_stub(nlines_, f)}
+        for heading, _ in LOGS:
+            what = heading[3:]
+            taken = [(fpath, r) for key, fpath, sections in members for h, hd, sp, rs in (sections or []) if h == heading for r in rs]
+            if not taken:
+                continue
+            if heading not in btables:
+                note("%s seals rows of the %s, which %s's tree did not keep" % (members[0][1], what, base)); continue
+            _, bhd, bsp, brows = btables[heading]
+            for key, fpath, sections in members:
+                for h, hd, sp, rs in (sections or []):
+                    if h == heading and (hd, sp) != (bhd, bsp):
+                        note("%s's %s does not open with the header %s's tree gave it" % (fpath, what, base))
+            held_then = [t for _, t in brows]
+            kept, i, torn = [], 0, False
+            for fpath, r in taken:
+                try:
+                    j = held_then.index(r, i)
+                except ValueError:
+                    note("%s holds a row of the %s that %s's tree did not hold there, or not in that order: %s" % (fpath, what, base, r[:72])); torn = True; break
+                kept.extend(held_then[i:j])
+                i = j + 1
+            if torn:
+                continue
+            kept.extend(held_then[i:])
+            now_rows, k = [t for _, t in ntables.get(heading, (0, 0, 0, []))[3]], 0
+            for r in kept:
+                lid = row_leaf(heading, r)
+                if lid is None or lid not in stub_now:
+                    continue  # not a sealed leaf's row: other edits in the sealing commit are not the seal's
+                try:
+                    k = now_rows.index(r, k) + 1
+                except ValueError:
+                    note("%s: a row of the %s naming the sealed leaf %s, which %s's tree held, is neither kept at %s nor sealed: %s" % (members[0][1], what, lid, base, when, r[:72])); break
+            for fpath, r in taken:
+                lid = row_leaf(heading, r)
+                if lid is None: note("%s holds a row of the %s that names no one leaf: %s" % (fpath, what, r[:72]))
+                elif not under(lid, tname): note("%s holds a row naming %s, not a leaf of %s" % (fpath, lid, tname))
+                elif lid not in stub_now: note("%s holds a row naming %s, which is not sealed at %s — a row follows its leaf" % (fpath, lid, when))
+                elif lid not in done_before: note("%s holds a row naming %s, which was not `done` in %s's tree" % (fpath, lid, base))
+    return checked, row_checked, len(stubs)
 
 def census(commit):
     """Per tree file at `commit`: the bytes of live `done` leaves under top-level subtrees still open, and of those in
-    the closed subtrees below them that a seal would take — each leaf's span sliced as `leaves` slices it (PROGRAM.69)."""
+    the closed subtrees below them that a seal would take — each leaf's span sliced as `leaves` slices it (PROGRAM.69);
+    and the bytes of log rows naming sealed leaves, which a seal would take too (PROGRAM.95)."""
     names = git("ls-tree", "-z", "--name-only", commit, TASKS + "/")
     if names is None:
         sys.exit("task-history: `git ls-tree %s %s/` failed" % (commit, TASKS))
     if names and not names.endswith(b"\0"):
         raise Unreadable("census tree listing is not NUL-terminated")
     paths = decode(names, "census tree listing").split("\0")
-    total, in_closed, count = 0, 0, 0
+    total, in_closed, count, rows_total = 0, 0, 0, 0
     for path in sorted(paths):
         name = os.path.basename(path)
         if not name.endswith(".md") or name == "TEMPLATE.md":
@@ -514,6 +752,13 @@ def census(commit):
         if text is None:
             raise Unreadable("cannot read selected tree %s:%s" % (commit, path))
         lines, ls = leaves(text)
+        # Log rows naming a stub: each row's bytes and its line end, as the seal moves them.
+        stubs = {lid for lid, f, _ in ls if is_stub(lines, f)}
+        row_bytes = sum(len(t.encode("utf-8")) + 1 for heading, _ in LOGS for _, t in log_tables(lines).get(heading, (0, 0, 0, []))[3]
+                        if (lid := row_leaf(heading, t)) is not None and lid in stubs and under(lid, tname))
+        if row_bytes:
+            print("census: %s — %d byte(s) of log rows naming sealed leaves, which a seal would take" % (tname, row_bytes))
+            rows_total += row_bytes
         unit = units(lines, ls, tname)
         open_tops = {subtree(lid, tname) for lid, f, _ in ls if subtree(lid, tname) and status(lines, f) != "done"}
         live = [(lid, f, e) for lid, f, e in ls
@@ -533,6 +778,7 @@ def census(commit):
         total, in_closed, count = total + tree_total, in_closed + tree_closed, count + len(keys)
     print("census: %s — %d byte(s) of `done` leaves under open top-level subtrees, %d of them in %d closed subtree(s) below the top level"
           % (commit, total, in_closed, count))
+    print("census: %s — %d byte(s) of log rows naming sealed leaves, which a seal would take" % (commit, rows_total))
 
 def seal(tree_name):
     path = os.path.join(TASKS, tree_name + ".md")
@@ -555,14 +801,42 @@ def seal(tree_name):
             groups.setdefault(unit[lid], []).append((lid, first, end))
     # A unit the index rows is sealed already — a live leaf under it is the gate's to refuse (leg 6), so it is left
     # alone. Any other unit's file path must be free: an entry there — a file, a folder, a link to anything or to
-    # nothing — is no seal of it, and is refused before a write (reviews R9-2, R10 D2).
-    rowed = {m.group(1) for m in map(ROW_RE.match, (read(INDEX).split("\n") if os.path.exists(INDEX) else [])) if m}
+    # nothing — is no seal of it, and is refused before a write (reviews R9-2, R10 D2). The index is read as the gate
+    # reads it, its faults left for the gate to name after the write (PROGRAM.95).
+    noted = len(fails)
+    rowed_sub, rowed_logs = rows(read(INDEX), INDEX) if os.path.exists(INDEX) else ({}, {})
+    del fails[noted:]
+    rowed = {r[0] for trows in rowed_sub.values() for r in trows}
     sealable = [key for key in groups if key not in rowed]
-    if not sealable:
+    first_number = max((int(r[0][5:]) for r in rowed_logs.get(tree_name, [])), default=0) + 1
+    # The tree after the leaf seal: every sealable unit's leaves replaced by stubs — none when nothing is sealable.
+    seal_of = {m[0]: key for key in sealable for m in groups[key]}
+    sealed = {key: [] for key in sealable}
+    out, i = [], 0
+    warnings = []
+    for lid, first, end in sorted((m for key in sealable for m in groups[key]), key=lambda m: m[1]):
+        out.extend(lines[i:first])
+        bend = body_end(lines, first, end)
+        sealed[seal_of[lid]].append("\n".join(lines[first:end]))
+        rel = "%s/%s.md" % (tree_name, seal_of[lid])
+        commit = commit_of(lines, first, bend, lid)
+        if commit == "not recorded" or "`pending`" in "\n".join(l for l in lines[first:bend] if l.startswith("  Commit:")):
+            warnings.append("task-history: warning — %s is `done` and its Commit field names no commit; its stub says %s" % (lid, commit))
+        out.append(lines[first])
+        out.append("  Status: `done` — sealed in [`%s`](../task-history/%s); commit %s" % (rel, rel, commit))
+        out.extend(lines[bend:end])
+        i = end
+    out.extend(lines[i:])
+    after = "\n".join(out)
+    files = {key: ("\n".join(sealed[key]) + ("" if "\n".join(sealed[key]).endswith("\n") else "\n")) for key in sealable}
+    # The log rows of every stub, those just made included, go too, those the committed tree holds (PROGRAM.95).
+    plan = plan_rows(after, tree_name, first_number, at("HEAD", path))
+    if not sealable and plan is None:
         print("task-history: %s — nothing to seal" % path)
         return
-    taken = [os.path.join(HIST, tree_name, key + ".md") for key in sealable
-             if os.path.lexists(os.path.join(HIST, tree_name, key + ".md"))]
+    final, row_files, removed = plan if plan else (after, {}, [])
+    taken = [p for p in [os.path.join(HIST, tree_name, key + ".md") for key in sealable] + [os.path.join(HIST, tree_name, name) for name in row_files]
+             if os.path.lexists(p)]
     if taken:
         sys.exit("task-history: %s already taken — an entry at a sealed file's path; nothing was written" % ", ".join(taken))
     # A seal writes the tree, its index and its history in place: no link anywhere on their paths below the root — the
@@ -586,24 +860,8 @@ def seal(tree_name):
     if torn:
         sys.exit("task-history: %s holds leaves with a line at column 0 after their ID, which the line slicing would tear;"
                  " nothing was written:\n  " % path + "\n  ".join(torn))
-    seal_of = {m[0]: key for key in sealable for m in groups[key]}
-    sealed = {key: [] for key in sealable}
-    out, i = [], 0
-    for lid, first, end in sorted((m for key in sealable for m in groups[key]), key=lambda m: m[1]):
-        out.extend(lines[i:first])
-        bend = body_end(lines, first, end)
-        sealed[seal_of[lid]].append("\n".join(lines[first:end]))
-        rel = "%s/%s.md" % (tree_name, seal_of[lid])
-        commit = commit_of(lines, first, bend, lid)
-        if commit == "not recorded" or "`pending`" in "\n".join(l for l in lines[first:bend] if l.startswith("  Commit:")):
-            print("task-history: warning — %s is `done` and its Commit field names no commit; its stub says %s" % (lid, commit), file=sys.stderr)
-        out.append(lines[first])
-        out.append("  Status: `done` — sealed in [`%s`](../task-history/%s); commit %s" % (rel, rel, commit))
-        out.extend(lines[bend:end])
-        i = end
-    out.extend(lines[i:])
-    after = "\n".join(out)
-    files = {key: ("\n".join(sealed[key]) + ("" if "\n".join(sealed[key]).endswith("\n") else "\n")) for key in sealable}
+    for warning in warnings:
+        print(warning, file=sys.stderr)
     # The proof: every new stub replaced by its body from its new file reconstructs the tree as it stood.
     alines, als = leaves(after)
     rebuilt, i = [], 0
@@ -621,6 +879,22 @@ def seal(tree_name):
     rebuilt.extend(alines[i:])
     if "\n".join(rebuilt) != before:
         sys.exit("task-history: the seal of %s would not reconstruct it byte for byte; nothing was written" % path)
+    # And every log row put back at its line reconstructs the tree the stubs left, the files' rows being exactly the
+    # rows taken, in order (PROGRAM.95).
+    if plan:
+        flines = final.split("\n")
+        for k, row, _ in sorted(removed):
+            flines.insert(k, row)
+        moved = {h: [r for k, r, hh in removed if hh == h] for h, _ in LOGS}
+        in_files = {h: [] for h, _ in LOGS}
+        for name in sorted(row_files):
+            noted = len(fails)
+            sections = row_file_sections(row_files[name], name) or []
+            del fails[noted:]
+            for h, _, _, rs in sections:
+                in_files[h].extend(rs)
+        if "\n".join(flines) != after or in_files != moved:
+            sys.exit("task-history: the seal of %s would not reconstruct its logs byte for byte; nothing was written" % path)
     # Write, then prove the result with the gate; roll back if it refuses.
     index_before = read(INDEX) if os.path.exists(INDEX) else None
     tree_dir = os.path.join(HIST, tree_name)
@@ -686,7 +960,7 @@ def seal(tree_name):
         STARTED.append(path)
         try:
             os.makedirs(tree_dir, exist_ok=True)
-            for key in order:
+            for key, text in [(key, files[key]) for key in order] + [(name[:-3], row_files[name]) for name in sorted(row_files)]:
                 fpath = os.path.join(HIST, tree_name, key + ".md")
                 written.append(fpath)
                 try:
@@ -695,12 +969,17 @@ def seal(tree_name):
                     written.pop()  # not this run's to remove
                     raise
                 with f:
-                    f.write(files[key])
+                    f.write(text)
             replaced.append((path, before))
-            put(path, after)
+            put(path, final)
             replaced.append((INDEX, index_before))
-            add_rows(tree_name, ["| `%s` | %d | %d | %d | `%s` | `%s` |" % (key, len(groups[key]), files[key].count("\n"),
-                                 len(files[key].encode("utf-8")), sha(files[key]), today) for key in order])
+            if order:
+                add_rows(tree_name, ["| `%s` | %d | %d | %d | `%s` | `%s` |" % (key, len(groups[key]), files[key].count("\n"),
+                                     len(files[key].encode("utf-8")), sha(files[key]), today) for key in order])
+            if row_files:
+                add_rows(tree_name, ["| `%s` | %d | %d | %d | `%s` | `%s` |" % (name[:-3], sum(1 for l in row_files[name].split("\n") if l.startswith("| `")),
+                                     row_files[name].count("\n"), len(row_files[name].encode("utf-8")), sha(row_files[name]), today)
+                                     for name in sorted(row_files)], logs=True)
             gate()
         except BaseException as e:
             whole = rollback()
@@ -715,8 +994,9 @@ def seal(tree_name):
                 % (path, "so it was rolled back" if whole else "and its rollback left what it named above")
                 + "\n  ".join(fails), sys.stderr)
             sys.exit(1)
-        say("task-history: %s — sealed %d subtree(s), %d leaves: %s; the reconstruction is byte for byte"
-            % (path, len(sealable), len(seal_of), " ".join(order)), sys.stdout)
+        say("task-history: %s — sealed %d subtree(s), %d leaves%s; %d log row(s)%s; the reconstruction is byte for byte"
+            % (path, len(sealable), len(seal_of), (": " + " ".join(order)) if order else "", len(removed),
+               (" in " + " ".join(sorted(row_files))) if row_files else ""), sys.stdout)
     finally:
         signal.pthread_sigmask(signal.SIG_SETMASK, previous)
 
@@ -745,16 +1025,16 @@ try:
                     pass
             quiet_exit(128 + signal.SIGINT)
         fails.clear()
-    checked, nstubs = gate()
+    checked, nrows, nstubs = gate()
 except (Unreadable, OSError) as e:
     note(str(e))
-    checked, nstubs = 0, 0
+    checked, nrows, nstubs = 0, 0, 0
 for msg in fails:
     print("TASK-HISTORY: " + msg, file=sys.stderr)
 if fails:
     print("TASK-HISTORY: %d breach(es) — docs/decisions/decision_task-tree-sealing.md" % len(fails), file=sys.stderr)
     sys.exit(1)
-print("task-history: OK (%d sealed file(s), each against its row and its sealing commit; the index append-only across history; %d stub(s), each against its body; every sealed leaf proven against its tree before its seal)" % (checked, nstubs))
+print("task-history: OK (%d sealed file(s), each against its row and its sealing commit; %d log-row file(s), each against its row, its logs and its tree before its seal; the index append-only across history; %d stub(s), each against its body; every sealed leaf proven against its tree before its seal)" % (checked, nrows, nstubs))
 PY
 }
 
@@ -1886,6 +2166,191 @@ HOOK
   else echo "SELF-TEST: a removal that failed stopped the next, or went unnamed" >&2; fi
   rm -rf "$work/docs/task-history/S" "$fake"; restore
   git -C "$work" rm -q docs/tasks/S.md; commit
+  # ── A sealed leaf's log rows follow it (PROGRAM.95, docs/decisions/decision_task-log-row-sealing.md) ──
+  hard() { git -C "$work" reset -q --hard HEAD && git -C "$work" clean -qfd; }
+  cat > "$work/docs/tasks/L.md" <<'MD'
+# L: a tree with logs
+
+## Task Tree
+
+- ID: `L`
+  Status: `active`
+  Goal: the tree
+
+- ID: `L.1`
+  Status: `done`
+  Goal: a closed subtree
+  Commit: `ARCHOGEN-L-0001 (leaf L.1)`
+
+- ID: `L.1.1`
+  Status: `done`
+  Goal: its child
+  Commit: `ARCHOGEN-L-0002`
+
+- ID: `L.2`
+  Status: `active`
+  Goal: an open subtree
+
+- ID: `L.2.1`
+  Status: `done`
+  Goal: a closed leaf of an open subtree
+  Commit: `ARCHOGEN-L-0003`
+
+## Current Frontier
+
+| Order | Leaf | Status | Why next |
+| --- | --- | --- | --- |
+| 1 | `L.2` | `active` | open |
+
+## Verification Log
+
+| Date | Leaf | Checks | Result |
+| --- | --- | --- | --- |
+| `2026-10-01` | `L.1` | the subtree's check | pass |
+| `2026-10-02` | `L.2` | the open subtree's check, which stays | pass |
+| `2026-10-03` | `L.1.1` | the child's check, with a `code span` | pass |
+| `2026-10-04` | `L.2.1` | the closed leaf's check | pass |
+| `2026-10-05` | `L.1` and `L.1.1` | a row naming two leaves, which stays | pass |
+
+## Commit Log
+
+| Leaf | Commit subject or reference | Notes |
+| --- | --- | --- |
+| `L.1` | `ARCHOGEN-L-0001 (leaf L.1)` | closed |
+| `L.1.1` | `ARCHOGEN-L-0002 (leaf L.1.1)` | closed |
+| `L.2.1` | `ARCHOGEN-L-0003 (leaf L.2.1)` | closed below an open subtree |
+| `L.2` | `pending` | open |
+
+## Changelog
+
+- `2026-10-01`: Created.
+MD
+  commit
+  arm "the census counts no log row before a leaf is sealed" 0 "census: HEAD — 0 byte(s) of log rows naming sealed leaves" --census HEAD
+  arm "the seal moves the log rows of the leaves it seals and of none other" 0 "sealed 2 subtree(s), 3 leaves: L.1 L.2.1; 6 log row(s) in rows-0001.md;" --seal L
+  grep -q '^| `2026-10-02` | `L.2` | the open subtree' "$work/docs/tasks/L.md" && grep -q '^| `2026-10-05` | `L.1` and `L.1.1` |' "$work/docs/tasks/L.md" &&
+    grep -q '^| `L.2` | `pending` | open |$' "$work/docs/tasks/L.md" && ! grep -q 'the child'"'"'s check' "$work/docs/tasks/L.md" && ! grep -q '^| `L.1.1` |' "$work/docs/tasks/L.md" ||
+    { arms=$((arms + 1)); echo "SELF-TEST: the row seal moved a live row, or left a sealed leaf's row in the tree" >&2; }
+  python3 - "$work" <<'PY' || { arms=$((arms + 1)); echo "SELF-TEST: the log-row file is not the form the seal writes" >&2; }
+import sys
+w = sys.argv[1]
+want = ("## Verification Log\n\n| Date | Leaf | Checks | Result |\n| --- | --- | --- | --- |\n"
+        "| `2026-10-01` | `L.1` | the subtree's check | pass |\n"
+        "| `2026-10-03` | `L.1.1` | the child's check, with a `code span` | pass |\n"
+        "| `2026-10-04` | `L.2.1` | the closed leaf's check | pass |\n"
+        "\n## Commit Log\n\n| Leaf | Commit subject or reference | Notes |\n| --- | --- | --- |\n"
+        "| `L.1` | `ARCHOGEN-L-0001 (leaf L.1)` | closed |\n"
+        "| `L.1.1` | `ARCHOGEN-L-0002 (leaf L.1.1)` | closed |\n"
+        "| `L.2.1` | `ARCHOGEN-L-0003 (leaf L.2.1)` | closed below an open subtree |\n")
+sys.exit(0 if open(w + "/docs/task-history/L/rows-0001.md", encoding="utf-8").read() == want else 1)
+PY
+  arm "the sealed tree and its log-row file pass the gate" 0 "1 log-row file(s)"
+  grep -q '^## `L` log rows$' "$work/docs/task-history/INDEX.md" && grep -q '^| `rows-0001` | 6 | 15 | ' "$work/docs/task-history/INDEX.md" ||
+    { arms=$((arms + 1)); echo "SELF-TEST: the index has no log-row table for L, or its row is not the file's" >&2; }
+  arm "sealing again moves nothing" 0 "nothing to seal" --seal L
+  commit
+  printf 'x' >> "$work/docs/task-history/L/rows-0001.md"
+  arm "a byte added to a log-row file is refused" 1 "a log-row file changed"
+  restore
+  sub docs/task-history/INDEX.md '^(\| `rows-0001` \| )6( \|)' '\g<1>7\2'
+  arm "a log-row file's row count unlike its row's is refused" 1 "holds 6 rows, and its row says 7"
+  restore
+  sub docs/task-history/INDEX.md '^\| `rows-0001` \|.*\n' ''
+  arm "a log-row file with no row is refused" 1 "rows-0001.md is in no row of"
+  restore
+  python3 - "$work" <<'PY'
+import sys
+w = sys.argv[1]; p = w + "/docs/task-history/INDEX.md"; s = open(p, encoding="utf-8").read()
+row = [l for l in s.split("\n") if l.startswith("| `rows-0001` |")][0]
+s = s.replace(row + "\n", "", 1).replace("| --- | --- | --- | --- | --- | --- |\n| `L.1` |", "| --- | --- | --- | --- | --- | --- |\n" + row + "\n| `L.1` |", 1)
+open(p, "w", encoding="utf-8").write(s)
+PY
+  arm "a log-row file listed among the sealed subtrees is refused" 1 "rows-0001.md holds no leaf"
+  restore
+  # A late row for a sealed leaf: the census counts it, and the next seal moves it alone, into the next file.
+  sub docs/tasks/L.md '^(\| `2026-10-05` \| `L\.1` and `L\.1\.1` \|.*\n)' '\1| `2026-10-06` | `L.1.1` | a late check of a sealed leaf | pass |\n'
+  commit
+  arm "the census counts the bytes of log rows a seal would take" 0 "census: L — 66 byte(s) of log rows naming sealed leaves" --census HEAD
+  arm "a late row of a sealed leaf is sealed alone, into the next file" 0 "sealed 0 subtree(s), 0 leaves; 1 log row(s) in rows-0002.md;" --seal L
+  arm "and both files pass, numbered in order" 0 "2 log-row file(s)"
+  commit
+  git -C "$work" mv -q docs/task-history/L/rows-0002.md docs/task-history/L/rows-0003.md
+  sub docs/task-history/INDEX.md '`rows-0002`' '`rows-0003`'
+  arm "log-row files numbered with a gap are refused" 1 "numbered 1, 3 — a tree's are 1 to n"
+  hard
+  # Seals made by hand: a log-row file and its row from given rows, which leg 7 judges against the tree.
+  hand_rows() { python3 - "$work" "$@" <<'PY'
+import hashlib, sys
+w, tree, key, text = sys.argv[1:5]
+open(w + "/docs/task-history/%s/%s.md" % (tree, key), "w", encoding="utf-8").write(text)
+p = w + "/docs/task-history/INDEX.md"; i = open(p, encoding="utf-8").read().rstrip("\n").split("\n")
+head = "## `%s` log rows" % tree
+if head not in i:
+    i += ["", head, "", "| Rows file | Rows | Lines | Bytes | sha256 | Sealed |", "| --- | --- | --- | --- | --- | --- |"]
+at = i.index(head); last = at
+for k in range(at + 1, len(i)):
+    if i[k].startswith("## "): break
+    if i[k].startswith("| "): last = k
+n = sum(1 for l in text.split("\n") if l.startswith("| `"))
+i[last + 1:last + 1] = ["| `%s` | %d | %d | %d | `%s` | `2026-10-20` |" % (key, n, text.count("\n"), len(text.encode("utf-8")), hashlib.sha256(text.encode("utf-8")).hexdigest())]
+open(p, "w", encoding="utf-8").write("\n".join(i) + "\n")
+PY
+  }
+  V=$'## Verification Log\n\n| Date | Leaf | Checks | Result |\n| --- | --- | --- | --- |\n'
+  hand_rows L rows-0003 "$V"$'| `2026-10-09` | `L.1` | a row the tree never held | pass |\n'
+  arm "a log-row file holding a row the tree did not hold is refused" 1 "did not hold there"
+  hard
+  sub docs/tasks/L.md '^\| `2026-10-02` \| `L\.2` \|.*\n' ''
+  hand_rows L rows-0003 "$V"$'| `2026-10-02` | `L.2` | the open subtree\'s check, which stays | pass |\n'
+  arm "a log-row file holding a row of a live leaf is refused" 1 "which is not sealed at HEAD — a row follows its leaf"
+  hard
+  sub docs/tasks/L.md '^(\| `2026-10-05` \| `L\.1` and `L\.1\.1` \|.*\n)' '\1| `2026-10-07` | `L.1` | a late check, dropped beside a seal | pass |\n| `2026-10-08` | `L.1.1` | a late check, sealed by hand | pass |\n'
+  commit
+  sub docs/tasks/L.md '^\| `2026-10-07` \| `L\.1` \|.*\n' ''
+  sub docs/tasks/L.md '^\| `2026-10-08` \| `L\.1\.1` \|.*\n' ''
+  sub docs/tasks/L.md '^\| `2026-10-05` \| `L\.1` and `L\.1\.1` \|.*\n' ''
+  hand_rows L rows-0003 "$V"$'| `2026-10-08` | `L.1.1` | a late check, sealed by hand | pass |\n'
+  arm "a sealed leaf's row dropped from the tree beside a seal is refused" 1 "naming the sealed leaf L.1, which HEAD's tree held, is neither kept at HEAD nor sealed"
+  hard
+  hand_rows L rows-0003 "$V"$'| `2026-10-05` | `L.1` and `L.1.1` | a row naming two leaves, which stays | pass |\n'
+  arm "a log-row file holding a row that names no one leaf is refused" 1 "names no one leaf"
+  hard
+  git -C "$work" reset -q --hard HEAD~1
+  hand_rows L rows-0003 $'## Commit Log\n\n| Leaf | Commit subject or reference | Notes |\n| --- | --- | --- |\n| `L.1` | `ARCHOGEN-L-0001 (leaf L.1)` | closed |\n\n'"$V"$'| `2026-10-01` | `L.1` | the subtree\'s check | pass |\n'
+  arm "a log-row file with its logs out of the tree's order is refused" 1 "not a log's heading in the tree's order"
+  hard
+  hand_rows L rows-0003 $'## Verification Log\n\n| Date | Leaf | Check | Result |\n| --- | --- | --- | --- |\n| `2026-10-06` | `L.1.1` | a late check of a sealed leaf | pass |\n'
+  arm "a log-row file whose header is not the tree's is refused" 1 "does not open with the header"
+  hard
+  hand_rows L rows-0003 $'## Verification Log\n\n| Date | Leaf | Checks | Result |\n| --- | --- | --- | --- |\n'
+  arm "a log-row file holding no row is refused" 1 "holds no row — a seal writes a log with its first row"
+  hard
+  # A row seal the gate refuses is rolled back: the tree keeps its row, the file is gone.
+  sub docs/tasks/L.md '^(\| `2026-10-05` \| `L\.1` and `L\.1\.1` \|.*\n)' '\1| `2026-10-07` | `L.2.1` | a late check, which a refused seal gives back | pass |\n'
+  commit
+  printf 'stray\n' > "$work/docs/task-history/notes.txt"
+  arm "a row seal the gate refuses is rolled back" 1 "so it was rolled back" --seal L
+  rm "$work/docs/task-history/notes.txt"
+  [ -z "$(git -C "$work" status --porcelain --untracked-files=all)" ] && grep -q 'which a refused seal gives back' "$work/docs/tasks/L.md" ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a rolled-back row seal left its file, or lost the tree's row" >&2; }
+  # Files sized by a budget: under a small one, two late rows go into two files, numbered on.
+  sub docs/tasks/L.md '^(\| `2026-10-07` \| `L\.2\.1` \|.*\n)' '\1| `2026-10-08` | `L.1` | a second late check, which the budget parts from the first | pass |\n'
+  commit
+  export TASK_HISTORY_ROW_BYTES=220
+  arm "a seal parts its rows into files under its byte budget" 0 "2 log row(s) in rows-0003.md rows-0004.md;" --seal L
+  unset TASK_HISTORY_ROW_BYTES
+  arm "and the parted files pass" 0 "4 log-row file(s)"
+  commit
+  # Prose under a log's heading, as a tree may keep, and a row parted from the table by a blank line: the table is
+  # the first one under the heading, and the parted row stays (COMMIT-LOG-ROWS reads live rows so).
+  sub docs/tasks/L.md '^## Commit Log\n\n' '## Commit Log\n\nA note on these rows, which the seal reads past.\n\n'
+  sub docs/tasks/L.md '^(\| `L\.2` \| `pending` \| open \|\n)' '\1| `L.1` | `ARCHOGEN-L-0001 (leaf L.1)` | a late row of a sealed leaf, in the table |\n\n| `L.1.1` | `ARCHOGEN-L-0002 (leaf L.1.1)` | a row parted from the table, which stays |\n'
+  commit
+  arm "prose under a log's heading is read past, and a row parted from the table stays" 0 "1 log row(s) in rows-0005.md;" --seal L
+  grep -q '^| `L.1.1` | `ARCHOGEN-L-0002 (leaf L.1.1)` | a row parted from the table, which stays |$' "$work/docs/tasks/L.md" ||
+    { arms=$((arms + 1)); echo "SELF-TEST: a row parted from its table was sealed" >&2; }
+  arm "and the files pass" 0 "5 log-row file(s)"
+  commit
   rm -rf "$work"
   arms=$((arms + 1))
   if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the real task history passes"

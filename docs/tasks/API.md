@@ -190,52 +190,13 @@ this tree is taken when it does not delay that.
 | Date | Leaf | Checks | Result |
 | --- | --- | --- | --- |
 | `2026-09-28` | `API` | tree seeded from the director's ruling and a feasibility census; no code | the census is recorded in `docs/decisions/decision_programmatic-interface.md`: six of eight crates I/O-free in production, two already `no_std`, zero third-party dependencies, no `Command::new` in any production half |
-| `2026-09-30` | `API.1` | the five I/O-free crates built for wasm32; the derivation's arms; the integration tier | all compile; the first cut of the detection matched nothing and the arms caught it; tier `incomplete`, 8 passed, the emulator quarantined |
-| `2026-09-30` | `API.2` | the gate on the product; nine arms and two mutations; `wasm_build.sh` on the same rule | 44 production files, none spawns; the naive test-half rule shown leaking and replaced in both scripts |
-| `2026-09-30` | `API.3.1` | a read of `archogen check`'s judging path (`check_cmd.rs`, `build_cmd.rs`), `ModuleSource` and `ROADMAP.md` §10.4 and §15 | the path's parts and their one shared routing point, `frontend`; `MemoryModules` already exists; the ruling's wording and §10.4's differ, flagged as findings §9 |
-| `2026-09-30` | `API.3.2` | the crate's eight legs; the wasm build and its derived set; the subprocess gate; three mutations; the whole suite; `make focused` | all pass; `archogen-api` compiles for wasm32; 690 passed / 0 failed over 55 suites; each mutation killed |
-| `2026-09-30` | `API.3.3` | the three parity legs and their arms; six mutations; the whole catalogue; the whole suite | 6 pass; each mutation killed by its leg; 38 of 38 as expected; every transcript and frozen verdict unchanged |
-| `2026-09-30` | `API.3.4` | the example and its transcript test; the register's self-test and real tree; the shape test; the whole suite; `make focused` | the transcript holds and fails when edited; 14 of 14 arms, 8 entries; 698 passed / 0 failed over 57 suites |
-| `2026-09-30` | `API.4.1` | the determinism test; the register before and after the bump; the manifests' history; the whole suite | the same request answers identically; the register refused 1.1 until its entry moved; every manifest version ever written is 0.1.0; 708 passed / 0 failed over 58 suites |
-| `2026-09-30` | `API.4.2` | the cost per byte measured; the budget's five legs; three mutations; the wasm build; the whole suite; the doctrines | about 75 bytes held per byte sent; both edges hold through the description and the modules; each mutation killed; 713 passed / 0 failed over 59 suites |
-| `2026-09-30` | `API.5.1` | a throwaway `cdylib` for `wasm32-unknown-unknown` on the pinned toolchain, read by `WebAssembly.Module`; `#[no_mangle]` under `deny(unsafe_code)`; the module-file rule read from `eadl-front` | no imports; `memory`, the functions and two linker globals exported; the lint refuses each unmangled export; `<dir>/<module>.eadl` |
-| `2026-09-30` | `API.5.2` | the host tests; the same tests under Miri; two catalogued mutations; the shape golden blessed once; the focused tier, the wasm build and the gates | 8 of 8, and 8 of 8 under Miri; both mutations killed; the golden passes unblessed; all green |
-| `2026-09-30` | `API.5.3` | the artifact inspected by `WebAssembly.Module`; every tracked description through the loader, against the host build and `archogen check`; six RED arms; a broken loader on the real tree; the integration tier | no imports, the decided exports; 108 of 108 byte-identical, each exit equal; 6 of 6; refused, then green when restored; 11 of 11 |
-| `2026-09-30` | `API.5.4` | the book's page transcript through the page's own logic; five new RED arms and a real-tree RED; the page's wiring against a stand-in document; the book's serving command read with `curl`; the integration tier | reproduced; 11 of 11 arms, refused then green; both answers as expected; every file with its right content type; 11 of 11 — no browser run (`API.5.5`) |
-| `2026-09-30` | `API.5.5` | the director ran the book's "Opening the page" in a browser and reported the answer after Check | the book's transcript, line for line; the load answer and the browser's name and version not yet reported |
-| `2026-09-30` | `API.5.5` | the director's second report: the page's answer on load, and the browser | `invalid-description (exit 10)` as the book says; Chrome `154.0.8037.58` (arm64); the leaf and `API.5` closed |
-| `2026-10-02` | `API.6` | each acceptance clause against its test or record; `make integration` | every clause evidenced; 11 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined; `API.6` closed |
-| `2026-10-02` | `API.7` | the reference legs 8 and 9; the transcript replay; the doctrines | 55 passed; 3 passed; all green; `API.7` and the tree closed |
 
 ## Commit Log
 
 | Leaf | Commit subject or reference | Notes |
 | --- | --- | --- |
 | `API` | `ARCHOGEN-API-0078 (leaf API)` | tree seeded: `ROADMAP.md` §10.4, the decision record and its index row, seven leaves, three of the four open questions routed to a named owner |
-| `API.1` | `ARCHOGEN-API-0157 (leaf API.1)` | **the engine compiles for the browser** — measured by a derived `wasm-build` step; four members excluded by the I/O they do, each named |
-| `API.2` | `ARCHOGEN-API-0158 (leaf API.2)` | **the product runs nothing, and a gate says so** — `NO-SUBPROCESS` |
-| `API.3.1` | `ARCHOGEN-API-0174 (leaf API.3.1)` | **the engine API's design, recorded** — a crate, one outcome vocabulary, a version promise, parity three ways; `API.3` decomposed |
-| `API.3.2` | `ARCHOGEN-API-0175 (leaf API.3.2)` | **the engine API exists** — `archogen-api`: `check`, `Response`, `Status` moved into it, `VERSION`; compiles for wasm32 |
-| `API.3.3` | `ARCHOGEN-API-0176 (leaf API.3.3)` | **the CLI checks through the API** — its own routing removed; parity gated structurally, by operation and by behaviour |
-| `API.3.4` | `ARCHOGEN-API-0177 (leaf API.3.4)` | **the book documents the engine API** — `engine-api.md`, its example held to a run; version `1.0` fixed and registered; `API.3` closed |
-| `API.4.1` | `ARCHOGEN-API-0182 (leaf API.4.1)` | **an instance defined** — one build, no state between requests; every response names its engine; API `1.1` |
-| `API.4.2` | `ARCHOGEN-API-0183 (leaf API.4.2)` | **a byte budget per request** — 1 MiB by default, set by the instance; `tool-failure` past it, never partial; `API.4` closed |
-| `API.5.1` | `ARCHOGEN-API-0201 (leaf API.5.1)` | **the wasm binding decided** — three exports, a framed request, a versioned JSON response, no imports as the authority test |
-| `API.5.2` | `ARCHOGEN-API-0202 (leaf API.5.2)` | **the wasm binding, built and tested on the host** — `crates/archogen-wasm`, its framing, its encoding and its three exports |
-| `API.5.3` | `ARCHOGEN-API-0203 (leaf API.5.3)` | **the browser module answers as the command line does** — the `wasm-binding` tier step, the loader and the harness |
-| `API.5.4` | `ARCHOGEN-API-0205 (leaf API.5.4)` | **the page** — `crates/archogen-wasm/page/`, documented with a transcript the tier reproduces; `API.5.5` filed for the browser run this session could not make |
-| `API.5.5` | `ARCHOGEN-API-0209 (leaf API.5.5)` | partial: the Check answer observed in a browser by the director; the leaf stays open for the load answer and the browser |
-| `API.5.5` | `ARCHOGEN-API-0220 (leaf API.5.5)` | **the page run in a real browser**, both legs observed by the director in Chrome 154; `API.5` closed |
-| `API.6.1` | `ARCHOGEN-API-0293 (leaf API.6.1)` | **the MCP server designed** — both protocol eras read at the source and answered; the specification ledgered by commit and hash |
-| `API.6.2` | `ARCHOGEN-API-0294 (leaf API.6.2)` | **each command declares whether it is offered** — `Exposure`, the builds and `verify` excluded citing §10.4, `tools()` |
-| `API.6.3` | `ARCHOGEN-API-0332 (leaf API.6.3)` | **the server's JSON reader and writer**: RFC 8259 and nothing else, a size and a nesting bound, a name twice refused, a number kept as its text; `spec.rs` formatted, which `focused` had failed on since `-0294` |
-| `API.6.4` | `ARCHOGEN-API-0333 (leaf API.6.4)` | **the MCP server, `archogen mcp`**: both eras over stdio, the command table's tools, `check` answering the wasm binding's bytes, its verdicts the command line's on the conformance cases |
-| `API.6.5` | `ARCHOGEN-API-0335 (leaf API.6.5)` | **the book documents the MCP server**: *The server an agent spawns*, its transcript a real run the stdio test replays |
-| `API.6.5` | `ARCHOGEN-API-0337 (leaf API.6.5)` | **the MCP server's review answered**: the duplicate check linear, the line bound six times the budget, no `null` ids, integral ids, argument errors as tool errors; D3 filed as `API.6.6` |
-| `API.6.6` | `ARCHOGEN-API-0338 (leaf API.6.6)` | **an answer as bounded as its request**: a diagnostic quotes a 160-character window of a long line; 1.5 GB to 0.57 MB for the reviewer's 1 MB line |
-| `API.7` | `ARCHOGEN-API-0353 (leaf API.7)` | **the programmatic interface's chapter**: what each consumer can do and receives, today and ahead; the tree closed |
 | `API` | `ARCHOGEN-API-0354 (leaf API)` | API.1 to API.7 sealed into `docs/task-history/API/`, 24 leaves, each with its stub; `docs/tasks/` was past its ceiling |
-| `API.6` | `ARCHOGEN-API-0341 (leaf API.6)` | **the MCP server closed**: every acceptance clause evidenced, the integration tier 11 of 11; `API.7` next |
 
 ## Changelog
 

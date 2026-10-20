@@ -15,3 +15,4 @@ To prove a file, compare `sha256sum docs/decision-history/<RECORD>/<NN>.md` with
 | `decision_findings-for-director-review` | `04` | 21 | 1543 | `e3a309b27e3e91b95b1fd27bee6b6db02be43a1971725518036e6d328d94ec31` | `2026-09-30` |
 | `decision_findings-for-director-review` | `08` | 47 | 3857 | `121aff31e0b4ab4b8162f630506bc33303bd41057a13b1240707a3677b06a80b` | `2026-09-30` |
 | `decision_findings-for-director-review` | `10` | 44 | 2767 | `9591881df3c96e96aa0fd96ea06a7dbce7d56463688e228bb1b3e059c963e752` | `2026-09-30` |
+| `decision_findings-for-director-review` | `06` | 142 | 11887 | `0460631c8cf702384c4b3acc519a5062415080e062b2751d768fc4c7780bb9da` | `2026-10-20` |

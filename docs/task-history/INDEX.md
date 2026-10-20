@@ -61,6 +61,12 @@ with its row.
 | `M1.29.2` | 1 | 128 | 11483 | `f71997701417a20f0d029daa1aebcfd16db0ed4f70768b5446bcd4a0f7f618ba` | `2026-10-10` |
 | `M1.29.3` | 1 | 107 | 8990 | `dfd04eb8fdf53b9c89ddfda761294c132ab2798da26141340b452d8c1e6a744b` | `2026-10-10` |
 
+## `M1` log rows
+
+| Rows file | Rows | Lines | Bytes | sha256 | Sealed |
+| --- | --- | --- | --- | --- | --- |
+| `rows-0001` | 139 | 148 | 72770 | `9e257e215e79dcc52eefc6af3f12a47ee3c6382f9aa6dea79e7fd8efefbbdf8e` | `2026-10-20` |
+
 ## `PROGRAM`
 
 | Subtree | Leaves | Lines | Bytes | sha256 | Sealed |
@@ -154,6 +160,12 @@ with its row.
 | `PROGRAM.93` | 1 | 19 | 1786 | `5c253c03713b0b40822f056e064dba4bfbda83a0fd71b31eef7626958509fbed` | `2026-10-20` |
 | `PROGRAM.94` | 1 | 16 | 1071 | `e9d71c423401856facf92b33fb5ddf22d0b48f7a4946ab53b16e4237d612aa89` | `2026-10-20` |
 
+## `PROGRAM` log rows
+
+| Rows file | Rows | Lines | Bytes | sha256 | Sealed |
+| --- | --- | --- | --- | --- | --- |
+| `rows-0001` | 301 | 310 | 96793 | `41a77c20f3b43529fac671f238034c60815a7f187ba50792c3012d1c81beafb4` | `2026-10-20` |
+
 ## `M2`
 
 | Subtree | Leaves | Lines | Bytes | sha256 | Sealed |
@@ -189,6 +201,12 @@ with its row.
 | `M2.7.6.2` | 1 | 49 | 4490 | `0b2551ae34f7bacc1e3188a02636eda2b584781a1d79b198e620f1800cab94cf` | `2026-10-10` |
 | `M2.7.6.3` | 1 | 35 | 3005 | `3bb3e3e6951a29bdbf5af44b2a7ace3f5cae760ffe2d93121a63cddcad6e53d5` | `2026-10-10` |
 
+## `M2` log rows
+
+| Rows file | Rows | Lines | Bytes | sha256 | Sealed |
+| --- | --- | --- | --- | --- | --- |
+| `rows-0001` | 182 | 191 | 46379 | `fde6d57a9c0b398073970a7762087488b730b35c8f94734e3167525be056b640` | `2026-10-20` |
+
 ## `API`
 
 | Subtree | Leaves | Lines | Bytes | sha256 | Sealed |
@@ -200,6 +218,12 @@ with its row.
 | `API.5` | 6 | 199 | 17404 | `ae826aac09dc32f8e04ca24f3c14fa675302e3be9824c5646ab02118414c14c4` | `2026-10-02` |
 | `API.6` | 7 | 235 | 20730 | `4ac41ac66bdb9f6546c7c63b2ab96e8deddad8838b66f0dbeb1ec3683ef70ff9` | `2026-10-02` |
 | `API.7` | 1 | 22 | 2074 | `3b987992fa09fc7769b542c94bcf2a20f39b54b270c2e8908426485f4d8465b2` | `2026-10-02` |
+
+## `API` log rows
+
+| Rows file | Rows | Lines | Bytes | sha256 | Sealed |
+| --- | --- | --- | --- | --- | --- |
+| `rows-0001` | 39 | 48 | 8764 | `a0f0785c2569519b944982652174efb31b7c4c2725bb2659288d58a4f8ae3c23` | `2026-10-20` |
 
 ## `S0`
 
@@ -214,6 +238,12 @@ with its row.
 | `S0.7` | 1 | 70 | 5852 | `ea0b1cda5e2ea9dd918750c5d4966e21e27e827098139e5cf20d6370115be573` | `2026-10-05` |
 | `S0.8` | 1 | 94 | 7751 | `c4d9fad26fa8b454a0da972d077d9ec052f4439c1f530d82203f81ea7a76559f` | `2026-10-05` |
 
+## `S0` log rows
+
+| Rows file | Rows | Lines | Bytes | sha256 | Sealed |
+| --- | --- | --- | --- | --- | --- |
+| `rows-0001` | 31 | 40 | 4349 | `35c4e6912453e5f1383a14dd2492376d3a16fcd5bece096b08aaaed2bb73c65a` | `2026-10-20` |
+
 ## `M0`
 
 | Subtree | Leaves | Lines | Bytes | sha256 | Sealed |
@@ -225,6 +255,12 @@ with its row.
 | `M0.5` | 1 | 39 | 2888 | `db0961d879c1a007351ad1e3421f21ca6cd7d8888c5cf9b1da61869e9d1e91b2` | `2026-10-05` |
 | `M0.6` | 1 | 48 | 3631 | `7eac7321a5bb25fb7638d72039038b7a18c9218253629173e7627f2c7b205bda` | `2026-10-05` |
 | `M0.7` | 1 | 47 | 3438 | `58c2cb1fb4b7f6b9a0724d577e580a6f37f26007e4f4b03437e01a37f50becd5` | `2026-10-05` |
+
+## `M0` log rows
+
+| Rows file | Rows | Lines | Bytes | sha256 | Sealed |
+| --- | --- | --- | --- | --- | --- |
+| `rows-0001` | 14 | 23 | 1703 | `5ffea7e73d42114b3f864a58bb513c7018cf40fec065d5784843f55ace0c8767` | `2026-10-20` |
 
 ## `M3`
 
@@ -381,3 +417,10 @@ with its row.
 | `M3.6.9.6.3.2.2.15.2.1.6.3` | 1 | 7 | 487 | `ffb0b21de60f84cf3e9dbbcdb8e948b362860332487d50f46d9ae394aa35a338` | `2026-10-20` |
 | `M3.6.9.6.3.2.2.15.2.1.6.1.0` | 1 | 14 | 1250 | `cc6aaa5cb4653884d20b54deaa24c78fc64fb0abdde5dddae27567f506883293` | `2026-10-20` |
 | `M3.6.9.6.3.2.2.15.2.1.6.1.1.0` | 1 | 7 | 577 | `df566130998b626252970ec4ac6e2fcf49e3e7c7042640cafdf14cf22b9da1b8` | `2026-10-20` |
+| `M3.6.9.6.3.2.2.15.2.1.6.1.1.1` | 1 | 17 | 1501 | `c365ab786ac266a3e55f1c721f991bac0a980b5b04f78ec816c0557a74c4a488` | `2026-10-20` |
+
+## `M3` log rows
+
+| Rows file | Rows | Lines | Bytes | sha256 | Sealed |
+| --- | --- | --- | --- | --- | --- |
+| `rows-0001` | 416 | 425 | 120009 | `83ba6218a823495d1133129ca7127db012dd716c73e442679a290259fd4bfd7b` | `2026-10-20` |

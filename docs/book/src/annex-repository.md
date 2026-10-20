@@ -600,7 +600,12 @@ A task tree records every leaf of its work, with its checklist and evidence. Mos
   decision — so, below an open one, each finished part moves the same way, the largest it can, into a file of its own;
   when the open part closes, the rest of it follows into its own file (`PROGRAM.69`).
 - **What stays.** Each leaf leaves two lines in the tree, its name and a link to where its text now is. The live
-  work, the list of what is next and the logs stay where they were.
+  work and the list of what is next stay where they were.
+- **The logs follow** (`2026-10-20`, `PROGRAM.95`). A tree also keeps two logs, one row per check and one per
+  commit. Once a leaf has moved, its rows in both are finished work too, and the same tool moves them, byte for
+  byte and in the tree's order, into numbered files beside the leaf files, as many as a byte budget needs, each
+  listed in the index with its digest; a row naming a leaf still in the tree, no leaf or several stays, and so
+  does a row not yet committed, until the next run (`docs/decisions/decision_task-log-row-sealing.md`).
 - **The proof.** Before anything is written, the tool checks that putting every leaf back would give the tree as it was,
   byte for byte (`docs/decisions/decision_task-tree-sealing.md`). After writing, it runs the check below on the result,
   and undoes every write if the check refuses or an error stops it — each file written whole or not at all, and whatever
@@ -628,6 +633,10 @@ A task tree records every leaf of its work, with its checklist and evidence. Mos
 - that no live leaf sits inside a part that is sealed, in any tree directly under `docs/tasks/` (one in a sub-folder is
   `PROGRAM.72`'s), and that each tree holds only its own leaves, each named once; that every sealed file holds a leaf;
   and that the index keeps one table per tree, its rows under it.
+- that every file of moved log rows is the form the tool writes and matches its index row; that its rows were the
+  tree's own just before the commit that moved them, in that order and under that log's header; that every row
+  that log then held for a sealed leaf is still in the tree or in those files, none invented; and that each row
+  names one sealed leaf of that tree.
 
 ```console
 $ bash scripts/check_task_history.sh                  # the gate

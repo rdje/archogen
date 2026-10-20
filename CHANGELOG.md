@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a sealed leaf's log rows follow it
+
+`ARCHOGEN-PROGRAM-0827` (leaf `PROGRAM.95`), `2026-10-20`.
+
+- Extend the task-history seal: every Verification Log and Commit Log row naming a stub, and held by
+  the committed tree, moves byte for byte and in the tree's order into numbered log-row files under
+  `docs/task-history/<TREE>/`, as many as a byte budget needs, listed in the index per tree; nothing
+  is left where a row stood. The seal's proof, gate, rollback and signal rules cover the rows.
+- Add the gate's seventh leg, provenance of rows against the tree's logs just before their seal, and
+  the census's measure of rows a seal would take; 24 RED arms fail first and pass with the tool.
+- Seal every tree's sealed-leaf rows, 1122 rows into seven files, taking `docs/tasks/` from 815 600 to
+  465 813 bytes; repair the broken Verification Log tables of `M3` and `PROGRAM`, whose rows the next
+  seal takes; seal the findings register's ruled §6 to make room for the ruling in `docs/decisions/`.
+
+
 ## archogen — refuse ambiguous dependency records
 
 `ARCHOGEN-M3-0826` (leaf `M3.6.9.6.3.2.2.15.2.1.6.1.1.1`), `2026-10-20`.

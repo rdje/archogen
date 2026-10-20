@@ -21,7 +21,8 @@
   maintained external repositories and submodules stay read-only.
   Corrected renderer adoption stays owned in `.4.3.4.1`.
   Final full sweeps and review precede `M3.3`.
-  `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
+  `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.95` closed `2026-10-20`: a sealed leaf's log rows
+  follow it, and the next `--seal` of `M3` and `PROGRAM` takes the rows their repaired tables now hold.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.
   `M3.6.3.2.1.1` owns runner-baseline compatibility after key encoding; an authorized cadence run is needed. `M2`'s open leaves
   wait on the director: `M2.7.4.5` and `M2.7.6`'s review and hosting half. No branches.
