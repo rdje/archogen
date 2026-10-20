@@ -140,6 +140,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#complete-current-caller-suffix-checkpoint)
 - Complete current controller replay — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-current-controller-replay)
+- Complete current environment-tail checkpoint — [Annex C: Trust proof
+  records](annex-trust-proofs.md#complete-current-environment-tail-checkpoint)
 - Complete current observer replay — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-current-observer-replay)
 - Complete diagnostic-region replay — [Annex C: Trust proof

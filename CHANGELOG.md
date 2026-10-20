@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — close the current environment-tail checkpoint
+
+`ARCHOGEN-M3-0821` (leaf `M3.6.9.6.3.2.2.15.2.1.5.2`), `2026-10-20`.
+
+- Reconcile the historical/current tail with the complete source proof and exact
+  committed cleanup; no equivalence follows merely from candidate absence.
+- Fresh current24/full201 gives1K/23E, strict0: every unchanged reason holds and the
+  mapped non-tail continue has actual finishing kills. A proposed generic reason refuses.
+- Revalidate5 actual source/producer/close controls,48 bindings and37+2 producer sources;
+  preserve every reason, source and semantic test. The201 selected names contain no ignored tests.
+- Restore all1152 original/copied inputs, exact parent names and the reconstructible
+  held root; preserve331 prior archives/new cleanup seal and full book evidence/adapters.
+  Close only .1/.5; dependency paths next, compiler/caller/global/review still open.
+
+
 ## archogen — remove the proved redundant environment tail
 
 `ARCHOGEN-M3-0820` (leaf `M3.6.9.6.3.2.2.15.2.1.5.1.2`), `2026-10-20`.
