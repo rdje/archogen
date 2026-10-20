@@ -27,14 +27,9 @@ The repository boundary runs **in both directions**, and both halves are binding
 
 ### The incident, correctly stated
 
-⚠️ **This record was first written with the direction reversed, and the correction is kept visible
-rather than silently applied.** The first version read the upstream disclosure as a claim that
-*archogen* had written into LinkedSpec. The director corrected it on `2026-09-27`: **LinkedSpec's
-agent modified a few `.md` files in *this* repository** to notify archogen that the logged bug
-reports had been fixed. The director objected to LinkedSpec, which has since made every other
-repository strictly read-only in its own bootstrap and durable memory, preserved an unapplied
-recovery patch on its side, and left archogen in control of its own tree. It was a one-time error
-and is not expected to recur.
+LinkedSpec’s agent wrote into archogen; the original attribution reversed that direction.
+The [verbatim incident account](../book/src/annex-trust-proofs.md#repository-boundary-incident-record)
+preserves the correction and context.
 
 So the crossing was **inbound**. What was audited here, with tools rather than assumption:
 
@@ -97,3 +92,8 @@ A rule that lives only in a prompt is weaker than either.
    gate and cannot have one from here; it is the rule, and a leaf.
 
 Related: [[decision_findings-for-director-review]] (what needs the director, not an agent).
+
+**Director exception (2026-10-20):** disposable project-owned test, hook and diagnostic Git
+fixtures under ignored repository-local `target/` may be created, written, committed,
+recreated and removed. Maintained external checkouts and submodules stay read-only, even
+when linked or placed there. [Exact ruling and scope](../book/src/annex-trust-proofs.md#disposable-fixture-exception).

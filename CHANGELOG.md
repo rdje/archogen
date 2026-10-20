@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — assess absolute dependency paths
+
+`ARCHOGEN-M3-0822` (leaf `M3.6.9.6.3.2.2.15.2.1.6.0`), `2026-10-20`.
+
+- Reconcile all four historical/current dependency-absolute edits: native4S/full201,
+  strict1 unmet; all1153 original/copied inputs and exact names restored.
+- Preserve production, tests and reasons; reject14 native/binding and4 mapping false
+  receipts. Retain full portable inputs/output/adapters, six pre-approval task states
+  and the approved state in the unbounded book; all332 prior/new333rd archives exact.
+- Own every survivor; record the director's ignored project-owned Git-fixture exception
+  and preserve the external-repository boundary. Verify that exception next, then repairs.
+
+
 ## archogen — close the current environment-tail checkpoint
 
 `ARCHOGEN-M3-0821` (leaf `M3.6.9.6.3.2.2.15.2.1.5.2`), `2026-10-20`.

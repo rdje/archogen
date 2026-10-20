@@ -60,6 +60,10 @@ human is working. Follow it exactly.
   the part visible from here — each vendored checkout at its pin, nothing committed, modified or
   created in it; the rest is this rule
   (`docs/decisions/decision_repository-boundary-read-only.md`).
+  **Director exception (2026-10-20):** project-owned disposable Git fixtures may be
+  created, written, committed and removed under ignored `target/` for tests, hooks or
+  diagnostics. External maintained repositories and submodules stay read-only, including
+  ones placed or linked there. Same-volume and sealed-evaluation rules still apply.
 - **The sealed evaluation set is never read before leaf `M6.5`.** Its text is out of the tree. Never write to disk a
   commit older than `6d61f65` whose history holds the set (a checkout, restore, reset, archive, clone or worktree at
   it, a revert of `2f6f331`),

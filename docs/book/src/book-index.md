@@ -194,6 +194,8 @@ a change that leaves it stale, so it is never edited by hand.
   may claim](evidence.md), [What the scheduling checker establishes](analysis.md), [The runtime: decisions, not
   actions](runtime.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned,
   and what changing it costs](versions.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- Dependency path assessment contracts — [Annex C: Trust proof
+  records](annex-trust-proofs.md#dependency-path-assessment-contracts)
 - **description** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [The supported
   profile](profile.md), [The use cases](usecases.md), [Reading a description](reading.md), [Kinds and
@@ -210,6 +212,9 @@ a change that leaves it stale, so it is never edited by hand.
 - Diagnostic selector assessment — [Annex C: Trust proof records](annex-trust-proofs.md#diagnostic-selector-assessment)
 - Diagnostics — [The archogen command line](cli.md#diagnostics)
 - Diagnostics point at the problem — [Reading a description](reading.md#diagnostics-point-at-the-problem)
+- Disposable fixture exception — [Annex C: Trust proof records](annex-trust-proofs.md#disposable-fixture-exception)
+- Disposable Git fixtures policy conflict — [Annex C: Trust proof
+  records](annex-trust-proofs.md#disposable-git-fixtures-policy-conflict)
 - **DMA** — [definition](glossary.md), [The supported profile](profile.md), [Refinement](refinement.md)
 - **DSP** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 
@@ -328,6 +333,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Incremental matcher reasons — [Annex C: Trust proof records](annex-trust-proofs.md#incremental-matcher-reasons)
 - Initial cache and current-reason assessment — [Annex C: Trust proof
   records](annex-trust-proofs.md#initial-cache-and-current-reason-assessment)
+- Initial dependency absolute assessment — [Annex C: Trust proof
+  records](annex-trust-proofs.md#initial-dependency-absolute-assessment)
 - Initial parent killing tests — [Generated-sources test adequacy](trust-adequacy.md#initial-parent-killing-tests)
 - Initial role and build operator outcomes — [Generated-sources test
   adequacy](trust-adequacy.md#initial-role-and-build-operator-outcomes)
@@ -526,7 +533,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **R24-11** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **RAM** — [definition](glossary.md), [Where generated systems run](targets.md)
 - **README** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Verifying
-  the toolchain](verification.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
+  the toolchain](verification.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C:
+  Trust proof records](annex-trust-proofs.md)
 - Real Cargo regression parents and exact replay — [Annex C: Trust proof
   records](annex-trust-proofs.md#real-cargo-regression-parents-and-exact-replay)
 - Record-presence state assessment — [Annex C: Trust proof
@@ -561,6 +569,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#repaired-caller-integration-checkpoint)
 - Repeated generator preflight refusals — [Annex C: Trust proof
   records](annex-trust-proofs.md#repeated-generator-preflight-refusals)
+- Repository boundary incident record — [Annex C: Trust proof
+  records](annex-trust-proofs.md#repository-boundary-incident-record)
 - Repository path caller repair — [Annex C: Trust proof records](annex-trust-proofs.md#repository-path-caller-repair)
 - Required crate-name minimum membership — [Annex C: Trust proof
   records](annex-trust-proofs.md#required-crate-name-minimum-membership)
