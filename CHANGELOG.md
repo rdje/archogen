@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — close the current caller suffix checkpoint
+
+`ARCHOGEN-M3-0816` (leaf `M3.6.9.6.3.2.2.15.2.1.4.4`), `2026-10-20`.
+
+- Freshly bind both historical/current caller edits and replay all201 current semantic
+  parents: 1K/1E, strict0; contains fails the intended regression and the shorter
+  prefix retains its exact guarded reason. No new E or broader closure is inferred.
+- Revalidate actual producer/constructor controls,18 source/pin/wiring premises and
+  changed-premise/wrong-oracle controls; preserve48 bindings and37+2 producer sources.
+- Restore1147 original/copied inputs; reconstruct their exact identities/root tree
+  from the retained commit and portable delta, rejecting five incomplete derivations.
+- Retain326 prior archives and the exact new two-node cache seal. Publish complete
+  native/proof/mapping/input evidence and adapters in the unbounded book; advance to
+  the environment-loop tail. Full caller/global/review and renderer adoption stay open.
+
+
 ## archogen — close the repaired cache and current-reason checkpoint
 
 `ARCHOGEN-M3-0815` (leaf `M3.6.9.6.3.2.2.15.2.1.4.3.2.3`), `2026-10-20`.

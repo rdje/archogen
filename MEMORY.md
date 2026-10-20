@@ -14,8 +14,8 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.6`; `PROGRAM` resumes at `PROGRAM.71`.
-- **Next action:** complete the current caller suffix checkpoint in
-  `M3.6.9.6.3.2.2.15.2.1.4.4`; rebind discovery, producer premises and all current semantic parents.
+- **Next action:** assess the environment-loop tail in
+  `M3.6.9.6.3.2.2.15.2.1.5`; establish supported reachability and an intended kill or precise source proof.
   Corrected renderer adoption stays owned in `.4.3.4.1`.
   Final full sweeps and review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.

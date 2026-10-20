@@ -136,6 +136,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#complete-cache-and-current-reason-replay-plan)
 - Complete compiler-function measurement — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-compiler-function-measurement)
+- Complete current caller suffix checkpoint — [Annex C: Trust proof
+  records](annex-trust-proofs.md#complete-current-caller-suffix-checkpoint)
 - Complete current controller replay — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-current-controller-replay)
 - Complete current observer replay — [Annex C: Trust proof
