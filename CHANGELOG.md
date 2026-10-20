@@ -5,6 +5,23 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — assess current cache edits and own seven survivors
+
+`ARCHOGEN-M3-0812` (leaf `M3.6.9.6.3.2.2.15.2.1.4.3.2.1`), `2026-10-20`.
+
+- Complete43/full200 native assessment:23 existing E,11 intended K,7 S,2 U; strict1.
+  All1141 original/copied inputs restore, with opaque gitlink metadata only.
+- Independently qualify both U through actual component baseline/mutant/recovery builds;
+  twelve false diagnostics refuse. Retain all outcomes, why text and finishing names.
+- Cargo-qualified in-memory actual-method observations distinguish all seven survivors;
+  own a bounded permanent regression and complete final replay before cache closure.
+- Fifteen false native/binding receipts, twelve diagnostic receipts and four input
+  reconstruction controls refuse; preserve48 bindings and37+2 producer snapshots.
+- Seal the completed plan exactly; preserve prior archives, full parent record and
+  complete public evidence/adapters. Remove the stale hand-written planning control count.
+  Production, previous tests and reasons unchanged; final publication gates required.
+
+
 ## archogen — freeze the complete cache and current-reason replay plan
 
 `ARCHOGEN-M3-0811` (leaf `M3.6.9.6.3.2.2.15.2.1.4.3.2.0`), `2026-10-20`.

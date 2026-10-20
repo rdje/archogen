@@ -10712,7 +10712,7 @@ records back into their compact entries reconstructs the whole prior task file b
 
 Prepared `2026-10-20`: actual CLI discovery, independent source-line anchors confirmed by
 `rg`, exact key matching and full argument-list reconstruction confirm the selected plan.
-The audit rejects `13` altered plans: missing cache/reason edits, an unrelated or duplicate
+The audit rejects the altered plans listed in its retained control roster: missing cache/reason edits, an unrelated or duplicate
 edit, a shortened lookup span omitting `continue`, false membership/source/reason/raw/parent
 fields, an altered production delta, a missing native argument and false embedded parent/source/producer maps.
 
@@ -10732,3 +10732,1893 @@ The source, current reasons and critical bindings are unchanged; this documentat
 unit executes no mutation and supplies no new semantic coverage or equivalence.
 The pinned book build and commit doctrine gates are required before the planning commit.
 The initial native assessment starts afterward under its separately owned leaf.
+
+
+### Initial cache and current-reason assessment
+
+Measured `2026-10-20`, leaf `M3.6.9.6.3.2.2.15.2.1.4.3.2.1`. This is the initial assessment of the preceding frozen plan. Its exact command, candidate blocks, reason text, parent roster, source deltas and producer bindings remain in [the complete plan](#complete-cache-and-current-reason-replay-plan). The current production source is unchanged. The assessment does not close the cache checkpoint, later full-source sweeps, F30, or independent review.
+
+The native command uses the maintained [mutation sweep](verification.md#selected-mutation-ids) and [adequacy parser](../../../scripts/trust_adequacy.py). Read-only samples compared the copied source against the frozen replacements; only complete native result lines were counted. The native terminal result below, rather than a progress sample, supplies the complete outcome census.
+
+The held indexed tree is `cf10a220a4fa3db4b3e74cf00676427d513dc579`. Original and copied restoration cover `1141` regular inputs; the submodule is bound only by its opaque Git identity. Source bindings, public producer snapshots, the full parent roster and exact reason file remain matched. No submodule implementation was read.
+
+#### Complete native assessment receipt
+
+
+The following receipt retains every selected identity, outcome, finishing test name, existing reason and native operator total. The initial strict exit is preserved. An existing reason is replayed only for its exact physical replacement; finite agreement creates no additional equivalence reason.
+
+
+```json
+{
+  "status": "passed",
+  "scope": "Initial complete cache/current-reason assessment only; no new E, parent/global closure or repair inferred",
+  "plan_sha256": "fe8b8f2a06641fa4a4d3b6fa59c718f6ec85c40e8b616b4274b8e6f63f47ff04",
+  "source_sha256": "c02f30e133a9ef8b54f237dd5aa2cb0c8b55041fbdd304290d5109d65277aa49",
+  "production_sha256": "51af305a7198e25bb793f1d24a24628082f6b0479704b6e65a488497d9c4502d",
+  "selected": 43,
+  "cache": 20,
+  "current_reason_edits": 23,
+  "raw": 1414,
+  "parents": 200,
+  "held_tree": "cf10a220a4fa3db4b3e74cf00676427d513dc579",
+  "regular_inputs": 1141,
+  "opaque_gitlinks": 1,
+  "original_and_copy_restored": true,
+  "bindings": 48,
+  "producer_sources": 37,
+  "additional_producer_sources": 2,
+  "native": {
+    "entries": [
+      {
+        "id": "L345.iter.59",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "check_pairs borrows a and b from Program.pair: Option<(String, String)> and visits the fixed [a, b] array. Both positions are ends, so the rewrite visits a then b and preserves early returns and duplicate/aliased references. The counter advances at most twice; peek moves only shared String references, with no user callback or destructor effect. The body and its outcome/diagnostics are unchanged. Compiled actual-candidate controls hold order and early returns, and refuse first/last-only and wider-array equivalence claims (leaf M3.6.9.6.3.2.2.8.2)."
+      },
+      {
+        "id": "L455.bool.83",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "The separate --cap-lints key is not visited in the current pinned successful inventory caller. Cargo f2d3ce0 add_cap_lints emits a cap only when show_warnings is false or is_local is false. Compiled units here are path-source and non-stdlib: checked fresh offline homes cannot provide fetched Git/registry units, no build-std route is supplied, and Unit::is_local is path-source and not is_std. Local units always show warnings, so both cap branches are false. Cleared environment, alias-only configuration, stable profile-feature gates, hard dynamic-target preflight and compile's lack of trailing rustc arguments exclude injected caps. Other operand consumers remain unchanged for this single table edit. Permanent actual-candidate controls require independent local producer argv/normalized outputs and refute a broader claim with successful cargo rustc -- --cap-lints allow: the changed helper leaks allow. Consumed-value and wrong positive/negative controls hold the scope. Source/caller proof and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer/pin, package-source/stdlib/warning premises, environment/configuration/mode/arguments or consumers require revalidation. No arbitrary-argv or every-release claim (leaf M3.6.9.6.3.2.2.11.2.4.2). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L456.bool.84",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "The separate -W key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L457.bool.85",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "The separate -A key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L458.bool.86",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "The separate -D key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L459.bool.87",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "The separate -F key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L460.bool.88",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "The separate --warn key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L461.bool.89",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "The separate --allow key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L462.bool.90",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "The separate --deny key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L463.bool.91",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "The separate --forbid key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 converts manifest lint levels to joined --level=name tokens. compile uses build or test/no-run with no trailing rustc arguments; cleared environment, checked fresh Cargo homes and alias-only configurations exclude extra rustflags/wrappers, hard metadata preflight excludes dynamic targets, and the pinned stable feature gate excludes admitted profile rustflags. Other consumers are unchanged in this single edit, so a bare key used as their operand stays consumed. Changing only this key's consuming bit therefore changes no result in that domain. Permanent controls compile this actual native edit, require independently expected real producer argv and normalized outputs for ordinary/allow/warn/deny/forbid, and refute wider-domain equivalence with successful cargo rustc separate arguments and wrong positive/negative oracles. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md; changed producer, pin, arguments, configuration, environment or consumers require revalidation. This is not arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.11.2.4.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L464.bool.92",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "The separate --color key is never visited in the current pinned successful inventory caller. Cargo f2d3ce0 add_error_format_and_color constructs joined JSON/error-format/width options and emits no separate color key. Compile supplies build or test/no-run with no trailing rustc args; cleared environment, alias-only configuration, checked fresh Cargo homes, stable profile-feature gates and hard dynamic-target preflight exclude injected flags. Fixed RUSTC=rustc also excludes replacement compiler programs. Other consumers remain unchanged per single edit, so any bare-key operand they consume is not visited. Changing this key's consuming bit therefore changes no output in that domain. Permanent controls compile this actual edit with independently expected ordinary argv/configuration. Plain Cargo color-plus-JSON refusal is not counted as a successful falsifier: a published test-owned RUSTC forwarding override provides successful Cargo builds and actual no-JSON compiler argv for always/never/auto. Raw requests and forwarded args are checked separately, real libraries consumed by an independent compiler, and variants retain each color operand outside the fixed caller. Consumed-value and wrong positive/negative/forwarded-argv oracles limit the claim. Source/premise/revalidation record: docs/specs/trust/flag-normalization-domain.md. Changed producer/pin, selector/formatter, arguments/environment/configuration/profile/preflight or operand consumers require revalidation; no arbitrary-argv or every-release equivalence (leaf M3.6.9.6.3.2.2.11.2.4.3.2). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L497.dir.112",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "In the current pinned successful inventory caller, Cargo f2d3ce0 constructs the metadata operand with the literal metadata= prefix; it and the unchanged extra-filename=/incremental= operands are already discarded. All other visited -C operands come from Cargo constants or profile scalars accepted by Cargo/rustc and cannot contain metadata=. This includes strip: Cargo forwards a string, but rustc only accepts none/debuginfo/symbols; a rejected value makes run_cargo return before command normalization. Alias-only configuration and the cleared environment exclude linker paths and rustflags, stable feature gates exclude profile rustflags, hard preflight excludes build-script linker arguments, and build/test-no-run supplies no trailing compiler args. Other consumers remain unchanged and prevent operands from masquerading as visited -C tokens. Thus this single contains edit changes no result in that domain. Permanent controls compile the actual edit, assert literal real producer argv and normalized values, consume both produced libraries with value37, and refute wider equivalence with successful cargo rustc -C llvm-args=--pass-remarks=metadata=inside. Refused strip and synthetic key controls are explicitly outside the successful compiler domain; wrong argv/positive/negative/helper oracles fail. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md. Changed pin, constructors, arguments/environment/configuration/admissions/preflight or consumers require revalidation; no arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.13.2.4.2.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L497.lit.113",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "In the current pinned successful inventory caller, Cargo f2d3ce0 emits metadata= followed by its metadata value; no other Cargo-constructed visited -C key starts with metadata. Other codegen keys have distinct literal prefixes, and arbitrary rustflags/linker/build-script/trailing-argument routes are excluded by the checked environment, alias-only/fresh-home configuration, stable feature gate, dynamic-target preflight and build/test-no-run caller. Other consumers are unchanged, so source/cfg/path/extern operands cannot introduce a visited synthetic -C key. Removing this equals delimiter therefore changes no normalization result in that domain. Permanent controls compile this exact literal edit with independently expected actual Cargo argv/configuration, real libraries consumed with value37, valid wider LLVM input retained by this edit, and explicit metadataX=inside helper-boundary falsification of arbitrary-token equivalence. The synthetic key and compiler-refused strip are not valid successful-producer coverage. Wrong argv/positive/negative/helper oracles fail. Exact pinned constructors, successful scalar validation, caller premises and triggers: docs/specs/trust/flag-normalization-domain.md. Changed producer/pin, arguments/environment/configuration/admissions/preflight or token consumers require revalidation; no arbitrary-argv or every-release claim (leaf M3.6.9.6.3.2.2.13.2.4.2.1). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L498.dir.116",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "In the current pinned successful inventory caller, Cargo f2d3ce0 emits extra-filename=- followed by its suffix when this operand is present, so the original discards it. Metadata and incremental operands are also already discarded by unchanged guards, including an incremental path containing extra-filename=. Retained -C scalars use accepted Cargo/rustc value domains without that marker; raw strip strings carrying it are compiler-refused, and run_cargo returns before normalization on failure. Explicit linker paths, build-script arguments, arbitrary rustflags and trailing compiler arguments are excluded by checked alias-only/fresh-home configuration, cleared environment, stable feature gate, hard target preflight and build/test-no-run selection. Other consumers still prevent a data operand from masquerading as visited -C. This single contains edit therefore preserves output in that domain. Permanent controls compile the actual native edit, hold independent real Cargo argv/configuration and libraries consumed with value37, and refute broader equivalence with successful cargo rustc -C llvm-args=--pass-remarks=extra-filename=inside. Refused strip and synthetic key controls are not successful-producer coverage; wrong forwarded-argv/positive/negative/helper oracles fail. Source/constructor/caller record and revalidation triggers: docs/specs/trust/flag-normalization-domain.md. Changed producer/pin, arguments/environment/configuration/admissions/preflight or consumers require revalidation; no arbitrary-argv claim (leaf M3.6.9.6.3.2.2.13.2.4.2.2). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L498.lit.117",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "The current pinned successful inventory caller only visits this Cargo f2d3ce0 key with its literal extra-filename= delimiter when present. Other generated -C keys have distinct literal prefixes, and the caller excludes arbitrary linker/flag/script/trailing-argument routes through checked configuration/environment, stable profile feature gates, hard preflight and build/test-no-run commands. Unchanged operand consumers rule out a synthetic visited -C key in another argument. Removing this delimiter changes no output in that domain. Permanent controls compile the exact native literal edit, require independently expected real Cargo argv/configuration and consumed library value37, and retain the complete valid wider LLVM operand in both original and literal variants. Synthetic extra-filenameX=inside exposes arbitrary-helper inequivalence but is not claimed as a successful compiler producer; the strip marker case is explicitly compiler-refused. Wrong forwarded-argv/positive/negative/helper oracles fail. Complete source and successful-value/caller premises: docs/specs/trust/flag-normalization-domain.md. Changed pin/constructors, arguments/environment/configuration/admissions/preflight or consumers require revalidation; no every-release or arbitrary-argv claim (leaf M3.6.9.6.3.2.2.13.2.4.2.2). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L499.dir.120",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "In the current pinned successful inventory caller, Cargo f2d3ce0 emits the literal incremental= prefix followed by its cache directory when the profile enables this operand, so both versions discard it. Unchanged metadata/extra-filename guards already discard their operands. All remaining visited -C operands have successful Cargo/rustc scalar domains without incremental=; raw strip strings containing it are compiler-refused, and run_cargo returns before normalization on failure. Alias-only/fresh-home configuration, cleared environment, stable profile feature gates, hard metadata preflight and build/test-no-run selection exclude explicit linker paths, script linker arguments, arbitrary rustflags and trailing compiler arguments. Other consumers stay unchanged, preventing a data operand from creating a visited -C key. This single contains edit therefore preserves output in that domain. Permanent controls enable a real incremental release profile, assert the independent complete producer argv/cache path and populated local cache, compile the actual variant and consume both libraries with value37. Successful cargo rustc -C llvm-args=--pass-remarks=incremental=inside refutes arbitrary-domain equivalence. Refused strip and synthetic key controls are not successful-producer coverage; wrong forwarded-argv/positive/negative/helper oracles fail. Source/caller premises and revalidation triggers: docs/specs/trust/flag-normalization-domain.md. Changed pin/constructors, arguments/environment/configuration/admissions/preflight or consumers require revalidation; no arbitrary-argv claim (leaf M3.6.9.6.3.2.2.13.2.4.2.3). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L499.lit.121",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "The current pinned successful inventory caller only visits this Cargo f2d3ce0 key as incremental= followed by its cache path when enabled. Other generated -C keys have distinct literal prefixes; arbitrary linker/flag/script/trailing-argument routes are excluded by the checked configuration/environment, stable profile feature gate, hard preflight and build/test-no-run caller. Unchanged consumers exclude a synthetic visited -C token in another operand. Removing this equals delimiter changes no result in that domain. Permanent controls enable a real release incremental profile and populated explicit local cache, compile this exact native edit, independently require real producer argv/configuration and consumed library value37, and retain the complete successful wider LLVM operand in original/literal variants. Synthetic incrementalX=inside exposes arbitrary-helper inequivalence but is not a valid compiler producer; the strip marker is explicitly refused. Wrong argv/positive/negative/helper oracles fail. Source, successful-value and caller record: docs/specs/trust/flag-normalization-domain.md. Changed producer/pin, arguments/environment/configuration/admissions/preflight or consumers require revalidation; no every-release or arbitrary-argv equivalence (leaf M3.6.9.6.3.2.2.13.2.4.2.3). Revalidated for the owned observer caller: immutable native argv is forwarded unchanged, only private settings are removed, no compiler flag is added, and inherited wrappers remain excluded. Cargo constructors, preflight and normalise consumers are unchanged; current compiled controls and reason replay are owned by M3.6.9.6.3.2.2.15.2.1.3.3.2.1."
+      },
+      {
+        "id": "L514.cmp.139",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "In normalise, both indices come from the same immutable file string via rfind of the distinct nonempty ASCII characters '-' and '.'. If both are Some, their match positions cannot be equal: one byte position cannot match both characters. Thus dash < dot and dash <= dot have identical truth values for every defined Rust string input here; all other Option cases, branch work, outputs and index progress stay unchanged. This is a source-context proof, not survival-based inference or a claim that arbitrary integer comparisons are interchangeable. Permanent controls compile this exact native edit beside the original with independent literal basenames for rlib/rmeta, paths, empty/missing/reversed/multiple punctuation and Unicode, plus a bounded 5461-string helper grid and unequal-index predicate observations. The finite grid supplements the universal distinct-search argument and is not an exhaustive-universe claim. A same-character search refutes that predicate premise only, without claiming a wider final-string counterexample; equal-index and wrong-negative oracles fail. Revalidate if search patterns/receivers, comparison/context, or relevant string contracts change. Canonical proof: docs/specs/trust/flag-normalization-domain.md (leaf M3.6.9.6.3.2.2.13.2.5)."
+      },
+      {
+        "id": "L585.iter.158",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "cargo_error_line constructs the owned paths Vec with exactly cwd and at most one target selected by rfind; the entire constructor is bound by the permanent proof control. Thus its length is one or two, so every position is first or last and both versions run the unchanged body in the same order. The rewrite counter advances at most twice; peek only moves a concrete PathBuf and invokes no user iterator or filesystem callback. Canonicalization and prefix insertion retain their ordering and values. Actual helper/trace variants cover absent/present targets, aliases, missing paths, relative targets and repeated values; same-edit wider Vec controls lose the middle and wrong positive/negative oracles fail. This source-cardinality argument, not those finite examples, establishes equivalence. Revalidate after constructor, type, iterator or body changes; no arbitrary-vector claim (leaf M3.6.9.6.3.2.2.14.3.2.2.2.1)."
+      },
+      {
+        "id": "L587.iter.161",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "cargo_error_line computes canonical as fs::canonicalize(&path).ok(), an Option<PathBuf>, before iterating std::iter::once(path).chain(canonical). This concrete chain has exactly one or two elements. Each is an end, so the actual ends rewrite visits every raw/canonical spelling in the same order and cannot overflow its at-most-two counter. Peeking moves the optional owned PathBuf without a filesystem call or user iterator callback; the unchanged ancestor/prefix body sees identical spellings. Permanent source-constructor guards, actual compiled helper/ordered traces and successful/missing canonical paths hold the premises; a wider Vec-backed chain compiles and loses its middle, and wrong wider/positive/negative oracles fail. Finite examples supplement the universal cardinality proof. Revalidate after constructor, type, iterator or body changes; no arbitrary-chain claim (leaf M3.6.9.6.3.2.2.14.3.2.2.2.1)."
+      },
+      {
+        "id": "L590.cond.168",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "On supported Unix Cargo-built callers, cwd is absolute: inventory/baseline derive from Cargo's absolute manifest root, the repaired gate canonicalizes its repository before output joins, inventory joins out/tree, and compile is the sole production run_cargo caller. The helper retains absolute targets or joins relative targets to that cwd; raw/canonical ancestors, lossy conversion and apostrophe quoting preserve a leading slash. The unconditional guard adds only prefixes with no newline. Such a match cannot straddle a physical line start (byte zero or after newline), and at begin equality its slash disagrees with the candidate's error prefix. It therefore suppresses no additional candidate for any stderr/environment in this domain; returned bytes and empty result remain unchanged. This is a universal prefix/line-boundary proof, not finite-example inference. Permanent exact production/caller guards, actual compiled original/edit, literal and generated records, native Cargo root through relative manifest/alias, relative wider witnesses, altered-premise and wrong-oracle controls bind scope. Revalidate guarded source, callers/root/constructors, conversion, line framing or Unix/toolchain contract changes; no relative-cwd or producer-boundary claim. Canonical proof: docs/specs/trust/decision_trust-inventory.md, Absolute Cargo diagnostic-prefix proof (leaf M3.6.9.6.3.2.2.14.3.2.2.2.2.5)."
+      },
+      {
+        "id": "L617.cmp.181",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "On supported Unix Cargo-built callers, all raw paths are absolute from the guarded CLI/gate/inventory/compile chain; target resolution, successful canonicalization, ancestors, lossy conversion and apostrophe quoting preserve their leading slash. Every recorded prefix thus begins with slash. The edited comparison differs only at begin == start, but a candidate there begins with error and cannot simultaneously begin a slash-prefixed match. Every original containing span already has begin < start, so membership, selection and returned bytes agree for any stderr/environment with absolute cwd. This universal first-byte argument is independent of Cargo's diagnostic grammar; finite records only support it. Permanent exact production/caller guards, actual compiled helper/edit, independent literals/aliases/relative targets/line endings and generated records, native Cargo-root control, relative wider witness, altered-premise and wrong-oracle controls delimit the domain. Revalidate source/callers/root/constructors, prefix conversion, line/predicate or Unix/toolchain contracts; no arbitrary relative-cwd equivalence. Canonical proof: docs/specs/trust/decision_trust-inventory.md, Absolute Cargo diagnostic-prefix proof (leaf M3.6.9.6.3.2.2.14.3.2.2.2.2.5)."
+      },
+      {
+        "id": "L729.lit.202",
+        "outcome": "equivalent",
+        "names": [],
+        "detail": "",
+        "reason": "For the current Unix inventory caller with pinned stable Cargo f2d3ce0bd7f24a49f8f72d9000448f8838c4e850 / Rust 1.95.0, every adjacent pair whose first token is -C either has no extra-filename prefix or has the complete ASCII extra-filename= constructor. Cargo emits the optional suffix as extra-filename=- plus a sixteen-hex UnitHash, or omits it. All other codegen constructors retain distinct initial keys for any value. Both role/test and generated-entry compile routes use fixed build or test/no-run commands without trailing compiler args; cleared allowlisted environment, reset Cargo homes and alias-only ancestor-checked config exclude arbitrary flags/wrappers, hard metadata preflight excludes dynamic package code independently of manifest admissions, and the pinned stable gate excludes profile rustflags. Source/name/type, lint/check-cfg, dependency and directory constructors cannot introduce a distinguishing incidental adjacent pair; in particular arbitrary custom check-cfg values are followed by fixed option tokens, not arbitrary suffix operands. The observer forwards immutable native argv and the consumer selects only successful current compilation records after Cargo succeeds. Thus both predicates choose the same first pair or the same empty default; the unchanged fifteen-byte slice starts after the same complete ASCII prefix at a valid UTF-8 boundary and returns identical bytes, preserving dep-info selection and subsequent behavior. Permanent exact production/controller/observer/base/configuration/metadata/parser/tree/module/dependency/pin guards outside semantic tests, actual compiled original/edit, complete real ordinary/incremental/mixed argv and three consumed libraries, literal/constructor/adjacency controls, wider changed-output and short/Unicode panic witnesses, nineteen altered-premise controls and three wrong-oracle controls delimit the proof. Wider argv is explicitly not equivalent; finite producer agreement is not the proof. This conditional lemma covers actual successful invocations by that pinned producer; other judged-tree toolchain producers are outside it. Revalidate producer/pin, both callers, environment/config/admissions/preflight, transitive readers/module/dependency wiring, constructors/adjacency, record filter or extraction/slicing changes. Canonical proof: docs/specs/trust/compiler-provenance-contract.md, Caller dep-info suffix prefix proof; full source argument: docs/book/src/annex-trust-proofs.md#caller-dep-info-suffix-prefix-proof-after-preflight-repair (leaf M3.6.9.6.3.2.2.15.2.1.4.3.1)."
+      },
+      {
+        "id": "L1296.guard.436",
+        "outcome": "survived",
+        "names": [],
+        "detail": ""
+      },
+      {
+        "id": "L1296.guard.437",
+        "outcome": "survived",
+        "names": [],
+        "detail": ""
+      },
+      {
+        "id": "L1296.guard.438",
+        "outcome": "survived",
+        "names": [],
+        "detail": ""
+      },
+      {
+        "id": "L1296.guard.439",
+        "outcome": "killed",
+        "names": [
+          "trust::tests::a_feature_another_manifest_enables_does_not_reach_a_root_s_build",
+          "trust_gate::tests::a_directory_at_the_proposal_path_stops_before_a_refusal_report",
+          "trust_gate::tests::a_protected_previous_proposal_stops_before_a_refusal_report",
+          "trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared",
+          "trust_gate::tests::f30_case_2_an_already_shared_package_changed_behind_its_name_is_shared_changed",
+          "trust_gate::tests::f30_case_3_data_both_roots_are_handed_is_new_shared_and_an_undeclared_input_is_refused",
+          "trust_gate::tests::f30_case_4_a_package_whose_inventory_is_of_the_commit_before_is_stale",
+          "trust_gate::tests::f30_case_5_an_unrelated_change_is_unchanged_and_warns_of_nothing"
+        ],
+        "detail": " — trust::tests::a_feature_another_manifest_enables_does_not_reach_a_root_s_build, trust_gate::tests::a_directory_at_the_proposal_path_stops_before_a_refusal_report, trust_gate::tests::a_protected_previous_proposal_stops_before_a_refusal_report, trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared, trust_gate::tests::f30_case_2_an_already_shared_package_changed_behind_its_name_is_shared_changed, trust_gate::tests::f30_case_3_data_both_roots_are_handed_is_new_shared_and_an_undeclared_input_is_refused, trust_gate::tests::f30_case_4_a_package_whose_inventory_is_of_the_commit_before_is_stale, trust_gate::tests::f30_case_5_an_unrelated_change_is_unchanged_and_warns_of_nothing"
+      },
+      {
+        "id": "L1296.guard.440",
+        "outcome": "killed",
+        "names": [
+          "trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared"
+        ],
+        "detail": " — trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared"
+      },
+      {
+        "id": "L1296.guard.441",
+        "outcome": "killed",
+        "names": [
+          "trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared"
+        ],
+        "detail": " — trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared"
+      },
+      {
+        "id": "L1296.guard.442",
+        "outcome": "survived",
+        "names": [],
+        "detail": ""
+      },
+      {
+        "id": "L1296.guard.443",
+        "outcome": "survived",
+        "names": [],
+        "detail": ""
+      },
+      {
+        "id": "L1296.guard.444",
+        "outcome": "survived",
+        "names": [],
+        "detail": ""
+      },
+      {
+        "id": "L1309.cond.450",
+        "outcome": "killed",
+        "names": [
+          "trust::tests::a_build_script_is_refused_before_anything_runs",
+          "trust::tests::a_feature_another_manifest_enables_does_not_reach_a_root_s_build",
+          "trust::tests::an_admitted_build_script_is_refused_before_any_compilation",
+          "trust::tests::an_admitted_procedural_macro_is_refused_before_any_compilation",
+          "trust::tests::cargo_failure_diagnostics_keep_the_error_after_a_quoted_key_warning",
+          "trust::tests::repeated_generator_build_script_refusals_prevent_compilation",
+          "trust::tests::repeated_generator_manifest_refusals_prevent_compilation",
+          "trust::tests::the_harness_is_inventoried_and_its_development_edges_followed",
+          "trust_gate::tests::a_directory_at_the_proposal_path_stops_before_a_refusal_report",
+          "trust_gate::tests::a_protected_previous_proposal_stops_before_a_refusal_report",
+          "trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared",
+          "trust_gate::tests::f30_case_2_an_already_shared_package_changed_behind_its_name_is_shared_changed",
+          "trust_gate::tests::f30_case_3_data_both_roots_are_handed_is_new_shared_and_an_undeclared_input_is_refused",
+          "trust_gate::tests::f30_case_4_a_package_whose_inventory_is_of_the_commit_before_is_stale",
+          "trust_gate::tests::f30_case_5_an_unrelated_change_is_unchanged_and_warns_of_nothing"
+        ],
+        "detail": " — trust::tests::a_build_script_is_refused_before_anything_runs, trust::tests::a_feature_another_manifest_enables_does_not_reach_a_root_s_build, trust::tests::an_admitted_build_script_is_refused_before_any_compilation, trust::tests::an_admitted_procedural_macro_is_refused_before_any_compilation, trust::tests::cargo_failure_diagnostics_keep_the_error_after_a_quoted_key_warning, trust::tests::repeated_generator_build_script_refusals_prevent_compilation, trust::tests::repeated_generator_manifest_refusals_prevent_compilation, trust::tests::the_harness_is_inventoried_and_its_development_edges_followed, trust_gate::tests::a_directory_at_the_proposal_path_stops_before_a_refusal_report, trust_gate::tests::a_protected_previous_proposal_stops_before_a_refusal_report, trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared, trust_gate::tests::f30_case_2_an_already_shared_package_changed_behind_its_name_is_shared_changed, trust_gate::tests::f30_case_3_data_both_roots_are_handed_is_new_shared_and_an_undeclared_input_is_refused, trust_gate::tests::f30_case_4_a_package_whose_inventory_is_of_the_commit_before_is_stale, trust_gate::tests::f30_case_5_an_unrelated_change_is_unchanged_and_warns_of_nothing"
+      },
+      {
+        "id": "L1309.cond.451",
+        "outcome": "killed",
+        "names": [
+          "trust::tests::repeated_generator_build_script_refusals_prevent_compilation"
+        ],
+        "detail": " — trust::tests::repeated_generator_build_script_refusals_prevent_compilation"
+      },
+      {
+        "id": "L1310.stmt.452",
+        "outcome": "killed",
+        "names": [
+          "trust::tests::repeated_generator_build_script_refusals_prevent_compilation"
+        ],
+        "detail": " — trust::tests::repeated_generator_build_script_refusals_prevent_compilation"
+      },
+      {
+        "id": "L1360.eq.478",
+        "outcome": "killed",
+        "names": [
+          "trust::tests::repeated_generator_build_script_refusals_prevent_compilation",
+          "trust::tests::repeated_generator_manifest_refusals_prevent_compilation"
+        ],
+        "detail": " — trust::tests::repeated_generator_build_script_refusals_prevent_compilation, trust::tests::repeated_generator_manifest_refusals_prevent_compilation"
+      },
+      {
+        "id": "L1360.cond.479",
+        "outcome": "killed",
+        "names": [
+          "trust::tests::repeated_generator_build_script_refusals_prevent_compilation",
+          "trust::tests::repeated_generator_manifest_refusals_prevent_compilation"
+        ],
+        "detail": " — trust::tests::repeated_generator_build_script_refusals_prevent_compilation, trust::tests::repeated_generator_manifest_refusals_prevent_compilation"
+      },
+      {
+        "id": "L1360.cond.480",
+        "outcome": "killed",
+        "names": [
+          "trust::tests::repeated_generator_build_script_refusals_prevent_compilation"
+        ],
+        "detail": " — trust::tests::repeated_generator_build_script_refusals_prevent_compilation"
+      },
+      {
+        "id": "L1361.stmt.481",
+        "outcome": "killed",
+        "names": [
+          "trust::tests::repeated_generator_build_script_refusals_prevent_compilation"
+        ],
+        "detail": " — trust::tests::repeated_generator_build_script_refusals_prevent_compilation"
+      },
+      {
+        "id": "L1309.contains.1121",
+        "outcome": "killed",
+        "names": [
+          "trust::tests::repeated_generator_build_script_refusals_prevent_compilation"
+        ],
+        "detail": " — trust::tests::repeated_generator_build_script_refusals_prevent_compilation"
+      },
+      {
+        "id": "L1309.contains.1122",
+        "outcome": "unviable",
+        "names": [],
+        "detail": " — error[E0277]: the trait bound \u0060String: Copy\u0060 is not satisfied"
+      },
+      {
+        "id": "L1309.contains.1123",
+        "outcome": "survived",
+        "names": [],
+        "detail": ""
+      },
+      {
+        "id": "L1309.contains.1124",
+        "outcome": "unviable",
+        "names": [],
+        "detail": " — error[E0277]: the trait bound \u0060String: Copy\u0060 is not satisfied"
+      }
+    ],
+    "counts": {
+      "equivalent": 23,
+      "survived": 7,
+      "killed": 11,
+      "unviable": 2
+    },
+    "operator_counts": {
+      "iter": {
+        "attempted": 3,
+        "unviable": 0
+      },
+      "bool": {
+        "attempted": 10,
+        "unviable": 0
+      },
+      "dir": {
+        "attempted": 3,
+        "unviable": 0
+      },
+      "lit": {
+        "attempted": 4,
+        "unviable": 0
+      },
+      "cmp": {
+        "attempted": 2,
+        "unviable": 0
+      },
+      "cond": {
+        "attempted": 5,
+        "unviable": 0
+      },
+      "guard": {
+        "attempted": 9,
+        "unviable": 0
+      },
+      "stmt": {
+        "attempted": 2,
+        "unviable": 0
+      },
+      "eq": {
+        "attempted": 1,
+        "unviable": 0
+      },
+      "contains": {
+        "attempted": 4,
+        "unviable": 2
+      }
+    },
+    "complete_identities": true,
+    "baseline_passed": true,
+    "raw_exit_code": 1
+  },
+  "native_and_binding_falsifiers": [
+    "wrong-baseline-count",
+    "wrong-baseline-span",
+    "wrong-source-file",
+    "foreign-outcome",
+    "duplicate-outcome",
+    "missing-outcome",
+    "wrong-replacement",
+    "wrong-terminal-count",
+    "missing-operator-summary",
+    "wrong-strict-exit",
+    "unlisted-equivalent",
+    "false-actual-reason-binding",
+    "false-production-source-binding",
+    "false-operator-source-binding",
+    "foreign-killing-parent"
+  ],
+  "prior_archives": 321,
+  "cache_diagnostic_sha256": "cd10168b50957616f10cac1c59687f2e0e5c21545432cc13a77776e09d5ec580",
+  "component_qualification_sha256": "bf9be39554860566148c7f9a904184ee923e70c173cc5314d623b269e5e539f9",
+  "input_reconstruction_sha256": "230fa8e1933751ebe9958e288bdf134e72df118ddb4f9ea1cf777401754fe111",
+  "all_survivors_distinguished_by_metadata_qualified_site_observations": true
+}
+```
+
+<details>
+<summary>Complete native output</summary>
+
+
+```json
+{
+  "log": "mutation-sweep: the unmutated copy passes (63s); 1414 mutation(s) of xtask/src/trust.rs, lines 147 to 2592\n  = L345.iter.59       equivalent for x in [a, b] { ⟶ let mut __archogen_sweep_345_it = ([a, b]).into_iter().peekable(); let mut __archogen_sweep_345_k = 0usize; while let Some(x) = __archogen_sweep_345_it.next() { let (__archogen_sweep_345_first, __archogen_sweep_345_last) = (__archogen_sweep_345_k == 0, __archogen_sweep_345_it.peek().is_none()); __archogen_sweep_345_k += 1; if !(__archogen_sweep_345_first || __archogen_sweep_345_last) { continue; }\n  = L455.bool.83       equivalent (\"--cap-lints\", true), ⟶ (\"--cap-lints\", false),\n  = L456.bool.84       equivalent (\"-W\", true), ⟶ (\"-W\", false),\n  = L457.bool.85       equivalent (\"-A\", true), ⟶ (\"-A\", false),\n  = L458.bool.86       equivalent (\"-D\", true), ⟶ (\"-D\", false),\n  = L459.bool.87       equivalent (\"-F\", true), ⟶ (\"-F\", false),\n  = L460.bool.88       equivalent (\"--warn\", true), ⟶ (\"--warn\", false),\n  = L461.bool.89       equivalent (\"--allow\", true), ⟶ (\"--allow\", false),\n  = L462.bool.90       equivalent (\"--deny\", true), ⟶ (\"--deny\", false),\n  = L463.bool.91       equivalent (\"--forbid\", true), ⟶ (\"--forbid\", false),\n  = L464.bool.92       equivalent (\"--color\", true), ⟶ (\"--color\", false),\n  = L497.dir.112       equivalent if v.starts_with(\"metadata=\") ⟶ if v.contains(\"metadata=\")\n  = L497.lit.113       equivalent if v.starts_with(\"metadata=\") ⟶ if v.starts_with(\"metadata\")\n  = L498.dir.116       equivalent || v.starts_with(\"extra-filename=\") ⟶ || v.contains(\"extra-filename=\")\n  = L498.lit.117       equivalent || v.starts_with(\"extra-filename=\") ⟶ || v.starts_with(\"extra-filename\")\n  = L499.dir.120       equivalent || v.starts_with(\"incremental=\") ⟶ || v.contains(\"incremental=\")\n  = L499.lit.121       equivalent || v.starts_with(\"incremental=\") ⟶ || v.starts_with(\"incremental\")\n  = L514.cmp.139       equivalent (Some(dash), Some(dot)) if dash < dot => { ⟶ (Some(dash), Some(dot)) if dash <= dot => {\n  = L585.iter.158      equivalent for path in paths { ⟶ let mut __archogen_sweep_585_it = (paths).into_iter().peekable(); let mut __archogen_sweep_585_k = 0usize; while let Some(path) = __archogen_sweep_585_it.next() { let (__archogen_sweep_585_first, __archogen_sweep_585_last) = (__archogen_sweep_585_k == 0, __archogen_sweep_585_it.peek().is_none()); __archogen_sweep_585_k += 1; if !(__archogen_sweep_585_first || __archogen_sweep_585_last) { continue; }\n  = L587.iter.161      equivalent for spelling in std::iter::once(path).chain(canonical) { ⟶ let mut __archogen_sweep_587_it = (std::iter::once(path).chain(canonical)).into_iter().peekable(); let mut __archogen_sweep_587_k = 0usize; while let Some(spelling) = __archogen_sweep_587_it.next() { let (__archogen_sweep_587_first, __archogen_sweep_587_last) = (__archogen_sweep_587_k == 0, __archogen_sweep_587_it.peek().is_none()); __archogen_sweep_587_k += 1; if !(__archogen_sweep_587_first || __archogen_sweep_587_last) { continue; }\n  = L590.cond.168      equivalent if prefix.contains('\\n') { ⟶ if true {\n  = L617.cmp.181       equivalent .any(|&(begin, end)| begin <= start && start < end) ⟶ .any(|&(begin, end)| begin < start && start < end)\n  = L729.lit.202       equivalent (w[0] == \"-C\" && w[1].starts_with(\"extra-filename=\")) ⟶ (w[0] == \"-C\" && w[1].starts_with(\"extra-filename\"))\n  ✗ L1296.guard.436    survived   \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if (self.manifests_checked.contains(pkg)) && __archogen_sweep_1296_first {\"\n  ✗ L1296.guard.437    survived   \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if (self.manifests_checked.contains(pkg)) && __archogen_sweep_1296_last {\"\n  ✗ L1296.guard.438    survived   \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if (self.manifests_checked.contains(pkg)) && (__archogen_sweep_1296_first || __archogen_sweep_1296_last) {\"\n  ✓ L1296.guard.439    killed     \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if (self.admissions.contains_key(&admission)) && __archogen_sweep_1296_first {\" — trust::tests::a_feature_another_manifest_enables_does_not_reach_a_root_s_build, trust_gate::tests::a_directory_at_the_proposal_path_stops_before_a_refusal_report, trust_gate::tests::a_protected_previous_proposal_stops_before_a_refusal_report, trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared, trust_gate::tests::f30_case_2_an_already_shared_package_changed_behind_its_name_is_shared_changed, trust_gate::tests::f30_case_3_data_both_roots_are_handed_is_new_shared_and_an_undeclared_input_is_refused, trust_gate::tests::f30_case_4_a_package_whose_inventory_is_of_the_commit_before_is_stale, trust_gate::tests::f30_case_5_an_unrelated_change_is_unchanged_and_warns_of_nothing\n  ✓ L1296.guard.440    killed     \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if (self.admissions.contains_key(&admission)) && __archogen_sweep_1296_last {\" — trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared\n  ✓ L1296.guard.441    killed     \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if (self.admissions.contains_key(&admission)) && (__archogen_sweep_1296_first || __archogen_sweep_1296_last) {\" — trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared\n  ✗ L1296.guard.442    survived   \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\\n                            *self.used.entry(admission).or_default() += 1;\\n                        } else {\\n                            refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{pkg}\u0060: {why}, and no admission names it (manifest sha256 {})\\\", who, admission.sha256));\\n                        }\\n                    }\\n                }\\n                Some(Err(o)) => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{path}\u0060 line {}: {}\\\",\\n                    o.line, o.why\\n                )),\\n                None => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{}\u0060 reaches a package with no tracked \u0060{path}\u0060\\\",\\n                    who\\n                )),\\n            }\\n            // A refusal must still block every later target that reaches this package.\\n            if refused.len() == before {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\\n                            *self.used.entry(admission).or_default() += 1;\\n                        } else {\\n                            refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{pkg}\u0060: {why}, and no admission names it (manifest sha256 {})\\\", who, admission.sha256));\\n                        }\\n                    }\\n                }\\n                Some(Err(o)) => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{path}\u0060 line {}: {}\\\",\\n                    o.line, o.why\\n                )),\\n                None => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{}\u0060 reaches a package with no tracked \u0060{path}\u0060\\\",\\n                    who\\n                )),\\n            }\\n            // A refusal must still block every later target that reaches this package.\\n            if (refused.len() == before) && __archogen_sweep_1296_first {\"\n  ✗ L1296.guard.443    survived   \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\\n                            *self.used.entry(admission).or_default() += 1;\\n                        } else {\\n                            refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{pkg}\u0060: {why}, and no admission names it (manifest sha256 {})\\\", who, admission.sha256));\\n                        }\\n                    }\\n                }\\n                Some(Err(o)) => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{path}\u0060 line {}: {}\\\",\\n                    o.line, o.why\\n                )),\\n                None => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{}\u0060 reaches a package with no tracked \u0060{path}\u0060\\\",\\n                    who\\n                )),\\n            }\\n            // A refusal must still block every later target that reaches this package.\\n            if refused.len() == before {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\\n                            *self.used.entry(admission).or_default() += 1;\\n                        } else {\\n                            refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{pkg}\u0060: {why}, and no admission names it (manifest sha256 {})\\\", who, admission.sha256));\\n                        }\\n                    }\\n                }\\n                Some(Err(o)) => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{path}\u0060 line {}: {}\\\",\\n                    o.line, o.why\\n                )),\\n                None => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{}\u0060 reaches a package with no tracked \u0060{path}\u0060\\\",\\n                    who\\n                )),\\n            }\\n            // A refusal must still block every later target that reaches this package.\\n            if (refused.len() == before) && __archogen_sweep_1296_last {\"\n  ✗ L1296.guard.444    survived   \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\\n                            *self.used.entry(admission).or_default() += 1;\\n                        } else {\\n                            refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{pkg}\u0060: {why}, and no admission names it (manifest sha256 {})\\\", who, admission.sha256));\\n                        }\\n                    }\\n                }\\n                Some(Err(o)) => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{path}\u0060 line {}: {}\\\",\\n                    o.line, o.why\\n                )),\\n                None => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{}\u0060 reaches a package with no tracked \u0060{path}\u0060\\\",\\n                    who\\n                )),\\n            }\\n            // A refusal must still block every later target that reaches this package.\\n            if refused.len() == before {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\\n                            *self.used.entry(admission).or_default() += 1;\\n                        } else {\\n                            refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{pkg}\u0060: {why}, and no admission names it (manifest sha256 {})\\\", who, admission.sha256));\\n                        }\\n                    }\\n                }\\n                Some(Err(o)) => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{path}\u0060 line {}: {}\\\",\\n                    o.line, o.why\\n                )),\\n                None => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{}\u0060 reaches a package with no tracked \u0060{path}\u0060\\\",\\n                    who\\n                )),\\n            }\\n            // A refusal must still block every later target that reaches this package.\\n            if (refused.len() == before) && (__archogen_sweep_1296_first || __archogen_sweep_1296_last) {\"\n  ✓ L1309.cond.450     killed     if self.manifests_checked.contains(pkg) { ⟶ if true { — trust::tests::a_build_script_is_refused_before_anything_runs, trust::tests::a_feature_another_manifest_enables_does_not_reach_a_root_s_build, trust::tests::an_admitted_build_script_is_refused_before_any_compilation, trust::tests::an_admitted_procedural_macro_is_refused_before_any_compilation, trust::tests::cargo_failure_diagnostics_keep_the_error_after_a_quoted_key_warning, trust::tests::repeated_generator_build_script_refusals_prevent_compilation, trust::tests::repeated_generator_manifest_refusals_prevent_compilation, trust::tests::the_harness_is_inventoried_and_its_development_edges_followed, trust_gate::tests::a_directory_at_the_proposal_path_stops_before_a_refusal_report, trust_gate::tests::a_protected_previous_proposal_stops_before_a_refusal_report, trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared, trust_gate::tests::f30_case_2_an_already_shared_package_changed_behind_its_name_is_shared_changed, trust_gate::tests::f30_case_3_data_both_roots_are_handed_is_new_shared_and_an_undeclared_input_is_refused, trust_gate::tests::f30_case_4_a_package_whose_inventory_is_of_the_commit_before_is_stale, trust_gate::tests::f30_case_5_an_unrelated_change_is_unchanged_and_warns_of_nothing\n  ✓ L1309.cond.451     killed     if self.manifests_checked.contains(pkg) { ⟶ if false { — trust::tests::repeated_generator_build_script_refusals_prevent_compilation\n  ✓ L1310.stmt.452     killed     continue; ⟶ // continue; — trust::tests::repeated_generator_build_script_refusals_prevent_compilation\n  ✓ L1360.eq.478       killed     if refused.len() == before { ⟶ if refused.len() != before { — trust::tests::repeated_generator_build_script_refusals_prevent_compilation, trust::tests::repeated_generator_manifest_refusals_prevent_compilation\n  ✓ L1360.cond.479     killed     if refused.len() == before { ⟶ if true { — trust::tests::repeated_generator_build_script_refusals_prevent_compilation, trust::tests::repeated_generator_manifest_refusals_prevent_compilation\n  ✓ L1360.cond.480     killed     if refused.len() == before { ⟶ if false { — trust::tests::repeated_generator_build_script_refusals_prevent_compilation\n  ✓ L1361.stmt.481     killed     self.manifests_checked.insert(pkg.clone()); ⟶ // self.manifests_checked.insert(pkg.clone()); — trust::tests::repeated_generator_build_script_refusals_prevent_compilation\n  ✓ L1309.contains.1121 killed     if self.manifests_checked.contains(pkg) { ⟶ if ((self.manifests_checked).first() == Some(pkg)) { — trust::tests::repeated_generator_build_script_refusals_prevent_compilation\n  · L1309.contains.1122 unviable   if self.manifests_checked.contains(pkg) { ⟶ if ((self.manifests_checked).first().copied() == Some(pkg)) { — error[E0277]: the trait bound \u0060String: Copy\u0060 is not satisfied\n  ✗ L1309.contains.1123 survived   if self.manifests_checked.contains(pkg) { ⟶ if ((self.manifests_checked).last() == Some(pkg)) {\n  · L1309.contains.1124 unviable   if self.manifests_checked.contains(pkg) { ⟶ if ((self.manifests_checked).last().copied() == Some(pkg)) { — error[E0277]: the trait bound \u0060String: Copy\u0060 is not satisfied\nmutation-sweep: 23 equivalent, 11 killed, 7 survived, 2 unviable\nmutation-sweep: unviable by operator: bool=0/10, cmp=0/2, cond=0/5, contains=2/4, dir=0/3, eq=0/1, guard=0/9, iter=0/3, lit=0/4, stmt=0/2 (unviable/attempted)\n  survivor L1296.guard.436: \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if (self.manifests_checked.contains(pkg)) && __archogen_sweep_1296_first {\"\n  survivor L1296.guard.437: \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if (self.manifests_checked.contains(pkg)) && __archogen_sweep_1296_last {\"\n  survivor L1296.guard.438: \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if (self.manifests_checked.contains(pkg)) && (__archogen_sweep_1296_first || __archogen_sweep_1296_last) {\"\n  survivor L1296.guard.442: \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\\n                            *self.used.entry(admission).or_default() += 1;\\n                        } else {\\n                            refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{pkg}\u0060: {why}, and no admission names it (manifest sha256 {})\\\", who, admission.sha256));\\n                        }\\n                    }\\n                }\\n                Some(Err(o)) => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{path}\u0060 line {}: {}\\\",\\n                    o.line, o.why\\n                )),\\n                None => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{}\u0060 reaches a package with no tracked \u0060{path}\u0060\\\",\\n                    who\\n                )),\\n            }\\n            // A refusal must still block every later target that reaches this package.\\n            if refused.len() == before {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\\n                            *self.used.entry(admission).or_default() += 1;\\n                        } else {\\n                            refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{pkg}\u0060: {why}, and no admission names it (manifest sha256 {})\\\", who, admission.sha256));\\n                        }\\n                    }\\n                }\\n                Some(Err(o)) => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{path}\u0060 line {}: {}\\\",\\n                    o.line, o.why\\n                )),\\n                None => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{}\u0060 reaches a package with no tracked \u0060{path}\u0060\\\",\\n                    who\\n                )),\\n            }\\n            // A refusal must still block every later target that reaches this package.\\n            if (refused.len() == before) && __archogen_sweep_1296_first {\"\n  survivor L1296.guard.443: \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\\n                            *self.used.entry(admission).or_default() += 1;\\n                        } else {\\n                            refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{pkg}\u0060: {why}, and no admission names it (manifest sha256 {})\\\", who, admission.sha256));\\n                        }\\n                    }\\n                }\\n                Some(Err(o)) => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{path}\u0060 line {}: {}\\\",\\n                    o.line, o.why\\n                )),\\n                None => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{}\u0060 reaches a package with no tracked \u0060{path}\u0060\\\",\\n                    who\\n                )),\\n            }\\n            // A refusal must still block every later target that reaches this package.\\n            if refused.len() == before {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\\n                            *self.used.entry(admission).or_default() += 1;\\n                        } else {\\n                            refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{pkg}\u0060: {why}, and no admission names it (manifest sha256 {})\\\", who, admission.sha256));\\n                        }\\n                    }\\n                }\\n                Some(Err(o)) => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{path}\u0060 line {}: {}\\\",\\n                    o.line, o.why\\n                )),\\n                None => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{}\u0060 reaches a package with no tracked \u0060{path}\u0060\\\",\\n                    who\\n                )),\\n            }\\n            // A refusal must still block every later target that reaches this package.\\n            if (refused.len() == before) && __archogen_sweep_1296_last {\"\n  survivor L1296.guard.444: \"for pkg in closure {\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\\n                            *self.used.entry(admission).or_default() += 1;\\n                        } else {\\n                            refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{pkg}\u0060: {why}, and no admission names it (manifest sha256 {})\\\", who, admission.sha256));\\n                        }\\n                    }\\n                }\\n                Some(Err(o)) => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{path}\u0060 line {}: {}\\\",\\n                    o.line, o.why\\n                )),\\n                None => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{}\u0060 reaches a package with no tracked \u0060{path}\u0060\\\",\\n                    who\\n                )),\\n            }\\n            // A refusal must still block every later target that reaches this package.\\n            if refused.len() == before {\" ⟶ \"let mut __archogen_sweep_1296_it = (closure).into_iter().peekable(); let mut __archogen_sweep_1296_k = 0usize; while let Some(pkg) = __archogen_sweep_1296_it.next() { let (__archogen_sweep_1296_first, __archogen_sweep_1296_last) = (__archogen_sweep_1296_k == 0, __archogen_sweep_1296_it.peek().is_none()); __archogen_sweep_1296_k += 1;\\n            let before = refused.len();\\n            // rustc compiles a crate root whatever its name, and no token rule reads a file that is not \u0060.rs\u0060; \u0060mod\u0060\\n            // finds only \u0060.rs\u0060 files, and \u0060#[path]\u0060 and \u0060include!\u0060 are refused, so with this every Rust source a root\\n            // compiles is a \u0060.rs\u0060 file (R8 1).\\n            for src in self.package_targets.get(pkg).into_iter().flatten() {\\n                if std::path::Path::new(src)\\n                    .extension()\\n                    .is_none_or(|e| e != \\\"rs\\\")\\n                {\\n                    refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{src}\u0060, a crate root that is not a \u0060.rs\u0060 file, which rustc compiles and no rule reads\\\", who));\\n                }\\n            }\\n            if self.manifests_checked.contains(pkg) {\\n                continue;\\n            }\\n            for (kinds, name) in self.metadata_targets.get(pkg).into_iter().flatten() {\\n                for kind in kinds {\\n                    if kind == \\\"custom-build\\\" || kind == \\\"proc-macro\\\" {\\n                        refused.push(format!(\\n                            \\\"trust-undeclared-input: \u0060{who}\u0060 reaches \u0060{pkg}\u0060 target \u0060{name}\u0060 of kind \u0060{kind}\u0060, \\\\\\n                             which runs package code during compilation (§3)\\\"\\n                        ));\\n                    }\\n                }\\n            }\\n            let path = if pkg.is_empty() {\\n                \\\"Cargo.toml\\\".to_owned()\\n            } else {\\n                format!(\\\"{pkg}/Cargo.toml\\\")\\n            };\\n            match self\\n                .tree\\n                .get(&path)\\n                .map(|m| manifest::parse(&String::from_utf8_lossy(m)))\\n            {\\n                Some(Ok(m)) => {\\n                    if let Err(why) = package::check_manifest(self.tree, pkg, &path, &m) {\\n                        // A manifest rule has no line: its admission names the manifest, the catalog's reason, and\\n                        // the manifest's own sha256, so any edit to the manifest is reviewed again.\\n                        self.sites += 1;\\n                        let bytes = self.tree.get(&path).unwrap_or_default();\\n                        let admission = Admission {\\n                            file: path.clone(),\\n                            rule: why.clone(),\\n                            sha256: Digest::of(bytes).hex(),\\n                        };\\n                        if self.admissions.contains_key(&admission) {\\n                            *self.used.entry(admission).or_default() += 1;\\n                        } else {\\n                            refused.push(format!(\\\"trust-undeclared-input: \u0060{}\u0060 reaches \u0060{pkg}\u0060: {why}, and no admission names it (manifest sha256 {})\\\", who, admission.sha256));\\n                        }\\n                    }\\n                }\\n                Some(Err(o)) => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{path}\u0060 line {}: {}\\\",\\n                    o.line, o.why\\n                )),\\n                None => refused.push(format!(\\n                    \\\"trust-undeclared-input: \u0060{}\u0060 reaches a package with no tracked \u0060{path}\u0060\\\",\\n                    who\\n                )),\\n            }\\n            // A refusal must still block every later target that reaches this package.\\n            if (refused.len() == before) && (__archogen_sweep_1296_first || __archogen_sweep_1296_last) {\"\n  survivor L1309.contains.1123: if self.manifests_checked.contains(pkg) { ⟶ if ((self.manifests_checked).last() == Some(pkg)) {\n"
+}
+```
+
+</details>
+
+#### Independent whole-component compiler qualification
+
+
+The unchanged component and its tests compile in a separate exact source copy. Each precise `.copied()` replacement is then compiled through actual pinned [Cargo/Rust toolchain](ledger.md#rust-toolchain) using `cargo test -q --offline -p xtask --no-run --message-format=json`, with an independent target directory. Both fail at the intended lookup: `String` does not implement `Copy` (`E0277`), and the equality operands disagree as `String` versus `&String` (`E0308`). The original source is restored, the component compiles again, and every regular copied input matches.
+
+
+These are component compilation results. They do not claim semantic kills, substitute a toy program for the component, or excuse an infrastructure failure. The compiler controls reject altered error codes, files, lines, source text, successful statuses and empty diagnostics for each variant.
+
+
+```json
+{
+  "status": "qualified-actual-component-compilation",
+  "scope": "Baseline and recovery compile; these exact two variants fail with intended errors. Native outcome classification remains independently pending.",
+  "source_sha256": "c02f30e133a9ef8b54f237dd5aa2cb0c8b55041fbdd304290d5109d65277aa49",
+  "baseline_exit": 0,
+  "recovery_exit": 0,
+  "regular_inputs_restored": 1141,
+  "mutants": [
+    {
+      "id": "L1309.contains.1122",
+      "source_sha256": "4d4a6b8a94773e845092cb87a8ba6c9fc341f0870e5b2c7e91e78e46604a20ec",
+      "exit": 101,
+      "error_codes": [
+        "E0277",
+        "E0308"
+      ],
+      "line": 1309,
+      "stdout_sha256": "5a29eda1367b2b284756e646d36334c3fa2e9f3b5db3dc283d5cc01e742cb2d5",
+      "stderr_sha256": "f2bcbef405959335dc4c247117799b1ed569b01da434c2ede21709a08f0e6222"
+    },
+    {
+      "id": "L1309.contains.1124",
+      "source_sha256": "db4a28c604c39f449277bcd54efc7d81fbdbcb821294cdf60ff5112fb689d4f3",
+      "exit": 101,
+      "error_codes": [
+        "E0277",
+        "E0308"
+      ],
+      "line": 1309,
+      "stdout_sha256": "4e47ba3a2c0b35388130dae855a42496b12866c5dc91d30f84a74925e8598fc3",
+      "stderr_sha256": "f2bcbef405959335dc4c247117799b1ed569b01da434c2ede21709a08f0e6222"
+    }
+  ],
+  "negative_controls": [
+    "L1309.contains.1122:wrong-error-code",
+    "L1309.contains.1122:wrong-file",
+    "L1309.contains.1122:wrong-line",
+    "L1309.contains.1122:wrong-replacement",
+    "L1309.contains.1122:false-success",
+    "L1309.contains.1122:empty-diagnostics",
+    "L1309.contains.1124:wrong-error-code",
+    "L1309.contains.1124:wrong-file",
+    "L1309.contains.1124:wrong-line",
+    "L1309.contains.1124:wrong-replacement",
+    "L1309.contains.1124:false-success",
+    "L1309.contains.1124:empty-diagnostics"
+  ],
+  "command": [
+    "cargo",
+    "test",
+    "-q",
+    "--offline",
+    "-p",
+    "xtask",
+    "--no-run",
+    "--message-format=json"
+  ]
+}
+```
+
+#### Reproduction and receipt controls
+
+
+Prepare the repository-owned stores as in the [verification chapter](verification.md), recreate the preceding full plan exactly, stage the owned task status, and capture inputs with `python3 -I -B scripts/trust_adequacy.py --snapshot-inputs --output target/cache-current-checkpoint/native-inputs.json`. Execute the exact frozen native argument list inside the stated same-volume sandbox, retaining the raw status and complete combined log. The maintained adequacy parser must accept every exact replacement, finishing name and terminal total; then check original inputs with `--check-inputs` and copied regular bytes against that same manifest. Re-list all semantic parent names in the restored copy.
+
+
+The following source copies make the local execution adapters reconstructible. Their original `target/` paths are local evidence locations; these tracked book blocks preserve the adapters themselves. They require the maintained scripts and the exact frozen plan and bindings above. A changed source, producer or plan requires a fresh assessment.
+
+
+<details>
+<summary>Execution adapter: run-native.py</summary>
+
+
+```python
+from pathlib import Path
+import hashlib,importlib.util,json,os,re,subprocess
+root=Path.cwd();out=root/"target/cache-current-checkpoint"
+spec=importlib.util.spec_from_file_location("adequacy",root/"scripts/trust_adequacy.py");m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+plan=json.loads((out/"plan.json").read_text());bindings=json.loads((out/"bindings.json").read_text())
+for filename,sha in bindings.items():assert hashlib.sha256((root/filename).read_bytes()).hexdigest()==sha,filename
+assert hashlib.sha256((root/plan["file"]).read_bytes()).hexdigest()==plan["source_sha256"]
+profile=out/"mutation-volume.sb";assert hashlib.sha256(profile.read_bytes()).hexdigest()=="2b3fbe199bddb4ba84c453a23334c7025308b06127ce3cc96f74b2a17680eedd"
+held=subprocess.check_output(["git","write-tree"],text=True).strip()
+command=plan["native_command"]
+assert isinstance(command,list) and all(isinstance(v,str) for v in command)
+(out/"execution.json").write_text(json.dumps(dict(command=command,held_tree=held,source_sha256=plan["source_sha256"],profile="target/cache-current-checkpoint/mutation-volume.sb",writable_root=".",scope="Initial complete cache/current-reason assessment; no parent/global closure inferred"),indent=2)+"\n")
+error=None
+try:
+ with (out/"native.log").open("w") as log:
+  result=subprocess.run(["/usr/bin/sandbox-exec","-D","WRITABLE_ROOT="+str(root),"-f",str(profile),*command],stdout=log,stderr=subprocess.STDOUT,env=dict(os.environ,PYTHONUNBUFFERED="1"))
+ (out/"native.exit").write_text(str(result.returncode)+"\n")
+ measured=m.audit_measurement((out/"native.log").read_text(),plan,plan["file"],result.returncode)
+ names=set(json.loads((out/"parent-names.json").read_text()))
+ for row in measured["entries"]:
+  if row["outcome"]=="killed":assert row["names"] and set(row["names"])<=names,row
+ (out/"measurement.json").write_text(json.dumps(measured,indent=2)+"\n")
+ assert not measured["counts"].get("unjudged"),measured["counts"]
+except Exception as caught:
+ error=caught
+ (out/"measurement-refusal.json").write_text(json.dumps({"status":"refused","error":str(caught)})+"\n")
+finally:
+ subprocess.run(["python3","-I","-B","scripts/trust_adequacy.py","--check-inputs","target/cache-current-checkpoint/native-inputs.json","--output","target/cache-current-checkpoint/original-restoration.json"],check=True)
+ subprocess.run(["python3","-I","-B","target/m369-cap-equivalence/check-copy.py","target/cache-current-checkpoint/native-inputs.json","target/cache-current-checkpoint/copy-restoration.json"],check=True)
+listing=subprocess.run(["cargo","test","-q","-p","xtask","--","--list","trust::","trust_generated::","trust_gate::","--skip","route_tests"],cwd=root/"target/mutation-sweep/tree",env=dict(os.environ,CARGO_TARGET_DIR=str(root/"target/mutation-sweep/target"),ARCHOGEN_SWEEP_SOURCE=str(root)),capture_output=True,text=True,check=True)
+(out/"copied-parent-list.log").write_text(listing.stdout+listing.stderr)
+assert re.findall(r"^([\w:]+): test$",listing.stdout,re.M)==json.loads((out/"parent-names.json").read_text())
+for filename,sha in bindings.items():assert hashlib.sha256((root/filename).read_bytes()).hexdigest()==sha,filename
+if error:raise error
+print("cache/current-reason native assessment",json.dumps(measured["counts"]),"all original/copy inputs and parents restore; held",held)
+```
+
+</details>
+
+
+<details>
+<summary>Execution adapter: reconstruct-inputs.py</summary>
+
+
+```python
+from pathlib import Path
+import copy,hashlib,json,subprocess
+out=Path('target/cache-current-checkpoint')
+base='e83a8b3c6cb47d365f7ec382fb90a0b3f3b769ac'
+held='cf10a220a4fa3db4b3e74cf00676427d513dc579'
+assert subprocess.check_output(['git','rev-parse','--show-object-format'],text=True).strip()=='sha1'
+def object_hash(kind,data):
+ return hashlib.sha1(kind.encode()+b' '+str(len(data)).encode()+b'\0'+data).hexdigest()
+task='docs/tasks/M3.md'
+prior=subprocess.check_output(['git','show',base+':'+task])
+old=b'  Status: `pending` \xe2\x80\x94 initial complete cache/current-reason native assessment'
+new=b'  Status: `active` \xe2\x80\x94 initial complete cache/current-reason native assessment'
+assert prior.count(old)==1
+changed=prior.replace(old,new)
+changed_oid=object_hash('blob',changed)
+native_blob=subprocess.check_output(['git','hash-object','--stdin'],input=changed,text=False).decode().strip()
+assert changed_oid==native_blob
+def tree_hash(path,replacement=None):
+ spec=base+(':'+path if path else '')
+ raw=subprocess.check_output(['git','ls-tree','-z',spec])
+ entries=[]
+ for record in raw.split(b'\0'):
+  if not record:continue
+  header,name=record.split(b'\t',1);mode,kind,oid=header.split(b' ')
+  relative=(path+'/' if path else '')+name.decode()
+  if replacement is not None:
+   if relative==task:oid=replacement.encode()
+   elif task.startswith(relative+'/'):oid=tree_hash(relative,replacement).encode()
+  entries.append(mode.lstrip(b'0')+b' '+name+b'\0'+bytes.fromhex(oid.decode()))
+ return object_hash('tree',b''.join(entries))
+baseline=tree_hash('')
+assert baseline==subprocess.check_output(['git','rev-parse',base+'^{tree}'],text=True).strip()
+assert tree_hash('',changed_oid)==held
+inputs=json.loads((out/'native-inputs.json').read_text())
+entries={}
+for row in subprocess.check_output(['git','ls-tree','-r','-z',base]).split(b'\0'):
+ if not row:continue
+ header,name=row.split(b'\t',1)
+ mode,kind,oid=header.decode().split(' ')
+ entries[name.decode()]=(mode,kind,oid)
+def verify_metadata(proposal):
+ for name,entry in proposal['regular'].items():
+  mode,kind,oid=entries[name]
+  assert kind=='blob' and entry['index_mode']==mode,name
+  assert entry['index_oid']==(changed_oid if name==task else oid),name
+ for name,oid in proposal['gitlinks'].items():
+  assert entries[name]==('160000','commit',oid),name
+verify_metadata(inputs)
+metadata_false=[]
+for label,alter in [
+ ('false-regular-mode',lambda p:p['regular'][task].__setitem__('index_mode','100755')),
+ ('false-opaque-gitlink',lambda p:p['gitlinks'].__setitem__(next(iter(p['gitlinks'])),'0'*40)),
+]:
+ bad=copy.deepcopy(inputs);alter(bad)
+ try:verify_metadata(bad)
+ except AssertionError:metadata_false.append(label)
+ else:raise AssertionError(label+' accepted')
+for filename,entry in inputs['regular'].items():
+ body=changed if filename==task else subprocess.check_output(['git','show',base+':'+filename])
+ assert hashlib.sha256(body).hexdigest()==entry['sha256'],filename
+ assert object_hash('blob',body)==entry['index_oid'],filename
+for label,bad in [('missing-status-change',object_hash('blob',prior)),('altered-task',object_hash('blob',changed+b'\n'))]:
+ assert tree_hash('',bad)!=held,label
+receipt=dict(status='reconstructed',scope='Read-only Git-object hashing from a retained committed predecessor plus the exact owned pending-to-active status change. Does not require the uncommitted held tree object to survive a clone or pruning.',base_commit=base,held_tree=held,changed_path=task,old=old.decode(),new=new.decode(),regular_inputs=len(inputs['regular']),opaque_gitlinks=len(inputs['gitlinks']),native_blob_hash_agrees=True,root_tree_reconstructed=True,negative_controls=['missing-status-change','altered-task']+metadata_false)
+(out/'input-reconstruction.json').write_text(json.dumps(receipt,indent=2)+'\n')
+print('Input reconstruction passed:',len(inputs['regular']),'regular blobs and held root tree from retained predecessor;2 false roots/2 false metadata records refused; no Git writes')
+```
+
+</details>
+
+
+<details>
+<summary>Execution adapter: prepare-component.py</summary>
+
+
+```python
+from pathlib import Path
+import hashlib,json,os,subprocess
+root=Path.cwd()
+out=root/"target/cache-current-checkpoint/component-qualification"
+tree=out/"tree"
+manifest=json.loads((root/"target/cache-current-checkpoint/native-inputs.json").read_text())
+def sha(data):return hashlib.sha256(data).hexdigest()
+assert not tree.exists()
+tree.mkdir(parents=True)
+for filename,entry in manifest["regular"].items():
+ src=root/filename;dest=tree/filename
+ data=src.read_bytes()
+ assert sha(data)==entry["sha256"],filename
+ dest.parent.mkdir(parents=True,exist_ok=True)
+ dest.write_bytes(data)
+ dest.chmod(src.stat().st_mode & 0o777)
+env=dict(os.environ,CARGO_TARGET_DIR=str(out/"target"),ARCHOGEN_SWEEP_SOURCE=str(root))
+command=["cargo","test","-q","--offline","-p","xtask","--no-run"]
+with (out/"baseline.log").open("w") as log:
+ result=subprocess.run(command,cwd=tree,env=env,stdout=log,stderr=subprocess.STDOUT)
+(out/"baseline.exit").write_text(str(result.returncode)+"\n")
+receipt={"status":"passed" if result.returncode==0 else "refused","scope":"Actual whole xtask component and test compilation, no semantic mutation outcome inferred","command":command,"tree":"target/cache-current-checkpoint/component-qualification/tree","target":"target/cache-current-checkpoint/component-qualification/target","regular_inputs":len(manifest["regular"]),"gitlinks":"metadata only, no submodule content copied","source_sha256":sha((tree/"xtask/src/trust.rs").read_bytes()),"exit":result.returncode}
+(out/"baseline.json").write_text(json.dumps(receipt,indent=2)+"\n")
+assert result.returncode==0,receipt
+print(json.dumps(receipt))
+```
+
+</details>
+
+
+<details>
+<summary>Execution adapter: qualify-copied.py</summary>
+
+
+```python
+from pathlib import Path
+import hashlib,json,os,subprocess
+root=Path.cwd();out=root/'target/cache-current-checkpoint/component-qualification'
+tree=out/'tree';file=tree/'xtask/src/trust.rs'
+plan=json.loads((root/'target/cache-current-checkpoint/plan.json').read_text())
+original=(root/'target/cache-current-checkpoint/source-before.rs.txt').read_bytes()
+def sha(data):return hashlib.sha256(data).hexdigest()
+assert file.read_bytes()==original and sha(original)==plan['source_sha256']
+baseline=json.loads((out/'baseline.json').read_text())
+assert baseline['exit']==0 and baseline['source_sha256']==sha(original)
+env=dict(os.environ,CARGO_TARGET_DIR=str(out/'target'),ARCHOGEN_SWEEP_SOURCE=str(root))
+command=['cargo','test','-q','--offline','-p','xtask','--no-run','--message-format=json']
+rows=[]
+try:
+ for identity in ['L1309.contains.1122','L1309.contains.1124']:
+  c=next(c for c in plan['candidates'] if c['id']==identity)
+  lines=original.decode().split('\n');start,stop=c['span']
+  assert '\n'.join(lines[start:stop])==c['original']
+  lines[start:stop]=c['replacement'].split('\n')
+  mutated='\n'.join(lines).encode()
+  assert mutated!=original
+  file.write_bytes(mutated);assert file.read_bytes()==mutated
+  run=subprocess.run(command,cwd=tree,env=env,capture_output=True)
+  (out/(identity+'.stdout.jsonl')).write_bytes(run.stdout)
+  (out/(identity+'.stderr.log')).write_bytes(run.stderr)
+  errors=[]
+  for line in run.stdout.splitlines():
+   message=json.loads(line)
+   if message.get('reason')!='compiler-message':continue
+   body=message['message']
+   if body.get('level')=='error':
+    errors.append(dict(code=(body.get('code') or {}).get('code'),message=body['message'],primary_spans=[s for s in body.get('spans',[]) if s.get('is_primary')]))
+  rows.append(dict(id=identity,span=c['span'],original=c['original'],replacement=c['replacement'],source_sha256=sha(mutated),exit=run.returncode,errors=errors))
+  assert run.returncode!=0 and errors,identity
+finally:
+ file.write_bytes(original);assert file.read_bytes()==original
+recovery=subprocess.run(command,cwd=tree,env=env,capture_output=True)
+(out/'recovery.stdout.jsonl').write_bytes(recovery.stdout);(out/'recovery.stderr.log').write_bytes(recovery.stderr)
+assert recovery.returncode==0
+manifest=json.loads((root/'target/cache-current-checkpoint/native-inputs.json').read_text())
+for filename,entry in manifest['regular'].items():assert sha((tree/filename).read_bytes())==entry['sha256'],filename
+receipt=dict(status='actual-component-compilations-observed',scope='Independent component compilation only; native outcomes not inferred',baseline_exit=baseline['exit'],command=command,source_sha256=sha(original),mutants=rows,recovery_exit=recovery.returncode,all_regular_inputs_restored=len(manifest['regular']))
+(out/'copied-observations.json').write_text(json.dumps(receipt,indent=2)+'\n')
+print(json.dumps(receipt))
+```
+
+</details>
+
+
+<details>
+<summary>Execution adapter: verify-components.py</summary>
+
+
+```python
+from pathlib import Path
+import copy,hashlib,json
+out=Path('target/cache-current-checkpoint');component=out/'component-qualification'
+plan=json.loads((out/'plan.json').read_text());observations=json.loads((component/'copied-observations.json').read_text())
+def sha(data):return hashlib.sha256(data).hexdigest()
+source=(out/'source-before.rs.txt').read_text()
+def qualify(identity,stream,exit_code):
+ assert exit_code==101
+ c=next(c for c in plan['candidates'] if c['id']==identity)
+ errors=[]
+ for line in stream.splitlines():
+  message=json.loads(line)
+  if message.get('reason')=='compiler-message' and message['message'].get('level')=='error':
+   errors.append(message['message'])
+ assert len(errors)==2 and {row['code']['code'] for row in errors}=={'E0277','E0308'}
+ for error in errors:
+  spans=[span for span in error['spans'] if span['is_primary']]
+  assert len(spans)==1
+  span=spans[0]
+  assert span['file_name']==plan['file'] and span['line_start']==span['line_end']==c['span'][0]+1
+  assert len(span['text'])==1 and span['text'][0]['text']==c['replacement']
+  if error['code']['code']=='E0277':
+   assert error['message']=='the trait bound `String: Copy` is not satisfied'
+   assert span['label']=='the trait `Copy` is not implemented for `String`'
+  else:
+   assert error['message']=='mismatched types' and span['label']=='expected `String`, found `&String`'
+ return errors
+negative=[];rows=[]
+for observation in observations['mutants']:
+ identity=observation['id'];stdout=(component/(identity+'.stdout.jsonl')).read_text()
+ errors=qualify(identity,stdout,observation['exit'])
+ c=next(c for c in plan['candidates'] if c['id']==identity)
+ lines=source.split('\n');lines[c['span'][0]:c['span'][1]]=c['replacement'].split('\n')
+ assert sha('\n'.join(lines).encode())==observation['source_sha256']
+ assert [dict(code=e['code']['code'],message=e['message'],primary_spans=[s for s in e['spans'] if s['is_primary']]) for e in errors]==observation['errors']
+ messages=[json.loads(line) for line in stdout.splitlines()]
+ index=next(i for i,m in enumerate(messages) if m.get('reason')=='compiler-message' and m['message'].get('level')=='error')
+ for label,alter in [
+  ('wrong-error-code',lambda ms:ms[index]['message']['code'].__setitem__('code','E9999')),
+  ('wrong-file',lambda ms:next(s for s in ms[index]['message']['spans'] if s['is_primary']).__setitem__('file_name','foreign.rs')),
+  ('wrong-line',lambda ms:next(s for s in ms[index]['message']['spans'] if s['is_primary']).__setitem__('line_start',1)),
+  ('wrong-replacement',lambda ms:next(s for s in ms[index]['message']['spans'] if s['is_primary'])['text'][0].__setitem__('text','unrelated source')),
+ ]:
+  bad=copy.deepcopy(messages);alter(bad)
+  try:qualify(identity,'\n'.join(json.dumps(m) for m in bad),101)
+  except AssertionError:negative.append(identity+':'+label)
+  else:raise AssertionError(label+' accepted')
+ for label,stream,exit_code in [('false-success',stdout,0),('empty-diagnostics','',101)]:
+  try:qualify(identity,stream,exit_code)
+  except AssertionError:negative.append(identity+':'+label)
+  else:raise AssertionError(label+' accepted')
+ rows.append(dict(id=identity,source_sha256=observation['source_sha256'],exit=101,error_codes=sorted(e['code']['code'] for e in errors),line=c['span'][0]+1,stdout_sha256=sha(stdout.encode()),stderr_sha256=sha((component/(identity+'.stderr.log')).read_bytes())))
+assert observations['baseline_exit']==0 and observations['recovery_exit']==0
+assert observations['source_sha256']==plan['source_sha256']
+manifest=json.loads((out/'native-inputs.json').read_text())
+for name,entry in manifest['regular'].items():assert sha((component/'tree'/name).read_bytes())==entry['sha256']
+receipt=dict(status='qualified-actual-component-compilation',scope='Baseline and recovery compile; these exact two variants fail with intended errors. Native outcome classification remains independently pending.',source_sha256=plan['source_sha256'],baseline_exit=0,recovery_exit=0,regular_inputs_restored=len(manifest['regular']),mutants=rows,negative_controls=negative,command=observations['command'])
+(component/'qualification.json').write_text(json.dumps(receipt,indent=2)+'\n')
+print('Component qualification: passed;',len(rows),'exact variants;',len(negative),'false diagnostics refused; baseline/recovery pass;1141 restored; receipt sha256',sha((component/'qualification.json').read_bytes()))
+```
+
+</details>
+
+
+<details>
+<summary>Execution adapter: audit-native.py</summary>
+
+
+```python
+from pathlib import Path
+import ast,bisect,copy,hashlib,importlib.util,json,re,subprocess
+root=Path.cwd();out=root/'target/cache-current-checkpoint'
+def sha(data):return hashlib.sha256(data).hexdigest()
+spec=importlib.util.spec_from_file_location('adequacy','scripts/trust_adequacy.py')
+m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+plan=json.loads((out/'plan.json').read_text())
+assert sha((out/'plan.json').read_bytes())=='fe8b8f2a06641fa4a4d3b6fa59c718f6ec85c40e8b616b4274b8e6f63f47ff04'
+log=(out/'native.log').read_text();rc=int((out/'native.exit').read_text())
+measured=m.audit_measurement(log,plan,plan['file'],rc)
+names=plan['semantic_parent_names'];assert len(names)==200 and len(set(names))==200
+def verify_names(proposal):
+ for row in proposal['entries']:
+  if row['outcome']=='killed':
+   assert row['names'] and set(row['names'])<=set(names),row
+verify_names(measured)
+diagnostic=json.loads((out/'cache-diagnostic-audit.json').read_text())
+assert diagnostic['status']=='passed' and diagnostic['source_sha256']==plan['source_sha256']
+diagnostic_rows={row['id']:row for row in diagnostic['variants']}
+for row in measured['entries']:
+ if row['outcome']=='survived':
+  result=diagnostic_rows[row['id']]['result']
+  assert result['sites']!=1 or result['used']!=1 or result['refused'],row['id']
+qualified=json.loads((out/'component-qualification/qualification.json').read_text())
+assert qualified['status']=='qualified-actual-component-compilation'
+assert {row['id'] for row in measured['entries'] if row['outcome']=='unviable'}=={row['id'] for row in qualified['mutants']}
+for name,command in [('cargo',['cargo','--version','--verbose']),('rustc',['rustc','--version','--verbose'])]:
+ assert subprocess.check_output(command,text=True)==plan['producer_identity'][name],name
+source=Path(plan['file']).read_bytes()
+assert source==subprocess.check_output(['git','show','e83a8b3c6cb47d365f7ec382fb90a0b3f3b769ac:'+plan['file']])
+assert sha(source)==plan['source_sha256']
+discovered,listing,scope=m.discover(Path('scripts/mutation_sweep.sh').read_text(),source.decode())
+assert len(discovered)==plan['listed_count']==1414 and list(scope)==plan['production_range']
+m.verify_listing((out/'listing.log').read_text(),listing,plan['file'],scope)
+by_id={c['id']:c for c in discovered}
+assert plan['candidates']==[by_id[c['id']] for c in plan['candidates']]
+assert len(plan['candidates'])==len({c['id'] for c in plan['candidates']})==43
+assert len(plan['cache_candidates'])==20 and len(plan['reason_candidates'])==23
+assert set(plan['cache_candidates']).isdisjoint(plan['reason_candidates'])
+assert {c['id'] for c in plan['candidates']}==set(plan['cache_candidates']+plan['reason_candidates'])
+code=Path('scripts/mutation_sweep.sh').read_text().split("<<'PY'\n",1)[1].rsplit('\nPY',1)[0]
+ns=dict(re=re,json=json,bisect=bisect,lines=source.decode().split('\n'),first=scope[0],last=scope[1])
+exec(compile(ast.Module(body=[n for n in ast.parse(code).body if isinstance(n,ast.FunctionDef)],type_ignores=[]),'scripts/mutation_sweep.sh','exec'),ns)
+reasons=ns['load_equivalents'](Path('xtask/trust.equivalents'))
+def verify_bindings(proposal,bound):
+ assert sha(Path(proposal['file']).read_bytes())==proposal['source_sha256']
+ assert sha(Path('xtask/trust.equivalents').read_bytes())==proposal['equivalents_sha256']
+ assert {(row['original'],row['replacement']):row['reason'] for row in proposal['equivalents']}==reasons
+ assert bound==proposal['source_bindings'] and len(bound)==48
+ for filename,digest in bound.items():assert sha(Path(filename).read_bytes())==digest,filename
+verify_bindings(plan,plan['source_bindings'])
+assert len(reasons)==23
+pins=plan['producer_sources'];assert len(pins)==37
+for filename,row in list(pins.items())+list(plan['additional_producer_sources'].items()):
+ assert sha(Path(row['local']).read_bytes())==row['sha256'],filename
+for file in ['parent-list.log','copied-parent-list.log']:
+ assert re.findall(r'^([\w:]+): test$',(out/file).read_text(),re.M)==names,file
+inputs=json.loads((out/'native-inputs.json').read_text())
+assert len(inputs['regular'])==1141 and len(inputs['gitlinks'])==1
+restored=json.loads((out/'original-restoration.json').read_text())
+copied=json.loads((out/'copy-restoration.json').read_text())
+assert restored['status'] in ['restored','passed','verified'] and copied['status']=='restored'
+assert copied['regular']==inputs['regular']
+execution=json.loads((out/'execution.json').read_text())
+assert execution['command']==plan['native_command'] and execution['source_sha256']==plan['source_sha256']
+assert execution['held_tree']=='cf10a220a4fa3db4b3e74cf00676427d513dc579'
+subprocess.run(['python3','-I','-B','target/cache-current-checkpoint/reconstruct-inputs.py'],check=True)
+reconstruction=json.loads((out/'input-reconstruction.json').read_text())
+assert reconstruction['status']=='reconstructed' and reconstruction['held_tree']==execution['held_tree']
+assert reconstruction['regular_inputs']==len(inputs['regular'])
+false=[]
+def refuse(label,bad_log=log,bad_plan=plan,bad_exit=rc):
+ try:m.audit_measurement(bad_log,bad_plan,plan['file'],bad_exit)
+ except ValueError:false.append(label)
+ else:raise AssertionError(label+' was accepted')
+refuse('wrong-baseline-count',log.replace('1414 mutation(s)','1413 mutation(s)',1))
+refuse('wrong-baseline-span',log.replace('lines 147 to 2592','lines 148 to 2592',1))
+refuse('wrong-source-file',log.replace('mutation(s) of xtask/src/trust.rs','mutation(s) of xtask/src/trust_generated.rs',1))
+row=next(line for line in log.splitlines() if re.match(r'^  = \S+ +equivalent +',line))
+identity=re.match(r'^  = (\S+)',row)[1]
+refuse('foreign-outcome',log.replace(row,row.replace(identity,'L99999.foreign.0',1),1))
+refuse('duplicate-outcome',log+'\n'+row+'\n')
+refuse('missing-outcome',log.replace(row+'\n','',1))
+refuse('wrong-replacement',log.replace(row,row.replace(' ⟶ ',' ⟶ WRONG ',1),1))
+summary=next(line for line in log.splitlines() if line.startswith('mutation-sweep: ') and ' equivalent' in line and 'unviable by operator' not in line)
+refuse('wrong-terminal-count',log.replace(summary,summary.replace(' equivalent',' equivalent, 999 survived',1),1))
+operators=next(line for line in log.splitlines() if line.startswith('mutation-sweep: unviable by operator:'))
+refuse('missing-operator-summary',log.replace(operators+'\n','',1))
+refuse('wrong-strict-exit',bad_exit=0 if rc else 1)
+bad=copy.deepcopy(plan);bad['equivalents']=[]
+refuse('unlisted-equivalent',bad_plan=bad)
+for label,alter in [
+ ('false-actual-reason-binding',lambda p,b:p['equivalents'][0].__setitem__('reason','false reason')),
+ ('false-production-source-binding',lambda p,b:p.__setitem__('source_sha256','0'*64)),
+ ('false-operator-source-binding',lambda p,b:b.__setitem__('xtask/mutation_sweep_tests.py','0'*64)),
+]:
+ p,b=copy.deepcopy(plan),copy.deepcopy(plan['source_bindings']);alter(p,b)
+ try:verify_bindings(p,b)
+ except AssertionError:false.append(label)
+ else:raise AssertionError(label+' was accepted')
+bad=copy.deepcopy(measured)
+killed=next((row for row in bad['entries'] if row['outcome']=='killed'),None)
+if killed is None:
+ bad['entries'].append(dict(id='control',outcome='killed',names=['foreign::not_a_parent']))
+else:killed['names']=['foreign::not_a_parent']
+try:verify_names(bad)
+except AssertionError:false.append('foreign-killing-parent')
+else:raise AssertionError('foreign killing parent accepted')
+history={}
+for path in Path('docs/task-history').glob('*/*.md'):history[str(path)]=sha(path.read_bytes())
+assert len(history)==321
+(out/'assessment-history-before.json').write_text(json.dumps(history,indent=2)+'\n')
+result=dict(status='passed',scope='Initial complete cache/current-reason assessment only; no new E, parent/global closure or repair inferred',plan_sha256=sha((out/'plan.json').read_bytes()),source_sha256=sha(source),production_sha256=sha(source.split(b'#[cfg(test)]',1)[0]),selected=43,cache=20,current_reason_edits=23,raw=1414,parents=200,held_tree=execution['held_tree'],regular_inputs=1141,opaque_gitlinks=1,original_and_copy_restored=True,bindings=48,producer_sources=37,additional_producer_sources=2,native=measured,native_and_binding_falsifiers=false,prior_archives=321,cache_diagnostic_sha256=sha((out/'cache-diagnostic-audit.json').read_bytes()),component_qualification_sha256=sha((out/'component-qualification/qualification.json').read_bytes()),input_reconstruction_sha256=sha((out/'input-reconstruction.json').read_bytes()),all_survivors_distinguished_by_metadata_qualified_site_observations=True)
+(out/'native-audit.json').write_text(json.dumps(result,indent=2)+'\n')
+print('native audit: PASS',json.dumps(measured['counts']),'negative controls',len(false),'sha256',sha((out/'native-audit.json').read_bytes()))
+```
+
+</details>
+
+
+#### Remaining obligations
+
+
+The seven initial survivors are `L1296.guard.436`, `L1296.guard.437`, `L1296.guard.438`, `L1296.guard.442`, `L1296.guard.443`, `L1296.guard.444`, `L1309.contains.1123`. Each remains an open mutation-adequacy defect owned by the next regression task. No equivalence reason was added. The parent checkpoint remains open until the repair and a complete strict final replay finish.
+
+The existing parents kill both constant lookup conditions, deleted cache control, inverted/constant success handling and first-element membership as recorded above. Their finishing names are retained; the new regression is scoped to the actual remaining survivors.
+
+
+#### Middle shared-manifest diagnostic
+
+The original manifest method counts one admitted manifest site once across both callers. For the surviving positional lookup/insertion edits and last-element membership, the qualified input instead produces two counts and two uses. Identical final cache contents in the lookup cases do not distinguish this change. The missing semantic observation is the admission count across a shared package in the middle of both closures.
+
+Public Cargo metadata qualifies the files, targets and closures below. The actual production method and its real catalog/evidence dependencies are compiled, with only the exact selected replacement varied. The input Tree is held in memory; no separate Git repository is created or modified. These are diagnostic function observations, not end-to-end inventory runs or finishing semantic kills. The next task makes the observation permanent and measures the complete semantic cohort.
+
+<details>
+<summary>Actual metadata-qualified input</summary>
+
+```json
+{
+  "status": "actual-public-metadata-qualified",
+  "scope": "Project-owned ordinary workspace; no Git repository or metadata created. Cargo graph, manifests and target records only; no end-to-end inventory outcome inferred.",
+  "command": [
+    "cargo",
+    "metadata",
+    "--offline",
+    "--format-version",
+    "1"
+  ],
+  "exit": 0,
+  "git_root": ".",
+  "files": {
+    "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\n",
+    "rust-toolchain.toml": "[toolchain]\nchannel = \"1.95.0\"\n",
+    ".cargo/config.toml": "# \u0060cargo xtask \u2026\u0060 runs the repository's own verification runner (ROADMAP.md \u00a74.2, \u00a714.3).\n# Committed deliberately: a tier that only works if each developer remembers an incantation is a\n# tier nobody runs.\n[alias]\nxtask = \"run --quiet --package xtask --\"\n",
+    "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[dependencies]\nc = { path = \"../c\" }\nz = { path = \"../z\" }\n",
+    "crates/a/src/main.rs": "fn main() { assert_eq!(c::f() + z::f(), 18); }\n",
+    "crates/b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[dependencies]\nc = { path = \"../c\" }\nz = { path = \"../z\" }\n",
+    "crates/b/src/lib.rs": "pub fn check() -> u32 { c::f() + z::f() }\n",
+    "crates/c/Cargo.toml": "[package]\nname = \"c\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[features]\nextra = []\n",
+    "crates/c/src/lib.rs": "pub fn f() -> u32 { 7 }\n",
+    "crates/z/Cargo.toml": "[package]\nname = \"z\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "crates/z/src/lib.rs": "pub fn f() -> u32 { 11 }\n",
+    "Cargo.lock": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\ndependencies = [\n \"c\",\n \"z\",\n]\n\n[[package]]\nname = \"b\"\nversion = \"0.1.0\"\ndependencies = [\n \"c\",\n \"z\",\n]\n\n[[package]]\nname = \"c\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"z\"\nversion = \"0.1.0\"\n"
+  },
+  "closures": [
+    {
+      "who": "gen",
+      "closure": [
+        "crates/a",
+        "crates/c",
+        "crates/z"
+      ]
+    },
+    {
+      "who": "chk",
+      "closure": [
+        "crates/b",
+        "crates/c",
+        "crates/z"
+      ]
+    }
+  ],
+  "package_targets": {
+    "crates/a": [
+      "crates/a/src/main.rs"
+    ],
+    "crates/b": [
+      "crates/b/src/lib.rs"
+    ],
+    "crates/c": [
+      "crates/c/src/lib.rs"
+    ],
+    "crates/z": [
+      "crates/z/src/lib.rs"
+    ]
+  },
+  "metadata_targets": {
+    "crates/a": [
+      [
+        [
+          "bin"
+        ],
+        "a"
+      ]
+    ],
+    "crates/b": [
+      [
+        [
+          "lib"
+        ],
+        "b"
+      ]
+    ],
+    "crates/c": [
+      [
+        [
+          "lib"
+        ],
+        "c"
+      ]
+    ],
+    "crates/z": [
+      [
+        [
+          "lib"
+        ],
+        "z"
+      ]
+    ]
+  },
+  "source_sha256": "c02f30e133a9ef8b54f237dd5aa2cb0c8b55041fbdd304290d5109d65277aa49"
+}
+```
+
+</details>
+
+<details>
+<summary>Complete compiled observations and false-receipt controls</summary>
+
+```json
+{
+  "status": "passed",
+  "scope": "Actual Cargo-qualified in-memory manifest diagnostic; no new Git repository or semantic kill inferred",
+  "source_sha256": "c02f30e133a9ef8b54f237dd5aa2cb0c8b55041fbdd304290d5109d65277aa49",
+  "closures": [
+    {
+      "who": "gen",
+      "closure": [
+        "crates/a",
+        "crates/c",
+        "crates/z"
+      ]
+    },
+    {
+      "who": "chk",
+      "closure": [
+        "crates/b",
+        "crates/c",
+        "crates/z"
+      ]
+    }
+  ],
+  "compiled_original_and_variants": 19,
+  "variants": [
+    {
+      "id": "original",
+      "result": {
+        "sites": 1,
+        "used": 1,
+        "cached": [
+          "crates/a",
+          "crates/b",
+          "crates/c",
+          "crates/z"
+        ],
+        "refused": []
+      },
+      "method_sha256": "438c428bdba233c34742a1fbb3b8bc299263d55a7d896e94c93d1c2a0d965aa1",
+      "program_sha256": "8de47de56b12efb00953236b85b8609412a2f81f763e2aba19146fb8b14b79c4"
+    },
+    {
+      "id": "L1296.guard.436",
+      "result": {
+        "sites": 2,
+        "used": 2,
+        "cached": [
+          "crates/a",
+          "crates/b",
+          "crates/c",
+          "crates/z"
+        ],
+        "refused": []
+      },
+      "method_sha256": "bb32298097a0714228b2385a87c2fbbead7df9730312c619c403dcc1dea9701a",
+      "program_sha256": "fd97007208aad0ded0064e8bf39673b3b57819d099e6d7985fb3fd50e6d42021"
+    },
+    {
+      "id": "L1296.guard.437",
+      "result": {
+        "sites": 2,
+        "used": 2,
+        "cached": [
+          "crates/a",
+          "crates/b",
+          "crates/c",
+          "crates/z"
+        ],
+        "refused": []
+      },
+      "method_sha256": "db9c977ca4dbebc6c6c0f03885136be333104c89a9e166c4b72abf5f72d3c2a5",
+      "program_sha256": "3e5160602e721c9e15e674131dbc16062355a5c65dae568ffc12bc7ca4bc3759"
+    },
+    {
+      "id": "L1296.guard.438",
+      "result": {
+        "sites": 2,
+        "used": 2,
+        "cached": [
+          "crates/a",
+          "crates/b",
+          "crates/c",
+          "crates/z"
+        ],
+        "refused": []
+      },
+      "method_sha256": "497c975d684ec24472913e69be7b915bfb676b7111a22d93ed6e7e2563932e77",
+      "program_sha256": "c2596a1f61c6269e66310c9f7e0f1e83244ab496a2d26e0a224afe6d870fbd95"
+    },
+    {
+      "id": "L1296.guard.439",
+      "result": {
+        "sites": 2,
+        "used": 0,
+        "cached": [
+          "crates/a",
+          "crates/b",
+          "crates/z"
+        ],
+        "refused": [
+          "trust-undeclared-input: \u0060gen\u0060 reaches \u0060crates/c\u0060: \u0060crates/c/Cargo.toml\u0060: \u0060[features]\u0060 makes a second configuration, and no admission names it (manifest sha256 6feed7ef8e7fe5dd89c4d9abd102bde741fedb396571aba27e85527f912fc220)",
+          "trust-undeclared-input: \u0060chk\u0060 reaches \u0060crates/c\u0060: \u0060crates/c/Cargo.toml\u0060: \u0060[features]\u0060 makes a second configuration, and no admission names it (manifest sha256 6feed7ef8e7fe5dd89c4d9abd102bde741fedb396571aba27e85527f912fc220)"
+        ]
+      },
+      "method_sha256": "cd7852475584f73ad6daf954c2fa336022f926cc07fcd7dd60f560bf498acf2a",
+      "program_sha256": "b38fa36e43f08baac193c379316adefd4fe4c1b015ddd6088287e5fc19213412"
+    },
+    {
+      "id": "L1296.guard.440",
+      "result": {
+        "sites": 2,
+        "used": 0,
+        "cached": [
+          "crates/a",
+          "crates/b",
+          "crates/z"
+        ],
+        "refused": [
+          "trust-undeclared-input: \u0060gen\u0060 reaches \u0060crates/c\u0060: \u0060crates/c/Cargo.toml\u0060: \u0060[features]\u0060 makes a second configuration, and no admission names it (manifest sha256 6feed7ef8e7fe5dd89c4d9abd102bde741fedb396571aba27e85527f912fc220)",
+          "trust-undeclared-input: \u0060chk\u0060 reaches \u0060crates/c\u0060: \u0060crates/c/Cargo.toml\u0060: \u0060[features]\u0060 makes a second configuration, and no admission names it (manifest sha256 6feed7ef8e7fe5dd89c4d9abd102bde741fedb396571aba27e85527f912fc220)"
+        ]
+      },
+      "method_sha256": "e96a2de06d13bec76e3028b705754355aa206a441651a1c7a6bc0c4ca1783598",
+      "program_sha256": "f2a7057f75cc5138cab39f094428284b933a53de5c091eebcf88a545d53aae49"
+    },
+    {
+      "id": "L1296.guard.441",
+      "result": {
+        "sites": 2,
+        "used": 0,
+        "cached": [
+          "crates/a",
+          "crates/b",
+          "crates/z"
+        ],
+        "refused": [
+          "trust-undeclared-input: \u0060gen\u0060 reaches \u0060crates/c\u0060: \u0060crates/c/Cargo.toml\u0060: \u0060[features]\u0060 makes a second configuration, and no admission names it (manifest sha256 6feed7ef8e7fe5dd89c4d9abd102bde741fedb396571aba27e85527f912fc220)",
+          "trust-undeclared-input: \u0060chk\u0060 reaches \u0060crates/c\u0060: \u0060crates/c/Cargo.toml\u0060: \u0060[features]\u0060 makes a second configuration, and no admission names it (manifest sha256 6feed7ef8e7fe5dd89c4d9abd102bde741fedb396571aba27e85527f912fc220)"
+        ]
+      },
+      "method_sha256": "3ccc3990d9efc114cb77866052966c2235c2dc4b77a29438a58194e145d6261c",
+      "program_sha256": "ad6f0a8e2c40f7c448fab7d498ee191bada7b24bd92f2c66be7461828ad3890e"
+    },
+    {
+      "id": "L1296.guard.442",
+      "result": {
+        "sites": 2,
+        "used": 2,
+        "cached": [
+          "crates/a",
+          "crates/b"
+        ],
+        "refused": []
+      },
+      "method_sha256": "a10df1582d5ef510f8948cc68392c92c2839f0f2dd570c02dcb13079ae9e5f05",
+      "program_sha256": "26e6a2fbbe08a065fe3482ebed23a27bb3fd3c7024ec9db7a9b6f6be7692e503"
+    },
+    {
+      "id": "L1296.guard.443",
+      "result": {
+        "sites": 2,
+        "used": 2,
+        "cached": [
+          "crates/z"
+        ],
+        "refused": []
+      },
+      "method_sha256": "807d981b113c0d4e5bf70f4a2235e0d6c0ca97db4dd3681d01e86ab892e5244e",
+      "program_sha256": "8d278e6c1aaff11a3b0dbb1da10fbc6bda1e5b52d8c3fc55143185999dccb067"
+    },
+    {
+      "id": "L1296.guard.444",
+      "result": {
+        "sites": 2,
+        "used": 2,
+        "cached": [
+          "crates/a",
+          "crates/b",
+          "crates/z"
+        ],
+        "refused": []
+      },
+      "method_sha256": "1c38f2d05018f19466bab00ec29b459282ba6788a70580f6a684167c11e02652",
+      "program_sha256": "51195435a49e95af4af9cc26c01ecf2b079c22a76d67e88c06f2d4ba2b3acb48"
+    },
+    {
+      "id": "L1309.cond.450",
+      "result": {
+        "sites": 0,
+        "used": 0,
+        "cached": [],
+        "refused": []
+      },
+      "method_sha256": "26ffac8496707bb4067be83609174cd7aa4958a08fbd35b349670b5c8f5dcdf2",
+      "program_sha256": "fc1b8376cd07d8e6a3353e3f17d7a3cc9c63e07ce79a642113f9eb704e982942"
+    },
+    {
+      "id": "L1309.cond.451",
+      "result": {
+        "sites": 2,
+        "used": 2,
+        "cached": [
+          "crates/a",
+          "crates/b",
+          "crates/c",
+          "crates/z"
+        ],
+        "refused": []
+      },
+      "method_sha256": "1288221eb62f994cb7dfe3095fa0bcb0561a763a8ab0039c7cec5ad0ea6bd196",
+      "program_sha256": "d2e652ceaab6f3521cfd0bf4c96d9fc402e66a170f521f7721ccd62ba3f3589e"
+    },
+    {
+      "id": "L1310.stmt.452",
+      "result": {
+        "sites": 2,
+        "used": 2,
+        "cached": [
+          "crates/a",
+          "crates/b",
+          "crates/c",
+          "crates/z"
+        ],
+        "refused": []
+      },
+      "method_sha256": "b99d5351446079ae6b286c5538171b9226edc1ba7e8017b311a0f700482cd601",
+      "program_sha256": "d56850bf0ca9be08b9186f5247be4c428283412bc6334d09bf5716df88654bf6"
+    },
+    {
+      "id": "L1360.eq.478",
+      "result": {
+        "sites": 2,
+        "used": 2,
+        "cached": [],
+        "refused": []
+      },
+      "method_sha256": "68287d537cdb3ede297cd56a3c2b52cfbc94d751a475309d95e5216dd628dc72",
+      "program_sha256": "ff6ac00e32bd8af6bc62f4cccc75d9e76267013ba50681ba7fa4cb2dac0ca44f"
+    },
+    {
+      "id": "L1360.cond.479",
+      "result": {
+        "sites": 1,
+        "used": 1,
+        "cached": [
+          "crates/a",
+          "crates/b",
+          "crates/c",
+          "crates/z"
+        ],
+        "refused": []
+      },
+      "method_sha256": "de990f11d046cd547c89dd32f6b10d617be179e8ad996521f6dab6a660b2ae70",
+      "program_sha256": "99e32a0943bb8bf7b9fbef9e8d987d3b7ba385ebcdf8e1aee791de58fac1643d"
+    },
+    {
+      "id": "L1360.cond.480",
+      "result": {
+        "sites": 2,
+        "used": 2,
+        "cached": [],
+        "refused": []
+      },
+      "method_sha256": "a50b0dbd1316bde8e03bcb32df4228e362a62d68d48fe385ecbf63df067eee0b",
+      "program_sha256": "6eb506f75ba5b3d5d70fb85a948286ef116888444f0b028548c4f2a4c9f36ba8"
+    },
+    {
+      "id": "L1361.stmt.481",
+      "result": {
+        "sites": 2,
+        "used": 2,
+        "cached": [],
+        "refused": []
+      },
+      "method_sha256": "e2b118e232f55e04e56931fc198294fa551744fddfd496224d85beeece4caf93",
+      "program_sha256": "35cc311125d8505a32b453c85378be87ff302faaa02e1eef96ef03027441c87d"
+    },
+    {
+      "id": "L1309.contains.1121",
+      "result": {
+        "sites": 2,
+        "used": 2,
+        "cached": [
+          "crates/a",
+          "crates/b",
+          "crates/c",
+          "crates/z"
+        ],
+        "refused": []
+      },
+      "method_sha256": "672dc436a198ee774863774642f6c8bf510bc509c20ef0d022211d7e07cabfe5",
+      "program_sha256": "dab45e035f6c62f2d4d871973277aac95522625d48c33a13b22d97bb8b44a889"
+    },
+    {
+      "id": "L1309.contains.1123",
+      "result": {
+        "sites": 2,
+        "used": 2,
+        "cached": [
+          "crates/a",
+          "crates/b",
+          "crates/c",
+          "crates/z"
+        ],
+        "refused": []
+      },
+      "method_sha256": "4ccf75d7f55fee5e89f94475bd6e686fbb36b27f800e4511112b4e23c9208faa",
+      "program_sha256": "020eef5a88f0ba1530eecbe1ade30f896eb8cbb32c26fe56b955e49951793765"
+    }
+  ],
+  "false_receipts": [
+    "missing-variant",
+    "duplicate-variant",
+    "false-source-binding",
+    "false-method-binding",
+    "false-program-binding",
+    "false-original-sites",
+    "false-original-admission-use",
+    "false-mutant-sites",
+    "false-mutant-admission-use",
+    "false-cached-content",
+    "false-refusal",
+    "false-process-exit"
+  ],
+  "graph_receipt_sha256": "8dbde12700b84b251374d0d9e6e9e7113d6efc1fe34064b51225d4d2e369c064",
+  "observations_sha256": "b37ae38bfd6c298ecaa97ccae218becee56041b12c66de9cba2fa147b9ec25cd"
+}
+```
+
+</details>
+
+<details>
+<summary>Held-input reconstruction</summary>
+
+```json
+{
+  "status": "reconstructed",
+  "scope": "Read-only Git-object hashing from a retained committed predecessor plus the exact owned pending-to-active status change. Does not require the uncommitted held tree object to survive a clone or pruning.",
+  "base_commit": "e83a8b3c6cb47d365f7ec382fb90a0b3f3b769ac",
+  "held_tree": "cf10a220a4fa3db4b3e74cf00676427d513dc579",
+  "changed_path": "docs/tasks/M3.md",
+  "old": "  Status: \u0060pending\u0060 \u2014 initial complete cache/current-reason native assessment",
+  "new": "  Status: \u0060active\u0060 \u2014 initial complete cache/current-reason native assessment",
+  "regular_inputs": 1141,
+  "opaque_gitlinks": 1,
+  "native_blob_hash_agrees": true,
+  "root_tree_reconstructed": true,
+  "negative_controls": [
+    "missing-status-change",
+    "altered-task",
+    "false-regular-mode",
+    "false-opaque-gitlink"
+  ]
+}
+```
+
+</details>
+
+<details>
+<summary>Complete frozen-plan audit and control roster</summary>
+
+```json
+{
+  "status": "passed",
+  "scope": "Planning only; no native outcomes or new equivalence inferred",
+  "source_sha256": "c02f30e133a9ef8b54f237dd5aa2cb0c8b55041fbdd304290d5109d65277aa49",
+  "plan_sha256": "fe8b8f2a06641fa4a4d3b6fa59c718f6ec85c40e8b616b4274b8e6f63f47ff04",
+  "raw": 1414,
+  "cache": 20,
+  "current_reason_candidates": 23,
+  "selected": 43,
+  "parents": 200,
+  "bindings": 48,
+  "producer_pins": 37,
+  "source_spans_confirmed_by_rg": true,
+  "plan_falsifiers": [
+    "missing-cache-edit",
+    "missing-reason-edit",
+    "extra-unrelated-edit",
+    "duplicate-edit",
+    "lookup-without-continue",
+    "false-cache-membership",
+    "false-source-sha",
+    "false-reason-text",
+    "false-reason-file-sha",
+    "false-raw-count",
+    "false-parent-count",
+    "false-production-delta",
+    "missing-native-argument",
+    "false-embedded-parent-roster",
+    "false-embedded-source-binding",
+    "false-embedded-producer-pin"
+  ],
+  "previous_archives": 320,
+  "current_archives": 321,
+  "new_seal_exact": true,
+  "history_falsifiers": [
+    "truncated-seal",
+    "modified-seal",
+    "false-total"
+  ],
+  "full_task_routing_reconstructs": true,
+  "routing_saved_bytes": 1286,
+  "routing_falsifiers": 6,
+  "book_previous_prefix_exact": true,
+  "full_plan_and_contracts_preserved_publicly": true
+}
+```
+
+</details>
+
+The held tree is a capture identity, not a promised retained Git object. Exact replay starts from the retained predecessor in the reconstruction receipt and applies only the named pending-to-active task-status change. Read-only Git-object hashing reconstructs the root identity and all regular input blobs; native Git hashing independently agrees. The adapter rejects missing/altered status bytes, a false regular mode and a false opaque gitlink. It neither writes Git metadata nor reads submodule implementation.
+
+For an exact historical replay, use that recorded predecessor/status state with the repository-local stores prepared, then recreate these ignored execution adapters and the preceding full plan. The measurement audit runs at that capture boundary, before task sealing and documentation changes; the final publication audit checks the ensuing committed records separately. Changed source or producer inputs require a new assessment.
+
+The preceding planning paragraph carried a hand-written control count of `13`. Its executed audit always retained the complete roster shown above. That prose count is removed in this commit; the named control roster remains the authority. The frozen plan, its digest, previous audit receipt and candidate selection are unchanged.
+
+<details>
+<summary>Diagnostic adapter: qualify-cache-graph.py</summary>
+
+```python
+from pathlib import Path
+import hashlib,json,subprocess
+root=Path.cwd();out=root/'target/cache-current-checkpoint';base=out/'cache-function-graph';work=base/'workspace'
+work.mkdir(parents=True,exist_ok=False)
+def ordinary(name):return '[package]\nname = "'+name+'"\nversion = "0.1.0"\nedition = "2021"\n'
+deps='[dependencies]\nc = { path = "../c" }\nz = { path = "../z" }\n'
+files={
+ 'Cargo.toml':'[workspace]\nresolver = "2"\nmembers = ["crates/*"]\n',
+ 'rust-toolchain.toml':'[toolchain]\nchannel = "1.95.0"\n',
+ '.cargo/config.toml':Path('.cargo/config.toml').read_text(),
+ 'crates/a/Cargo.toml':ordinary('a')+deps,
+ 'crates/a/src/main.rs':'fn main() { assert_eq!(c::f() + z::f(), 18); }\n',
+ 'crates/b/Cargo.toml':ordinary('b')+deps,
+ 'crates/b/src/lib.rs':'pub fn check() -> u32 { c::f() + z::f() }\n',
+ 'crates/c/Cargo.toml':ordinary('c')+'[features]\nextra = []\n',
+ 'crates/c/src/lib.rs':'pub fn f() -> u32 { 7 }\n',
+ 'crates/z/Cargo.toml':ordinary('z'),
+ 'crates/z/src/lib.rs':'pub fn f() -> u32 { 11 }\n',
+}
+for name,text in files.items():
+ p=work/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(text)
+assert not (work/'.git').exists()
+git_root=Path(subprocess.check_output(['git','rev-parse','--show-toplevel'],cwd=work,text=True).strip())
+assert git_root==root
+command=['cargo','metadata','--offline','--format-version','1']
+run=subprocess.run(command,cwd=work,capture_output=True,text=True)
+(base/'metadata.stdout.json').write_text(run.stdout);(base/'metadata.stderr.log').write_text(run.stderr)
+assert run.returncode==0,run.stderr
+metadata=json.loads(run.stdout)
+packages={p['id']:p for p in metadata['packages']}
+nodes={node['id']:node for node in metadata['resolve']['nodes']}
+relative={identity:Path(p['manifest_path']).parent.relative_to(work).as_posix() for identity,p in packages.items()}
+closures=[]
+for who,name in [('gen','a'),('chk','b')]:
+ first=next(identity for identity,p in packages.items() if p['name']==name)
+ todo=[first];seen=set()
+ while todo:
+  current=todo.pop()
+  if current in seen:continue
+  seen.add(current);todo.extend(nodes[current]['dependencies'])
+ closure=sorted(relative[identity] for identity in seen)
+ closures.append(dict(who=who,closure=closure))
+assert closures==[dict(who='gen',closure=['crates/a','crates/c','crates/z']),dict(who='chk',closure=['crates/b','crates/c','crates/z'])]
+for p in work.rglob('*'):
+ if p.is_file() and 'target' not in p.relative_to(work).parts:
+  files[p.relative_to(work).as_posix()]=p.read_text()
+package_targets={relative[i]:[Path(t['src_path']).relative_to(work).as_posix() for t in p['targets']] for i,p in packages.items()}
+metadata_targets={relative[i]:[[t['kind'],t['name']] for t in p['targets']] for i,p in packages.items()}
+receipt=dict(status='actual-public-metadata-qualified',scope='Project-owned ordinary workspace; no Git repository or metadata created. Cargo graph, manifests and target records only; no end-to-end inventory outcome inferred.',command=command,exit=0,git_root='.',files=files,closures=closures,package_targets=package_targets,metadata_targets=metadata_targets,source_sha256=hashlib.sha256(Path('xtask/src/trust.rs').read_bytes()).hexdigest())
+(base/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+print(json.dumps({k:receipt[k] for k in ['status','scope','closures','package_targets']}))
+```
+
+</details>
+
+<details>
+<summary>Diagnostic adapter: probe-cache-function-qualified.py</summary>
+
+```python
+from pathlib import Path
+import hashlib,json,subprocess
+root=Path.cwd();out=root/'target/cache-current-checkpoint';base=out/'cache-function-qualified-probe'
+base.mkdir(exist_ok=False)
+plan=json.loads((out/'plan.json').read_text());source=(out/'source-before.rs.txt').read_text()
+assert hashlib.sha256(source.encode()).hexdigest()==plan['source_sha256']
+def fragments(text):
+ a=text.index('#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]\npub struct Admission')
+ b=text.index('\n}\n',a)+3
+ admission=text[a:b]
+ a=text.index("struct Rules<'a> {");b=text.index('\n}\n',a)+3
+ fields=text[a:b]
+ a=text.index('    fn manifests(&mut self,');b=text.index('    /// The token rules',a)
+ return admission,fields,text[a:b]
+admission,fields,method=fragments(source)
+libraries={}
+for name in ['archogen_catalog','archogen_evidence']:
+ libraries[name]=max((out/'component-qualification/target/debug/deps').glob('lib'+name+'-*.rlib'),key=lambda p:p.stat().st_mtime_ns)
+main='\nfn main() {\n let tree = Tree::new(vec![("Cargo.toml".to_owned(),"[workspace]\\nresolver = \\"2\\"\\nmembers = [\\"crates/*\\"]\\n".as_bytes().to_vec()),("rust-toolchain.toml".to_owned(),"[toolchain]\\nchannel = \\"1.95.0\\"\\n".as_bytes().to_vec()),(".cargo/config.toml".to_owned(),"# `cargo xtask …` runs the repository\'s own verification runner (ROADMAP.md §4.2, §14.3).\\n# Committed deliberately: a tier that only works if each developer remembers an incantation is a\\n# tier nobody runs.\\n[alias]\\nxtask = \\"run --quiet --package xtask --\\"\\n".as_bytes().to_vec()),("crates/a/Cargo.toml".to_owned(),"[package]\\nname = \\"a\\"\\nversion = \\"0.1.0\\"\\nedition = \\"2021\\"\\n[dependencies]\\nc = { path = \\"../c\\" }\\nz = { path = \\"../z\\" }\\n".as_bytes().to_vec()),("crates/a/src/main.rs".to_owned(),"fn main() { assert_eq!(c::f() + z::f(), 18); }\\n".as_bytes().to_vec()),("crates/b/Cargo.toml".to_owned(),"[package]\\nname = \\"b\\"\\nversion = \\"0.1.0\\"\\nedition = \\"2021\\"\\n[dependencies]\\nc = { path = \\"../c\\" }\\nz = { path = \\"../z\\" }\\n".as_bytes().to_vec()),("crates/b/src/lib.rs".to_owned(),"pub fn check() -> u32 { c::f() + z::f() }\\n".as_bytes().to_vec()),("crates/c/Cargo.toml".to_owned(),"[package]\\nname = \\"c\\"\\nversion = \\"0.1.0\\"\\nedition = \\"2021\\"\\n[features]\\nextra = []\\n".as_bytes().to_vec()),("crates/c/src/lib.rs".to_owned(),"pub fn f() -> u32 { 7 }\\n".as_bytes().to_vec()),("crates/z/Cargo.toml".to_owned(),"[package]\\nname = \\"z\\"\\nversion = \\"0.1.0\\"\\nedition = \\"2021\\"\\n".as_bytes().to_vec()),("crates/z/src/lib.rs".to_owned(),"pub fn f() -> u32 { 11 }\\n".as_bytes().to_vec()),("Cargo.lock".to_owned(),"# This file is automatically @generated by Cargo.\\n# It is not intended for manual editing.\\nversion = 4\\n\\n[[package]]\\nname = \\"a\\"\\nversion = \\"0.1.0\\"\\ndependencies = [\\n \\"c\\",\\n \\"z\\",\\n]\\n\\n[[package]]\\nname = \\"b\\"\\nversion = \\"0.1.0\\"\\ndependencies = [\\n \\"c\\",\\n \\"z\\",\\n]\\n\\n[[package]]\\nname = \\"c\\"\\nversion = \\"0.1.0\\"\\n\\n[[package]]\\nname = \\"z\\"\\nversion = \\"0.1.0\\"\\n".as_bytes().to_vec())]);\n let admitted = tree.get("crates/c/Cargo.toml").unwrap();\n let parsed = manifest::parse(&String::from_utf8_lossy(admitted)).unwrap();\n let why = package::check_manifest(&tree, "crates/c", "crates/c/Cargo.toml", &parsed).unwrap_err();\n let site = Admission { file: "crates/c/Cargo.toml".to_owned(), rule: why, sha256: Digest::of(admitted).hex() };\n let admissions = BTreeMap::from([(site,1usize)]);\n let symlinks = BTreeSet::new();\n let package_targets = BTreeMap::from([("crates/a".to_owned(),vec!["crates/a/src/main.rs".to_owned()]),("crates/b".to_owned(),vec!["crates/b/src/lib.rs".to_owned()]),("crates/c".to_owned(),vec!["crates/c/src/lib.rs".to_owned()]),("crates/z".to_owned(),vec!["crates/z/src/lib.rs".to_owned()])]);\n let metadata_targets = BTreeMap::from([("crates/a".to_owned(),vec![(vec!["bin".to_owned()],"a".to_owned())]),("crates/b".to_owned(),vec![(vec!["lib".to_owned()],"b".to_owned())]),("crates/c".to_owned(),vec![(vec!["lib".to_owned()],"c".to_owned())]),("crates/z".to_owned(),vec![(vec!["lib".to_owned()],"z".to_owned())])]);\n let mut rules = Rules {\n  tree: &tree, tree_dir: Path::new("."), symlinks: &symlinks,\n  admissions: &admissions, package_targets: &package_targets,\n  metadata_targets: &metadata_targets, sites: 0, used: BTreeMap::new(),\n  manifests_checked: BTreeSet::new(), judged: BTreeSet::new(),\n };\n let mut refused = Vec::new();\n for (who, names) in [("gen",vec!["crates/a".to_owned(),"crates/c".to_owned(),"crates/z".to_owned()]),("chk",vec!["crates/b".to_owned(),"crates/c".to_owned(),"crates/z".to_owned()])] {\n  let closure = names.into_iter().collect();\n  rules.manifests(who, &closure, &mut refused);\n }\n println!("{{\\"sites\\":{},\\"used\\":{},\\"cached\\":{:?},\\"refused\\":{:?}}}",\n  rules.sites,rules.used.values().sum::<usize>(),\n  rules.manifests_checked.into_iter().collect::<Vec<_>>(),refused);\n}\n'
+
+rows=[]
+for identity in ['original']+[identity for identity in plan['cache_candidates'] if identity not in {'L1309.contains.1122','L1309.contains.1124'}]:
+ text=source
+ if identity!='original':
+  c=next(c for c in plan['candidates'] if c['id']==identity)
+  lines=source.split('\n');start,stop=c['span'];assert '\n'.join(lines[start:stop])==c['original']
+  lines[start:stop]=c['replacement'].split('\n');text='\n'.join(lines)
+ a,f,body=fragments(text);assert a==admission and f==fields
+ program='#![allow(dead_code, unused_imports)]\nuse std::collections::{BTreeMap,BTreeSet};\nuse std::path::Path;\nuse archogen_catalog::{manifest,package,tree::Tree};\nuse archogen_evidence::sha256::Digest;\n'+a+'\n'+f+"\nimpl Rules<'_> {\n"+body+'\n}\n'+main
+ path=base/(identity+'.rs');path.write_text(program)
+ binary=base/('run-'+identity)
+ command=['rustc','--edition=2021','--crate-name','cache_function_probe',str(path),'-L','dependency='+str(out/'component-qualification/target/debug/deps'),'-o',str(binary)]
+ for name,library in libraries.items():command+=['--extern',name+'='+str(library)]
+ compile_run=subprocess.run(command,capture_output=True)
+ (base/(identity+'.compile.stderr')).write_bytes(compile_run.stderr)
+ assert compile_run.returncode==0,compile_run.stderr.decode()
+ run=subprocess.run([str(binary)],cwd=root,capture_output=True,text=True,timeout=10)
+ (base/(identity+'.stdout')).write_text(run.stdout);(base/(identity+'.stderr')).write_text(run.stderr)
+ assert run.returncode==0,run.stderr
+ result=json.loads(run.stdout)
+ rows.append(dict(id=identity,source_sha256=hashlib.sha256(text.encode()).hexdigest(),method_sha256=hashlib.sha256(body.encode()).hexdigest(),program_sha256=hashlib.sha256(program.encode()).hexdigest(),exit=run.returncode,result=result))
+assert rows[0]['result']['sites']==rows[0]['result']['used']==1
+receipt=dict(status='observed',scope='Actual manifest method with files, targets and closures qualified by public Cargo metadata; no separate Git repository or metadata created; no end-to-end inventory or semantic kill claimed',source_sha256=plan['source_sha256'],closures=[['crates/a','crates/c','crates/z'],['crates/b','crates/c','crates/z']],rows=rows)
+(base/'observations.json').write_text(json.dumps(receipt,indent=2)+'\n')
+print(json.dumps({'status':receipt['status'],'scope':receipt['scope'],'rows':[{k:row[k] for k in ['id','result']} for row in rows]}))
+```
+
+</details>
+
+<details>
+<summary>Diagnostic adapter: verify-cache-diagnostic.py</summary>
+
+```python
+from pathlib import Path
+import copy,hashlib,json
+out=Path('target/cache-current-checkpoint')
+plan=json.loads((out/'plan.json').read_text())
+graph=json.loads((out/'cache-function-graph/receipt.json').read_text())
+observed=json.loads((out/'cache-function-qualified-probe/observations.json').read_text())
+source=(out/'source-before.rs.txt').read_text()
+def sha(data):return hashlib.sha256(data).hexdigest()
+assert sha(source.encode())==plan['source_sha256']==graph['source_sha256']==observed['source_sha256']
+assert graph['status']=='actual-public-metadata-qualified' and graph['exit']==0 and graph['git_root']=='.'
+work=out/'cache-function-graph/workspace'
+assert not (work/'.git').exists()
+for name,content in graph['files'].items():assert (work/name).read_text()==content,name
+raw=json.loads((out/'cache-function-graph/metadata.stdout.json').read_text())
+packages={p['id']:p for p in raw['packages']}
+nodes={node['id']:node for node in raw['resolve']['nodes']}
+closures=[]
+for who,name in [('gen','a'),('chk','b')]:
+ visited=set();pending=[key for key,row in packages.items() if row['name']==name]
+ assert len(pending)==1
+ while pending:
+  identity=pending.pop()
+  if identity in visited:continue
+  visited.add(identity)
+  pending.extend(nodes[identity]['dependencies'])
+ paths=sorted(Path(packages[identity]['manifest_path']).parent.relative_to(work.resolve()).as_posix() for identity in visited)
+ closures.append(dict(who=who,closure=paths))
+assert closures==graph['closures']
+assert [row['closure'] for row in closures]==observed['closures']
+expected=['original']+[identity for identity in plan['cache_candidates'] if identity not in {'L1309.contains.1122','L1309.contains.1124'}]
+def validate(proposal):
+ assert proposal['source_sha256']==plan['source_sha256'] and [row['id'] for row in proposal['rows']]==expected
+ for row in proposal['rows']:
+  identity=row['id'];text=source
+  if identity!='original':
+   c=next(c for c in plan['candidates'] if c['id']==identity)
+   lines=source.split('\n');a,b=c['span'];lines[a:b]=c['replacement'].split('\n');text='\n'.join(lines)
+  a=text.index('    fn manifests(&mut self,');b=text.index('    /// The token rules',a);method=text[a:b]
+  program=(out/'cache-function-qualified-probe'/(identity+'.rs')).read_text()
+  assert program.count(method)==1 and sha(program.encode())==row['program_sha256']
+  assert sha(method.encode())==row['method_sha256'] and sha(text.encode())==row['source_sha256']
+  assert row['exit']==0
+  stdout=(out/'cache-function-qualified-probe'/(identity+'.stdout')).read_text()
+  assert json.loads(stdout)==row['result']
+  for filename,content in graph['files'].items():
+   fragment='('+json.dumps(filename,ensure_ascii=False)+'.to_owned(),'+json.dumps(content,ensure_ascii=False)+'.as_bytes().to_vec())'
+   assert program.count(fragment)==1,filename
+ assert proposal['rows'][0]['result']==dict(sites=1,used=1,cached=['crates/a','crates/b','crates/c','crates/z'],refused=[])
+validate(observed)
+negative=[]
+for label,alter in [
+ ('missing-variant',lambda p:p['rows'].pop()),
+ ('duplicate-variant',lambda p:p['rows'].append(p['rows'][1])),
+ ('false-source-binding',lambda p:p.__setitem__('source_sha256','0'*64)),
+ ('false-method-binding',lambda p:p['rows'][1].__setitem__('method_sha256','0'*64)),
+ ('false-program-binding',lambda p:p['rows'][1].__setitem__('program_sha256','0'*64)),
+ ('false-original-sites',lambda p:p['rows'][0]['result'].__setitem__('sites',2)),
+ ('false-original-admission-use',lambda p:p['rows'][0]['result'].__setitem__('used',2)),
+ ('false-mutant-sites',lambda p:p['rows'][1]['result'].__setitem__('sites',1)),
+ ('false-mutant-admission-use',lambda p:p['rows'][1]['result'].__setitem__('used',1)),
+ ('false-cached-content',lambda p:p['rows'][1]['result']['cached'].pop()),
+ ('false-refusal',lambda p:p['rows'][1]['result']['refused'].append('invented refusal')),
+ ('false-process-exit',lambda p:p['rows'][1].__setitem__('exit',101)),
+]:
+ bad=copy.deepcopy(observed);alter(bad)
+ try:validate(bad)
+ except AssertionError:negative.append(label)
+ else:raise AssertionError(label+' accepted')
+result=dict(status='passed',scope='Actual Cargo-qualified in-memory manifest diagnostic; no new Git repository or semantic kill inferred',source_sha256=plan['source_sha256'],closures=graph['closures'],compiled_original_and_variants=len(expected),variants=[dict(id=row['id'],result=row['result'],method_sha256=row['method_sha256'],program_sha256=row['program_sha256']) for row in observed['rows']],false_receipts=negative,graph_receipt_sha256=sha((out/'cache-function-graph/receipt.json').read_bytes()),observations_sha256=sha((out/'cache-function-qualified-probe/observations.json').read_bytes()))
+(out/'cache-diagnostic-audit.json').write_text(json.dumps(result,indent=2)+'\n')
+print('Cache diagnostic audit: passed;',len(expected),'actual programs;',len(negative),'false receipts refused; source/metadata inputs exact; sha256',sha((out/'cache-diagnostic-audit.json').read_bytes()))
+```
+
+</details>
+
+
+#### Compiler-premise checkpoint parent record
+
+The complete private parent record immediately before this assessment publication is retained verbatim.
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.4.3`
+  Status: `active` — decomposed before closure: generator preflight repair, then precise prefix proof
+  Priority: P2 after .2, before caller suffix checkpoint; owner .4.
+  Goal: assess exact L729.lit.202 independently. Bind all current producer/caller routes,
+    full codegen option domains, optional suffix branches and fixed substring safety.
+    Successful finite helper/API agreement grants no E. Establish actual supported
+    distinguishing controls or a complete guarded source/producer proof, actual compiled
+    original/edit and wider-domain/false-premise/oracle controls before any precise reason.
+    Keep source/hash proof gates outside the semantic native cohort; preserve older controls.
+  Acceptance: source/API/pin revalidation, justified intended native K or precise E, full
+    input restoration, normal proof/focused/book/live checks and separate commit.
+  Scope: bind current1414 candidates/all200 parents after .0, reproduce the exact edit before
+    any reason; enumerate every constructor and incidental adjacency under the pinned
+    successful caller. If complete, preserve source/pin guards outside semantic tests,
+    compile actual original/edit extraction with literal/wider/false-premise oracles, then
+    add only the precise reason and replay native E. Preserve older source/tests/reasons;
+    update canonical producer contract, unbounded book and live pointers; final focused.
+  Children, in order: `.4.3.0` (preflight repair), `.4.3.3` (literal-fence gate repair),
+    `.4.3.4.0` (publication guard), `.4.3.1` (prefix proof),
+    `.4.3.2` (complete changed-cache checkpoint).
+  Verification: current source90c1078d/full198 before1S; provisional exact native1E and
+    operator49 pass, but premise investigation finds repeated-generator dynamic preflight
+    bypass. These receipts grant no accepted E. New reason/proof body deferred verbatim
+    under `target/caller-suffix-literal/deferred-proof/`; revalidation follows .0.
+    API observation: source production036f650d, fixture ec313fa049a63fa7d1ace30e43dd976085b2e706;
+    explicit custom-build refusal for first generator plus actual RAN marker after second.
+    No inventory written. Owner .0 records root cause/reproduction/impact.
+  Commit: `pending`
+
+```
+
+#### Middle shared-manifest regression task
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.4.3.2.2`
+  Status: `pending` — observe a middle shared admitted manifest exactly once
+  Priority: next/P1, blocks final cache closure; owner .3.2.
+  Goal: add a bounded permanent semantic parent using the actual manifest method and
+    public in-memory Tree. Its files, target records and middle shared closures must
+    match the independently qualified Cargo metadata; create no separate Git repository.
+    Both program orders must count/use the admitted manifest once. Refused and recovered
+    phases use fresh Rules and assert each caller's refusal plus successful recovery.
+    Distinguish every measured survivor below through the intended finishing parent,
+    replaying all of them against the complete next semantic cohort with strict timeouts:
+    L1296.guard.436, L1296.guard.437, L1296.guard.438, L1296.guard.442, L1296.guard.443, L1296.guard.444, L1309.contains.1123.
+    Preserve production and every older semantic body; no new E from finite agreement.
+    Revalidate affected proof premises, source/producer bindings and focused checks.
+    Publish exact test body, original/mutant observations, roster, restoration and
+    false receipts in the unbounded book. Commit this repair before final replay.
+  Acceptance: every listed initial S becomes intended K; all original/copied inputs
+    restore; older tests and reasons remain exact; focused checks and book gates pass.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+#### Complete cache checkpoint final replay task
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.4.3.2.3`
+  Status: `pending` — complete repaired cache/current-reason final replay
+  Priority: after committed .2, before .4.4; owner .3.2.
+  Goal: rederive current discovery and all three conservative cache spans, preserve the
+    exact complete .0 cohort or explicitly own any source-derived population change.
+    Rebind current whole/production source, every reason and proof premise, producer
+    identity and the complete semantic roster. Freeze a reviewable exact current plan
+    before execution. Run the complete native cohort, with current reasons, all parents,
+    strict timeouts and same-volume sandbox. Independently qualify U in the actual current
+    component; preserve source/copy restoration, all outcomes/names and false controls.
+    Own any new S/TO/unjudged before closure. Book/live sync and COMMIT workflow required.
+  Acceptance: complete current cohort has no S/TO/unjudged; every K intended, every E
+    precisely justified, every U actually qualified; full restoration and exact receipts.
+    Close only this cache checkpoint; suffix/global sweeps and independent review remain.
+  Verification: `pending`
+  Commit: `pending`
+
+```
+
+<details>
+<summary>Final publication audit adapter</summary>
+
+```python
+from pathlib import Path
+import copy,hashlib,importlib.util,json,re,subprocess
+out=Path('target/cache-current-checkpoint');B=chr(96);q=lambda x:B+x+B
+base='e83a8b3c6cb47d365f7ec382fb90a0b3f3b769ac'
+def sha(data):return hashlib.sha256(data).hexdigest()
+def prior(path):return subprocess.check_output(['git','show',base+':'+path])
+core=json.loads((out/'native-audit.json').read_text())
+assert sha((out/'native-audit.json').read_bytes())=='c04d444f638ad4a862c9fae4495e5638799b4fbe874c8e3ea30f361c0f0ce3b8'
+plan=json.loads((out/'plan.json').read_text())
+spec=importlib.util.spec_from_file_location('adequacy','scripts/trust_adequacy.py')
+m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+native=m.audit_measurement((out/'native.log').read_text(),plan,plan['file'],int((out/'native.exit').read_text()))
+assert native==core['native'] and native['counts']==dict(equivalent=23,survived=7,killed=11,unviable=2)
+for name,digest in plan['source_bindings'].items():assert sha(Path(name).read_bytes())==digest,name
+assert Path(plan['file']).read_bytes()==prior(plan['file'])
+assert Path('xtask/trust.equivalents').read_bytes()==prior('xtask/trust.equivalents')
+for name,row in list(plan['producer_sources'].items())+list(plan['additional_producer_sources'].items()):
+ assert sha(Path(row['local']).read_bytes())==row['sha256'],name
+assert len(plan['source_bindings'])==48 and len(plan['producer_sources'])==37
+for filename,field in [('cache-diagnostic-audit.json','cache_diagnostic_sha256'),('component-qualification/qualification.json','component_qualification_sha256'),('input-reconstruction.json','input_reconstruction_sha256')]:
+ assert sha((out/filename).read_bytes())==core[field],filename
+qa=json.loads((out/'component-qualification/qualification.json').read_text())
+diagnostic=json.loads((out/'cache-diagnostic-audit.json').read_text())
+reconstruction=json.loads((out/'input-reconstruction.json').read_text())
+assert len(core['native_and_binding_falsifiers'])==15
+assert len(qa['negative_controls'])==len(diagnostic['false_receipts'])==12
+assert len(reconstruction['negative_controls'])==4
+history=json.loads((out/'assessment-history-before.json').read_text());assert len(history)==321
+for name,digest in history.items():assert sha(Path(name).read_bytes())==digest,name
+identity='M3.6.9.6.3.2.2.15.2.1.4.3.2.0'
+archive=Path('docs/task-history/M3')/(identity+'.md');data=archive.read_bytes()
+tree=prior('docs/tasks/M3.md')
+a=tree.index(('- ID: '+q(identity)).encode())
+b=tree.index(b'\n- ID: ',a+1)+1
+assert data+b'\n'==tree[a:b]
+paths={str(p) for p in Path('docs/task-history').glob('*/*.md')}
+assert paths==set(history)|{str(archive)} and len(paths)==322
+index=Path('docs/task-history/INDEX.md').read_text()
+rows=[line for line in index.splitlines(keepends=True) if line.startswith('| '+q(identity)+' |')]
+assert len(rows)==1 and index.replace(rows[0],'',1).encode()==prior('docs/task-history/INDEX.md')
+indexed=set()
+for line in index.splitlines():
+ if not line.startswith('| '+B):continue
+ cells=[cell.strip().strip(B) for cell in line.strip('|').split('|')]
+ if len(cells)!=6:continue
+ leaf,count,lines,size,digest,date=cells
+ name='docs/task-history/'+leaf.split('.')[0]+'/'+leaf+'.md'
+ body=Path(name).read_bytes()
+ assert int(count)>0 and body.count(b'\n')==int(lines) and len(body)==int(size) and sha(body)==digest
+ indexed.add(name)
+assert indexed==paths
+history_false=[]
+for label,bad in [('truncated-seal',data[:-1]),('modified-seal',data.replace(b'- ID:',b'- iD:',1))]:
+ assert bad+b'\n'!=tree[a:b];history_false.append(label)
+assert len(paths)!=323;history_false.append('false-total')
+book=Path('docs/book/src/annex-trust-proofs.md').read_text()
+before=(out/'book-before-publication.md').read_text()
+assert before.encode()==prior('docs/book/src/annex-trust-proofs.md')
+route=json.loads((out/'publication-routing.json').read_text())
+prefix=before.replace(route['prose_count_before'],route['prose_count_after'],1)
+assert book==prefix+(out/'assessment-book-complete.md').read_text()
+assert (out/'plan.json').read_text() in book
+original=(out/'premise-parent-record-before.md').read_text()
+compact=(out/'premise-parent-record-compact.md').read_text()
+assert original in book
+before_task=(out/'task-before-parent-routing.md').read_text()
+after_task=(out/'task-after-parent-routing.md').read_text()
+assert after_task==Path('docs/tasks/M3.md').read_text()
+assert after_task.count(compact)==1 and after_task.replace(compact,original,1)==before_task
+assert len(before_task.encode())-len(after_task.encode())==route['parent_saved_bytes']==len(original.encode())-len(compact.encode())
+routing_false=[]
+for label,bad in [('truncated-parent',original[:-1]),('modified-parent',original.replace('Status:','STATUS:',1)),('extra-parent-newline',original+'\n')]:
+ assert after_task.replace(compact,bad,1)!=before_task;routing_false.append(label)
+def verify_saving(claimed):
+ assert claimed==len(before_task.encode())-len(after_task.encode())
+verify_saving(route['parent_saved_bytes'])
+try:verify_saving(1766)
+except AssertionError:routing_false.append('stale-proposed-saving')
+else:raise AssertionError('stale proposed saving accepted')
+start=book.index('### Initial cache and current-reason assessment')
+marker='<summary>Complete native output</summary>'
+a=book.index(marker,start)+len(marker)
+opening=re.match(r'\s*'+re.escape(B*3)+r'json\n',book[a:])
+assert opening is not None
+a+=opening.end();b=book.index('\n'+B*3,a)
+assert json.loads(book[a:b])['log'].encode()==(out/'native.log').read_bytes()
+receipt_start=book.index('#### Complete native assessment receipt',start)
+a=book.index(B*3+'json\n',receipt_start)+len(B*3+'json\n');b=book.index('\n'+B*3,a)
+assert json.loads(book[a:b])==core
+for title,filename in [
+ ('Actual metadata-qualified input','cache-function-graph/receipt.json'),
+ ('Complete compiled observations and false-receipt controls','cache-diagnostic-audit.json'),
+ ('Held-input reconstruction','input-reconstruction.json'),
+ ('Complete frozen-plan audit and control roster','plan-audit.json'),
+]:
+ marker='<summary>'+title+'</summary>'
+ a=book.index(marker,start)+len(marker)
+ opening=re.match(r'\s*'+re.escape(B*3)+r'json\n',book[a:]);assert opening is not None
+ a+=opening.end();b=book.index('\n'+B*3,a)
+ assert json.loads(book[a:b])==json.loads((out/filename).read_text()),filename
+for filename in ['repair-task-full.md','replay-task-full.md']:
+ assert (out/filename).read_text() in book
+for filename in ['run-native.py','reconstruct-inputs.py','prepare-component.py','qualify-copied.py','verify-components.py','audit-native.py','qualify-cache-graph.py','probe-cache-function-qualified.py','verify-cache-diagnostic.py','final-audit.py']:
+ assert (out/filename).read_text() in book,filename
+survivors=[row['id'] for row in native['entries'] if row['outcome']=='survived']
+assert all(identity in (out/'repair-task-full.md').read_text() for identity in survivors)
+assert 'Status: '+q('done') in after_task.split('- ID: '+q('M3.6.9.6.3.2.2.15.2.1.4.3.2.1'),1)[1].split('\n- ID: ',1)[0]
+for identity in ['M3.6.9.6.3.2.2.15.2.1.4.3.2.2','M3.6.9.6.3.2.2.15.2.1.4.3.2.3']:
+ assert 'Status: '+q('pending') in after_task.split('- ID: '+q(identity),1)[1].split('\n- ID: ',1)[0]
+task_total=sum(p.stat().st_size for p in Path('docs/tasks').rglob('*') if p.is_file())
+assert task_total<=819200
+result=dict(status='passed',scope='Initial assessment publication only; repair/final replay remain open; doctrine/book gates required separately',base_commit=base,native=native['counts'],strict_exit=1,source_and_old_reasons_exact=True,regular_inputs=1141,parents=200,source_bindings=48,producer_sources=37,additional_sources=2,native_falsifiers=15,compiler_falsifiers=12,diagnostic_falsifiers=12,input_reconstruction_falsifiers=4,previous_archives=321,current_archives=322,new_seal_exact=True,history_falsifiers=history_false,whole_parent_routing_reconstructs=True,routing_saved_bytes=route['parent_saved_bytes'],routing_falsifiers=routing_false,book_previous_content_reconstructs_with_one_count_correction=True,full_log_plan_receipts_adapters_and_next_contracts_preserved=True,private_task_bytes=task_total,native_audit_sha256=sha((out/'native-audit.json').read_bytes()),native_log_sha256=sha((out/'native.log').read_bytes()))
+(out/'final-audit.json').write_text(json.dumps(result,indent=2)+'\n')
+print('Final assessment publication audit: passed;43/full200,1141 restored;321 prior archives/new322nd exact; full routing/log/plan/adapters/contracts retained;',len(history_false),'history and',len(routing_false),'routing falsifiers; sha256',sha((out/'final-audit.json').read_bytes()))
+```
+
+</details>
+
+<details>
+<summary>Publication-audit calibration</summary>
+
+```json
+{
+  "scope": "Unpublished first publication-audit draft",
+  "observed": "Refused a stale proposed saved-byte count; complete parent/document identity reconstruction already matched",
+  "draft_proposal": 1766,
+  "actual_saving": 1772,
+  "final_verification": "Derive from complete before/after records and retain stale proposal as a rejecting control"
+}
+```
+
+</details>
+
+<details>
+<summary>Diagnostic-data serialization</summary>
+
+The anchor gate first treated literal backticks in fixture diagnostic strings as repository citations. JSON Unicode escapes preserve those data characters and identify the strings as serialized fixture evidence. The final audit decodes each receipt and compares it with the complete original object; the decoded native log also matches the original bytes. The execution adapters retain their exact source text.
+
+</details>

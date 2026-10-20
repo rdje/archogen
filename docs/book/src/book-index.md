@@ -314,6 +314,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **ID** — [definition](glossary.md), [The S0 early generation path](s0.md), [Verifying the toolchain](verification.md),
   [Annex C: Trust proof records](annex-trust-proofs.md)
 - Incremental matcher reasons — [Annex C: Trust proof records](annex-trust-proofs.md#incremental-matcher-reasons)
+- Initial cache and current-reason assessment — [Annex C: Trust proof
+  records](annex-trust-proofs.md#initial-cache-and-current-reason-assessment)
 - Initial parent killing tests — [Generated-sources test adequacy](trust-adequacy.md#initial-parent-killing-tests)
 - Initial role and build operator outcomes — [Generated-sources test
   adequacy](trust-adequacy.md#initial-role-and-build-operator-outcomes)

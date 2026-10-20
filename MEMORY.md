@@ -16,8 +16,8 @@
 - **Active tree:** `M3` → frontier `M3.6`. `PROGRAM` resumes at `PROGRAM.71`. `M2`'s frontier is `M2.7.4`, on the director; `API` is
   closed; `M1`'s open leaf is `M1.29.4`, blocked on the director. Every other tree's frontier head is in
   `docs/TASK_TREE.md`.
-- **Next action:** execute the frozen cache/current-reason assessment in
-  `M3.6.9.6.3.2.2.15.2.1.4.3.2.1`; own repairs and final replay under its parent before the suffix checkpoint.
+- **Next action:** add the middle shared-manifest admission-count regression in
+  `M3.6.9.6.3.2.2.15.2.1.4.3.2.2`; then require the complete final replay in `M3.6.9.6.3.2.2.15.2.1.4.3.2.3`.
   Corrected renderer adoption stays owned in `.4.3.4.1`.
   Final full sweeps and review precede `M3.3`.
   `M3.6.9.1` is done, strict/attributed outcomes; `PROGRAM.76` is closed.
