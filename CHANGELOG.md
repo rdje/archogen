@@ -5,6 +5,23 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — guard the middle shared-manifest admission count
+
+`ARCHOGEN-M3-0813` (leaf `M3.6.9.6.3.2.2.15.2.1.4.3.2.2`), `2026-10-20`.
+
+- Add one bounded semantic parent using all12 Cargo-qualified fixture files, targets
+  and middle shared closures; both caller orders exercise accepted/refused/recovered phases.
+- All seven initial cache survivors now finish as7 intended K/full201, strict0; every kill
+  names only the new parent. Production, all older source bytes/operators/reasons unchanged.
+- Restore1143 original/copied inputs; preserve48 bindings/37+2 producer sources and18
+  premise guards. Reject16 false native/binding,4 fixture and4 input-derivation receipts.
+- Publish the missing legacy copied-input helper source and inline maintained checks
+  in the new runner; all1143 records agree. Prior measured results remain unchanged.
+- Preserve322 prior archives and the exact new323rd seal. Freeze the complete43/full201
+  final replay plan in the unbounded book; focused/publication gates required before commit.
+  The full cache checkpoint, suffix/global sweeps and independent review remain open.
+
+
 ## archogen — assess current cache edits and own seven survivors
 
 `ARCHOGEN-M3-0812` (leaf `M3.6.9.6.3.2.2.15.2.1.4.3.2.1`), `2026-10-20`.

@@ -383,6 +383,8 @@ a change that leaves it stale, so it is never edited by hand.
 - mdbook — [What this project relies on from outside](ledger.md#mdbook)
 - **MEI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Metadata matcher reasons — [Annex C: Trust proof records](annex-trust-proofs.md#metadata-matcher-reasons)
+- Middle shared-manifest admission count regression — [Annex C: Trust proof
+  records](annex-trust-proofs.md#middle-shared-manifest-admission-count-regression)
 - miri — [What this project relies on from outside](ledger.md#miri)
 - **MMIO** — [definition](glossary.md), [Where generated systems run](targets.md)
 - More is not better — [Quantities and units](quantities.md#more-is-not-better)
