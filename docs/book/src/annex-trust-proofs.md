@@ -154198,3 +154198,378 @@ print('published', len(f), 'bytes')
 </details>
 
 The receipts are under `target/configuration-path-assessment/`.
+
+
+### Configuration absolute-path routes
+
+Which producer route can leave a path outside the written tree in a unit's normalised configuration was measured on `2026-10-21` (`M3.6.9.6.3.2.2.15.2.1.7.1`) with the real pinned Cargo through the unchanged production inventory, in the sweep's copy with one inserted probe test. **None does.** Every route the producer's interface offers is closed before rustc runs, or stops the run before any unit is judged:
+
+| Route | Where it stops | Evidence |
+| --- | --- | --- |
+| a commit's cargo configuration | refused: a configuration may hold only `alias` | `check_config` in `crates/archogen-catalog/src/package.rs`, applied on the build's path |
+| `rustflags` or `cargo-features` in the workspace manifest | refused | the workspace rule, `check_workspace` |
+| an inherited `RUSTFLAGS` | never reaches the build | the build's environment is cleared to a fixed list |
+| a build script's `cargo:rustc-link-arg` | refused before any compilation, admitted or not | `trust::tests::an_admitted_build_script_is_refused_before_any_compilation` |
+| a `trim-paths` profile | refused by the pinned Cargo: unstable in 1.95.0, and `cargo-features` is refused | measured below |
+| a path dependency outside the tree, absolute or climbing | built, then the run stops unjudged on compiler provenance | measured below |
+
+For the outside dependencies, the record of the outside crate carries its own directory as its working directory — Cargo compiles a package outside the workspace from its own root — while every other record carries the written tree; the provenance session refuses that record, and the inventory returns the error before any unit is read:
+
+- `control`: written
+- `absolute path dependency`: error — ``gen` compiler provenance: compiler provenance schema, session, role or working directory differs`
+- `climbing path dependency`: error — ``gen` compiler provenance: compiler provenance schema, session, role or working directory differs`
+
+```json
+{
+  "cfg-route-absolute-dependency": [
+    "<repository-root>/target/mutation-sweep/tree/target/trust-tests/cfg-route-absolute-dependency/out/tree",
+    "<repository-root>/target/mutation-sweep/tree/target/trust-tests/cfg-route-absolute-dependency/out/tree",
+    "<repository-root>/target/mutation-sweep/tree/target/trust-tests/cfg-route-absolute-dependency/out/tree",
+    "<repository-root>/target/mutation-sweep/tree/target/trust-tests/cfg-route-external/x",
+    "<repository-root>/target/mutation-sweep/tree/target/trust-tests/cfg-route-absolute-dependency/out/tree"
+  ],
+  "cfg-route-climbing-dependency": [
+    "<repository-root>/target/mutation-sweep/tree/target/trust-tests/cfg-route-climbing-dependency/out/tree",
+    "<repository-root>/target/mutation-sweep/tree/target/trust-tests/cfg-route-climbing-dependency/out/tree",
+    "<repository-root>/target/mutation-sweep/tree/target/trust-tests/cfg-route-climbing-dependency/out/tree",
+    "<repository-root>/target/mutation-sweep/tree/target/trust-tests/cfg-route-climbing-dependency/cfg-route-external/x",
+    "<repository-root>/target/mutation-sweep/tree/target/trust-tests/cfg-route-climbing-dependency/out/tree"
+  ]
+}
+```
+
+Two findings, each owned. **An outside path dependency is reported unjudged where a refusal is due** — it is the commit's own manifest that reaches outside it, which the inventory refuses as it refuses a cargo configuration on the build's path (`M3.6.3.4`); the run still fails closed, exit 2 rather than 1. Owner: `M3.6.9.6.3.2.2.15.2.1.7.2`. **The configuration refusal is reached by no route**, so it is defence in depth; its ten survivors are owned by `M3.6.9.6.3.2.2.15.2.1.7.3`, which holds the refusal directly, both forms at every position, rather than claim it unreachable over a producer's whole domain.
+
+<details>
+<summary>The inserted probe</summary>
+
+```rust
+
+    #[test]
+    fn probe_configuration_routes() {
+        use crate::json::{write as json_write, Json};
+        fn row(name: &str, outcome: Result<Outcome, String>) -> Json {
+            let mut m = std::collections::BTreeMap::new();
+            m.insert("name".to_owned(), Json::Str(name.to_owned()));
+            let (kind, lines) = match outcome {
+                Ok(Outcome::Written(_)) => ("written", Vec::new()),
+                Ok(Outcome::Refused(r)) => ("refused", r),
+                Err(e) => ("error", vec![e]),
+            };
+            m.insert("outcome".to_owned(), Json::Str(kind.to_owned()));
+            m.insert("lines".to_owned(), Json::Array(lines.into_iter().map(Json::Str).collect()));
+            Json::Object(m)
+        }
+        let mut rows = Vec::new();
+        let f = two_roots("cfg-route-control", "fn main() {}\n", "pub fn f() {}\n", &[]);
+        rows.push(row("control", f.try_run_into("out")));
+        // A crate outside every fixture's repository, reached by an absolute and by a climbing path.
+        let external = real_root().join("target/trust-tests/cfg-route-external");
+        let _ = std::fs::remove_dir_all(&external);
+        write(
+            &external,
+            &[
+                ("x/Cargo.toml", manifest("x", "")),
+                ("x/src/lib.rs", "pub fn x() {}\n".to_owned()),
+            ],
+        );
+        let absolute = format!("[dependencies]\nx = {{ path = \"{}\" }}\n", external.join("x").display());
+        let f = two_roots(
+            "cfg-route-absolute-dependency",
+            "fn main() { x::x(); }\n",
+            "pub fn f() {}\n",
+            &[("crates/a/Cargo.toml", manifest("a", &absolute))],
+        );
+        rows.push(row("absolute path dependency", f.try_run_into("out")));
+        let f = two_roots(
+            "cfg-route-climbing-dependency",
+            "fn main() { x::x(); }\n",
+            "pub fn f() {}\n",
+            &[(
+                "crates/a/Cargo.toml",
+                manifest("a", "[dependencies]\nx = { path = \"../../../../cfg-route-external/x\" }\n"),
+            )],
+        );
+        // The tree is written one level deeper than the repository (`out/tree` against `repo`), so the same climbing
+        // path resolves to the base from the tree: a copy there makes the build reach it.
+        write(
+            &f.base,
+            &[
+                ("cfg-route-external/x/Cargo.toml", manifest("x", "")),
+                ("cfg-route-external/x/src/lib.rs", "pub fn x() {}\n".to_owned()),
+            ],
+        );
+        rows.push(row("climbing path dependency", f.try_run_into("out")));
+        // `trim-paths` is not a route: the pinned Cargo refuses it unstable (trim-paths-unstable.log).
+        std::fs::write(
+            std::env::var("ARCHOGEN_PROBE_OUT").unwrap(),
+            json_write(&Json::Array(rows)),
+        )
+        .unwrap();
+    }
+```
+
+</details>
+
+<details>
+<summary>The pinned Cargo on `trim-paths`</summary>
+
+```text
+
+running 1 test
+trust::tests::probe_configuration_routes --- FAILED
+
+failures:
+
+---- trust::tests::probe_configuration_routes stdout ----
+
+thread 'trust::tests::probe_configuration_routes' (1366706590) panicked at xtask/src/trust.rs:3032:9:
+error: failed to parse manifest at `<repository-root>/target/mutation-sweep/tree/target/trust-tests/cfg-route-trim-paths/repo/Cargo.toml`
+
+Caused by:
+  feature `trim-paths` is required
+
+  The package requires the Cargo feature called `trim-paths`, but that feature is not stabilized in this version of Cargo (1.95.0 (f2d3ce0bd 2026-03-21)).
+  Consider trying a newer version of Cargo (this may require the nightly release).
+  See https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#profile-trim-paths-option for more information about the status of this feature.
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    trust::tests::probe_configuration_routes
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 338 filtered out; finished in 3.66s
+
+error: test failed, to rerun pass `-p xtask --bin xtask`
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: probe.py</summary>
+
+```python
+"""M3.6.9.6.3.2.2.15.2.1.7.1: which producer route can leave an outside path in a unit's configuration.
+
+Measurement only. The sweep's plain copy is refreshed from the tracked inputs, one probe test is inserted into
+its `xtask/src/trust.rs` test module, and the test runs with the real pinned Cargo through the unchanged
+production inventory, `ARCHOGEN_SWEEP_SOURCE` binding the copy to this repository as every sweep run does.
+Each route is a fixture; its outcome — written, refused with its lines, or the build's error — is recorded.
+The copy's file is restored afterwards.
+"""
+from pathlib import Path
+import hashlib, importlib.util, json, os, shutil, subprocess, tempfile
+
+root = Path.cwd().resolve()
+out = root / 'target/configuration-route-assessment'
+copy = root / 'target/mutation-sweep/tree'
+spec = importlib.util.spec_from_file_location('adequacy', root / 'scripts/trust_adequacy.py')
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+snapshot = m.load_input_snapshot((out / 'inputs.json').read_bytes())
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+PROBE = r'''
+    #[test]
+    fn probe_configuration_routes() {
+        use crate::json::{write as json_write, Json};
+        fn row(name: &str, outcome: Result<Outcome, String>) -> Json {
+            let mut m = std::collections::BTreeMap::new();
+            m.insert("name".to_owned(), Json::Str(name.to_owned()));
+            let (kind, lines) = match outcome {
+                Ok(Outcome::Written(_)) => ("written", Vec::new()),
+                Ok(Outcome::Refused(r)) => ("refused", r),
+                Err(e) => ("error", vec![e]),
+            };
+            m.insert("outcome".to_owned(), Json::Str(kind.to_owned()));
+            m.insert("lines".to_owned(), Json::Array(lines.into_iter().map(Json::Str).collect()));
+            Json::Object(m)
+        }
+        let mut rows = Vec::new();
+        let f = two_roots("cfg-route-control", "fn main() {}\n", "pub fn f() {}\n", &[]);
+        rows.push(row("control", f.try_run_into("out")));
+        // A crate outside every fixture's repository, reached by an absolute and by a climbing path.
+        let external = real_root().join("target/trust-tests/cfg-route-external");
+        let _ = std::fs::remove_dir_all(&external);
+        write(
+            &external,
+            &[
+                ("x/Cargo.toml", manifest("x", "")),
+                ("x/src/lib.rs", "pub fn x() {}\n".to_owned()),
+            ],
+        );
+        let absolute = format!("[dependencies]\nx = {{ path = \"{}\" }}\n", external.join("x").display());
+        let f = two_roots(
+            "cfg-route-absolute-dependency",
+            "fn main() { x::x(); }\n",
+            "pub fn f() {}\n",
+            &[("crates/a/Cargo.toml", manifest("a", &absolute))],
+        );
+        rows.push(row("absolute path dependency", f.try_run_into("out")));
+        let f = two_roots(
+            "cfg-route-climbing-dependency",
+            "fn main() { x::x(); }\n",
+            "pub fn f() {}\n",
+            &[(
+                "crates/a/Cargo.toml",
+                manifest("a", "[dependencies]\nx = { path = \"../../../../cfg-route-external/x\" }\n"),
+            )],
+        );
+        // The tree is written one level deeper than the repository (`out/tree` against `repo`), so the same climbing
+        // path resolves to the base from the tree: a copy there makes the build reach it.
+        write(
+            &f.base,
+            &[
+                ("cfg-route-external/x/Cargo.toml", manifest("x", "")),
+                ("cfg-route-external/x/src/lib.rs", "pub fn x() {}\n".to_owned()),
+            ],
+        );
+        rows.push(row("climbing path dependency", f.try_run_into("out")));
+        // `trim-paths` is not a route: the pinned Cargo refuses it unstable (trim-paths-unstable.log).
+        std::fs::write(
+            std::env::var("ARCHOGEN_PROBE_OUT").unwrap(),
+            json_write(&Json::Array(rows)),
+        )
+        .unwrap();
+    }
+'''
+ANCHOR = '    #[test]\n    fn every_program_target_is_a_root_or_classified_and_the_rest_is_reported() {\n'
+
+assert not (copy / '.git').exists() and not (copy / '.git').is_symlink()
+for relative, entry in snapshot['regular'].items():
+    src, dst = root / relative, copy / relative
+    assert sha(src.read_bytes()) == entry['sha256'], relative
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=dst.parent, delete=False) as handle:
+        temporary = Path(handle.name)
+    try:
+        shutil.copy2(src, temporary)
+        temporary.replace(dst)
+    finally:
+        temporary.unlink(missing_ok=True)
+target = copy / 'xtask/src/trust.rs'
+original = target.read_text()
+assert original == (root / 'xtask/src/trust.rs').read_text() and original.count(ANCHOR) == 1
+probed = original.replace(ANCHOR, PROBE.lstrip('\n') + '\n' + ANCHOR, 1)
+(out / 'probe-diff.json').write_text(json.dumps(dict(file='xtask/src/trust.rs', original_sha256=sha(original.encode()),
+                                                     probed_sha256=sha(probed.encode()), inserted=PROBE), indent=2) + '\n')
+target.write_text(probed)
+env = dict(os.environ, CARGO_TARGET_DIR=str(root / 'target/mutation-sweep/target'), ARCHOGEN_SWEEP_SOURCE=str(root),
+           ARCHOGEN_PROBE_OUT=str(out / 'results.json'))
+try:
+    with (out / 'probe.log').open('w') as log:
+        result = subprocess.run(['cargo', 'test', '--locked', '--offline', '-q', '-p', 'xtask',
+                                 'trust::tests::probe_configuration_routes', '--', '--exact'],
+                                cwd=copy, env=env, stdout=log, stderr=subprocess.STDOUT)
+finally:
+    target.write_text(original)
+(out / 'probe.exit').write_text(str(result.returncode) + '\n')
+assert result.returncode == 0, (out / 'probe.log').read_text()[-3000:]
+for r in json.loads((out / 'results.json').read_text()):
+    print(r['name'], '->', r['outcome'])
+    for line in r['lines']:
+        print('   ', line.replace(str(root), '<repository-root>')[:400])
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: audit.py</summary>
+
+```python
+"""M3.6.9.6.3.2.2.15.2.1.7.1: the independent audit of the configuration route assessment.
+
+Judges the probe's receipts against literal expectations written here: the control is written; each outside
+path dependency stops with the provenance error, and the outside package's own record carries its own directory
+as the working directory where every other record carries the written tree; `trim-paths` is refused unstable by
+the pinned Cargo. No outcome names the configuration refusal. The copy is restored and the main inputs restore.
+"""
+from pathlib import Path
+import copy as copying, hashlib, json, subprocess
+
+out = Path('target/configuration-route-assessment')
+root = Path.cwd().resolve()
+base = (out / 'base-commit.txt').read_text().strip()
+PROVENANCE = '`gen` compiler provenance: compiler provenance schema, session, role or working directory differs'
+EXPECTED = [('control', 'written', []), ('absolute path dependency', 'error', [PROVENANCE]),
+            ('climbing path dependency', 'error', [PROVENANCE])]
+CONFIGURED = 'is configured with'
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def cwds(fixture):
+    records = root / 'target/mutation-sweep/tree/target/trust-tests' / fixture / 'out/target/gen/.archogen-provenance'
+    seen = []
+    for f in sorted(records.glob('*/records/*.json')):
+        seen.append(bytes.fromhex(json.loads(f.read_text())['cwd_hex']).decode())
+    return seen
+
+
+def judge(rows, observed):
+    assert [(r['name'], r['outcome'], r['lines']) for r in rows] == EXPECTED, rows
+    assert not any(CONFIGURED in l for r in rows for l in r['lines'])
+    tests = str(root / 'target/mutation-sweep/tree/target/trust-tests')
+    for fixture, outside in [('cfg-route-absolute-dependency', tests + '/cfg-route-external/x'),
+                             ('cfg-route-climbing-dependency', tests + '/cfg-route-climbing-dependency/cfg-route-external/x')]:
+        tree = tests + '/' + fixture + '/out/tree'
+        seen = observed[fixture]
+        assert seen.count(outside) == 1, (fixture, seen)
+        assert all(c == tree for c in seen if c != outside) and len(seen) > 1, (fixture, seen)
+
+
+if __name__ == '__main__':
+    rows = json.loads((out / 'results.json').read_text())
+    observed = {f: cwds(f) for f in ['cfg-route-absolute-dependency', 'cfg-route-climbing-dependency']}
+    judge(rows, observed)
+    trim = (out / 'trim-paths-unstable.log').read_text()
+    assert 'feature `trim-paths` is required' in trim and 'not stabilized in this version of Cargo (1.95.0 (f2d3ce0bd 2026-03-21))' in trim
+    diff = json.loads((out / 'probe-diff.json').read_text())
+    committed = subprocess.check_output(['git', 'show', base + ':xtask/src/trust.rs'])
+    assert diff['original_sha256'] == sha(committed)
+    assert (root / 'target/mutation-sweep/tree/xtask/src/trust.rs').read_bytes() == committed, 'the copy is restored'
+    assert json.loads((out / 'restoration.json').read_text())['status'] in ['restored', 'passed', 'verified']
+    arms = []
+
+    def arm(label, alter_rows=None, alter_observed=None):
+        r, o = copying.deepcopy(rows), copying.deepcopy(observed)
+        if alter_rows:
+            alter_rows(r)
+        if alter_observed:
+            alter_observed(o)
+        try:
+            judge(r, o)
+        except AssertionError:
+            arms.append(label)
+            return
+        raise SystemExit('falsifying arm accepted: ' + label)
+
+    arm('the control refused', lambda r: r[0].update(outcome='refused', lines=['x']))
+    arm('an outside dependency written', lambda r: r[1].update(outcome='written', lines=[]))
+    arm('an outside dependency refused by the configuration loop', lambda r: r[2].update(
+        outcome='refused', lines=['trust-undeclared-input: `x` in `gen` is configured with `/x`, a path outside the written tree']))
+    arm('the outside record at the tree', alter_observed=lambda o: o.__setitem__(
+        'cfg-route-absolute-dependency', [c.replace('cfg-route-external/x', 'cfg-route-absolute-dependency/out/tree')
+                                          for c in o['cfg-route-absolute-dependency']]))
+    arm('a second foreign directory', alter_observed=lambda o: o['cfg-route-climbing-dependency'].append('/elsewhere'))
+    arm('a route dropped', lambda r: r.pop())
+    result = dict(status='passed', base_commit=base, routes=[dict(name=n, outcome=o) for n, o, _ in EXPECTED],
+                  outside_record_cwd={f: [c.replace(str(root), '<repository-root>') for c in v] for f, v in observed.items()},
+                  trim_paths='refused unstable by the pinned Cargo', configuration_refusal_reached=False,
+                  probe=diff['inserted'], falsifying_arms_refused=len(arms), arms=arms)
+    (out / 'audit.json').write_text(json.dumps(result, indent=2) + '\n')
+    print('Configuration route audit passed: control written; both outside dependencies stop at provenance, the outside '
+          'record\'s cwd its own directory; trim-paths unstable; no route reaches the refusal;', len(arms), 'of',
+          len(arms), 'falsifying arms refused; sha256', sha((out / 'audit.json').read_bytes()))
+```
+
+</details>
+
+The receipts are under `target/configuration-route-assessment/`.

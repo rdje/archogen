@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — measure the configuration's producer routes
+
+`ARCHOGEN-M3-0836` (leaf `M3.6.9.6.3.2.2.15.2.1.7.1`), `2026-10-21`.
+
+- Ask the real pinned Cargo, through the unchanged inventory, which route can leave a path outside the
+  written tree in a unit's configuration: none does. A commit's cargo configuration, workspace
+  `rustflags`, an inherited `RUSTFLAGS` and build scripts are closed before rustc; `trim-paths` is
+  unstable in Cargo 1.95.0.
+- An outside path dependency, absolute or climbing, is built and the run then stops unjudged: the
+  outside crate's compiler record carries its own directory, which the provenance session refuses.
+  That is the commit's own fault and should be a refusal; owned by `.7.2`.
+- With no route reaching it, the configuration refusal is defence in depth; `.7.3` holds it directly.
+  Measurement only; all inputs restore; the audit refuses six altered receipts.
+
 ## archogen — assess the configuration absolute-path loop
 
 `ARCHOGEN-M3-0835` (leaf `M3.6.9.6.3.2.2.15.2.1.7.0`), `2026-10-21`.
