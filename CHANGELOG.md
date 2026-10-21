@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — assess the configuration absolute-path loop
+
+`ARCHOGEN-M3-0835` (leaf `M3.6.9.6.3.2.2.15.2.1.7.0`), `2026-10-21`.
+
+- Select the loop that refuses a unit configured with a path outside the written tree — a token that
+  begins with `/` or holds `=/` — and map the ten historical survivors of the source-`069d8e59` run to
+  current candidates by exact text.
+- Replay all 18 of the loop's candidates against all 207 parents with strict timeouts: 10 survive, the
+  ten historical ones, `if false {` among them, so no current test reaches the refusal; 4 widenings are
+  killed and 4 narrowings refused by the compiler. All inputs restore; the audit refuses eight altered
+  receipts. Measurement only.
+- File `.7.1`: which producer route can leave an outside path in a configuration, then a control per
+  form at every position, or a proof.
+
 ## archogen — the colon path limit surfaced to the director
 
 `ARCHOGEN-PROGRAM-0834` (leaf `PROGRAM.97`), `2026-10-21`.
