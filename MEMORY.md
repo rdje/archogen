@@ -14,8 +14,9 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.3`; `PROGRAM` resumes at `PROGRAM.71`.
-- **Next action:** `M3.3` (joint constraints, F08/F09): design first — the resource vocabulary under §15, what a
-  combination is — per its survey; then `M3.5`. **Mutation testing is stopped** until the functionality is locked
+- **Next action:** `M3.3.2` (P1): the joint checker, `crates/eadl-resolve/src/joint.rs` — channel count and region
+  ownership per `M3.3`'s reviewed design, F08 and F09 with controls, `model.md` §8, the book; flip the migration note
+  `eadl-1-consumed-facts-and-channels.md` to `applied`. `.1` done `2026-10-21`; then `M3.3.3`–`.7`, `M3.5`. **Mutation testing is stopped** until the functionality is locked
   (`decision_mutation-testing-after-completion.md`, `2026-10-21`): every pending `M3.6.9` leaf is `blocked`;
   every decision advances the project first. `M3.6.9.6.3.2.2.15.2.1.8.2` stays owned, a suspected defect, P2.
   Disposable project-owned Git fixtures under ignored `target/` are approved;

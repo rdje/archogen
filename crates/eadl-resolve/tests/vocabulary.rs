@@ -13,7 +13,9 @@ use eadl_model::check::shipped_registry;
 use eadl_model::kind::Registry;
 use eadl_model::Dimension;
 use eadl_resolve::model::{self, CLAUSE_WORDS, VOCABULARY};
-use eadl_resolve::vocabulary::{clause_words, Cause, Direction, Domain, Role, Rule, Vocabulary};
+use eadl_resolve::vocabulary::{
+    clause_words, Cause, Direction, Domain, Role, Rule, Usage, Vocabulary,
+};
 
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -137,6 +139,7 @@ fn the_shipped_table_is_the_model_s_slash_one_entry_by_entry() {
             e.name
         );
         assert_eq!(f.implies, e.implies, "{}: implies", e.name);
+        assert_eq!(f.usage == Usage::Consumed, e.consumed, "{}: use", e.name);
         assert!(
             !f.doc.is_empty(),
             "{}: every entry says what it means",
@@ -425,6 +428,77 @@ fn implies_names_members_of_a_set() {
         [Cause::Implies]
     );
     assert_eq!(causes(&fact("f", "set a b", "includes", "(implies a)")), []);
+}
+
+#[test]
+fn the_two_alarms_are_consumed_and_every_other_fact_is_shared() {
+    // `M3.3`'s marks, written out here rather than read from the model or the record, so a mark moved in all three at
+    // once still fails: a further mark is a §15 migration.
+    let table = shipped();
+    let consumed: Vec<&str> = table
+        .facts()
+        .filter(|f| f.usage == Usage::Consumed)
+        .map(|f| f.name.as_str())
+        .collect();
+    assert_eq!(consumed, ["absolute-deadline", "relative-delay"]);
+    let channels = table.fact("channels").expect("`channels` is an entry");
+    assert_eq!(
+        (
+            &channels.domain,
+            channels.role,
+            channels.direction,
+            channels.usage
+        ),
+        (
+            &Domain::Count,
+            Role::Guarantee,
+            Direction::AtLeast,
+            Usage::Shared
+        )
+    );
+}
+
+#[test]
+fn a_use_is_shared_or_consumed_and_consumed_sits_on_a_boolean_or_a_group_head() {
+    assert_eq!(causes(&fact("f", "boolean", "exact", "(use consumed)")), []);
+    assert_eq!(causes(&fact("f", "boolean", "exact", "(use shared)")), []);
+    let group = [
+        fact("g", "group a", "exact", "(use consumed)"),
+        fact("a", "quantity time", "at-least", ""),
+    ]
+    .join("\n");
+    assert_eq!(causes(&group), []);
+    assert_eq!(
+        causes(&fact("f", "boolean", "exact", "(use taken)")),
+        [Cause::Usage]
+    );
+    for (domain, direction) in [
+        ("count", "at-least"),
+        ("quantity time", "at-most"),
+        ("set a b", "includes"),
+        ("enumeration a b", "exact"),
+    ] {
+        assert_eq!(
+            causes(&fact("f", domain, direction, "(use consumed)")),
+            [Cause::Usage],
+            "{domain}"
+        );
+        assert_eq!(
+            causes(&fact("f", domain, direction, "(use shared)")),
+            [],
+            "{domain}"
+        );
+    }
+    // Twice is the frame's: `use` is written at most once.
+    assert_eq!(
+        causes(&fact(
+            "f",
+            "boolean",
+            "exact",
+            "(use consumed) (use shared)"
+        )),
+        [Cause::Frame]
+    );
 }
 
 #[test]

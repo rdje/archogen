@@ -140,12 +140,13 @@ that writes a `deffact` alike — so no description's registry is ever asked for
 | `rule` | a symbol | a rule name | the engine's rule that computes it, named here and listed in §4 |
 | `implies` | forms | members of the fact's set | for a set fact, the members every valued constraint on it holds beside what it writes, under every written direction — `available-in-state` implies `run`, the state every use runs in; a presence requirement writes no value and asks only for an offer (§2, §3 rule 3; R16 2; R17 1, 2; R18 3) |
 | `doc` | a string | a string | what the fact means, one line; required, as a kind's `doc` is |
+| `use` | a symbol | `shared` or `consumed` | whether a requester bound to the fact takes one of the provider's `channels`, `consumed`, only on a boolean fact or a group's head; or reads it, `shared`, the default (`M3.3`; model §8) |
 
 `deffact`'s clauses are `(holds forms)` for `domain`, since `(ordered …)` nests, and for `derived-from`, `reads` and
-`implies`, which list facts or members (R18 8); `(holds values string)` for `doc`; and `(holds values symbol)` for `role`, `direction` and
-`rule`, each exactly one value — reference §7 rule 4 makes `values` a fixed number, and `kind.rs` refuses any
+`implies`, which list facts or members (R18 8); `(holds values string)` for `doc`; and `(holds values symbol)` for `role`, `direction`,
+`rule` and `use`, each exactly one value — reference §7 rule 4 makes `values` a fixed number, and `kind.rs` refuses any
 other as `schema-arity` (R2 B3). `doc`, `domain`, `role` and `direction` appear exactly once, `derived-from`,
-`reads`, `rule` and `implies` at most once, `implies` only on a set fact (R3 C11; R17 2). A fact's name lives in the vocabulary, not in a
+`reads`, `rule`, `implies` and `use` at most once, `implies` only on a set fact (R3 C11; R17 2). A fact's name lives in the vocabulary, not in a
 description's declaration namespace: the vocabulary is validated on its own, never checked as a description. A
 declaration whose local name is a vocabulary fact is `invalid-description`: module resolution (reference §6 rule 10)
 binds a `uses`, `needs` or `refines` operand to a declaration of its own instance before anything else, so such a
@@ -178,24 +179,26 @@ as today's corpus writes it, because a reader of a bound should see which way it
 a bare value, `(counter-width 32 bit)`, takes its direction from the vocabulary, which is what makes both checkable
 (R16 9).
 
-**The entries of `/1`**, one per fact the census writes, each direction with its reason; `M3.1.2` ships them as
+**The entries of `/1`**, one per fact the census writes, and `channels`, which `M3.3`'s joint check reads, each direction with its reason; `M3.1.2` ships them as
 `vocabulary.eadl` and adds none without a row here (R2 B8). A fact marked *interface* takes `exact` because a
 different value is a different interface, not a better one (§5.2); a *capacity* takes the direction in which more
 of it satisfies more.
 
 | Fact | Domain | Role | Direction | Why |
 | --- | --- | --- | --- | --- |
-| `absolute-deadline` | group `supported-horizon delivery-bound` | guarantee | `exact` | a boolean head |
+| `absolute-deadline` | group `supported-horizon delivery-bound` | guarantee | `exact` | a boolean head; `use consumed`: an alarm a requester programs (`M3.3`) |
 | `application-mutexes`, `general-ipc`, `descriptor-format` | boolean | guarantee | `exact` | presence facts; the first two are §3.1 exclusions |
 | `available-in-state` | set `run idle sleep`, `(implies run)` | guarantee | `includes` | the offer covers every state required and `run`, the state every use runs in, which the entry's `implies` names: `(available-in-state idle)` asks for `run` and `idle`, and `(available-in-state (exactly idle))` for exactly those two (R16 2; R17 1, 2) |
 | `bounded-arrival` | boolean | guarantee | `exact` | |
 | `bus-width` | quantity information | guarantee | `exact` | interface: a wider bus is another bus |
+| `channels` | count | guarantee | `at-least` | capacity: the requesters a provider serves at once through its consumed facts (`M3.3`) |
 | `clock-rate` | quantity frequency | guarantee | `exact` | interface: a block's timing is its rate's |
 | `core-count` | count | guarantee | `exact` | two cores do not satisfy a uniprocessor profile (§3.1: one active core) |
 | `counter-modulus` | count | guarantee | `exact` | interface: wrapping arithmetic depends on the modulus itself (§3.1's "explicit counter modulus"), as `quantity.rs`'s own example of `Exact` says; what wraps later is the horizon, which has its own entry; offered, never derived, and positive — a modulus of 0 is `invalid-description` (§4; R5 E4; R6 F1; R9 I13) |
 | `counter-width` | quantity information | guarantee | `at-least` | capacity: a wider register holds every narrower modulus, and a modulus offered beside it may not exceed `2^width` (§4); `exactly` where the width is the interface (§6) |
 | `deadlines` | enumeration `constrained arbitrary` | guarantee | `exact` | a policy's word |
-| `debug-port`, `interrupt-source`, `low-power-timer`, `multicore`, `observable-output`, `observation-coherent`, `relative-delay`, `transfer-engine`, `uart` | boolean | guarantee | `exact` | |
+| `debug-port`, `interrupt-source`, `low-power-timer`, `multicore`, `observable-output`, `observation-coherent`, `transfer-engine`, `uart` | boolean | guarantee | `exact` | shared (`M3.3`); `transfer-engine`'s channels wait on the profile admitting DMA |
+| `relative-delay` | boolean | guarantee | `exact` | `use consumed`: an alarm a requester programs (`M3.3`) |
 | `delivery-bound` | quantity time | guarantee | `at-most` | a shorter delivery satisfies |
 | `frequency` | interval frequency | guarantee | `within` | the rates the block can run at, a capability the offered range covers; the clock a block must be fed is another fact, added when a description needs it (§10; R4 N1) |
 | `min-arrival-separation` | quantity time | guarantee | `at-least` | arrivals further apart satisfy a bound on separation |

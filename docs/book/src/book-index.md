@@ -569,6 +569,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 - **R24-11** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **RAM** — [definition](glossary.md), [Where generated systems run](targets.md)
+- Read or taken: consumed facts and channels — [Matching an offer to a
+  requirement](matching.md#read-or-taken-consumed-facts-and-channels)
 - **README** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Verifying
   the toolchain](verification.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C:
   Trust proof records](annex-trust-proofs.md)

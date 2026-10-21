@@ -81,6 +81,9 @@ pub struct Entry {
     /// For a set fact: members every requirement on it holds beside what it writes — the entry's `implies` clause
     /// (record §1.1, R17 2): `available-in-state` implies `run`, the state every use runs in.
     pub implies: &'static [&'static str],
+    /// Whether a requester bound to it takes one of the provider's `channels` — the entry's `use consumed`, on a
+    /// boolean fact or a group's head (`M3.3`) — rather than reading it, the default.
+    pub consumed: bool,
 }
 
 const fn plain(name: &'static str, domain: Domain, direction: Direction) -> Entry {
@@ -93,6 +96,7 @@ const fn plain(name: &'static str, domain: Domain, direction: Direction) -> Entr
         reads: &[],
         rule: None,
         implies: &[],
+        consumed: false,
     }
 }
 
@@ -100,13 +104,21 @@ const fn boolean(name: &'static str) -> Entry {
     plain(name, Domain::Boolean, Direction::Exact)
 }
 
+/// `entry`, marked `use consumed`.
+const fn consumed(entry: Entry) -> Entry {
+    Entry {
+        consumed: true,
+        ..entry
+    }
+}
+
 /// The entries of `/1`, in the order of the record's §1.1 table.
 pub const VOCABULARY: &[Entry] = &[
-    plain(
+    consumed(plain(
         "absolute-deadline",
         Domain::Group(&["supported-horizon", "delivery-bound"]),
         Direction::Exact,
-    ),
+    )),
     boolean("application-mutexes"),
     boolean("general-ipc"),
     boolean("descriptor-format"),
@@ -119,6 +131,7 @@ pub const VOCABULARY: &[Entry] = &[
         reads: &[],
         rule: None,
         implies: &["run"],
+        consumed: false,
     },
     boolean("bounded-arrival"),
     plain(
@@ -126,6 +139,7 @@ pub const VOCABULARY: &[Entry] = &[
         Domain::Quantity(Dimension::Information),
         Direction::Exact,
     ),
+    plain("channels", Domain::Count, Direction::AtLeast),
     plain(
         "clock-rate",
         Domain::Quantity(Dimension::Frequency),
@@ -152,7 +166,7 @@ pub const VOCABULARY: &[Entry] = &[
     boolean("multicore"),
     boolean("observable-output"),
     boolean("observation-coherent"),
-    boolean("relative-delay"),
+    consumed(boolean("relative-delay")),
     boolean("transfer-engine"),
     boolean("uart"),
     plain(
@@ -182,6 +196,7 @@ pub const VOCABULARY: &[Entry] = &[
         reads: &[],
         rule: None,
         implies: &[],
+        consumed: false,
     },
     boolean("preemptive"),
     plain(
@@ -227,6 +242,7 @@ pub const VOCABULARY: &[Entry] = &[
         reads: &["wrap-behavior"],
         rule: Some(Rule::HorizonFromModulusAndRate),
         implies: &[],
+        consumed: false,
     },
     plain(
         "wrap-behavior",
@@ -249,8 +265,9 @@ mod tests {
     use super::{entry, VOCABULARY};
 
     #[test]
-    fn the_table_holds_thirty_five_entries_named_once() {
-        assert_eq!(VOCABULARY.len(), 35);
+    fn the_table_holds_thirty_six_entries_named_once() {
+        // Thirty-five from the census, and `channels`, which `M3.3`'s joint check reads.
+        assert_eq!(VOCABULARY.len(), 36);
         for e in VOCABULARY {
             assert_eq!(
                 VOCABULARY.iter().filter(|o| o.name == e.name).count(),

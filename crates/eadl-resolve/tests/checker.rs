@@ -1148,9 +1148,12 @@ fn the_vocabulary_is_the_record_s_table_row_by_row() {
             .collect()
     };
     let mut stated = std::collections::BTreeMap::new();
+    // `M3.3`: a row whose reason marks the fact `use consumed` is the record's word that a binding takes a channel.
+    let mut consumed = std::collections::BTreeMap::new();
     for r in rows("| Fact | Domain | Role | Direction | Why |") {
         for name in ticked(&r[0]) {
             let row = (r[1].clone(), r[2].clone(), r[3].clone());
+            consumed.insert(name.clone(), r[4].contains("`use consumed`"));
             assert!(stated.insert(name.clone(), row).is_none(), "{name} twice");
         }
     }
@@ -1228,6 +1231,7 @@ fn the_vocabulary_is_the_record_s_table_row_by_row() {
             "{}: §1.1's row",
             e.name
         );
+        assert_eq!(consumed[e.name], e.consumed, "{}: §1.1's use", e.name);
         let derived: Vec<String> = e.derived_from.iter().map(|s| (*s).to_string()).collect();
         let reads: Vec<String> = e.reads.iter().map(|s| (*s).to_string()).collect();
         match (e.rule, rules.get(e.name)) {

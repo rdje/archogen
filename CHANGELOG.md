@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a fact can be consumed, and a provider states its channels
+
+`ARCHOGEN-M3-0841` (leaf `M3.3.1`), `2026-10-21`.
+
+- Write `M3.3`'s design — an assignment of requesters to providers, a channel count over consumed facts (F08), region
+  ownership among bound providers (F09) — and answer its one independent review: three defects, three remarks.
+- Give `deffact` an optional `use` clause, `shared` by default or `consumed` on a boolean fact or a group's head; mark
+  `relative-delay` and `absolute-deadline` consumed; add the entry `channels`. The record's rows, the model's table, a
+  migration note and the frozen baseline move with it; no tracked verdict changes.
+- Explain consumed facts and channels in the book's matching chapter, with an example.
+
 ## archogen — mutation testing waits until the functionality is locked
 
 `ARCHOGEN-PROGRAM-0840` (leaf `PROGRAM.98`), `2026-10-21`.

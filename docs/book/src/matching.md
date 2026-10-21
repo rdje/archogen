@@ -62,6 +62,35 @@ The direction belongs to the fact, so it is checked wherever the fact is written
 A fact the vocabulary does not declare may still be offered, declared absent or needed — presence judges that — but a
 constraint on it is `unsupported-profile`: no rule decides a value without a documented direction.
 
+### Read or taken: consumed facts and channels
+
+Some functions are read, and any number of users can read them at once: two services can both read one counter.
+Others are *programmed*, and each user needs a piece of hardware of its own: two services cannot both own one alarm
+comparator. The vocabulary says which is which. An entry may write `(use consumed)`; without it, a fact is `shared`.
+`/1` marks two facts consumed, both alarms:
+
+```text
+(deffact relative-delay
+  (doc "a delay programmed relative to the time it is set")
+  (domain boolean)
+  (role guarantee)
+  (direction exact)
+  (use consumed))
+```
+
+`absolute-deadline` is the other; every other entry is shared. A provider then says how many users it can serve at
+once through its consumed facts with one more entry, `channels`, a count where more satisfies more:
+
+```text
+(defblock timer.compare
+  (offers (absolute-deadline true) (channels 1 tick)))
+```
+
+Nothing judges this yet. The vocabulary only states what the joint check (`M3.3`) will count: a requester bound to a
+consumed fact at the value `true` takes one channel, and a provider with more requesters than channels is refused.
+`use consumed` is written only on a boolean fact or a group's head, whose bare offer is `true`; anywhere else, or with
+any word but `shared` and `consumed`, the vocabulary is refused.
+
 ### What a provider offers
 
 A **provider** is a block or a platform. It offers a fact bare, with a value, or, on an abstract platform, with a
@@ -135,8 +164,9 @@ the code. Section numbers below are the record's.
 `crates/eadl-resolve/src/vocabulary.rs` reads the vocabulary against `docs/semantics/kinds/deffact.eadl`, holds each
 entry's frame to the kind with the validator every declaration meets, and then refuses what a frame cannot say: a
 direction its domain does not admit (§2's table), a derivation without its rule or with inputs that rule does not
-read, a cycle among `derived-from` and `reads`, `implies` off a set fact, a name twice, and a fact named like a
-clause word of the description kinds, since an offer on it would read as the clause (§1.1). The vocabulary is part
+read, a cycle among `derived-from` and `reads`, `implies` off a set fact, `use consumed` off a boolean fact or a
+group's head, a name twice, and a fact named like a clause word of the description kinds, since an offer on it would
+read as the clause (§1.1). The vocabulary is part
 of `eadl/1`: it is frozen with the language, and `archogen check` answers a file that writes a `deffact` as the
 language's own definition, exit `20` ([Checking a description](checking.md)).
 

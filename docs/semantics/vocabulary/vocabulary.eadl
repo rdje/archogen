@@ -27,7 +27,8 @@
   (doc "a deadline programmed at an absolute time: the head of a group whose sub-facts are how far ahead it can be programmed and how late it may be delivered")
   (domain group supported-horizon delivery-bound)
   (role guarantee)
-  (direction exact))
+  (direction exact)
+  (use consumed))
 
 (deffact application-mutexes
   (doc "mutual exclusion offered to application tasks, which the first profile excludes")
@@ -65,6 +66,12 @@
   (domain quantity information)
   (role guarantee)
   (direction exact))
+
+(deffact channels
+  (doc "how many requesters a provider serves at once through its consumed facts, one pool for all of them")
+  (domain count)
+  (role guarantee)
+  (direction at-least))
 
 (deffact clock-rate
   (doc "the rate of a block's clock, an interface: the block's timing is its rate's")
@@ -136,7 +143,8 @@
   (doc "a delay programmed relative to the time it is set")
   (domain boolean)
   (role guarantee)
-  (direction exact))
+  (direction exact)
+  (use consumed))
 
 (deffact transfer-engine
   (doc "an engine that moves data without the processor")

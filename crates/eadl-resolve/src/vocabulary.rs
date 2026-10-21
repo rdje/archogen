@@ -8,6 +8,7 @@
 //! `eadl_model::kind::validate`, the one validator every declaration meets. Then the reader checks what no frame
 //! can say: that a domain, a role, a direction or a rule is one the record lists; that a direction is one its
 //! domain admits (record §2's table); that `implies` is written only on a set fact and names its members; that
+//! `use` is `shared` or `consumed`, the latter only on a boolean fact or a group's head (`M3.3`); that
 //! `derived-from`, `reads` and a group name declared facts; that a derivation names the rule that computes it, with
 //! the inputs that rule reads; that `derived-from` and `reads` close no cycle (record §1.1, §9); that no name is
 //! declared twice (reference §7 rule 6); and that no fact is named like a clause word of the description kinds,
@@ -88,6 +89,18 @@ pub enum Role {
     Guarantee,
     /// The requiring side's word about itself; it constrains no provider.
     Statement,
+}
+
+/// Whether a requester bound to a fact takes one of the provider's `channels`: the entry's `use` clause (record §1.1;
+/// `M3.3`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Usage {
+    /// Read without being taken, the default.
+    #[default]
+    Shared,
+    /// A function a requester programs, an alarm, taking one of the provider's channels; only on a boolean fact or a
+    /// group's head, whose bare offer is `true`.
+    Consumed,
 }
 
 /// How an offered value satisfies a required one (record §2's table).
@@ -213,6 +226,8 @@ pub struct Fact {
     pub rule: Option<Rule>,
     /// For a set fact, the members every valued constraint on it holds beside what it writes.
     pub implies: Vec<String>,
+    /// Whether a requester bound to it takes a channel.
+    pub usage: Usage,
     /// Where the entry is written.
     pub span: Span,
 }
@@ -259,6 +274,8 @@ pub enum Cause {
     Rule,
     /// `implies` on a fact that is not a set, empty, or naming what is not a member of the set.
     Implies,
+    /// A `use` other than `shared` and `consumed`, or `consumed` on a fact neither boolean nor a group's head.
+    Usage,
 }
 
 /// One refusal: what, where, and the entry it is about.
@@ -593,6 +610,7 @@ fn entry(form: &Form) -> Result<Fact, Vec<Refusal>> {
     let (mut doc, mut domain_of, mut role, mut direction) = (String::new(), None, None, None);
     let (mut derived_from, mut reads, mut rule, mut implies) =
         (Vec::new(), Vec::new(), None, Vec::new());
+    let mut usage = Usage::Shared;
     for clause in &form.items()[2..] {
         let rest = &clause.items()[1..];
         match clause.head() {
@@ -655,6 +673,16 @@ fn entry(form: &Form) -> Result<Fact, Vec<Refusal>> {
                     Err(r) => refusals.push(r),
                 }
             }
+            Some("use") => match word(clause) {
+                "shared" => usage = Usage::Shared,
+                "consumed" => usage = Usage::Consumed,
+                other => refusals.push(Refusal::new(
+                    Cause::Usage,
+                    Some(&name),
+                    Some(clause.span()),
+                    format!("`{other}` is not a use: shared or consumed"),
+                )),
+            },
             // The frame admits no other clause.
             _ => {}
         }
@@ -670,6 +698,7 @@ fn entry(form: &Form) -> Result<Fact, Vec<Refusal>> {
             reads,
             rule,
             implies,
+            usage,
             span: form.span(),
         }),
         _ => {
@@ -789,6 +818,17 @@ fn across(facts: &[Fact], words: &BTreeSet<String>) -> Vec<Refusal> {
                     "`implies` names members of a set, and the fact is not one".to_string(),
                 ),
             }
+        }
+        // A consumed binding is one met by the value `true` (`M3.3`), which only a boolean or a group's head offers bare.
+        if fact.usage == Usage::Consumed
+            && !matches!(fact.domain, Domain::Boolean | Domain::Group(_))
+        {
+            refuse(
+                Cause::Usage,
+                fact,
+                "`use consumed` is written on a boolean fact or a group's head, whose bare offer is `true`"
+                    .to_string(),
+            );
         }
     }
     refusals.extend(cycles(facts));
