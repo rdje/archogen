@@ -653,15 +653,22 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.96.md`](../task-history/PROGRAM/PROGRAM.96.md); commit `ARCHOGEN-PROGRAM-0829`
 
 - ID: `PROGRAM.97`
-  Status: `done` — the colon path limit surfaced to the director, findings §13
-  Goal: `M3.6.9.6.3.2.2.15.2.1.6.2.3` measured that the pinned Cargo fails every build under a target directory
-    holding a colon, so the repository cannot live under such a path, against the standing rule that it may be
-    moved anywhere. Record it as §13 of `docs/decisions/decision_findings-for-director-review.md` with the
-    measurement, what the project already does about it, the options and a recommendation, so it survives a missed
-    message. No code changes.
-  Verification: §13 written with the measurement of `target/colon-path-assessment/`, what is already done, the
-    harmless characters, and a recommendation that waits on nothing; the register's count moved to thirteen.
-  Commit: `ARCHOGEN-PROGRAM-0834`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.97.md`](../task-history/PROGRAM/PROGRAM.97.md); commit `ARCHOGEN-PROGRAM-0834`
+
+- ID: `PROGRAM.98`
+  Status: `done` — the mutation-adequacy lane's pace surfaced and ruled: mutation testing waits for completion
+  Goal: the director asked whether the project was progressing. Measured: from `2026-10-11` to `2026-10-21`, 158 of
+    173 commits went to `M3.6.9`, the mutation adequacy of the trust gate's tests, and none to the product. Record it
+    as findings §14 with the director's ruling of the same day — mutation testing stops until the functionality is
+    complete and locked, every decision advances the project first — as a decision record, and move the trees to it:
+    every pending `M3.6.9` leaf `blocked` on the ruling, `M3.3` the frontier head. No code changes.
+  Verification: `git log --oneline --since=2026-10-11 | wc -l` → 173; with `--grep='leaf M3.6.9'` → 158; the other
+    15 `PROGRAM` upkeep; `decision_mutation-testing-after-completion.md` and its index row; findings §14, the register
+    at fourteen; 27 `M3.6.9` leaves `blocked` on the ruling, `.8.2` kept as a P2 defect. The new record put
+    `docs/decisions/` 1 314 bytes over its ceiling (`README-ROUTES`), so the settled §12, approved `2026-10-02`, is
+    sealed (`bash scripts/check_decision_history.sh --seal … 12`, byte for byte); §14 can be sealed once committed.
+    The register's header named §2, §4, §8 and §10 as sealed where §6 was too: corrected. The doctrine gate green.
+  Commit: `ARCHOGEN-PROGRAM-0840`
 
 
 ## Roadmap coverage map
@@ -844,7 +851,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-11` | `PROGRAM.69` (round 35) | new census and summary-boundary controls before/after repair; both full self-tests, syntax, book and final staged gates | history 129/3 of 132 and counts 140/10 of 150 before; repaired 132/0 and 150/0; finite selected-read failures never print a final aggregate, empty counterparts pass; staged counts 1 review / 35 rounds, history 175 files / 335 stubs; book 30/4, 67/25, 316, syntax and final doctrine gates |
 | `2026-10-11` | `PROGRAM.69` (round 36) | EOF/path/diagnostic controls before repair, then both complete self-tests; syntax, book and staged gates | history 133/13 of 146 and counts 153/3 of 156 before; repaired 146/0 and 156/0; literal byte and unusual-path counterparts, named no-traceback row refusals; independent round 37 next |
 | `2026-10-11` | `PROGRAM.69` (round 37 closure) | independent pinned review; root recount/authentication; staged count/history and book gates | zero defects/actionable arm gaps/remarks; 347 expected checker outcomes, separate 4 096 unit comparisons; retained results recount and 17 source identities pass, exit code 0; scope/limits retained; all 37 summary rows judged before removal from counted list |
-| `2026-10-21` | `PROGRAM.97` | the register re-read; the measurement it cites; the doctrine gate | §13 recorded; the colon limit, what the catalog gate does about it, a recommendation |
+| `2026-10-21` | `PROGRAM.98` | commit census since `2026-10-11` by leaf; the ruling's record, index row and findings §14; the postponed leaves counted; the doctrine gate on the staged tree | 158 of 173 commits on `M3.6.9`, 0 on the product; 27 leaves `blocked` on the ruling; `M3.3` the frontier head |
 
 ## Commit Log
 
@@ -865,7 +872,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0450 (leaf PROGRAM)` | **`PROGRAM.55` and `PROGRAM.56` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 324 bytes over its 819 200-byte ceiling with `M3.1.1`'s step 27 |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0460 (leaf PROGRAM)` | **`PROGRAM.57`, `PROGRAM.58` and `PROGRAM.59` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` would have grown 1 331 bytes over its 819 200-byte ceiling with `M3.1.2`'s decomposition |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0489 (leaf PROGRAM)` | **`PROGRAM.10` and `.61`–`.65` sealed**, 13 closed leaves into `docs/task-history/PROGRAM/`, when `README-ROUTES` refused `docs/tasks/` at 820 957 bytes over its 819 200; `docs/tasks/` 817 470 → 752 861 bytes, measured from `HEAD` and the tree |
-| `PROGRAM.97` | `ARCHOGEN-PROGRAM-0834 (leaf PROGRAM.97)` | **the colon path limit surfaced**: findings §13, the toolchain's limit against the rule that the repository may move anywhere; accepted as known unless the director says otherwise |
+| `PROGRAM.98` | `ARCHOGEN-PROGRAM-0840 (leaf PROGRAM.98)` | **mutation testing waits for completion**: the director's ruling recorded as findings §14 and a decision; every pending `M3.6.9` leaf postponed; `M3.3` next |
 
 ## Changelog
 

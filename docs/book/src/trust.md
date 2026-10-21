@@ -213,7 +213,7 @@ relative to the selected repository; absolute values keep their destination. Rep
 to their physical root. Missing or non-directory repository paths return 2 and create no output.
 The [verified caller repair](annex-trust-proofs.md#repository-path-caller-repair) records the controls.
 Its [local integration checkpoint](annex-trust-proofs.md#repaired-caller-integration-checkpoint)
-passes the complete tier; diagnostic-helper mutation assessment continues.
+passes the complete tier; the diagnostic helpers' mutation assessment is postponed with the rest (below).
 
 `cargo xtask trust-gate` builds the commit's inventory and compares it with the forms its **base** commit holds. Its
 report, `target/trust/report.txt`, names the build it describes and comes in two parts — here as it would read had the
@@ -701,7 +701,12 @@ a route within one step (`M3.6.6.4`, reviewed by a context that did not write it
 
 The accepted mutation criterion, measured controls and exact command examples are in
 [Annex C](annex-trust-proofs.md#mutation-measurements-and-controls). Historical results retain their
-source and limits; final production-sweep adequacy remains open.
+source and limits; final production-sweep adequacy remains open. **Mutation testing is postponed** by the director
+on `2026-10-21` until the project's functionality is complete and locked, then done extensively in one campaign
+(`docs/decisions/decision_mutation-testing-after-completion.md`): a result is bound to the exact source it ran against, so measuring code
+that `M3.3` to `M7` will still change would pay for most of it twice. Until then each feature keeps its own tests,
+a commit that changes Rust runs the focused tier, and every push to `main` runs the full CI and this gate, which
+judges every commit the push brings; a real defect is still fixed.
 
 The package the verifier
 reads is fixed provisionally until `M4.7` writes real ones.

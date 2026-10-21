@@ -6,11 +6,11 @@
 - **Owner / source:** raised during the M0 + M1 build; recorded here so they survive the session
 - **External sources:** [QEMU](../book/src/ledger.md#qemu) — version, scope and limits in the ledger
 
-Thirteen items are recorded here so they survive the session. Three are outside an implementer's
+Fourteen items are recorded here so they survive the session. Three are outside an implementer's
 authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you
 should see even though it is already fixed; the sixth (§6) is a review of **your own amendment**
 by the model that has never read the implementation. Each is tracked as work, so nothing here
-depends on this file being read. The settled items, §2, §4, §8 and §10, are sealed in
+depends on this file being read. The settled items, §2, §4, §6, §8, §10 and §12, are sealed in
 `docs/decision-history/`, each under its heading here (`PROGRAM.41`).
 
 ## 1. No physical board — the one M0 obligation that cannot be closed in software
@@ -202,47 +202,7 @@ read the catalog, which reaches the generator's own reader and model, that shari
 
 ## 12. The fault contract's narrowings — **approved `2026-10-02`**
 
-The fault contract (`docs/profiles/rt-static-up-v1-faults.md`) lists in its header, under *Narrowings*, each claim its
-amendments made that the earlier text did not limit, "for the director's review" (§14.1). Asked on `2026-10-02`, after
-its fifteenth independent review found no defect — "The narrowings listed in the contract's header await your
-approval." — **the director answered: "APPROVED"**.
-
-What was approved is that list as it stood when asked, R15's answers included:
-- no overrun is raised without a release (rule 1a);
-- a missed deadline is reported only as rule 6 says, and §13.1 F26 with it;
-- an externally released task's second arrival during a pending request can be lost where its source does not count
-  arrivals (rule 1);
-- a `mask` or `unmask` outside a job is an assertion failure, initialisation's included (Terms);
-- the cases the Terms list that the trap path, a service or the runtime API's entry can see — an external trap's empty
-  first claim, a timer trap or further timer service that finds no release due, a claim returning an undeclared
-  source, an API entry naming neither a primitive nor the completion path — are unexpected traps, halting when raised;
-- a port's runtime-API trap serves no interrupt, whatever its entry names (rule 2);
-- the image's panic handler and its panic strategy are the port's, another refused at build, and a panic is an
-  assertion failure unless a check of the runtime's, a port's, a catalog record's or generated code finds a guard or an
-  unexpected trap, an application's check being classified by how it ends;
-- what can happen before a fault a check finds, or a panic, is raised is the port's to state, whole, in its catalog
-  record — a primitive left consistent or its job not abandoned, and a job not abandoned run on at its task's priority,
-  before any later job of its task starts, to the raising (Terms, rule 5);
-- application initialisation, like application code after it, never calls the fault path (Terms);
-- a policy applied before its check in the trap of an API entry naming neither a primitive nor the completion path, or
-  in an `unmask` at depth zero, abandons the job and raises nothing (rule 5).
-
-**How it is applied.** The contract's header records the approval when `M2.9`'s step 6v lands, and the rules that said
-"for the director's review" say approved. A later amendment that narrows a claim again is a new item for review; this
-approval covers the list above and nothing added after it.
-
-**A mechanism stated after the approval, `2026-10-02` (`M2.12.3`) — for your review.** The item "the image's panic
-handler and its panic strategy are the port's, another refused at build" stands in effect: the handler still does
-nothing but the port's work, an application's own still does not build, and the strategy is still the port's — on the
-pinned compiler `abort`, the only one that builds a `no_std` binary. What changed is how the handler is supplied. The
-catalog's own rules (§3) refuse `#[panic_handler]` in any record's code, since it is a global hook another package
-could supply in its place. So the image generates the handler, holding nothing but a call of the entry the port's
-record names, and the fault contract's Terms and rule 7 now raise a panic at that entry's first act rather than the
-handler's. Two small consequences: the raising comes later by the handler's own call, so rule 7's "from the raising,
-no pending interrupt is taken" starts that much later; and the window before the raising now holds that generated
-code, which the port states whole without holding it. It narrows no approved claim, so it is not a new narrowing under
-the rule above; it is shown to you because it rewords an approved item. **If you want it treated as one**, say so and
-it waits for your approval.
+Sealed, byte for byte, in [`decision_findings-for-director-review/12.md`](../decision-history/decision_findings-for-director-review/12.md) — settled, and never edited again.
 
 ## 13. The repository cannot live under a path holding a colon — the toolchain's limit (`2026-10-21`)
 
@@ -265,6 +225,20 @@ quotes in the path.
 
 **Recommendation:** accept it as a known limit of the toolchain, as stated. The alternative, a target directory outside
 the repository, would break the rule that every project path is repository-relative. Nothing waits on your answer.
+
+## 14. The mutation-adequacy lane had stopped the product's progress (`2026-10-21`) — **ruled the same day**
+
+From `2026-10-11` to `2026-10-21`, 158 of 173 commits went to `M3.6.9`, the mutation adequacy of the trust gate's own
+tests in `xtask/src/trust.rs`, and none to the product; the other 15 were upkeep. Each surviving edit opened further
+children — leaf identifiers twelve levels deep — and the pending lanes still listed about 1 100 candidate edits, so no
+honest finish date could be given. The roadmap's F30 exit criterion asks that the trust gate surface unreviewed sharing
+and drift and block acceptance, and that gate exists and runs; the exhaustive adequacy of its tests was filed by an
+internal review (`M3.6.6.4`, round 14), and finishing it before `M3.3` was a project choice, not a roadmap one.
+
+**Ruled `2026-10-21`:** mutation testing stops now and resumes, extensively, once the functionality is complete and
+locked; every decision advances the project toward its goals first. Every pending `M3.6.9` leaf is postponed, `blocked`
+on [the ruling](decision_mutation-testing-after-completion.md); the frontier moves to `M3.3`. A suspected real defect the
+lane's reading found, two generators given one target directory (`M3.6.9.6.3.2.2.15.2.1.8.2`), stays owned at P2.
 
 ## A note on what "done" means so far
 

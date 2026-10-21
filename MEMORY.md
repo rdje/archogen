@@ -13,15 +13,14 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M3` → frontier `M3.6`; `PROGRAM` resumes at `PROGRAM.71`.
-- **Next action:** `M3.6.9.6.3.2.2.15.2.1.8.1` (P1), the own-package check's producer routes measured with the
-  real Cargo, then a witness or a proof. `.8.0` assessed `2026-10-21`: `if false {` survives, no parent reaches
-  the check; `.8.2`, coinciding generator target directories, follows (P2).
+- **Active tree:** `M3` → frontier `M3.3`; `PROGRAM` resumes at `PROGRAM.71`.
+- **Next action:** `M3.3` (joint constraints, F08/F09): design first — the resource vocabulary under §15, what a
+  combination is — per its survey; then `M3.5`. **Mutation testing is stopped** until the functionality is locked
+  (`decision_mutation-testing-after-completion.md`, `2026-10-21`): every pending `M3.6.9` leaf is `blocked`;
+  every decision advances the project first. `M3.6.9.6.3.2.2.15.2.1.8.2` stays owned, a suspected defect, P2.
   Disposable project-owned Git fixtures under ignored `target/` are approved;
   maintained external repositories and submodules stay read-only.
   Corrected renderer adoption stays owned in `.4.3.4.1`.
-  Final full sweeps and review precede `M3.3`.
-  `M3.6.9.1` is done, strict/attributed outcomes; `.6.1` and `PROGRAM.95` sealed with their log rows.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.
   `M3.6.3.2.1.1` owns runner-baseline compatibility after key encoding; an authorized cadence run is needed. `M2`'s open leaves
   wait on the director: `M2.7.4.5` and `M2.7.6`'s review and hosting half. No branches.
