@@ -117,6 +117,31 @@ its place or another preparation error stops the build. Child working-directory 
 temp overrides cannot redirect this setting. Compiler-read environment dependencies remain subject
 to the catalog's separate admission rules.
 
+### What a build may have read
+
+After each build, the checker reads the compiler's dependency record of every unit it compiled — the
+`.d` files under a `deps/` directory — and judges every file the record names: the file must be inside
+the written tree, in some facet's source set, and unchanged by the build; an environment variable the
+code read must be one Cargo sets from the manifest — a `CARGO_PKG_` variable, `CARGO_CRATE_NAME`,
+`CARGO_MANIFEST_DIR` or `CARGO_MANIFEST_PATH`. Anything else refuses the record (`catalog-source`).
+
+A record names the package's files relative to the workspace, so the repository's own location does
+not reach them (measured `2026-10-21`). The same two-module package builds and is accepted in a directory
+whose name holds a space, a backslash, a tab, a line break, a hash or a quote; each record reads, for
+example:
+
+```text
+<repository-root>/target/…/with space/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d: crates/p/src/lib.rs crates/p/src/a.rs
+```
+
+A directory name holding a colon cannot be built at all: the pinned Cargo fails before writing any
+record (`error: failed to join paths from $DYLD_FALLBACK_LIBRARY_PATH together`), and the checker
+reports the package as not building. How that outcome should be classified, and where the limit is
+stated, is owned by `M3.6.9.6.3.2.2.15.2.1.6.2.3`. The reader also carries a replacement that can never
+apply, owned by `M3.6.9.6.3.2.2.15.2.1.6.2.2`. The
+[assessment record](annex-trust-proofs.md#catalog-builder-dependency-reader-assessment) keeps every
+record and the probe.
+
 ### Status is derived, never written
 
 A facet's evidence status is `production`, `rejected`, `stale` or `unreviewed`, and it is computed from reviews,

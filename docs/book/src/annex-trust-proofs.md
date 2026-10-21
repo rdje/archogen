@@ -152464,3 +152464,715 @@ print('published', len(f), 'bytes')
 </details>
 
 The receipts are under `target/dependency-block-checkpoint/`. The adapters are supplemental; the maintained sweep, its auditor and the input census are primary.
+
+
+### Catalog builder dependency-reader assessment
+
+The catalog builder reads each compiled unit's dependency record with its own reader, `dep_info` in `xtask/src/catalog_build.rs`, which the trust inventory's repair did not touch. It was measured on `2026-10-21` (`M3.6.9.6.3.2.2.15.2.1.6.2.1`) with the real pinned producer: the test harness's own two-module workspace built by the unchanged production `check` once per directory name, each written under the repository's `target/` with the repository as `repo`, as production writes it. **`9` of the `10` variants are accepted with every record exact; the tenth, a directory name holding a colon, is Cargo's own failure before any record is written.** No false refusal, fragment or dropped input reaches the reader. This is a measurement: no source, test or reason changes.
+
+| Directory name | Outcome | Records |
+| --- | --- | ---: |
+| `"ordinary"` | built: packages 1 builds 4 units 4 | 4 |
+| `"with space"` | built: packages 1 builds 4 units 4 | 4 |
+| `"with: colon"` | refused: Source: `p` does not build in dev: error: failed to join paths from `$DYLD_FALLBACK_LIBRARY_PATH` together | 0 |
+| `"back\\slash"` | built: packages 1 builds 4 units 4 | 4 |
+| `"back\\ slash"` | built: packages 1 builds 4 units 4 | 4 |
+| `"trailing\\"` | built: packages 1 builds 4 units 4 | 4 |
+| `"hash#mark"` | built: packages 1 builds 4 units 4 | 4 |
+| `"quote'mark"` | built: packages 1 builds 4 units 4 | 4 |
+| `"tab\there"` | built: packages 1 builds 4 units 4 | 4 |
+| `"line\nbreak"` | built: packages 1 builds 4 units 4 | 4 |
+
+#### What the producer writes
+
+Every record names the package's crate root and its module relative to the workspace, whatever the root is called, as the records below show: the build runs in the written tree, and the catalog's token rules refuse `include`, `include_str`, `include_bytes`, `macro_rules` and the `path` attribute at load, so a loaded package reaches a file only by module resolution, inside its own directory, under the catalog's path grammar. The rule's target is the record's own absolute path, written **literally**: a space, a tab, a backslash, a hash or a quote stays as it is, and a line break splits the target across two physical lines. The reader takes the first line holding `: `, so the line-break variant reaches the rule on the next line, and the space-split of the prerequisites is exact. A `: ` inside the target would split the rule at the wrong place, but a path holding any colon never gets that far: Cargo cannot compose its library search path, whose separator is the colon, and fails the build.
+
+The dev record of the spaced root, as rustc wrote it, the repository root replaced by a placeholder:
+
+```text
+<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d: crates/p/src/lib.rs crates/p/src/a.rs
+
+<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rlib: crates/p/src/lib.rs crates/p/src/a.rs
+
+<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rmeta: crates/p/src/lib.rs crates/p/src/a.rs
+
+crates/p/src/lib.rs:
+crates/p/src/a.rs:
+```
+
+The same record under the line-break root:
+
+```text
+<repository-root>/target/catalog-dependency-assessment/roots/line
+break/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d: crates/p/src/lib.rs crates/p/src/a.rs
+
+<repository-root>/target/catalog-dependency-assessment/roots/line
+break/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rlib: crates/p/src/lib.rs crates/p/src/a.rs
+
+<repository-root>/target/catalog-dependency-assessment/roots/line
+break/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rmeta: crates/p/src/lib.rs crates/p/src/a.rs
+
+crates/p/src/lib.rs:
+crates/p/src/a.rs:
+```
+
+#### Findings, each owned
+
+**The unescape is dead.** `dep_info` splits the rule at every space and only then replaces `\ ` with a space; a piece split at spaces holds no space, so the replacement never matches, for any input. It changes nothing and misstates what the reader does. With the measured domain above it is also never needed. Owner: `M3.6.9.6.3.2.2.15.2.1.6.2.2`, which removes it, states the domain in the reader, and holds the measured roots as a permanent control.
+
+**A colon in the repository's path cannot be built.** The pinned Cargo fails the build — `error: failed to join paths from `$DYLD_FALLBACK_LIBRARY_PATH` together` — and the gate reports it as the package not building, a `catalog-source` refusal, although the package is not at fault. Whether that outcome is a refusal or a run that could not judge, as the trust inventory rules its own producer's errors, and where the toolchain's path limit is stated, is owned by `M3.6.9.6.3.2.2.15.2.1.6.2.3`.
+
+#### Restoration and continuity
+
+The probe ran in a plain copy of the tracked inputs, which differs from the committed source by the appended test alone; the copy carries an index of its own, staged and never committed, because the harness lists the tracked files with `git ls-files` — a disposable project-owned fixture under the ignored `target/`, as the director allowed on `2026-10-20`. A first placement of the workspaces inside the copy was refused for every variant, the ordinary control included, by the cargo configuration of the repository above the copy; the control showed the arrangement invalid, and the workspaces were moved to where production writes them. All tracked inputs of the main tree restore. The audit refuses `8` altered receipts: a spaced root refused, a record escaping its prerequisites, a record dropped, the colon variant claimed accepted, the ordinary control refused, a variant missing, a record under another root, a line-break record read from its first line.
+
+<details>
+<summary>The appended probe</summary>
+
+```rust
+
+    #[test]
+    fn probe_catalog_dependency_roots() {
+        use crate::json::{parse, write, Json};
+        let Json::Array(given) = parse(&std::env::var("ARCHOGEN_PROBE_NAMES").unwrap()).unwrap() else {
+            panic!("the probe's names are a JSON array")
+        };
+        let names: Vec<String> = given
+            .into_iter()
+            .map(|n| match n {
+                Json::Str(s) => s,
+                other => panic!("{other:?}"),
+            })
+            .collect();
+        // The workspace is built where production builds it: under the repository's own `target/`, with that
+        // repository as `repo`, so the cargo configurations on the build's path are production's.
+        let repo = PathBuf::from(std::env::var("ARCHOGEN_PROBE_REPO").unwrap());
+        let roots = PathBuf::from(std::env::var("ARCHOGEN_PROBE_ROOTS").unwrap());
+        let mut rows = Vec::new();
+        for name in &names {
+            let (tree, _) = small_workspace(
+                "probe",
+                "#![no_std]\nmod a;\npub fn f() -> u32 { a::A }\n",
+                &[("crates/p/src/a.rs", "pub const A: u32 = 1;\n")],
+            );
+            let dir = roots.join(name);
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(&dir).unwrap();
+            let tree = with_lock(tree);
+            let (_, loaded) = loaded_of(&tree);
+            let root = dir.join("tree");
+            let result = super::write_tree(&tree, &root)
+                .and_then(|()| check(&loaded, &tree, &root, &repo, &pin(), &dir.join("scratch")));
+            let outcome = match result {
+                Ok(b) => format!("built: packages {} builds {} units {}", b.packages, b.builds, b.units),
+                Err(Failure::Refused(r)) => format!("refused: {:?}: {}", r.code, r.message),
+                Err(other) => format!("error: {other:?}"),
+            };
+            let mut records = Vec::new();
+            let mut stack = vec![dir.join("scratch/records-target")];
+            while let Some(d) = stack.pop() {
+                let Ok(entries) = std::fs::read_dir(&d) else { continue };
+                for entry in entries.flatten() {
+                    let p = entry.path();
+                    if p.is_dir() {
+                        stack.push(p);
+                    } else if p.extension().is_some_and(|x| x == "d")
+                        && p.parent().and_then(|q| q.file_name()).is_some_and(|q| q == "deps")
+                    {
+                        let text = std::fs::read_to_string(&p).unwrap_or_default();
+                        records.push(Json::Array(vec![
+                            Json::Str(p.display().to_string()),
+                            Json::Str(text),
+                        ]));
+                    }
+                }
+            }
+            records.sort_by_key(write);
+            let mut row = BTreeMap::new();
+            row.insert("name".to_owned(), Json::Str(name.clone()));
+            row.insert("dir".to_owned(), Json::Str(dir.display().to_string()));
+            row.insert("outcome".to_owned(), Json::Str(outcome));
+            row.insert("records".to_owned(), Json::Array(records));
+            rows.push(Json::Object(row));
+        }
+        std::fs::write(std::env::var("ARCHOGEN_PROBE_OUT").unwrap(), write(&Json::Array(rows))).unwrap();
+    }
+```
+
+</details>
+
+<details>
+<summary>Every record, the repository root replaced</summary>
+
+```json
+[
+  {
+    "dir": "<repository-root>/target/catalog-dependency-assessment/roots/ordinary",
+    "name": "ordinary",
+    "outcome": "built: packages 1 builds 4 units 4",
+    "records": [
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/release/deps/p-2f624b884b0c53be.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/release/deps/p-2f624b884b0c53be.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/release/deps/libp-2f624b884b0c53be.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/release/deps/libp-2f624b884b0c53be.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/ordinary/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ]
+    ]
+  },
+  {
+    "dir": "<repository-root>/target/catalog-dependency-assessment/roots/with space",
+    "name": "with space",
+    "outcome": "built: packages 1 builds 4 units 4",
+    "records": [
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/release/deps/p-2f624b884b0c53be.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/release/deps/p-2f624b884b0c53be.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/release/deps/libp-2f624b884b0c53be.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/release/deps/libp-2f624b884b0c53be.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/with space/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ]
+    ]
+  },
+  {
+    "dir": "<repository-root>/target/catalog-dependency-assessment/roots/with: colon",
+    "name": "with: colon",
+    "outcome": "refused: Source: `p` does not build in dev: error: failed to join paths from `$DYLD_FALLBACK_LIBRARY_PATH` together",
+    "records": []
+  },
+  {
+    "dir": "<repository-root>/target/catalog-dependency-assessment/roots/back\\slash",
+    "name": "back\\slash",
+    "outcome": "built: packages 1 builds 4 units 4",
+    "records": [
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/release/deps/p-2f624b884b0c53be.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/release/deps/p-2f624b884b0c53be.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/release/deps/libp-2f624b884b0c53be.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/release/deps/libp-2f624b884b0c53be.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\slash/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ]
+    ]
+  },
+  {
+    "dir": "<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash",
+    "name": "back\\ slash",
+    "outcome": "built: packages 1 builds 4 units 4",
+    "records": [
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/release/deps/p-2f624b884b0c53be.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/release/deps/p-2f624b884b0c53be.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/release/deps/libp-2f624b884b0c53be.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/release/deps/libp-2f624b884b0c53be.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/back\\ slash/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ]
+    ]
+  },
+  {
+    "dir": "<repository-root>/target/catalog-dependency-assessment/roots/trailing\\",
+    "name": "trailing\\",
+    "outcome": "built: packages 1 builds 4 units 4",
+    "records": [
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/release/deps/p-2f624b884b0c53be.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/release/deps/p-2f624b884b0c53be.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/release/deps/libp-2f624b884b0c53be.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/release/deps/libp-2f624b884b0c53be.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/trailing\\/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ]
+    ]
+  },
+  {
+    "dir": "<repository-root>/target/catalog-dependency-assessment/roots/hash#mark",
+    "name": "hash#mark",
+    "outcome": "built: packages 1 builds 4 units 4",
+    "records": [
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/release/deps/p-2f624b884b0c53be.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/release/deps/p-2f624b884b0c53be.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/release/deps/libp-2f624b884b0c53be.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/release/deps/libp-2f624b884b0c53be.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/hash#mark/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ]
+    ]
+  },
+  {
+    "dir": "<repository-root>/target/catalog-dependency-assessment/roots/quote'mark",
+    "name": "quote'mark",
+    "outcome": "built: packages 1 builds 4 units 4",
+    "records": [
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/release/deps/p-2f624b884b0c53be.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/release/deps/p-2f624b884b0c53be.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/release/deps/libp-2f624b884b0c53be.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/release/deps/libp-2f624b884b0c53be.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/quote'mark/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ]
+    ]
+  },
+  {
+    "dir": "<repository-root>/target/catalog-dependency-assessment/roots/tab\there",
+    "name": "tab\there",
+    "outcome": "built: packages 1 builds 4 units 4",
+    "records": [
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/release/deps/p-2f624b884b0c53be.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/release/deps/p-2f624b884b0c53be.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/release/deps/libp-2f624b884b0c53be.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/release/deps/libp-2f624b884b0c53be.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/tab\there/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ]
+    ]
+  },
+  {
+    "dir": "<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak",
+    "name": "line\nbreak",
+    "outcome": "built: packages 1 builds 4 units 4",
+    "records": [
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/debug/deps/libp-c4392ab1538cc2d5.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/release/deps/p-2f624b884b0c53be.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/release/deps/p-2f624b884b0c53be.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/release/deps/libp-2f624b884b0c53be.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/release/deps/libp-2f624b884b0c53be.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/p-4a0a12f004d1b5aa.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/riscv64imac-unknown-none-elf/debug/deps/libp-4a0a12f004d1b5aa.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ],
+      [
+        "<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d",
+        "<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/p-921d5a92fa5f5930.d: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rlib: crates/p/src/lib.rs crates/p/src/a.rs\n\n<repository-root>/target/catalog-dependency-assessment/roots/line\nbreak/scratch/records-target/riscv64imac-unknown-none-elf/release/deps/libp-921d5a92fa5f5930.rmeta: crates/p/src/lib.rs crates/p/src/a.rs\n\ncrates/p/src/lib.rs:\ncrates/p/src/a.rs:\n"
+      ]
+    ]
+  }
+]
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: probe.py</summary>
+
+```python
+"""M3.6.9.6.3.2.2.15.2.1.6.2.1: the catalog builder's dependency reader under the real pinned producer.
+
+Measurement only. A plain copy of the tracked inputs is made under this directory; one probe test is
+appended to the copy's `xtask/src/catalog_build.rs` test module, and nothing else in the copy changes.
+The probe builds the test harness's own small workspace (`small_workspace`, two modules) through the
+unchanged production `check`, once per scratch directory geometry, and records `check`'s outcome and
+every compiler dependency record it read. The expectation is independent and literal: a package that
+builds is accepted, with one package, four builds and at least four units, whatever its directory is
+called; any other outcome is recorded as the defect it is.
+"""
+from pathlib import Path
+import hashlib, importlib.util, json, os, shutil, subprocess, tempfile
+
+root = Path.cwd().resolve()
+out = root / 'target/catalog-dependency-assessment'
+copy = out / 'tree'
+spec = importlib.util.spec_from_file_location('adequacy', root / 'scripts/trust_adequacy.py')
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+snapshot = m.load_input_snapshot((out / 'inputs.json').read_bytes())
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+# Directory names under the copy's target/catalog-build-tests/: the ordinary control first.
+VARIANTS = ['ordinary', 'with space', 'with: colon', 'back\\slash', 'back\\ slash', 'trailing\\', 'hash#mark',
+            "quote'mark", 'tab\there', 'line\nbreak']
+PROBE = r'''
+    #[test]
+    fn probe_catalog_dependency_roots() {
+        use crate::json::{parse, write, Json};
+        let Json::Array(given) = parse(&std::env::var("ARCHOGEN_PROBE_NAMES").unwrap()).unwrap() else {
+            panic!("the probe's names are a JSON array")
+        };
+        let names: Vec<String> = given
+            .into_iter()
+            .map(|n| match n {
+                Json::Str(s) => s,
+                other => panic!("{other:?}"),
+            })
+            .collect();
+        // The workspace is built where production builds it: under the repository's own `target/`, with that
+        // repository as `repo`, so the cargo configurations on the build's path are production's.
+        let repo = PathBuf::from(std::env::var("ARCHOGEN_PROBE_REPO").unwrap());
+        let roots = PathBuf::from(std::env::var("ARCHOGEN_PROBE_ROOTS").unwrap());
+        let mut rows = Vec::new();
+        for name in &names {
+            let (tree, _) = small_workspace(
+                "probe",
+                "#![no_std]\nmod a;\npub fn f() -> u32 { a::A }\n",
+                &[("crates/p/src/a.rs", "pub const A: u32 = 1;\n")],
+            );
+            let dir = roots.join(name);
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(&dir).unwrap();
+            let tree = with_lock(tree);
+            let (_, loaded) = loaded_of(&tree);
+            let root = dir.join("tree");
+            let result = super::write_tree(&tree, &root)
+                .and_then(|()| check(&loaded, &tree, &root, &repo, &pin(), &dir.join("scratch")));
+            let outcome = match result {
+                Ok(b) => format!("built: packages {} builds {} units {}", b.packages, b.builds, b.units),
+                Err(Failure::Refused(r)) => format!("refused: {:?}: {}", r.code, r.message),
+                Err(other) => format!("error: {other:?}"),
+            };
+            let mut records = Vec::new();
+            let mut stack = vec![dir.join("scratch/records-target")];
+            while let Some(d) = stack.pop() {
+                let Ok(entries) = std::fs::read_dir(&d) else { continue };
+                for entry in entries.flatten() {
+                    let p = entry.path();
+                    if p.is_dir() {
+                        stack.push(p);
+                    } else if p.extension().is_some_and(|x| x == "d")
+                        && p.parent().and_then(|q| q.file_name()).is_some_and(|q| q == "deps")
+                    {
+                        let text = std::fs::read_to_string(&p).unwrap_or_default();
+                        records.push(Json::Array(vec![
+                            Json::Str(p.display().to_string()),
+                            Json::Str(text),
+                        ]));
+                    }
+                }
+            }
+            records.sort_by_key(write);
+            let mut row = BTreeMap::new();
+            row.insert("name".to_owned(), Json::Str(name.clone()));
+            row.insert("dir".to_owned(), Json::Str(dir.display().to_string()));
+            row.insert("outcome".to_owned(), Json::Str(outcome));
+            row.insert("records".to_owned(), Json::Array(records));
+            rows.push(Json::Object(row));
+        }
+        std::fs::write(std::env::var("ARCHOGEN_PROBE_OUT").unwrap(), write(&Json::Array(rows))).unwrap();
+    }
+'''
+
+# The plain copy: every tracked regular input, byte for byte. The harness's `real_tree` lists the tracked files
+# with `git ls-files`, so the copy gets an index of its own: a disposable project-owned fixture under the ignored
+# target/ (the director's exception of 2026-10-20), initialised and staged, never committed.
+if (copy / '.git').exists():
+    assert (copy / '.git').resolve().is_relative_to(out) and not (copy / '.git').is_symlink()
+    shutil.rmtree(copy / '.git')
+copy.mkdir(parents=True, exist_ok=True)
+for relative, entry in snapshot['regular'].items():
+    src, dst = root / relative, copy / relative
+    assert sha(src.read_bytes()) == entry['sha256'], relative
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=dst.parent, delete=False) as handle:
+        temporary = Path(handle.name)
+    try:
+        shutil.copy2(src, temporary)
+        temporary.replace(dst)
+    finally:
+        temporary.unlink(missing_ok=True)
+fixture = dict(os.environ, GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=os.devnull)
+subprocess.run(['git', 'init', '-q'], cwd=copy, env=fixture, check=True)
+subprocess.run(['git', 'add', '-A', '--', *sorted(snapshot['regular'])], cwd=copy, env=fixture, check=True)
+listed = subprocess.check_output(['git', 'ls-files', '-z'], cwd=copy, env=fixture).split(b'\0')
+assert sorted(x.decode() for x in listed if x) == sorted(snapshot['regular']), 'the copy indexes exactly the tracked inputs'
+target = copy / 'xtask/src/catalog_build.rs'
+original = target.read_text()
+assert original == (root / 'xtask/src/catalog_build.rs').read_text() and original.endswith('    }\n}\n')
+probed = original[:-2] + PROBE + '}\n'
+target.write_text(probed)
+(out / 'probe-diff.json').write_text(json.dumps(dict(
+    file='xtask/src/catalog_build.rs', original_sha256=sha(original.encode()), probed_sha256=sha(probed.encode()),
+    appended=PROBE), indent=2) + '\n')
+roots = out / 'roots'
+env = dict(os.environ, CARGO_TARGET_DIR=str(out / 'target'), ARCHOGEN_PROBE_OUT=str(out / 'results.json'),
+           ARCHOGEN_PROBE_REPO=str(root), ARCHOGEN_PROBE_ROOTS=str(roots),
+           ARCHOGEN_PROBE_NAMES=json.dumps(VARIANTS))
+name = 'catalog_build::tests::probe_catalog_dependency_roots'
+with (out / 'probe.log').open('w') as log:
+    result = subprocess.run(['cargo', 'test', '--locked', '--offline', '-q', '-p', 'xtask', name, '--', '--exact'],
+                            cwd=copy, env=env, stdout=log, stderr=subprocess.STDOUT)
+(out / 'probe.exit').write_text(str(result.returncode) + '\n')
+assert result.returncode == 0, (out / 'probe.log').read_text()[-3000:]
+rows = json.loads((out / 'results.json').read_text())
+assert [r['name'] for r in rows] == VARIANTS
+for r in rows:
+    print(repr(r['name']), '->', r['outcome'][:200], '|', len(r['records']), 'records')
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: audit.py</summary>
+
+```python
+"""M3.6.9.6.3.2.2.15.2.1.6.2.1: the independent audit of the catalog builder's dependency-reader assessment.
+
+Judges the probe's receipts against literal expectations written here, not derived from the reader:
+a package that builds is accepted whatever its directory is called; each record's first rule is the
+record's own path, written literally, then `: `, then exactly the two relative module paths. The colon
+variant is Cargo's own failure before any record is written. The copy differs from the committed source
+by the appended probe alone, and the main tree's inputs restore.
+"""
+from pathlib import Path
+import copy as copying, hashlib, json, subprocess
+
+out = Path('target/catalog-dependency-assessment')
+root = Path.cwd().resolve()
+base = (out / 'base-commit.txt').read_text().strip()
+VARIANTS = ['ordinary', 'with space', 'with: colon', 'back\\slash', 'back\\ slash', 'trailing\\', 'hash#mark',
+            "quote'mark", 'tab\there', 'line\nbreak']
+BUILT = 'built: packages 1 builds 4 units 4'
+COLON = ('refused: Source: `p` does not build in dev: error: failed to join paths from `$DYLD_FALLBACK_LIBRARY_PATH` '
+         'together')
+PREREQUISITES = 'crates/p/src/lib.rs crates/p/src/a.rs'
+PROFILES = ['debug', 'release', 'riscv64imac-unknown-none-elf/debug', 'riscv64imac-unknown-none-elf/release']
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def judge(rows):
+    assert [r['name'] for r in rows] == VARIANTS
+    findings = {}
+    for r in rows:
+        assert r['dir'] == str(root / 'target/catalog-dependency-assessment/roots' / r['name']), r['name']
+        if r['name'] == 'with: colon':
+            assert r['outcome'] == COLON and r['records'] == [], r
+            findings[r['name']] = 'cargo-error-before-any-record'
+            continue
+        assert r['outcome'] == BUILT, (r['name'], r['outcome'])
+        assert len(r['records']) == 4, r['name']
+        profiles = []
+        for path, text in r['records']:
+            prefix = r['dir'] + '/scratch/records-target/'
+            assert path.startswith(prefix) and '/deps/p-' in path and path.endswith('.d'), path
+            profiles.append(path[len(prefix):].split('/deps/')[0])
+            rule = path + ': ' + PREREQUISITES + '\n\n'
+            assert text.startswith(rule), (r['name'], text[:200])
+            assert '\\ ' not in text.split('\n\n', 1)[0][len(path):], 'no escape among the prerequisites'
+            if '\n' in r['name']:
+                assert ': ' not in text.split('\n', 1)[0], 'the first physical line is not the rule'
+        assert sorted(profiles) == sorted(PROFILES), (r['name'], profiles)
+        findings[r['name']] = 'accepted'
+    return findings
+
+
+if __name__ == '__main__':
+    rows = json.loads((out / 'results.json').read_text())
+    findings = judge(rows)
+    diff = json.loads((out / 'probe-diff.json').read_text())
+    committed = subprocess.check_output(['git', 'show', base + ':xtask/src/catalog_build.rs'])
+    assert diff['original_sha256'] == sha(committed) == sha((root / 'xtask/src/catalog_build.rs').read_bytes())
+    probed = (out / 'tree/xtask/src/catalog_build.rs').read_text()
+    assert sha(probed.encode()) == diff['probed_sha256'] and probed == committed.decode()[:-2] + diff['appended'] + '}\n'
+    assert (out / 'probe.exit').read_text().strip() == '0'
+    restored = json.loads((out / 'restoration.json').read_text())
+    assert restored['status'] in ['restored', 'passed', 'verified']
+    arms = []
+
+    def arm(label, alter):
+        state = copying.deepcopy(rows)
+        alter(state)
+        try:
+            judge(state)
+        except AssertionError:
+            arms.append(label)
+            return
+        raise SystemExit('falsifying arm accepted: ' + label)
+
+    space = VARIANTS.index('with space')
+    arm('a spaced root refused', lambda s: s[space].update(outcome='refused: Source: `p` read `x`'))
+    arm('a record escaping its prerequisites', lambda s: s[space]['records'][0].__setitem__(
+        1, s[space]['records'][0][1].replace('crates/p/src/a.rs', 'crates/p/src/a\\ b.rs', 1)))
+    arm('a record dropped', lambda s: s[space]['records'].pop())
+    arm('the colon variant claimed accepted', lambda s: s[VARIANTS.index('with: colon')].update(outcome=BUILT))
+    arm('the ordinary control refused', lambda s: s[0].update(outcome='refused: Source: a cargo configuration above the repository'))
+    arm('a variant missing', lambda s: s.pop())
+    arm('a record under another root', lambda s: s[space]['records'][0].__setitem__(
+        0, s[space]['records'][0][0].replace('with space', 'ordinary')))
+    arm('a line-break record read from its first line', lambda s: s[VARIANTS.index('line\nbreak')]['records'][0].__setitem__(
+        1, s[VARIANTS.index('line\nbreak')]['records'][0][1].replace('\n', '', 1)))
+    result = dict(status='passed', base_commit=base, variants=len(VARIANTS), findings=findings,
+                  accepted=sum(v == 'accepted' for v in findings.values()), records=sum(len(r['records']) for r in rows),
+                  probe=diff['appended'], falsifying_arms_refused=len(arms), arms=arms)
+    (out / 'audit.json').write_text(json.dumps(result, indent=2) + '\n')
+    print('Catalog reader assessment audit passed:', result['accepted'], 'of', len(VARIANTS), 'variants accepted,',
+          result['records'], 'records exact; the colon variant Cargo\'s own error;', len(arms), 'of', len(arms),
+          'falsifying arms refused; sha256', sha((out / 'audit.json').read_bytes()))
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: publish.py</summary>
+
+```python
+"""M3.6.9.6.3.2.2.15.2.1.6.2.1: the annex record of the catalog builder's dependency-reader assessment."""
+from pathlib import Path
+import json
+
+out = Path('target/catalog-dependency-assessment')
+root = str(Path.cwd().resolve())
+B = chr(96)
+
+
+def q(s):
+    return B + str(s) + B
+
+
+def fence(text, language):
+    ticks = B * 3 if B * 3 not in text else '~~~'
+    return ticks + language + '\n' + text + ('' if text.endswith('\n') else '\n') + ticks + '\n'
+
+
+def details(title, body):
+    return '\n<details>\n<summary>' + title + '</summary>\n\n' + body + '\n</details>\n'
+
+
+audit = json.loads((out / 'audit.json').read_text())
+rows = json.loads((out / 'results.json').read_text())
+assert audit['status'] == 'passed'
+hide = lambda s: s.replace(root, '<repository-root>')
+p = Path('docs/book/src/annex-trust-proofs.md')
+base = p.read_text()
+(out / 'book-before.md').write_text(base)
+f = '\n\n### Catalog builder dependency-reader assessment\n\n'
+f += ('The catalog builder reads each compiled unit\'s dependency record with its own reader, ' + q('dep_info') + ' in '
+      + q('xtask/src/catalog_build.rs') + ', which the trust inventory\'s repair did not touch. It was measured on '
+      + q('2026-10-21') + ' (' + q('M3.6.9.6.3.2.2.15.2.1.6.2.1') + ') with the real pinned producer: the test '
+      'harness\'s own two-module workspace built by the unchanged production ' + q('check') + ' once per directory '
+      'name, each written under the repository\'s ' + q('target/') + ' with the repository as ' + q('repo') + ', as '
+      'production writes it. **' + q(audit['accepted']) + ' of the ' + q(audit['variants']) + ' variants are accepted '
+      'with every record exact; the tenth, a directory name holding a colon, is Cargo\'s own failure before any record '
+      'is written.** No false refusal, fragment or dropped input reaches the reader. This is a measurement: no '
+      'source, test or reason changes.\n\n')
+f += '| Directory name | Outcome | Records |\n| --- | --- | ---: |\n'
+for r in rows:
+    f += '| ' + q(json.dumps(r['name'])) + ' | ' + hide(r['outcome']).replace('|', '\\|') + ' | ' + str(len(r['records'])) + ' |\n'
+f += '\n#### What the producer writes\n\n'
+f += ('Every record names the package\'s crate root and its module relative to the workspace, '
+      'whatever the root is called, as the records below show: the build runs in the written tree, and the '
+      'catalog\'s token rules refuse ' + q('include') + ', ' + q('include_str') + ', ' + q('include_bytes') + ', '
+      + q('macro_rules') + ' and the ' + q('path') + ' attribute at load, so a loaded package reaches a file only by '
+      'module resolution, inside its own directory, under the catalog\'s path grammar. The rule\'s target is the '
+      'record\'s own absolute path, written **literally**: a space, a tab, a backslash, a hash or a quote stays as it '
+      'is, and a line break splits the target across two physical lines. The reader takes the first line holding '
+      + q(': ') + ', so the line-break variant reaches the rule on the next line, and the space-split of the '
+      'prerequisites is exact. A ' + q(': ') + ' inside the target would split the rule at the wrong place, but a '
+      'path holding any colon never gets that far: Cargo cannot compose its library search path, whose separator is '
+      'the colon, and fails the build.\n\n')
+spaced = next(r for r in rows if r['name'] == 'with space')
+broken = next(r for r in rows if r['name'] == 'line\nbreak')
+f += 'The dev record of the spaced root, as rustc wrote it, the repository root replaced by a placeholder:\n\n'
+f += fence(hide(sorted(spaced['records'])[0][1]), 'text')
+f += '\nThe same record under the line-break root:\n\n'
+f += fence(hide(sorted(broken['records'])[0][1]), 'text')
+f += '\n#### Findings, each owned\n\n'
+f += ('**The unescape is dead.** ' + q('dep_info') + ' splits the rule at every space and only then replaces '
+      + q('\\ ') + ' with a space; a piece split at spaces holds no space, so the replacement never matches, for any '
+      'input. It changes nothing and misstates what the reader does. With the measured domain above it is also never '
+      'needed. Owner: ' + q('M3.6.9.6.3.2.2.15.2.1.6.2.2') + ', which removes it, states the domain in the reader, and '
+      'holds the measured roots as a permanent control.\n\n')
+f += ('**A colon in the repository\'s path cannot be built.** The pinned Cargo fails the build — ' + q(
+    'error: failed to join paths from `$DYLD_FALLBACK_LIBRARY_PATH` together') + ' — and the gate reports it as the '
+      'package not building, a ' + q('catalog-source') + ' refusal, although the package is not at fault. Whether '
+      'that outcome is a refusal or a run that could not judge, as the trust inventory rules its own producer\'s '
+      'errors, and where the toolchain\'s path limit is stated, is owned by ' + q('M3.6.9.6.3.2.2.15.2.1.6.2.3') + '.\n\n')
+f += '#### Restoration and continuity\n\n'
+f += ('The probe ran in a plain copy of the tracked inputs, which differs from the committed source by the appended '
+      'test alone; the copy carries an index of its own, staged and never committed, because the harness lists the '
+      'tracked files with ' + q('git ls-files') + ' — a disposable project-owned fixture under the ignored '
+      + q('target/') + ', as the director allowed on ' + q('2026-10-20') + '. A first placement of the workspaces '
+      'inside the copy was refused for every variant, the ordinary control included, by the cargo configuration of '
+      'the repository above the copy; the control showed the arrangement invalid, and the workspaces were moved to '
+      'where production writes them. All tracked inputs of the main tree restore. The audit refuses '
+      + q(audit['falsifying_arms_refused']) + ' altered receipts: ' + ', '.join(audit['arms']) + '.\n')
+f += details('The appended probe', fence(audit['probe'], 'rust'))
+f += details('Every record, the repository root replaced', fence(hide(json.dumps(rows, indent=2, ensure_ascii=False)), 'json'))
+for name in ['probe.py', 'audit.py', 'publish.py']:
+    f += details('Supplemental adapter: ' + name, fence((out / name).read_text(), 'python'))
+f += ('\nThe receipts are under ' + q('target/catalog-dependency-assessment/') + '. The adapters are supplemental; the '
+      'production ' + q('check') + ', the pinned Cargo and the input census are primary.\n')
+(out / 'book-fragment.md').write_text(f)
+p.write_text(base + f)
+print('published', len(f), 'bytes')
+```
+
+</details>
+
+The receipts are under `target/catalog-dependency-assessment/`. The adapters are supplemental; the production `check`, the pinned Cargo and the input census are primary.

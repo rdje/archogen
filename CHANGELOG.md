@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — measure the catalog builder's dependency reader
+
+`ARCHOGEN-M3-0831` (leaf `M3.6.9.6.3.2.2.15.2.1.6.2.1`), `2026-10-21`.
+
+- Build the catalog test harness's two-module workspace through the unchanged production `check`, with
+  the real pinned producer, under ten directory names: ordinary, a space, a colon, three backslash
+  shapes, a hash, a quote, a tab and a line break, each where production writes it.
+- Nine are accepted with all 36 records exact: a record names the package's files relatively and its
+  own path literally, so the root's name never reaches the prerequisites. A colon is Cargo's own error,
+  `failed to join paths`, before any record is written. Outside inputs cannot be reached: the loader
+  refuses the tokens that would name them. No false refusal, fragment or dropped input.
+- File what was found: the reader's unescape can never apply (`.6.2.2`, P2, next), and a colon's
+  outcome is reported as the package not building (`.6.2.3`, P3). The catalog chapter says what a build
+  may have read; the annex keeps every record and the probe.
+
 ## archogen — replay the complete dependency block
 
 `ARCHOGEN-M3-0830` (leaf `M3.6.9.6.3.2.2.15.2.1.6.2.0`), `2026-10-21`.

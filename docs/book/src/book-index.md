@@ -89,6 +89,8 @@ a change that leaves it stale, so it is never edited by hand.
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
   changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex C: Trust proof
   records](annex-trust-proofs.md)
+- Catalog builder dependency-reader assessment — [Annex C: Trust proof
+  records](annex-trust-proofs.md#catalog-builder-dependency-reader-assessment)
 - catalog-rules — [What is versioned, and what changing it costs](versions.md#catalog-rules)
 - catalog-s0 — [What is versioned, and what changing it costs](versions.md#catalog-s0)
 - **check-passing convention** — [definition](glossary.md), [Where the engine's knowledge comes from: the
@@ -766,6 +768,8 @@ a change that leaves it stale, so it is never edited by hand.
 - wasm-request-format — [What is versioned, and what changing it costs](versions.md#wasm-request-format)
 - wasm-response-format — [What is versioned, and what changing it costs](versions.md#wasm-response-format)
 - **WCET** — [definition](glossary.md), [Describing a workload](workload.md)
+- What a build may have read — [Where the engine's knowledge comes from: the
+  catalog](catalog.md#what-a-build-may-have-read)
 - What a provider offers — [Matching an offer to a requirement](matching.md#what-a-provider-offers)
 - What a side requires — [Matching an offer to a requirement](matching.md#what-a-side-requires)
 - What a task carries — [Describing a workload](workload.md#what-a-task-carries)
