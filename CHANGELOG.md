@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the colon path limit surfaced to the director
+
+`ARCHOGEN-PROGRAM-0834` (leaf `PROGRAM.97`), `2026-10-21`.
+
+- Record as §13 of the findings register that the repository cannot live under a path holding a colon:
+  the pinned Cargo fails every build under a target directory holding one, against the standing rule
+  that the repository may be moved anywhere. It cites the measurement, what the catalog gate already
+  does about it and the characters measured harmless, and recommends accepting the toolchain's limit;
+  nothing waits on the answer.
+
 ## archogen — a colon in the target directory is unjudged
 
 `ARCHOGEN-M3-0833` (leaf `M3.6.9.6.3.2.2.15.2.1.6.2.3`), `2026-10-21`.

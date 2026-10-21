@@ -37,7 +37,7 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM`
   Status: `active`
   Goal: own the program spine
-  Children: `PROGRAM.1` … `PROGRAM.96`, and the sub-leaves each of them names
+  Children: `PROGRAM.1` … `PROGRAM.97`, and the sub-leaves each of them names
 
 - ID: `PROGRAM.1`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.1.md`](../task-history/PROGRAM/PROGRAM.1.md); commit `ARCHOGEN-PROGRAM-0002`
@@ -650,28 +650,18 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.95.md`](../task-history/PROGRAM/PROGRAM.95.md); commit `ARCHOGEN-PROGRAM-0827`
 
 - ID: `PROGRAM.96`
-  Status: `done` — thirteenth daily artifact cleanup; the record's last run `2026-10-20T00:58:20+00:00`, over 24 h old
-  Goal: remove only idle, regenerable compiler caches — the main and owned native-sweep incremental directories —
-    after a physical and native inventory, a successful handoff census and an identity recheck; retain every
-    dependency store, final product, cited evidence directory and Git workspace; prove each removed directory gone,
-    every other file under `target/` identity-equal, the tracked inputs restored and the focused tier regenerating;
-    overwrite `docs/ARTIFACT_CLEANUP.md` and add the run's section to the repository annex. The commit also seals
-    what closed at `HEAD`: `M3`'s `.6.1` subtree and `PROGRAM.95`.
-    [Full evidence and adapters](../book/src/annex-repository.md#daily-artifact-cleanup-on-2026-10-21).
-  Acceptance:
-  - [x] ROOT CAUSE: `python3 -I -B target/artifact-cleanup/2026-10-21/census.py`, exit code 0: five locations,
-    physical and native find/stat inventories agree; no link, nested Git boundary or cross-volume entry; the handoff
-    census `handoff: OK` before the inventory and again immediately before the deletion.
-  - [x] ADDRESSED: `python3 -I -B target/artifact-cleanup/2026-10-21/audit.py`, exit code 0: only 2849 idle cache
-    files / 1017454565 logical bytes removed, 360 bin, no logs; both directories gone by Python and native stat;
-    584886 of 584889 other `target/` entries identical, the three directory rows the strict comparison refused
-    accounted (two parents, the census's scratch); 580 evidence digests agree; 4 of 4 falsifying arms refused.
-  - [x] NO REGRESSION: `make focused`, exit code 0 on the final staged tree; 1168 inputs restore; production source
-    unchanged; `bash scripts/check_task_history.sh` OK on both seals.
-  Verification: `target/artifact-cleanup/2026-10-21/`; the external policies of §14, §17 and §18 re-read at session
-    start, each body still hashing as adopted (`README_POLICY.md` `77a1e934…`, the containment body `af130de4…`,
-    the adoption guide `8f77fa39…`, `pgen`'s claim verification 285 lines / 18 166 bytes), so nothing to apply.
-  Commit: `ARCHOGEN-PROGRAM-0829`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.96.md`](../task-history/PROGRAM/PROGRAM.96.md); commit `ARCHOGEN-PROGRAM-0829`
+
+- ID: `PROGRAM.97`
+  Status: `done` — the colon path limit surfaced to the director, findings §13
+  Goal: `M3.6.9.6.3.2.2.15.2.1.6.2.3` measured that the pinned Cargo fails every build under a target directory
+    holding a colon, so the repository cannot live under such a path, against the standing rule that it may be
+    moved anywhere. Record it as §13 of `docs/decisions/decision_findings-for-director-review.md` with the
+    measurement, what the project already does about it, the options and a recommendation, so it survives a missed
+    message. No code changes.
+  Verification: §13 written with the measurement of `target/colon-path-assessment/`, what is already done, the
+    harmless characters, and a recommendation that waits on nothing; the register's count moved to thirteen.
+  Commit: `ARCHOGEN-PROGRAM-0834`
 
 
 ## Roadmap coverage map
@@ -854,7 +844,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-11` | `PROGRAM.69` (round 35) | new census and summary-boundary controls before/after repair; both full self-tests, syntax, book and final staged gates | history 129/3 of 132 and counts 140/10 of 150 before; repaired 132/0 and 150/0; finite selected-read failures never print a final aggregate, empty counterparts pass; staged counts 1 review / 35 rounds, history 175 files / 335 stubs; book 30/4, 67/25, 316, syntax and final doctrine gates |
 | `2026-10-11` | `PROGRAM.69` (round 36) | EOF/path/diagnostic controls before repair, then both complete self-tests; syntax, book and staged gates | history 133/13 of 146 and counts 153/3 of 156 before; repaired 146/0 and 156/0; literal byte and unusual-path counterparts, named no-traceback row refusals; independent round 37 next |
 | `2026-10-11` | `PROGRAM.69` (round 37 closure) | independent pinned review; root recount/authentication; staged count/history and book gates | zero defects/actionable arm gaps/remarks; 347 expected checker outcomes, separate 4 096 unit comparisons; retained results recount and 17 source identities pass, exit code 0; scope/limits retained; all 37 summary rows judged before removal from counted list |
-| `2026-10-21` | `PROGRAM.96` | physical/native inventories; two handoff censuses; identity recheck, residue and whole-`target/` identity comparison; evidence digests; input restoration; audit with four falsifying arms; focused tier | 2849 cache files / 1017454565 logical bytes; 584886 of 584889 other entries identical, 3 rows accounted; 580 evidence files and 1168 inputs unchanged; focused on the staged tree |
+| `2026-10-21` | `PROGRAM.97` | the register re-read; the measurement it cites; the doctrine gate | §13 recorded; the colon limit, what the catalog gate does about it, a recommendation |
 
 ## Commit Log
 
@@ -875,7 +865,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0450 (leaf PROGRAM)` | **`PROGRAM.55` and `PROGRAM.56` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 324 bytes over its 819 200-byte ceiling with `M3.1.1`'s step 27 |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0460 (leaf PROGRAM)` | **`PROGRAM.57`, `PROGRAM.58` and `PROGRAM.59` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` would have grown 1 331 bytes over its 819 200-byte ceiling with `M3.1.2`'s decomposition |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0489 (leaf PROGRAM)` | **`PROGRAM.10` and `.61`–`.65` sealed**, 13 closed leaves into `docs/task-history/PROGRAM/`, when `README-ROUTES` refused `docs/tasks/` at 820 957 bytes over its 819 200; `docs/tasks/` 817 470 → 752 861 bytes, measured from `HEAD` and the tree |
-| `PROGRAM.96` | `ARCHOGEN-PROGRAM-0829 (leaf PROGRAM.96)` | **thirteenth daily cleanup**: only idle incremental caches, 2849 files / 1017454565 logical bytes; every other `target/` entry identity-equal but three accounted directory rows; `M3` `.6.1` and `PROGRAM.95` sealed; the M3 checkpoint `.6.2` resumes |
+| `PROGRAM.97` | `ARCHOGEN-PROGRAM-0834 (leaf PROGRAM.97)` | **the colon path limit surfaced**: findings §13, the toolchain's limit against the rule that the repository may move anywhere; accepted as known unless the director says otherwise |
 
 ## Changelog
 

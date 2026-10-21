@@ -6,7 +6,7 @@
 - **Owner / source:** raised during the M0 + M1 build; recorded here so they survive the session
 - **External sources:** [QEMU](../book/src/ledger.md#qemu) — version, scope and limits in the ledger
 
-Twelve items are recorded here so they survive the session. Three are outside an implementer's
+Thirteen items are recorded here so they survive the session. Three are outside an implementer's
 authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you
 should see even though it is already fixed; the sixth (§6) is a review of **your own amendment**
 by the model that has never read the implementation. Each is tracked as work, so nothing here
@@ -243,6 +243,28 @@ no pending interrupt is taken" starts that much later; and the window before the
 code, which the port states whole without holding it. It narrows no approved claim, so it is not a new narrowing under
 the rule above; it is shown to you because it rewords an approved item. **If you want it treated as one**, say so and
 it waits for your approval.
+
+## 13. The repository cannot live under a path holding a colon — the toolchain's limit (`2026-10-21`)
+
+Your standing rule is that the repository may be moved anywhere, another filesystem included, without breaking
+anything. One place breaks it, and the cause is upstream. The pinned [Cargo](../book/src/ledger.md#rust-toolchain)
+(1.95.0) joins its target directory into
+the library search path, whose separator on this host is the colon, and fails **every** build under a target directory
+whose path holds one — a trivial crate with no dependency included: ``failed to join paths from
+`$DYLD_FALLBACK_LIBRARY_PATH` together``, caused by ``path segment contains separator `:` ``. A colon in the
+crate's own directory or in Cargo's home is harmless; only the target directory matters. This project keeps its target directory inside the
+repository, so the limit is the repository's.
+
+What is already done (`M3.6.9.6.3.2.2.15.2.1.6.2.3`): the catalog gate used to refuse the package as not building when
+its scratch directory held a colon — blaming a package for its directory. It now stops before building anything,
+unjudged, naming the directory, held by a permanent control. The limit is stated in the book's verification chapter
+under *Where the repository may live*, with the measurement in the trust annex.
+
+Measured harmless in the same assessment: spaces, backslashes (a trailing one included), tabs, line breaks, hashes and
+quotes in the path.
+
+**Recommendation:** accept it as a known limit of the toolchain, as stated. The alternative, a target directory outside
+the repository, would break the rule that every project path is repository-relative. Nothing waits on your answer.
 
 ## A note on what "done" means so far
 
