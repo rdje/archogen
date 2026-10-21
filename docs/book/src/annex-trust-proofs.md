@@ -153415,3 +153415,269 @@ print('premise re-bound:', sha(old_prefix)[:12], '->', sha(new_prefix)[:12], '; 
 ```
 
 </details>
+
+
+### A colon in the target directory
+
+The pinned Cargo cannot build in a target directory whose path holds a colon, whatever it builds (`M3.6.9.6.3.2.2.15.2.1.6.2.3`, `2026-10-21`). It joins `<target>/<profile>/deps` into the library search path, `$DYLD_FALLBACK_LIBRARY_PATH` here, whose separator is the colon, and std refuses to join a path holding it. A trivial crate, one function and no dependency, measured with `cargo 1.95.0 (f2d3ce0bd 2026-03-21)`:
+
+| Crate directory | Target directory | Cargo home | Exit |
+| --- | --- | --- | ---: |
+| plain | inside it | the repository's | 0 |
+| holding a colon | inside it | the repository's | 101 |
+| holding a colon | plain, elsewhere | the repository's | 0 |
+| plain | holding a colon | the repository's | 101 |
+| plain | plain, elsewhere | holding a colon | 0 |
+
+Only the target directory matters. The catalog gate builds in `<scratch>/records-target`, so a scratch directory holding a colon failed every package, and the gate reported each as not building — a `catalog-source` refusal that blamed a package for its directory. **Decided:** no package can be judged there, so the run is unjudged, as when Cargo does not run at all and as the trust inventory rules its own producer's errors: `check` now asks std whether the target directory can be joined before it builds anything, and stops unjudged, naming the directory, when it cannot. The check uses the platform's own rule, not a spelled-out colon. §3 is unchanged: a package that does not build is still refused; this run never builds one.
+
+With the target directory inside the repository, as this project keeps it, the repository itself cannot live under a path holding a colon: every build of it fails the same way.
+
+The control `catalog_build::tests::a_target_directory_holding_the_search_path_separator_is_unjudged` failed first, against `check` without the preflight, with the refusal it exists to forbid:
+
+```text
+expected an unjudged run, got Err(Refused(Refusal { code: Source, path: "crates/p/Cargo.toml", field: "(build)", at: None, message: "`p` does not build in dev: error: failed to join paths from `$DYLD_FALLBACK_LIBRARY_PATH` together" }))
+```
+
+With the preflight it passes, and every catalog-builder test passes, `17 passed; 0 failed`. The production change sits inside `check`, which the trust code never calls; the caller-suffix proof's premise on the file is revalidated as before — the hunk inside `check`, every item the trust code imports unchanged — and its digest re-bound, `3dce0025a2a71afb9aa4cb3802ebcfcf14379d92ac88b0bca8ae80847b6e7ba0` to `d3e8865c3633de9f4cafb82c3613f0ee82df0c065012b732469cda5951221ed2`.
+
+<details>
+<summary>The trivial crate under a colon</summary>
+
+```text
+error: failed to join paths from `$DYLD_FALLBACK_LIBRARY_PATH` together
+
+Check if any of path segments listed below contain an unterminated quote character or path separator:
+    "<repository-root>/target/colon-path-assessment/with:colon/k/target/debug/deps"
+    "<home>/.rustup/toolchains/1.95.0-aarch64-apple-darwin/lib"
+    "<home>/lib"
+    "/usr/local/lib"
+    "/usr/lib"
+
+Caused by:
+  path segment contains separator `:`
+```
+
+</details>
+
+<details>
+<summary>A plain crate, its target directory holding a colon</summary>
+
+```text
+error: failed to join paths from `$DYLD_FALLBACK_LIBRARY_PATH` together
+
+Check if any of path segments listed below contain an unterminated quote character or path separator:
+    "<repository-root>/target/colon-path-assessment/colon:target/debug/deps"
+    "<home>/.rustup/toolchains/1.95.0-aarch64-apple-darwin/lib"
+    "<home>/lib"
+    "/usr/local/lib"
+    "/usr/lib"
+
+Caused by:
+  path segment contains separator `:`
+```
+
+</details>
+
+<details>
+<summary>The control without the preflight</summary>
+
+```text
+
+running 1 test
+catalog_build::tests::a_target_directory_holding_the_search_path_separator_is_unjudged --- FAILED
+
+failures:
+
+---- catalog_build::tests::a_target_directory_holding_the_search_path_separator_is_unjudged stdout ----
+
+thread 'catalog_build::tests::a_target_directory_holding_the_search_path_separator_is_unjudged' (1357081985) panicked at xtask/src/catalog_build.rs:1343:22:
+expected an unjudged run, got Err(Refused(Refusal { code: Source, path: "crates/p/Cargo.toml", field: "(build)", at: None, message: "`p` does not build in dev: error: failed to join paths from `$DYLD_FALLBACK_LIBRARY_PATH` together" }))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    catalog_build::tests::a_target_directory_holding_the_search_path_separator_is_unjudged
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 337 filtered out; finished in 0.37s
+
+error: test failed, to rerun pass `-p xtask --bin xtask`
+```
+
+</details>
+
+<details>
+<summary>The control with the preflight</summary>
+
+```text
+
+running 1 test
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 337 filtered out; finished in 0.11s
+
+```
+
+</details>
+
+<details>
+<summary>Every catalog-builder test</summary>
+
+```text
+
+running 18 tests
+i.................
+test result: ok. 17 passed; 0 failed; 1 ignored; 0 measured; 320 filtered out; finished in 4.07s
+
+```
+
+</details>
+
+<details>
+<summary>The revalidation record</summary>
+
+```json
+{
+  "file": "xtask/src/catalog_build.rs",
+  "base_commit": "34b618f84b130fc907f6c636ee7739abc35ad1d1",
+  "previous_production_sha256": "3dce0025a2a71afb9aa4cb3802ebcfcf14379d92ac88b0bca8ae80847b6e7ba0",
+  "production_sha256": "d3e8865c3633de9f4cafb82c3613f0ee82df0c065012b732469cda5951221ed2",
+  "changed_production_hunks": [
+    {
+      "old": [
+        705,
+        705
+      ],
+      "new": [
+        705,
+        715
+      ]
+    }
+  ],
+  "reader": {
+    "old": [
+      687,
+      833
+    ],
+    "new": [
+      687,
+      843
+    ]
+  },
+  "imported_by_trust": [
+    "ENV_ALLOWED",
+    "configurations_on_paths",
+    "environment",
+    "toolchain_file",
+    "write_tree"
+  ],
+  "unchanged_items": [
+    "ENV_ALLOWED",
+    "configurations_on_paths",
+    "environment",
+    "toolchain_file",
+    "write_tree",
+    "configurations_on_path",
+    "command"
+  ],
+  "environment_fragment_unchanged": true,
+  "premise": {
+    "test_caller_suffix_prefix_requires_the_complete_pinned_constructor": "catalog_build.rs production digest re-bound"
+  },
+  "sweep_tests": {
+    "previous_sha256": "51da57e11798912ac2e0df68f6971add0374bc462acd97cd7811607c7ffbec5c",
+    "sha256": "c18719633264455bc5c767eb579699dc0f1b1722a02e75b296c5c2ca2e95682c"
+  },
+  "argument": "The preflight changes only check, the catalog gate's build entry, which refuses to build under a target directory Cargo cannot use; the items the trust code imports, the configuration walk and the command helper are byte for byte the committed ones, so the proof's configuration and preflight premises hold and the digest is re-bound."
+}
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: revalidate-premises.py</summary>
+
+```python
+"""M3.6.9.6.3.2.2.15.2.1.6.2.3: revalidate the caller-suffix proof's premise on `xtask/src/catalog_build.rs`.
+
+`test_caller_suffix_prefix_requires_the_complete_pinned_constructor` pins the production part of every file
+whose code enforces the proof's configuration and preflight premises; `catalog_build.rs` is pinned for what the
+trust code takes from it: `configurations_on_paths`, `environment`, `toolchain_file`, `write_tree` and
+`ENV_ALLOWED`. This proves the preflight's production hunks lie inside `check`, which the trust code does not
+call, and that every imported item is byte for byte the committed one, then re-binds the one digest. Idempotent: it starts from the committed test file.
+"""
+from pathlib import Path
+import difflib, hashlib, json, re, subprocess
+
+out = Path('target/colon-path-assessment')
+file = 'xtask/src/catalog_build.rs'
+head = (out / 'base-commit.txt').read_text().strip()
+
+
+def sha(text):
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
+before = subprocess.check_output(['git', 'show', head + ':' + file], text=True)
+source = Path(file).read_text()
+old_prefix, new_prefix = before.split('#[cfg(test)]', 1)[0], source.split('#[cfg(test)]', 1)[0]
+assert sha(old_prefix) == '3dce0025a2a71afb9aa4cb3802ebcfcf14379d92ac88b0bca8ae80847b6e7ba0'
+old_lines, new_lines = old_prefix.split('\n'), new_prefix.split('\n')
+
+
+def span(lines, start, end):
+    a = next(i for i, l in enumerate(lines) if l.startswith(start))
+    b = next(i for i in range(a, len(lines)) if lines[i] == end)
+    return a, b + 1
+
+
+old_reader = span(old_lines, 'pub fn check(', '}')
+new_reader = span(new_lines, 'pub fn check(', '}')
+hunks = [(i1, i2, j1, j2) for tag, i1, i2, j1, j2 in
+         difflib.SequenceMatcher(None, old_lines, new_lines, autojunk=False).get_opcodes() if tag != 'equal']
+assert hunks
+for i1, i2, j1, j2 in hunks:
+    assert old_reader[0] <= i1 and i2 <= old_reader[1] and new_reader[0] <= j1 and j2 <= new_reader[1], (i1, i2, j1, j2)
+assert old_lines[:old_reader[0]] == new_lines[:new_reader[0]] and old_lines[old_reader[1]:] == new_lines[new_reader[1]:]
+# The trust code never calls `check`; only the catalog gate does.
+users = subprocess.check_output(['git', 'grep', '-n', '-F', 'catalog_build::check(', '--', 'xtask/src'], text=True).splitlines()
+assert [u.split(':', 1)[0] for u in users] == ['xtask/src/catalog_check.rs'], users
+imported = re.search(r'use crate::catalog_build::\{([^}]*)\};', Path('xtask/src/trust.rs').read_text()).group(1)
+names = sorted(n.strip() for n in imported.split(',') if n.strip())
+assert names == ['ENV_ALLOWED', 'configurations_on_paths', 'environment', 'toolchain_file', 'write_tree'], names
+
+
+def item(text, name):
+    lines = text.split('\n')
+    a = next(i for i, l in enumerate(lines) if re.match(r'(pub(\(crate\))? )?(fn|const) ' + re.escape(name) + r'\b', l))
+    while a > 0 and lines[a - 1].startswith('///'):
+        a -= 1
+    b = next(i for i in range(a, len(lines)) if lines[i] in ('}', '];'))
+    return '\n'.join(lines[a:b + 1])
+
+
+for name in names + ['configurations_on_path', 'command']:
+    assert item(old_prefix, name) == item(new_prefix, name), name
+environment = lambda t: t[t.index('pub fn environment('):t.index('\nfn command(')]
+assert environment(before) == environment(source)
+tests = Path('xtask/mutation_sweep_tests.py')
+head_tests = subprocess.check_output(['git', 'show', head + ':xtask/mutation_sweep_tests.py'], text=True)
+pin = "'xtask/src/catalog_build.rs': '" + sha(old_prefix) + "'"
+assert head_tests.count(pin) == 1
+rebound = head_tests.replace(pin, "'xtask/src/catalog_build.rs': '" + sha(new_prefix) + "'", 1)
+tests.write_text(rebound)
+record = dict(file=file, base_commit=head, previous_production_sha256=sha(old_prefix), production_sha256=sha(new_prefix),
+              changed_production_hunks=[dict(old=[i1, i2], new=[j1, j2]) for i1, i2, j1, j2 in hunks],
+              reader=dict(old=list(old_reader), new=list(new_reader)), imported_by_trust=names,
+              unchanged_items=names + ['configurations_on_path', 'command'], environment_fragment_unchanged=True,
+              premise={'test_caller_suffix_prefix_requires_the_complete_pinned_constructor': 'catalog_build.rs production digest re-bound'},
+              sweep_tests=dict(previous_sha256=sha(head_tests), sha256=sha(rebound)),
+              argument='The preflight changes only check, the catalog gate\'s build entry, which refuses to build under a '
+                       'target directory Cargo cannot use; the items the trust code imports, the configuration walk and the command '
+                       'helper are byte for byte the committed ones, so the proof\'s configuration and preflight premises '
+                       'hold and the digest is re-bound.')
+(out / 'premise-revalidation.json').write_text(json.dumps(record, indent=2) + '\n')
+print('premise re-bound:', sha(old_prefix)[:12], '->', sha(new_prefix)[:12], '; hunks', record['changed_production_hunks'],
+      '; imported items unchanged:', ', '.join(names))
+```
+
+</details>

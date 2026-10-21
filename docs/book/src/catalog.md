@@ -134,12 +134,23 @@ example:
 <repository-root>/target/…/with space/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d: crates/p/src/lib.rs crates/p/src/a.rs
 ```
 
-A directory name holding a colon cannot be built at all: the pinned Cargo fails before writing any
-record (`error: failed to join paths from $DYLD_FALLBACK_LIBRARY_PATH together`), and the checker
-reports the package as not building. How that outcome should be classified, and where the limit is
-stated, is owned by `M3.6.9.6.3.2.2.15.2.1.6.2.3`. The
+A target directory whose path holds a colon cannot be built in at all: the pinned Cargo joins it into
+the library search path, whose separator is the colon, and fails every build, a trivial crate's
+included (`error: failed to join paths from $DYLD_FALLBACK_LIBRARY_PATH together`). A colon in the
+written root or in Cargo's home is harmless. No package can be judged there, so the checker stops
+before building anything and the run is unjudged, naming the directory — never a refusal that would
+blame the package (`2026-10-21`):
+
+```text
+<scratch>/records-target: Cargo cannot build under a target directory holding the library search path's separator: path segment contains separator `:`
+```
+
+The permanent control
+`catalog_build::tests::a_target_directory_holding_the_search_path_separator_is_unjudged` holds it; before
+the check existed, the same run refused the package as not building. The
 [assessment record](annex-trust-proofs.md#catalog-builder-dependency-reader-assessment) keeps every
-record and the probe.
+record and the probe, and the [colon record](annex-trust-proofs.md#a-colon-in-the-target-directory) the
+measurement.
 
 The reader, `dep_info` in `xtask/src/catalog_build.rs`, therefore takes the first line holding `: ` as
 the rule and splits its prerequisites at spaces, and unescapes nothing: a name outside the catalog's

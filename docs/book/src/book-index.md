@@ -10,6 +10,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 - A bug report says what its issue says — [Annex B: The checks that keep the repository
   honest](annex-repository.md#a-bug-report-says-what-its-issue-says)
+- A colon in the target directory — [Annex C: Trust proof
+  records](annex-trust-proofs.md#a-colon-in-the-target-directory)
 - A commit holds what was run — [Annex B: The checks that keep the repository
   honest](annex-repository.md#a-commit-holds-what-was-run)
 - A kind defines well-formedness, never behavior — [Kinds and
@@ -825,6 +827,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Where it runs — [Checks that must not share a mistake: the trust gate](trust.md#where-it-runs)
 - Where the landing page sends things — [Annex B: The checks that keep the repository
   honest](annex-repository.md#where-the-landing-page-sends-things)
+- Where the repository may live — [Verifying the toolchain](verification.md#where-the-repository-may-live)
 - Where the rules live — [Reading a description](reading.md#where-the-rules-live)
 - Where to go next — [A tour: from a description to a board](tour.md#where-to-go-next)
 - Which language version a description is written in — [Reading a

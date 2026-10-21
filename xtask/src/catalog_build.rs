@@ -703,6 +703,16 @@ pub fn check(
     }
     let cargo_home = scratch.join("cargo-home");
     let target_dir = scratch.join("records-target");
+    // The pinned Cargo joins `<target>/<profile>/deps` into the library search path, and fails every build under a
+    // target directory holding that path's separator; the written root and Cargo's home may hold it (measured,
+    // `M3.6.9.6.3.2.2.15.2.1.6.2.3`). No package can be judged there, so the run is unjudged, never a refusal.
+    if let Err(e) = std::env::join_paths([&target_dir]) {
+        return Err(format!(
+            "{}: Cargo cannot build under a target directory holding the library search path's separator: {e}",
+            target_dir.display()
+        )
+        .into());
+    }
     let _ = fs::remove_dir_all(&target_dir);
     let env = environment(pin, &cargo_home, &target_dir)?;
     configurations_on_path(root, root, repo, tree)?;
@@ -1320,6 +1330,30 @@ mod tests {
             }
             let _ = std::fs::remove_dir_all(dir);
         }
+    }
+
+    #[test]
+    fn a_target_directory_holding_the_search_path_separator_is_unjudged() {
+        // The pinned Cargo fails every build there, whatever the package (`M3.6.9.6.3.2.2.15.2.1.6.2.3`), so the run
+        // must not blame the package: it stops before building anything, unjudged, naming the directory.
+        let (tree, dir) = small_workspace(
+            "with: colon",
+            "#![no_std]\nmod a;\npub fn f() -> u32 { a::A }\n",
+            &[("crates/p/src/a.rs", "pub const A: u32 = 1;\n")],
+        );
+        let target = dir.join("scratch/records-target");
+        match run(&tree, &dir) {
+            Err(Failure::Unjudged(why)) => {
+                let expected = format!(
+                    "{}: Cargo cannot build under a target directory holding the library search path's separator: ",
+                    target.display()
+                );
+                assert!(why.starts_with(&expected), "{why}");
+            }
+            other => panic!("expected an unjudged run, got {other:?}"),
+        }
+        assert!(!target.exists(), "nothing was built");
+        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]

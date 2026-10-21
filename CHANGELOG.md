@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a colon in the target directory is unjudged
+
+`ARCHOGEN-M3-0833` (leaf `M3.6.9.6.3.2.2.15.2.1.6.2.3`), `2026-10-21`.
+
+- Measure where the pinned Cargo cannot build: a trivial crate fails, exit 101, exactly when its target
+  directory's path holds a colon — Cargo joins `<target>/<profile>/deps` into the library search path,
+  and std refuses a path holding its separator — and builds when only the crate's directory or Cargo's
+  home holds one.
+- Stop the catalog gate's `check` before it builds anything when std cannot join its target directory,
+  unjudged and naming the directory: it used to refuse the package as not building, blaming a package
+  for its directory. The control `a_target_directory_holding_the_search_path_separator_is_unjudged`
+  fails first without the check; §3 is unchanged. The caller-suffix proof's premise is revalidated.
+- State the limit where the director reads it: the repository cannot live under a path holding a colon.
+  Close `.6.2`, the dependency-block checkpoint, and `.6`, the dependency absolute paths; the
+  configuration absolute paths `.7` are next.
+
 ## archogen — the catalog reader unescapes nothing
 
 `ARCHOGEN-M3-0832` (leaf `M3.6.9.6.3.2.2.15.2.1.6.2.2`), `2026-10-21`.

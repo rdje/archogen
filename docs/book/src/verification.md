@@ -848,3 +848,15 @@ The implemented focused tier runs formatting, strict lint and the complete contr
 §14.3 describes affected contract tests; selecting them requires a dependable map from changes to
 contracts. The runner reports each step's elapsed time. Those current observations, together with
 the coverage required for a change, are the basis for revisiting test selection.
+
+### Where the repository may live
+
+Anywhere on one volume, with one exception the toolchain imposes (measured `2026-10-21`): not under a
+path holding a colon. The pinned Cargo joins its target directory into the library search path, whose
+separator is the colon, and fails every build under a target directory that holds one — a trivial
+crate's included — with `failed to join paths from $DYLD_FALLBACK_LIBRARY_PATH together`. This
+project keeps its target directory inside the repository, so the limit is the repository's. Spaces,
+backslashes, tabs, line breaks, hashes and quotes in the path are measured harmless to the catalog's
+builds. Where the catalog gate meets such a directory it stops unjudged rather than blame a package;
+the [colon record](annex-trust-proofs.md#a-colon-in-the-target-directory) keeps the measurement, and
+`xtask/src/catalog_build.rs` the check.

@@ -14,9 +14,9 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.6`; `PROGRAM` resumes at `PROGRAM.71`.
-- **Next action:** `M3.6.9.6.3.2.2.15.2.1.6.2.3` (P3), a colon in the repository's path: Cargo's error
-  classified, the limit stated, a §3 change to the director first. `.6.2.0`–`.2` closed `2026-10-21`; `.6.2`
-  closes with it.
+- **Next action:** `M3.6.9.6.3.2.2.15.2.1.7` (P1), the configuration absolute paths: its ten historical
+  survivors reproduced and mapped, then witnesses or proofs under owned children. `.6`, the dependency absolute
+  paths, closed `2026-10-21`.
   Disposable project-owned Git fixtures under ignored `target/` are approved;
   maintained external repositories and submodules stay read-only.
   Corrected renderer adoption stays owned in `.4.3.4.1`.

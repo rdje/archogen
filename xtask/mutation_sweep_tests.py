@@ -1502,7 +1502,7 @@ os.execvp("rustc", ["rustc"] + arguments)
             'xtask/src/trust.rs': '9d17f39a35dba3a07d094c5374b0786a966bdf0705fb71a9201a5907872eb7ce',
             'xtask/src/trust_compiler.rs': '634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70',
             'xtask/src/trust_compiler_observer.rs': 'c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f',
-            'xtask/src/catalog_build.rs': '3dce0025a2a71afb9aa4cb3802ebcfcf14379d92ac88b0bca8ae80847b6e7ba0',
+            'xtask/src/catalog_build.rs': 'd3e8865c3633de9f4cafb82c3613f0ee82df0c065012b732469cda5951221ed2',
             'xtask/src/catalog_check.rs': '8a24ca8a5423ea31d18ad46c477553c441b03f6b9de027fa3ccbc49a4dc1d14a',
             'xtask/src/json.rs': '224d05f9f4ac43c9670883d5f4ed06665697e475d831a8c397c248a735485701',
             'crates/archogen-catalog/src/package.rs': 'a270b7ead993fafbd2dc7b783ea107b66fb378073aab6581647cd59f39afd226',
