@@ -704,6 +704,29 @@ struct Compilation {
     arguments: Vec<String>,
 }
 
+/// A unit's normalised `configuration`, returned as it is once each entry that still names a path outside the written
+/// tree is refused, in order: one that begins with `/`, or one that holds `=/`. Such a path is something the commit
+/// does not hold and another checkout would spell otherwise (R9 1). No producer route measured reaches it — the cargo
+/// configuration, workspace `rustflags`, an inherited `RUSTFLAGS` and build scripts are refused before any build
+/// (`M3.6.9.6.3.2.2.15.2.1.7.1`) — so it is defence in depth, held by its own control; a unit's configuration is
+/// only ever had through it, so the check cannot be dropped without the configuration.
+fn checked_configuration(
+    crate_name: &str,
+    who: &str,
+    configuration: Vec<String>,
+    refused: &mut Vec<String>,
+) -> Vec<String> {
+    for t in &configuration {
+        if t.starts_with('/') || t.contains("=/") {
+            refused.push(format!(
+                "trust-undeclared-input: `{crate_name}` in `{who}` is configured with `{t}`, a path outside the \
+                 written tree"
+            ));
+        }
+    }
+    configuration
+}
+
 /// Compile one target of the package at `package` clean in `tree_dir` — `target_args` such as `["build", "--bin",
 /// NAME]` — and read every unit's dependency information, each refusal naming `who` (§3). Returns the units, in a fixed
 /// order, and the metadata-owned compiler invocations.
@@ -845,18 +868,8 @@ fn compile(
                 None => refused.push(format!("trust-undeclared-input: `{}` reads `{rel}`, which climbs out of the written tree", who)),
             }
         }
-        let configuration = normalise(&tokens, &scratch);
-        // A path the normalisation leaves absolute names something outside the written tree, which the commit does
-        // not hold and another checkout would spell otherwise (R9 1).
-        for t in &configuration {
-            if t.starts_with('/') || t.contains("=/") {
-                refused.push(format!(
-                    "trust-undeclared-input: `{crate_name}` in `{}` is configured with `{t}`, a path outside the \
-                     written tree",
-                    who
-                ));
-            }
-        }
+        let configuration =
+            checked_configuration(&crate_name, who, normalise(&tokens, &scratch), refused);
         compilations.push(Compilation {
             package: package.clone(),
             arguments: tokens,
@@ -5842,6 +5855,57 @@ version = "0.1.0"
     /// One first-rule text can spell two prerequisite lists: the per-file targets decide, and a rule they do not
     /// re-spell, a backslash outside the known prefixes, or a line after them that is no environment record, is
     /// refused naming the raw rule (`M3.6.9.6.3.2.2.15.2.1.6.1.1.1`).
+    #[test]
+    fn a_configuration_naming_an_outside_path_is_refused_at_every_position() {
+        // No producer route reaches this refusal (`M3.6.9.6.3.2.2.15.2.1.7.1`), so it is held here directly: each form
+        // first, in the middle and last of an ordinary configuration, two at once in order, and none; the
+        // configuration itself comes back unchanged.
+        let ordinary = [
+            "--crate-name",
+            "b",
+            "--edition=2021",
+            "crates/b/src/lib.rs",
+            "-C opt-level=3",
+        ];
+        let refusal = |t: &str| {
+            format!(
+                "trust-undeclared-input: `b` in `chk` is configured with `{t}`, a path outside the written tree"
+            )
+        };
+        let with = |inserted: &[(usize, &str)]| {
+            let mut tokens: Vec<String> = ordinary.iter().map(|t| (*t).to_owned()).collect();
+            for (at, t) in inserted {
+                tokens.insert(*at, (*t).to_owned());
+            }
+            let mut refused = Vec::new();
+            let configuration =
+                super::checked_configuration("b", "chk", tokens.clone(), &mut refused);
+            assert_eq!(
+                configuration, tokens,
+                "the configuration is returned as it is"
+            );
+            refused
+        };
+        assert_eq!(with(&[]), Vec::<String>::new(), "an ordinary configuration");
+        for outside in ["/outside/lib", "-C link-arg=/outside/lib.o"] {
+            for at in [0, 3, ordinary.len()] {
+                assert_eq!(
+                    with(&[(at, outside)]),
+                    [refusal(outside)],
+                    "`{outside}` at {at}"
+                );
+            }
+        }
+        assert_eq!(
+            with(&[(1, "/outside/lib"), (4, "-C link-arg=/outside/lib.o")]),
+            [
+                refusal("/outside/lib"),
+                refusal("-C link-arg=/outside/lib.o")
+            ],
+            "two at once, in order"
+        );
+    }
+
     #[test]
     fn an_ambiguous_dependency_record_is_refused_by_its_raw_rule() {
         let file = std::path::Path::new("out/b.d");

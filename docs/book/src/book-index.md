@@ -185,6 +185,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#configuration-absolute-path-routes)
 - Configuration checkpoint integration — [Annex B: The checks that keep the repository
   honest](annex-repository.md#configuration-checkpoint-integration)
+- Configuration refusal held directly — [Annex C: Trust proof
+  records](annex-trust-proofs.md#configuration-refusal-held-directly)
 - Content hashes — [What a report may claim](evidence.md#content-hashes)
 - Contradictions are rejected, never resolved — [Presence, absence, and
   relevance](presence.md#contradictions-are-rejected-never-resolved)

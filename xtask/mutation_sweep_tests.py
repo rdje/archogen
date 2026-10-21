@@ -539,7 +539,7 @@ class ObserverCloseTests(DiscoveryFixture):
         expected = {
             'xtask/src/trust_compiler_observer.rs': '58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98',
             'xtask/src/trust_compiler.rs': '1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973',
-            'xtask/src/trust.rs': '407890940cedc3970542a25b44f431d524fed829966fb74cedea86ca7d7a3b7d',
+            'xtask/src/trust.rs': '1f1215d08e1ded8b2d25227ffd9f86c7399bb962c77f1bf03782275e4839a6cd',
         }
         def verify(inputs):
             for path, digest in expected.items():
@@ -1499,7 +1499,7 @@ os.execvp("rustc", ["rustc"] + arguments)
         ]
         inputs = {path: (ROOT / path).read_bytes() for path in paths}
         expected = {
-            'xtask/src/trust.rs': '9d17f39a35dba3a07d094c5374b0786a966bdf0705fb71a9201a5907872eb7ce',
+            'xtask/src/trust.rs': '2587e24603ecc63f92e6899476102f04f325652bc659402e798b83f34500d61e',
             'xtask/src/trust_compiler.rs': '634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70',
             'xtask/src/trust_compiler_observer.rs': 'c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f',
             'xtask/src/catalog_build.rs': 'd3e8865c3633de9f4cafb82c3613f0ee82df0c065012b732469cda5951221ed2',
@@ -1966,7 +1966,7 @@ class IteratorTests(DiscoveryFixture):
             entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
             guarded = {
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
-                    "9d17f39a35dba3a07d094c5374b0786a966bdf0705fb71a9201a5907872eb7ce"),
+                    "2587e24603ecc63f92e6899476102f04f325652bc659402e798b83f34500d61e"),
                 "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
                     "634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70"),
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],

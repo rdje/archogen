@@ -377,6 +377,26 @@ no equivalence reason is used. The four edits the first assessment saw survive a
 catalog builder reads its own builds' dependency records with a separate reader; that reader is
 measured on its own (`M3.6.9.6.3.2.2.15.2.1.6.2.1`).
 
+A unit's configuration is checked the same way: once normalised, an entry that still names a path
+outside the written tree — one that begins with `/`, or one that holds `=/` — refuses the unit, each
+entry once and in order:
+
+```text
+trust-undeclared-input: `b` in `chk` is configured with `-C link-arg=/outside/lib.o`, a path outside the written tree
+```
+
+No way of building a commit reaches this today (measured `2026-10-21`): the cargo configuration, the
+workspace's `rustflags`, an inherited `RUSTFLAGS` and build scripts are each refused before anything is
+compiled, and the pinned Cargo does not offer `trim-paths`. So the check is defence in depth, and it is
+held directly: `checked_configuration` in `xtask/src/trust.rs` is the only way a unit's configuration is
+had, and `trust::tests::a_configuration_naming_an_outside_path_is_refused_at_every_position` gives it
+each form first, in the middle and last of a configuration, two at once, and none. Every mutation of it
+is killed by that control or refused by the compiler; ten had survived every earlier test. The
+[route record](annex-trust-proofs.md#configuration-absolute-path-routes) and the
+[control record](annex-trust-proofs.md#configuration-refusal-held-directly) keep the measurements. One
+route stops wrongly: a path dependency outside the written tree ends the run unjudged where it should
+be refused, owned by `M3.6.9.6.3.2.2.15.2.1.7.2`.
+
 ### Codegen options retain their operands
 
 A `-C` compiler option and its following operand are recorded together as one configuration entry.

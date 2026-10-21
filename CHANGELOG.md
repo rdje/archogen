@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold the configuration refusal directly
+
+`ARCHOGEN-M3-0837` (leaf `M3.6.9.6.3.2.2.15.2.1.7.3`), `2026-10-21`.
+
+- Extract the refusal of a unit configured with a path outside the written tree into
+  `checked_configuration`, which returns the configuration it checks; the unit reader binds its
+  configuration through it, so the check cannot be dropped without the configuration.
+- Add the control `a_configuration_naming_an_outside_path_is_refused_at_every_position`: a token that
+  begins with `/` and one that holds `=/`, each first, in the middle and last, two at once, and none, with
+  literal refusals. Against all 208 parents every edit of the function is killed by it or refused by the
+  compiler — 14 and 5, strict exit 0 — the ten historical survivors among the killed. No reason used.
+- Revalidate the three proofs pinning the production and re-bind their digests; the trust chapter states
+  the refusal, that no route reaches it, and the control.
+
 ## archogen — measure the configuration's producer routes
 
 `ARCHOGEN-M3-0836` (leaf `M3.6.9.6.3.2.2.15.2.1.7.1`), `2026-10-21`.
