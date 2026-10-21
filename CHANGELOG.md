@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — refuse an outside path dependency before compilation
+
+`ARCHOGEN-M3-0838` (leaf `M3.6.9.6.3.2.2.15.2.1.7.2`), `2026-10-21`.
+
+- Root cause: the metadata reader read a package's directory as its manifest path less the canonical
+  tree prefix, and as the root's empty one when the prefix did not match, so a path dependency outside
+  the written tree passed the manifest rules as the root's; the build then stopped on compiler
+  provenance and the run ended unjudged, exit 2.
+- Refuse every package whose manifest lies outside the written tree right after the metadata is read,
+  naming it, before anything is compiled: exit 1, the commit's own fault.
+- The control `a_path_dependency_outside_the_written_tree_is_refused_before_any_compilation` fails first
+  on the provenance error and then holds an absolute path, a climbing one, two at once and one under a
+  directory repeating the tree's path; all 7 edits of the refusal are killed against 209 parents. The
+  three proofs pinning the production are revalidated. Close `.7`; own-package completion is next.
+
 ## archogen — hold the configuration refusal directly
 
 `ARCHOGEN-M3-0837` (leaf `M3.6.9.6.3.2.2.15.2.1.7.3`), `2026-10-21`.

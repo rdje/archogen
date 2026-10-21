@@ -1630,6 +1630,31 @@ pub fn inventory_with(
             .map_err(|e| e.to_string())?
             .display()
     );
+    // A package whose manifest lies outside the written tree is one the commit does not hold, reached by the commit's
+    // own manifest: it is refused, naming it, before anything is compiled — never read as the root's, whose directory
+    // is the empty one (`M3.6.9.6.3.2.2.15.2.1.7.2`).
+    let outside: Vec<String> = meta
+        .get("packages")
+        .map(Json::elements)
+        .unwrap_or_default()
+        .iter()
+        .filter_map(|p| {
+            let manifest = p
+                .get("manifest_path")
+                .and_then(Json::as_str)
+                .unwrap_or_default();
+            (!manifest.starts_with(&root_prefix)).then(|| {
+                let name = p.get("name").and_then(Json::as_str).unwrap_or_default();
+                format!(
+                    "trust-undeclared-input: the commit reaches the package `{name}` at `{manifest}`, outside the \
+                     written tree"
+                )
+            })
+        })
+        .collect();
+    if !outside.is_empty() {
+        return Ok(refuse(outside));
+    }
     let mut package_names: BTreeMap<String, String> = BTreeMap::new();
     let mut id_dir: BTreeMap<String, String> = BTreeMap::new();
     let mut targets: Targets = BTreeMap::new();
@@ -3610,6 +3635,125 @@ pub(crate) mod tests {
             .map(|r| r.slug())
             .collect();
         assert_eq!(slugs, super::ROLES);
+    }
+
+    #[test]
+    fn a_path_dependency_outside_the_written_tree_is_refused_before_any_compilation() {
+        crate::trust_test_process::bounded!(
+            a_path_dependency_outside_the_written_tree_is_refused_before_any_compilation
+        );
+        // The commit's own manifest reaches a package it does not hold — by an absolute path, by one climbing out of the
+        // tree, two at once, or under a directory whose name repeats the tree's own path — and each is refused, naming
+        // it, before anything is compiled: never read as the root's, never a run that could not judge
+        // (`M3.6.9.6.3.2.2.15.2.1.7.2`). Cargo lists the members first, so two outside packages are never both first
+        // or both last.
+        let external = real_root().join("target/trust-tests/outside-dependency-external");
+        let _ = std::fs::remove_dir_all(&external);
+        let crate_named = |dir: &str, name: &str| {
+            vec![
+                (format!("{dir}/Cargo.toml"), manifest(name, "")),
+                (format!("{dir}/src/lib.rs"), "pub fn x() {}\n".to_owned()),
+            ]
+        };
+        let put = |base: &Path, files: Vec<(String, String)>| {
+            let files: Vec<(&str, String)> =
+                files.iter().map(|(p, t)| (p.as_str(), t.clone())).collect();
+            write(base, &files);
+        };
+        put(&external, crate_named("x", "x"));
+        put(&external, crate_named("p", "p"));
+        put(&external, crate_named("q", "q"));
+        let tree_of = |name: &str| {
+            std::fs::canonicalize(real_root())
+                .unwrap()
+                .join("target/trust-tests")
+                .join(name)
+                .join("out/tree")
+        };
+        let nested = external
+            .join("nested")
+            .join(
+                tree_of("outside-dependency-substring")
+                    .strip_prefix("/")
+                    .unwrap(),
+            )
+            .join("s");
+        put(&nested, crate_named(".", "s"));
+        let path = |p: &Path| format!("{{ path = \"{}\" }}", p.display());
+        let cases = [
+            (
+                "outside-dependency-absolute",
+                format!("[dependencies]\nx = {}\n", path(&external.join("x"))),
+                vec![external.join("x")],
+            ),
+            (
+                "outside-dependency-climbing",
+                "[dependencies]\nx = { path = \"../../../../outside-dependency-external/x\" }\n"
+                    .to_owned(),
+                vec![],
+            ),
+            (
+                "outside-dependency-two",
+                format!(
+                    "[dependencies]\np = {}\nq = {}\n",
+                    path(&external.join("p")),
+                    path(&external.join("q"))
+                ),
+                vec![external.join("p"), external.join("q")],
+            ),
+            (
+                "outside-dependency-substring",
+                format!("[dependencies]\ns = {}\n", path(&nested)),
+                vec![nested.clone()],
+            ),
+        ];
+        for (name, dependencies, reached) in cases {
+            let f = two_roots(
+                name,
+                "fn main() {}\n",
+                "pub fn f() {}\n",
+                &[("crates/a/Cargo.toml", manifest("a", &dependencies))],
+            );
+            // The tree is written one level deeper than the repository, so the climbing path resolves to the base from
+            // it: a copy there is what the build would reach.
+            let reached = if reached.is_empty() {
+                put(
+                    &f.base.join("outside-dependency-external"),
+                    crate_named("x", "x"),
+                );
+                vec![f.base.join("outside-dependency-external/x")]
+            } else {
+                reached
+            };
+            let mut expected: Vec<String> = reached
+                .iter()
+                .map(|dir| {
+                    let manifest = std::fs::canonicalize(dir.join("Cargo.toml")).unwrap();
+                    let crate_name = dir.file_name().unwrap().to_string_lossy().into_owned();
+                    format!(
+                        "trust-undeclared-input: the commit reaches the package `{crate_name}` at `{}`, outside the \
+                         written tree",
+                        manifest.display()
+                    )
+                })
+                .collect();
+            expected.sort();
+            assert_eq!(refused(f.run()), expected, "{name}");
+            assert_eq!(
+                tree_of(name),
+                std::fs::canonicalize(f.base.join("out/tree")).unwrap(),
+                "{name}"
+            );
+            assert!(
+                !f.base.join("out/target/gen").exists(),
+                "{name}: nothing compiled"
+            );
+            assert!(
+                !f.base.join("out/target/chk").exists(),
+                "{name}: nothing compiled"
+            );
+        }
+        let _ = std::fs::remove_dir_all(external);
     }
 
     #[test]

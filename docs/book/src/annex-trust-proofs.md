@@ -155053,3 +155053,401 @@ if __name__ == '__main__':
 </details>
 
 The receipts are under `target/configuration-refusal-control/`.
+
+
+### Outside path dependencies refused
+
+A member that depends on a path package outside the written tree is refused, naming the package, before anything is compiled (`M3.6.9.6.3.2.2.15.2.1.7.2`, `2026-10-21`). **Root cause**: the metadata reader took a package's directory as its manifest path less the canonical tree prefix, and an empty one when the prefix did not match — `unwrap_or_default` — so a package outside the tree was read as the workspace root's and passed the manifest rules. The build then compiled the outside crate from its own directory, the provenance session refused that record, and the run ended unjudged (the [route record](#configuration-absolute-path-routes)). Now every package whose manifest does not begin with the canonical tree prefix is refused right after the metadata is read, before any package is mapped.
+
+The permanent control `trust::tests::a_path_dependency_outside_the_written_tree_is_refused_before_any_compilation` failed first, against the code without the refusal, with the error it exists to forbid:
+
+```text
+called `Result::unwrap()` on an `Err` value: "`gen` compiler provenance: compiler provenance schema, session, role or working directory differs"
+```
+
+With it, each case is refused with its literal lines and nothing is compiled: an absolute path, a climbing one, two outside packages at once — Cargo lists members first, so they are never both first nor both last — and one under a directory whose name repeats the tree's own path, which a match anywhere in the path rather than at its start would let through.
+
+Every candidate of the inserted refusal ran against all `209` current parents with strict timeouts under the write-fenced sweep: **all `7` killed, raw strict exit `0`**. Each edit that would let an outside package through is killed by the control; `if true {`, which refuses every run, is killed by the ordinary inventory tests.
+
+| Current ID | Outcome | Killed by the control | Finishing parents |
+| --- | --- | --- | ---: |
+| `L1646.not.589` | killed | yes | 125 |
+| `L1646.dir.590` | killed | yes | 1 |
+| `L1655.cond.591` | killed | no | 124 |
+| `L1655.cond.592` | killed | yes | 1 |
+| `L1655.not.593` | killed | yes | 125 |
+| `L1640.chain.1168` | killed | yes | 1 |
+| `L1640.chain.1169` | killed | yes | 1 |
+
+The production change is one inserted hunk inside `inventory_with`, after every region the three pinned proofs reason about; their digests are re-bound, `2587e24603ecc63f92e6899476102f04f325652bc659402e798b83f34500d61e` to `1d4168ac1493de1020a8b19a3e7a839ec86463de7660a8ec3d7d5763722aeb70` and `1f1215d08e1ded8b2d25227ffd9f86c7399bb962c77f1bf03782275e4839a6cd` to `c677dc5d61316e07b96c4cf176899674975a0e286b89d80c58ab67eef5d0cd21`. All `1187` regular inputs restore in the tree and the copy; the audit refuses `7` altered receipts.
+
+<details>
+<summary>The revalidation record</summary>
+
+```json
+{
+  "file": "xtask/src/trust.rs",
+  "base_commit": "8e3f258b073b8d0acd50176b83367ad4ca7e5191",
+  "previous_production_sha256": "2587e24603ecc63f92e6899476102f04f325652bc659402e798b83f34500d61e",
+  "production_sha256": "1d4168ac1493de1020a8b19a3e7a839ec86463de7660a8ec3d7d5763722aeb70",
+  "previous_strict_production_sha256": "1f1215d08e1ded8b2d25227ffd9f86c7399bb962c77f1bf03782275e4839a6cd",
+  "strict_production_sha256": "c677dc5d61316e07b96c4cf176899674975a0e286b89d80c58ab67eef5d0cd21",
+  "hunk": {
+    "old": [
+      1632,
+      1632
+    ],
+    "new": [
+      1632,
+      1657
+    ]
+  },
+  "premises": {
+    "ObserverCloseTests.test_close_reason_requires_current_production_and_caller_premises": "strict production digest re-bound",
+    "test_caller_suffix_prefix_requires_the_complete_pinned_constructor": "production digest re-bound",
+    "IteratorTests absolute-cwd proof premises": "production digest re-bound"
+  },
+  "sweep_tests": {
+    "previous_sha256": "e44b1399d8343084aa5df35cb57cfd1124800a7ddbc964bc02b4d413fc41d610",
+    "sha256": "4f62fd0becff5f4c71d4969555acc8e7f9f3be6100058e330a47d2dcc545de15"
+  },
+  "argument": "The repair inserts, in inventory_with after the canonical root prefix is computed, a refusal of every package whose manifest lies outside the written tree; every region the proofs reason about lies before it, unchanged with its line numbers, and nothing after it moves but by the insertion, so each proof holds and is re-bound to its digest."
+}
+```
+
+</details>
+
+<details>
+<summary>The native sweep log</summary>
+
+```text
+mutation-sweep: the unmutated copy passes (75s); 1438 mutation(s) of xtask/src/trust.rs, lines 147 to 2681
+  ✓ L1646.not.589      killed     (!manifest.starts_with(&root_prefix)).then(|| { ⟶ (manifest.starts_with(&root_prefix)).then(|| { — trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read, trust::adequacy_tests::every_allowed_target_position_is_built_and_its_sites_are_judged, trust::adequacy_tests::every_program_target_position_is_refused_before_a_foreign_role_build, trust::adequacy_tests::every_script_position_is_judged_against_the_reading_role, trust::adequacy_tests::every_unowned_rust_generator_position_has_its_own_refusal, trust::adequacy_tests::reader_role_tests::an_allowed_held_package_does_not_hide_a_later_foreign_package, trust::adequacy_tests::reader_role_tests::every_compiled_reader_is_judged_for_scripts_and_program_targets, trust::adequacy_tests::reader_role_tests::runtime_only_data_readers_judge_scripts_and_program_targets, trust::adequacy_tests::reader_role_tests::the_harness_allows_both_pair_roles_and_refuses_each_foreign_generator_kind, trust::tests::a_build_script_is_refused_before_anything_runs, trust::tests::a_crate_root_that_is_not_a_rs_file_is_refused_before_any_build, trust::tests::a_directory_at_the_inventory_path_stops_before_writing_the_tree, trust::tests::a_failed_cargo_home_reset_stops_before_metadata_or_wrapper_execution, trust::tests::a_failed_previous_inventory_cleanup_stops_before_a_forms_refusal, trust::tests::a_feature_another_manifest_enables_does_not_reach_a_root_s_build, trust::tests::a_file_a_root_compiles_whose_header_marks_it_generated_is_refused_until_declared, trust::tests::a_final_prerequisite_ending_in_a_backslash_is_the_builds_own_error, trust::tests::a_form_naming_a_package_or_a_target_the_commit_no_longer_has_is_stale, trust::tests::a_harness_or_a_library_root_compiling_another_role_s_package_is_refused, trust::tests::a_macro_assembling_a_path_attribute_is_refused, trust::tests::a_new_consumer_of_a_shared_package_changes_its_edges, trust::tests::a_new_reader_of_a_shared_package_s_file_changes_its_readers, trust::tests::a_no_mangle_memcmp_in_the_harness_is_refused, trust::tests::a_package_both_roots_compile_is_shared_case_1, trust::tests::a_patch_in_the_workspace_manifest_is_refused, trust::tests::a_path_dependency_outside_the_written_tree_is_refused_before_any_compilation, trust::tests::a_profile_edit_changes_the_build_configuration, trust::tests::a_role_package_that_names_no_package_is_refused, trust::tests::a_root_s_configuration_retains_its_dependency_argument, trust::tests::a_root_s_run_time_data_is_hashed_and_shared, trust::tests::a_rs_file_read_as_data_is_tokenised_too, trust::tests::a_second_run_writes_the_same_bytes, trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change, trust::tests::a_shared_package_item_holds_every_compiled_environment_value, trust::tests::a_shared_package_s_environment_is_in_its_item_and_a_foreign_variable_is_refused, trust::tests::a_site_two_roots_compile_is_counted_once, trust::tests::a_symbolic_output_root_accepts_raw_and_canonical_in_tree_inputs, trust::tests::a_trailing_backslash_before_an_in_tree_prerequisite_is_refused_as_ambiguous, trust::tests::a_unit_belongs_to_the_package_whose_target_names_its_crate_root, trust::tests::an_admission_covers_its_site_s_whole_extent, trust::tests::an_admitted_build_script_is_refused_before_any_compilation, trust::tests::an_admitted_include_or_path_names_a_rs_file, trust::tests::an_admitted_procedural_macro_is_refused_before_any_compilation, trust::tests::an_admitted_site_passes_and_an_edited_one_is_refused, trust::tests::an_alias_or_a_wrapper_of_a_refused_construct_is_inadmissible, trust::tests::an_edit_no_root_s_compilation_reads_leaves_the_build_configuration, trust::tests::an_executable_compiling_another_role_s_package_is_refused, trust::tests::an_extern_block_calling_another_package_s_symbol_is_refused, trust::tests::an_incbin_under_asm_and_under_naked_asm_is_refused, trust::tests::an_incbin_under_each_assembler_macro_is_refused, trust::tests::an_include_and_a_path_module_are_refused, trust::tests::an_incremental_profile_leaves_the_configuration_the_same_from_two_directories, trust::tests::cargo_codegen_arguments_remain_single_normalized_options, trust::tests::cargo_dependency_paths_with_equals_preserve_extern_arguments, trust::tests::cargo_diagnostic_flags_do_not_enter_unit_configurations, trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings, trust::tests::cargo_failure_diagnostics_ignore_multiline_output_paths, trust::tests::cargo_failure_diagnostics_ignore_multiline_output_paths_messages, trust::tests::cargo_failure_diagnostics_ignore_multiline_output_paths_quoted_and_unicode, trust::tests::cargo_failure_diagnostics_keep_the_error_after_a_quoted_key_warning, trust::tests::cargo_failure_diagnostics_keep_the_error_at_a_config_warning_boundary, trust::tests::cargo_failure_diagnostics_preserve_operational_refusals, trust::tests::cargo_home_reset_accepts_absence_and_clears_data_but_rejects_a_file, trust::tests::cargo_multiline_output_paths_preserve_complete_inventory, trust::tests::cargo_quoted_output_paths_preserve_inventory_units_and_configuration, trust::tests::cargo_source_paths_with_diagnostic_substrings_remain_in_configuration, trust::tests::compiled_environment_refusals_cover_nonterminal_records, trust::tests::compiled_environment_refuses_package_namespace_lookalikes, trust::tests::compiler_command_filter_ignores_admitted_nonterminal_warning_records, trust::tests::compiler_installation_paths_preserve_inventory_units_and_configuration, trust::tests::compiler_provenance_harness_warning_admission_and_failure_recover, trust::tests::compiler_provenance_ignores_admitted_compiler_shaped_warning_records, trust::tests::compiler_provenance_preserves_admitted_harness_warning_records_and_recovery, trust::tests::dep_info_suffix_does_not_match_an_incremental_output_path, trust::tests::each_root_records_its_artifact_and_its_packages, trust::tests::each_site_needs_an_admission_of_its_own, trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused, trust::tests::every_program_target_is_a_root_or_classified_and_the_rest_is_reported, trust::tests::naked_asm_is_refused, trust::tests::observed_artifact_metadata_distinguishes_harness_and_same_named_binary, trust::tests::observed_artifacts_are_actual_binary_and_library_outputs, trust::tests::observed_role_artifacts_preserve_paths_and_disable_target_default_features, trust::tests::outside_inputs_with_spaces_are_refused_by_their_raw_rule, trust::tests::repeated_generator_build_script_refusals_prevent_compilation, trust::tests::repeated_generator_manifest_refusals_prevent_compilation, trust::tests::shared_environment_records_keep_their_boundaries, trust::tests::temporary_process_paths_are_not_admitted_as_compiled_environment_inputs, trust::tests::the_configuration_is_the_same_from_two_directories_and_two_toolchains, trust::tests::the_harness_is_inventoried_and_its_development_edges_followed, trust::tests::the_harness_is_paired_with_every_root_but_its_pair_s, trust::tests::the_harness_item_holds_what_it_compiles_beside_its_pair, trust::tests::two_roots_sharing_nothing_share_only_the_build_configuration, trust_gate::tests::a_directory_at_the_proposal_path_stops_before_a_refusal_report, trust_gate::tests::a_protected_previous_proposal_stops_before_a_refusal_report, trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared, trust_gate::tests::f30_case_2_an_already_shared_package_changed_behind_its_name_is_shared_changed, trust_gate::tests::f30_case_3_data_both_roots_are_handed_is_new_shared_and_an_undeclared_input_is_refused, trust_gate::tests::f30_case_4_a_package_whose_inventory_is_of_the_commit_before_is_stale, trust_gate::tests::f30_case_5_an_unrelated_change_is_unchanged_and_warns_of_nothing, trust_gate::tests::gate_command_preserves_absolute_output_and_missing_repository_errors, trust_gate::tests::gate_command_public_wrapper_keeps_outer_configurations_unauthorized, trust_gate::tests::gate_command_resolves_relative_repository_and_output_paths, trust_generated::gate_tests::a_defgenerated_form_added_changed_or_removed_is_in_the_change_part_and_every_one_is_standing, trust_generated::gate_tests::an_edit_to_a_declared_generator_is_reported_and_to_an_undeclared_script_is_unchanged, trust_generated::generator_tests::a_crate_root_of_two_targets_is_judged_by_the_union_of_their_role_packages, trust_generated::generator_tests::a_crate_root_that_is_not_rs_is_refused_before_its_build, trust_generated::generator_tests::a_generator_build_failing_leaves_step_4_unable_to_judge_with_its_refusals_beside_it, trust_generated::generator_tests::a_generator_that_is_a_root_is_its_own_build_and_one_a_live_form_s_refusal_names_is_never_built, trust_generated::generator_tests::an_allowed_generator_is_built_and_its_sites_judged_with_the_programs_a_shared_site_admitted_once, trust_generated::generator_tests::another_role_s_program_target_script_or_library_is_refused_as_a_generator, trust_generated::generator_tests::compiler_provenance_preserves_admitted_generator_warning_records_and_recovery, trust_generated::generator_tests::the_harness_may_use_its_pair_s_roles_and_no_other, trust_generated::order_tests::a_form_no_program_reads_is_stale_on_the_baseline_s_host_alone, trust_generated::order_tests::a_marked_file_no_form_can_declare_is_refused_when_a_program_reads_it, trust_generated::order_tests::a_refusal_at_each_of_the_five_steps_ends_the_run_and_no_form_is_stale, trust_generated::order_tests::step_5_refuses_a_chain_through_a_generator_build_and_an_undeclared_marked_file_one_message_a_file, trust_generated::provenance_tests::a_data_file_one_side_reads_and_a_copy_of_an_input_are_shared_and_a_plain_copy_is_not, trust_generated::provenance_tests::a_generator_shared_over_two_inputs_or_with_none_is_shared, trust_generated::provenance_tests::a_third_program_reaching_the_same_provenance_makes_items_of_its_own_and_moves_none, trust_generated::provenance_tests::case_3_two_generated_sources_sharing_an_input_through_two_generators_share_it, trust_generated::provenance_tests::step_3_refuses_a_live_form_s_non_blob_and_its_chain_and_holds_a_form_no_program_reads_to_its_text, trust_generated::provenance_tests::the_harness_reaches_provenance_through_the_units_beside_its_pair_alone, trust_generated::tests::a_build_failing_in_a_step_leaves_it_unable_to_judge_with_its_refusals_beside_it, trust_generated::tests::a_refusal_of_the_forms_text_ends_the_run_before_anything_is_written_or_built, trust_generated::tests::a_refused_run_leaves_no_inventory_an_earlier_run_wrote
+  ✓ L1646.dir.590      killed     (!manifest.starts_with(&root_prefix)).then(|| { ⟶ (!manifest.contains(&root_prefix)).then(|| { — trust::tests::a_path_dependency_outside_the_written_tree_is_refused_before_any_compilation
+  ✓ L1655.cond.591     killed     if !outside.is_empty() { ⟶ if true { — trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read, trust::adequacy_tests::every_allowed_target_position_is_built_and_its_sites_are_judged, trust::adequacy_tests::every_program_target_position_is_refused_before_a_foreign_role_build, trust::adequacy_tests::every_script_position_is_judged_against_the_reading_role, trust::adequacy_tests::every_unowned_rust_generator_position_has_its_own_refusal, trust::adequacy_tests::reader_role_tests::an_allowed_held_package_does_not_hide_a_later_foreign_package, trust::adequacy_tests::reader_role_tests::every_compiled_reader_is_judged_for_scripts_and_program_targets, trust::adequacy_tests::reader_role_tests::runtime_only_data_readers_judge_scripts_and_program_targets, trust::adequacy_tests::reader_role_tests::the_harness_allows_both_pair_roles_and_refuses_each_foreign_generator_kind, trust::tests::a_build_script_is_refused_before_anything_runs, trust::tests::a_crate_root_that_is_not_a_rs_file_is_refused_before_any_build, trust::tests::a_directory_at_the_inventory_path_stops_before_writing_the_tree, trust::tests::a_failed_cargo_home_reset_stops_before_metadata_or_wrapper_execution, trust::tests::a_failed_previous_inventory_cleanup_stops_before_a_forms_refusal, trust::tests::a_feature_another_manifest_enables_does_not_reach_a_root_s_build, trust::tests::a_file_a_root_compiles_whose_header_marks_it_generated_is_refused_until_declared, trust::tests::a_final_prerequisite_ending_in_a_backslash_is_the_builds_own_error, trust::tests::a_form_naming_a_package_or_a_target_the_commit_no_longer_has_is_stale, trust::tests::a_harness_or_a_library_root_compiling_another_role_s_package_is_refused, trust::tests::a_macro_assembling_a_path_attribute_is_refused, trust::tests::a_new_consumer_of_a_shared_package_changes_its_edges, trust::tests::a_new_reader_of_a_shared_package_s_file_changes_its_readers, trust::tests::a_no_mangle_memcmp_in_the_harness_is_refused, trust::tests::a_package_both_roots_compile_is_shared_case_1, trust::tests::a_patch_in_the_workspace_manifest_is_refused, trust::tests::a_profile_edit_changes_the_build_configuration, trust::tests::a_role_package_that_names_no_package_is_refused, trust::tests::a_root_s_configuration_retains_its_dependency_argument, trust::tests::a_root_s_run_time_data_is_hashed_and_shared, trust::tests::a_rs_file_read_as_data_is_tokenised_too, trust::tests::a_second_run_writes_the_same_bytes, trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change, trust::tests::a_shared_package_item_holds_every_compiled_environment_value, trust::tests::a_shared_package_s_environment_is_in_its_item_and_a_foreign_variable_is_refused, trust::tests::a_site_two_roots_compile_is_counted_once, trust::tests::a_symbolic_output_root_accepts_raw_and_canonical_in_tree_inputs, trust::tests::a_trailing_backslash_before_an_in_tree_prerequisite_is_refused_as_ambiguous, trust::tests::a_unit_belongs_to_the_package_whose_target_names_its_crate_root, trust::tests::an_admission_covers_its_site_s_whole_extent, trust::tests::an_admitted_build_script_is_refused_before_any_compilation, trust::tests::an_admitted_include_or_path_names_a_rs_file, trust::tests::an_admitted_procedural_macro_is_refused_before_any_compilation, trust::tests::an_admitted_site_passes_and_an_edited_one_is_refused, trust::tests::an_alias_or_a_wrapper_of_a_refused_construct_is_inadmissible, trust::tests::an_edit_no_root_s_compilation_reads_leaves_the_build_configuration, trust::tests::an_executable_compiling_another_role_s_package_is_refused, trust::tests::an_extern_block_calling_another_package_s_symbol_is_refused, trust::tests::an_incbin_under_asm_and_under_naked_asm_is_refused, trust::tests::an_incbin_under_each_assembler_macro_is_refused, trust::tests::an_include_and_a_path_module_are_refused, trust::tests::an_incremental_profile_leaves_the_configuration_the_same_from_two_directories, trust::tests::cargo_codegen_arguments_remain_single_normalized_options, trust::tests::cargo_dependency_paths_with_equals_preserve_extern_arguments, trust::tests::cargo_diagnostic_flags_do_not_enter_unit_configurations, trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings, trust::tests::cargo_failure_diagnostics_ignore_multiline_output_paths, trust::tests::cargo_failure_diagnostics_ignore_multiline_output_paths_messages, trust::tests::cargo_failure_diagnostics_ignore_multiline_output_paths_quoted_and_unicode, trust::tests::cargo_failure_diagnostics_keep_the_error_after_a_quoted_key_warning, trust::tests::cargo_failure_diagnostics_keep_the_error_at_a_config_warning_boundary, trust::tests::cargo_failure_diagnostics_preserve_operational_refusals, trust::tests::cargo_home_reset_accepts_absence_and_clears_data_but_rejects_a_file, trust::tests::cargo_multiline_output_paths_preserve_complete_inventory, trust::tests::cargo_quoted_output_paths_preserve_inventory_units_and_configuration, trust::tests::cargo_source_paths_with_diagnostic_substrings_remain_in_configuration, trust::tests::compiled_environment_refusals_cover_nonterminal_records, trust::tests::compiled_environment_refuses_package_namespace_lookalikes, trust::tests::compiler_command_filter_ignores_admitted_nonterminal_warning_records, trust::tests::compiler_installation_paths_preserve_inventory_units_and_configuration, trust::tests::compiler_provenance_harness_warning_admission_and_failure_recover, trust::tests::compiler_provenance_ignores_admitted_compiler_shaped_warning_records, trust::tests::compiler_provenance_preserves_admitted_harness_warning_records_and_recovery, trust::tests::dep_info_suffix_does_not_match_an_incremental_output_path, trust::tests::each_root_records_its_artifact_and_its_packages, trust::tests::each_site_needs_an_admission_of_its_own, trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused, trust::tests::every_program_target_is_a_root_or_classified_and_the_rest_is_reported, trust::tests::naked_asm_is_refused, trust::tests::observed_artifact_metadata_distinguishes_harness_and_same_named_binary, trust::tests::observed_artifacts_are_actual_binary_and_library_outputs, trust::tests::observed_role_artifacts_preserve_paths_and_disable_target_default_features, trust::tests::outside_inputs_with_spaces_are_refused_by_their_raw_rule, trust::tests::repeated_generator_build_script_refusals_prevent_compilation, trust::tests::repeated_generator_manifest_refusals_prevent_compilation, trust::tests::shared_environment_records_keep_their_boundaries, trust::tests::temporary_process_paths_are_not_admitted_as_compiled_environment_inputs, trust::tests::the_configuration_is_the_same_from_two_directories_and_two_toolchains, trust::tests::the_harness_is_inventoried_and_its_development_edges_followed, trust::tests::the_harness_is_paired_with_every_root_but_its_pair_s, trust::tests::the_harness_item_holds_what_it_compiles_beside_its_pair, trust::tests::two_roots_sharing_nothing_share_only_the_build_configuration, trust_gate::tests::a_directory_at_the_proposal_path_stops_before_a_refusal_report, trust_gate::tests::a_protected_previous_proposal_stops_before_a_refusal_report, trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared, trust_gate::tests::f30_case_2_an_already_shared_package_changed_behind_its_name_is_shared_changed, trust_gate::tests::f30_case_3_data_both_roots_are_handed_is_new_shared_and_an_undeclared_input_is_refused, trust_gate::tests::f30_case_4_a_package_whose_inventory_is_of_the_commit_before_is_stale, trust_gate::tests::f30_case_5_an_unrelated_change_is_unchanged_and_warns_of_nothing, trust_gate::tests::gate_command_preserves_absolute_output_and_missing_repository_errors, trust_gate::tests::gate_command_public_wrapper_keeps_outer_configurations_unauthorized, trust_gate::tests::gate_command_resolves_relative_repository_and_output_paths, trust_generated::gate_tests::a_defgenerated_form_added_changed_or_removed_is_in_the_change_part_and_every_one_is_standing, trust_generated::gate_tests::an_edit_to_a_declared_generator_is_reported_and_to_an_undeclared_script_is_unchanged, trust_generated::generator_tests::a_crate_root_of_two_targets_is_judged_by_the_union_of_their_role_packages, trust_generated::generator_tests::a_crate_root_that_is_not_rs_is_refused_before_its_build, trust_generated::generator_tests::a_generator_build_failing_leaves_step_4_unable_to_judge_with_its_refusals_beside_it, trust_generated::generator_tests::a_generator_that_is_a_root_is_its_own_build_and_one_a_live_form_s_refusal_names_is_never_built, trust_generated::generator_tests::an_allowed_generator_is_built_and_its_sites_judged_with_the_programs_a_shared_site_admitted_once, trust_generated::generator_tests::another_role_s_program_target_script_or_library_is_refused_as_a_generator, trust_generated::generator_tests::compiler_provenance_preserves_admitted_generator_warning_records_and_recovery, trust_generated::generator_tests::the_harness_may_use_its_pair_s_roles_and_no_other, trust_generated::order_tests::a_form_no_program_reads_is_stale_on_the_baseline_s_host_alone, trust_generated::order_tests::a_marked_file_no_form_can_declare_is_refused_when_a_program_reads_it, trust_generated::order_tests::a_refusal_at_each_of_the_five_steps_ends_the_run_and_no_form_is_stale, trust_generated::order_tests::step_5_refuses_a_chain_through_a_generator_build_and_an_undeclared_marked_file_one_message_a_file, trust_generated::provenance_tests::a_data_file_one_side_reads_and_a_copy_of_an_input_are_shared_and_a_plain_copy_is_not, trust_generated::provenance_tests::a_generator_shared_over_two_inputs_or_with_none_is_shared, trust_generated::provenance_tests::a_third_program_reaching_the_same_provenance_makes_items_of_its_own_and_moves_none, trust_generated::provenance_tests::case_3_two_generated_sources_sharing_an_input_through_two_generators_share_it, trust_generated::provenance_tests::step_3_refuses_a_live_form_s_non_blob_and_its_chain_and_holds_a_form_no_program_reads_to_its_text, trust_generated::provenance_tests::the_harness_reaches_provenance_through_the_units_beside_its_pair_alone, trust_generated::tests::a_build_failing_in_a_step_leaves_it_unable_to_judge_with_its_refusals_beside_it, trust_generated::tests::a_refusal_of_the_forms_text_ends_the_run_before_anything_is_written_or_built, trust_generated::tests::a_refused_run_leaves_no_inventory_an_earlier_run_wrote
+  ✓ L1655.cond.592     killed     if !outside.is_empty() { ⟶ if false { — trust::tests::a_path_dependency_outside_the_written_tree_is_refused_before_any_compilation
+  ✓ L1655.not.593      killed     if !outside.is_empty() { ⟶ if outside.is_empty() { — trust::adequacy_tests::build_read_tests::every_generator_names_a_shared_transitive_marked_or_declared_build_read, trust::adequacy_tests::every_allowed_target_position_is_built_and_its_sites_are_judged, trust::adequacy_tests::every_program_target_position_is_refused_before_a_foreign_role_build, trust::adequacy_tests::every_script_position_is_judged_against_the_reading_role, trust::adequacy_tests::every_unowned_rust_generator_position_has_its_own_refusal, trust::adequacy_tests::reader_role_tests::an_allowed_held_package_does_not_hide_a_later_foreign_package, trust::adequacy_tests::reader_role_tests::every_compiled_reader_is_judged_for_scripts_and_program_targets, trust::adequacy_tests::reader_role_tests::runtime_only_data_readers_judge_scripts_and_program_targets, trust::adequacy_tests::reader_role_tests::the_harness_allows_both_pair_roles_and_refuses_each_foreign_generator_kind, trust::tests::a_build_script_is_refused_before_anything_runs, trust::tests::a_crate_root_that_is_not_a_rs_file_is_refused_before_any_build, trust::tests::a_directory_at_the_inventory_path_stops_before_writing_the_tree, trust::tests::a_failed_cargo_home_reset_stops_before_metadata_or_wrapper_execution, trust::tests::a_failed_previous_inventory_cleanup_stops_before_a_forms_refusal, trust::tests::a_feature_another_manifest_enables_does_not_reach_a_root_s_build, trust::tests::a_file_a_root_compiles_whose_header_marks_it_generated_is_refused_until_declared, trust::tests::a_final_prerequisite_ending_in_a_backslash_is_the_builds_own_error, trust::tests::a_form_naming_a_package_or_a_target_the_commit_no_longer_has_is_stale, trust::tests::a_harness_or_a_library_root_compiling_another_role_s_package_is_refused, trust::tests::a_macro_assembling_a_path_attribute_is_refused, trust::tests::a_new_consumer_of_a_shared_package_changes_its_edges, trust::tests::a_new_reader_of_a_shared_package_s_file_changes_its_readers, trust::tests::a_no_mangle_memcmp_in_the_harness_is_refused, trust::tests::a_package_both_roots_compile_is_shared_case_1, trust::tests::a_patch_in_the_workspace_manifest_is_refused, trust::tests::a_path_dependency_outside_the_written_tree_is_refused_before_any_compilation, trust::tests::a_profile_edit_changes_the_build_configuration, trust::tests::a_role_package_that_names_no_package_is_refused, trust::tests::a_root_s_configuration_retains_its_dependency_argument, trust::tests::a_root_s_run_time_data_is_hashed_and_shared, trust::tests::a_rs_file_read_as_data_is_tokenised_too, trust::tests::a_second_run_writes_the_same_bytes, trust::tests::a_separator_inside_an_environment_value_cannot_hide_a_configuration_change, trust::tests::a_shared_package_item_holds_every_compiled_environment_value, trust::tests::a_shared_package_s_environment_is_in_its_item_and_a_foreign_variable_is_refused, trust::tests::a_site_two_roots_compile_is_counted_once, trust::tests::a_symbolic_output_root_accepts_raw_and_canonical_in_tree_inputs, trust::tests::a_trailing_backslash_before_an_in_tree_prerequisite_is_refused_as_ambiguous, trust::tests::a_unit_belongs_to_the_package_whose_target_names_its_crate_root, trust::tests::an_admission_covers_its_site_s_whole_extent, trust::tests::an_admitted_build_script_is_refused_before_any_compilation, trust::tests::an_admitted_include_or_path_names_a_rs_file, trust::tests::an_admitted_procedural_macro_is_refused_before_any_compilation, trust::tests::an_admitted_site_passes_and_an_edited_one_is_refused, trust::tests::an_alias_or_a_wrapper_of_a_refused_construct_is_inadmissible, trust::tests::an_edit_no_root_s_compilation_reads_leaves_the_build_configuration, trust::tests::an_executable_compiling_another_role_s_package_is_refused, trust::tests::an_extern_block_calling_another_package_s_symbol_is_refused, trust::tests::an_incbin_under_asm_and_under_naked_asm_is_refused, trust::tests::an_incbin_under_each_assembler_macro_is_refused, trust::tests::an_include_and_a_path_module_are_refused, trust::tests::an_incremental_profile_leaves_the_configuration_the_same_from_two_directories, trust::tests::cargo_codegen_arguments_remain_single_normalized_options, trust::tests::cargo_dependency_paths_with_equals_preserve_extern_arguments, trust::tests::cargo_diagnostic_flags_do_not_enter_unit_configurations, trust::tests::cargo_failure_diagnostics_cover_canonical_paths_and_ancestor_warnings, trust::tests::cargo_failure_diagnostics_ignore_multiline_output_paths, trust::tests::cargo_failure_diagnostics_ignore_multiline_output_paths_messages, trust::tests::cargo_failure_diagnostics_ignore_multiline_output_paths_quoted_and_unicode, trust::tests::cargo_failure_diagnostics_keep_the_error_after_a_quoted_key_warning, trust::tests::cargo_failure_diagnostics_keep_the_error_at_a_config_warning_boundary, trust::tests::cargo_failure_diagnostics_preserve_operational_refusals, trust::tests::cargo_home_reset_accepts_absence_and_clears_data_but_rejects_a_file, trust::tests::cargo_multiline_output_paths_preserve_complete_inventory, trust::tests::cargo_quoted_output_paths_preserve_inventory_units_and_configuration, trust::tests::cargo_source_paths_with_diagnostic_substrings_remain_in_configuration, trust::tests::compiled_environment_refusals_cover_nonterminal_records, trust::tests::compiled_environment_refuses_package_namespace_lookalikes, trust::tests::compiler_command_filter_ignores_admitted_nonterminal_warning_records, trust::tests::compiler_installation_paths_preserve_inventory_units_and_configuration, trust::tests::compiler_provenance_harness_warning_admission_and_failure_recover, trust::tests::compiler_provenance_ignores_admitted_compiler_shaped_warning_records, trust::tests::compiler_provenance_preserves_admitted_harness_warning_records_and_recovery, trust::tests::dep_info_suffix_does_not_match_an_incremental_output_path, trust::tests::each_root_records_its_artifact_and_its_packages, trust::tests::each_site_needs_an_admission_of_its_own, trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused, trust::tests::every_program_target_is_a_root_or_classified_and_the_rest_is_reported, trust::tests::naked_asm_is_refused, trust::tests::observed_artifact_metadata_distinguishes_harness_and_same_named_binary, trust::tests::observed_artifacts_are_actual_binary_and_library_outputs, trust::tests::observed_role_artifacts_preserve_paths_and_disable_target_default_features, trust::tests::outside_inputs_with_spaces_are_refused_by_their_raw_rule, trust::tests::repeated_generator_build_script_refusals_prevent_compilation, trust::tests::repeated_generator_manifest_refusals_prevent_compilation, trust::tests::shared_environment_records_keep_their_boundaries, trust::tests::temporary_process_paths_are_not_admitted_as_compiled_environment_inputs, trust::tests::the_configuration_is_the_same_from_two_directories_and_two_toolchains, trust::tests::the_harness_is_inventoried_and_its_development_edges_followed, trust::tests::the_harness_is_paired_with_every_root_but_its_pair_s, trust::tests::the_harness_item_holds_what_it_compiles_beside_its_pair, trust::tests::two_roots_sharing_nothing_share_only_the_build_configuration, trust_gate::tests::a_directory_at_the_proposal_path_stops_before_a_refusal_report, trust_gate::tests::a_protected_previous_proposal_stops_before_a_refusal_report, trust_gate::tests::f30_case_1_a_package_both_roots_come_to_compile_is_new_shared, trust_gate::tests::f30_case_2_an_already_shared_package_changed_behind_its_name_is_shared_changed, trust_gate::tests::f30_case_3_data_both_roots_are_handed_is_new_shared_and_an_undeclared_input_is_refused, trust_gate::tests::f30_case_4_a_package_whose_inventory_is_of_the_commit_before_is_stale, trust_gate::tests::f30_case_5_an_unrelated_change_is_unchanged_and_warns_of_nothing, trust_gate::tests::gate_command_preserves_absolute_output_and_missing_repository_errors, trust_gate::tests::gate_command_public_wrapper_keeps_outer_configurations_unauthorized, trust_gate::tests::gate_command_resolves_relative_repository_and_output_paths, trust_generated::gate_tests::a_defgenerated_form_added_changed_or_removed_is_in_the_change_part_and_every_one_is_standing, trust_generated::gate_tests::an_edit_to_a_declared_generator_is_reported_and_to_an_undeclared_script_is_unchanged, trust_generated::generator_tests::a_crate_root_of_two_targets_is_judged_by_the_union_of_their_role_packages, trust_generated::generator_tests::a_crate_root_that_is_not_rs_is_refused_before_its_build, trust_generated::generator_tests::a_generator_build_failing_leaves_step_4_unable_to_judge_with_its_refusals_beside_it, trust_generated::generator_tests::a_generator_that_is_a_root_is_its_own_build_and_one_a_live_form_s_refusal_names_is_never_built, trust_generated::generator_tests::an_allowed_generator_is_built_and_its_sites_judged_with_the_programs_a_shared_site_admitted_once, trust_generated::generator_tests::another_role_s_program_target_script_or_library_is_refused_as_a_generator, trust_generated::generator_tests::compiler_provenance_preserves_admitted_generator_warning_records_and_recovery, trust_generated::generator_tests::the_harness_may_use_its_pair_s_roles_and_no_other, trust_generated::order_tests::a_form_no_program_reads_is_stale_on_the_baseline_s_host_alone, trust_generated::order_tests::a_marked_file_no_form_can_declare_is_refused_when_a_program_reads_it, trust_generated::order_tests::a_refusal_at_each_of_the_five_steps_ends_the_run_and_no_form_is_stale, trust_generated::order_tests::step_5_refuses_a_chain_through_a_generator_build_and_an_undeclared_marked_file_one_message_a_file, trust_generated::provenance_tests::a_data_file_one_side_reads_and_a_copy_of_an_input_are_shared_and_a_plain_copy_is_not, trust_generated::provenance_tests::a_generator_shared_over_two_inputs_or_with_none_is_shared, trust_generated::provenance_tests::a_third_program_reaching_the_same_provenance_makes_items_of_its_own_and_moves_none, trust_generated::provenance_tests::case_3_two_generated_sources_sharing_an_input_through_two_generators_share_it, trust_generated::provenance_tests::step_3_refuses_a_live_form_s_non_blob_and_its_chain_and_holds_a_form_no_program_reads_to_its_text, trust_generated::provenance_tests::the_harness_reaches_provenance_through_the_units_beside_its_pair_alone, trust_generated::tests::a_build_failing_in_a_step_leaves_it_unable_to_judge_with_its_refusals_beside_it, trust_generated::tests::a_refusal_of_the_forms_text_ends_the_run_before_anything_is_written_or_built, trust_generated::tests::a_refused_run_leaves_no_inventory_an_earlier_run_wrote
+  ✓ L1640.chain.1168   killed     .iter() ⟶ .iter().take(1) — trust::tests::a_path_dependency_outside_the_written_tree_is_refused_before_any_compilation
+  ✓ L1640.chain.1169   killed     .iter() ⟶ .iter().rev().take(1) — trust::tests::a_path_dependency_outside_the_written_tree_is_refused_before_any_compilation
+mutation-sweep: 7 killed
+mutation-sweep: unviable by operator: chain=0/2, cond=0/2, dir=0/1, not=0/2 (unviable/attempted)
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: revalidate-premises.py</summary>
+
+```python
+"""M3.6.9.6.3.2.2.15.2.1.7.2: revalidate the retained proofs' premises on `xtask/src/trust.rs` after the repair.
+
+Three proofs pin the production: the observer close proof by the strict production digest, the caller-suffix
+constructor proof and the absolute-cwd proof by the production prefix's. This proves the production difference is
+exactly one inserted hunk — the refusal of a package outside the written tree, inside `inventory_with`, after the
+canonical root prefix is computed and before any package is read — and that every region a proof reasons about is
+byte for byte the committed one, its line numbers included, then re-binds the three digests. Idempotent: it starts
+from the committed test file.
+"""
+from pathlib import Path
+import difflib, hashlib, json, subprocess
+
+out = Path('target/outside-dependency-refusal')
+file = 'xtask/src/trust.rs'
+head = (out / 'base-commit.txt').read_text().strip()
+
+
+def sha(text):
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
+before = subprocess.check_output(['git', 'show', head + ':' + file], text=True)
+source = Path(file).read_text()
+old_prefix, new_prefix = before.split('#[cfg(test)]', 1)[0], source.split('#[cfg(test)]', 1)[0]
+old_strict, new_strict = before.split('\n#[cfg(test)]\n', 1)[0], source.split('\n#[cfg(test)]\n', 1)[0]
+assert sha(old_prefix) == '2587e24603ecc63f92e6899476102f04f325652bc659402e798b83f34500d61e'
+assert sha(old_strict) == '1f1215d08e1ded8b2d25227ffd9f86c7399bb962c77f1bf03782275e4839a6cd'
+old_lines, new_lines = old_prefix.split('\n'), new_prefix.split('\n')
+hunks = [(tag, i1, i2, j1, j2) for tag, i1, i2, j1, j2 in
+         difflib.SequenceMatcher(None, old_lines, new_lines, autojunk=False).get_opcodes() if tag != 'equal']
+assert len(hunks) == 1 and hunks[0][0] == 'insert', hunks
+_, a1, _, b1, b2 = hunks[0]
+inserted = '\n'.join(new_lines[b1:b2])
+assert inserted.lstrip().startswith('// A package whose manifest lies outside the written tree') \
+    and 'return Ok(refuse(outside));' in inserted, inserted
+assert old_lines[a1].strip() == 'let mut package_names: BTreeMap<String, String> = BTreeMap::new();'
+assert old_lines[a1 - 2].strip() == '.display()' and 'fs::canonicalize(&tree_dir)' in old_lines[a1 - 4]
+start = max(i for i, l in enumerate(old_lines[:a1]) if l.startswith('pub fn inventory_with('))
+assert start < a1
+for anchor in ['    for path in paths {', '        for spelling in std::iter::once(path).chain(canonical) {',
+               'fn cargo_error_line(', 'fn normalise(', 'fn dependency_files(', 'fn normalise_dependency_environment(',
+               'fn checked_configuration(', 'fn compile(']:
+    at = [i for i, l in enumerate(old_lines) if l.startswith(anchor)]
+    assert len(at) == 1 and at[0] < a1 and new_lines[at[0]] == old_lines[at[0]], anchor
+assert old_lines[:a1] == new_lines[:b1] and old_lines[a1:] == new_lines[b2:]
+tests = Path('xtask/mutation_sweep_tests.py')
+head_tests = subprocess.check_output(['git', 'show', head + ':xtask/mutation_sweep_tests.py'], text=True)
+pins = {"'xtask/src/trust.rs': '" + sha(old_strict) + "'": "'xtask/src/trust.rs': '" + sha(new_strict) + "'",
+        "'xtask/src/trust.rs': '" + sha(old_prefix) + "'": "'xtask/src/trust.rs': '" + sha(new_prefix) + "'",
+        '"' + sha(old_prefix) + '"': '"' + sha(new_prefix) + '"'}
+rebound = head_tests
+for old, new in pins.items():
+    assert rebound.count(old) == 1, old
+    rebound = rebound.replace(old, new, 1)
+tests.write_text(rebound)
+record = dict(file=file, base_commit=head, previous_production_sha256=sha(old_prefix), production_sha256=sha(new_prefix),
+              previous_strict_production_sha256=sha(old_strict), strict_production_sha256=sha(new_strict),
+              hunk=dict(old=[a1, a1], new=[b1, b2]),
+              premises={'ObserverCloseTests.test_close_reason_requires_current_production_and_caller_premises': 'strict production digest re-bound',
+                        'test_caller_suffix_prefix_requires_the_complete_pinned_constructor': 'production digest re-bound',
+                        'IteratorTests absolute-cwd proof premises': 'production digest re-bound'},
+              sweep_tests=dict(previous_sha256=sha(head_tests), sha256=sha(rebound)),
+              argument='The repair inserts, in inventory_with after the canonical root prefix is computed, a refusal of '
+                       'every package whose manifest lies outside the written tree; every region the proofs reason about '
+                       'lies before it, unchanged with its line numbers, and nothing after it moves but by the insertion, '
+                       'so each proof holds and is re-bound to its digest.')
+(out / 'premise-revalidation.json').write_text(json.dumps(record, indent=2) + '\n')
+print('premises re-bound:', sha(old_prefix)[:12], '->', sha(new_prefix)[:12], ';', sha(old_strict)[:12], '->',
+      sha(new_strict)[:12], '; hunk', hunks[0])
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: plan.py</summary>
+
+```python
+"""M3.6.9.6.3.2.2.15.2.1.7.2: select every candidate of the inserted outside-package refusal."""
+from pathlib import Path
+import hashlib, importlib.util, json, subprocess
+
+out = Path('target/outside-dependency-refusal')
+file = 'xtask/src/trust.rs'
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+spec = importlib.util.spec_from_file_location('adequacy', 'scripts/trust_adequacy.py')
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+source = Path(file).read_bytes()
+hunk = json.loads((out / 'premise-revalidation.json').read_text())['hunk']['new']
+lines = source.decode().split('\n')
+assert lines[hunk[0]].lstrip().startswith('// A package whose manifest lies outside the written tree')
+assert lines[hunk[1] - 1].strip() == '}' and lines[hunk[1] - 2].strip() == 'return Ok(refuse(outside));'
+raw, listing, scope = m.discover(Path('scripts/mutation_sweep.sh').read_text(), source.decode())
+actual = subprocess.check_output(['bash', 'scripts/mutation_sweep.sh', file, '--package', 'xtask', '--list'], text=True)
+m.verify_listing(actual, listing, file, scope)
+(out / 'listing.log').write_text(actual)
+selected = [c for c in raw if m.overlaps(hunk, c['span'])]
+plan = dict(schema='archogen-outside-dependency-refusal/1', status='planning-only',
+            scope='Every discovered candidate of the inserted refusal, against the full current parent population with '
+                  'strict timeouts.', file=file,
+            base_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+            source_sha256=sha(source), production_sha256=sha(source.split(b'#[cfg(test)]', 1)[0]),
+            production_range=scope, listed_count=len(raw), blocks=[hunk], candidates=selected, equivalents=[],
+            equivalents_sha256=sha(Path('xtask/trust.equivalents').read_bytes()),
+            catalogue_sha256=sha(Path('xtask/mutations.txt').read_bytes()))
+(out / 'plan.json').write_text(json.dumps(plan, indent=2) + '\n')
+print('discovery', len(raw), 'hunk lines', hunk[0] + 1, 'to', hunk[1], 'selected', len(selected))
+for c in selected:
+    print(' ', c['id'], json.dumps(c['original'].strip()[:60]), '->', json.dumps(c['replacement'].strip()[:80]))
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: run-native.py</summary>
+
+```python
+"""M3.6.9.6.3.2.2.15.2.1.7.2: run the outside-package refusal against the full parent population.
+
+Runs the sweep's own command for every selected candidate under the write-fenced profile, audits the
+native log exactly with the maintained auditor, records every outcome whatever it is, and then proves the
+original and copied inputs restored and the copied parent list unchanged. Judgment is the audit's.
+"""
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
+import hashlib, importlib.util, json, os, re, subprocess, time
+
+root = Path.cwd()
+out = Path('target/outside-dependency-refusal')
+file = 'xtask/src/trust.rs'
+spec = importlib.util.spec_from_file_location('adequacy', 'scripts/trust_adequacy.py')
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+plan = json.loads((out / 'plan.json').read_text())
+assert plan['source_sha256'] == sha(Path(file).read_bytes())
+names = re.findall(r'^([\w:]+): test$', (out / 'parent-list.log').read_text(), re.M)
+assert len(names) == len(set(names)) == 209, len(names)
+protected = {name: sha(Path(name).read_bytes()) for name in
+             [file, 'xtask/mutations.txt', 'xtask/trust.equivalents', 'scripts/mutation_sweep.sh', 'scripts/trust_adequacy.py']}
+command = ['bash', 'scripts/mutation_sweep.sh', file, '--package', 'xtask', '--timeout', '600',
+           '--filter=trust::', '--filter=trust_generated::', '--filter=trust_gate::', '--filter=--skip',
+           '--filter=route_tests', '--timeouts-fail', '--equivalents', 'xtask/trust.equivalents']
+for candidate in plan['candidates']:
+    command += ['--only', candidate['id']]
+profile = out / 'mutation-volume.sb'
+execution = dict(command=command, base_commit=plan['base_commit'], source_sha256=plan['source_sha256'],
+                 plan_sha256=sha((out / 'plan.json').read_bytes()),
+                 input_manifest_sha256=sha((out / 'inputs-before.json').read_bytes()), profile=str(profile),
+                 profile_sha256=sha(profile.read_bytes()), writable_root='.', protected=protected,
+                 semantic_parents=len(names), started=time.strftime('%Y-%m-%dT%H:%M:%S%z'),
+                 scope='The outside-package refusal, 7 candidates, full current 209 parent population; '
+                       'actual outcomes pending.')
+(out / 'execution.json').write_text(json.dumps(execution, indent=2) + '\n')
+error = None
+measured = None
+try:
+    with (out / 'native.log').open('w') as log:
+        result = subprocess.run(['/usr/bin/sandbox-exec', '-D', 'WRITABLE_ROOT=' + str(root), '-f', str(profile), *command],
+                                stdout=log, stderr=subprocess.STDOUT, env=dict(os.environ, PYTHONUNBUFFERED='1'))
+    (out / 'native.exit').write_text(str(result.returncode) + '\n')
+    measured = m.audit_measurement((out / 'native.log').read_text(), plan, file, result.returncode)
+    (out / 'measurement.json').write_text(json.dumps(measured, indent=2) + '\n')
+    assert len(measured['entries']) == len(plan['candidates'])
+    for row in measured['entries']:
+        if row['outcome'] == 'killed':
+            assert row['names'] and set(row['names']) <= set(names), row
+except Exception as caught:
+    error = caught
+    (out / 'measurement-refusal.json').write_text(json.dumps(dict(status='refused', error=repr(caught))) + '\n')
+finally:
+    subprocess.run(['python3', '-I', '-B', 'scripts/trust_adequacy.py', '--check-inputs', str(out / 'inputs-before.json'),
+                    '--output', str(out / 'original-restoration.json')], check=True)
+    expected = json.loads((out / 'inputs-before.json').read_text())
+    copy_root = root / 'target/mutation-sweep/tree'
+    items = [(name, {'index_mode': row['index_mode'], 'index_oid': row['index_oid']})
+             for name, row in expected['regular'].items()]
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        actual = dict(pool.map(lambda item: m.regular_input(copy_root, item), items))
+    assert actual == expected['regular']
+    (out / 'copy-restoration.json').write_text(json.dumps(dict(
+        status='restored', qualification='Maintained regular_input; borrowed index metadata, no copied Git index or '
+                                         'submodule implementation claim.', regular=actual), indent=2) + '\n')
+    print(len(actual), 'current copied inputs restored', flush=True)
+listing = subprocess.run(['cargo', 'test', '-q', '-p', 'xtask', '--', '--list', 'trust::', 'trust_generated::',
+                          'trust_gate::', '--skip', 'route_tests'], cwd=copy_root,
+                         env=dict(os.environ, CARGO_TARGET_DIR=str(root / 'target/mutation-sweep/target'),
+                                  ARCHOGEN_SWEEP_SOURCE=str(root)), capture_output=True, text=True, check=True)
+(out / 'copied-parent-list.log').write_text(listing.stdout + listing.stderr)
+assert re.findall(r'^([\w:]+): test$', listing.stdout, re.M) == names
+for name, digest in protected.items():
+    assert sha(Path(name).read_bytes()) == digest, name
+execution['finished'] = time.strftime('%Y-%m-%dT%H:%M:%S%z')
+(out / 'execution.json').write_text(json.dumps(execution, indent=2) + '\n')
+if error:
+    raise error
+print('Outside-package refusal:', json.dumps(measured['counts']), 'raw exit', measured['raw_exit_code'],
+      '; original/copied inputs, all 209 parents and', len(protected), 'protected bindings restore')
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: audit.py</summary>
+
+```python
+"""M3.6.9.6.3.2.2.15.2.1.7.2: the independent audit of the outside-package refusal's sweep.
+
+Re-derives the selection, re-reads every outcome through the maintained auditor, and holds each candidate to the
+table written here: all seven are killed; every edit that would let an outside package through — refusing it never,
+or for in-tree packages instead, or only the first or the last, or matching the prefix anywhere — is killed by the
+new control; `if true {`, which refuses every run, outside package or not, is killed by the ordinary inventory tests.
+"""
+from pathlib import Path
+import copy as copying, hashlib, importlib.util, json, re, subprocess
+
+out = Path('target/outside-dependency-refusal')
+file = 'xtask/src/trust.rs'
+spec = importlib.util.spec_from_file_location('adequacy', 'scripts/trust_adequacy.py')
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+CONTROL = 'trust::tests::a_path_dependency_outside_the_written_tree_is_refused_before_any_compilation'
+BY_CONTROL = ['L1646.not.589', 'L1646.dir.590', 'L1655.cond.592', 'L1655.not.593', 'L1640.chain.1168', 'L1640.chain.1169']
+BY_OTHERS = ['L1655.cond.591']
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def judge(plan, measured, names):
+    ids = [c['id'] for c in plan['candidates']]
+    assert sorted(ids) == sorted(BY_CONTROL + BY_OTHERS) and [e['id'] for e in measured['entries']] == ids
+    assert measured['complete_identities'] and measured['baseline_passed'] and measured['raw_exit_code'] == 0
+    assert set(measured['counts']) == {'killed'}, measured['counts']
+    assert len(names) == 209 and CONTROL in names
+    rows = []
+    for e in measured['entries']:
+        assert e['outcome'] == 'killed' and e['names'] and set(e['names']) <= set(names), e['id']
+        if e['id'] in BY_CONTROL:
+            assert CONTROL in e['names'], e['id']
+        rows.append(dict(id=e['id'], outcome='killed', by_control=CONTROL in e['names'], finishing=len(e['names'])))
+    return rows
+
+
+if __name__ == '__main__':
+    plan = json.loads((out / 'plan.json').read_text())
+    source = Path(file).read_bytes()
+    assert sha(source) == plan['source_sha256']
+    raw, listing, scope = m.discover(Path('scripts/mutation_sweep.sh').read_text(), source.decode())
+    assert [c for c in raw if any(m.overlaps(b, c['span']) for b in plan['blocks'])] == plan['candidates']
+    m.verify_listing((out / 'listing.log').read_text(), listing, file, scope)
+    log = (out / 'native.log').read_text()
+    measured = m.audit_measurement(log, plan, file, int((out / 'native.exit').read_text()))
+    assert measured == json.loads((out / 'measurement.json').read_text())
+    names = re.findall(r'^([\w:]+): test$', (out / 'parent-list.log').read_text(), re.M)
+    assert names == re.findall(r'^([\w:]+): test$', (out / 'copied-parent-list.log').read_text(), re.M)
+    rows = judge(plan, measured, names)
+    for name in ['original-restoration.json', 'copy-restoration.json']:
+        assert json.loads((out / name).read_text())['status'] in ['restored', 'passed', 'verified'], name
+    execution = json.loads((out / 'execution.json').read_text())
+    for name, digest in execution['protected'].items():
+        assert sha(Path(name).read_bytes()) == digest, name
+    assert (out / 'source-before.rs').read_bytes() == subprocess.check_output(['git', 'show', 'HEAD:' + file])
+    revalidation = json.loads((out / 'premise-revalidation.json').read_text())
+    assert revalidation['production_sha256'] == sha(source.split(b'#[cfg(test)]', 1)[0])
+    before_fix = (out / 'control-without-fix.log').read_text()
+    assert 'compiler provenance schema, session, role or working directory differs' in before_fix and 'FAILED' in before_fix
+    inputs = json.loads((out / 'inputs-before.json').read_text())
+    arms = []
+
+    def arm(label, alter):
+        state = dict(plan=copying.deepcopy(plan), measured=copying.deepcopy(measured), names=list(names))
+        alter(state)
+        try:
+            judge(state['plan'], state['measured'], state['names'])
+        except AssertionError:
+            arms.append(label)
+            return
+        raise SystemExit('falsifying arm accepted: ' + label)
+
+    at = {e['id']: i for i, e in enumerate(measured['entries'])}
+    arm('the substring edit surviving', lambda s: s['measured']['entries'][at['L1646.dir.590']].update(outcome='survived', names=[]))
+    arm('the last-only edit killed without the control', lambda s: s['measured']['entries'][at['L1640.chain.1169']].update(
+        names=[n for n in s['measured']['entries'][at['L1640.chain.1169']]['names'] if n != CONTROL] or ['trust::tests::x']))
+    arm('a foreign finishing parent', lambda s: s['measured']['entries'][at['L1655.cond.591']]['names'].append('trust::tests::x'))
+    arm('a candidate dropped', lambda s: s['measured']['entries'].pop())
+    arm('the control missing from the population', lambda s: s['names'].remove(CONTROL))
+    arm('a failing strict exit', lambda s: s['measured'].update(raw_exit_code=1))
+    arm('an unviable edit counted', lambda s: s['measured']['counts'].update(unviable=1))
+    result = dict(status='passed', selected=len(rows), killed=len(rows), raw_exit_code=measured['raw_exit_code'],
+                  parents=len(names), control=CONTROL, rows=rows, restored_inputs=len(inputs['regular']),
+                  falsifying_arms_refused=len(arms), operator_counts=measured['operator_counts'])
+    (out / 'audit.json').write_text(json.dumps(result, indent=2) + '\n')
+    print('Outside-package refusal audit passed:', len(rows), 'of', len(rows), 'killed against', len(names),
+          'parents,', sum(r['by_control'] for r in rows), 'by the control; raw exit', measured['raw_exit_code'], ';',
+          len(arms), 'of', len(arms), 'falsifying arms refused; sha256', sha((out / 'audit.json').read_bytes()))
+```
+
+</details>
+
+The receipts are under `target/outside-dependency-refusal/`.

@@ -393,9 +393,25 @@ had, and `trust::tests::a_configuration_naming_an_outside_path_is_refused_at_eve
 each form first, in the middle and last of a configuration, two at once, and none. Every mutation of it
 is killed by that control or refused by the compiler; ten had survived every earlier test. The
 [route record](annex-trust-proofs.md#configuration-absolute-path-routes) and the
-[control record](annex-trust-proofs.md#configuration-refusal-held-directly) keep the measurements. One
-route stops wrongly: a path dependency outside the written tree ends the run unjudged where it should
-be refused, owned by `M3.6.9.6.3.2.2.15.2.1.7.2`.
+[control record](annex-trust-proofs.md#configuration-refusal-held-directly) keep the measurements.
+
+A package the commit does not hold is refused before anything is compiled (`2026-10-21`). A member
+may depend on a path package outside the written tree — by an absolute path, or by one climbing out —
+and Cargo's metadata lists it with its own manifest. The inventory used to read such a package's
+directory as the empty one, the workspace root's, and let it through the manifest rules; the build then
+stopped on compiler provenance, Cargo having compiled the outside crate from its own directory, and the
+run ended unjudged, exit 2, as if the gate could not tell. It is the commit's own manifest that reaches
+outside it, so it is now a refusal, exit 1, naming each such package:
+
+```text
+trust-undeclared-input: the commit reaches the package `x` at `<run>/outside-dependency-external/x/Cargo.toml`, outside the written tree
+```
+
+The permanent control
+`trust::tests::a_path_dependency_outside_the_written_tree_is_refused_before_any_compilation` holds it
+with real Cargo builds — an absolute path, a climbing one, two outside packages at once, and one under a
+directory whose name repeats the tree's own path — and that nothing is compiled. The
+[repair record](annex-trust-proofs.md#outside-path-dependencies-refused) keeps the measurement.
 
 ### Codegen options retain their operands
 

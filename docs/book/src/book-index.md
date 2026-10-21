@@ -486,6 +486,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Other repositories are read-only — [Annex B: The checks that keep the repository
   honest](annex-repository.md#other-repositories-are-read-only)
 - Outcomes and verdicts — [Matching an offer to a requirement](matching.md#outcomes-and-verdicts)
+- Outside path dependencies refused — [Annex C: Trust proof
+  records](annex-trust-proofs.md#outside-path-dependencies-refused)
 - **overrun** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Describing a
   workload](workload.md), [The runtime: decisions, not actions](runtime.md), [Annex A: The runtime's rules in
   detail](annex-runtime.md)
