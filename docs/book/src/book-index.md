@@ -207,6 +207,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Dependency path-domain repair — [Annex C: Trust proof records](annex-trust-proofs.md#dependency-path-domain-repair)
 - Dependency refusal witness contracts — [Annex C: Trust proof
   records](annex-trust-proofs.md#dependency-refusal-witness-contracts)
+- Dependency terminal-backslash control — [Annex C: Trust proof
+  records](annex-trust-proofs.md#dependency-terminal-backslash-control)
 - **description** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [The supported
   profile](profile.md), [The use cases](usecases.md), [Reading a description](reading.md), [Kinds and

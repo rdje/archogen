@@ -424,3 +424,4 @@ with its row.
 | Rows file | Rows | Lines | Bytes | sha256 | Sealed |
 | --- | --- | --- | --- | --- | --- |
 | `rows-0001` | 416 | 425 | 120009 | `83ba6218a823495d1133129ca7127db012dd716c73e442679a290259fd4bfd7b` | `2026-10-20` |
+| `rows-0002` | 34 | 38 | 11458 | `de9222851acae65418b93fbb87653b61cfdddc6b827a3e5bc33b8b1f18542b2b` | `2026-10-21` |

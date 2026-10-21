@@ -3060,14 +3060,17 @@ pub(crate) mod tests {
             git(&self.repo, &["add", "-A"]);
             git(&self.repo, &["commit", "-q", "-m", "change"]);
         }
-        pub(crate) fn run_into(&self, out: &str) -> Outcome {
+        /// The run as the inventory returns it: an error where the build itself fails, before any judgment.
+        pub(crate) fn try_run_into(&self, out: &str) -> Result<Outcome, String> {
             inventory_with(
                 &self.repo,
                 "HEAD",
                 &self.base.join(out),
                 &configuration_roots(),
             )
-            .unwrap()
+        }
+        pub(crate) fn run_into(&self, out: &str) -> Outcome {
+            self.try_run_into(out).unwrap()
         }
         pub(crate) fn run(&self) -> Outcome {
             self.run_into("out")
@@ -4837,6 +4840,98 @@ version = "0.1.0"
             .collect();
         assert_eq!(refused(f.run_into("output-alias")), expected);
         assert!(!f.base.join("output-alias/trust-dependencies.json").exists());
+    }
+
+    /// Three outside inputs whose names end in a backslash: rustc writes each literally, so the first rule's final
+    /// prerequisite ends in a backslash, and the pinned Cargo refuses its own dependency record before the inventory
+    /// reads anything. That is the build's error, not a judgment: the run returns Cargo's message, writes nothing and
+    /// lists no refusal. The record rustc left is one the reader refuses as ambiguous, so the inventory does not rest
+    /// on Cargo's refusal (`M3.6.9.6.3.2.2.15.2.1.6.1.1.2`, D3). A backslash is a name's own byte only on Unix.
+    #[cfg(unix)]
+    #[test]
+    fn a_final_prerequisite_ending_in_a_backslash_is_the_builds_own_error() {
+        crate::trust_test_process::bounded!(
+            a_final_prerequisite_ending_in_a_backslash_is_the_builds_own_error
+        );
+        let name = "dependency-terminal-backslashes";
+        let base = real_root().join("target/trust-tests").join(name);
+        let external = base.join("external");
+        let inputs = [
+            ("FIRST", "a\\", "first external input\n"),
+            ("MIDDLE", "m\\", "middle external input\n"),
+            ("LAST", "z\\", "last external input\n"),
+        ];
+        let lines: Vec<_> = inputs
+            .iter()
+            .map(|(constant, file, _)| {
+                format!(
+                    "pub const {constant}: &str = include_str!({:?});",
+                    external.join(file).to_str().unwrap()
+                )
+            })
+            .collect();
+        let admissions: String = lines
+            .iter()
+            .map(|line| admit("crates/b/src/lib.rs", "include_str", line))
+            .collect();
+        let f = two_roots(
+            name,
+            "fn main() {}\n",
+            &(lines.join("\n") + "\n"),
+            &[("trust/roots.eadl", format!("{ROOTS}{admissions}"))],
+        );
+        std::fs::create_dir_all(&external).unwrap();
+        for (_, file, contents) in inputs {
+            std::fs::write(external.join(file), contents).unwrap();
+        }
+        let error = match f.try_run_into("out") {
+            Ok(Outcome::Written(_)) => panic!("written where the build fails"),
+            Ok(Outcome::Refused(r)) => panic!("refused where the build fails: {r:#?}"),
+            Err(error) => error,
+        };
+        // The record rustc wrote, by its real name: Cargo's message names it, and its first rule ends in a backslash.
+        let records: Vec<_> = std::fs::read_dir(base.join("out/target/chk/release/deps"))
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .filter(|path| {
+                path.extension().is_some_and(|e| e == "d")
+                    && path
+                        .file_name()
+                        .is_some_and(|n| n.to_string_lossy().starts_with("b-"))
+            })
+            .collect();
+        assert_eq!(records.len(), 1, "one record of `b`: {records:?}");
+        let record = &records[0];
+        assert_eq!(
+            error,
+            format!(
+                "`cargo build --lib --release --locked --offline --no-default-features --message-format=json -v \
+                 -p b` failed: error: could not parse/generate dep info at: {}",
+                record.display()
+            )
+        );
+        assert!(!base.join("out/trust-dependencies.json").exists());
+        let rule = std::iter::once("crates/b/src/lib.rs".to_owned())
+            .chain(
+                inputs
+                    .iter()
+                    .map(|(_, file, _)| external.join(file).display().to_string()),
+            )
+            .collect::<Vec<_>>()
+            .join(" ");
+        let text = std::fs::read_to_string(record).unwrap();
+        assert!(
+            text.starts_with(&format!("{}: {rule}\n", record.display())),
+            "{text}"
+        );
+        let scratch = format!("{}/", base.join("out/tree").display());
+        let canonical = std::fs::canonicalize(base.join("out/tree"))
+            .map(|c| format!("{}/", c.display()))
+            .unwrap_or_else(|_| scratch.clone());
+        assert_eq!(
+            ambiguous(super::dependency_files(&text, record, &scratch, &canonical).unwrap()),
+            (rule, "a backslash outside the written tree's prefixes")
+        );
     }
 
     fn package_item<'a>(all: &'a [(String, Json)], package: &str) -> &'a Json {

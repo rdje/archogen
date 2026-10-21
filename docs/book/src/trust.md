@@ -346,10 +346,26 @@ The permanent controls `trust::tests::a_trailing_backslash_before_an_in_tree_pre
 `trust::tests::outside_inputs_with_spaces_are_refused_by_their_raw_rule`, under the raw output root and
 under a symbolic link to it, and `trust::tests::a_symbolic_output_root_accepts_raw_and_canonical_in_tree_inputs`
 hold these with real Cargo builds; `trust::tests::an_ambiguous_dependency_record_is_refused_by_its_raw_rule`
-holds the record grammar on synthetic records. A final prerequisite ending in a backslash is refused by
-the pinned Cargo before the inventory reads anything; that control is owned by
-`M3.6.9.6.3.2.2.15.2.1.6.1.1.2`. The [repair record](annex-trust-proofs.md#dependency-path-domain-repair)
-retains the measurement.
+holds the record grammar on synthetic records. The
+[repair record](annex-trust-proofs.md#dependency-path-domain-repair) retains the measurement.
+
+A final prerequisite ending in a backslash never reaches the reader (`2026-10-21`): rustc writes the
+backslash literally, and the pinned Cargo's own dependency-record reader takes a trailing backslash as
+the escape of a next token that is not there, so the build fails as Cargo's internal error before the
+inventory reads anything. The run reports that as the error it is, never as a refusal: a refusal is the
+inventory's judgment of a record it read, and no input can be named without reading past the producer's
+own refusal. Nothing is written, no refusal is listed, and the outcome is unjudged, not passed:
+
+```text
+`cargo build --lib --release --locked --offline --no-default-features --message-format=json -v -p b` failed: error: could not parse/generate dep info at: <run>/out/target/chk/release/deps/b-20572edba3a82d76.d
+```
+
+The permanent control `trust::tests::a_final_prerequisite_ending_in_a_backslash_is_the_builds_own_error`
+holds that exact message naming the record, and holds that the record rustc left is one the reader
+refuses as ambiguous, so the inventory does not rest on Cargo's refusal: a Cargo that stopped refusing
+would fail the control, and the reader would refuse the record. The
+[control record](annex-trust-proofs.md#dependency-terminal-backslash-control) retains Cargo's message,
+its reader's text at the pinned commit, and the decision.
 
 ### Codegen options retain their operands
 

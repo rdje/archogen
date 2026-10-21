@@ -14,9 +14,9 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.6`; `PROGRAM` resumes at `PROGRAM.71`.
-- **Next action:** retain Cargo's terminal-backslash refusal as a control in
-  `M3.6.9.6.3.2.2.15.2.1.6.1.1.2` (P2; the P0 ambiguity repair closed `2026-10-20`), then the
-  full dependency-block checkpoint `.6.2`.
+- **Next action:** the full dependency-block checkpoint `M3.6.9.6.3.2.2.15.2.1.6.2` (P1): re-discover the
+  current block and reconcile every historical obligation with exact outcomes; `.6.1` closed `2026-10-21`,
+  Cargo's terminal-backslash refusal held as a control and the build error ruled an error, not a refusal.
   Disposable project-owned Git fixtures under ignored `target/` are approved;
   maintained external repositories and submodules stay read-only.
   Corrected renderer adoption stays owned in `.4.3.4.1`.

@@ -5,6 +5,25 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — hold Cargo's terminal-backslash refusal as a control
+
+`ARCHOGEN-M3-0828` (leaf `M3.6.9.6.3.2.2.15.2.1.6.1.1.2`), `2026-10-21`.
+
+- Add the permanent control `trust::tests::a_final_prerequisite_ending_in_a_backslash_is_the_builds_own_error`:
+  three outside inputs whose names end in a backslash make rustc's first rule end in a backslash, and
+  the pinned Cargo 1.95.0 refuses its own dependency record as an internal error, `malformed dep-info
+  format, trailing \`, before the inventory reads anything. The control holds Cargo's exact message
+  naming the record, no inventory and no refusal list, and the reader's own refusal of the record rustc
+  left, so the inventory does not rest on Cargo's refusal.
+- Rule that a build the pinned Cargo refuses is reported as the error it is, never as a refusal: a
+  refusal is the inventory's judgment of a record it read; the outcome is unjudged, not passed.
+  Production, reasons, catalogue and premises are unchanged; the parent population grows by the
+  control alone; the audit rejects 21 altered receipts.
+- Close `.6.1.1`, the path-domain follow-up, and `.6.1`, the survivor witnesses; the full
+  dependency-block checkpoint `.6.2` is next. The trust chapter and the annex carry the decision and
+  the record; the seal takes the rows of `M3`'s repaired Verification Log table.
+
+
 ## archogen — a sealed leaf's log rows follow it
 
 `ARCHOGEN-PROGRAM-0827` (leaf `PROGRAM.95`), `2026-10-20`.

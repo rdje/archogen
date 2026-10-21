@@ -151116,3 +151116,572 @@ print('Final audit passed: fragment', result['fragment_bytes'], 'bytes;', result
 ~~~
 
 </details>
+
+### Dependency terminal-backslash control
+
+The pinned Cargo's refusal of a dependency record whose final prerequisite ends in a backslash, D3 of the [path-domain assessment](#dependency-path-domain-assessment), is held as a permanent real-Cargo control on `2026-10-21`, with production unchanged (production digest `9d17f39a35dba3a07d094c5374b0786a966bdf0705fb71a9201a5907872eb7ce`, the pinned premise; source `555adc1630f9220d83412bff2848849e5264236bdcfe0fcd86488bf5b8aa5cdc`, previously `93512551cf48fe29e8d577331a16947a72429b57ad7d1eaaa3d1229995b42f57`; every changed line in the test module). The control `trust::tests::a_final_prerequisite_ending_in_a_backslash_is_the_builds_own_error` names three outside inputs `a\`, `m\` and `z\` from the library root's admitted `include_str!` sites, as the refusal parent names its ordinary inputs. The pinned rustc writes each backslash literally, so the first rule ends in a backslash; the pinned Cargo then refuses its own record as an internal error before the inventory reads anything. The run returns that error, writes no inventory and lists no refusal. The record rustc left is one the inventory's reader refuses as ambiguous, so the inventory does not rest on Cargo's refusal: a Cargo that stopped refusing would fail the control, and the reader would refuse the record.
+
+#### The producer's own refusal
+
+The control's fixture, under the ignored `target/trust-tests/` that the director's `2026-10-20` exception approves, keeps the record as rustc wrote it, the runtime repository root replaced by a declared placeholder:
+
+```text
+<repository-root>/target/trust-tests/dependency-terminal-backslashes/out/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/a\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/m\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/z\
+
+<repository-root>/target/trust-tests/dependency-terminal-backslashes/out/target/chk/release/deps/libb-20572edba3a82d76.rlib: crates/b/src/lib.rs <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/a\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/m\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/z\
+
+<repository-root>/target/trust-tests/dependency-terminal-backslashes/out/target/chk/release/deps/libb-20572edba3a82d76.rmeta: crates/b/src/lib.rs <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/a\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/m\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/z\
+
+crates/b/src/lib.rs:
+<repository-root>/target/trust-tests/dependency-terminal-backslashes/external/a\:
+<repository-root>/target/trust-tests/dependency-terminal-backslashes/external/m\:
+<repository-root>/target/trust-tests/dependency-terminal-backslashes/external/z\:
+```
+
+Cargo's own output on that tree, `cargo build --lib --release --locked --offline --no-default-features -v -p b` run in the written tree with a scratch target directory, exit code 101, with its `Running` lines omitted:
+
+```text
+   Compiling b v0.1.0 (<repository-root>/target/trust-tests/dependency-terminal-backslashes/out/tree/crates/b)
+error: could not parse/generate dep info at: <repository-root>/target/dependency-terminal-backslash-control/cargo-probe/target/release/deps/b-20572edba3a82d76.d
+
+Caused by:
+  malformed dep-info format, trailing \
+note: this is an unexpected cargo internal error
+note: we would appreciate a bug report: https://github.com/rust-lang/cargo/issues/
+note: cargo 1.95.0 (f2d3ce0bd 2026-03-21)
+```
+
+The inventory's error carries the first error line, naming the record by its real path, and nothing else:
+
+```text
+`cargo build --lib --release --locked --offline --no-default-features --message-format=json -v -p b` failed: error: could not parse/generate dep info at: <repository-root>/target/trust-tests/dependency-terminal-backslashes/out/target/chk/release/deps/b-20572edba3a82d76.d
+```
+
+Cargo's reader at the pinned commit, `cargo 1.95.0 (f2d3ce0bd 2026-03-21)`, takes a trailing backslash as the escape of the next whitespace-separated token and refuses the rule when none follows ([`parse_rustc_dep_info`](https://github.com/rust-lang/cargo/blob/f2d3ce0bd/src/cargo/core/compiler/fingerprint/dep_info.rs)):
+
+```rust
+            while let Some(s) = deps.next() {
+                let mut file = s.to_string();
+                while file.ends_with('\\') {
+                    file.pop();
+                    file.push(' ');
+                    file.push_str(deps.next().ok_or_else(|| {
+                        crate::util::internal("malformed dep-info format, trailing \\")
+                    })?);
+                }
+                ret.files.entry(file.into()).or_default();
+            }
+```
+
+and `rustc`'s work closure wraps that failure as the message the inventory carries ([`translate_dep_info` call](https://github.com/rust-lang/cargo/blob/f2d3ce0bd/src/cargo/core/compiler/mod.rs)):
+
+```rust
+            .with_context(|| {
+                internal(format!(
+                    "could not parse/generate dep info at: {}",
+                    rustc_dep_info_loc.display()
+                ))
+            })?;
+```
+
+So three names ending in a backslash are joined by Cargo's reader into one name holding spaces, and the last backslash, with no token after it, is the refusal; the rule's text is the same whether a name ends in a backslash or a space was escaped, which is the ambiguity the [repair](#dependency-path-domain-repair) refuses on the inventory's side.
+
+| Control | Output root | First rule as rustc wrote it | Cargo | Inventory | Model outcome |
+| --- | --- | --- | --- | --- | --- |
+| `terminal-backslashes` | `out` | `crates/b/src/lib.rs <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/a\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/m\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/z\` | `malformed dep-info format, trailing \`, exit 101 | error, none written | ambiguous: a backslash outside the written tree's prefixes |
+
+#### The decision: the error is an error
+
+A build the pinned Cargo refuses is reported as the error it is, never as a refusal. A refusal is the inventory's judgment of a record it read: an input outside the written tree, an undeclared environment variable, a record whose text names two prerequisite lists. A record Cargo refused was never read by the inventory, and naming an input from it would mean reading past the producer's own refusal, or parsing Cargo's message for a cause the message does not establish. The gate fails on the error either way, nothing is written, and the outcome is unjudged rather than passed. The control pins both layers: the pinned Cargo's exact message naming the record, and the reader's refusal of the same record under its raw rule. The decision is recorded in the tree's decisions and in the trust chapter.
+
+#### Restoration and continuity
+
+No production line changed, so no edit sweep is owed by this leaf: the production digest is the sweep tests' pinned premise, the reasons (`xtask/trust.equivalents`), the catalogue (`xtask/mutations.txt`) and the sweep's own tests are byte for byte the committed ones, and the neighbouring sources are unchanged. The parent population grew from its retained 206 names by exactly the control, to 207, listed by the same command as the repair leaf's. The control and its nine companions pass by their exact names, live under the audit and in the retained logs. The audit rejects 21 altered receipts: `written-claimed`, `record-without-terminal-backslash`, `escaped-backslash-claimed`, `cargo-exit-zero`, `cargo-message-missing`, `cause-missing`, `internal-error-note-missing`, `foreign-cargo-version`, `inventory-error-foreign`, `controls-failed`, `live-controls-failed`, `control-alone-failed`, `parent-dropped`, `parent-foreign`, `control-renamed`, `production-changed`, `stale-pinned-premise`, `protected-changed`, `foreign-base-commit`, `span-in-production-claimed`, `reader-assertion-dropped`. The focused tier runs on the staged tree before the commit.
+
+#### Completed control leaf
+
+```markdown
+- ID: `M3.6.9.6.3.2.2.15.2.1.6.1.1.2`
+  Status: `done` — Cargo's terminal-backslash refusal held as a control; the build error stays an error; D3 closed
+  Goal: [control record](../book/src/annex-trust-proofs.md#dependency-terminal-backslash-control).
+  Verification: `python3 -I -B target/dependency-terminal-backslash-control/audit.py`: exit code 0; the control
+    and its nine companions live, all10 passing; the record's final prerequisite ends in a backslash, the pinned
+    Cargo 1.95.0 refuses it as its own internal error, nothing written, no refusal; the reader refuses the same
+    record; production, reasons, catalogue and premises unchanged; parents207 = 206 + the control;21 receipts rejected.
+  Acceptance:
+    - [x] ROOT CAUSE — `python3 -I -B target/dependency-terminal-backslash-control/audit.py`: exit code 0; rustc writes
+      a final prerequisite's backslash literally, and the pinned Cargo's reader takes a trailing backslash as the
+      escape of a next token that is not there: `malformed dep-info format, trailing \`, an internal error by
+      Cargo's own note, raised before the inventory reads anything.
+    - [x] ADDRESSED — `cargo test -p xtask … -- --exact`: 10 passed; 0 failed: the control holds Cargo's exact message
+      naming the record, no inventory and no refusal list, and the reader's own refusal of the record rustc left;
+      the error is ruled an error, never a refusal, and the outcome unjudged.
+    - [x] NO REGRESSION — `make focused`, exit code 0 on the staged tree; production unchanged at its pinned digest,
+      the reasons and the catalogue unchanged; the parent population grew by the control alone.
+  Commit: `ARCHOGEN-M3-0828`
+
+```
+
+<details>
+<summary>Complete terminal-backslash control audit</summary>
+
+```json
+{
+  "schema": "archogen-dependency-terminal-backslash-control-audit/1",
+  "status": "passed",
+  "base_commit": "a1fc88b09e82e653ab6bb98bacf2e48e7ceae9bd",
+  "control": "trust::tests::a_final_prerequisite_ending_in_a_backslash_is_the_builds_own_error",
+  "production_sha256": "9d17f39a35dba3a07d094c5374b0786a966bdf0705fb71a9201a5907872eb7ce",
+  "source_sha256": "555adc1630f9220d83412bff2848849e5264236bdcfe0fcd86488bf5b8aa5cdc",
+  "source_before_sha256": "93512551cf48fe29e8d577331a16947a72429b57ad7d1eaaa3d1229995b42f57",
+  "controls": [
+    "trust::tests::dependency_information_requires_its_known_nonempty_target",
+    "trust::tests::an_ambiguous_dependency_record_is_refused_by_its_raw_rule",
+    "trust::tests::cargo_dependency_information_retains_actual_source_paths",
+    "trust::tests::cargo_dependency_environment_normalizes_escaped_scratch_paths",
+    "trust::tests::dependency_environment_uses_the_canonical_encoded_prefix",
+    "trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused",
+    "trust::tests::a_trailing_backslash_before_an_in_tree_prerequisite_is_refused_as_ambiguous",
+    "trust::tests::outside_inputs_with_spaces_are_refused_by_their_raw_rule",
+    "trust::tests::a_symbolic_output_root_accepts_raw_and_canonical_in_tree_inputs",
+    "trust::tests::a_final_prerequisite_ending_in_a_backslash_is_the_builds_own_error"
+  ],
+  "parents": 207,
+  "parents_before": 206,
+  "cargo": {
+    "exit": 101,
+    "version": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "message": "error: could not parse/generate dep info at: <repository-root>/target/dependency-terminal-backslash-control/cargo-probe/target/release/deps/b-20572edba3a82d76.d",
+    "cause": "malformed dep-info format, trailing \\"
+  },
+  "inventory_error": "`cargo build --lib --release --locked --offline --no-default-features --message-format=json -v -p b` failed: error: could not parse/generate dep info at: <repository-root>/target/trust-tests/dependency-terminal-backslashes/out/target/chk/release/deps/b-20572edba3a82d76.d",
+  "record": {
+    "path": "<repository-root>/target/trust-tests/dependency-terminal-backslashes/out/target/chk/release/deps/b-20572edba3a82d76.d",
+    "rule": "crates/b/src/lib.rs <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/a\\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/m\\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/z\\",
+    "text": "<repository-root>/target/trust-tests/dependency-terminal-backslashes/out/target/chk/release/deps/b-20572edba3a82d76.d: crates/b/src/lib.rs <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/a\\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/m\\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/z\\\n\n<repository-root>/target/trust-tests/dependency-terminal-backslashes/out/target/chk/release/deps/libb-20572edba3a82d76.rlib: crates/b/src/lib.rs <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/a\\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/m\\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/z\\\n\n<repository-root>/target/trust-tests/dependency-terminal-backslashes/out/target/chk/release/deps/libb-20572edba3a82d76.rmeta: crates/b/src/lib.rs <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/a\\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/m\\ <repository-root>/target/trust-tests/dependency-terminal-backslashes/external/z\\\n\ncrates/b/src/lib.rs:\n<repository-root>/target/trust-tests/dependency-terminal-backslashes/external/a\\:\n<repository-root>/target/trust-tests/dependency-terminal-backslashes/external/m\\:\n<repository-root>/target/trust-tests/dependency-terminal-backslashes/external/z\\:\n"
+  },
+  "model_outcome": "ambiguous: a backslash outside the written tree's prefixes",
+  "inventory": "none",
+  "decision": "the build error is reported as the error it is, never as a refusal; the outcome is unjudged",
+  "rejected": [
+    "written-claimed",
+    "record-without-terminal-backslash",
+    "escaped-backslash-claimed",
+    "cargo-exit-zero",
+    "cargo-message-missing",
+    "cause-missing",
+    "internal-error-note-missing",
+    "foreign-cargo-version",
+    "inventory-error-foreign",
+    "controls-failed",
+    "live-controls-failed",
+    "control-alone-failed",
+    "parent-dropped",
+    "parent-foreign",
+    "control-renamed",
+    "production-changed",
+    "stale-pinned-premise",
+    "protected-changed",
+    "foreign-base-commit",
+    "span-in-production-claimed",
+    "reader-assertion-dropped"
+  ],
+  "live_controls_log_sha256": "84f4b7894c177d66858930525916d287fbd0caf5357af922579f85f053934e00"
+}
+```
+
+</details>
+
+#### Executable control adapters
+
+Prepare the repository-local environment in `TOOLBOX.md`. The source adapter applies the exact test-module edits to the input commit; the probe retains the controls' run, the parent population, the record rustc wrote and Cargo's own message; the audit re-derives every claim from the receipts and a live run of the controls, and rejects altered receipts.
+
+<details>
+<summary>Exact terminal-backslash control edit-source.py</summary>
+
+~~~python
+"""Exact-text edits of xtask/src/trust.rs for leaf M3.6.9.6.3.2.2.15.2.1.6.1.1.2; each old text must occur once."""
+from pathlib import Path
+p = Path('xtask/src/trust.rs'); t = p.read_text()
+def edit(old, new):
+    global t
+    assert t.count(old) == 1, old[:80]
+    t = t.replace(old, new, 1)
+
+edit('''        pub(crate) fn run_into(&self, out: &str) -> Outcome {
+            inventory_with(
+                &self.repo,
+                "HEAD",
+                &self.base.join(out),
+                &configuration_roots(),
+            )
+            .unwrap()
+        }
+''', '''        /// The run as the inventory returns it: an error where the build itself fails, before any judgment.
+        pub(crate) fn try_run_into(&self, out: &str) -> Result<Outcome, String> {
+            inventory_with(
+                &self.repo,
+                "HEAD",
+                &self.base.join(out),
+                &configuration_roots(),
+            )
+        }
+        pub(crate) fn run_into(&self, out: &str) -> Outcome {
+            self.try_run_into(out).unwrap()
+        }
+''')
+
+edit('''        assert_eq!(refused(f.run_into("output-alias")), expected);
+        assert!(!f.base.join("output-alias/trust-dependencies.json").exists());
+    }
+
+    fn package_item<'a>(''', '''        assert_eq!(refused(f.run_into("output-alias")), expected);
+        assert!(!f.base.join("output-alias/trust-dependencies.json").exists());
+    }
+
+    /// Three outside inputs whose names end in a backslash: rustc writes each literally, so the first rule's final
+    /// prerequisite ends in a backslash, and the pinned Cargo refuses its own dependency record before the inventory
+    /// reads anything. That is the build's error, not a judgment: the run returns Cargo's message, writes nothing and
+    /// lists no refusal. The record rustc left is one the reader refuses as ambiguous, so the inventory does not rest
+    /// on Cargo's refusal (`M3.6.9.6.3.2.2.15.2.1.6.1.1.2`, D3). A backslash is a name's own byte only on Unix.
+    #[cfg(unix)]
+    #[test]
+    fn a_final_prerequisite_ending_in_a_backslash_is_the_builds_own_error() {
+        crate::trust_test_process::bounded!(
+            a_final_prerequisite_ending_in_a_backslash_is_the_builds_own_error
+        );
+        let name = "dependency-terminal-backslashes";
+        let base = real_root().join("target/trust-tests").join(name);
+        let external = base.join("external");
+        let inputs = [
+            ("FIRST", "a\\\\", "first external input\\n"),
+            ("MIDDLE", "m\\\\", "middle external input\\n"),
+            ("LAST", "z\\\\", "last external input\\n"),
+        ];
+        let lines: Vec<_> = inputs
+            .iter()
+            .map(|(constant, file, _)| {
+                format!(
+                    "pub const {constant}: &str = include_str!({:?});",
+                    external.join(file).to_str().unwrap()
+                )
+            })
+            .collect();
+        let admissions: String = lines
+            .iter()
+            .map(|line| admit("crates/b/src/lib.rs", "include_str", line))
+            .collect();
+        let f = two_roots(
+            name,
+            "fn main() {}\\n",
+            &(lines.join("\\n") + "\\n"),
+            &[("trust/roots.eadl", format!("{ROOTS}{admissions}"))],
+        );
+        std::fs::create_dir_all(&external).unwrap();
+        for (_, file, contents) in inputs {
+            std::fs::write(external.join(file), contents).unwrap();
+        }
+        let error = match f.try_run_into("out") {
+            Ok(Outcome::Written(_)) => panic!("written where the build fails"),
+            Ok(Outcome::Refused(r)) => panic!("refused where the build fails: {r:#?}"),
+            Err(error) => error,
+        };
+        // The record rustc wrote, by its real name: Cargo's message names it, and its first rule ends in a backslash.
+        let records: Vec<_> = std::fs::read_dir(base.join("out/target/chk/release/deps"))
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .filter(|path| {
+                path.extension().is_some_and(|e| e == "d")
+                    && path
+                        .file_name()
+                        .is_some_and(|n| n.to_string_lossy().starts_with("b-"))
+            })
+            .collect();
+        assert_eq!(records.len(), 1, "one record of `b`: {records:?}");
+        let record = &records[0];
+        assert_eq!(
+            error,
+            format!(
+                "`cargo build --lib --release --locked --offline --no-default-features --message-format=json -v \\
+                 -p b` failed: error: could not parse/generate dep info at: {}",
+                record.display()
+            )
+        );
+        assert!(!base.join("out/trust-dependencies.json").exists());
+        let rule = std::iter::once("crates/b/src/lib.rs".to_owned())
+            .chain(
+                inputs
+                    .iter()
+                    .map(|(_, file, _)| external.join(file).display().to_string()),
+            )
+            .collect::<Vec<_>>()
+            .join(" ");
+        let text = std::fs::read_to_string(record).unwrap();
+        assert!(
+            text.starts_with(&format!("{}: {rule}\\n", record.display())),
+            "{text}"
+        );
+        let scratch = format!("{}/", base.join("out/tree").display());
+        let canonical = std::fs::canonicalize(base.join("out/tree"))
+            .map(|c| format!("{}/", c.display()))
+            .unwrap_or_else(|_| scratch.clone());
+        assert_eq!(
+            ambiguous(super::dependency_files(&text, record, &scratch, &canonical).unwrap()),
+            (rule, "a backslash outside the written tree's prefixes")
+        );
+    }
+
+    fn package_item<'a>(''')
+p.write_text(t)
+print('edited', p)
+~~~
+
+</details>
+
+<details>
+<summary>Exact terminal-backslash control probe.py</summary>
+
+~~~python
+"""Retain every receipt of the terminal-backslash control: the controls' run, the parent population, the record rustc
+wrote, the pinned Cargo's own message, and the unchanged production, reasons and catalogue."""
+from pathlib import Path
+import hashlib, json, os, re, subprocess, sys
+
+out = Path('target/dependency-terminal-backslash-control'); file = 'xtask/src/trust.rs'; root = Path.cwd()
+TESTS = 'target/trust-tests'; NAME = 'dependency-terminal-backslashes'
+CONTROL = 'a_final_prerequisite_ending_in_a_backslash_is_the_builds_own_error'
+CONTROLS = ['dependency_information_requires_its_known_nonempty_target', 'an_ambiguous_dependency_record_is_refused_by_its_raw_rule',
+            'cargo_dependency_information_retains_actual_source_paths', 'cargo_dependency_environment_normalizes_escaped_scratch_paths',
+            'dependency_environment_uses_the_canonical_encoded_prefix', 'every_absolute_dependency_outside_the_written_tree_is_refused',
+            'a_trailing_backslash_before_an_in_tree_prerequisite_is_refused_as_ambiguous', 'outside_inputs_with_spaces_are_refused_by_their_raw_rule',
+            'a_symbolic_output_root_accepts_raw_and_canonical_in_tree_inputs', CONTROL]
+PROTECTED = ['xtask/trust.equivalents', 'xtask/mutations.txt', 'xtask/mutation_sweep_tests.py', 'xtask/src/trust_compiler.rs',
+             'xtask/src/trust_compiler_observer.rs', 'xtask/src/catalog_build.rs', 'xtask/src/catalog_check.rs']
+def sha(raw): return hashlib.sha256(raw).hexdigest()
+def production(text): return text.split('#[cfg(test)]', 1)[0]
+env = dict(os.environ, CARGO_HOME=str(root / 'target/cargo-home'), TMPDIR=str(root / 'target/tmp'))
+
+head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+assert head == (out / 'base-commit.txt').read_text().strip()
+source = Path(file).read_text(); before = (out / 'source-before.rs').read_text()
+head_source = subprocess.check_output(['git', 'show', f'{head}:{file}'], text=True)
+assert before == head_source, 'the retained source-before is the committed source'
+# Every changed line lies in the test module: production is unchanged by construction.
+test_line = before.index('\n#[cfg(test)]\n')
+assert production(source) == production(before)
+import difflib
+changed = [(tag, i1, i2, j1, j2) for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, before.split('\n'), source.split('\n'), autojunk=False).get_opcodes() if tag != 'equal']
+first_test_line = before[:test_line].count('\n') + 1
+assert all(i1 >= first_test_line for _, i1, _, _, _ in changed), changed
+
+# 1. The control alone, then every dependency control, each by its exact name.
+single = subprocess.run(['cargo', 'test', '--locked', '--offline', '-q', '-p', 'xtask', 'trust::tests::' + CONTROL, '--', '--exact'], capture_output=True, text=True, env=env)
+(out / 'control.log').write_text(single.stdout + single.stderr); assert single.returncode == 0, single.stdout + single.stderr
+controls = subprocess.run(['cargo', 'test', '--locked', '--offline', '-q', '-p', 'xtask', '--', *('trust::tests::' + c for c in CONTROLS), '--exact'], capture_output=True, text=True, env=env)
+(out / 'controls.log').write_text(controls.stdout + controls.stderr); assert controls.returncode == 0, controls.stdout + controls.stderr
+assert re.search(r'test result: ok\. 10 passed; 0 failed', controls.stdout), controls.stdout
+
+# 2. The parent population: the repair leaf's retained list plus exactly the control.
+listing = subprocess.run(['cargo', 'test', '-q', '-p', 'xtask', '--', '--list', 'trust::', 'trust_generated::', 'trust_gate::', '--skip', 'route_tests'], capture_output=True, text=True, env=env)
+(out / 'parent-list.log').write_text(listing.stdout + listing.stderr)
+names = re.findall(r'^([\w:]+): test$', listing.stdout, re.M)
+previous = Path('target/dependency-path-domain-repair/parent-list.log')
+old = re.findall(r'^([\w:]+): test$', previous.read_text(), re.M) if previous.exists() else None
+if old is not None:
+    (out / 'parent-list-before.log').write_bytes(previous.read_bytes())
+    assert sorted(set(names) - set(old)) == ['trust::tests::' + CONTROL] and set(old) <= set(names), 'exactly the control is new'
+
+# 3. The record rustc wrote and the pinned Cargo's own message, from the fixture the control left.
+base = root / TESTS / NAME; deps = base / 'out/target/chk/release/deps'
+found = sorted(p for p in deps.glob('b-*.d')); assert len(found) == 1, found
+record = found[0]; text = record.read_text()
+externals = ['a\\', 'm\\', 'z\\']; ext_dir = base / 'external'
+rule = 'crates/b/src/lib.rs ' + ' '.join(str(ext_dir / e) for e in externals)
+assert text.startswith(f'{record}: {rule}\n'), text
+assert sorted(p.name for p in ext_dir.iterdir()) == externals
+probe = out / 'cargo-probe'; cargo_stderr = (probe / 'stderr.log').read_text(); cargo_exit = int((probe / 'exit.log').read_text().split()[-1])
+assert cargo_exit == 101 and 'error: could not parse/generate dep info at: ' in cargo_stderr and 'malformed dep-info format, trailing \\' in cargo_stderr
+toolchain = (base / 'out/tree/rust-toolchain.toml').read_text()
+cargo_version = re.search(r'^note: (cargo \d+\.\d+\.\d+ \([0-9a-f]+ \d{4}-\d{2}-\d{2}\))$', cargo_stderr, re.M).group(1)
+assert not (base / 'out/trust-dependencies.json').exists()
+
+# 4. Unchanged premises: production, reasons, catalogue, the sweep's own tests, the neighbours.
+pinned = Path('xtask/mutation_sweep_tests.py').read_text()
+digest = sha(production(source).encode())
+assert pinned.count(f"'xtask/src/trust.rs': '{digest}'") >= 1, 'the pinned production premise is the current production digest'
+protected = {}
+for name in PROTECTED:
+    now = Path(name).read_bytes(); at_head = subprocess.check_output(['git', 'show', f'{head}:{name}'])
+    assert now == at_head, name; protected[name] = sha(now)
+status = subprocess.check_output(['git', 'status', '--porcelain', '--', 'xtask'], text=True)
+assert status.rstrip('\n') == f' M {file}', status
+
+results = dict(
+    schema='archogen-dependency-terminal-backslash-control/1', base_commit=head, control='trust::tests::' + CONTROL,
+    source_sha256=sha(source.encode()), source_before_sha256=sha(before.encode()), production_sha256=digest, first_test_line=first_test_line,
+    changed_spans=[[i1, i2, j1, j2] for _, i1, i2, j1, j2 in changed],
+    controls=['trust::tests::' + c for c in CONTROLS], controls_exit=controls.returncode, control_exit=single.returncode,
+    parents=len(names), parents_before=(len(old) if old is not None else None), parents_added=['trust::tests::' + CONTROL],
+    fixture=dict(base=str(base), output='out', record=str(record), rule=rule, externals=externals, text=text, lib_rs=(base / 'repo/crates/b/src/lib.rs').read_text(),
+                 roots=(base / 'repo/trust/roots.eadl').read_text(), toolchain=toolchain, inventory_written=(base / 'out/trust-dependencies.json').exists()),
+    cargo=dict(exit=cargo_exit, version=cargo_version, stderr=cargo_stderr, command='cargo build --lib --release --locked --offline --no-default-features -v -p b',
+               cwd=str(base / 'out/tree'), message=re.search(r'^error: could not parse/generate dep info at: .*$', cargo_stderr, re.M).group(0),
+               cause='malformed dep-info format, trailing \\'),
+    inventory_error='`cargo build --lib --release --locked --offline --no-default-features --message-format=json -v -p b` failed: error: could not parse/generate dep info at: ' + str(record),
+    protected=protected, pinned_sweep_tests_sha256=sha(pinned.encode()),
+)
+(out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
+print('probe: control passed alone and among', len(CONTROLS), 'controls; parents', len(names), '(before', results['parents_before'], '); Cargo exit', cargo_exit, cargo_version, '; production', digest[:12], 'unchanged')
+~~~
+
+</details>
+
+<details>
+<summary>Exact terminal-backslash control audit.py</summary>
+
+~~~python
+"""Re-derive every claim of the terminal-backslash control from retained receipts and a live run, and reject altered ones."""
+from pathlib import Path
+import copy, difflib, hashlib, json, os, re, subprocess
+
+out = Path('target/dependency-terminal-backslash-control'); file = 'xtask/src/trust.rs'; root = Path.cwd()
+def sha(raw): return hashlib.sha256(raw).hexdigest()
+def read(name): return json.loads((out / name).read_text())
+def production(text): return text.split('#[cfg(test)]', 1)[0]
+env = dict(os.environ, CARGO_HOME=str(root / 'target/cargo-home'), TMPDIR=str(root / 'target/tmp'))
+BACKSLASH = "a backslash outside the written tree's prefixes"
+BUILD = '`cargo build --lib --release --locked --offline --no-default-features --message-format=json -v -p b` failed: error: could not parse/generate dep info at: '
+
+def esc(path): return path.replace(' ', '\\ ')
+
+def model_reader(text, dependency_file, scratch, canonical):
+    """An independent model of the repaired reading, for cross-checking the retained record only."""
+    rules = text[len(dependency_file + ': '):]; assert text.startswith(dependency_file + ': ')
+    marked = (' ' + rules).replace(' ' + esc(scratch), ' \0r').replace(' ' + esc(canonical), ' \0c')
+    rule = marked.split('\n', 1)[0]; raw = rule.replace('\0r', esc(scratch)).replace('\0c', esc(canonical))[1:]; rest = rules[len(raw):]
+    files = []
+    for token in [t for t in rule.split(' ') if t]:
+        prefix, suffix = ('', token)
+        for mark, p in [('\0r', scratch), ('\0c', canonical)]:
+            if token.startswith(mark): prefix, suffix = p, token[len(mark):]; break
+        if '\\' in suffix: return ('ambiguous', raw, BACKSLASH)
+        files.append(prefix + suffix)
+    phony = ''.join(esc(f) + ':\n' for f in files); repeated = ': ' + raw + '\n\n'
+    tail = rest[2:] if rest.startswith('\n\n') else None
+    if tail is not None: tail = tail.rsplit(repeated, 1)[-1]
+    if tail is None or not tail.startswith(phony): return ('ambiguous', raw, 'its per-file targets spell the prerequisites otherwise')
+    after = tail[len(phony):]
+    if after and not (after.startswith('\n') and all(l.startswith('# env-dep:') for l in after[1:].splitlines())):
+        return ('ambiguous', raw, 'its per-file targets spell the prerequisites otherwise')
+    return ('read', raw, files)
+
+def collect():
+    ctx = {'results': read('results.json')}
+    ctx['source'] = Path(file).read_text(); ctx['before'] = (out / 'source-before.rs').read_text()
+    ctx['head'] = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+    ctx['head_source'] = subprocess.check_output(['git', 'show', ctx['head'] + ':' + file], text=True)
+    ctx['control_log'] = (out / 'control.log').read_text(); ctx['controls_log'] = (out / 'controls.log').read_text()
+    ctx['names'] = (out / 'parent-list.log').read_text(); ctx['old_names'] = (out / 'parent-list-before.log').read_text()
+    ctx['cargo_stderr'] = (out / 'cargo-probe/stderr.log').read_text(); ctx['cargo_exit'] = int((out / 'cargo-probe/exit.log').read_text().split()[-1])
+    ctx['pinned'] = Path('xtask/mutation_sweep_tests.py').read_text()
+    ctx['protected'] = {name: Path(name).read_bytes() for name in ctx['results']['protected']}
+    ctx['head_protected'] = {name: subprocess.check_output(['git', 'show', ctx['head'] + ':' + name]) for name in ctx['results']['protected']}
+    fixture = ctx['results']['fixture']; base = Path(fixture['base'])
+    found = sorted(p for p in (base / 'out/target/chk/release/deps').glob('b-*.d')); assert len(found) == 1, found
+    ctx['record'] = dict(path=str(found[0]), text=found[0].read_text(), inventory_written=(base / 'out/trust-dependencies.json').exists(),
+                         externals=sorted(p.name for p in (base / 'external').iterdir()), lib_rs=(base / 'repo/crates/b/src/lib.rs').read_text())
+    # The live leg: the control and its nine companions, each by its exact name, re-run now.
+    run = subprocess.run(['cargo', 'test', '--locked', '--offline', '-q', '-p', 'xtask', '--', *ctx['results']['controls'], '--exact'], capture_output=True, text=True, env=env)
+    ctx['live_rc'] = run.returncode; ctx['live_log'] = run.stdout + run.stderr; (out / 'controls-live.log').write_text(ctx['live_log'])
+    return ctx
+
+def verify(ctx):
+    r = ctx['results']; source, before = ctx['source'], ctx['before']; control = r['control']
+    assert r['schema'] == 'archogen-dependency-terminal-backslash-control/1' and r['base_commit'] == ctx['head'] and before == ctx['head_source']
+    assert sha(source.encode()) == r['source_sha256'] and sha(before.encode()) == r['source_before_sha256']
+    # Production is unchanged by construction: every changed line lies in the test module, and the pinned premise is the digest.
+    assert production(source) == production(before) and sha(production(source).encode()) == r['production_sha256']
+    first_test_line = before[:before.index('\n#[cfg(test)]\n')].count('\n') + 1; assert first_test_line == r['first_test_line']
+    spans = [[i1, i2, j1, j2] for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, before.split('\n'), source.split('\n'), autojunk=False).get_opcodes() if tag != 'equal']
+    assert spans == r['changed_spans'] and all(span[0] >= first_test_line for span in spans)
+    assert ctx['pinned'].count("'xtask/src/trust.rs': '" + r['production_sha256'] + "'") >= 1 and sha(ctx['pinned'].encode()) == r['pinned_sweep_tests_sha256']
+    for name, digest in r['protected'].items(): assert sha(ctx['protected'][name]) == digest == sha(ctx['head_protected'][name]), name
+    # The control is one test, named once in the source, among the dependency controls, and the only new parent.
+    short = control.split('::')[-1]; assert source.count('fn ' + short + '()') == 1 and before.count('fn ' + short + '()') == 0 and control in r['controls'] and len(r['controls']) == 10
+    assert re.search(r'test result: ok\. 1 passed; 0 failed', ctx['control_log']) and r['control_exit'] == 0
+    assert re.search(r'test result: ok\. 10 passed; 0 failed', ctx['controls_log']) and r['controls_exit'] == 0
+    assert ctx['live_rc'] == 0 and re.search(r'test result: ok\. 10 passed; 0 failed', ctx['live_log'])
+    names = re.findall(r'^([\w:]+): test$', ctx['names'], re.M); old = re.findall(r'^([\w:]+): test$', ctx['old_names'], re.M)
+    assert len(names) == len(set(names)) == r['parents'] == 207 and len(old) == r['parents_before'] == 206 and set(old) <= set(names)
+    assert sorted(set(names) - set(old)) == [control] == r['parents_added']
+    # The record rustc wrote: its first rule ends in a literal backslash, each outside name does, and the reader refuses it.
+    f = r['fixture']; record = ctx['record']; assert record['path'] == f['record'] and record['text'] == f['text'] and record['externals'] == f['externals'] == ['a\\', 'm\\', 'z\\']
+    base = f['base']; rule = 'crates/b/src/lib.rs ' + ' '.join(base + '/external/' + e for e in f['externals']); assert rule == f['rule'] and rule.endswith('\\')
+    assert record['text'].startswith(record['path'] + ': ' + rule + '\n') and record['path'].startswith(base + '/' + f['output'] + '/target/chk/release/deps/b-')
+    assert not record['inventory_written'] and not f['inventory_written'] and record['lib_rs'] == f['lib_rs']
+    assert all('include_str!("' + base.replace('\\', '\\\\') + '/external/' + e.replace('\\', '\\\\') + '")' in f['lib_rs'] for e in f['externals'])
+    scratch = base + '/' + f['output'] + '/tree/'
+    assert model_reader(record['text'], record['path'], scratch, scratch) == ('ambiguous', rule, BACKSLASH)
+    # The pinned Cargo refuses its own record as an internal error before the inventory reads anything.
+    c = r['cargo']; stderr = ctx['cargo_stderr']; assert stderr == c['stderr'] and ctx['cargo_exit'] == c['exit'] == 101
+    message = re.search(r'^error: could not parse/generate dep info at: (.*)$', stderr, re.M); assert message and message.group(0) == c['message']
+    assert re.search(r'/release/deps/b-[0-9a-f]{16}\.d$', message.group(1)) and c['cause'] == 'malformed dep-info format, trailing \\'
+    assert '\n\nCaused by:\n  ' + c['cause'] + '\n' in stderr and 'note: this is an unexpected cargo internal error' in stderr
+    assert re.search(r'^note: ' + re.escape(c['version']) + '$', stderr, re.M) and re.fullmatch(r'cargo \d+\.\d+\.\d+ \([0-9a-f]+ \d{4}-\d{2}-\d{2}\)', c['version'])
+    assert c['version'].split()[1] == f['toolchain'].split('"')[1], 'the message is the pinned toolchain\'s Cargo'
+    assert r['inventory_error'] == BUILD + record['path']
+    # The control's text asserts exactly that error, no inventory, the rule's ending and the reader's refusal.
+    body = source[source.index('fn ' + short + '()'):]; body = body[:body.index('\n    }\n') + 7]
+    for needed in ['Err(error) => error', 'could not parse/generate dep info at: {}', 'trust-dependencies.json").exists()', 'ambiguous(super::dependency_files(', BACKSLASH,
+                   'panic!("written where the build fails")', 'panic!("refused where the build fails']:
+        assert needed in body, needed
+
+def arms():
+    labels = []
+    def arm(label, mutate):
+        altered = copy.deepcopy(ctx); mutate(altered)
+        try: verify(altered)
+        except AssertionError: labels.append(label); return
+        raise SystemExit('altered receipt accepted: ' + label)
+    def text_swap(key, a, b):
+        def f(d): assert a in d[key]; d[key] = d[key].replace(a, b)
+        return f
+    def record_swap(a, b):
+        def f(d): assert a in d['record']['text']; d['record']['text'] = d['record']['text'].replace(a, b); d['results']['fixture']['text'] = d['record']['text']
+        return f
+    arm('written-claimed', lambda d: d['results']['fixture'].__setitem__('inventory_written', True))
+    arm('record-without-terminal-backslash', record_swap('external/z\\\n', 'external/z\n'))
+    arm('escaped-backslash-claimed', record_swap('external/z\\\n', 'external/z\\\\\n'))
+    arm('cargo-exit-zero', lambda d: d.__setitem__('cargo_exit', 0))
+    arm('cargo-message-missing', text_swap('cargo_stderr', 'could not parse/generate dep info', 'parsed dep info'))
+    arm('cause-missing', text_swap('cargo_stderr', 'malformed dep-info format, trailing \\', 'well-formed dep-info'))
+    arm('internal-error-note-missing', text_swap('cargo_stderr', 'note: this is an unexpected cargo internal error', 'note: a refusal'))
+    arm('foreign-cargo-version', text_swap('cargo_stderr', 'note: cargo 1.95.0', 'note: cargo 1.94.0'))
+    arm('inventory-error-foreign', lambda d: d['results'].__setitem__('inventory_error', BUILD + '/elsewhere/b-0000000000000000.d'))
+    arm('controls-failed', text_swap('controls_log', '10 passed; 0 failed', '9 passed; 1 failed'))
+    arm('live-controls-failed', lambda d: d.__setitem__('live_rc', 101))
+    arm('control-alone-failed', text_swap('control_log', '1 passed; 0 failed', '0 passed; 1 failed'))
+    arm('parent-dropped', text_swap('names', 'trust::tests::every_absolute_dependency_outside_the_written_tree_is_refused: test\n', ''))
+    arm('parent-foreign', text_swap('names', ctx['results']['control'] + ': test\n', ctx['results']['control'] + ': test\ntrust::tests::foreign_parent: test\n'))
+    arm('control-renamed', lambda d: d['results'].__setitem__('control', 'trust::tests::another_control'))
+    arm('production-changed', lambda d: d.__setitem__('source', '// changed premise\n' + d['source']))
+    arm('stale-pinned-premise', text_swap('pinned', ctx['results']['production_sha256'], '0' * 64))
+    arm('protected-changed', lambda d: d['protected'].__setitem__('xtask/trust.equivalents', b'changed'))
+    arm('foreign-base-commit', lambda d: d['results'].__setitem__('base_commit', '0' * 40))
+    arm('span-in-production-claimed', lambda d: d['results'].__setitem__('changed_spans', [[1, 2, 1, 2]] + d['results']['changed_spans']))
+    arm('reader-assertion-dropped', text_swap('source', 'ambiguous(super::dependency_files(&text, record, &scratch, &canonical).unwrap())', 'read(super::dependency_files(&text, record, &scratch, &canonical).unwrap())'))
+    return labels
+
+ctx = collect(); verify(ctx); labels = arms()
+r = ctx['results']
+audit = dict(schema='archogen-dependency-terminal-backslash-control-audit/1', status='passed', base_commit=r['base_commit'], control=r['control'],
+             production_sha256=r['production_sha256'], source_sha256=r['source_sha256'], source_before_sha256=r['source_before_sha256'],
+             controls=r['controls'], parents=r['parents'], parents_before=r['parents_before'], cargo=dict(exit=r['cargo']['exit'], version=r['cargo']['version'], message=r['cargo']['message'], cause=r['cargo']['cause']),
+             inventory_error=r['inventory_error'], record=dict(path=r['fixture']['record'], rule=r['fixture']['rule'], text=r['fixture']['text']),
+             model_outcome='ambiguous: ' + BACKSLASH, inventory='none', decision='the build error is reported as the error it is, never as a refusal; the outcome is unjudged',
+             rejected=labels, live_controls_log_sha256=sha(ctx['live_log'].encode()))
+(out / 'audit.json').write_text(json.dumps(audit, indent=2).replace(str(root), '<repository-root>') + '\n')
+print('Terminal-backslash control audit: passed; control and', len(r['controls']) - 1, 'companions live; parents', r['parents'], '=', r['parents_before'], '+ 1; Cargo exit', r['cargo']['exit'], '"' + r['cargo']['cause'] + '"; production unchanged;', len(labels), 'altered receipts rejected; SHA256', sha((out / 'audit.json').read_bytes()))
+~~~
+
+</details>
