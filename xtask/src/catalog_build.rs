@@ -592,6 +592,13 @@ fn metadata(
 }
 
 /// One `.d` file: the prerequisites of its first target, and its environment dependencies.
+///
+/// The compiler names a package's files relative to the workspace, and the token rules leave a loaded package no
+/// way to name any other file, so a prerequisite is a path in §4's grammar: no space, no backslash, no colon. The
+/// target is the record's own path, written literally, so a space, a tab, a backslash or a line break in the root's
+/// name reaches it and nothing else; the pinned Cargo cannot build under a name holding a colon. The first line
+/// holding `: ` is therefore the rule, and its prerequisites split exactly at spaces. Anything outside that domain
+/// is refused by [`judge_prerequisite`], never unescaped here (`M3.6.9.6.3.2.2.15.2.1.6.2.1`).
 fn dep_info(text: &str) -> (Vec<String>, Vec<String>) {
     let mut prerequisites = Vec::new();
     let mut env = Vec::new();
@@ -600,11 +607,7 @@ fn dep_info(text: &str) -> (Vec<String>, Vec<String>) {
             env.push(dep.split('=').next().unwrap_or_default().to_owned());
         } else if prerequisites.is_empty() {
             if let Some((_, rest)) = line.split_once(": ") {
-                prerequisites.extend(
-                    rest.split(' ')
-                        .filter(|p| !p.is_empty())
-                        .map(|p| p.replace("\\ ", " ")),
-                );
+                prerequisites.extend(rest.split(' ').filter(|p| !p.is_empty()).map(str::to_owned));
             }
         }
     }
@@ -1260,6 +1263,63 @@ mod tests {
             &[],
         );
         run(&tree, &dir).unwrap_or_else(|e| panic!("{e:?}"));
+    }
+
+    #[test]
+    fn a_root_s_name_never_reaches_what_its_builds_read() {
+        // The compiler names a package's files relative to the workspace and a record's own path literally, so a
+        // space, a backslash, a tab or a line break in the root's name reaches the target and never the
+        // prerequisites (`M3.6.9.6.3.2.2.15.2.1.6.2.1`). A colon is absent: the pinned Cargo cannot build there.
+        for name in [
+            "ordinary",
+            "with space",
+            "back\\slash",
+            "back\\ slash",
+            "trailing\\",
+            "tab\there",
+            "line\nbreak",
+            "hash#mark",
+            "quote'mark",
+        ] {
+            let (tree, dir) = small_workspace(
+                name,
+                "#![no_std]\nmod a;\npub fn f() -> u32 { a::A }\n",
+                &[("crates/p/src/a.rs", "pub const A: u32 = 1;\n")],
+            );
+            let built = run(&tree, &dir).unwrap_or_else(|e| panic!("{name:?}: {e:?}"));
+            assert_eq!(
+                (built.packages, built.builds, built.units),
+                (1, 4, 4),
+                "{name:?}"
+            );
+            let mut records = Vec::new();
+            let mut stack = vec![dir.join("scratch/records-target")];
+            while let Some(d) = stack.pop() {
+                for entry in std::fs::read_dir(&d).unwrap().filter_map(Result::ok) {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        stack.push(path);
+                    } else if path.extension().is_some_and(|e| e == "d")
+                        && path
+                            .parent()
+                            .and_then(std::path::Path::file_name)
+                            .is_some_and(|p| p == "deps")
+                    {
+                        records.push(path);
+                    }
+                }
+            }
+            assert_eq!(records.len(), 4, "{name:?}");
+            for record in records {
+                let text = std::fs::read_to_string(&record).unwrap();
+                let rule = format!(
+                    "{}: crates/p/src/lib.rs crates/p/src/a.rs\n\n",
+                    record.display()
+                );
+                assert!(text.starts_with(&rule), "{name:?}: {text:?}");
+            }
+            let _ = std::fs::remove_dir_all(dir);
+        }
     }
 
     #[test]

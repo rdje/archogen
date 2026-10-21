@@ -137,10 +137,17 @@ example:
 A directory name holding a colon cannot be built at all: the pinned Cargo fails before writing any
 record (`error: failed to join paths from $DYLD_FALLBACK_LIBRARY_PATH together`), and the checker
 reports the package as not building. How that outcome should be classified, and where the limit is
-stated, is owned by `M3.6.9.6.3.2.2.15.2.1.6.2.3`. The reader also carries a replacement that can never
-apply, owned by `M3.6.9.6.3.2.2.15.2.1.6.2.2`. The
+stated, is owned by `M3.6.9.6.3.2.2.15.2.1.6.2.3`. The
 [assessment record](annex-trust-proofs.md#catalog-builder-dependency-reader-assessment) keeps every
 record and the probe.
+
+The reader, `dep_info` in `xtask/src/catalog_build.rs`, therefore takes the first line holding `: ` as
+the rule and splits its prerequisites at spaces, and unescapes nothing: a name outside the catalog's
+path grammar is refused when it is judged. The permanent control
+`catalog_build::tests::a_root_s_name_never_reaches_what_its_builds_read` builds the package under each
+of the names above and holds every record's rule exactly; a reader that split the rule at its first
+space instead would refuse the spaced root, naming a fragment of the target (`2026-10-21`). The
+[cleanup record](annex-trust-proofs.md#catalog-dependency-reader-cleanup) keeps that measurement.
 
 ### Status is derived, never written
 

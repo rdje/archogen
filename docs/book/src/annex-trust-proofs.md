@@ -153176,3 +153176,242 @@ print('published', len(f), 'bytes')
 </details>
 
 The receipts are under `target/catalog-dependency-assessment/`. The adapters are supplemental; the production `check`, the pinned Cargo and the input census are primary.
+
+
+### Catalog dependency-reader cleanup
+
+The catalog builder's reader, `dep_info` in `xtask/src/catalog_build.rs`, no longer carries a replacement that could never apply (`M3.6.9.6.3.2.2.15.2.1.6.2.2`, `2026-10-21`). It split the rule at every space and then replaced `\ ` with a space in each piece; a piece split at spaces holds no space, so no piece could hold the two-byte sequence, for any input. The replacement is gone, and the reader states the domain the [assessment](#catalog-builder-dependency-reader-assessment) measured: prerequisites are relative paths in the catalog's grammar, the target is the record's own path written literally, and anything else is refused when it is judged.
+
+The permanent control `catalog_build::tests::a_root_s_name_never_reaches_what_its_builds_read` builds the harness's workspace through `check` under the nine accepted names of the assessment and holds each record's first rule exactly. Measured in this order:
+
+| Reader | Control | Every catalog-builder test |
+| --- | --- | --- |
+| as committed, the replacement present | passes | `15 passed; 0 failed` before the control existed |
+| seeded: the rule split at its first space | **fails**: the spaced root refused, a fragment named | — |
+| the replacement removed | passes | `16 passed; 0 failed` |
+
+The seeded reader's refusal, as the control reported it:
+
+```text
+"with space": Refused(Refusal { code: Source, path: "crates/p/Cargo.toml", field: "(build)", at: None, message: "`p` read `space/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d:`, outside the written index (§3)" })
+```
+
+The control passing on the reader as committed is expected — the replacement changed nothing — and is why the control was also run against a seeded defect: a control only ever seen green shows nothing.
+
+<details>
+<summary>The control on the reader as committed</summary>
+
+```text
+
+running 1 test
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 336 filtered out; finished in 4.74s
+
+```
+
+</details>
+
+<details>
+<summary>The control on the seeded split</summary>
+
+```text
+
+running 1 test
+catalog_build::tests::a_root_s_name_never_reaches_what_its_builds_read --- FAILED
+
+failures:
+
+---- catalog_build::tests::a_root_s_name_never_reaches_what_its_builds_read stdout ----
+
+thread 'catalog_build::tests::a_root_s_name_never_reaches_what_its_builds_read' (1355536045) panicked at xtask/src/catalog_build.rs:1286:61:
+"with space": Refused(Refusal { code: Source, path: "crates/p/Cargo.toml", field: "(build)", at: None, message: "`p` read `space/scratch/records-target/debug/deps/p-c4392ab1538cc2d5.d:`, outside the written index (§3)" })
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    catalog_build::tests::a_root_s_name_never_reaches_what_its_builds_read
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 336 filtered out; finished in 0.88s
+
+error: test failed, to rerun pass `-p xtask --bin xtask`
+```
+
+</details>
+
+<details>
+<summary>Every catalog-builder test, the replacement removed</summary>
+
+```text
+
+running 17 tests
+i................
+test result: ok. 16 passed; 0 failed; 1 ignored; 0 measured; 320 filtered out; finished in 4.78s
+
+```
+
+</details>
+
+#### The caller-suffix proof's premise, revalidated
+
+The first focused run failed one proof guard, `test_caller_suffix_prefix_requires_the_complete_pinned_constructor` in `xtask/mutation_sweep_tests.py`: it pins the production part of `xtask/src/catalog_build.rs`, because the trust code takes `ENV_ALLOWED`, `configurations_on_paths`, `environment`, `toolchain_file`, `write_tree` from it and those enforce the proof's configuration and preflight premises. The guard did its job. The revalidation proves the cleanup's production hunks lie inside `dep_info` and its comment, that nothing outside the file reads `dep_info`, and that every imported item, the configuration walk and the command helper are byte for byte the committed ones; only then is the digest re-bound, `a3ec83b4f8ae870ea7a301dd8acc61d0eb42bb20a5b561c673fa8bb2a23d4864` to `3dce0025a2a71afb9aa4cb3802ebcfcf14379d92ac88b0bca8ae80847b6e7ba0`. A change seeded inside `environment` and one inside `write_tree` are each refused before anything is written.
+
+<details>
+<summary>The revalidation record</summary>
+
+```json
+{
+  "file": "xtask/src/catalog_build.rs",
+  "base_commit": "414b3612b075ce9dca13d6c6689c7f2c6d7ff3ce",
+  "previous_production_sha256": "a3ec83b4f8ae870ea7a301dd8acc61d0eb42bb20a5b561c673fa8bb2a23d4864",
+  "production_sha256": "3dce0025a2a71afb9aa4cb3802ebcfcf14379d92ac88b0bca8ae80847b6e7ba0",
+  "changed_production_hunks": [
+    {
+      "old": [
+        594,
+        594
+      ],
+      "new": [
+        594,
+        601
+      ]
+    },
+    {
+      "old": [
+        602,
+        607
+      ],
+      "new": [
+        609,
+        610
+      ]
+    }
+  ],
+  "reader": {
+    "old": [
+      593,
+      612
+    ],
+    "new": [
+      593,
+      615
+    ]
+  },
+  "imported_by_trust": [
+    "ENV_ALLOWED",
+    "configurations_on_paths",
+    "environment",
+    "toolchain_file",
+    "write_tree"
+  ],
+  "unchanged_items": [
+    "ENV_ALLOWED",
+    "configurations_on_paths",
+    "environment",
+    "toolchain_file",
+    "write_tree",
+    "configurations_on_path",
+    "command"
+  ],
+  "environment_fragment_unchanged": true,
+  "premise": {
+    "test_caller_suffix_prefix_requires_the_complete_pinned_constructor": "catalog_build.rs production digest re-bound"
+  },
+  "sweep_tests": {
+    "previous_sha256": "8098a11c1bda370b77a8cff3f3ae7803b5830eca4ef10ee879bd2d56dca55c4e",
+    "sha256": "51da57e11798912ac2e0df68f6971add0374bc462acd97cd7811607c7ffbec5c"
+  },
+  "argument": "The cleanup changes only dep_info, a private reader of a compiler-written record after a catalog build, and its comment; the items the trust code imports, the configuration walk and the command helper are byte for byte the committed ones, so the proof's configuration and preflight premises hold and the digest is re-bound."
+}
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: revalidate-premises.py</summary>
+
+```python
+"""M3.6.9.6.3.2.2.15.2.1.6.2.2: revalidate the caller-suffix proof's premise on `xtask/src/catalog_build.rs`.
+
+`test_caller_suffix_prefix_requires_the_complete_pinned_constructor` pins the production part of every file
+whose code enforces the proof's configuration and preflight premises; `catalog_build.rs` is pinned for what the
+trust code takes from it: `configurations_on_paths`, `environment`, `toolchain_file`, `write_tree` and
+`ENV_ALLOWED`. This proves the cleanup's production hunks lie inside `dep_info`, a private reader used by
+nothing outside its file, and that every imported item is byte for byte the committed one, then re-binds the
+one digest. Idempotent: it starts from the committed test file.
+"""
+from pathlib import Path
+import difflib, hashlib, json, re, subprocess
+
+out = Path('target/catalog-reader-cleanup')
+file = 'xtask/src/catalog_build.rs'
+head = (out / 'base-commit.txt').read_text().strip()
+
+
+def sha(text):
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
+before = subprocess.check_output(['git', 'show', head + ':' + file], text=True)
+source = Path(file).read_text()
+old_prefix, new_prefix = before.split('#[cfg(test)]', 1)[0], source.split('#[cfg(test)]', 1)[0]
+assert sha(old_prefix) == 'a3ec83b4f8ae870ea7a301dd8acc61d0eb42bb20a5b561c673fa8bb2a23d4864'
+old_lines, new_lines = old_prefix.split('\n'), new_prefix.split('\n')
+
+
+def span(lines, start, end):
+    a = next(i for i, l in enumerate(lines) if l.startswith(start))
+    b = next(i for i in range(a, len(lines)) if lines[i] == end)
+    return a, b + 1
+
+
+old_reader = span(old_lines, '/// One `.d` file', '}')
+new_reader = span(new_lines, '/// One `.d` file', '}')
+hunks = [(i1, i2, j1, j2) for tag, i1, i2, j1, j2 in
+         difflib.SequenceMatcher(None, old_lines, new_lines, autojunk=False).get_opcodes() if tag != 'equal']
+assert hunks
+for i1, i2, j1, j2 in hunks:
+    assert old_reader[0] <= i1 and i2 <= old_reader[1] and new_reader[0] <= j1 and j2 <= new_reader[1], (i1, i2, j1, j2)
+assert old_lines[:old_reader[0]] == new_lines[:new_reader[0]] and old_lines[old_reader[1]:] == new_lines[new_reader[1]:]
+# `dep_info` is private and read by nothing outside its own file.
+users = subprocess.check_output(['git', 'grep', '-n', r'\bdep_info(', '--', 'xtask/src', 'crates'], text=True).splitlines()
+assert all(u.startswith(file + ':') for u in users), users
+imported = re.search(r'use crate::catalog_build::\{([^}]*)\};', Path('xtask/src/trust.rs').read_text()).group(1)
+names = sorted(n.strip() for n in imported.split(',') if n.strip())
+assert names == ['ENV_ALLOWED', 'configurations_on_paths', 'environment', 'toolchain_file', 'write_tree'], names
+
+
+def item(text, name):
+    lines = text.split('\n')
+    a = next(i for i, l in enumerate(lines) if re.match(r'(pub(\(crate\))? )?(fn|const) ' + re.escape(name) + r'\b', l))
+    while a > 0 and lines[a - 1].startswith('///'):
+        a -= 1
+    b = next(i for i in range(a, len(lines)) if lines[i] in ('}', '];'))
+    return '\n'.join(lines[a:b + 1])
+
+
+for name in names + ['configurations_on_path', 'command']:
+    assert item(old_prefix, name) == item(new_prefix, name), name
+environment = lambda t: t[t.index('pub fn environment('):t.index('\nfn command(')]
+assert environment(before) == environment(source)
+tests = Path('xtask/mutation_sweep_tests.py')
+head_tests = subprocess.check_output(['git', 'show', head + ':xtask/mutation_sweep_tests.py'], text=True)
+pin = "'xtask/src/catalog_build.rs': '" + sha(old_prefix) + "'"
+assert head_tests.count(pin) == 1
+rebound = head_tests.replace(pin, "'xtask/src/catalog_build.rs': '" + sha(new_prefix) + "'", 1)
+tests.write_text(rebound)
+record = dict(file=file, base_commit=head, previous_production_sha256=sha(old_prefix), production_sha256=sha(new_prefix),
+              changed_production_hunks=[dict(old=[i1, i2], new=[j1, j2]) for i1, i2, j1, j2 in hunks],
+              reader=dict(old=list(old_reader), new=list(new_reader)), imported_by_trust=names,
+              unchanged_items=names + ['configurations_on_path', 'command'], environment_fragment_unchanged=True,
+              premise={'test_caller_suffix_prefix_requires_the_complete_pinned_constructor': 'catalog_build.rs production digest re-bound'},
+              sweep_tests=dict(previous_sha256=sha(head_tests), sha256=sha(rebound)),
+              argument='The cleanup changes only dep_info, a private reader of a compiler-written record after a catalog '
+                       'build, and its comment; the items the trust code imports, the configuration walk and the command '
+                       'helper are byte for byte the committed ones, so the proof\'s configuration and preflight premises '
+                       'hold and the digest is re-bound.')
+(out / 'premise-revalidation.json').write_text(json.dumps(record, indent=2) + '\n')
+print('premise re-bound:', sha(old_prefix)[:12], '->', sha(new_prefix)[:12], '; hunks', record['changed_production_hunks'],
+      '; imported items unchanged:', ', '.join(names))
+```
+
+</details>

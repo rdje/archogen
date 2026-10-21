@@ -5,6 +5,21 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the catalog reader unescapes nothing
+
+`ARCHOGEN-M3-0832` (leaf `M3.6.9.6.3.2.2.15.2.1.6.2.2`), `2026-10-21`.
+
+- Remove from `dep_info` in `xtask/src/catalog_build.rs` a replacement of `\ ` that could never apply:
+  it ran on pieces already split at spaces. The reader now states the domain the assessment measured:
+  relative paths in the catalog's grammar, the record's own path written literally, anything else
+  refused when it is judged.
+- Add the permanent control `catalog_build::tests::a_root_s_name_never_reaches_what_its_builds_read`:
+  the harness's workspace built through `check` under nine root names holding a space, backslashes, a
+  tab, a line break, a hash and a quote, each record's rule held exactly. It passes on the old and the
+  new reader and fails on a seeded first-space split, which refuses the spaced root naming a fragment.
+- Every catalog-builder test passes, 15 before and 16 after; the catalog chapter states the reader's
+  rule and names the control.
+
 ## archogen — measure the catalog builder's dependency reader
 
 `ARCHOGEN-M3-0831` (leaf `M3.6.9.6.3.2.2.15.2.1.6.2.1`), `2026-10-21`.

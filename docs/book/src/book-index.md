@@ -91,6 +91,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md)
 - Catalog builder dependency-reader assessment — [Annex C: Trust proof
   records](annex-trust-proofs.md#catalog-builder-dependency-reader-assessment)
+- Catalog dependency-reader cleanup — [Annex C: Trust proof
+  records](annex-trust-proofs.md#catalog-dependency-reader-cleanup)
 - catalog-rules — [What is versioned, and what changing it costs](versions.md#catalog-rules)
 - catalog-s0 — [What is versioned, and what changing it costs](versions.md#catalog-s0)
 - **check-passing convention** — [definition](glossary.md), [Where the engine's knowledge comes from: the
@@ -386,7 +388,8 @@ a change that leaves it stale, so it is never edited by hand.
   scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The
   runtime: decisions, not actions](runtime.md), [Where generated systems run](targets.md), [Verifying the
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
-  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
+  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust
+  proof records](annex-trust-proofs.md)
 - **JSON** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md),
   [Generated-sources test adequacy](trust-adequacy.md), [The engine API](engine-api.md), [Verifying the
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
