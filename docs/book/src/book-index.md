@@ -192,6 +192,8 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#daily-artifact-cleanup)
 - Daily artifact cleanup on 2026-10-20 — [Annex B: The checks that keep the repository
   honest](annex-repository.md#daily-artifact-cleanup-on-2026-10-20)
+- Daily artifact cleanup on 2026-10-21 — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#daily-artifact-cleanup-on-2026-10-21)
 - **deadline** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [Reading a
   description](reading.md), [Quantities and units](quantities.md), [Describing a workload](workload.md), [What a report

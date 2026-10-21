@@ -5,6 +5,22 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the thirteenth daily artifact cleanup
+
+`ARCHOGEN-PROGRAM-0829` (leaf `PROGRAM.96`), `2026-10-21`.
+
+- Remove only the idle main and owned native-sweep incremental caches, 2849 files / 1017454565 logical
+  bytes (360 cached `.bin`, no `.log`), after physical and native inventories that agree, a handoff
+  census before the inventory and again before the deletion, and an identity recheck of every
+  inventoried entry. Dependency stores, final products and every cited evidence directory are retained.
+- Compare, for the first time, the identity of every other entry under `target/` before and after:
+  584886 of 584889 identical; the three rows the strict comparison refused are the two removed
+  caches' parents and the scratch directory the handoff census makes and removes its guard in, each
+  accounted. 580 evidence digests and 1168 tracked inputs restore; an audit refuses four altered receipts.
+- Seal what closed at `HEAD`, `M3`'s `.6.1` subtree and `PROGRAM.95`, with their log rows; overwrite
+  the latest-cleanup record and add the run's section to the repository annex. The external policies
+  re-read at session start still hash as adopted.
+
 ## archogen — hold Cargo's terminal-backslash refusal as a control
 
 `ARCHOGEN-M3-0828` (leaf `M3.6.9.6.3.2.2.15.2.1.6.1.1.2`), `2026-10-21`.
