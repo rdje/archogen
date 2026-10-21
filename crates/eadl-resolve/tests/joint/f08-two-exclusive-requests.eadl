@@ -1,0 +1,26 @@
+; F08 — two exclusive requests, one resource (ROADMAP.md §13.1): rejected unless a selected realization supplies
+; sharing. Two services each program an absolute deadline, and the platform has one comparator, with one channel.
+; Each service alone is satisfied by it (§7); together they need two channels (§8, leaf M3.3.2).
+
+(eadl-version eadl/1)
+
+(defblock timer.compare
+  (offers (absolute-deadline true) (channels 1 tick)))
+
+(defplatform soc.one-comparator
+  (offers (core-count 1 tick))
+  (requires (uses timer.compare)))
+
+(defservice alarm.engine
+  (requires (needs absolute-deadline)))
+
+(defservice alarm.watchdog
+  (requires (needs absolute-deadline)))
+
+(defsystem two-alarms
+  (task engine (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1)
+    (uses alarm.engine))
+  (task watchdog (period 100 ms) (deadline 100 ms) (deadline-from release) (priority 2)
+    (uses alarm.watchdog))
+  (requires (uses alarm.engine alarm.watchdog))
+  (platform (uses soc.one-comparator)))

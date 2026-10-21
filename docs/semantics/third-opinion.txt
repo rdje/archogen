@@ -1,5 +1,7 @@
 # docs/semantics/third-opinion.txt — per document, whether archogen's reader and LinkedSpec's SExprDocumentV1
 # recognizer agree on its forms (leaf M1.22). Written by scripts/third_opinion.sh --bless; checked by it.
+agree crates/eadl-resolve/tests/joint/f08-two-exclusive-requests.eadl
+agree crates/eadl-resolve/tests/joint/f09-conflicting-ownership.eadl
 agree docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/01-multiple-top-level-forms.eadl
 agree docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/06-unterminated-form.eadl
 agree docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/07-trailing-garbage.eadl

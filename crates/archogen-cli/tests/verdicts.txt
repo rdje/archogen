@@ -1,6 +1,8 @@
 # The frozen verdict of every description in this repository (leaf `PROGRAM.6.2`).
 # <exit code of `archogen check`> <its diagnostic codes, sorted, or -> <path>
 # Regenerated deliberately: ARCHOGEN_BLESS_VERDICTS=1 cargo test -p archogen-cli --test verdicts
+0 - crates/eadl-resolve/tests/joint/f08-two-exclusive-requests.eadl
+0 - crates/eadl-resolve/tests/joint/f09-conflicting-ownership.eadl
 0 - docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/01-multiple-top-level-forms.eadl
 10 read-unclosed-list docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/06-unterminated-form.eadl
 10 read-unclosed-list docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/07-trailing-garbage.eadl

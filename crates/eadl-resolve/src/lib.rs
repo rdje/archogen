@@ -12,8 +12,11 @@
 //! record beside the model and runs the model's exhaustive checker and its falsification corpus
 //! (`tests/checker.rs`, `tests/corpus.rs`), so a question a machine can settle — whether every input has one
 //! outcome, whether a value is ever read the wrong way — is settled by one. The production relation, leaf
-//! `M3.1.2`, is tested against the model over the same bounded universe. `archogen check` does not call it.
+//! `M3.1.2`, is tested against the model over the same bounded universe. [`joint`] judges the bindings of one complete
+//! assignment together — a provider's channels and the regions bound providers own (`M3.3.2`). `archogen check` does
+//! not call any of it.
 
+pub mod joint;
 pub mod model;
 pub mod offer;
 pub mod refusal;

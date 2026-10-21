@@ -1,0 +1,723 @@
+//! Joint constraints: whether the bindings of one complete assignment hold together (`docs/semantics/model.md` §8;
+//! leaf `M3.3.2`, the design in `docs/tasks/M3.md`'s `M3.3`).
+//!
+//! ⭐ **The relation judges a binding alone; these rules judge the bindings together.** An assignment binds each
+//! requester's requirement to one provider the relation satisfies it at (§7). Two rules are decided here, over one
+//! complete assignment the resolver proposes:
+//!
+//! - **Channels** (F08). A requester bound to a consumed fact — `use consumed` in the vocabulary — at the value `true`
+//!   takes one of the provider's `channels`, and a provider serves no more requesters than it has.
+//! - **Ownership** (F09). A provider bound in the assignment owns every region it offers, and the regions of two such
+//!   providers do not overlap, unless one composes the other through `uses`.
+//!
+//! A [`Report`] lists what one assignment breaks. It is a judgment of that assignment only: the description is
+//! `infeasible-configuration`, or `missing-fact`, when no assignment the resolver can propose avoids it, which is
+//! `M3.4`'s search to conclude. What a provider writes that cannot mean anything — a consumed function offered with no
+//! channel, a region with no base — is refused when the providers are read, whether or not anything binds them.
+//!
+//! A service several users reach — tasks or services that use it — is one requester of what it binds: its realization
+//! serves them, so it is the multiplexer, and an [`Obligation::Multiplex`] reports that it owes them the semantics and
+//! a bounded overhead.
+
+use std::collections::{BTreeMap, BTreeSet};
+
+use eadl_front::{Diagnostic, Form, Label, Span};
+use eadl_model::{Dimension, Quantity};
+
+use crate::offer::{Provider, State};
+use crate::requirement::{self, Requirement};
+use crate::value::Value;
+use crate::vocabulary::{Usage, Vocabulary};
+
+/// Who a requester is (the design's requester).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Kind {
+    /// A task, for what it writes itself.
+    Task,
+    /// A service.
+    Service,
+    /// Any other declaration, for what it writes at its own level, outside its tasks.
+    Other,
+}
+
+/// One requester, its requirements and the declarations its `uses` names.
+#[derive(Debug, Clone)]
+pub struct Requester {
+    /// Its name; a task's is `system/task`.
+    pub name: String,
+    /// Who it is.
+    pub kind: Kind,
+    /// Where it is written.
+    pub span: Span,
+    /// What it requires, as the relation reads a side.
+    pub requirements: Vec<Requirement>,
+    /// The declarations its `uses` lists name.
+    pub uses: Vec<String>,
+}
+
+/// Every requester `decl` writes: a system's own level and each of its tasks apart, any other declaration whole.
+/// A block or a platform writes requirements too; its `uses` is composition, which [`Provider`]s read instead.
+///
+/// # Errors
+///
+/// The refusals the relation's reading of a side gives (§7 rule 4).
+pub fn requesters(
+    decl: &Form,
+    vocabulary: &Vocabulary,
+) -> Result<Vec<Requester>, requirement::Refusals> {
+    let name = name_of(decl).to_string();
+    let kind = match decl.head() {
+        Some("defservice") => Kind::Service,
+        _ => Kind::Other,
+    };
+    if decl.head() != Some("defsystem") {
+        return Ok(vec![requester(decl, name, kind, vocabulary)?]);
+    }
+    let (tasks, own): (Vec<&Form>, Vec<&Form>) = decl
+        .items()
+        .iter()
+        .partition(|item| item.head() == Some("task"));
+    let own = Form::List {
+        items: own.into_iter().cloned().collect(),
+        span: decl.span(),
+    };
+    let mut out = vec![requester(&own, name.clone(), Kind::Other, vocabulary)?];
+    for task in tasks {
+        let task_name = format!("{name}/{}", name_of(task));
+        out.push(requester(task, task_name, Kind::Task, vocabulary)?);
+    }
+    Ok(out)
+}
+
+fn requester(
+    form: &Form,
+    name: String,
+    kind: Kind,
+    vocabulary: &Vocabulary,
+) -> Result<Requester, requirement::Refusals> {
+    Ok(Requester {
+        name,
+        kind,
+        span: form.span(),
+        requirements: requirement::read_side(form, vocabulary)?,
+        uses: used_names(form),
+    })
+}
+
+/// The names `form`'s `uses` lists hold, at the positions the relation reads a side's.
+fn used_names(form: &Form) -> Vec<String> {
+    requirement::side_name_lists(form)
+        .into_iter()
+        .filter(|list| list.head() == Some("uses"))
+        .flat_map(|list| list.items()[1..].iter().filter_map(Form::as_symbol))
+        .map(str::to_string)
+        .collect()
+}
+
+fn name_of(form: &Form) -> &str {
+    form.items()
+        .get(1)
+        .and_then(Form::as_symbol)
+        .unwrap_or_default()
+}
+
+/// One binding of an assignment: a requester's requirement, met by a provider.
+#[derive(Debug, Clone)]
+pub struct Binding {
+    /// The requester's name.
+    pub requester: String,
+    /// The requirement the provider meets.
+    pub requirement: Requirement,
+    /// The provider's name.
+    pub provider: String,
+}
+
+/// A byte range a provider owns: `(region NAME (base B) (size S))`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Region {
+    /// The region's name.
+    pub name: String,
+    /// Where it is offered.
+    pub span: Span,
+    /// Its first byte.
+    pub base: i128,
+    /// How many bytes it holds, when its size is written.
+    pub bytes: Option<i128>,
+}
+
+impl Region {
+    /// The bytes it is known to own: `[base, base + size)`, or its base alone when its size is not written.
+    const fn known(&self) -> (i128, i128) {
+        match self.bytes {
+            Some(bytes) => (self.base, self.base + bytes),
+            None => (self.base, self.base + 1),
+        }
+    }
+}
+
+/// What a provider says of its channels.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Channels {
+    /// A count.
+    Count(i128),
+    /// Not written.
+    Undescribed,
+    /// Offered without a value, or past the arithmetic.
+    Unknown,
+}
+
+/// What the joint rules read of one provider.
+#[derive(Debug, Clone)]
+struct Held {
+    span: Span,
+    channels: Channels,
+    regions: Vec<Region>,
+    composes: BTreeSet<String>,
+}
+
+/// One rule broken, or one fact a rule cannot do without.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Finding {
+    /// More requesters take a provider's channels than it has (F08).
+    OverChannels {
+        /// The provider.
+        provider: String,
+        /// Its `channels`.
+        channels: i128,
+        /// The requesters taking one, each with where it requires the fact.
+        requesters: Vec<(String, Span)>,
+    },
+    /// Two requesters or more take a provider's channels, and it does not say how many it has.
+    ChannelsUnknown {
+        /// The provider.
+        provider: String,
+        /// The requesters taking one.
+        requesters: Vec<(String, Span)>,
+    },
+    /// Two bound providers own overlapping bytes, and neither composes the other (F09).
+    Overlap {
+        /// The first provider and its region.
+        first: (String, Region),
+        /// The second.
+        second: (String, Region),
+    },
+    /// A bound provider's region has no size, and another bound provider owns bytes at or above its base.
+    RegionUnsized {
+        /// The provider.
+        provider: String,
+        /// The region.
+        region: Region,
+        /// The provider owning bytes above its base.
+        against: String,
+    },
+    /// A provider offers a consumed function `true` and declares its `channels` absent, or zero.
+    ChannelsContradicted {
+        /// The provider.
+        provider: String,
+        /// Where it is declared.
+        span: Span,
+    },
+    /// A region written so that it names no byte range.
+    RegionMalformed {
+        /// The provider.
+        provider: String,
+        /// Where the region is written.
+        span: Span,
+        /// What is wrong.
+        detail: String,
+    },
+    /// A region whose range lies past the exact arithmetic.
+    RegionPastArithmetic {
+        /// The provider.
+        provider: String,
+        /// Where the region is written.
+        span: Span,
+    },
+}
+
+impl Finding {
+    /// Its code (`ROADMAP.md` §5.5).
+    #[must_use]
+    pub const fn code(&self) -> &'static str {
+        match self {
+            Self::OverChannels { .. } | Self::Overlap { .. } => "infeasible-configuration",
+            Self::ChannelsUnknown { .. } | Self::RegionUnsized { .. } => "missing-fact",
+            Self::ChannelsContradicted { .. } | Self::RegionMalformed { .. } => {
+                "invalid-description"
+            }
+            Self::RegionPastArithmetic { .. } => "unsupported-profile",
+        }
+    }
+
+    /// The finding as a diagnostic: what is wrong, where, and what to do.
+    #[must_use]
+    pub fn diagnostic(&self) -> Diagnostic {
+        match self {
+            Self::OverChannels {
+                provider,
+                channels,
+                requesters,
+            } => {
+                let names = listed(requesters);
+                let primary = Label::new(requesters[0].1, "takes a channel here");
+                requesters[1..]
+                    .iter()
+                    .fold(
+                        Diagnostic::error(
+                            "infeasible-configuration",
+                            format!(
+                                "`{provider}` serves {channels} requester(s) at once through its consumed facts, \
+                                 and {} take one: {names}",
+                                requesters.len()
+                            ),
+                            primary,
+                            "bind a requester to another provider, select a realization that shares the function, \
+                             or use a provider with more channels",
+                        ),
+                        |d, (_, span)| d.with_secondary(Label::new(*span, "and here")),
+                    )
+            }
+            Self::ChannelsUnknown {
+                provider,
+                requesters,
+            } => {
+                let names = listed(requesters);
+                requesters[1..].iter().fold(
+                    Diagnostic::error(
+                        "missing-fact",
+                        format!(
+                            "`{provider}` does not say how many requesters it serves at once, and {} take a \
+                             channel: {names}",
+                            requesters.len()
+                        ),
+                        Label::new(requesters[0].1, "takes a channel here"),
+                        format!("describe `{provider}`'s `channels`, or bind a requester to another provider"),
+                    ),
+                    |d, (_, span)| d.with_secondary(Label::new(*span, "and here")),
+                )
+            }
+            Self::Overlap { first, second } => Diagnostic::error(
+                "infeasible-configuration",
+                format!(
+                    "`{}` and `{}` both own bytes of `{}` and `{}`, and neither composes the other",
+                    first.0, second.0, first.1.name, second.1.name
+                ),
+                Label::new(first.1.span, "owned here"),
+                "bind one of the two requesters to a provider that does not own these bytes, or describe one \
+                 provider as composing the other",
+            )
+            .with_secondary(Label::new(second.1.span, "and here")),
+            Self::RegionUnsized {
+                provider,
+                region,
+                against,
+            } => Diagnostic::error(
+                "missing-fact",
+                format!(
+                    "`{provider}`'s region `{}` has no size, and `{against}` owns bytes above its base, so whether \
+                     they overlap is unknown",
+                    region.name
+                ),
+                Label::new(region.span, "no size"),
+                "write the region's `(size …)`",
+            ),
+            Self::ChannelsContradicted { provider, span } => Diagnostic::error(
+                "invalid-description",
+                format!(
+                    "`{provider}` offers a consumed function and declares no channel to serve it with"
+                ),
+                Label::new(*span, "declared here"),
+                "describe `channels` as one or more, or withdraw the consumed offer",
+            ),
+            Self::RegionMalformed {
+                provider,
+                span,
+                detail,
+            } => Diagnostic::error(
+                "invalid-description",
+                format!("`{provider}`: {detail}"),
+                Label::new(*span, "written here"),
+                "write a region as `(region NAME (base ADDRESS) (size AMOUNT UNIT))`",
+            ),
+            Self::RegionPastArithmetic { provider, span } => Diagnostic::error(
+                "unsupported-profile",
+                format!("`{provider}`: a region whose bytes the exact arithmetic cannot count"),
+                Label::new(*span, "written here"),
+                "write a smaller region",
+            ),
+        }
+    }
+}
+
+fn listed(requesters: &[(String, Span)]) -> String {
+    requesters
+        .iter()
+        .map(|(name, _)| format!("`{name}`"))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// What a realization owes because of an assignment.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Obligation {
+    /// A service several requesters reach takes a channel: its realization serves them all through it, so it owes
+    /// them the shared semantics and a bounded overhead (`ROADMAP.md` §5.4).
+    Multiplex {
+        /// The service.
+        service: String,
+        /// The requesters that use it.
+        users: Vec<String>,
+        /// The provider whose channel it takes.
+        provider: String,
+    },
+}
+
+/// What one assignment breaks, what it leaves unknown, and what it obliges.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Report {
+    /// Rules the assignment breaks: `infeasible-configuration` once every assignment breaks one.
+    pub conflicts: Vec<Finding>,
+    /// Facts a rule needs and the description does not give: `missing-fact` once no assignment is free of conflicts.
+    pub unknowns: Vec<Finding>,
+    /// What the assignment obliges a realization to do.
+    pub obligations: Vec<Obligation>,
+}
+
+impl Report {
+    /// Whether the assignment holds together.
+    #[must_use]
+    pub fn holds(&self) -> bool {
+        self.conflicts.is_empty() && self.unknowns.is_empty()
+    }
+}
+
+/// The joint rules over one description's providers and requesters.
+#[derive(Debug, Clone)]
+pub struct Joint<'v> {
+    vocabulary: &'v Vocabulary,
+    held: BTreeMap<String, Held>,
+    requesters: BTreeMap<String, Kind>,
+    users: BTreeMap<String, BTreeSet<String>>,
+}
+
+impl<'v> Joint<'v> {
+    /// Read what the rules need of each provider — its channels, its regions, the providers it composes — and who
+    /// uses whom among the requesters.
+    ///
+    /// # Errors
+    ///
+    /// Every provider-level finding: a consumed function offered `true` with `channels` absent or zero; a region
+    /// that names no byte range, or one past the arithmetic.
+    pub fn new(
+        providers: &[(Provider, &Form)],
+        requesters: &[Requester],
+        vocabulary: &'v Vocabulary,
+    ) -> Result<Self, Vec<Finding>> {
+        let mut findings = Vec::new();
+        let mut held = BTreeMap::new();
+        for (provider, decl) in providers {
+            let channels = match provider.state("channels") {
+                None => Channels::Undescribed,
+                Some(State::Valued(values)) => match values.first() {
+                    Some(Value::Count(n)) => Channels::Count(*n),
+                    _ => Channels::Unknown,
+                },
+                Some(State::Absent) => Channels::Count(0),
+                Some(State::Unvalued | State::Overflow) => Channels::Unknown,
+            };
+            if channels == Channels::Count(0) && offers_a_consumed_function(provider, vocabulary) {
+                findings.push(Finding::ChannelsContradicted {
+                    provider: provider.name.clone(),
+                    span: provider
+                        .facts
+                        .get("channels")
+                        .and_then(|s| s.spans.first().copied())
+                        .unwrap_or(provider.span),
+                });
+            }
+            let regions = regions(provider, decl, &mut findings);
+            held.insert(
+                provider.name.clone(),
+                Held {
+                    span: provider.span,
+                    channels,
+                    regions,
+                    composes: used_names(decl).into_iter().collect(),
+                },
+            );
+        }
+        if !findings.is_empty() {
+            return Err(findings);
+        }
+        // A service's users are what calls it at run time — tasks and other services. A system's own `uses` says what
+        // the system includes, not who calls it, so it is no second user beside the task that does.
+        let mut users: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+        for r in requesters.iter().filter(|r| r.kind != Kind::Other) {
+            for used in &r.uses {
+                users
+                    .entry(used.clone())
+                    .or_default()
+                    .insert(r.name.clone());
+            }
+        }
+        Ok(Self {
+            vocabulary,
+            held,
+            requesters: requesters
+                .iter()
+                .map(|r| (r.name.clone(), r.kind))
+                .collect(),
+            users,
+        })
+    }
+
+    /// Judge one complete assignment.
+    #[must_use]
+    pub fn check(&self, assignment: &[Binding]) -> Report {
+        let mut report = Report::default();
+        self.channels(assignment, &mut report);
+        self.ownership(assignment, &mut report);
+        report
+    }
+
+    /// F08: the requesters taking a provider's channels number at most its `channels`.
+    fn channels(&self, assignment: &[Binding], report: &mut Report) {
+        let mut taking: BTreeMap<&str, BTreeMap<&str, Span>> = BTreeMap::new();
+        for b in assignment {
+            if let Some(span) = takes_a_channel(&b.requirement, self.vocabulary) {
+                taking
+                    .entry(b.provider.as_str())
+                    .or_default()
+                    .entry(b.requester.as_str())
+                    .or_insert(span);
+            }
+        }
+        for (provider, by) in taking {
+            let requesters: Vec<(String, Span)> = by
+                .iter()
+                .map(|(name, span)| ((*name).to_string(), *span))
+                .collect();
+            for (name, _) in &requesters {
+                let users = self.users.get(name).filter(|u| u.len() > 1);
+                if let (Some(Kind::Service), Some(users)) = (self.requesters.get(name), users) {
+                    report.obligations.push(Obligation::Multiplex {
+                        service: name.clone(),
+                        users: users.iter().cloned().collect(),
+                        provider: provider.to_string(),
+                    });
+                }
+            }
+            if requesters.len() < 2 {
+                continue; // one requester needs no count: offering the function at all serves one
+            }
+            let channels = self
+                .held
+                .get(provider)
+                .map_or(Channels::Undescribed, |h| h.channels);
+            match channels {
+                Channels::Count(n)
+                    if i128::try_from(requesters.len()).is_ok_and(|taken| taken <= n) => {}
+                Channels::Count(n) => report.conflicts.push(Finding::OverChannels {
+                    provider: provider.to_string(),
+                    channels: n,
+                    requesters,
+                }),
+                Channels::Undescribed | Channels::Unknown => {
+                    report.unknowns.push(Finding::ChannelsUnknown {
+                        provider: provider.to_string(),
+                        requesters,
+                    })
+                }
+            }
+        }
+    }
+
+    /// F09: the regions of two bound providers do not overlap, unless one composes the other.
+    fn ownership(&self, assignment: &[Binding], report: &mut Report) {
+        let bound: BTreeSet<&str> = assignment.iter().map(|b| b.provider.as_str()).collect();
+        let bound: Vec<(&str, &Held)> = bound
+            .into_iter()
+            .filter_map(|name| self.held.get(name).map(|h| (name, h)))
+            .collect();
+        for (i, (p, ph)) in bound.iter().enumerate() {
+            for (q, qh) in &bound[i + 1..] {
+                if self.composes(p, q) || self.composes(q, p) {
+                    continue;
+                }
+                for a in &ph.regions {
+                    for b in &qh.regions {
+                        judge_pair((p, a), (q, b), report);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Whether `outer` composes `inner` through `uses`, at any depth.
+    fn composes(&self, outer: &str, inner: &str) -> bool {
+        let mut seen = BTreeSet::new();
+        let mut todo = vec![outer];
+        while let Some(at) = todo.pop() {
+            if !seen.insert(at) {
+                continue;
+            }
+            if let Some(h) = self.held.get(at) {
+                for next in &h.composes {
+                    if next == inner {
+                        return true;
+                    }
+                    todo.push(next);
+                }
+            }
+        }
+        false
+    }
+
+    /// Where `provider` is declared, when the rules read it.
+    #[must_use]
+    pub fn span_of(&self, provider: &str) -> Option<Span> {
+        self.held.get(provider).map(|h| h.span)
+    }
+}
+
+/// Two regions of two bound providers: overlapping known bytes are a conflict; a region with no size, with the other's
+/// bytes at or above its base, is unknown.
+fn judge_pair(a: (&str, &Region), b: (&str, &Region), report: &mut Report) {
+    let ((p, ra), (q, rb)) = (a, b);
+    let (a0, a1) = ra.known();
+    let (b0, b1) = rb.known();
+    if a0 < b1 && b0 < a1 {
+        report.conflicts.push(Finding::Overlap {
+            first: (p.to_string(), ra.clone()),
+            second: (q.to_string(), rb.clone()),
+        });
+        return;
+    }
+    if ra.bytes.is_none() && b0 >= a0 {
+        report.unknowns.push(Finding::RegionUnsized {
+            provider: p.to_string(),
+            region: ra.clone(),
+            against: q.to_string(),
+        });
+    }
+    if rb.bytes.is_none() && a0 >= b0 {
+        report.unknowns.push(Finding::RegionUnsized {
+            provider: q.to_string(),
+            region: rb.clone(),
+            against: p.to_string(),
+        });
+    }
+}
+
+/// Where a requirement takes a channel: one on a consumed fact that the value `true` meets.
+fn takes_a_channel(requirement: &Requirement, vocabulary: &Vocabulary) -> Option<Span> {
+    let consumed = vocabulary
+        .fact(requirement.fact())
+        .is_some_and(|f| f.usage == Usage::Consumed);
+    if !consumed {
+        return None;
+    }
+    match requirement {
+        Requirement::Presence { span, .. } | Requirement::Group { span, .. } => Some(*span),
+        Requirement::Constraint {
+            value: Value::Bool(true),
+            span,
+            ..
+        } => Some(*span),
+        Requirement::Constraint { .. } | Requirement::Statement { .. } => None,
+    }
+}
+
+/// Whether `provider` offers a consumed fact at the value `true`.
+fn offers_a_consumed_function(provider: &Provider, vocabulary: &Vocabulary) -> bool {
+    vocabulary
+        .facts()
+        .filter(|f| f.usage == Usage::Consumed)
+        .any(|f| matches!(provider.state(&f.name), Some(State::Valued(v)) if v.contains(&Value::Bool(true))))
+}
+
+/// Every region `decl` offers, each read or refused.
+fn regions(provider: &Provider, decl: &Form, findings: &mut Vec<Finding>) -> Vec<Region> {
+    let mut out = Vec::new();
+    let offers = decl.items().iter().filter(|c| c.head() == Some("offers"));
+    for item in offers.flat_map(|c| c.items()[1..].iter()) {
+        if item.head() != Some("region") {
+            continue;
+        }
+        match region(item) {
+            Ok(r) => out.push(r),
+            Err(None) => findings.push(Finding::RegionPastArithmetic {
+                provider: provider.name.clone(),
+                span: item.span(),
+            }),
+            Err(Some(detail)) => findings.push(Finding::RegionMalformed {
+                provider: provider.name.clone(),
+                span: item.span(),
+                detail,
+            }),
+        }
+    }
+    out
+}
+
+/// One `(region NAME (base B) (size S) …)`: `Err(Some(why))` when it names no byte range, `Err(None)` when its range
+/// lies past the exact arithmetic. Sub-clauses other than `base` and `size` are another rule's and ignored here.
+fn region(item: &Form) -> Result<Region, Option<String>> {
+    let items = item.items();
+    let name = items
+        .get(1)
+        .and_then(Form::as_symbol)
+        .ok_or_else(|| Some("a region is named first".to_string()))?
+        .to_string();
+    let base = match clauses(&items[2..], "base").as_slice() {
+        [one] => match one.items() {
+            [_, Form::Integer { value, .. }] if *value >= 0 => i128::from(*value),
+            _ => {
+                return Err(Some(format!(
+                    "region `{name}`'s base is a non-negative address"
+                )))
+            }
+        },
+        [] => return Err(Some(format!("region `{name}` has no base"))),
+        _ => return Err(Some(format!("region `{name}` has two bases"))),
+    };
+    let bytes = match clauses(&items[2..], "size").as_slice() {
+        [] => None,
+        [one] => Some(size_in_bytes(one, &name)?),
+        _ => return Err(Some(format!("region `{name}` has two sizes"))),
+    };
+    if let Some(bytes) = bytes {
+        base.checked_add(bytes).ok_or(None)?;
+    }
+    Ok(Region {
+        name,
+        span: item.span(),
+        base,
+        bytes,
+    })
+}
+
+/// The sub-clauses among `items` headed `head`.
+fn clauses<'a>(items: &'a [Form], head: &str) -> Vec<&'a Form> {
+    items.iter().filter(|c| c.head() == Some(head)).collect()
+}
+
+/// A size clause, `(size AMOUNT UNIT)`: a positive whole number of bytes.
+fn size_in_bytes(clause: &Form, name: &str) -> Result<i128, Option<String>> {
+    let wrong = || {
+        Some(format!(
+            "region `{name}`'s size is a positive whole number of bytes"
+        ))
+    };
+    let items = clause.items();
+    let quantity =
+        Quantity::read(items.get(1), items.get(2), clause.span()).map_err(|_| wrong())?;
+    if quantity.unit.dimension != Dimension::Information || items.len() != 3 {
+        return Err(wrong());
+    }
+    let bits = quantity.in_base().map_err(|_| None)?;
+    if !bits.is_integer() || !bits.is_positive() || bits.numerator() % 8 != 0 {
+        return Err(wrong());
+    }
+    Ok(bits.numerator() / 8)
+}

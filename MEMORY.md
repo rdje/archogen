@@ -14,9 +14,9 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.3`; `PROGRAM` resumes at `PROGRAM.99` (P1, the suite under exec saturation).
-- **Next action:** `M3.3.2` (P1): the joint checker, `crates/eadl-resolve/src/joint.rs` — channel count and region
-  ownership per `M3.3`'s reviewed design, F08 and F09 with controls, `model.md` §8, the book. `.1` done
-  `2026-10-21`; then `M3.3.3`–`.7`, `M3.5`. **Mutation testing is stopped** until the functionality is locked
+- **Next action:** `M3.3.3` (P2), connectivity and interrupt routes, then `M3.3.4`–`.7`, `M3.5`; `M3.3.1` and `.2`
+  done `2026-10-21`: F08 and F09 refused by `crates/eadl-resolve/src/joint.rs`, `archogen check` wiring `M3.4`'s.
+  **Mutation testing is stopped** until the functionality is locked
   (`decision_mutation-testing-after-completion.md`, `2026-10-21`): every pending `M3.6.9` leaf is `blocked`;
   every decision advances the project first. `M3.6.9.6.3.2.2.15.2.1.8.2` stays owned, a suspected defect, P2.
   Disposable project-owned Git fixtures under ignored `target/` are approved;

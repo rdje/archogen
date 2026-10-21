@@ -42,6 +42,7 @@ nothing re-derives.
 | `crates/eadl-resolve/src/requirement.rs` | §7 rule 4, what a side requires, read whole |
 | `crates/eadl-resolve/src/relation.rs` | §7 rule 5, each fact's outcome at a provider and each requirement's verdict there |
 | `crates/eadl-resolve/src/refusal.rs` | §7 rule 6, the relation's refusals, their codes and their repair directions |
+| `crates/eadl-resolve/src/joint.rs` | §8, whether the bindings of one assignment hold together: channels and owned regions |
 
 The census over this declaration runs in both directions, in `crates/eadl-front/tests/reference.rs`. A code
 these sources can emit and §6 does not state is a rule nobody has written down. A code §6 states and no
@@ -178,11 +179,11 @@ the one code that names more than one rule today says so.
 | `quantity-overflow` | a decimal is too precise to represent exactly (§1 rule 5) | reduce the precision, or change the unit so fewer digits are needed | `check (defblock timer.counter (offers (tick-rate 0.0000000000000000000000000000000000000001 MHz)))` |
 | `quantity-invalid` | no input today: the totality arm for a refusal `Quantity::new` may grow (§1 rule 6) | write a quantity as a number followed by a known unit | `none: the catch-all arm of Quantity::read, for a refusal Quantity::new may grow later; today it refuses only what the frequency and duration rows state, and each has its own code (section 1 rule 6)` |
 | `priority-below-one` | a task's priority is below 1 (§4 rule 5) | write a rank of 1 or more: 1 is the highest priority, and a larger number is a lower one | `check (defsystem s (task t (period 10 ms) (deadline 10 ms) (priority 0)))` |
-| `invalid-description` | a description contradicts itself: a fact both offered and absent (§2 rule 1), or a task with two release models (§4 rule 1); or the substitutability relation refuses what it writes, each refusal naming its cause (§7 rule 6) | remove one of the two declarations; only the author knows which was meant | `check (defblock b (offers counter-width) (absent counter-width))` |
-| `infeasible-configuration` | a required fact is declared absent (§2 rule 2) | correct the requirement or the platform | `check (defblock timer.counter (offers counter-width) (absent low-power-timer)) (defservice time.lowpower (requires (needs low-power-timer))) (defsystem s (requires (uses time.lowpower)))` |
-| `missing-fact` | something the system requires is described nowhere: a required fact (§2 rule 3), a task's release model (§4 rule 1), or the platform a refinement names (§3 rule 4) | declare the fact offered or absent on the platform; give a task a `period` or a `min-separation`; for a refinement, import the module that declares the target, or correct its name | `check (defservice time.monotonic (requires (needs wrap-behavior))) (defsystem s (requires (uses time.monotonic)))` |
+| `invalid-description` | a description contradicts itself: a fact both offered and absent (§2 rule 1), or a task with two release models (§4 rule 1); or the substitutability relation refuses what it writes, each refusal naming its cause (§7 rule 6); or a provider offers a consumed function with no channel, or a region that names no byte range (§8 rules 3 and 5) | remove one of the two declarations; only the author knows which was meant | `check (defblock b (offers counter-width) (absent counter-width))` |
+| `infeasible-configuration` | a required fact is declared absent (§2 rule 2); or an assignment gives a provider more requesters than channels, or two bound providers overlapping bytes (§8 rules 3 and 5), once no assignment avoids it | correct the requirement or the platform | `check (defblock timer.counter (offers counter-width) (absent low-power-timer)) (defservice time.lowpower (requires (needs low-power-timer))) (defsystem s (requires (uses time.lowpower)))` |
+| `missing-fact` | something the system requires is described nowhere: a required fact (§2 rule 3), a task's release model (§4 rule 1), or the platform a refinement names (§3 rule 4); or what §8 cannot judge an assignment without — a provider's `channels`, a region's size (§8 rules 3 and 5) | declare the fact offered or absent on the platform; give a task a `period` or a `min-separation`; for a refinement, import the module that declares the target, or correct its name | `check (defservice time.monotonic (requires (needs wrap-behavior))) (defsystem s (requires (uses time.monotonic)))` |
 | `refinement-violated` | a concrete platform breaks an obligation of the abstract one it refines (§3 rules 1–3) | honour the obligation the diagnostic names: offer the guarantee, give the bounded value, or drop what the abstract declares absent | `check (defplatform soc.abstract (offers counter-width) (absent debug-port)) (defplatform soc.concrete (refines soc.abstract) (offers counter-width debug-port))` |
-| `unsupported-profile` | the description asks for something the active profile does not admit (§4 rules 2–4 and 6); or the substitutability relation meets a constraint on a fact no rule decides, or a comparison past the exact arithmetic (§7 rule 6) | request a profile that supports it, or change the description to fit this one; nothing is silently weakened | `check (defsystem s (task a (period 10 ms) (deadline 10 ms) (priority 1)) (task b (period 10 ms) (deadline 10 ms) (priority 1)))` |
+| `unsupported-profile` | the description asks for something the active profile does not admit (§4 rules 2–4 and 6); or the substitutability relation meets a constraint on a fact no rule decides, or a comparison past the exact arithmetic (§7 rule 6), a region's range among them (§8 rule 5) | request a profile that supports it, or change the description to fit this one; nothing is silently weakened | `check (defsystem s (task a (period 10 ms) (deadline 10 ms) (priority 1)) (task b (period 10 ms) (deadline 10 ms) (priority 1)))` |
 | `tool-failure` | the toolchain could not proceed (§4 rule 7) | this is a failure of the toolchain, not a verdict about the description; report it | `none: only a shipped kind module over 4 GiB reaches it, and the kind modules are embedded in the toolchain (shipped_registry in crates/eadl-model/src/check.rs)` |
 | `boundary-implementation-in-description` | a construct is implementation, which eADL does not contain (§5) | move it to the layer the diagnostic names; the description states what, not how | `check (defsystem app.rt (task sensor (period 10 ms) (deadline 10 ms) (wcet 850 us)))` |
 
@@ -232,3 +233,39 @@ which is held to the model over the model checker's whole universe (`crates/eadl
    the reference's §4 rule 3 asks of a new rule, is declined for now: while `archogen check` does not call the
    relation, each would be a row whose `fires on` no command reaches, naming a rule its typed cause and its message
    already name. `M3.4`, which makes the causes reachable from a command, takes the question up again.
+
+## 8. Whether the bindings of one assignment hold together
+
+The relation judges one binding at a time (§7). An **assignment** binds each requester's requirement to one provider
+the relation satisfies it at, and these rules judge the bindings together (`crates/eadl-resolve/src/joint.rs`). Their
+design is `M3.3`'s in `docs/tasks/M3.md`, reviewed once by a context that did not write it. `archogen check` does not
+call them yet: `M3.4` searches for an assignment and wires both in.
+
+1. **Requesters.** A requester is a task, for what the task itself writes; a service; or any other declaration, for
+   what it writes at its own level outside its tasks. Two tasks of one system are two requesters, though §7 reads them
+   as one side. A platform's or a block's `uses` is composition, never a binding.
+2. **Consumed facts.** A vocabulary entry marked `use consumed` — `relative-delay` and `absolute-deadline` in `/1` —
+   is a function a requester programs. A binding takes a channel when its requirement is on a consumed fact and is met
+   by the value `true`: `(needs f)`, `(f true)` or the group whose head it is. `(f false)` takes none, and a shared
+   fact never does, however many read it.
+3. **Channels** (F08). The requesters taking channels at one provider number at most its `channels`; more is a
+   conflict. One requester needs no count. Two or more where `channels` is undescribed, or offered without a value, is
+   `missing-fact`. A provider that offers a consumed function `true` and declares `channels` absent, or `0`, is
+   `invalid-description`, refused when it is read, whether or not anything binds it.
+4. **A service several users reach is one requester.** Its users are the tasks and services that use it; a system's
+   own `uses` says what the system includes, and is no second user. Such a service's realization serves them through
+   the channel it takes, so it is the multiplexer: the assignment reports that it owes them the shared semantics and a
+   bounded overhead (`ROADMAP.md` §5.4), for the realization and the analysis to discharge. A multiplexing adapter is
+   likewise a provider with more channels and itself one requester of the channel beneath it.
+5. **Ownership** (F09). A provider owns each `(region NAME (base B) (size S))` it offers: the bytes `[B, B+S)`, `B` a
+   non-negative address and `S` a positive whole number of bytes; any other sub-clause is another rule's. Two distinct
+   providers both bound in an assignment whose bytes overlap are a conflict, unless one composes the other through
+   `uses`, at any depth. A region without `size` owns at least its base byte; where another bound provider owns bytes
+   above its base, whether they overlap is `missing-fact`. A region without a base, with two, or with a size that is
+   not a positive whole number of bytes is `invalid-description`; one past the exact arithmetic `unsupported-profile`.
+   A provider nothing is bound to owns nothing: an unused device costs nothing (`ROADMAP.md` §5.3).
+6. **One assignment, then the search.** A conflict refuses the assignment it is found in, and an unknown blocks it.
+   The description is `infeasible-configuration` when every assignment has a conflict, and `missing-fact` when some
+   assignment is blocked by unknowns alone — `M3.4`'s search to conclude, never a single assignment's. Each finding
+   names the provider, the requesters with where they require the fact, and the count or the two ranges, with a
+   repair: another provider, a sharing realization, or the fact described.

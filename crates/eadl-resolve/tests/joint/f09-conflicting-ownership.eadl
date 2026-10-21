@@ -1,0 +1,32 @@
+; F09 — valid individual providers with conflicting ownership (ROADMAP.md §13.1): the combined plan is rejected. The
+; platform offers a relative delay by programming its comparator directly, and an absolute deadline through firmware
+; that programs the same comparator. Each service alone is satisfied by its provider (§7); bound together, the two
+; providers own the same comparator's bytes and neither composes the other (§8, leaf M3.3.2).
+
+(eadl-version eadl/1)
+
+(defblock timer.direct
+  (offers (relative-delay true) (channels 1 tick)
+    (region clint.mtimecmp (base 0x0200_4000) (size 8 byte))))
+
+(defblock timer.firmware
+  (offers (absolute-deadline true) (channels 1 tick)
+    (region sbi.timer-window (base 0x0200_0000) (size 64 KiB))))
+
+(defplatform soc.clint
+  (offers (core-count 1 tick))
+  (requires (uses timer.direct timer.firmware)))
+
+(defservice time.delay
+  (requires (needs relative-delay)))
+
+(defservice time.deadline
+  (requires (needs absolute-deadline)))
+
+(defsystem delays-and-deadlines
+  (task sampler (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1)
+    (uses time.delay))
+  (task reporter (period 100 ms) (deadline 100 ms) (deadline-from release) (priority 2)
+    (uses time.deadline))
+  (requires (uses time.delay time.deadline))
+  (platform (uses soc.clint)))

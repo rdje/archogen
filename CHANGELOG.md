@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the joint checker: channels and owned regions
+
+`ARCHOGEN-M3-0843` (leaf `M3.3.2`), `2026-10-21`.
+
+- Add `crates/eadl-resolve/src/joint.rs`: one complete assignment of requesters to providers judged as a whole — the
+  requesters taking a provider's channels through consumed facts at most its count (F08), and no two bound providers
+  owning overlapping bytes unless one composes the other (F09) — with provider-level refusals, `missing-fact` for an
+  undescribed count or size, and a service's multiplexing obligation to the tasks that share it.
+- Hold both cases with descriptions under `crates/eadl-resolve/tests/joint/`: every assignment refused with literal
+  expectations, beside controls that hold; each rule's test failing with the rule removed.
+- State the rules as `docs/semantics/model.md` §8 and explain them in the book's matching chapter. Every crate but
+  `xtask` passes; `xtask`, which names no `eadl-resolve`, waits on a quiet host (`PROGRAM.99`).
+
 ## archogen — file the xtask suite's failures under exec saturation
 
 `ARCHOGEN-PROGRAM-0842` (leaf `PROGRAM.99`), `2026-10-21`.

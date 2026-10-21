@@ -86,10 +86,10 @@ once through its consumed facts with one more entry, `channels`, a count where m
   (offers (absolute-deadline true) (channels 1 tick)))
 ```
 
-Nothing judges this yet. The vocabulary only states what the joint check (`M3.3`) will count: a requester bound to a
-consumed fact at the value `true` takes one channel, and a provider with more requesters than channels is refused.
-`use consumed` is written only on a boolean fact or a group's head, whose bare offer is `true`; anywhere else, or with
-any word but `shared` and `consumed`, the vocabulary is refused.
+The joint check counts them (below): a requester bound to a consumed fact at the value `true` takes one channel, and a
+provider with more requesters than channels is refused. `use consumed` is written only on a boolean fact or a group's
+head, whose bare offer is `true`; anywhere else, or with any word but `shared` and `consumed`, the vocabulary is
+refused.
 
 ### What a provider offers
 
@@ -146,6 +146,52 @@ horizon, not to anyone's sense of which counter is faster.
 `reachable-at-privilege` lists the levels a function can be called from. A supervisor caller is served by an offer
 of `supervisor machine` and not by `machine` alone, nor by `user`. `available-in-state` works the same way, with one
 member always implied: a requirement for `idle` asks for `idle` and `run`, the state every use runs in.
+
+### Several bindings at once: channels and owned regions
+
+The relation answers for one requirement at one provider. A system makes many requirements at once, and some answers
+that are each fine alone are wrong together. The joint check (`crates/eadl-resolve/src/joint.rs`) judges one complete
+**assignment** — every requirement bound to one provider that satisfies it — for two such mistakes.
+
+**Too many requesters for a provider's channels** (`ROADMAP.md`'s case F08). Two services each program an absolute
+deadline, and the platform has one comparator with one channel:
+
+```text
+(defblock timer.compare
+  (offers (absolute-deadline true) (channels 1 tick)))
+(defservice alarm.engine   (requires (needs absolute-deadline)))
+(defservice alarm.watchdog (requires (needs absolute-deadline)))
+```
+
+Each service alone is satisfied by `timer.compare`. Bound together, they need two channels, and the assignment is
+refused, `infeasible-configuration`, naming both: *`timer.compare` serves 1 requester(s) at once through its consumed
+facts, and 2 take one*. With `(channels 2 tick)` it holds; with one service it holds, since offering the function at
+all serves one; with no `channels` written it is `missing-fact`, never a quiet yes. A requester is a task, a service,
+or another declaration's own level, so two tasks that each write `(needs absolute-deadline)` are two requesters. A
+service two tasks *use* is one requester: its realization serves both through one channel, so it is the multiplexer,
+and the check reports that it owes them the shared semantics and a bounded overhead.
+
+**Two providers owning the same hardware** (case F09). The platform offers a relative delay by programming its
+comparator directly, and an absolute deadline through firmware that programs the same comparator:
+
+```text
+(defblock timer.direct
+  (offers (relative-delay true)
+    (region clint.mtimecmp (base 0x0200_4000) (size 8 byte))))
+(defblock timer.firmware
+  (offers (absolute-deadline true)
+    (region sbi.timer-window (base 0x0200_0000) (size 64 KiB))))
+```
+
+A service needing each is satisfied alone; bound together, the two providers own overlapping bytes — the firmware's
+window holds the comparator's registers — and the assignment is refused. A provider nothing is bound to owns
+nothing, so an unused device costs nothing; and a provider never conflicts with one it composes through `uses`, as
+a platform's window holds its own blocks.
+
+A refused assignment is not yet a refused description: another assignment may hold. `M3.4`'s search tries them, and
+the description is `infeasible-configuration` only when every assignment is refused. Both cases are descriptions
+under `crates/eadl-resolve/tests/joint/`, and `crates/eadl-resolve/tests/joint.rs` refuses every assignment of each,
+beside controls that hold.
 
 ### The list a resolver chooses from
 
@@ -216,6 +262,13 @@ past the arithmetic. The diagnostic names the fact and what is wrong and says wh
 rule a typed cause (`crates/eadl-resolve/src/refusal.rs`). A code of its own per cause waits until a command can reach
 the relation (`model.md` §7 rule 6).
 
+### Joint rules
+
+`docs/semantics/model.md` §8 is normative over `crates/eadl-resolve/src/joint.rs`: who a requester is (rule 1), when
+a binding takes a channel (rule 2), the channel count and its codes (rule 3), the service that multiplexes (rule 4),
+region ownership and its codes (rule 5), and that one assignment's findings decide nothing about the description until
+the search has tried every assignment (rule 6).
+
 ### What is not claimed
 
 The relation is a predicate on one requirement and one provider. Per fact its direction induces a preorder and
@@ -232,5 +285,7 @@ has a catalogued mutation that its test must kill (`xtask/mutations.txt`).
 `archogen check` does not call it yet, so no verdict a description gets today comes from it. Leaf `M3.4` wires it in,
 over the description's providers, deciding a description's `missing-fact` or `infeasible-configuration` from the
 enumeration and keeping or migrating every verdict it moves. `M3.2` adds adapters — a provider in its own right, such
-as an epoch extender — offered only where a requirer allows mediation; `M3.3` judges what one provider cannot, such as
-the privilege context a plan binds a caller to; `M3.7` makes a catalog record a provider.
+as an epoch extender — offered only where a requirer allows mediation; `M3.3` judges what one provider cannot: its
+channels and owned regions are judged today, over an assignment a test proposes (`M3.3.2`), and connectivity,
+privilege, placement, bundles and initialization order follow (`M3.3.3`–`.7`); `M3.7` makes a catalog record a
+provider.
