@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — file the xtask suite's failures under exec saturation
+
+`ARCHOGEN-PROGRAM-0842` (leaf `PROGRAM.99`), `2026-10-21`.
+
+- File, at P1, what `M3.3.1`'s gate met: the `xtask` suite passing in 240 s, then failing 73 and 31 tests that pass
+  alone, with syspolicyd saturated by the host's exec load. The quiet-host focused run that commit owes comes first,
+  then the measured cause and its repair; the director's pasted diagnosis is kept as hypotheses to test.
+- Mark `M3.3.1`'s migration note `applied`, as the freeze gate requires of the commit after it lands.
+
 ## archogen — a fact can be consumed, and a provider states its channels
 
 `ARCHOGEN-M3-0841` (leaf `M3.3.1`), `2026-10-21`.

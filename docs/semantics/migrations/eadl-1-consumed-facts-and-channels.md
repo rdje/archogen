@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-10-21
 - leaf: M3.3.1 (`docs/tasks/M3.md`)
-- status: pending
+- status: applied
 - constructs: suite/docs/semantics/kinds/deffact.eadl, suite/docs/semantics/vocabulary/vocabulary.eadl
 - invalidates: none, measured — every tracked description's `archogen check` verdict, frozen in `crates/archogen-cli/tests/verdicts.txt`, is unchanged; no tracked description writes `channels`, and nothing reads `use` until the joint check (`M3.3.2`), which `archogen check` does not call until `M3.4`
 
