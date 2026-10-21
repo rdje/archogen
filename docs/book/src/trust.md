@@ -367,6 +367,16 @@ would fail the control, and the reader would refuse the record. The
 [control record](annex-trust-proofs.md#dependency-terminal-backslash-control) retains Cargo's message,
 its reader's text at the pinned commit, and the decision.
 
+The whole dependency block is then held by its tests, not only the lines the repair changed (measured
+`2026-10-21`): every mutation the sweep finds in the reader, its result type, the environment records'
+normalisation and the unit reader's handling of the record — `64` of them — was run against every
+current parent. `58` are killed, each by at least one of the block's own controls, and the compiler
+refuses the other `6` as written, each with its actual error; nothing survives, nothing times out, and
+no equivalence reason is used. The four edits the first assessment saw survive are among the killed. The
+[checkpoint record](annex-trust-proofs.md#complete-dependency-block-checkpoint) lists every outcome. The
+catalog builder reads its own builds' dependency records with a separate reader; that reader is
+measured on its own (`M3.6.9.6.3.2.2.15.2.1.6.2.1`).
+
 ### Codegen options retain their operands
 
 A `-C` compiler option and its following operand are recorded together as one configuration entry.

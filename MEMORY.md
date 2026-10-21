@@ -14,9 +14,9 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.6`; `PROGRAM` resumes at `PROGRAM.71`.
-- **Next action:** the full dependency-block checkpoint `M3.6.9.6.3.2.2.15.2.1.6.2` (P1): re-discover the
-  current block and reconcile every historical obligation with exact outcomes; `.6.1` closed `2026-10-21`,
-  Cargo's terminal-backslash refusal held as a control and the build error ruled an error, not a refusal.
+- **Next action:** `M3.6.9.6.3.2.2.15.2.1.6.2.1` (P1), the catalog builder's dependency reader measured with
+  the real producer; the probe is drafted in `target/catalog-dependency-assessment/probe.py`. `.6.2.0` closed
+  `2026-10-21`: the whole block replayed, nothing survives; `.6.2` closes with `.1` and any repair it files.
   Disposable project-owned Git fixtures under ignored `target/` are approved;
   maintained external repositories and submodules stay read-only.
   Corrected renderer adoption stays owned in `.4.3.4.1`.

@@ -148,6 +148,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#complete-current-environment-tail-checkpoint)
 - Complete current observer replay — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-current-observer-replay)
+- Complete dependency-block checkpoint — [Annex C: Trust proof
+  records](annex-trust-proofs.md#complete-dependency-block-checkpoint)
 - Complete diagnostic-region replay — [Annex C: Trust proof
   records](annex-trust-proofs.md#complete-diagnostic-region-replay)
 - Complete final artifact checkpoint — [Annex C: Trust proof
