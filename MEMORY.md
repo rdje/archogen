@@ -14,9 +14,9 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.6`; `PROGRAM` resumes at `PROGRAM.71`.
-- **Next action:** `M3.6.9.6.3.2.2.15.2.1.8` (P1), own-package completion: its one historical survivor
-  `L911.cond.332` reproduced and mapped, then witness or proof under owned children. `.7`, the configuration
-  absolute paths, closed `2026-10-21`.
+- **Next action:** `M3.6.9.6.3.2.2.15.2.1.8.1` (P1), the own-package check's producer routes measured with the
+  real Cargo, then a witness or a proof. `.8.0` assessed `2026-10-21`: `if false {` survives, no parent reaches
+  the check; `.8.2`, coinciding generator target directories, follows (P2).
   Disposable project-owned Git fixtures under ignored `target/` are approved;
   maintained external repositories and submodules stay read-only.
   Corrected renderer adoption stays owned in `.4.3.4.1`.

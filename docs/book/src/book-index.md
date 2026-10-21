@@ -491,6 +491,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **overrun** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Describing a
   workload](workload.md), [The runtime: decisions, not actions](runtime.md), [Annex A: The runtime's rules in
   detail](annex-runtime.md)
+- Own-package completion assessment — [Annex C: Trust proof
+  records](annex-trust-proofs.md#own-package-completion-assessment)
 
 ## P
 

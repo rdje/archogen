@@ -5,6 +5,20 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — assess the own-package completion check
+
+`ARCHOGEN-M3-0839` (leaf `M3.6.9.6.3.2.2.15.2.1.8.0`), `2026-10-21`.
+
+- Select the check that stops the inventory unjudged when a successful build compiled nothing of the program's own
+  package, and map the historical survivor of the source-`069d8e59` run, `L911.cond.332`, to `L894.cond.257` by
+  exact text.
+- Replay all 6 of the check's candidates against all 209 parents with strict timeouts: `if false {` survives, so no
+  current parent reaches the check; the 5 edits that make it fire where the own package was compiled are killed.
+  All inputs restore; the audit refuses nine altered receipts. Measurement only.
+- File `.8.1`, the producer routes — a rerun into a kept target directory, an own unit refused for its owner — then
+  a control or a proof; and `.8.2`, generator target directories that two generators can share. Seal the closed
+  configuration absolute paths.
+
 ## archogen — refuse an outside path dependency before compilation
 
 `ARCHOGEN-M3-0838` (leaf `M3.6.9.6.3.2.2.15.2.1.7.2`), `2026-10-21`.
