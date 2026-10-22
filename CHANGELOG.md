@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the privilege level is the profile's
+
+`ARCHOGEN-M3-0852` (leaf `M3.3.4.2`), `2026-10-22`.
+
+- `rt-static-up-v1` gains a Privilege row: the runtime, its tasks and its services run at one level, `machine`, which a
+  RISC-V hart starts in at reset — the privileged specification's §2.1.4, quoted and ledgered — and the playground
+  models it; `Profile::caller_level` carries it for the search.
+- The port record's citation for machine mode is corrected to that row, that sentence and the spike's own instructions.
+
 ## archogen — privilege, judged given a level
 
 `ARCHOGEN-M3-0851` (leaf `M3.3.4.1`), `2026-10-22`.

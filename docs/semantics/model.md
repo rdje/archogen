@@ -288,7 +288,8 @@ did not write it. `archogen check` does not call them yet: `M3.4` searches for a
    a second timer, which the analysis does not model, is the analysis's to refuse. Given the system's level (rule 9), a
    route carries it: the level the interrupt is delivered at.
 9. **Privilege** (`M3.3.4.1`; `SR-H11`, `SR-H12`). Given the level a plan binds one system's callers to — a level of
-   `reachable-at-privilege`'s domain, the profile's once `M3.3.4.2` states it; a level outside the domain is the engine's
+   `reachable-at-privilege`'s domain, the profile's — `rt-static-up-v1`'s Privilege row states `machine`
+   (`crates/eadl-model/src/profile.rs`), which `M3.4` gives every system it resolves; a level outside the domain is the engine's
    input error, never a description's code — these rules judge **callers**: the system's own level, its tasks, and the
    services and policies its closure reaches, never a block or platform needing another's fact, which has no level. A
    caller stating it calls from levels that do not hold the system's is `unsupported-profile`, judged first, since no

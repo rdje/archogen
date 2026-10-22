@@ -1180,3 +1180,18 @@ fn every_privilege_finding_s_diagnostic_carries_its_code() {
     }
     assert_eq!(codes, ["infeasible-configuration"]);
 }
+
+#[test]
+fn the_profile_s_level_is_one_a_system_can_be_given() {
+    // Leaf `M3.3.4.2`: the level is the profile's Privilege row, a level of `reachable-at-privilege`'s domain, so the
+    // search can give it to every system it resolves.
+    let v = vocabulary();
+    let read = Read::of(LEVELS, &v);
+    let [system] = read.systems().try_into().expect("one system");
+    let level = eadl_model::RT_STATIC_UP_V1.caller_level;
+    assert_eq!(level, "machine");
+    let at = system
+        .at(level, &v)
+        .expect("the profile's level is the vocabulary's");
+    assert_eq!(at.level.as_deref(), Some("machine"));
+}

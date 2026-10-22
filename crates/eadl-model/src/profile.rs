@@ -75,6 +75,10 @@ pub struct Profile {
     pub decisions: &'static [ProfileDecision],
     /// Capabilities this profile refuses, each with the obligation it would add.
     pub exclusions: &'static [Exclusion],
+    /// The one privilege level a plan runs the runtime, the tasks and the services at — a level of the vocabulary's
+    /// `reachable-at-privilege` — which the joint rules judge every caller's providers against (its Privilege row; leaf
+    /// `M3.3.4.2`).
+    pub caller_level: &'static str,
 }
 
 impl Profile {
@@ -99,6 +103,7 @@ impl Profile {
 /// configured real-time executive.
 pub const RT_STATIC_UP_V1: Profile = Profile {
     id: "rt-static-up-v1",
+    caller_level: "machine",
     summary: "single-core, statically configured, fixed-priority real-time executive",
     decisions: &[
         ProfileDecision {
@@ -248,6 +253,24 @@ pub const RT_STATIC_UP_V1: Profile = Profile {
                 Part {
                     rule: "no claim of isolation from malicious tasks",
                     stage: Stage::NotARule("a limit on what the toolchain claims, not a property a description can break; the assurance report states it"),
+                },
+            ],
+        },
+        ProfileDecision {
+            concern: "Privilege",
+            decision: "the runtime, its tasks and its services run at one level, the platform's most privileged, `machine`, which a RISC-V hart starts in at reset; the hosted playground models it",
+            parts: &[
+                Part {
+                    rule: "the runtime, its tasks and its services run at one level, the platform's most privileged, `machine`",
+                    stage: Stage::Later { stage: "resolution", owner: "M3.4" },
+                },
+                Part {
+                    rule: "which a RISC-V hart starts in at reset",
+                    stage: Stage::Later { stage: "build", owner: "M4.2" },
+                },
+                Part {
+                    rule: "the hosted playground models it",
+                    stage: Stage::Later { stage: "build", owner: "M4.3" },
                 },
             ],
         },

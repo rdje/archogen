@@ -625,8 +625,9 @@ a change that leaves it stale, so it is never edited by hand.
 - rfc-8259 — [What this project relies on from outside](ledger.md#rfc-8259)
 - **RGX** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - rgx — [What this project relies on from outside](ledger.md#rgx)
-- **RISC-V** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where generated systems
-  run](targets.md), [What this project relies on from outside](ledger.md)
+- **RISC-V** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Matching an offer to a
+  requirement](matching.md), [Where generated systems run](targets.md), [What this project relies on from
+  outside](ledger.md)
 - riscv-plic — [What this project relies on from outside](ledger.md#riscv-plic)
 - riscv-privileged — [What this project relies on from outside](ledger.md#riscv-privileged)
 - **RP2350** — [definition](glossary.md), [Where generated systems run](targets.md), [What this project relies on from
@@ -634,12 +635,13 @@ a change that leaves it stale, so it is never edited by hand.
 - rp2350 — [What this project relies on from outside](ledger.md#rp2350)
 - run_cargo locality preflight — [Annex C: Trust proof records](annex-trust-proofs.md#run_cargo-locality-preflight)
 - **runtime** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
-  board](tour.md), [The supported profile](profile.md), [What a report may claim](evidence.md), [What the scheduling
-  checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [Checks that
-  must not share a mistake: the trust gate](trust.md), [The runtime: decisions, not actions](runtime.md), [Where
-  generated systems run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the
-  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+  board](tour.md), [The supported profile](profile.md), [What a report may claim](evidence.md), [Matching an offer to a
+  requirement](matching.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes
+  from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
+  decisions, not actions](runtime.md), [Where generated systems run](targets.md), [Verifying the
+  toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust
+  proof records](annex-trust-proofs.md)
 - rust-reference — [What this project relies on from outside](ledger.md#rust-reference)
 - rust-toolchain — [What this project relies on from outside](ledger.md#rust-toolchain)
 - **RUSTC** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)

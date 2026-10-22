@@ -22,6 +22,7 @@ page is its published form, and a test in that module fails if the two drift apa
 | Interrupts | timer interrupt plus explicitly modeled bounded sources; unknown or uncontrolled interrupt load is unsupported for timing assurance |
 | Time | fixed clock configuration; explicit counter modulus, conversion rules, and interrupt delivery bounds |
 | Isolation | trusted application components in one address space; no claim of isolation from malicious tasks |
+| Privilege | the runtime, its tasks and its services run at one level, the platform's most privileged, `machine`, which a RISC-V hart starts in at reset ([privileged specification](../book/src/ledger.md#riscv-privileged) §2.1.4); the hosted playground models it |
 | Fault response | defined overrun, unexpected-trap, stack-guard, and assertion failure policy; bounded diagnostic handling |
 | Devices | timer and minimal observable output first; no filesystem, network stack, DMA driver, or general virtio dependency |
 | Runtime | Rust `no_std` core with narrow architecture and MMIO boundaries |

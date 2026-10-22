@@ -248,8 +248,10 @@ runs at `machine`, and `timer.s` is reachable from `supervisor` alone*. A provid
 reachable from is `missing-fact`, and one declared reachable from none `infeasible-configuration`. A service that states
 it calls from `supervisor` — `(requires (reachable-at-privilege supervisor))` — is `unsupported-profile` first, whatever
 it is bound to, since this profile runs no caller there. A block needing a sibling's fact is no caller and has no level,
-and a route carries the level its interrupt is delivered at. Where the level comes from — the profile — is
-`M3.3.4.2`'s to state; until then a test gives it, and with none given the rule says nothing.
+and a route carries the level its interrupt is delivered at. The level is the profile's: `rt-static-up-v1` runs the
+runtime, its tasks and its services at `machine`, the level a RISC-V hart starts in at reset
+([privileged specification](ledger.md#riscv-privileged) §2.1.4), and the hosted playground models it
+(`docs/profiles/rt-static-up-v1.md`). `M3.4` gives it to every system it resolves; with none given the rule says nothing.
 
 ### The list a resolver chooses from
 
@@ -346,6 +348,6 @@ over the description's providers, deciding a description's `missing-fact` or `in
 enumeration and keeping or migrating every verdict it moves. `M3.2` adds adapters — a provider in its own right, such
 as an epoch extender — offered only where a requirer allows mediation; `M3.3` judges what one provider cannot: its
 channels and owned regions (`M3.3.2`), connectivity and routes (`M3.3.3`) and privilege given a level (`M3.3.4.1`) are
-judged today, over an assignment a test proposes, and the level's source, placement, bundles and initialization order
-follow (`M3.3.4.2`–`.7`); `M3.7` makes a catalog
+judged today, over an assignment a test proposes; the descriptions stating their levels, placement, bundles and
+initialization order follow (`M3.3.4.3`–`.7`); `M3.7` makes a catalog
 record a provider.

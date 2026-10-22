@@ -329,7 +329,9 @@ stating record at its contract's targets; for two declarations that disagree, th
 #### 14.3 The `riscv64` dialect
 
 Its one target triple is `riscv64imac-unknown-none-elf`, one of the two `rust-toolchain.toml` pins, for code running in
-machine mode on one hart (`docs/targets/first-target.md`). The list is what a port needs and no more — its trap entry and exit, its
+machine mode on one hart — the level `rt-static-up-v1`'s Privilege row states (`docs/profiles/rt-static-up-v1.md`), which a hart
+starts in at reset ([privileged specification](../../book/src/ledger.md#riscv-privileged) §2.1.4) and in which the spike writes `mtvec` and
+returns with `mret` (`targets/riscv-virt-up/spike/src/main.rs`), each trapping below it. The list is what a port needs and no more — its trap entry and exit, its
 transitions, its masking and its trap vector, as §14.1 found them in the spike. A later need adds to it by a change
 to this record; from the first lock on, that is a new rules version, which moves every hash (§5).
 
