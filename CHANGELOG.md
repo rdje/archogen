@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a block no system uses decides no description's code
+
+`ARCHOGEN-M3-0867` (leaf `M3.4.1`), `2026-10-22`.
+
+- `SR-H18` amended as `M3.4` decided: when the search decides a description's code, a block or platform outside a
+  system's hardware takes no part, as an unused device costs nothing; the book's account of `M3.4` says so.
+
 ## archogen — the runtime analysis design moves to the specifications
 
 `ARCHOGEN-PROGRAM-0866` (leaf `PROGRAM.102`), `2026-10-22`.

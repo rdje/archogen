@@ -378,7 +378,8 @@ and the horizon agreeing with a simulation of the counter's reads on every case 
 has a catalogued mutation that its test must kill (`xtask/mutations.txt`).
 
 `archogen check` does not call it yet, so no verdict a description gets today comes from it. Leaf `M3.4` wires it in,
-over the description's providers, deciding a description's `missing-fact` or `infeasible-configuration` from the
+over the providers of each system's hardware — a block no system uses decides nothing, as an unused device costs
+nothing — deciding a description's `missing-fact` or `infeasible-configuration` from the
 enumeration and keeping or migrating every verdict it moves. `M3.2` adds adapters — a provider in its own right, such
 as an epoch extender — offered only where a requirer allows mediation; `M3.3` judges what one provider cannot: its
 channels and owned regions (`M3.3.2`), connectivity and routes (`M3.3.3`) and privilege given a level (`M3.3.4.1`) are
