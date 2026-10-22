@@ -85,8 +85,16 @@ fn region(form: &Form) -> Result<Region, String> {
         .ok_or("a region without a name")?
         .to_string();
     let (mut base, mut size, mut executable) = (None, None, false);
+    let mut seen: Vec<&str> = Vec::new();
     for clause in &items[2..] {
         let parts = clause.items();
+        // Model §8 rule 5's grammar, as the joint rules read it (leaf `M3.3.5.1`): each sub-form at most once.
+        if let Some(head) = clause.head() {
+            if seen.contains(&head) {
+                return Err(format!("region `{name}` has two `{head}`s"));
+            }
+            seen.push(head);
+        }
         match clause.head() {
             Some("base") => base = parts.get(1).and_then(integer),
             Some("size") => {
@@ -96,9 +104,17 @@ fn region(form: &Form) -> Result<Region, String> {
                     .and_then(|(v, u)| quantity(v, u))
             }
             Some("executable") => {
-                executable = parts.get(1).and_then(Form::as_symbol) == Some("true")
+                executable = match (parts.len(), parts.get(1).and_then(Form::as_symbol)) {
+                    (2, Some("true")) => true,
+                    (2, Some("false")) => false,
+                    _ => {
+                        return Err(format!(
+                            "region `{name}`'s `executable` is `true` or `false`"
+                        ))
+                    }
+                }
             }
-            Some("reserved") => {}
+            // `reserved` included: the agreement compares no reserved range, so the target may claim none.
             other => {
                 return Err(format!(
                     "region `{name}` has a clause `{other:?}` the agreement does not read"
@@ -601,6 +617,24 @@ mod tests {
                 "(defblock target.console\n  (absent debug-port)\n",
             ),
             "`target.console` writes a `absent` clause, which the agreement does not read",
+        );
+    }
+
+    #[test]
+    fn a_region_s_sub_forms_follow_the_joint_rules_grammar() {
+        // Leaf `M3.3.5.1`: the same refusals as `crates/eadl-resolve/src/joint.rs`'s reader, and `reserved` refused
+        // until the agreement compares it.
+        reported(
+            &with("(executable true)", "(executable yes)"),
+            "region `target.ram`'s `executable` is `true` or `false`",
+        );
+        reported(
+            &with("(executable true)", "(executable true) (executable true)"),
+            "region `target.ram` has two `executable`s",
+        );
+        reported(
+            &with("(size 256 byte)", "(size 256 byte) (reserved true)"),
+            "region `target.console` has a clause `Some(\"reserved\")` the agreement does not read",
         );
     }
 

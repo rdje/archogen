@@ -236,6 +236,44 @@ fn named(f: &Finding) -> String {
             f.code(),
             offered.join(" ")
         ),
+        Finding::MapContradiction {
+            system,
+            memory,
+            other,
+        } => format!(
+            "{} map {system}: {} {} in {} {}",
+            f.code(),
+            other.0,
+            other.1.name,
+            memory.0,
+            memory.1.name
+        ),
+        Finding::MemoryAllHoles { system, memory } => {
+            format!(
+                "{} all holes {system}: {} {}",
+                f.code(),
+                memory.0,
+                memory.1.name
+            )
+        }
+        Finding::PlacementUnsized {
+            system,
+            sizeless,
+            against,
+        } => format!(
+            "{} size of {} {} against {against} in {system}",
+            f.code(),
+            sizeless.0,
+            sizeless.1.name
+        ),
+        Finding::PlacementIllegal {
+            system,
+            region,
+            why,
+            ..
+        } => {
+            format!("{} placement {system} in {region}: {why}", f.code())
+        }
         Finding::LevelUnstated {
             requester,
             provider,
@@ -1194,4 +1232,221 @@ fn the_profile_s_level_is_one_a_system_can_be_given() {
         .at(level, &v)
         .expect("the profile's level is the vocabulary's");
     assert_eq!(at.level.as_deref(), Some("machine"));
+}
+
+// Placement (leaf `M3.3.5.1`, model §8 rule 10): one system's memory map, judged once.
+
+/// A platform with 128 MiB of executable RAM at `0x8000_0000`, a device and a firmware block written by `devices`, and
+/// a system on it; `extra` adds declarations.
+fn memory_map(devices: &str) -> String {
+    format!(
+        "{devices}
+(defplatform soc (offers (core-count 1 tick) (region ram (base 0x8000_0000) (size 128 MiB) (executable true)))
+  (requires (uses dev fw)))
+{}",
+        one_task_system("", "\n  (platform (uses soc))")
+    )
+}
+
+/// The map of `text`'s one system, as literals: refusals, unknowns, and the placement obligations.
+fn map_of(text: &str, v: &Vocabulary) -> (Vec<String>, Vec<String>, Vec<Obligation>) {
+    let read = Read::of(text, v);
+    let [system] = read.systems().try_into().expect("one system");
+    let map = read
+        .joint(v)
+        .unwrap_or_else(|f| panic!("{:?}", f.iter().map(named).collect::<Vec<_>>()))
+        .map(&system);
+    (
+        map.refused.iter().map(named).collect(),
+        map.unknowns.iter().map(named).collect(),
+        map.obligations,
+    )
+}
+
+fn placement(region: &str, holes: &[(&str, &str)]) -> Obligation {
+    Obligation::Placement {
+        system: "s".to_string(),
+        provider: "soc".to_string(),
+        region: region.to_string(),
+        holes: holes
+            .iter()
+            .map(|(o, r)| ((*o).to_string(), (*r).to_string()))
+            .collect(),
+    }
+}
+
+const DEV_OUTSIDE: &str = "(defblock dev (offers (observable-output true) (region dev.regs (base 0x1000_0000) (size 4 KiB))))";
+const FW_HOLE: &str = "(defblock fw (offers (core-count 1 tick) (region fw.range (base 0x8000_0000) (size 2 MiB) (reserved true))))";
+
+#[test]
+fn a_reserved_range_in_memory_is_a_hole_the_plan_avoids() {
+    // Review D1: firmware below an S-mode image, a carve-out — `addressable-region.eadl`'s "constrains placement".
+    let v = vocabulary();
+    assert_eq!(
+        map_of(&memory_map(&format!("{DEV_OUTSIDE}\n{FW_HOLE}")), &v),
+        (
+            vec![],
+            vec![],
+            vec![placement("ram", &[("fw", "fw.range")])]
+        )
+    );
+}
+
+#[test]
+fn a_device_inside_memory_is_a_contradictory_map_once_per_system() {
+    // Review D3: two claims on the same bytes, judged over the hardware, bound or not and composed or not.
+    let v = vocabulary();
+    let inside = "(defblock dev (offers (observable-output true) (region dev.regs (base 0x8100_0000) (size 4 KiB))))";
+    let (refused, unknowns, _) = map_of(&memory_map(&format!("{inside}\n{FW_HOLE}")), &v);
+    assert_eq!(
+        refused,
+        ["invalid-description map s: dev dev.regs in soc ram"]
+    );
+    assert!(unknowns.is_empty());
+    // Straddling memory's end is overlapping it too (review D4).
+    let straddle = "(defblock dev (offers (observable-output true) (region dev.regs (base 0x87FF_F000) (size 8 KiB))))";
+    assert_eq!(
+        map_of(&memory_map(&format!("{straddle}\n{FW_HOLE}")), &v).0,
+        ["invalid-description map s: dev dev.regs in soc ram"]
+    );
+}
+
+#[test]
+fn a_region_both_executable_and_reserved_is_no_placement_memory() {
+    // Review D2.
+    let v = vocabulary();
+    let fw = "(defblock fw (offers (core-count 1 tick) (region fw.range (base 0x9000_0000) (size 2 MiB) (executable true) (reserved true))))";
+    let (refused, unknowns, obligations) = map_of(&memory_map(&format!("{DEV_OUTSIDE}\n{fw}")), &v);
+    assert!(refused.is_empty() && unknowns.is_empty());
+    assert_eq!(
+        obligations,
+        [placement("ram", &[])],
+        "only `ram` is placement memory"
+    );
+}
+
+#[test]
+fn a_size_the_map_needs_is_unknown_either_way() {
+    // Review D4: rule 5 mirrored — memory unsized below a device, and a device unsized below memory.
+    let v = vocabulary();
+    let sizeless_ram = memory_map(&format!("{DEV_OUTSIDE}\n{FW_HOLE}")).replace(
+        "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))",
+        "(region ram (base 0x0800_0000) (executable true))",
+    );
+    assert_eq!(
+        map_of(&sizeless_ram, &v).1,
+        [
+            "missing-fact size of soc ram against dev in s",
+            "missing-fact size of soc ram against fw in s"
+        ]
+    );
+    let sizeless_dev =
+        "(defblock dev (offers (observable-output true) (region dev.regs (base 0x7FFF_F000))))";
+    assert_eq!(
+        map_of(&memory_map(&format!("{sizeless_dev}\n{FW_HOLE}")), &v).1,
+        ["missing-fact size of dev dev.regs against soc in s"]
+    );
+}
+
+#[test]
+fn two_placement_regions_on_the_same_bytes_contradict_and_memory_all_holes_is_refused() {
+    let v = vocabulary();
+    let ram2 = "(defblock fw (offers (core-count 1 tick) (region ram2 (base 0x8400_0000) (size 128 MiB) (executable true))))";
+    assert_eq!(
+        map_of(&memory_map(&format!("{DEV_OUTSIDE}\n{ram2}")), &v).0,
+        // Neither is privileged: the map walks the hardware in name order, `fw` before `soc`.
+        ["invalid-description map s: soc ram in fw ram2"]
+    );
+    let all = "(defblock fw (offers (core-count 1 tick) (region fw.range (base 0x8000_0000) (size 128 MiB) (reserved true))))";
+    assert_eq!(
+        map_of(&memory_map(&format!("{DEV_OUTSIDE}\n{all}")), &v).0,
+        ["invalid-description all holes s: soc ram"]
+    );
+}
+
+#[test]
+fn a_region_s_sub_forms_follow_one_grammar() {
+    // Review R7: each sub-form at most once, a flag `true` or `false`, nothing else — refused where providers are read.
+    let v = vocabulary();
+    for (written, refused) in [
+        (
+            "(executable yes)",
+            "region `r`'s `executable` is `true` or `false`",
+        ),
+        (
+            "(reserved true) (reserved true)",
+            "region `r` has two `reserved`s",
+        ),
+        (
+            "(alias other)",
+            "region `r` has a sub-form `alias` no rule reads",
+        ),
+    ] {
+        let text = format!("(defblock b (offers (region r (base 0x1000) (size 4 KiB) {written})))");
+        let found = Read::of(&text, &v).joint(&v).expect_err(written);
+        assert_eq!(
+            found.iter().map(named).collect::<Vec<_>>(),
+            [format!("invalid-description b: {refused}")]
+        );
+    }
+}
+
+#[test]
+fn a_placement_given_to_the_plan_is_placement_memory_of_the_system() {
+    // Review R9: M3 chooses the region, `M4.1` the offsets.
+    let v = vocabulary();
+    let text = memory_map(&format!("{DEV_OUTSIDE}\n{FW_HOLE}"));
+    let read = Read::of(&text, &v);
+    let [system] = read.systems().try_into().expect("one system");
+    let joint = read.joint(&v).expect("reads");
+    let check = |region: &str| {
+        report_of(
+            &joint
+                .clone()
+                .for_system(system.clone().placed_in(region))
+                .check(&[]),
+        )
+        .0
+    };
+    assert!(check("ram").is_empty());
+    assert_eq!(check("dev.regs"), ["infeasible-configuration placement s in dev.regs: it is not executable, unreserved memory"]);
+    assert_eq!(check("fw.range"), ["infeasible-configuration placement s in fw.range: it is not executable, unreserved memory"]);
+    assert_eq!(check("nowhere"), ["infeasible-configuration placement s in nowhere: it is no region of the system's hardware"]);
+}
+
+#[test]
+fn the_target_s_map_holds_with_its_ram_as_placement_memory() {
+    let v = vocabulary();
+    let target =
+        std::fs::read_to_string(root().join("targets/riscv-virt-up.eadl")).expect("the target");
+    let text = format!(
+        "{target}\n{}",
+        one_task_system("", "\n  (platform (uses target.riscv-virt-up))")
+    );
+    let (refused, unknowns, obligations) = map_of(&text, &v);
+    assert!(
+        refused.is_empty() && unknowns.is_empty(),
+        "{refused:?} {unknowns:?}"
+    );
+    assert_eq!(
+        obligations,
+        [Obligation::Placement {
+            system: "s".to_string(),
+            provider: "target.riscv-virt-up".to_string(),
+            region: "target.ram".to_string(),
+            holes: vec![],
+        }]
+    );
+}
+
+#[test]
+fn ownership_no_longer_reads_placement_memory() {
+    // Review R6: a bound device inside bound memory is the map's contradiction, not a second ownership report.
+    let v = vocabulary();
+    let text = "(defblock dev (offers (observable-output true) (region dev.regs (base 0x8100_0000) (size 4 KiB))))
+(defblock mem (offers (core-count 1 tick) (region ram (base 0x8000_0000) (size 128 MiB) (executable true))))
+(defservice out (requires (needs observable-output core-count)))";
+    for r in every(text, &v) {
+        assert!(r.conflicts.is_empty(), "{:?}", report_of(&r));
+    }
 }

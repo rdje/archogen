@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — placement, judged once per system
+
+`ARCHOGEN-M3-0856` (leaf `M3.3.5.1`), `2026-10-22`.
+
+- A region's sub-forms follow one grammar in the joint rules and the target agreement: each once, a flag `true` or
+  `false`; the agreement refuses `reserved`, which it does not compare.
+- Each system's memory map is judged once: reserved ranges in placement memory are holes reported for the plan; a
+  device or a second placement region on its bytes, or memory all holes, is `invalid-description`; a placement the plan
+  is given must be placement memory. Model §8 rule 10 and the book explain it.
+
 ## archogen — placement: the design, reviewed
 
 `ARCHOGEN-M3-0855` (leaf `M3.3.5`), `2026-10-22`.

@@ -125,7 +125,8 @@ what it is, not by address alone:
   ([privileged specification](ledger.md#riscv-privileged) §2.1.4, §2.1.7.1.3), and the spike runs at M, programming
   the CLINT and writing to the console (leaf `M3.3.4.4`).
 
-A region, an offer or a clause that no rule reads is a disagreement too. `archogen check` must also admit the file. Every `--check`
+A region, an offer or a clause that no rule reads is a disagreement too, and a region's sub-forms follow the joint
+rules' grammar: each once, `executable` `true` or `false`, and `reserved` refused, since no rule compares it. `archogen check` must also admit the file. Every `--check`
 runs the agreement on the same fresh dump it compared with the recorded tree:
 
 ```console

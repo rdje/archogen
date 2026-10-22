@@ -42,7 +42,7 @@ nothing re-derives.
 | `crates/eadl-resolve/src/requirement.rs` | §7 rule 4, what a side requires, read whole |
 | `crates/eadl-resolve/src/relation.rs` | §7 rule 5, each fact's outcome at a provider and each requirement's verdict there |
 | `crates/eadl-resolve/src/refusal.rs` | §7 rule 6, the relation's refusals, their codes and their repair directions |
-| `crates/eadl-resolve/src/joint.rs` | §8, whether the bindings of one assignment hold together: channels, owned regions, connectivity, routes and privilege |
+| `crates/eadl-resolve/src/joint.rs` | §8, whether the bindings of one assignment hold together: channels, owned regions, connectivity, routes, privilege and placement |
 
 The census over this declaration runs in both directions, in `crates/eadl-front/tests/reference.rs`. A code
 these sources can emit and §6 does not state is a rule nobody has written down. A code §6 states and no
@@ -179,9 +179,9 @@ the one code that names more than one rule today says so.
 | `quantity-overflow` | a decimal is too precise to represent exactly (§1 rule 5) | reduce the precision, or change the unit so fewer digits are needed | `check (defblock timer.counter (offers (tick-rate 0.0000000000000000000000000000000000000001 MHz)))` |
 | `quantity-invalid` | no input today: the totality arm for a refusal `Quantity::new` may grow (§1 rule 6) | write a quantity as a number followed by a known unit | `none: the catch-all arm of Quantity::read, for a refusal Quantity::new may grow later; today it refuses only what the frequency and duration rows state, and each has its own code (section 1 rule 6)` |
 | `priority-below-one` | a task's priority is below 1 (§4 rule 5) | write a rank of 1 or more: 1 is the highest priority, and a larger number is a lower one | `check (defsystem s (task t (period 10 ms) (deadline 10 ms) (priority 0)))` |
-| `invalid-description` | a description contradicts itself: a fact both offered and absent (§2 rule 1), or a task with two release models (§4 rule 1); or the substitutability relation refuses what it writes, each refusal naming its cause (§7 rule 6); or a provider offers a consumed function with no channel, or a region that names no byte range (§8 rules 3 and 5) | remove one of the two declarations; only the author knows which was meant | `check (defblock b (offers counter-width) (absent counter-width))` |
-| `infeasible-configuration` | a required fact is declared absent (§2 rule 2); or an assignment gives a provider more requesters than channels, or two bound providers overlapping bytes, or a requester bound to a block or platform outside its system's hardware (§8 rules 3, 5 and 7), or a caller bound to a provider not reachable at its system's level, or declared reachable from none (§8 rule 9), once no assignment avoids it | correct the requirement or the platform | `check (defblock timer.counter (offers counter-width) (absent low-power-timer)) (defservice time.lowpower (requires (needs low-power-timer))) (defsystem s (requires (uses time.lowpower)))` |
-| `missing-fact` | something the system requires is described nowhere: a required fact (§2 rule 3), a task's release model (§4 rule 1), or the platform a refinement names (§3 rule 4); or what §8 cannot judge an assignment without — a provider's `channels`, a region's size, a bound provider's level (§8 rules 3, 5 and 9) | declare the fact offered or absent on the platform; give a task a `period` or a `min-separation`; for a refinement, import the module that declares the target, or correct its name | `check (defservice time.monotonic (requires (needs wrap-behavior))) (defsystem s (requires (uses time.monotonic)))` |
+| `invalid-description` | a description contradicts itself: a fact both offered and absent (§2 rule 1), or a task with two release models (§4 rule 1); or the substitutability relation refuses what it writes, each refusal naming its cause (§7 rule 6); or a provider offers a consumed function with no channel, or a region that names no byte range (§8 rules 3 and 5), or a system's memory map makes two claims on one byte or reserves all its placement memory (§8 rule 10) | remove one of the two declarations; only the author knows which was meant | `check (defblock b (offers counter-width) (absent counter-width))` |
+| `infeasible-configuration` | a required fact is declared absent (§2 rule 2); or an assignment gives a provider more requesters than channels, or two bound providers overlapping bytes, or a requester bound to a block or platform outside its system's hardware (§8 rules 3, 5 and 7), or a caller bound to a provider not reachable at its system's level, or declared reachable from none (§8 rule 9), or a placement given outside placement memory (§8 rule 10), once no assignment avoids it | correct the requirement or the platform | `check (defblock timer.counter (offers counter-width) (absent low-power-timer)) (defservice time.lowpower (requires (needs low-power-timer))) (defsystem s (requires (uses time.lowpower)))` |
+| `missing-fact` | something the system requires is described nowhere: a required fact (§2 rule 3), a task's release model (§4 rule 1), or the platform a refinement names (§3 rule 4); or what §8 cannot judge an assignment without — a provider's `channels`, a region's size, a bound provider's level (§8 rules 3, 5, 9 and 10) | declare the fact offered or absent on the platform; give a task a `period` or a `min-separation`; for a refinement, import the module that declares the target, or correct its name | `check (defservice time.monotonic (requires (needs wrap-behavior))) (defsystem s (requires (uses time.monotonic)))` |
 | `refinement-violated` | a concrete platform breaks an obligation of the abstract one it refines (§3 rules 1–3) | honour the obligation the diagnostic names: offer the guarantee, give the bounded value, or drop what the abstract declares absent | `check (defplatform soc.abstract (offers counter-width) (absent debug-port)) (defplatform soc.concrete (refines soc.abstract) (offers counter-width debug-port))` |
 | `unsupported-profile` | the description asks for something the active profile does not admit (§4 rules 2–4 and 6); or the substitutability relation meets a constraint on a fact no rule decides, or a comparison past the exact arithmetic (§7 rule 6), a region's range among them (§8 rule 5); or a caller stating a level its system does not run its callers at (§8 rule 9) | request a profile that supports it, or change the description to fit this one; nothing is silently weakened | `check (defsystem s (task a (period 10 ms) (deadline 10 ms) (priority 1)) (task b (period 10 ms) (deadline 10 ms) (priority 1)))` |
 | `tool-failure` | the toolchain could not proceed (§4 rule 7) | this is a failure of the toolchain, not a verdict about the description; report it | `none: only a shipped kind module over 4 GiB reaches it, and the kind modules are embedded in the toolchain (shipped_registry in crates/eadl-model/src/check.rs)` |
@@ -258,12 +258,15 @@ did not write it. `archogen check` does not call them yet: `M3.4` searches for a
    bounded overhead (`ROADMAP.md` §5.4), for the realization and the analysis to discharge. A multiplexing adapter is
    likewise a provider with more channels and itself one requester of the channel beneath it.
 5. **Ownership** (F09). A provider owns each `(region NAME (base B) (size S))` it offers: the bytes `[B, B+S)`, `B` a
-   non-negative address and `S` a positive whole number of bytes; any other sub-clause is another rule's. Two distinct
+   non-negative address and `S` a positive whole number of bytes. Its other sub-forms are `(executable true)` or `false`
+   and `(reserved true)` or `false`; each sub-form at most once, and any other, a second one or another value is
+   `invalid-description` (`M3.3.5.1`). Placement memory — executable, unreserved — is rule 10's, owned by none. Two distinct
    providers both bound in an assignment whose bytes overlap are a conflict, unless one composes the other through
    `uses`, at any depth. A region without `size` owns at least its base byte; where another bound provider owns bytes
    above its base, whether they overlap is `missing-fact`. A region without a base, with two, or with a size that is
    not a positive whole number of bytes is `invalid-description`; one past the exact arithmetic `unsupported-profile`.
-   A provider nothing is bound to owns nothing: an unused device costs nothing (`ROADMAP.md` §5.3).
+   A provider nothing is bound to owns nothing: an unused device costs nothing (`ROADMAP.md` §5.3) but the bytes it
+   occupies in memory, which rule 10 charges.
 6. **One assignment, then the search.** A conflict refuses the assignment it is found in, and an unknown blocks it.
    The description is `infeasible-configuration` when every assignment has a conflict, and `missing-fact` when some
    assignment is blocked by unknowns alone — `M3.4`'s search to conclude, never a single assignment's. Each finding
@@ -299,3 +302,14 @@ did not write it. `archogen check` does not call them yet: `M3.4` searches for a
    that states a level (`SR-H18`), so `SR-H12`'s "refused" is the assignment's, and the description's only by rule 6.
    With no level given, these rules say nothing. At `archogen check`, §2 rule 1 refuses one block's absent level beside
    another's offered one first, description-wide.
+10. **Placement** (`M3.3.5.1`; `SR-H13`, amended `2026-10-22`). Judged once per system, over its hardware, never per
+   assignment. **Placement memory** is a region `(executable true)` and not `(reserved true)`: where a plan places the
+   image — M3 chooses the region, `M4.1` the offsets. A reserved region overlapping it is a **hole** the plan avoids, and
+   each placement region is reported with its holes as a **placement obligation**, for `M4.1` to lay out around and
+   `M4.4` (F20) to verify. A region neither executable nor reserved — a device's registers — overlapping placement
+   memory, or two placement regions overlapping, are two claims on the same bytes, and placement memory reserved in
+   every byte leaves nothing to place in: each `invalid-description`, bound or not, composed or not. Where a region has no
+   size and the other's bytes lie at or above its base, whether they overlap is `missing-fact`, as rule 5 reads it. A
+   placement given to an assignment that is not placement memory of the system's hardware is a conflict of that
+   assignment. A system with no placement memory is said nothing of — the hosted playground provides memory — and a
+   system's regions against a target's own map are `M4.4`'s.

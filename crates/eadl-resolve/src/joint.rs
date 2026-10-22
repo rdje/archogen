@@ -15,6 +15,9 @@
 //! - **Routes.** Each provider the assignment relies on for an interrupt — a source, or a timer's alarm — is reported
 //!   as an [`Obligation::Route`]: the description states that the provider is part of the system, and the path from
 //!   it to the core, with its latency, is the catalog's to state and the plan's to enable.
+//! - **Placement** (leaf `M3.3.5.1`). A system's memory map, once: placement memory — executable, unreserved regions —
+//!   holds no device's registers and no second placement region, and the reserved ranges in it are holes the plan avoids,
+//!   reported with it as an [`Obligation::Placement`]; a placement the plan is given is placement memory of the system.
 //! - **Privilege** (leaf `M3.3.4.1`). Given the level a plan binds the system's callers to, a caller states no other
 //!   level, and every provider bound for a caller is reachable at that level and says so (`SR-H11`, `SR-H12`).
 //!
@@ -148,6 +151,8 @@ fn is_hardware(decl: &Form) -> bool {
 pub struct System {
     /// Its name.
     pub name: String,
+    /// Where it is declared.
+    pub span: Span,
     /// The blocks and platforms it has: every one its `platform` clause, its own `uses` and `needs` or its tasks' name,
     /// and every one those name in turn, at any depth. `refines` is no edge: a refinement keeps the abstract
     /// platform's obligations (model §3), not its blocks.
@@ -156,6 +161,8 @@ pub struct System {
     pub reached: BTreeSet<String>,
     /// The privilege level a plan binds the system's callers to, when one is given (model §8 rule 9).
     pub level: Option<String>,
+    /// The region a plan places the image in, when one is given (model §8 rule 10): M3 chooses it, `M4.1` the offsets.
+    pub placement: Option<String>,
 }
 
 impl System {
@@ -192,10 +199,19 @@ impl System {
         }
         Self {
             name: name_of(decl).to_string(),
+            span: decl.span(),
             hardware,
             reached,
             level: None,
+            placement: None,
         }
+    }
+
+    /// The system with the region a plan places its image in.
+    #[must_use]
+    pub fn placed_in(mut self, region: &str) -> Self {
+        self.placement = Some(region.to_string());
+        self
     }
 
     /// The system with the level a plan binds its callers to — the profile's, once `M3.3.4.2` states it.
@@ -248,7 +264,8 @@ const MIN_ARRIVAL_SEPARATION: &str = "min-arrival-separation";
 /// The levels a function is reachable from, and the level a caller states it calls from.
 const REACHABLE_AT_PRIVILEGE: &str = "reachable-at-privilege";
 
-/// A byte range a provider owns: `(region NAME (base B) (size S))`.
+/// A byte range a provider offers: `(region NAME (base B) (size S) (executable E) (reserved R))`, model §8 rule 5's
+/// grammar — `base` once, `size` at most once, each flag at most once and `true` or `false`, nothing else.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Region {
     /// The region's name.
@@ -259,9 +276,19 @@ pub struct Region {
     pub base: i128,
     /// How many bytes it holds, when its size is written.
     pub bytes: Option<i128>,
+    /// `(executable true)`: memory code may be placed in.
+    pub executable: bool,
+    /// `(reserved true)`: a range nothing may be placed in.
+    pub reserved: bool,
 }
 
 impl Region {
+    /// Placement memory: executable and not reserved (model §8 rule 10).
+    #[must_use]
+    pub const fn is_memory(&self) -> bool {
+        self.executable && !self.reserved
+    }
+
     /// The bytes it is known to own: `[base, base + size)`, or its base alone when its size is not written.
     const fn known(&self) -> (i128, i128) {
         match self.bytes {
@@ -396,6 +423,43 @@ pub enum Finding {
         /// Declared absent — reachable from no level — rather than undescribed or offered bare.
         absent: bool,
     },
+    /// Two claims on the same bytes in a system's memory map: a region that is neither placement memory nor reserved —
+    /// a device's registers — overlapping placement memory, or two placement regions overlapping (leaf `M3.3.5.1`).
+    MapContradiction {
+        /// The system.
+        system: String,
+        /// The placement region and its provider.
+        memory: (String, Region),
+        /// The region overlapping it and its provider.
+        other: (String, Region),
+    },
+    /// Placement memory whose every byte is a reserved hole: nothing is left to place in.
+    MemoryAllHoles {
+        /// The system.
+        system: String,
+        /// The placement region and its provider.
+        memory: (String, Region),
+    },
+    /// A region of a system's memory map with no size, where whether it overlaps placement memory is unknown.
+    PlacementUnsized {
+        /// The system.
+        system: String,
+        /// The sizeless region and its provider.
+        sizeless: (String, Region),
+        /// The provider whose region lies at or above its base.
+        against: String,
+    },
+    /// A placement given to the plan that is not placement memory of the system's hardware.
+    PlacementIllegal {
+        /// The system.
+        system: String,
+        /// Where the system is declared.
+        span: Span,
+        /// The region given.
+        region: String,
+        /// Why it cannot hold the image.
+        why: String,
+    },
     /// A requester of a system bound to a block or platform outside the system's hardware (leaf `M3.3.3`).
     Unconnected {
         /// The requester.
@@ -420,10 +484,13 @@ impl Finding {
             | Self::Overlap { .. }
             | Self::Unconnected { .. }
             | Self::OutOfLevel { .. }
+            | Self::PlacementIllegal { .. }
             | Self::LevelUnstated { absent: true, .. } => "infeasible-configuration",
             Self::ChannelsUnknown { .. }
             | Self::RegionUnsized { .. }
+            | Self::PlacementUnsized { .. }
             | Self::LevelUnstated { absent: false, .. } => "missing-fact",
+            Self::MapContradiction { .. } | Self::MemoryAllHoles { .. } => "invalid-description",
             Self::LevelUnsupported { .. } => "unsupported-profile",
             Self::ChannelsContradicted { .. } | Self::RegionMalformed { .. } => {
                 "invalid-description"
@@ -546,6 +613,61 @@ impl Finding {
                 ),
             )
             .with_secondary(Label::new(*declared, "declared here, outside it")),
+            Self::MapContradiction {
+                system,
+                memory,
+                other,
+            } => Diagnostic::error(
+                "invalid-description",
+                if other.1.is_memory() {
+                    format!(
+                        "`{system}`'s placement regions `{}` and `{}` claim the same bytes",
+                        memory.1.name, other.1.name
+                    )
+                } else {
+                    format!(
+                        "`{}`'s region `{}` lies in `{}`'s placement memory `{}`, in `{system}`'s map",
+                        other.0, other.1.name, memory.0, memory.1.name
+                    )
+                },
+                Label::new(other.1.span, "overlapping here"),
+                "correct the region map: mark the range `(reserved true)`, or move it out of the memory",
+            )
+            .with_secondary(Label::new(memory.1.span, "placement memory")),
+            Self::MemoryAllHoles { system, memory } => Diagnostic::error(
+                "invalid-description",
+                format!(
+                    "`{}`'s placement memory `{}` is reserved in every byte, so `{system}` has nothing to place in it",
+                    memory.0, memory.1.name
+                ),
+                Label::new(memory.1.span, "every byte reserved"),
+                "correct the region map: shrink the reserved ranges, or drop `(executable true)`",
+            ),
+            Self::PlacementUnsized {
+                system,
+                sizeless,
+                against,
+            } => Diagnostic::error(
+                "missing-fact",
+                format!(
+                    "`{}`'s region `{}` has no size, and `{against}` has a region above its base, so whether `{system}`'s \
+                     placement memory overlaps it is unknown",
+                    sizeless.0, sizeless.1.name
+                ),
+                Label::new(sizeless.1.span, "no size"),
+                "write the region's `(size …)`",
+            ),
+            Self::PlacementIllegal {
+                system,
+                span,
+                region,
+                why,
+            } => Diagnostic::error(
+                "infeasible-configuration",
+                format!("`{system}`'s image cannot be placed in `{region}`: {why}"),
+                Label::new(*span, "the system placed"),
+                "place the image in an executable, unreserved region of the system's hardware",
+            ),
             Self::LevelUnsupported {
                 requester,
                 span,
@@ -647,6 +769,29 @@ pub enum Obligation {
         /// The level its interrupt is delivered at, when the system is given one.
         level: Option<String>,
     },
+    /// Placement memory of a system and the reserved ranges in it, which the plan lays the image out around (`M4.1`)
+    /// and the build verifies (`M4.4`, F20).
+    Placement {
+        /// The system.
+        system: String,
+        /// The provider offering the memory.
+        provider: String,
+        /// The placement region.
+        region: String,
+        /// Each hole in it: its provider and its region.
+        holes: Vec<(String, String)>,
+    },
+}
+
+/// What one system's memory map says of placement, judged once for the system (model §8 rule 10).
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Map {
+    /// Two claims on the same bytes, or memory all holes: `invalid-description`.
+    pub refused: Vec<Finding>,
+    /// A size the judgment cannot do without: `missing-fact`.
+    pub unknowns: Vec<Finding>,
+    /// Each placement region with its holes.
+    pub obligations: Vec<Obligation>,
 }
 
 /// What an [`Obligation::Route`]'s interrupt is.
@@ -805,8 +950,105 @@ impl<'v> Joint<'v> {
             if let Some(level) = &system.level {
                 self.privilege(system, level, assignment, &mut report);
             }
+            if let Some(region) = &system.placement {
+                self.placed(system, region, &mut report);
+            }
         }
         report
+    }
+
+    /// The regions of `system`'s hardware, each with its provider, in the order the providers are named.
+    fn hardware_regions<'s>(&'s self, system: &System) -> Vec<(&'s str, &'s Region)> {
+        system
+            .hardware
+            .iter()
+            .filter_map(|name| self.held.get_key_value(name))
+            .flat_map(|(name, h)| h.regions.iter().map(move |r| (name.as_str(), r)))
+            .collect()
+    }
+
+    /// A placement given to the plan is placement memory of the system's hardware.
+    fn placed(&self, system: &System, region: &str, report: &mut Report) {
+        let why = match self
+            .hardware_regions(system)
+            .iter()
+            .find(|(_, r)| r.name == region)
+        {
+            None => Some("it is no region of the system's hardware"),
+            Some((_, r)) if !r.is_memory() => Some("it is not executable, unreserved memory"),
+            Some(_) => None,
+        };
+        if let Some(why) = why {
+            report.conflicts.push(Finding::PlacementIllegal {
+                system: system.name.clone(),
+                span: system.span,
+                region: region.to_string(),
+                why: why.to_string(),
+            });
+        }
+    }
+
+    /// Model §8 rule 10, once per system: its placement memory, the holes in it, and what contradicts or blocks it.
+    #[must_use]
+    pub fn map(&self, system: &System) -> Map {
+        let regions = self.hardware_regions(system);
+        let mut map = Map::default();
+        for (i, (owner, memory)) in regions.iter().enumerate() {
+            if !memory.is_memory() {
+                continue;
+            }
+            let mut holes = Vec::new();
+            for (j, (other_owner, other)) in regions.iter().enumerate() {
+                if i == j {
+                    continue;
+                }
+                let (m0, m1) = memory.known();
+                let (o0, o1) = other.known();
+                if m0 < o1 && o0 < m1 {
+                    if other.reserved {
+                        holes.push(((*other_owner).to_string(), (*other).clone()));
+                    } else if !other.is_memory() || i < j {
+                        map.refused.push(Finding::MapContradiction {
+                            system: system.name.clone(),
+                            memory: ((*owner).to_string(), (*memory).clone()),
+                            other: ((*other_owner).to_string(), (*other).clone()),
+                        });
+                    }
+                    continue;
+                }
+                for (unsized_owner, sizeless, against, at_or_above) in [
+                    (owner, memory, other_owner, o0 >= m0),
+                    (other_owner, other, owner, m0 >= o0),
+                ] {
+                    if sizeless.bytes.is_none() && at_or_above {
+                        let finding = Finding::PlacementUnsized {
+                            system: system.name.clone(),
+                            sizeless: ((*unsized_owner).to_string(), (*sizeless).clone()),
+                            against: (*against).to_string(),
+                        };
+                        if !map.unknowns.contains(&finding) {
+                            map.unknowns.push(finding);
+                        }
+                    }
+                }
+            }
+            if let Some(size) = memory.bytes {
+                let covered = covered_bytes(memory.base, size, &holes);
+                if covered == size {
+                    map.refused.push(Finding::MemoryAllHoles {
+                        system: system.name.clone(),
+                        memory: ((*owner).to_string(), (*memory).clone()),
+                    });
+                }
+            }
+            map.obligations.push(Obligation::Placement {
+                system: system.name.clone(),
+                provider: (*owner).to_string(),
+                region: memory.name.clone(),
+                holes: holes.into_iter().map(|(o, r)| (o, r.name)).collect(),
+            });
+        }
+        map
     }
 
     /// Whether `requester` is a block or platform: hardware needing hardware has no privilege level.
@@ -995,8 +1237,9 @@ impl<'v> Joint<'v> {
                 if self.composes(p, q) || self.composes(q, p) {
                     continue;
                 }
-                for a in &ph.regions {
-                    for b in &qh.regions {
+                // Placement memory is the plan's, not a device's: rule 10 judges it (leaf `M3.3.5.1`).
+                for a in ph.regions.iter().filter(|r| !r.is_memory()) {
+                    for b in qh.regions.iter().filter(|r| !r.is_memory()) {
                         judge_pair((p, a), (q, b), report);
                     }
                 }
@@ -1029,6 +1272,28 @@ impl<'v> Joint<'v> {
     pub fn span_of(&self, provider: &str) -> Option<Span> {
         self.held.get(provider).map(|h| h.span)
     }
+}
+
+/// How many of the `size` bytes from `base` the holes cover, each counted once.
+fn covered_bytes(base: i128, size: i128, holes: &[(String, Region)]) -> i128 {
+    let mut spans: Vec<(i128, i128)> = holes
+        .iter()
+        .map(|(_, r)| {
+            let (lo, hi) = r.known();
+            (lo.max(base), hi.min(base + size))
+        })
+        .filter(|(lo, hi)| lo < hi)
+        .collect();
+    spans.sort_unstable();
+    let (mut covered, mut reach) = (0, base);
+    for (lo, hi) in spans {
+        let lo = lo.max(reach);
+        if hi > lo {
+            covered += hi - lo;
+            reach = hi;
+        }
+    }
+    covered
 }
 
 /// Two regions of two bound providers: overlapping known bytes are a conflict; a region with no size, with the other's
@@ -1113,8 +1378,8 @@ fn regions(provider: &Provider, decl: &Form, findings: &mut Vec<Finding>) -> Vec
     out
 }
 
-/// One `(region NAME (base B) (size S) …)`: `Err(Some(why))` when it names no byte range, `Err(None)` when its range
-/// lies past the exact arithmetic. Sub-clauses other than `base` and `size` are another rule's and ignored here.
+/// One `(region NAME (base B) (size S) …)`: `Err(Some(why))` when it is written outside model §8 rule 5's grammar,
+/// `Err(None)` when its range lies past the exact arithmetic.
 fn region(item: &Form) -> Result<Region, Option<String>> {
     let items = item.items();
     let name = items
@@ -1122,6 +1387,17 @@ fn region(item: &Form) -> Result<Region, Option<String>> {
         .and_then(Form::as_symbol)
         .ok_or_else(|| Some("a region is named first".to_string()))?
         .to_string();
+    if let Some(other) = items[2..]
+        .iter()
+        .find(|c| !matches!(c.head(), Some("base" | "size" | "executable" | "reserved")))
+    {
+        return Err(Some(format!(
+            "region `{name}` has a sub-form `{}` no rule reads",
+            other.head().or_else(|| other.as_symbol()).unwrap_or("?")
+        )));
+    }
+    let executable = flag(&items[2..], "executable", &name)?;
+    let reserved = flag(&items[2..], "reserved", &name)?;
     let base = match clauses(&items[2..], "base").as_slice() {
         [one] => match one.items() {
             [_, Form::Integer { value, .. }] if *value >= 0 => i128::from(*value),
@@ -1147,7 +1423,24 @@ fn region(item: &Form) -> Result<Region, Option<String>> {
         span: item.span(),
         base,
         bytes,
+        executable,
+        reserved,
     })
+}
+
+/// A region's flag, `(executable true)` or `(reserved false)`: at most once, `true` or `false`, `false` when unwritten.
+fn flag(items: &[Form], head: &str, name: &str) -> Result<bool, Option<String>> {
+    match clauses(items, head).as_slice() {
+        [] => Ok(false),
+        [one] => match one.items() {
+            [_, value] if value.as_symbol() == Some("true") => Ok(true),
+            [_, value] if value.as_symbol() == Some("false") => Ok(false),
+            _ => Err(Some(format!(
+                "region `{name}`'s `{head}` is `true` or `false`"
+            ))),
+        },
+        _ => Err(Some(format!("region `{name}` has two `{head}`s"))),
+    }
 }
 
 /// The sub-clauses among `items` headed `head`.
