@@ -727,6 +727,22 @@ mdBook that is the director's window into the project.
     `pgen`'s claim verification identical to the adopted body by diff), so nothing to apply.
   Commit: `ARCHOGEN-PROGRAM-0846 (leaf PROGRAM.101)`
 
+- ID: `PROGRAM.102`
+  Status: `pending` — P2, next: `docs/decisions/` at its byte ceiling blocks `M3.3.6`
+  Reproduce / issue: `2026-10-22`, `find docs/decisions -maxdepth 1 -type f -exec cat {} + | wc -c`: 392915, against the
+    ruled 393216 (`README_POLICY.md`'s routed destinations; `docs/decisions/decision_decisions-folder-ceiling.md`), with 40
+    files, the file ceiling. `M3.3.6`'s bundles need vocabulary rows in `decision_substitutability-relation.md` §1.1, which
+    the folder cannot hold. Sealing settled sections frees about 1 KiB: the findings record's §10 and §12 are already
+    stubs and §14 is 1292 bytes, its other long sections still with the director; the largest record,
+    `decision_substitutability-relation.md` (72961 bytes), is live normative text.
+  Goal: headroom by the folder's own routes — moving records that are specifications to `docs/specs/`
+    (`docs/decisions/decision_specifications-home.md`, as the catalog's were), every link to them rewritten and the
+    decisions index and `docs/specs/`'s ceiling held — never by raising a ceiling, which needs the director's ruling.
+    Candidates to judge, each with its reason: `decision_task-tree-sealing.md` (33245 bytes), `decision_runtime-analysis-
+    variant.md` (38794), `decision_runtime-contract-gaps.md` (29963).
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -792,8 +808,9 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.102` | `pending` | P2: `docs/decisions/` at its byte ceiling blocks `M3.3.6`'s vocabulary rows |
+| 2 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
+| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.72`, `.73` and `.78` — are filed and owned. Every closed
@@ -931,6 +948,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0489 (leaf PROGRAM)` | **`PROGRAM.10` and `.61`–`.65` sealed**, 13 closed leaves into `docs/task-history/PROGRAM/`, when `README-ROUTES` refused `docs/tasks/` at 820 957 bytes over its 819 200; `docs/tasks/` 817 470 → 752 861 bytes, measured from `HEAD` and the tree |
 | `PROGRAM.101` | `ARCHOGEN-PROGRAM-0846 (leaf PROGRAM.101)` | **fourteenth daily artifact cleanup**: the idle main and native-sweep incremental caches removed (5382 files / 1181873277 logical bytes); every other `target/` entry identical or accounted; `PROGRAM.99` sealed |
 | `PROGRAM.100` | `ARCHOGEN-PROGRAM-0847 (leaf PROGRAM.100)` | **a failed tier step's whole output is kept**: `target/verify-logs/<tier>/<step>.log`, named under the tail and removed when the step next runs; a control and two arms failing first |
+| `PROGRAM.102` | `ARCHOGEN-PROGRAM-0860 (leaf PROGRAM.102)` | **filed: `docs/decisions/` at its byte ceiling** (392915 of 393216), blocking `M3.3.6`'s vocabulary rows; the remedy, specifications moved to `docs/specs/` |
 
 ## Changelog
 

@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — file: the decisions folder at its byte ceiling
+
+`ARCHOGEN-PROGRAM-0860` (leaf `PROGRAM.102`), `2026-10-22`.
+
+- `docs/decisions/` holds 392915 of its ruled 393216 bytes, so `M3.3.6`'s vocabulary rows have nowhere to go; filed
+  at the frontier's head with its remedy — records that are specifications moved to `docs/specs/` — and its candidates.
+
 ## archogen — the initialization graph, derived
 
 `ARCHOGEN-M3-0859` (leaf `M3.3.7`), `2026-10-22`.
