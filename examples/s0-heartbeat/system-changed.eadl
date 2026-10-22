@@ -21,10 +21,10 @@
 (eadl-version eadl/1)
 
 (defblock console.uart
-  (offers (observable-output true)))
+  (offers (observable-output true) (reachable-at-privilege machine)))
 
 (defplatform host.playground
-  (offers (core-count 1 tick))
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
   (requires (uses console.uart)))
 
 (defservice console.write

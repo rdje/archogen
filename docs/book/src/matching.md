@@ -252,6 +252,8 @@ and a route carries the level its interrupt is delivered at. The level is the pr
 runtime, its tasks and its services at `machine`, the level a RISC-V hart starts in at reset
 ([privileged specification](ledger.md#riscv-privileged) §2.1.4), and the hosted playground models it
 (`docs/profiles/rt-static-up-v1.md`). `M3.4` gives it to every system it resolves; with none given the rule says nothing.
+Every block and platform in a suite system's hardware states `(reachable-at-privilege machine)`, held by a census
+over the suite (`crates/eadl-resolve/tests/privilege_census.rs`); `examples/alternative-timer` waits on the director.
 
 ### The list a resolver chooses from
 

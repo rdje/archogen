@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — every suite system's hardware states its level
+
+`ARCHOGEN-M3-0853` (leaf `M3.3.4.3`), `2026-10-22`.
+
+- 45 blocks and platforms in 21 suite descriptions gain `(reachable-at-privilege machine)`, so the joint rule will refuse
+  none of them once wired; a census over each system's hardware holds it, `examples/alternative-timer` excluded by name
+  until the director decides.
+- A pending migration note names the 21 moved constructs; the frozen verdicts and the third opinion are unchanged; the
+  tour's copies of `s0`'s description and the sporadic case moved with them.
+
 ## archogen — the privilege level is the profile's
 
 `ARCHOGEN-M3-0852` (leaf `M3.3.4.2`), `2026-10-22`.

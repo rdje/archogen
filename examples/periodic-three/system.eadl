@@ -16,15 +16,17 @@
   (offers
     (counter-width 32 bit)
     (tick-rate 10 MHz)
-    (observation-coherent true)))
+    (observation-coherent true)
+    (reachable-at-privilege machine)))
 
 (defblock console.uart
-  (offers (observable-output true)))
+  (offers (observable-output true) (reachable-at-privilege machine)))
 
 (defplatform soc.playground
   (offers
     (core-count 1 tick)
-    (region device.timer (base 0x1000_0000)))
+    (region device.timer (base 0x1000_0000))
+    (reachable-at-privilege machine))
   (requires (uses timer.counter console.uart)))
 
 (defservice time.monotonic

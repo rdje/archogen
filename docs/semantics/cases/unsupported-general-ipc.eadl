@@ -4,8 +4,8 @@
 ;
 (eadl-version eadl/1)
 
-(defblock timer.counter (offers counter-width))
-(defplatform soc.p (offers (core-count 1 tick)) (requires (uses timer.counter)))
+(defblock timer.counter (offers counter-width (reachable-at-privilege machine)))
+(defplatform soc.p (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.counter)))
 (defservice queue.bounded (requires (queue-capacity 8 tick) (needs general-ipc)))
 (defsystem s
   (task producer (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses queue.bounded))

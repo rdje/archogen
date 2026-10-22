@@ -8,8 +8,8 @@
 ;
 (eadl-version eadl/1)
 
-(defblock console.uart (offers (observable-output true)))
-(defplatform soc.p (offers (core-count 1 tick)) (requires (uses console.uart)))
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc.p (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
 (defservice console.write (requires (needs observable-output)))
 (defsystem s
   (task a (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))

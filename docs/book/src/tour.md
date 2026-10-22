@@ -29,9 +29,9 @@ removed:
 ```text
 (eadl-version eadl/1)
 (defblock console.uart
-  (offers (observable-output true)))
+  (offers (observable-output true) (reachable-at-privilege machine)))
 (defplatform host.playground
-  (offers (core-count 1 tick))
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
   (requires (uses console.uart)))
 (defservice console.write
   (requires (needs observable-output)))
@@ -48,7 +48,8 @@ removed:
 
 Read it as a list of facts and requirements:
 
-- a **UART** that can show output, on a single-core **platform**;
+- a **UART** that can show output, on a single-core **platform**, each reachable from the `machine` privilege
+  level — the one level this profile runs everything at ([Matching](matching.md));
 - a **service**, `console.write`, which needs that output;
 - a **system**, `heartbeat`, with two tasks. `beat` is released every 10 ms and must finish within
   10 ms; `chime` every 30 ms, within 30 ms. `beat` is the more urgent (priority 1 outranks 2), and
@@ -155,7 +156,7 @@ inputs, watch its declared outputs, and look inside with a debugger.
 
   <!-- excerpt: docs/semantics/cases/positive-sporadic-release.eadl -->
   ```text
-  (defblock event.line (offers interrupt-source min-arrival-separation))
+  (defblock event.line (offers interrupt-source min-arrival-separation (reachable-at-privilege machine)))
   (defsystem s
     (task handler (min-separation 20 ms) (deadline 15 ms) (deadline-from release) (jitter 1 ms)
                   (priority 1) (uses event.release))

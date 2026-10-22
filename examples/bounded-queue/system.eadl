@@ -18,10 +18,10 @@
 (eadl-version eadl/1)
 
 (defblock timer.counter
-  (offers counter-width tick-rate observation-coherent))
+  (offers counter-width tick-rate observation-coherent (reachable-at-privilege machine)))
 
 (defplatform soc.playground
-  (offers (core-count 1 tick))
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
   (requires (uses timer.counter)))
 
 (defservice time.monotonic
