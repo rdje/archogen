@@ -235,6 +235,22 @@ the service released by `event.line` gives one *source* route, carrying what `ev
 `min-arrival-separation` — here offered without a value — for the analysis to read; and in case F09 each of the two
 providers of the one comparator, direct and through firmware, gives a *timer* route of its own. The plan enables each, and no other interrupt.
 
+**Privilege.** A plan runs one system's callers — its own level, its tasks, the services and policies it uses — at one
+privilege level, and every provider a caller is bound to must be reachable from it and say so. Given `machine`:
+
+```text
+(defblock timer.m (offers (counter-width 32 bit) (reachable-at-privilege machine)))
+(defblock timer.s (offers (counter-width 32 bit) (reachable-at-privilege supervisor)))
+```
+
+a task needing a counter is served by `timer.m`; bound to `timer.s` it is refused, `infeasible-configuration`: *`s/t`
+runs at `machine`, and `timer.s` is reachable from `supervisor` alone*. A provider that does not say which levels it is
+reachable from is `missing-fact`, and one declared reachable from none `infeasible-configuration`. A service that states
+it calls from `supervisor` — `(requires (reachable-at-privilege supervisor))` — is `unsupported-profile` first, whatever
+it is bound to, since this profile runs no caller there. A block needing a sibling's fact is no caller and has no level,
+and a route carries the level its interrupt is delivered at. Where the level comes from — the profile — is
+`M3.3.4.2`'s to state; until then a test gives it, and with none given the rule says nothing.
+
 ### The list a resolver chooses from
 
 Matching does not choose. For one requirement it lists every provider in the order given, with its verdict, the
@@ -309,8 +325,8 @@ the relation (`model.md` §7 rule 6).
 `docs/semantics/model.md` §8 is normative over `crates/eadl-resolve/src/joint.rs`: who a requester is (rule 1), when
 a binding takes a channel (rule 2), the channel count and its codes (rule 3), the service that multiplexes (rule 4),
 region ownership and its codes (rule 5), and that one assignment's findings decide nothing about the description until
-the search has tried every assignment (rule 6); then one system's assignment, its hardware and connectivity (rule 7), and
-the route obligations (rule 8).
+the search has tried every assignment (rule 6); then one system's assignment, its hardware and connectivity (rule 7),
+the route obligations (rule 8), and privilege over a system's callers, given its level (rule 9).
 
 ### What is not claimed
 
@@ -329,6 +345,7 @@ has a catalogued mutation that its test must kill (`xtask/mutations.txt`).
 over the description's providers, deciding a description's `missing-fact` or `infeasible-configuration` from the
 enumeration and keeping or migrating every verdict it moves. `M3.2` adds adapters — a provider in its own right, such
 as an epoch extender — offered only where a requirer allows mediation; `M3.3` judges what one provider cannot: its
-channels and owned regions (`M3.3.2`), connectivity and routes (`M3.3.3`) are judged today, over an assignment a test
-proposes, and privilege, placement, bundles and initialization order follow (`M3.3.4`–`.7`); `M3.7` makes a catalog
+channels and owned regions (`M3.3.2`), connectivity and routes (`M3.3.3`) and privilege given a level (`M3.3.4.1`) are
+judged today, over an assignment a test proposes, and the level's source, placement, bundles and initialization order
+follow (`M3.3.4.2`–`.7`); `M3.7` makes a catalog
 record a provider.

@@ -215,6 +215,37 @@ fn named(f: &Finding) -> String {
             "{} unconnected {requester} -> {provider} outside {system}",
             f.code()
         ),
+        Finding::LevelUnsupported {
+            requester,
+            stated,
+            level,
+            ..
+        } => format!(
+            "{} {requester} states {} at {level}",
+            f.code(),
+            stated.join(" ")
+        ),
+        Finding::OutOfLevel {
+            requester,
+            provider,
+            level,
+            offered,
+            ..
+        } => format!(
+            "{} out of level {requester} -> {provider} at {level}: {}",
+            f.code(),
+            offered.join(" ")
+        ),
+        Finding::LevelUnstated {
+            requester,
+            provider,
+            absent,
+            ..
+        } => format!(
+            "{} level {} {requester} -> {provider}",
+            f.code(),
+            if *absent { "absent" } else { "unstated" }
+        ),
     }
 }
 
@@ -273,6 +304,7 @@ fn timer_route(system: &str, provider: &str, requesters: &[&str]) -> Obligation 
         provider: provider.to_string(),
         interrupt: Interrupt::Timer,
         requesters: requesters.iter().map(|r| (*r).to_string()).collect(),
+        level: None,
     }
 }
 
@@ -855,6 +887,7 @@ fn each_source_and_each_timer_an_assignment_relies_on_is_a_route_obligation() {
                 provider,
                 interrupt: Interrupt::Source { separation },
                 requesters,
+                level: None,
             }] => {
                 assert_eq!(
                     (system.as_str(), provider.as_str(), requesters.as_slice()),
@@ -911,4 +944,239 @@ fn an_unconnected_binding_s_diagnostic_names_both_ends_and_the_repair() {
         1,
         "the provider's declaration, outside the hardware"
     );
+}
+
+// Privilege (leaf `M3.3.4.1`, model §8 rule 9): `SR-H11` and `SR-H12` over one system's callers, given its level.
+
+/// The reports of every assignment of `text`'s one system, judged at `level`.
+fn every_at(text: &str, level: &str, v: &Vocabulary) -> Vec<(Vec<String>, Vec<String>)> {
+    let read = Read::of(text, v);
+    let [system] = read.systems().try_into().expect("one system");
+    let joint = read
+        .joint(v)
+        .expect("reads")
+        .for_system(system.at(level, v).expect("a level of the domain"));
+    let mut seen: Vec<_> = read
+        .assignments(v)
+        .iter()
+        .map(|a| report_of(&joint.check(a)))
+        .collect();
+    seen.sort();
+    seen
+}
+
+/// Two timers, one reachable at `machine` and one at `supervisor`, on a platform reachable at `machine`, and a task
+/// needing a counter.
+const LEVELS: &str = "(defblock timer.m (offers (counter-width 32 bit) (reachable-at-privilege machine)))
+(defblock timer.s (offers (counter-width 32 bit) (reachable-at-privilege supervisor)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.m timer.s)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs counter-width))
+  (platform (uses soc)))";
+
+#[test]
+fn a_caller_is_bound_only_to_a_provider_reachable_at_its_system_s_level() {
+    let v = vocabulary();
+    assert_eq!(
+        every_at(LEVELS, "machine", &v),
+        [
+            (vec![], vec![]),
+            (
+                vec![
+                    "infeasible-configuration out of level s/t -> timer.s at machine: supervisor"
+                        .to_string()
+                ],
+                vec![]
+            ),
+        ]
+    );
+    // Review D10: with no level given, the rule says nothing, so the earlier tests' controls keep holding.
+    for r in every(LEVELS, &v) {
+        assert!(r.holds(), "{:?}", report_of(&r));
+    }
+}
+
+#[test]
+fn a_provider_that_states_no_level_is_refused_for_a_caller() {
+    // `SR-H12`: undescribed or bare is unknown, declared absent a conflict — the codes the relation gives a requirer
+    // that states a level (`SR-H18`). At `archogen check`, model §2 rule 1 would refuse an absent level beside an offered
+    // one first, description-wide (review R12); these rules are judged on their own here.
+    let v = vocabulary();
+    let with = |timer: &str| {
+        format!(
+            "(defblock timer {timer})
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs counter-width))
+  (platform (uses soc)))"
+        )
+    };
+    let one = |timer: &str| {
+        let seen = every_at(&with(timer), "machine", &v);
+        assert_eq!(seen.len(), 1);
+        seen[0].clone()
+    };
+    assert_eq!(
+        one("(offers (counter-width 32 bit))"),
+        (
+            vec![],
+            vec!["missing-fact level unstated s/t -> timer".to_string()]
+        )
+    );
+    assert_eq!(
+        one("(offers (counter-width 32 bit) reachable-at-privilege)"),
+        (
+            vec![],
+            vec!["missing-fact level unstated s/t -> timer".to_string()]
+        )
+    );
+    assert_eq!(
+        one("(offers (counter-width 32 bit)) (absent reachable-at-privilege)"),
+        (
+            vec!["infeasible-configuration level absent s/t -> timer".to_string()],
+            vec![]
+        )
+    );
+    assert_eq!(
+        one("(offers (counter-width 32 bit) (reachable-at-privilege machine supervisor))"),
+        (vec![], vec![])
+    );
+}
+
+#[test]
+fn a_caller_stating_another_level_is_unsupported_and_judged_first() {
+    // Review D3: `docs/semantics/boundary/accept/access-authority.eadl`'s service calls from `supervisor`; under this
+    // profile its system runs callers at `machine` alone, so whatever the provider offers, no context at `supervisor`
+    // exists, and nothing else is said of that caller.
+    let v = vocabulary();
+    let with = |offered: &str| {
+        format!(
+            "(defblock timer (offers (counter-width 32 bit) (reachable-at-privilege {offered})))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer)))
+(defservice time.deadline (requires (reachable-at-privilege supervisor) (needs counter-width)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses time.deadline))
+  (platform (uses soc)))"
+        )
+    };
+    let refused = (
+        vec!["unsupported-profile time.deadline states supervisor at machine".to_string()],
+        vec![],
+    );
+    assert_eq!(
+        every_at(&with("supervisor machine"), "machine", &v),
+        std::slice::from_ref(&refused)
+    );
+    assert_eq!(every_at(&with("supervisor"), "machine", &v), [refused]);
+    // Stating the system's own level asks nothing more of it: met at the timer or at the platform, both hold.
+    assert_eq!(
+        every_at(
+            &with("supervisor machine").replace(
+                "(reachable-at-privilege supervisor) (needs",
+                "(reachable-at-privilege machine) (needs"
+            ),
+            "machine",
+            &v
+        ),
+        [(vec![], vec![]), (vec![], vec![])]
+    );
+}
+
+#[test]
+fn hardware_needing_hardware_has_no_level() {
+    // Review D4: a block relying on a sibling's fact is no caller; the sibling states no level and the binding holds.
+    let v = vocabulary();
+    let text = format!(
+        "(defblock x (offers (counter-width 32 bit) (reachable-at-privilege machine)) (requires (needs clock-rate)))
+(defblock y (offers (clock-rate 10 MHz)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses x y)))
+{}",
+        one_task_system("", "\n  (platform (uses soc))")
+    );
+    let read = Read::of(&text, &v);
+    let [system] = read.systems().try_into().expect("one system");
+    let joint = read
+        .joint(&v)
+        .expect("reads")
+        .for_system(system.at("machine", &v).expect("a level"));
+    let [x] = requesters(read.decl("x"), &v)
+        .expect("the block reads")
+        .try_into()
+        .expect("one requester");
+    let to_y = [Binding {
+        requester: x.name.clone(),
+        requirement: x.requirements[0].clone(),
+        provider: "y".to_string(),
+    }];
+    assert!(joint.check(&to_y).holds());
+}
+
+#[test]
+fn a_level_outside_the_domain_is_refused_where_it_is_given() {
+    let v = vocabulary();
+    let read = Read::of(LEVELS, &v);
+    let [system] = read.systems().try_into().expect("one system");
+    let refused = system.clone().at("kernel", &v).expect_err("no such level");
+    assert!(refused.contains("`kernel` is no level"), "{refused}");
+    assert_eq!(
+        system.at("machine", &v).expect("a level").level.as_deref(),
+        Some("machine")
+    );
+}
+
+#[test]
+fn a_route_carries_the_level_its_interrupt_is_delivered_at() {
+    // Review D9: `M3.3.3` handed this here; a source routed to the core is delivered at the system's level.
+    let v = vocabulary();
+    let text = "(defblock event.line (offers interrupt-source (reachable-at-privilege machine)))
+(defplatform soc.p (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses event.line)))
+(defservice event.release (requires (needs interrupt-source)))
+(defsystem s
+  (task handler (min-separation 20 ms) (deadline 15 ms) (deadline-from release) (jitter 1 ms)
+                (priority 1) (uses event.release))
+  (platform (uses soc.p)))";
+    let read = Read::of(text, &v);
+    let [system] = read.systems().try_into().expect("one system");
+    let joint = read
+        .joint(&v)
+        .expect("reads")
+        .for_system(system.at("machine", &v).expect("a level"));
+    let [assignment] = read.assignments(&v).try_into().expect("one assignment");
+    let report = joint.check(&assignment);
+    assert!(report.holds(), "{:?}", report_of(&report));
+    assert_eq!(
+        report.obligations,
+        [Obligation::Route {
+            system: "s".to_string(),
+            provider: "event.line".to_string(),
+            interrupt: Interrupt::Source { separation: None },
+            requesters: vec!["event.release".to_string()],
+            level: Some("machine".to_string()),
+        }]
+    );
+}
+
+#[test]
+fn every_privilege_finding_s_diagnostic_carries_its_code() {
+    let v = vocabulary();
+    let read = Read::of(LEVELS, &v);
+    let [system] = read.systems().try_into().expect("one system");
+    let joint = read
+        .joint(&v)
+        .expect("reads")
+        .for_system(system.at("machine", &v).expect("a level"));
+    let mut codes = Vec::new();
+    for a in read.assignments(&v) {
+        for f in joint.check(&a).conflicts {
+            let d = f.diagnostic();
+            assert_eq!(d.code, f.code());
+            assert!(
+                d.message.contains("reachable from `supervisor` alone"),
+                "{}",
+                d.message
+            );
+            codes.push(d.code);
+        }
+    }
+    assert_eq!(codes, ["infeasible-configuration"]);
 }

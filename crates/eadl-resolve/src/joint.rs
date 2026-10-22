@@ -15,6 +15,8 @@
 //! - **Routes.** Each provider the assignment relies on for an interrupt — a source, or a timer's alarm — is reported
 //!   as an [`Obligation::Route`]: the description states that the provider is part of the system, and the path from
 //!   it to the core, with its latency, is the catalog's to state and the plan's to enable.
+//! - **Privilege** (leaf `M3.3.4.1`). Given the level a plan binds the system's callers to, a caller states no other
+//!   level, and every provider bound for a caller is reachable at that level and says so (`SR-H11`, `SR-H12`).
 //!
 //! A [`Report`] lists what one assignment breaks. It is a judgment of that assignment only: the description is
 //! `infeasible-configuration`, or `missing-fact`, when no assignment the resolver can propose avoids it, which is
@@ -34,7 +36,7 @@ use crate::offer::{Provider, State};
 use crate::requirement::side_name_lists;
 use crate::requirement::{self, Requirement};
 use crate::value::Value;
-use crate::vocabulary::{Usage, Vocabulary};
+use crate::vocabulary::{Domain, Usage, Vocabulary};
 
 /// Who a requester is (the design's requester).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -152,6 +154,8 @@ pub struct System {
     pub hardware: BTreeSet<String>,
     /// Every declaration a `uses` or `needs` of the system, its tasks, or of what they reach names, at any depth.
     pub reached: BTreeSet<String>,
+    /// The privilege level a plan binds the system's callers to, when one is given (model §8 rule 9).
+    pub level: Option<String>,
 }
 
 impl System {
@@ -190,6 +194,28 @@ impl System {
             name: name_of(decl).to_string(),
             hardware,
             reached,
+            level: None,
+        }
+    }
+
+    /// The system with the level a plan binds its callers to — the profile's, once `M3.3.4.2` states it.
+    ///
+    /// # Errors
+    ///
+    /// A level outside `reachable-at-privilege`'s domain: the engine's input error, never a description's code.
+    pub fn at(mut self, level: &str, vocabulary: &Vocabulary) -> Result<Self, String> {
+        match vocabulary.fact(REACHABLE_AT_PRIVILEGE).map(|f| &f.domain) {
+            Some(Domain::Set(members)) if members.iter().any(|m| m == level) => {
+                self.level = Some(level.to_string());
+                Ok(self)
+            }
+            Some(Domain::Set(members)) => Err(format!(
+                "`{level}` is no level of `{REACHABLE_AT_PRIVILEGE}`, whose levels are {}",
+                members.join(", ")
+            )),
+            _ => Err(format!(
+                "the vocabulary declares no set `{REACHABLE_AT_PRIVILEGE}`"
+            )),
         }
     }
 
@@ -219,6 +245,8 @@ pub struct Binding {
 const INTERRUPT_SOURCE: &str = "interrupt-source";
 /// The source's own bound on how often it fires, which the analysis reads with the route.
 const MIN_ARRIVAL_SEPARATION: &str = "min-arrival-separation";
+/// The levels a function is reachable from, and the level a caller states it calls from.
+const REACHABLE_AT_PRIVILEGE: &str = "reachable-at-privilege";
 
 /// A byte range a provider owns: `(region NAME (base B) (size S))`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -262,6 +290,8 @@ struct Held {
     hardware: bool,
     /// What it states of its own `min-arrival-separation`, which a route obligation carries.
     separation: Option<State>,
+    /// What it states of `reachable-at-privilege`.
+    level: Option<State>,
     channels: Channels,
     regions: Vec<Region>,
     composes: BTreeSet<String>,
@@ -325,6 +355,47 @@ pub enum Finding {
         /// Where the region is written.
         span: Span,
     },
+    /// A caller stating a level its system does not run its callers at (leaf `M3.3.4.1`).
+    LevelUnsupported {
+        /// The caller.
+        requester: String,
+        /// Where it states its level.
+        span: Span,
+        /// The levels it states.
+        stated: Vec<String>,
+        /// The system's level.
+        level: String,
+        /// The system.
+        system: String,
+    },
+    /// A caller bound to a provider whose `reachable-at-privilege` does not hold the system's level (`SR-H11`).
+    OutOfLevel {
+        /// The caller.
+        requester: String,
+        /// Where it requires what the provider meets.
+        span: Span,
+        /// The provider.
+        provider: String,
+        /// Where the provider is declared.
+        declared: Span,
+        /// The system's level.
+        level: String,
+        /// The levels the provider is reachable from.
+        offered: Vec<String>,
+    },
+    /// A caller bound to a provider that states no level: undescribed or bare, or declared absent (`SR-H12`).
+    LevelUnstated {
+        /// The caller.
+        requester: String,
+        /// Where it requires what the provider meets.
+        span: Span,
+        /// The provider.
+        provider: String,
+        /// Where the provider is declared.
+        declared: Span,
+        /// Declared absent — reachable from no level — rather than undescribed or offered bare.
+        absent: bool,
+    },
     /// A requester of a system bound to a block or platform outside the system's hardware (leaf `M3.3.3`).
     Unconnected {
         /// The requester.
@@ -345,10 +416,15 @@ impl Finding {
     #[must_use]
     pub const fn code(&self) -> &'static str {
         match self {
-            Self::OverChannels { .. } | Self::Overlap { .. } | Self::Unconnected { .. } => {
-                "infeasible-configuration"
-            }
-            Self::ChannelsUnknown { .. } | Self::RegionUnsized { .. } => "missing-fact",
+            Self::OverChannels { .. }
+            | Self::Overlap { .. }
+            | Self::Unconnected { .. }
+            | Self::OutOfLevel { .. }
+            | Self::LevelUnstated { absent: true, .. } => "infeasible-configuration",
+            Self::ChannelsUnknown { .. }
+            | Self::RegionUnsized { .. }
+            | Self::LevelUnstated { absent: false, .. } => "missing-fact",
+            Self::LevelUnsupported { .. } => "unsupported-profile",
             Self::ChannelsContradicted { .. } | Self::RegionMalformed { .. } => {
                 "invalid-description"
             }
@@ -470,8 +546,69 @@ impl Finding {
                 ),
             )
             .with_secondary(Label::new(*declared, "declared here, outside it")),
+            Self::LevelUnsupported {
+                requester,
+                span,
+                stated,
+                level,
+                system,
+            } => Diagnostic::error(
+                "unsupported-profile",
+                format!(
+                    "`{requester}` states it calls from {}, and `{system}` runs its callers at `{level}` alone",
+                    quoted(stated)
+                ),
+                Label::new(*span, "stated here"),
+                format!("drop the stated level, or state `{level}`; another level is a later profile's"),
+            ),
+            Self::OutOfLevel {
+                requester,
+                span,
+                provider,
+                declared,
+                level,
+                offered,
+            } => Diagnostic::error(
+                "infeasible-configuration",
+                format!(
+                    "`{requester}` runs at `{level}`, and `{provider}` is reachable from {} alone",
+                    quoted(offered)
+                ),
+                Label::new(*span, "required here"),
+                format!(
+                    "bind a provider reachable at `{level}`, or a mediating adapter where the requirer allows one"
+                ),
+            )
+            .with_secondary(Label::new(*declared, "declared here")),
+            Self::LevelUnstated {
+                requester,
+                span,
+                provider,
+                declared,
+                absent,
+            } => Diagnostic::error(
+                self.code(),
+                if *absent {
+                    format!("`{provider}` is declared reachable from no level, and `{requester}` is bound to it")
+                } else {
+                    format!(
+                        "`{provider}` does not say which levels it is reachable from, and `{requester}` is bound to it"
+                    )
+                },
+                Label::new(*span, "required here"),
+                format!("describe `{provider}`'s `{REACHABLE_AT_PRIVILEGE}` with the levels it is reachable from"),
+            )
+            .with_secondary(Label::new(*declared, "declared here")),
         }
     }
+}
+
+fn quoted(levels: &[String]) -> String {
+    levels
+        .iter()
+        .map(|l| format!("`{l}`"))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 fn listed(requesters: &[(String, Span)]) -> String {
@@ -507,6 +644,8 @@ pub enum Obligation {
         interrupt: Interrupt,
         /// The requesters relying on it.
         requesters: Vec<String>,
+        /// The level its interrupt is delivered at, when the system is given one.
+        level: Option<String>,
     },
 }
 
@@ -548,6 +687,8 @@ pub struct Joint<'v> {
     vocabulary: &'v Vocabulary,
     system: Option<System>,
     held: BTreeMap<String, Held>,
+    /// The levels each requester states it calls from, and where.
+    stated: BTreeMap<String, (BTreeSet<String>, Span)>,
     requesters: BTreeMap<String, Kind>,
     users: BTreeMap<String, BTreeSet<String>>,
 }
@@ -594,6 +735,7 @@ impl<'v> Joint<'v> {
                     span: provider.span,
                     hardware: is_hardware(decl),
                     separation: provider.state(MIN_ARRIVAL_SEPARATION).cloned(),
+                    level: provider.state(REACHABLE_AT_PRIVILEGE).cloned(),
                     channels,
                     regions,
                     composes: used_names(decl).into_iter().collect(),
@@ -614,10 +756,27 @@ impl<'v> Joint<'v> {
                     .insert(r.name.clone());
             }
         }
+        let stated = requesters
+            .iter()
+            .filter_map(|r| {
+                r.requirements.iter().find_map(|q| match q {
+                    Requirement::Constraint {
+                        fact,
+                        value: Value::Set(levels),
+                        span,
+                        ..
+                    } if fact == REACHABLE_AT_PRIVILEGE => {
+                        Some((r.name.clone(), (levels.clone(), *span)))
+                    }
+                    _ => None,
+                })
+            })
+            .collect();
         Ok(Self {
             vocabulary,
             system: None,
             held,
+            stated,
             requesters: requesters
                 .iter()
                 .map(|r| (r.name.clone(), r.kind))
@@ -643,8 +802,81 @@ impl<'v> Joint<'v> {
         if let Some(system) = &self.system {
             self.connectivity(system, assignment, &mut report);
             self.routes(system, assignment, &mut report);
+            if let Some(level) = &system.level {
+                self.privilege(system, level, assignment, &mut report);
+            }
         }
         report
+    }
+
+    /// Whether `requester` is a block or platform: hardware needing hardware has no privilege level.
+    fn is_hardware(&self, requester: &str) -> bool {
+        self.held.get(requester).is_some_and(|h| h.hardware)
+    }
+
+    /// `SR-H11` and `SR-H12` over one system's callers, given its level: a caller stating another level first, then each
+    /// provider bound for a caller — any provider — reachable at the level and saying so; one finding a caller and provider.
+    fn privilege(&self, system: &System, level: &str, assignment: &[Binding], report: &mut Report) {
+        let callers: Vec<&Binding> = assignment
+            .iter()
+            .filter(|b| system.serves(&b.requester) && !self.is_hardware(&b.requester))
+            .collect();
+        let mut unsupported = BTreeSet::new();
+        for b in &callers {
+            if let Some((levels, span)) = self.stated.get(&b.requester) {
+                if !levels.contains(level) && unsupported.insert(b.requester.as_str()) {
+                    report.conflicts.push(Finding::LevelUnsupported {
+                        requester: b.requester.clone(),
+                        span: *span,
+                        stated: levels.iter().cloned().collect(),
+                        level: level.to_string(),
+                        system: system.name.clone(),
+                    });
+                }
+            }
+        }
+        let mut judged = BTreeSet::new();
+        for b in callers {
+            if unsupported.contains(b.requester.as_str())
+                || !judged.insert((b.requester.as_str(), b.provider.as_str()))
+            {
+                continue;
+            }
+            let Some(held) = self.held.get(&b.provider) else {
+                continue;
+            };
+            let unstated = |absent: bool| Finding::LevelUnstated {
+                requester: b.requester.clone(),
+                span: b.requirement.span(),
+                provider: b.provider.clone(),
+                declared: held.span,
+                absent,
+            };
+            match &held.level {
+                Some(State::Valued(values)) => {
+                    let offered = values.iter().find_map(|v| match v {
+                        Value::Set(levels) => Some(levels),
+                        _ => None,
+                    });
+                    match offered {
+                        Some(levels) if levels.contains(level) => {}
+                        Some(levels) => report.conflicts.push(Finding::OutOfLevel {
+                            requester: b.requester.clone(),
+                            span: b.requirement.span(),
+                            provider: b.provider.clone(),
+                            declared: held.span,
+                            level: level.to_string(),
+                            offered: levels.iter().cloned().collect(),
+                        }),
+                        None => report.unknowns.push(unstated(false)),
+                    }
+                }
+                Some(State::Absent) => report.conflicts.push(unstated(true)),
+                None | Some(State::Unvalued | State::Overflow) => {
+                    report.unknowns.push(unstated(false));
+                }
+            }
+        }
     }
 
     /// `SR-H15`'s last clause, in the checker's form: a block or platform bound for a requester the system serves is
@@ -694,6 +926,7 @@ impl<'v> Joint<'v> {
                 provider: provider.to_string(),
                 interrupt,
                 requesters: requesters.into_iter().map(str::to_string).collect(),
+                level: system.level.clone(),
             });
         }
     }

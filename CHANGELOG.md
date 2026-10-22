@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — privilege, judged given a level
+
+`ARCHOGEN-M3-0851` (leaf `M3.3.4.1`), `2026-10-22`.
+
+- Given the level a plan runs one system's callers at, the joint check refuses a caller stating another level
+  (`unsupported-profile`, first), and a caller bound to a provider not reachable at that level or stating none.
+- A block needing a sibling's fact is no caller; routes carry the level; with no level given, nothing is said.
+- Seven tests with literal expectations, failing first under five arms; model §8 rule 9 and the book explain it.
+
 ## archogen — privilege: the design, reviewed and restructured
 
 `ARCHOGEN-M3-0850` (leaf `M3.3.4`), `2026-10-22`.

@@ -542,13 +542,13 @@ a change that leaves it stale, so it is never edited by hand.
 - **profile** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [The use cases](usecases.md), [Reading a
   description](reading.md), [Quantities and units](quantities.md), [Refinement](refinement.md), [Describing a
-  workload](workload.md), [Checking a description](checking.md), [Where the engine's knowledge comes from: the
-  catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime: decisions, not
-  actions](runtime.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [The archogen
-  command line](cli.md), [The engine API](engine-api.md), [What this project relies on from outside](ledger.md), [What
-  is versioned, and what changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md),
-  [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
-  records](annex-trust-proofs.md)
+  workload](workload.md), [Checking a description](checking.md), [Matching an offer to a requirement](matching.md),
+  [Where the engine's knowledge comes from: the catalog](catalog.md), [Checks that must not share a mistake: the trust
+  gate](trust.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where
+  generated systems run](targets.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [What this
+  project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex A:
+  The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository
+  honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **PROGRAM** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Promised narrowing spellings — [Generated-sources test adequacy](trust-adequacy.md#promised-narrowing-spellings)
 - Proved environment-tail removal — [Annex C: Trust proof
