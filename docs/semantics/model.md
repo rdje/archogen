@@ -240,7 +240,8 @@ which is held to the model over the model checker's whole universe (`crates/eadl
 The relation judges one binding at a time (§7). An **assignment** binds each requester's requirement to one provider
 the relation satisfies it at, and these rules judge the bindings together (`crates/eadl-resolve/src/joint.rs`). Their
 design is `M3.3`'s in `docs/tasks/M3.md`, and connectivity's and routes' `M3.3.3`'s, each reviewed once by a context that
-did not write it. `archogen check` does not call them yet: `M3.4` searches for an assignment and wires both in.
+did not write it, as are privilege's, placement's, the initialization graph's and the functions', `M3.3.4`'s to
+`M3.3.7`'s. `archogen check` does not call them yet: `M3.4` searches for an assignment and wires both in.
 
 1. **Requesters.** A requester is a task, for what the task itself writes; a service; or any other declaration, for
    what it writes at its own level outside its tasks. Two tasks of one system are two requesters, though §7 reads them
@@ -328,3 +329,19 @@ did not write it. `archogen check` does not call them yet: `M3.4` searches for a
    that names it by `uses` or `needs`; each carries its reason. Nothing is refused: initialisation runs masked, before
    every release, so a cycle establishes no infeasibility, and each strongly connected component is reported as one
    unit the engine initialises together, in two phases where it can — whether this profile's engine can is `M4.1`'s.
+13. **One function, one provider** (`M3.3.6`; `SR-H14`). The vocabulary names the function each fact describes, the
+   operations of one device that are only valid together (§7 rule 1). One requester's bindings for the facts of one
+   function are to one provider: a service reading time reads one counter. Where an assignment binds them to several,
+   each of those requirements is judged at each of those providers: if one provider meets them all, the split is that
+   assignment's conflict, another binding them whole; if none meets them all and one refutes none — leaving facts
+   undescribed or unknown — it is an unknown naming that provider and those facts, since describing them makes it whole
+   (`SR-H18`'s `missing-fact`; past the arithmetic, `unsupported-profile`); otherwise a conflict naming each provider
+   and what it is bound for. So one requester has at most one provider per function, and a description wanting two
+   counters writes two requesters. The rule is per requester, so it needs no system, and never spans requesters: a
+   task's group head beside its system's own sub-fact, two requesters, is `SR-H17`'s, `M3.4`'s. A **qualifier**,
+   `(function each)`, describes every function its requirer relies on: each requirement on one is judged at every
+   provider bound for the requester's functions and for those of each requester it reaches through `uses` and `needs`
+   — refused or absent a conflict, unknown or undescribed an unknown — and makes no binding of its own; a requester
+   relying on no function bound binds it as any requirement. `reachable-at-privilege` is the qualifier rule 9 judges
+   against the level the system is given, and this rule never repeats it. An adapter offering a function's facts is
+   one provider for this rule (`M3.2`).

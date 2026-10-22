@@ -311,6 +311,27 @@ which start after everything is initialised, are no nodes. Nothing is refused: a
 that logs its wrap forms one **component**, which the engine initialises as one unit, since initialisation runs with
 interrupts masked, before any task is released.
 
+**One counter, read whole.** A requester's facts of one function are met by one provider. With the width offered by
+one timer and the rate by another, neither offering both, the assignment is refused:
+
+```text
+(defblock timer.a (offers (counter-width 32 bit) (tick-rate 1 MHz)))
+(defblock timer.b (offers (counter-width 8 bit) (tick-rate 10 MHz)))
+(defservice time.monotonic (requires (counter-width (at-least 16 bit)) (tick-rate 10 MHz)))
+```
+
+*`time.monotonic`'s `counter` facts are bound to 2 providers: `counter-width` at `timer.a`; `tick-rate` at `timer.b`*,
+`infeasible-configuration`, with the repair *bind `time.monotonic`'s `counter` to one provider that offers it whole, or
+to an adapter that does*. Where a timer would be whole once a fact it leaves undescribed were described — the horizon
+derived at one, the coherent reads offered at the other — the finding is `missing-fact`, naming that timer and the fact
+to describe. A delay is its counter's comparator, so a 16-bit delay beside another block's 32-bit width is refused the
+same way. Two services each reading a counter of its own hold: the rule is one requester's. A **qualifier** holds
+everywhere its requester relies on: `(requires (available-in-state idle))` on a service that `needs` the clock service
+is judged at the counter that service reads — *`time.wakeup` requires `available-in-state` of every function it relies
+on, and `timer.t` does not meet it* — and the privilege level stays rule 9's. A census over the suite finds no
+requester whose function its hardware offers only across providers, and lists the five counters whose horizon or wrap
+behaviour no block states yet, with their only routes (`crates/eadl-resolve/tests/function_census.rs`).
+
 ### The list a resolver chooses from
 
 Matching does not choose. For one requirement it lists every provider in the order given, with its verdict, the
@@ -388,7 +409,8 @@ a binding takes a channel (rule 2), the channel count and its codes (rule 3), th
 region ownership and its codes (rule 5), and that one assignment's findings decide nothing about the description until
 the search has tried every assignment (rule 6); then one system's assignment, its hardware and connectivity (rule 7),
 the route obligations (rule 8), privilege over a system's callers, given its level (rule 9), placement, once per
-system (rule 10), ordering, unsupported under this profile (rule 11), and the initialization graph (rule 12).
+system (rule 10), ordering, unsupported under this profile (rule 11), the initialization graph (rule 12), and one
+function at one provider, with the qualifiers (rule 13).
 
 ### What is not claimed
 
@@ -410,6 +432,6 @@ enumeration and keeping or migrating every verdict it moves. `M3.2` adds adapter
 as an epoch extender — offered only where a requirer allows mediation; `M3.3` judges what one provider cannot: its
 channels and owned regions (`M3.3.2`), connectivity and routes (`M3.3.3`) and privilege given a level (`M3.3.4.1`) are
 judged today, over an assignment a test proposes, and placement over a system's map (`M3.3.5.1`); ordering is
-unsupported under this profile (`M3.3.5.2`), and the initialization graph derived (`M3.3.7`); bundles follow
-(`M3.3.6`); `M3.7` makes a catalog
+unsupported under this profile (`M3.3.5.2`), the initialization graph derived (`M3.3.7`), and one function held at
+one provider (`M3.3.6`); `M3.7` makes a catalog
 record a provider.

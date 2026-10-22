@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-10-22
 - leaf: M3.3.6.1 (`docs/tasks/M3.md`)
-- status: pending
+- status: applied
 - constructs: suite/docs/semantics/kinds/deffact.eadl, suite/docs/semantics/vocabulary/vocabulary.eadl
 - invalidates: none, measured — every tracked description's `archogen check` verdict, frozen in `crates/archogen-cli/tests/verdicts.txt`, is unchanged; no description writes a `deffact`, and nothing reads `function` until the joint check's rule 13 (`M3.3.6.2`), which `archogen check` does not call until `M3.4`
 

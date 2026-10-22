@@ -285,6 +285,57 @@ fn named(f: &Finding) -> String {
             f.code(),
             if *absent { "absent" } else { "unstated" }
         ),
+        Finding::FunctionSplit {
+            requester,
+            function,
+            bound,
+        } => format!(
+            "{} split {requester} {function}: {}",
+            f.code(),
+            bound
+                .iter()
+                .map(|(p, facts)| format!(
+                    "{p}[{}]",
+                    facts
+                        .iter()
+                        .map(|(f, _)| f.as_str())
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                ))
+                .collect::<Vec<_>>()
+                .join(" ")
+        ),
+        Finding::FunctionIncomplete {
+            requester,
+            function,
+            completions,
+            ..
+        } => format!(
+            "{} incomplete {requester} {function}: {}",
+            f.code(),
+            completions
+                .iter()
+                .map(|(p, parts)| format!(
+                    "{p}[{}]",
+                    parts
+                        .iter()
+                        .map(|(f, _, v)| format!("{f} {v:?}"))
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                ))
+                .collect::<Vec<_>>()
+                .join(" ")
+        ),
+        Finding::QualifierUnmet {
+            requester,
+            fact,
+            provider,
+            verdict,
+            ..
+        } => format!(
+            "{} qualifier {requester} {fact} at {provider} {verdict:?}",
+            f.code()
+        ),
     }
 }
 
@@ -1616,4 +1667,330 @@ fn a_provider_s_own_bindings_count_as_an_adapter_s_will() {
         "a requester the system does not serve is no node: {:?}",
         g.nodes
     );
+}
+
+// One function, one provider, and the qualifiers (leaf `M3.3.6.2`, model §8 rule 13, `SR-H14`): one requester's facts
+// of one vocabulary function are met by one provider, and a qualifier holds at every provider of what it relies on.
+
+/// One assignment as a test reads it: its conflicts and unknowns, named, and each binding as `(requester, fact,
+/// provider)`.
+type Judged = (Vec<String>, Vec<String>, Vec<(String, String, String)>);
+
+/// Each assignment's report of `text`, named, with the bindings it judged, as `every` judges them.
+fn every_named_with(text: &str, v: &Vocabulary) -> Vec<Judged> {
+    let read = Read::of(text, v);
+    let mut joint = read
+        .joint(v)
+        .unwrap_or_else(|f| panic!("{:?}", f.iter().map(named).collect::<Vec<_>>()));
+    if let [system] = read.systems().as_slice() {
+        joint = joint.for_system(system.clone());
+    }
+    read.assignments(v)
+        .iter()
+        .map(|a| {
+            let (conflicts, unknowns) = report_of(&joint.check(a));
+            let bound = a
+                .iter()
+                .map(|b| {
+                    (
+                        b.requester.clone(),
+                        b.requirement.fact().to_string(),
+                        b.provider.clone(),
+                    )
+                })
+                .collect();
+            (conflicts, unknowns, bound)
+        })
+        .collect()
+}
+
+#[test]
+fn one_requester_s_counter_facts_across_two_timers_are_refused_naming_both() {
+    // `SR-H14`'s case: the width met at one counter, the rate at another; each refuses the other's, so describing a
+    // fact cannot make either whole. Judged without a system: the rule is per requester.
+    let v = vocabulary();
+    let text = "(defblock timer.a (offers (counter-width 32 bit) (tick-rate 1 MHz)))
+(defblock timer.b (offers (counter-width 8 bit) (tick-rate 10 MHz)))
+(defservice time.monotonic (requires (counter-width (at-least 16 bit)) (tick-rate 10 MHz)))";
+    let reports = every_named_with(text, &v);
+    assert_eq!(reports.len(), 1, "each fact met at one timer alone");
+    assert_eq!(
+        (reports[0].0.clone(), reports[0].1.clone()),
+        (
+            vec![
+                "infeasible-configuration split time.monotonic counter: timer.a[counter-width] timer.b[tick-rate]"
+                    .to_string()
+            ],
+            vec![]
+        )
+    );
+}
+
+#[test]
+fn a_counter_whole_at_one_timer_holds_and_a_split_beside_it_is_that_assignment_s() {
+    // A third timer meets both: the assignment binding both to it holds; the one splitting them is refused, a conflict
+    // and not an unknown, since another assignment binds the function whole.
+    let v = vocabulary();
+    let text = "(defblock timer.a (offers (counter-width 32 bit) (tick-rate 1 MHz)))
+(defblock timer.c (offers (counter-width 32 bit) (tick-rate 10 MHz)))
+(defservice time.monotonic (requires (counter-width (at-least 16 bit)) (tick-rate 10 MHz)))";
+    let mut got: Vec<(Vec<String>, Vec<String>)> = every_named_with(text, &v)
+        .into_iter()
+        .map(|(c, u, _)| (c, u))
+        .collect();
+    got.sort();
+    assert_eq!(
+        got,
+        [
+            (vec![], vec![]),
+            (
+                vec![
+                    "infeasible-configuration split time.monotonic counter: timer.a[counter-width] timer.c[tick-rate]"
+                        .to_string()
+                ],
+                vec![]
+            ),
+        ]
+    );
+}
+
+#[test]
+fn a_split_a_described_fact_would_mend_is_an_unknown_naming_the_fact() {
+    // The review's D5: the horizon is derived at `timer.a`, the coherent reads offered at `timer.b`, and each says
+    // nothing of the other's fact. Splitting is the only assignment, yet describing one fact makes a timer whole:
+    // `missing-fact` (`SR-H18`), never `infeasible-configuration`.
+    let v = vocabulary();
+    let text = "(defblock timer.a (offers (counter-modulus 4294967296) (tick-rate 10 MHz)))
+(defblock timer.b (offers (observation-coherent true)))
+(defservice time.monotonic (requires (unambiguous-horizon (at-least 60 s)) (observation-coherent true)))";
+    let reports = every_named_with(text, &v);
+    assert_eq!(reports.len(), 1);
+    assert_eq!(
+        (reports[0].0.clone(), reports[0].1.clone()),
+        (
+            vec![],
+            vec![
+                "missing-fact incomplete time.monotonic counter: timer.a[observation-coherent Undescribed] \
+                 timer.b[unambiguous-horizon Undescribed]"
+                    .to_string()
+            ]
+        )
+    );
+}
+
+#[test]
+fn a_delay_on_one_counter_beside_another_s_width_is_refused() {
+    // The review's D2: a relative delay is a comparator on a counter, its range that counter's width, so a 16-bit
+    // delay beside another block's 32-bit width is one function split.
+    let v = vocabulary();
+    let text = "(defblock timer.delay16 (offers (relative-delay true) (counter-width 16 bit) (channels 1 tick)))
+(defblock clock32 (offers (counter-width 32 bit)) (absent relative-delay))
+(defservice sleep.long (requires (relative-delay true) (counter-width (at-least 32 bit))))";
+    let reports = every_named_with(text, &v);
+    assert_eq!(reports.len(), 1);
+    assert_eq!(
+        reports[0].0,
+        ["infeasible-configuration split sleep.long counter: clock32[counter-width] timer.delay16[relative-delay]"]
+    );
+}
+
+#[test]
+fn two_requesters_on_two_counters_each_whole_hold() {
+    // Never across requesters: each service reads its own counter whole.
+    let v = vocabulary();
+    let text = "(defblock timer.x (offers (counter-width 32 bit) (tick-rate 10 MHz)))
+(defblock timer.y (offers (counter-width 32 bit) (tick-rate 1 MHz)))
+(defservice fast (requires (counter-width (at-least 16 bit)) (tick-rate 10 MHz)))
+(defservice slow (requires (counter-width (at-least 16 bit)) (tick-rate 1 MHz)))";
+    let reports = every_named_with(text, &v);
+    let whole: Vec<_> = reports
+        .iter()
+        .filter(|(c, u, _)| c.is_empty() && u.is_empty())
+        .map(|(_, _, bound)| bound.clone())
+        .collect();
+    assert_eq!(
+        whole,
+        [vec![
+            (
+                "fast".to_string(),
+                "counter-width".to_string(),
+                "timer.x".to_string()
+            ),
+            (
+                "fast".to_string(),
+                "tick-rate".to_string(),
+                "timer.x".to_string()
+            ),
+            (
+                "slow".to_string(),
+                "counter-width".to_string(),
+                "timer.y".to_string()
+            ),
+            (
+                "slow".to_string(),
+                "tick-rate".to_string(),
+                "timer.y".to_string()
+            ),
+        ]],
+        "the one assignment that binds each service whole"
+    );
+    for (conflicts, _, _) in &reports {
+        for c in conflicts {
+            assert!(
+                !c.contains("fast") || !c.contains("slow"),
+                "a finding across requesters: {c}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_task_s_group_head_beside_its_system_s_sub_fact_is_two_requesters_which_rule_13_does_not_join()
+{
+    // The review's D4, recorded as the gap it is: one side, two requesters (model §8 rule 1). The task's alarm at
+    // `cmp.a` and its system's horizon at `cmp.b` split `SR-H17`'s group, which is `M3.4`'s to refuse; this rule judges
+    // one requester, so it says nothing here.
+    let v = vocabulary();
+    let text = "(defblock cmp.a (offers (absolute-deadline true) (channels 1 tick)))
+(defblock cmp.b (offers (supported-horizon 20 s)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses cmp.a cmp.b)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs absolute-deadline))
+  (requires (supported-horizon (at-least 10 s)))
+  (platform (uses soc)))";
+    let reports = every_named_with(text, &v);
+    assert_eq!(reports.len(), 1);
+    assert_eq!(
+        (reports[0].0.clone(), reports[0].1.clone()),
+        (vec![], vec![])
+    );
+}
+
+/// A service relying on a counter through `needs`, and a qualifier on its power state; `timer` is the counter's offers.
+fn wakeup(timer: &str) -> String {
+    format!(
+        "(defblock timer.t (offers {timer}))
+(defblock console.uart (offers (observable-output true) (available-in-state run idle)))
+(defservice time.monotonic (requires (needs counter-width)))
+(defservice time.wakeup (requires (available-in-state idle)) (needs time.monotonic))"
+    )
+}
+
+#[test]
+fn a_qualifier_holds_at_the_counter_its_requester_relies_on_through_needs() {
+    // `power-state-availability.eadl`'s reading: the required functionality must still hold. `time.wakeup` relies on
+    // `time.monotonic`'s counter, so its qualifier is judged at `timer.t`. The enumeration also binds the qualifier
+    // itself, to the UART, which meets it by construction; that a search makes no such binding is `M3.4`'s.
+    let v = vocabulary();
+    let refused = every_named_with(
+        &wakeup("(counter-width 32 bit) (available-in-state run)"),
+        &v,
+    );
+    assert_eq!(refused.len(), 1);
+    assert_eq!(
+        (refused[0].0.clone(), refused[0].1.clone()),
+        (
+            vec!["infeasible-configuration qualifier time.wakeup available-in-state at timer.t Refused".to_string()],
+            vec![]
+        )
+    );
+    let unknown = every_named_with(&wakeup("(counter-width 32 bit)"), &v);
+    assert_eq!(
+        (unknown[0].0.clone(), unknown[0].1.clone()),
+        (
+            vec![],
+            vec![
+                "missing-fact qualifier time.wakeup available-in-state at timer.t Undescribed"
+                    .to_string()
+            ]
+        )
+    );
+    let held = every_named_with(
+        &wakeup("(counter-width 32 bit) (available-in-state run idle)"),
+        &v,
+    );
+    assert!(
+        held.iter().any(|(c, u, _)| c.is_empty() && u.is_empty()),
+        "{held:?}"
+    );
+}
+
+#[test]
+fn reachable_at_privilege_is_rule_9_s_alone() {
+    // A stated level is a qualifier, judged by rule 9 against the level the system is given; rule 13 never repeats it,
+    // so with no level given nothing is said.
+    let v = vocabulary();
+    let text =
+        "(defblock timer.s (offers (counter-width 32 bit) (reachable-at-privilege supervisor)))
+(defservice time.monotonic (requires (needs counter-width) (reachable-at-privilege machine)))
+(defblock spare (offers (reachable-at-privilege machine)))";
+    for (conflicts, unknowns, _) in every_named_with(text, &v) {
+        assert!(
+            !conflicts
+                .iter()
+                .chain(&unknowns)
+                .any(|f| f.contains("qualifier")),
+            "{conflicts:?} {unknowns:?}"
+        );
+    }
+}
+
+#[test]
+fn an_adapter_offering_a_function_whole_is_one_provider_and_composing_its_device_shares_its_bytes()
+{
+    // The design's adapters (`M3.2`), with synthetic providers as `alarm.mux` is tested: one programming its device
+    // directly composes it, so rule 5 exempts their shared bytes while rule 13 keeps each requester's function whole at
+    // one of them; one mediating it, composing nothing, owns the same bytes beside it — F09's shape.
+    let v = vocabulary();
+    let board = |adapter_uses: &str| {
+        format!(
+            "(defblock timer.delay (offers (relative-delay true) (channels 1 tick) (counter-width 32 bit)
+  (region timer.delay (base 0x0200_0000) (size 64 KiB))))
+(defblock adapter.deadline {adapter_uses} (offers (absolute-deadline true) (supported-horizon 4000 s)
+  (delivery-bound 20 us) (channels 1 tick) (region timer.delay (base 0x0200_0000) (size 64 KiB))))
+(defservice time.monotonic (requires (counter-width (at-least 32 bit))))
+(defservice time.deadline (requires (absolute-deadline true) (supported-horizon (at-least 10 s))
+  (delivery-bound (at-most 50 us))))"
+        )
+    };
+    let direct = every_named_with(&board("(requires (uses timer.delay))"), &v);
+    assert_eq!(direct.len(), 1);
+    assert_eq!((direct[0].0.clone(), direct[0].1.clone()), (vec![], vec![]));
+    let mediating = every_named_with(&board(""), &v);
+    assert_eq!(
+        mediating[0].0,
+        ["infeasible-configuration adapter.deadline timer.delay@0x2000000+Some(65536) / timer.delay timer.delay@0x2000000+Some(65536)"]
+    );
+}
+
+#[test]
+fn rule_13_s_diagnostics_say_what_the_book_quotes() {
+    // `docs/book/src/matching.md` quotes these sentences; a change to either is a change to the book.
+    let v = vocabulary();
+    let split = "(defblock timer.a (offers (counter-width 32 bit) (tick-rate 1 MHz)))
+(defblock timer.b (offers (counter-width 8 bit) (tick-rate 10 MHz)))
+(defservice time.monotonic (requires (counter-width (at-least 16 bit)) (tick-rate 10 MHz)))";
+    let report = &every(split, &v)[0];
+    let d = report.conflicts[0].diagnostic();
+    assert_eq!(
+        (d.code, d.message.as_str(), d.repair.as_str()),
+        (
+            "infeasible-configuration",
+            "`time.monotonic`'s `counter` facts are bound to 2 providers: `counter-width` at `timer.a`; `tick-rate` at \
+             `timer.b`",
+            "bind `time.monotonic`'s `counter` to one provider that offers it whole, or to an adapter that does"
+        )
+    );
+    let report = &every(
+        &wakeup("(counter-width 32 bit) (available-in-state run)"),
+        &v,
+    )[0];
+    let d = report.conflicts[0].diagnostic();
+    assert_eq!(
+        d.message,
+        "`time.wakeup` requires `available-in-state` of every function it relies on, and `timer.t` does not meet it"
+    );
+    for f in report.conflicts.iter().chain(&report.unknowns) {
+        assert_eq!(f.diagnostic().code, f.code());
+    }
 }

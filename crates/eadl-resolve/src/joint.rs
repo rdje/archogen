@@ -20,6 +20,9 @@
 //!   reported with it as an [`Obligation::Placement`]; a placement the plan is given is placement memory of the system.
 //! - **Privilege** (leaf `M3.3.4.1`). Given the level a plan binds the system's callers to, a caller states no other
 //!   level, and every provider bound for a caller is reachable at that level and says so (`SR-H11`, `SR-H12`).
+//! - **Functions** (leaf `M3.3.6.2`, `SR-H14`). One requester's bindings for the facts of one function — the
+//!   vocabulary's `function` — are to one provider; a qualifier, `(function each)`, holds at every provider bound for
+//!   the requester's functions and for those of what it relies on through `uses` and `needs`.
 //!
 //! A [`Report`] lists what one assignment breaks. It is a judgment of that assignment only: the description is
 //! `infeasible-configuration`, or `missing-fact`, when no assignment the resolver can propose avoids it, which is
@@ -36,10 +39,11 @@ use eadl_front::{Diagnostic, Form, Label, Span};
 use eadl_model::{Dimension, Quantity};
 
 use crate::offer::{Provider, State};
+use crate::relation::{judge, Verdict};
 use crate::requirement::side_name_lists;
 use crate::requirement::{self, Requirement};
 use crate::value::Value;
-use crate::vocabulary::{Domain, Usage, Vocabulary};
+use crate::vocabulary::{Domain, Function, Usage, Vocabulary};
 
 /// Who a requester is (the design's requester).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -332,6 +336,10 @@ struct Held {
     composes: BTreeSet<String>,
 }
 
+/// What a provider leaves of a function it would meet whole (rule 13): each fact it does not yet meet, where the
+/// requester requires it, and the relation's verdict there.
+pub type Gaps = Vec<(String, Span, Verdict)>;
+
 /// One rule broken, or one fact a rule cannot do without.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Finding {
@@ -468,6 +476,43 @@ pub enum Finding {
         /// Why it cannot hold the image.
         why: String,
     },
+    /// One requester's facts of one function bound to two providers or more, none of which could meet them whole by a
+    /// fact described (model §8 rule 13, `SR-H14`).
+    FunctionSplit {
+        /// The requester.
+        requester: String,
+        /// The function.
+        function: String,
+        /// Each provider, by name, with the facts bound to it and where they are required.
+        bound: Vec<(String, Vec<(String, Span)>)>,
+    },
+    /// One requester's facts of one function bound to two providers or more, where a provider bound for them refutes
+    /// none of them and would meet them whole once what it leaves undescribed or unknown is described (rule 13).
+    FunctionIncomplete {
+        /// The requester.
+        requester: String,
+        /// The function.
+        function: String,
+        /// Each such provider, by name, with each fact it does not yet meet, where it is required, and its verdict there.
+        completions: Vec<(String, Gaps)>,
+        /// Whether a fact some such provider does not meet lies past the exact arithmetic, judged first (`SR-H18`).
+        past_arithmetic: bool,
+    },
+    /// A qualifier a requester requires, unmet at a provider bound for a function it relies on (rule 13).
+    QualifierUnmet {
+        /// The requester.
+        requester: String,
+        /// The qualifier.
+        fact: String,
+        /// Where it is required.
+        span: Span,
+        /// The provider.
+        provider: String,
+        /// Where the provider is declared.
+        declared: Span,
+        /// The relation's verdict there: refused or absent, unknown or undescribed, or past the arithmetic.
+        verdict: Verdict,
+    },
     /// A requester of a system bound to a block or platform outside the system's hardware (leaf `M3.3.3`).
     Unconnected {
         /// The requester.
@@ -504,6 +549,17 @@ impl Finding {
                 "invalid-description"
             }
             Self::RegionPastArithmetic { .. } => "unsupported-profile",
+            Self::FunctionSplit { .. } => "infeasible-configuration",
+            Self::FunctionIncomplete {
+                past_arithmetic: true,
+                ..
+            } => "unsupported-profile",
+            Self::FunctionIncomplete { .. } => "missing-fact",
+            Self::QualifierUnmet { verdict, .. } => match verdict {
+                Verdict::Refused | Verdict::Absent => "infeasible-configuration",
+                Verdict::Unsupported => "unsupported-profile",
+                _ => "missing-fact",
+            },
         }
     }
 
@@ -729,8 +785,89 @@ impl Finding {
                 format!("describe `{provider}`'s `{REACHABLE_AT_PRIVILEGE}` with the levels it is reachable from"),
             )
             .with_secondary(Label::new(*declared, "declared here")),
+            Self::FunctionSplit {
+                requester,
+                function,
+                bound,
+            } => {
+                let at = |(provider, facts): &(String, Vec<(String, Span)>)| {
+                    format!(
+                        "{} at `{provider}`",
+                        facts
+                            .iter()
+                            .map(|(f, _)| format!("`{f}`"))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    )
+                };
+                bound.iter().flat_map(|(_, facts)| facts).skip(1).fold(
+                    Diagnostic::error(
+                        "infeasible-configuration",
+                        format!(
+                            "`{requester}`'s `{function}` facts are bound to {} providers: {}",
+                            bound.len(),
+                            bound.iter().map(at).collect::<Vec<_>>().join("; ")
+                        ),
+                        Label::new(bound[0].1[0].1, "required here"),
+                        format!(
+                            "bind `{requester}`'s `{function}` to one provider that offers it whole, or to an adapter that \
+                             does"
+                        ),
+                    ),
+                    |d, (_, span)| d.with_secondary(Label::new(*span, "and here")),
+                )
+            }
+            Self::FunctionIncomplete {
+                requester,
+                function,
+                completions,
+                ..
+            } => {
+                let (provider, parts) = &completions[0];
+                let facts = parts
+                    .iter()
+                    .map(|(f, _, _)| format!("`{f}`"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                Diagnostic::error(
+                    self.code(),
+                    format!(
+                        "`{requester}`'s `{function}` facts are bound to several providers, and `{provider}` meets every \
+                         one of them but {facts}, which it does not describe"
+                    ),
+                    Label::new(parts[0].1, "required here"),
+                    format!("describe {facts} at `{provider}`, and bind `{requester}`'s `{function}` to it whole"),
+                )
+            }
+            Self::QualifierUnmet {
+                requester,
+                fact,
+                span,
+                provider,
+                declared,
+                verdict,
+            } => Diagnostic::error(
+                self.code(),
+                match verdict {
+                    Verdict::Refused | Verdict::Absent => format!(
+                        "`{requester}` requires `{fact}` of every function it relies on, and `{provider}` does not \
+                         meet it"
+                    ),
+                    _ => format!(
+                        "`{requester}` requires `{fact}` of every function it relies on, and `{provider}` does not say"
+                    ),
+                },
+                Label::new(*span, "required here"),
+                format!("bind the function to a provider that meets `{fact}`, or describe `{provider}`'s `{fact}`"),
+            )
+            .with_secondary(Label::new(*declared, "declared here")),
         }
     }
+}
+
+/// The function the vocabulary gives `fact`, if it declares the fact and names one.
+fn function_of<'v>(vocabulary: &'v Vocabulary, fact: &str) -> Option<&'v Function> {
+    vocabulary.fact(fact).and_then(|f| f.function.as_ref())
 }
 
 fn quoted(levels: &[String]) -> String {
@@ -838,7 +975,8 @@ pub struct Initialization {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Interrupt {
     /// A source, bound through `interrupt-source` at `true`, with what it states of its own `min-arrival-separation`
-    /// — `None` when it does not name it — since `SR-H14` (`M3.3.6`) may bind that fact to another provider.
+    /// — `None` when it does not name it; model §8 rule 13 keeps a requester's `interrupt` facts at one provider, so a
+    /// separation the requester requires is this source's.
     Source {
         /// Its own separation.
         separation: Option<State>,
@@ -878,6 +1016,10 @@ pub struct Joint<'v> {
     users: BTreeMap<String, BTreeSet<String>>,
     /// The declarations each requester names by `uses` or `needs`.
     names: BTreeMap<String, BTreeSet<String>>,
+    /// Each provider as read, which rule 13 judges requirements at.
+    providers: BTreeMap<String, Provider>,
+    /// Each requester's requirements on a qualifier but `reachable-at-privilege`, rule 9's (rule 13).
+    qualified: BTreeMap<String, Vec<Requirement>>,
 }
 
 impl<'v> Joint<'v> {
@@ -959,11 +1101,31 @@ impl<'v> Joint<'v> {
                 })
             })
             .collect();
+        let qualified = requesters
+            .iter()
+            .filter_map(|r| {
+                let qualifiers: Vec<Requirement> = r
+                    .requirements
+                    .iter()
+                    .filter(|q| {
+                        q.fact() != REACHABLE_AT_PRIVILEGE
+                            && function_of(vocabulary, q.fact()) == Some(&Function::Each)
+                    })
+                    .cloned()
+                    .collect();
+                (!qualifiers.is_empty()).then(|| (r.name.clone(), qualifiers))
+            })
+            .collect();
         Ok(Self {
             vocabulary,
             system: None,
             held,
             stated,
+            qualified,
+            providers: providers
+                .iter()
+                .map(|(provider, _)| (provider.name.clone(), provider.clone()))
+                .collect(),
             requesters: requesters
                 .iter()
                 .map(|r| (r.name.clone(), r.kind))
@@ -995,6 +1157,8 @@ impl<'v> Joint<'v> {
         let mut report = Report::default();
         self.channels(assignment, &mut report);
         self.ownership(assignment, &mut report);
+        self.functions(assignment, &mut report);
+        self.qualifiers(assignment, &mut report);
         if let Some(system) = &self.system {
             self.connectivity(system, assignment, &mut report);
             self.routes(system, assignment, &mut report);
@@ -1006,6 +1170,147 @@ impl<'v> Joint<'v> {
             }
         }
         report
+    }
+
+    /// Model §8 rule 13 (`SR-H14`): one requester's bindings for the facts of one function are to one provider. Where
+    /// they are to several, the split is the assignment's conflict when some provider would meet every one of them, or
+    /// when none of them could; an unknown when none meets them all and one refutes none, so that describing what it
+    /// leaves undescribed would make it whole (`SR-H18`'s `missing-fact`).
+    fn functions(&self, assignment: &[Binding], report: &mut Report) {
+        let mut split: BTreeMap<(&str, &str), BTreeMap<&str, Vec<&Requirement>>> = BTreeMap::new();
+        for b in assignment {
+            if let Some(Function::Of(function)) = function_of(self.vocabulary, b.requirement.fact())
+            {
+                split
+                    .entry((b.requester.as_str(), function.as_str()))
+                    .or_default()
+                    .entry(b.provider.as_str())
+                    .or_default()
+                    .push(&b.requirement);
+            }
+        }
+        for ((requester, function), by_provider) in split {
+            if by_provider.len() < 2 {
+                continue;
+            }
+            let all: Vec<&Requirement> = by_provider.values().flatten().copied().collect();
+            let verdicts = |name: &str| -> Option<Vec<(&Requirement, Verdict)>> {
+                let p = self.providers.get(name)?;
+                Some(
+                    all.iter()
+                        .map(|q| (*q, judge(p, q, self.vocabulary)))
+                        .collect(),
+                )
+            };
+            let judged: Vec<(&str, Vec<(&Requirement, Verdict)>)> = by_provider
+                .keys()
+                .filter_map(|name| verdicts(name).map(|v| (*name, v)))
+                .collect();
+            let whole = judged
+                .iter()
+                .any(|(_, v)| v.iter().all(|(_, verdict)| *verdict == Verdict::Satisfied));
+            let completions: Vec<(String, Gaps)> = judged
+                .iter()
+                .filter(|(_, v)| {
+                    !v.iter()
+                        .any(|(_, verdict)| matches!(verdict, Verdict::Refused | Verdict::Absent))
+                })
+                .map(|(name, v)| {
+                    let parts = v
+                        .iter()
+                        .filter(|(_, verdict)| *verdict != Verdict::Satisfied)
+                        .map(|(q, verdict)| (q.fact().to_string(), q.span(), *verdict))
+                        .collect();
+                    ((*name).to_string(), parts)
+                })
+                .collect();
+            if whole || completions.is_empty() {
+                report.conflicts.push(Finding::FunctionSplit {
+                    requester: requester.to_string(),
+                    function: function.to_string(),
+                    bound: by_provider
+                        .iter()
+                        .map(|(provider, qs)| {
+                            (
+                                (*provider).to_string(),
+                                qs.iter()
+                                    .map(|q| (q.fact().to_string(), q.span()))
+                                    .collect(),
+                            )
+                        })
+                        .collect(),
+                });
+            } else {
+                let past_arithmetic = completions
+                    .iter()
+                    .any(|(_, parts)| parts.iter().any(|(_, _, v)| *v == Verdict::Unsupported));
+                report.unknowns.push(Finding::FunctionIncomplete {
+                    requester: requester.to_string(),
+                    function: function.to_string(),
+                    completions,
+                    past_arithmetic,
+                });
+            }
+        }
+    }
+
+    /// Rule 13's qualifiers: each requirement a requester makes of an `each` fact — `reachable-at-privilege` is rule 9's
+    /// — is judged at every provider bound for its functions and for those of each requester it relies on through
+    /// `uses` and `needs`, at any depth. A requester relying on no function bound binds its qualifier as any requirement.
+    fn qualifiers(&self, assignment: &[Binding], report: &mut Report) {
+        let mut bound: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
+        for b in assignment {
+            if matches!(
+                function_of(self.vocabulary, b.requirement.fact()),
+                Some(Function::Of(_))
+            ) {
+                bound
+                    .entry(b.requester.as_str())
+                    .or_default()
+                    .insert(b.provider.as_str());
+            }
+        }
+        for (requester, qualifiers) in &self.qualified {
+            let mut reached: BTreeSet<&str> = BTreeSet::from([requester.as_str()]);
+            let mut todo = vec![requester.as_str()];
+            while let Some(at) = todo.pop() {
+                for named in self.names.get(at).into_iter().flatten() {
+                    if self.requesters.contains_key(named) && reached.insert(named.as_str()) {
+                        todo.push(named.as_str());
+                    }
+                }
+            }
+            let relied: BTreeSet<&str> = reached
+                .iter()
+                .filter_map(|r| bound.get(r))
+                .flatten()
+                .copied()
+                .collect();
+            for q in qualifiers {
+                for name in &relied {
+                    let Some(provider) = self.providers.get(*name) else {
+                        continue;
+                    };
+                    let verdict = judge(provider, q, self.vocabulary);
+                    if verdict == Verdict::Satisfied {
+                        continue;
+                    }
+                    let finding = Finding::QualifierUnmet {
+                        requester: requester.clone(),
+                        fact: q.fact().to_string(),
+                        span: q.span(),
+                        provider: (*name).to_string(),
+                        declared: provider.span,
+                        verdict,
+                    };
+                    if finding.code() == "infeasible-configuration" {
+                        report.conflicts.push(finding);
+                    } else {
+                        report.unknowns.push(finding);
+                    }
+                }
+            }
+        }
     }
 
     /// The regions of `system`'s hardware, each with its provider, in the order the providers are named.

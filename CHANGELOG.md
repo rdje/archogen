@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — one function, one provider
+
+`ARCHOGEN-M3-0870` (leaf `M3.3.6.2`), `2026-10-22`.
+
+- The joint check keeps one requester's facts of one function at one provider: a counter's width and rate split
+  across two timers is refused, or reported `missing-fact` where describing a fact would make one timer whole. A
+  qualifier, such as a power state, is judged at every provider the requester relies on.
+- A census over the suite finds no function split across hardware and lists five counters whose horizon or wrap
+  behaviour no block states yet (the design's approximate count was nine). Model §8 rule 13 and the book explain it.
+
 ## archogen — each vocabulary fact names its function
 
 `ARCHOGEN-M3-0869` (leaf `M3.3.6.1`), `2026-10-22`.
