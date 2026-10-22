@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — lifetimes and execution contexts decided; the joint constraints closed
+
+`ARCHOGEN-M3-0871` (leaf `M3.3.8`), `2026-10-22`.
+
+- Under `rt-static-up-v1` every part lives from its initialisation to a halt, so no lifetime rule is needed; which
+  contexts a provider supports is a catalog record's statement, judged as a privilege level is once one states it, and
+  initialisation waits on no interrupt. `M3.3`, §5.4's joint constraints, is closed.
+
 ## archogen — one function, one provider
 
 `ARCHOGEN-M3-0870` (leaf `M3.3.6.2`), `2026-10-22`.
