@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — ruled: each checker its own executable, behind a git-style front
+
+`ARCHOGEN-M3-0876` (leaf `M3.5.1`), `2026-10-22`.
+
+- The director ruled findings §16 (a): the scheduling and configuration checkers become executables of their own, and
+  `archogen analyze` and `archogen resolve` run them as git runs its sibling commands; the programmatic surface still
+  runs nothing. `M3.5.1` designs it, `M2.21` follows.
+
 ## archogen — for the director: the checkers' executables
 
 `ARCHOGEN-M3-0875` (leaf `M3.5.1`), `2026-10-22`.

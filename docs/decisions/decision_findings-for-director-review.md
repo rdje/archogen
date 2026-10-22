@@ -262,6 +262,10 @@ names the program that produced it, `TI-H14`); (b) keep one executable and accep
 `trust-shared-program` for the two checkers — §4.4's independence then rests on code review alone; (c) let `archogen`
 launch its role executables — §10.4's safety argument then no longer holds for the programmatic surface.
 `M3.5.1` and `M2.21` wait on it; the checker's library work (`M3.5.2`–`.5`) holds under every answer and proceeds.
+**Ruled (a), `2026-10-22`**, with a git-style front: "Let's trust you and pick (a) Recommended: give each checker its
+own executable"; then, on `archogen analyze` running the executable `archogen-analyze` as git runs `git-foo`, the
+human CLI alone allowed to run its own sibling executables and the programmatic surface still running nothing: "Then
+if we agree then go ahead". `M3.5.1` designs both, `M2.21` taking the scheduling checker's shape from it.
 
 ## A note on what "done" means so far
 
