@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — provider bundles: the design, reviewed
+
+`ARCHOGEN-M3-0868` (leaf `M3.3.6`), `2026-10-22`.
+
+- Design `SR-H14`'s bundles: each vocabulary fact names the function it describes, and one requester's facts of one
+  function are met by one provider; where describing a fact would make one provider whole the finding is an unknown,
+  not a conflict. Qualifiers — a power state — hold at every provider the requester relies on.
+- One independent review, seven defects and eight remarks answered; a census over the suite's 38 systems finds no
+  function split across hardware, and names the 9 counters whose horizon no block states yet.
+
 ## archogen — a block no system uses decides no description's code
 
 `ARCHOGEN-M3-0867` (leaf `M3.4.1`), `2026-10-22`.

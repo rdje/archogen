@@ -14,8 +14,8 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.3`; `PROGRAM` resumes at `PROGRAM.71`.
-- **Next action:** `M3.3.6` (P2), provider bundles (`SR-H14`), its design first and reviewed; then `.8`, `M3.5`,
-  `PROGRAM.103`. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
+- **Next action:** `M3.3.6.1` (P2), the vocabulary's `function` clause, as `M3.3.6`'s reviewed design gives it;
+  then `.6.2`, `.8`, `M3.5`, `PROGRAM.103`. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
   focused green at `eaf71286`; `archogen check` wiring is `M3.4`'s. The next artifact cleanup is due after
   `2026-10-23T15:54`. A test's deadline is one only a hang reaches (`PROGRAM.99`).
   **Mutation testing is stopped** until the functionality is locked
