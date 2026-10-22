@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a failed tier step's whole output is kept
+
+`ARCHOGEN-PROGRAM-0847` (leaf `PROGRAM.100`), `2026-10-22`.
+
+- When a step fails, the tier runner keeps its whole output in `target/verify-logs/<tier>/<step>.log` — the command,
+  its status, then each stream in full — and names it under the same 40-line tail; a step's log is removed when the
+  step next runs, so a log that exists is of a failed last run.
+- Hold it with a synthetic step through `run_step`, failing first with the keeping or the removal taken out.
+
 ## archogen — the fourteenth daily artifact cleanup
 
 `ARCHOGEN-PROGRAM-0846` (leaf `PROGRAM.101`), `2026-10-22`.

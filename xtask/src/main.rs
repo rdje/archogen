@@ -578,7 +578,9 @@ const fn missing_tool(provisioned: bool) -> Outcome {
     }
 }
 
-fn run_step(step: &Step, root: &Path, provisioned: bool) -> Outcome {
+fn run_step(step: &Step, root: &Path, tier: &str, provisioned: bool) -> Outcome {
+    let log = output_log(root, tier, step.name);
+    forget_output(&log);
     match &step.action {
         Action::NotBuilt { owner, note } => {
             println!("  ⚠  {:<18} NOT BUILT — tracked by leaf {owner}", step.name);
@@ -610,7 +612,7 @@ fn run_step(step: &Step, root: &Path, provisioned: bool) -> Outcome {
                         println!("     {note}");
                     } else {
                         println!("  ❌ {:<18} {elapsed:>6.2}s  FAILED", step.name);
-                        print_tail(&output);
+                        report_failure(root, &log, program, args, &output);
                         println!("     re-run it directly: {program} {}", args.join(" "));
                     }
                     outcome
@@ -698,7 +700,7 @@ fn run_step(step: &Step, root: &Path, provisioned: bool) -> Outcome {
                         );
                         println!("     issue: {}", q.issue);
                         println!("     unproven while it stands: {}", q.claim);
-                        print_tail(&output);
+                        report_failure(root, &log, program, args, &output);
                         Outcome::Quarantined
                     }
                     Judgement::Stale => {
@@ -713,7 +715,7 @@ fn run_step(step: &Step, root: &Path, provisioned: bool) -> Outcome {
                     }
                     judgement @ (Judgement::Undeclared | Judgement::Failed) => {
                         println!("  ❌ {:<18} {elapsed:>6.2}s  FAILED", step.name);
-                        print_tail(&output);
+                        report_failure(root, &log, program, args, &output);
                         if judgement == Judgement::Undeclared {
                             println!(
                                 "     exit {COULD_NOT_RUN} says \"could not be run\", and no row of QUARANTINES \
@@ -760,6 +762,77 @@ fn print_tail(output: &std::process::Output) {
     let stderr = String::from_utf8_lossy(&output.stderr);
     for line in tail_lines(&stdout, &stderr) {
         println!("     {line}");
+    }
+}
+
+/// Where a step's whole output is kept when it fails: `target/verify-logs/<tier>/<step>.log`.
+///
+/// ⛔ The tail alone was measured losing what a failure is: a `tests` step that failed 73 tests after 45 minutes
+/// printed `… 2705 earlier line(s) omitted` and its last 40 lines, and nothing else was kept — not the failure list,
+/// not one message — while "re-run it directly" cannot bring back a failure that needed the host's load (leaf
+/// `PROGRAM.100`). The log is removed when its step next runs, so one that exists is always of the step's last run,
+/// and that run failed.
+fn output_log(root: &Path, tier: &str, step: &str) -> PathBuf {
+    root.join("target/verify-logs")
+        .join(tier)
+        .join(format!("{step}.log"))
+}
+
+/// Remove a step's kept output before the step runs again; saying so when it cannot, since a stale log would then
+/// stand for a run that never failed.
+fn forget_output(log: &Path) {
+    match std::fs::remove_file(log) {
+        Err(error) if error.kind() != std::io::ErrorKind::NotFound => {
+            println!(
+                "  ⚠  {} could not be removed, so it may be of an earlier run: {error}",
+                log.display()
+            );
+        }
+        _ => {}
+    }
+}
+
+/// Write a failed step's whole output: what ran, how it exited, then each stream in full, byte for byte.
+fn keep_output(
+    log: &Path,
+    program: &str,
+    args: &[&str],
+    output: &std::process::Output,
+) -> std::io::Result<()> {
+    if let Some(dir) = log.parent() {
+        std::fs::create_dir_all(dir)?;
+    }
+    let mut text = format!(
+        "command: {program} {}\nstatus: {}\n",
+        args.join(" "),
+        output.status
+    )
+    .into_bytes();
+    for (name, stream) in [("stdout", &output.stdout), ("stderr", &output.stderr)] {
+        text.extend_from_slice(format!("== {name}: {} byte(s) ==\n", stream.len()).as_bytes());
+        text.extend_from_slice(stream);
+        if !stream.is_empty() && !stream.ends_with(b"\n") {
+            text.push(b'\n');
+        }
+    }
+    std::fs::write(log, text)
+}
+
+/// A failed step's report: the tail of each stream, then where the whole of both is kept.
+fn report_failure(
+    root: &Path,
+    log: &Path,
+    program: &str,
+    args: &[&str],
+    output: &std::process::Output,
+) {
+    print_tail(output);
+    match keep_output(log, program, args, output) {
+        Ok(()) => println!(
+            "     whole output: {}",
+            log.strip_prefix(root).unwrap_or(log).display()
+        ),
+        Err(error) => println!("     whole output not kept at {}: {error}", log.display()),
     }
 }
 
@@ -827,7 +900,7 @@ fn verify(name: &str, provisioned: bool) -> i32 {
     let outcomes: Vec<Outcome> = tier
         .steps
         .iter()
-        .map(|step| run_step(step, &root, provisioned))
+        .map(|step| run_step(step, &root, tier.name, provisioned))
         .collect();
 
     let count = |want: Outcome| outcomes.iter().filter(|o| **o == want).count();
@@ -1067,8 +1140,8 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::{
-        gate_outcome, judge, missing_tool, tail_lines, tier, Action, Judgement, Outcome, Verdict,
-        QUARANTINES, TAIL_LINES, TIERS,
+        gate_outcome, judge, missing_tool, output_log, repo_root, run_step, tail_lines, tier,
+        Action, Judgement, Outcome, Step, Verdict, QUARANTINES, TAIL_LINES, TIERS,
     };
 
     /// The leaf a step routes its gap to, and why: a step not built, or a gate whose pass is not yet the step's.
@@ -1205,6 +1278,72 @@ mod tests {
         let shown = tail_lines(&long, "");
         assert_eq!(shown.len(), TAIL_LINES + 1);
         assert_eq!(shown[0], "… 7 earlier line(s) omitted");
+    }
+
+    #[test]
+    fn the_book_states_the_tail_the_runner_prints() {
+        // `docs/figures.md` gates the chapter's figure on this test (leaf `PROGRAM.100`).
+        let chapter = std::fs::read_to_string(repo_root().join("docs/book/src/verification.md"))
+            .expect("the verification chapter");
+        let phrase = format!("the last {TAIL_LINES} lines of each of its streams");
+        assert!(
+            chapter.contains(&phrase),
+            "the chapter no longer says {phrase:?}"
+        );
+    }
+
+    #[test]
+    fn a_failing_step_keeps_its_whole_output_and_a_passing_rerun_removes_it() {
+        // Leaf `PROGRAM.100`: the tail alone lost a 73-test failure list. The whole output is kept beside it, and a
+        // kept log is always of its step's last run, which failed.
+        const FAILING: Step = Step {
+            name: "synthetic",
+            proves: "nothing: a control",
+            action: Action::Run {
+                program: "sh",
+                args: &[
+                    "-c",
+                    "i=0; while [ $i -lt 100 ]; do echo \"line $i\"; i=$((i+1)); done; echo cause >&2; exit 3",
+                ],
+                requires: None,
+                matters: "",
+            },
+        };
+        const PASSING: Step = Step {
+            name: "synthetic",
+            proves: "nothing: a control",
+            action: Action::Run {
+                program: "sh",
+                args: &["-c", "echo fine"],
+                requires: None,
+                matters: "",
+            },
+        };
+        let root = repo_root()
+            .join("target/doctrine_scratch/verify-logs")
+            .join(std::process::id().to_string());
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root).expect("a scratch root");
+        let log = output_log(&root, "control", "synthetic");
+        assert_eq!(run_step(&FAILING, &root, "control", false), Outcome::Failed);
+        let kept = std::fs::read_to_string(&log).expect("a failed step's whole output is kept");
+        const {
+            assert!(
+                TAIL_LINES < 100,
+                "the control's output is longer than the tail"
+            )
+        };
+        for i in 0..100 {
+            assert!(kept.contains(&format!("line {i}\n")), "line {i}:\n{kept}");
+        }
+        assert!(kept.contains("== stderr: 6 byte(s) ==\ncause\n"), "{kept}");
+        assert!(kept.contains("status: exit status: 3"), "{kept}");
+        assert_eq!(run_step(&PASSING, &root, "control", false), Outcome::Passed);
+        assert!(
+            !log.exists(),
+            "a passing run leaves no log of an earlier failure"
+        );
+        std::fs::remove_dir_all(&root).expect("the scratch root is removed");
     }
 
     #[test]

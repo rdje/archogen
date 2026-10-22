@@ -1514,7 +1514,7 @@ os.execvp("rustc", ["rustc"] + arguments)
             'crates/archogen-catalog/src/manifest.rs': '110c489a0e9d59435c0df770e32d7ab600c4de5cac3a9f0ca1706c25792de01b',
             'crates/archogen-catalog/src/tree.rs': '5bb9030f10feecadd27f02b0d476901b4cec958196c492947290fb8318c1ad78',
             'crates/archogen-catalog/src/grammar.rs': '6b60d509abf08334f308e7fef00b711203288e48e5786802a5c153e50f9bf43f',
-            'xtask/src/main.rs': '9d83a570b177d7cd5a95730e7ee2e655494e1cf9b8a6c3bfef05b13fd2a1807e',
+            'xtask/src/main.rs': '48e836b0df5ae788ed0ef071c8eb4c8113cbcc143e89f2362d67df64d3b60723',  # re-pinned by PROGRAM.100: runner only, wiring unchanged
             'crates/archogen-catalog/src/lib.rs': '1e299ccfab838708b41afc6ba366bb890a09dc5195957bb6690cef509312703a',
             'xtask/Cargo.toml': '6ee1cf3699670f97a13b3c49a37013f29270b80bf458ed22835bdc9b99be9f9f',
             'crates/archogen-catalog/Cargo.toml': '1e8266bd7987f766565e66ddca4d6fbc277bfc853771dfec61fa8050fea0629d',

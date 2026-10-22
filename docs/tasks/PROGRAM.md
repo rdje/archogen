@@ -663,15 +663,41 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.99.md`](../task-history/PROGRAM/PROGRAM.99.md); commit `ARCHOGEN-PROGRAM-0845`
 
 - ID: `PROGRAM.100`
-  Status: `pending` — P2: the tier runner discards a failed step's output past its last 40 lines
+  Status: `done` — P2: a failed tier step's whole output is kept, not its last 40 lines alone
   Reproduce / issue: `2026-10-22`, `target/m331/focused.log` and `focused-capped.log` — `make focused`'s failed `tests`
     step printed `… 2705 earlier line(s) omitted` and `… 2222 earlier line(s) omitted` then 40 lines; nothing else was
     kept, so the 73-test run's failure list and every failure message were lost (`tail_lines`, `xtask/src/main.rs:745`,
     `TAIL_LINES = 40`), and its advice, "re-run it directly", cannot reproduce a failure that needs the host's load.
-  Goal: a failed step's whole stdout and stderr kept under `target/` beside the tier's stamps and named in the summary,
-    the printed tail unchanged; a control failing first.
-  Verification: `pending`
-  Commit: `pending`
+  Goal: a failed step's whole stdout and stderr kept under `target/` and named in the summary, the printed tail
+    unchanged; a control failing first.
+  Acceptance:
+    - [x] ROOT CAUSE — `grep -n "print_tail(" xtask/src/main.rs` at `58110665`: three call sites, one per failing branch
+      of `run_step` (a gate's refusal, a quarantined step, a failed or undeclared one), each printing `tail_lines`
+      and nothing else; `git grep -n verify-logs`: 0 lines — the runner wrote no output anywhere.
+    - [x] FIX — `run_step` learns its tier; before a step runs, `forget_output` removes its earlier log, saying so when
+      it cannot; each failing branch calls `report_failure`, which prints the same tail and writes
+      `target/verify-logs/<tier>/<step>.log` — the command, its status, then each stream whole with its byte count —
+      and names it.
+    - [x] ADDRESSED — `cargo test -p xtask --bin xtask -- tests::a_failing_step_keeps`: `test result: ok. 1 passed; 0
+      failed`: a synthetic step writing 100 lines and a stderr cause, failing with status 3, keeps every line, the
+      cause and the status, past the 40-line tail; a passing rerun leaves no log. Failing first, each arm restored byte
+      for byte: with the keeping removed `test result: FAILED. 0 passed; 1 failed` at `main.rs:1317`; with the stale log
+      left `test result: FAILED. 0 passed; 1 failed` at `main.rs:1327`. The chapter's "the last 40 lines" is gated by
+      `the_book_states_the_tail_the_runner_prints` (`docs/figures.md`): `test result: ok. 1 passed`; with the chapter
+      saying 41, `test result: FAILED. 0 passed; 1 failed`, restored.
+    - [x] NO REGRESSION — the first focused run failed one test, read from the log this leaf keeps
+      (`target/verify-logs/focused/tests.log`): `caller suffix source premise requires revalidation` — the sweep
+      proof's premise pins `xtask/src/main.rs` whole, for its wiring. Revalidated: its `mod`, `use`, `pub` and `cfg`
+      lines identical to `HEAD`'s (`diff`: no output), and no changed item named outside the file (`git grep`: 0 lines
+      for each of the eight, `verify` only as `trust_verify::verify`); re-pinned to `48e836b0…`, then
+      `cargo test -p xtask --bin xtask -- mutation::tests::the_sweep_holds`: `test result: ok. 1 passed; 0 failed`.
+      The over-wide premise is filed as `M3.6.9.8`. `cargo clippy -p xtask --all-targets -- -D warnings`: exit code 0;
+      `make focused` on this staged tree: exit code 0, `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not
+      built, 0 quarantined`.
+    - [x] LOCKSTEP — the book's verification chapter (where a failed step's output goes, with an example), `TOOLBOX.md`'s
+      tier-runner row, `docs/figures.md`'s row, the snapshots and the changelog.
+  Verification: the control above and its two arms; the focused tier on the staged tree.
+  Commit: `ARCHOGEN-PROGRAM-0847 (leaf PROGRAM.100)`
 
 - ID: `PROGRAM.101`
   Status: `done` — fourteenth daily artifact cleanup; the record's last run `2026-10-21T12:06:25+00:00`, over 24 h old
@@ -766,9 +792,8 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.100` | `pending` | P2: a failed tier step's output is kept whole, not its last 40 lines |
-| 2 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.72`, `.73` and `.78` — are filed and owned. Every closed
@@ -883,6 +908,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-11` | `PROGRAM.69` (round 36) | EOF/path/diagnostic controls before repair, then both complete self-tests; syntax, book and staged gates | history 133/13 of 146 and counts 153/3 of 156 before; repaired 146/0 and 156/0; literal byte and unusual-path counterparts, named no-traceback row refusals; independent round 37 next |
 | `2026-10-11` | `PROGRAM.69` (round 37 closure) | independent pinned review; root recount/authentication; staged count/history and book gates | zero defects/actionable arm gaps/remarks; 347 expected checker outcomes, separate 4 096 unit comparisons; retained results recount and 17 source identities pass, exit code 0; scope/limits retained; all 37 summary rows judged before removal from counted list |
 | `2026-10-22` | `PROGRAM.101` (fourteenth run) | two handoff censuses; physical and native inventories; identity of every other `target/` entry before and after; input snapshot and restoration; audit and four falsifying arms; the focused tier on the staged tree | 5382 files / 1181873277 logical bytes removed; 590423 of 590426 identical, 3 accounted; 1205 inputs restored; 4 of 4 arms refused |
+| `2026-10-22` | `PROGRAM.100` | a synthetic failing step through `run_step`, then a passing rerun; two arms, each restored; clippy; the focused tier on the staged tree | 1 passed; each arm 1 failed; clippy and focused exit 0 |
 
 ## Commit Log
 
@@ -904,6 +930,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0460 (leaf PROGRAM)` | **`PROGRAM.57`, `PROGRAM.58` and `PROGRAM.59` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` would have grown 1 331 bytes over its 819 200-byte ceiling with `M3.1.2`'s decomposition |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0489 (leaf PROGRAM)` | **`PROGRAM.10` and `.61`–`.65` sealed**, 13 closed leaves into `docs/task-history/PROGRAM/`, when `README-ROUTES` refused `docs/tasks/` at 820 957 bytes over its 819 200; `docs/tasks/` 817 470 → 752 861 bytes, measured from `HEAD` and the tree |
 | `PROGRAM.101` | `ARCHOGEN-PROGRAM-0846 (leaf PROGRAM.101)` | **fourteenth daily artifact cleanup**: the idle main and native-sweep incremental caches removed (5382 files / 1181873277 logical bytes); every other `target/` entry identical or accounted; `PROGRAM.99` sealed |
+| `PROGRAM.100` | `ARCHOGEN-PROGRAM-0847 (leaf PROGRAM.100)` | **a failed tier step's whole output is kept**: `target/verify-logs/<tier>/<step>.log`, named under the tail and removed when the step next runs; a control and two arms failing first |
 
 ## Changelog
 
