@@ -28,7 +28,8 @@ rely on. Project-local diagnostic schemas are documented with their producers an
 
 `VERSION-REGISTER` (`scripts/check_version_register.sh`) keeps this page in step with the code. It reads
 public Rust format/version constants, profile identifiers and API version declarations under `crates/*/src`,
-and the engine version in workspace-member manifests. Each one must belong to an entry below with the same value,
+and the engine version in workspace-member manifests — a declaration whole, wherever rustfmt breaks its lines. Each
+one must belong to an entry below with the same value,
 and every entry's declaration must still exist. A new format, or a bump, therefore cannot land without
 this page changing too within that population. The checker does not enumerate Python diagnostic schema strings;
 their versioned readers and permanent refusal controls enforce their local contracts.
@@ -109,6 +110,17 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Changes when | an assumption of the model changes: what costs nothing, what is atomic, what is known. A changed model invalidates every conclusion stated in the old one |
 | Pinned by | the tests in `crates/rt-analysis/src/response.rs`, and the conclusions printed in `docs/book/src/analysis.md`, which quote the model by name |
 | Keeps | a conclusion "in `idealized-zero-overhead/1`" means the same bound under the same assumptions |
+
+## `runtime-analysis-model`
+
+| Field | Value |
+| --- | --- |
+| Surface | the model the runtime-applicable analysis variant reasons in, which each of its conclusions names, apart from the baseline's ([What the scheduling checker establishes](analysis.md)) |
+| Version | `fixed-priority-with-overheads/2` — `/1` until `2026-10-02`, when leaf `M2.11` changed its admission conditions |
+| Declared at | `const:crates/rt-analysis/src/runtime.rs:MODEL` |
+| Changes when | the recurrence, the charging or the admission conditions change after a conclusion has been stated: the next is `/3`, and a changed model invalidates every conclusion stated in the one before (`docs/decisions/decision_runtime-analysis-variant.md`, *How to apply*) |
+| Pinned by | `crates/rt-analysis/tests/runtime_variant.rs`, which holds the constant to the identifier the record states and to the record's path, and each conclusion its tests check to the constant |
+| Keeps | a conclusion "in `fixed-priority-with-overheads/2`" means the same bound under the same conditions |
 
 ## `cost-format`
 

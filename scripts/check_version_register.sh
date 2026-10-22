@@ -57,18 +57,39 @@ members() {
     done
 }
 
+# A source file with each `pub const` of type `&str` or `Version` on one line. rustfmt wraps a long one after its
+# `=`, or across its struct literal, and a line-at-a-time read missed `crates/rt-analysis/src/runtime.rs`'s `MODEL`
+# that way (leaf `PROGRAM.104`): such a declaration's lines are joined, single-spaced, up to the line its `;` ends,
+# eight at most. Other declarations keep their lines, so a profile's `id:` still starts one.
+joined() {
+  awk '
+    function trim(s) { sub(/^[[:space:]]+/, "", s); sub(/[[:space:]]+$/, "", s); return s }
+    acc != "" {
+      acc = acc " " trim($0); n++
+      if ($0 ~ /;[[:space:]]*$/ || n >= 8) { print acc; acc = "" }
+      next
+    }
+    /^[[:space:]]*pub const [A-Z0-9_]+: (&str|Version) =/ && $0 !~ /;[[:space:]]*$/ {
+      acc = $0; sub(/[[:space:]]+$/, "", acc); n = 1; next
+    }
+    { print }
+    END { if (acc != "") print acc }
+  ' "$1"
+}
+
 # Every version the code declares, as `locator<TAB>value`.
 declared() {
-  local f
+  local f text
   while IFS= read -r f; do
     [ -f "$f" ] || continue
-    sed -nE 's/^[[:space:]]*pub const ([A-Z0-9_]+): &str = "([a-z][a-z0-9-]*\/[0-9]+)[^"]*";.*/\1\t\2/p' "$f" |
+    text="$(joined "$f")"
+    printf '%s\n' "$text" | sed -nE 's/^[[:space:]]*pub const ([A-Z0-9_]+): &str = "([a-z][a-z0-9-]*\/[0-9]+)[^"]*";.*/\1\t\2/p' |
       while IFS=$'\t' read -r name value; do printf 'const:%s:%s\t%s\n' "$f" "$name" "$value"; done
-    sed -nE 's/^[[:space:]]*pub const ([A-Z0-9_]*VERSION): &str = "([0-9]+\.[0-9]+\.[0-9]+)";.*/\1\t\2/p' "$f" |
+    printf '%s\n' "$text" | sed -nE 's/^[[:space:]]*pub const ([A-Z0-9_]*VERSION): &str = "([0-9]+\.[0-9]+\.[0-9]+)";.*/\1\t\2/p' |
       while IFS=$'\t' read -r name value; do printf 'const:%s:%s\t%s\n' "$f" "$name" "$value"; done
-    sed -nE 's/^[[:space:]]*pub const ([A-Z0-9_]+): Version = Version \{ major: ([0-9]+), minor: ([0-9]+) \};.*/\1\t\2.\3/p' "$f" |
+    printf '%s\n' "$text" | sed -nE 's/^[[:space:]]*pub const ([A-Z0-9_]+): Version = Version \{ major: ([0-9]+), minor: ([0-9]+),? \};.*/\1\t\2.\3/p' |
       while IFS=$'\t' read -r name value; do printf 'const:%s:%s\t%s\n' "$f" "$name" "$value"; done
-    sed -nE 's/^[[:space:]]*id: "([a-z0-9-]+-v[0-9]+)",.*/\1/p' "$f" |
+    printf '%s\n' "$text" | sed -nE 's/^[[:space:]]*id: "([a-z0-9-]+-v[0-9]+)",.*/\1/p' |
       while IFS= read -r id; do printf 'profile:%s:%s\t%s\n' "$f" "$id" "$id"; done
   done < <(git ls-files -- 'crates/*/src/*.rs' 'crates/*/src/**/*.rs')
   local versions
@@ -191,6 +212,12 @@ self_test() {
   arm "an entry whose declaration moved is stale" 1 "names the declaration const:crates/a/src/lib.rs:FORMAT, which the code no longer has"
   fresh; sed -i.bak '/^| Pinned by |/d' "$work/$REGISTER"; rm -f "$work/$REGISTER.bak"
   arm "an entry with a field missing is refused" 1 "has no \`Pinned by\`"
+  fresh; printf 'pub const WRAPPED: &str =\n    "wrap/1 (a citation long enough for rustfmt to wrap)";\n' >> "$work/crates/a/src/lib.rs"
+  arm "a format identifier rustfmt wrapped after its = is read" 1 "const:crates/a/src/lib.rs:WRAPPED = 'wrap/1'"
+  fresh; printf 'pub const WIDE: Version = Version {\n    major: 3,\n    minor: 4,\n};\n' >> "$work/crates/a/src/lib.rs"
+  arm "an API version rustfmt wrapped across its literal is read" 1 "const:crates/a/src/lib.rs:WIDE = '3.4'"
+  fresh; printf 'pub const Q: Profile = Profile {\n    id: "extra-v1",\n};\n' >> "$work/crates/b/src/lib.rs"
+  arm "a profile id inside a public constant's literal is still read" 1 "profile:crates/b/src/lib.rs:extra-v1"
   fresh; printf 'fn f() {\n    // pub const X: &str = "fake/9";\n}\n' >> "$work/crates/a/src/lib.rs"
   arm "a commented-out constant is not a declaration" 0 ""
   fresh; printf '# Versions\n\nNothing yet.\n' > "$work/$REGISTER"

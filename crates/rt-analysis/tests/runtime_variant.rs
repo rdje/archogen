@@ -499,3 +499,32 @@ fn a_task_released_on_some_arrivals_only_has_its_rate_limit_named() {
         set.assumptions()
     );
 }
+
+/// The record the variant implements, by its path from the root, which [`MODEL`] cites.
+macro_rules! record_path {
+    () => {
+        "docs/decisions/decision_runtime-analysis-variant.md"
+    };
+}
+
+const RECORD: &str = include_str!(concat!("../../../", record_path!()));
+
+#[test]
+fn the_model_names_the_identifier_its_record_states_and_cites_that_record() {
+    // `docs/book/src/versions.md`'s `runtime-analysis-model` entry is pinned here (leaf `PROGRAM.104`): the register
+    // holds its `Version` to this constant, and this test holds the constant to the record whose rule says when the
+    // model moves — so a bump in either alone fails, and so does a citation left behind when the record moves.
+    let identifier = MODEL
+        .split(' ')
+        .next()
+        .expect("the model names its identifier first");
+    assert!(
+        RECORD.contains(&format!("model identifier is `{identifier}`")),
+        "the record does not state `{identifier}` as its model identifier"
+    );
+    assert!(
+        MODEL.ends_with(concat!("(", record_path!(), ")")),
+        "`{MODEL}` does not cite {}",
+        record_path!()
+    );
+}

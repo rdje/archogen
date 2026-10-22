@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the version register reads a declaration rustfmt wraps
+
+`ARCHOGEN-PROGRAM-0865` (leaf `PROGRAM.104`), `2026-10-22`.
+
+- `VERSION-REGISTER` read declarations a line at a time, so `fixed-priority-with-overheads/2` — the runtime analysis
+  variant's model, bumped from `/1` by `M2.11`, wrapped by rustfmt — was never registered. It now reads each declaration
+  whole; three arms hold the wrapped shapes and a profile's `id:`.
+- The book's register gains `runtime-analysis-model`, pinned by a test that holds the constant to the identifier and
+  the path of the record that defines it.
+
 ## archogen — uc3 states its level
 
 `ARCHOGEN-M3-0862` (leaf `M3.3.4.5`), `2026-10-22`.

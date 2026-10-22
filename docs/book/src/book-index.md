@@ -644,6 +644,7 @@ a change that leaves it stale, so it is never edited by hand.
   toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
   detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust
   proof records](annex-trust-proofs.md)
+- runtime-analysis-model — [What is versioned, and what changing it costs](versions.md#runtime-analysis-model)
 - rust-reference — [What this project relies on from outside](ledger.md#rust-reference)
 - rust-toolchain — [What this project relies on from outside](ledger.md#rust-toolchain)
 - **RUSTC** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
