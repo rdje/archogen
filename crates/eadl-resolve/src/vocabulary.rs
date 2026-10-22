@@ -8,8 +8,10 @@
 //! `eadl_model::kind::validate`, the one validator every declaration meets. Then the reader checks what no frame
 //! can say: that a domain, a role, a direction or a rule is one the record lists; that a direction is one its
 //! domain admits (record §2's table); that `implies` is written only on a set fact and names its members; that
-//! `use` is `shared` or `consumed`, the latter only on a boolean fact or a group's head (`M3.3`); that
-//! `derived-from`, `reads` and a group name declared facts; that a derivation names the rule that computes it, with
+//! `use` is `shared` or `consumed`, the latter only on a boolean fact or a group's head (`M3.3`); that a guarantee
+//! names its `function` and a statement none, `each` on no consumed, grouped or derived fact, and that a group's
+//! sub-facts and a derivation's inputs are its own function's (`M3.3.6`); that `derived-from`, `reads` and a group
+//! name declared facts; that a derivation names the rule that computes it, with
 //! the inputs that rule reads; that `derived-from` and `reads` close no cycle (record §1.1, §9); that no name is
 //! declared twice (reference §7 rule 6); and that no fact is named like a clause word of the description kinds,
 //! since an offer or a requirement on it would read as a clause (record §1.1, R31 1).
@@ -101,6 +103,16 @@ pub enum Usage {
     /// A function a requester programs, an alarm, taking one of the provider's channels; only on a boolean fact or a
     /// group's head, whose bare offer is `true`.
     Consumed,
+}
+
+/// The function a fact describes: the entry's `function` clause (record §1.1; `M3.3.6`, model §8 rule 13).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Function {
+    /// One device's operations that are only valid together: one requester's bindings for its facts are to one
+    /// provider.
+    Of(String),
+    /// `each`, a qualifier: it describes every function its requirer relies on, and holds at every provider of them.
+    Each,
 }
 
 /// How an offered value satisfies a required one (record §2's table).
@@ -228,6 +240,8 @@ pub struct Fact {
     pub implies: Vec<String>,
     /// Whether a requester bound to it takes a channel.
     pub usage: Usage,
+    /// The function it describes; a statement, which constrains no provider, names none.
+    pub function: Option<Function>,
     /// Where the entry is written.
     pub span: Span,
 }
@@ -276,6 +290,9 @@ pub enum Cause {
     Implies,
     /// A `use` other than `shared` and `consumed`, or `consumed` on a fact neither boolean nor a group's head.
     Usage,
+    /// A guarantee naming no `function` or a statement naming one; `each` on a consumed, grouped or derived fact; a
+    /// group's sub-fact or a derivation's input of another function (`M3.3.6`).
+    Function,
 }
 
 /// One refusal: what, where, and the entry it is about.
@@ -611,6 +628,7 @@ fn entry(form: &Form) -> Result<Fact, Vec<Refusal>> {
     let (mut derived_from, mut reads, mut rule, mut implies) =
         (Vec::new(), Vec::new(), None, Vec::new());
     let mut usage = Usage::Shared;
+    let mut function = None;
     for clause in &form.items()[2..] {
         let rest = &clause.items()[1..];
         match clause.head() {
@@ -683,6 +701,12 @@ fn entry(form: &Form) -> Result<Fact, Vec<Refusal>> {
                     format!("`{other}` is not a use: shared or consumed"),
                 )),
             },
+            Some("function") => {
+                function = Some(match word(clause) {
+                    "each" => Function::Each,
+                    name => Function::Of(name.to_string()),
+                });
+            }
             // The frame admits no other clause.
             _ => {}
         }
@@ -699,6 +723,7 @@ fn entry(form: &Form) -> Result<Fact, Vec<Refusal>> {
             rule,
             implies,
             usage,
+            function,
             span: form.span(),
         }),
         _ => {
@@ -831,7 +856,87 @@ fn across(facts: &[Fact], words: &BTreeSet<String>) -> Vec<Refusal> {
             );
         }
     }
+    refusals.extend(functions(facts, &by_name));
     refusals.extend(cycles(facts));
+    refusals
+}
+
+/// What `function` must agree with (`M3.3.6`): a guarantee names one and a statement none; a qualifier describes every
+/// function its requirer relies on, so it is never a function of its own — consumed, a group's head or sub-fact, or
+/// derived — and the facts a group or a derivation joins are one device's, so they share one function.
+fn functions(facts: &[Fact], by_name: &BTreeMap<&str, &Fact>) -> Vec<Refusal> {
+    let mut refusals = Vec::new();
+    let mut refuse = |fact: &Fact, detail: String| {
+        refusals.push(Refusal::new(
+            Cause::Function,
+            Some(&fact.name),
+            Some(fact.span),
+            detail,
+        ));
+    };
+    let grouped: BTreeSet<&str> = facts
+        .iter()
+        .filter_map(|f| match &f.domain {
+            Domain::Group(subs) => Some(subs.iter().map(String::as_str)),
+            _ => None,
+        })
+        .flatten()
+        .collect();
+    for fact in facts {
+        match (fact.role, &fact.function) {
+            (Role::Guarantee, None) => refuse(
+                fact,
+                "a guarantee names the function it describes, or `each` for a qualifier"
+                    .to_string(),
+            ),
+            (Role::Statement, Some(_)) => refuse(
+                fact,
+                "a statement constrains no provider, and names no function".to_string(),
+            ),
+            _ => {}
+        }
+        if fact.function == Some(Function::Each) {
+            let why = if fact.usage == Usage::Consumed {
+                Some("consumed")
+            } else if matches!(fact.domain, Domain::Group(_)) {
+                Some("a group's head")
+            } else if grouped.contains(fact.name.as_str()) {
+                Some("a group's sub-fact")
+            } else if !fact.derived_from.is_empty() {
+                Some("derived")
+            } else {
+                None
+            };
+            if let Some(why) = why {
+                refuse(
+                    fact,
+                    format!("a fact {why} is one device's, never a qualifier of every function: `each` is not its function"),
+                );
+            }
+        }
+        let Some(Function::Of(own)) = &fact.function else {
+            continue;
+        };
+        let joined = match &fact.domain {
+            Domain::Group(subs) => subs.as_slice(),
+            _ => &[],
+        };
+        for other in joined.iter().chain(&fact.derived_from).chain(&fact.reads) {
+            let Some(other_fact) = by_name.get(other.as_str()) else {
+                continue; // undeclared: refused as such
+            };
+            let theirs = match &other_fact.function {
+                Some(Function::Of(theirs)) if theirs == own => continue,
+                Some(Function::Of(theirs)) => format!("the function `{theirs}`'s"),
+                Some(Function::Each) => "a qualifier".to_string(),
+                None => "a statement".to_string(),
+            };
+            refuse(
+                fact,
+                format!("`{other}` is {theirs}, and this fact joins it as the function `{own}`'s"),
+            );
+        }
+    }
     refusals
 }
 

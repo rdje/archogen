@@ -27,4 +27,4 @@ pub use requirement::{
     read_uses, side_name_lists, NotJudged, Requirement, CLAUSE_WORDS,
 };
 pub use value::{Overflow, Value};
-pub use vocab::{Direction, Domain, Entry, Role, Rule, VOCABULARY};
+pub use vocab::{Direction, Domain, Entry, Function, Role, Rule, VOCABULARY};

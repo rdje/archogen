@@ -1551,13 +1551,13 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 29 remark 3: a row of the vocabulary is pinned to the record's §1.1; `clock-rate` read `at-least`, §5.2's "a faster clock is better" as a rule, passed every other property.
 from
-            "clock-rate",
-            Domain::Quantity(Dimension::Frequency),
-            Direction::Exact,
+                "clock-rate",
+                Domain::Quantity(Dimension::Frequency),
+                Direction::Exact,
 to
-            "clock-rate",
-            Domain::Quantity(Dimension::Frequency),
-            Direction::AtLeast,
+                "clock-rate",
+                Domain::Quantity(Dimension::Frequency),
+                Direction::AtLeast,
 end
 
 mutation model-vocab-release-accuracy-turned
@@ -1566,13 +1566,13 @@ test -p eadl-resolve
 expect killed
 why M3.1.1 round 29 remark 3: `release-accuracy` turned to `at-least` failed only an incidental fixture before the vocabulary was pinned to §1.1.
 from
-            "release-accuracy",
-            Domain::Quantity(Dimension::Time),
-            Direction::AtMost,
+                "release-accuracy",
+                Domain::Quantity(Dimension::Time),
+                Direction::AtMost,
 to
-            "release-accuracy",
-            Domain::Quantity(Dimension::Time),
-            Direction::AtLeast,
+                "release-accuracy",
+                Domain::Quantity(Dimension::Time),
+                Direction::AtLeast,
 end
 
 mutation model-vocab-implies-dropped

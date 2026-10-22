@@ -34,6 +34,9 @@
 ;   implies       for a set fact, the members every valued constraint on it holds beside what it writes
 ;   use           `consumed`, only on a boolean fact or a group's head: a requester bound to it takes one of the
 ;                 provider's `channels`; or `shared`, the default: read without being taken (`M3.3`)
+;   function      the function the fact describes, one device's operations only valid together, whose facts one
+;                 requester's bindings meet at one provider; `each` for a qualifier of every function its requirer
+;                 relies on; required of a guarantee, never written on a statement (`M3.3.6`)
 
 (eadl-version eadl/1)
 
@@ -48,4 +51,5 @@
   (clause reads (cardinality at-most-one) (holds forms))
   (clause rule (cardinality at-most-one) (holds values symbol))
   (clause implies (cardinality at-most-one) (holds forms))
-  (clause use (cardinality at-most-one) (holds values symbol)))
+  (clause use (cardinality at-most-one) (holds values symbol))
+  (clause function (cardinality at-most-one) (holds values symbol)))

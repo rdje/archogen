@@ -91,6 +91,31 @@ provider with more requesters than channels is refused. `use consumed` is writte
 head, whose bare offer is `true`; anywhere else, or with any word but `shared` and `consumed`, the vocabulary is
 refused.
 
+### One device's facts: functions
+
+A service that reads time reads one counter: its width, its rate, how it wraps and whether a read can tear are all that
+counter's. Bound to two counters — the horizon met by one, the coherent reads by another — it would read a time no
+device keeps. So every entry names the **function** it describes, the operations of one device that are only valid
+together, and the joint check keeps one requester's facts of one function at one provider (`M3.3.6`):
+
+```text
+(deffact observation-coherent
+  (doc "a read of the counter's value never observes a torn update")
+  (domain boolean)
+  (role guarantee)
+  (direction exact)
+  (function counter))
+```
+
+`/1`'s functions: `counter` — the width, modulus, rate, unit, wrap behaviour, horizon, coherent reads and low-power
+counting, and the two alarms with `channels`, since an absolute deadline is a time in the counter's time base and a
+relative delay a comparator on it; `interrupt` — a source and its arrival separation; `arrival` — `bounded-arrival`,
+which the realization gives; `output`, `queue`, `transfer`, `processor`, `scheduler`, `clock`, `release`, `debug`,
+`mutex` and `bus`. Two facts are **qualifiers**, `(function each)`: `available-in-state` and `reachable-at-privilege`
+describe every function their requirer relies on, as an operating condition must hold of all of it.
+`or-through-mediation`, the requirer's word about itself, names none. A `requires` clause is not the unit: a description
+may write one counter's facts across a clause and a `needs` of its own, as `examples/bounded-queue/system.eadl` does.
+
 ### What a provider offers
 
 A **provider** is a block or a platform. It offers a fact bare, with a value, or, on an abstract platform, with a
@@ -304,7 +329,8 @@ the code. Section numbers below are the record's.
 entry's frame to the kind with the validator every declaration meets, and then refuses what a frame cannot say: a
 direction its domain does not admit (§2's table), a derivation without its rule or with inputs that rule does not
 read, a cycle among `derived-from` and `reads`, `implies` off a set fact, `use consumed` off a boolean fact or a
-group's head, a name twice, and a fact named like a clause word of the description kinds, since an offer on it would
+group's head, a guarantee naming no `function` or a statement naming one, `each` on a consumed, grouped or derived
+fact, a group's sub-fact or a derivation's input of another function, a name twice, and a fact named like a clause word of the description kinds, since an offer on it would
 read as the clause (§1.1). The vocabulary is part
 of `eadl/1`: it is frozen with the language, and `archogen check` answers a file that writes a `deffact` as the
 language's own definition, exit `20` ([Checking a description](checking.md)).

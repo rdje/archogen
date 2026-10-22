@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — each vocabulary fact names its function
+
+`ARCHOGEN-M3-0869` (leaf `M3.3.6.1`), `2026-10-22`.
+
+- `deffact` gains `function`: every guarantee of `/1` names the function it describes — `counter`, `interrupt`,
+  `output` and the rest — or `each` for a qualifier; the vocabulary refuses one missing, misplaced or joining another
+  function's facts. The book's matching chapter explains functions; a pending migration note covers the two files.
+
 ## archogen — provider bundles: the design, reviewed
 
 `ARCHOGEN-M3-0868` (leaf `M3.3.6`), `2026-10-22`.

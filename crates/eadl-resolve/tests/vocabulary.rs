@@ -14,7 +14,7 @@ use eadl_model::kind::Registry;
 use eadl_model::Dimension;
 use eadl_resolve::model::{self, CLAUSE_WORDS, VOCABULARY};
 use eadl_resolve::vocabulary::{
-    clause_words, Cause, Direction, Domain, Role, Rule, Usage, Vocabulary,
+    clause_words, Cause, Direction, Domain, Function, Role, Rule, Usage, Vocabulary,
 };
 
 fn repo_root() -> PathBuf {
@@ -71,9 +71,17 @@ fn causes(entries: &str) -> Vec<Cause> {
     }
 }
 
-/// One entry, from its domain, direction and any further clauses.
+/// One entry, from its domain, direction and any further clauses: a guarantee of the function `f` unless `more` names
+/// its own, so every fixture's groups and derivations join one function (`M3.3.6`).
 fn fact(name: &str, domain: &str, direction: &str, more: &str) -> String {
-    format!("(deffact {name} (doc \"a fact\") (domain {domain}) (role guarantee) (direction {direction}) {more})")
+    let function = if more.contains("(function ") {
+        ""
+    } else {
+        "(function f) "
+    };
+    format!(
+        "(deffact {name} (doc \"a fact\") (domain {domain}) (role guarantee) (direction {direction}) {function}{more})"
+    )
 }
 
 fn model_domain(d: model::Domain) -> Domain {
@@ -140,6 +148,15 @@ fn the_shipped_table_is_the_model_s_slash_one_entry_by_entry() {
         );
         assert_eq!(f.implies, e.implies, "{}: implies", e.name);
         assert_eq!(f.usage == Usage::Consumed, e.consumed, "{}: use", e.name);
+        assert_eq!(
+            f.function,
+            e.function.map(|function| match function {
+                model::Function::Of(name) => Function::Of(name.to_string()),
+                model::Function::Each => Function::Each,
+            }),
+            "{}: function",
+            e.name
+        );
         assert!(
             !f.doc.is_empty(),
             "{}: every entry says what it means",
@@ -512,5 +529,181 @@ fn every_refusal_is_reported_not_only_the_first() {
     assert_eq!(
         causes(&entries),
         [Cause::Domain, Cause::ClauseWord, Cause::Implies]
+    );
+}
+
+#[test]
+fn each_fact_describes_the_function_m3_3_6_gives_it() {
+    // `M3.3.6`'s functions, written out here rather than read from the model or the record, so a function moved in all
+    // three at once still fails: moving one is a §15 migration.
+    let table = shipped();
+    let mut by_function: std::collections::BTreeMap<String, Vec<&str>> = Default::default();
+    for f in table.facts() {
+        let key = match &f.function {
+            Some(Function::Of(name)) => name.clone(),
+            Some(Function::Each) => "each".to_string(),
+            None => "none".to_string(),
+        };
+        by_function.entry(key).or_default().push(f.name.as_str());
+    }
+    let expected: &[(&str, &[&str])] = &[
+        ("arrival", &["bounded-arrival"]),
+        ("bus", &["bus-width"]),
+        ("clock", &["clock-rate", "frequency"]),
+        (
+            "counter",
+            &[
+                "absolute-deadline",
+                "channels",
+                "counter-modulus",
+                "counter-width",
+                "low-power-timer",
+                "observation-coherent",
+                "relative-delay",
+                "delivery-bound",
+                "supported-horizon",
+                "tick-rate",
+                "tick-unit",
+                "unambiguous-horizon",
+                "wrap-behavior",
+            ],
+        ),
+        ("debug", &["debug-port"]),
+        ("each", &["available-in-state", "reachable-at-privilege"]),
+        ("interrupt", &["interrupt-source", "min-arrival-separation"]),
+        ("mutex", &["application-mutexes"]),
+        ("none", &["or-through-mediation"]),
+        ("output", &["observable-output", "uart"]),
+        ("processor", &["core-count", "multicore"]),
+        ("queue", &["general-ipc", "queue-capacity"]),
+        ("release", &["release-accuracy"]),
+        ("scheduler", &["deadlines", "preemptive", "priorities"]),
+        ("transfer", &["descriptor-format", "transfer-engine"]),
+    ];
+    let got: Vec<(&str, Vec<&str>)> = by_function
+        .iter()
+        .map(|(k, v)| (k.as_str(), v.clone()))
+        .collect();
+    let want: Vec<(&str, Vec<&str>)> = expected.iter().map(|(k, v)| (*k, v.to_vec())).collect();
+    assert_eq!(got, want);
+}
+
+#[test]
+fn a_guarantee_names_its_function_and_a_statement_none() {
+    let bare = "(deffact f (doc \"a fact\") (domain boolean) (role guarantee) (direction exact))";
+    assert_eq!(causes(bare), [Cause::Function]);
+    assert_eq!(
+        causes(&fact("f", "boolean", "exact", "(function counter)")),
+        []
+    );
+    assert_eq!(
+        causes(&fact("f", "boolean", "exact", "(function each)")),
+        []
+    );
+    let statement = |more: &str| {
+        format!("(deffact f (doc \"a fact\") (domain enumeration a b) (role statement) (direction exact) {more})")
+    };
+    assert_eq!(causes(&statement("")), []);
+    assert_eq!(causes(&statement("(function counter)")), [Cause::Function]);
+    assert_eq!(causes(&statement("(function each)")), [Cause::Function]);
+    // Twice is the frame's: `function` is written at most once.
+    assert_eq!(
+        causes(&fact("f", "boolean", "exact", "(function a) (function b)")),
+        [Cause::Frame]
+    );
+}
+
+#[test]
+fn a_qualifier_is_never_one_device_s_fact() {
+    // `each` describes every function its requirer relies on, so a consumed fact, a group's head or sub-fact and a
+    // derived fact — each one device's — refuse it, and each is accepted as a function's beside.
+    let each = "(function each)";
+    assert_eq!(
+        causes(&fact(
+            "f",
+            "boolean",
+            "exact",
+            "(function each) (use consumed)"
+        )),
+        [Cause::Function]
+    );
+    assert_eq!(
+        causes(&fact(
+            "f",
+            "boolean",
+            "exact",
+            "(function c) (use consumed)"
+        )),
+        []
+    );
+    let group = |head: &str, sub: &str| {
+        [
+            fact("g", "group a", "exact", head),
+            fact("a", "quantity time", "at-least", sub),
+        ]
+        .join("\n")
+    };
+    // One refusal at each entry that writes `each` wrongly; a head with no function of its own joins nothing.
+    assert_eq!(
+        causes(&group(each, each)),
+        [Cause::Function, Cause::Function]
+    );
+    assert_eq!(
+        causes(&group("(function c)", each)),
+        [Cause::Function, Cause::Function]
+    );
+    assert_eq!(causes(&group("(function c)", "(function c)")), []);
+    let derived = |own: &str| {
+        [
+            fact("m", "count", "exact", ""),
+            fact("rate", "quantity frequency", "exact", ""),
+            fact(
+                "h",
+                "quantity time",
+                "at-least",
+                &format!("{own} (derived-from m rate) (rule horizon-from-modulus-and-rate)"),
+            ),
+        ]
+        .join("\n")
+    };
+    assert_eq!(causes(&derived(each)), [Cause::Function]);
+    assert_eq!(causes(&derived("(function f)")), []);
+}
+
+#[test]
+fn a_group_and_a_derivation_join_one_function() {
+    // The facts a group or a derivation joins are one device's (`M3.3.6`): a sub-fact or an input of another function,
+    // a qualifier or a statement is refused at the fact that joins it.
+    let group = |sub: &str| {
+        [
+            fact("g", "group a", "exact", "(function c)"),
+            fact("a", "quantity time", "at-least", sub),
+        ]
+        .join("\n")
+    };
+    assert_eq!(causes(&group("(function c)")), []);
+    assert_eq!(causes(&group("(function d)")), [Cause::Function]);
+    let inputs = |modulus: &str, wrap: &str| {
+        [
+            fact("m", "count", "exact", modulus),
+            fact("rate", "quantity frequency", "exact", "(function c)"),
+            fact("wrap", "enumeration modular saturating", "exact", wrap),
+            fact(
+                "h",
+                "quantity time",
+                "at-least",
+                "(function c) (derived-from m rate) (reads wrap) (rule horizon-from-modulus-and-rate)",
+            ),
+        ]
+        .join("\n")
+    };
+    assert_eq!(causes(&inputs("(function c)", "(function c)")), []);
+    assert_eq!(
+        causes(&inputs("(function d)", "(function c)")),
+        [Cause::Function]
+    );
+    assert_eq!(
+        causes(&inputs("(function c)", "(function each)")),
+        [Cause::Function]
     );
 }

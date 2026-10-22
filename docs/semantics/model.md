@@ -195,12 +195,13 @@ model is `crates/eadl-resolve/src/model/`; this section is normative over the pr
 which is held to the model over the model checker's whole universe (`crates/eadl-resolve/tests/production.rs`).
 `archogen check` does not call the relation yet: `M3.4` wires it, keeping or migrating every verdict it moves.
 
-1. **The vocabulary decides each fact's domain, role and direction.** `docs/semantics/vocabulary/vocabulary.eadl`,
+1. **The vocabulary decides each fact's domain, role, direction and function.** `docs/semantics/vocabulary/vocabulary.eadl`,
    written with the kind `docs/semantics/kinds/deffact.eadl`, is read into a typed table
    (`crates/eadl-resolve/src/vocabulary.rs`). Each entry's frame is held to the kind; then the table refuses what no
    frame can say — a direction its domain does not admit, a derivation without the rule that computes it or with
    inputs that rule does not read, a cycle among derivations, `implies` off a set fact, `use consumed` off a boolean
-   fact or a group's head, a name twice, a fact named like a clause word. A fact the table does not declare may be offered, absent or needed, and presence judges it (§2); a
+   fact or a group's head, a guarantee naming no `function` or a statement naming one, `each` on a consumed, grouped or
+   derived fact, a group's sub-fact or a derivation's input of another function (`M3.3.6`), a name twice, a fact named like a clause word. A fact the table does not declare may be offered, absent or needed, and presence judges it (§2); a
    constraint on it is `unsupported-profile`.
 2. **Values are exact** (`crates/eadl-resolve/src/value.rs`). A quantity is §1's, two amounts in one unit compared by
    their written numbers and in two units in the base unit; a count is an integer or `(pow2 N)`; nothing is rounded.

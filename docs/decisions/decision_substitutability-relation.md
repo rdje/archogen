@@ -141,12 +141,13 @@ that writes a `deffact` alike — so no description's registry is ever asked for
 | `implies` | forms | members of the fact's set | for a set fact, the members every valued constraint on it holds beside what it writes, under every written direction — `available-in-state` implies `run`, the state every use runs in; a presence requirement writes no value and asks only for an offer (§2, §3 rule 3; R16 2; R17 1, 2; R18 3) |
 | `doc` | a string | a string | what the fact means, one line; required, as a kind's `doc` is |
 | `use` | a symbol | `shared` or `consumed` | whether a requester bound to the fact takes one of the provider's `channels`, `consumed`, only on a boolean fact or a group's head; or reads it, `shared`, the default (`M3.3`; model §8) |
+| `function` | a symbol | a function's name, or `each` | the function the fact describes, one device's operations only valid together, whose facts one requester's bindings meet at one provider (model §8 rule 13); `each` for a qualifier of every function its requirer relies on, never on a consumed, grouped or derived fact; required of a guarantee, never written on a statement; a group's sub-facts and a derivation's inputs are its own function's (`M3.3.6`) |
 
 `deffact`'s clauses are `(holds forms)` for `domain`, since `(ordered …)` nests, and for `derived-from`, `reads` and
 `implies`, which list facts or members (R18 8); `(holds values string)` for `doc`; and `(holds values symbol)` for `role`, `direction`,
-`rule` and `use`, each exactly one value — reference §7 rule 4 makes `values` a fixed number, and `kind.rs` refuses any
+`rule`, `use` and `function`, each exactly one value — reference §7 rule 4 makes `values` a fixed number, and `kind.rs` refuses any
 other as `schema-arity` (R2 B3). `doc`, `domain`, `role` and `direction` appear exactly once, `derived-from`,
-`reads`, `rule`, `implies` and `use` at most once, `implies` only on a set fact (R3 C11; R17 2). A fact's name lives in the vocabulary, not in a
+`reads`, `rule`, `implies`, `use` and `function` at most once, `implies` only on a set fact (R3 C11; R17 2). A fact's name lives in the vocabulary, not in a
 description's declaration namespace: the vocabulary is validated on its own, never checked as a description. A
 declaration whose local name is a vocabulary fact is `invalid-description`: module resolution (reference §6 rule 10)
 binds a `uses`, `needs` or `refines` operand to a declaration of its own instance before anything else, so such a
@@ -179,40 +180,47 @@ as today's corpus writes it, because a reader of a bound should see which way it
 a bare value, `(counter-width 32 bit)`, takes its direction from the vocabulary, which is what makes both checkable
 (R16 9).
 
-**The entries of `/1`**, one per fact the census writes, and `channels`, which `M3.3`'s joint check reads, each direction with its reason; `M3.1.2` ships them as
+**The entries of `/1`**, one per fact the census writes, and `channels`, which `M3.3`'s joint check reads, each direction and function with its reason; `M3.1.2` ships them as
 `vocabulary.eadl` and adds none without a row here (R2 B8). A fact marked *interface* takes `exact` because a
 different value is a different interface, not a better one (§5.2); a *capacity* takes the direction in which more
 of it satisfies more.
 
-| Fact | Domain | Role | Direction | Why |
-| --- | --- | --- | --- | --- |
-| `absolute-deadline` | group `supported-horizon delivery-bound` | guarantee | `exact` | a boolean head; `use consumed`: an alarm a requester programs (`M3.3`) |
-| `application-mutexes`, `general-ipc`, `descriptor-format` | boolean | guarantee | `exact` | presence facts; the first two are §3.1 exclusions |
-| `available-in-state` | set `run idle sleep`, `(implies run)` | guarantee | `includes` | the offer covers every state required and `run`, the state every use runs in, which the entry's `implies` names: `(available-in-state idle)` asks for `run` and `idle`, and `(available-in-state (exactly idle))` for exactly those two (R16 2; R17 1, 2) |
-| `bounded-arrival` | boolean | guarantee | `exact` | |
-| `bus-width` | quantity information | guarantee | `exact` | interface: a wider bus is another bus |
-| `channels` | count | guarantee | `at-least` | capacity: the requesters a provider serves at once through its consumed facts (`M3.3`) |
-| `clock-rate` | quantity frequency | guarantee | `exact` | interface: a block's timing is its rate's |
-| `core-count` | count | guarantee | `exact` | two cores do not satisfy a uniprocessor profile (§3.1: one active core) |
-| `counter-modulus` | count | guarantee | `exact` | interface: wrapping arithmetic depends on the modulus itself (§3.1's "explicit counter modulus"), as `quantity.rs`'s own example of `Exact` says; what wraps later is the horizon, which has its own entry; offered, never derived, and positive — a modulus of 0 is `invalid-description` (§4; R5 E4; R6 F1; R9 I13) |
-| `counter-width` | quantity information | guarantee | `at-least` | capacity: a wider register holds every narrower modulus, and a modulus offered beside it may not exceed `2^width` (§4); `exactly` where the width is the interface (§6) |
-| `deadlines` | enumeration `constrained arbitrary` | guarantee | `exact` | a policy's word |
-| `debug-port`, `interrupt-source`, `low-power-timer`, `multicore`, `observable-output`, `observation-coherent`, `transfer-engine`, `uart` | boolean | guarantee | `exact` | shared (`M3.3`); `transfer-engine`'s channels wait on the profile admitting DMA |
-| `relative-delay` | boolean | guarantee | `exact` | `use consumed`: an alarm a requester programs (`M3.3`) |
-| `delivery-bound` | quantity time | guarantee | `at-most` | a shorter delivery satisfies |
-| `frequency` | interval frequency | guarantee | `within` | the rates the block can run at, a capability the offered range covers; the clock a block must be fed is another fact, added when a description needs it (§10; R4 N1) |
-| `min-arrival-separation` | quantity time | guarantee | `at-least` | arrivals further apart satisfy a bound on separation |
-| `or-through-mediation` | enumeration `allowed forbidden` | statement | `exact` | the requirer's word, read by `M3.2` (§3 rule 6) |
-| `preemptive` | boolean | guarantee | `exact` | |
-| `priorities` | set `static unique dynamic` | guarantee | `exact` | a policy's word, like `deadlines`: `unique` is a demand on the task set, not a capability, so a realization offering `static unique` does not satisfy a policy that wrote `static` alone; a policy that wants both writes both (R3 C4) |
-| `queue-capacity` | count | guarantee | `at-least` | capacity |
-| `reachable-at-privilege` | set `user supervisor machine` | guarantee | `includes` | the levels the function is reachable from, each listed: a requirer states the level it calls from, and the offered set must include it. A machine-mode register offers `machine` and does not satisfy a supervisor caller; a user mapping a supervisor cannot reach without `sstatus.SUM` offers `user` alone. Inclusion reads no order among levels, so a stronger precondition is never a stronger capability (§3 rule 4; R8 H9; R9 I1, I2; R10 J1, J6) |
-| `release-accuracy` | quantity time | guarantee | `at-most` | a tighter accuracy satisfies |
-| `supported-horizon` | quantity time | guarantee | `at-least` | capacity |
-| `tick-rate` | quantity frequency | guarantee | `exact` | interface: a faster counter is another counter, and what is longer or shorter with it is derived (§4) |
-| `tick-unit` | enumeration `ns us ms` | guarantee | `exact` | interface (§4.3, representation units) |
-| `unambiguous-horizon` | quantity time | guarantee | `at-least` | capacity; derived from `counter-modulus` and `tick-rate`, and offered only where neither is, nor `wrap-behavior` (§4) |
-| `wrap-behavior` | enumeration `modular saturating` | guarantee | `exact` | read by §4's rule |
+| Fact | Domain | Role | Direction | Function | Why |
+| --- | --- | --- | --- | --- | --- |
+| `absolute-deadline` | group `supported-horizon delivery-bound` | guarantee | `exact` | `counter` | a boolean head; `use consumed`: an alarm a requester programs (`M3.3`); a time in the counter's time base, so programming one is valid only on the counter whose time it is (`M3.3.6`) |
+| `application-mutexes` | boolean | guarantee | `exact` | `mutex` | a presence fact; a §3.1 exclusion |
+| `general-ipc` | boolean | guarantee | `exact` | `queue` | a presence fact; a §3.1 exclusion; one queue's, with its capacity |
+| `descriptor-format` | boolean | guarantee | `exact` | `transfer` | a presence fact; the transfer engine's |
+| `available-in-state` | set `run idle sleep`, `(implies run)` | guarantee | `includes` | `each` | the offer covers every state required and `run`, the state every use runs in, which the entry's `implies` names: `(available-in-state idle)` asks for `run` and `idle`, and `(available-in-state (exactly idle))` for exactly those two (R16 2; R17 1, 2); a qualifier, an operating condition every function its requirer relies on must still hold in (`M3.3.6`) |
+| `bounded-arrival` | boolean | guarantee | `exact` | `arrival` | a guarantee about the events served, which the realization gives — a catalog record from `M3.7` (§9) — so a function of its own beside the source's (`M3.3.6`) |
+| `bus-width` | quantity information | guarantee | `exact` | `bus` | interface: a wider bus is another bus |
+| `channels` | count | guarantee | `at-least` | `counter` | capacity: the requesters a provider serves at once through its consumed facts (`M3.3`), the pool of the counter's alarms (`M3.3.6`) |
+| `clock-rate` | quantity frequency | guarantee | `exact` | `clock` | interface: a block's timing is its rate's; a block's clock (`M3.3.6`) |
+| `core-count` | count | guarantee | `exact` | `processor` | two cores do not satisfy a uniprocessor profile (§3.1: one active core) |
+| `counter-modulus` | count | guarantee | `exact` | `counter` | interface: wrapping arithmetic depends on the modulus itself (§3.1's "explicit counter modulus"), as `quantity.rs`'s own example of `Exact` says; what wraps later is the horizon, which has its own entry; offered, never derived, and positive — a modulus of 0 is `invalid-description` (§4; R5 E4; R6 F1; R9 I13) |
+| `counter-width` | quantity information | guarantee | `at-least` | `counter` | capacity: a wider register holds every narrower modulus, and a modulus offered beside it may not exceed `2^width` (§4); `exactly` where the width is the interface (§6) |
+| `deadlines` | enumeration `constrained arbitrary` | guarantee | `exact` | `scheduler` | a policy's word |
+| `low-power-timer`, `observation-coherent` | boolean | guarantee | `exact` | `counter` | shared (`M3.3`); the counter's counting in a low-power state, and its reads |
+| `observable-output`, `uart` | boolean | guarantee | `exact` | `output` | shared (`M3.3`) |
+| `debug-port` | boolean | guarantee | `exact` | `debug` | shared (`M3.3`) |
+| `interrupt-source` | boolean | guarantee | `exact` | `interrupt` | shared (`M3.3`); one source's, with its separation |
+| `multicore` | boolean | guarantee | `exact` | `processor` | shared (`M3.3`) |
+| `transfer-engine` | boolean | guarantee | `exact` | `transfer` | shared (`M3.3`); its channels wait on the profile admitting DMA |
+| `relative-delay` | boolean | guarantee | `exact` | `counter` | `use consumed`: an alarm a requester programs (`M3.3`); a comparator on a counter, whose range, resolution and power state `/1` states only as the counter's facts (`M3.3.6`) |
+| `delivery-bound` | quantity time | guarantee | `at-most` | `counter` | a shorter delivery satisfies; its group head's function |
+| `frequency` | interval frequency | guarantee | `within` | `clock` | the rates the block can run at, a capability the offered range covers; the clock a block must be fed is another fact, added when a description needs it (§10; R4 N1) |
+| `min-arrival-separation` | quantity time | guarantee | `at-least` | `interrupt` | arrivals further apart satisfy a bound on separation |
+| `or-through-mediation` | enumeration `allowed forbidden` | statement | `exact` | — | the requirer's word, read by `M3.2` (§3 rule 6) |
+| `preemptive` | boolean | guarantee | `exact` | `scheduler` | |
+| `priorities` | set `static unique dynamic` | guarantee | `exact` | `scheduler` | a policy's word, like `deadlines`: `unique` is a demand on the task set, not a capability, so a realization offering `static unique` does not satisfy a policy that wrote `static` alone; a policy that wants both writes both (R3 C4) |
+| `queue-capacity` | count | guarantee | `at-least` | `queue` | capacity |
+| `reachable-at-privilege` | set `user supervisor machine` | guarantee | `includes` | `each` | the levels the function is reachable from, each listed: a requirer states the level it calls from, and the offered set must include it. A machine-mode register offers `machine` and does not satisfy a supervisor caller; a user mapping a supervisor cannot reach without `sstatus.SUM` offers `user` alone. Inclusion reads no order among levels, so a stronger precondition is never a stronger capability (§3 rule 4; R8 H9; R9 I1, I2; R10 J1, J6); a qualifier, model §8 rule 9's |
+| `release-accuracy` | quantity time | guarantee | `at-most` | `release` | a tighter accuracy satisfies |
+| `supported-horizon` | quantity time | guarantee | `at-least` | `counter` | capacity; its group head's function |
+| `tick-rate` | quantity frequency | guarantee | `exact` | `counter` | interface: a faster counter is another counter, and what is longer or shorter with it is derived (§4) |
+| `tick-unit` | enumeration `ns us ms` | guarantee | `exact` | `counter` | interface (§4.3, representation units) |
+| `unambiguous-horizon` | quantity time | guarantee | `at-least` | `counter` | capacity; derived from `counter-modulus` and `tick-rate`, and offered only where neither is, nor `wrap-behavior` (§4) |
+| `wrap-behavior` | enumeration `modular saturating` | guarantee | `exact` | `counter` | read by §4's rule |
 
 `region` and `ordering` have no entry in `/1` (§10).
 

@@ -54,6 +54,15 @@ pub enum Direction {
     Within,
 }
 
+/// The function a fact describes (record §1.1's Function column; `M3.3.6`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Function {
+    /// One device's operations only valid together, named.
+    Of(&'static str),
+    /// `each`: a qualifier of every function its requirer relies on.
+    Each,
+}
+
 /// The engine rule a derived fact names (record §4).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Rule {
@@ -84,6 +93,8 @@ pub struct Entry {
     /// Whether a requester bound to it takes one of the provider's `channels` — the entry's `use consumed`, on a
     /// boolean fact or a group's head (`M3.3`) — rather than reading it, the default.
     pub consumed: bool,
+    /// The function it describes — the entry's `function` clause; a statement names none (`M3.3.6`).
+    pub function: Option<Function>,
 }
 
 const fn plain(name: &'static str, domain: Domain, direction: Direction) -> Entry {
@@ -97,6 +108,7 @@ const fn plain(name: &'static str, domain: Domain, direction: Direction) -> Entr
         rule: None,
         implies: &[],
         consumed: false,
+        function: None,
     }
 }
 
@@ -112,16 +124,35 @@ const fn consumed(entry: Entry) -> Entry {
     }
 }
 
+/// `entry`, describing the function `name`.
+const fn of(name: &'static str, entry: Entry) -> Entry {
+    Entry {
+        function: Some(Function::Of(name)),
+        ..entry
+    }
+}
+
+/// `entry`, a qualifier: `each`.
+const fn each(entry: Entry) -> Entry {
+    Entry {
+        function: Some(Function::Each),
+        ..entry
+    }
+}
+
 /// The entries of `/1`, in the order of the record's §1.1 table.
 pub const VOCABULARY: &[Entry] = &[
-    consumed(plain(
-        "absolute-deadline",
-        Domain::Group(&["supported-horizon", "delivery-bound"]),
-        Direction::Exact,
-    )),
-    boolean("application-mutexes"),
-    boolean("general-ipc"),
-    boolean("descriptor-format"),
+    of(
+        "counter",
+        consumed(plain(
+            "absolute-deadline",
+            Domain::Group(&["supported-horizon", "delivery-bound"]),
+            Direction::Exact,
+        )),
+    ),
+    of("mutex", boolean("application-mutexes")),
+    of("queue", boolean("general-ipc")),
+    of("transfer", boolean("descriptor-format")),
     Entry {
         name: "available-in-state",
         domain: Domain::Set(&["run", "idle", "sleep"]),
@@ -132,57 +163,88 @@ pub const VOCABULARY: &[Entry] = &[
         rule: None,
         implies: &["run"],
         consumed: false,
+        function: Some(Function::Each),
     },
-    boolean("bounded-arrival"),
-    plain(
-        "bus-width",
-        Domain::Quantity(Dimension::Information),
-        Direction::Exact,
+    of("arrival", boolean("bounded-arrival")),
+    of(
+        "bus",
+        plain(
+            "bus-width",
+            Domain::Quantity(Dimension::Information),
+            Direction::Exact,
+        ),
     ),
-    plain("channels", Domain::Count, Direction::AtLeast),
-    plain(
-        "clock-rate",
-        Domain::Quantity(Dimension::Frequency),
-        Direction::Exact,
+    of(
+        "counter",
+        plain("channels", Domain::Count, Direction::AtLeast),
     ),
-    plain("core-count", Domain::Count, Direction::Exact),
-    plain("counter-modulus", Domain::Count, Direction::Exact),
-    plain(
-        "counter-width",
-        Domain::Quantity(Dimension::Information),
-        Direction::AtLeast,
+    of(
+        "clock",
+        plain(
+            "clock-rate",
+            Domain::Quantity(Dimension::Frequency),
+            Direction::Exact,
+        ),
     ),
-    plain(
-        "deadlines",
-        Domain::Enumeration {
-            alternatives: &["constrained", "arbitrary"],
-            ordered: false,
-        },
-        Direction::Exact,
+    of(
+        "processor",
+        plain("core-count", Domain::Count, Direction::Exact),
     ),
-    boolean("debug-port"),
-    boolean("interrupt-source"),
-    boolean("low-power-timer"),
-    boolean("multicore"),
-    boolean("observable-output"),
-    boolean("observation-coherent"),
-    consumed(boolean("relative-delay")),
-    boolean("transfer-engine"),
-    boolean("uart"),
-    plain(
-        "delivery-bound",
-        Domain::Quantity(Dimension::Time),
-        Direction::AtMost,
+    of(
+        "counter",
+        plain("counter-modulus", Domain::Count, Direction::Exact),
     ),
-    plain(
-        "frequency",
-        Domain::Interval(Dimension::Frequency),
-        Direction::Within,
+    of(
+        "counter",
+        plain(
+            "counter-width",
+            Domain::Quantity(Dimension::Information),
+            Direction::AtLeast,
+        ),
     ),
-    plain(
-        "min-arrival-separation",
-        Domain::Quantity(Dimension::Time),
-        Direction::AtLeast,
+    of(
+        "scheduler",
+        plain(
+            "deadlines",
+            Domain::Enumeration {
+                alternatives: &["constrained", "arbitrary"],
+                ordered: false,
+            },
+            Direction::Exact,
+        ),
+    ),
+    of("debug", boolean("debug-port")),
+    of("interrupt", boolean("interrupt-source")),
+    of("counter", boolean("low-power-timer")),
+    of("processor", boolean("multicore")),
+    of("output", boolean("observable-output")),
+    of("counter", boolean("observation-coherent")),
+    of("counter", consumed(boolean("relative-delay"))),
+    of("transfer", boolean("transfer-engine")),
+    of("output", boolean("uart")),
+    of(
+        "counter",
+        plain(
+            "delivery-bound",
+            Domain::Quantity(Dimension::Time),
+            Direction::AtMost,
+        ),
+    ),
+    of(
+        "clock",
+        plain(
+            "frequency",
+            Domain::Interval(Dimension::Frequency),
+            Direction::Within,
+        ),
+    ),
+    of(
+        "interrupt",
+        plain(
+            "min-arrival-separation",
+            Domain::Quantity(Dimension::Time),
+            Direction::AtLeast,
+        ),
     ),
     Entry {
         name: "or-through-mediation",
@@ -197,41 +259,60 @@ pub const VOCABULARY: &[Entry] = &[
         rule: None,
         implies: &[],
         consumed: false,
+        function: None,
     },
-    boolean("preemptive"),
-    plain(
-        "priorities",
-        Domain::Set(&["static", "unique", "dynamic"]),
-        Direction::Exact,
+    of("scheduler", boolean("preemptive")),
+    of(
+        "scheduler",
+        plain(
+            "priorities",
+            Domain::Set(&["static", "unique", "dynamic"]),
+            Direction::Exact,
+        ),
     ),
-    plain("queue-capacity", Domain::Count, Direction::AtLeast),
-    plain(
+    of(
+        "queue",
+        plain("queue-capacity", Domain::Count, Direction::AtLeast),
+    ),
+    each(plain(
         "reachable-at-privilege",
         Domain::Set(&["user", "supervisor", "machine"]),
         Direction::Includes,
+    )),
+    of(
+        "release",
+        plain(
+            "release-accuracy",
+            Domain::Quantity(Dimension::Time),
+            Direction::AtMost,
+        ),
     ),
-    plain(
-        "release-accuracy",
-        Domain::Quantity(Dimension::Time),
-        Direction::AtMost,
+    of(
+        "counter",
+        plain(
+            "supported-horizon",
+            Domain::Quantity(Dimension::Time),
+            Direction::AtLeast,
+        ),
     ),
-    plain(
-        "supported-horizon",
-        Domain::Quantity(Dimension::Time),
-        Direction::AtLeast,
+    of(
+        "counter",
+        plain(
+            "tick-rate",
+            Domain::Quantity(Dimension::Frequency),
+            Direction::Exact,
+        ),
     ),
-    plain(
-        "tick-rate",
-        Domain::Quantity(Dimension::Frequency),
-        Direction::Exact,
-    ),
-    plain(
-        "tick-unit",
-        Domain::Enumeration {
-            alternatives: &["ns", "us", "ms"],
-            ordered: false,
-        },
-        Direction::Exact,
+    of(
+        "counter",
+        plain(
+            "tick-unit",
+            Domain::Enumeration {
+                alternatives: &["ns", "us", "ms"],
+                ordered: false,
+            },
+            Direction::Exact,
+        ),
     ),
     Entry {
         name: "unambiguous-horizon",
@@ -243,14 +324,18 @@ pub const VOCABULARY: &[Entry] = &[
         rule: Some(Rule::HorizonFromModulusAndRate),
         implies: &[],
         consumed: false,
+        function: Some(Function::Of("counter")),
     },
-    plain(
-        "wrap-behavior",
-        Domain::Enumeration {
-            alternatives: &["modular", "saturating"],
-            ordered: false,
-        },
-        Direction::Exact,
+    of(
+        "counter",
+        plain(
+            "wrap-behavior",
+            Domain::Enumeration {
+                alternatives: &["modular", "saturating"],
+                ordered: false,
+            },
+            Direction::Exact,
+        ),
     ),
 ];
 

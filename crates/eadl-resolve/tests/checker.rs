@@ -1150,10 +1150,13 @@ fn the_vocabulary_is_the_record_s_table_row_by_row() {
     let mut stated = std::collections::BTreeMap::new();
     // `M3.3`: a row whose reason marks the fact `use consumed` is the record's word that a binding takes a channel.
     let mut consumed = std::collections::BTreeMap::new();
-    for r in rows("| Fact | Domain | Role | Direction | Why |") {
+    // `M3.3.6`: the function a row names, `each` for a qualifier, none (`—`) for a statement.
+    let mut function = std::collections::BTreeMap::new();
+    for r in rows("| Fact | Domain | Role | Direction | Function | Why |") {
         for name in ticked(&r[0]) {
             let row = (r[1].clone(), r[2].clone(), r[3].clone());
-            consumed.insert(name.clone(), r[4].contains("`use consumed`"));
+            consumed.insert(name.clone(), r[5].contains("`use consumed`"));
+            function.insert(name.clone(), ticked(&r[4]).first().cloned());
             assert!(stated.insert(name.clone(), row).is_none(), "{name} twice");
         }
     }
@@ -1232,6 +1235,11 @@ fn the_vocabulary_is_the_record_s_table_row_by_row() {
             e.name
         );
         assert_eq!(consumed[e.name], e.consumed, "{}: §1.1's use", e.name);
+        let held = e.function.map(|f| match f {
+            eadl_resolve::model::Function::Of(name) => name.to_string(),
+            eadl_resolve::model::Function::Each => "each".to_string(),
+        });
+        assert_eq!(function[e.name], held, "{}: §1.1's function", e.name);
         let derived: Vec<String> = e.derived_from.iter().map(|s| (*s).to_string()).collect();
         let reads: Vec<String> = e.reads.iter().map(|s| (*s).to_string()).collect();
         match (e.rule, rules.get(e.name)) {
