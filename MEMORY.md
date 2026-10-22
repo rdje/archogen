@@ -13,10 +13,9 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M3` → frontier `M3.3`; `PROGRAM` resumes at `PROGRAM.102` (P2, `docs/decisions/` at its ceiling).
-- **Next action:** seal `M3`'s closed subtrees from the committed tree (`bash scripts/check_task_history.sh --seal M3`,
-  `M3.3.1`–`.5` and `.7` among them); then `PROGRAM.102` (headroom in `docs/decisions/`), `M3.3.6` bundles,
-  `.8`, `M3.5`, `PROGRAM.103`. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
+- **Active tree:** `PROGRAM` → frontier `PROGRAM.102`; `M3` resumes at `M3.3` (`.6`, waiting on `PROGRAM.102`).
+- **Next action:** `PROGRAM.102` (P2), headroom in `docs/decisions/` by moving specifications to `docs/specs/`;
+  then `M3.3.6` bundles, `.8`, `M3.5`, `PROGRAM.103`. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
   focused green at `eaf71286`; `archogen check` wiring is `M3.4`'s. The next artifact cleanup is due after
   `2026-10-23T15:54`. A test's deadline is one only a hang reaches (`PROGRAM.99`).
   **Mutation testing is stopped** until the functionality is locked
