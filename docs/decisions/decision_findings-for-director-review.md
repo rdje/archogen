@@ -240,6 +240,15 @@ locked; every decision advances the project toward its goals first. Every pendin
 on [the ruling](decision_mutation-testing-after-completion.md); the frontier moves to `M3.3`. A suspected real defect the
 lane's reading found, two generators given one target directory (`M3.6.9.6.3.2.2.15.2.1.8.2`), stays owned at P2.
 
+## 15. `examples/alternative-timer` and a privilege level (`2026-10-22`)
+
+`SR-H12` (`M3.3.4`) refuses a provider a plan binds that states no level. uc3 states none: its timer, and its
+`console.uart`, bound through `observable-output`. `SR-H10` gives the timer's level to `M3.2` and asks that its
+description change only with your yes; nothing covers the console, and `examples/README.md` seals that uc3 builds
+unchanged. **Your call:** (a) uc3 gains `(reachable-at-privilege machine)` on each provider a plan binds, in `M3.3.4`'s
+migration; or (b) it stays unchanged and is refused once `M3.4` wires the rule, until `M3.2` states the timer's level and
+you rule on the console's. Recommended: (a). Owned by `M3.3.4.5`, blocked on this.
+
 ## A note on what "done" means so far
 
 M0 and M1 are complete, and the shape of the claim matters. What exists is a **frontend**: a
