@@ -5,6 +5,17 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers' programs and the git-style front: the design, reviewed
+
+`ARCHOGEN-M3-0877` (leaf `M3.5.1`), `2026-10-22`.
+
+- Design the ruled shape: `archogen-plan-check` and `archogen-analyze`, each its own executable writing a result record;
+  `archogen resolve` and `archogen analyze` run them, the launcher compiled into the `archogen` executable alone, each
+  sibling verified against an install manifest derived from the trust inventory. `resolve --unchecked` is the search
+  alone, offered alike on the command line and programmatically.
+- One independent review, nine defects and seven remarks answered; it also found four ways past `NO-SUBPROCESS`'s
+  patterns, filed as `PROGRAM.105`.
+
 ## archogen — ruled: each checker its own executable, behind a git-style front
 
 `ARCHOGEN-M3-0876` (leaf `M3.5.1`), `2026-10-22`.
