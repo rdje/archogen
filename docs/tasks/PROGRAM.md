@@ -660,55 +660,7 @@ mdBook that is the director's window into the project.
 
 
 - ID: `PROGRAM.99`
-  Status: `done` — P1: the `xtask` suite red under host load: deadlines that read slowness as a hang
-  Reproduce / issue: `2026-10-21`, `make focused` on `M3.3.1`'s staged tree — its first run passed every test in 240 s;
-    the next two, on the same code formatted, failed 73 and then 31 `xtask` tests in 2731 s and 2168 s, beside other
-    projects' builds; three failing tests passed alone. Impact: the gate a commit cites is red for reasons outside the
-    commit, so it either blocks product work or is waived; a shared CI runner can meet the same load. The tier runner
-    kept only the last 40 lines of the failed step, so no failure message survived (owned: `PROGRAM.100`).
-  Goal: first, the focused tier on a quiet host for `M3.3.1` and `M3.3.2`, recorded there; then, tools first, which limit
-    fires and why, repaired with a control failing first.
-  Acceptance:
-    - [x] ROOT CAUSE — `make focused` at `eaf71286`, `2026-10-22`, host quieter (syspolicyd mean 17.5 % over 19
-      samples): exit code 0, `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`,
-      184 s, recorded in `M3.3.1` and `M3.3.2`. WIDEN — `ARCHOGEN_PARENT_TEST_TIMINGS=1 cargo test -p xtask --
-      --nocapture`: `test result: ok. 338 passed; 0 failed; 2 ignored`, 162.50 s; the 200 bounded children median 1.49 s,
-      p90 7.03 s, slowest 11.78 s, 34 of them at 5 s or more, against `const LIMIT: Duration = Duration::from_secs(30)`
-      (`xtask/src/trust_test_process.rs:11`), set at 6.23 s measured (`M3.6.9.6.3.2.1.2`). Of `2026-10-21`'s 31 named
-      failures 28 are bounded children; the other three, and `trust_test_process`'s own 10 s probe control, carry
-      deadlines of their own. A census of every wall-clock limit in `xtask` (24 sites) classed each as the side that
-      must finish or the side that must be stopped. NARROW — `scripts/exec_pressure.sh` (new) re-creates a loaded
-      host; its probe refused 12 and 24 workers (×1.0, ×1.6 — exit code 1) and accepted 64: `quiet 174804 µs, under 64
-      workers 685380 µs (×3.9); syspolicyd 65.8 % CPU`, exit code 0. PINPOINT, failing first — under 64 workers
-      `test result: FAILED. 335 passed; 3 failed`, each `bounded test command: test process group exceeded its limit`
-      at `trust_test_process.rs:56`, the three slowest quiet children, no assertion of theirs failed; under 160 workers
-      the timing controls alone `test result: FAILED. 9 passed; 2 failed`: `the unmutated copy does not pass (timeout,
-      1s)` (`mutation.rs:1062`, the hang case's 1 s also bounding the baseline that must finish) and `'timeout' !=
-      'killed'` (`mutation_sweep_tests.py:239`, `--timeout 1` for every kind of `failing_baseline`).
-    - [x] FIX — one rule, stated in the book's verification chapter: what must finish gets a deadline only a hang
-      reaches; what must be stopped keeps a tight one, against a hang that outlasts every bound the test asserts. A
-      bounded child's limit is `ARCHOGEN_PARENT_TEST_LIMIT` seconds or ten minutes; `cargo xtask mutate` and
-      `scripts/mutation_sweep.sh` set 30 unless their caller sets one, the limit their own were sized for (on a line
-      of its own beside the sweep's catalogued `env` line). The runner's finishing controls get 120 s, their hangs
-      120 s against 60 s bounds; the sample's hang 10 s, its finishing kinds 120 s; `failing_baseline` 10 s for the
-      kind that hangs and 120 s for the rest; every sweep a control runs `RUN_LIMIT = 600`; the observer writers 120 s.
-      The census's other sites hold already: `a_run_within_its_limit_…`'s 60 s, and hang-side limits of 1 s and 300 ms.
-    - [x] ADDRESSED — under the same 64 workers, `test result: ok. 339 passed; 0 failed; 2 ignored`, 325.11 s, the
-      slowest child 36.07 s, past the old 30 s; under 160 workers the timing controls `test result: ok. 12 passed; 0
-      failed`; `the_limit_is_the_default_or_a_positive_whole_number_of_seconds` holds the variable's reading.
-    - [x] NO REGRESSION — quiet host, `cargo test -p xtask`: `test result: ok. 339 passed; 0 failed; 2 ignored`,
-      188.08 s (the stopped hangs now wait 10 s, not 1); `cargo fmt --all -- --check` and `cargo clippy -p xtask
-      --all-targets -- -D warnings`: exit code 0; `make focused` on this staged tree: exit code 0, `tier focused:
-      passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, which also holds every catalogued `from` text.
-    - [x] LOCKSTEP — the book's verification chapter (the rule, the measurements, the tool), `TOOLBOX.md`'s row,
-      `M3.3.1` and `M3.3.2`'s records, `M3.6.9.7` filed, `PROGRAM.100` filed, the snapshots, the changelog, and a note promoted to
-      `docs/knowledge/a-deadline-is-a-safety-net-not-the-property.md`.
-  Found and owned here: `PROGRAM.100` (the tier runner discards a failed step's output); `M3.6.9.7` (a harness's 30 s
-    child limit can count a slow child as a kill on a loaded host; blocked by the director's postponement).
-  Verification: `target/program99/` (untracked): the focused log and host samples, child timings quiet and loaded,
-    both pressured runs before and after. The cause of `2026-10-21`'s ×10 is not established — the re-created load
-    measured ×3.9 — and the repair does not depend on it.
-  Commit: `ARCHOGEN-PROGRAM-0845 (leaf PROGRAM.99)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.99.md`](../task-history/PROGRAM/PROGRAM.99.md); commit `ARCHOGEN-PROGRAM-0845`
 
 - ID: `PROGRAM.100`
   Status: `pending` — P2: the tier runner discards a failed step's output past its last 40 lines
@@ -720,6 +672,34 @@ mdBook that is the director's window into the project.
     the printed tail unchanged; a control failing first.
   Verification: `pending`
   Commit: `pending`
+
+- ID: `PROGRAM.101`
+  Status: `done` — fourteenth daily artifact cleanup; the record's last run `2026-10-21T12:06:25+00:00`, over 24 h old
+    at session start (`2026-10-22T14:55`)
+  Goal: remove only idle, regenerable compiler caches — the main and owned native-sweep incremental directories —
+    after a physical and native inventory, a successful handoff census and an identity recheck; retain every
+    dependency store, final product, cited evidence directory and Git workspace; prove each removed directory gone,
+    every other entry under `target/` identity-equal or accounted, the tracked inputs restored and the focused tier
+    regenerating; overwrite `docs/ARTIFACT_CLEANUP.md` and add the run's section to the repository annex. The commit
+    also seals what closed at `HEAD`: `PROGRAM.99`.
+    [Full evidence and adapters](../book/src/annex-repository.md#daily-artifact-cleanup-on-2026-10-22).
+  Acceptance:
+  - [x] ROOT CAUSE: `python3 -I -B target/artifact-cleanup/2026-10-22/census.py`, exit code 0: five locations,
+    physical and native find/stat inventories agree; no link, nested Git boundary or cross-volume entry; the handoff
+    census `handoff: OK` before the inventory and again immediately before the deletion. Outside `target/` only agent
+    configuration, `build/` and the rendered book are ignored, each retained as on every run; no stray log or bin file.
+  - [x] ADDRESSED: `python3 -I -B target/artifact-cleanup/2026-10-22/audit.py`, exit code 0: only 5382 idle cache
+    files / 1181873277 logical bytes removed, 255 bin, no logs; both directories gone by Python and native stat;
+    590423 of 590426 other `target/` entries identical, the three directory rows the strict comparison refused
+    accounted (two parents, the census's scratch); 4862 evidence digests agree; 4 of 4 falsifying arms refused.
+  - [x] NO REGRESSION: `bash scripts/trust_adequacy.sh --check-inputs`: `restored 1205 regular inputs`; production
+    source unchanged; `bash scripts/check_task_history.sh --seal PROGRAM`: `sealed 1 subtree(s), 1 leaves: PROGRAM.99`,
+    the reconstruction byte for byte; `make focused` on this staged tree: exit code 0, `tier focused: passed — 3
+    passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, the main cache regenerated.
+  Verification: `target/artifact-cleanup/2026-10-22/`; the external policies of §14, §17 and §18 re-read at session
+    start, each body still hashing as adopted (`README_POLICY.md` `77a1e934…`, the adoption guide `8f77fa39…`,
+    `pgen`'s claim verification identical to the adopted body by diff), so nothing to apply.
+  Commit: `ARCHOGEN-PROGRAM-0846 (leaf PROGRAM.101)`
 
 ## Roadmap coverage map
 
@@ -902,7 +882,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-11` | `PROGRAM.69` (round 35) | new census and summary-boundary controls before/after repair; both full self-tests, syntax, book and final staged gates | history 129/3 of 132 and counts 140/10 of 150 before; repaired 132/0 and 150/0; finite selected-read failures never print a final aggregate, empty counterparts pass; staged counts 1 review / 35 rounds, history 175 files / 335 stubs; book 30/4, 67/25, 316, syntax and final doctrine gates |
 | `2026-10-11` | `PROGRAM.69` (round 36) | EOF/path/diagnostic controls before repair, then both complete self-tests; syntax, book and staged gates | history 133/13 of 146 and counts 153/3 of 156 before; repaired 146/0 and 156/0; literal byte and unusual-path counterparts, named no-traceback row refusals; independent round 37 next |
 | `2026-10-11` | `PROGRAM.69` (round 37 closure) | independent pinned review; root recount/authentication; staged count/history and book gates | zero defects/actionable arm gaps/remarks; 347 expected checker outcomes, separate 4 096 unit comparisons; retained results recount and 17 source identities pass, exit code 0; scope/limits retained; all 37 summary rows judged before removal from counted list |
-| `2026-10-22` | `PROGRAM.99` | the focused tier at `eaf71286` on a quieter host; child timings quiet; a load re-created by `scripts/exec_pressure.sh`, its probe refusing ×1.0 and ×1.6 and accepting ×3.9; the suite under it before and after; the timing controls under 160 workers before and after | focused exit 0; quiet 338 / 0 → 339 / 0; 64 workers 3 failed (`exceeded its limit`) → 0; 160 workers 2 failed → 0; slowest child 11.78 s quiet, 36.07 s loaded |
+| `2026-10-22` | `PROGRAM.101` (fourteenth run) | two handoff censuses; physical and native inventories; identity of every other `target/` entry before and after; input snapshot and restoration; audit and four falsifying arms; the focused tier on the staged tree | 5382 files / 1181873277 logical bytes removed; 590423 of 590426 identical, 3 accounted; 1205 inputs restored; 4 of 4 arms refused |
 
 ## Commit Log
 
@@ -923,9 +903,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0450 (leaf PROGRAM)` | **`PROGRAM.55` and `PROGRAM.56` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 324 bytes over its 819 200-byte ceiling with `M3.1.1`'s step 27 |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0460 (leaf PROGRAM)` | **`PROGRAM.57`, `PROGRAM.58` and `PROGRAM.59` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` would have grown 1 331 bytes over its 819 200-byte ceiling with `M3.1.2`'s decomposition |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0489 (leaf PROGRAM)` | **`PROGRAM.10` and `.61`–`.65` sealed**, 13 closed leaves into `docs/task-history/PROGRAM/`, when `README-ROUTES` refused `docs/tasks/` at 820 957 bytes over its 819 200; `docs/tasks/` 817 470 → 752 861 bytes, measured from `HEAD` and the tree |
-| `PROGRAM.99` | `ARCHOGEN-PROGRAM-0842 (leaf PROGRAM.99)` | **filed: the `xtask` suite red under host exec saturation**, P1, at the frontier's head; the quiet-host focused run `M3.3.1` owes, then a tools-first repair |
-| `PROGRAM.99` | `ARCHOGEN-PROGRAM-0844 (leaf PROGRAM.99)` | **the host handed over for the quiet run**: the director stopped the other projects' jobs `2026-10-22`; syspolicyd still sampled at up to 61 % with no build left, so the next session measures before it runs; `M3.3.2` owes the same run |
-| `PROGRAM.99` | `ARCHOGEN-PROGRAM-0845 (leaf PROGRAM.99)` | **closed: deadlines that read slowness as a hang.** The focused tier passed at `eaf71286` for `M3.3.1` and `.2`; a re-created ×3.9 load reproduced 3 bounded children past their 30 s and 2 sweep controls racing a baseline with 1 s; a child's limit is now ten minutes unless `ARCHOGEN_PARENT_TEST_LIMIT` says otherwise, the mutation harnesses keeping 30, and every finishing control's deadline only a hang reaches; green under the same loads. `scripts/exec_pressure.sh` added; `PROGRAM.100` and `M3.6.9.7` filed |
+| `PROGRAM.101` | `ARCHOGEN-PROGRAM-0846 (leaf PROGRAM.101)` | **fourteenth daily artifact cleanup**: the idle main and native-sweep incremental caches removed (5382 files / 1181873277 logical bytes); every other `target/` entry identical or accounted; `PROGRAM.99` sealed |
 
 ## Changelog
 

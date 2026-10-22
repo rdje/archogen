@@ -1629,3 +1629,396 @@ print(json.dumps({k: v for k, v in result.items() if k != 'qualification'}, inde
 </details>
 
 The evidence digests, the complete pre-deletion metadata and both identity inventories are under `target/artifact-cleanup/2026-10-21/`. These adapters are supplemental; maintained input checks, native system inventories and the focused tier supply primary verification.
+
+
+### Daily artifact cleanup on 2026-10-22
+
+Measured `2026-10-22T15:54:45+00:00`, `PROGRAM.101`. Only the idle main and owned native-sweep incremental caches were removed, as on every earlier run. Physical metadata and independent native find/stat inventories agreed; the handoff census reported no project job before the inventory and again immediately before the deletion, which rechecked every inventoried identity first. Dependency stores, final products, the empty wasm cache and every cited evidence directory were retained.
+
+The deletion removed `5382` regular cache files totaling `1181873277` logical bytes, including `255` cached `.bin` files. The surveyed locations held no `.log` files. This measures logical size; no allocated-space recovery is claimed.
+
+| Repository-relative location | Regular files | Logical bytes | `.bin` / `.log` | Action |
+| --- | --- | --- | --- | --- |
+| `target/debug/incremental` | 3886 | 760689034 | 219 / 0 | Remove idle cache |
+| `target/wasm32-unknown-unknown/debug/incremental` | 0 | 0 | 0 / 0 | Retain |
+| `target/debug/deps` | 804 | 680451726 | 0 / 0 | Retain |
+| `target/release` | 117 | 17080485 | 0 / 0 | Retain |
+| `target/mutation-sweep/target/debug/incremental` | 1496 | 421184243 | 36 / 0 | Remove idle cache |
+
+This run also compared the identity of every other entry under `target/` — device, inode, kind, mode, size and modification time — before and after the deletion, the run's own scratch excluded: `590426` entries. The first comparison refused, because it held directory metadata that must change. Each row that moved is accounted: the parent of each removed cache, `target/debug` and `target/mutation-sweep/target/debug`, lost exactly that child, so its size dropped and its time moved; and `target/doctrine_scratch` is where `scripts/handoff_census.sh` makes and removes its guard directory, so the census the procedure requires before a deletion moved that directory's time alone — its time matches the census log's within a millisecond. The other `590423` entries, every file among them, are identical, and none appeared or disappeared.
+
+Immediate Python existence checks and native missing-path statuses confirm both admitted directories gone. The three retained surveyed locations keep their inventories exactly. Every one of the `4862` files in the `14` evidence directories the leaves since the last run cite keeps its captured digest. Maintained Python/system checks restore all `1205` captured regular inputs; the submodule remains opaque metadata.
+
+The focused tier must pass on the final staged cleanup record after cache removal. Existing products may be reused, so this verifies workflow regeneration after incremental removal, not a rebuild from source.
+
+
+<details>
+<summary>Exact admitted deletion</summary>
+
+```json
+{
+  "qualification": "Supplemental adapter; every inventoried file/directory identity and same-volume/no-link/no-Git boundary rechecked immediately before removal; only fixed admitted regenerable incremental directories.",
+  "removed": [
+    {
+      "path": "target/debug/incremental",
+      "status": "gone",
+      "files": 3886,
+      "logical_bytes": 760689034
+    },
+    {
+      "path": "target/mutation-sweep/target/debug/incremental",
+      "status": "gone",
+      "files": 1496,
+      "logical_bytes": 421184243
+    }
+  ]
+}
+```
+
+</details>
+
+<details>
+<summary>Immediate residue and retention</summary>
+
+```json
+{
+  "status": "refused",
+  "timestamp_utc": "2026-10-22T15:54:45+00:00",
+  "files": 5382,
+  "logical_bytes": 1181873277,
+  "residue": [
+    {
+      "path": "target/debug/incremental",
+      "python_absent": true,
+      "native_status": 1,
+      "native_stderr": "stat: target/debug/incremental: stat: No such file or directory\n"
+    },
+    {
+      "path": "target/mutation-sweep/target/debug/incremental",
+      "python_absent": true,
+      "native_status": 1,
+      "native_stderr": "stat: target/mutation-sweep/target/debug/incremental: stat: No such file or directory\n"
+    }
+  ],
+  "other_target_entries_identity_equal": false,
+  "other_target_entries": 590426,
+  "other_target_entries_sha256": "da8e908fbe9a64a9021d607c0a159c577cd5d43188aa40f471bbc52bf4642c96",
+  "untouched_surveyed_locations": 3,
+  "regenerable_only": true,
+  "qualification": "Logical bytes, not allocated-space recovery; metadata/native inventory, exact identity recheck and successful no-job census precede removal. Every other entry under target/ but this run's scratch keeps its device, inode, kind, mode, size and mtime. Focused regeneration required separately."
+}
+```
+
+</details>
+
+<details>
+<summary>Every identity difference under target/, accounted</summary>
+
+```json
+{
+  "status": "accounted",
+  "entries_compared": 590426,
+  "entries_identical": 590423,
+  "changed": [
+    {
+      "path": "target/debug",
+      "changed": [
+        "mtime_ns",
+        "size"
+      ],
+      "size": [
+        512,
+        480
+      ],
+      "mtime_ns": [
+        1792684087741431498,
+        1792684468935316556
+      ]
+    },
+    {
+      "path": "target/doctrine_scratch",
+      "changed": [
+        "mtime_ns"
+      ],
+      "size": [
+        1408,
+        1408
+      ],
+      "mtime_ns": [
+        1792684423846932508,
+        1792684468400779067
+      ]
+    },
+    {
+      "path": "target/mutation-sweep/target/debug",
+      "changed": [
+        "mtime_ns",
+        "size"
+      ],
+      "size": [
+        320,
+        288
+      ],
+      "mtime_ns": [
+        1792585260236519722,
+        1792684469011749780
+      ]
+    }
+  ],
+  "handoff_log_mtime_ns": 1792684468401734440,
+  "qualification": "The first comparison (residue.json) refused because it held directory metadata the deletion and the pre-deletion handoff census must change. Each of the three rows is classified here; every other entry, every file among them, is identical in device, inode, kind, mode, size and mtime, and none appeared or disappeared."
+}
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: census.py</summary>
+
+```python
+"""Fourteenth daily artifact cleanup (PROGRAM.101): pre-deletion inventories.
+
+Supplementary, ignored adapter. Two inventories, both taken from the repository root:
+
+* the five surveyed locations, as every earlier run took them: each file and directory on the
+  repository's volume, regular or directory, no symbolic link, no nested Git marker, with an
+  independent native `find`/`/usr/bin/stat` count and byte sum that must agree;
+* the identity of every other entry under `target/` (device, inode, kind, mode, size, mtime_ns),
+  the two admitted deletion directories and this run's own scratch excluded, so a later
+  comparison proves the deletion touched nothing else.
+
+Logical bytes, never allocated disk space.
+"""
+from pathlib import Path
+import hashlib, json, os, stat, subprocess
+
+root = Path.cwd()
+out = root / 'target/artifact-cleanup/2026-10-22'
+device = root.stat().st_dev
+LOCATIONS = ['target/debug/incremental', 'target/wasm32-unknown-unknown/debug/incremental',
+             'target/debug/deps', 'target/release', 'target/mutation-sweep/target/debug/incremental']
+ADMITTED = ['target/debug/incremental', 'target/mutation-sweep/target/debug/incremental']
+# The evidence the leaves committed since the last run cite (M3-0830 to PROGRAM-0845), digested whole.
+EVIDENCE = ['target/catalog-dependency-assessment', 'target/catalog-reader-cleanup', 'target/colon-path-assessment',
+            'target/configuration-path-assessment', 'target/configuration-refusal-control',
+            'target/configuration-route-assessment', 'target/dependency-absolute-assessment',
+            'target/dependency-block-checkpoint', 'target/dependency-path-domain-repair', 'target/m331',
+            'target/m33-design-review', 'target/outside-dependency-refusal', 'target/own-package-assessment',
+            'target/program99']
+# Written during the run by this adapter and by the shell's temporary files.
+SCRATCH = ['target/artifact-cleanup/2026-10-22', 'target/tmp']
+
+
+def metadata(path):
+    info = path.lstat()
+    assert info.st_dev == device and not stat.S_ISLNK(info.st_mode), str(path)
+    assert stat.S_ISREG(info.st_mode) or stat.S_ISDIR(info.st_mode), str(path)
+    return {'path': str(path.relative_to(root)), 'device': info.st_dev, 'inode': info.st_ino,
+            'mode': stat.S_IMODE(info.st_mode), 'bytes': info.st_size,
+            'kind': 'file' if stat.S_ISREG(info.st_mode) else 'directory'}
+
+
+def inventory(name):
+    base = root / name
+    for n in range(1, len(Path(name).parts) + 1):
+        ancestor = root.joinpath(*Path(name).parts[:n])
+        if not os.path.lexists(ancestor):
+            return {'status': 'absent', 'count': 0, 'bytes': 0, 'bin_count': 0, 'log_count': 0,
+                    'files': [], 'directories': []}
+        info = metadata(ancestor)
+        assert info['kind'] == 'directory'
+        assert not os.path.lexists(ancestor / '.git'), str(ancestor)
+    files, directories = [], []
+    for directory, dirs, names in os.walk(base, followlinks=False):
+        assert '.git' not in dirs + names, directory
+        directories.append(metadata(Path(directory)))
+        for entry in dirs + names:
+            info = metadata(Path(directory) / entry)
+            if info['kind'] == 'file':
+                files.append(info)
+    sizes = list(map(int, subprocess.check_output(
+        ['find', name, '-type', 'f', '-exec', '/usr/bin/stat', '-f', '%z', '{}', '+'], text=True).splitlines()))
+    assert len(sizes) == len(files) and sum(sizes) == sum(f['bytes'] for f in files), name
+    return {'status': 'present', 'count': len(files), 'bytes': sum(sizes),
+            'bin_count': sum(f['path'].endswith('.bin') for f in files),
+            'log_count': sum(f['path'].endswith('.log') for f in files),
+            'independent_system_find_stat_agrees': True,
+            'files': sorted(files, key=lambda r: r['path']),
+            'directories': sorted(directories, key=lambda r: r['path'])}
+
+
+def target_identities():
+    """Every entry under target/ but the admitted and scratch directories, as lstat sees it."""
+    skip = {str(root / name) for name in ADMITTED + SCRATCH}
+    rows = []
+    for directory, dirs, names in os.walk(root / 'target', followlinks=False):
+        dirs[:] = sorted(d for d in dirs if os.path.join(directory, d) not in skip)
+        for entry in sorted(dirs) + sorted(names):
+            path = os.path.join(directory, entry)
+            info = os.lstat(path)
+            rows.append([os.path.relpath(path, root), info.st_dev, info.st_ino, stat.S_IFMT(info.st_mode),
+                         stat.S_IMODE(info.st_mode), info.st_size, info.st_mtime_ns])
+    rows.sort(key=lambda r: r[0])
+    text = ''.join(json.dumps(r) + '\n' for r in rows)
+    return {'entries': len(rows), 'sha256': hashlib.sha256(text.encode()).hexdigest()}, text
+
+
+if __name__ == '__main__':
+    records = {name: inventory(name) for name in LOCATIONS}
+    (out / 'before.json').write_text(json.dumps({
+        'qualification': 'Ignored supplementary metadata adapter; native system find/stat independently agrees. '
+                         'Only the named locations traversed; no links, cross-volume entries or nested Git '
+                         'ancestors/children. Logical bytes, not allocated disk space.',
+        'locations': records}, indent=2) + '\n')
+    evidence = {}
+    for name in EVIDENCE:
+        for directory, dirs, names in os.walk(root / name, followlinks=False):
+            dirs.sort()
+            for entry in sorted(names):
+                path = Path(directory) / entry
+                if stat.S_ISREG(path.lstat().st_mode):
+                    evidence[str(path.relative_to(root))] = hashlib.sha256(path.read_bytes()).hexdigest()
+    (out / 'retained-evidence.json').write_text(json.dumps(evidence, indent=2, sort_keys=True) + '\n')
+    print(json.dumps({'retained_evidence_files': len(evidence)}))
+    summary, text = target_identities()
+    (out / 'target-before.jsonl').write_text(text)
+    print(json.dumps({'target_identities': summary}))
+    for name, record in records.items():
+        print(name, {k: v for k, v in record.items() if k not in ('files', 'directories')})
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: delete.py</summary>
+
+```python
+"""Fourteenth daily artifact cleanup (PROGRAM.101): the admitted deletion, then its residue.
+
+Rechecks each admitted directory's complete inventory against `before.json` immediately before
+removing it, removes only the two fixed incremental-cache directories, and proves each gone by a
+Python existence check and a native `stat` failure. Then it re-takes the identity of every other
+entry under `target/` and requires it equal to the pre-deletion inventory.
+"""
+from pathlib import Path
+from datetime import datetime, timezone
+import importlib.util, json, os, shutil, subprocess
+
+out = Path('target/artifact-cleanup/2026-10-22')
+spec = importlib.util.spec_from_file_location('census', out / 'census.py')
+census = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(census)
+
+before = json.loads((out / 'before.json').read_text())['locations']
+for name in census.ADMITTED:
+    assert census.inventory(name) == before[name], name
+removed = []
+for name in census.ADMITTED:
+    expected = before[name]
+    if expected['status'] == 'present':
+        shutil.rmtree(name)
+    assert not os.path.lexists(name), name
+    removed.append({'path': name, 'status': 'gone', 'files': expected['count'], 'logical_bytes': expected['bytes']})
+(out / 'removed.json').write_text(json.dumps({
+    'qualification': 'Supplemental adapter; every inventoried file/directory identity and same-volume/no-link/no-Git '
+                     'boundary rechecked immediately before removal; only fixed admitted regenerable incremental '
+                     'directories.',
+    'removed': removed}, indent=2) + '\n')
+
+residue = []
+for name in census.ADMITTED:
+    native = subprocess.run(['/usr/bin/stat', name], capture_output=True, text=True)
+    residue.append({'path': name, 'python_absent': not os.path.lexists(name), 'native_status': native.returncode,
+                    'native_stderr': native.stderr})
+summary, text = census.target_identities()
+(out / 'target-after.jsonl').write_text(text)
+untouched = text == (out / 'target-before.jsonl').read_text()
+retained = {name: census.inventory(name) == before[name] for name in census.LOCATIONS if name not in census.ADMITTED}
+(out / 'residue.json').write_text(json.dumps({
+    'status': 'verified' if untouched and all(retained.values()) and all(
+        r['python_absent'] and r['native_status'] != 0 for r in residue) else 'refused',
+    'timestamp_utc': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+    'files': sum(r['files'] for r in removed),
+    'logical_bytes': sum(r['logical_bytes'] for r in removed),
+    'residue': residue,
+    'other_target_entries_identity_equal': untouched,
+    'other_target_entries': summary['entries'],
+    'other_target_entries_sha256': summary['sha256'],
+    'untouched_surveyed_locations': sum(retained.values()),
+    'regenerable_only': True,
+    'qualification': 'Logical bytes, not allocated-space recovery; metadata/native inventory, exact identity recheck '
+                     'and successful no-job census precede removal. Every other entry under target/ but this run\'s '
+                     'scratch keeps its device, inode, kind, mode, size and mtime. Focused regeneration required '
+                     'separately.'}, indent=2) + '\n')
+print((out / 'residue.json').read_text())
+```
+
+</details>
+
+<details>
+<summary>Supplemental adapter: delta.py</summary>
+
+```python
+"""Fourteenth daily artifact cleanup (PROGRAM.101): classify every identity difference under target/.
+
+`delete.py` compared the whole identity of every other entry under `target/` and refused: three
+rows differ. This names each one and the only change it may carry, and refuses anything else:
+
+* the parent directory of each removed cache loses exactly that child, so its size drops by the
+  one entry and its mtime moves; its device, inode, kind and mode stay;
+* `target/doctrine_scratch` is where `scripts/handoff_census.sh` makes and removes its
+  `handoff_census.XXXXXX` guard, and the census ran between the two inventories (before the
+  deletion, as the procedure requires), so only that directory's mtime moves.
+
+Every file, link and other directory must be identical, and no entry may appear or disappear.
+"""
+from pathlib import Path
+import json
+
+out = Path('target/artifact-cleanup/2026-10-22')
+FIELDS = ['path', 'device', 'inode', 'kind', 'mode', 'size', 'mtime_ns']
+EXPECTED = {
+    'target/debug': {'size', 'mtime_ns'},
+    'target/mutation-sweep/target/debug': {'size', 'mtime_ns'},
+    'target/doctrine_scratch': {'mtime_ns'},
+}
+
+
+def rows(name):
+    return [dict(zip(FIELDS, json.loads(line))) for line in (out / name).read_text().splitlines()]
+
+
+before, after = rows('target-before.jsonl'), rows('target-after.jsonl')
+assert [r['path'] for r in before] == [r['path'] for r in after], 'an entry appeared or disappeared'
+changed = []
+for old, new in zip(before, after):
+    moved = {k for k in FIELDS if old[k] != new[k]}
+    if moved:
+        assert moved == EXPECTED.get(old['path']), (old['path'], sorted(moved))
+        changed.append({'path': old['path'], 'changed': sorted(moved),
+                        'size': [old['size'], new['size']], 'mtime_ns': [old['mtime_ns'], new['mtime_ns']]})
+assert [c['path'] for c in changed] == sorted(EXPECTED), changed
+for c in changed:
+    if c['path'] != 'target/doctrine_scratch':
+        assert c['size'][1] < c['size'][0], c
+handoff = (out / 'process-predelete.log').stat().st_mtime_ns
+scratch = next(c for c in changed if c['path'] == 'target/doctrine_scratch')['mtime_ns'][1]
+assert abs(scratch - handoff) < 10_000_000, (scratch, handoff)
+result = {
+    'status': 'accounted',
+    'entries_compared': len(before),
+    'entries_identical': len(before) - len(changed),
+    'changed': changed,
+    'handoff_log_mtime_ns': handoff,
+    'qualification': 'The first comparison (residue.json) refused because it held directory metadata the deletion '
+                     'and the pre-deletion handoff census must change. Each of the three rows is classified here; '
+                     'every other entry, every file among them, is identical in device, inode, kind, mode, size '
+                     'and mtime, and none appeared or disappeared.',
+}
+(out / 'identity-delta.json').write_text(json.dumps(result, indent=2) + '\n')
+print(json.dumps({k: v for k, v in result.items() if k != 'qualification'}, indent=1))
+```
+
+</details>
+
+The evidence digests, the complete pre-deletion metadata and both identity inventories are under `target/artifact-cleanup/2026-10-22/`. These adapters are supplemental; maintained input checks, native system inventories and the focused tier supply primary verification.

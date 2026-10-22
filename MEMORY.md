@@ -14,9 +14,9 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.3`; `PROGRAM` resumes at `PROGRAM.100` (P2, a failed step's output kept).
-- **Next action:** the daily artifact cleanup, due since `2026-10-22T12:06` (a new `PROGRAM` leaf); then `PROGRAM.100`;
-  then `M3.3.3` (P2), connectivity and interrupt routes — its design first, reviewed by a context that did not write
-  it — then `M3.3.4`–`.7`, `M3.5`. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`), focused
+- **Next action:** `PROGRAM.100` (P2, a failed tier step's output kept whole); then `M3.3.3` (P2), connectivity and
+  interrupt routes — its design first, reviewed by a context that did not write it — then `M3.3.4`–`.7`, `M3.5`.
+  The next artifact cleanup is due after `2026-10-23T15:54`. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`), focused
   green at `eaf71286`; `archogen check` wiring is `M3.4`'s. A test's deadline only a hang reaches (`PROGRAM.99`).
   **Mutation testing is stopped** until the functionality is locked
   (`decision_mutation-testing-after-completion.md`, `2026-10-21`): every pending `M3.6.9` leaf is `blocked`;

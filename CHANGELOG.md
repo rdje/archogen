@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the fourteenth daily artifact cleanup
+
+`ARCHOGEN-PROGRAM-0846` (leaf `PROGRAM.101`), `2026-10-22`.
+
+- Remove only the idle main and native-sweep incremental caches — 5382 files, 1181873277 logical bytes — after two
+  handoff censuses and an inventory whose identities were rechecked first; every other entry under `target/` is
+  identical or accounted, the cited evidence keeps its digests, and the tracked inputs restore.
+- Overwrite `docs/ARTIFACT_CLEANUP.md`, add the run's section to the repository annex, and seal `PROGRAM.99`.
+
 ## archogen — a test's deadline is a safety net, never the property
 
 `ARCHOGEN-PROGRAM-0845` (leaf `PROGRAM.99`), `2026-10-22`.
