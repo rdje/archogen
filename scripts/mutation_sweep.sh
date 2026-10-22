@@ -768,6 +768,9 @@ for p in paths:
 target_file = os.path.join(TREE, a.file)
 original = open(target_file, "rb").read()
 env = dict(os.environ, CARGO_TARGET_DIR=TARGET, ARCHOGEN_SWEEP_SOURCE=ROOT)
+# A bounded parent test's child limit, unless the caller sets one: the 30 s this sweep's own limit was sized for, so a
+# hang a mutation causes finishes as a named failure inside it (an ordinary run's is ten minutes; leaf PROGRAM.99).
+env.setdefault("ARCHOGEN_PARENT_TEST_LIMIT", "30")
 cmd = ["cargo", "test", "-q", "-p", a.package, "--"] + a.filter
 
 def failed_tests(stdout):

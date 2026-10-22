@@ -368,18 +368,25 @@ pub(crate) fn run_test_command(
     })
 }
 
+/// The variable that sets a bounded parent test's child limit, in seconds (`trust_test_process`, leaf `PROGRAM.99`).
+pub(crate) const PARENT_TEST_LIMIT_VARIABLE: &str = "ARCHOGEN_PARENT_TEST_LIMIT";
+
+/// The child limit this harness and `scripts/mutation_sweep.sh` set when their caller sets none: the one their own
+/// limits were sized for (`M3.6.9.6.3.2.1.2`), so a hang a mutation causes still finishes as a named failure inside
+/// them. An ordinary run's is ten minutes, which only a hang reaches.
+pub(crate) const PARENT_TEST_HARNESS_SECONDS: &str = "30";
+
 fn run_one(root: &Path, m: &Mutation, scratch: &Path) -> Result<(Seen, f64), String> {
-    run_one_with(
-        root,
-        m,
-        scratch,
-        Command::new("cargo")
-            .arg("test")
-            .arg("-q")
-            .args(&m.test)
-            .current_dir(root),
-        limit(),
-    )
+    let mut command = Command::new("cargo");
+    command
+        .arg("test")
+        .arg("-q")
+        .args(&m.test)
+        .current_dir(root);
+    if std::env::var_os(PARENT_TEST_LIMIT_VARIABLE).is_none() {
+        command.env(PARENT_TEST_LIMIT_VARIABLE, PARENT_TEST_HARNESS_SECONDS);
+    }
+    run_one_with(root, m, scratch, &mut command, limit())
 }
 
 /// The command seam lets controls exercise landing, bounded execution and restoration without another Cargo build.
@@ -648,14 +655,15 @@ mod tests {
         let started = Instant::now();
         let run = run_bounded(
             Command::new("sh").arg("-c").arg(format!(
-                "sleep 30 & echo $! > '{}'; echo started; sleep 30",
+                "sleep 120 & echo $! > '{}'; echo started; sleep 120",
                 pid_file.display()
             )),
             Duration::from_secs(1),
         )
         .expect("the command runs");
+        // Waited on, it would take 120 s; stopped, it takes its limit and a loaded host's delay (`PROGRAM.99`).
         assert!(
-            started.elapsed() < Duration::from_secs(20),
+            started.elapsed() < Duration::from_secs(60),
             "it was waited on: {:?}",
             started.elapsed()
         );
@@ -668,7 +676,7 @@ mod tests {
             .expect("a pid");
         // Killed, it is a zombie until whoever inherits it reaps it, and signal 0 finds a zombie: wait for the reaping.
         let waited = Instant::now();
-        while signal(pid, 0) && waited.elapsed() < Duration::from_secs(10) {
+        while signal(pid, 0) && waited.elapsed() < Duration::from_secs(60) {
             std::thread::sleep(Duration::from_millis(50));
         }
         let _ = std::fs::remove_dir_all(&dir);
@@ -739,9 +747,9 @@ mod tests {
         // or both: none of those pipe lifetimes may bypass the command's deadline.
         let mut failures = Vec::new();
         for (pipes, script) in [
-            ("both", "sleep 5 & echo out; echo err >&2; exit 0"),
-            ("stdout", "sleep 5 2>&1 & echo out; echo err >&2; exit 7"),
-            ("stderr", "sleep 5 >&2 & echo out; echo err >&2; exit 0"),
+            ("both", "sleep 120 & echo out; echo err >&2; exit 0"),
+            ("stdout", "sleep 120 2>&1 & echo out; echo err >&2; exit 7"),
+            ("stderr", "sleep 120 >&2 & echo out; echo err >&2; exit 0"),
         ] {
             let started = Instant::now();
             let run = run_bounded(
@@ -756,7 +764,9 @@ mod tests {
             );
             assert_eq!(run.stdout, b"out\n");
             assert_eq!(run.stderr, b"err\n");
-            if run.status.is_some() || elapsed >= Duration::from_secs(4) {
+            // A pipe-holder that bypassed the deadline would keep the run for 120 s; a stopped one returns after its
+            // limit and whatever delay a loaded host adds (`PROGRAM.99`).
+            if run.status.is_some() || elapsed >= Duration::from_secs(60) {
                 failures.push(format!(
                     "{pipes}: status {:?}, elapsed {elapsed:?}",
                     run.status
@@ -774,9 +784,10 @@ mod tests {
             ("stdout", "sleep 1 2>&1 & echo out; echo err >&2; exit 7", 7),
             ("stderr", "sleep 1 >&2 & echo out; echo err >&2; exit 3", 3),
         ] {
+            // The pipes drain in a second; the limit only has to outlast a loaded host (`PROGRAM.99`).
             let run = run_bounded(
                 Command::new("sh").args(["-c", script]),
-                Duration::from_secs(5),
+                Duration::from_secs(120),
             )
             .expect("the finite pipe-holder runs");
             assert_eq!(
@@ -970,7 +981,7 @@ end
                 if matches!(expected, Seen::Hung(_)) {
                     Duration::from_secs(1)
                 } else {
-                    Duration::from_secs(10)
+                    Duration::from_secs(120) // a finishing outcome's limit only has to outlast a loaded host
                 },
             )
             .expect("synthetic command completes under the bound");
@@ -1026,7 +1037,7 @@ if not state.exists():
 assert '    false\\n' in text, 'mutation did not land'
 kind = os.environ['PROBE_OUTCOME']
 if kind == 'hang':
-    time.sleep(30)
+    time.sleep(600)
 if kind in ('diagnostic', 'diagnostic-with-list'):
     print('failures:\\n\\n---- tests::caught stdout ----\\n    ~~~~^^^\\n    tests::not_a_list\\n')
 if kind in ('kill', 'incomplete', 'diagnostic-with-list'):
@@ -1059,8 +1070,9 @@ try:
         env = dict(os.environ, PROBE_ROOT=str(fixture), PROBE_OUTCOME=kind,
                    PATH=str(fixture / 'bin') + os.pathsep + os.environ['PATH'])
         command = ['bash', str(root / 'scripts/mutation_sweep.sh'), 'sample.rs', '--package', 'synthetic',
-                   '--timeout', '1' if kind == 'hang' else '10'] + (['--timeouts-fail'] if strict else [])
-        run = subprocess.run(command, env=env, capture_output=True, text=True, timeout=30)
+                   '--timeout', '10' if kind == 'hang' else '120'] + (['--timeouts-fail'] if strict else [])
+        # The baseline must finish inside the hang's limit too, so it is ten seconds, not one (`PROGRAM.99`).
+        run = subprocess.run(command, env=env, capture_output=True, text=True, timeout=600)
         if run.returncode != expected:
             failures.append(f'{kind}, strict={strict}: exit {run.returncode}, expected {expected}\n'
                             + run.stdout + run.stderr)

@@ -660,26 +660,64 @@ mdBook that is the director's window into the project.
 
 
 - ID: `PROGRAM.99`
-  Status: `pending` — P1: the `xtask` suite fails under host exec saturation; a quiet-host focused run owed to `M3.3.1`
-    and `M3.3.2` (`91da9ad1`, `5b5dcbfb`)
+  Status: `done` — P1: the `xtask` suite red under host load: deadlines that read slowness as a hang
   Reproduce / issue: `2026-10-21`, `make focused` on `M3.3.1`'s staged tree — its first run passed every test in 240 s;
-    the next two, on the same code formatted, failed 73 and then 31 `xtask` tests (trust, trust_generated, trust_gate,
-    mutation, catalog_build) in 2731 s and 2168 s, the second with `RUST_TEST_THREADS=2`. Three failing tests pass alone,
-    exit code 0 in 0.3–3 s; syspolicyd ran at 63–87 % CPU before and after, with other projects' builds on the host.
-    `target/m331/focused*.log`, untracked. Impact: the gate a commit cites is red for reasons outside the commit, so it
-    either blocks product work or is waived; a shared CI runner can meet the same load.
-  Hypotheses, the director's pasted diagnosis of `2026-10-21`, none yet measured here: macOS's syspolicyd serialises
-    every exec, and each trust case execs a fresh cargo, rustc, linker and the built program; the compiler observer is
-    copied byte for byte into each fixture's `.archogen-provenance/observer` and the kernel logged AMFI signature
-    failures for such a path, a slow error path per exec; tests then time out rather than compute.
-  Host, `2026-10-22`: the director stopped the other projects' jobs (pgen's gate, linkedspec's probe, reasonbraid's
-    clippy) for a fresh session to run this leaf. At handoff no cargo, rustc or clippy process remained, yet
-    syspolicyd (pid 541) sampled 0.0, 27.3, 60.9, 60.5 % CPU, 3 s apart, with codex and iTerm2 running: not yet quiet.
-    So the run starts by sampling syspolicyd; still busy, what execs is itself this leaf's first measurement.
-  Goal: first, the focused tier on a quiet host for `M3.3.1`'s commit, recorded there. Then, tools first: the full
-    failing output of one saturated run (which assertion or limit fires, where), the AMFI log for the observer's path,
-    and execs per case; repair only what is measured — a limit that confuses slow with stuck, a copied binary whose
-    signature the copy breaks, an avoidable exec chain — each with a control, failing first.
+    the next two, on the same code formatted, failed 73 and then 31 `xtask` tests in 2731 s and 2168 s, beside other
+    projects' builds; three failing tests passed alone. Impact: the gate a commit cites is red for reasons outside the
+    commit, so it either blocks product work or is waived; a shared CI runner can meet the same load. The tier runner
+    kept only the last 40 lines of the failed step, so no failure message survived (owned: `PROGRAM.100`).
+  Goal: first, the focused tier on a quiet host for `M3.3.1` and `M3.3.2`, recorded there; then, tools first, which limit
+    fires and why, repaired with a control failing first.
+  Acceptance:
+    - [x] ROOT CAUSE — `make focused` at `eaf71286`, `2026-10-22`, host quieter (syspolicyd mean 17.5 % over 19
+      samples): exit code 0, `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`,
+      184 s, recorded in `M3.3.1` and `M3.3.2`. WIDEN — `ARCHOGEN_PARENT_TEST_TIMINGS=1 cargo test -p xtask --
+      --nocapture`: `test result: ok. 338 passed; 0 failed; 2 ignored`, 162.50 s; the 200 bounded children median 1.49 s,
+      p90 7.03 s, slowest 11.78 s, 34 of them at 5 s or more, against `const LIMIT: Duration = Duration::from_secs(30)`
+      (`xtask/src/trust_test_process.rs:11`), set at 6.23 s measured (`M3.6.9.6.3.2.1.2`). Of `2026-10-21`'s 31 named
+      failures 28 are bounded children; the other three, and `trust_test_process`'s own 10 s probe control, carry
+      deadlines of their own. A census of every wall-clock limit in `xtask` (24 sites) classed each as the side that
+      must finish or the side that must be stopped. NARROW — `scripts/exec_pressure.sh` (new) re-creates a loaded
+      host; its probe refused 12 and 24 workers (×1.0, ×1.6 — exit code 1) and accepted 64: `quiet 174804 µs, under 64
+      workers 685380 µs (×3.9); syspolicyd 65.8 % CPU`, exit code 0. PINPOINT, failing first — under 64 workers
+      `test result: FAILED. 335 passed; 3 failed`, each `bounded test command: test process group exceeded its limit`
+      at `trust_test_process.rs:56`, the three slowest quiet children, no assertion of theirs failed; under 160 workers
+      the timing controls alone `test result: FAILED. 9 passed; 2 failed`: `the unmutated copy does not pass (timeout,
+      1s)` (`mutation.rs:1062`, the hang case's 1 s also bounding the baseline that must finish) and `'timeout' !=
+      'killed'` (`mutation_sweep_tests.py:239`, `--timeout 1` for every kind of `failing_baseline`).
+    - [x] FIX — one rule, stated in the book's verification chapter: what must finish gets a deadline only a hang
+      reaches; what must be stopped keeps a tight one, against a hang that outlasts every bound the test asserts. A
+      bounded child's limit is `ARCHOGEN_PARENT_TEST_LIMIT` seconds or ten minutes; `cargo xtask mutate` and
+      `scripts/mutation_sweep.sh` set 30 unless their caller sets one, the limit their own were sized for (on a line
+      of its own beside the sweep's catalogued `env` line). The runner's finishing controls get 120 s, their hangs
+      120 s against 60 s bounds; the sample's hang 10 s, its finishing kinds 120 s; `failing_baseline` 10 s for the
+      kind that hangs and 120 s for the rest; every sweep a control runs `RUN_LIMIT = 600`; the observer writers 120 s.
+      The census's other sites hold already: `a_run_within_its_limit_…`'s 60 s, and hang-side limits of 1 s and 300 ms.
+    - [x] ADDRESSED — under the same 64 workers, `test result: ok. 339 passed; 0 failed; 2 ignored`, 325.11 s, the
+      slowest child 36.07 s, past the old 30 s; under 160 workers the timing controls `test result: ok. 12 passed; 0
+      failed`; `the_limit_is_the_default_or_a_positive_whole_number_of_seconds` holds the variable's reading.
+    - [x] NO REGRESSION — quiet host, `cargo test -p xtask`: `test result: ok. 339 passed; 0 failed; 2 ignored`,
+      188.08 s (the stopped hangs now wait 10 s, not 1); `cargo fmt --all -- --check` and `cargo clippy -p xtask
+      --all-targets -- -D warnings`: exit code 0; `make focused` on this staged tree: exit code 0, `tier focused:
+      passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, which also holds every catalogued `from` text.
+    - [x] LOCKSTEP — the book's verification chapter (the rule, the measurements, the tool), `TOOLBOX.md`'s row,
+      `M3.3.1` and `M3.3.2`'s records, `M3.6.9.7` filed, `PROGRAM.100` filed, the snapshots, the changelog, and a note promoted to
+      `docs/knowledge/a-deadline-is-a-safety-net-not-the-property.md`.
+  Found and owned here: `PROGRAM.100` (the tier runner discards a failed step's output); `M3.6.9.7` (a harness's 30 s
+    child limit can count a slow child as a kill on a loaded host; blocked by the director's postponement).
+  Verification: `target/program99/` (untracked): the focused log and host samples, child timings quiet and loaded,
+    both pressured runs before and after. The cause of `2026-10-21`'s ×10 is not established — the re-created load
+    measured ×3.9 — and the repair does not depend on it.
+  Commit: `ARCHOGEN-PROGRAM-0845 (leaf PROGRAM.99)`
+
+- ID: `PROGRAM.100`
+  Status: `pending` — P2: the tier runner discards a failed step's output past its last 40 lines
+  Reproduce / issue: `2026-10-22`, `target/m331/focused.log` and `focused-capped.log` — `make focused`'s failed `tests`
+    step printed `… 2705 earlier line(s) omitted` and `… 2222 earlier line(s) omitted` then 40 lines; nothing else was
+    kept, so the 73-test run's failure list and every failure message were lost (`tail_lines`, `xtask/src/main.rs:745`,
+    `TAIL_LINES = 40`), and its advice, "re-run it directly", cannot reproduce a failure that needs the host's load.
+  Goal: a failed step's whole stdout and stderr kept under `target/` beside the tier's stamps and named in the summary,
+    the printed tail unchanged; a control failing first.
   Verification: `pending`
   Commit: `pending`
 
@@ -748,7 +786,7 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.99` | `pending` | P1: the `xtask` suite red under host exec saturation; the quiet-host focused run `M3.3.1` owes, then tools-first repair |
+| 1 | `PROGRAM.100` | `pending` | P2: a failed tier step's output is kept whole, not its last 40 lines |
 | 2 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
 | 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
@@ -864,6 +902,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-11` | `PROGRAM.69` (round 35) | new census and summary-boundary controls before/after repair; both full self-tests, syntax, book and final staged gates | history 129/3 of 132 and counts 140/10 of 150 before; repaired 132/0 and 150/0; finite selected-read failures never print a final aggregate, empty counterparts pass; staged counts 1 review / 35 rounds, history 175 files / 335 stubs; book 30/4, 67/25, 316, syntax and final doctrine gates |
 | `2026-10-11` | `PROGRAM.69` (round 36) | EOF/path/diagnostic controls before repair, then both complete self-tests; syntax, book and staged gates | history 133/13 of 146 and counts 153/3 of 156 before; repaired 146/0 and 156/0; literal byte and unusual-path counterparts, named no-traceback row refusals; independent round 37 next |
 | `2026-10-11` | `PROGRAM.69` (round 37 closure) | independent pinned review; root recount/authentication; staged count/history and book gates | zero defects/actionable arm gaps/remarks; 347 expected checker outcomes, separate 4 096 unit comparisons; retained results recount and 17 source identities pass, exit code 0; scope/limits retained; all 37 summary rows judged before removal from counted list |
+| `2026-10-22` | `PROGRAM.99` | the focused tier at `eaf71286` on a quieter host; child timings quiet; a load re-created by `scripts/exec_pressure.sh`, its probe refusing ×1.0 and ×1.6 and accepting ×3.9; the suite under it before and after; the timing controls under 160 workers before and after | focused exit 0; quiet 338 / 0 → 339 / 0; 64 workers 3 failed (`exceeded its limit`) → 0; 160 workers 2 failed → 0; slowest child 11.78 s quiet, 36.07 s loaded |
 
 ## Commit Log
 
@@ -886,6 +925,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0489 (leaf PROGRAM)` | **`PROGRAM.10` and `.61`–`.65` sealed**, 13 closed leaves into `docs/task-history/PROGRAM/`, when `README-ROUTES` refused `docs/tasks/` at 820 957 bytes over its 819 200; `docs/tasks/` 817 470 → 752 861 bytes, measured from `HEAD` and the tree |
 | `PROGRAM.99` | `ARCHOGEN-PROGRAM-0842 (leaf PROGRAM.99)` | **filed: the `xtask` suite red under host exec saturation**, P1, at the frontier's head; the quiet-host focused run `M3.3.1` owes, then a tools-first repair |
 | `PROGRAM.99` | `ARCHOGEN-PROGRAM-0844 (leaf PROGRAM.99)` | **the host handed over for the quiet run**: the director stopped the other projects' jobs `2026-10-22`; syspolicyd still sampled at up to 61 % with no build left, so the next session measures before it runs; `M3.3.2` owes the same run |
+| `PROGRAM.99` | `ARCHOGEN-PROGRAM-0845 (leaf PROGRAM.99)` | **closed: deadlines that read slowness as a hang.** The focused tier passed at `eaf71286` for `M3.3.1` and `.2`; a re-created ×3.9 load reproduced 3 bounded children past their 30 s and 2 sweep controls racing a baseline with 1 s; a child's limit is now ten minutes unless `ARCHOGEN_PARENT_TEST_LIMIT` says otherwise, the mutation harnesses keeping 30, and every finishing control's deadline only a hang reaches; green under the same loads. `scripts/exec_pressure.sh` added; `PROGRAM.100` and `M3.6.9.7` filed |
 
 ## Changelog
 

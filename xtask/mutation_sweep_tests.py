@@ -17,6 +17,10 @@ import unittest
 ROOT = Path(sys.argv.pop(1)).resolve()
 SCRIPT = ROOT / "scripts/mutation_sweep.sh"
 ORIGINAL = 'fn sample() -> bool {\n    true\n}\n#[cfg(test)]\nmod tests {}\n'
+# Every sweep a control runs is expected to finish, so its limit is a safety net that only a hang reaches, never
+# the property: a loaded host runs these several times slower (leaf PROGRAM.99,
+# the rule in docs/book/src/verification.md).
+RUN_LIMIT = 600
 GIT = '''#!/usr/bin/env python3
 import os, sys
 if sys.argv[1:] == ['rev-parse', '--show-toplevel']:
@@ -73,7 +77,7 @@ class SweepFixture(unittest.TestCase):
         else:
             env["ARCHOGEN_SWEEP_SOURCE"] = source_hint
         result = subprocess.run(["bash", str(script), "sample.rs", "--package", "synthetic", "--op", "bool",
-                                 "--equivalents", "equivalents"], env=env, capture_output=True, text=True, timeout=20)
+                                 "--equivalents", "equivalents"], env=env, capture_output=True, text=True, timeout=RUN_LIMIT)
         self.assertEqual((self.base / "sample.rs").read_bytes(), original.encode())
         copied = self.base / "target/mutation-sweep/tree/sample.rs"
         if copied.exists():
@@ -156,7 +160,7 @@ class SelectionIdTests(SweepFixture):
             command.extend(["--only", ident])
         if listing:
             command.append("--list")
-        result = subprocess.run(command, env=env, capture_output=True, text=True, timeout=20)
+        result = subprocess.run(command, env=env, capture_output=True, text=True, timeout=RUN_LIMIT)
         self.assertEqual((self.base / "sample.rs").read_bytes(), original.encode())
         copied = self.base / "target/mutation-sweep/tree/sample.rs"
         if copied.exists() and not listing and result.returncode != 2:
@@ -229,15 +233,16 @@ assert os.environ['ARCHOGEN_SWEEP_SOURCE'] == str(root.resolve())
 with (root / 'invoked').open('a') as out:
     out.write('called\\n')
 os.write(1, ''' + repr(stdout) + ')\nos.write(2, ' + repr(stderr) + ')\n' +
-                         ("time.sleep(20)\n" if kind == "timeout" else
+                         ("time.sleep(600)\n" if kind == "timeout" else
                           "os.kill(os.getpid(), signal.SIGTERM)\n" if kind == "signal" else
                           "sys.exit(101)\n" if kind in {"killed", "unviable"} else "sys.exit(23)\n"))
         cargo.chmod(0o755)
         env = dict(os.environ, PROBE_ROOT=str(self.base),
                    PATH=str(self.base / "bin") + os.pathsep + os.environ["PATH"])
-        result = subprocess.run(["bash", str(SCRIPT), "sample.rs", "--package", "synthetic",
-                                 "--op", "bool", "--timeout", "1"], env=env,
-                                capture_output=True, text=True, timeout=20)
+        # Only the kind that hangs is stopped by the sweep's limit; every other kind finishes and must not be raced.
+        result = subprocess.run(["bash", str(SCRIPT), "sample.rs", "--package", "synthetic", "--op", "bool",
+                                 "--timeout", "10" if kind == "timeout" else "120"], env=env,
+                                capture_output=True, text=True, timeout=RUN_LIMIT)
         self.assert_exit(result, 2)
         self.assertEqual(source.read_bytes(), ORIGINAL.encode())
         self.assertEqual((self.base / "target/mutation-sweep/tree/sample.rs").read_bytes(), ORIGINAL.encode())
@@ -303,7 +308,7 @@ sys.exit(result.returncode)
         env = dict(os.environ, PROBE_ROOT=str(self.base),
                    PATH=str(self.base / "bin") + os.pathsep + os.environ["PATH"])
         result = subprocess.run(["bash", str(SCRIPT), "sample.rs", "--package", "synthetic", "--op", "bool"],
-                                env=env, capture_output=True, text=True, timeout=20)
+                                env=env, capture_output=True, text=True, timeout=RUN_LIMIT)
         self.assert_exit(result, 2)
         paths = list((self.base / "target/mutation-sweep/baseline-failures").glob("*/receipt.json"))
         self.assertEqual(len(paths), 1)
@@ -356,7 +361,7 @@ with (root / 'observations').open('a') as out:
                    PATH=str(self.base / "bin") + os.pathsep + os.environ["PATH"])
         return subprocess.run(["bash", str(SCRIPT), source, "--package", "synthetic", "--op", "bool"]
                               + (["--list"] if listing else []), env=env, capture_output=True,
-                              text=True, timeout=20)
+                              text=True, timeout=RUN_LIMIT)
 
     def test_absolute_source_refuses_before_mutating_the_original(self):
         original = self.base / "sample.rs"
@@ -471,14 +476,14 @@ sys.exit(code)
                    PATH=str(self.base / "bin") + os.pathsep + os.environ["PATH"])
         command = ["bash", str(SCRIPT), "sample.rs", "--package", "synthetic", "--op", "bool", "--op", "contains",
                    "--timeouts-fail"]
-        listing = subprocess.run(command + ["--list"], env=env, capture_output=True, text=True, timeout=20)
+        listing = subprocess.run(command + ["--list"], env=env, capture_output=True, text=True, timeout=RUN_LIMIT)
         self.assert_exit(listing, 0)
         self.assertNotIn("unviable by operator", listing.stdout)
         self.assertFalse((self.base / "outcomes").exists(), "listing invoked the compiler")
         ids = re.findall(r"^(L\d+\.(?:bool|contains)\.\d+) ", listing.stdout, re.M)
         self.assertEqual(len(ids), 5)
         refused = subprocess.run(command + ["--only", "not-a-candidate"], env=env,
-                                 capture_output=True, text=True, timeout=20)
+                                 capture_output=True, text=True, timeout=RUN_LIMIT)
         self.assert_exit(refused, 2)
         self.assertIn("unknown selected mutation ID", refused.stderr)
         self.assertFalse((self.base / "outcomes").exists(), "unknown selection invoked the compiler")
@@ -490,7 +495,7 @@ sys.exit(code)
         for selection, summary, expected in cases:
             with self.subTest(selection=selection):
                 (self.base / "outcomes").unlink(missing_ok=True)
-                result = subprocess.run(command + selection, env=env, capture_output=True, text=True, timeout=30)
+                result = subprocess.run(command + selection, env=env, capture_output=True, text=True, timeout=RUN_LIMIT)
                 self.assert_exit(result, 0)
                 self.assertIn("mutation-sweep: unviable by operator: " + summary + " (unviable/attempted)", result.stdout)
                 outcomes = [json.loads(line) for line in (self.base / "outcomes").read_text().splitlines()]
@@ -520,7 +525,7 @@ class DiscoveryFixture(SweepFixture):
         process = subprocess.Popen(command, cwd=self.base, env=env, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, text=True, start_new_session=True)
         try:
-            stdout, stderr = process.communicate(timeout=60)
+            stdout, stderr = process.communicate(timeout=RUN_LIMIT)
         except subprocess.TimeoutExpired:
             os.killpg(process.pid, signal.SIGKILL)
             process.communicate()
@@ -597,7 +602,7 @@ class ObserverCloseTests(DiscoveryFixture):
                                                env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                                start_new_session=True)
                     try:
-                        stdout, stderr = process.communicate(timeout=45)
+                        stdout, stderr = process.communicate(timeout=RUN_LIMIT)
                     except subprocess.TimeoutExpired:
                         os.killpg(process.pid, signal.SIGKILL)
                         process.communicate()
@@ -914,7 +919,7 @@ class DiagnosticFlagTests(DiscoveryFixture):
                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                        text=True, start_new_session=True)
             try:
-                stdout, stderr = process.communicate(timeout=60)
+                stdout, stderr = process.communicate(timeout=RUN_LIMIT)
             except subprocess.TimeoutExpired:
                 os.killpg(process.pid, signal.SIGKILL)
                 process.communicate()
@@ -986,7 +991,7 @@ os.execvp("rustc", ["rustc"] + arguments)
             process = subprocess.Popen(command, cwd=project, env=env, stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE, text=True, start_new_session=True)
             try:
-                stdout, stderr = process.communicate(timeout=60)
+                stdout, stderr = process.communicate(timeout=RUN_LIMIT)
             except subprocess.TimeoutExpired:
                 os.killpg(process.pid, signal.SIGKILL)
                 process.communicate()
@@ -1575,7 +1580,7 @@ os.execvp("rustc", ["rustc"] + arguments)
                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                        text=True, start_new_session=True)
             try:
-                stdout, stderr = process.communicate(timeout=60)
+                stdout, stderr = process.communicate(timeout=RUN_LIMIT)
             except subprocess.TimeoutExpired:
                 os.killpg(process.pid, signal.SIGKILL)
                 process.communicate()

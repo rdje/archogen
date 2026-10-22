@@ -849,6 +849,64 @@ The implemented focused tier runs formatting, strict lint and the complete contr
 contracts. The runner reports each step's elapsed time. Those current observations, together with
 the coverage required for a change, are the basis for revisiting test selection.
 
+### A test's clock is a safety net, never the property
+
+In plain words: a test that waits for another program gives it a deadline, so that a program stuck
+forever ends as a named failure instead of a run that never finishes. On a busy machine every program
+runs slower. A deadline set close to a quiet run's time then reads slowness as being stuck, and the
+gate turns red for a reason that has nothing to do with the change it is judging.
+
+That happened on `2026-10-21`: beside other projects' builds, the suite ran about ten times slower, and
+`make focused` failed 73 and then 31 `xtask` tests that day, on a change that touched none of them (`2026-10-21`);
+alone, each passed.
+Leaf `PROGRAM.99` measured why on `2026-10-22`, by re-creating the load on purpose, and settled two rules.
+
+1. **What must finish gets a deadline only a stuck program reaches.** The deadline is there to end a hang,
+   not to time the work, so it is generous: ten minutes for a bounded test's child
+   (`xtask/src/trust_test_process.rs`), two for the process runner's own finishing controls
+   (`xtask/src/mutation.rs`), ten for every sweep a sweep control runs (`RUN_LIMIT` in
+   `xtask/mutation_sweep_tests.py`).
+2. **What must be stopped keeps a tight deadline, and its hang outlasts every bound the test asserts.** Then
+   the assertion still tells "stopped" from "waited for". For example, the pipe control gives its command
+   one second while a background `sleep 120` holds its output pipe, and requires the run back within 60
+   seconds: a runner that waited for the pipe would take two minutes, and one that stopped takes about one
+   second, or a few on a loaded host.
+
+A **bounded test** runs its body in a child process selected by its exact name, and reports a child that
+reaches its deadline as a named failure. The deadline is `ARCHOGEN_PARENT_TEST_LIMIT` seconds when set,
+and ten minutes otherwise. Both mutation harnesses, `cargo xtask mutate` and
+`scripts/mutation_sweep.sh`, set it to 30 when their caller does not, because their own limits were sized
+for a 30-second child: a hang a mutation causes must still end as a named failure inside them. That
+choice has a cost on a loaded host, owned by `M3.6.9.7`: a child that is only slow reaches the 30 s too,
+and the harness counts its named failure as a kill.
+
+What was measured, each run the whole `xtask` suite unless it says otherwise:
+
+| Run | Load | Result |
+| --- | --- | --- |
+| before, `2026-10-22` | quiet | 338 passed, 162.50 s; the 200 bounded children took 1.49 s at the median and 11.78 s at most, against a 30 s deadline |
+| before, `2026-10-22` | 64 workers, measured ×3.9 | 3 failed, each `bounded test command: test process group exceeded its limit`; no assertion of theirs failed |
+| before, `2026-10-22` | 160 workers, the eleven timing controls alone | 2 failed: a sweep given one second for a run that must finish reported `timeout` where `killed` was expected |
+| after, `2026-10-22` | quiet | 339 passed, 188.08 s — the stopped hangs now wait ten seconds, not one |
+| after, `2026-10-22` | 64 workers | 339 passed, 325.11 s; the slowest child took 36.07 s, past the old deadline |
+| after, `2026-10-22` | 160 workers, the timing controls alone | 12 passed — the eleven above and the deadline's own reading |
+
+To re-create the load, `scripts/exec_pressure.sh` keeps a number of workers compiling and running programs
+no earlier run has seen — what a build hands the machine — and runs a command under them. `--probe` first
+measures what the load does to one such program and refuses to claim a load that did not at least double
+its time, which this machine's twelve processors needed 64 workers to reach on `2026-10-22`:
+
+```console
+$ bash scripts/exec_pressure.sh --probe --workers 64
+exec-pressure: median build and run of a fresh program — quiet 174804 µs, under 64 workers 685380 µs (×3.9); syspolicyd 65.8 % CPU
+exec-pressure: the load at least doubles the time a fresh program takes to build and run on this host
+$ bash scripts/exec_pressure.sh --workers 64 -- cargo test -p xtask
+```
+
+⚠️ **Honest limit.** The load re-created here measured ×3.9, not the ×10 seen on `2026-10-21`, whose cause
+— whether the machine's signature checks, its disk or its processors — is not established. The rules do
+not depend on it: they size a deadline from what it is for, not from one machine's speed.
+
 ### Where the repository may live
 
 Anywhere on one volume, with one exception the toolchain imposes (measured `2026-10-21`): not under a

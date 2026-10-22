@@ -1317,7 +1317,8 @@ mod tests {
                 .iter()
                 .map(|pid| std::ffi::OsString::from(format!(".{pid}.part")))
                 .collect();
-            let deadline = Instant::now() + Duration::from_secs(5);
+            // The writers reserve as soon as they start; this only bounds a loaded host's spawning (`PROGRAM.99`).
+            let deadline = Instant::now() + Duration::from_secs(120);
             loop {
                 let names: BTreeSet<_> = fs::read_dir(&session.records)
                     .map_err(|error| error.to_string())?

@@ -5,6 +5,19 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a test's deadline is a safety net, never the property
+
+`ARCHOGEN-PROGRAM-0845` (leaf `PROGRAM.99`), `2026-10-22`.
+
+- Run the focused tier at `eaf71286` on a quieter host — exit code 0 — and record it in `M3.3.1` and `M3.3.2`.
+- Add `scripts/exec_pressure.sh`, which re-creates a loaded host and refuses to claim a load it did not measure. Under
+  it, three bounded children ran past their 30 s limit without hanging, and two sweep controls raced a baseline with 1 s.
+- A bounded child's limit is now `ARCHOGEN_PARENT_TEST_LIMIT` seconds or ten minutes; `cargo xtask mutate` and the
+  sweep keep the 30 s their own limits were sized for. Every control's finishing side gets a deadline only a hang
+  reaches, its hang side a tight one against a hang that outlasts the bound. Green under the same loads.
+- State the rule in the book's verification chapter; file `PROGRAM.100` (a failed step's output kept whole) and
+  `M3.6.9.7` (a slow child counted as a kill in a loaded sweep, blocked with the mutation work).
+
 ## archogen — the host handed over for the quiet run
 
 `ARCHOGEN-PROGRAM-0844` (leaf `PROGRAM.99`), `2026-10-22`.

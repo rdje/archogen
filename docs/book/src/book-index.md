@@ -24,6 +24,8 @@ a change that leaves it stale, so it is never edited by hand.
 - A requirement is an obligation, not a claim to trust — [The boundary: functionality versus
   implementation](boundary.md#a-requirement-is-an-obligation-not-a-claim-to-trust)
 - A task's life — [The runtime: decisions, not actions](runtime.md#a-tasks-life)
+- A test's clock is a safety net, never the property — [Verifying the
+  toolchain](verification.md#a-tests-clock-is-a-safety-net-never-the-property)
 - A third reader — [Verifying the toolchain](verification.md#a-third-reader)
 - A tier has three outcomes, not two — [Verifying the toolchain](verification.md#a-tier-has-three-outcomes-not-two)
 - **ABI** — [definition](glossary.md), [The boundary: functionality versus implementation](boundary.md), [What this
