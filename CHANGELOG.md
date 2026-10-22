@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a required ordering is unsupported under this profile
+
+`ARCHOGEN-M3-0857` (leaf `M3.3.5.2`), `2026-10-22`.
+
+- `ordering` keeps no vocabulary entry: `rt-static-up-v1` excludes `dma`, whose obligations name ordering, so its domain
+  is the later profile's; a requirement on it in a closure is `unsupported-profile`, pinned by a test.
+- The boundary case requests nothing and keeps its frozen verdict; model §8 rule 11 and the book say so.
+
 ## archogen — placement, judged once per system
 
 `ARCHOGEN-M3-0856` (leaf `M3.3.5.1`), `2026-10-22`.

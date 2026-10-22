@@ -1450,3 +1450,22 @@ fn ownership_no_longer_reads_placement_memory() {
         assert!(r.conflicts.is_empty(), "{:?}", report_of(&r));
     }
 }
+
+#[test]
+fn a_required_ordering_is_unsupported_under_this_profile() {
+    // Leaf `M3.3.5.2`: `ordering` has no entry in `/1` — `rt-static-up-v1` excludes `dma`, whose obligations name
+    // ordering — so a requirement on it in a system's closure is `unsupported-profile`, the relation's reading of a
+    // constraint on an undeclared fact (record §1.1). `docs/semantics/boundary/accept/required-ordering-guarantee.eadl`
+    // requests nothing, so no closure judges it and its frozen verdict stays.
+    let v = vocabulary();
+    let platform = forms(
+        "(defplatform soc.bus (requires (ordering (before (write device.control)) (after (write memory.buffer)))))",
+    );
+    let refused = eadl_resolve::requirement::read_side(&platform[0], &v)
+        .expect_err("not judged under this profile");
+    assert_eq!(
+        eadl_resolve::requirement::code(&refused).slug(),
+        "unsupported-profile",
+        "{refused:?}"
+    );
+}

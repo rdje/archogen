@@ -313,3 +313,8 @@ did not write it. `archogen check` does not call them yet: `M3.4` searches for a
    placement given to an assignment that is not placement memory of the system's hardware is a conflict of that
    assignment. A system with no placement memory is said nothing of — the hosted playground provides memory — and a
    system's regions against a target's own map are `M4.4`'s.
+11. **Ordering** (`M3.3.5.2`; `SR-H13`). A required ordering — `(ordering (before …) (after …))` — is `unsupported-profile`
+   under `rt-static-up-v1`: `ordering` has no entry in `/1`, and a constraint on an undeclared fact is that (§7, record
+   §1.1). Its entry and domain wait for the profile that admits `dma`, whose exclusion names ordering among its
+   obligations (`docs/profiles/rt-static-up-v1.md`). `docs/semantics/boundary/accept/required-ordering-guarantee.eadl`
+   requests nothing, so no closure judges it, and its frozen verdict stays under `M3.4`'s keep-or-migrate rule.

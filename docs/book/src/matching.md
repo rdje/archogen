@@ -273,6 +273,10 @@ memory, and a region's sub-forms are written once each, a flag `true` or `false`
 goes in — a choice of anything but placement memory is refused — and lays out the offsets later (`M4.1`). The hosted
 playground offers no such region and needs none: its host provides memory.
 
+A required **ordering** between two effects — `(ordering (before (write device.control)) (after (write
+memory.buffer)))` — is `unsupported-profile` under this profile: ordering matters where devices move data without the
+processor, which the profile's `dma` exclusion leaves to a later profile, and its vocabulary entry waits for that one.
+
 ### The list a resolver chooses from
 
 Matching does not choose. For one requirement it lists every provider in the order given, with its verdict, the
@@ -348,8 +352,8 @@ the relation (`model.md` §7 rule 6).
 a binding takes a channel (rule 2), the channel count and its codes (rule 3), the service that multiplexes (rule 4),
 region ownership and its codes (rule 5), and that one assignment's findings decide nothing about the description until
 the search has tried every assignment (rule 6); then one system's assignment, its hardware and connectivity (rule 7),
-the route obligations (rule 8), privilege over a system's callers, given its level (rule 9), and placement, once per
-system (rule 10).
+the route obligations (rule 8), privilege over a system's callers, given its level (rule 9), placement, once per
+system (rule 10), and ordering, unsupported under this profile (rule 11).
 
 ### What is not claimed
 
@@ -369,6 +373,6 @@ over the description's providers, deciding a description's `missing-fact` or `in
 enumeration and keeping or migrating every verdict it moves. `M3.2` adds adapters — a provider in its own right, such
 as an epoch extender — offered only where a requirer allows mediation; `M3.3` judges what one provider cannot: its
 channels and owned regions (`M3.3.2`), connectivity and routes (`M3.3.3`) and privilege given a level (`M3.3.4.1`) are
-judged today, over an assignment a test proposes, and placement over a system's map (`M3.3.5.1`); ordering, bundles and
-initialization order follow (`M3.3.5.2`–`.7`); `M3.7` makes a catalog
+judged today, over an assignment a test proposes, and placement over a system's map (`M3.3.5.1`); ordering is
+unsupported under this profile (`M3.3.5.2`); bundles and initialization order follow (`M3.3.6`, `.7`); `M3.7` makes a catalog
 record a provider.

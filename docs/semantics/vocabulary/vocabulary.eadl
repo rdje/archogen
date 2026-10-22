@@ -18,8 +18,8 @@
 ; table the relation consults (leaf `M3.1.2.2`). A fact a description writes and this file does not declare may
 ; still be offered, declared absent or needed, but a constraint on it is `unsupported-profile` (record §1.1).
 ;
-; Two facts the corpus names have no entry, `region` and `ordering`: they fit no domain of record §2, and placement
-; and ordering are `M3.3`'s (record §10).
+; Two facts the corpus names have no entry, `region` and `ordering`, fitting no domain of record §2: a region stays
+; outside `/1`, read by model §8 rules 5 and 10 (`SR-H13`, amended); `ordering` waits for a profile admitting `dma` (rule 11).
 
 (eadl-version eadl/1)
 
