@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — for the director: the checkers' executables
+
+`ARCHOGEN-M3-0875` (leaf `M3.5.1`), `2026-10-22`.
+
+- `ROADMAP.md` §10.2 writes `archogen analyze` as a subcommand, but one program may not run two roles and the product
+  spawns no process; findings §16 puts the choice to the director, recommending a separate executable per checker.
+
 ## archogen — file: the mutation campaign as a release gate
 
 `ARCHOGEN-M7-0874` (leaf `M7.6`), `2026-10-22`.

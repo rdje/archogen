@@ -14,8 +14,8 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.5`; `PROGRAM` resumes at `PROGRAM.71`.
-- **Next action:** `M3.5.1` (P2), role programs reached without a process, with `M2.21`: its design first, reviewed;
-  then `M3.5.2`–`.6`, `PROGRAM.103`. The mutation campaign is `M7.6`'s, at completion. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
+- **Next action:** `M3.5.2` (P2), the shared derivation of the two relations disclosed in the trust record, its design
+  reviewed; then `M3.5.3`–`.5`, `PROGRAM.103`. The mutation campaign is `M7.6`'s, at completion. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
   focused green at `eaf71286`; `archogen check` wiring is `M3.4`'s. The next artifact cleanup is due after
   `2026-10-23T15:54`. A test's deadline is one only a hang reaches (`PROGRAM.99`).
   **Mutation testing is stopped** until the functionality is locked
@@ -27,7 +27,7 @@
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.
   `M3.6.3.2.1.1` owns runner-baseline compatibility after key encoding; an authorized cadence run is needed. `M2`'s open leaves
   wait on the director: `M2.7.4.5` and `M2.7.6`'s review and hosting half. No branches.
-- **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
+- **⏳ Blockers (the director's):** `M3.5.1`, `M2.21` — findings §16, the checkers' executables; `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,
   ruled `2026-09-30`); every other script is archogen's.

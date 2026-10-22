@@ -249,6 +249,20 @@ unchanged. **Your call:** (a) uc3 gains `(reachable-at-privilege machine)` on ea
 migration; or (b) it stays unchanged and is refused once `M3.4` wires the rule, until `M3.2` states the timer's level and
 you rule on the console's. **Decided (a), `2026-10-22`**, under the director's delegation; `M3.3.4.5`, done.
 
+## 16. `archogen analyze` and the plan check cannot be subcommands of `archogen` (`2026-10-22`)
+
+`ROADMAP.md` §10.2's interface target writes `archogen analyze …` as a subcommand, and an independently checked plan
+needs a configuration checker (`M3.5`). Two recorded rules make both impossible as subcommands of the `archogen`
+executable: one program may not run two roles (§4.4; `decision_trust-inventory.md` §2, `trust-shared-program`), and
+the product spawns no process (§10.4; `NO-SUBPROCESS`), so `archogen` can neither link nor launch the scheduling
+checker or the configuration checker. **Your call:** (a) amend §10.2 — each checker is an executable of its own,
+`archogen-analyze` and `archogen-check`, run by the user or the build orchestration, each writing a result record that
+`archogen build` consumes and refuses without (recommended: both rules keep their full strength, and every result
+names the program that produced it, `TI-H14`); (b) keep one executable and accept a reviewed exception to
+`trust-shared-program` for the two checkers — §4.4's independence then rests on code review alone; (c) let `archogen`
+launch its role executables — §10.4's safety argument then no longer holds for the programmatic surface.
+`M3.5.1` and `M2.21` wait on it; the checker's library work (`M3.5.2`–`.5`) holds under every answer and proceeds.
+
 ## A note on what "done" means so far
 
 M0 and M1 are complete, and the shape of the claim matters. What exists is a **frontend**: a
