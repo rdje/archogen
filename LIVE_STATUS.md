@@ -15,7 +15,7 @@ one of those changes, and only then. What each closed leaf did lives in its tree
 | `S0` — early executable generation (F28) | Done | **F28 green**; every leaf closed — `S0.8` made the book chapter's counts and corpus table measured |
 | `M1` — eADL description foundation | Mostly Done | §12 M1's exit gate met; `M1.29.4` waits on the director (findings §7) |
 | `M2` — one engine realization + controls | In Progress | **F17 (analysis half), F18 and F29 green**; `riscv-virt-up` verified (`M2.8`); frontier `M2.7.4`, on the director: the gate done, its records and `M2.7.6` waiting; `M2.20`, `M2.10`, `M2.15`, `M2.12`, `M2.11`, `M2.9` closed; the catalog crate built |
-| `M3` — joint resolver + checked plan | In Progress | frontier `M3.3`: F08, F09, connectivity, routes and privilege judged (`.1`–`.4`), placement and ordering (`.5`); bundles `.6` next; F30's gate runs; `M3.6.9` postponed by the director `2026-10-21` until the functionality is locked |
+| `M3` — joint resolver + checked plan | In Progress | frontier `M3.3`: F08, F09, connectivity, routes and privilege judged (`.1`–`.4`), placement and ordering (`.5`); the initialization graph `.7` next; F30's gate runs; `M3.6.9` postponed by the director `2026-10-21` until the functionality is locked |
 | `M4` — generated system + simulator | Not Started | frontier `M4.1` |
 | `M5` — physical execution evidence | Not Started | **blocked: no board procured** (2026-09-13) — director decision |
 | `M6` — reuse and extension | Not Started | gated on `M4` |

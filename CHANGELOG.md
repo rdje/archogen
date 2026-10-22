@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the initialization graph: the design, reviewed
+
+`ARCHOGEN-M3-0858` (leaf `M3.3.7`), `2026-10-22`.
+
+- Design initialization order as a graph derived from one system's assignment, for `M4.1`'s plan: providers before the
+  requesters bound to them, used services before their users, each edge with its reason; nothing refused, a cycle a
+  component the engine initialises as one unit, since initialisation runs masked before every release.
+- One independent review, five defects and four remarks answered; taken before `M3.3.6`, whose bundles wait on a
+  vocabulary decision and on `M3.2`'s adapters.
+
 ## archogen — a required ordering is unsupported under this profile
 
 `ARCHOGEN-M3-0857` (leaf `M3.3.5.2`), `2026-10-22`.

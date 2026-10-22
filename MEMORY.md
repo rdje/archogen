@@ -14,8 +14,8 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.3`; `PROGRAM` resumes at `PROGRAM.71` (task-history index row order).
-- **Next action:** `M3.3.6` (P2), provider bundles (`SR-H14`) and an adapter owning its device with `M3.2` — its design
-  first, reviewed; then `M3.3.7`, `.8`, `M3.5`. `M3.3.4` waits on uc3 (findings §15); `M3.3.5` done `2026-10-22`. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
+- **Next action:** `M3.3.7` (P2), the initialization graph as its reviewed design says — derived for `M4.1`, refusing
+  nothing; then `M3.3.6` bundles (`SR-H14`), `.8`, `M3.5`. `M3.3.4` waits on uc3 (findings §15). `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
   focused green at `eaf71286`; `archogen check` wiring is `M3.4`'s. The next artifact cleanup is due after
   `2026-10-23T15:54`. A test's deadline is one only a hang reaches (`PROGRAM.99`).
   **Mutation testing is stopped** until the functionality is locked
