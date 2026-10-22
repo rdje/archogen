@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — connectivity and interrupt routes: the design, reviewed
+
+`ARCHOGEN-M3-0848` (leaf `M3.3.3`), `2026-10-22`.
+
+- Design the joint rules for §5.4's device connectivity and interrupt routes: an assignment is one system's; a binding
+  to a block or platform outside the system's hardware, read along `SR-H15`'s edges, is refused, the description's
+  code left to `SR-H18`; each source and each timer an assignment relies on is reported as a route obligation for the
+  plan and the analysis to discharge.
+- One independent review: seven defects and four remarks, each verified and answered; two questions filed for `M3.4`.
+
 ## archogen — a failed tier step's whole output is kept
 
 `ARCHOGEN-PROGRAM-0847` (leaf `PROGRAM.100`), `2026-10-22`.
