@@ -14,8 +14,8 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.3`; `PROGRAM` resumes at `PROGRAM.102` (P2, `docs/decisions/` at its ceiling).
-- **Next action:** `PROGRAM.102` first — headroom in `docs/decisions/`, specifications moved to `docs/specs/` — then
-  `M3.3.6` (P2), bundles (`SR-H14`), its design reviewed; `.8`, `M3.5`. `M3.3.4` waits on uc3 (findings §15). `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
+- **Next action:** `M3.3.4.5` (P2), uc3 gains its level — decided under the director's delegation of `2026-10-22`,
+  its plan in the leaf; then `PROGRAM.102` (headroom in `docs/decisions/`), `M3.3.6` bundles, `.8`, `M3.5`, `PROGRAM.103`. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
   focused green at `eaf71286`; `archogen check` wiring is `M3.4`'s. The next artifact cleanup is due after
   `2026-10-23T15:54`. A test's deadline is one only a hang reaches (`PROGRAM.99`).
   **Mutation testing is stopped** until the functionality is locked
@@ -28,7 +28,7 @@
   `M3.6.3.2.1.1` owns runner-baseline compatibility after key encoding; an authorized cadence run is needed. `M2`'s open leaves
   wait on the director: `M2.7.4.5` and `M2.7.6`'s review and hosting half. No branches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
-  `decision_findings-for-director-review.md`; `M3.3.4.5` — §15, uc3's privilege level; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
+  `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,
   ruled `2026-09-30`); every other script is archogen's.
 - **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance

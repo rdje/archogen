@@ -743,6 +743,21 @@ mdBook that is the director's window into the project.
   Verification: `pending`
   Commit: `pending`
 
+- ID: `PROGRAM.103`
+  Status: `pending` — P3: `CHANGELOG.md` becomes a curated changelog — decided `2026-10-22` under the director's delegation of `2026-10-22`: low-level technical findings are the engineer's to decide, at state-of-the-art, signoff, production grade
+  Decision: Keep a Changelog 1.1.0's convention — an *Unreleased* section and one section per release, entries grouped
+    Added, Changed, Deprecated, Removed, Fixed, Security, each a change a user of archogen sees (the CLI, the language, the
+    profile, the book's behaviour), never one per commit. The per-commit record already lives twice — `git log`, whose
+    subjects name the work unit and leaf, and each tree's Commit Log, which `COMMIT-LOG-ROWS` enforces — so a third copy
+    costs every commit and informs no one; the director reads the book. Rejected: freezing it with nothing after, since
+    `M7`'s release needs notes a user can read; generating it from `git log`, which writes commits, not changes.
+  Goal: the live file restarted in that form, its per-commit history sealed whole under `docs/history/changelog/` as
+    `HISTORY-LEDGERS` already seals; `COMMIT.md`, `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`'s narrative home, `STATED-ORDER`'s
+    changelog leg and `HISTORY-LEDGERS`' window rule moved to it, each gate's arms kept and re-armed; the book's account of
+    the workflow updated. A design first, reviewed by a context that did not write it.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does

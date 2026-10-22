@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the director's delegation: six findings decided
+
+`ARCHOGEN-M3-0861` (leaf `M3.3.4.5`), `2026-10-22`.
+
+- Decided under the director's delegation of low-level technical findings: uc3 gains its privilege level (a); the
+  profile's Privilege row stands; `docs/decisions/` gains room by moving specifications (`PROGRAM.102`); the changelog
+  becomes curated, per user-visible change (`PROGRAM.103`); `M3.4`'s three questions answered; `M3.6.9.7` and `.8`
+  stay postponed with the mutation work. Each decision, its reason and its alternatives are in its leaf.
+
 ## archogen — file: the decisions folder at its byte ceiling
 
 `ARCHOGEN-PROGRAM-0860` (leaf `PROGRAM.102`), `2026-10-22`.
