@@ -3,7 +3,7 @@
 //!
 //! The fixture is one complete task set that `fixed-priority-with-overheads/2` admits, and a list of single
 //! defects, each applied alone. Every defect must be **refused** with the verdict
-//! `docs/decisions/decision_runtime-analysis-variant.md` §5 gives it, `unsupported-profile` or
+//! `docs/specs/analysis/decision_runtime-analysis-variant.md` §5 gives it, `unsupported-profile` or
 //! `analysis-inconclusive`, and **never silently downgraded**:
 //! - a refused set yields no admitted set, so no conclusion of the runtime variant exists for it;
 //! - the idealized baseline, which a careless caller might fall back to, states a different model, and its

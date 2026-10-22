@@ -1,7 +1,7 @@
 //! The runtime variant against expected results derived independently (leaf `M2.6.3`).
 //!
 //! `tests/fixtures/runtime_expected.txt` was written by a context that read
-//! `docs/decisions/decision_runtime-analysis-variant.md`, the roadmap and the profile, and was told not to read this
+//! `docs/specs/analysis/decision_runtime-analysis-variant.md`, the roadmap and the profile, and was told not to read this
 //! crate. It derived every expectation by hand. The inputs were given to it; the expected lines are its own, copied
 //! verbatim. This test runs every fixture through `rt_analysis::runtime` and requires the two to agree, as `M2.2`'s
 //! reference and the runtime agree. A disagreement is classified and answered in the record, never "fixed" here by

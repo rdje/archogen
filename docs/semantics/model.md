@@ -287,7 +287,7 @@ did not write it. `archogen check` does not call them yet: `M3.4` searches for a
    states of its own `min-arrival-separation`; and a *timer*, bound through a consumed fact at `true`. The description's
    half of a route is rule 7; the controller between source and core, its line and context, and the latency are the
    catalog's, and the plan enables each such interrupt and no other, as the analysis requires
-   (`docs/decisions/decision_runtime-analysis-variant.md`, *enabled sources*). A route is an obligation, never a finding:
+   (`docs/specs/analysis/decision_runtime-analysis-variant.md`, *enabled sources*). A route is an obligation, never a finding:
    a second timer, which the analysis does not model, is the analysis's to refuse. Given the system's level (rule 9), a
    route carries it: the level the interrupt is delivered at.
 9. **Privilege** (`M3.3.4.1`; `SR-H11`, `SR-H12`). Given the level a plan binds one system's callers to — a level of

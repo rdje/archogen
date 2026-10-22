@@ -1,5 +1,5 @@
 //! `fixed-priority-with-overheads/2` against the record that defines it (leaf `M2.6.2`,
-//! `docs/decisions/decision_runtime-analysis-variant.md`).
+//! `docs/specs/analysis/decision_runtime-analysis-variant.md`).
 //!
 //! Every expected number here was derived by hand from the record's §2 before the test was run; each derivation is
 //! written beside its assertion so a reader can redo it. The independent derivation of a wider fixture set, by a
@@ -503,7 +503,7 @@ fn a_task_released_on_some_arrivals_only_has_its_rate_limit_named() {
 /// The record the variant implements, by its path from the root, which [`MODEL`] cites.
 macro_rules! record_path {
     () => {
-        "docs/decisions/decision_runtime-analysis-variant.md"
+        "docs/specs/analysis/decision_runtime-analysis-variant.md"
     };
 }
 

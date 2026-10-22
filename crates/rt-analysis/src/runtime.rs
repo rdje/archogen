@@ -1,6 +1,6 @@
 //! The runtime analysis variant `fixed-priority-with-overheads/2` (leaf `M2.6.2`; `/2` since leaf `M2.11`).
 //!
-//! ⛔ **This module implements `docs/decisions/decision_runtime-analysis-variant.md` and nothing else.** Every
+//! ⛔ **This module implements `docs/specs/analysis/decision_runtime-analysis-variant.md` and nothing else.** Every
 //! input, condition, term and verdict below is a section of that record, cited where it is used. Anything the
 //! implementation needs that the record does not say goes back to the record first. Independent reviews have
 //! each found a way an earlier draft could under-estimate a response time (the record's Review), so a local
@@ -17,7 +17,7 @@ use archogen_evidence::claim::Conclusion;
 
 /// The model this variant reasons in, apart from the baseline's (record, "The fact / decision").
 pub const MODEL: &str =
-    "fixed-priority-with-overheads/2 (docs/decisions/decision_runtime-analysis-variant.md)";
+    "fixed-priority-with-overheads/2 (docs/specs/analysis/decision_runtime-analysis-variant.md)";
 
 /// The iteration budget (record §2): the derived step bound is pseudo-polynomial in `T_i`, so reaching this is a
 /// named resource limit, `analysis-inconclusive`.

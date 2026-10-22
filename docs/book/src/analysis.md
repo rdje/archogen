@@ -224,7 +224,7 @@ result is acceptable. That is leaf `M2.6`, and its control is fixture **F29** (Â
 specified repeated-preemption trace whose ledger totals 23, built so that an omitted interrupt or
 resume cost turns a real miss into a false pass.
 
-The variant is decided (leaf `M2.6.1`, `docs/decisions/decision_runtime-analysis-variant.md`) and built
+The variant is decided (leaf `M2.6.1`, `docs/specs/analysis/decision_runtime-analysis-variant.md`) and built
 (`crates/rt-analysis/src/runtime.rs`, leaf `M2.6.2`). It is a
 response-time analysis with release jitter, interrupt and timer interference, a charge for every context switch,
 and a charge for state a preemption destroys, `fixed-priority-with-overheads/2`. Its costs and platform facts are

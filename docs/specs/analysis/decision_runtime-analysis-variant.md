@@ -3,8 +3,8 @@
 - **Type:** `decision`
 - **Date:** `2026-09-30`
 - **Status:** `active`
-- **External sources:** [QEMU](../book/src/ledger.md#qemu), [the PLIC specification](../book/src/ledger.md#riscv-plic)
-  and [the RISC-V privileged specification](../book/src/ledger.md#riscv-privileged) — versions, scope and limits in
+- **External sources:** [QEMU](../../book/src/ledger.md#qemu), [the PLIC specification](../../book/src/ledger.md#riscv-plic)
+  and [the RISC-V privileged specification](../../book/src/ledger.md#riscv-privileged) — versions, scope and limits in
   the ledger
 - **Owner / source:** leaf `M2.6.1` (`docs/tasks/M2.md`), deciding what `ROADMAP.md` §7.4 requires before a
   `rt-static-up-v1` timing result may be accepted: "an analysis variant that accounts for its bounded critical
@@ -212,10 +212,10 @@ about a run that differs from another only in arrivals after an instant, and a c
      charges every service. *Added `2026-10-02` by leaf `M2.11`*, after the composition's review found services that a conforming
      controller, or the emulator's, allows and no arrival pays for
      (`decision_runtime-composite-inputs.md`, rounds 4 to 6, N2, O1 and P2): a trap taken on a notification that
-     lags the claim which emptied it, since the [PLIC specification](../book/src/ledger.md#riscv-plic) lets one
+     lags the claim which emptied it, since the [PLIC specification](../../book/src/ledger.md#riscv-plic) lets one
      "take some time to be received", whose claim finds nothing or an arrival made after the trap; and a second
      service for one arrival, since the controller forwards a new request on a completion "if the interrupt is
-     level-triggered and the interrupt is still asserted", and [QEMU](../book/src/ledger.md#qemu)'s pends one on any
+     level-triggered and the interrupt is still asserted", and [QEMU](../../book/src/ledger.md#qemu)'s pends one on any
      raise of the line. Each is charged nowhere, and repeated it can keep the timer from being taken at all.
    - A pending interrupt is taken before the resumed context executes an instruction, and every transition, into
      idle included, ends unmasked.
@@ -235,7 +235,7 @@ about a run that differs from another only in arrivals after an instant, and a c
    - A timer interrupt is taken only when a release is due, and its service releases every due task. A release of a
      timer-released task is **due** once the counter has reached its nominal release, rounded as the compare rounds,
      and the release has not been performed. *Taken*, not *raised* (`M2.11`): an interrupt still pending after a service moved the compare on,
-     which the [privileged specification](../book/src/ledger.md#riscv-privileged) allows, since the timer interrupt
+     which the [privileged specification](../../book/src/ledger.md#riscv-privileged) allows, since the timer interrupt
      follows the comparison "eventually, but not necessarily immediately", could be served with no release due, and
      the timer term counts releases.
    - Only the timer service releases timer-released tasks.
@@ -322,7 +322,7 @@ fixture's exact timeline, where H responds in 5 and L in 23.
   need the masked run as blocking, the timer as a queue member whose arrivals are every release, and the residue
   above as extra items;
 - whether RISC-V takes an interrupt pending at `mret` before any instruction of the resumed context. **Settled
-  `2026-09-30` for a conforming hart** (`M2.10.1`): the [privileged specification](../book/src/ledger.md#riscv-privileged)
+  `2026-09-30` for a conforming hart** (`M2.10.1`): the [privileged specification](../../book/src/ledger.md#riscv-privileged)
   says interrupt-trap conditions "must also be evaluated immediately following the execution of an xRET
   instruction". Whether the target and QEMU conform is a separate fact. The model keeps it a declared platform fact
   (condition 5).
@@ -379,7 +379,7 @@ fixture's exact timeline, where H responds in 5 and L in 23.
 Four readers checked this record on `2026-09-30`, and five more `M2.11`'s change on `2026-10-02`, the last finding no defect. Each was a new
 read-only context that had not written it. Their
 findings, and the answer to each, are kept in
-[`decision_runtime-analysis-variant-reviews.md`](../reviews/decision_runtime-analysis-variant-reviews.md).
+[`decision_runtime-analysis-variant-reviews.md`](../../reviews/decision_runtime-analysis-variant-reviews.md).
 
 | Reader | Findings | What it turned on | Outcome |
 | --- | --- | --- | --- |

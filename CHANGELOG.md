@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the runtime analysis design moves to the specifications
+
+`ARCHOGEN-PROGRAM-0866` (leaf `PROGRAM.102`), `2026-10-22`.
+
+- `docs/decisions/` held 392950 of the director's 393216 bytes. By the ruling of `2026-10-01`, the runtime analysis
+  variant's accepted design moves to `docs/specs/analysis/`, every path citing it repointed, `MODEL`'s among them:
+  355040 bytes now, room for `M3.3.6` and `M3.4`'s amendment.
+- `docs/specs/` had 42 bytes to spare, so its ceiling rises one 64 KiB step, 589824, by its record's measured paragraph.
+
 ## archogen — the version register reads a declaration rustfmt wraps
 
 `ARCHOGEN-PROGRAM-0865` (leaf `PROGRAM.104`), `2026-10-22`.

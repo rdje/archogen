@@ -25,6 +25,15 @@ more. Weighed and refused: compacting — a record's review table is its own acc
 history kept beside it, and nothing here is terminal; a total by subject — the per-file caps already bound each
 record, and a total for each sub-folder would move the same decision without changing it.
 
+**Raised `2026-10-22` to 589 824 (576 KiB)** (`PROGRAM.102`). Measured at `757c49a6`, `git ls-tree -r -l HEAD --
+docs/specs`: 524 246 of 524 288, 42 bytes to spare, 134 963 bytes in the 264 commits since `e2d11228`, nearly all the
+trust subject's mutation-adequacy records, a line of work stopped on `2026-10-21` until the functionality is locked.
+`docs/decisions/` held 392 950 of the director's 393 216, and `M3.3.6` needs rows there. The role grew by a subject: the
+runtime analysis variant's design, accepted with `M2.11`'s fifth review and unchanged since `2026-10-03`, moves to
+`docs/specs/analysis/` (38 794 bytes), taking the folder to about 563 000. One 64 KiB step holds it, with room for
+about 50 commits at the overall rate. Weighed and refused: moving a record that is still amended, or whose citations
+cannot all follow it (`PROGRAM.102` names each).
+
 ## Why
 
 **Measured `2026-10-05`**, `git ls-files <folder> | xargs cat | wc -c`: `docs/decisions/` held 393 061 bytes of its

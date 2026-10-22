@@ -118,7 +118,7 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Surface | the model the runtime-applicable analysis variant reasons in, which each of its conclusions names, apart from the baseline's ([What the scheduling checker establishes](analysis.md)) |
 | Version | `fixed-priority-with-overheads/2` — `/1` until `2026-10-02`, when leaf `M2.11` changed its admission conditions |
 | Declared at | `const:crates/rt-analysis/src/runtime.rs:MODEL` |
-| Changes when | the recurrence, the charging or the admission conditions change after a conclusion has been stated: the next is `/3`, and a changed model invalidates every conclusion stated in the one before (`docs/decisions/decision_runtime-analysis-variant.md`, *How to apply*) |
+| Changes when | the recurrence, the charging or the admission conditions change after a conclusion has been stated: the next is `/3`, and a changed model invalidates every conclusion stated in the one before (`docs/specs/analysis/decision_runtime-analysis-variant.md`, *How to apply*) |
 | Pinned by | `crates/rt-analysis/tests/runtime_variant.rs`, which holds the constant to the identifier the record states and to the record's path, and each conclusion its tests check to the constant |
 | Keeps | a conclusion "in `fixed-priority-with-overheads/2`" means the same bound under the same conditions |
 
