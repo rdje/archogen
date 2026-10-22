@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-10-22
 - leaf: M3.3.4.5 (`docs/tasks/M3.md`)
-- status: pending
+- status: applied
 - constructs: suite/examples/alternative-timer/system.eadl
 - invalidates: none, measured — `archogen check` still answers `13 infeasible-configuration` with the same diagnostic,
   frozen in `crates/archogen-cli/tests/verdicts.txt`; its two locations move one line down, the timer's offers having
