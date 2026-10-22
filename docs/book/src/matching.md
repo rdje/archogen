@@ -147,11 +147,12 @@ horizon, not to anyone's sense of which counter is faster.
 of `supervisor machine` and not by `machine` alone, nor by `user`. `available-in-state` works the same way, with one
 member always implied: a requirement for `idle` asks for `idle` and `run`, the state every use runs in.
 
-### Several bindings at once: channels and owned regions
+### Several bindings at once: channels, owned regions, connectivity and routes
 
 The relation answers for one requirement at one provider. A system makes many requirements at once, and some answers
 that are each fine alone are wrong together. The joint check (`crates/eadl-resolve/src/joint.rs`) judges one complete
-**assignment** — every requirement bound to one provider that satisfies it — for two such mistakes.
+**assignment** — every requirement bound to one provider that satisfies it — for such mistakes, and reports what the
+assignment leaves for the plan to do.
 
 **Too many requesters for a provider's channels** (`ROADMAP.md`'s case F08). Two services each program an absolute
 deadline, and the platform has one comparator with one channel:
@@ -192,6 +193,47 @@ A refused assignment is not yet a refused description: another assignment may ho
 the description is `infeasible-configuration` only when every assignment is refused. Both cases are descriptions
 under `crates/eadl-resolve/tests/joint/`, and `crates/eadl-resolve/tests/joint.rs` refuses every assignment of each,
 beside controls that hold.
+
+**A device the system does not have.** An assignment is one system's, and a block or platform it binds is part of
+that system's **hardware**: what its `platform` clause names, what its own and its tasks' `uses` and `needs` name, and
+what those name in turn, at any depth. A block that offers the right fact but sits on no platform the system uses
+cannot serve it:
+
+```text
+(defplatform bus.main (uses bus.timer) (offers (bus-width 32 bit)))
+(defplatform bus.fast (refines bus.main) (needs bus.clock) (offers (bus-width 32 bit)))
+(defblock bus.timer   (offers (counter-width 32 bit)))
+(defblock bus.clock   (offers (clock-rate 10 MHz)))
+(defblock stray.clock (offers (clock-rate 10 MHz)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs clock-rate))
+  (platform (uses bus.fast)))
+```
+
+`s`'s hardware is `bus.fast` and `bus.clock`, which `bus.fast` names through `needs`. Binding the task's `clock-rate`
+to `bus.clock` holds; binding it to `stray.clock` is refused, `infeasible-configuration`: *`s/t` is bound to
+`stray.clock`, which is not part of `s`'s hardware*, with the repair *compose `stray.clock` into `s`'s platform, or
+bind `s/t` to a provider its platform composes*. `bus.timer` is not `s`'s either: `bus.fast` *refines* `bus.main`, and a
+refinement keeps the abstract platform's obligations, not its blocks. A system with no platform has no hardware, so
+every binding of its requesters to a block is refused. Two systems in one description are judged apart, each against
+its own board, so two boards that each put a timer at the same address never meet. A requester no system reaches is
+judged for channels alone. What a description's code becomes when only unconnected providers offer a fact is decided
+with the search (`M3.4`).
+
+**The interrupts an assignment relies on.** Under one active core, every interrupt a plan relies on must be routed
+from its source to the core, and the analysis requires the interrupts the build enables to equal its declared sources
+plus the timer. The description says which source is part of the system; the controller between them, its line and
+the latency are the catalog's. So the check reports a **route obligation** for each provider an assignment relies on
+for an interrupt — never a refusal. In the sporadic-release case,
+
+```text
+(defblock event.line (offers interrupt-source min-arrival-separation))
+(defplatform soc.p (offers (core-count 1 tick)) (requires (uses event.line)))
+```
+
+the service released by `event.line` gives one *source* route, carrying what `event.line` states of its own
+`min-arrival-separation` — here offered without a value — for the analysis to read; and in case F09 each of the two
+providers of the one comparator, direct and through firmware, gives a *timer* route of its own. The plan enables each, and no other interrupt.
 
 ### The list a resolver chooses from
 
@@ -267,7 +309,8 @@ the relation (`model.md` §7 rule 6).
 `docs/semantics/model.md` §8 is normative over `crates/eadl-resolve/src/joint.rs`: who a requester is (rule 1), when
 a binding takes a channel (rule 2), the channel count and its codes (rule 3), the service that multiplexes (rule 4),
 region ownership and its codes (rule 5), and that one assignment's findings decide nothing about the description until
-the search has tried every assignment (rule 6).
+the search has tried every assignment (rule 6); then one system's assignment, its hardware and connectivity (rule 7), and
+the route obligations (rule 8).
 
 ### What is not claimed
 
@@ -286,6 +329,6 @@ has a catalogued mutation that its test must kill (`xtask/mutations.txt`).
 over the description's providers, deciding a description's `missing-fact` or `infeasible-configuration` from the
 enumeration and keeping or migrating every verdict it moves. `M3.2` adds adapters — a provider in its own right, such
 as an epoch extender — offered only where a requirer allows mediation; `M3.3` judges what one provider cannot: its
-channels and owned regions are judged today, over an assignment a test proposes (`M3.3.2`), and connectivity,
-privilege, placement, bundles and initialization order follow (`M3.3.3`–`.7`); `M3.7` makes a catalog record a
-provider.
+channels and owned regions (`M3.3.2`), connectivity and routes (`M3.3.3`) are judged today, over an assignment a test
+proposes, and privilege, placement, bundles and initialization order follow (`M3.3.4`–`.7`); `M3.7` makes a catalog
+record a provider.

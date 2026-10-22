@@ -9,6 +9,12 @@
 //!   takes one of the provider's `channels`, and a provider serves no more requesters than it has.
 //! - **Ownership** (F09). A provider bound in the assignment owns every region it offers, and the regions of two such
 //!   providers do not overlap, unless one composes the other through `uses`.
+//! - **Connectivity** (leaf `M3.3.3`). An assignment is one [`System`]'s, and a block or platform it binds a requester
+//!   of that system to is part of the system's hardware — `SR-H15`'s "a provider on a platform the system does not use
+//!   never satisfying", in the checker's form.
+//! - **Routes.** Each provider the assignment relies on for an interrupt — a source, or a timer's alarm — is reported
+//!   as an [`Obligation::Route`]: the description states that the provider is part of the system, and the path from
+//!   it to the core, with its latency, is the catalog's to state and the plan's to enable.
 //!
 //! A [`Report`] lists what one assignment breaks. It is a judgment of that assignment only: the description is
 //! `infeasible-configuration`, or `missing-fact`, when no assignment the resolver can propose avoids it, which is
@@ -25,6 +31,7 @@ use eadl_front::{Diagnostic, Form, Label, Span};
 use eadl_model::{Dimension, Quantity};
 
 use crate::offer::{Provider, State};
+use crate::requirement::side_name_lists;
 use crate::requirement::{self, Requirement};
 use crate::value::Value;
 use crate::vocabulary::{Usage, Vocabulary};
@@ -121,6 +128,82 @@ fn name_of(form: &Form) -> &str {
         .unwrap_or_default()
 }
 
+/// The names the `uses` and `needs` lists of `form` hold, at the positions the relation reads a side's — a system's
+/// `platform` clause and its tasks' included, `refines` never.
+fn named_by(form: &Form) -> impl Iterator<Item = &str> {
+    side_name_lists(form)
+        .into_iter()
+        .flat_map(|list| list.items()[1..].iter().filter_map(Form::as_symbol))
+}
+
+/// Whether `decl` declares hardware: a block or a platform.
+fn is_hardware(decl: &Form) -> bool {
+    matches!(decl.head(), Some("defblock" | "defplatform"))
+}
+
+/// One system as the joint rules read it: its hardware, and every declaration its closure reaches (model §8 rule 7).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct System {
+    /// Its name.
+    pub name: String,
+    /// The blocks and platforms it has: every one its `platform` clause, its own `uses` and `needs` or its tasks' name,
+    /// and every one those name in turn, at any depth. `refines` is no edge: a refinement keeps the abstract
+    /// platform's obligations (model §3), not its blocks.
+    pub hardware: BTreeSet<String>,
+    /// Every declaration a `uses` or `needs` of the system, its tasks, or of what they reach names, at any depth.
+    pub reached: BTreeSet<String>,
+}
+
+impl System {
+    /// Read `decl`, a `defsystem`, among the description's `declarations`; a name no declaration bears is a
+    /// vocabulary fact or another rule's refusal, and leads nowhere.
+    #[must_use]
+    pub fn read(decl: &Form, declarations: &[Form]) -> Self {
+        let declared: BTreeMap<&str, &Form> =
+            declarations.iter().map(|d| (name_of(d), d)).collect();
+        let mut reached = BTreeSet::new();
+        let mut todo = vec![decl];
+        while let Some(at) = todo.pop() {
+            for name in named_by(at) {
+                if let Some(next) = declared.get(name) {
+                    if reached.insert(name.to_string()) {
+                        todo.push(next);
+                    }
+                }
+            }
+        }
+        let mut hardware = BTreeSet::new();
+        let mut todo: Vec<&Form> = named_by(decl)
+            .filter_map(|name| declared.get(name).copied())
+            .filter(|d| is_hardware(d))
+            .collect();
+        while let Some(at) = todo.pop() {
+            if hardware.insert(name_of(at).to_string()) {
+                todo.extend(
+                    named_by(at)
+                        .filter_map(|name| declared.get(name).copied())
+                        .filter(|d| is_hardware(d)),
+                );
+            }
+        }
+        Self {
+            name: name_of(decl).to_string(),
+            hardware,
+            reached,
+        }
+    }
+
+    /// Whether the system's closure reaches `requester`: its own level, one of its tasks, or a declaration it reaches.
+    #[must_use]
+    pub fn serves(&self, requester: &str) -> bool {
+        requester == self.name
+            || requester
+                .strip_prefix(self.name.as_str())
+                .is_some_and(|task| task.starts_with('/'))
+            || self.reached.contains(requester)
+    }
+}
+
 /// One binding of an assignment: a requester's requirement, met by a provider.
 #[derive(Debug, Clone)]
 pub struct Binding {
@@ -131,6 +214,11 @@ pub struct Binding {
     /// The provider's name.
     pub provider: String,
 }
+
+/// The fact a requester released by an interrupt requires of its source.
+const INTERRUPT_SOURCE: &str = "interrupt-source";
+/// The source's own bound on how often it fires, which the analysis reads with the route.
+const MIN_ARRIVAL_SEPARATION: &str = "min-arrival-separation";
 
 /// A byte range a provider owns: `(region NAME (base B) (size S))`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -170,6 +258,10 @@ enum Channels {
 #[derive(Debug, Clone)]
 struct Held {
     span: Span,
+    /// A block or a platform, which connectivity judges; an adapter or a record would take its users' system.
+    hardware: bool,
+    /// What it states of its own `min-arrival-separation`, which a route obligation carries.
+    separation: Option<State>,
     channels: Channels,
     regions: Vec<Region>,
     composes: BTreeSet<String>,
@@ -233,6 +325,19 @@ pub enum Finding {
         /// Where the region is written.
         span: Span,
     },
+    /// A requester of a system bound to a block or platform outside the system's hardware (leaf `M3.3.3`).
+    Unconnected {
+        /// The requester.
+        requester: String,
+        /// Where it requires the fact.
+        span: Span,
+        /// The provider.
+        provider: String,
+        /// Where the provider is declared.
+        declared: Span,
+        /// The system.
+        system: String,
+    },
 }
 
 impl Finding {
@@ -240,7 +345,9 @@ impl Finding {
     #[must_use]
     pub const fn code(&self) -> &'static str {
         match self {
-            Self::OverChannels { .. } | Self::Overlap { .. } => "infeasible-configuration",
+            Self::OverChannels { .. } | Self::Overlap { .. } | Self::Unconnected { .. } => {
+                "infeasible-configuration"
+            }
             Self::ChannelsUnknown { .. } | Self::RegionUnsized { .. } => "missing-fact",
             Self::ChannelsContradicted { .. } | Self::RegionMalformed { .. } => {
                 "invalid-description"
@@ -345,6 +452,24 @@ impl Finding {
                 Label::new(*span, "written here"),
                 "write a smaller region",
             ),
+            Self::Unconnected {
+                requester,
+                span,
+                provider,
+                declared,
+                system,
+            } => Diagnostic::error(
+                "infeasible-configuration",
+                format!(
+                    "`{requester}` is bound to `{provider}`, which is not part of `{system}`'s hardware"
+                ),
+                Label::new(*span, "required here"),
+                format!(
+                    "compose `{provider}` into `{system}`'s platform, or bind `{requester}` to a provider its \
+                     platform composes"
+                ),
+            )
+            .with_secondary(Label::new(*declared, "declared here, outside it")),
         }
     }
 }
@@ -358,7 +483,7 @@ fn listed(requesters: &[(String, Span)]) -> String {
 }
 
 /// What a realization owes because of an assignment.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Obligation {
     /// A service several requesters reach takes a channel: its realization serves them all through it, so it owes
     /// them the shared semantics and a bounded overhead (`ROADMAP.md` §5.4).
@@ -370,10 +495,36 @@ pub enum Obligation {
         /// The provider whose channel it takes.
         provider: String,
     },
+    /// A provider the assignment relies on for an interrupt: the path from it to the system's core, with its latency,
+    /// is the catalog's to state and the plan's to enable (leaf `M3.3.3`; `decision_runtime-analysis-variant.md`'s
+    /// *enabled sources*).
+    Route {
+        /// The system.
+        system: String,
+        /// The provider.
+        provider: String,
+        /// What the interrupt is.
+        interrupt: Interrupt,
+        /// The requesters relying on it.
+        requesters: Vec<String>,
+    },
+}
+
+/// What an [`Obligation::Route`]'s interrupt is.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Interrupt {
+    /// A source, bound through `interrupt-source` at `true`, with what it states of its own `min-arrival-separation`
+    /// — `None` when it does not name it — since `SR-H14` (`M3.3.6`) may bind that fact to another provider.
+    Source {
+        /// Its own separation.
+        separation: Option<State>,
+    },
+    /// A timer, bound through a consumed fact at `true`: an alarm the requester programs.
+    Timer,
 }
 
 /// What one assignment breaks, what it leaves unknown, and what it obliges.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Report {
     /// Rules the assignment breaks: `infeasible-configuration` once every assignment breaks one.
     pub conflicts: Vec<Finding>,
@@ -395,6 +546,7 @@ impl Report {
 #[derive(Debug, Clone)]
 pub struct Joint<'v> {
     vocabulary: &'v Vocabulary,
+    system: Option<System>,
     held: BTreeMap<String, Held>,
     requesters: BTreeMap<String, Kind>,
     users: BTreeMap<String, BTreeSet<String>>,
@@ -440,6 +592,8 @@ impl<'v> Joint<'v> {
                 provider.name.clone(),
                 Held {
                     span: provider.span,
+                    hardware: is_hardware(decl),
+                    separation: provider.state(MIN_ARRIVAL_SEPARATION).cloned(),
                     channels,
                     regions,
                     composes: used_names(decl).into_iter().collect(),
@@ -462,6 +616,7 @@ impl<'v> Joint<'v> {
         }
         Ok(Self {
             vocabulary,
+            system: None,
             held,
             requesters: requesters
                 .iter()
@@ -471,13 +626,76 @@ impl<'v> Joint<'v> {
         })
     }
 
+    /// The rules for one system's assignment: connectivity and routes judge the bindings of the requesters it serves.
+    /// Without a system, an assignment is judged for channels and ownership alone.
+    #[must_use]
+    pub fn for_system(mut self, system: System) -> Self {
+        self.system = Some(system);
+        self
+    }
+
     /// Judge one complete assignment.
     #[must_use]
     pub fn check(&self, assignment: &[Binding]) -> Report {
         let mut report = Report::default();
         self.channels(assignment, &mut report);
         self.ownership(assignment, &mut report);
+        if let Some(system) = &self.system {
+            self.connectivity(system, assignment, &mut report);
+            self.routes(system, assignment, &mut report);
+        }
         report
+    }
+
+    /// `SR-H15`'s last clause, in the checker's form: a block or platform bound for a requester the system serves is
+    /// part of the system's hardware.
+    fn connectivity(&self, system: &System, assignment: &[Binding], report: &mut Report) {
+        for b in assignment.iter().filter(|b| system.serves(&b.requester)) {
+            let Some(held) = self.held.get(&b.provider) else {
+                continue;
+            };
+            if held.hardware && !system.hardware.contains(&b.provider) {
+                report.conflicts.push(Finding::Unconnected {
+                    requester: b.requester.clone(),
+                    span: b.requirement.span(),
+                    provider: b.provider.clone(),
+                    declared: held.span,
+                    system: system.name.clone(),
+                });
+            }
+        }
+    }
+
+    /// One route obligation per provider the system's requesters rely on for an interrupt, and per kind.
+    fn routes(&self, system: &System, assignment: &[Binding], report: &mut Report) {
+        let mut routes: BTreeMap<(&str, bool), BTreeSet<&str>> = BTreeMap::new();
+        for b in assignment.iter().filter(|b| system.serves(&b.requester)) {
+            let source = b.requirement.fact() == INTERRUPT_SOURCE && met_by_true(&b.requirement);
+            let timer = takes_a_channel(&b.requirement, self.vocabulary).is_some();
+            for (is_source, relied) in [(true, source), (false, timer)] {
+                if relied {
+                    routes
+                        .entry((b.provider.as_str(), is_source))
+                        .or_default()
+                        .insert(b.requester.as_str());
+                }
+            }
+        }
+        for ((provider, is_source), requesters) in routes {
+            let interrupt = if is_source {
+                Interrupt::Source {
+                    separation: self.held.get(provider).and_then(|h| h.separation.clone()),
+                }
+            } else {
+                Interrupt::Timer
+            };
+            report.obligations.push(Obligation::Route {
+                system: system.name.clone(),
+                provider: provider.to_string(),
+                interrupt,
+                requesters: requesters.into_iter().map(str::to_string).collect(),
+            });
+        }
     }
 
     /// F08: the requesters taking a provider's channels number at most its `channels`.
@@ -609,23 +827,25 @@ fn judge_pair(a: (&str, &Region), b: (&str, &Region), report: &mut Report) {
     }
 }
 
+/// Whether the value `true` of the requirement's fact meets it: `(needs f)`, `(f true)`, or the group whose head it is.
+const fn met_by_true(requirement: &Requirement) -> bool {
+    matches!(
+        requirement,
+        Requirement::Presence { .. }
+            | Requirement::Group { .. }
+            | Requirement::Constraint {
+                value: Value::Bool(true),
+                ..
+            }
+    )
+}
+
 /// Where a requirement takes a channel: one on a consumed fact that the value `true` meets.
 fn takes_a_channel(requirement: &Requirement, vocabulary: &Vocabulary) -> Option<Span> {
     let consumed = vocabulary
         .fact(requirement.fact())
         .is_some_and(|f| f.usage == Usage::Consumed);
-    if !consumed {
-        return None;
-    }
-    match requirement {
-        Requirement::Presence { span, .. } | Requirement::Group { span, .. } => Some(*span),
-        Requirement::Constraint {
-            value: Value::Bool(true),
-            span,
-            ..
-        } => Some(*span),
-        Requirement::Constraint { .. } | Requirement::Statement { .. } => None,
-    }
+    (consumed && met_by_true(requirement)).then(|| requirement.span())
 }
 
 /// Whether `provider` offers a consumed fact at the value `true`.

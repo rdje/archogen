@@ -42,7 +42,7 @@ nothing re-derives.
 | `crates/eadl-resolve/src/requirement.rs` | §7 rule 4, what a side requires, read whole |
 | `crates/eadl-resolve/src/relation.rs` | §7 rule 5, each fact's outcome at a provider and each requirement's verdict there |
 | `crates/eadl-resolve/src/refusal.rs` | §7 rule 6, the relation's refusals, their codes and their repair directions |
-| `crates/eadl-resolve/src/joint.rs` | §8, whether the bindings of one assignment hold together: channels and owned regions |
+| `crates/eadl-resolve/src/joint.rs` | §8, whether the bindings of one assignment hold together: channels, owned regions, connectivity and routes |
 
 The census over this declaration runs in both directions, in `crates/eadl-front/tests/reference.rs`. A code
 these sources can emit and §6 does not state is a rule nobody has written down. A code §6 states and no
@@ -180,7 +180,7 @@ the one code that names more than one rule today says so.
 | `quantity-invalid` | no input today: the totality arm for a refusal `Quantity::new` may grow (§1 rule 6) | write a quantity as a number followed by a known unit | `none: the catch-all arm of Quantity::read, for a refusal Quantity::new may grow later; today it refuses only what the frequency and duration rows state, and each has its own code (section 1 rule 6)` |
 | `priority-below-one` | a task's priority is below 1 (§4 rule 5) | write a rank of 1 or more: 1 is the highest priority, and a larger number is a lower one | `check (defsystem s (task t (period 10 ms) (deadline 10 ms) (priority 0)))` |
 | `invalid-description` | a description contradicts itself: a fact both offered and absent (§2 rule 1), or a task with two release models (§4 rule 1); or the substitutability relation refuses what it writes, each refusal naming its cause (§7 rule 6); or a provider offers a consumed function with no channel, or a region that names no byte range (§8 rules 3 and 5) | remove one of the two declarations; only the author knows which was meant | `check (defblock b (offers counter-width) (absent counter-width))` |
-| `infeasible-configuration` | a required fact is declared absent (§2 rule 2); or an assignment gives a provider more requesters than channels, or two bound providers overlapping bytes (§8 rules 3 and 5), once no assignment avoids it | correct the requirement or the platform | `check (defblock timer.counter (offers counter-width) (absent low-power-timer)) (defservice time.lowpower (requires (needs low-power-timer))) (defsystem s (requires (uses time.lowpower)))` |
+| `infeasible-configuration` | a required fact is declared absent (§2 rule 2); or an assignment gives a provider more requesters than channels, or two bound providers overlapping bytes, or a requester bound to a block or platform outside its system's hardware (§8 rules 3, 5 and 7), once no assignment avoids it | correct the requirement or the platform | `check (defblock timer.counter (offers counter-width) (absent low-power-timer)) (defservice time.lowpower (requires (needs low-power-timer))) (defsystem s (requires (uses time.lowpower)))` |
 | `missing-fact` | something the system requires is described nowhere: a required fact (§2 rule 3), a task's release model (§4 rule 1), or the platform a refinement names (§3 rule 4); or what §8 cannot judge an assignment without — a provider's `channels`, a region's size (§8 rules 3 and 5) | declare the fact offered or absent on the platform; give a task a `period` or a `min-separation`; for a refinement, import the module that declares the target, or correct its name | `check (defservice time.monotonic (requires (needs wrap-behavior))) (defsystem s (requires (uses time.monotonic)))` |
 | `refinement-violated` | a concrete platform breaks an obligation of the abstract one it refines (§3 rules 1–3) | honour the obligation the diagnostic names: offer the guarantee, give the bounded value, or drop what the abstract declares absent | `check (defplatform soc.abstract (offers counter-width) (absent debug-port)) (defplatform soc.concrete (refines soc.abstract) (offers counter-width debug-port))` |
 | `unsupported-profile` | the description asks for something the active profile does not admit (§4 rules 2–4 and 6); or the substitutability relation meets a constraint on a fact no rule decides, or a comparison past the exact arithmetic (§7 rule 6), a region's range among them (§8 rule 5) | request a profile that supports it, or change the description to fit this one; nothing is silently weakened | `check (defsystem s (task a (period 10 ms) (deadline 10 ms) (priority 1)) (task b (period 10 ms) (deadline 10 ms) (priority 1)))` |
@@ -238,8 +238,8 @@ which is held to the model over the model checker's whole universe (`crates/eadl
 
 The relation judges one binding at a time (§7). An **assignment** binds each requester's requirement to one provider
 the relation satisfies it at, and these rules judge the bindings together (`crates/eadl-resolve/src/joint.rs`). Their
-design is `M3.3`'s in `docs/tasks/M3.md`, reviewed once by a context that did not write it. `archogen check` does not
-call them yet: `M3.4` searches for an assignment and wires both in.
+design is `M3.3`'s in `docs/tasks/M3.md`, and connectivity's and routes' `M3.3.3`'s, each reviewed once by a context that
+did not write it. `archogen check` does not call them yet: `M3.4` searches for an assignment and wires both in.
 
 1. **Requesters.** A requester is a task, for what the task itself writes; a service; or any other declaration, for
    what it writes at its own level outside its tasks. Two tasks of one system are two requesters, though §7 reads them
@@ -269,3 +269,20 @@ call them yet: `M3.4` searches for an assignment and wires both in.
    assignment is blocked by unknowns alone — `M3.4`'s search to conclude, never a single assignment's. Each finding
    names the provider, the requesters with where they require the fact, and the count or the two ranges, with a
    repair: another provider, a sharing realization, or the fact described.
+7. **One system's assignment, and its hardware** (`M3.3.3`). An assignment is one system's: a description of several
+   systems is resolved system by system, so channels count and ownership compares within one. A system's **hardware**
+   is the blocks and platforms its `platform` clause, its own `uses` and `needs` or its tasks' name, and every block or
+   platform those name in turn through `uses` or `needs` — a clause of their own, or inside `requires` — at any depth.
+   `refines` is no edge: a refinement keeps the abstract platform's obligations (§3), not its blocks. A requester the
+   system serves — its own level, one of its tasks, or a declaration its closure reaches through `uses` and `needs` —
+   bound to a block or platform outside that hardware is a conflict naming the requester, the provider and the system:
+   `SR-H15`'s "a provider on a platform the system does not use never satisfying", in the checker's form. What the
+   description's code then is, is `SR-H18`'s, `M3.4`'s to decide. An adapter or a catalog record is composed by no
+   platform, and takes the system of the requesters bound to it (`M3.2`, `M3.7`).
+8. **Routes** (`M3.3.3`). Under one active core, an assignment reports a **route obligation** for each provider its
+   system's requesters rely on for an interrupt: a *source*, bound through `interrupt-source` at `true`, with what it
+   states of its own `min-arrival-separation`; and a *timer*, bound through a consumed fact at `true`. The description's
+   half of a route is rule 7; the controller between source and core, its line and context, and the latency are the
+   catalog's, and the plan enables each such interrupt and no other, as the analysis requires
+   (`docs/decisions/decision_runtime-analysis-variant.md`, *enabled sources*). A route is an obligation, never a finding:
+   a second timer, which the analysis does not model, is the analysis's to refuse.

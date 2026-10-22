@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — connectivity and interrupt routes, judged
+
+`ARCHOGEN-M3-0849` (leaf `M3.3.3`), `2026-10-22`.
+
+- The joint check judges one system's assignment: a block or platform bound for a requester the system serves must be
+  part of its hardware — its platform and what that names through `uses` and `needs`, `refines` excepted — or the
+  assignment is refused, naming both ends and the repair.
+- Each source and each timer an assignment relies on is reported as a route obligation, a source with its own
+  separation, for the plan to enable and the analysis to read.
+- Eight tests with literal expectations, each rule failing first when removed; `model.md` §8 rules 7 and 8 and the
+  book's matching chapter explain both.
+
 ## archogen — connectivity and interrupt routes: the design, reviewed
 
 `ARCHOGEN-M3-0848` (leaf `M3.3.3`), `2026-10-22`.

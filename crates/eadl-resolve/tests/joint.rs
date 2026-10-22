@@ -9,9 +9,9 @@
 use eadl_front::{read, Form, SourceMap};
 use eadl_model::check::shipped_registry;
 use eadl_resolve::joint::{
-    requesters, Binding, Finding, Joint, Kind, Obligation, Report, Requester,
+    requesters, Binding, Finding, Interrupt, Joint, Kind, Obligation, Report, Requester, System,
 };
-use eadl_resolve::offer::{self, Provider};
+use eadl_resolve::offer::{self, Provider, State};
 use eadl_resolve::relation::{judge, Verdict};
 use eadl_resolve::requirement::Requirement;
 use eadl_resolve::vocabulary::Vocabulary;
@@ -94,6 +94,15 @@ impl Read {
         Joint::new(&pairs, &self.requesters, v)
     }
 
+    /// Each system the description declares, as the joint rules read it.
+    fn systems(&self) -> Vec<System> {
+        self.decls
+            .iter()
+            .filter(|f| f.head() == Some("defsystem"))
+            .map(|f| System::read(f, &self.decls))
+            .collect()
+    }
+
     fn decl(&self, name: &str) -> &Form {
         self.decls
             .iter()
@@ -103,8 +112,13 @@ impl Read {
 
     /// Every complete assignment: each requirement on a guarantee bound to each provider the relation satisfies it at.
     fn assignments(&self, v: &Vocabulary) -> Vec<Vec<Binding>> {
+        self.assignments_of(v, |_| true)
+    }
+
+    /// Every complete assignment of the requesters `keep` admits — one system's, for instance.
+    fn assignments_of(&self, v: &Vocabulary, keep: impl Fn(&str) -> bool) -> Vec<Vec<Binding>> {
         let mut all: Vec<Vec<Binding>> = vec![Vec::new()];
-        for r in &self.requesters {
+        for r in self.requesters.iter().filter(|r| keep(&r.name)) {
             for req in &r.requirements {
                 if matches!(req, Requirement::Statement { .. }) {
                     continue;
@@ -192,6 +206,15 @@ fn named(f: &Finding) -> String {
         Finding::RegionPastArithmetic { provider, .. } => {
             format!("{} region of {provider}", f.code())
         }
+        Finding::Unconnected {
+            requester,
+            provider,
+            system,
+            ..
+        } => format!(
+            "{} unconnected {requester} -> {provider} outside {system}",
+            f.code()
+        ),
     }
 }
 
@@ -202,12 +225,16 @@ fn report_of(r: &Report) -> (Vec<String>, Vec<String>) {
     )
 }
 
-/// The reports of every assignment of `text`.
+/// The reports of every assignment of `text`, judged as its one system's when it declares one (leaf `M3.3.3`), as the
+/// checker will judge every assignment.
 fn every(text: &str, v: &Vocabulary) -> Vec<Report> {
     let read = Read::of(text, v);
-    let joint = read
+    let mut joint = read
         .joint(v)
         .unwrap_or_else(|f| panic!("{:?}", f.iter().map(named).collect::<Vec<_>>()));
+    if let [system] = read.systems().as_slice() {
+        joint = joint.for_system(system.clone());
+    }
     read.assignments(v).iter().map(|a| joint.check(a)).collect()
 }
 
@@ -227,7 +254,25 @@ fn f08_two_requests_on_one_single_channel_comparator_are_refused_at_every_assign
                 vec![]
             )
         );
-        assert!(r.obligations.is_empty());
+        // Leaf `M3.3.3`: both alarms rely on the comparator's interrupt, one route for the plan to enable.
+        assert_eq!(
+            r.obligations,
+            [timer_route(
+                "two-alarms",
+                "timer.compare",
+                &["alarm.engine", "alarm.watchdog"]
+            )]
+        );
+    }
+}
+
+/// A timer's route obligation, written out.
+fn timer_route(system: &str, provider: &str, requesters: &[&str]) -> Obligation {
+    Obligation::Route {
+        system: system.to_string(),
+        provider: provider.to_string(),
+        interrupt: Interrupt::Timer,
+        requesters: requesters.iter().map(|r| (*r).to_string()).collect(),
     }
 }
 
@@ -268,10 +313,14 @@ fn f08_a_multiplexer_is_one_requester_beneath_and_serves_both_above() {
     // The sharing realization `M3.2` will select, held synthetically: a provider with more channels, itself one
     // requester of the comparator's one channel.
     let v = vocabulary();
-    let text = fixture("f08-two-exclusive-requests.eadl")
-        + "\n(defblock alarm.mux (offers (absolute-deadline true) (channels 4 tick)))\n";
+    // Leaf `M3.3.3`: the multiplexer is a block, so it is judged connected: the platform composes it.
+    let text = fixture("f08-two-exclusive-requests.eadl").replace(
+        "(requires (uses timer.compare))",
+        "(requires (uses timer.compare alarm.mux))",
+    ) + "\n(defblock alarm.mux (offers (absolute-deadline true) (channels 4 tick)))\n";
     let read = Read::of(&text, &v);
-    let joint = read.joint(&v).expect("reads");
+    let [system] = read.systems().try_into().expect("one system");
+    let joint = read.joint(&v).expect("reads").for_system(system);
     let deadline = read.requesters[0].requirements[0].clone();
     assert_eq!(deadline.fact(), "absolute-deadline");
     let bind = |requester: &str, provider: &str| Binding {
@@ -299,10 +348,13 @@ fn f08_a_multiplexer_is_one_requester_beneath_and_serves_both_above() {
 fn two_tasks_of_one_system_are_two_requesters() {
     // Review D1: the relation reads a system and its tasks as one side, and that must not hide two requests.
     let v = vocabulary();
+    // Leaf `M3.3.3`: the system gains the platform its comparator sits on, as a binding must be connected.
     let text = "(defblock timer.compare (offers (absolute-deadline true) (channels 1 tick)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses timer.compare)))
 (defsystem s
   (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs absolute-deadline))
-  (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (needs absolute-deadline)))";
+  (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (needs absolute-deadline))
+  (platform (uses soc)))";
     let read = Read::of(text, &v);
     let kinds: Vec<(&str, Kind)> = read
         .requesters
@@ -324,21 +376,27 @@ fn two_tasks_of_one_system_are_two_requesters() {
 #[test]
 fn a_service_two_tasks_use_is_one_requester_and_owes_the_multiplexing() {
     let v = vocabulary();
+    // Leaf `M3.3.3`: the system gains the platform its comparator sits on, and the alarm its route.
     let text = "(defblock timer.compare (offers (absolute-deadline true) (channels 1 tick)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses timer.compare)))
 (defservice time.deadline (requires (needs absolute-deadline)))
 (defsystem s
   (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses time.deadline))
-  (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses time.deadline)))";
+  (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses time.deadline))
+  (platform (uses soc)))";
     let reports = every(text, &v);
     assert_eq!(reports.len(), 1);
     assert!(reports[0].holds());
     assert_eq!(
         reports[0].obligations,
-        [Obligation::Multiplex {
-            service: "time.deadline".to_string(),
-            users: vec!["s/a".to_string(), "s/b".to_string()],
-            provider: "timer.compare".to_string(),
-        }]
+        [
+            Obligation::Multiplex {
+                service: "time.deadline".to_string(),
+                users: vec!["s/a".to_string(), "s/b".to_string()],
+                provider: "timer.compare".to_string(),
+            },
+            timer_route("s", "timer.compare", &["time.deadline"]),
+        ]
     );
 }
 
@@ -559,4 +617,298 @@ fn every_finding_s_diagnostic_carries_its_code() {
     seen.sort_unstable();
     seen.dedup();
     assert_eq!(seen, ["infeasible-configuration", "missing-fact"]);
+}
+
+// Connectivity and routes (leaf `M3.3.3`, model §8 rules 7 and 8): `SR-H15`'s last clause in the checker's form, and the
+// interrupts an assignment relies on.
+
+/// `docs/semantics/modules/hw.bus.eadl`'s edges, flattened: a platform naming a block through `needs`, one refining
+/// another, and a block no platform composes.
+const BUS: &str = "(defplatform bus.main (uses bus.timer) (offers (bus-width 32 bit)))
+(defplatform bus.fast (refines bus.main) (needs bus.clock) (offers (bus-width 32 bit)))
+(defblock bus.timer (offers (counter-width 32 bit)))
+(defblock bus.clock (offers (clock-rate 10 MHz)))
+(defblock stray.clock (offers (clock-rate 10 MHz)))
+";
+
+/// A system of one task, which writes `task`, and the rest of the system's own clauses, `rest`.
+fn one_task_system(task: &str, rest: &str) -> String {
+    format!("(defsystem s\n  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1){task}){rest})")
+}
+
+fn hardware(text: &str, v: &Vocabulary) -> Vec<String> {
+    let [system] = Read::of(text, v).systems().try_into().expect("one system");
+    system.hardware.into_iter().collect()
+}
+
+/// Every report of `text`'s assignments as literals, sorted, so a test lists what it expects whatever the order.
+fn every_named(text: &str, v: &Vocabulary) -> Vec<(Vec<String>, Vec<String>)> {
+    let mut seen: Vec<_> = every(text, v).iter().map(report_of).collect();
+    seen.sort();
+    seen
+}
+
+#[test]
+fn a_system_s_hardware_follows_uses_and_needs_and_never_refines() {
+    // Review D1: a platform's `needs` is an edge, `refines` is none, and a system's own `uses` of hardware is one.
+    let v = vocabulary();
+    let with = |platform: &str, own: &str| {
+        format!(
+            "{BUS}{}",
+            one_task_system("", &format!("{own}\n  (platform (uses {platform}))"))
+        )
+    };
+    assert_eq!(
+        hardware(&with("bus.fast", ""), &v),
+        ["bus.clock", "bus.fast"]
+    );
+    assert_eq!(
+        hardware(&with("bus.main", ""), &v),
+        ["bus.main", "bus.timer"]
+    );
+    assert_eq!(
+        hardware(&with("bus.fast", "\n  (requires (uses bus.timer))"), &v),
+        ["bus.clock", "bus.fast", "bus.timer"]
+    );
+    assert!(hardware(&format!("{BUS}{}", one_task_system("", "")), &v).is_empty());
+}
+
+#[test]
+fn a_block_outside_the_system_s_hardware_is_refused_beside_one_inside() {
+    let v = vocabulary();
+    let text = format!(
+        "{BUS}{}",
+        one_task_system(" (needs clock-rate)", "\n  (platform (uses bus.fast))")
+    );
+    assert_eq!(
+        every_named(&text, &v),
+        [
+            (vec![], vec![]),
+            (
+                vec![
+                    "infeasible-configuration unconnected s/t -> stray.clock outside s".to_string()
+                ],
+                vec![]
+            ),
+        ]
+    );
+}
+
+#[test]
+fn a_system_with_no_hardware_binds_no_block() {
+    let v = vocabulary();
+    let text = format!("{BUS}{}", one_task_system(" (needs clock-rate)", ""));
+    assert_eq!(
+        every_named(&text, &v),
+        [
+            (
+                vec!["infeasible-configuration unconnected s/t -> bus.clock outside s".to_string()],
+                vec![]
+            ),
+            (
+                vec![
+                    "infeasible-configuration unconnected s/t -> stray.clock outside s".to_string()
+                ],
+                vec![]
+            ),
+        ]
+    );
+}
+
+#[test]
+fn two_systems_are_judged_apart_each_against_its_own_board() {
+    // Review D3: an assignment is one system's, so two boards with a timer at one address never meet.
+    let v = vocabulary();
+    let text = "(defblock timer.a (offers (counter-width 32 bit) (region clint.a (base 0x0200_0000) (size 64 KiB))))
+(defblock timer.b (offers (counter-width 32 bit) (region clint.b (base 0x0200_0000) (size 64 KiB))))
+(defplatform board.a (offers (core-count 1 tick)) (requires (uses timer.a)))
+(defplatform board.b (offers (core-count 1 tick)) (requires (uses timer.b)))
+(defsystem sa (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs counter-width))
+  (platform (uses board.a)))
+(defsystem sb (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs counter-width))
+  (platform (uses board.b)))";
+    let read = Read::of(text, &v);
+    let joint = read.joint(&v).expect("reads");
+    let systems = read.systems();
+    assert_eq!(systems.len(), 2);
+    for (system, other) in systems.iter().zip(["timer.b", "timer.a"]) {
+        let judge = joint.clone().for_system(system.clone());
+        let mut seen: Vec<_> = read
+            .assignments_of(&v, |r| system.serves(r))
+            .iter()
+            .map(|a| report_of(&judge.check(a)))
+            .collect();
+        seen.sort();
+        let refused = format!(
+            "infeasible-configuration unconnected {0}/t -> {other} outside {0}",
+            system.name
+        );
+        assert_eq!(seen, [(vec![], vec![]), (vec![refused], vec![])]);
+    }
+    // Judged as one assignment, the two boards' timers would overlap: why an assignment is one system's.
+    let need = |name: &str| {
+        read.requesters
+            .iter()
+            .find(|r| r.name == name)
+            .expect("a requester")
+            .requirements[0]
+            .clone()
+    };
+    let both = [
+        Binding {
+            requester: "sa/t".to_string(),
+            requirement: need("sa/t"),
+            provider: "timer.a".to_string(),
+        },
+        Binding {
+            requester: "sb/t".to_string(),
+            requirement: need("sb/t"),
+            provider: "timer.b".to_string(),
+        },
+    ];
+    assert_eq!(
+        report_of(&joint.check(&both)).0,
+        ["infeasible-configuration timer.a clint.a@0x2000000+Some(65536) / timer.b clint.b@0x2000000+Some(65536)"]
+    );
+}
+
+#[test]
+fn a_block_may_rely_on_a_sibling_its_platform_composes() {
+    let v = vocabulary();
+    let text = format!(
+        "(defblock x (offers (counter-width 32 bit)) (requires (needs clock-rate)))
+(defblock y (offers (clock-rate 10 MHz)))
+(defblock stray (offers (clock-rate 10 MHz)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses x y)))
+{}",
+        one_task_system("", "\n  (platform (uses soc))")
+    );
+    let read = Read::of(&text, &v);
+    let [system] = read.systems().try_into().expect("one system");
+    let joint = read.joint(&v).expect("reads").for_system(system);
+    let [x] = requesters(read.decl("x"), &v)
+        .expect("the block reads")
+        .try_into()
+        .expect("one requester");
+    let bind = |provider: &str| {
+        [Binding {
+            requester: x.name.clone(),
+            requirement: x.requirements[0].clone(),
+            provider: provider.to_string(),
+        }]
+    };
+    assert!(joint.check(&bind("y")).holds());
+    assert_eq!(
+        report_of(&joint.check(&bind("stray"))).0,
+        ["infeasible-configuration unconnected x -> stray outside s"]
+    );
+}
+
+#[test]
+fn a_requester_no_system_reaches_is_judged_for_channels_alone() {
+    // Review R11: connectivity and routes say nothing of it; the channel count still does.
+    let v = vocabulary();
+    let text = format!(
+        "(defblock stray (offers (absolute-deadline true) (channels 1 tick)))
+(defplatform soc (offers (core-count 1 tick)))
+(defservice orphan (requires (needs absolute-deadline)))
+(defservice orphan.two (requires (needs absolute-deadline)))
+{}",
+        one_task_system("", "\n  (platform (uses soc))")
+    );
+    let reports = every(&text, &v);
+    assert_eq!(reports.len(), 1);
+    assert_eq!(
+        report_of(&reports[0]),
+        (
+            vec!["infeasible-configuration over stray (1): orphan orphan.two".to_string()],
+            vec![]
+        )
+    );
+    assert!(reports[0].obligations.is_empty());
+}
+
+#[test]
+fn each_source_and_each_timer_an_assignment_relies_on_is_a_route_obligation() {
+    let v = vocabulary();
+    // `docs/semantics/cases/positive-sporadic-release.eadl`'s source, platform and system, its service's
+    // `bounded-arrival` left out: no block offers it, the realization does (`M3.2`, `M3.7`).
+    let sporadic = |offers: &str, needs: &str| {
+        format!(
+            "(defblock event.line (offers {offers}))
+(defplatform soc.p (offers (core-count 1 tick)) (requires (uses event.line)))
+(defservice event.release (requires (needs {needs})))
+(defsystem s
+  (task handler (min-separation 20 ms) (deadline 15 ms) (deadline-from release) (jitter 1 ms)
+                (priority 1) (uses event.release))
+  (requires (uses event.release))
+  (platform (uses soc.p)))"
+        )
+    };
+    let source = |text: &str| {
+        let reports = every(text, &v);
+        assert_eq!(reports.len(), 1);
+        assert!(reports[0].holds(), "{:?}", report_of(&reports[0]));
+        match reports[0].obligations.as_slice() {
+            [Obligation::Route {
+                system,
+                provider,
+                interrupt: Interrupt::Source { separation },
+                requesters,
+            }] => {
+                assert_eq!(
+                    (system.as_str(), provider.as_str(), requesters.as_slice()),
+                    ("s", "event.line", &["event.release".to_string()][..])
+                );
+                separation.clone()
+            }
+            other => panic!("one source's route, not {other:?}"),
+        }
+    };
+    // As the case writes it: the separation offered without a value.
+    assert_eq!(
+        source(&sporadic(
+            "interrupt-source min-arrival-separation",
+            "interrupt-source min-arrival-separation"
+        )),
+        Some(State::Unvalued)
+    );
+    // A source that states no separation of its own: the analysis must find one elsewhere, or refuse.
+    assert_eq!(
+        source(&sporadic("interrupt-source", "interrupt-source")),
+        None
+    );
+    // F09's two timers: one route each.
+    let reports = every(&fixture("f09-conflicting-ownership.eadl"), &v);
+    assert_eq!(reports.len(), 1);
+    assert_eq!(
+        reports[0].obligations,
+        [
+            timer_route("delays-and-deadlines", "timer.direct", &["time.delay"]),
+            timer_route("delays-and-deadlines", "timer.firmware", &["time.deadline"]),
+        ]
+    );
+}
+
+#[test]
+fn an_unconnected_binding_s_diagnostic_names_both_ends_and_the_repair() {
+    let v = vocabulary();
+    let text = format!("{BUS}{}", one_task_system(" (needs clock-rate)", ""));
+    let report = every(&text, &v)
+        .into_iter()
+        .find(|r| !r.conflicts.is_empty())
+        .expect("a conflict");
+    let d = report.conflicts[0].diagnostic();
+    assert_eq!(d.code, "infeasible-configuration");
+    assert!(
+        d.message.contains("not part of `s`'s hardware"),
+        "{}",
+        d.message
+    );
+    assert!(d.repair.contains("compose"), "{}", d.repair);
+    assert_eq!(
+        d.secondary.len(),
+        1,
+        "the provider's declaration, outside the hardware"
+    );
 }

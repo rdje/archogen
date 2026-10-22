@@ -384,10 +384,10 @@ a change that leaves it stale, so it is never edited by hand.
 - Internal NUL argument validation — [Annex C: Trust proof
   records](annex-trust-proofs.md#internal-nul-argument-validation)
 - **interrupt** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
-  board](tour.md), [The supported profile](profile.md), [What the scheduling checker establishes](analysis.md), [Where
-  the engine's knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [Where
-  generated systems run](targets.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's
-  rules in detail](annex-runtime.md)
+  board](tour.md), [The supported profile](profile.md), [Matching an offer to a requirement](matching.md), [What the
+  scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The
+  runtime: decisions, not actions](runtime.md), [Where generated systems run](targets.md), [What this project relies on
+  from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - **IPC** — [definition](glossary.md), [The supported profile](profile.md)
 - **ISA** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **ISR** — [definition](glossary.md), [The use cases](usecases.md), [What the scheduling checker
@@ -658,8 +658,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Sets: what a part accepts — [Matching an offer to a requirement](matching.md#sets-what-a-part-accepts)
 - Seven diagnostic-helper obligations: domain assessment — [Annex C: Trust proof
   records](annex-trust-proofs.md#seven-diagnostic-helper-obligations-domain-assessment)
-- Several bindings at once: channels and owned regions — [Matching an offer to a
-  requirement](matching.md#several-bindings-at-once-channels-and-owned-regions)
+- Several bindings at once: channels, owned regions, connectivity and routes — [Matching an offer to a
+  requirement](matching.md#several-bindings-at-once-channels-owned-regions-connectivity-and-routes)
 - **SHA-256** — [definition](glossary.md), [What a report may claim](evidence.md), [Generated-sources test
   adequacy](trust-adequacy.md), [Verifying the toolchain](verification.md), [Annex B: The checks that keep the
   repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
