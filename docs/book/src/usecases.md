@@ -74,6 +74,15 @@ What must **not** happen is the description changing. If the only way to build t
 to weaken `absolute-deadline` into `relative-delay` in the eADL source, the engine has failed
 and the boundary has been crossed.
 
+It changed once, before `M3.2` and to build nothing: each block and platform of its hardware now
+states the level it is reachable from, `(reachable-at-privilege machine)`, as every example's
+hardware does, since `rt-static-up-v1` runs every caller at `machine` ([matching](matching.md)).
+No requirement and no absence moved — `absolute-deadline` is still required and still declared
+absent, and a test asserts both (`crates/eadl-model/tests/examples.rs`). The description `M3.2`
+must build is the one that change left: any later change to what it describes moves its digest in
+the language baseline, which a gate refuses without a migration note
+([what is frozen](verification.md#what-is-frozen-and-what-a-digest-can-prove)).
+
 This is the only case whose expected answer changes as a capability lands, and that is the
 point: adding an engine capability and weakening a requirement until it passes both turn a red
 fixture green. Only one of them is progress, and `uc3` is where the difference is visible.

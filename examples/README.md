@@ -63,5 +63,10 @@ $ archogen check examples/bounded-queue/system.eadl   ; echo $?   # 12 unsupport
 
 `uc3` and `uc4` are refused for different reasons, and the difference matters. `uc3`'s refusal is
 **temporary**: the same description must build once `M3.2` supplies indirect realization, without
-changing. `uc4`'s refusal is **permanent** for this profile: admitting it requires a new named
-profile with its own analysis obligations, not a wider `rt-static-up-v1`.
+changing. It changed once before then, moving no requirement: its hardware states the level it is
+reachable from, `(reachable-at-privilege machine)`, as every example's does
+([`eadl-1-uc3-states-its-level.md`](../docs/semantics/migrations/eadl-1-uc3-states-its-level.md)).
+From then on, any change to what it describes moves its digest in `docs/semantics/BASELINE.txt`,
+which `scripts/check_language_freeze.sh` refuses without a migration note. `uc4`'s refusal is
+**permanent** for this profile: admitting it requires a new named profile with its own analysis
+obligations, not a wider `rt-static-up-v1`.

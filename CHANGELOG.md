@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — uc3 states its level
+
+`ARCHOGEN-M3-0862` (leaf `M3.3.4.5`), `2026-10-22`.
+
+- `examples/alternative-timer`'s timer, console and platform each offer `(reachable-at-privilege machine)`, as every
+  other suite description's hardware does; the privilege census now excludes nothing, and `M3.3.4` closes.
+- No requirement moved: `archogen check` still answers `13 infeasible-configuration`, its locations one line down. The
+  seal that uc3 builds unchanged now says it changed once, before `M3.2`, and that the language freeze refuses any later
+  change without a note.
+
 ## archogen — the director's delegation: six findings decided
 
 `ARCHOGEN-M3-0861` (leaf `M3.3.4.5`), `2026-10-22`.

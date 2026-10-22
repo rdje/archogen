@@ -253,7 +253,8 @@ runtime, its tasks and its services at `machine`, the level a RISC-V hart starts
 ([privileged specification](ledger.md#riscv-privileged) §2.1.4), and the hosted playground models it
 (`docs/profiles/rt-static-up-v1.md`). `M3.4` gives it to every system it resolves; with none given the rule says nothing.
 Every block and platform in a suite system's hardware states `(reachable-at-privilege machine)`, held by a census
-over the suite (`crates/eadl-resolve/tests/privilege_census.rs`); `examples/alternative-timer` waits on the director.
+over the whole suite that excludes no description, uc3's `examples/alternative-timer` among them
+(`crates/eadl-resolve/tests/privilege_census.rs`).
 
 **Where the image goes.** A region a platform offers with `(executable true)` is memory a plan may place code in, and
 `(reserved true)` marks a range nothing may be placed in. Judged once per system:

@@ -22,11 +22,9 @@ use eadl_resolve::offer::{self, State};
 use eadl_resolve::value::Value;
 use eadl_resolve::vocabulary::Vocabulary;
 
-/// Descriptions the census does not hold, each with why: none may be added without a leaf that owns it.
-const EXCLUDED: &[(&str, &str)] = &[(
-    "examples/alternative-timer/",
-    "uc3's description changes only with the director's yes (`SR-H10`, findings §15); `M3.3.4.5` owns it",
-)];
+/// Descriptions the census does not hold, each with why: none may be added without a leaf that owns it. Empty since
+/// `M3.3.4.5` gave uc3's hardware its level; `every_exclusion_still_excludes_something` holds any entry added later.
+const EXCLUDED: &[(&str, &str)] = &[];
 
 fn root() -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR"))

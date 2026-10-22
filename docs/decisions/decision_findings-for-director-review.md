@@ -247,7 +247,7 @@ lane's reading found, two generators given one target directory (`M3.6.9.6.3.2.2
 description change only with your yes; nothing covers the console, and `examples/README.md` seals that uc3 builds
 unchanged. **Your call:** (a) uc3 gains `(reachable-at-privilege machine)` on each provider a plan binds, in `M3.3.4`'s
 migration; or (b) it stays unchanged and is refused once `M3.4` wires the rule, until `M3.2` states the timer's level and
-you rule on the console's. **Decided (a), `2026-10-22`**, under the director's delegation; `M3.3.4.5`, unblocked.
+you rule on the console's. **Decided (a), `2026-10-22`**, under the director's delegation; `M3.3.4.5`, done.
 
 ## A note on what "done" means so far
 

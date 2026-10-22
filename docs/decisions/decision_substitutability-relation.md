@@ -533,9 +533,9 @@ decided in this record.
 - `region` and `ordering` fit no domain of §2 and stay undeclared in `/1`, placement and ordering being `M3.3`'s;
   whether `ordering` gains an entry or `required-ordering-guarantee.eadl` migrates is decided there and by `M3.4`'s
   keep-or-migrate rule (R1 A10; R9 I11; R14 4; R15 2); `region` stays outside `/1` (`SR-H13`, amended `2026-10-22`).
-- `uc3`'s seal: `timer.delay` states no modulus and no privilege level, and its policy waits on a record, so its
-  horizon and level come from one provider — itself, an adapter or a record after `M3.7` — `M3.2`'s to choose, the
-  director's before the description changes (`SR-H10`; R14 1; R15 4).
+- `uc3`'s seal: `timer.delay` states no modulus, and its policy waits on a record, so its horizon comes from one
+  provider — itself, an adapter or a record after `M3.7` — `M3.2`'s to choose, the director's before the description
+  changes (`SR-H10`; R14 1; R15 4); its level it states itself (`M3.3.4.5`).
 - `/1` has no condition role: the context a plan binds a caller to is §5.4's privilege constraint, `M3.3`'s; a clock
   a block must be fed is another fact, added when a description needs one (R2 B2; R10 J1, J6).
 - Arithmetic in a description stays refused: `(pow2 N)` is a literal's spelling, and a new derivation is a new named

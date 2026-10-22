@@ -45,6 +45,15 @@ boundary has been crossed — §17's first stop/rework trigger: "a supposedly fu
 example needs driver/model/code-generation instructions → repair the boundary; move
 implementation to engine knowledge."
 
+It changed once, before `M3.2` and to build nothing: each block and platform of its hardware
+states the level it is reachable from, `(reachable-at-privilege machine)` — the level
+`rt-static-up-v1` runs every caller at — as every suite description's hardware does (leaf
+`M3.3.4.5`, `docs/semantics/migrations/eadl-1-uc3-states-its-level.md`). No requirement and no
+absence moved, and `crates/eadl-model/tests/examples.rs` asserts both halves of the gap are
+still there. The description `M3.2` must build is the one that change left; any later change to
+what it describes moves its digest in `docs/semantics/BASELINE.txt`, which
+`scripts/check_language_freeze.sh` refuses without a migration note.
+
 ## Why the status changes
 
 This is the only one of the four whose expected answer changes as a capability lands, and that

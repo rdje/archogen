@@ -154,13 +154,13 @@ total — so the number a script branches on and the word a human reads come fro
 ```console
 $ archogen check examples/alternative-timer/system.eadl ; echo $?
 error[infeasible-configuration]: `absolute-deadline` is required by this system but declared absent
-  --> examples/alternative-timer/system.eadl:51:25
+  --> examples/alternative-timer/system.eadl:52:25
    |
-51 |   (needs time.monotonic absolute-deadline))
+52 |   (needs time.monotonic absolute-deadline))
    |                         ^^^^^^^^^^^^^^^^^ required through this request
-  --> examples/alternative-timer/system.eadl:26:11
+  --> examples/alternative-timer/system.eadl:27:11
    |
-26 |   (absent absolute-deadline))
+27 |   (absent absolute-deadline))
    |           ----------------- declared absent by `timer.delay`
   = hint: either the requirement or the platform is wrong; an explicitly absent fact is a definite answer, not a gap to be filled in
 archogen: infeasible-configuration: 1 diagnostic(s) in examples/alternative-timer/system.eadl
