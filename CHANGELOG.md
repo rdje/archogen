@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the host handed over for the quiet run
+
+`ARCHOGEN-PROGRAM-0844` (leaf `PROGRAM.99`), `2026-10-22`.
+
+- Record that the director stopped the host's other projects' jobs so a fresh session can run the quiet-host focused
+  tier `M3.3.1` and `M3.3.2` owe; syspolicyd still sampled at up to 61 % with no build left, so that run measures the
+  host first. The resume pointer now names `PROGRAM.99` before `M3.3.3`.
+
 ## archogen — the joint checker: channels and owned regions
 
 `ARCHOGEN-M3-0843` (leaf `M3.3.2`), `2026-10-21`.

@@ -661,6 +661,7 @@ mdBook that is the director's window into the project.
 
 - ID: `PROGRAM.99`
   Status: `pending` — P1: the `xtask` suite fails under host exec saturation; a quiet-host focused run owed to `M3.3.1`
+    and `M3.3.2` (`91da9ad1`, `5b5dcbfb`)
   Reproduce / issue: `2026-10-21`, `make focused` on `M3.3.1`'s staged tree — its first run passed every test in 240 s;
     the next two, on the same code formatted, failed 73 and then 31 `xtask` tests (trust, trust_generated, trust_gate,
     mutation, catalog_build) in 2731 s and 2168 s, the second with `RUST_TEST_THREADS=2`. Three failing tests pass alone,
@@ -671,6 +672,10 @@ mdBook that is the director's window into the project.
     every exec, and each trust case execs a fresh cargo, rustc, linker and the built program; the compiler observer is
     copied byte for byte into each fixture's `.archogen-provenance/observer` and the kernel logged AMFI signature
     failures for such a path, a slow error path per exec; tests then time out rather than compute.
+  Host, `2026-10-22`: the director stopped the other projects' jobs (pgen's gate, linkedspec's probe, reasonbraid's
+    clippy) for a fresh session to run this leaf. At handoff no cargo, rustc or clippy process remained, yet
+    syspolicyd (pid 541) sampled 0.0, 27.3, 60.9, 60.5 % CPU, 3 s apart, with codex and iTerm2 running: not yet quiet.
+    So the run starts by sampling syspolicyd; still busy, what execs is itself this leaf's first measurement.
   Goal: first, the focused tier on a quiet host for `M3.3.1`'s commit, recorded there. Then, tools first: the full
     failing output of one saturated run (which assertion or limit fires, where), the AMFI log for the observer's path,
     and execs per case; repair only what is measured — a limit that confuses slow with stuck, a copied binary whose
@@ -880,6 +885,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0460 (leaf PROGRAM)` | **`PROGRAM.57`, `PROGRAM.58` and `PROGRAM.59` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` would have grown 1 331 bytes over its 819 200-byte ceiling with `M3.1.2`'s decomposition |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0489 (leaf PROGRAM)` | **`PROGRAM.10` and `.61`–`.65` sealed**, 13 closed leaves into `docs/task-history/PROGRAM/`, when `README-ROUTES` refused `docs/tasks/` at 820 957 bytes over its 819 200; `docs/tasks/` 817 470 → 752 861 bytes, measured from `HEAD` and the tree |
 | `PROGRAM.99` | `ARCHOGEN-PROGRAM-0842 (leaf PROGRAM.99)` | **filed: the `xtask` suite red under host exec saturation**, P1, at the frontier's head; the quiet-host focused run `M3.3.1` owes, then a tools-first repair |
+| `PROGRAM.99` | `ARCHOGEN-PROGRAM-0844 (leaf PROGRAM.99)` | **the host handed over for the quiet run**: the director stopped the other projects' jobs `2026-10-22`; syspolicyd still sampled at up to 61 % with no build left, so the next session measures before it runs; `M3.3.2` owes the same run |
 
 ## Changelog
 
