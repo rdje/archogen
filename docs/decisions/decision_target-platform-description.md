@@ -19,7 +19,7 @@ The target is described in **`targets/riscv-virt-up.eadl`**, beside `targets/ris
 ### 1. What it says, one fact per profile requirement
 
 `targets/riscv-virt-up.env` names what `rt-static-up-v1` requires of a target (§3.1): `REQUIRES_CORES`,
-`REQUIRES_TIMER`, `REQUIRES_OBSERVABLE_OUTPUT` and `REQUIRES_EXECUTABLE_RAM`. The description states each, and
+`REQUIRES_TIMER`, `REQUIRES_OBSERVABLE_OUTPUT`, `REQUIRES_EXECUTABLE_RAM` and `REQUIRES_PRIVILEGE`. The description states each, and
 nothing it cannot check.
 
 | Requirement | In the description | Compared with (device tree) |
@@ -28,6 +28,7 @@ nothing it cannot check.
 | `REQUIRES_EXECUTABLE_RAM=yes` | the platform offers `(region target.ram (base …) (size …) (executable true))` | the node whose `device_type` is `memory`: its `reg` base and size |
 | `REQUIRES_TIMER=yes` | a block, used by the platform, offering `(tick-rate …)` and `(region target.timer (base …) (size …))` | `/cpus`'s `timebase-frequency`; the node compatible with `sifive,clint0`: its `reg` base and size |
 | `REQUIRES_OBSERVABLE_OUTPUT=yes` | a block, used by the platform, offering `(observable-output true)` and `(region target.console (base …) (size …))` | the node `/chosen`'s `stdout-path` names, compatible with `ns16550a`: its `reg` base and size |
+| `REQUIRES_PRIVILEGE=machine` | each block and the platform offer `(reachable-at-privilege machine)` | no node: the [privileged specification](../book/src/ledger.md#riscv-privileged)'s reset and PMP sentences, and the spike run at M (`M3.3.4.4`) |
 
 A region names **its device by what it is**, not by address alone. The RAM region must match a `memory` node, the
 timer's the CLINT, the console's the node `stdout-path` names. So a region that happened to share an address with
@@ -51,7 +52,7 @@ fails, naming the fact, when:
 - a requirement is missing its fact;
 - a fact is missing its node;
 - a number differs;
-- the description offers a region the comparison rules above do not cover.
+- the description offers a region, an offer or a clause the rules above do not read (`M3.3.4.4`).
 
 Every value is compared exactly, in the device tree's own integers after the description's quantities are
 converted (a `MiB` is 1 048 576 bytes, a `MHz` is 1 000 000 Hz). A unit test runs it over the kept dump,

@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the target states its level, and its agreement reads every claim
+
+`ARCHOGEN-M3-0854` (leaf `M3.3.4.4`), `2026-10-22`.
+
+- `riscv-virt-up` requires `machine` (`REQUIRES_PRIVILEGE`), and its blocks and platform state it; the agreement
+  compares each, from the privileged specification's reset and PMP sentences and the spike's measured run at M.
+- The agreement now refuses an offer or a clause it does not read, as it refused an uncompared region: the target
+  claims nothing it cannot check. The emulator check and the spike pass on the pinned QEMU.
+
 ## archogen — every suite system's hardware states its level
 
 `ARCHOGEN-M3-0853` (leaf `M3.3.4.3`), `2026-10-22`.

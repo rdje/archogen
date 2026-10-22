@@ -103,11 +103,14 @@ only words the language already has, and states one fact for each thing the prof
 
 ```text
 (defblock target.timer
-  (offers (tick-rate 10 MHz) (region target.timer (base 0x0200_0000) (size 64 KiB))))
+  (offers (tick-rate 10 MHz) (reachable-at-privilege machine)
+    (region target.timer (base 0x0200_0000) (size 64 KiB))))
 (defblock target.console
-  (offers (observable-output true) (region target.console (base 0x1000_0000) (size 256 byte))))
+  (offers (observable-output true) (reachable-at-privilege machine)
+    (region target.console (base 0x1000_0000) (size 256 byte))))
 (defplatform target.riscv-virt-up
-  (offers (core-count 1 tick) (region target.ram (base 0x8000_0000) (size 128 MiB) (executable true)))
+  (offers (core-count 1 tick) (reachable-at-privilege machine)
+    (region target.ram (base 0x8000_0000) (size 128 MiB) (executable true)))
   (requires (uses target.timer target.console)))
 ```
 
@@ -116,9 +119,13 @@ what it is, not by address alone:
 - the core count with the harts under `/cpus`;
 - the executable region with the `memory` node;
 - the timer's region with the CLINT, and its tick rate with the timebase;
-- the console's region with the node `/chosen`'s `stdout-path` names.
+- the console's region with the node `/chosen`'s `stdout-path` names;
+- each block's and the platform's level with the `.env`'s `REQUIRES_PRIVILEGE=machine`, which no node carries: a hart
+  starts in M at reset, an M-mode access that no locked PMP entry matches succeeds
+  ([privileged specification](ledger.md#riscv-privileged) §2.1.4, §2.1.7.1.3), and the spike runs at M, programming
+  the CLINT and writing to the console (leaf `M3.3.4.4`).
 
-A region that no rule compares is a disagreement too. `archogen check` must also admit the file. Every `--check`
+A region, an offer or a clause that no rule reads is a disagreement too. `archogen check` must also admit the file. Every `--check`
 runs the agreement on the same fresh dump it compared with the recorded tree:
 
 ```console

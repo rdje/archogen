@@ -45,6 +45,10 @@ struct Described {
     regions: Vec<(String, Region)>,
     /// The blocks the platform `uses`.
     used: Vec<String>,
+    /// Every block and platform declared, in written order.
+    declared: Vec<String>,
+    /// The levels each declaration states it is reachable from, `(reachable-at-privilege …)`.
+    levels: BTreeMap<String, Vec<String>>,
 }
 
 /// A quantity `(n unit)` in the base unit, bytes or Hz. `None` for a unit the agreement does not compare.
@@ -133,6 +137,9 @@ fn describe(text: &str, name: &str) -> Result<Described, Vec<String>> {
             .unwrap_or("?")
             .to_string();
         let platform = declaration.head() == Some("defplatform");
+        if matches!(declaration.head(), Some("defblock" | "defplatform")) {
+            found.declared.push(owner.clone());
+        }
         for clause in declaration.items().iter().skip(2) {
             match clause.head() {
                 Some("offers") => {
@@ -158,7 +165,21 @@ fn describe(text: &str, name: &str) -> Result<Described, Vec<String>> {
                                 Ok(r) => found.regions.push((owner.clone(), r)),
                                 Err(e) => problems.push(e),
                             },
-                            _ => {}
+                            Some("reachable-at-privilege") => {
+                                found.levels.insert(
+                                    owner.clone(),
+                                    parts[1..]
+                                        .iter()
+                                        .filter_map(Form::as_symbol)
+                                        .map(str::to_string)
+                                        .collect(),
+                                );
+                            }
+                            // The target states nothing the agreement cannot check (leaf `M3.3.4.4`).
+                            _ => problems.push(format!(
+                                "`{owner}` offers `{}`, which the agreement does not compare",
+                                offer.head().or_else(|| offer.as_symbol()).unwrap_or("?")
+                            )),
                         }
                     }
                 }
@@ -173,6 +194,11 @@ fn describe(text: &str, name: &str) -> Result<Described, Vec<String>> {
                             );
                         }
                     }
+                }
+                Some(other) if matches!(declaration.head(), Some("defblock" | "defplatform")) => {
+                    problems.push(format!(
+                        "`{owner}` writes a `{other}` clause, which the agreement does not read"
+                    ));
                 }
                 _ => {}
             }
@@ -416,6 +442,30 @@ pub fn disagreements(
         }
     }
 
+    // REQUIRES_PRIVILEGE: every block and the platform states the level the .env names. The device tree carries no
+    // level; the value's source is the privileged specification and the spike's run at it (the target decision §1).
+    match env.get("REQUIRES_PRIVILEGE") {
+        Some(wanted) => {
+            for owner in &described.declared {
+                match described.levels.get(owner) {
+                    None => wrong.push(format!("REQUIRES_PRIVILEGE: `{owner}` states no level")),
+                    Some(levels) if levels.iter().any(|l| l == wanted) => {}
+                    Some(levels) => wrong.push(format!(
+                        "REQUIRES_PRIVILEGE: `{owner}` is reachable from {}, and the .env requires {wanted}",
+                        levels.join(" ")
+                    )),
+                }
+            }
+        }
+        None => {
+            for owner in described.levels.keys() {
+                wrong.push(format!(
+                    "`{owner}` states a level, and the .env requires none to compare it with"
+                ));
+            }
+        }
+    }
+
     // A region no rule compared is an assertion nothing checks.
     for (_, r) in &described.regions {
         if !covered.contains(&r.name.as_str()) {
@@ -482,6 +532,7 @@ mod tests {
             "REQUIRES_TIMER",
             "REQUIRES_OBSERVABLE_OUTPUT",
             "REQUIRES_EXECUTABLE_RAM",
+            "REQUIRES_PRIVILEGE",
         ] {
             assert!(
                 env.contains_key(key),
@@ -533,6 +584,45 @@ mod tests {
                 "(defplatfrom target.riscv-virt-up",
             ),
             "archogen check does not admit",
+        );
+    }
+
+    #[test]
+    fn what_the_agreement_does_not_read_is_refused() {
+        // Leaf `M3.3.4.4`: the target states nothing it cannot check, so an offer or a clause no rule reads is a
+        // disagreement, as an uncompared region already was.
+        reported(
+            &with("(tick-rate 10 MHz)", "(tick-rate 10 MHz) (debug-port true)"),
+            "`target.timer` offers `debug-port`, which the agreement does not compare",
+        );
+        reported(
+            &with(
+                "(defblock target.console\n",
+                "(defblock target.console\n  (absent debug-port)\n",
+            ),
+            "`target.console` writes a `absent` clause, which the agreement does not read",
+        );
+    }
+
+    #[test]
+    fn every_block_and_the_platform_state_the_required_level() {
+        // Leaf `M3.3.4.4`: REQUIRES_PRIVILEGE against each declaration's `reachable-at-privilege`.
+        let (env, _, _) = kept();
+        assert_eq!(
+            env.get("REQUIRES_PRIVILEGE").map(String::as_str),
+            Some("machine")
+        );
+        let timer = "(tick-rate 10 MHz)\n    (reachable-at-privilege machine)";
+        reported(
+            &with(timer, "(tick-rate 10 MHz)"),
+            "REQUIRES_PRIVILEGE: `target.timer` states no level",
+        );
+        reported(
+            &with(
+                timer,
+                "(tick-rate 10 MHz)\n    (reachable-at-privilege supervisor)",
+            ),
+            "REQUIRES_PRIVILEGE: `target.timer` is reachable from supervisor, and the .env requires machine",
         );
     }
 

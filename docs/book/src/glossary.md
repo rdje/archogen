@@ -104,6 +104,7 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
   [provenance commit ledger](annex-trust-proofs.md#compiler-provenance-commit-ledger).
 - **PLIC** — Platform-Level Interrupt Controller: the RISC-V block that routes devices' interrupts to a hart. See
   [its specification's ledger entry](ledger.md#riscv-plic).
+- **PMP** — Physical Memory Protection: the RISC-V mechanism that limits which addresses a hart may reach below machine mode, and in it only through a locked entry. See [The targets](targets.md).
 - **POSIX** — Portable Operating System Interface: the standard Unix-like interface; not the first profile's. See
   [The supported profile](profile.md).
 - **PROGRAM** — the project’s engineering and workflow task tree, named in retained historical verification records. See [the retained records](annex-trust-proofs.md#supported-regression-commit-note-routing).

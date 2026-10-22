@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-10-22
 - leaf: M3.3.4.3 (`docs/tasks/M3.md`)
-- status: pending
+- status: applied
 - constructs: suite/docs/semantics/cases/infeasible-required-absence.eadl, suite/docs/semantics/cases/invalid-two-release-models.eadl, suite/docs/semantics/cases/missing-release-model.eadl, suite/docs/semantics/cases/missing-relevant-fact.eadl, suite/docs/semantics/cases/positive-decimal-quantity.eadl, suite/docs/semantics/cases/positive-explicit-absence-unused.eadl, suite/docs/semantics/cases/positive-minimal-system.eadl, suite/docs/semantics/cases/positive-skip-late-job.eadl, suite/docs/semantics/cases/positive-sporadic-release.eadl, suite/docs/semantics/cases/positive-unrelated-unknown.eadl, suite/docs/semantics/cases/unsupported-arbitrary-deadline.eadl, suite/docs/semantics/cases/unsupported-duplicate-priority.eadl, suite/docs/semantics/cases/unsupported-general-ipc.eadl, suite/docs/semantics/cases/unsupported-precedence-over-missing-fact.eadl, suite/examples/bounded-queue/system.eadl, suite/examples/high-interference/system.eadl, suite/examples/periodic-three/system.eadl, suite/examples/s0-heartbeat/system-changed.eadl, suite/examples/s0-heartbeat/system-non-harmonic.eadl, suite/examples/s0-heartbeat/system-unsupported.eadl, suite/examples/s0-heartbeat/system.eadl
 - invalidates: none, measured — every tracked description's `archogen check` verdict, frozen in `crates/archogen-cli/tests/verdicts.txt`, is unchanged; the descriptions gain an offer, and no requirement moves
 

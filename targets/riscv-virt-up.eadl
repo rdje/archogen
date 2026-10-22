@@ -7,21 +7,27 @@
 
 (eadl-version eadl/1)
 
+; REQUIRES_PRIVILEGE: each block and the platform reachable from `machine`, the level the hart starts in at reset and
+; every caller runs at under `rt-static-up-v1` — no device-tree node carries it (`M3.3.4.4`).
+
 ; REQUIRES_TIMER: the CLINT, counting at the hart's timebase.
 (defblock target.timer
   (offers
     (tick-rate 10 MHz)
+    (reachable-at-privilege machine)
     (region target.timer (base 0x0200_0000) (size 64 KiB))))
 
 ; REQUIRES_OBSERVABLE_OUTPUT: the UART `/chosen`'s `stdout-path` names.
 (defblock target.console
   (offers
     (observable-output true)
+    (reachable-at-privilege machine)
     (region target.console (base 0x1000_0000) (size 256 byte))))
 
 ; REQUIRES_CORES and REQUIRES_EXECUTABLE_RAM: one hart, and the RAM `-bios none` starts the image in.
 (defplatform target.riscv-virt-up
   (offers
     (core-count 1 tick)
+    (reachable-at-privilege machine)
     (region target.ram (base 0x8000_0000) (size 128 MiB) (executable true)))
   (requires (uses target.timer target.console)))
