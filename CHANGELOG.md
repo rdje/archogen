@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — placement: the design, reviewed
+
+`ARCHOGEN-M3-0855` (leaf `M3.3.5`), `2026-10-22`.
+
+- Design memory placement: executable, unreserved regions are placement memory; reserved ranges inside it are holes
+  the plan avoids, reported as an obligation; a device's registers inside it are a contradictory map, refused once per
+  system; M3 chooses the region, `M4.1` the offsets.
+- One independent review, five defects and four remarks answered; `SR-H13` amended so `region` stays outside `/1`, its
+  sub-forms normative in model §8; ordering is `.2`'s own design.
+
 ## archogen — the target states its level, and its agreement reads every claim
 
 `ARCHOGEN-M3-0854` (leaf `M3.3.4.4`), `2026-10-22`.
