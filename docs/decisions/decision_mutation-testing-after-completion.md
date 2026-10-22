@@ -40,5 +40,7 @@ criterion asks that the trust gate surface unreviewed sharing and drift and bloc
 - A real defect is still owned and fixed (§15 of the session directives), whatever found it. The one open defect
   investigation in the postponed lane, `M3.6.9.6.3.2.2.15.2.1.8.2` — two generators given one target directory — is
   such a defect, kept `pending` at its priority, not postponed.
+- The campaign is owned by `M7.6` (`docs/tasks/M7.md`), a gate of the first supported release, filed `2026-10-22` so
+  that postponed never becomes never.
 - Rigor is proportionate to risk: a real defect gets a reproduction, a fix and a control; evidence procedures built for
   the adequacy campaign are not applied to ordinary product slices.

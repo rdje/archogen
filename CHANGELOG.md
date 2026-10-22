@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — file: the mutation campaign as a release gate
+
+`ARCHOGEN-M7-0874` (leaf `M7.6`), `2026-10-22`.
+
+- `ROADMAP.md` §14 asks for mutation testing, which the director postponed until the functionality is locked; `M7.6`
+  makes the first supported release wait on the campaign, so the postponement cannot become an omission.
+
 ## archogen — the configuration checker: the design, reviewed
 
 `ARCHOGEN-M3-0873` (leaf `M3.5`), `2026-10-22`.
