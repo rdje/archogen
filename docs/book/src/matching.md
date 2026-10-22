@@ -277,6 +277,14 @@ A required **ordering** between two effects — `(ordering (before (write device
 memory.buffer)))` — is `unsupported-profile` under this profile: ordering matters where devices move data without the
 processor, which the profile's `dma` exclusion leaves to a later profile, and its vocabulary entry waits for that one.
 
+**What starts first.** A description never writes a boot sequence: it states what each part needs, and the check
+derives the **initialization graph** from the assignment for the plan. A provider comes before each requester bound to
+it — the counter before the clock service reading it — and a service before each service that `uses` or `needs` it;
+a block a platform composes is part of it, so no edge runs between them, and the system's own level and its tasks,
+which start after everything is initialised, are no nodes. Nothing is refused: a log that timestamps through a clock
+that logs its wrap forms one **component**, which the engine initialises as one unit, since initialisation runs with
+interrupts masked, before any task is released.
+
 ### The list a resolver chooses from
 
 Matching does not choose. For one requirement it lists every provider in the order given, with its verdict, the
@@ -353,7 +361,7 @@ a binding takes a channel (rule 2), the channel count and its codes (rule 3), th
 region ownership and its codes (rule 5), and that one assignment's findings decide nothing about the description until
 the search has tried every assignment (rule 6); then one system's assignment, its hardware and connectivity (rule 7),
 the route obligations (rule 8), privilege over a system's callers, given its level (rule 9), placement, once per
-system (rule 10), and ordering, unsupported under this profile (rule 11).
+system (rule 10), ordering, unsupported under this profile (rule 11), and the initialization graph (rule 12).
 
 ### What is not claimed
 
@@ -374,5 +382,6 @@ enumeration and keeping or migrating every verdict it moves. `M3.2` adds adapter
 as an epoch extender — offered only where a requirer allows mediation; `M3.3` judges what one provider cannot: its
 channels and owned regions (`M3.3.2`), connectivity and routes (`M3.3.3`) and privilege given a level (`M3.3.4.1`) are
 judged today, over an assignment a test proposes, and placement over a system's map (`M3.3.5.1`); ordering is
-unsupported under this profile (`M3.3.5.2`); bundles and initialization order follow (`M3.3.6`, `.7`); `M3.7` makes a catalog
+unsupported under this profile (`M3.3.5.2`), and the initialization graph derived (`M3.3.7`); bundles follow
+(`M3.3.6`); `M3.7` makes a catalog
 record a provider.

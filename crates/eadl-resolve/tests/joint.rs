@@ -9,7 +9,8 @@
 use eadl_front::{read, Form, SourceMap};
 use eadl_model::check::shipped_registry;
 use eadl_resolve::joint::{
-    requesters, Binding, Finding, Interrupt, Joint, Kind, Obligation, Report, Requester, System,
+    requesters, Because, Binding, Finding, Initialization, Interrupt, Joint, Kind, Node,
+    Obligation, Report, Requester, System,
 };
 use eadl_resolve::offer::{self, Provider, State};
 use eadl_resolve::relation::{judge, Verdict};
@@ -1467,5 +1468,152 @@ fn a_required_ordering_is_unsupported_under_this_profile() {
         eadl_resolve::requirement::code(&refused).slug(),
         "unsupported-profile",
         "{refused:?}"
+    );
+}
+
+// The initialization graph (leaf `M3.3.7`, model §8 rule 12): derived for `M4.1`'s plan, refusing nothing.
+
+/// The graph of `text`'s one system for its one assignment, with `extra` requesters — blocks or platforms that require
+/// something — read too, since a provider's own requirements are bound like anyone's.
+fn graph(text: &str, extra: &[&str], v: &Vocabulary) -> Initialization {
+    let read = Read::of(text, v);
+    let [system] = read.systems().try_into().expect("one system");
+    let mut all = read.requesters.clone();
+    for name in extra {
+        all.extend(requesters(read.decl(name), v).expect("reads"));
+    }
+    let pairs: Vec<(Provider, &Form)> = read
+        .providers
+        .iter()
+        .map(|p| (p.clone(), read.decl(&p.name)))
+        .collect();
+    let joint = Joint::new(&pairs, &all, v).expect("reads");
+    let with_extra = Read {
+        decls: read.decls.clone(),
+        providers: read.providers.clone(),
+        requesters: all,
+    };
+    let [assignment] = with_extra
+        .assignments(v)
+        .try_into()
+        .expect("one assignment");
+    joint.initialization(&system, &assignment)
+}
+
+fn edge(from: &str, to: &str, because: Because) -> (String, String, Because) {
+    (from.to_string(), to.to_string(), because)
+}
+
+fn bound(fact: &str) -> Because {
+    Because::Binding(fact.to_string())
+}
+
+#[test]
+fn a_system_s_initialization_graph_runs_from_providers_and_used_services_to_their_users() {
+    let v = vocabulary();
+    let text = "(defblock timer.counter (offers (counter-width 32 bit)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses timer.counter)))
+(defservice time.monotonic (requires (needs counter-width)))
+(defservice time.periodic-release (requires (needs time.monotonic)))
+(defpolicy sched (requires (needs core-count)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses time.periodic-release))
+  (requires (uses time.monotonic time.periodic-release sched))
+  (platform (uses soc)))";
+    let g = graph(text, &[], &v);
+    assert_eq!(
+        g.nodes,
+        [
+            ("sched".to_string(), Node::Other),
+            ("soc".to_string(), Node::Provider),
+            ("time.monotonic".to_string(), Node::Service),
+            ("time.periodic-release".to_string(), Node::Service),
+            ("timer.counter".to_string(), Node::Provider),
+        ],
+        "the system's own level and its task are no nodes"
+    );
+    assert_eq!(
+        g.edges,
+        [
+            edge("soc", "sched", bound("core-count")),
+            edge("time.monotonic", "time.periodic-release", Because::Named),
+            edge("timer.counter", "time.monotonic", bound("counter-width")),
+        ]
+    );
+    assert!(g.components.is_empty());
+}
+
+#[test]
+fn a_composite_and_its_part_binding_each_other_make_no_edge() {
+    // Review D1: a well-formed board whose platform needs its timer's counter and whose timer needs the bus.
+    let v = vocabulary();
+    let text = "(defblock timer (offers (counter-width 32 bit)) (requires (needs bus-width)))
+(defplatform soc (offers (bus-width 32 bit) (core-count 1 tick))
+  (requires (uses timer) (needs counter-width)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs counter-width))
+  (platform (uses soc)))";
+    let g = graph(text, &["timer", "soc"], &v);
+    assert_eq!(
+        g.nodes,
+        [
+            ("soc".to_string(), Node::Provider),
+            ("timer".to_string(), Node::Provider)
+        ]
+    );
+    assert!(g.edges.is_empty(), "{:?}", g.edges);
+    assert!(g.components.is_empty());
+}
+
+#[test]
+fn two_services_using_each_other_are_one_component_not_a_refusal() {
+    // Review D3: a log that timestamps and a clock that logs its wrap each initialise without calling the other.
+    let v = vocabulary();
+    let text = "(defblock timer.counter (offers (counter-width 32 bit) (observable-output true)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses timer.counter)))
+(defservice log.write (requires (needs observable-output) (uses time.monotonic)))
+(defservice time.monotonic (requires (needs counter-width) (uses log.write)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses log.write))
+  (platform (uses soc)))";
+    let g = graph(text, &[], &v);
+    assert_eq!(
+        g.components,
+        [vec!["log.write".to_string(), "time.monotonic".to_string()]]
+    );
+    assert!(g
+        .edges
+        .contains(&edge("log.write", "time.monotonic", Because::Named)));
+    assert!(g
+        .edges
+        .contains(&edge("time.monotonic", "log.write", Because::Named)));
+}
+
+#[test]
+fn a_provider_s_own_bindings_count_as_an_adapter_s_will() {
+    // Review D2: a multiplexer — `M3.2`'s adapter, held here by a block that no platform composes, as an adapter is composed
+    // by none — bound for a served service, itself bound to the comparator beneath it: the system reaches it only through
+    // that binding, and the comparator precedes it.
+    let v = vocabulary();
+    let text = "(defblock timer.compare (offers (absolute-deadline true) (channels 1 tick)))
+(defblock alarm.mux (offers (relative-delay true) (channels 4 tick)) (requires (needs absolute-deadline)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses timer.compare)))
+(defservice time.delay (requires (needs relative-delay)))
+(defservice orphan (requires (needs core-count)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses time.delay))
+  (platform (uses soc)))";
+    let g = graph(text, &["alarm.mux"], &v);
+    assert_eq!(
+        g.edges,
+        [
+            edge("alarm.mux", "time.delay", bound("relative-delay")),
+            edge("timer.compare", "alarm.mux", bound("absolute-deadline")),
+        ]
+    );
+    assert!(
+        !g.nodes.iter().any(|(n, _)| n == "orphan"),
+        "a requester the system does not serve is no node: {:?}",
+        g.nodes
     );
 }

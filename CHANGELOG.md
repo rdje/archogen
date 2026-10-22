@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the initialization graph, derived
+
+`ARCHOGEN-M3-0859` (leaf `M3.3.7`), `2026-10-22`.
+
+- From one system's assignment the joint check derives what initialises before what, for the plan: providers before
+  the requesters bound to them, used services before their users, each edge with its reason; composed parts exempt,
+  adapters reached through their bindings.
+- Nothing is refused: a cycle is a component the engine initialises as one unit. Four tests fail first under five arms;
+  model §8 rule 12 and the book explain it.
+
 ## archogen — the initialization graph: the design, reviewed
 
 `ARCHOGEN-M3-0858` (leaf `M3.3.7`), `2026-10-22`.

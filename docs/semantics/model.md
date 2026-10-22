@@ -42,7 +42,7 @@ nothing re-derives.
 | `crates/eadl-resolve/src/requirement.rs` | §7 rule 4, what a side requires, read whole |
 | `crates/eadl-resolve/src/relation.rs` | §7 rule 5, each fact's outcome at a provider and each requirement's verdict there |
 | `crates/eadl-resolve/src/refusal.rs` | §7 rule 6, the relation's refusals, their codes and their repair directions |
-| `crates/eadl-resolve/src/joint.rs` | §8, whether the bindings of one assignment hold together: channels, owned regions, connectivity, routes, privilege and placement |
+| `crates/eadl-resolve/src/joint.rs` | §8, whether the bindings of one assignment hold together: channels, owned regions, connectivity, routes, privilege, placement and the initialization graph |
 
 The census over this declaration runs in both directions, in `crates/eadl-front/tests/reference.rs`. A code
 these sources can emit and §6 does not state is a rule nobody has written down. A code §6 states and no
@@ -318,3 +318,12 @@ did not write it. `archogen check` does not call them yet: `M3.4` searches for a
    §1.1). Its entry and domain wait for the profile that admits `dma`, whose exclusion names ordering among its
    obligations (`docs/profiles/rt-static-up-v1.md`). `docs/semantics/boundary/accept/required-ordering-guarantee.eadl`
    requests nothing, so no closure judges it, and its frozen verdict stays under `M3.4`'s keep-or-migrate rule.
+12. **The initialization graph** (`M3.3.7`). From one system's assignment the engine derives which part is initialised
+   before which, for `M4.1`'s plan; a description never writes the order (`docs/semantics/boundary/reject/initialization-order.eadl`).
+   Its nodes are the providers bound for the requesters the system serves — closed over bindings, so an adapter's or a
+   block's own bindings count — and the services and policies it serves; the system's own level, which initialises
+   nothing, and its tasks, which start after all initialisation, are none. An edge runs from a provider to each
+   requester bound to it, except across composition, at any depth, or to itself, and from a service or policy to each
+   that names it by `uses` or `needs`; each carries its reason. Nothing is refused: initialisation runs masked, before
+   every release, so a cycle establishes no infeasibility, and each strongly connected component is reported as one
+   unit the engine initialises together, in two phases where it can — whether this profile's engine can is `M4.1`'s.

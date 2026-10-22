@@ -65,6 +65,8 @@ pub struct Requester {
     pub requirements: Vec<Requirement>,
     /// The declarations its `uses` lists name.
     pub uses: Vec<String>,
+    /// The declarations its `needs` lists name — a service another service needs, not a vocabulary fact.
+    pub needs: Vec<String>,
 }
 
 /// Every requester `decl` writes: a system's own level and each of its tasks apart, any other declaration whole.
@@ -113,6 +115,12 @@ fn requester(
         span: form.span(),
         requirements: requirement::read_side(form, vocabulary)?,
         uses: used_names(form),
+        needs: requirement::side_name_lists(form)
+            .into_iter()
+            .filter(|list| list.head() == Some("needs"))
+            .flat_map(|list| list.items()[1..].iter().filter_map(Form::as_symbol))
+            .map(str::to_string)
+            .collect(),
     })
 }
 
@@ -794,6 +802,38 @@ pub struct Map {
     pub obligations: Vec<Obligation>,
 }
 
+/// What a node of an initialization graph is (model §8 rule 12).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Node {
+    /// A provider: a block, a platform, an adapter or a record.
+    Provider,
+    /// A service.
+    Service,
+    /// Any other requester the system serves but its own level: a policy.
+    Other,
+}
+
+/// Why one node is initialised before another.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Because {
+    /// The later is bound to the earlier for a requirement on this fact.
+    Binding(String),
+    /// The later names the earlier by `uses` or `needs`.
+    Named,
+}
+
+/// The initialization graph of one system's assignment (leaf `M3.3.7`): derived for `M4.1`'s plan, refusing nothing.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Initialization {
+    /// Each node and what it is, by name.
+    pub nodes: Vec<(String, Node)>,
+    /// Each edge, earlier to later, with its reason, sorted.
+    pub edges: Vec<(String, String, Because)>,
+    /// Each strongly connected component of more than one node, its nodes by name: a unit the engine initialises
+    /// together, in two phases where it can.
+    pub components: Vec<Vec<String>>,
+}
+
 /// What an [`Obligation::Route`]'s interrupt is.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Interrupt {
@@ -836,6 +876,8 @@ pub struct Joint<'v> {
     stated: BTreeMap<String, (BTreeSet<String>, Span)>,
     requesters: BTreeMap<String, Kind>,
     users: BTreeMap<String, BTreeSet<String>>,
+    /// The declarations each requester names by `uses` or `needs`.
+    names: BTreeMap<String, BTreeSet<String>>,
 }
 
 impl<'v> Joint<'v> {
@@ -927,6 +969,15 @@ impl<'v> Joint<'v> {
                 .map(|r| (r.name.clone(), r.kind))
                 .collect(),
             users,
+            names: requesters
+                .iter()
+                .map(|r| {
+                    (
+                        r.name.clone(),
+                        r.uses.iter().chain(&r.needs).cloned().collect(),
+                    )
+                })
+                .collect(),
         })
     }
 
@@ -985,6 +1036,93 @@ impl<'v> Joint<'v> {
                 region: region.to_string(),
                 why: why.to_string(),
             });
+        }
+    }
+
+    /// Model §8 rule 12: the initialization graph of `system`'s assignment. Its nodes are the providers bound for the
+    /// requesters it serves — closed over bindings, so an adapter's or a block's own bindings count — and the services and
+    /// policies it serves; its edges run from a provider to each requester bound to it, except across composition or to
+    /// itself, and from a used service or policy to each that names it. Nothing is refused.
+    #[must_use]
+    pub fn initialization(&self, system: &System, assignment: &[Binding]) -> Initialization {
+        let kind = |name: &str| self.requesters.get(name).copied();
+        let is_node_requester = |name: &str| {
+            name != system.name
+                && !matches!(kind(name), Some(Kind::Task))
+                && system.serves(name)
+                && !self.is_hardware(name)
+        };
+        // Requesters whose bindings count: those the system serves, then each provider bound for one, at any depth.
+        let mut active: BTreeSet<&str> = assignment
+            .iter()
+            .map(|b| b.requester.as_str())
+            .filter(|r| system.serves(r))
+            .collect();
+        loop {
+            let reached: Vec<&str> = assignment
+                .iter()
+                .filter(|b| active.contains(b.requester.as_str()))
+                .map(|b| b.provider.as_str())
+                .filter(|p| !active.contains(p))
+                .collect();
+            if reached.is_empty() {
+                break;
+            }
+            active.extend(reached);
+        }
+        let mut nodes: BTreeMap<String, Node> = BTreeMap::new();
+        for b in assignment
+            .iter()
+            .filter(|b| active.contains(b.requester.as_str()))
+        {
+            nodes.insert(b.provider.clone(), Node::Provider);
+        }
+        for (name, k) in &self.requesters {
+            if is_node_requester(name) && !nodes.contains_key(name) {
+                nodes.insert(
+                    name.clone(),
+                    if *k == Kind::Service {
+                        Node::Service
+                    } else {
+                        Node::Other
+                    },
+                );
+            }
+        }
+        let mut edges: BTreeSet<(String, String, Because)> = BTreeSet::new();
+        for b in assignment
+            .iter()
+            .filter(|b| active.contains(b.requester.as_str()))
+        {
+            let (from, to) = (b.provider.as_str(), b.requester.as_str());
+            if nodes.contains_key(to)
+                && from != to
+                && !self.composes(from, to)
+                && !self.composes(to, from)
+            {
+                edges.insert((
+                    from.to_string(),
+                    to.to_string(),
+                    Because::Binding(b.requirement.fact().to_string()),
+                ));
+            }
+        }
+        for (user, named) in &self.names {
+            if !nodes.contains_key(user) || self.is_hardware(user) {
+                continue;
+            }
+            for used in named
+                .iter()
+                .filter(|n| *n != user && nodes.contains_key(*n) && !self.is_hardware(n))
+            {
+                edges.insert((used.clone(), user.clone(), Because::Named));
+            }
+        }
+        let components = components(&nodes, &edges);
+        Initialization {
+            nodes: nodes.into_iter().collect(),
+            edges: edges.into_iter().collect(),
+            components,
         }
     }
 
@@ -1272,6 +1410,79 @@ impl<'v> Joint<'v> {
     pub fn span_of(&self, provider: &str) -> Option<Span> {
         self.held.get(provider).map(|h| h.span)
     }
+}
+
+/// The strongly connected components of more than one node, each by name, in the order of their least names (Tarjan's
+/// algorithm, visiting nodes and successors by name, so the result is one for one graph).
+fn components(
+    nodes: &BTreeMap<String, Node>,
+    edges: &BTreeSet<(String, String, Because)>,
+) -> Vec<Vec<String>> {
+    struct Walk<'g> {
+        next: BTreeMap<&'g str, BTreeSet<&'g str>>,
+        index: BTreeMap<&'g str, usize>,
+        low: BTreeMap<&'g str, usize>,
+        stack: Vec<&'g str>,
+        on_stack: BTreeSet<&'g str>,
+        found: Vec<Vec<String>>,
+    }
+    fn visit<'g>(w: &mut Walk<'g>, at: &'g str) {
+        let i = w.index.len();
+        w.index.insert(at, i);
+        w.low.insert(at, i);
+        w.stack.push(at);
+        w.on_stack.insert(at);
+        let next: Vec<&'g str> = w
+            .next
+            .get(at)
+            .map(|n| n.iter().copied().collect())
+            .unwrap_or_default();
+        for to in next {
+            if !w.index.contains_key(to) {
+                visit(w, to);
+                let low = w.low[at].min(w.low[to]);
+                w.low.insert(at, low);
+            } else if w.on_stack.contains(to) {
+                let low = w.low[at].min(w.index[to]);
+                w.low.insert(at, low);
+            }
+        }
+        if w.low[at] == w.index[at] {
+            let mut component = Vec::new();
+            while let Some(top) = w.stack.pop() {
+                w.on_stack.remove(top);
+                component.push(top.to_string());
+                if top == at {
+                    break;
+                }
+            }
+            if component.len() > 1 {
+                component.sort();
+                w.found.push(component);
+            }
+        }
+    }
+    let mut walk = Walk {
+        next: BTreeMap::new(),
+        index: BTreeMap::new(),
+        low: BTreeMap::new(),
+        stack: Vec::new(),
+        on_stack: BTreeSet::new(),
+        found: Vec::new(),
+    };
+    for (from, to, _) in edges {
+        walk.next
+            .entry(from.as_str())
+            .or_default()
+            .insert(to.as_str());
+    }
+    for name in nodes.keys() {
+        if !walk.index.contains_key(name.as_str()) {
+            visit(&mut walk, name.as_str());
+        }
+    }
+    walk.found.sort();
+    walk.found
 }
 
 /// How many of the `size` bytes from `base` the holes cover, each counted once.
