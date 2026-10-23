@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-23`
-- **Status:** `active` — written `2026-10-23` by leaf `M3.5.2`; rounds 1 to 11 answered the same day; under review
+- **Status:** `active` — written `2026-10-23` by leaf `M3.5.2`; rounds 1 to 12 answered by `2026-10-24`; under review
   ([`decision_trust-role-programs-reviews.md`](../../reviews/decision_trust-role-programs-reviews.md)), from round 5 read
   against its readers' code and fixtures, `M3.5.2`'s children, its rules in force as each lands.
 - **External sources:** none beyond the parent's: `ROADMAP.md` §4.4 (its "externally invoked tools", and the classes
@@ -293,3 +293,4 @@ refuses the item until a push holds the form and nothing after it moves the item
 | 9 | `2026-10-23` | 4 | 7 | not acceptable, read against `M3.5.2.5`'s code; every finding answered, and the method changed again: what decides what a unit compiles a table, each row a fixture against cargo's dep-info (`M3.5.2.6`) |
 | 10 | `2026-10-23` | 7 | 8 | not acceptable, read against `M3.5.2.6`'s code; every finding answered, and the method changed a third time: the census independent of every build configuration — metadata's edges and every source's inclusion sites read lexically, default-deny — its soundness held by an oracle over a matrix of builds (`M3.5.2.7`) |
 | 11 | `2026-10-23` | 8 | 9 | not acceptable, read against `M3.5.2.7`'s code; every finding answered, and the method changed a fourth time: every token that can make rustc or rustdoc read a file read whole or refused, doc text read with no markdown, the oracle running rustdoc and each unit's closure (`M3.5.2.8`) |
+| 12 | `2026-10-24` | 10 | 7 | not acceptable, read against `M3.5.2.8`'s code; every finding answered, and the method changed a fifth time: the census reads only what it can check it reads as rustc does — an alphabet it checks, every path followed with the module's own file or refused, no narrowing a build script can undo — the rest refused, its reading held against rustc by a generated corpus (`M3.5.2.9`) |

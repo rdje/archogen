@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers' programs in the trust record, round 12, and a fifth change of method
+
+`ARCHOGEN-M3-0930` (leaf `M3.5.2`), `2026-10-24`.
+
+- The twelfth review of the trust record found 10 defects and 7 remarks: the census refused what it could not read,
+  but its own idea of what a token is, which file a path names and what a dependency's settings are still differed
+  from the compiler's. It is to read only what it can check it reads as the compiler does — a fixed alphabet, every
+  path with its default, no test-only narrowing a build script can undo — refuse the rest, and be held to the
+  compiler by a generated corpus of every pairing of the language's literals and comments.
+
 ## archogen — the trust records say what the round-11 census does
 
 `ARCHOGEN-M3-0929` (leaf `M3.5.2.8.5`), `2026-10-24`.

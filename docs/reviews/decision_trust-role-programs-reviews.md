@@ -350,3 +350,43 @@ component. The oracle gains rustdoc and each unit's closure. Measured first: the
 | R11-R15 | remark | §1's census cannot be re-derived from its commit, which refuses one site; the book's measurement omits that | both say so, re-measured on the new census (`M3.5.2.8.5`) |
 | R11-R16 | remark | the inventory's `outer` and its link set are untested | `outer` removed, an out-of-tree path refused (`M3.5.2.8.1`); links tested through the inventory (`M3.5.2.8.3`) |
 | R11-R17 | remark | `RP-H18` covers `crates/rt-core` alone; a unit another commit joins before the readers' push has no owner | `RP-H18` takes every unit the judging base's census finds joining and unnamed (`M3.5.2.8.5`) |
+
+**Round 12**, `2026-10-24`, a new context at `b8bea94f`, read-only and fenced, read against `M3.5.2.8`'s code: probes
+run through the census's own `Sources::reach` in a scratch crate, each first shown by the pin's rustc dep-info,
+rustdoc's failure to read or a passing cargo test to read a role package's file, and the pin's Cargo Book, rustdoc book
+and Rust reference fetched. Verdict: not acceptable, 10 defects and 7 remarks; every round-11 answer landed as text,
+code and tests. The count rose a fifth round running — 3, 4, 7, 8, 10 — and the reviewer named why: round 11's method
+refused every trigger it did not read whole, but the layers under the triggers were the census's own models of rustc,
+held by nothing beyond a finite corpus — what is a token (a vertical tab or U+200E between `include_str` and `!`, a
+byte-order mark, a shebang), which file a path names (a `cfg_attr` path beside the module's own file, an inner
+`#![path]`, an absolute inline path, an undecodable doc literal), and what `cfg` a dependency carries (a build script
+setting `cfg(test)`). **The method changed a fifth time, under the reader**: the census reads only what it can check it
+reads as rustc does, and refuses the rest. Outside comments and literals its alphabet is printable ASCII and the four
+whitespace characters it and rustc agree on — any other byte, a byte-order mark or a shebang refused; every `path`
+attribute is followed with the module's own file beside it, an inner one refused, every path value checked before
+it is used; no `cfg(test)` narrowing stands in a package a build script configures. What it does read is held against
+rustc by a generated corpus — every pair of the reference's lexical constructs, literals, raw strings, characters and
+lifetimes, comments nested and not, around every trigger, compiled by the pin in one crate, each file it reads counted
+or refused — beside the probes. Measured first, by a lexer of the measurement's own: no source the census reads holds a
+byte outside that alphabet, a byte-order mark or a shebang; no `path` sits under `cfg_attr` but in the census's own test
+strings, none inside `#![…]`; no package holds a build script.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R12-D1 | defect | the census's lexer is not rustc's: Pattern_White_Space outside ASCII and a vertical tab, a byte-order mark and a shebang line hide a trigger, nothing counted or refused; the parent's token rules share the lexer | an alphabet the census checks — outside comments and literals, printable ASCII, space, tab, form feed, newline and carriage return — any other byte, a non-ASCII identifier, a byte-order mark or a shebang refused (`M3.5.2.9.1`); the lexer's half, the catalog's and the parent's rules, filed with its owner (`M3.5.2.9.5`) |
+| R12-D2 | defect | a `path` under `cfg_attr` drops the module's own file, which rustc reads where the `cfg` is off | every `path` attribute followed with the module's own file beside it, the oracle's corpus holding a default file apart from both paths (`M3.5.2.9.2`, `.4`) |
+| R12-D3 | defect | an inner `#![path]` is attached to the next `mod` | an inner `path` attribute refused (`M3.5.2.9.2`) |
+| R12-D4 | defect | an absolute or host-spelt path on an inline module escapes `OUTSIDE` and `HOSTS` | every path value checked as it is read, an inline module's among them (`M3.5.2.9.2`) |
+| R12-D5 | defect | a `doc` literal the census cannot decode becomes empty doc text; `\` before a CRLF is no continuation to it | an undecodable `doc` literal refused; `\` before CRLF a continuation (`M3.5.2.9.1`) |
+| R12-D6 | defect | doc text's triggers miss U+200E and U+200F around them and a non-ASCII module name | a trigger read past any non-ASCII or control character; `mod` a trigger before any non-ASCII character (`M3.5.2.9.1`); rustdoc cases in the oracle (`M3.5.2.9.4`) |
+| R12-D7 | defect | a build script's `cargo::rustc-cfg=test` sets `cfg(test)` on a library others link, so the narrowing misses its module | no narrowing in a package holding a build script; §3, the table and the configuration row say so (`M3.5.2.9.3`, `.5`) |
+| R12-D8 | defect | the record's soundness rests on the census's tokens and paths being rustc's, held by nothing beyond the probes | the premise stated; the alphabet refused outside it; a generated leg of the oracle over every pair of lexical constructs around every trigger (`M3.5.2.9.1`, `.4`, `.5`) |
+| R12-D9 | defect | a test-like unit's run-time reads of another role's files are unseen and unsaid | a line of `UNSEEN`, §3 and the book (`M3.5.2.9.5`) |
+| R12-D10 | defect | "beside every refusal and exit of their step" is false before `cargo metadata` | worded "after the census reads", in §3, the generated-sources clarification and the code (`M3.5.2.9.5`) |
+| R12-R11 | remark | prose refused with a doc test's reason: `include` ending a line, `include/exclude`, `asm` ending a line | `/` a trigger only as a comment's `/*` or `//`; the reason worded for prose (`M3.5.2.9.1`) |
+| R12-R12 | remark | the doc tests row's first quote is the Cargo Book's, not the rustdoc book's; "each rule quoted" overstated | attributed; the lead says which rows quote and which paraphrase (`M3.5.2.9.5`) |
+| R12-R13 | remark | build-era words survive in *How to apply*, §3 and the book | worded (`M3.5.2.9.5`) |
+| R12-R14 | remark | the book's narrowing omits the `#![cfg(test)]` module file | worded (`M3.5.2.9.5`) |
+| R12-R15 | remark | a non-member's binaries are read and refused, unstated | stated (`M3.5.2.9.5`) |
+| R12-R16 | remark | no fixture holds a census refusal beside a build's failure; the rustdoc leg checks a file, not a block; the oracle skips an invocation with no dep-info untraced | a fixture (`M3.5.2.9.3`); a refusal per block, every skip counted and bounded (`M3.5.2.9.4`) |
+| R12-R17 | remark | checked and holding: the reading rule, the forms' read failures and items, §5, `M3.5.8`'s order, the hand-offs, the other quotes and hashes | no change |
