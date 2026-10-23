@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's census reads documentation with no markdown
+
+`ARCHOGEN-M3-0925` (leaf `M3.5.2.8.2`), `2026-10-23`.
+
+- A library's documentation can hold doc tests in more spellings than the census parsed — other fences, indented
+  blocks, a test split across attributes. The census no longer reads markdown at all: it refuses every word in a
+  library's documentation that could make a doc test read a file, except one set off by a backtick in prose,
+  which no compiled code can hold.
+
 ## archogen — the trust gate's census reads every word that can include a file
 
 `ARCHOGEN-M3-0924` (leaf `M3.5.2.8.1`), `2026-10-23`.

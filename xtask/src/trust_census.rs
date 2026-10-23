@@ -103,9 +103,12 @@ impl<'a> Sources<'a> {
         self.file("", src)?.ok_or("is no file of the commit")
     }
 
-    /// Every file the crate root `root` reaches.
-    pub(crate) fn reach(&self, root: &str) -> Reach {
+    /// Every file the crate root `root` reaches, its doc text read for triggers when rustdoc tests it, a library's
+    /// (`doc_tested`; round 11's R9) — the `doctest` field "is only relevant for libraries, it has no effect on other
+    /// sections".
+    pub(crate) fn reach(&self, root: &str, doc_tested: bool) -> Reach {
         let mut out = Reach::default();
+        let mut doc = DocText::default();
         // Each file to read, with the directories its `mod name;` children may lie under, whether it is reached only
         // through a module under `#[cfg(test)]`, and whether it is loaded as a module, so its own leading
         // `#![cfg(test)]` holds.
@@ -142,6 +145,9 @@ impl<'a> Sources<'a> {
             // what it reaches by a test's alone.
             let test_only = test_only || (module && scan.test_file);
             out.unfollowed.extend(scan.unfollowed);
+            if doc_tested {
+                doc.read(&file, &scan.doc);
+            }
             let dir = parent(&file);
             let follow =
                 |rel: &str, from: &str, site: &Site| -> Result<Option<String>, Unfollowed> {
@@ -223,19 +229,14 @@ impl<'a> Sources<'a> {
                                 }
                                 out.files.insert(path);
                             }
-                            // A document a doc attribute includes: its code blocks are doc tests, read for their own sites.
+                            // A document a doc attribute includes: doc text of the library, read whole.
                             What::Doc => {
-                                if let Some(text) = self.tree.get(&path) {
-                                    for site in
-                                        doc_sites(&numbered(&String::from_utf8_lossy(text), 1))
-                                    {
-                                        out.unfollowed.insert(Unfollowed {
-                                            file: path.clone(),
-                                            line: site.line,
-                                            sha256: Digest::of(site.extent.as_bytes()).hex(),
-                                            why: DOC_TEST.to_owned(),
-                                        });
-                                    }
+                                if let Some(text) = self.tree.get(&path).filter(|_| doc_tested) {
+                                    let whole = Fragment {
+                                        line: 1,
+                                        text: String::from_utf8_lossy(text).into_owned(),
+                                    };
+                                    doc.read(&path, &[whole]);
                                 }
                                 if !test_only {
                                     out.nontest.insert(path.clone());
@@ -247,6 +248,7 @@ impl<'a> Sources<'a> {
                 }
             }
         }
+        out.unfollowed.extend(doc.refused());
         out
     }
 }
@@ -313,6 +315,8 @@ struct Scan {
     modules: Vec<Module>,
     includes: Vec<Include>,
     unfollowed: Vec<Unfollowed>,
+    /// Its doc text: every doc comment and `doc` literal.
+    doc: Vec<Fragment>,
     /// Whether its leading inner attributes hold exactly `#![cfg(test)]`.
     test_file: bool,
 }
@@ -510,12 +514,10 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                     }
                     if key == Some("doc") && assigned {
                         match value {
-                            Some(v) => {
-                                let text = decode(&source[v.at..v.end]).unwrap_or_default();
-                                for s in doc_sites(&numbered(&text, line_of(source, v.at))) {
-                                    out.unfollowed.push(s.unfollowed(file, DOC_TEST));
-                                }
-                            }
+                            Some(v) => out.doc.push(Fragment {
+                                line: line_of(source, v.at),
+                                text: decode(&source[v.at..v.end]).unwrap_or_default(),
+                            }),
                             // `doc = include_str!("…")`: the inclusion, read below, is the document.
                             None if doc_included(&ts, j + 2, close) => {}
                             None => out.unfollowed.push(site(i, close).unfollowed(
@@ -660,9 +662,7 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
         }
         i += 1;
     }
-    for s in doc_sites(&doc_comments(source, &ts)) {
-        out.unfollowed.push(s.unfollowed(file, DOC_TEST));
-    }
+    out.doc.extend(doc_comments(source, &ts));
     Ok(out)
 }
 
@@ -890,9 +890,9 @@ fn within_doc(ts: &[Token], i: usize) -> bool {
     s >= 2 && ts[s - 1].kind == Kind::Punct('=') && name(&ts[s - 2]) == Some("doc")
 }
 
-/// The doc comments of `source` — `///`, `//!`, `/** */` and `/*! */`, which the lexer drops — as numbered lines of
-/// text, in order.
-fn doc_comments(source: &[u8], ts: &[Token]) -> Vec<(usize, String)> {
+/// The doc comments of `source` — `///`, `//!`, `/** */` and `/*! */`, which the lexer drops — each a fragment of its
+/// doc text, a block comment's to the `*/` closing it, nested ones within.
+fn doc_comments(source: &[u8], ts: &[Token]) -> Vec<Fragment> {
     let mut gaps = Vec::new();
     let mut at = 0;
     for t in ts {
@@ -912,26 +912,41 @@ fn doc_comments(source: &[u8], ts: &[Token]) -> Vec<(usize, String)> {
                 if (line.starts_with(b"///") && !line.starts_with(b"////"))
                     || line.starts_with(b"//!")
                 {
-                    let body = &line[3..];
-                    let body = body.strip_prefix(b" ").unwrap_or(body);
-                    out.push((
-                        line_of(source, a + k),
-                        String::from_utf8_lossy(body).into_owned(),
-                    ));
+                    out.push(Fragment {
+                        line: line_of(source, a + k),
+                        text: String::from_utf8_lossy(&line[3..]).into_owned(),
+                    });
                 }
                 k += end.max(1);
             } else if rest.starts_with(b"/*") {
-                let end = rest
-                    .windows(2)
-                    .position(|w| w == b"*/")
-                    .map_or(rest.len(), |p| p + 2);
+                // Rust's block comments nest: this one ends at the `*/` closing its own `/*`.
+                let mut depth = 0usize;
+                let mut end = rest.len();
+                let mut j = 0;
+                while j + 1 < rest.len() {
+                    if &rest[j..j + 2] == b"/*" {
+                        depth += 1;
+                        j += 2;
+                    } else if &rest[j..j + 2] == b"*/" {
+                        depth -= 1;
+                        j += 2;
+                        if depth == 0 {
+                            end = j;
+                            break;
+                        }
+                    } else {
+                        j += 1;
+                    }
+                }
                 let block = &rest[..end];
                 let doc =
                     (block.starts_with(b"/**") && !block.starts_with(b"/***") && block != b"/**/")
                         || block.starts_with(b"/*!");
                 if doc && block.len() >= 5 {
-                    let body = String::from_utf8_lossy(&block[3..block.len() - 2]).into_owned();
-                    out.extend(numbered(&body, line_of(source, a + k)));
+                    out.push(Fragment {
+                        line: line_of(source, a + k),
+                        text: String::from_utf8_lossy(&block[3..block.len() - 2]).into_owned(),
+                    });
                 }
                 k += end.max(1);
             } else {
@@ -942,73 +957,109 @@ fn doc_comments(source: &[u8], ts: &[Token]) -> Vec<(usize, String)> {
     out
 }
 
-/// `text`'s lines, numbered from `first`.
-fn numbered(text: &str, first: usize) -> Vec<(usize, String)> {
-    text.lines()
-        .enumerate()
-        .map(|(n, l)| (first + n, l.to_owned()))
-        .collect()
+/// One piece of a file's doc text: a doc comment's body, a `doc` attribute's literal, or a document one includes.
+#[derive(Debug, Clone)]
+struct Fragment {
+    /// Its first line, 1-based.
+    line: usize,
+    text: String,
 }
 
-/// The inclusion sites of the code blocks of doc text, its lines numbered: every `include!`, `include_str!`,
-/// `include_bytes!` and `path = …` in a block rustdoc may compile.
-fn doc_sites(lines: &[(usize, String)]) -> Vec<Site> {
-    let mut out = Vec::new();
-    // The block open: whether rustdoc compiles it, and its lines.
-    let mut block: Option<(bool, Vec<(usize, String)>)> = None;
-    for (n, line) in lines {
-        let trimmed = line.trim_start();
-        if let Some(info) = trimmed.strip_prefix("```") {
-            match block.take() {
-                Some((true, code)) => out.extend(code_sites(&code)),
-                Some((false, _)) => {}
-                None => {
-                    // rustdoc compiles a block with no language, `rust`, or only its own attributes.
-                    let compiled = info.split([',', ' ']).filter(|w| !w.is_empty()).all(|w| {
-                        matches!(
-                            w,
-                            "rust"
-                                | "should_panic"
-                                | "no_run"
-                                | "compile_fail"
-                                | "test_harness"
-                                | "standalone_crate"
-                        ) || w.starts_with("edition")
-                            || w.starts_with('E')
-                    });
-                    block = Some((compiled, Vec::new()));
-                }
+/// The words in doc text that can make a doc test read a file — an inclusion or assembly macro before `!`, an alias
+/// or a comment, a `mod` before its name, a debugger visualizer; an assembler directive needs an assembly macro, or a
+/// macro of the library's, whose definition is refused — each found by
+/// its word alone, with no markdown read, so no fence, indentation or info string hides one, and each piece read by
+/// itself, a word ending one a trigger, so no split does (round 11's D1).
+/// One a backtick opens, with no quote or star between, is exempt: no compiled Rust holds a backtick outside a literal
+/// or comment, so a doc test holding it there either holds the word inside that literal or comment, or cannot
+/// compile — whatever a file it includes says, unless a `compile_fail` block names an error code (`exempt`).
+#[derive(Debug, Default)]
+struct DocText {
+    /// Each trigger: its site, and whether a backtick opens it.
+    triggers: Vec<(Unfollowed, bool)>,
+    /// Whether any doc text read names an error code, `E` and four digits, as a `compile_fail` block's may.
+    error_code: bool,
+}
+
+impl DocText {
+    /// The triggers of `file`'s doc text, each fragment read by itself.
+    fn read(&mut self, file: &str, fragments: &[Fragment]) {
+        for f in fragments {
+            self.read_one(file, f);
+        }
+    }
+
+    fn read_one(&mut self, file: &str, fragment: &Fragment) {
+        let text = fragment.text.as_str();
+        // Each line's start, so a trigger's site is its line: the extent an admission names.
+        let starts: Vec<usize> = std::iter::once(0)
+            .chain(text.match_indices('\n').map(|(k, _)| k + 1))
+            .collect();
+        let bytes = text.as_bytes();
+        let word = |b: u8| b.is_ascii_alphanumeric() || b == b'_';
+        let mut k = 0;
+        while k < bytes.len() {
+            if !word(bytes[k]) {
+                k += 1;
+                continue;
             }
-        } else if let Some((true, code)) = block.as_mut() {
-            // A hidden line, `# …`, is compiled as any other.
-            code.push((*n, trimmed.strip_prefix("# ").unwrap_or(trimmed).to_owned()));
+            let a = k;
+            while k < bytes.len() && word(bytes[k]) {
+                k += 1;
+            }
+            let w = &text[a..k];
+            if w.len() == 5 && w.starts_with('E') && w[1..].bytes().all(|b| b.is_ascii_digit()) {
+                self.error_code = true;
+            }
+            let rest = text[k..].trim_start_matches(|c: char| c.is_whitespace() || c == '*');
+            let then_word = |x: &str| {
+                rest.strip_prefix(x)
+                    .is_some_and(|r| !r.bytes().next().is_some_and(word))
+            };
+            let trigger = match w {
+                "include" | "include_str" | "include_bytes" | "asm" | "global_asm"
+                | "naked_asm" => rest.is_empty() || rest.starts_with(['!', '/']) || then_word("as"),
+                "mod" => {
+                    rest.is_empty()
+                        || rest
+                            .starts_with(|c: char| c == '$' || c == '_' || c.is_ascii_alphabetic())
+                }
+                "debugger_visualizer" => true,
+                _ => false,
+            };
+            if !trigger {
+                continue;
+            }
+            let run = &text[text[..a].rfind(char::is_whitespace).map_or(0, |s| s + 1)..a];
+            let exempt = run
+                .rfind('`')
+                .is_some_and(|bt| !run[bt + 1..].contains(['"', '\'', '*']));
+            let row = starts.partition_point(|&s| s <= a) - 1;
+            let extent = text[starts[row]..]
+                .split('\n')
+                .next()
+                .unwrap_or_default()
+                .trim_end_matches('\r');
+            self.triggers.push((
+                Unfollowed {
+                    file: file.to_owned(),
+                    line: fragment.line + row,
+                    sha256: Digest::of(extent.as_bytes()).hex(),
+                    why: DOC_TEST.to_owned(),
+                },
+                exempt,
+            ));
         }
     }
-    if let Some((true, code)) = block {
-        out.extend(code_sites(&code));
-    }
-    out
-}
 
-fn code_sites(code: &[(usize, String)]) -> Vec<Site> {
-    let text: String = code.iter().map(|(_, l)| format!("{l}\n")).collect();
-    let Ok(ts) = tokens(text.as_bytes()) else {
-        return Vec::new();
-    };
-    let mut out = Vec::new();
-    for (i, t) in ts.iter().enumerate() {
-        let hit = name(t).is_some_and(|n| INCLUDES.contains(&n))
-            || (name(t) == Some("path")
-                && ts.get(i + 1).is_some_and(|u| u.kind == Kind::Punct('=')));
-        if hit {
-            let row = text[..t.at].matches('\n').count();
-            out.push(Site {
-                line: code.get(row).map_or(0, |(n, _)| *n),
-                extent: text[t.at..t.end].to_owned(),
-            });
-        }
+    /// The triggers refused: every one but those a backtick opens, unless the library's doc text names an error code.
+    fn refused(self) -> impl Iterator<Item = Unfollowed> {
+        let error_code = self.error_code;
+        self.triggers
+            .into_iter()
+            .filter(move |(_, exempt)| error_code || !exempt)
+            .map(|(u, _)| u)
     }
-    out
 }
 
 /// A string literal's value: a plain or raw string, its escapes undone; none for a byte or C string.
@@ -1168,7 +1219,12 @@ mod tests {
 
     fn with_links(files: &[(&str, &str)], links: &[&str], root: &str) -> Reach {
         let links: BTreeSet<String> = links.iter().map(|l| (*l).to_owned()).collect();
-        Sources::new(&tree(files), &links).reach(root)
+        Sources::new(&tree(files), &links).reach(root, true)
+    }
+
+    /// What `root` reaches as a crate rustdoc does not test: a binary's, a test's.
+    fn untested(files: &[(&str, &str)], root: &str) -> Reach {
+        Sources::new(&tree(files), &BTreeSet::new()).reach(root, false)
     }
 
     fn refused(r: &Reach, why: &str) -> bool {
@@ -1377,15 +1433,140 @@ mod tests {
             "r/tests/t.rs",
         );
         assert!(r.unfollowed.is_empty(), "{:?}", whys(&r));
-        // A doc block rustdoc does not compile is not read.
+        // Prose naming an inclusion in backticks is no doc test.
         let r = of(
             &[(
                 "r/src/lib.rs",
-                "/// ```text\n/// include!(\"x\");\n/// ```\npub fn d() {}\n",
+                "/// The `include!` and `::core::include_str!` macros, a `mod name;`, an `.incbin`.\npub fn d() {}\n",
             )],
             "r/src/lib.rs",
         );
         assert!(r.unfollowed.is_empty(), "{:?}", whys(&r));
+    }
+
+    #[test]
+    fn every_doc_test_rustdoc_may_compile_is_refused_however_it_is_spelt() {
+        // Round 11's D1: rustdoc compiles a fenced block of backticks or tildes, of any length, "indented code blocks",
+        // a block whose info string is `rust,foo`, `ignore` or `ignore-windows`, a test split over `#[doc]` attributes or
+        // mixed with comments, a CRLF file, a nested block comment's — so no markdown is read: every trigger a doc-tested
+        // library's doc text holds is refused, whatever the block around it, a `text` block's too.
+        for (case, source) in [
+            ("tildes", "/// ~~~\n/// include!(\"../../c/x.rs\");\n/// ~~~\npub fn d() {}\n"),
+            ("four backticks", "/// ````\n/// include!(\"../../c/x.rs\");\n/// ````\npub fn d() {}\n"),
+            ("indented", "/// Text.\n///\n///     include!(\"../../c/x.rs\");\npub fn d() {}\n"),
+            ("rust,foo", "/// ```rust,foo\n/// include!(\"../../c/x.rs\");\n/// ```\npub fn d() {}\n"),
+            ("ignore", "/// ```ignore\n/// include!(\"../../c/x.rs\");\n/// ```\npub fn d() {}\n"),
+            ("ignore-windows", "/// ```ignore-windows\n/// include!(\"../../c/x.rs\");\n/// ```\npub fn d() {}\n"),
+            ("text", "/// ```text\n/// include!(\"x\");\n/// ```\npub fn d() {}\n"),
+            (
+                "split over attributes",
+                "#[doc = \"```\"]\n#[doc = \"include\"]\n#[doc = \"!(\\\"x\\\");\"]\n#[doc = \"```\"]\npub fn d() {}\n",
+            ),
+            ("comments and attributes", "/// ```\n#[doc = \"include!(\\\"x\\\");\"]\n/// ```\npub fn d() {}\n"),
+            ("CRLF", "/// ```\r\n/// include!(\"x\");\r\n/// ```\r\npub fn d() {}\r\n"),
+            ("a block comment", "/**\n * ```\n * include\n * !(\"x\");\n * ```\n */\npub fn d() {}\n"),
+            ("a nested block comment", "/** a /* b */ ```\ninclude!(\"x\");\n``` */\npub fn d() {}\n"),
+            ("an inner doc", "//! ```\n//! include_bytes!(\"x\");\n//! ```\n"),
+            ("a module", "/// ```\n/// #[path = \"x.rs\"] mod m;\n/// fn main() {}\n/// ```\npub fn d() {}\n"),
+            ("assembly", "/// ```\n/// core::arch::global_asm!(\".incbin \\\"x\\\"\");\n/// ```\npub fn d() {}\n"),
+            ("an alias", "/// ```\n/// use std::include_str as s;\n/// ```\npub fn d() {}\n"),
+            (
+                "an include directive",
+                "/// ```\n/// core::arch::global_asm!(\".include \\\"x.s\\\"\");\n/// ```\npub fn d() {}\n",
+            ),
+            (
+                "an assembly macro alone",
+                "/// ```\n/// core::arch::global_asm!(concat!(\".inc\", \"bin x\"));\n/// ```\npub fn d() {}\n",
+            ),
+            (
+                "a comment before its `!`",
+                "/// ```\n/// include/* c */!(\"x\");\n/// ```\npub fn d() {}\n",
+            ),
+            (
+                "a fragment's end",
+                "/// ```\n/// const T: &str = include_str\n/// !(\"x\");\n/// ```\npub fn d() {}\n",
+            ),
+            ("a visualizer", "/// ```\n/// #![debugger_visualizer(gdb_script_file = \"x.py\")]\n/// ```\npub fn d() {}\n"),
+        ] {
+            let r = of(&[("r/src/lib.rs", source)], "r/src/lib.rs");
+            assert!(refused(&r, "doc test"), "{case}: {:?}", whys(&r));
+        }
+        // A document a `doc` attribute includes is the library's doc text too, an indented block's trigger refused there.
+        let r = of(
+            &[
+                ("r/src/lib.rs", "#![doc = include_str!(\"../README.md\")]\n"),
+                ("r/README.md", "Text.\n\n    include!(\"x\");\n"),
+            ],
+            "r/src/lib.rs",
+        );
+        assert!(
+            r.unfollowed
+                .iter()
+                .any(|u| u.file == "r/README.md" && u.line == 3 && u.why.contains("doc test")),
+            "{:?}",
+            whys(&r)
+        );
+    }
+
+    #[test]
+    fn a_backtick_exempts_prose_unless_a_doc_test_names_an_error_code() {
+        // No compiled Rust holds a backtick outside a literal or comment, so a word a backtick opens, with no quote or
+        // star between, is inside one or follows a stray backtick, and its doc test cannot compile whatever a file it
+        // includes says — unless a `compile_fail` block names an error code, which rustdoc may check: then no word is
+        // exempt. A quote between reopens it; an English "include" without `!` is no trigger.
+        let prose = "/// The `include!(\"x\")` macro, `std::include_str!`, these include the rest.\npub fn d() {}\n";
+        assert!(of(&[("r/src/lib.rs", prose)], "r/src/lib.rs")
+            .unfollowed
+            .is_empty());
+        let reopened = "/// ```\n/// let s = \"`\";include!(\"x\");\n/// ```\npub fn d() {}\n";
+        let r = of(&[("r/src/lib.rs", reopened)], "r/src/lib.rs");
+        assert!(refused(&r, "doc test"), "{:?}", whys(&r));
+        let r = of(
+            &[
+                ("r/src/lib.rs", "mod m;\n"),
+                (
+                    "r/src/m.rs",
+                    "/// ```compile_fail,E0308\n/// let x: u8 = \"\";\n/// ```\npub fn e() {}\n",
+                ),
+                ("r/src/other.rs", ""),
+                ("r/README.md", ""),
+            ],
+            "r/src/lib.rs",
+        );
+        assert!(r.unfollowed.is_empty(), "{:?}", whys(&r));
+        let r = of(
+            &[
+                ("r/src/lib.rs", &format!("mod m;\n{prose}")),
+                (
+                    "r/src/m.rs",
+                    "/// ```compile_fail,E0308\n/// let x: u8 = \"\";\n/// ```\npub fn e() {}\n",
+                ),
+            ],
+            "r/src/lib.rs",
+        );
+        // The prose's line, its two words one site, refused once a block names an error code.
+        assert!(
+            r.unfollowed
+                .iter()
+                .any(|u| u.file == "r/src/lib.rs" && u.line == 2 && u.why.contains("doc test")),
+            "{:?}",
+            whys(&r)
+        );
+    }
+
+    #[test]
+    fn doc_text_is_read_for_doc_tested_libraries_alone() {
+        // Round 11's R9: rustdoc tests a library's doc text alone — "This is only relevant for libraries, it has no
+        // effect on other sections" — so a binary's or a test's doc test is no site; its code still is.
+        let files = [(
+            "r/tests/t.rs",
+            "/// ```\n/// include!(\"x\");\n/// ```\nfn d() {}\nconst T: &str = include_str!(concat!(\"a\"));\n",
+        )];
+        let r = untested(&files, "r/tests/t.rs");
+        assert_eq!(whys(&r).len(), 1, "{:?}", whys(&r));
+        assert!(refused(&r, "no single string literal"), "{:?}", whys(&r));
+        let r = of(&files, "r/tests/t.rs");
+        assert!(refused(&r, "doc test"), "{:?}", whys(&r));
     }
 
     #[test]

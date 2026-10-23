@@ -102,6 +102,10 @@ pub const PROGRAM_KINDS: &[&str] = &["bin", "example", "cdylib", "staticlib", "d
 /// program target when its build joins two roles of a pair in [`JOINED`] (`decision_trust-role-programs.md` §3).
 pub const TEST_KINDS: &[&str] = &["test", "bench", "lib-test", "bin-test", "doctest"];
 
+/// The kinds of library rustdoc tests: a `lib`, `rlib` or `proc-macro` alone — cargo refuses a `dylib`'s and a
+/// `cdylib`'s doc tests (round 7's R4), and the `doctest` field "is only relevant for libraries".
+const DOCTESTED: &[&str] = &["lib", "rlib", "proc-macro"];
+
 /// The pairs of roles a property rests on (`decision_trust-role-programs.md` §5): a test-like unit whose build compiles
 /// a role package of a root of each is a program target, named by a pair form or classified, whatever its sources
 /// name, so no spelling hides a comparison (round 5's D1).
@@ -2183,9 +2187,7 @@ pub fn inventory_with(
             // `lib`, `rlib` or `proc-macro` alone — cargo refuses a `dylib`'s and a `cdylib`'s (round 7's R4). Flags are
             // not read: `test`, `doctest`, `harness` and `required-features` change what the default build makes, and
             // `cargo test --lib`, `--test` or `--doc` builds the unit whatever they say (measured `2026-10-23`, round 6).
-            let doctested = kinds
-                .iter()
-                .any(|k| matches!(*k, "lib" | "rlib" | "proc-macro"));
+            let doctested = kinds.iter().any(|k| DOCTESTED.contains(k));
             let library = kinds.iter().any(|k| {
                 matches!(
                     *k,
@@ -2333,15 +2335,20 @@ pub fn inventory_with(
     // every target's crate root and every file it reaches, read with nothing built, whatever their `cfg`; a site it
     // cannot read whole is refused unless an admission names it, each site once however many roots reach it — a path
     // out of the tree, through a symbolic link or spelt as hosts read apart among them.
+    // A crate root rustdoc tests — a library's — has its doc text read too (round 11's D1).
     let sources = census::Sources::new(&tree, &symlinks);
+    let mut doc_tested: BTreeMap<&String, bool> = BTreeMap::new();
+    for ((_, kind, _), srcs) in &target_sources {
+        for src in srcs {
+            *doc_tested.entry(src).or_default() |= DOCTESTED.contains(&kind.as_str());
+        }
+    }
     let mut reaches: BTreeMap<String, census::Reach> = BTreeMap::new();
-    for src in target_sources.values().flatten() {
+    for (src, doc_tested) in doc_tested {
         let Ok(root) = sources.root(src) else {
             continue;
         };
-        if !reaches.contains_key(src) {
-            reaches.insert(src.clone(), sources.reach(&root));
-        }
+        reaches.insert(src.clone(), sources.reach(&root, doc_tested));
     }
     let unfollowed: BTreeSet<&census::Unfollowed> =
         reaches.values().flat_map(|r| &r.unfollowed).collect();

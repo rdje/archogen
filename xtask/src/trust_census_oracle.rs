@@ -249,12 +249,17 @@ fn the_census_counts_every_file_any_build_of_the_corpus_reads() {
     }
     let links = BTreeSet::new();
     let reader = Sources::new(&tree, &links);
+    let mut doc_tested: BTreeMap<&String, bool> = BTreeMap::new();
+    for ((_, kind, _), srcs) in &sources {
+        for src in srcs {
+            *doc_tested.entry(src).or_default() |=
+                matches!(kind.as_str(), "lib" | "rlib" | "proc-macro");
+        }
+    }
     let mut reaches = BTreeMap::new();
-    for src in sources.values().flatten() {
+    for (src, doc_tested) in doc_tested {
         if let Ok(root) = reader.root(src) {
-            reaches
-                .entry(src.clone())
-                .or_insert_with(|| reader.reach(&root));
+            reaches.insert(src.clone(), reader.reach(&root, doc_tested));
         }
     }
     let census = crate::trust::Census::lexical(&reaches, &sources);

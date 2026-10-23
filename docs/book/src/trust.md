@@ -105,7 +105,11 @@ design (leaf `M3.5.2.3.1`). Every file a target reaches is read for every token 
 text, whatever their `cfg` — and one the census does not read whole — a module a macro's expansion places, an assembly
 directive reading a file, a path out of the tree, through a symbolic link or spelt as hosts read apart — is refused
 unless an admission, rule `inclusion`, names it, so a spelling it does not know is a refusal, never a miss (leaves
-`M3.5.2.7.1`, `M3.5.2.8.1`). What only a `#[cfg(test)]` module reaches, outside any macro, counts for its crate's own
+`M3.5.2.7.1`, `M3.5.2.8.1`). A library's doc text is read with no markdown — every doc comment, `doc` literal and
+document it includes, each by itself — and each word in it that can make a doc test read a file is refused, but one a
+backtick opens while no doc text of the library names an error code: no compiled Rust holds a backtick outside a
+literal or comment, so such a doc test cannot compile, whatever a file it includes says (leaf `M3.5.2.8.2`). What only
+a `#[cfg(test)]` module reaches, outside any macro, counts for its crate's own
 tests, never for the crate as another links it; `cfg(test)` anywhere else is read as on; a non-member's tests are not
 counted; and a pair form is held to what the census reads of its test as to its build (leaf `M3.5.2.7.2`). An oracle
 holds the census to rustc: it builds a corpus of every reviewer's probe in twelve configurations through a compiler

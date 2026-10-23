@@ -106,7 +106,14 @@ spelling it does not know is a refusal, never a miss: no single string literal, 
 macro's expansion places, a `doc` attribute no literal gives, an assembly directive that reads a file or assembles one,
 a doc test's own, a path outside the tree's text, through a symbolic link at any component, or spelt as hosts read apart
 — a backslash, a drive, a trailing dot or space, a byte outside ASCII, a name the commit holds only in another case — and
-a file that does not tokenize (`M3.5.2.7.1`, `M3.5.2.8.1`, `RP-H19`). What a module under exactly `#[cfg(test)]`,
+a file that does not tokenize (`M3.5.2.7.1`, `M3.5.2.8.1`, `RP-H19`). A doc test's own is read with no markdown: in
+a library rustdoc tests — a `lib`, `rlib` or `proc-macro` — every doc comment, `doc` literal and document a `doc`
+attribute includes is read by itself, and each word in it that can make a doc test read a file — an inclusion or
+assembly macro before `!`, an alias or a comment, a `mod` before a name, `debugger_visualizer`, or one ending the piece
+— is refused, but one a backtick opens with no quote or star between while no doc text of the library names an error
+code: no compiled Rust holds a backtick outside a literal or comment, so that doc test cannot compile, whatever a file
+it includes says, unless a `compile_fail` block names the code a file could make it fail with (`M3.5.2.8.2`). What a
+module under exactly `#[cfg(test)]`,
 outside any macro, or a module file whose leading inner attributes hold `#![cfg(test)]`, alone reaches counts for its
 crate's own test units — `cfg(test)` is set on no dependency — never for its library as another unit links it, a doc
 test among them, nor for a binary built as no test; `cfg(test)` anywhere else is read as on (`M3.5.2.8.1`); only a
@@ -117,8 +124,8 @@ it whatever it is — a manifest, a table an `include_str!` reads — so a docum
 package makes that package compiled, joining here and refused under `trust-shared-program`, not the parent's §4 file
 item: share it from a package of no role (round 9's R7).
 
-**What decides what a unit compiles** (rounds 9 and 10's changes of method), each rule quoted from the Cargo Book of
-the pin ([`rust-toolchain`](../../book/src/ledger.md#rust-toolchain)) or the Rust reference it ships
+**What decides what a unit compiles** (rounds 9 and 10's changes of method), each rule quoted from the Cargo Book or the rustdoc
+book of the pin ([`rust-toolchain`](../../book/src/ledger.md#rust-toolchain)) or the Rust reference it ships
 ([`rust-reference`](../../book/src/ledger.md#rust-reference)). Each row the census reads or refuses names the fixtures
 that hold it, and each row with a part outside the census the report's line that says so; a test,
 `the_census_table_is_held_by_its_fixtures_and_the_report`, reads this table and holds both to the code. And the census
@@ -141,7 +148,7 @@ the directory, the loaded file's, which the census follows (`M3.5.2.7.3`).
 | file inclusion | a module's file "mirrors the logical module path"; "for `path` attributes on modules not inside inline module blocks, the file path is relative to the directory the source file is located"; a `debugger_visualizer` file "a path relative to the source file" (the Rust reference) | read: every file a crate root reaches by `mod`, `#[path]`, the `include!` family and `debugger_visualizer`, each the innermost package's; every token that can make rustc read a file read whole or refused unless admitted — a macro's module, an assembly directive reading a file, a path out of the tree, through a link or spelt as hosts read apart among them | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_file_counts_for_the_innermost_package_holding_it`, `an_inclusion_the_census_cannot_follow_is_refused_unless_admitted`, `a_path_attribute_resolves_as_the_reference_says`, `a_raw_identifier_and_every_mod_are_read_whole_or_refused`, `every_attribute_and_macro_that_reads_a_file_is_read_whole_or_refused`, `a_path_meets_the_links_at_every_component_and_hosts_read_none_apart`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | — |
 | dependency kinds | normal, build and development dependencies | edges: normal and build, and the unit's own package's development | `a_unit_joining_two_roles_is_a_program_target_whatever_it_names` | — |
 | build scripts, procedural macros | each runs code as its package builds | read as any package's sources and never run; what they generate outside | `a_package_with_a_build_script_is_read_and_its_script_never_run`, `a_package_reaching_a_build_script_is_read_as_any_other` | `what the census does not read` |
-| doc tests | "each code block compiles to a doctest executable on the fly with `rustc`" | the library's files; a code block's own inclusion sites refused unless admitted | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_site_no_literal_pins_is_unfollowed` | — |
+| doc tests | "each code block compiles to a doctest executable on the fly with `rustc`"; "Rustdoc also accepts indented code blocks as an alternative to fenced code blocks"; "`compile_fail` tells rustdoc that the compilation should fail" (the rustdoc book); the `doctest` field "is only relevant for libraries" | the library's files; its doc text read with no markdown, each piece by itself, every word that can make a doc test read a file refused unless admitted, but one a backtick opens while the library's doc text names no error code; a binary's or a test's doc text no doc test's | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_site_no_literal_pins_is_unfollowed`, `every_doc_test_rustdoc_may_compile_is_refused_however_it_is_spelt`, `a_backtick_exempts_prose_unless_a_doc_test_names_an_error_code`, `doc_text_is_read_for_doc_tested_libraries_alone` | — |
 | non-members, other workspaces | neither's tests are this workspace's | a non-member's library read as an edge, its tests not counted; another workspace's outside | `the_census_counts_members_tests_alone` | `what the census does not read` |
 | a program a test runs | a process, compiled by no unit of the test | outside | — | `a program a test runs` |
 

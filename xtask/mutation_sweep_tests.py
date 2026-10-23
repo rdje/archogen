@@ -544,7 +544,7 @@ class ObserverCloseTests(DiscoveryFixture):
         expected = {
             'xtask/src/trust_compiler_observer.rs': '58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98',
             'xtask/src/trust_compiler.rs': '1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973',
-            'xtask/src/trust.rs': '02847c1e825fb133594a5068a059403dec142c7d0bb0241b692bcde81944b383',  # re-pinned by M3.5.2.8.1: the census read through `Sources`, `outer` and the canonicalised tree removed; the observer's close unchanged
+            'xtask/src/trust.rs': '7b4d1bbda7343e504581982c609d6bd1f8da1eb6a8aa6f3b2f985fcde23c4ec8',  # re-pinned by M3.5.2.8.2: `DOCTESTED` and each crate root's doc-tested flag; the observer's close unchanged
         }
         def verify(inputs):
             for path, digest in expected.items():
@@ -1504,7 +1504,7 @@ os.execvp("rustc", ["rustc"] + arguments)
         ]
         inputs = {path: (ROOT / path).read_bytes() for path in paths}
         expected = {
-            'xtask/src/trust.rs': '077bad0967480904f82f388121148e1c9aade2a9d7c2c9af4dc6d377926dc4e3',  # re-pinned by M3.5.2.8.1: the census read through `Sources`, `outer` and the canonicalised tree removed; the caller suffix unchanged
+            'xtask/src/trust.rs': 'af2ba5f30fca19b314b6b94c7f45c0a54a92654e91752c16b0b8b6474fd41243',  # re-pinned by M3.5.2.8.2: `DOCTESTED` and each crate root's doc-tested flag; the caller suffix unchanged
             'xtask/src/trust_compiler.rs': '634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70',
             'xtask/src/trust_compiler_observer.rs': 'c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f',
             'xtask/src/catalog_build.rs': 'd3e8865c3633de9f4cafb82c3613f0ee82df0c065012b732469cda5951221ed2',
@@ -1971,7 +1971,7 @@ class IteratorTests(DiscoveryFixture):
             entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
             guarded = {
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
-                    "077bad0967480904f82f388121148e1c9aade2a9d7c2c9af4dc6d377926dc4e3"),  # re-pinned by M3.5.2.8.1: the census read through `Sources`, `outer` and the canonicalised tree removed; the absolute cwd unchanged
+                    "af2ba5f30fca19b314b6b94c7f45c0a54a92654e91752c16b0b8b6474fd41243"),  # re-pinned by M3.5.2.8.2: `DOCTESTED` and each crate root's doc-tested flag; the absolute cwd unchanged
                 "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
                     "634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70"),
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],
