@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's census builds tests as `cargo test` does
+
+`ARCHOGEN-M3-0915` (leaf `M3.5.2.6.2`), `2026-10-23`.
+
+- The census of what each test compiles now builds in `cargo test`'s own profile and features, and builds by name
+  the tests and benches `cargo test` skips unless asked, so code under `debug_assertions` or a required feature
+  is seen. A test that does not build stops the run instead of being judged silently.
+
 ## archogen — a file belongs to the package that holds it
 
 `ARCHOGEN-M3-0914` (leaf `M3.5.2.6.1`), `2026-10-23`.

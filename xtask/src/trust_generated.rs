@@ -1663,7 +1663,9 @@ mod generator_tests {
         assert!(!f.base.join("out/trust-dependencies.json").exists());
         f.commit(&[(
             "crates/g/src/main.rs",
-            format!("{last}\ncompile_error!(\"actual generator failure\");\n"),
+            // A release build's failure alone, as the gate builds a generator: the census, in the test profile, compiles it
+            // (round 9's D2).
+            format!("{last}\n#[cfg(not(debug_assertions))]\ncompile_error!(\"actual generator failure\");\n"),
         )]);
         let failure =
             match inventory_with(&f.repo, "HEAD", &f.base.join("out"), &configuration_roots()) {
@@ -1707,7 +1709,13 @@ mod generator_tests {
                     "mod gen_b;\nmod other;\npub fn f() -> u32 { gen_b::T + other::U }\n".to_owned(),
                 ),
                 ("crates/g/Cargo.toml", manifest("g", "")),
-                ("crates/g/src/main.rs", "fn main() { let _: u32 = \"no\"; }\n".to_owned()),
+                // A failure as the gate builds a generator, in release, which the census, in `cargo test`'s profile,
+                // does not meet (round 9's D2).
+                (
+                    "crates/g/src/main.rs",
+                    "#[cfg(not(debug_assertions))]\nfn main() { let _: u32 = \"no\"; }\n#[cfg(debug_assertions)]\nfn main() {}\n"
+                        .to_owned(),
+                ),
             ],
         );
         let out = f.base.join("out");

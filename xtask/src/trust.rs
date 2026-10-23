@@ -977,9 +977,31 @@ fn compile(
     );
     args.push(name.clone());
     let argv: Vec<&str> = args.iter().map(String::as_str).collect();
+    let (units, compilations) = observed(who, &argv, targets, env, tree_dir, compiler, refused)?;
+    if !units.iter().any(|u| u.package == package) {
+        return Err(format!(
+            "`{who}`'s build compiled nothing of its own package `{package}`"
+        ));
+    }
+    Ok((units, compilations))
+}
+
+/// Run cargo with `argv` in `tree_dir` through the compiler observer and read every unit it compiled — its
+/// dependency information, its configuration — each refusal naming `who` (§3). Returns the units, in a fixed order, and
+/// the metadata-owned compiler invocations; a unit cargo finds fresh is not compiled, so not read.
+#[allow(clippy::too_many_arguments)]
+fn observed(
+    who: &str,
+    argv: &[&str],
+    targets: &Targets,
+    env: &[(String, String)],
+    tree_dir: &Path,
+    compiler: &compiler::Compiler,
+    refused: &mut Vec<String>,
+) -> Result<(Vec<Unit>, Vec<Compilation>), String> {
     let session = compiler.session(who, env, tree_dir)?;
     let compile_env = session.environment(env)?;
-    let _ = run_cargo(&argv, &compile_env, tree_dir)?;
+    let _ = run_cargo(argv, &compile_env, tree_dir)?;
     let scratch = format!("{}/", tree_dir.display());
     let canonical_scratch = fs::canonicalize(tree_dir)
         .map(|c| format!("{}/", c.display()))
@@ -1117,12 +1139,91 @@ fn compile(
             &b.configuration,
         ))
     });
-    if !units.iter().any(|u| u.package == package) {
-        return Err(format!(
-            "`{who}`'s build compiled nothing of its own package `{package}`"
-        ));
-    }
     Ok((units, compilations))
+}
+
+/// A target's required features, by package, kind and name, as cargo's metadata states them.
+type RequiredFeatures = BTreeMap<(String, String, String), Vec<String>>;
+
+/// The census build of the package at `pkg` (`decision_trust-role-programs.md` §3; round 9's D1): its targets built as
+/// `cargo test` builds them — the test profile, default features — once as it selects them, once with `--all-targets`,
+/// and then by name, with its required features, each target neither build made: a `test = false` test, a
+/// `bench = false` bench, one whose required features the default set lacks. Every unit compiled is read as a
+/// program's is; its refusals are dropped, since what a census build would refuse is no program's.
+#[allow(clippy::too_many_arguments)]
+fn census_build(
+    pkg: &str,
+    package_names: &BTreeMap<String, String>,
+    targets: &Targets,
+    target_sources: &TargetSources,
+    required: &RequiredFeatures,
+    env: &[(String, String)],
+    tree_dir: &Path,
+    compiler: &compiler::Compiler,
+) -> Result<Vec<Unit>, String> {
+    let name = package_names
+        .get(pkg)
+        .ok_or_else(|| format!("no package at `{pkg}`"))?;
+    let who = format!("the census of `{pkg}`");
+    let suffix = [
+        "--locked",
+        "--offline",
+        "--message-format=json",
+        "-v",
+        "-p",
+        name.as_str(),
+    ];
+    let run = |selection: &[&str]| {
+        let argv: Vec<&str> = ["test", "--no-run"]
+            .into_iter()
+            .chain(selection.iter().copied())
+            .chain(suffix)
+            .collect();
+        observed(
+            &who,
+            &argv,
+            targets,
+            env,
+            tree_dir,
+            compiler,
+            &mut Vec::new(),
+        )
+        .map(|(units, _)| units)
+    };
+    let mut units = run(&[])?;
+    units.extend(run(&["--all-targets"])?);
+    let mut missed: BTreeMap<Vec<String>, Vec<String>> = BTreeMap::new();
+    for ((dir, kind, target), sources) in target_sources.iter().filter(|((d, _, _), _)| d == pkg) {
+        let selector = match kind.as_str() {
+            "bin" | "test" | "bench" | "example" => vec![format!("--{kind}"), target.clone()],
+            "lib" | "rlib" | "dylib" | "cdylib" | "staticlib" => vec!["--lib".to_owned()],
+            _ => continue,
+        };
+        let crate_name = target.replace('-', "_");
+        let made = units
+            .iter()
+            .any(|u| u.package == *dir && u.crate_name == crate_name && sources.contains(&u.root));
+        if !made {
+            missed
+                .entry(
+                    required
+                        .get(&(dir.clone(), kind.clone(), target.clone()))
+                        .cloned()
+                        .unwrap_or_default(),
+                )
+                .or_default()
+                .extend(selector);
+        }
+    }
+    for (features, selectors) in &missed {
+        let features = features.join(",");
+        let mut selection: Vec<&str> = selectors.iter().map(String::as_str).collect();
+        if !features.is_empty() {
+            selection.extend(["--features", features.as_str()]);
+        }
+        units.extend(run(&selection)?);
+    }
+    Ok(units)
 }
 
 /// Build `p` clean in `tree_dir`, into `target_dir`, and read every unit's dependency information and its artifact.
@@ -2113,6 +2214,7 @@ pub fn inventory_with(
     let mut id_dir: BTreeMap<String, String> = BTreeMap::new();
     let mut targets: Targets = BTreeMap::new();
     let mut target_sources: TargetSources = BTreeMap::new();
+    let mut required_features: RequiredFeatures = BTreeMap::new();
     let mut package_targets: BTreeMap<String, Vec<String>> = BTreeMap::new();
     // Every program target (§2): (package, kind, name).
     let mut program_targets: Vec<(String, String, String)> = Vec::new();
@@ -2164,11 +2266,25 @@ pub fn inventory_with(
                 .filter_map(Json::as_str)
                 .collect();
             let target_name = t.get("name").and_then(Json::as_str).unwrap_or_default();
+            let features: Vec<String> = t
+                .get("required-features")
+                .map(Json::elements)
+                .unwrap_or_default()
+                .iter()
+                .filter_map(Json::as_str)
+                .map(str::to_owned)
+                .collect();
             for kind in &kinds {
                 target_sources
                     .entry((dir.clone(), (*kind).to_owned(), target_name.to_owned()))
                     .or_default()
                     .insert(src.clone());
+                if !features.is_empty() {
+                    required_features.insert(
+                        (dir.clone(), (*kind).to_owned(), target_name.to_owned()),
+                        features.clone(),
+                    );
+                }
             }
             // The units some build of this target makes (`decision_trust-role-programs.md` §3): its own, if it is a test
             // or a bench; a library's or an executable's unit tests; a library's doc tests, which rustdoc runs on a
@@ -2375,13 +2491,12 @@ pub fn inventory_with(
         }
     }
 
-    // The census (`decision_trust-role-programs.md` §3; round 8's change of method): each package's targets built, a
-    // test-like target as `cargo test` builds it, without default features as a root is, so what each unit compiles is
-    // read from the compiler's dependency information. It runs no package's code: a package holding a build script or a
-    // procedural macro, and every package whose closure reaches one, is left out, its units judged by their edges alone.
-    // A package whose build fails compiles nothing, so none of its units can compare anything: judged by its edges, it
-    // is named in the inventory's `census-failed`. What a census build would refuse of a program is not a program's, so
-    // its refusals are dropped; and none is built once a program's build has failed.
+    // The census (`decision_trust-role-programs.md` §3; rounds 8 and 9's changes of method): each package's targets
+    // built as `cargo test` builds them ([`census_build`]), so what each unit compiles is read from the compiler's
+    // dependency information. It runs no package's code: a package holding a build script or a procedural macro, and
+    // every package whose closure reaches one, is left out, its units judged by their edges alone. A census build that
+    // fails leaves the gate unable to judge, naming its package, as `cargo test` would fail on it (round 9's D2); none
+    // is built once a program's build has failed.
     let running: BTreeSet<&String> = every_target
         .iter()
         .filter(|(_, ts)| {
@@ -2410,27 +2525,25 @@ pub fn inventory_with(
             .any(|s| running.iter().any(|r| r.as_str() == *s))
     };
     let mut census_units: Vec<Unit> = Vec::new();
-    let mut census_failed: Vec<String> = Vec::new();
     if failed.is_empty() {
         reset_cargo_home(&cargo_home).map_err(unable(&refused))?;
         let census_dir = out.join("target-census");
         let census_env = environment(&pin, &cargo_home, &census_dir).map_err(unable(&refused))?;
-        let args = ["test", "--no-run", "--all-targets"].map(str::to_owned);
         for pkg in package_names.keys().filter(|pkg| !reaches_code(pkg)) {
-            match compile(
-                &format!("the census of `{pkg}`"),
+            let units = census_build(
                 pkg,
-                &args,
                 &package_names,
                 &targets,
+                &target_sources,
+                &required_features,
                 &census_env,
                 &tree_dir,
                 &compiler,
-                &mut Vec::new(),
-            ) {
-                Ok((units, _)) => census_units.extend(units),
-                Err(why) => census_failed.push(format!("{pkg}: {why}")),
-            }
+            )
+            .map_err(|why| {
+                unable(&refused)(format!("the census of `{pkg}` did not build: {why}"))
+            })?;
+            census_units.extend(units);
         }
     }
     let census = Census::of(&census_units, &target_sources);
@@ -3203,7 +3316,6 @@ pub fn inventory_with(
             ),
         ),
         ("program-targets", Json::Array(program_targets)),
-        ("census-failed", strings(census_failed)),
         ("classifications-unused", strings(classifications_unused)),
     ]);
     fs::create_dir_all(out).map_err(|e| e.to_string())?;
@@ -5769,6 +5881,143 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn the_census_builds_each_target_as_cargo_test_builds_it() {
+        crate::trust_test_process::bounded!(the_census_builds_each_target_as_cargo_test_builds_it);
+        // Round 9's D1: the census builds as `cargo test` does — its test profile, default features — and by name, with
+        // its required features, each target `cargo test` and `--all-targets` skip; a file only another profile
+        // compiles stays outside, as §3 says.
+        let g = "[dev-dependencies]\ng = { path = \"../g\" }\n";
+        let gc = "`crates/c`, `crates/g`";
+        let path_c = "#[path = \"../../c/src/lib.rs\"]\nmod checker;\n#[test]\nfn t() { assert_eq!(checker::x(), g::x()); }\n";
+        let under = |cfg: &str| {
+            format!("#[cfg({cfg})]\n#[path = \"../../c/src/lib.rs\"]\nmod checker;\n#[test]\nfn t() {{ let _ = g::x(); }}\n")
+        };
+        // A case: its name, `crates/r`'s manifest beside its package table, its test's text, the units joined.
+        type Case = (&'static str, String, String, Vec<(String, String, String)>);
+        let cases: Vec<Case> = vec![
+            ("census-control", g.to_owned(), path_c.to_owned(), compare_alone(gc)),
+            (
+                "census-test-false",
+                format!("[[test]]\nname = \"compare\"\ntest = false\n\n{g}"),
+                path_c.to_owned(),
+                compare_alone(gc),
+            ),
+            (
+                "census-required-features",
+                format!("[features]\ncmp = []\n\n[[test]]\nname = \"compare\"\nrequired-features = [\"cmp\"]\n\n{g}"),
+                path_c.to_owned(),
+                compare_alone(gc),
+            ),
+            (
+                "census-default-feature",
+                format!("[features]\ndefault = [\"cmp\"]\ncmp = []\n\n{g}"),
+                under("feature = \"cmp\""),
+                compare_alone(gc),
+            ),
+            ("census-debug-assertions", g.to_owned(), under("debug_assertions"), compare_alone(gc)),
+            ("census-release-only", g.to_owned(), under("not(debug_assertions)"), vec![]),
+        ];
+        for (case, manifest_extra, compare, want) in cases {
+            let inv = written(
+                joining_with(
+                    case,
+                    &manifest_extra,
+                    "",
+                    &[("crates/r/tests/compare.rs", compare.as_str())],
+                )
+                .run(),
+            );
+            assert_eq!(units_of_r(&inv), want, "{case}");
+        }
+        // A bench `--all-targets` skips, built by name.
+        let inv = written(
+            joining_with(
+                "census-bench-false",
+                &format!("[[bench]]\nname = \"speed\"\nbench = false\n\n{g}"),
+                "",
+                &[("crates/r/benches/speed.rs", path_c)],
+            )
+            .run(),
+        );
+        assert_eq!(
+            units_of_r(&inv),
+            unclassified_units("crates/r", &[("bench", "speed")], gc),
+            "census-bench-false"
+        );
+        // An example as `cargo test` builds it to see it compile, not as a test, and as `--all-targets` builds it, as
+        // a test.
+        let example = "#[cfg(not(test))]\n#[path = \"../../c/src/lib.rs\"]\nmod checker;\n#[cfg(not(test))]\nfn main() { let _ = checker::x(); }\n#[cfg(test)]\nfn main() {}\n";
+        let example_test = "#[cfg(test)]\n#[path = \"../../c/src/lib.rs\"]\nmod checker;\nfn main() {}\n#[test]\nfn t() { let _ = checker::x(); }\n";
+        let inv = written(
+            joining_with(
+                "census-example",
+                g,
+                "",
+                &[
+                    ("crates/r/examples/ex.rs", example),
+                    ("crates/r/examples/ex2.rs", example_test),
+                ],
+            )
+            .run(),
+        );
+        let role_packages = |name: &str| {
+            inv.get("program-targets")
+                .map(Json::elements)
+                .unwrap_or_default()
+                .iter()
+                .find(|t| {
+                    t.get("kind").and_then(Json::as_str) == Some("example")
+                        && t.get("name").and_then(Json::as_str) == Some(name)
+                })
+                .and_then(|t| t.get("role-packages"))
+                .map(|r| {
+                    r.elements()
+                        .iter()
+                        .filter_map(Json::as_str)
+                        .map(str::to_owned)
+                        .collect::<Vec<_>>()
+                })
+        };
+        // Each example's path, one in its non-test unit, one in its test unit, and its package's development edge.
+        for name in ["ex", "ex2"] {
+            assert_eq!(
+                role_packages(name),
+                Some(vec!["crates/c".to_owned(), "crates/g".to_owned()]),
+                "census-example {name}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_census_build_that_fails_leaves_the_gate_unable_to_judge() {
+        crate::trust_test_process::bounded!(
+            a_census_build_that_fails_leaves_the_gate_unable_to_judge
+        );
+        // Round 9's D2: a test `cargo test` cannot build compares nothing the census can see, so the run stops, naming
+        // the package, rather than judging its units by their edges alone.
+        let f = joining_with(
+            "census-failure",
+            "[dev-dependencies]\ng = { path = \"../g\" }\n",
+            "",
+            &[(
+                "crates/r/tests/compare.rs",
+                "#[cfg(debug_assertions)]\ncompile_error!(\"fails as `cargo test` builds it\");\n#[test]\nfn t() {}\n",
+            )],
+        );
+        let e = match f.try_run_into("out") {
+            Err(e) => e,
+            Ok(Outcome::Written(_)) => panic!("written"),
+            Ok(Outcome::Refused(r)) => panic!("refused: {r:#?}"),
+        };
+        assert!(
+            e.starts_with("the census of `crates/r` did not build:")
+                && e.contains("could not compile `r` (test \"compare\")"),
+            "{e}"
+        );
+        assert!(!f.base.join("out/trust-dependencies.json").exists());
+    }
+
+    #[test]
     fn a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles() {
         crate::trust_test_process::bounded!(
             a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles
@@ -7335,7 +7584,9 @@ version = "0.1.0"
             let lints = if level == "ordinary" {
                 String::new()
             } else {
-                format!("[lints.rust]\nunused_variables = \"{level}\"\nunsafe_code = \"{level}\"\ndead_code = \"{level}\"\n")
+                // Not `dead_code`: the test harness allows it on `main`, which a `forbid` refuses (E0453), so `cargo
+                // test` could not build a binary's unit tests, as the census builds them (round 9's D2).
+                format!("[lints.rust]\nunused_variables = \"{level}\"\nunsafe_code = \"{level}\"\nunreachable_code = \"{level}\"\n")
             };
             let dependency = "[dependencies]\ncommon = { path = \"../common\" }\n";
             let f = two_roots(
@@ -7415,7 +7666,7 @@ version = "0.1.0"
                 let expected_lints = if level == "ordinary" {
                     std::collections::BTreeSet::new()
                 } else {
-                    ["unused_variables", "unsafe_code", "dead_code"]
+                    ["unused_variables", "unsafe_code", "unreachable_code"]
                         .into_iter()
                         .map(|lint| format!("--{level}={lint}"))
                         .collect()
@@ -9530,8 +9781,10 @@ version = "0.1.0"
             &format!("{features}[dev-dependencies]\nr = {{ path = \"../r\" }}\n"),
         );
         let generator_manifest = manifest("g", features);
-        let implementation = "#[cfg(feature = \"tripwire\")]\ncompile_error!(\"role default features were enabled\");\npub fn imp(x: u32) -> u32 { x }\n";
-        let generator = "#[cfg(feature = \"tripwire\")]\ncompile_error!(\"generator default features were enabled\");\nmod helper;\nfn main() { let _ = helper::VALUE; }\n";
+        // Each tripwire fires in a release build with default features, as no root is built, and in no census build,
+        // which `cargo test`'s profile makes (round 9's D2).
+        let implementation = "#[cfg(all(feature = \"tripwire\", not(debug_assertions)))]\ncompile_error!(\"role default features were enabled\");\npub fn imp(x: u32) -> u32 { x }\n";
+        let generator = "#[cfg(all(feature = \"tripwire\", not(debug_assertions)))]\ncompile_error!(\"generator default features were enabled\");\nmod helper;\nfn main() { let _ = helper::VALUE; }\n";
         let helper = "pub const VALUE: u32 = 3;\n";
         let mut roots = std::fs::read_to_string(f.repo.join("trust/roots.eadl")).unwrap();
         roots.push_str("(defgenerated \"crates/i/tests/support/mod.rs\" (generator \"crates/g/src/main.rs\") (inputs \"crates/g/src/helper.rs\") (command \"fixture\") (reason \"fixture\"))\n");

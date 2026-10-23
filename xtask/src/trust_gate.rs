@@ -951,10 +951,11 @@ pub const UNSEEN: &[&str] = &[
      decides that it compares nothing they hold equal (§3)",
     "an edit inside a classified program target: its classification is reviewed again only when the role packages its \
      build compiles grow, so an edit that makes it start comparing two roles reads unchanged (§3; M3.6.10)",
-    "what the census build does not compile: each package's targets built once, without default features, on this \
-     host, so a file only another platform or a feature compiles, what a doc test's own snippet includes, a package \
-     holding or reaching a build script or a procedural macro, judged by its edges, one whose build fails, the \
-     inventory's `census-failed`, a non-member's features and another workspace's tests are outside it (§3)",
+    "what the census build does not compile: each package's targets built as `cargo test` builds them — the test \
+     profile, default features, this host — and each it skips by name with its required features, so a file only \
+     another profile, platform or feature set compiles, what a doc test's own snippet includes, a package holding or \
+     reaching a build script or a procedural macro, judged by its edges, a non-member's features and another \
+     workspace's tests are outside it (§3)",
     "a program a test runs: a test that runs another role's program as a process compiles none of it, so the census \
      does not see it (§3)",
 ];

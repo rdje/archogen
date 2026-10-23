@@ -5,6 +5,11 @@ use crate::json::Json;
 
 const TABLE: &str = "crates/b/src/table.rs";
 
+/// A program that fails to compile as the gate builds one, in release, and compiles as the census builds it, in the test
+/// profile: a build the gate must never make, which no census build trips (round 9's D2).
+const RELEASE_ONLY_FAILURE: &str =
+    "#[cfg(not(debug_assertions))]\ncompile_error!(\"built as the gate builds a program\");\nfn main() {}\n";
+
 fn declaration(generators: &[&str]) -> (&'static str, String) {
     (
         "trust/roots.eadl",
@@ -96,11 +101,12 @@ fn every_program_target_position_is_refused_before_a_foreign_role_build() {
         declaration(&generators),
         ("crates/a/Cargo.toml", manifest("a", targets)),
     ];
-    // Deliberately uncompilable: all targets must be refused before anything of them runs.
+    // Deliberately uncompilable as the gate builds a program, in release — yet compilable in the census's test profile,
+    // as `cargo test` builds it (round 9's D2): all targets must be refused before anything of them runs.
     files.extend(
         generators
             .iter()
-            .map(|p| (*p, "fn main() { missing(); }\n".to_owned())),
+            .map(|p| (*p, RELEASE_ONLY_FAILURE.to_owned())),
     );
     let f = fixture("adequacy-target-role-positions", &files);
     exact_refusals(
@@ -227,7 +233,7 @@ mod reader_role_tests {
                 ("crates/x/src/lib.rs", "pub fn value() {}\n".to_owned()),
                 (
                     "crates/x/src/main.rs",
-                    "fn main() { missing(); }\n".to_owned(),
+                    super::RELEASE_ONLY_FAILURE.to_owned(),
                 ),
                 ("crates/x/generate.sh", "echo generate\n".to_owned()),
             ],
