@@ -31,9 +31,12 @@ No bootstrap read includes this directory.
 | [`rt-static-up-v1-faults-observation-reviews.md`](rt-static-up-v1-faults-observation-reviews.md) | [`rt-static-up-v1-faults-observation.md`](../profiles/rt-static-up-v1-faults-observation.md), the fault paths' observation events | 7 | closed: round 7 found no defect (`M2.15`) |
 | [`decision_trust-generated-refusals-reviews.md`](decision_trust-generated-refusals-reviews.md) | [`decision_trust-generated-refusals.md`](../specs/trust/decision_trust-generated-refusals.md) | 23 | closed: `2026-10-10`, round 23 found no defect; rounds 1–22 answered, rounds 5, 14, 16 to 20 by method (`M3.6.6.4`) |
 | [`decision_trust-generated-adequacy-reviews.md`](decision_trust-generated-adequacy-reviews.md) | [`decision_trust-generated-adequacy.md`](../specs/trust/decision_trust-generated-adequacy.md) | 3 | closed: `2026-10-11`, round 3 found zero defects and one remark, existing invocation-error kills owned by M3.6.9.1; accepted design, strict outcomes built; remaining implementation pending |
+| [`decision_trust-role-programs-reviews.md`](decision_trust-role-programs-reviews.md) | [`decision_trust-role-programs.md`](../specs/trust/decision_trust-role-programs.md) | 1 | open: round 1, 23 defects and 10 remarks, answered `2026-10-23`; round 2 pending |
 
 ## Counted by `REVIEW-COUNTS`
 
 The reviews whose counts `scripts/check_review_counts.sh` judges against their histories: every open review whose
 record keeps a summary table, from the commit that answers its first round; a review leaves the list in the commit
 that closes it. Each line names the history, then the record, both from this folder.
+
+- `decision_trust-role-programs-reviews.md` with `../specs/trust/decision_trust-role-programs.md`

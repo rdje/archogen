@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers' programs in the trust record, under review
+
+`ARCHOGEN-M3-0886` (leaf `M3.5.2`), `2026-10-23`.
+
+- A record beside the trust inventory's says how the gate will hold the configuration checker's program: the
+  relation it shares with the generator as a derivation disclosed for review, the front's invoked checkers, and what
+  the roles share, each with its class. Its first independent review found 23 defects, each answered.
+
 ## archogen — the programmatic surface runs nothing
 
 `ARCHOGEN-M3-0885` (leaf `M3.5.1.5.3`), `2026-10-23`.

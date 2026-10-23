@@ -429,7 +429,7 @@ that found each, are in the sections above and the review history:
 | `TI-H16` | `M4.8` | A property resting on a role's independence is established only when each role it rests on has an inventoried root whose form is accepted, every root form, classification and admission is accepted, no program target is unclassified, and every shared item of those roles is accepted under `M3.6.5`; otherwise it is `not-established`, naming F30. |
 | `TI-H17` | `M2.7.5` | The catalog records the scheduling checker reads at run time are declared, by path, in its root's form in `trust/roots.eadl`. |
 | `TI-H18` | `M3.4` | `archogen resolve` runs as a program that is the root of one role only, and the fixed data its root reads at run time is declared, by path, in that root's form in `trust/roots.eadl`. |
-| `TI-H19` | `M3.5` | `archogen-check`'s executable is classified in `trust/roots.eadl` as the configuration checker's root with its fixed run-time data declared there by path, the description and plan it checks being claim subjects and not dependencies, unreviewed until accepted under `M3.6.5`. |
+| `TI-H19` | `M3.5` | `archogen-plan-check`'s executable is classified in `trust/roots.eadl` as the configuration checker's root, the kind modules it reads compiled in and shared with the generator as files (`decision_trust-role-programs.md` §2) and any other fixed run-time data it reads declared there by path, the description and plan it checks being claim subjects and not dependencies, unreviewed until accepted under `M3.6.5`. |
 | `TI-H20` | `M4.2` | The executable that runs the generator is classified in `trust/roots.eadl` as the generator's root with its fixed run-time data declared there by path, the description it generates from being a claim subject and not a dependency, unreviewed until accepted under `M3.6.5`. |
 | `TI-H21` | `M2.21` | `archogen analyze` gets an open owner and a program that is the root of the scheduling checker's role alone, decided before it is built, since as a subcommand of the `archogen` executable it would be refused as `trust-shared-program`. |
 | `TI-H22` | `M3.6.6` | Committed generated sources declare their generator and input, which become items of the inventory, with a case-3 fixture of a generated-source input on both sides of a pair and a design reviewed by a context that did not write it. |
@@ -512,6 +512,15 @@ Its sentence that `Cargo.lock` is recorded and is not part of the build configur
 *Completed `2026-10-10`, by `M3.6.6.3`, its review's round 1, D2:* §4's comparison-harness item gains the harness's
 provenance as an aspect, as its files are, and §6's `trust-shared-changed` one whose provenance moves — passages the
 record's §7 list omitted, corrected there the same day.
+
+**Clarified `2026-10-23`, by `M3.5.2`, [`decision_trust-role-programs.md`](decision_trust-role-programs.md)**, under the
+director's ruling of `2026-10-22` (findings §16 (a)): the configuration checker's root; the **shared derivation**, the
+generator's relation and the checker's held equal by a comparison that compiles both roles' packages, a form
+`defderivation` and a shared item of its own kind, exempt from `trust-shared-program` for its pair alone; a root's
+**invoked programs** and **installed data**, `(invokes …)` and `(installed …)`, refused as `trust-invocation` when an
+invocation names no other role's executable root, and each invocation a shared item; and the classes of what the
+roles share; `defharness`'s pair narrowed to a reference model and its implementation. Each passage that record's §6
+lists reads with it; `TI-H19` is amended above to match, and `TI-H18` stands.
 
 **Case 4 is judged where an inventory is consumed** (R1 A8). The gate builds its own inventory and cannot find it
 stale. `cargo xtask trust-verify <package>` refuses a package whose inventory is missing, whose build identity is not
