@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers' programs in the trust record, round 11, and a fourth change of method
+
+`ARCHOGEN-M3-0923` (leaf `M3.5.2`), `2026-10-23`.
+
+- The eleventh review of the trust record found 8 defects and 9 remarks, up a fourth round: the census's reader
+  followed the spellings it knew and passed others in silence — a doc test fenced another way, a raw-identifier
+  module, a test-only attribute on a field. It is to account for every word that can make the compiler read a
+  file, refusing whatever it cannot read whole, and to read documentation with no markdown at all; the oracle is
+  to run rustdoc too.
+
 ## archogen — the trust record says what the census now does
 
 `ARCHOGEN-M3-0922` (leaf `M3.5.2.7.4`), `2026-10-23`.

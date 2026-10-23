@@ -307,3 +307,41 @@ of those builds read inside the census's count. Measured first: the tree holds o
 | R10-R13 | remark | `RP-H18`'s measure cannot be observed before the push after the census | the lexical census needs no host and no build, so `M3.5.8` measures it on any host from the base after the push; said (`M3.5.2.7.4`) |
 | R10-R14 | remark | a unit joining only off the baseline's host cannot be classified | moot: the census is the same on every host |
 | R10-R15 | remark | `UNSEEN`'s launcher line omits "declared from the front's `main.rs`"; `M3.5.3.2` says "derivation" | both worded (`M3.5.2.7.4`) |
+
+**Round 11**, `2026-10-23`, a new context at `7385e261`, read-only and fenced, read against `M3.5.2.7`'s code: probes
+run through the census's own `reach` in a scratch crate, each confirmed by the pin's rustc, rustdoc or cargo, and the
+pin's Cargo Book, Rust reference and rustdoc book fetched. Verdict: not acceptable, 8 defects and 9 remarks; of round
+10's answers D1, D2, D4, D5, D6, R8, R13 and R15 landed, D3, D7, R9 and R12 in part. The count rose a fourth round
+running — 2, 3, 4, 7, 8 — and for one reason, a level below round 10's: the census's reader followed the spellings it
+knew and passed every other in silence — a fence other than three backticks, an indented block, a doc test split over
+attributes, a raw identifier, `#[cfg(test)]` on a field, a path climbing back out of a link, a test that is a link —
+so each round found another. **The method changed a fourth time, at the reader**: every token that can make rustc or
+rustdoc read a file — `mod`, the `include!` family, the assembly macros, a `doc` or `debugger_visualizer` attribute —
+is a trigger, and a trigger the census does not read whole is refused, so a spelling it does not know is a refusal,
+never a miss. Doc text is read with no markdown: every trigger in a doc-tested library's doc text is refused but one a
+backtick opens — no compiled Rust holds a backtick outside a literal or comment, and a block that holds one stray
+cannot compile, whatever a file it includes says, unless a `compile_fail` block names an error code, so none may. The
+one narrowing the census allows, `cfg(test)`, stands on a module alone; a path is checked against the links at every
+component. The oracle gains rustdoc and each unit's closure. Measured first: the new rules refuse nothing in the tree
+— its sixteen doc-tested libraries' doc text holds ten triggers, each opened by a backtick, and no error code;
+`#[cfg(test)]` stands on modules alone; the commit holds no symbolic link and no build script.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R11-D1 | defect | the census misses doc tests rustdoc compiles — a `~~~` or four-backtick fence, an indented block, `rust,foo`, `ignore` and `ignore-*`, a test split over `#[doc]` attributes or mixed with comments, a CRLF file | doc text read with no markdown: every trigger in a doc-tested library's doc text, its fragments joined in order, refused but one a backtick opens, in a library whose doc text names no error code (`M3.5.2.8.2`); the oracle runs rustdoc (`M3.5.2.8.4`) |
+| R11-D2 | defect | `#[cfg(test)]` on a field, variant, parameter or arm, and `#![cfg(test)]` inside an inline module, hide what follows from every non-test unit | the narrowing stands on a `mod` item alone, outside any macro, and on a module file whose leading inner attributes hold `#![cfg(test)]`; anything else is read as on (`M3.5.2.8.1`); the oracle builds each placement (`M3.5.2.8.4`) |
+| R11-D3 | defect | a raw-identifier module, `mod r#type;`, is silently not followed | a raw identifier read as one token; a `mod` the census does not read whole refused (`M3.5.2.8.1`) |
+| R11-D4 | defect | a path climbing back out of a link (`link/../src/lib.rs`), and a test target that is itself a link, evade the link rule | every component of a path checked against the links as it is resolved (`M3.5.2.8.1`); a link under a package's directory, and a crate root that is no blob of the tree, refused (`M3.5.2.8.3`) |
+| R11-D5 | defect | the census's refusals are dropped at step 2's earlier exits, and the compiler's preparation fails with no refusal beside it | the census's refusals joined before the step's last judgment before a build; the preparation through `unable` (`M3.5.2.8.3`) |
+| R11-D6 | defect | the parent's clarification says "the census build read", omits the innermost package, and gives `trust-shared-program` a root's or pair form's own build alone | worded: the census reads, the innermost package, a pair form's test as the census reads it (`M3.5.2.8.5`) |
+| R11-D7 | defect | §3's `cfg(test)` row and `UNSEEN` say "every `cfg` at once", against the narrowing the code makes | both state the narrowing, the row naming its fixture (`M3.5.2.8.5`) |
+| R11-D8 | defect | the oracle's coverage is overstated: no doc test, no edge, no link, no closure | it gains rustdoc and each unit's closure over a renamed, an optional and a platform's dependency (`M3.5.2.8.4`); §3, the table and the book say what it does not check (`M3.5.2.8.5`) |
+| R11-R9 | remark | refusals over-strict for real code: `let path =` or a field `include` in a doc block, doc text no doc test compiles, `mod $name { … }` in a macro, `use<'a>` taken for a `use` item, a non-member's tests and every build script read and refused though counted nowhere | each narrowed: doc text a doc-tested library's alone, `path` no trigger in it, `include` one only before `!` or `as`; a macro's inline module loads nothing; `use<` begins no item (`M3.5.2.8.1`, `.2`); a non-member's tests unread, a build script's files its package's (`M3.5.2.8.3`) |
+| R11-R10 | remark | unseen and unsaid: an admitted site's file, a `debugger_visualizer` file, an assembler `.incbin`, an absolute or out-of-tree path joining no role | a `debugger_visualizer` file followed; `.incbin` or `.include` in an assembly macro refused; an absolute or out-of-tree path refused (`M3.5.2.8.1`); what an admitted site names said to be outside (`M3.5.2.8.5`) |
+| R11-R11 | remark | build-era words: §3's heading, the book's "found by the build", "quoted from the Cargo Book", the `rust-toolchain` entry's scope, four test comments | worded (`M3.5.2.8.5`) |
+| R11-R12 | remark | the `rust-reference` entry holds no hash for "Modules"; the rustdoc book is not ledgered; the table's test checks names alone | the hash captured, the rustdoc book ledgered; the names test kept, each row's claim held by its fixtures and the oracle (`M3.5.2.8.5`) |
+| R11-R13 | remark | R10-R9's logged answer, "the table gives way to the rule", is not what was built | corrected in this log (`M3.5.2.8.5`) |
+| R11-R14 | remark | the parent's "whose generator files its crate root never is" is false for a joined `bin-test` or a `cdylib`'s `lib-test` | the generated-sources record's words (`M3.5.2.8.5`) |
+| R11-R15 | remark | §1's census cannot be re-derived from its commit, which refuses one site; the book's measurement omits that | both say so, re-measured on the new census (`M3.5.2.8.5`) |
+| R11-R16 | remark | the inventory's `outer` and its link set are untested | `outer` removed, an out-of-tree path refused (`M3.5.2.8.1`); links tested through the inventory (`M3.5.2.8.3`) |
+| R11-R17 | remark | `RP-H18` covers `crates/rt-core` alone; a unit another commit joins before the readers' push has no owner | `RP-H18` takes every unit the judging base's census finds joining and unnamed (`M3.5.2.8.5`) |
