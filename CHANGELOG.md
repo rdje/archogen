@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the fifteenth daily artifact cleanup
+
+`ARCHOGEN-PROGRAM-0928` (leaf `PROGRAM.109`), `2026-10-24`.
+
+- Remove only the idle main and wasm debug incremental caches — 29847 files, 4245385971 logical bytes — after two
+  handoff censuses and an inventory whose identities were rechecked first; every other entry under `target/` is
+  identical or accounted, the cited evidence keeps its digests, and the tracked inputs restore.
+- Overwrite `docs/ARTIFACT_CLEANUP.md`, add the run's section to the repository annex, and seal `PROGRAM.100`–`.102`
+  and `.104`–`.108`.
+
 ## archogen — the trust gate's census oracle runs rustdoc and follows each test's dependencies
 
 `ARCHOGEN-M3-0927` (leaf `M3.5.2.8.4`), `2026-10-24`.
