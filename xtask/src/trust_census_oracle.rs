@@ -10,7 +10,7 @@ use std::process::Command;
 
 use archogen_catalog::tree::Tree;
 
-use super::{normalized, reach};
+use super::Sources;
 use crate::json::{self, Json};
 
 /// The corpus: one workspace, a package for each family of probe.
@@ -247,26 +247,14 @@ fn the_census_counts_every_file_any_build_of_the_corpus_reads() {
             }
         }
     }
-    let outer = |from: &str, rel: &str| -> Option<String> {
-        let path = if rel.starts_with('/') {
-            PathBuf::from(rel)
-        } else {
-            repo.join(from).join(rel)
-        };
-        let path = std::fs::canonicalize(path).ok()?;
-        Some(
-            path.strip_prefix(&repo)
-                .ok()?
-                .to_string_lossy()
-                .into_owned(),
-        )
-    };
+    let links = BTreeSet::new();
+    let reader = Sources::new(&tree, &links);
     let mut reaches = BTreeMap::new();
     for src in sources.values().flatten() {
-        if let Some(root) = normalized(src).filter(|r| tree.is_file(r)) {
+        if let Ok(root) = reader.root(src) {
             reaches
                 .entry(src.clone())
-                .or_insert_with(|| reach(&tree, &BTreeSet::new(), &root, &outer));
+                .or_insert_with(|| reader.reach(&root));
         }
     }
     let census = crate::trust::Census::lexical(&reaches, &sources);

@@ -2329,29 +2329,18 @@ pub fn inventory_with(
     };
     rules.workspace(&mut refused);
 
-    // The census's reading of the sources (`decision_trust-role-programs.md` §3; round 10's change of method): every
-    // target's crate root and every file it reaches, read with nothing built, whatever their `cfg`; a site it cannot
-    // follow by its text is refused unless an admission names it, each site once however many roots reach it.
-    // A path out of the tree's text is placed on disk: followed if it lands in the written tree.
-    let canonical_tree =
-        fs::canonicalize(&tree_dir).map_err(|e| unable(&refused)(e.to_string()))?;
-    let outer = |from: &str, rel: &str| -> Option<String> {
-        let path = if rel.starts_with('/') {
-            PathBuf::from(rel)
-        } else {
-            tree_dir.join(from).join(rel)
-        };
-        let path = fs::canonicalize(path).ok()?;
-        let inside = path.strip_prefix(&canonical_tree).ok()?;
-        Some(inside.to_string_lossy().into_owned())
-    };
+    // The census's reading of the sources (`decision_trust-role-programs.md` §3; rounds 10 and 11's changes of method):
+    // every target's crate root and every file it reaches, read with nothing built, whatever their `cfg`; a site it
+    // cannot read whole is refused unless an admission names it, each site once however many roots reach it — a path
+    // out of the tree, through a symbolic link or spelt as hosts read apart among them.
+    let sources = census::Sources::new(&tree, &symlinks);
     let mut reaches: BTreeMap<String, census::Reach> = BTreeMap::new();
     for src in target_sources.values().flatten() {
-        let Some(root) = census::normalized(src).filter(|r| tree.is_file(r)) else {
+        let Ok(root) = sources.root(src) else {
             continue;
         };
         if !reaches.contains_key(src) {
-            reaches.insert(src.clone(), census::reach(&tree, &symlinks, &root, &outer));
+            reaches.insert(src.clone(), sources.reach(&root));
         }
     }
     let unfollowed: BTreeSet<&census::Unfollowed> =
@@ -6031,7 +6020,7 @@ pub(crate) mod tests {
                 )
                 .run(),
             ),
-            "`crates/r/tests/compare.rs:1`: an inclusion site that imports or shadows an inclusion macro",
+            "`crates/r/tests/compare.rs:1`: an inclusion site that imports or shadows an inclusion or assembly macro",
         );
     }
 
@@ -9403,10 +9392,13 @@ version = "0.1.0"
     // ── Round 8 (`M3.6.1` step 9): each reproducer the reader ran, as a fixture ─────────────────────────────────────
 
     /// The catalog's admission of a line's `include_str!` site and, where the census cannot follow it — no single
-    /// string literal — the census's of the invocation too (round 10's change of method).
+    /// string literal, or an absolute path (rounds 10 and 11's changes of method) — the census's of the invocation too.
     fn admit_line(file: &str, line: &str) -> String {
         let mut out = admit(file, "include_str", line);
-        if let Some(at) = line.find("include_str!(concat!(") {
+        let unfollowed = line
+            .find("include_str!(concat!(")
+            .or_else(|| line.find("include_str!(\"/"));
+        if let Some(at) = unfollowed {
             let rest = &line[at..];
             let mut depth = 0usize;
             let end = rest

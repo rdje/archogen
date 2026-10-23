@@ -100,10 +100,13 @@ the `include!` family, with nothing built, whatever the profile, the features, t
 `M3.5.2.7.2`), and a unit counts its own target's files and its closure's libraries', each
 for the innermost package holding it (leaf `M3.5.2.6.1`), so a role package's file reached by a path, an `include!` or a dependency's own path joins it however its source spells it
 (leaf `M3.5.2.5.1`; a scan of the text before it, `M3.5.2.4.1`, missed spellings). It counts what some build compiles, more than the default build makes, by
-design (leaf `M3.5.2.3.1`). Every file a target reaches is read for its inclusion sites — `mod`, `#[path]`, the
-`include!` family, in code and in doc text, whatever their `cfg` — and a site the census cannot follow by its text
-alone is refused unless an admission, rule `inclusion`, names it (leaf `M3.5.2.7.1`). What only a `#[cfg(test)]`
-item reaches counts for its crate's own tests, never for the crate as another links it; a non-member's tests are not
+design (leaf `M3.5.2.3.1`). Every file a target reaches is read for every token that can make rustc read a file —
+`mod`, `#[path]`, the `include!` family, a `debugger_visualizer` file, an assembly macro's template, in code and in doc
+text, whatever their `cfg` — and one the census does not read whole — a module a macro's expansion places, an assembly
+directive reading a file, a path out of the tree, through a symbolic link or spelt as hosts read apart — is refused
+unless an admission, rule `inclusion`, names it, so a spelling it does not know is a refusal, never a miss (leaves
+`M3.5.2.7.1`, `M3.5.2.8.1`). What only a `#[cfg(test)]` module reaches, outside any macro, counts for its crate's own
+tests, never for the crate as another links it; `cfg(test)` anywhere else is read as on; a non-member's tests are not
 counted; and a pair form is held to what the census reads of its test as to its build (leaf `M3.5.2.7.2`). An oracle
 holds the census to rustc: it builds a corpus of every reviewer's probe in twelve configurations through a compiler
 wrapper of its own and finds every file each build read counted (leaf `M3.5.2.7.3`). What decides what a unit compiles — target selection, required features, the profile,
@@ -753,9 +756,10 @@ Every report ends with what the inventory does not see, the same list each time,
   decides that the unit compares nothing the two hold equal;
 - **an edit inside a classified program target.** A classification is reviewed again only when the role packages its
   build compiles grow, so an edit that makes a unit start comparing two roles reads "unchanged" (`M3.6.10` owns it);
-- **what the census does not read.** It reads every target's sources and every dependency edge, every `cfg`,
-  feature and host at once, with nothing built, so what a build script or a procedural macro generates, a non-member's
-  tests and another workspace's are outside it;
+- **what the census does not read.** It reads every target's sources and every dependency edge, every `cfg` — but
+  `cfg(test)` on a module, which narrows what that module reaches to its crate's own tests — feature and host at once,
+  with nothing built, so what a build script or a procedural macro generates, a non-member's tests and another
+  workspace's are outside it;
 - **a program a test runs.** A test that runs another role's program as a process compiles none of it, so the census
   does not see it.
 

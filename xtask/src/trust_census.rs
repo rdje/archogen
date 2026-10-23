@@ -1,9 +1,11 @@
 //! What a target compiles, read from its sources with nothing built (`docs/specs/trust/decision_trust-role-programs.md`
 //! §3; round 10's change of method): from its crate root, every file `mod`, `#[path]` and the `include!` family reach,
-//! whatever their `cfg`, so no profile, feature, flag or host decides it. A site the census cannot follow by its
-//! text alone — no single string literal, an alias or a macro's, a path out of the tree or through a symbolic link, a
-//! file that does not tokenize, a doc test's own — is returned unfollowed, for the inventory to refuse unless an
-//! admission names it.
+//! whatever their `cfg`, so no profile, feature, flag or host decides it. Every token that can make rustc read a file
+//! — a `mod`, an inclusion or assembly macro, a `path`, `doc` or `debugger_visualizer` attribute — is read whole or
+//! returned unfollowed, for the inventory to refuse unless an admission names it, so a spelling the census does not
+//! know is a refusal, never a miss (round 11's change of method): no single string literal, an alias or a macro's, a
+//! module a macro's expansion places, an assembly directive reading a file, a path out of the tree, through a symbolic
+//! link or spelt as hosts read apart, a file that does not tokenize, a doc test's own.
 //!
 //! The Rust reference of the pin decides where a module's file is: "When the module does not have a `path` attribute,
 //! the path to the file mirrors the logical module path"; "For `path` attributes on modules not inside inline module
@@ -13,9 +15,10 @@
 //! silent — the children of a module a `path` attribute loads, the `mod` items of a file an `include!` brings in — the
 //! pin decides, measured `2026-10-23` by its own refusal of a missing child: "create file \"src/pl/child.rs\" or
 //! \"src/pl/child/mod.rs\"" for `src/pl/loaded.rs`, "\"src/inc/c.rs\"" for `src/inc/i.rs` — each under the loaded
-//! file's own directory, which the census's oracle holds on every build of its corpus.
+//! file's own directory, which the census's oracle holds on every build of its corpus. A `debugger_visualizer` file is
+//! "a path relative to the source file".
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use archogen_catalog::package::{tokens, Kind, Token};
 use archogen_catalog::tree::Tree;
@@ -42,167 +45,210 @@ pub(crate) struct Unfollowed {
 pub(crate) struct Reach {
     /// Every file it reaches, its own among them, each a blob of the tree.
     pub files: BTreeSet<String>,
-    /// Those it reaches through no item under `#[cfg(test)]`: what it compiles when built for another crate, or for
+    /// Those it reaches through no module under `#[cfg(test)]`: what it compiles when built for another crate, or for
     /// itself as no test — `cfg(test)` is set only on the crate a test harness builds, never on a dependency.
     pub nontest: BTreeSet<String>,
     /// Every site it cannot follow.
     pub unfollowed: BTreeSet<Unfollowed>,
 }
 
-/// Where an absolute path, or one climbing out of the tree, lands: `outer(from, rel)` names the file of the tree it
-/// reaches on disk, from the directory `from`, or none for a file outside the tree, which joins no role.
-pub(crate) type Outer<'a> = &'a dyn Fn(&str, &str) -> Option<String>;
+const OUTSIDE: &str =
+    "names a path outside the commit's tree — absolute, or climbing out of it — whose file the census cannot read";
+const HOSTS: &str = "names a path hosts read apart — a backslash, a drive, a component ending in a dot or a space, \
+                     or a byte outside ASCII";
+const CASE: &str =
+    "names a file the commit holds only in another case, or in two, which a case-insensitive host reads as one";
+const LINK: &str = "reaches a symbolic link, whose target the census does not read";
 
-/// Every file the crate root `root` reaches in `tree`, `links` the tree's symbolic links.
-pub(crate) fn reach(tree: &Tree, links: &BTreeSet<String>, root: &str, outer: Outer) -> Reach {
-    let mut out = Reach::default();
-    let mut seen: BTreeSet<(String, Vec<String>, bool)> = BTreeSet::new();
-    // Each file to read, with the directories its `mod name;` children may lie under, and whether it is reached only
-    // through an item under `#[cfg(test)]`.
-    let mut todo: Vec<(String, Vec<String>, bool)> =
-        vec![(root.to_owned(), vec![parent(root)], false)];
-    while let Some((file, bases, test_only)) = todo.pop() {
-        if !seen.insert((file.clone(), bases.clone(), test_only)) {
-            continue;
+/// The commit's sources as the census reads them: its tree, its symbolic links, and each blob's path folded to ASCII
+/// lower case, so a name only a case-insensitive host resolves is known.
+pub(crate) struct Sources<'a> {
+    tree: &'a Tree,
+    links: &'a BTreeSet<String>,
+    folded: BTreeMap<String, usize>,
+}
+
+impl<'a> Sources<'a> {
+    pub(crate) fn new(tree: &'a Tree, links: &'a BTreeSet<String>) -> Self {
+        let mut folded: BTreeMap<String, usize> = BTreeMap::new();
+        for path in tree.paths() {
+            *folded.entry(path.to_ascii_lowercase()).or_default() += 1;
         }
-        let Some(source) = tree.get(&file) else {
-            continue;
-        };
-        out.files.insert(file.clone());
-        if !test_only {
-            out.nontest.insert(file.clone());
-        }
-        let scan = match scan(&file, source) {
-            Ok(scan) => scan,
-            Err((at, why)) => {
-                out.unfollowed.insert(Unfollowed {
-                    file: file.clone(),
-                    line: line_of(source, at),
-                    sha256: Digest::of(source).hex(),
-                    why: format!(
-                        "does not tokenize ({why}), so the census cannot read what it includes"
-                    ),
-                });
-                continue;
-            }
-        };
-        out.unfollowed.extend(scan.unfollowed);
-        let dir = parent(&file);
-        // A path resolved, through no symbolic link, to a blob of the tree; none for a file the tree does not hold.
-        let follow = |rel: &str, from: &str, site: &Site| -> Result<Option<String>, Unfollowed> {
-            let resolved = match resolve(from, rel) {
-                Ok(Some(path)) => Ok(path),
-                // Out of the tree's text: followed if it lands back inside the written tree, else nothing of it is a
-                // role package's.
-                Ok(None) => match outer(from, rel) {
-                    Some(path) => Ok(path),
-                    None => return Ok(None),
-                },
-                Err(why) => Err(why),
-            };
-            match resolved {
-                Err(why) => Err(site.unfollowed(&file, why)),
-                Ok(path) if through_link(&path, links) => Err(site.unfollowed(
-                    &file,
-                    "reaches a symbolic link, whose file the census does not read",
-                )),
-                Ok(path) => Ok(tree.is_file(&path).then_some(path)),
-            }
-        };
-        let found = |r: Result<Option<String>, Unfollowed>, out: &mut Reach| match r {
-            Err(u) => {
-                out.unfollowed.insert(u);
-                None
-            }
-            Ok(path) => path,
-        };
-        for m in &scan.modules {
-            match m.paths.as_slice() {
-                // `mod name;`: its file mirrors its module path, under each directory this file's children may lie in.
-                [] => {
-                    for dir in bases.iter().flat_map(|base| expansions(base, &m.inline)) {
-                        for candidate in [format!("{}.rs", m.name), format!("{}/mod.rs", m.name)] {
-                            if let Some(path) = found(follow(&candidate, &dir, &m.site), &mut out) {
-                                todo.push((
-                                    path,
-                                    vec![join(&dir, &m.name)],
-                                    test_only || m.test_only,
-                                ));
-                            }
-                        }
-                    }
-                }
-                // `#[path = "…"] mod name;`: relative to this file's directory, or inside inline modules to it with the
-                // inline components — after the non-mod-rs file's own name, when it is one. Each `path` attribute the
-                // item carries, `cfg_attr`'s in every configuration, is followed.
-                rels => {
-                    let mut froms = Vec::new();
-                    if m.inline.is_empty() {
-                        froms.push(dir.clone());
-                    } else {
-                        froms.extend(expansions(&dir, &m.inline));
-                        if let Some(stem) = non_mod_rs_stem(&file, root) {
-                            froms.extend(expansions(&join(&dir, &stem), &m.inline));
-                        }
-                    }
-                    for (from, rel) in froms.iter().flat_map(|f| rels.iter().map(move |r| (f, r))) {
-                        if let Some(path) = found(follow(rel, from, &m.site), &mut out) {
-                            let children = children_of_path_module(&path);
-                            todo.push((path, children, test_only || m.test_only));
-                        }
-                    }
-                }
-            }
-        }
-        for inc in &scan.includes {
-            match &inc.literal {
-                None => {
-                    out.unfollowed.insert(inc.site.unfollowed(
-                        &file,
-                        "is no single string literal, so the file it names is decided by its expansion",
-                    ));
-                }
-                Some(rel) => {
-                    let Some(path) = found(follow(rel, &dir, &inc.site), &mut out) else {
-                        continue;
-                    };
-                    match inc.what {
-                        // An `include!`d file is read as Rust, its `mod` children under its own directory, as the pin
-                        // resolves them (the module documentation's measurement).
-                        What::Rust => {
-                            let children = vec![parent(&path)];
-                            todo.push((path, children, test_only || inc.test_only));
-                        }
-                        What::Data => {
-                            if !(test_only || inc.test_only) {
-                                out.nontest.insert(path.clone());
-                            }
-                            out.files.insert(path);
-                        }
-                        // A document a doc attribute includes: its code blocks are doc tests, read for their own sites.
-                        What::Doc => {
-                            if let Some(text) = tree.get(&path) {
-                                for site in doc_sites(&numbered(&String::from_utf8_lossy(text), 1))
-                                {
-                                    out.unfollowed.insert(Unfollowed {
-                                        file: path.clone(),
-                                        line: site.line,
-                                        sha256: Digest::of(site.extent.as_bytes()).hex(),
-                                        why: DOC_TEST.to_owned(),
-                                    });
-                                }
-                            }
-                            if !(test_only || inc.test_only) {
-                                out.nontest.insert(path.clone());
-                            }
-                            out.files.insert(path);
-                        }
-                    }
-                }
-            }
+        Self {
+            tree,
+            links,
+            folded,
         }
     }
-    out
+
+    /// The blob `rel` names from the directory `from`; none for a file the commit holds in no case, which no build of
+    /// it can read.
+    fn file(&self, from: &str, rel: &str) -> Result<Option<String>, &'static str> {
+        let path = resolve(from, rel, self.links)?;
+        let folds = self
+            .folded
+            .get(&path.to_ascii_lowercase())
+            .copied()
+            .unwrap_or(0);
+        match (self.tree.is_file(&path), folds) {
+            (true, 1) => Ok(Some(path)),
+            (false, 0) => Ok(None),
+            _ => Err(CASE),
+        }
+    }
+
+    /// A target's crate root as the tree holds it — cargo's metadata names it as its manifest's directory joined with
+    /// the target's `path`, `..` kept (`crates/r/../c/src/lib.rs`) — or why the census cannot read it.
+    pub(crate) fn root(&self, src: &str) -> Result<String, &'static str> {
+        self.file("", src)?.ok_or("is no file of the commit")
+    }
+
+    /// Every file the crate root `root` reaches.
+    pub(crate) fn reach(&self, root: &str) -> Reach {
+        let mut out = Reach::default();
+        // Each file to read, with the directories its `mod name;` children may lie under, whether it is reached only
+        // through a module under `#[cfg(test)]`, and whether it is loaded as a module, so its own leading
+        // `#![cfg(test)]` holds.
+        let mut seen: BTreeSet<(String, Vec<String>, bool, bool)> = BTreeSet::new();
+        let mut todo: Vec<(String, Vec<String>, bool, bool)> =
+            vec![(root.to_owned(), vec![parent(root)], false, true)];
+        while let Some(entry) = todo.pop() {
+            if !seen.insert(entry.clone()) {
+                continue;
+            }
+            let (file, bases, test_only, module) = entry;
+            let Some(source) = self.tree.get(&file) else {
+                continue;
+            };
+            out.files.insert(file.clone());
+            if !test_only {
+                out.nontest.insert(file.clone());
+            }
+            let scan = match scan(&file, source) {
+                Ok(scan) => scan,
+                Err((at, why)) => {
+                    out.unfollowed.insert(Unfollowed {
+                        file: file.clone(),
+                        line: line_of(source, at),
+                        sha256: Digest::of(source).hex(),
+                        why: format!(
+                            "does not tokenize ({why}), so the census cannot read what it includes"
+                        ),
+                    });
+                    continue;
+                }
+            };
+            // A module file whose leading inner attributes hold `#![cfg(test)]` is read by every build declaring it, but
+            // what it reaches by a test's alone.
+            let test_only = test_only || (module && scan.test_file);
+            out.unfollowed.extend(scan.unfollowed);
+            let dir = parent(&file);
+            let follow =
+                |rel: &str, from: &str, site: &Site| -> Result<Option<String>, Unfollowed> {
+                    self.file(from, rel)
+                        .map_err(|why| site.unfollowed(&file, why))
+                };
+            let found = |r: Result<Option<String>, Unfollowed>, out: &mut Reach| match r {
+                Err(u) => {
+                    out.unfollowed.insert(u);
+                    None
+                }
+                Ok(path) => path,
+            };
+            for m in &scan.modules {
+                let test_only = test_only || m.test_only;
+                match m.paths.as_slice() {
+                    // `mod name;`: its file mirrors its module path, under each directory this file's children may lie in.
+                    [] => {
+                        for dir in bases.iter().flat_map(|base| expansions(base, &m.inline)) {
+                            for candidate in
+                                [format!("{}.rs", m.name), format!("{}/mod.rs", m.name)]
+                            {
+                                if let Some(path) =
+                                    found(follow(&candidate, &dir, &m.site), &mut out)
+                                {
+                                    todo.push((path, vec![join(&dir, &m.name)], test_only, true));
+                                }
+                            }
+                        }
+                    }
+                    // `#[path = "…"] mod name;`: relative to this file's directory, or inside inline modules to it with the
+                    // inline components — after the non-mod-rs file's own name, when it is one. Each `path` attribute the
+                    // item carries, `cfg_attr`'s in every configuration, is followed.
+                    rels => {
+                        let mut froms = Vec::new();
+                        if m.inline.is_empty() {
+                            froms.push(dir.clone());
+                        } else {
+                            froms.extend(expansions(&dir, &m.inline));
+                            if let Some(stem) = non_mod_rs_stem(&file, root) {
+                                froms.extend(expansions(&join(&dir, &stem), &m.inline));
+                            }
+                        }
+                        for (from, rel) in
+                            froms.iter().flat_map(|f| rels.iter().map(move |r| (f, r)))
+                        {
+                            if let Some(path) = found(follow(rel, from, &m.site), &mut out) {
+                                let children = children_of_path_module(&path);
+                                todo.push((path, children, test_only, true));
+                            }
+                        }
+                    }
+                }
+            }
+            for inc in &scan.includes {
+                let test_only = test_only || inc.test_only;
+                match &inc.literal {
+                    None => {
+                        out.unfollowed.insert(inc.site.unfollowed(
+                            &file,
+                            "is no single string literal, so the file it names is decided by its expansion",
+                        ));
+                    }
+                    Some(rel) => {
+                        let Some(path) = found(follow(rel, &dir, &inc.site), &mut out) else {
+                            continue;
+                        };
+                        match inc.what {
+                            // An `include!`d file is read as Rust, its `mod` children under its own directory, as the pin
+                            // resolves them (the module documentation's measurement); no module, its own
+                            // `#![cfg(test)]` is none.
+                            What::Rust => {
+                                let children = vec![parent(&path)];
+                                todo.push((path, children, test_only, false));
+                            }
+                            What::Data => {
+                                if !test_only {
+                                    out.nontest.insert(path.clone());
+                                }
+                                out.files.insert(path);
+                            }
+                            // A document a doc attribute includes: its code blocks are doc tests, read for their own sites.
+                            What::Doc => {
+                                if let Some(text) = self.tree.get(&path) {
+                                    for site in
+                                        doc_sites(&numbered(&String::from_utf8_lossy(text), 1))
+                                    {
+                                        out.unfollowed.insert(Unfollowed {
+                                            file: path.clone(),
+                                            line: site.line,
+                                            sha256: Digest::of(site.extent.as_bytes()).hex(),
+                                            why: DOC_TEST.to_owned(),
+                                        });
+                                    }
+                                }
+                                if !test_only {
+                                    out.nontest.insert(path.clone());
+                                }
+                                out.files.insert(path);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        out
+    }
 }
 
 const DOC_TEST: &str = "is in a doc test, whose files rustdoc resolves apart from the crate";
@@ -234,7 +280,7 @@ struct Module {
     /// The inline modules it is declared in, outermost first, each by its `path` attributes or its name: every
     /// alternative a directory its children may lie under.
     inline: Vec<Vec<String>>,
-    /// Whether it lies in an item under `#[cfg(test)]`.
+    /// Whether it lies in a module under `#[cfg(test)]`.
     test_only: bool,
     site: Site,
 }
@@ -244,19 +290,19 @@ struct Module {
 enum What {
     /// `include!`: Rust.
     Rust,
-    /// `include_str!` or `include_bytes!`: data.
+    /// `include_str!`, `include_bytes!` or a `debugger_visualizer` file: data.
     Data,
     /// `include_str!` inside a `doc` attribute: a document whose code blocks are doc tests.
     Doc,
 }
 
-/// An `include!`, `include_str!` or `include_bytes!` invocation.
+/// An `include!`, `include_str!` or `include_bytes!` invocation, or a `debugger_visualizer` file.
 #[derive(Debug)]
 struct Include {
     what: What,
     /// Its one string literal, decoded; none when it is no single string literal.
     literal: Option<String>,
-    /// Whether it lies in an item under `#[cfg(test)]`.
+    /// Whether it lies in a module under `#[cfg(test)]`.
     test_only: bool,
     site: Site,
 }
@@ -267,15 +313,72 @@ struct Scan {
     modules: Vec<Module>,
     includes: Vec<Include>,
     unfollowed: Vec<Unfollowed>,
+    /// Whether its leading inner attributes hold exactly `#![cfg(test)]`.
+    test_file: bool,
 }
 
 const INCLUDES: [&str; 3] = ["include", "include_str", "include_bytes"];
 
+/// The assembly macros, whose templates the assembler reads, directives and all.
+const ASM: [&str; 3] = ["asm", "global_asm", "naked_asm"];
+
+/// The assembler's directives that read a file — `.incbin`, `.include` — or assemble one from parts, which no reading
+/// of the template can follow; matched in any case, anywhere in it.
+const DIRECTIVES: [&str; 6] = ["incbin", "include", ".macro", ".irp", ".rept", ".altmacro"];
+
+/// Rust's keywords, strict and reserved: one before `!` names no macro (`if !(…)`); a raw one does.
+const KEYWORDS: &[&str] = &[
+    "as", "async", "await", "break", "const", "continue", "crate", "dyn", "else", "enum", "extern",
+    "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub",
+    "ref", "return", "self", "Self", "static", "struct", "super", "trait", "true", "type",
+    "unsafe", "use", "where", "while", "abstract", "become", "box", "do", "final", "gen", "macro",
+    "override", "priv", "try", "typeof", "unsized", "virtual", "yield",
+];
+
+const ALIAS: &str =
+    "imports or shadows an inclusion or assembly macro, so no literal pins what it reads";
+
+/// An identifier's name, a raw one's without its `r#`.
 fn name(t: &Token) -> Option<&str> {
     match &t.kind {
         Kind::Ident(n, _) => Some(n.strip_prefix("r#").unwrap_or(n)),
         _ => None,
     }
+}
+
+/// Whether `t` is the keyword `k`: a raw identifier of that name is none.
+fn keyword(t: &Token, k: &str) -> bool {
+    matches!(&t.kind, Kind::Ident(n, _) if n == k)
+}
+
+/// The lexer's tokens, each raw identifier one: it reads `r#type` as `r`, `#` and `type`, touching (round 11's D3).
+fn merged(ts: Vec<Token>) -> Vec<Token> {
+    let mut out: Vec<Token> = Vec::with_capacity(ts.len());
+    let mut i = 0;
+    while i < ts.len() {
+        if let (Kind::Ident(r, _), Some(hash), Some(ident)) =
+            (&ts[i].kind, ts.get(i + 1), ts.get(i + 2))
+        {
+            if let Kind::Ident(n, wide) = &ident.kind {
+                if r == "r"
+                    && hash.kind == Kind::Punct('#')
+                    && ts[i].end == hash.at
+                    && hash.end == ident.at
+                {
+                    out.push(Token {
+                        kind: Kind::Ident(format!("r#{n}"), *wide),
+                        at: ts[i].at,
+                        end: ident.end,
+                    });
+                    i += 3;
+                    continue;
+                }
+            }
+        }
+        out.push(ts[i].clone());
+        i += 1;
+    }
+    out
 }
 
 /// The index of the delimiter closing the one opened at `open`, or the last token's.
@@ -296,12 +399,60 @@ fn closing(ts: &[Token], open: usize) -> usize {
     ts.len().saturating_sub(1)
 }
 
+/// Where a token lies: in a `macro_rules!` body, whose expansion decides what its tokens name, or in another macro's
+/// arguments, whose expansion may place, move or drop what they declare.
+#[derive(Debug, Clone, Copy, Default)]
+struct Region {
+    body: bool,
+    args: bool,
+}
+
+/// Each token's region: a body from `macro_rules! name`'s delimiter, arguments from any other `name!`'s.
+fn regions(ts: &[Token]) -> Vec<Region> {
+    let mut out = vec![Region::default(); ts.len()];
+    let opens = |k: usize| ts.get(k).is_some_and(|t| matches!(t.kind, Kind::Open(_)));
+    for (i, t) in ts.iter().enumerate() {
+        let Kind::Ident(n, _) = &t.kind else {
+            continue;
+        };
+        if KEYWORDS.contains(&n.as_str())
+            || !ts.get(i + 1).is_some_and(|b| b.kind == Kind::Punct('!'))
+        {
+            continue;
+        }
+        let (open, body) = if name(t) == Some("macro_rules")
+            && ts.get(i + 2).and_then(name).is_some()
+            && opens(i + 3)
+        {
+            (i + 3, true)
+        } else if opens(i + 2) {
+            (i + 2, false)
+        } else {
+            continue;
+        };
+        let close = closing(ts, open);
+        for r in out.iter_mut().take(close).skip(open + 1) {
+            if body {
+                r.body = true;
+            } else {
+                r.args = true;
+            }
+        }
+    }
+    out
+}
+
 /// The sites of one Rust source, its doc text's among them.
 fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
-    let ts = tokens(source)?;
-    let mut out = Scan::default();
-    let test_only = test_only_spans(&ts);
+    let ts = merged(tokens(source)?);
+    let regions = regions(&ts);
+    let mut out = Scan {
+        test_file: test_file(&ts),
+        ..Scan::default()
+    };
+    let test_only = test_only_spans(&ts, &regions);
     let in_test = |k: usize| test_only.iter().any(|&(a, b)| a <= k && k <= b);
+    let is = |k: usize, kind: Kind| ts.get(k).is_some_and(|t| t.kind == kind);
     let text =
         |a: usize, b: usize| String::from_utf8_lossy(&source[ts[a].at..ts[b].end]).into_owned();
     let site = |a: usize, b: usize| Site {
@@ -310,8 +461,6 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
     };
     // Inline modules open: (the brace depth inside them, their directory component).
     let mut inline: Vec<(usize, Vec<String>)> = Vec::new();
-    // The closing delimiter of the `macro_rules!` body open, if any.
-    let mut macro_end: Option<usize> = None;
     // Whether a `use` item is open, up to its `;`.
     let mut in_use = false;
     let mut depth = 0usize;
@@ -319,33 +468,38 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
     let mut pending_path: Vec<(String, usize)> = Vec::new();
     let mut i = 0;
     while i < ts.len() {
-        if macro_end.is_some_and(|end| i > end) {
-            macro_end = None;
-        }
-        let in_macro = macro_end.is_some();
-        // An attribute, `#[…]` or `#![…]`, read whole: its `path`, its `doc` text, its inclusions.
+        let region = regions[i];
+        // An attribute, `#[…]` or `#![…]`, read whole: its `path`, its `doc` text, its `debugger_visualizer` file, its
+        // inclusions.
         if ts[i].kind == Kind::Punct('#') {
-            if in_macro && ts.get(i + 1).is_some_and(|t| t.kind == Kind::Punct('$')) {
+            if region.body && is(i + 1, Kind::Punct('$')) {
                 out.unfollowed.push(site(i, i + 1).unfollowed(
                     file,
                     "is an attribute a macro assembles, so the module it may load is decided by its expansion",
                 ));
             }
-            let bang = ts.get(i + 1).is_some_and(|t| t.kind == Kind::Punct('!'));
+            let bang = is(i + 1, Kind::Punct('!'));
             let open = if bang { i + 2 } else { i + 1 };
-            if ts.get(open).is_some_and(|t| t.kind == Kind::Open('[')) {
+            if is(open, Kind::Open('[')) {
                 let close = closing(&ts, open);
                 let mut j = open + 1;
                 while j < close {
                     let key = name(&ts[j]);
-                    let assigned = ts.get(j + 1).is_some_and(|t| t.kind == Kind::Punct('='));
+                    let assigned = is(j + 1, Kind::Punct('='));
                     let value = ts.get(j + 2).filter(|t| t.kind == Kind::Str);
+                    if keyword(&ts[j], "mod") {
+                        out.unfollowed.push(site(i, close).unfollowed(
+                            file,
+                            "is a `mod` inside an attribute, so the module it may declare is decided by the \
+                             attribute's expansion",
+                        ));
+                    }
                     if key == Some("path") && assigned {
                         match value.and_then(|v| decode(&source[v.at..v.end])) {
-                            Some(p) if !in_macro => pending_path.push((p, i)),
+                            Some(p) if !region.body => pending_path.push((p, i)),
                             _ => out.unfollowed.push(site(i, close).unfollowed(
                                 file,
-                                if in_macro {
+                                if region.body {
                                     "is a `path` attribute inside a macro, so the file it names is decided by its \
                                      expansion"
                                 } else {
@@ -355,16 +509,46 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                         }
                     }
                     if key == Some("doc") && assigned {
-                        if let Some(v) = value {
-                            let text = decode(&source[v.at..v.end]).unwrap_or_default();
-                            for s in doc_sites(&numbered(&text, line_of(source, v.at))) {
-                                out.unfollowed.push(s.unfollowed(file, DOC_TEST));
+                        match value {
+                            Some(v) => {
+                                let text = decode(&source[v.at..v.end]).unwrap_or_default();
+                                for s in doc_sites(&numbered(&text, line_of(source, v.at))) {
+                                    out.unfollowed.push(s.unfollowed(file, DOC_TEST));
+                                }
                             }
+                            // `doc = include_str!("…")`: the inclusion, read below, is the document.
+                            None if doc_included(&ts, j + 2, close) => {}
+                            None => out.unfollowed.push(site(i, close).unfollowed(
+                                file,
+                                "is a `doc` attribute whose text no literal gives, so the doc tests it holds are \
+                                 decided by its expansion",
+                            )),
                         }
                     }
-                    if let Some(end) =
-                        inclusion(&ts, j, source, file, in_macro, in_test(j), &mut out, &site)
-                    {
+                    if matches!(key, Some("natvis_file" | "gdb_script_file")) && assigned {
+                        match value.and_then(|v| decode(&source[v.at..v.end])) {
+                            Some(p) if !region.body => out.includes.push(Include {
+                                what: What::Data,
+                                literal: Some(p),
+                                test_only: in_test(j),
+                                site: site(i, close),
+                            }),
+                            _ => out.unfollowed.push(site(i, close).unfollowed(
+                                file,
+                                "is a `debugger_visualizer` file no single literal names, or a macro's",
+                            )),
+                        }
+                    }
+                    if let Some(end) = inclusion(
+                        &ts,
+                        j,
+                        source,
+                        file,
+                        region.body,
+                        in_test(j),
+                        &mut out,
+                        &site,
+                    ) {
                         j = end;
                     }
                     j += 1;
@@ -388,73 +572,91 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
             }
             _ => {}
         }
-        match name(&ts[i]) {
-            Some("use") => in_use = true,
-            Some("macro_rules") if ts.get(i + 1).is_some_and(|t| t.kind == Kind::Punct('!')) => {
-                // `macro_rules! name { … }`: a body whose inclusions its expansion decides; one named for an inclusion
-                // macro shadows it.
-                if ts
+        if keyword(&ts[i], "use") {
+            // `use<…>` is a precise capture, which begins no item.
+            in_use = in_use || !is(i + 1, Kind::Punct('<'));
+        } else if keyword(&ts[i], "mod") {
+            // A `mod` read whole, or refused: outside any macro, `mod name;` or `mod name { … }`; in a macro's body or
+            // arguments only an inline module, which loads no file, the expansion deciding every other.
+            let declared = ts
+                .get(i + 1)
+                .filter(|t| matches!(t.kind, Kind::Ident(..)))
+                .and_then(name)
+                .map(str::to_owned);
+            let inline_module = declared.is_some() && is(i + 2, Kind::Open('{'));
+            let paths = std::mem::take(&mut pending_path);
+            let at = site(i, (i + 2).min(ts.len() - 1));
+            if region.body {
+                let metavariable = is(i + 1, Kind::Punct('$'))
+                    && ts
+                        .get(i + 2)
+                        .is_some_and(|t| matches!(t.kind, Kind::Ident(..)))
+                    && is(i + 3, Kind::Open('{'));
+                if !(inline_module || metavariable) {
+                    out.unfollowed.push(at.unfollowed(
+                        file,
+                        "is a module a macro declares, so its file is decided by its expansion",
+                    ));
+                }
+            } else if region.args {
+                if !inline_module {
+                    out.unfollowed.push(at.unfollowed(
+                        file,
+                        "is a module in a macro's arguments, so its file is decided by the macro's expansion",
+                    ));
+                }
+            } else {
+                match (declared, inline_module) {
+                    (Some(n), false) if is(i + 2, Kind::Punct(';')) => out.modules.push(Module {
+                        site: site(paths.first().map_or(i, |(_, at)| *at), i + 2),
+                        paths: paths.into_iter().map(|(p, _)| p).collect(),
+                        inline: inline.iter().map(|(_, c)| c.clone()).collect(),
+                        test_only: in_test(i),
+                        name: n,
+                    }),
+                    // Its brace is counted when the loop reaches it.
+                    (Some(n), true) => {
+                        let alternatives = if paths.is_empty() {
+                            vec![n]
+                        } else {
+                            paths.into_iter().map(|(p, _)| p).collect()
+                        };
+                        inline.push((depth + 1, alternatives));
+                    }
+                    _ => out.unfollowed.push(at.unfollowed(
+                        file,
+                        "is a `mod` the census cannot read whole, as `mod name;` or `mod name { … }`",
+                    )),
+                }
+            }
+        } else if let Some(n) = name(&ts[i]) {
+            let shadows = n == "macro_rules"
+                && is(i + 1, Kind::Punct('!'))
+                && ts
                     .get(i + 2)
                     .and_then(name)
-                    .is_some_and(|n| INCLUDES.contains(&n))
-                {
-                    out.unfollowed.push(site(i, i + 2).unfollowed(file, ALIAS));
-                }
-                if let Some(open) = (i + 2..ts.len()).find(|&k| matches!(ts[k].kind, Kind::Open(_)))
-                {
-                    if macro_end.is_none() {
-                        macro_end = Some(closing(&ts, open));
-                    }
-                }
+                    .is_some_and(|m| INCLUDES.contains(&m) || ASM.contains(&m));
+            let imports = in_use
+                && (INCLUDES.contains(&n)
+                    || (ASM.contains(&n) && ts.get(i + 1).is_some_and(|t| keyword(t, "as"))));
+            if shadows || imports {
+                out.unfollowed
+                    .push(site(i, (i + 2).min(ts.len() - 1)).unfollowed(file, ALIAS));
+            } else if let Some(end) = inclusion(
+                &ts,
+                i,
+                source,
+                file,
+                region.body,
+                in_test(i),
+                &mut out,
+                &site,
+            )
+            .or_else(|| assembly(&ts, i, source, file, region.body, &mut out, &site))
+            {
+                i = end + 1;
+                continue;
             }
-            Some("mod") => {
-                let declared = ts.get(i + 1).and_then(name).map(str::to_owned);
-                let ends = ts.get(i + 2).map(|t| t.kind.clone());
-                if in_macro {
-                    if ends == Some(Kind::Punct(';'))
-                        || ts.get(i + 1).is_some_and(|t| t.kind == Kind::Punct('$'))
-                    {
-                        out.unfollowed
-                            .push(site(i, (i + 2).min(ts.len() - 1)).unfollowed(
-                            file,
-                            "is a module a macro declares, so its file is decided by its expansion",
-                        ));
-                    }
-                } else if let Some(n) = declared {
-                    let paths = std::mem::take(&mut pending_path);
-                    match ends {
-                        Some(Kind::Punct(';')) => out.modules.push(Module {
-                            site: site(paths.first().map_or(i, |(_, at)| *at), i + 2),
-                            paths: paths.into_iter().map(|(p, _)| p).collect(),
-                            inline: inline.iter().map(|(_, c)| c.clone()).collect(),
-                            test_only: in_test(i),
-                            name: n,
-                        }),
-                        // Its brace is counted when the loop reaches it.
-                        Some(Kind::Open('{')) => {
-                            let alternatives = if paths.is_empty() {
-                                vec![n]
-                            } else {
-                                paths.into_iter().map(|(p, _)| p).collect()
-                            };
-                            inline.push((depth + 1, alternatives));
-                        }
-                        _ => {}
-                    }
-                }
-            }
-            Some(n) if INCLUDES.contains(&n) && in_use => {
-                out.unfollowed.push(site(i, i).unfollowed(file, ALIAS));
-            }
-            Some(_) => {
-                if let Some(end) =
-                    inclusion(&ts, i, source, file, in_macro, in_test(i), &mut out, &site)
-                {
-                    i = end + 1;
-                    continue;
-                }
-            }
-            None => {}
         }
         i += 1;
     }
@@ -463,8 +665,6 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
     }
     Ok(out)
 }
-
-const ALIAS: &str = "imports or shadows an inclusion macro, so no literal pins what it includes";
 
 /// The inclusion invoked at `i`, if one is: recorded in `out`, its closing delimiter's index returned.
 #[allow(clippy::too_many_arguments)]
@@ -515,67 +715,179 @@ fn inclusion(
     Some(close)
 }
 
-/// The token spans of the items under exactly `#[cfg(test)]` — from the attribute to the item's `;` or its closing
-/// brace — and the whole file under `#![cfg(test)]`. Any other `cfg` is read as on, so the census over-counts.
-fn test_only_spans(ts: &[Token]) -> Vec<(usize, usize)> {
+/// The assembly macro invoked at `i`, if one is: a template the census cannot read whole, or holding a directive that
+/// reads a file or assembles one, refused (round 11's R10); its closing delimiter's index returned.
+fn assembly(
+    ts: &[Token],
+    i: usize,
+    source: &[u8],
+    file: &str,
+    in_macro: bool,
+    out: &mut Scan,
+    site: &dyn Fn(usize, usize) -> Site,
+) -> Option<usize> {
+    name(&ts[i]).filter(|n| ASM.contains(n))?;
+    let invoked = ts.get(i + 1).is_some_and(|t| t.kind == Kind::Punct('!'))
+        && ts
+            .get(i + 2)
+            .is_some_and(|t| matches!(t.kind, Kind::Open(_)));
+    if !invoked {
+        return None;
+    }
+    let close = closing(ts, i + 2);
+    let inner = ts.get(i + 3..close).unwrap_or_default();
+    let assembled = inner
+        .windows(2)
+        .any(|w| matches!(w[0].kind, Kind::Ident(..)) && w[1].kind == Kind::Punct('!'));
+    let directive = inner.iter().filter(|t| t.kind == Kind::Str).any(|t| {
+        decode(&source[t.at..t.end]).is_none_or(|s| {
+            let s = s.to_ascii_lowercase();
+            DIRECTIVES.iter().any(|d| s.contains(d))
+        })
+    });
+    let why = if in_macro {
+        Some("is an assembly macro inside a macro, so its template is decided by its expansion")
+    } else if assembled {
+        Some("is an assembly template a macro assembles, so the census cannot read its directives")
+    } else if directive {
+        Some("is an assembly template holding a directive that reads a file or assembles one")
+    } else {
+        None
+    };
+    if let Some(why) = why {
+        out.unfollowed.push(site(i, close).unfollowed(file, why));
+    }
+    Some(close)
+}
+
+/// Whether the tokens from `k` up to the attribute's `close` are one `include_str!(…)`, a path to it allowed: a `doc`
+/// attribute's value read as a document.
+fn doc_included(ts: &[Token], k: usize, close: usize) -> bool {
+    let colons = |at: usize| {
+        ts.get(at).is_some_and(|t| t.kind == Kind::Punct(':'))
+            && ts.get(at + 1).is_some_and(|t| t.kind == Kind::Punct(':'))
+    };
+    let mut at = k;
+    if colons(at) {
+        at += 2;
+    }
+    while ts
+        .get(at)
+        .is_some_and(|t| matches!(t.kind, Kind::Ident(..)))
+        && colons(at + 1)
+    {
+        at += 3;
+    }
+    let invoked = ts.get(at).and_then(name) == Some("include_str")
+        && ts.get(at + 1).is_some_and(|t| t.kind == Kind::Punct('!'))
+        && ts
+            .get(at + 2)
+            .is_some_and(|t| matches!(t.kind, Kind::Open(_)));
+    if !invoked {
+        return false;
+    }
+    let end = closing(ts, at + 2) + 1;
+    end == close
+        || ts
+            .get(end)
+            .is_some_and(|t| matches!(t.kind, Kind::Punct(',') | Kind::Close(_)))
+}
+
+/// Whether `#![cfg(test)]` or `#[cfg(test)]`, exactly, begins at `i`: `cfg` and `test` no raw identifiers.
+fn cfg_test(ts: &[Token], i: usize, inner: bool) -> bool {
     let is = |k: usize, kind: Kind| ts.get(k).is_some_and(|t| t.kind == kind);
-    let named = |k: usize, n: &str| ts.get(k).and_then(name) == Some(n);
+    let word = |k: usize, w: &str| ts.get(k).is_some_and(|t| keyword(t, w));
+    let open = if inner { i + 2 } else { i + 1 };
+    is(i, Kind::Punct('#'))
+        && (!inner || is(i + 1, Kind::Punct('!')))
+        && is(open, Kind::Open('['))
+        && word(open + 1, "cfg")
+        && is(open + 2, Kind::Open('('))
+        && word(open + 3, "test")
+        && is(open + 4, Kind::Close(')'))
+        && is(open + 5, Kind::Close(']'))
+}
+
+/// Whether a file's leading inner attributes hold exactly `#![cfg(test)]`: a module file so marked compiles for its
+/// crate's own test units alone, though every build declaring it reads the file.
+fn test_file(ts: &[Token]) -> bool {
+    let mut k = 0;
+    while ts.get(k).is_some_and(|t| t.kind == Kind::Punct('#'))
+        && ts.get(k + 1).is_some_and(|t| t.kind == Kind::Punct('!'))
+        && ts.get(k + 2).is_some_and(|t| t.kind == Kind::Open('['))
+    {
+        if cfg_test(ts, k, true) {
+            return true;
+        }
+        k = closing(ts, k + 2) + 1;
+    }
+    false
+}
+
+/// The token spans counted for their crate's own test units alone: a `mod` item under exactly `#[cfg(test)]`, outside
+/// any macro — the attribute, then only attributes and a visibility before `mod name;` or `mod name { … }` — from the
+/// attribute to the item's end. Nothing else narrows: `cfg(test)` on any other item, a field, a variant, a parameter,
+/// an arm or a statement, or inside a macro, whose expansion may move it, is read as on, so the census over-counts
+/// (round 11's D2).
+fn test_only_spans(ts: &[Token], regions: &[Region]) -> Vec<(usize, usize)> {
+    let is = |k: usize, kind: Kind| ts.get(k).is_some_and(|t| t.kind == kind);
     let mut out = Vec::new();
     let mut i = 0;
     while i < ts.len() {
-        let inner = is(i, Kind::Punct('#')) && is(i + 1, Kind::Punct('!'));
-        let open = if inner { i + 2 } else { i + 1 };
-        let cfg_test = is(i, Kind::Punct('#'))
-            && is(open, Kind::Open('['))
-            && named(open + 1, "cfg")
-            && is(open + 2, Kind::Open('('))
-            && named(open + 3, "test")
-            && is(open + 4, Kind::Close(')'))
-            && is(open + 5, Kind::Close(']'));
-        if !cfg_test {
+        let outside = regions.get(i).is_some_and(|r| !r.body && !r.args);
+        if !(outside && cfg_test(ts, i, false)) {
             i += 1;
             continue;
         }
-        if inner {
-            out.push((0, ts.len()));
-            break;
+        let mut k = i + 7;
+        while is(k, Kind::Punct('#')) && is(k + 1, Kind::Open('[')) {
+            k = closing(ts, k + 1) + 1;
         }
-        // The item the attribute stands on: past further attributes, to its `;` or its first brace's close.
-        let mut k = open + 6;
-        while is(k, Kind::Punct('#')) {
-            let o = if is(k + 1, Kind::Punct('!')) {
-                k + 2
-            } else {
-                k + 1
-            };
-            k = closing(ts, o) + 1;
-        }
-        let mut end = ts.len().saturating_sub(1);
-        let mut j = k;
-        while j < ts.len() {
-            match ts[j].kind {
-                Kind::Punct(';') => {
-                    end = j;
-                    break;
-                }
-                Kind::Open('{') => {
-                    end = closing(ts, j);
-                    break;
-                }
-                Kind::Open(_) => j = closing(ts, j),
-                _ => {}
+        if ts.get(k).is_some_and(|t| keyword(t, "pub")) {
+            k += 1;
+            if is(k, Kind::Open('(')) {
+                k = closing(ts, k) + 1;
             }
-            j += 1;
         }
-        out.push((i, end));
-        i = end + 1;
+        let module = ts.get(k).is_some_and(|t| keyword(t, "mod"))
+            && ts
+                .get(k + 1)
+                .is_some_and(|t| matches!(t.kind, Kind::Ident(..)));
+        let end = if !module {
+            None
+        } else if is(k + 2, Kind::Punct(';')) {
+            Some(k + 2)
+        } else if is(k + 2, Kind::Open('{')) {
+            Some(closing(ts, k + 2))
+        } else {
+            None
+        };
+        match end {
+            Some(end) => {
+                out.push((i, end));
+                i = end + 1;
+            }
+            None => i += 1,
+        }
     }
     out
 }
 
-/// Whether the invocation at `i` is a `doc` attribute's value: `doc =` before it.
+/// Whether the invocation at `i` is a `doc` attribute's value: `doc =` before it, or before the path ending in it.
 fn within_doc(ts: &[Token], i: usize) -> bool {
-    i >= 2 && ts[i - 1].kind == Kind::Punct('=') && name(&ts[i - 2]) == Some("doc")
+    let colons = |k: usize| {
+        k >= 2 && ts[k - 1].kind == Kind::Punct(':') && ts[k - 2].kind == Kind::Punct(':')
+    };
+    let mut s = i;
+    while colons(s) {
+        if s >= 3 && matches!(ts[s - 3].kind, Kind::Ident(..)) {
+            s -= 3;
+        } else {
+            s -= 2;
+            break;
+        }
+    }
+    s >= 2 && ts[s - 1].kind == Kind::Punct('=') && name(&ts[s - 2]) == Some("doc")
 }
 
 /// The doc comments of `source` — `///`, `//!`, `/** */` and `/*! */`, which the lexer drops — as numbered lines of
@@ -750,51 +1062,42 @@ fn decode(lit: &[u8]) -> Option<String> {
     Some(out)
 }
 
-/// A crate root as the tree holds it: cargo's metadata names a target's root as its manifest's directory joined with
-/// the target's `path`, `..` kept (`crates/r/../c/src/lib.rs`); none for one out of the tree's text.
-pub(crate) fn normalized(path: &str) -> Option<String> {
-    resolve("", path).ok().flatten()
-}
-
-/// `rel` resolved against the directory `from` of the written tree, lexically: none for an absolute path or one that
-/// climbs out of the tree, which only the disk can place.
-fn resolve(from: &str, rel: &str) -> Result<Option<String>, &'static str> {
+/// `rel` resolved against the directory `from` of the tree, lexically and component by component: each component
+/// reached is checked against `links` before the next applies, so a link's `..` — its target's parent on disk — is
+/// never read as the link's (round 11's D4). An absolute path, one climbing out of the tree, and a spelling hosts read
+/// apart are refused: none names a file the census can place in the commit (round 11's R10, R16).
+fn resolve(from: &str, rel: &str, links: &BTreeSet<String>) -> Result<String, &'static str> {
     if rel.starts_with('/') {
-        return Ok(None);
+        return Err(OUTSIDE);
     }
     if rel.contains('\\') || rel.contains(':') {
-        return Err(
-            "names a path with a backslash or a drive, which the census cannot read on every host",
-        );
+        return Err(HOSTS);
     }
-    let mut parts: Vec<&str> = from.split('/').filter(|p| !p.is_empty()).collect();
-    for p in rel.split('/') {
+    let mut parts: Vec<&str> = Vec::new();
+    for p in from
+        .split('/')
+        .filter(|p| !p.is_empty())
+        .chain(rel.split('/'))
+    {
         match p {
             "" | "." => {}
             ".." => {
                 if parts.pop().is_none() {
-                    return Ok(None);
+                    return Err(OUTSIDE);
                 }
             }
-            p => parts.push(p),
+            p => {
+                if !p.is_ascii() || p.ends_with('.') || p.ends_with(' ') {
+                    return Err(HOSTS);
+                }
+                parts.push(p);
+                if links.contains(&parts.join("/")) {
+                    return Err(LINK);
+                }
+            }
         }
     }
-    Ok(Some(parts.join("/")))
-}
-
-/// Whether `path`, or a directory it lies in, is one of `links`.
-fn through_link(path: &str, links: &BTreeSet<String>) -> bool {
-    let mut prefix = String::new();
-    for part in path.split('/') {
-        if !prefix.is_empty() {
-            prefix.push('/');
-        }
-        prefix.push_str(part);
-        if links.contains(&prefix) {
-            return true;
-        }
-    }
-    false
+    Ok(parts.join("/"))
 }
 
 /// The directory a `path`-loaded module's own `mod` children lie under: its file's, as the pin resolves them (the module
@@ -847,7 +1150,7 @@ mod oracle;
 
 #[cfg(test)]
 mod tests {
-    use super::{reach, Reach};
+    use super::{Reach, Sources};
     use archogen_catalog::tree::Tree;
     use std::collections::BTreeSet;
 
@@ -860,7 +1163,16 @@ mod tests {
     }
 
     fn of(files: &[(&str, &str)], root: &str) -> Reach {
-        reach(&tree(files), &BTreeSet::new(), root, &|_, _| None)
+        with_links(files, &[], root)
+    }
+
+    fn with_links(files: &[(&str, &str)], links: &[&str], root: &str) -> Reach {
+        let links: BTreeSet<String> = links.iter().map(|l| (*l).to_owned()).collect();
+        Sources::new(&tree(files), &links).reach(root)
+    }
+
+    fn refused(r: &Reach, why: &str) -> bool {
+        r.unfollowed.iter().any(|u| u.why.contains(why))
     }
 
     fn files(r: &Reach) -> Vec<&str> {
@@ -1111,70 +1423,316 @@ mod tests {
             !w.iter().any(|(f, _, _)| f == "r/src/unreached.rs"),
             "{w:?}"
         );
-        let links: BTreeSet<String> = ["r/link".to_owned()].into();
-        let t = tree(&[("r/tests/t.rs", "#[path = \"../link/lib.rs\"]\nmod l;\n")]);
-        let r = reach(&t, &links, "r/tests/t.rs", &|_, _| None);
-        assert!(
-            r.unfollowed.iter().any(|u| u.why.contains("symbolic link")),
-            "{:?}",
-            whys(&r)
+        let r = with_links(
+            &[("r/tests/t.rs", "#[path = \"../link/lib.rs\"]\nmod l;\n")],
+            &["r/link"],
+            "r/tests/t.rs",
         );
+        assert!(refused(&r, "symbolic link"), "{:?}", whys(&r));
     }
 
     #[test]
-    fn a_path_out_of_the_tree_s_text_is_followed_where_it_lands() {
-        // An absolute path or one climbing out of the tree names a file only the disk can place: followed when it lands
-        // back inside the written tree, nothing otherwise, since no file outside the tree is a role package's.
-        let sources = [
+    fn a_path_meets_the_links_at_every_component_and_hosts_read_none_apart() {
+        // Round 11's D4: a link's `..` is its target's parent on disk, so a path climbing back out of one is refused as
+        // the link is, and a link in an inline module's directory too. R10 and R16: a path outside the tree's text,
+        // absolute or climbing out, names no file of the commit; and a spelling a host reads apart — a backslash, a
+        // drive, a trailing dot or space, a byte outside ASCII, a name the commit holds only in another case or in two
+        // — is refused, never followed nor dropped.
+        let c = ("c/src/lib.rs", "pub fn x() {}\n");
+        for (case, source, links, why) in [
             (
-                "r/tests/t.rs",
-                "#[path = \"../../../tree/c/src/lib.rs\"]\nmod a;\n#[path = \"/elsewhere/x.rs\"]\nmod b;\n",
+                "back out of a link",
+                "#[path = \"../link/../../c/src/lib.rs\"]\nmod l;\n",
+                &["r/link"][..],
+                "symbolic link",
             ),
-            ("c/src/lib.rs", ""),
-        ];
-        let inside = |from: &str, rel: &str| {
-            (from == "r/tests" && rel == "../../../tree/c/src/lib.rs")
-                .then(|| "c/src/lib.rs".to_owned())
-        };
-        let r = reach(&tree(&sources), &BTreeSet::new(), "r/tests/t.rs", &inside);
-        assert_eq!(files(&r), ["c/src/lib.rs", "r/tests/t.rs"]);
-        assert!(r.unfollowed.is_empty(), "{:?}", whys(&r));
-        let r = reach(
-            &tree(&sources),
-            &BTreeSet::new(),
+            (
+                "an inclusion through a link",
+                "const T: &str = include_str!(\"../link/x.txt\");\n",
+                &["r/link"][..],
+                "symbolic link",
+            ),
+            (
+                "an inline module's directory a link",
+                "mod sub {\n    #[path = \"x.rs\"]\n    mod x;\n}\n",
+                &["r/tests/sub"][..],
+                "symbolic link",
+            ),
+            (
+                "absolute",
+                "#[path = \"/elsewhere/x.rs\"]\nmod b;\n",
+                &[][..],
+                "outside the commit's tree",
+            ),
+            (
+                "climbing out",
+                "const T: &str = include_str!(\"../../../x.txt\");\n",
+                &[][..],
+                "outside the commit's tree",
+            ),
+            (
+                "a backslash",
+                "const T: &str = include_str!(\"..\\\\..\\\\c\\\\src\\\\lib.rs\");\n",
+                &[][..],
+                "hosts read apart",
+            ),
+            (
+                "a trailing dot",
+                "const T: &str = include_str!(\"../../c/src/lib.rs.\");\n",
+                &[][..],
+                "hosts read apart",
+            ),
+            (
+                "outside ASCII",
+                "const T: &str = include_str!(\"../../c/src/lïb.rs\");\n",
+                &[][..],
+                "hosts read apart",
+            ),
+            (
+                "another case",
+                "const T: &str = include_str!(\"../../C/src/lib.rs\");\n",
+                &[][..],
+                "another case",
+            ),
+        ] {
+            let r = with_links(&[("r/tests/t.rs", source), c], links, "r/tests/t.rs");
+            assert!(refused(&r, why), "{case}: {:?}", whys(&r));
+            assert!(!r.files.contains("c/src/lib.rs"), "{case}: {:?}", files(&r));
+        }
+        let r = of(
+            &[
+                (
+                    "r/tests/t.rs",
+                    "const T: &str = include_str!(\"../../c/a.txt\");\n",
+                ),
+                ("c/a.txt", ""),
+                ("c/A.txt", ""),
+            ],
             "r/tests/t.rs",
-            &|_, _| None,
         );
-        assert_eq!(files(&r), ["r/tests/t.rs"]);
+        assert!(refused(&r, "another case"), "{:?}", whys(&r));
+        // A name the commit does not hold at all reaches nothing: no build of the commit can read it.
+        let r = of(
+            &[(
+                "r/tests/t.rs",
+                "const T: &str = include_str!(\"absent.txt\");\nmod absent;\n",
+            )],
+            "r/tests/t.rs",
+        );
         assert!(r.unfollowed.is_empty(), "{:?}", whys(&r));
+        assert_eq!(files(&r), ["r/tests/t.rs"]);
+        // A crate root is read as cargo's metadata names it, `..` kept, and refused out of the tree or through a link.
+        let t = tree(&[c]);
+        let links: BTreeSet<String> = ["l".to_owned()].into();
+        let sources = Sources::new(&t, &links);
+        assert_eq!(
+            sources.root("r/../c/src/lib.rs").as_deref(),
+            Ok("c/src/lib.rs")
+        );
+        assert!(sources.root("../outside/lib.rs").is_err());
+        assert!(sources.root("l/../c/src/lib.rs").is_err());
+        assert!(sources.root("c/src/absent.rs").is_err());
     }
 
     #[test]
     fn a_file_reached_through_cfg_test_alone_counts_for_its_crate_s_tests_alone() {
-        // `cfg(test)` is set only on the crate a test harness builds: what an item under exactly `#[cfg(test)]`, or a
-        // file under `#![cfg(test)]`, reaches counts for its own test units, never for it as a dependency or for its
-        // non-test units; any other `cfg` is read as on.
+        // `cfg(test)` is set only on the crate a test harness builds: what a module under exactly `#[cfg(test)]`, or a
+        // module file whose leading inner attributes hold `#![cfg(test)]`, reaches counts for its own test units, never
+        // for it as a dependency or for its non-test units. Round 11's D2: nothing else narrows — `cfg(test)` on another
+        // item, a field, a variant, a parameter, an arm or a statement, `#![cfg(test)]` in an inline module or an
+        // `include!`d file, a module under it inside a macro — and any other `cfg` is read as on.
         let r = of(
             &[
                 (
                     "p/src/lib.rs",
-                    "#[cfg(test)]\nmod tests;\n#[cfg(test)]\nconst T: &str = include_str!(\"../../c/a.txt\");\n\
-                     #[cfg(any(test, feature = \"x\"))]\nconst U: &str = include_str!(\"../../c/b.txt\");\nmod inner;\n",
+                    "#[cfg(test)]\nmod tests;\n#[cfg(test)]\n#[allow(unused)]\npub(crate) mod more {\n    \
+                     const M: &str = include_str!(\"../../c/m.txt\");\n}\n\
+                     #[cfg(test)]\nconst T: &str = include_str!(\"../../c/a.txt\");\n\
+                     #[cfg(any(test, feature = \"x\"))]\nconst U: &str = include_str!(\"../../c/b.txt\");\n\
+                     pub struct S {\n    #[cfg(test)]\n    a: u8,\n}\nconst F: &str = include_str!(\"../../c/field.txt\");\n\
+                     pub enum E {\n    #[cfg(test)]\n    A,\n}\nconst V: &str = include_str!(\"../../c/variant.txt\");\n\
+                     pub fn g(#[cfg(test)] _a: u8) {}\nconst P: &str = include_str!(\"../../c/param.txt\");\n\
+                     pub fn h(x: u8) -> u8 {\n    match x {\n        #[cfg(test)]\n        0 => 1,\n        _ => 2,\n    }\n}\n\
+                     const A: &str = include_str!(\"../../c/arm.txt\");\n\
+                     mod im {\n    #![cfg(test)]\n    const I: &str = include_str!(\"../../c/inline.txt\");\n}\n\
+                     wrap! {\n    #[cfg(test)]\n    mod wrapped {\n        const W: &str = include_str!(\"../../c/macro.txt\");\n    }\n}\n\
+                     include!(\"inc.rs\");\nmod inner;\n",
                 ),
                 ("p/src/tests.rs", "const V: &str = include_str!(\"../../c/c.txt\");\n"),
-                ("p/src/inner.rs", "#![cfg(test)]\nconst W: &str = include_str!(\"../../c/d.txt\");\n"),
+                ("p/src/inc.rs", "#![cfg(test)]\nconst N: &str = include_str!(\"../../c/included.txt\");\n"),
+                ("p/src/inner.rs", "#![allow(unused)]\n#![cfg(test)]\nconst W: &str = include_str!(\"../../c/d.txt\");\n"),
                 ("c/a.txt", ""),
                 ("c/b.txt", ""),
                 ("c/c.txt", ""),
                 ("c/d.txt", ""),
+                ("c/m.txt", ""),
+                ("c/field.txt", ""),
+                ("c/variant.txt", ""),
+                ("c/param.txt", ""),
+                ("c/arm.txt", ""),
+                ("c/inline.txt", ""),
+                ("c/macro.txt", ""),
+                ("c/included.txt", ""),
             ],
             "p/src/lib.rs",
         );
-        for f in ["c/a.txt", "c/b.txt", "c/c.txt", "c/d.txt", "p/src/tests.rs"] {
+        for f in ["c/c.txt", "c/d.txt", "c/m.txt", "p/src/tests.rs"] {
+            assert!(r.files.contains(f), "{f}: {:?}", files(&r));
+            assert!(!r.nontest.contains(f), "{f}: {:?}", r.nontest);
+        }
+        for f in [
+            "c/a.txt",
+            "c/b.txt",
+            "c/field.txt",
+            "c/variant.txt",
+            "c/param.txt",
+            "c/arm.txt",
+            "c/inline.txt",
+            "c/macro.txt",
+            "c/included.txt",
+            "p/src/inc.rs",
+            "p/src/inner.rs",
+            "p/src/lib.rs",
+        ] {
+            assert!(r.nontest.contains(f), "{f}: {:?}", r.nontest);
+        }
+    }
+
+    #[test]
+    fn a_raw_identifier_and_every_mod_are_read_whole_or_refused() {
+        // Round 11's D3: `r#type` is one identifier, its module `type.rs`, an inline one `type/`; and a `mod` the census
+        // cannot read whole — in a macro's arguments, declared by a macro, inside an attribute, or spelt otherwise — is
+        // refused, never passed. A macro's inline module loads no file.
+        let r = of(
+            &[
+                (
+                    "p/src/lib.rs",
+                    "mod r#type;\nmod r#impl {\n    mod inner;\n}\nconst T: &str = r#include_str!(\"t.txt\");\n",
+                ),
+                ("p/src/type.rs", ""),
+                ("p/src/impl/inner.rs", ""),
+                ("p/src/t.txt", ""),
+            ],
+            "p/src/lib.rs",
+        );
+        for f in ["p/src/type.rs", "p/src/impl/inner.rs", "p/src/t.txt"] {
             assert!(r.files.contains(f), "{f}: {:?}", files(&r));
         }
-        let nontest: Vec<&str> = r.nontest.iter().map(String::as_str).collect();
-        assert_eq!(nontest, ["c/b.txt", "p/src/inner.rs", "p/src/lib.rs"]);
+        assert!(r.unfollowed.is_empty(), "{:?}", whys(&r));
+        for (case, source, why) in [
+            (
+                "in a macro's arguments",
+                "wrap! { mod x; }\n",
+                "a macro's arguments",
+            ),
+            (
+                "a macro adding its `;`",
+                "semi!(mod x);\n",
+                "a macro's arguments",
+            ),
+            (
+                "a macro's",
+                "macro_rules! m { ($n:ident) => { mod $n; }; }\n",
+                "a macro declares",
+            ),
+            (
+                "in an attribute",
+                "#[gen(mod x;)]\nfn f() {}\n",
+                "inside an attribute",
+            ),
+            ("spelt otherwise", "mod x\n", "cannot read whole"),
+        ] {
+            let r = of(
+                &[("p/src/lib.rs", source), ("p/src/x.rs", "")],
+                "p/src/lib.rs",
+            );
+            assert!(refused(&r, why), "{case}: {:?}", whys(&r));
+        }
+        let r = of(
+            &[(
+                "p/src/lib.rs",
+                "macro_rules! m { ($n:ident) => { mod $n { pub fn f() {} } mod fixed {} }; }\nwrap! { mod y { } }\n",
+            )],
+            "p/src/lib.rs",
+        );
+        assert!(r.unfollowed.is_empty(), "{:?}", whys(&r));
+    }
+
+    #[test]
+    fn every_attribute_and_macro_that_reads_a_file_is_read_whole_or_refused() {
+        // Round 11's R9 and R10: a precise capture begins no `use` item; a `doc` attribute's text is a literal or a
+        // document `include_str!` names, by any path, else refused; a `debugger_visualizer` file is followed as data; an
+        // assembly template holding a directive that reads a file or assembles one, or a macro, refused, as an alias of
+        // an assembly macro is; a plain template and import not.
+        let r = of(
+            &[
+                (
+                    "r/src/lib.rs",
+                    "pub fn f() -> impl Sized + use<> {}\nconst T: &str = include_str!(\"t.txt\");\n\
+                     #![debugger_visualizer(gdb_script_file = \"../../c/pretty.py\")]\n\
+                     #[doc = ::core::include_str!(\"../README.md\")]\npub struct R;\n\
+                     use core::arch::asm;\npub unsafe fn n() { asm!(\"nop\") }\n",
+                ),
+                ("r/src/t.txt", ""),
+                ("c/pretty.py", ""),
+                ("r/README.md", "```\ninclude!(\"x\");\n```\n"),
+            ],
+            "r/src/lib.rs",
+        );
+        for f in ["r/src/t.txt", "c/pretty.py", "r/README.md"] {
+            assert!(r.files.contains(f), "{f}: {:?}", files(&r));
+        }
+        let w = whys(&r);
+        assert_eq!(w.len(), 1, "{w:?}");
+        assert!(
+            w[0].0 == "r/README.md" && w[0].2.contains("doc test"),
+            "{w:?}"
+        );
+        for (case, source, why) in [
+            (
+                "a doc a macro gives",
+                "#[doc = concat!(\"a\", \"b\")]\npub fn f() {}\n",
+                "no literal gives",
+            ),
+            (
+                "a doc a metavariable gives",
+                "macro_rules! m { ($d:expr) => { #[doc = $d] pub fn f() {} }; }\n",
+                "no literal gives",
+            ),
+            (
+                "a visualizer no literal names",
+                "#![debugger_visualizer(natvis_file = concat!(\"a\"))]\n",
+                "debugger_visualizer",
+            ),
+            (
+                "an incbin",
+                "core::arch::global_asm!(\".data\\n.INCBIN \\\"../c/blob.bin\\\"\");\n",
+                "a directive",
+            ),
+            (
+                "an include directive",
+                "core::arch::global_asm!(\".include \\\"x.s\\\"\");\n",
+                "a directive",
+            ),
+            (
+                "a template a macro gives",
+                "core::arch::global_asm!(include_str!(\"boot.s\"));\n",
+                "a macro assembles",
+            ),
+            (
+                "in a macro",
+                "macro_rules! m { ($t:literal) => { core::arch::global_asm!($t); }; }\n",
+                "inside a macro",
+            ),
+            (
+                "an alias",
+                "use core::arch::global_asm as g;\n",
+                "imports or shadows",
+            ),
+        ] {
+            let r = of(&[("r/src/lib.rs", source)], "r/src/lib.rs");
+            assert!(refused(&r, why), "{case}: {:?}", whys(&r));
+        }
     }
 
     #[test]

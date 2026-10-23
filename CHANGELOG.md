@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's census reads every word that can include a file
+
+`ARCHOGEN-M3-0924` (leaf `M3.5.2.8.1`), `2026-10-23`.
+
+- The census now reads each word in a source that can make the compiler read a file — a module, an inclusion, an
+  assembly template, a documentation or debugger attribute — whole, or refuses it: a raw-identifier module is
+  followed, a module a macro places is refused, a test-only attribute narrows a module alone, and a path is
+  refused when it leaves the tree, passes a symbolic link anywhere, or is spelt in a way hosts read differently.
+
 ## archogen — the checkers' programs in the trust record, round 11, and a fourth change of method
 
 `ARCHOGEN-M3-0923` (leaf `M3.5.2`), `2026-10-23`.
