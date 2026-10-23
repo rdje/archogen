@@ -129,6 +129,10 @@ pub struct Roots {
     pub front_clauses: Vec<FrontClauses>,
 }
 
+/// The launcher the front runs its invoked programs through, the one file `NO-SUBPROCESS` is to admit (`M3.5.1.4`): its
+/// sha256 is part of every invocation, whose risk its acceptance contract carries (`decision_trust-role-programs.md` §4).
+pub const LAUNCHER: &str = "crates/archogen-cli/src/sibling.rs";
+
 /// A root form's `(invokes …)` and `(installed …)`: the programs the front runs and the file the install writes beside
 /// it (`decision_trust-role-programs.md` §4). `None` is a clause the form does not hold; an empty list one it holds
 /// empty.
@@ -1742,6 +1746,16 @@ pub fn inventory_with(
             }
         }
     }
+    // The launcher an invocation's content names, read with the tree as a root's data is
+    // (`decision_trust-role-programs.md` §4).
+    for c in roots.front_clauses.iter().filter(|c| c.invokes.is_some()) {
+        if symlinks.contains(LAUNCHER) || tree.get(LAUNCHER).is_none() {
+            refused.push(format!(
+                "trust-undeclared-input: `{}` invokes programs, and its launcher `{LAUNCHER}` is not a blob of the commit",
+                c.root
+            ));
+        }
+    }
 
     let tree_dir = out.join("tree");
     write_tree(&tree, &tree_dir).map_err(|f| format!("{f:?}"))?;
@@ -2683,6 +2697,32 @@ pub fn inventory_with(
                         crate::trust_generated::provenance_json(&provenance[&h.name]),
                     ),
                 ]));
+            }
+            // The front and each root its form invokes share an invocation: the invoked root and the launcher
+            // (`decision_trust-role-programs.md` §4).
+            for (front, invoked) in [(a, b), (b, a)] {
+                let invokes = roots
+                    .front_clauses
+                    .iter()
+                    .find(|c| c.root == front.name)
+                    .and_then(|c| c.invokes.as_ref());
+                if invokes.is_some_and(|names| names.contains(&invoked.name)) {
+                    let target = match &invoked.target {
+                        Target::Bin(name) => format!("bin {name}"),
+                        Target::Lib => "lib".to_owned(),
+                        Target::Test(name) => format!("test {name}"),
+                    };
+                    items.push(obj(vec![
+                        ("kind", s("invocation")),
+                        (
+                            "content",
+                            strings([
+                                format!("invoked={} {} {target}", invoked.name, invoked.role),
+                                format!("launcher={LAUNCHER}={}", file_hash(LAUNCHER)),
+                            ]),
+                        ),
+                    ]));
+                }
             }
             shared.push(obj(vec![
                 ("pair", strings([a.name.clone(), b.name.clone()])),
@@ -4510,6 +4550,107 @@ pub(crate) mod tests {
             "[lib]\nproc-macro = true\n",
         );
         says(&refused(f.run()), "reaches `crates/d`");
+    }
+
+    /// A front `gen` whose form holds `clauses`, the configuration checker `cfg` as an executable, a scheduling checker
+    /// `chk`, and the launcher with `launcher` as its text, or none (`decision_trust-role-programs.md` §4).
+    fn invoking(name: &str, clauses: &str, launcher: Option<&str>) -> Fixture {
+        let roots = format!(
+            "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\") {clauses})\n\
+             (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n\
+             (defroot cfg (role configuration-checker) (package \"crates/c\") (target bin c) (role-packages \"crates/c\"))\n"
+        );
+        let mut files = vec![
+            ("Cargo.toml", WS.to_owned()),
+            ("trust/roots.eadl", roots),
+            ("crates/a/Cargo.toml", manifest("a", "")),
+            ("crates/a/src/main.rs", "fn main() {}\n".to_owned()),
+            ("crates/b/Cargo.toml", manifest("b", "")),
+            ("crates/b/src/lib.rs", "pub fn analysis() {}\n".to_owned()),
+            ("crates/c/Cargo.toml", manifest("c", "")),
+            ("crates/c/src/main.rs", "fn main() {}\n".to_owned()),
+            (
+                "crates/archogen-cli/Cargo.toml",
+                manifest("archogen-cli", ""),
+            ),
+            (
+                "crates/archogen-cli/src/lib.rs",
+                "pub fn front() {}\n".to_owned(),
+            ),
+        ];
+        if let Some(text) = launcher {
+            files.push(("crates/archogen-cli/src/sibling.rs", text.to_owned()));
+        }
+        fixture(name, "1.95.0", &files)
+    }
+
+    const INVOKES: &str = "(invokes cfg) (installed \"archogen-install.json\")";
+
+    /// The invocation items of an inventory, by pair, with their content.
+    fn invocations(inv: &Json) -> Vec<(String, Vec<String>)> {
+        items(inv)
+            .into_iter()
+            .filter(|(_, i)| kind(i) == "invocation")
+            .map(|(pair, i)| {
+                let content = i.get("content").map(Json::elements).unwrap_or_default();
+                (
+                    pair,
+                    content
+                        .iter()
+                        .filter_map(Json::as_str)
+                        .map(str::to_owned)
+                        .collect(),
+                )
+            })
+            .collect()
+    }
+
+    #[test]
+    fn the_front_and_each_root_it_invokes_share_an_invocation() {
+        crate::trust_test_process::bounded!(the_front_and_each_root_it_invokes_share_an_invocation);
+        // `decision_trust-role-programs.md` §4: the invoked root's name, role and target and the launcher's sha256, so a
+        // launcher edit moves the item; no clause, no item.
+        let first = written(invoking("invocation", INVOKES, Some("pub fn run() {}\n")).run());
+        let found = invocations(&first);
+        let launcher = Digest::of(b"pub fn run() {}\n").hex();
+        assert_eq!(
+            found,
+            [(
+                "gen+cfg".to_owned(),
+                vec![
+                    "invoked=cfg configuration-checker bin c".to_owned(),
+                    format!("launcher=crates/archogen-cli/src/sibling.rs={launcher}"),
+                ]
+            )],
+            "one invocation, the front's and the invoked root's, none with the scheduling checker"
+        );
+        let edited = written(
+            invoking(
+                "invocation-edited",
+                INVOKES,
+                Some("pub fn run() { /* another contract */ }\n"),
+            )
+            .run(),
+        );
+        assert_ne!(
+            invocations(&edited),
+            found,
+            "a launcher edit moves the invocation"
+        );
+        let none = written(invoking("invocation-none", "", Some("pub fn run() {}\n")).run());
+        assert!(invocations(&none).is_empty(), "no clause, no invocation");
+    }
+
+    #[test]
+    fn a_front_that_invokes_without_its_launcher_is_refused() {
+        crate::trust_test_process::bounded!(a_front_that_invokes_without_its_launcher_is_refused);
+        // `decision_trust-role-programs.md` §4: read with the tree, in step 2, as a root's `(data …)` is.
+        let f = invoking("invocation-no-launcher", INVOKES, None);
+        says(
+            &refused(f.run()),
+            "trust-undeclared-input: `gen` invokes programs, and its launcher `crates/archogen-cli/src/sibling.rs` is not a \
+             blob of the commit",
+        );
     }
 
     #[test]

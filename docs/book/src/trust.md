@@ -83,8 +83,11 @@ writes yet, since the gate that judges a push is built from the commit before it
 
 Each departure refuses before a build, as a misnamed harness does, and one test target belongs to one comparison
 only. A derivation is built, recorded, scanned and held to its pair's role packages as the harness is, but paired with
-no root: its pair takes its item, `shared-derivation`, one item a form (leaf `M3.5.2.1.2`). What an invocation is lands
-with the rest of `M3.5.2.1`.
+no root: its pair takes its item, `shared-derivation`, one item a form (leaf `M3.5.2.1.2`). The front and each root it
+invokes share an `invocation` item: the invoked root's name, role and target, and the sha256 of the launcher — the
+file the constant `LAUNCHER` in `xtask/src/trust.rs` names, which the front gains with leaf `M3.5.1.4` — so an edit to
+the launcher, whose acceptance contract carries the risk, is reported; a front that invokes while its commit holds no
+launcher is refused (leaf `M3.5.2.1.3`).
 
 A program that would run two roles is refused: one program cannot be independent of itself. Every other program the
 workspace can build — an example, a diagnostic tool, the browser module — is classified as not a root, with a reason

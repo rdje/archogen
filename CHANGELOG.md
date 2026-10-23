@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the programs the front runs, named
+
+`ARCHOGEN-M3-0892` (leaf `M3.5.2.1.3`), `2026-10-23`.
+
+- The trust gate records an item for the front and each checker it runs: the checker's name and target and the
+  sha256 of the launcher that runs it, so a change to either is reported; no launcher, no invocation.
+
 ## archogen — a derivation, judged as the harness but for two things
 
 `ARCHOGEN-M3-0891` (leaf `M3.5.2.1.2`), `2026-10-23`.
