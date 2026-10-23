@@ -2,10 +2,10 @@
 # scripts/sha256_fixture.sh — the system's SHA-256 over every message length the padding treats differently
 # (leaf `M2.7.2`).
 #
-# The catalog's content hash is SHA-256 implemented in the workspace (`crates/archogen-evidence/src/sha256.rs`),
+# The catalog's content hash is SHA-256 implemented in the workspace (`crates/archogen-digest/src/lib.rs`),
 # because the engine depends on nothing outside `std` and spawns no process. So this oracle is written down rather
 # than run: the script hashes deterministic messages with the system's own tool (`sha256sum`, or `shasum -a 256`
-# where coreutils is absent) and writes the digests to the fixture `crates/archogen-evidence/tests/sha256.rs`
+# where coreutils is absent) and writes the digests to the fixture `crates/archogen-digest/tests/sha256.rs`
 # compares against. Byte `i` of the message of length `n` is `(7 × i + 3) mod 256`. The lengths are every `n` from
 # 0 to 129, which puts the padding's `0x80` byte and the 64-bit length at every offset of one block and across
 # two, and a few longer ones across block and page boundaries.
@@ -17,7 +17,7 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FIXTURE=crates/archogen-evidence/tests/fixtures/sha256_boundaries.txt
+FIXTURE=crates/archogen-digest/tests/fixtures/sha256_boundaries.txt
 SCRATCH=target/doctrine_scratch/sha256_fixture
 mkdir -p "$SCRATCH"
 

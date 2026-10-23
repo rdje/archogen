@@ -7,7 +7,7 @@
 //!    byte and the 64-bit length at every offset of one block and across two, which is where a hand-written
 //!    SHA-256 goes wrong.
 
-use archogen_evidence::sha256::{Digest, Sha256};
+use archogen_digest::{Digest, Sha256};
 
 /// FIPS 180-4's examples (the NIST example files for SHA-256), which the system's tool also reproduces.
 const PUBLISHED: &[(&str, &str)] = &[

@@ -1,8 +1,15 @@
 //! SHA-256 (FIPS 180-4), the content hash every catalog record is identified by (leaf `M2.7.2`).
 //!
 //! `docs/specs/catalog/decision_catalog-records.md` §3 hashes each facet of a record with SHA-256, and a review holds
-//! only at the hash it names, so this function decides whether a review still holds. It is written here rather
-//! than taken from a crate, because the engine depends on nothing outside `std`
+//! only at the hash it names, so this function decides whether a review still holds.
+//!
+//! ⭐ **A package of its own** (leaf `M3.5.1.2`). It was `archogen_evidence::sha256`, which still names it. A checker's
+//! result record names the sha256 of the program that wrote it and of what it judged (`M3.5.1`), and a checker needs
+//! none of the evidence package's claims vocabulary to say so; a role package that compiled that vocabulary for one
+//! function would share more with the generator than it uses. So the trust inventory sees this function as the one
+//! node it is.
+//!
+//! It is written here rather than taken from a crate, because the engine depends on nothing outside `std`
 //! (`decision_zero-dependency-engine-core.md`), and rather than run as the system's `shasum`, because the product
 //! spawns no process (`NO-SUBPROCESS`).
 //!

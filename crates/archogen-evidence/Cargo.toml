@@ -16,3 +16,4 @@ description = "Evidence categories, permitted conclusions, bound provenance, and
 workspace = true
 
 [dependencies]
+archogen-digest = { path = "../archogen-digest" }

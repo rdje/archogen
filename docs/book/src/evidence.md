@@ -131,20 +131,21 @@ digest in lowercase hexadecimal. The catalog of engine knowledge will identify e
 review of a record will hold only at the digest it names. So the digest decides whether a review still holds, and
 it is computed inside the engine rather than by the system's `shasum`, because the engine runs no other program.
 
-The function is `archogen_evidence::sha256` (`crates/archogen-evidence/src/sha256.rs`). Three checks stand
-outside it:
+The function is `archogen_digest`, a package of its own (`crates/archogen-digest/src/lib.rs`), so that a checker can
+name a digest without compiling the rest of the evidence vocabulary; `archogen_evidence::sha256` still names it.
+Three checks stand outside it:
 
 - its constants are derived again, in exact integer arithmetic, from their definition in the standard: the
   fractional parts of the square and cube roots of the first primes;
 - it reproduces the standard's published examples, the one-million-character message included;
 - for every message length that puts the padding at a different place in one block or across two, its digest
-  equals the one the system's own tool computed (`crates/archogen-evidence/tests/fixtures/sha256_boundaries.txt`).
+  equals the one the system's own tool computed (`crates/archogen-digest/tests/fixtures/sha256_boundaries.txt`).
 
 The last check is the one that matters most. The standard's published messages all happen to leave the padding
 somewhere harmless, so a hand-written SHA-256 that pads one byte too early passes every one of them. It fails the
 boundary fixture, and that mistake is kept in the mutation catalogue to prove it stays caught.
 
 ```console
-$ cargo test -p archogen-evidence --test sha256    # the published examples and every boundary length
+$ cargo test -p archogen-digest --test sha256      # the published examples and every boundary length
 $ bash scripts/sha256_fixture.sh --check           # the fixture against a fresh run of the system's tool
 ```

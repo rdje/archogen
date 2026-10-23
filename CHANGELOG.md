@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — sha256 in a package of its own
+
+`ARCHOGEN-M3-0879` (leaf `M3.5.1.2`), `2026-10-23`.
+
+- The engine's SHA-256 moves, with its tests and its fixture, into `crates/archogen-digest`, so a checker can name
+  the digest of what it judged without compiling the evidence vocabulary; `archogen_evidence::sha256` still names it.
+
 ## archogen — the no-process gate closes every route to a process
 
 `ARCHOGEN-PROGRAM-0878` (leaf `PROGRAM.105`), `2026-10-22`.

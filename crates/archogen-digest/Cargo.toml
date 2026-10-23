@@ -1,0 +1,16 @@
+# SHA-256, the one content hash the workspace computes (leaf M2.7.2; its own package since M3.5.1.2).
+#
+# A separate crate ON PURPOSE, as archogen-evidence is: a checker's result record names the sha256 of the program
+# that wrote it and of what it judged, and a checker needs nothing else of the evidence vocabulary. A function shared
+# between roles is one node the trust inventory can classify, not a module inside a package that brings more.
+[package]
+name = "archogen-digest"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "SHA-256 (FIPS 180-4) and its one written form, for the archogen toolchain's records"
+
+[lints]
+workspace = true
+
+[dependencies]

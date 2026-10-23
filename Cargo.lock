@@ -31,8 +31,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "archogen-digest"
+version = "0.1.0"
+
+[[package]]
 name = "archogen-evidence"
 version = "0.1.0"
+dependencies = [
+ "archogen-digest",
+]
 
 [[package]]
 name = "archogen-s0"

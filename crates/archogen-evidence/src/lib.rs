@@ -29,8 +29,11 @@
 
 pub mod bound;
 pub mod claim;
-pub mod sha256;
 pub mod trust;
+
+/// SHA-256 (FIPS 180-4), [`archogen_digest`] under the name it had here until leaf `M3.5.1.2` gave it a package of its
+/// own, so that every `archogen_evidence::sha256::…` path still names the one function.
+pub use archogen_digest as sha256;
 
 pub use bound::{Bound, BoundDefect, BoundOrigin, SafetyFactor};
 pub use claim::{Claim, Conclusion, EvidenceCategory, Property, Report, ReportError};
