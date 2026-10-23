@@ -945,9 +945,9 @@ pub const UNSEEN: &[&str] = &[
      `M3.4`, one to the generator's relation — before it the relation is compiled beside the pair's builds, in the \
      derivation's item — and only the comparison failing joins them (§3)",
     "whether the front runs only, or all, the programs its form invokes: from `M3.5.1.4`, `NO-SUBPROCESS` admitting \
-     the launcher alone, the launcher running only what the install manifest names and the install placing only the \
-     invoked roots stand there; until then no front invokes (§4)",
-    "whether a unit two roles' packages join compares them: the build finds the joining, and a classification's review \
+     the launcher alone, declared from the front's `main.rs`, the launcher running only what the install manifest names \
+     and the install placing only the invoked roots stand there; until then no front invokes (§4)",
+    "whether a unit two roles' packages join compares them: the census finds the joining, and a classification's review \
      decides that it compares nothing they hold equal (§3)",
     "an edit inside a classified program target: its classification is reviewed again only when the role packages its \
      build compiles grow, so an edit that makes it start comparing two roles reads unchanged (§3; M3.6.10)",

@@ -525,7 +525,7 @@ passage written in that term reads it but the generated-sources record's §5, wh
 never is; §2's role packages of a program target follow build edges too, over every
 feature and platform, a test-like unit's its package's development edges, as an example's do, and count a role
 package holding a file the census build read for it (that record's §3); `trust-shared-program` counts, in a root's or
-a pair form's own build, its units' packages and those holding a file one of them read (`M3.5.2.5.3`).
+a pair form's own build, its units' packages and the innermost holding a file one of them read (`M3.5.2.5.3`).
 
 **Case 4 is judged where an inventory is consumed** (R1 A8). The gate builds its own inventory and cannot find it
 stale. `cargo xtask trust-verify <package>` refuses a package whose inventory is missing, whose build identity is not
@@ -561,8 +561,9 @@ paragraph's "a change outside every root's packages and files", and the case-5 b
 change to nothing the gate reads beyond the roots. It reads more: the pin, whose channel is in the build
 configuration and which admits a few keys, any other leaving the gate unable to judge; every cargo configuration on
 the build's path, a key other than an alias refused; each member's manifest, a program target it adds unclassified;
-the commit's tree, a symbolic link or submodule entry under `catalog/` refused; and the comparison harness's units
-beside its pair's builds, the comparison-harness item's. A change to any of these is judged as §6 says, and reads
+the commit's tree, a symbolic link or submodule entry under `catalog/` refused; the comparison harness's units
+beside its pair's builds, the comparison-harness item's; and every member's sources, read for the files each target
+reaches, nothing built (that record's §3). A change to any of these is judged as §6 says, and reads
 "unchanged" only when the change part names nothing. Case 5's examples above stand.
 
 ### 7. Where it runs, and what it is not

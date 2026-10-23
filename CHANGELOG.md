@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust record says what the census now does
+
+`ARCHOGEN-M3-0922` (leaf `M3.5.2.7.4`), `2026-10-23`.
+
+- The trust records now list the census among what the gate reads, cite the census as it stands, and quote the
+  Rust reference they rest on; the gate's report words its outside list as the record does.
+
 ## archogen — the trust gate's census is held to the compiler
 
 `ARCHOGEN-M3-0921` (leaf `M3.5.2.7.3`), `2026-10-23`.

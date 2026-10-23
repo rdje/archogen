@@ -36,9 +36,9 @@
 - **What the roles share.** `cargo xtask trust-inventory --commit 0a5a4b12`, `aarch64-apple-darwin`: exit 0, `5
   program(s), 8 pair(s), 10 shared item(s)`, the tenth `generator+scheduling-checker package crates/archogen-digest`,
   reached through `archogen-outcome` (`archogen-api`'s since `5bc5627d`) and through `archogen-evidence`.
-- **The census today** (`76e10884`, read from what rustc compiled): `crates/rt-core`'s `lifecycle`, unit tests and doc
-  tests join the reference model and the implementation beside the harness, unnamed (`RP-H18`) — the three the retired
-  text scan found at `b9a070d4`.
+- **The census today** (`12e4a0a9`, read from the sources, nothing built): `crates/rt-core`'s `lifecycle`, unit tests
+  and doc tests join the reference model and the implementation beside the harness, unnamed (`RP-H18`) — the three the
+  retired text scan found at `b9a070d4` and the retired build census at `76e10884`.
 - **The gate is built from the base** (parent `TI-H6`; `.github/workflows/trust-gate.yml`): on a push, the commit
   `main` pointed at before it, which the report names. Its `read_roots` fails on a form or clause it does not know
   (exit 2), and its item encoding is the base's: `origin/main` is `8cdac117`, which does not hold `62099a39`, the
@@ -108,13 +108,14 @@ reaches counts for its crate's own test units — `cfg(test)` is set on no depen
 unit links it, a doc test among them, nor for a binary built as no test; only a workspace member's test-like units are
 counted, a non-member's library read as an edge; and a pair form's test is held to what the census reads of it as to
 its build, a root's role package beside its pair refused, `trust-shared-program` (`M3.5.2.7.2`). A file counts for the package holding
-it whatever it is — a manifest, a table an `include_str!` reads — so a document another role reads from a role
+it whatever it is — a manifest, a table an `include_str!` reads — so a document another role compiles from a role
 package makes that package compiled, joining here and refused under `trust-shared-program`, not the parent's §4 file
 item: share it from a package of no role (round 9's R7).
 
-**What decides what a unit compiles** (round 9's change of method), drawn from the Cargo Book and the rustc of the pin
-([`rust-toolchain`](../../book/src/ledger.md#rust-toolchain)), each rule quoted as the Book states it. Each row names the
-fixtures that hold it and, where part of it is outside the census, the report's line that says so; a test,
+**What decides what a unit compiles** (rounds 9 and 10's changes of method), each rule quoted from the Cargo Book of
+the pin ([`rust-toolchain`](../../book/src/ledger.md#rust-toolchain)) or the Rust reference it ships
+([`rust-reference`](../../book/src/ledger.md#rust-reference)). Each row the census reads or refuses names the fixtures
+that hold it, and each row with a part outside the census the report's line that says so; a test,
 `the_census_table_is_held_by_its_fixtures_and_the_report`, reads this table and holds both to the code. And the census
 is held to rustc itself: an oracle builds a corpus of the probes rounds 5 to 10 ran in twelve configurations —
 `cargo test`'s own selection, every target, release, every feature, none, a plain build in both profiles, each target

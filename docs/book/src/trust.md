@@ -747,9 +747,9 @@ Every report ends with what the inventory does not see, the same list each time,
   which is why the relation's derivations are reference derivations, their controls the ones independent of the
   transcription;
 - **whether the front runs only, or all, the programs its form invokes.** From leaf `M3.5.1.4`, `NO-SUBPROCESS`
-  admitting the launcher alone, the launcher running only what the install manifest names, and the install placing only
-  the invoked roots stand there; until then no front invokes;
-- **whether a unit two roles' packages join compares them.** The build finds the joining; a classification's review
+  admitting the launcher alone, declared from the front's `main.rs`, the launcher running only what the install manifest
+  names, and the install placing only the invoked roots stand there; until then no front invokes;
+- **whether a unit two roles' packages join compares them.** The census finds the joining; a classification's review
   decides that the unit compares nothing the two hold equal;
 - **an edit inside a classified program target.** A classification is reviewed again only when the role packages its
   build compiles grow, so an edit that makes a unit start comparing two roles reads "unchanged" (`M3.6.10` owns it);

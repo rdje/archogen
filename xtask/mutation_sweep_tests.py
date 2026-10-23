@@ -1981,7 +1981,7 @@ class IteratorTests(DiscoveryFixture):
                 "base environment": (environment,
                     "8b6fa81a2d715c2e42f8ab75a02b6e0c037c97d2f55e71c44c21e4a5516ee74c"),
                 "gate production": (gate.split("#[cfg(test)]", 1)[0],
-                    "7469fd02854349bbef4bca2de63b3eba73f8ae3aab4d6563c627002a93df5c9d"),  # re-pinned by M3.5.2.7.2: `UNSEEN`'s census line and the report's left-out line removed; the gate's absolute paths unchanged
+                    "26a268e1129905667063251c34309e00e93d70ee2d6ca2716b75414bb7ba2c22"),  # re-pinned by M3.5.2.7.4: `UNSEEN`'s launcher and joining lines reworded; the gate's absolute paths unchanged
                 "repository root": (root, "84ec4298740c835ae19ed9f2cff11f0f985cd59a4f3c5c205e9abd47805b6d77"),
                 # re-pinned by M3.5.1.3: the `install` arm, which hands `trust::inventory` the same absolute
                 # `repo_root()`, and an `out` joined to it, as the `trust-inventory` arm does
