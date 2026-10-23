@@ -156,13 +156,32 @@ pub fn verify(dir: &Path) -> Result<Vec<String>, String> {
     }
 
     // A result names the program that produced it: its role's root, or for the reference model the harness of its
-    // pair, so a result a debug build or another commit's checker produced does not pass (R5 4).
+    // pair, so a result a debug build or another commit's checker produced does not pass (R5 4). Its role is a root's,
+    // never `harness` or `derivation`, and no derivation's artifact produces it: a derivation produces no claim's
+    // result (`decision_trust-role-programs.md` §3).
+    let derivations: Vec<String> = programs
+        .iter()
+        .filter(|p| text(p, "role") == "derivation")
+        .map(&artifact_sha)
+        .collect();
     for r in manifest
         .get("results")
         .map(Json::elements)
         .unwrap_or_default()
     {
         let (claim, role, producer) = (text(r, "claim"), text(r, "role"), text(r, "producer"));
+        if !crate::trust::ROLES.contains(&role) {
+            refuse(format!(
+                "the result `{claim}` claims the role `{role}`, which no root runs"
+            ));
+            continue;
+        }
+        if derivations.iter().any(|d| d == producer) {
+            refuse(format!(
+                "the result `{claim}` names `{producer}`, a derivation's artifact, as its producer: a derivation produces no claim's result"
+            ));
+            continue;
+        }
         let roots_of_role: Vec<&Json> = programs
             .iter()
             .filter(|p| text(p, "role") == role)
@@ -245,6 +264,7 @@ mod tests {
     const CHECKER: &[u8] = b"the checker's executable";
     const HARNESS: &[u8] = b"the comparison harness";
     const TABLE: &[u8] = b"a fixed table";
+    const DERIVED: &[u8] = b"a derivation's test binary";
 
     fn sha(b: &[u8]) -> String {
         Digest::of(b).hex()
@@ -265,10 +285,12 @@ mod tests {
               {{"name":"chk","role":"scheduling-checker","pair":[],"artifact":{{"path":"release/chk","sha256":"{}"}},"data":{{"docs/table.txt":"{}"}}}},
               {{"name":"refm","role":"reference-model","pair":[],"artifact":{{"path":"release/librefm.rlib","sha256":"r"}},"data":{{}}}},
               {{"name":"imp","role":"implementation","pair":[],"artifact":{{"path":"release/libimp.rlib","sha256":"i"}},"data":{{}}}},
-              {{"name":"diff","role":"harness","pair":["refm","imp"],"artifact":{{"path":"release/diff","sha256":"{}"}},"data":{{}}}}]}}"#,
+              {{"name":"diff","role":"harness","pair":["refm","imp"],"artifact":{{"path":"release/diff","sha256":"{}"}},"data":{{}}}},
+              {{"name":"prod","role":"derivation","pair":["gen","cfg"],"artifact":{{"path":"release/prod","sha256":"{}"}},"data":{{}}}}]}}"#,
             sha(CHECKER),
             sha(TABLE),
-            sha(HARNESS)
+            sha(HARNESS),
+            sha(DERIVED)
         );
         let write = |rel: &str, bytes: &[u8]| {
             let p = dir.join(rel);
@@ -307,7 +329,7 @@ mod tests {
             sha(HARNESS),
             parts.implementation_producer.as_ref().map_or(String::new(), |p| format!(
                 r#",{{"claim":"implemented","role":"implementation","producer":"{p}","subject":"trace"}}"#
-            )),
+            )) + &parts.result.as_ref().map_or(String::new(), |r| format!(",{r}")),
             parts.handed.clone().unwrap_or_else(|| sha(TABLE)),
         );
         if !parts.no_manifest {
@@ -327,6 +349,8 @@ mod tests {
         checker_bytes: Option<Vec<u8>>,
         producer: Option<String>,
         implementation_producer: Option<String>,
+        /// A result of its own, appended to the package's.
+        result: Option<String>,
         handed: Option<String>,
     }
 
@@ -340,6 +364,43 @@ mod tests {
             r.iter().all(|x| x.starts_with("trust-inventory-stale: ")),
             "{r:#?}"
         );
+    }
+
+    #[test]
+    fn a_result_names_a_root_s_role_and_no_derivation_produces_one() {
+        crate::trust_test_process::bounded!(
+            a_result_names_a_root_s_role_and_no_derivation_produces_one
+        );
+        // `decision_trust-role-programs.md` §3: a result claiming the harness's or a derivation's own role passed when
+        // its producer was that program's artifact; a derivation produces no claim's result. A reference model's
+        // result by its pair's harness stays accepted (`a_package_whose_parts_are_one_build_s_is_verified`).
+        for (case, role, producer, want) in [
+            (
+                "derivation-role",
+                "derivation",
+                sha(DERIVED),
+                "claims the role `derivation`, which no root runs",
+            ),
+            (
+                "harness-role",
+                "harness",
+                sha(HARNESS),
+                "claims the role `harness`, which no root runs",
+            ),
+            (
+                "derivation-producer",
+                "configuration-checker",
+                sha(DERIVED),
+                "a derivation's artifact, as its producer",
+            ),
+        ] {
+            let dir = package(case, |p| {
+                p.result = Some(format!(
+                    r#"{{"claim":"{case}","role":"{role}","producer":"{producer}","subject":"plan"}}"#
+                ));
+            });
+            refused(&dir, want);
+        }
     }
 
     #[test]

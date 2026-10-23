@@ -273,7 +273,9 @@ reads *unchanged*.
 A report that a property holds rests on results produced by particular programs. `cargo xtask trust-verify <package>`
 checks a package that carries the trust build's inventory, report and programs: that they are one commit's and one
 toolchain's, that each result was produced by the program its role names, and that every file handed to a program at
-run time was declared. Its manifest and inventory JSON require valid UTF-8.
+run time was declared. A result's role is a root's — never the harness's or a derivation's own — and no derivation
+produces one, while a reference model's result produced by its pair's harness is accepted (leaf `M3.5.2.1.4`). Its
+manifest and inventory JSON require valid UTF-8.
 
 ## The precise rules
 
@@ -626,7 +628,7 @@ build it needs fails.
 | `trust-undeclared-input` | refused | an input the commit does not hold, or a construct the catalog's rules refuse, with no admission, in a program's build or a generator's; a `defgenerated` form departing from its shape, or a construction its text alone refuses — a file two forms declare, an entry twice in a clause, a file both a generator and an input, a declared file its own generator or input; a live form's generator or input that is no file of the commit's tree — one at or under a gitlink among them — or is a symbolic link, or that a form declares or a header marks, a chain; an entry point that is not a `.rs` file, in a program's closure or a generator's; a `.rs` generator file that is no program target's entry point; a file a program reads that is marked generated and no form declares; a declared or marked file a generator's build reads |
 | `trust-form-missing` | refused, on the baseline's host | a shared item with no form in the commit's own baseline, or with one proposing other digests than the commit measures; a program target with no classification |
 | `trust-shared-program` | refused | a root compiling another role's role package, or the comparison harness one of a role outside its pair; a live form's generator file that is the entry point of a program target whose role packages hold another role's than the reading program's — for the harness, than its pair's — or a script lying in a role package of such a role |
-| `trust-inventory-stale` | refused, by `trust-verify` | a package's inventory missing or of another build, its report of another inventory, an artifact or a result's producer not the inventory's, a handed dependency undeclared |
+| `trust-inventory-stale` | refused, by `trust-verify` | a package's inventory missing or of another build, its report of another inventory, an artifact or a result's producer not the inventory's, a result's role no root's or its producer a derivation, a handed dependency undeclared |
 
 **Reported** passes and lists the item unreviewed; **refused** fails the gate wherever it runs, and is repaired by a
 change to the code or to `trust/`.
