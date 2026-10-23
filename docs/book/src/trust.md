@@ -113,8 +113,11 @@ a `#[cfg(test)]` module reaches, outside any macro, counts for its crate's own
 tests, never for the crate as another links it; `cfg(test)` anywhere else is read as on; a non-member's tests are not
 read; a build script's files count as its package's; a symbolic link in or beside a package's directory, and a crate
 root the census cannot read, are refused (leaf `M3.5.2.8.3`); and a pair form is held to what the census reads of its test as to its build (leaf `M3.5.2.7.2`). An oracle
-holds the census to rustc: it builds a corpus of every reviewer's probe in twelve configurations through a compiler
-wrapper of its own and finds every file each build read counted (leaf `M3.5.2.7.3`). What decides what a unit compiles — target selection, required features, the profile,
+holds the census to rustc and rustdoc: it builds a corpus of every probe of rounds 5 to 11 that the census counts in
+twelve configurations through a compiler wrapper of its own and finds every file a unit, every crate it links and their
+build scripts read counted, and runs rustdoc on doc tests in each spelling round 11 found, every block it compiles one
+the census refuses (leaves `M3.5.2.7.3`, `M3.5.2.8.4`). It checks what the census counts, not what it refuses beyond
+that, which the fixtures hold, nor what a build script or a procedural macro generates. What decides what a unit compiles — target selection, required features, the profile,
 `cfg(test)`, features, platform, configuration, file inclusion, dependency kinds, build scripts and procedural macros,
 doc tests, non-members, a program a test runs — is a table in the record's §3, each rule quoted from the Cargo Book of
 the pin ([`rust-toolchain`](ledger.md#rust-toolchain)), each row held by its fixtures and, where part of it is outside

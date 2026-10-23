@@ -132,12 +132,20 @@ book of the pin ([`rust-toolchain`](../../book/src/ledger.md#rust-toolchain)) or
 ([`rust-reference`](../../book/src/ledger.md#rust-reference)). Each row the census reads or refuses names the fixtures
 that hold it, and each row with a part outside the census the report's line that says so; a test,
 `the_census_table_is_held_by_its_fixtures_and_the_report`, reads this table and holds both to the code. And the census
-is held to rustc itself: an oracle builds a corpus of the probes rounds 5 to 10 ran in twelve configurations —
-`cargo test`'s own selection, every target, release, every feature, none, a plain build in both profiles, each target
-a selection skips by name with its required features — through a compiler wrapper of its own, and finds every file of
-the tree each build's unit read counted by the census for that unit; where the Rust reference is silent, the children
-of a `path`-loaded module and a module an `include!`d file declares, the pin's own refusal of a missing child names
-the directory, the loaded file's, which the census follows (`M3.5.2.7.3`).
+is held to rustc and rustdoc themselves: an oracle builds a corpus of every probe of rounds 5 to 11 that the census
+counts — those it refuses, a link or an assembly directive, are the fixtures' — in twelve configurations, `cargo
+test`'s own selection, every target, release, every feature, none, a plain build in both profiles, each target a
+selection skips by name with its required features, through a compiler wrapper of its own, and finds every file of
+the tree that a unit, every crate it links, transitively, and their packages' build scripts read counted by the
+census for that unit and its closure, over a renamed, an optional, a platform's and a development dependency; and it
+runs rustdoc on a library whose doc tests, one in each spelling round 11 found, each include a file the corpus lacks,
+so rustdoc's failures name every block it compiled, and finds each refused (`M3.5.2.7.3`, `M3.5.2.8.4`). Where the
+Rust reference is silent, the children of a `path`-loaded module and a module an `include!`d file declares, the pin's
+own refusal of a missing child names the directory, the loaded file's, which the census follows. The oracle checks
+what the census counts and that it refuses what rustdoc compiles; not what it refuses beyond that, which the fixtures
+hold, nor what it counts beyond what a build reads, a non-member's tests, which no build of the workspace makes, or
+what a build script or a procedural macro generates. Its corpus is the probes, so a spelling none holds is the
+reader's rules' to refuse, as every token not read whole is.
 
 | Input | The build tool's rule | The census | Held by | Report |
 | --- | --- | --- | --- | --- |
@@ -151,7 +159,7 @@ the directory, the loaded file's, which the census follows (`M3.5.2.7.3`).
 | file inclusion | a module's file "mirrors the logical module path"; "for `path` attributes on modules not inside inline module blocks, the file path is relative to the directory the source file is located"; a `debugger_visualizer` file "a path relative to the source file" (the Rust reference) | read: every file a crate root reaches by `mod`, `#[path]`, the `include!` family and `debugger_visualizer`, each the innermost package's; every token that can make rustc read a file read whole or refused unless admitted — a macro's module, an assembly directive reading a file, a path out of the tree, through a link or spelt as hosts read apart among them | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_file_counts_for_the_innermost_package_holding_it`, `an_inclusion_the_census_cannot_follow_is_refused_unless_admitted`, `a_path_attribute_resolves_as_the_reference_says`, `a_raw_identifier_and_every_mod_are_read_whole_or_refused`, `every_attribute_and_macro_that_reads_a_file_is_read_whole_or_refused`, `a_path_meets_the_links_at_every_component_and_hosts_read_none_apart`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | — |
 | dependency kinds | normal, build and development dependencies | edges: normal and build, and the unit's own package's development | `a_unit_joining_two_roles_is_a_program_target_whatever_it_names` | — |
 | build scripts, procedural macros | each runs code as its package builds | read as any package's sources and never run, a build script's files its package's library's; what they generate outside | `a_package_with_a_build_script_is_read_and_its_script_never_run`, `a_package_reaching_a_build_script_is_read_as_any_other`, `a_build_script_s_files_count_for_its_package` | `what the census does not read` |
-| doc tests | "each code block compiles to a doctest executable on the fly with `rustc`"; "Rustdoc also accepts indented code blocks as an alternative to fenced code blocks"; "`compile_fail` tells rustdoc that the compilation should fail" (the rustdoc book); the `doctest` field "is only relevant for libraries" | the library's files; its doc text read with no markdown, each piece by itself, every word that can make a doc test read a file refused unless admitted, but one a backtick opens while the library's doc text names no error code; a binary's or a test's doc text no doc test's | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_site_no_literal_pins_is_unfollowed`, `every_doc_test_rustdoc_may_compile_is_refused_however_it_is_spelt`, `a_backtick_exempts_prose_unless_a_doc_test_names_an_error_code`, `doc_text_is_read_for_doc_tested_libraries_alone` | — |
+| doc tests | "each code block compiles to a doctest executable on the fly with `rustc`"; "Rustdoc also accepts indented code blocks as an alternative to fenced code blocks"; "`compile_fail` tells rustdoc that the compilation should fail" (the rustdoc book); the `doctest` field "is only relevant for libraries" | the library's files; its doc text read with no markdown, each piece by itself, every word that can make a doc test read a file refused unless admitted, but one a backtick opens while the library's doc text names no error code; a binary's or a test's doc text no doc test's | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_site_no_literal_pins_is_unfollowed`, `every_doc_test_rustdoc_may_compile_is_refused_however_it_is_spelt`, `a_backtick_exempts_prose_unless_a_doc_test_names_an_error_code`, `doc_text_is_read_for_doc_tested_libraries_alone`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | — |
 | non-members, other workspaces | neither's tests are this workspace's | a non-member's library read as an edge, its tests, benches and examples unread; another workspace's outside | `the_census_counts_members_tests_alone` | `what the census does not read` |
 | a program a test runs | a process, compiled by no unit of the test | outside | — | `a program a test runs` |
 
