@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's census reads every module's own file beside its paths
+
+`ARCHOGEN-M3-0932` (leaf `M3.5.2.9.2`), `2026-10-24`.
+
+- A module whose file is chosen by a conditional `path` attribute is now read at its usual file too, which the
+  compiler reads when the condition is off; a `path` attribute inside a module is refused, and every path is
+  checked for absolute or host-dependent spellings as soon as it is read.
+
 ## archogen — the trust gate's census reads only its alphabet
 
 `ARCHOGEN-M3-0931` (leaf `M3.5.2.9.1`), `2026-10-24`.

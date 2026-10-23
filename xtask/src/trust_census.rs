@@ -166,24 +166,21 @@ impl<'a> Sources<'a> {
             };
             for m in &scan.modules {
                 let test_only = test_only || m.test_only;
-                match m.paths.as_slice() {
-                    // `mod name;`: its file mirrors its module path, under each directory this file's children may lie in.
-                    [] => {
-                        for dir in bases.iter().flat_map(|base| expansions(base, &m.inline)) {
-                            for candidate in
-                                [format!("{}.rs", m.name), format!("{}/mod.rs", m.name)]
-                            {
-                                if let Some(path) =
-                                    found(follow(&candidate, &dir, &m.site), &mut out)
-                                {
-                                    todo.push((path, vec![join(&dir, &m.name)], test_only, true));
-                                }
-                            }
+                // `mod name;`: its file mirrors its module path, under each directory this file's children may lie in —
+                // read beside any `path` attribute too, since a `cfg_attr`'s holds only where its `cfg` does, and rustc
+                // reads the module's own file elsewhere (round 12's D2).
+                for dir in bases.iter().flat_map(|base| expansions(base, &m.inline)) {
+                    for candidate in [format!("{}.rs", m.name), format!("{}/mod.rs", m.name)] {
+                        if let Some(path) = found(follow(&candidate, &dir, &m.site), &mut out) {
+                            todo.push((path, vec![join(&dir, &m.name)], test_only, true));
                         }
                     }
-                    // `#[path = "…"] mod name;`: relative to this file's directory, or inside inline modules to it with the
-                    // inline components — after the non-mod-rs file's own name, when it is one. Each `path` attribute the
-                    // item carries, `cfg_attr`'s in every configuration, is followed.
+                }
+                // `#[path = "…"] mod name;`: relative to this file's directory, or inside inline modules to it with the
+                // inline components — after the non-mod-rs file's own name, when it is one. Each `path` attribute the
+                // item carries, `cfg_attr`'s in every configuration, is followed.
+                match m.paths.as_slice() {
+                    [] => {}
                     rels => {
                         let mut froms = Vec::new();
                         if m.inline.is_empty() {
@@ -541,7 +538,18 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                     }
                     if key == Some("path") && assigned {
                         match value.and_then(|v| decode(&source[v.at..v.end])) {
-                            Some(p) if !region.body => pending_path.push((p, i)),
+                            // An inner `path` names its own module's directory, which the census does not apply
+                            // (round 12's D3).
+                            _ if bang => out.unfollowed.push(site(i, close).unfollowed(
+                                file,
+                                "is an inner `path` attribute, naming its own module's directory, which the census \
+                                 does not apply",
+                            )),
+                            // Checked as it is read, an inline module's directory among them (round 12's D4).
+                            Some(p) if !region.body => match path_spelling(&p) {
+                                Some(why) => out.unfollowed.push(site(i, close).unfollowed(file, why)),
+                                None => pending_path.push((p, i)),
+                            },
                             _ => out.unfollowed.push(site(i, close).unfollowed(
                                 file,
                                 if region.body {
@@ -666,12 +674,11 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                         name: n,
                     }),
                     // Its brace is counted when the loop reaches it.
+                    // Its directory each `path` attribute names, and its own name, which rustc takes where a `cfg_attr`'s
+                    // `path` does not hold (round 12's D2).
                     (Some(n), true) => {
-                        let alternatives = if paths.is_empty() {
-                            vec![n]
-                        } else {
-                            paths.into_iter().map(|(p, _)| p).collect()
-                        };
+                        let mut alternatives: Vec<String> = paths.into_iter().map(|(p, _)| p).collect();
+                        alternatives.push(n);
                         inline.push((depth + 1, alternatives));
                     }
                     _ => out.unfollowed.push(at.unfollowed(
@@ -1187,6 +1194,21 @@ fn decode(lit: &[u8]) -> Option<String> {
         }
     }
     Some(out)
+}
+
+/// Why a `path` attribute's value cannot name a file every host reads alike in the tree, if it cannot: an absolute path,
+/// or one spelt with a backslash, a drive, a component ending in a dot or a space, or a byte outside ASCII. A path
+/// climbing out of the tree is refused as it is resolved (`resolve`).
+fn path_spelling(p: &str) -> Option<&'static str> {
+    if p.starts_with('/') {
+        return Some(OUTSIDE);
+    }
+    let apart = p.contains('\\')
+        || p.contains(':')
+        || p.split('/')
+            .filter(|c| !matches!(*c, "" | "." | ".."))
+            .any(|c| !c.is_ascii() || c.ends_with('.') || c.ends_with(' '));
+    apart.then_some(HOSTS)
 }
 
 /// `rel` resolved against the directory `from` of the tree, lexically and component by component: each component
@@ -1736,6 +1758,74 @@ mod tests {
         ] {
             let r = of(&[("r/src/lib.rs", source)], "r/src/lib.rs");
             assert!(r.unfollowed.is_empty(), "{case}: {:?}", whys(&r));
+        }
+    }
+
+    #[test]
+    fn every_path_is_followed_with_the_module_s_own_file_or_refused() {
+        // Round 12's D2: a `cfg_attr`'s `path` holds only where its `cfg` does, and rustc reads the module's own file
+        // elsewhere — so it is read beside every `path`, a module's file and an inline module's directory alike. D3: an
+        // inner `path` names its own module's directory, which the census does not apply, so it is refused. D4: every
+        // `path` value is checked as it is read, an inline module's among them.
+        let r = of(
+            &[
+                (
+                    "p/src/lib.rs",
+                    "#[cfg_attr(test, path = \"mock.rs\")]\npub mod m;\n\
+                     #[cfg_attr(test, path = \"elsewhere\")]\nmod inl {\n    mod z;\n}\n",
+                ),
+                ("p/src/mock.rs", ""),
+                (
+                    "p/src/m.rs",
+                    "const M: &str = include_str!(\"../../c/m.txt\");\n",
+                ),
+                (
+                    "p/src/inl/z.rs",
+                    "const Z: &str = include_str!(\"../../../c/z.txt\");\n",
+                ),
+                ("c/m.txt", ""),
+                ("c/z.txt", ""),
+            ],
+            "p/src/lib.rs",
+        );
+        for f in [
+            "p/src/mock.rs",
+            "p/src/m.rs",
+            "c/m.txt",
+            "p/src/inl/z.rs",
+            "c/z.txt",
+        ] {
+            assert!(r.files.contains(f), "{f}: {:?}", files(&r));
+            assert!(r.nontest.contains(f), "{f}: {:?}", r.nontest);
+        }
+        assert!(r.unfollowed.is_empty(), "{:?}", whys(&r));
+        for (case, source, why) in [
+            (
+                "an inner path",
+                "mod a {\n    #![path = \"../../c/src\"]\n    pub mod lib;\n}\n",
+                "inner `path`",
+            ),
+            (
+                "an absolute inline path",
+                "#[path = \"/abs/c/src\"]\nmod a {\n    pub mod lib;\n}\n",
+                "outside the commit's tree",
+            ),
+            (
+                "a backslash in an inline path",
+                "#[path = \"..\\\\c\"]\nmod a {\n    pub mod lib;\n}\n",
+                "hosts read apart",
+            ),
+            (
+                "a name outside ASCII in a module's path",
+                "#[path = \"é.rs\"]\nmod a;\n",
+                "hosts read apart",
+            ),
+        ] {
+            let r = of(
+                &[("p/src/lib.rs", source), ("c/src/lib.rs", "")],
+                "p/src/lib.rs",
+            );
+            assert!(refused(&r, why), "{case}: {:?}", whys(&r));
         }
     }
 

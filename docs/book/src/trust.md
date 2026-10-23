@@ -107,7 +107,8 @@ directive reading a file, a path out of the tree, through a symbolic link or spe
 unless an admission, rule `inclusion`, names it, so a spelling it does not know is a refusal, never a miss (leaves
 `M3.5.2.7.1`, `M3.5.2.8.1`). The census reads only what it can check it reads as rustc does: outside comments and
 literals, printable ASCII and the four whitespace characters both skip, a file holding any other byte there or opening
-with a shebang line refused whole (leaf `M3.5.2.9.1`). A library's doc text is read with no markdown — every doc
+with a shebang line refused whole (leaf `M3.5.2.9.1`); every `path` attribute is followed with the module's own
+file beside it, an inner one refused, every path value checked as it is read (leaf `M3.5.2.9.2`). A library's doc text is read with no markdown — every doc
 comment, `doc` literal and document it includes, joined in source order — and each word in it that can make a doc test
 read a file, read past any whitespace or character outside ASCII, is refused, but one a
 backtick opens while no doc text of the library names an error code: no compiled Rust holds a backtick outside a
