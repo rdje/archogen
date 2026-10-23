@@ -149,3 +149,31 @@ read against `M3.5.2.1`'s code and fixtures, so a claim about the gate's behavio
 | R4-R18 | remark | only cross-form read failures are found once the whole file is read | split in the generated-sources clarification |
 | R4-R19 | remark | `eadl-front` omits the third reader; own-property controls and the pinned toolchain unlabelled | the third reader added; each labelled (§5) |
 | R4-R20 | remark | "the two siblings" in `M3.5.1`; whether a harness's target counts as another form's | each sibling's hand-off named; a harness's or a derivation's (§3) |
+
+**Round 5**, `2026-10-23`, a new context at `a203e3ce`, read-only and fenced, the first read against the code: it ran
+the readers' tests, re-measured the inventory (`5 program(s), 8 pair(s), 10 shared item(s)`) and the ledger (76, held),
+and probed the census in a scratch copy of `xtask`. Verdict: not acceptable, 7 defects and 10 remarks. The readers
+exist and their fixtures pass; the census of names missed ten comparisons the probe built, and three coded behaviours
+departed from the records. The census is replaced by the build: what a test-like unit compiles, not what its text
+names, decides whether it joins two roles, so no spelling hides one and every unit that does is named or classified by
+review.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R5-D1 | defect | the census of names misses ten comparisons a probe built — a renamed dependency, `::g`, a nested module, `include!`, `cfg_attr`, a macro, a unit test, a doc test, a bench, a helper's re-export — and the report says nothing | read from the build: each test-like unit of a package whose build, its own development edges followed, compiles role packages of two roots a property rests on is a program target, named by a pair form or classified; the census of names removed (§3, `M3.5.2.2.2`) |
+| R5-D2 | defect | a generator–scheduling-checker test is found and no form can name it; a unit linking both that compares nothing has no form | a derivation's pair is the generator and either checker; a unit that compares nothing is classified by `defprogram`, its reason the reviewed claim (`M3.5.2.2.2`) |
+| R5-D3 | defect | a clause item that is not a name is dropped silently | every clause holds names alone, anything else a read failure (`M3.5.2.2.1`) |
+| R5-D4 | defect | the front's faults within its own form are decided once the file is read, against the generated-sources clarification | decided at the form; the invoked names and two generator roots alone once the file is read (`M3.5.2.2.1`) |
+| R5-D5 | defect | the census makes a test a program target and nothing amends the parent's definition, §6's rows, case 5 or `M3.6.7`'s list | the parent's clarification makes each such unit a §2 program target, so every passage written in that term reads it (`M3.5.2.2.2`) |
+| R5-D6 | defect | §5's derivation row gives the joint comparison §3's class, which §3 leaves to its review | the row is the relation's two derivations (§5) |
+| R5-D7 | defect | `M3.5.1.8`'s plan and verification still take the next push's proposal, whose base lacks `62099a39` | the first run whose base holds it, at the earliest the push after the next (`M3.5.1.8`) |
+| R5-R8 | remark | stated behaviours with no test: the unnamed unit's remedy, the invocation through the gate, `(invokes <a derivation>)`, an empty `installed`, a derivation's provenance, reads and other roles, its package gone | a fixture each (`M3.5.2.2.3`) |
+| R5-R9 | remark | case 5's outside edit touches a file no program reads | a file of the derivation's package outside its units (`M3.5.2.2.3`) |
+| R5-R10 | remark | "`M3.5.2.1`'s commit" is six commits | the ancestry rule names `3f0a27e0`, where both new kinds' encodings stand; "in force" names the readers' leaves |
+| R5-R11 | remark | the book's codes table and a stale "read, not yet built"; its outside list held to `UNSEEN` by nothing | corrected, a test holding the list equal (`M3.5.2.2.3`) |
+| R5-R12 | remark | an error text holds 18 spaces | corrected, its test reading it whole (`M3.5.2.2.1`) |
+| R5-R13 | remark | `ItemId`'s comment omits two kinds | added (`M3.5.2.2.3`) |
+| R5-R14 | remark | `M3.5`'s status and design text are stale | corrected |
+| R5-R15 | remark | the transcription line is unconditional, true only from `M3.4` | conditioned (`M3.5.2.2.3`) |
+| R5-R16 | remark | `NO-SUBPROCESS` "admits" a file that does not exist | "is to admit" (§4) |
+| R5-R17 | remark | the arming evidence lives in ignored `target/` | each leaf records its arms; a durable, re-runnable arming is mutation testing, deferred by the ruling of `2026-10-21` — `M7.6` holds it |

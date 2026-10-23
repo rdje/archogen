@@ -2,9 +2,9 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-23`
-- **Status:** `active` — written `2026-10-23` by leaf `M3.5.2`; rounds 1 to 4 answered the same day; under review
+- **Status:** `active` — written `2026-10-23` by leaf `M3.5.2`; rounds 1 to 5 answered the same day; under review
   ([`decision_trust-role-programs-reviews.md`](../../reviews/decision_trust-role-programs-reviews.md)), from round 5 read
-  against `M3.5.2.1`'s reader and fixtures, from whose commit its rules are in force.
+  against its readers' code and fixtures (`M3.5.2.1`, `M3.5.2.2`), its rules in force as each lands.
 - **External sources:** none beyond the parent's: `ROADMAP.md` §4.4 (its "externally invoked tools", and the classes
   of a shared item, "reference derivation" among them), §7.1's properties and §14.4's cases.
 - **Owner / source:** leaf `M3.5.2` (`docs/tasks/M3.md`), as `M3.5`'s and `M3.5.1`'s reviewed designs assign it, under
@@ -106,7 +106,7 @@ not an executable, the harness or a derivation; `(installed …)` holding more t
 `archogen-install.json` (`archogen_install::FILE`). An invocation is a shared item of the two roots: kind
 `invocation`, identity `<a>+<b> invocation`, the pair in the inventory's order; its content the invoked root's name,
 role and target and the sha256 of the launcher, `crates/archogen-cli/src/sibling.rs`, the one file `NO-SUBPROCESS`
-admits; a front with `(invokes …)` whose commit holds no such blob is `trust-undeclared-input`, decided in step 2 of
+is to admit; a front with `(invokes …)` whose commit holds no such blob is `trust-undeclared-input`, decided in step 2 of
 the generated-sources record's order, when the tree is read. A process is not a compilation: an invocation is never
 `trust-shared-program`. The installed name is no blob and no `(data …)`, so the blob rule of `trust-undeclared-input`
 does not reach it. Today the install places the generator's executable as the front and every other executable root
@@ -134,7 +134,7 @@ none rests on its independence, and its form says so.
 | `crates/archogen-outcome` | every pair it joins | interpretation/normalization | a refusal read as an acceptance for every role | its own tests — one text per record, its consistency rules, the damage sweep; the exit code's second channel *pending* `M3.5.1.4` |
 | `crates/archogen-json` | every pair it joins | interpretation/normalization | a parsing fault common to every record and server | its own tests — RFC 8259 strictness, a member named twice refused; the records' readers re-write what they read |
 | `crates/archogen-transport` | every pair it joins | interpretation/normalization | a framing fault common to every server | *pending* `M3.5.1.6` |
-| each shared derivation | generator, configuration checker | reference derivation | as §3 | as §3 |
+| the relation's derivations, `production` and `vocabulary` | generator, configuration checker | reference derivation | as §3 | as §3 |
 | an invocation | the front and each invoked root | interpretation/normalization | the front reporting a refused or unchecked result as checked | *pending* `M3.5.1.4`: the exit code agreeing with the record, the subject's digests, the program's sha256 |
 | the build configuration | every new pair | infrastructure | a toolchain, profile or flag fault common to every role | the pinned toolchain (`SOURCE-LEDGER`) and the item compared on the baseline's host, change control |
 
@@ -148,7 +148,7 @@ the parent's §2 gains this record's forms and clauses and its sentence on `arch
 answered; case 4, `trust-inventory-stale` and §7's package contents gain the install manifest as `M4.7` records it;
 `TI-H19` is amended in the parent's ledger in this change and `TI-H18` stands. Ledger rows owned elsewhere that the
 reading rule extends — `GS-H10`'s acceptance of live `defgenerated` forms among them — are quoted below for their
-leaves. Both records state, from `b788ec4e`, that these read with it from `M3.5.2.1`'s commit.
+leaves. Both records state, from `b788ec4e`, that these read with it as its readers land (`M3.5.2.1`, `M3.5.2.2`).
 
 ## Why
 
@@ -163,7 +163,7 @@ leaves. Both records state, from `b788ec4e`, that these read with it from `M3.5.
 **A reader before its form.** The gate is built from the base (§1), so a form's reader lands first (`M3.5.2.1`),
 reaches `main` through a cadence push, and only a commit of a later push writes the form. **A form from the runner.**
 The forms of the shared items a commit adds, or whose measured aspects it moves, are the proposal of a runner run whose
-base holds the encoding the judging gate uses — today `62099a39` and, for the new kinds, `M3.5.2.1`'s commit, decided
+base holds the encoding the judging gate uses — today `62099a39` and, for the new kinds, `3f0a27e0`, decided
 by ancestry against the base the report names — committed in a leaf of their own that waits on the runner, writing §5's
 row and recording that base. A proposal holds for the item as the run measured it, so the gate on the baseline's host
 refuses the item until a push holds the form and nothing after it moves the item; each push's report says which.
@@ -195,3 +195,4 @@ refuses the item until a push holds the form and nothing after it moves the item
 | 2 | `2026-10-23` | 14 | 6 | not acceptable; every finding answered |
 | 3 | `2026-10-23` | 10 | 10 | not acceptable; every finding answered |
 | 4 | `2026-10-23` | 10 | 10 | not acceptable; every finding answered, and the method changed: §6's enumeration replaced by a reading rule complete by construction, a missing comparison found by machine, and from round 5 the record read against `M3.5.2.1`'s code and fixtures |
+| 5 | `2026-10-23` | 7 | 10 | not acceptable, read against the code; every finding answered, the census read from the build (`M3.5.2.2`) |

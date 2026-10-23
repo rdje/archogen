@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers' programs in the trust record, round 5 read against the code
+
+`ARCHOGEN-M3-0896` (leaf `M3.5.2`), `2026-10-23`.
+
+- The fifth review read the record against the gate's code and found 7 defects and 10 remarks: a census that reads
+  crate names from a test's text misses a comparison spelt another way. From the next leaf the build decides: a test
+  whose package compiles two roles' packages is a program the gate names or a review classifies.
+
 ## archogen — the trust gate's readers for the checkers' programs, whole
 
 `ARCHOGEN-M3-0895` (leaf `M3.5.2.1.6`), `2026-10-23`.
