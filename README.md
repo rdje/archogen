@@ -74,7 +74,8 @@ it holds for any agent or human identically:
 - Durable facts go to [`docs/decisions/`](docs/decisions/); the resume pointer is
   [`MEMORY.md`](MEMORY.md) ([`MEMORY_ARCHITECTURE.md`](MEMORY_ARCHITECTURE.md)).
 - Which documents are bounded snapshots and which are histories:
-  [`LIVE_DOCUMENT_SIZE_CONTAINMENT.md`](LIVE_DOCUMENT_SIZE_CONTAINMENT.md).
+  [`LIVE_DOCUMENT_SIZE_CONTAINMENT.md`](LIVE_DOCUMENT_SIZE_CONTAINMENT.md); how finished work leaves the task
+  trees, byte for byte, written for any project to adopt: [`docs/TASK_TREE_SEALING.md`](docs/TASK_TREE_SEALING.md).
 - Commit per [`COMMIT.md`](COMMIT.md); for any unknown, reach for a tool first
   ([`TOOLBOX.md`](TOOLBOX.md)). The enforced doctrines are listed in
   [`DOCTRINE_ENFORCEMENT.md`](DOCTRINE_ENFORCEMENT.md).

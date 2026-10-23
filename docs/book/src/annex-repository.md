@@ -594,7 +594,8 @@ $ bash scripts/check_history_ledgers.sh --self-test  # its RED arms, on scratch 
 ## Finished work leaves the task trees
 
 A task tree records every leaf of its work, with its checklist and evidence. Most of it is finished work: on
-`2026-09-30`, 77% of `docs/tasks/M1.md` and 79% of `docs/tasks/PROGRAM.md`.
+`2026-09-30`, 77% of `docs/tasks/M1.md` and 79% of `docs/tasks/PROGRAM.md`. The approach, written for any project and
+any harness to adopt, is `docs/TASK_TREE_SEALING.md`.
 - **What moves.** Once every leaf of one of a tree's top-level parts is done, those leaves move, byte for byte, into
   one file under `docs/task-history/`. A top-level part can stay open for long — one of its leaves waiting on a
   decision — so, below an open one, each finished part moves the same way, the largest it can, into a file of its own;

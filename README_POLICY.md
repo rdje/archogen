@@ -56,6 +56,7 @@ and archive-stub rules still govern other material. A bounded parent cannot impo
 | `ROADMAP.md` | navigation + overflow | the director | maintained_reference | — | 1100 | 131072 | 1024 | — | — |
 | `TOOLBOX.md` | navigation + overflow | `PROGRAM` | maintained_reference | — | 110 | 28672 | 2048 | — | — |
 | `VISIBILITY.md` | navigation | `PROGRAM` | maintained_reference | — | 90 | 5120 | 200 | — | — |
+| `docs/TASK_TREE_SEALING.md` | navigation | `PROGRAM.106` | maintained_reference | — | 480 | 40960 | 512 | — | — |
 | `docs/TASK_TREE.md` | navigation + overflow | `PROGRAM.17.2` | bounded_snapshot | — | LIVE-SNAPSHOTS | LIVE-SNAPSHOTS | LIVE-SNAPSHOTS | — | `CHANGELOG.md`, `docs/tasks/` |
 | `docs/book/` | navigation + overflow | `PROGRAM` | maintained_reference | unbounded | unbounded | unbounded | unbounded | unbounded | — |
 | `docs/history/` | overflow | `PROGRAM.31` | archive_terminal | HISTORY-LEDGERS | 1200 | 131072 | 256 | HISTORY-LEDGERS | — |

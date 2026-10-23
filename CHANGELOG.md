@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — task-tree sealing, written for any project to adopt
+
+`ARCHOGEN-PROGRAM-0900` (leaf `PROGRAM.106`), `2026-10-23`.
+
+- `docs/TASK_TREE_SEALING.md` explains how this project keeps its task trees short without losing a byte of their
+  history, in terms any project and any agent or harness can adopt. Next, the engine's API reference by rustdoc.
+
 ## archogen — every rule the checkers' trust record states, tested
 
 `ARCHOGEN-M3-0899` (leaf `M3.5.2.2.3`), `2026-10-23`.
