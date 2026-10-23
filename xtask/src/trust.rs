@@ -1371,6 +1371,167 @@ fn target_closure(
     closure
 }
 
+/// Every integration test whose sources name a crate of the generator's role packages and a crate of a checker's, and
+/// that no `defharness` or `defderivation` names, as an unclassified program target is reported: so a comparison two
+/// roles share is found by machine, not by hand (`decision_trust-role-programs.md` §3).
+fn unnamed_comparisons(
+    roots: &Roots,
+    tree: &Tree,
+    every_target: &BTreeMap<String, Vec<(Vec<String>, String)>>,
+    target_sources: &TargetSources,
+) -> Vec<Json> {
+    let lib_crate = |dir: &str| {
+        every_target.get(dir).and_then(|targets| {
+            targets
+                .iter()
+                .find(|(kinds, _)| kinds.iter().any(|k| k == "lib" || k == "rlib"))
+                .map(|(_, name)| name.replace('-', "_"))
+        })
+    };
+    let crates_of = |roles: &[&str]| -> BTreeSet<String> {
+        roots
+            .programs
+            .iter()
+            .filter(|p| p.pair.is_none() && roles.contains(&p.role.as_str()))
+            .flat_map(|p| p.role_packages.iter())
+            .filter_map(|dir| lib_crate(dir))
+            .collect()
+    };
+    let generator = crates_of(&["generator"]);
+    let checkers = crates_of(&["configuration-checker", "scheduling-checker"]);
+    let mut out = Vec::new();
+    for (dir, targets) in every_target {
+        for (_, name) in targets
+            .iter()
+            .filter(|(kinds, _)| kinds.iter().any(|k| k == "test"))
+        {
+            let named = roots.programs.iter().any(|p| {
+                p.pair.is_some() && &p.package == dir && p.target == Target::Test(name.clone())
+            });
+            if named {
+                continue;
+            }
+            let crates: BTreeSet<String> = target_sources
+                .get(&(dir.clone(), "test".to_owned(), name.clone()))
+                .into_iter()
+                .flatten()
+                .flat_map(|src| named_crates(tree, src))
+                .collect();
+            let g = crates.iter().find(|c| generator.contains(*c));
+            let c = crates.iter().find(|c| checkers.contains(*c));
+            if let (Some(g), Some(c)) = (g, c) {
+                out.push(obj(vec![
+                    ("package", s(dir)),
+                    ("kind", s("test")),
+                    ("name", s(name)),
+                    (
+                        "status",
+                        s(format!(
+                            "trust-unclassified-program: the test `{name}` of `{dir}` names `{g}`, the generator's, \
+                             and `{c}`, a checker's, and no `defderivation` names it"
+                        )),
+                    ),
+                ]));
+            }
+        }
+    }
+    out
+}
+
+/// The crates a crate's sources name — a path's first segment, a `use`'s root, an `extern crate` — read from `root`
+/// and every module file its `mod` declarations reach, a `#[path]` followed as rustc follows it; read with the
+/// catalog's tokenizer, so a name in a comment or a literal is none.
+fn named_crates(tree: &Tree, root: &str) -> BTreeSet<String> {
+    use archogen_catalog::package::Kind;
+    let mut named = BTreeSet::new();
+    let mut seen = BTreeSet::new();
+    // (a file, whether it is a crate root or a `mod.rs`, whose modules lie beside it rather than below it)
+    let mut todo = vec![(root.to_owned(), true)];
+    while let Some((file, owns_dir)) = todo.pop() {
+        if !seen.insert(file.clone()) {
+            continue;
+        }
+        let Some(bytes) = tree.get(&file) else {
+            continue;
+        };
+        let Ok(toks) = package::tokens(bytes) else {
+            continue;
+        };
+        let ident = |i: usize| match toks.get(i).map(|t| &t.kind) {
+            Some(Kind::Ident(n, _)) => Some(n.as_str()),
+            _ => None,
+        };
+        let punct = |i: usize, c: char| matches!(toks.get(i).map(|t| &t.kind), Some(Kind::Punct(p)) if *p == c);
+        let (dir, stem) = file
+            .rsplit_once('/')
+            .map_or(("", file.as_str()), |(d, f)| (d, f));
+        let stem = stem.trim_end_matches(".rs");
+        let below = if owns_dir {
+            dir.to_owned()
+        } else {
+            format!("{dir}/{stem}")
+        };
+        let mut path_attribute: Option<String> = None;
+        for i in 0..toks.len() {
+            // `#[path = "…"]`, for the `mod` that follows it.
+            if ident(i) == Some("path")
+                && matches!(
+                    toks.get(i.wrapping_sub(1)).map(|t| &t.kind),
+                    Some(Kind::Open('['))
+                )
+                && punct(i + 1, '=')
+            {
+                if let Some(t) = toks.get(i + 2).filter(|t| matches!(t.kind, Kind::Str)) {
+                    let text = String::from_utf8_lossy(&bytes[t.at..t.end]);
+                    path_attribute = Some(text.trim_matches('"').to_owned());
+                }
+            }
+            let Some(name) = ident(i) else { continue };
+            let after_path_separator = i >= 2 && punct(i - 1, ':') && punct(i - 2, ':');
+            if punct(i + 1, ':') && punct(i + 2, ':') && !after_path_separator {
+                named.insert(name.to_owned());
+            }
+            if (name == "use" || (name == "crate" && ident(i.wrapping_sub(1)) == Some("extern")))
+                && ident(i + 1).is_some()
+            {
+                named.insert(ident(i + 1).unwrap_or_default().to_owned());
+            }
+            if name == "mod" && punct(i + 2, ';') {
+                if let Some(module) = ident(i + 1) {
+                    match path_attribute.take() {
+                        Some(relative) => {
+                            todo.push((normalized(&format!("{dir}/{relative}")), true))
+                        }
+                        None => {
+                            todo.push((format!("{below}/{module}.rs"), false));
+                            todo.push((format!("{below}/{module}/mod.rs"), true));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for ignored in ["crate", "self", "super", "std", "core", "alloc"] {
+        named.remove(ignored);
+    }
+    named
+}
+
+/// `path` with each `..` taking the segment before it away, and each `.` dropped.
+fn normalized(path: &str) -> String {
+    let mut parts: Vec<&str> = Vec::new();
+    for part in path.split('/') {
+        match part {
+            "." | "" => {}
+            ".." => {
+                parts.pop();
+            }
+            other => parts.push(other),
+        }
+    }
+    parts.join("/")
+}
+
 fn classify_programs(
     roots: &Roots,
     program_targets: &[(String, String, String)],
@@ -1982,8 +2143,15 @@ pub fn inventory_with(
         }
     }
 
-    let (program_targets, classifications_unused) =
+    let (mut program_targets, classifications_unused) =
         classify_programs(&roots, &program_targets, &graph);
+    // A comparison no form names, found by machine (`decision_trust-role-programs.md` §3).
+    program_targets.extend(unnamed_comparisons(
+        &roots,
+        &tree,
+        &every_target,
+        &target_sources,
+    ));
 
     let mut rules = Rules {
         tree: &tree,
@@ -4650,6 +4818,111 @@ pub(crate) mod tests {
             &refused(f.run()),
             "trust-undeclared-input: `gen` invokes programs, and its launcher `crates/archogen-cli/src/sibling.rs` is not a \
              blob of the commit",
+        );
+    }
+
+    /// The generator `gen`, its role packages `crates/a` and `crates/g`, the configuration checker `cfg` in `crates/c`,
+    /// and `crates/r`, whose test `compare` reads `test_src` beside `extra` files; `forms` appended to the roots.
+    fn comparisons(name: &str, test_src: &str, extra: &[(&str, &str)], forms: &str) -> Fixture {
+        let roots = format!(
+            "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\" \"crates/g\"))\n\
+             (defroot cfg (role configuration-checker) (package \"crates/c\") (target lib) (role-packages \"crates/c\"))\n{forms}"
+        );
+        let mut files = vec![
+            ("Cargo.toml", WS.to_owned()),
+            ("trust/roots.eadl", roots),
+            (
+                "crates/a/Cargo.toml",
+                manifest("a", "[dependencies]\ng = { path = \"../g\" }\n"),
+            ),
+            ("crates/a/src/main.rs", "fn main() { g::x(); }\n".to_owned()),
+            ("crates/g/Cargo.toml", manifest("g", "")),
+            (
+                "crates/g/src/lib.rs",
+                "pub fn x() -> u32 { 1 }\n".to_owned(),
+            ),
+            ("crates/c/Cargo.toml", manifest("c", "")),
+            (
+                "crates/c/src/lib.rs",
+                "pub fn x() -> u32 { 1 }\n".to_owned(),
+            ),
+            (
+                "crates/r/Cargo.toml",
+                manifest(
+                    "r",
+                    "[dev-dependencies]\ng = { path = \"../g\" }\nc = { path = \"../c\" }\n",
+                ),
+            ),
+            ("crates/r/src/lib.rs", "pub fn r() {}\n".to_owned()),
+            ("crates/r/tests/compare.rs", test_src.to_owned()),
+        ];
+        files.extend(extra.iter().map(|(path, text)| (*path, (*text).to_owned())));
+        fixture(name, "1.95.0", &files)
+    }
+
+    /// The unnamed comparisons an inventory reports.
+    fn unnamed(inv: &Json) -> Vec<String> {
+        inv.get("program-targets")
+            .map(Json::elements)
+            .unwrap_or_default()
+            .iter()
+            .filter(|t| t.get("kind").and_then(Json::as_str) == Some("test"))
+            .filter_map(|t| t.get("status").and_then(Json::as_str).map(str::to_owned))
+            .collect()
+    }
+
+    #[test]
+    fn a_comparison_no_form_names_is_found_by_machine() {
+        crate::trust_test_process::bounded!(a_comparison_no_form_names_is_found_by_machine);
+        // `decision_trust-role-programs.md` §3: a test naming a crate of the generator's role packages and one of a
+        // checker's, and named by no form, is reported; its names read from its modules, `#[path]` followed, and never
+        // from a comment or a literal.
+        let both = "#[test]\nfn same() { assert_eq!(g::x(), c::x()); }\n";
+        let want = "trust-unclassified-program: the test `compare` of `crates/r` names `g`, the generator's, and `c`, a \
+                    checker's, and no `defderivation` names it";
+        assert_eq!(
+            unnamed(&written(comparisons("comparison", both, &[], "").run())),
+            [want]
+        );
+        let derivation =
+            "(defderivation compare (pair gen cfg) (package \"crates/r\") (test compare) (reason \"the comparison\"))\n";
+        assert!(
+            unnamed(&written(
+                comparisons("comparison-named", both, &[], derivation).run()
+            ))
+            .is_empty(),
+            "named by a form, not reported"
+        );
+        let one = "#[test]\nfn one() { assert_eq!(g::x(), 1); }\n";
+        assert!(
+            unnamed(&written(
+                comparisons("comparison-one-role", one, &[], "").run()
+            ))
+            .is_empty(),
+            "one role's crates alone"
+        );
+        let quiet = "// c::x() would compare\n#[test]\nfn one() { assert_eq!(g::x(), \"c::x\".len() as u32 - 3); }\n";
+        assert!(
+            unnamed(&written(
+                comparisons("comparison-quiet", quiet, &[], "").run()
+            ))
+            .is_empty(),
+            "a name in a comment or a literal is none"
+        );
+        let through_path = "#[path = \"../shared/both.rs\"]\nmod both;\n";
+        let module = "#[test]\nfn same() { assert_eq!(g::x(), c::x()); }\n";
+        assert_eq!(
+            unnamed(&written(
+                comparisons(
+                    "comparison-path",
+                    through_path,
+                    &[("crates/r/shared/both.rs", module)],
+                    ""
+                )
+                .run()
+            )),
+            [want],
+            "a `#[path]` module's names count"
         );
     }
 

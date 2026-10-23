@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a comparison found by machine
+
+`ARCHOGEN-M3-0894` (leaf `M3.5.2.1.5`), `2026-10-23`.
+
+- The trust gate reads every integration test's sources and reports one that names both a generator's crate and a
+  checker's while no form names it, so a comparison two roles share cannot go unseen; today's tree has none.
+
 ## archogen — a result is a root's, never a comparison's
 
 `ARCHOGEN-M3-0893` (leaf `M3.5.2.1.4`), `2026-10-23`.

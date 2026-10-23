@@ -601,8 +601,14 @@ pub fn judge(
             c.package == field("package") && c.kind == field("kind") && c.target == field("name")
         });
         if !classified {
+            // A test is named by a `defderivation`, never classified (`decision_trust-role-programs.md` §3).
+            let remedy = if field("kind") == "test" {
+                "name it by a `defderivation` form"
+            } else {
+                "classify it, or make it a root"
+            };
             formless.push(format!(
-                "trust-form-missing: the {} `{}` of `{}` has no form in {} — classify it, or make it a root",
+                "trust-form-missing: the {} `{}` of `{}` has no form in {} — {remedy}",
                 field("kind"),
                 field("name"),
                 field("package"),

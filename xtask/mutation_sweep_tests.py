@@ -544,7 +544,7 @@ class ObserverCloseTests(DiscoveryFixture):
         expected = {
             'xtask/src/trust_compiler_observer.rs': '58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98',
             'xtask/src/trust_compiler.rs': '1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973',
-            'xtask/src/trust.rs': 'bb46274fa663096ac50a8e49cdc34704b3f3273d930b37aea80b75ff5a05855d',  # re-pinned by M3.5.2.1.3: the launcher's check and the invocation item alone; the observer's close unchanged
+            'xtask/src/trust.rs': '9e275031f197db210fe834984b4e256f537750d37da20e6c5e6a68eb29b4c58a',  # re-pinned by M3.5.2.1.5: the census of unnamed comparisons and the test's remedy alone; the observer's close unchanged
         }
         def verify(inputs):
             for path, digest in expected.items():
@@ -1504,7 +1504,7 @@ os.execvp("rustc", ["rustc"] + arguments)
         ]
         inputs = {path: (ROOT / path).read_bytes() for path in paths}
         expected = {
-            'xtask/src/trust.rs': 'ea4862521c3ffbd2ce490d2fca86c50fb12baf5eac3490089e763ee7855d4eb9',  # re-pinned by M3.5.2.1.3: the launcher's check and the invocation item alone; the caller suffix unchanged
+            'xtask/src/trust.rs': '93ea80d30fc77532260f414e5895371b648a2f971bdb92d7296e9e69e74b2153',  # re-pinned by M3.5.2.1.5: the census of unnamed comparisons and the test's remedy alone; the caller suffix unchanged
             'xtask/src/trust_compiler.rs': '634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70',
             'xtask/src/trust_compiler_observer.rs': 'c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f',
             'xtask/src/catalog_build.rs': 'd3e8865c3633de9f4cafb82c3613f0ee82df0c065012b732469cda5951221ed2',
@@ -1971,7 +1971,7 @@ class IteratorTests(DiscoveryFixture):
             entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
             guarded = {
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
-                    "ea4862521c3ffbd2ce490d2fca86c50fb12baf5eac3490089e763ee7855d4eb9"),  # re-pinned by M3.5.2.1.3: the launcher's check and the invocation item alone; the absolute cwd unchanged
+                    "93ea80d30fc77532260f414e5895371b648a2f971bdb92d7296e9e69e74b2153"),  # re-pinned by M3.5.2.1.5: the census of unnamed comparisons and the test's remedy alone; the absolute cwd unchanged
                 "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
                     "634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70"),
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],
@@ -1981,7 +1981,7 @@ class IteratorTests(DiscoveryFixture):
                 "base environment": (environment,
                     "8b6fa81a2d715c2e42f8ab75a02b6e0c037c97d2f55e71c44c21e4a5516ee74c"),
                 "gate production": (gate.split("#[cfg(test)]", 1)[0],
-                    "0630579b37dceedb228fbd7188eebd517baf74437911f17c6b10e70a2ab6f972"),  # re-pinned by M3.5.2.1.2: a derivation keyed on its pair, its items and its identity alone; the gate's absolute paths unchanged
+                    "bd457f835d47cc6ea9a6a54d54965a9491df790ff3c8d2fb9b7d65df565a4acd"),  # re-pinned by M3.5.2.1.5: the census of unnamed comparisons and the test's remedy alone; the gate's absolute paths unchanged
                 "repository root": (root, "84ec4298740c835ae19ed9f2cff11f0f985cd59a4f3c5c205e9abd47805b6d77"),
                 # re-pinned by M3.5.1.3: the `install` arm, which hands `trust::inventory` the same absolute
                 # `repo_root()`, and an `out` joined to it, as the `trust-inventory` arm does

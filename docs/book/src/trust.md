@@ -87,7 +87,10 @@ no root: its pair takes its item, `shared-derivation`, one item a form (leaf `M3
 invokes share an `invocation` item: the invoked root's name, role and target, and the sha256 of the launcher — the
 file the constant `LAUNCHER` in `xtask/src/trust.rs` names, which the front gains with leaf `M3.5.1.4` — so an edit to
 the launcher, whose acceptance contract carries the risk, is reported; a front that invokes while its commit holds no
-launcher is refused (leaf `M3.5.2.1.3`).
+launcher is refused (leaf `M3.5.2.1.3`). A comparison no form names is found by machine: an integration test whose
+sources — its crate root and the modules it declares, a `#[path]` followed — name a crate of the generator's role
+packages and one of a checker's, never in a comment or a literal, and that no pair form names, is reported as an
+unclassified program is, and refused on the baseline's host until a `defderivation` names it (leaf `M3.5.2.1.5`).
 
 A program that would run two roles is refused: one program cannot be independent of itself. Every other program the
 workspace can build — an example, a diagnostic tool, the browser module — is classified as not a root, with a reason
