@@ -131,6 +131,16 @@ def self_test(root: Path) -> int:
             "printf called > renderer-ran\n"
         )
         stub.chmod(0o755)
+        # The wrapper documents the crates `docs/book/api.crates` lists after the renderer (leaf `PROGRAM.107`): one
+        # crate here, and a cargo that writes its page under the `--target-dir` it is given.
+        (work / "docs/book/api.crates").write_text("# the wrapper fixture's one crate\nfixture\n")
+        cargo = work / "bin/cargo"
+        cargo.write_text(
+            "#!/usr/bin/env bash\n"
+            'while [ "$1" != --target-dir ]; do shift; done\n'
+            'mkdir -p "$2/doc/fixture" && : > "$2/doc/fixture/index.html"\n'
+        )
+        cargo.chmod(0o755)
         subprocess.run(["git", "init", "-q", str(work)], check=True)
         env = dict(os.environ, PATH=str(work / "bin") + os.pathsep + os.environ["PATH"])
         chapter = work / "docs/book/src/nested/control.md"

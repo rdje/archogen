@@ -13,7 +13,7 @@ help:
 	@echo "make fmt             - cargo fmt --all"
 	@echo "make clippy          - cargo clippy --all-targets -- -D warnings"
 	@echo "make test            - cargo test --all"
-	@echo "make book            - build the mdBook (requires mdbook)"
+	@echo "make book            - build the mdBook and its API reference (requires mdbook)"
 	@echo "make hooks           - install the git hooks (core.hooksPath=.githooks)"
 	@echo "make bootstrap       - first-time project bootstrap"
 	@echo "make update-scaffold - pull the latest bedrock spine (set URL=<bedrock-repo>)"

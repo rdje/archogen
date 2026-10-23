@@ -333,7 +333,7 @@ const TIERS: &[Tier] = &[
             SELF_TESTS,
             Step {
                 name: "book",
-                proves: "the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable",
+                proves: "the mdBook builds, with its pinned release, and the API reference with it, every link into it resolving — it is the director's window, so a broken book is a broken deliverable",
                 action: Action::Run {
                     program: "scripts/build_book.sh",
                     args: &[],

@@ -6,6 +6,11 @@
 //! vocabulary, the record's writer, and the record's reader, which decides whether a plan is built (`M3.5.1`). It
 //! holds no role's judgement: what a language verdict is in this vocabulary stays with the engine API, so nothing of
 //! the language's reader is compiled here.
+//!
+//! The contract is the book's: [*What is versioned, and what changing it costs*](../../versions.html).
+//! This reference is generated from the code and documents it, item by item (`docs/book/api.crates`).
+
+#![deny(missing_docs)]
 
 pub mod record;
 mod status;

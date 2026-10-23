@@ -10,7 +10,7 @@
 //! fields that later layers fill in. They live here rather than in each layer's own type
 //! because a user should not be able to tell, from the shape of a message, which pass produced
 //! it — and because a repair direction that is optional in the type is a repair direction that
-//! goes missing under deadline. [`Diagnostic::new`] requires one.
+//! goes missing under deadline. [`Diagnostic::error`] requires one.
 
 use crate::source::{SourceMap, Span};
 

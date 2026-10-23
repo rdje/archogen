@@ -14,6 +14,11 @@
 //! * **Comments survive.** They are semantically inert to the language and are still kept with
 //!   their spans, because the boundary corpus carries its case metadata in them. Discarding
 //!   them would force a second, divergent parser to exist just to read those headers.
+//!
+//! The contract is the book's: [*Reading a description*](../../reading.html).
+//! This reference is generated from the code and documents it, item by item (`docs/book/api.crates`).
+
+#![deny(missing_docs)]
 
 pub mod diagnostic;
 pub mod form;

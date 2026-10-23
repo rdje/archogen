@@ -241,7 +241,7 @@ impl ValueType {
     /// Whether a form is this type.
     ///
     /// ⛔ [`Self::Quantity`] admits **no** single form, and that is a true statement rather than a hole:
-    /// a quantity is two forms, so the pair is read by [`check_values`] through
+    /// a quantity is two forms, so the pair is read by `check_values` through
     /// [`Quantity::read`]. A positional loop that called this method for every type would refuse every
     /// quantity, which is why `a_quantity_value_type_consumes_two_forms_and_is_read_by_the_pair` pins
     /// the width and the reading rather than only the acceptance.

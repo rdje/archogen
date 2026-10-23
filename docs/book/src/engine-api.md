@@ -275,6 +275,29 @@ The table also says, for each command, whether a programmatic consumer is offere
 as well, and since `2026-10-23` the checkers' own commands, `plan-check` and `analyze`: the generator's server can run
 neither, in its program or as a process, so each checker serves its own tools (findings §16 (a), leaf `M3.5.1.5.2`).
 
+### The reference generated from the code
+
+This chapter, and the chapters it cites, are the contract. Beside the book, rustdoc documents the crates a consumer
+compiles against, item by item, from the code itself (leaf `PROGRAM.107`); the book's build writes it under `api/`,
+and it is never committed. The crates it publishes are the ones `docs/book/api.crates` lists:
+
+| Crate | Its reference | Its contract |
+| --- | --- | --- |
+| `crates/archogen-api` | [`archogen_api`](api/archogen_api/index.html) | this chapter |
+| `crates/archogen-outcome` | [`archogen_outcome`](api/archogen_outcome/index.html) | [What is versioned](versions.md) |
+| `crates/archogen-json` | [`archogen_json`](api/archogen_json/index.html) | this chapter, the MCP server |
+| `crates/archogen-digest` | [`archogen_digest`](api/archogen_digest/index.html) | [What a report may claim](evidence.md) |
+| `crates/archogen-install` | [`archogen_install`](api/archogen_install/index.html) | [What is versioned](versions.md) |
+| `crates/eadl-front` | [`eadl_front`](api/eadl_front/index.html) | [Reading a description](reading.md) |
+| `crates/eadl-model` | [`eadl_model`](api/eadl_model/index.html) | [Kinds and schemas](kinds.md) |
+
+Each crate denies missing documentation, so no public item is published undocumented; rustdoc runs with warnings
+denied, so a doc link that resolves nowhere fails the book; and every link a chapter makes into `api/` must name a
+listed crate (`scripts/check_book_anchors.sh`) and resolve in the reference just built (`scripts/build_book.sh`). Each
+crate's own documentation links back to its chapter. A record's format — `archogen-result/1`, `archogen-install/1` —
+is specified here and in its records, once; the reference shows the types that read and write it. The command line,
+the language and the MCP surface are not Rust items, and stay the book's alone.
+
 ## Today and ahead
 
 - **Today:** one operation, `check`, through four doors — the command line, the library, the page and the MCP

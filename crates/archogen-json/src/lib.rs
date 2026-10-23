@@ -32,6 +32,11 @@
 //!
 //! **A number keeps its text.** It is checked against the grammar and never converted, so a request's `id` is
 //! answered with exactly the text it came with, as JSON-RPC 2.0 asks, and no precision is lost to a float.
+//!
+//! The contract is the book's: [*The engine API*](../../engine-api.html).
+//! This reference is generated from the code and documents it, item by item (`docs/book/api.crates`).
+
+#![deny(missing_docs)]
 
 use std::collections::HashSet;
 use std::fmt;
@@ -43,10 +48,15 @@ pub const MAX_DEPTH: usize = 64;
 /// A JSON value.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Value {
+    /// `null`.
     Null,
+    /// `true` or `false`.
     Bool(bool),
+    /// A number, kept as its text.
     Number(Number),
+    /// A string, its escapes read.
     String(String),
+    /// Elements in the order they were read or made.
     Array(Vec<Value>),
     /// Members in the order they were read or made. The reader refuses a name given twice.
     Object(Vec<(String, Value)>),
@@ -102,7 +112,10 @@ impl Value {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RefusalKind {
     /// Longer than the bound the caller gave.
-    TooLong { limit: usize },
+    TooLong {
+        /// The bound, in bytes.
+        limit: usize,
+    },
     /// Not UTF-8.
     NotUtf8,
     /// A byte order mark before the value.
@@ -130,7 +143,9 @@ pub enum RefusalKind {
 /// A text the reader refused: why, and the byte offset where it stopped.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Refusal {
+    /// Why it was refused.
     pub kind: RefusalKind,
+    /// The byte offset where the reader stopped.
     pub at: usize,
 }
 

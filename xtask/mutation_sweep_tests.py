@@ -1514,7 +1514,7 @@ os.execvp("rustc", ["rustc"] + arguments)
             'crates/archogen-catalog/src/manifest.rs': '110c489a0e9d59435c0df770e32d7ab600c4de5cac3a9f0ca1706c25792de01b',
             'crates/archogen-catalog/src/tree.rs': '5bb9030f10feecadd27f02b0d476901b4cec958196c492947290fb8318c1ad78',
             'crates/archogen-catalog/src/grammar.rs': '6b60d509abf08334f308e7fef00b711203288e48e5786802a5c153e50f9bf43f',
-            'xtask/src/main.rs': 'de1ba9c6b427a24daa66d07ae2523153a4890ed2b2b03297377837efde117582',  # re-pinned by M3.5.1.3: `mod install`, its dispatch arm and help line; the trust commands' wiring unchanged
+            'xtask/src/main.rs': '4c36b78aed6cc2cc45ef1542a537ecf4a6d9260368d76453bfbe7724c9e925ac',  # re-pinned by PROGRAM.107: the book step's line names the API reference; the trust commands' wiring unchanged
             'crates/archogen-catalog/src/lib.rs': '1e299ccfab838708b41afc6ba366bb890a09dc5195957bb6690cef509312703a',
             'xtask/Cargo.toml': '7ec83341e8ba3104c8483930250683a0750af941be130b31bf950192e46568ab',  # re-pinned by M3.5.1.3: the dependency on archogen-install alone; no reader's wiring changed
             'crates/archogen-catalog/Cargo.toml': '1e8266bd7987f766565e66ddca4d6fbc277bfc853771dfec61fa8050fea0629d',

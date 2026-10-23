@@ -4,6 +4,11 @@
 //! Nothing here reads source text or chooses an implementation. This crate owns *what a
 //! description means* once it has been read; `eadl-front` owns turning bytes into forms, and
 //! the engine crates own deciding what to build from it.
+//!
+//! The contract is the book's: [*Kinds and schemas*](../../kinds.html).
+//! This reference is generated from the code and documents it, item by item (`docs/book/api.crates`).
+
+#![deny(missing_docs)]
 
 pub mod boundary;
 pub mod check;

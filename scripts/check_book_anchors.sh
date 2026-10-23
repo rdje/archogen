@@ -119,6 +119,37 @@ if [ "$normative" -eq 0 ]; then
   nothing, and the language reference the frontend is held to is gone."
 fi
 
+# Leg 3, REFERENCED (leaf `PROGRAM.107`): the crates the book's API reference publishes, `docs/book/api.crates`, each a
+# workspace crate that denies missing docs, and every link a chapter makes into `api/` naming one of them. That the page
+# itself exists is `scripts/build_book.sh`'s to check, once rustdoc has written it; this leg needs no build.
+API_CRATES="${BOOK_API_CRATES:-docs/book/api.crates}"
+published=0
+if [ -f "$API_CRATES" ]; then
+  listed="$(grep -vE '^[[:space:]]*(#|$)' "$API_CRATES" || true)"
+  while IFS= read -r crate; do
+    [ -n "$crate" ] || continue
+    published=$((published + 1))
+    lib="crates/$crate/src/lib.rs"
+    if [ ! -f "$lib" ]; then
+      note "$API_CRATES lists \`$crate\`, which has no \`$lib\`."
+    elif ! grep -qxF '#![deny(missing_docs)]' "$lib"; then
+      note "$API_CRATES lists \`$crate\`, whose \`$lib\` does not deny missing docs — its reference could publish an
+  item nobody documented."
+    fi
+  done <<< "$listed"
+  names=" $(printf '%s\n' "$listed" | tr '-' '_' | tr '\n' ' ')"
+  while IFS= read -r hit; do
+    [ -n "$hit" ] || continue
+    crate="${hit#*](api/}"; crate="${crate%%/*}"
+    case "$names" in
+      *" $crate "*) ;;
+      *) note "${hit%%:*} links into \`api/$crate\`, which is no crate $API_CRATES publishes." ;;
+    esac
+  done < <(grep -oE '\]\(api/[^)]*' "$SRC"/*.md /dev/null || true)
+else
+  note "there is no $API_CRATES, so the book's API reference names no crate."
+fi
+
 if [ "${1:-}" = "--self-test" ]; then
   arms=0; ok=0
   victim="$SRC/__self_test__.md"
@@ -170,6 +201,28 @@ if [ "${1:-}" = "--self-test" ]; then
   fi
   rm -f "$norm_victim"
 
+  # Arm 7: a chapter linking into the API reference of a crate it does not publish (leg 3).
+  arms=$((arms + 1))
+  printf '# Self test\n\nImplemented by `crates/eadl-model/src/presence.rs`; see [it](api/no_such_crate/index.html).\n' > "$victim"
+  "$0" >/dev/null 2>&1 && echo "SELF-TEST: arm 7 did not fail on a link into an unpublished crate" >&2 || ok=$((ok + 1))
+  rm -f "$victim"
+
+  # Arm 8: a link into a published crate passes, so arm 7 is not passing on a leg that always fails.
+  arms=$((arms + 1))
+  printf '# Self test\n\nImplemented by `crates/eadl-model/src/presence.rs`; see [it](api/eadl_model/index.html).\n' > "$victim"
+  if "$0" >/dev/null 2>&1; then ok=$((ok + 1)); else
+    echo "SELF-TEST: arm 8 failed on a link into a published crate — leg 3 is not discriminating" >&2
+  fi
+  rm -f "$victim"
+
+  # Arm 9: a published crate that does not deny missing docs (leg 3).
+  arms=$((arms + 1))
+  list="$ROOT/target/doctrine_scratch/book_anchors_api.crates"
+  mkdir -p "$(dirname "$list")"
+  printf 'archogen-cli\n' > "$list"
+  BOOK_API_CRATES="$list" "$0" >/dev/null 2>&1 && echo "SELF-TEST: arm 9 did not fail on a published crate that allows missing docs" >&2 || ok=$((ok + 1))
+  rm -f "$list"
+
   # ⚠️ The empty-normative-population guard has no arm, and the reason is stated rather than left
   # as an untested branch: firing it would mean removing or renaming `docs/semantics/`, which
   # `reference.rs` `include_str!`s — the self-test would have to break the build to prove the guard.
@@ -181,5 +234,5 @@ if [ "${1:-}" = "--self-test" ]; then
 fi
 
 [ "$fail" -eq 0 ] || exit 1
-echo "book-anchors: OK ($chapters chapter(s), $normative normative document(s); every cited repository path resolves)"
+echo "book-anchors: OK ($chapters chapter(s), $normative normative document(s); every cited repository path resolves; $published crate(s) in the API reference, each denying missing docs, every chapter link into it naming one)"
 exit 0

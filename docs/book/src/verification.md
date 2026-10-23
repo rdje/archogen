@@ -115,7 +115,7 @@ tier: integration — before a push, and before closing a milestone
   ✅ tests              117.82s  every contract test passes, F28 and the semantic corpus included
   ✅ doctrines           40.93s  every repository invariant holds on the working tree
   ✅ self-tests         167.49s  every doctrine gate's RED arms still fire — a gate that stopped being able to fail is caught here
-  ✅ book                 0.23s  the mdBook builds, with its pinned release — it is the director's window, so a broken book is a broken deliverable
+  ✅ book                 0.23s  the mdBook builds, with its pinned release, and the API reference with it, every link into it resolving — it is the director's window, so a broken book is a broken deliverable
   ✅ no-std-build         0.24s  the runtime core compiles for a bare-metal target (§14.3's "compile targets")
   ✅ pin-premises         2.51s  every premise the catalog rests on about the pinned toolchain still holds: the port record's, each probe it prints read at its hash (§14.1–§14.4), and the gate's three claims (§3)
   ✅ wasm-build           0.65s  the engine's I/O-free crates, derived from the workspace, compile for the browser target

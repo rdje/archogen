@@ -15,11 +15,16 @@
 //!
 //! ⚠️ Three oracles check it, and none of them is this code:
 //!
-//! - the unit test below derives [`K`] and [`H0`] from their definitions, the cube and square roots of the first
+//! - the unit test below derives `K` and `H0` from their definitions, the cube and square roots of the first
 //!   primes, in exact integer arithmetic;
 //! - `tests/sha256.rs` reproduces the standard's published examples;
 //! - the same test compares every message length across the padding's boundaries with digests the system's own
 //!   tool wrote into `tests/fixtures/sha256_boundaries.txt` (`scripts/sha256_fixture.sh`).
+//!
+//! The contract is the book's: [*What a report may claim*](../../evidence.html).
+//! This reference is generated from the code and documents it, item by item (`docs/book/api.crates`).
+
+#![deny(missing_docs)]
 
 use core::fmt;
 

@@ -15,6 +15,11 @@
 //! ⭐ **One text per manifest**, as `archogen-result/1`'s: [`Manifest::write`] writes compact JSON, its members in one
 //! order, then a newline, and [`Manifest::read`] accepts a text only when writing what it read gives back the same
 //! bytes. It does no I/O: the caller reads the file, and bounds how much.
+//!
+//! The contract is the book's: [*What is versioned, and what changing it costs*](../../versions.html).
+//! This reference is generated from the code and documents it, item by item (`docs/book/api.crates`).
+
+#![deny(missing_docs)]
 
 use std::fmt;
 use std::path::Path;

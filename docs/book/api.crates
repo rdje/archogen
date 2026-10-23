@@ -1,0 +1,14 @@
+# docs/book/api.crates — the crates whose rustdoc reference the book publishes under `api/` (leaf `PROGRAM.107`).
+#
+# One package per line, at `crates/<name>`. `scripts/build_book.sh` builds them with `cargo doc --no-deps`, warnings
+# denied, and copies the result into the book's output; `scripts/check_book_anchors.sh` holds each to
+# `#![deny(missing_docs)]` and every link a chapter makes into `api/` to one of them. The book is the contract; this
+# reference is a view of the code, generated with the book and never committed. Internals — `xtask`, the trust
+# instruments, the command line's own modules — are not published.
+archogen-api
+archogen-outcome
+archogen-json
+archogen-digest
+archogen-install
+eadl-front
+eadl-model

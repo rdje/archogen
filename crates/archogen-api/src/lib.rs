@@ -6,15 +6,44 @@
 //!
 //! ⭐ **Every response carries a [`Status`]**, and there is no response without one: the field is not
 //! optional and the type has no default. When the description was judged, the status is its `ROADMAP.md`
-//! §5.5 verdict and [`Response::judged`] says what it was judged under. When it was not — a profile nobody
-//! supports, a kind module, an import that exists and cannot be read, a language definition that failed to
-//! load — the status says so and [`Response::notes`] say why. It is never absent and never `ok`, which is
-//! how an unanswered question would otherwise become `established` in a consumer that never saw the
-//! distinction.
+//! §5.5 verdict and [`Response::judged`](Response#structfield.judged) says what it was judged under. When it
+//! was not — a profile nobody supports, a kind module, an import that exists and cannot be read, a language
+//! definition that failed to load — the status says so and [`Response::notes`] say why. It is never absent
+//! and never `ok`, which is how an unanswered question would otherwise become `established` in a consumer
+//! that never saw the distinction.
 //!
 //! It does no I/O. A description arrives as text, and its imports resolve through the [`ModuleSource`] the
 //! caller supplies — a directory for the CLI, [`MemoryModules`] for a consumer that has no filesystem. It
 //! renders nothing either: a consumer prints or serializes the structure it gets back.
+//!
+//! ```
+//! use archogen_api::{check, NoModules, Request};
+//!
+//! // A description held in memory, judged under the default profile.
+//! let response = check(&Request {
+//!     name: "uart.eadl",
+//!     text: "(defblock console.uart (offers observable-output))\n",
+//!     profile: None,
+//!     modules: &NoModules,
+//! });
+//! assert_eq!(response.status.slug(), "ok");
+//! assert!(response.judged.is_some(), "a judged description says what it was judged under");
+//!
+//! // A profile nobody supports is not judged, and the status says so.
+//! let not_judged = check(&Request {
+//!     name: "uart.eadl",
+//!     text: "(defblock console.uart (offers observable-output))\n",
+//!     profile: Some("rt-dynamic-mp"),
+//!     modules: &NoModules,
+//! });
+//! assert_eq!(not_judged.status.slug(), "unsupported-profile");
+//! assert!(not_judged.judged.is_none());
+//! ```
+//!
+//! The contract is the book's: [*The engine API*](../../engine-api.html).
+//! This reference is generated from the code and documents it, item by item (`docs/book/api.crates`).
+
+#![deny(missing_docs)]
 
 mod status;
 
