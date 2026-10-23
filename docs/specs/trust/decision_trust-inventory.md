@@ -513,8 +513,8 @@ Its sentence that `Cargo.lock` is recorded and is not part of the build configur
 provenance as an aspect, as its files are, and §6's `trust-shared-changed` one whose provenance moves — passages the
 record's §7 list omitted, corrected there the same day.
 
-**Clarified `2026-10-23`, by `M3.5.2`, [`decision_trust-role-programs.md`](decision_trust-role-programs.md)**, under the
-director's ruling of `2026-10-22` (findings §16 (a)): the configuration checker's root; the **shared derivation**, the
+**Clarified `2026-10-23`, in force from `M3.5.2.1`'s commit, by `M3.5.2`,
+[`decision_trust-role-programs.md`](decision_trust-role-programs.md)**, under the director's ruling of `2026-10-22` (findings §16 (a)): the configuration checker's root; the **shared derivation**, the
 generator's relation and the checker's held equal by a comparison test, a form `defderivation` and a shared item of
 its own kind, exempt from `trust-shared-program` for its pair's role packages alone once `M3.4` makes `eadl-resolve` the
 generator's; the front's **invoked programs** and **installed data**, `(invokes …)` and `(installed …)` on its form

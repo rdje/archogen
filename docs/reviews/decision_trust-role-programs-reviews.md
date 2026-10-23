@@ -89,3 +89,32 @@ form a push later. The author verified it in `.github/workflows/trust-gate.yml` 
 | R2-R18 | remark | the parent's clarification overstates: "a root's" invocations, an exemption vacuous until `M3.4`, a narrow refusal | reworded |
 | R2-R19 | remark | name the case-5 and channel fixtures | in `RP-H2` |
 | R2-R20 | remark | `RP-H8` holds only when the package carries the install's own trust build | said so |
+
+**Round 3**, `2026-10-23`, a new context at `551da268`, read-only and fenced; it re-measured §1 and the ledger (74,
+held), ran a metadata census of every test's closure, and checked `origin/main`'s encoding. Verdict: not acceptable,
+10 defects and 10 remarks; round 2's answers to D5, D6, D7, D10, D12, D14 and R19 not carried out whole. The rule
+round 2 added for unnamed tests fired on today's tree and is withdrawn; the runner's forms must come from a run whose
+base holds the judging gate's encoding. The author verified D2 (`lifecycle`) and D8 (`62099a39`) before answering.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R3-D1 | defect | "refuse a producer of no role of `trust::ROLES`" refuses the harness, whose role is `harness` | refused: a result whose role is no role of `ROLES`, or whose producer is a derivation's artifact; a reference-model result by its pair's harness accepted, each a fixture (§3, `RP-H2`) |
+| R3-D2 | defect | the unnamed two-role test rule fires today on `rt-core`'s `lifecycle`, no form can name it, and it has no code or report part | withdrawn: a test produces no claim's result and no root compiles it, so it shares nothing between roots; named as outside, a missing form not found mechanically (§3); verified with `cargo metadata` |
+| R3-D3 | defect | the parent's clarification states the reader in force before it exists | in force from `M3.5.2.1`'s commit, in the record's status, its §6 and both records' clarifications |
+| R3-D4 | defect | §6 omits the preflight, the Cargo home reset, case 4 and `trust-inventory-stale`, an admission bullet, four generated-sources passages; the generated-sources record has no clarification; one passage misattributed | each listed; a dated clarification in the generated-sources record; the attribution corrected |
+| R3-D5 | defect | `RP-H6`'s owner closes before its trigger; no leaf wires `archogen analyze` to the launcher; that invocation's form has no owner | `M2.21.5` filed, owning both (`RP-H6`) |
+| R3-D6 | defect | three tree passages contradict the answers: `.6`'s own runner forms, `trust-invocation`, "ten hand-offs" | amended |
+| R3-D7 | defect | *How to apply* covers added items only; a moved item's form is `trust-form-missing` too | added or moved, citing the parent's clarifications; `M3.4`'s in `RP-H7`; `RP-H12` |
+| R3-D8 | defect | the next push's base gate lacks the structured-key repair, so its proposal is in an older encoding | the first run whose base gate holds the judging gate's encoding, its base identity recorded (*How to apply*); verified: `62099a39` not an ancestor of `origin/main` |
+| R3-D9 | defect | the property column holds no §7.1 property | configuration validity or timing, per pair (§5) |
+| R3-D10 | defect | §4 gives the install "exactly the invoked roots" today | today every executable root but the generator's; exactly the invoked from `M3.5.1.4` (§4) |
+| R3-R11 | remark | the joint comparison does not fit "derivation" | `defderivation` names any generator–checker comparison, each form's class its own (§3) |
+| R3-R12 | remark | after `M3.4` the item holds only the test's own sources | stated as outside (§3) |
+| R3-R13 | remark | several controls are change control | named so (§3, §5) |
+| R3-R14 | remark | the JSON control covers records, the risk names servers | strictness for records and messages alike; re-writing for records (§5) |
+| R3-R15 | remark | `M3.5.3.1` bundles its form with runner forms, and the derivation's runner leaf is unfiled | split: `M3.5.3.2` filed (`RP-H14`) |
+| R3-R16 | remark | `RP-H2` names no fixture | named |
+| R3-R17 | remark | `(invokes …)` without `(installed …)`, two generator roots, a launcher that is no blob | each a read failure, a missing launcher `trust-undeclared-input` (§4) |
+| R3-R18 | remark | classification follows an example's development edges too | §1 says so |
+| R3-R19 | remark | `M3.5.1.3`'s plan contradicts R1-D15 | amended |
+| R3-R20 | remark | `RP-H10` names no place for the controls | this record's §5 row, through its review |

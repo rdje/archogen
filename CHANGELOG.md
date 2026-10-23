@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers' programs in the trust record, round 3 answered
+
+`ARCHOGEN-M3-0888` (leaf `M3.5.2`), `2026-10-23`.
+
+- The third review found the runner's forms must come from a run whose base already holds the judging gate's
+  encoding, and a rule round 2 added that fired on today's tree; both answered, with its eight other defects.
+
 ## archogen — the checkers' programs in the trust record, round 2 answered
 
 `ARCHOGEN-M3-0887` (leaf `M3.5.2`), `2026-10-23`.

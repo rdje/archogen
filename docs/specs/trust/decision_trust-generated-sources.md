@@ -391,6 +391,13 @@ these:
   under `cfg(target_os = "macos")` is read on that host alone — so on the baseline's host such a file's form is stale,
   and off it the file, marked and undeclared, is refused; the parent's admissions meet the same limit.
 
+**Clarified `2026-10-23`, in force from `M3.5.2.1`'s commit, by
+[`decision_trust-role-programs.md`](decision_trust-role-programs.md)** (its §6): a **derivation**, the comparison a
+`defderivation` form names, is a program here as the harness is — its reads and reaches count only through the units it
+compiles beside its pair's two builds, it is paired with its pair alone, its provenance is an aspect of its item, and
+"other roles" means roles other than its pair's two; §2's departures found once the whole file is read gain that
+record's §3 and §4 read failures; §7's case-5 list takes a derivation's units.
+
 ### 9. Hand-offs
 
 Each obligation is one sentence, quoted word for word beside its identifier by the leaf that takes it, which
