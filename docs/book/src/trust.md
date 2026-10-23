@@ -93,9 +93,11 @@ launcher is refused (leaf `M3.5.2.1.3`). A comparison no form names is found by 
 say: every test-like unit — an integration test, a bench, a library's or an executable's unit tests, a library's doc
 tests — that some build of its package makes, whatever its flags, and whose build, by normal and build edges over every
 feature and platform and its package's development edges, compiles role packages of both roles of a pair a property
-rests on (the generator and either checker, the reference model and the implementation) is a program target, and so is
-one whose package's files name a role package's file by a literal `#[path]` or `include!`, which compiles it with no
-dependency at all (leaf `M3.5.2.4.1`). It counts what some build compiles, more than the default build makes, by
+rests on (the generator and either checker, the reference model and the implementation) is a program target. What a
+unit compiles is read from the compiler itself: each package's targets are built once, a test-like target as `cargo
+test` builds it, and a unit counts every file its dependency information names and its closure's libraries' do, so a
+role package's file reached by a path, an `include!` or a dependency's own path joins it however its source spells it
+(leaf `M3.5.2.5.1`; a scan of the text before it, `M3.5.2.4.1`, missed spellings). It counts what some build compiles, more than the default build makes, by
 design (leaf `M3.5.2.3.1`). The inventory records the pairs each joins, so the gate's remedy names its pair's form —
 a harness for the reference model's, a derivation for the generator's and a checker's — or, for a unit joining two
 pairs, which no pair form can name, says to split or classify it.
@@ -732,9 +734,11 @@ Every report ends with what the inventory does not see, the same list each time,
   decides that the unit compares nothing the two hold equal;
 - **an edit inside a classified program target.** A classification is reviewed again only when the role packages its
   build compiles grow, so an edit that makes a unit start comparing two roles reads "unchanged" (`M3.6.10` owns it);
-- **a build script's actions, and a package outside the workspace's members.** The census reads the graph `cargo
-  metadata` gives, with every member's features, and the literal paths each package's files name: what a build script
-  runs or writes, a path no literal names, a non-member's features and another workspace's tests are outside it;
+- **what the census build does not compile.** It builds each package's targets once, without default features, on
+  this host: a file only another platform or a feature compiles, what a doc test's own snippet includes, a package
+  holding or reaching a build script or a procedural macro — left out, so none runs, and judged by its edges — one whose
+  build fails, which compiles nothing and is named in the inventory's `census-failed`, a non-member's features and
+  another workspace's tests are outside it;
 - **a program a test runs.** A test that runs another role's program as a process compiles none of it, so the census
   does not see it.
 

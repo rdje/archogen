@@ -399,7 +399,7 @@ other than its pair's two — but it is paired with no root, its pair taking its
 spanning forms (pairs, two generator roots, an invoked name, a target two forms name) join §2's departures found once
 the whole file is read; one within a form stops the reader at that form. §7's case-5 list takes a derivation's units.
 Joining gives no crate root a generator file's standing it lacks otherwise (that record's §3); §5's role packages
-follow the parent's edge rule as clarified, build edges, every feature and platform.
+are the parent's as clarified, computed once for a program target and its judgement here alike.
 
 ### 9. Hand-offs
 

@@ -544,7 +544,7 @@ class ObserverCloseTests(DiscoveryFixture):
         expected = {
             'xtask/src/trust_compiler_observer.rs': '58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98',
             'xtask/src/trust_compiler.rs': '1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973',
-            'xtask/src/trust.rs': 'b45255851938e703f2922e0c0ceabc2f5381cf409adb376a338979694bef0fe8',  # re-pinned by M3.5.2.4.1: a literal path into a role package joining, a dylib's doc tests not counted; the observer's close unchanged
+            'xtask/src/trust.rs': '711dca3b2f7a0b521d446430e95fdf283dd2e4f87dc1a143ee5722c2fdafd4c2',  # re-pinned by M3.5.2.5.1: the census read from what rustc compiled, `compile`'s argument suffix byte for byte as before; the observer's close unchanged
         }
         def verify(inputs):
             for path, digest in expected.items():
@@ -1504,7 +1504,7 @@ os.execvp("rustc", ["rustc"] + arguments)
         ]
         inputs = {path: (ROOT / path).read_bytes() for path in paths}
         expected = {
-            'xtask/src/trust.rs': 'c9186a0f6f6a441a3cdeac501f97b6dd9e9edf38d04e8fe312721d37ecff5eaf',  # re-pinned by M3.5.2.4.1: a literal path into a role package joining, a dylib's doc tests not counted; the caller suffix unchanged
+            'xtask/src/trust.rs': '55a4dcb5542cada3e0ba27f8d56110ec5b8f5d7f899dc2bf1865dc08d8e0ff75',  # re-pinned by M3.5.2.5.1: the census read from what rustc compiled, `compile`'s argument suffix byte for byte as before; the caller suffix unchanged
             'xtask/src/trust_compiler.rs': '634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70',
             'xtask/src/trust_compiler_observer.rs': 'c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f',
             'xtask/src/catalog_build.rs': 'd3e8865c3633de9f4cafb82c3613f0ee82df0c065012b732469cda5951221ed2',
@@ -1971,7 +1971,7 @@ class IteratorTests(DiscoveryFixture):
             entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
             guarded = {
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
-                    "c9186a0f6f6a441a3cdeac501f97b6dd9e9edf38d04e8fe312721d37ecff5eaf"),  # re-pinned by M3.5.2.4.1: a literal path into a role package joining, a dylib's doc tests not counted; the absolute cwd unchanged
+                    "55a4dcb5542cada3e0ba27f8d56110ec5b8f5d7f899dc2bf1865dc08d8e0ff75"),  # re-pinned by M3.5.2.5.1: the census read from what rustc compiled, `compile`'s argument suffix byte for byte as before; no command's cwd added, the absolute cwd unchanged
                 "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
                     "634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70"),
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],
@@ -1981,7 +1981,7 @@ class IteratorTests(DiscoveryFixture):
                 "base environment": (environment,
                     "8b6fa81a2d715c2e42f8ab75a02b6e0c037c97d2f55e71c44c21e4a5516ee74c"),
                 "gate production": (gate.split("#[cfg(test)]", 1)[0],
-                    "0f7f61562a327d9e56bf8146cc26d94b7b5845573d646e765d93398bdfcc9c67"),  # re-pinned by M3.5.2.4.2: the remedy for a unit joining two pairs; the gate's absolute paths unchanged
+                    "af7dcd0930ff3d1f6da5b505bfe73696e606a9387ec8420d27ecd14c7fb167f0"),  # re-pinned by M3.5.2.5.1: one `UNSEEN` line, what the census build does not compile; the gate's absolute paths unchanged
                 "repository root": (root, "84ec4298740c835ae19ed9f2cff11f0f985cd59a4f3c5c205e9abd47805b6d77"),
                 # re-pinned by M3.5.1.3: the `install` arm, which hands `trust::inventory` the same absolute
                 # `repo_root()`, and an `out` joined to it, as the `trust-inventory` arm does

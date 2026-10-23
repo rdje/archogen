@@ -83,9 +83,11 @@ whose producer is a derivation's artifact; a reference model's result produced b
 
 **Found by the build, not by names.** Each test-like unit — an integration test, a bench, a library's or an
 executable's unit tests, a library's doc tests — that some build of its package makes, whatever its flags, and whose
-build, by normal and build edges over every feature and platform and its package's own development edges, or whose
-package's files name one's file by a literal `#[path]` or `include!`, compiles role packages of the two roles of a pair a property rests on (§5: the generator and either checker, the reference model
-and the implementation) is a program target of the parent's §2, whatever its sources name: an integration test named by
+build compiles role packages of the two roles of a pair a property rests on (§5: the generator and either checker, the
+reference model and the implementation) — by its normal and build edges over every feature and platform and its
+package's own development edges, or by a file of one that its build read, however its source names it (`M3.5.2.5.1`):
+each package's targets are built once, a test-like target as `cargo test` builds it, and each unit counts the files its
+dependency information names and its closure's libraries' do — is a program target of the parent's §2, whatever its sources name: an integration test named by
 a pair form if it compares them, any unit else classified by `defprogram`, `(target test|bench|lib-test|bin-test|doctest
 <name>)`, its reason the claim that it compares nothing they hold equal. Unnamed, it is `trust-unclassified-program`,
 and `trust-form-missing` on the baseline's host. §1's census of names found the two comparisons `RP-H11` names. A
@@ -99,8 +101,10 @@ themselves — the model's sources are in the checker's package and the producti
 generator's, so from then an edit to either moves no shared item and is reported nowhere (before it the relation,
 compiled beside the pair's builds, is in the derivation's item); the comparison failing is what holds
 them together; whether a classified unit compares what two roles hold equal, which its review decides, and an edit
-inside it, reviewed again only when its role packages grow (`M3.6.10`); a build script's actions, a path no literal
-names, a non-member's features; a program a test runs as a process.
+inside it, reviewed again only when its role packages grow (`M3.6.10`); a file only another platform or a feature
+compiles; what a doc test's own snippet includes; a package holding a build script or a procedural macro, or reaching
+one, which the census does not build and judges by its edges, and one whose build fails, which compiles nothing; a
+non-member's features and another workspace's tests; a program a test runs as a process.
 
 **Its class** (§5), §4.4's **reference derivation.** The comparison holding the two equal is the coupling itself,
 not a control: a fault both carry passes it. Controls independent of the transcription: the model's exhaustive

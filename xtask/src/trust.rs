@@ -589,6 +589,10 @@ pub struct Unit {
     pub files: BTreeSet<String>,
     /// Every `# env-dep` line, with its value.
     pub env: Vec<String>,
+    /// Its crate root, as a repository path.
+    pub root: String,
+    /// Whether it is built as a test harness (`--test`).
+    pub harness: bool,
 }
 
 /// A unit's configuration as an item compares it: its normalised command line and every `# env-dep` line with its
@@ -1027,6 +1031,13 @@ fn compile(
                 continue;
             }
         };
+        let root = tokens
+            .iter()
+            .skip(1)
+            .map(|t| strip(t))
+            .find(|t| targets.contains_key(&(t.clone(), crate_name.clone())))
+            .unwrap_or_default();
+        let harness = tokens.iter().any(|t| t == "--test");
         let d = PathBuf::from(&out_dir).join(format!("{crate_name}{extra}.d"));
         let text = fs::read_to_string(&d).map_err(|e| format!("{}: {e}", d.display()))?;
         let mut files = BTreeSet::new();
@@ -1093,6 +1104,8 @@ fn compile(
             configuration,
             files,
             env: env_deps,
+            root,
+            harness,
         });
     }
     // In a fixed order, not cargo's scheduling order, so one commit's inventory is one sequence of bytes (R8 remark
@@ -1441,116 +1454,121 @@ fn joined_units(
     roots: &Roots,
     units: &[(String, String, String)],
     graph: &[(String, String, String)],
-    included: &Included,
+    census: &Census,
 ) -> Vec<(String, String, String)> {
     units
         .iter()
-        .filter(|(package, kind, _)| {
-            !joined_pairs(roots, package, kind, graph, included).is_empty()
+        .filter(|(package, kind, name)| {
+            !joined_pairs(roots, package, kind, name, graph, census).is_empty()
         })
         .cloned()
         .collect()
 }
 
-/// The role packages each package's sources name by a literal path (`included_role_packages`).
-type Included = BTreeMap<String, BTreeSet<String>>;
+/// What the census build compiled (`decision_trust-role-programs.md` §3; round 8's change of method): the files each
+/// target's own unit read, by package, kind and name — a test-like unit's by its kind of [`TEST_KINDS`] — and every file
+/// a package's library units read. Read from the compiler's dependency information, so a file a unit compiles is
+/// counted however its source names it, or whatever names it in a dependency.
+#[derive(Default)]
+struct Census {
+    own: BTreeMap<(String, String, String), BTreeSet<String>>,
+    libraries: BTreeMap<String, BTreeSet<String>>,
+}
 
-/// The role packages each package's `.rs` files reach by a literal path (`decision_trust-role-programs.md` §3; round
-/// 7's D1): a module a `path = "…"` names, or a file `include!` names, is compiled into the crate that names it with no
-/// dependency edge, so every program target of that package counts the role package the path lands in. Read with the
-/// catalog's tokenizer, so a path in a comment is none. Over-approximated: a `path = "…"` anywhere, an attribute's
-/// (`cfg_attr`'s among them) or not, resolved against its file's folder and against that folder and the file's stem,
-/// each beneath the inline modules around it, as rustc resolves it in a `mod.rs` and in another file; an `include!`
-/// against its file's folder. A path no literal names — `include!(concat!(…))` — is outside it.
-fn included_role_packages(
-    tree: &Tree,
-    packages: &BTreeSet<&String>,
-    role_packages: &BTreeSet<&String>,
-) -> Included {
-    use archogen_catalog::package::Kind;
-    use archogen_catalog::tree::{parent, resolve};
-    let mut out = Included::new();
-    for package in packages {
-        for file in tree.under(package).filter(|f| f.ends_with(".rs")) {
-            let Some(bytes) = tree.get(file) else {
+impl Census {
+    /// The census of `units`, each placed by its crate root among `sources`' targets.
+    fn of(units: &[Unit], sources: &TargetSources) -> Self {
+        let mut census = Self::default();
+        for u in units {
+            let Some((dir, kind, name)) = sources
+                .iter()
+                .filter(|((dir, _, name), srcs)| {
+                    *dir == u.package
+                        && srcs.contains(&u.root)
+                        && name.replace('-', "_") == u.crate_name
+                })
+                .map(|(key, _)| key)
+                .min_by_key(|(_, kind, _)| kind != "lib")
+            else {
                 continue;
             };
-            let Ok(toks) = package::tokens(bytes) else {
-                continue;
+            let library = matches!(
+                kind.as_str(),
+                "lib" | "rlib" | "dylib" | "cdylib" | "staticlib" | "proc-macro"
+            );
+            let unit_kind = match (u.harness, kind.as_str()) {
+                (true, "test" | "bench") => kind.clone(),
+                (true, _) if library => "lib-test".to_owned(),
+                (true, "bin") => "bin-test".to_owned(),
+                _ => kind.clone(),
             };
-            let kind = |i: usize| toks.get(i).map(|t| &t.kind);
-            let ident = |i: usize| match kind(i) {
-                Some(Kind::Ident(n, _)) => Some(n.as_str()),
-                _ => None,
-            };
-            let literal = |i: usize| {
-                toks.get(i)
-                    .filter(|t| matches!(t.kind, Kind::Str))
-                    .map(|t| {
-                        String::from_utf8_lossy(&bytes[t.at..t.end])
-                            .trim_start_matches(['b', 'r'])
-                            .trim_matches('#')
-                            .trim_matches('"')
-                            .to_owned()
-                    })
-            };
-            let dir = parent(file);
-            let stem = file
-                .rsplit('/')
-                .next()
-                .unwrap_or(file)
-                .trim_end_matches(".rs");
-            // The inline modules open at each token: a brace a `mod NAME` opens carries its name.
-            let mut braces: Vec<Option<&str>> = Vec::new();
-            for i in 0..toks.len() {
-                match kind(i) {
-                    Some(Kind::Open('{')) => {
-                        let named = (i >= 2 && ident(i - 2) == Some("mod"))
-                            .then(|| ident(i - 1))
-                            .flatten();
-                        braces.push(named);
-                        continue;
-                    }
-                    Some(Kind::Close('}')) => {
-                        braces.pop();
-                        continue;
-                    }
-                    _ => {}
-                }
-                let inline: Vec<&str> = braces.iter().flatten().copied().collect();
-                let mut targets = Vec::new();
-                if ident(i) == Some("path") && matches!(kind(i + 1), Some(Kind::Punct('='))) {
-                    if let Some(lit) = literal(i + 2) {
-                        for base in [dir.to_owned(), format!("{dir}/{stem}")] {
-                            let base = std::iter::once(base.as_str())
-                                .chain(inline.iter().copied())
-                                .collect::<Vec<_>>()
-                                .join("/");
-                            targets.push(resolve(&base, &lit));
-                        }
-                    }
-                }
-                if ident(i) == Some("include")
-                    && matches!(kind(i + 1), Some(Kind::Punct('!')))
-                    && matches!(kind(i + 2), Some(Kind::Open('(')))
-                {
-                    if let Some(lit) = literal(i + 3) {
-                        targets.push(resolve(dir, &lit));
-                    }
-                }
-                for target in targets.into_iter().flatten() {
-                    for rp in role_packages {
-                        if target.starts_with(&format!("{rp}/")) {
-                            out.entry((*package).clone())
-                                .or_default()
-                                .insert((*rp).clone());
-                        }
-                    }
-                }
+            if library && !u.harness {
+                census
+                    .libraries
+                    .entry(dir.clone())
+                    .or_default()
+                    .extend(u.files.iter().cloned());
+            }
+            // An executable's unit tests compile its sources and more: a binary `cargo test` builds as its harness alone
+            // counts them for the binary too, a superset of what its own build reads.
+            if u.harness && kind == "bin" {
+                census
+                    .own
+                    .entry((dir.clone(), "bin".to_owned(), name.clone()))
+                    .or_default()
+                    .extend(u.files.iter().cloned());
+            }
+            census
+                .own
+                .entry((dir.clone(), unit_kind, name.clone()))
+                .or_default()
+                .extend(u.files.iter().cloned());
+        }
+        census
+    }
+}
+
+/// The role packages a program target's build compiles (`decision_trust-role-programs.md` §3): those its closure
+/// reaches by edges, over every platform and feature, and those holding a file its own unit or a library of its closure
+/// read — a doc test's own unit its library's. One computation for the census, a target's classification and the
+/// generator judgement (round 8's R6).
+fn compiled_role_packages(
+    roots: &Roots,
+    census: &Census,
+    graph: &[(String, String, String)],
+    package: &str,
+    kind: &str,
+    name: &str,
+) -> BTreeSet<String> {
+    let role_packages: BTreeSet<&String> = roots
+        .programs
+        .iter()
+        .filter(|p| p.pair.is_none())
+        .flat_map(|p| p.role_packages.iter())
+        .collect();
+    let closure = target_closure(package, kind, graph);
+    let own = census
+        .own
+        .get(&(package.to_owned(), kind.to_owned(), name.to_owned()))
+        .into_iter()
+        .flatten();
+    let libraries = closure
+        .iter()
+        .filter_map(|p| census.libraries.get(p))
+        .flatten();
+    let mut compiled: BTreeSet<String> = closure
+        .iter()
+        .filter(|p| role_packages.contains(p))
+        .cloned()
+        .collect();
+    for file in own.chain(libraries) {
+        for rp in &role_packages {
+            if file.starts_with(&format!("{rp}/")) {
+                compiled.insert((*rp).clone());
             }
         }
     }
-    out
+    compiled
 }
 
 /// The pairs of [`JOINED`] a unit's build joins, each `<role>+<role>`: the generator's and a checker's are a derivation's
@@ -1559,18 +1577,18 @@ fn joined_pairs(
     roots: &Roots,
     package: &str,
     kind: &str,
+    name: &str,
     graph: &[(String, String, String)],
-    included: &Included,
+    census: &Census,
 ) -> Vec<String> {
-    let mut closure = target_closure(package, kind, graph);
-    closure.extend(included.get(package).into_iter().flatten().cloned());
+    let compiled = compiled_role_packages(roots, census, graph, package, kind, name);
     let compiles = |role: &str| {
         roots
             .programs
             .iter()
             .filter(|p| p.pair.is_none() && p.role == role)
             .flat_map(|p| p.role_packages.iter())
-            .any(|p| closure.contains(p))
+            .any(|p| compiled.contains(p))
     };
     JOINED
         .iter()
@@ -1583,7 +1601,7 @@ fn classify_programs(
     roots: &Roots,
     program_targets: &[(String, String, String)],
     graph: &[(String, String, String)],
-    included: &Included,
+    census: &Census,
 ) -> (Vec<Json>, Vec<String>) {
     let role_packages: BTreeSet<&String> = roots
         .programs
@@ -1603,12 +1621,11 @@ fn classify_programs(
                     Target::Lib => false,
                 }
         });
-        let mut closure = target_closure(package, kind, graph);
-        closure.extend(included.get(package).into_iter().flatten().cloned());
-        let compiled: BTreeSet<String> = closure
-            .into_iter()
-            .filter(|p| role_packages.contains(p))
-            .collect();
+        let compiled: BTreeSet<String> =
+            compiled_role_packages(roots, census, graph, package, kind, name)
+                .into_iter()
+                .filter(|p| role_packages.contains(p))
+                .collect();
         let classification = roots
             .classified
             .iter()
@@ -1649,7 +1666,7 @@ fn classify_programs(
         if TEST_KINDS.contains(&kind.as_str()) {
             entry.push((
                 "joins",
-                strings(joined_pairs(roots, package, kind, graph, included)),
+                strings(joined_pairs(roots, package, kind, name, graph, census)),
             ));
         }
         out.push(obj(entry));
@@ -2245,20 +2262,6 @@ pub fn inventory_with(
         }
     }
 
-    // A test-like unit joining two roles is a program target (`decision_trust-role-programs.md` §3).
-    // What each package's sources name by a literal path into a role package (`decision_trust-role-programs.md` §3).
-    let every_role_package: BTreeSet<&String> = roots
-        .programs
-        .iter()
-        .filter(|p| p.pair.is_none())
-        .flat_map(|p| p.role_packages.iter())
-        .collect();
-    let included =
-        included_role_packages(&tree, &package_names.keys().collect(), &every_role_package);
-    program_targets.extend(joined_units(&roots, &test_units, &graph, &included));
-    let (program_targets, classifications_unused) =
-        classify_programs(&roots, &program_targets, &graph, &included);
-
     let mut rules = Rules {
         tree: &tree,
         tree_dir: &tree_dir,
@@ -2324,6 +2327,70 @@ pub fn inventory_with(
             Err(why) => failed.push(why),
         }
     }
+
+    // The census (`decision_trust-role-programs.md` §3; round 8's change of method): each package's targets built, a
+    // test-like target as `cargo test` builds it, without default features as a root is, so what each unit compiles is
+    // read from the compiler's dependency information. It runs no package's code: a package holding a build script or a
+    // procedural macro, and every package whose closure reaches one, is left out, its units judged by their edges alone.
+    // A package whose build fails compiles nothing, so none of its units can compare anything: judged by its edges, it
+    // is named in the inventory's `census-failed`. What a census build would refuse of a program is not a program's, so
+    // its refusals are dropped; and none is built once a program's build has failed.
+    let running: BTreeSet<&String> = every_target
+        .iter()
+        .filter(|(_, ts)| {
+            ts.iter().any(|(kinds, _)| {
+                kinds
+                    .iter()
+                    .any(|k| k == "custom-build" || k == "proc-macro")
+            })
+        })
+        .map(|(pkg, _)| pkg)
+        .collect();
+    let reaches_code = |pkg: &str| {
+        let mut seen: BTreeSet<&str> = BTreeSet::new();
+        let mut todo = vec![pkg];
+        while let Some(at) = todo.pop() {
+            if !seen.insert(at) {
+                continue;
+            }
+            for (from, to, _) in &graph {
+                if from == at {
+                    todo.push(to);
+                }
+            }
+        }
+        seen.iter()
+            .any(|s| running.iter().any(|r| r.as_str() == *s))
+    };
+    let mut census_units: Vec<Unit> = Vec::new();
+    let mut census_failed: Vec<String> = Vec::new();
+    if failed.is_empty() {
+        reset_cargo_home(&cargo_home)?;
+        let census_dir = out.join("target-census");
+        let census_env = environment(&pin, &cargo_home, &census_dir)?;
+        let args = ["test", "--no-run", "--all-targets"].map(str::to_owned);
+        for pkg in package_names.keys().filter(|pkg| !reaches_code(pkg)) {
+            match compile(
+                &format!("the census of `{pkg}`"),
+                pkg,
+                &args,
+                &package_names,
+                &targets,
+                &census_env,
+                &tree_dir,
+                &compiler,
+                &mut Vec::new(),
+            ) {
+                Ok((units, _)) => census_units.extend(units),
+                Err(why) => census_failed.push(format!("{pkg}: {why}")),
+            }
+        }
+    }
+    let census = Census::of(&census_units, &target_sources);
+    // A test-like unit joining two roles is a program target (`decision_trust-role-programs.md` §3).
+    program_targets.extend(joined_units(&roots, &test_units, &graph, &census));
+    let (program_targets, classifications_unused) =
+        classify_programs(&roots, &program_targets, &graph, &census);
 
     // The token rules over every `.rs` file a compilation read, however it read it (§3; R8 10), each file once.
     let mut compiled: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
@@ -2473,7 +2540,9 @@ pub fn inventory_with(
                 // The union of its targets' role packages, as the parent computes them for every program target.
                 let held: BTreeSet<String> = owned
                     .iter()
-                    .flat_map(|(pkg, kind, _)| target_closure(pkg, kind, &graph))
+                    .flat_map(|(pkg, kind, name)| {
+                        compiled_role_packages(&roots, &census, &graph, pkg, kind, name)
+                    })
                     .filter(|pkg| all_role_packages.contains(pkg))
                     .collect();
                 let refused_here = foreign(&held);
@@ -3074,6 +3143,7 @@ pub fn inventory_with(
             ),
         ),
         ("program-targets", Json::Array(program_targets)),
+        ("census-failed", strings(census_failed)),
         ("classifications-unused", strings(classifications_unused)),
     ]);
     fs::create_dir_all(out).map_err(|e| e.to_string())?;
@@ -5213,6 +5283,11 @@ pub(crate) mod tests {
         )
     }
 
+    /// `crates/r`'s test `compare` alone, unclassified, compiling `compiled`: the one unit whose build compiled the file.
+    fn compare_alone(compiled: &str) -> Vec<(String, String, String)> {
+        unclassified_units("crates/r", &[("test", "compare")], compiled)
+    }
+
     /// `units` of `package`, each unclassified, compiling `compiled`.
     fn unclassified_units(
         package: &str,
@@ -5249,7 +5324,6 @@ pub(crate) mod tests {
         let dev = |deps: &str| format!("[dev-dependencies]\n{deps}");
         let gc = "`crates/c`, `crates/g`";
         let gs = "`crates/g`, `crates/s`";
-        let build_script: &[(&str, &str)] = &[("crates/r/build.rs", "fn main() {}\n")];
         for (case, manifest_extra, extra, want) in [
             ("joined", dev(&(dep("g") + &dep("c"))), &[][..], four_unclassified(gc)),
             ("joined-helper", dev(&dep("h")), &[][..], four_unclassified(gc)),
@@ -5266,10 +5340,11 @@ pub(crate) mod tests {
                 &[][..],
                 four_unclassified("`crates/i`, `crates/m`"),
             ),
+            // A build-dependency's edge counts, a build script being refused wherever the census reaches it.
             (
                 "joined-by-a-build-dependency",
                 format!("[build-dependencies]\n{}\n{}", dep("s"), dev(&dep("g"))),
-                build_script,
+                &[][..],
                 four_unclassified(gs),
             ),
             (
@@ -5297,7 +5372,10 @@ pub(crate) mod tests {
                 &[][..],
                 four_unclassified(gc),
             ),
-            // A literal path into a role package compiles its file with no edge (round 7's D1), `cfg_attr`'s too.
+            // A file compiled into a unit by any spelling joins that unit, read from what its build compiled (rounds 7
+            // and 8): a literal path, an `include!`, a `cfg_attr`'s path, a bracketed `include!`, an escaped literal, a
+            // file the catalog's tokenizer refuses, an aliased `include!`, a target whose own path lies outside its
+            // package. A path into no role's package, and a file no build compiles, join nothing.
             (
                 "joined-by-a-path",
                 dev(&dep("g")),
@@ -5305,7 +5383,7 @@ pub(crate) mod tests {
                     "crates/r/tests/compare.rs",
                     "#[path = \"../../c/src/lib.rs\"]\nmod checker;\n#[test]\nfn t() { assert_eq!(checker::x(), g::x()); }\n",
                 )][..],
-                four_unclassified(gc),
+                compare_alone(gc),
             ),
             (
                 "joined-by-an-include",
@@ -5314,7 +5392,7 @@ pub(crate) mod tests {
                     "crates/r/tests/compare.rs",
                     "mod checker { include!(\"../../c/src/lib.rs\"); }\n#[test]\nfn t() { assert_eq!(checker::x(), g::x()); }\n",
                 )][..],
-                four_unclassified(gc),
+                compare_alone(gc),
             ),
             (
                 "joined-by-a-cfg-attr-path",
@@ -5323,15 +5401,66 @@ pub(crate) mod tests {
                     "crates/r/tests/compare.rs",
                     "#[cfg_attr(all(), path = \"../../c/src/lib.rs\")]\nmod checker;\n#[test]\nfn t() {}\n",
                 )][..],
-                four_unclassified(gc),
+                compare_alone(gc),
+            ),
+            (
+                "joined-by-a-bracketed-include",
+                dev(&dep("g")),
+                &[(
+                    "crates/r/tests/compare.rs",
+                    "mod checker { include![\"../../c/src/lib.rs\"]; }\n#[test]\nfn t() { assert_eq!(checker::x(), g::x()); }\n",
+                )][..],
+                compare_alone(gc),
+            ),
+            (
+                "joined-by-an-escaped-path",
+                dev(&dep("g")),
+                &[(
+                    "crates/r/tests/compare.rs",
+                    "#[path = \"../../\\x63/src/lib.rs\"]\nmod checker;\n#[test]\nfn t() { assert_eq!(checker::x(), g::x()); }\n",
+                )][..],
+                compare_alone(gc),
+            ),
+            (
+                "joined-by-an-untokenized-file",
+                dev(&dep("g")),
+                &[(
+                    "crates/r/tests/compare.rs",
+                    "#[path = \"../../c/src/lib.rs\"]\nmod checker;\n#[test]\nfn t() { 'é: loop { break 'é; } assert_eq!(checker::x(), g::x()); }\n",
+                )][..],
+                compare_alone(gc),
+            ),
+            (
+                "joined-by-an-aliased-include",
+                dev(&dep("g")),
+                &[(
+                    "crates/r/tests/compare.rs",
+                    "use std::include as inc;\nmod checker { super::inc!(\"../../c/src/lib.rs\"); }\n#[test]\nfn t() { assert_eq!(checker::x(), g::x()); }\n",
+                )][..],
+                compare_alone(gc),
+            ),
+            (
+                "joined-by-a-target-path",
+                format!("[[test]]\nname = \"foreign\"\npath = \"../c/src/lib.rs\"\n\n{}", dev(&dep("g"))),
+                &[][..],
+                unclassified_units("crates/r", &[("test", "foreign")], gc),
             ),
             (
                 "a-path-into-no-role",
                 dev(&dep("g")),
-                &[(
-                    "crates/r/tests/compare.rs",
-                    "// mod c: #[path = \"../../c/src/lib.rs\"]\n#[path = \"../../h/src/lib.rs\"]\nmod helper;\n#[test]\nfn t() {}\n",
-                )][..],
+                &[
+                    ("crates/h/src/plain.rs", "pub fn p() {}\n"),
+                    (
+                        "crates/r/tests/compare.rs",
+                        "// mod c: #[path = \"../../c/src/lib.rs\"]\n#[path = \"../../h/src/plain.rs\"]\nmod helper;\n#[test]\nfn t() {}\n",
+                    ),
+                ][..],
+                Vec::new(),
+            ),
+            (
+                "a-file-no-build-compiles",
+                dev(&dep("g")),
+                &[("crates/r/tests/data/sample.rs", "include!(\"../../../c/src/lib.rs\");\n")][..],
                 Vec::new(),
             ),
             // A `dylib`'s doc tests no build makes (round 7's R4).
@@ -5372,6 +5501,76 @@ pub(crate) mod tests {
                 "{case}: a unit its flags turn off counts"
             );
         }
+    }
+
+    #[test]
+    fn a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles() {
+        crate::trust_test_process::bounded!(
+            a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles
+        );
+        // Round 8's D2: a role package's file a dependency's library compiles joins every unit linking it; one a chain
+        // of paths reaches joins the unit whose build read it, and no other.
+        let gh = "[dev-dependencies]\ng = { path = \"../g\" }\nh = { path = \"../h\" }\n";
+        let h = manifest("h", "");
+        let gc = "`crates/c`, `crates/g`";
+        let through_h: &[(&str, &str)] = &[
+            ("crates/h/Cargo.toml", &h),
+            (
+                "crates/h/src/lib.rs",
+                "#[path = \"../../c/src/lib.rs\"]\npub mod checker;\n",
+            ),
+            (
+                "crates/r/tests/compare.rs",
+                "#[test]\nfn t() { assert_eq!(h::checker::x(), g::x()); }\n",
+            ),
+        ];
+        let chain: &[(&str, &str)] = &[
+            ("crates/h/Cargo.toml", &h),
+            ("crates/h/src/lib.rs", "pub fn h() {}\n"),
+            ("crates/h/src/inner.rs", "#[path = \"../../c/src/lib.rs\"]\npub mod checker;\n"),
+            (
+                "crates/r/tests/compare.rs",
+                "#[path = \"../../h/src/inner.rs\"]\nmod inner;\n#[test]\nfn t() { assert_eq!(inner::checker::x(), g::x()); }\n",
+            ),
+        ];
+        for (case, extra, want) in [
+            (
+                "joined-through-a-dependency",
+                through_h,
+                four_unclassified(gc),
+            ),
+            ("joined-through-a-chain", chain, compare_alone(gc)),
+        ] {
+            let inv = written(joining_with(case, gh, "", extra).run());
+            assert_eq!(units_of_r(&inv), want, "{case}");
+        }
+    }
+
+    #[test]
+    fn a_package_with_a_build_script_is_left_out_of_the_census_and_never_run() {
+        crate::trust_test_process::bounded!(
+            a_package_with_a_build_script_is_left_out_of_the_census_and_never_run
+        );
+        // `decision_trust-role-programs.md` §3: the census runs no package's code, so a package holding a build script
+        // is left out of its build, its units judged by their edges — here, joining the generator and the checker.
+        let f = joining_with(
+            "census-build-script",
+            "[dev-dependencies]\ng = { path = \"../g\" }\nc = { path = \"../c\" }\n",
+            "",
+            &[(
+                "crates/r/build.rs",
+                "fn main() { std::fs::write(\"RAN\", \"\").unwrap(); }\n",
+            )],
+        );
+        let inv = written(f.run());
+        assert_eq!(
+            units_of_r(&inv),
+            four_unclassified("`crates/c`, `crates/g`")
+        );
+        assert!(
+            !f.base.join("out/tree/crates/r/RAN").exists(),
+            "the build script ran"
+        );
     }
 
     #[test]
@@ -9490,6 +9689,8 @@ version = "0.1.0"
                     configuration: command.iter().map(|s| (*s).to_owned()).collect(),
                     files: BTreeSet::new(),
                     env: environment.iter().map(|s| (*s).to_owned()).collect(),
+                    root: String::new(),
+                    harness: false,
                 };
                 let key = unit_configuration(&u);
                 assert_eq!(

@@ -523,7 +523,8 @@ program reads a derivation the same way, but for those two things, as that recor
 joining two roles a property rests on is a §2 program target (that record's §3), named or classified, and every
 passage written in that term reads it but the generated-sources record's §5, whose generator files its crate root
 never is; §2's role packages of a program target follow build edges too, over every
-feature and platform, a test-like unit's its package's development edges, as an example's do.
+feature and platform, a test-like unit's its package's development edges, as an example's do, and count a role
+package holding a file the census build read for it (that record's §3).
 
 **Case 4 is judged where an inventory is consumed** (R1 A8). The gate builds its own inventory and cannot find it
 stale. `cargo xtask trust-verify <package>` refuses a package whose inventory is missing, whose build identity is not

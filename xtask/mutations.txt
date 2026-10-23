@@ -3644,9 +3644,9 @@ test -p xtask trust_generated::generator_tests
 expect killed
 why M3.6.6.2.3, the generated-sources record §5 (`GS-H11`, `GS-H5`): one file the crate root of two targets is judged by the union of their role packages, an example's development edges among them.
 from
-                    .flat_map(|(pkg, kind, _)| target_closure(pkg, kind, &graph))
+                            compiled_role_packages(&roots, &census, &graph, pkg, kind, name)
 to
-                    .flat_map(|(pkg, _, _)| target_closure(pkg, "bin", &graph))
+                            compiled_role_packages(&roots, &census, &graph, pkg, "bin", name)
 end
 
 mutation gs-a-rs-non-crate-root-passes
