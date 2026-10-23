@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a test joining two pairs is told it must be split or classified
+
+`ARCHOGEN-M3-0907` (leaf `M3.5.2.4.2`), `2026-10-23`.
+
+- The last of the seventh review's findings answered: no form can name a test joining two pairs, and the gate says
+  so; a test's entry point never serves as a generator file, now tested.
+
 ## archogen — the trust gate sees a test that copies a role's file in
 
 `ARCHOGEN-M3-0906` (leaf `M3.5.2.4.1`), `2026-10-23`.

@@ -84,7 +84,7 @@ writes yet, since the gate that judges a push is built from the commit before it
 
 Each departure refuses before a build, as a misnamed harness does — a clause holding anything but names among them,
 and a fault within one form stopping the reading at that form (leaf `M3.5.2.2.1`) — and one test target belongs to one
-comparison only. A derivation is built, recorded, scanned and held to its pair's role packages as the harness is, but paired with
+comparison only, never classified beside it (leaf `M3.5.2.3.2`). A derivation is built, recorded, scanned and held to its pair's role packages as the harness is, but paired with
 no root: its pair takes its item, `shared-derivation`, one item a form (leaf `M3.5.2.1.2`). The front and each root it
 invokes share an `invocation` item: the invoked root's name, role and target, and the sha256 of the launcher — the
 file the constant `LAUNCHER` in `xtask/src/trust.rs` names, which the front gains with leaf `M3.5.1.4` — so an edit to
@@ -96,7 +96,9 @@ feature and platform and its package's development edges, compiles role packages
 rests on (the generator and either checker, the reference model and the implementation) is a program target, and so is
 one whose package's files name a role package's file by a literal `#[path]` or `include!`, which compiles it with no
 dependency at all (leaf `M3.5.2.4.1`). It counts what some build compiles, more than the default build makes, by
-design (leaf `M3.5.2.3.1`).
+design (leaf `M3.5.2.3.1`). The inventory records the pairs each joins, so the gate's remedy names its pair's form —
+a harness for the reference model's, a derivation for the generator's and a checker's — or, for a unit joining two
+pairs, which no pair form can name, says to split or classify it.
 An integration test that compares the two is named by its pair form; any other such unit is classified by a
 `defprogram` whose target is `(target test|bench|lib-test|bin-test|doctest <name>)`, its reason saying it compares
 nothing the two hold equal. Unnamed, it is reported as an unclassified program is, and refused on the baseline's host
@@ -637,9 +639,9 @@ build it needs fails.
 | `trust-new-shared` | reported | an item the base commit's baseline does not hold, a generated provenance among them |
 | `trust-shared-changed` | reported | an item whose content, configuration, edges or readers differ from the base commit's form — an invocation's launcher among them — or a generated provenance whose content, roles or declared files do, or a comparison's, a harness's or a derivation's, whose provenance does |
 | `trust-unclassified-program` | reported | a program target neither a root nor classified, or whose classification's role packages grew — a test-like unit whose build joins two roles a property rests on among them, unless a pair form names it |
-| `trust-baseline-stale` | refused, on the baseline's host | a form whose item is no longer shared, a classification whose target is gone, an admission no site uses; and, wherever the gate runs, a form naming a package or target the commit no longer has; a `defgenerated` form whose file no program reads, on the baseline's host |
+| `trust-baseline-stale` | refused, on the baseline's host | a form whose item is no longer shared, a classification whose target is gone or no longer joins two roles, an admission no site uses; and, wherever the gate runs, a form naming a package or target the commit no longer has; a `defgenerated` form whose file no program reads, on the baseline's host |
 | `trust-undeclared-input` | refused | an input the commit does not hold, or a construct the catalog's rules refuse, with no admission, in a program's build or a generator's; a `defgenerated` form departing from its shape, or a construction its text alone refuses — a file two forms declare, an entry twice in a clause, a file both a generator and an input, a declared file its own generator or input; a live form's generator or input that is no file of the commit's tree — one at or under a gitlink among them — or is a symbolic link, or that a form declares or a header marks, a chain; an entry point that is not a `.rs` file, in a program's closure or a generator's; a `.rs` generator file that is no program target's entry point; a file a program reads that is marked generated and no form declares; a declared or marked file a generator's build reads; a front that invokes while its commit holds no launcher |
-| `trust-form-missing` | refused, on the baseline's host | a shared item with no form in the commit's own baseline, or with one proposing other digests than the commit measures; a program target with no classification — a joined integration test, unless a pair form names it |
+| `trust-form-missing` | refused, on the baseline's host | a shared item with no form in the commit's own baseline, or with one proposing other digests than the commit measures; a program target with no classification — a joined unit among them, unless a pair form names it, the remedy naming its pair's form |
 | `trust-shared-program` | refused | a root compiling another role's role package, or a comparison — the harness or a derivation — one of a role outside its pair; a live form's generator file that is the entry point of a program target whose role packages hold another role's than the reading program's — for the harness, than its pair's — or a script lying in a role package of such a role |
 | `trust-inventory-stale` | refused, by `trust-verify` | a package's inventory missing or of another build, its report of another inventory, an artifact or a result's producer not the inventory's, a result's role no root's or its producer a derivation, a handed dependency undeclared |
 

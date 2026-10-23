@@ -2779,6 +2779,39 @@ mod route_tests {
     }
 
     #[test]
+    fn a_joined_test_s_crate_root_is_no_generator_file() {
+        crate::trust_test_process::bounded!(a_joined_test_s_crate_root_is_no_generator_file);
+        // The clarification of `2026-10-23`, round 7's D2: joining makes `crates/j`'s test a program target — it compiles
+        // `chk`'s package through its edge and `gen`'s through a literal path — and gives its crate root no generator
+        // file's standing, so it is refused as any `.rs` file that is no program target's crate root is.
+        let f = chk(
+            "joined-crate-root-generator",
+            &[
+                ("scripts/gen.sh", "echo a table\n".to_owned()),
+                (
+                    "crates/j/Cargo.toml",
+                    manifest("j", "[dev-dependencies]\nb = { path = \"../b\" }\n"),
+                ),
+                ("crates/j/src/lib.rs", "pub fn j() {}\n".to_owned()),
+                (
+                    "crates/j/tests/peek.rs",
+                    "#[path = \"../../a/src/main.rs\"]\nmod front;\n#[test]\nfn t() {}\n"
+                        .to_owned(),
+                ),
+                roots(&form(
+                    "crates/b/src/gen_b.rs",
+                    &["crates/j/tests/peek.rs"],
+                    &[],
+                )),
+            ],
+        );
+        says(
+            &refused(f.run()),
+            "generator `crates/j/tests/peek.rs` is a `.rs` file that is no",
+        );
+    }
+
+    #[test]
     fn route_a_vendored_file_copied() {
         // §3. A gitlink's files are no blobs (the blob rule's test above); their copies are files of the commit. A
         // copied input, script and executable, the executable named beside the script that runs it: written, reached.

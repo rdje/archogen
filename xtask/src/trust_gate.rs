@@ -604,15 +604,19 @@ pub fn judge(
         if !classified {
             // A test-like unit joining two roles is named by a pair form, if it compares them, or classified
             // (`decision_trust-role-programs.md` §3).
-            // Each pair's form: the reference model's and the implementation's a harness, any other a derivation.
-            let forms: BTreeSet<&str> = t
+            // Each pair's form: the reference model's and the implementation's a harness, any other a derivation; a unit
+            // joining two pairs compiles a role package outside either's pair, so no pair form can name it (round 7's R6).
+            let joins: Vec<&str> = t
                 .get("joins")
                 .map(Json::elements)
                 .unwrap_or_default()
                 .iter()
                 .filter_map(Json::as_str)
+                .collect();
+            let forms: BTreeSet<&str> = joins
+                .iter()
                 .map(|pair| {
-                    if pair == "reference-model+implementation" {
+                    if *pair == "reference-model+implementation" {
                         "`defharness`"
                     } else {
                         "`defderivation`"
@@ -620,6 +624,9 @@ pub fn judge(
                 })
                 .collect();
             let remedy = match field("kind") {
+                "test" if joins.len() > 1 => "it joins more than one pair, so no pair form can name it: split it, or \
+                                              classify it by a `defprogram` form"
+                    .to_owned(),
                 "test" if !forms.is_empty() => format!(
                     "name it by a {} form if it compares the two roles, or classify it by a `defprogram` form",
                     forms.into_iter().collect::<Vec<_>>().join(" or ")
@@ -1498,7 +1505,12 @@ mod tests {
         let test = unit("test", "compare", r#""generator+configuration-checker""#);
         let model = unit("test", "lifecycle", r#""reference-model+implementation""#);
         let lib = unit("lib-test", "r", r#""generator+configuration-checker""#);
-        let now = inv("h", &[CONFIG], &[&test, &model, &lib], (&[], &[]));
+        let both = unit(
+            "test",
+            "both",
+            r#""generator+configuration-checker","reference-model+implementation""#,
+        );
+        let now = inv("h", &[CONFIG], &[&test, &model, &lib, &both], (&[], &[]));
         let base = Base {
             commit: Some("b"),
             baseline: Some((&own, "s".to_owned())),
@@ -1512,10 +1524,12 @@ mod tests {
              `defharness` form if it compares the two roles, or classify it by a `defprogram` form",
             "trust-form-missing: the lib-test `r` of `crates/r` has no form in trust/roots.eadl — classify it by a \
              `defprogram` form",
+            "trust-form-missing: the test `both` of `crates/r` has no form in trust/roots.eadl — it joins more than one \
+             pair, so no pair form can name it: split it, or classify it by a `defprogram` form",
         ] {
             assert!(j.refused.iter().any(|r| r == want), "{want}: {:#?}", j.refused);
         }
-        assert_eq!(j.refused.len(), 3, "{:#?}", j.refused);
+        assert_eq!(j.refused.len(), 4, "{:#?}", j.refused);
         for kind in ["the test `compare`", "the lib-test `r`"] {
             assert!(has(&j.change, kind), "{kind}: {:#?}", j.change);
         }

@@ -87,7 +87,9 @@ a pair form if it compares them, any unit else classified by `defprogram`, `(tar
 <name>)`, its reason the claim that it compares nothing they hold equal. Unnamed, it is `trust-unclassified-program`,
 and `trust-form-missing` on the baseline's host. §1's census of names found the two comparisons `RP-H11` names. A
 comparison is an integration test, a pair form's; a classification says its unit compares nothing. Counting what
-some build compiles over-reports what the default build makes, by design (`M3.5.2.3.1`).
+some build compiles over-reports what the default build makes, by design (`M3.5.2.3.1`). The inventory
+records each one's pairs (`joins`), so the remedy names its pair's form, or says none can for a unit joining two; a
+classification of a test a pair form names is a read failure.
 
 **Outside it, stated in the report:** its run-time reads of the kind modules (`std::fs`); and the transcriptions
 themselves — the model's sources are in the checker's package and the production relation's, from `M3.4`, in the
