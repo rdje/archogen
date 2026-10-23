@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate reads every source's inclusions
+
+`ARCHOGEN-M3-0919` (leaf `M3.5.2.7.1`), `2026-10-23`.
+
+- The trust gate now reads every file a build target reaches through `mod`, `#[path]` or an `include!`, whatever the
+  build configuration, doc tests included, and refuses an inclusion whose file its text does not name — a computed
+  path, an alias, a macro's — unless an admission reviews it. The tree's one such site, in `rt-analysis`'s tests,
+  is admitted after the next push.
+
 ## archogen — the checkers' programs in the trust record, round 10, and a third change of method
 
 `ARCHOGEN-M3-0918` (leaf `M3.5.2`), `2026-10-23`.

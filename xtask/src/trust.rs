@@ -15,6 +15,8 @@
 //! `trust/roots.eadl` names its file, its rule and the sha256 of its extent — the statement or item it stands in
 //! (R8 4) — one admission per site (R8 3). Data other than a `.rs` file is hashed and never tokenised (R6 7; R8 10).
 
+#[path = "trust_census.rs"]
+mod census;
 #[path = "trust_compiler.rs"]
 mod compiler;
 
@@ -2434,6 +2436,49 @@ pub fn inventory_with(
     };
     rules.workspace(&mut refused);
 
+    // The census's reading of the sources (`decision_trust-role-programs.md` §3; round 10's change of method): every
+    // target's crate root and every file it reaches, read with nothing built, whatever their `cfg`; a site it cannot
+    // follow by its text is refused unless an admission names it, each site once however many roots reach it.
+    // A path out of the tree's text is placed on disk: followed if it lands in the written tree.
+    let canonical_tree =
+        fs::canonicalize(&tree_dir).map_err(|e| unable(&refused)(e.to_string()))?;
+    let outer = |from: &str, rel: &str| -> Option<String> {
+        let path = if rel.starts_with('/') {
+            PathBuf::from(rel)
+        } else {
+            tree_dir.join(from).join(rel)
+        };
+        let path = fs::canonicalize(path).ok()?;
+        let inside = path.strip_prefix(&canonical_tree).ok()?;
+        Some(inside.to_string_lossy().into_owned())
+    };
+    let mut reaches: BTreeMap<String, census::Reach> = BTreeMap::new();
+    for src in target_sources.values().flatten() {
+        if !reaches.contains_key(src) && tree.is_file(src) {
+            reaches.insert(src.clone(), census::reach(&tree, &symlinks, src, &outer));
+        }
+    }
+    let unfollowed: BTreeSet<&census::Unfollowed> =
+        reaches.values().flat_map(|r| &r.unfollowed).collect();
+    // Reported with the step's other refusals once its builds are made: reading a source runs nothing, so no build need
+    // wait for it (the generated-sources record §2).
+    let mut census_refused: Vec<String> = Vec::new();
+    for u in unfollowed {
+        let admission = Admission {
+            file: u.file.clone(),
+            rule: census::RULE.to_owned(),
+            sha256: u.sha256.clone(),
+        };
+        if roots.admissions.contains_key(&admission) {
+            *rules.used.entry(admission).or_default() += 1;
+        } else {
+            census_refused.push(format!(
+                "trust-undeclared-input: `{}:{}`: an inclusion site that {}, and no admission names it (site sha256 {})",
+                u.file, u.line, u.why, u.sha256
+            ));
+        }
+    }
+
     // The manifest rules over every package in a program's closure, from the metadata graph, before any build:
     // a build script or a procedural macro is refused here, so none runs (§3, R2 B12); the harness's development
     // edges are followed, since its build compiles them (R7 3). A program whose package is gone is stale, refused
@@ -2604,6 +2649,7 @@ pub fn inventory_with(
         }
     }
 
+    refused.extend(census_refused);
     if !failed.is_empty() {
         return Err(crate::trust_generated::beside(failed.join("\n"), &refused));
     }
@@ -5292,6 +5338,53 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn an_inclusion_the_census_cannot_follow_is_refused_unless_admitted() {
+        crate::trust_test_process::bounded!(
+            an_inclusion_the_census_cannot_follow_is_refused_unless_admitted
+        );
+        // Round 10's change of method: every file a target reaches is read for its inclusion sites, a test's as a
+        // root's, and one no literal pins is refused unless an admission names it, rule `inclusion`, by its extent.
+        let site = "include_str!(concat!(\"../\", \"x.txt\"))";
+        let test = format!("#[test]\nfn t() {{ let _ = {site}; }}\n");
+        let files = |roots: String| {
+            vec![
+                ("crates/b/tests/t.rs", test.clone()),
+                ("crates/b/x.txt", "x\n".to_owned()),
+                ("trust/roots.eadl", roots),
+            ]
+        };
+        let f = two_roots(
+            "census-unfollowed",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &files(ROOTS.to_owned()),
+        );
+        let sha = Digest::of(site.as_bytes()).hex();
+        says(
+            &refused(f.run()),
+            &format!(
+                "trust-undeclared-input: `crates/b/tests/t.rs:2`: an inclusion site that is no single string literal, so \
+                 the file it names is decided by its expansion, and no admission names it (site sha256 {sha})"
+            ),
+        );
+        let f = two_roots(
+            "census-unfollowed-admitted",
+            "fn main() {}\n",
+            "pub fn f() {}\n",
+            &files(format!(
+                "{ROOTS}{}",
+                admit("crates/b/tests/t.rs", "inclusion", site)
+            )),
+        );
+        let inv = written(f.run());
+        assert_eq!(
+            inv.get("admissions-unused").map(crate::json::write),
+            Some("[]".to_owned()),
+            "the admission is used"
+        );
+    }
+
+    #[test]
     fn a_comparison_is_paired_with_roots_alone() {
         crate::trust_test_process::bounded!(a_comparison_is_paired_with_roots_alone);
         // Round 9's R10, the parent's §4: the harness is paired with every root but its pair's two, a derivation with
@@ -5888,24 +5981,6 @@ pub(crate) mod tests {
                 compare_alone(gc),
             ),
             (
-                "joined-by-an-untokenized-file",
-                dev(&dep("g")),
-                &[(
-                    "crates/r/tests/compare.rs",
-                    "#[path = \"../../c/src/lib.rs\"]\nmod checker;\n#[test]\nfn t() { 'é: loop { break 'é; } assert_eq!(checker::x(), g::x()); }\n",
-                )][..],
-                compare_alone(gc),
-            ),
-            (
-                "joined-by-an-aliased-include",
-                dev(&dep("g")),
-                &[(
-                    "crates/r/tests/compare.rs",
-                    "use std::include as inc;\nmod checker { super::inc!(\"../../c/src/lib.rs\"); }\n#[test]\nfn t() { assert_eq!(checker::x(), g::x()); }\n",
-                )][..],
-                compare_alone(gc),
-            ),
-            (
                 "joined-by-a-target-path",
                 format!("[[test]]\nname = \"foreign\"\npath = \"../c/src/lib.rs\"\n\n{}", dev(&dep("g"))),
                 &[][..],
@@ -5967,6 +6042,35 @@ pub(crate) mod tests {
                 "{case}: a unit its flags turn off counts"
             );
         }
+        // A file the census cannot read is refused unless an admission names it (round 10's change of method): the
+        // catalog's lexer does not read a lifetime that is not ASCII.
+        let untokenized = "#[path = \"../../c/src/lib.rs\"]\nmod checker;\n#[test]\nfn t() { 'é: loop { break 'é; } assert_eq!(checker::x(), g::x()); }\n";
+        says(
+            &refused(
+                joining_with(
+                    "joined-by-an-untokenized-file",
+                    &dev(&dep("g")),
+                    "",
+                    &[("crates/r/tests/compare.rs", untokenized)],
+                )
+                .run(),
+            ),
+            "`crates/r/tests/compare.rs:4`: an inclusion site that does not tokenize",
+        );
+        // And an alias of `include!`, whose invocations no literal pins.
+        let aliased = "use std::include as inc;\nmod checker { super::inc!(\"../../c/src/lib.rs\"); }\n#[test]\nfn t() { assert_eq!(checker::x(), g::x()); }\n";
+        says(
+            &refused(
+                joining_with(
+                    "joined-by-an-aliased-include",
+                    &dev(&dep("g")),
+                    "",
+                    &[("crates/r/tests/compare.rs", aliased)],
+                )
+                .run(),
+            ),
+            "`crates/r/tests/compare.rs:1`: an inclusion site that imports or shadows an inclusion macro",
+        );
     }
 
     #[test]
@@ -7153,7 +7257,7 @@ version = "0.1.0"
             .collect();
         let admissions: String = lines
             .iter()
-            .map(|line| admit("crates/b/src/lib.rs", "include_str", line))
+            .map(|line| admit_line("crates/b/src/lib.rs", line))
             .collect();
         let f = two_roots(
             name,
@@ -7202,7 +7306,7 @@ version = "0.1.0"
         ];
         let admissions: String = lines
             .iter()
-            .map(|line| admit("crates/b/src/lib.rs", "include_str", line))
+            .map(|line| admit_line("crates/b/src/lib.rs", line))
             .collect();
         let f = two_roots(
             name,
@@ -7267,7 +7371,7 @@ version = "0.1.0"
             }
             let admissions: String = lines
                 .iter()
-                .map(|line| admit("crates/b/src/lib.rs", "include_str", line))
+                .map(|line| admit_line("crates/b/src/lib.rs", line))
                 .collect();
             extra.push(("trust/roots.eadl", format!("{ROOTS}{admissions}")));
             let f = two_roots(name, "fn main() {}\n", &(lines.join("\n") + "\n"), &extra);
@@ -7340,7 +7444,7 @@ version = "0.1.0"
         lines.push("pub const CANONICAL: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/src/inside.txt\"));".to_owned());
         let admissions: String = lines
             .iter()
-            .map(|line| admit("crates/b/src/lib.rs", "include_str", line))
+            .map(|line| admit_line("crates/b/src/lib.rs", line))
             .collect();
         let f = two_roots(
             name,
@@ -7404,7 +7508,7 @@ version = "0.1.0"
             .collect();
         let admissions: String = lines
             .iter()
-            .map(|line| admit("crates/b/src/lib.rs", "include_str", line))
+            .map(|line| admit_line("crates/b/src/lib.rs", line))
             .collect();
         let f = two_roots(
             name,
@@ -8035,9 +8139,15 @@ version = "0.1.0"
                 ),
                 (
                     "trust/roots.eadl",
+                    // The catalog's admission of the site, and the census's of what it cannot follow (round 10).
                     format!(
-                        "{ROOTS}{}",
-                        admit("crates/a/src/main.rs", "include_str", include)
+                        "{ROOTS}{}{}",
+                        admit("crates/a/src/main.rs", "include_str", include),
+                        admit(
+                            "crates/a/src/main.rs",
+                            "inclusion",
+                            "include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/src/data.txt\"))"
+                        )
                     ),
                 ),
             ],
@@ -9352,6 +9462,34 @@ version = "0.1.0"
     }
 
     // ── Round 8 (`M3.6.1` step 9): each reproducer the reader ran, as a fixture ─────────────────────────────────────
+
+    /// The catalog's admission of a line's `include_str!` site and, where the census cannot follow it — no single
+    /// string literal — the census's of the invocation too (round 10's change of method).
+    fn admit_line(file: &str, line: &str) -> String {
+        let mut out = admit(file, "include_str", line);
+        if let Some(at) = line.find("include_str!(concat!(") {
+            let rest = &line[at..];
+            let mut depth = 0usize;
+            let end = rest
+                .char_indices()
+                .find_map(|(i, c)| {
+                    match c {
+                        '(' => depth += 1,
+                        ')' => {
+                            depth -= 1;
+                            if depth == 0 {
+                                return Some(i + 1);
+                            }
+                        }
+                        _ => {}
+                    }
+                    None
+                })
+                .unwrap_or(rest.len());
+            out.push_str(&admit(file, "inclusion", &rest[..end]));
+        }
+        out
+    }
 
     /// The clause an admission names its site's sha256 in.
     const ADMIT: &str = "sha256";

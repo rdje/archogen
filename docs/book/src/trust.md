@@ -100,7 +100,9 @@ test profile, default features — once as it selects them, once with `--all-tar
 features, each target neither build made (leaf `M3.5.2.6.2`), and a unit counts every file its dependency information names and its closure's libraries' do, each
 for the innermost package holding it (leaf `M3.5.2.6.1`), so a role package's file reached by a path, an `include!` or a dependency's own path joins it however its source spells it
 (leaf `M3.5.2.5.1`; a scan of the text before it, `M3.5.2.4.1`, missed spellings). It counts what some build compiles, more than the default build makes, by
-design (leaf `M3.5.2.3.1`). What decides what a unit compiles — target selection, required features, the profile,
+design (leaf `M3.5.2.3.1`). Every file a target reaches is read for its inclusion sites — `mod`, `#[path]`, the
+`include!` family, in code and in doc text, whatever their `cfg` — and a site the census cannot follow by its text
+alone is refused unless an admission, rule `inclusion`, names it (leaf `M3.5.2.7.1`). What decides what a unit compiles — target selection, required features, the profile,
 `cfg(test)`, features, platform, configuration, file inclusion, dependency kinds, build scripts and procedural macros,
 doc tests, non-members, a program a test runs — is a table in the record's §3, each rule quoted from the Cargo Book of
 the pin ([`rust-toolchain`](ledger.md#rust-toolchain)), each row held by its fixtures and, where part of it is outside

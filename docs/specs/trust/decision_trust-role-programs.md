@@ -99,7 +99,12 @@ comparison is an integration test, a pair form's; a classification says its unit
 some build compiles over-reports what the default build makes, by design (`M3.5.2.3.1`). The inventory
 records each one's pairs (`joins`), so the remedy names its pair's form, or says none can for a unit joining two or
 compiling a role package of a root beside its pair's two, for which a pair form's build is refused (§2; round 8's R5,
-`M3.5.2.5.2`); a classification of a test a pair form names is a read failure. A file counts for the package holding
+`M3.5.2.5.2`); a classification of a test a pair form names is a read failure. Every file a target's crate root
+reaches is read for its inclusion sites — `mod`, `#[path]`, the `include!` family, in code and in doc text, whatever
+their `cfg` — and a site the census cannot follow by its text, no single string literal, an alias or a macro's, a doc
+test's own, one through a symbolic link, a file that does not tokenize, is refused unless an admission, rule
+`inclusion`, names it by its extent's sha256; a path out of the tree's text is followed where it lands on disk, a file
+outside the written tree joining no role (`M3.5.2.7.1`, `RP-H19`). A file counts for the package holding
 it whatever it is — a manifest, a table an `include_str!` reads — so a document another role reads from a role
 package makes that package compiled, joining here and refused under `trust-shared-program`, not the parent's §4 file
 item: share it from a package of no role (round 9's R7).
@@ -238,6 +243,7 @@ refuses the item until a push holds the form and nothing after it moves the item
 | `RP-H16` | `M3.5` | Each leaf of `M3.5` whose commit makes a test-like unit join two roles a property rests on names it by a pair form or classifies it by a `defprogram` in that commit, after a push carrying `M3.5.2`'s readers, whole. |
 | `RP-H17` | `M2.21` | Each leaf of `M2.21` whose commit makes a test-like unit join two roles a property rests on names it by a pair form or classifies it by a `defprogram` in that commit, after a push carrying `M3.5.2`'s readers, whole. |
 | `RP-H18` | `M3.5.8` | `trust/roots.eadl` classifies each test-like unit of `crates/rt-core` the census of the judging base finds joining the reference model and the implementation and no pair form names, after the first push that brings the census to `main` and before the push after it. |
+| `RP-H19` | `M3.5.8` | `trust/roots.eadl` admits, by rule `inclusion`, each site of the tree the census of the judging base cannot follow by its text — `crates/rt-analysis/tests/runtime_variant.rs:510`'s `include_str!(concat!(…))`, as `M3.5.2.7.1` measured it — after the first push that brings the census's reading of the sources to `main` and before the push after it. |
 
 ## Review
 

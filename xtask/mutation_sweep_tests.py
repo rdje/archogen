@@ -544,7 +544,7 @@ class ObserverCloseTests(DiscoveryFixture):
         expected = {
             'xtask/src/trust_compiler_observer.rs': '58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98',
             'xtask/src/trust_compiler.rs': '1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973',
-            'xtask/src/trust.rs': '85171aa80cd59a6ef2f3707b483743b1ca7acc9ee37f1f27c1ffeb4e861fb2c9',  # re-pinned by M3.5.2.6.4: step 4's exits through `unable` and a comparison paired with roots alone, no command, argument or cwd changed; the observer's close unchanged
+            'xtask/src/trust.rs': '992b32219da96426c3f46acb2eb71f63a6f8574cab6b744571705418e09ee6b9',  # re-pinned by M3.5.2.7.1: every source's inclusion sites read, `trust_census.rs` declared from here, no command, argument or cwd changed; the observer's close unchanged
         }
         def verify(inputs):
             for path, digest in expected.items():
@@ -1504,7 +1504,7 @@ os.execvp("rustc", ["rustc"] + arguments)
         ]
         inputs = {path: (ROOT / path).read_bytes() for path in paths}
         expected = {
-            'xtask/src/trust.rs': '4fb9ccb7ff49b793990fba3c1dc223514d1c32e7cf7cf75f3da58bf4e577a608',  # re-pinned by M3.5.2.6.4: step 4's exits through `unable` and a comparison paired with roots alone, no command, argument or cwd changed; the caller suffix unchanged
+            'xtask/src/trust.rs': '8eca1e113a4c7cab39eceba0697a1b1194f0d9c6367ae5cc9a7ee59cb992a9c3',  # re-pinned by M3.5.2.7.1: every source's inclusion sites read, `trust_census.rs` declared from here, no command, argument or cwd changed; the caller suffix unchanged
             'xtask/src/trust_compiler.rs': '634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70',
             'xtask/src/trust_compiler_observer.rs': 'c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f',
             'xtask/src/catalog_build.rs': 'd3e8865c3633de9f4cafb82c3613f0ee82df0c065012b732469cda5951221ed2',
@@ -1971,7 +1971,7 @@ class IteratorTests(DiscoveryFixture):
             entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
             guarded = {
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
-                    "4fb9ccb7ff49b793990fba3c1dc223514d1c32e7cf7cf75f3da58bf4e577a608"),  # re-pinned by M3.5.2.6.4: step 4's exits through `unable` and a comparison paired with roots alone, no command, argument or cwd changed; the absolute cwd unchanged
+                    "8eca1e113a4c7cab39eceba0697a1b1194f0d9c6367ae5cc9a7ee59cb992a9c3"),  # re-pinned by M3.5.2.7.1: every source's inclusion sites read, `trust_census.rs` declared from here, no command, argument or cwd changed; the absolute cwd unchanged
                 "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
                     "634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70"),
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],
