@@ -10,8 +10,10 @@
 //! blocks, the file path is relative to the directory the source file is located"; inside inline module blocks it is
 //! relative to the mod-rs file's directory "including the inline module components as directories", and for a
 //! non-mod-rs file "the path starts with a directory with the name of the non-mod-rs module". Where the reference is
-//! silent — the children of a module a `path` attribute loads, a module an `include!` brings in — both readings are
-//! followed, so the census over-counts rather than misses.
+//! silent — the children of a module a `path` attribute loads, the `mod` items of a file an `include!` brings in — the
+//! pin decides, measured `2026-10-23` by its own refusal of a missing child: "create file \"src/pl/child.rs\" or
+//! \"src/pl/child/mod.rs\"" for `src/pl/loaded.rs`, "\"src/inc/c.rs\"" for `src/inc/i.rs` — each under the loaded
+//! file's own directory, which the census's oracle holds on every build of its corpus.
 
 use std::collections::BTreeSet;
 
@@ -115,11 +117,10 @@ pub(crate) fn reach(tree: &Tree, links: &BTreeSet<String>, root: &str, outer: Ou
             Ok(path) => path,
         };
         for m in &scan.modules {
-            match &m.path {
+            match m.paths.as_slice() {
                 // `mod name;`: its file mirrors its module path, under each directory this file's children may lie in.
-                None => {
-                    for base in &bases {
-                        let dir = join_all(base, &m.inline);
+                [] => {
+                    for dir in bases.iter().flat_map(|base| expansions(base, &m.inline)) {
                         for candidate in [format!("{}.rs", m.name), format!("{}/mod.rs", m.name)] {
                             if let Some(path) = found(follow(&candidate, &dir, &m.site), &mut out) {
                                 todo.push((
@@ -132,19 +133,20 @@ pub(crate) fn reach(tree: &Tree, links: &BTreeSet<String>, root: &str, outer: Ou
                     }
                 }
                 // `#[path = "…"] mod name;`: relative to this file's directory, or inside inline modules to it with the
-                // inline components — after the non-mod-rs file's own name, when it is one.
-                Some(rel) => {
+                // inline components — after the non-mod-rs file's own name, when it is one. Each `path` attribute the
+                // item carries, `cfg_attr`'s in every configuration, is followed.
+                rels => {
                     let mut froms = Vec::new();
                     if m.inline.is_empty() {
                         froms.push(dir.clone());
                     } else {
-                        froms.push(join_all(&dir, &m.inline));
+                        froms.extend(expansions(&dir, &m.inline));
                         if let Some(stem) = non_mod_rs_stem(&file, root) {
-                            froms.push(join_all(&join(&dir, &stem), &m.inline));
+                            froms.extend(expansions(&join(&dir, &stem), &m.inline));
                         }
                     }
-                    for from in froms {
-                        if let Some(path) = found(follow(rel, &from, &m.site), &mut out) {
+                    for (from, rel) in froms.iter().flat_map(|f| rels.iter().map(move |r| (f, r))) {
+                        if let Some(path) = found(follow(rel, from, &m.site), &mut out) {
                             let children = children_of_path_module(&path);
                             todo.push((path, children, test_only || m.test_only));
                         }
@@ -165,11 +167,10 @@ pub(crate) fn reach(tree: &Tree, links: &BTreeSet<String>, root: &str, outer: Ou
                         continue;
                     };
                     match inc.what {
-                        // An `include!`d file is read as Rust; its `mod` children are looked for under this file's
-                        // directories and its own, either reading the reference does not decide.
+                        // An `include!`d file is read as Rust, its `mod` children under its own directory, as the pin
+                        // resolves them (the module documentation's measurement).
                         What::Rust => {
-                            let mut children = bases.clone();
-                            children.push(parent(&path));
+                            let children = vec![parent(&path)];
                             todo.push((path, children, test_only || inc.test_only));
                         }
                         What::Data => {
@@ -228,10 +229,11 @@ impl Site {
 #[derive(Debug)]
 struct Module {
     name: String,
-    /// Its `path` attribute, decoded.
-    path: Option<String>,
-    /// The inline modules it is declared in, outermost first, each by its `path` attribute or its name.
-    inline: Vec<String>,
+    /// Its `path` attributes, decoded: one, or one a `cfg_attr` each — every one a candidate.
+    paths: Vec<String>,
+    /// The inline modules it is declared in, outermost first, each by its `path` attributes or its name: every
+    /// alternative a directory its children may lie under.
+    inline: Vec<Vec<String>>,
     /// Whether it lies in an item under `#[cfg(test)]`.
     test_only: bool,
     site: Site,
@@ -307,14 +309,14 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
         extent: text(a, b),
     };
     // Inline modules open: (the brace depth inside them, their directory component).
-    let mut inline: Vec<(usize, String)> = Vec::new();
+    let mut inline: Vec<(usize, Vec<String>)> = Vec::new();
     // The closing delimiter of the `macro_rules!` body open, if any.
     let mut macro_end: Option<usize> = None;
     // Whether a `use` item is open, up to its `;`.
     let mut in_use = false;
     let mut depth = 0usize;
     // A `path` attribute seen, carried to the `mod` item it precedes: its value and its `#`'s index.
-    let mut pending_path: Option<(String, usize)> = None;
+    let mut pending_path: Vec<(String, usize)> = Vec::new();
     let mut i = 0;
     while i < ts.len() {
         if macro_end.is_some_and(|end| i > end) {
@@ -340,7 +342,7 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                     let value = ts.get(j + 2).filter(|t| t.kind == Kind::Str);
                     if key == Some("path") && assigned {
                         match value.and_then(|v| decode(&source[v.at..v.end])) {
-                            Some(p) if !in_macro => pending_path = Some((p, i)),
+                            Some(p) if !in_macro => pending_path.push((p, i)),
                             _ => out.unfollowed.push(site(i, close).unfollowed(
                                 file,
                                 if in_macro {
@@ -378,11 +380,11 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                     inline.pop();
                 }
                 depth = depth.saturating_sub(1);
-                pending_path = None;
+                pending_path.clear();
             }
             Kind::Punct(';') => {
                 in_use = false;
-                pending_path = None;
+                pending_path.clear();
             }
             _ => {}
         }
@@ -419,18 +421,23 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                         ));
                     }
                 } else if let Some(n) = declared {
-                    let path = pending_path.take();
+                    let paths = std::mem::take(&mut pending_path);
                     match ends {
                         Some(Kind::Punct(';')) => out.modules.push(Module {
-                            path: path.as_ref().map(|(p, _)| p.clone()),
+                            site: site(paths.first().map_or(i, |(_, at)| *at), i + 2),
+                            paths: paths.into_iter().map(|(p, _)| p).collect(),
                             inline: inline.iter().map(|(_, c)| c.clone()).collect(),
                             test_only: in_test(i),
-                            site: site(path.as_ref().map_or(i, |(_, at)| *at), i + 2),
                             name: n,
                         }),
                         // Its brace is counted when the loop reaches it.
                         Some(Kind::Open('{')) => {
-                            inline.push((depth + 1, path.map_or(n, |(p, _)| p)))
+                            let alternatives = if paths.is_empty() {
+                                vec![n]
+                            } else {
+                                paths.into_iter().map(|(p, _)| p).collect()
+                            };
+                            inline.push((depth + 1, alternatives));
                         }
                         _ => {}
                     }
@@ -790,15 +797,10 @@ fn through_link(path: &str, links: &BTreeSet<String>) -> bool {
     false
 }
 
-/// The directories a `path`-loaded module's own `mod` children may lie under: its file's directory, and, unless it is a
-/// `mod.rs`, the directory of its name — the reference decides neither, so both are followed.
+/// The directory a `path`-loaded module's own `mod` children lie under: its file's, as the pin resolves them (the module
+/// documentation's measurement).
 fn children_of_path_module(path: &str) -> Vec<String> {
-    let dir = parent(path);
-    let file = path.rsplit('/').next().unwrap_or(path);
-    match file.strip_suffix(".rs") {
-        Some("mod") | None => vec![dir],
-        Some(stem) => vec![dir.clone(), join(&dir, stem)],
-    }
+    vec![parent(path)]
 }
 
 /// A non-mod-rs file's module name: none for the crate root and a `mod.rs`.
@@ -820,8 +822,15 @@ fn join(dir: &str, part: &str) -> String {
     }
 }
 
-fn join_all(dir: &str, parts: &[String]) -> String {
-    parts.iter().fold(dir.to_owned(), |d, p| join(&d, p))
+/// Every directory `parts`' alternatives make under `dir`, one component each, outermost first.
+fn expansions(dir: &str, parts: &[Vec<String>]) -> Vec<String> {
+    parts
+        .iter()
+        .fold(vec![dir.to_owned()], |dirs, alternatives| {
+            dirs.iter()
+                .flat_map(|d| alternatives.iter().map(move |a| join(d, a)))
+                .collect()
+        })
 }
 
 fn line_of(source: &[u8], at: usize) -> usize {
@@ -831,6 +840,10 @@ fn line_of(source: &[u8], at: usize) -> usize {
         .count()
         + 1
 }
+
+#[cfg(test)]
+#[path = "trust_census_oracle.rs"]
+mod oracle;
 
 #[cfg(test)]
 mod tests {
@@ -1162,5 +1175,28 @@ mod tests {
         }
         let nontest: Vec<&str> = r.nontest.iter().map(String::as_str).collect();
         assert_eq!(nontest, ["c/b.txt", "p/src/inner.rs", "p/src/lib.rs"]);
+    }
+
+    #[test]
+    fn every_path_attribute_a_module_carries_is_followed() {
+        // The oracle's first finding: two `cfg_attr` paths on one module, each another configuration's — each followed,
+        // and an inline module's alternatives each a directory its children may lie under.
+        let r = of(
+            &[
+                (
+                    "p/src/lib.rs",
+                    "#[cfg_attr(not(test), path = \"ca.rs\")]\n#[cfg_attr(test, path = \"cb.rs\")]\nmod ca;\n\
+                     #[cfg_attr(test, path = \"x\")]\n#[cfg_attr(not(test), path = \"y\")]\nmod m {\n    mod z;\n}\n",
+                ),
+                ("p/src/ca.rs", ""),
+                ("p/src/cb.rs", ""),
+                ("p/src/x/z.rs", ""),
+                ("p/src/y/z.rs", ""),
+            ],
+            "p/src/lib.rs",
+        );
+        for f in ["p/src/ca.rs", "p/src/cb.rs", "p/src/x/z.rs", "p/src/y/z.rs"] {
+            assert!(r.files.contains(f), "{f}: {:?}", files(&r));
+        }
     }
 }

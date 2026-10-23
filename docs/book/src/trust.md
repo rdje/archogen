@@ -104,7 +104,9 @@ design (leaf `M3.5.2.3.1`). Every file a target reaches is read for its inclusio
 `include!` family, in code and in doc text, whatever their `cfg` — and a site the census cannot follow by its text
 alone is refused unless an admission, rule `inclusion`, names it (leaf `M3.5.2.7.1`). What only a `#[cfg(test)]`
 item reaches counts for its crate's own tests, never for the crate as another links it; a non-member's tests are not
-counted; and a pair form is held to what the census reads of its test as to its build (leaf `M3.5.2.7.2`). What decides what a unit compiles — target selection, required features, the profile,
+counted; and a pair form is held to what the census reads of its test as to its build (leaf `M3.5.2.7.2`). An oracle
+holds the census to rustc: it builds a corpus of every reviewer's probe in twelve configurations through a compiler
+wrapper of its own and finds every file each build read counted (leaf `M3.5.2.7.3`). What decides what a unit compiles — target selection, required features, the profile,
 `cfg(test)`, features, platform, configuration, file inclusion, dependency kinds, build scripts and procedural macros,
 doc tests, non-members, a program a test runs — is a table in the record's §3, each rule quoted from the Cargo Book of
 the pin ([`rust-toolchain`](ledger.md#rust-toolchain)), each row held by its fixtures and, where part of it is outside

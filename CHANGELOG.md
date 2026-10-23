@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's census is held to the compiler
+
+`ARCHOGEN-M3-0921` (leaf `M3.5.2.7.3`), `2026-10-23`.
+
+- A test now builds a corpus of every case the trust record's reviewers raised, in twelve build configurations, and
+  checks that every file the compiler read is one the census counts. Its first run found a real gap — a module
+  whose file depends on a `cfg_attr` — now closed.
+
 ## archogen — the trust gate's census builds nothing
 
 `ARCHOGEN-M3-0920` (leaf `M3.5.2.7.2`), `2026-10-23`.
