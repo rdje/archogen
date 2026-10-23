@@ -285,6 +285,12 @@ fn read_form(form: &Form, roots: &mut Roots, names: &mut BTreeSet<String>) -> Re
         if !seen.insert(h) {
             return Err(format!("{ROOTS}: `{name}` holds `{h}` twice"));
         }
+        // A clause holds names alone: anything else is refused, never dropped (`decision_trust-role-programs.md` §4).
+        if c.items().iter().skip(1).any(|item| word(item).is_none()) {
+            return Err(format!(
+                "{ROOTS}: `{name}`'s `({h} …)` holds something that is not a name"
+            ));
+        }
     }
     match head {
         "defroot" => {
@@ -311,6 +317,13 @@ fn read_form(form: &Form, roots: &mut Roots, names: &mut BTreeSet<String>) -> Re
             let invokes = clause(form, "invokes").map(|_| values(form, "invokes"));
             let installed = clause(form, "installed").map(|_| values(form, "installed"));
             if invokes.is_some() || installed.is_some() {
+                check_front_form(
+                    &name,
+                    &role,
+                    &target,
+                    invokes.as_deref(),
+                    installed.as_deref(),
+                )?;
                 roots.front_clauses.push(FrontClauses {
                     root: name.clone(),
                     invokes,
@@ -438,9 +451,56 @@ fn check_pairs(roots: &Roots) -> Result<(), String> {
     Ok(())
 }
 
-/// The front's clauses, judged once the whole file is read (`decision_trust-role-programs.md` §4): on the one root of
-/// role `generator` whose target is an executable, both or neither, `invokes` naming each other executable root once,
-/// `installed` the install manifest's one name.
+/// The front's clauses, judged at its form (`decision_trust-role-programs.md` §4; the generated-sources record's
+/// clarification, a read failure within a form stopping the reader there): on a root of role `generator` whose target
+/// is an executable, both, `invokes` naming roots once and never its own, `installed` the install manifest's one name.
+/// Which roots it names, and how many roots have its role, are known once the whole file is read ([`check_front`]).
+fn check_front_form(
+    name: &str,
+    role: &str,
+    target: &Target,
+    invokes: Option<&[String]>,
+    installed: Option<&[String]>,
+) -> Result<(), String> {
+    if role != "generator" {
+        return Err(format!(
+            "{ROOTS}: `{name}` holds `invokes` or `installed`, which only the front's form takes: the root of role \
+             `generator`"
+        ));
+    }
+    if !matches!(target, Target::Bin(_)) {
+        return Err(format!(
+            "{ROOTS}: the front `{name}` invokes nothing: its target is no executable"
+        ));
+    }
+    let (Some(invokes), Some(installed)) = (invokes, installed) else {
+        return Err(format!(
+            "{ROOTS}: `{name}` holds one of `invokes` and `installed` without the other"
+        ));
+    };
+    if invokes.is_empty() {
+        return Err(format!("{ROOTS}: `{name}`'s `invokes` names no root"));
+    }
+    let mut seen = BTreeSet::new();
+    for invoked in invokes {
+        if !seen.insert(invoked) {
+            return Err(format!("{ROOTS}: `{name}` invokes `{invoked}` twice"));
+        }
+        if invoked == name {
+            return Err(format!("{ROOTS}: `{name}` invokes itself"));
+        }
+    }
+    if installed != [archogen_install::FILE] {
+        return Err(format!(
+            "{ROOTS}: `{name}`'s `installed` holds {installed:?}, not the one name `{}`",
+            archogen_install::FILE
+        ));
+    }
+    Ok(())
+}
+
+/// The front's clauses, judged once the whole file is read (`decision_trust-role-programs.md` §4): the one root of role
+/// `generator` holds them, and each root `invokes` names is a root whose target is an executable.
 fn check_front(roots: &Roots) -> Result<(), String> {
     let root = |x: &str| {
         roots
@@ -454,62 +514,24 @@ fn check_front(roots: &Roots) -> Result<(), String> {
         .filter(|p| p.pair.is_none() && p.role == "generator")
         .count();
     for c in &roots.front_clauses {
-        let Some(front) = root(&c.root) else {
-            return Err(format!("{ROOTS}: `{}` is no root", c.root));
-        };
-        if front.role != "generator" {
-            return Err(format!(
-                "{ROOTS}: `{}` holds `invokes` or `installed`, which only the front's form takes: the root of role                  `generator`",
-                c.root
-            ));
-        }
-        if !matches!(front.target, Target::Bin(_)) {
-            return Err(format!(
-                "{ROOTS}: the front `{}` invokes nothing: its target is no executable",
-                c.root
-            ));
-        }
         if generators != 1 {
             return Err(format!(
                 "{ROOTS}: {generators} roots have role `generator`, so none is the front"
             ));
         }
-        let (Some(invokes), Some(installed)) = (&c.invokes, &c.installed) else {
-            return Err(format!(
-                "{ROOTS}: `{}` holds one of `invokes` and `installed` without the other",
-                c.root
-            ));
-        };
-        if invokes.is_empty() {
-            return Err(format!("{ROOTS}: `{}`'s `invokes` names no root", c.root));
-        }
-        let mut seen = BTreeSet::new();
-        for name in invokes {
-            if !seen.insert(name) {
-                return Err(format!("{ROOTS}: `{}` invokes `{name}` twice", c.root));
-            }
+        for name in c.invokes.iter().flatten() {
             let Some(invoked) = root(name) else {
                 return Err(format!(
                     "{ROOTS}: `{}` invokes `{name}`, which names no root",
                     c.root
                 ));
             };
-            if invoked.name == front.name {
-                return Err(format!("{ROOTS}: `{}` invokes itself", c.root));
-            }
             if !matches!(invoked.target, Target::Bin(_)) {
                 return Err(format!(
                     "{ROOTS}: `{}` invokes `{name}`, whose target is no executable",
                     c.root
                 ));
             }
-        }
-        if installed.as_slice() != [archogen_install::FILE] {
-            return Err(format!(
-                "{ROOTS}: `{}`'s `installed` holds {installed:?}, not the one name `{}`",
-                c.root,
-                archogen_install::FILE
-            ));
         }
     }
     Ok(())
@@ -3056,7 +3078,9 @@ pub(crate) mod tests {
     //! Every channel a review measured by hand, a fixture (ledger `TI-H24`): a scratch repository under
     //! `target/trust-tests/`, committed, inventoried by the real instrument from its commit.
 
-    use super::{inventory_with, read_roots, site_extent, Digest, FrontClauses, Outcome, Target};
+    use super::{
+        inventory_with, read_roots, site_extent, Digest, FrontClauses, Outcome, Target, FORMS,
+    };
     use crate::json::Json;
     use std::ffi::OsStr;
     use std::path::{Path, PathBuf};
@@ -3893,7 +3917,7 @@ pub(crate) mod tests {
                 "cfg",
                 both,
                 "bin a",
-                "`cfg` holds `invokes` or `installed`, which only the front's form takes",
+                "`cfg` holds `invokes` or `installed`, which only the front's form takes: the root of role `generator`",
             ),
             (
                 "gen",
@@ -3972,6 +3996,107 @@ pub(crate) mod tests {
         let e = read_roots(&two).expect_err("two generators");
         assert!(
             e.contains("2 roots have role `generator`, so none is the front"),
+            "{e}"
+        );
+    }
+
+    #[test]
+    fn every_clause_holds_names_alone() {
+        crate::trust_test_process::bounded!(every_clause_holds_names_alone);
+        // `decision_trust-role-programs.md` §4, round 5's D3: an integer or a list in any clause of any form the
+        // instrument reads is a read failure, never dropped; the same form with names alone passes that check.
+        let mut dropped = Vec::new();
+        for (head, clauses) in FORMS {
+            let name = if *head == "defadmit" { "" } else { " n" };
+            let who = if *head == "defadmit" {
+                "an admission"
+            } else {
+                "n"
+            };
+            let text = |bad_in: &str, bad: &str| {
+                let body: String = clauses
+                    .iter()
+                    .map(|c| {
+                        let extra = if *c == bad_in { bad } else { "" };
+                        format!(" ({c} \"v\"{extra})")
+                    })
+                    .collect();
+                format!("({head}{name}{body})\n")
+            };
+            if let Err(e) = read_roots(&text("", "")) {
+                assert!(!e.contains("is not a name"), "{head} with names alone: {e}");
+            }
+            for c in *clauses {
+                for bad in [" 7", " (x)"] {
+                    match read_roots(&text(c, bad)) {
+                        Err(e) => assert!(
+                            e.contains(&format!(
+                                "`{who}`'s `({c} …)` holds something that is not a name"
+                            )),
+                            "{head} ({c}{bad}): {e}"
+                        ),
+                        Ok(_) => dropped.push(format!("{head} ({c}{bad})")),
+                    }
+                }
+            }
+        }
+        assert!(dropped.is_empty(), "read with an item dropped: {dropped:?}");
+    }
+
+    #[test]
+    fn a_fault_in_the_front_s_own_form_stops_the_reader_there() {
+        crate::trust_test_process::bounded!(a_fault_in_the_front_s_own_form_stops_the_reader_there);
+        // Round 5's D4: the generated-sources record's clarification — a read failure within a form stops the reader at
+        // that form, so a `defgenerated` form after it is not read; one spanning forms is found once the file is read,
+        // with every refusal beside it.
+        let around = |on: &str, clauses: &str, gen_target: &str| {
+            format!(
+                "(defgenerated \"before.rs\" (generator \"g\") (command \"c\"))\n{}\
+                 (defgenerated \"after.rs\" (generator \"g\") (command \"c\"))\n",
+                front(on, clauses, gen_target)
+            )
+        };
+        let installed = "(installed \"archogen-install.json\")";
+        let both = format!("(invokes cfg) {installed}");
+        for (on, clauses, gen_target) in [
+            ("cfg", both.as_str(), "bin a"),
+            ("gen", both.as_str(), "lib"),
+            ("gen", "(invokes cfg)", "bin a"),
+            ("gen", installed, "bin a"),
+            ("gen", &format!("(invokes) {installed}"), "bin a"),
+            ("gen", &format!("(invokes cfg cfg) {installed}"), "bin a"),
+            ("gen", &format!("(invokes gen) {installed}"), "bin a"),
+            (
+                "gen",
+                "(invokes cfg) (installed \"manifest.json\")",
+                "bin a",
+            ),
+        ] {
+            let e = read_roots(&around(on, clauses, gen_target)).expect_err(clauses);
+            assert!(
+                e.contains("before.rs") && !e.contains("after.rs"),
+                "{on} {clauses}: within its form, the reader stops there: {e}"
+            );
+        }
+        for clauses in [
+            format!("(invokes nobody) {installed}"),
+            format!("(invokes chk) {installed}"),
+        ] {
+            let e = read_roots(&around("gen", &clauses, "bin a")).expect_err(&clauses);
+            assert!(
+                e.contains("before.rs") && e.contains("after.rs"),
+                "{clauses}: an invoked name is known once the file is read: {e}"
+            );
+        }
+        let two = format!(
+            "{}(defroot gen2 (role generator) (package \"crates/z\") (target bin z))\n",
+            around("gen", &both, "bin a")
+        );
+        let e = read_roots(&two).expect_err("two generators");
+        assert!(
+            e.contains("2 roots have role `generator`")
+                && e.contains("before.rs")
+                && e.contains("after.rs"),
             "{e}"
         );
     }

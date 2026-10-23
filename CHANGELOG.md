@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate reads a clause whole, and a front's fault at its form
+
+`ARCHOGEN-M3-0897` (leaf `M3.5.2.2.1`), `2026-10-23`.
+
+- A clause in `trust/roots.eadl` holding a number or a list is refused rather than read without it, and a fault in
+  the front's own form stops the reading there, as the records say.
+
 ## archogen — the checkers' programs in the trust record, round 5 read against the code
 
 `ARCHOGEN-M3-0896` (leaf `M3.5.2`), `2026-10-23`.

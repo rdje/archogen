@@ -81,8 +81,9 @@ writes yet, since the gate that judges a push is built from the commit before it
 - on the front's form alone — the one root of role `generator`, an executable — `(invokes <root> …)`, the other
   executable roots it runs, each once, and `(installed "archogen-install.json")`, together.
 
-Each departure refuses before a build, as a misnamed harness does, and one test target belongs to one comparison
-only. A derivation is built, recorded, scanned and held to its pair's role packages as the harness is, but paired with
+Each departure refuses before a build, as a misnamed harness does — a clause holding anything but names among them,
+and a fault within one form stopping the reading at that form (leaf `M3.5.2.2.1`) — and one test target belongs to one
+comparison only. A derivation is built, recorded, scanned and held to its pair's role packages as the harness is, but paired with
 no root: its pair takes its item, `shared-derivation`, one item a form (leaf `M3.5.2.1.2`). The front and each root it
 invokes share an `invocation` item: the invoked root's name, role and target, and the sha256 of the launcher — the
 file the constant `LAUNCHER` in `xtask/src/trust.rs` names, which the front gains with leaf `M3.5.1.4` — so an edit to
