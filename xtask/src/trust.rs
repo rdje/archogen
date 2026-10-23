@@ -2760,11 +2760,13 @@ pub fn inventory_with(
                         "example" => vec!["build".into(), "--example".into(), name.clone()],
                         _ => vec!["build".into(), "--lib".into()],
                     };
-                    reset_cargo_home(&cargo_home)?;
+                    // An exit the gate cannot judge past carries the refusals the step found before it (round 9's R9).
+                    reset_cargo_home(&cargo_home).map_err(unable(&step4))?;
                     let target_dir = out
                         .join("target-generators")
                         .join(format!("{}-{kind}-{name}", pkg.replace('/', "-")));
-                    let env = environment(&pin, &cargo_home, &target_dir)?;
+                    let env =
+                        environment(&pin, &cargo_home, &target_dir).map_err(unable(&step4))?;
                     match compile(
                         &who,
                         pkg,
@@ -3020,8 +3022,13 @@ pub fn inventory_with(
     let names: Vec<&Program> = roots.programs.iter().collect();
     for (i, a) in names.iter().enumerate() {
         for b in names.iter().skip(i + 1) {
-            // A derivation is paired with no root: its pair takes its item (`decision_trust-role-programs.md` §3).
-            if a.role == "derivation" || b.role == "derivation" {
+            // A comparison — the harness or a derivation — is paired with roots alone: the harness with every root but its
+            // pair's two, whose sharing with it is its pair's item, a derivation with none, its pair taking its item; two
+            // comparisons never (the parent's §4; `decision_trust-role-programs.md` §3; round 9's R10).
+            if a.role == "derivation"
+                || b.role == "derivation"
+                || (a.pair.is_some() && b.pair.is_some())
+            {
                 continue;
             }
             // The harness is paired with every root but its pair's two, whose sharing with it is the pair's own
@@ -5284,6 +5291,69 @@ pub(crate) mod tests {
         says(&refused(f.run()), "reaches `crates/d`");
     }
 
+    #[test]
+    fn a_comparison_is_paired_with_roots_alone() {
+        crate::trust_test_process::bounded!(a_comparison_is_paired_with_roots_alone);
+        // Round 9's R10, the parent's §4: the harness is paired with every root but its pair's two, a derivation with
+        // none, its pair taking its item, and two comparisons never — two of one pair would share that pair's role
+        // packages by design, as a comparison shares them with its pair.
+        let harnesses =
+            "(defroot refm (role reference-model) (package \"crates/m\") (target lib))\n\
+                         (defroot imp (role implementation) (package \"crates/i\") (target lib))\n\
+                         (defharness diff (pair refm imp) (package \"crates/i\") (test same))\n\
+                         (defharness diff2 (pair refm imp) (package \"crates/i\") (test same2))\n";
+        let f = derivations(
+            "comparisons-and-roots",
+            &format!("{harnesses}{PRODUCTION}"),
+            "",
+            "",
+            "",
+        );
+        let same = "#[test]\nfn same() { assert_eq!(i::imp(3), m::refm(3)); }\n";
+        f.commit(&[
+            ("crates/m/Cargo.toml", manifest("m", "")),
+            (
+                "crates/m/src/lib.rs",
+                "pub fn refm(x: u32) -> u32 { x }\n".to_owned(),
+            ),
+            (
+                "crates/i/Cargo.toml",
+                manifest("i", "[dev-dependencies]\nm = { path = \"../m\" }\n"),
+            ),
+            (
+                "crates/i/src/lib.rs",
+                "pub fn imp(x: u32) -> u32 { x }\n".to_owned(),
+            ),
+            ("crates/i/tests/same.rs", same.to_owned()),
+            ("crates/i/tests/same2.rs", same.to_owned()),
+        ]);
+        let pairs = pairs(&written(f.run()));
+        let comparisons = ["diff", "diff2", "prod"];
+        let with = |name: &str| -> Vec<String> {
+            pairs
+                .iter()
+                .filter(|p| p.split('+').any(|n| n == name))
+                .flat_map(|p| p.split('+').filter(|n| *n != name).map(str::to_owned))
+                .collect()
+        };
+        assert_eq!(
+            with("prod"),
+            Vec::<String>::new(),
+            "a derivation is paired with nothing"
+        );
+        for harness in ["diff", "diff2"] {
+            let mut others = with(harness);
+            others.sort();
+            others.dedup();
+            assert_eq!(
+                others,
+                ["cfg", "chk", "gen"],
+                "{harness}: every root but its pair's two"
+            );
+            assert!(others.iter().all(|o| !comparisons.contains(&o.as_str())));
+        }
+    }
+
     /// A front `gen` whose form holds `clauses`, the configuration checker `cfg` as an executable, a scheduling checker
     /// `chk`, and the launcher with `launcher` as its text, or none (`decision_trust-role-programs.md` §4).
     pub(crate) fn invoking(name: &str, clauses: &str, launcher: Option<&str>) -> Fixture {
@@ -5519,6 +5589,25 @@ pub(crate) mod tests {
         };
         assert!(
             e.starts_with("`cargo metadata` failed")
+                && e.contains("and beside it, 2 refusal(s):")
+                && e.contains(data)
+                && e.contains(launcher),
+            "{e}"
+        );
+        // And a pin the gate cannot read (round 9's R9): each exit a fixture can reach carries them; the others — the
+        // tree's write, the cargo home's reset, the environment, the tree's unjudged read — need a failing file system.
+        let f = step_two("step-two-pin");
+        f.commit(&[(
+            "rust-toolchain.toml",
+            "[toolchain]\nchannel = \"1.95.0\"\n\n[other]\n".to_owned(),
+        )]);
+        let e = match f.try_run_into("out") {
+            Err(e) => e,
+            Ok(Outcome::Written(_)) => panic!("written"),
+            Ok(Outcome::Refused(r)) => panic!("refused, not unable to judge: {r:#?}"),
+        };
+        assert!(
+            e.starts_with("`rust-toolchain.toml` holds a table other than `[toolchain]`")
                 && e.contains("and beside it, 2 refusal(s):")
                 && e.contains(data)
                 && e.contains(launcher),

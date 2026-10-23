@@ -268,3 +268,9 @@ found probe by probe.
 | R9-R9 | remark | of the `unable` exits only `cargo metadata`'s is tested; step 4's exits drop its refusals | step 4's exits carry them; each exit a fixture can reach tested (`M3.5.2.6.4`) |
 | R9-R10 | remark | a derivation is paired with no program, the harness with every program but its pair's roots | a derivation paired as the harness is, with every program but roots (`M3.5.2.6.4`) |
 | R9-R11 | remark | §1 cites a measurement of the retired scan; the leaves say "four units"; `UNSEEN`'s launcher line drifts from §4 | §1 re-measured at `76e10884`, the same three; the four are the inventory's entries, the harness's among them, as listed; `UNSEEN` in §4's words (`M3.5.2.6.4`) |
+
+*Corrected `2026-10-23`, by `M3.5.2.6.4`:* R9-R10 is answered the other way. Pairing a derivation with every other
+program made two derivations of one pair share that pair's role packages as items, by design, as a comparison shares
+them with its pair; and the parent's §4 pairs the harness with every root but its pair's two, not with programs. So a
+comparison is paired with roots alone — the harness with every root but its pair's two, a derivation with none — and
+two comparisons never, the code brought to the parent's text.

@@ -673,8 +673,8 @@ pub fn judge(
                                               classify it by a `defprogram` form"
                     .to_owned(),
                 "test" if !beyond.is_empty() => format!(
-                    "it compiles {}, of a root beside its pair's two, so a pair form naming it would be refused: split \
-                     it, or classify it by a `defprogram` form",
+                    "it compiles {}, of a root beside its pair's two, so a pair form naming it is refused wherever \
+                     its build compiles them: split it, or classify it by a `defprogram` form",
                     beyond.iter().map(|p| format!("`{p}`")).collect::<Vec<_>>().join(", ")
                 ),
                 "test" if !forms.is_empty() => format!(
@@ -961,8 +961,8 @@ pub const UNSEEN: &[&str] = &[
      `M3.4`, one to the generator's relation — before it the relation is compiled beside the pair's builds, in the \
      derivation's item — and only the comparison failing joins them (§3)",
     "whether the front runs only, or all, the programs its form invokes: from `M3.5.1.4`, `NO-SUBPROCESS` admitting \
-     the launcher, the launcher reading the manifest and the install placing only the invoked roots stand there; until \
-     then no front invokes (§4)",
+     the launcher alone, the launcher running only what the install manifest names and the install placing only the \
+     invoked roots stand there; until then no front invokes (§4)",
     "whether a unit two roles' packages join compares them: the build finds the joining, and a classification's review \
      decides that it compares nothing they hold equal (§3)",
     "an edit inside a classified program target: its classification is reviewed again only when the role packages its \
@@ -1647,8 +1647,8 @@ mod tests {
         };
         let beside = |p: &str| {
             format!(
-                "it compiles `{p}`, of a root beside its pair's two, so a pair form naming it would be refused: split it, \
-                 or classify it by a `defprogram` form"
+                "it compiles `{p}`, of a root beside its pair's two, so a pair form naming it is refused wherever its \
+                 build compiles them: split it, or classify it by a `defprogram` form"
             )
         };
         for want in [

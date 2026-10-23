@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate pairs a comparison with roots alone
+
+`ARCHOGEN-M3-0917` (leaf `M3.5.2.6.4`), `2026-10-23`.
+
+- The trust gate now pairs a comparison program with roots alone, as its record says, never with another comparison,
+  whose shared role packages are shared by design. A run the gate cannot judge past while judging generators names
+  the refusals already found, and the report's wording is tightened.
+
 ## archogen — what a test compiles is a table the trust gate is held to
 
 `ARCHOGEN-M3-0916` (leaf `M3.5.2.6.3`), `2026-10-23`.

@@ -85,7 +85,8 @@ writes yet, since the gate that judges a push is built from the commit before it
 Each departure refuses before a build, as a misnamed harness does — a clause holding anything but names among them,
 and a fault within one form stopping the reading at that form (leaf `M3.5.2.2.1`) — and one test target belongs to one
 comparison only, never classified beside it (leaf `M3.5.2.3.2`). A derivation is built, recorded, scanned and held to its pair's role packages as the harness is, but paired with
-no root: its pair takes its item, `shared-derivation`, one item a form (leaf `M3.5.2.1.2`). The front and each root it
+no root: its pair takes its item, `shared-derivation`, one item a form (leaf `M3.5.2.1.2`); no comparison is paired with
+another, the harness with every root but its pair's two (leaf `M3.5.2.6.4`). The front and each root it
 invokes share an `invocation` item: the invoked root's name, role and target, and the sha256 of the launcher — the
 file the constant `LAUNCHER` in `xtask/src/trust.rs` names, which the front gains with leaf `M3.5.1.4` — so an edit to
 the launcher, whose acceptance contract carries the risk, is reported; a front that invokes while its commit holds no
