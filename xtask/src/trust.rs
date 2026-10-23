@@ -47,7 +47,7 @@ pub enum Target {
     Lib,
     /// An executable target.
     Bin(String),
-    /// An integration test target: the comparison harness.
+    /// An integration test target: the comparison harness, or a derivation.
     Test(String),
 }
 
@@ -56,7 +56,7 @@ pub enum Target {
 pub struct Program {
     /// Its name in the roots file.
     pub name: String,
-    /// Its role; for the harness, `harness`.
+    /// Its role; for the harness, `harness`; for a derivation, `derivation` (`decision_trust-role-programs.md` §3).
     pub role: String,
     /// Its package's directory, relative to the repository.
     pub package: String,
@@ -64,7 +64,7 @@ pub struct Program {
     pub target: Target,
     /// The packages holding its role's own logic (§2).
     pub role_packages: BTreeSet<String>,
-    /// For the harness: the two roots it compares.
+    /// For the harness or a derivation: the two roots it compares.
     pub pair: Option<(String, String)>,
     /// The fixed data the pipeline hands it at run time, by repository path (§2, R9 remark 6).
     pub data: Vec<String>,
@@ -124,6 +124,22 @@ pub struct Roots {
     pub generated: Vec<crate::trust_generated::Generated>,
     /// Every refusal of the `defgenerated` forms' text, step 1 of that record's order: none, or the run ends.
     pub generated_refused: Vec<String>,
+    /// Each root form's `(invokes …)` and `(installed …)`, as written, judged once the whole file is read
+    /// (`decision_trust-role-programs.md` §4).
+    pub front_clauses: Vec<FrontClauses>,
+}
+
+/// A root form's `(invokes …)` and `(installed …)`: the programs the front runs and the file the install writes beside
+/// it (`decision_trust-role-programs.md` §4). `None` is a clause the form does not hold; an empty list one it holds
+/// empty.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct FrontClauses {
+    /// The root whose form holds them.
+    pub root: String,
+    /// The roots its program invokes, by name.
+    pub invokes: Option<Vec<String>>,
+    /// The file it reads that the install writes.
+    pub installed: Option<Vec<String>>,
 }
 
 /// Each form the instrument reads, and the clauses it takes; any other form or clause is refused (R8 11). A
@@ -131,9 +147,20 @@ pub struct Roots {
 const FORMS: &[(&str, &[&str])] = &[
     (
         "defroot",
-        &["role", "package", "target", "role-packages", "data"],
+        &[
+            "role",
+            "package",
+            "target",
+            "role-packages",
+            "data",
+            "invokes",
+            "installed",
+        ],
     ),
     ("defharness", &["pair", "package", "test"]),
+    // A comparison of a reading of the generator's with the configuration checker's, read as the harness but for its
+    // pairing and its results (`decision_trust-role-programs.md` §3, leaf `M3.5.2.1.1`).
+    ("defderivation", &["pair", "package", "test", "reason"]),
     ("defadmit", &["file", "rule", "sha256", "reason"]),
     // A program target that is not a root (§2): `M3.6.3.1`.
     (
@@ -208,9 +235,11 @@ pub fn read_roots(text: &str) -> Result<Roots, String> {
         })?;
     }
     // A departure found only once the whole file is read has every `defgenerated` form's refusals beside it.
-    check_pairs(&roots).map_err(|why| {
-        crate::trust_generated::beside(why, &crate::trust_generated::refusals(&generated))
-    })?;
+    check_pairs(&roots)
+        .and_then(|()| check_front(&roots))
+        .map_err(|why| {
+            crate::trust_generated::beside(why, &crate::trust_generated::refusals(&generated))
+        })?;
     roots.generated_refused = crate::trust_generated::refusals(&generated);
     roots.generated = crate::trust_generated::declarations(generated);
     Ok(roots)
@@ -275,6 +304,15 @@ fn read_form(form: &Form, roots: &mut Roots, names: &mut BTreeSet<String>) -> Re
                     ROLES.join(", ")
                 ));
             }
+            let invokes = clause(form, "invokes").map(|_| values(form, "invokes"));
+            let installed = clause(form, "installed").map(|_| values(form, "installed"));
+            if invokes.is_some() || installed.is_some() {
+                roots.front_clauses.push(FrontClauses {
+                    root: name.clone(),
+                    invokes,
+                    installed,
+                });
+            }
             roots.programs.push(Program {
                 role,
                 package,
@@ -285,13 +323,21 @@ fn read_form(form: &Form, roots: &mut Roots, names: &mut BTreeSet<String>) -> Re
                 name,
             });
         }
-        "defharness" => {
+        "defharness" | "defderivation" => {
             let pair = values(form, "pair");
             let [a, b] = pair.as_slice() else {
                 return Err(format!("{ROOTS}: `{name}` names `(pair ROOT ROOT)`"));
             };
+            if head == "defderivation" {
+                one(form, "reason", &name)?;
+            }
             roots.programs.push(Program {
-                role: "harness".to_owned(),
+                role: if head == "defharness" {
+                    "harness"
+                } else {
+                    "derivation"
+                }
+                .to_owned(),
                 package: one(form, "package", &name)?,
                 target: Target::Test(one(form, "test", &name)?),
                 role_packages: BTreeSet::new(),
@@ -340,14 +386,18 @@ fn read_form(form: &Form, roots: &mut Roots, names: &mut BTreeSet<String>) -> Re
 
 /// A harness compares two distinct roots the file declares.
 fn check_pairs(roots: &Roots) -> Result<(), String> {
+    let root = |x: &str| {
+        roots
+            .programs
+            .iter()
+            .find(|p| p.name == x && p.pair.is_none())
+    };
+    // Each test target one pair form's (`decision_trust-role-programs.md` §3): a comparison is written one way.
+    let mut targets: BTreeMap<(&str, &str), &str> = BTreeMap::new();
     for h in &roots.programs {
         let Some((a, b)) = &h.pair else { continue };
         for x in [a, b] {
-            if !roots
-                .programs
-                .iter()
-                .any(|p| &p.name == x && p.pair.is_none())
-            {
+            if root(x).is_none() {
                 return Err(format!(
                     "{ROOTS}: `{}`'s pair names `{x}`, which names no root",
                     h.name
@@ -356,6 +406,106 @@ fn check_pairs(roots: &Roots) -> Result<(), String> {
         }
         if a == b {
             return Err(format!("{ROOTS}: `{}`'s pair names `{a}` twice", h.name));
+        }
+        // A harness compares a reference model with the implementation it validates, a derivation the generator with
+        // the configuration checker, in either order (`decision_trust-role-programs.md` §3).
+        let want: [&str; 2] = if h.role == "harness" {
+            ["implementation", "reference-model"]
+        } else {
+            ["configuration-checker", "generator"]
+        };
+        let mut roles = [root(a), root(b)].map(|p| p.map_or("", |p| p.role.as_str()));
+        roles.sort_unstable();
+        if roles != want {
+            return Err(format!(
+                "{ROOTS}: `{}`'s pair has roles `{}` and `{}`; a {}'s has `{}` and `{}`",
+                h.name, roles[0], roles[1], h.role, want[0], want[1]
+            ));
+        }
+        if let Target::Test(t) = &h.target {
+            if let Some(other) = targets.insert((h.package.as_str(), t.as_str()), &h.name) {
+                return Err(format!(
+                    "{ROOTS}: `{other}` and `{}` name one test target, `{t}` of `{}`",
+                    h.name, h.package
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+/// The front's clauses, judged once the whole file is read (`decision_trust-role-programs.md` §4): on the one root of
+/// role `generator` whose target is an executable, both or neither, `invokes` naming each other executable root once,
+/// `installed` the install manifest's one name.
+fn check_front(roots: &Roots) -> Result<(), String> {
+    let root = |x: &str| {
+        roots
+            .programs
+            .iter()
+            .find(|p| p.name == x && p.pair.is_none())
+    };
+    let generators = roots
+        .programs
+        .iter()
+        .filter(|p| p.pair.is_none() && p.role == "generator")
+        .count();
+    for c in &roots.front_clauses {
+        let Some(front) = root(&c.root) else {
+            return Err(format!("{ROOTS}: `{}` is no root", c.root));
+        };
+        if front.role != "generator" {
+            return Err(format!(
+                "{ROOTS}: `{}` holds `invokes` or `installed`, which only the front's form takes: the root of role                  `generator`",
+                c.root
+            ));
+        }
+        if !matches!(front.target, Target::Bin(_)) {
+            return Err(format!(
+                "{ROOTS}: the front `{}` invokes nothing: its target is no executable",
+                c.root
+            ));
+        }
+        if generators != 1 {
+            return Err(format!(
+                "{ROOTS}: {generators} roots have role `generator`, so none is the front"
+            ));
+        }
+        let (Some(invokes), Some(installed)) = (&c.invokes, &c.installed) else {
+            return Err(format!(
+                "{ROOTS}: `{}` holds one of `invokes` and `installed` without the other",
+                c.root
+            ));
+        };
+        if invokes.is_empty() {
+            return Err(format!("{ROOTS}: `{}`'s `invokes` names no root", c.root));
+        }
+        let mut seen = BTreeSet::new();
+        for name in invokes {
+            if !seen.insert(name) {
+                return Err(format!("{ROOTS}: `{}` invokes `{name}` twice", c.root));
+            }
+            let Some(invoked) = root(name) else {
+                return Err(format!(
+                    "{ROOTS}: `{}` invokes `{name}`, which names no root",
+                    c.root
+                ));
+            };
+            if invoked.name == front.name {
+                return Err(format!("{ROOTS}: `{}` invokes itself", c.root));
+            }
+            if !matches!(invoked.target, Target::Bin(_)) {
+                return Err(format!(
+                    "{ROOTS}: `{}` invokes `{name}`, whose target is no executable",
+                    c.root
+                ));
+            }
+        }
+        if installed.as_slice() != [archogen_install::FILE] {
+            return Err(format!(
+                "{ROOTS}: `{}`'s `installed` holds {installed:?}, not the one name `{}`",
+                c.root,
+                archogen_install::FILE
+            ));
         }
     }
     Ok(())
@@ -2684,7 +2834,7 @@ pub(crate) mod tests {
     //! Every channel a review measured by hand, a fixture (ledger `TI-H24`): a scratch repository under
     //! `target/trust-tests/`, committed, inventoried by the real instrument from its commit.
 
-    use super::{inventory_with, read_roots, site_extent, Digest, Outcome};
+    use super::{inventory_with, read_roots, site_extent, Digest, FrontClauses, Outcome, Target};
     use crate::json::Json;
     use std::ffi::OsStr;
     use std::path::{Path, PathBuf};
@@ -3034,6 +3184,12 @@ pub(crate) mod tests {
     pub(crate) const ROOTS: &str = "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n\
                          (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n";
 
+    /// A reference model and the implementation it validates, the pair a harness compares
+    /// (`decision_trust-role-programs.md` §3).
+    pub(crate) const PAIRED: &str =
+        "(defroot refm (role reference-model) (package \"crates/r\") (target lib))\n\
+                         (defroot imp (role implementation) (package \"crates/i\") (target lib))\n";
+
     fn write(dir: &Path, files: &[(&str, String)]) {
         for (path, text) in files {
             let full = dir.join(path);
@@ -3305,18 +3461,18 @@ pub(crate) mod tests {
                     )
                 })
                 .collect();
-            format!("{ROOTS}{harnesses}")
+            format!("{ROOTS}{PAIRED}{harnesses}")
         };
-        let valid = read_roots(&forms([("gen", "chk"); 3]))
+        let valid = read_roots(&forms([("refm", "imp"); 3]))
             .expect("every harness compares two declared roots");
-        assert_eq!(valid.programs.len(), 5);
-        for harness in &valid.programs[2..] {
-            assert_eq!(harness.pair, Some(("gen".to_owned(), "chk".to_owned())));
+        assert_eq!(valid.programs.len(), 7);
+        for harness in &valid.programs[4..] {
+            assert_eq!(harness.pair, Some(("refm".to_owned(), "imp".to_owned())));
         }
 
         for position in 0..3 {
-            for root in ["gen", "chk"] {
-                let mut pairs = [("gen", "chk"); 3];
+            for root in ["refm", "imp"] {
+                let mut pairs = [("refm", "imp"); 3];
                 pairs[position] = (root, root);
                 let error = read_roots(&forms(pairs))
                     .expect_err("every harness must compare distinct roots");
@@ -3341,15 +3497,15 @@ pub(crate) mod tests {
                     )
                 })
                 .collect();
-            format!("{ROOTS}{harnesses}")
+            format!("{ROOTS}{PAIRED}{harnesses}")
         };
-        let valid = read_roots(&forms([("gen", "chk"); 3]))
+        let valid = read_roots(&forms([("refm", "imp"); 3]))
             .expect("both members of every pair name declared roots");
-        assert_eq!(valid.programs.len(), 5);
+        assert_eq!(valid.programs.len(), 7);
 
         for position in 0..3 {
-            for missing_pair in [("missing", "chk"), ("gen", "missing")] {
-                let mut pairs = [("gen", "chk"); 3];
+            for missing_pair in [("missing", "imp"), ("refm", "missing")] {
+                let mut pairs = [("refm", "imp"); 3];
                 pairs[position] = missing_pair;
                 let error = read_roots(&forms(pairs))
                     .expect_err("every member of every harness pair must name a root");
@@ -3368,15 +3524,15 @@ pub(crate) mod tests {
         crate::trust_test_process::bounded!(a_harness_pair_cannot_name_another_harness);
         let forms = |a: &str, b: &str| {
             format!(
-                "{ROOTS}(defharness other (pair gen chk) (package \"crates/tests\") (test other))\n\
+                "{ROOTS}{PAIRED}(defharness other (pair refm imp) (package \"crates/tests\") (test other))\n\
                  (defharness candidate (pair {a} {b}) (package \"crates/tests\") (test candidate))\n"
             )
         };
-        let valid = read_roots(&forms("gen", "chk"))
+        let valid = read_roots(&forms("refm", "imp"))
             .expect("several harnesses may compare the declared roots");
-        assert_eq!(valid.programs.len(), 4);
+        assert_eq!(valid.programs.len(), 6);
 
-        for (a, b) in [("other", "gen"), ("gen", "other")] {
+        for (a, b) in [("other", "refm"), ("refm", "other")] {
             let error =
                 read_roots(&forms(a, b)).expect_err("a declared harness is not a declared root");
             assert!(
@@ -3384,6 +3540,218 @@ pub(crate) mod tests {
                 "{a}, {b}: {error}"
             );
         }
+    }
+
+    #[test]
+    fn a_harness_compares_a_reference_model_and_its_implementation_alone() {
+        crate::trust_test_process::bounded!(
+            a_harness_compares_a_reference_model_and_its_implementation_alone
+        );
+        // `decision_trust-role-programs.md` §3: a harness for any pair could take a comparison a derivation is for,
+        // paired with every root and accepted as a producer; its pair's roles decide it, in either order.
+        let harness = |a: &str, b: &str| {
+            format!(
+                "{ROOTS}{PAIRED}(defharness h (pair {a} {b}) (package \"crates/t\") (test h))\n"
+            )
+        };
+        for (a, b) in [("refm", "imp"), ("imp", "refm")] {
+            read_roots(&harness(a, b)).expect("a reference model and its implementation");
+        }
+        for (a, b) in [("gen", "chk"), ("gen", "imp"), ("refm", "chk")] {
+            let e = read_roots(&harness(a, b)).expect_err("another pair of roles");
+            assert!(
+                e.contains("`h`'s pair has roles")
+                    && e.contains("a harness's has `implementation` and `reference-model`"),
+                "{a}, {b}: {e}"
+            );
+        }
+    }
+
+    /// The generator, the configuration checker and a scheduling checker, with a derivation over `pair`.
+    fn derivation(pair: &str, extra: &str) -> String {
+        format!(
+            "{ROOTS}(defroot cfg (role configuration-checker) (package \"crates/c\") (target lib))\n\
+             (defderivation d (pair {pair}) (package \"crates/r\") (test production) {extra})\n"
+        )
+    }
+
+    #[test]
+    fn a_derivation_compares_the_generator_and_the_configuration_checker() {
+        crate::trust_test_process::bounded!(
+            a_derivation_compares_the_generator_and_the_configuration_checker
+        );
+        // `decision_trust-role-programs.md` §3: its pair's roles, in either order, and a reason; every departure a read
+        // failure, as a harness's.
+        for pair in ["gen cfg", "cfg gen"] {
+            let roots = read_roots(&derivation(pair, "(reason \"the relation's comparison\")"))
+                .expect("the generator and the configuration checker");
+            let d = roots
+                .programs
+                .iter()
+                .find(|p| p.name == "d")
+                .expect("the derivation is read");
+            assert_eq!(d.role, "derivation");
+            assert_eq!(d.target, Target::Test("production".to_owned()));
+        }
+        let reason = "(reason \"r\")";
+        for (pair, extra, why) in [
+            (
+                "gen chk",
+                reason,
+                "`d`'s pair has roles `generator` and `scheduling-checker`; a derivation's has",
+            ),
+            ("gen gen", reason, "`d`'s pair names `gen` twice"),
+            (
+                "gen nobody",
+                reason,
+                "`d`'s pair names `nobody`, which names no root",
+            ),
+            ("gen cfg", "", "`d` needs exactly one `(reason …)`"),
+        ] {
+            let e = read_roots(&derivation(pair, extra)).expect_err(why);
+            assert!(e.contains(why), "{pair} {extra}: {e}");
+        }
+    }
+
+    #[test]
+    fn one_test_target_is_one_pair_form_s() {
+        crate::trust_test_process::bounded!(one_test_target_is_one_pair_form_s);
+        // `decision_trust-role-programs.md` §3: a comparison is written one way, so a harness and a derivation, or two
+        // of either, never name one test target of one package.
+        let forms = |harness_package: &str, harness_test: &str| {
+            format!(
+                "{ROOTS}{PAIRED}(defroot cfg (role configuration-checker) (package \"crates/c\") (target lib))\n\
+                 (defderivation d (pair gen cfg) (package \"crates/r\") (test production) (reason \"r\"))\n\
+                 (defharness h (pair refm imp) (package \"{harness_package}\") (test {harness_test}))\n"
+            )
+        };
+        read_roots(&forms("crates/r", "other")).expect("another target of the package");
+        read_roots(&forms("crates/i", "production"))
+            .expect("a target of that name in another package");
+        let e = read_roots(&forms("crates/r", "production")).expect_err("one target, two forms");
+        assert!(
+            e.contains("`d` and `h` name one test target, `production` of `crates/r`"),
+            "{e}"
+        );
+    }
+
+    /// A front, `gen` as an executable, a configuration checker `cfg` as an executable, and the clauses on `on`'s form.
+    fn front(on: &str, clauses: &str, gen_target: &str) -> String {
+        let clauses_on = |name: &str| if name == on { clauses } else { "" };
+        format!(
+            "(defroot gen (role generator) (package \"crates/a\") (target {gen_target}) {})\n\
+             (defroot cfg (role configuration-checker) (package \"crates/c\") (target bin cfg) {})\n\
+             (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) {})\n\
+             {PAIRED}(defharness h (pair refm imp) (package \"crates/i\") (test h))\n",
+            clauses_on("gen"),
+            clauses_on("cfg"),
+            clauses_on("chk")
+        )
+    }
+
+    #[test]
+    fn the_front_alone_invokes_and_reads_its_install_manifest() {
+        crate::trust_test_process::bounded!(the_front_alone_invokes_and_reads_its_install_manifest);
+        // `decision_trust-role-programs.md` §4: both clauses, together, on the one root of role `generator` whose
+        // target is an executable; every departure a read failure, decided from the text alone.
+        let both = "(invokes cfg) (installed \"archogen-install.json\")";
+        let roots =
+            read_roots(&front("gen", both, "bin a")).expect("the front invokes the checker");
+        assert_eq!(
+            roots.front_clauses,
+            [FrontClauses {
+                root: "gen".to_owned(),
+                invokes: Some(vec!["cfg".to_owned()]),
+                installed: Some(vec!["archogen-install.json".to_owned()]),
+            }]
+        );
+        let installed = "(installed \"archogen-install.json\")";
+        for (on, clauses, gen_target, why) in [
+            (
+                "cfg",
+                both,
+                "bin a",
+                "`cfg` holds `invokes` or `installed`, which only the front's form takes",
+            ),
+            (
+                "gen",
+                both,
+                "lib",
+                "the front `gen` invokes nothing: its target is no executable",
+            ),
+            (
+                "gen",
+                "(invokes cfg)",
+                "bin a",
+                "`gen` holds one of `invokes` and `installed` without the other",
+            ),
+            (
+                "gen",
+                installed,
+                "bin a",
+                "`gen` holds one of `invokes` and `installed` without the other",
+            ),
+            (
+                "gen",
+                &format!("(invokes) {installed}"),
+                "bin a",
+                "`gen`'s `invokes` names no root",
+            ),
+            (
+                "gen",
+                &format!("(invokes cfg cfg) {installed}"),
+                "bin a",
+                "`gen` invokes `cfg` twice",
+            ),
+            (
+                "gen",
+                &format!("(invokes nobody) {installed}"),
+                "bin a",
+                "`gen` invokes `nobody`, which names no root",
+            ),
+            (
+                "gen",
+                &format!("(invokes h) {installed}"),
+                "bin a",
+                "`gen` invokes `h`, which names no root",
+            ),
+            (
+                "gen",
+                &format!("(invokes gen) {installed}"),
+                "bin a",
+                "`gen` invokes itself",
+            ),
+            (
+                "gen",
+                &format!("(invokes chk) {installed}"),
+                "bin a",
+                "`gen` invokes `chk`, whose target is no executable",
+            ),
+            (
+                "gen",
+                "(invokes cfg) (installed \"manifest.json\")",
+                "bin a",
+                "`gen`'s `installed` holds [\"manifest.json\"]",
+            ),
+            (
+                "gen",
+                "(invokes cfg) (installed \"archogen-install.json\" \"x\")",
+                "bin a",
+                "not the one name `archogen-install.json`",
+            ),
+        ] {
+            let e = read_roots(&front(on, clauses, gen_target)).expect_err(why);
+            assert!(e.contains(why), "{on} {clauses}: {e}");
+        }
+        let two = format!(
+            "{}(defroot gen2 (role generator) (package \"crates/z\") (target bin z))\n",
+            front("gen", both, "bin a")
+        );
+        let e = read_roots(&two).expect_err("two generators");
+        assert!(
+            e.contains("2 roots have role `generator`, so none is the front"),
+            "{e}"
+        );
     }
 
     #[test]
@@ -3424,7 +3792,7 @@ pub(crate) mod tests {
             (
                 "defharness",
                 "comparison",
-                "(pair gen chk) (package \"crates/tests\") (test compare)",
+                "(pair refm imp) (package \"crates/tests\") (test compare)",
             ),
             (
                 "defprogram",
@@ -3436,11 +3804,11 @@ pub(crate) mod tests {
         let mut accepted = Vec::new();
         for (head, name, clauses) in forms {
             for valid_name in [name.to_owned(), format!("\"{name}\"")] {
-                read_roots(&format!("{ROOTS}({head} {valid_name} {clauses})"))
+                read_roots(&format!("{ROOTS}{PAIRED}({head} {valid_name} {clauses})"))
                     .expect("a symbol or string name is valid");
             }
             for invalid_name in ["", "7", "(not-a-name)"] {
-                let text = format!("{ROOTS}({head} {invalid_name} {clauses})");
+                let text = format!("{ROOTS}{PAIRED}({head} {invalid_name} {clauses})");
                 match read_roots(&text) {
                     Ok(roots) => accepted.push(format!(
                         "{head} {invalid_name:?}: program names {:?}; classification names {:?}",

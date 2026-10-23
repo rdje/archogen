@@ -49,7 +49,8 @@ The root's own package always belongs to its role packages, even if the clause o
 `(package "crates/archogen-cli")` and `(role-packages "crates/archogen-s0")`, both packages belong to the root's set;
 without a role-packages clause, its set still contains `crates/archogen-cli`. Every declared member is retained.
 
-`defroot`, `defharness`, `defprogram` and `defrole` place a symbol or string name immediately after the head.
+`defroot`, `defharness`, `defderivation`, `defprogram` and `defrole` place a symbol or string name immediately after the
+head.
 A missing name, integer or clause in that position refuses before a build. `defadmit` deliberately has no name.
 A role without a root names its future task: `(defrole configuration-checker (leaf "M3.5"))`.
 Its `leaf` clause requires one textual value; absent, empty or multiple-value clauses refuse.
@@ -67,7 +68,21 @@ The comparison harness in `trust/roots.eadl` declares:
 ```
 
 Every harness must name distinct declared roots. Unknown names or another harness in either slot refuse,
-including in a harness between valid ones.
+including in a harness between valid ones. A harness compares a reference model with the implementation it
+validates — one root of role `reference-model` and one of role `implementation`, in either order — and any other
+pair refuses, so a comparison of the generator with a checker cannot be written as one.
+
+**Read, not yet built** (leaf `M3.5.2.1.1`, `decision_trust-role-programs.md`). The gate now reads two forms no commit
+writes yet, since the gate that judges a push is built from the commit before it and must already know a form:
+
+- `(defderivation <name> (pair generator configuration-checker) (package "<dir>") (test <target>) (reason "…"))`,
+  a test comparing a reading of the generator's with the configuration checker's, its pair one root of each role, in
+  either order, and a reason;
+- on the front's form alone — the one root of role `generator`, an executable — `(invokes <root> …)`, the other
+  executable roots it runs, each once, and `(installed "archogen-install.json")`, together.
+
+Each departure refuses before a build, as a misnamed harness does, and one test target belongs to one comparison
+only. How a derivation is built and judged, and what an invocation is, land with the rest of `M3.5.2.1`.
 
 A program that would run two roles is refused: one program cannot be independent of itself. Every other program the
 workspace can build — an example, a diagnostic tool, the browser module — is classified as not a root, with a reason

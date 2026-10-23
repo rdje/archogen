@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate reads the checkers' new forms
+
+`ARCHOGEN-M3-0890` (leaf `M3.5.2.1.1`), `2026-10-23`.
+
+- The trust gate now reads a derivation, the comparison of a generator's reading with the configuration checker's,
+  and the front's list of the programs it runs; a harness must compare a reference model with its implementation.
+  Nothing writes the new forms yet: they wait until this reader is on `main`.
+
 ## archogen — the checkers' programs in the trust record: round 4, and a change of method
 
 `ARCHOGEN-M3-0889` (leaf `M3.5.2`), `2026-10-23`.

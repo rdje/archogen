@@ -3420,11 +3420,13 @@ test -p xtask trust_generated::tests
 expect killed
 why M3.6.6.2.1, the generated-sources record §2 (`GS-H1`, step 1): a departure the parent's reader finds only once the file is read — a harness's pair naming no root — has every `defgenerated` refusal beside it.
 from
-        check_pairs(&roots).map_err(|why| {
-            crate::trust_generated::beside(why, &crate::trust_generated::refusals(&generated))
-        })?;
+        check_pairs(&roots)
+            .and_then(|()| check_front(&roots))
+            .map_err(|why| {
+                crate::trust_generated::beside(why, &crate::trust_generated::refusals(&generated))
+            })?;
 to
-        check_pairs(&roots)?;
+        check_pairs(&roots).and_then(|()| check_front(&roots))?;
 end
 
 mutation gs-a-step-1-refusal-is-ignored

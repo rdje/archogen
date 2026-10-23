@@ -544,7 +544,7 @@ class ObserverCloseTests(DiscoveryFixture):
         expected = {
             'xtask/src/trust_compiler_observer.rs': '58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98',
             'xtask/src/trust_compiler.rs': '1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973',
-            'xtask/src/trust.rs': 'c677dc5d61316e07b96c4cf176899674975a0e286b89d80c58ab67eef5d0cd21',
+            'xtask/src/trust.rs': '4587148262f1f04a7747bcb559ce2b0adb00734d657b8fdf018670e98c053547',  # re-pinned by M3.5.2.1.1: the roots reader's forms and whole-file checks alone; the observer's close unchanged
         }
         def verify(inputs):
             for path, digest in expected.items():
@@ -1504,7 +1504,7 @@ os.execvp("rustc", ["rustc"] + arguments)
         ]
         inputs = {path: (ROOT / path).read_bytes() for path in paths}
         expected = {
-            'xtask/src/trust.rs': '1d4168ac1493de1020a8b19a3e7a839ec86463de7660a8ec3d7d5763722aeb70',
+            'xtask/src/trust.rs': '09079a49682e6b37fa2a702fb0c9754b694453b02b57ba4e41c7a782e53e1a84',  # re-pinned by M3.5.2.1.1: the roots reader's forms and whole-file checks alone; the caller suffix unchanged
             'xtask/src/trust_compiler.rs': '634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70',
             'xtask/src/trust_compiler_observer.rs': 'c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f',
             'xtask/src/catalog_build.rs': 'd3e8865c3633de9f4cafb82c3613f0ee82df0c065012b732469cda5951221ed2',
@@ -1971,7 +1971,7 @@ class IteratorTests(DiscoveryFixture):
             entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
             guarded = {
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
-                    "1d4168ac1493de1020a8b19a3e7a839ec86463de7660a8ec3d7d5763722aeb70"),
+                    "09079a49682e6b37fa2a702fb0c9754b694453b02b57ba4e41c7a782e53e1a84"),  # re-pinned by M3.5.2.1.1: the roots reader's forms and whole-file checks alone; the absolute cwd unchanged
                 "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
                     "634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70"),
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],
