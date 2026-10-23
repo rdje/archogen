@@ -72,7 +72,8 @@ including in a harness between valid ones. A harness compares a reference model 
 validates — one root of role `reference-model` and one of role `implementation`, in either order — and any other
 pair refuses, so a comparison of the generator with a checker cannot be written as one.
 
-**Read, not yet built** (leaf `M3.5.2.1.1`, `decision_trust-role-programs.md`). The gate now reads two forms no commit
+**Read and built, written by no commit yet** (leaves `M3.5.2.1` and `M3.5.2.2`, `decision_trust-role-programs.md`).
+The gate reads two forms no commit
 writes yet, since the gate that judges a push is built from the commit before it and must already know a form:
 
 - `(defderivation <name> (pair generator <checker>) (package "<dir>") (test <target>) (reason "…"))`, a test
@@ -630,12 +631,12 @@ build it needs fails.
 | Code | Outcome | When |
 | --- | --- | --- |
 | `trust-new-shared` | reported | an item the base commit's baseline does not hold, a generated provenance among them |
-| `trust-shared-changed` | reported | an item whose content, configuration, edges or readers differ from the base commit's form, or a generated provenance whose content, roles or declared files do, or a comparison harness whose provenance does |
-| `trust-unclassified-program` | reported | a program target neither a root nor classified, or whose classification's role packages grew |
+| `trust-shared-changed` | reported | an item whose content, configuration, edges or readers differ from the base commit's form — an invocation's launcher among them — or a generated provenance whose content, roles or declared files do, or a comparison's, a harness's or a derivation's, whose provenance does |
+| `trust-unclassified-program` | reported | a program target neither a root nor classified, or whose classification's role packages grew — a test-like unit whose build joins two roles a property rests on among them, unless a pair form names it |
 | `trust-baseline-stale` | refused, on the baseline's host | a form whose item is no longer shared, a classification whose target is gone, an admission no site uses; and, wherever the gate runs, a form naming a package or target the commit no longer has; a `defgenerated` form whose file no program reads, on the baseline's host |
-| `trust-undeclared-input` | refused | an input the commit does not hold, or a construct the catalog's rules refuse, with no admission, in a program's build or a generator's; a `defgenerated` form departing from its shape, or a construction its text alone refuses — a file two forms declare, an entry twice in a clause, a file both a generator and an input, a declared file its own generator or input; a live form's generator or input that is no file of the commit's tree — one at or under a gitlink among them — or is a symbolic link, or that a form declares or a header marks, a chain; an entry point that is not a `.rs` file, in a program's closure or a generator's; a `.rs` generator file that is no program target's entry point; a file a program reads that is marked generated and no form declares; a declared or marked file a generator's build reads |
-| `trust-form-missing` | refused, on the baseline's host | a shared item with no form in the commit's own baseline, or with one proposing other digests than the commit measures; a program target with no classification |
-| `trust-shared-program` | refused | a root compiling another role's role package, or the comparison harness one of a role outside its pair; a live form's generator file that is the entry point of a program target whose role packages hold another role's than the reading program's — for the harness, than its pair's — or a script lying in a role package of such a role |
+| `trust-undeclared-input` | refused | an input the commit does not hold, or a construct the catalog's rules refuse, with no admission, in a program's build or a generator's; a `defgenerated` form departing from its shape, or a construction its text alone refuses — a file two forms declare, an entry twice in a clause, a file both a generator and an input, a declared file its own generator or input; a live form's generator or input that is no file of the commit's tree — one at or under a gitlink among them — or is a symbolic link, or that a form declares or a header marks, a chain; an entry point that is not a `.rs` file, in a program's closure or a generator's; a `.rs` generator file that is no program target's entry point; a file a program reads that is marked generated and no form declares; a declared or marked file a generator's build reads; a front that invokes while its commit holds no launcher |
+| `trust-form-missing` | refused, on the baseline's host | a shared item with no form in the commit's own baseline, or with one proposing other digests than the commit measures; a program target with no classification — a joined integration test, unless a pair form names it |
+| `trust-shared-program` | refused | a root compiling another role's role package, or a comparison — the harness or a derivation — one of a role outside its pair; a live form's generator file that is the entry point of a program target whose role packages hold another role's than the reading program's — for the harness, than its pair's — or a script lying in a role package of such a role |
 | `trust-inventory-stale` | refused, by `trust-verify` | a package's inventory missing or of another build, its report of another inventory, an artifact or a result's producer not the inventory's, a result's role no root's or its producer a derivation, a handed dependency undeclared |
 
 **Reported** passes and lists the item unreviewed; **refused** fails the gate wherever it runs, and is repaired by a
@@ -713,10 +714,10 @@ Every report ends with what the inventory does not see, the same list each time,
   alone, so on the baseline's host its form is stale, and off it the file, marked and undeclared, is refused.
   Admissions meet the same limit.
 - **what a derivation reads at run time**, as a comparison test reads the kind modules from disk;
-- **the transcriptions a derivation holds together.** The checker's model lives in the checker's package and the
-  generator's relation in the generator's, so an edit to either moves no shared item: only the comparison failing joins
-  them, which is why a derivation's class is a reference derivation, its controls the ones independent of the
-  transcription;
+- **the transcriptions a derivation holds together.** The checker's model lives in the checker's package and, from
+  `M3.4`, the generator's relation in the generator's, so an edit to either moves no shared item — before `M3.4` the
+  relation, compiled beside the pair's builds, is in the derivation's item: only the comparison failing joins them,
+  which is why a derivation's class is a reference derivation, its controls the ones independent of the transcription;
 - **whether the front runs only, or all, the programs its form invokes.** `NO-SUBPROCESS` admitting the launcher alone,
   the launcher running only what the install manifest names, and the install placing only the invoked roots stand
   there;

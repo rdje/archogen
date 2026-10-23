@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — every rule the checkers' trust record states, tested
+
+`ARCHOGEN-M3-0899` (leaf `M3.5.2.2.3`), `2026-10-23`.
+
+- The last of the fifth review's findings answered in code: the invocation judged through the gate, a derivation
+  read as the comparison harness for what it generates and whom it may use, and the book's list of what the gate
+  does not see held to the report's by a test.
+
 ## archogen — the trust gate finds a comparison by what it compiles
 
 `ARCHOGEN-M3-0898` (leaf `M3.5.2.2.2`), `2026-10-23`.

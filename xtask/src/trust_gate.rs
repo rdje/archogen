@@ -42,7 +42,8 @@ pub const CLASSIFICATIONS: &[&str] = &[
 pub struct ItemId {
     /// The two roots, in the inventory's order.
     pub pair: (String, String),
-    /// `build-configuration`, `package`, `file`, `copy`, `comparison-harness` or `generated-provenance`.
+    /// `build-configuration`, `package`, `file`, `copy`, `comparison-harness`, `shared-derivation`, `invocation` or
+    /// `generated-provenance`.
     pub kind: String,
     /// What it is, by kind.
     pub item: String,
@@ -864,8 +865,9 @@ pub const UNSEEN: &[&str] = &[
      host and, marked and undeclared, refused off it; the admissions meet the same limit (§8)",
     "what a derivation reads at run time, as a comparison test reads the kind modules (decision_trust-role-programs.md \
      §3)",
-    "the transcriptions a derivation holds together: an edit to the checker's model or the generator's relation moves \
-     no shared item, and only the comparison failing joins them (§3)",
+    "the transcriptions a derivation holds together: an edit to the checker's model moves no shared item, nor, from \
+     `M3.4`, one to the generator's relation — before it the relation is compiled beside the pair's builds, in the \
+     derivation's item — and only the comparison failing joins them (§3)",
     "whether the front runs only, or all, the programs its form invokes: `NO-SUBPROCESS`, the launcher reading the \
      manifest and the install placing the invoked roots stand there (§4)",
     "whether a unit two roles' packages join compares them: the build finds the joining, and a classification's review \
@@ -2191,7 +2193,8 @@ mod tests {
         commit_proposal(&f, "first");
         let (j, _) = judge_head(&f, "proposed");
         assert!(j.refused.is_empty(), "every form present: {:#?}", j.refused);
-        f.commit(&[("README.md", "outside every unit\n".to_owned())]);
+        // A file of the derivation's own package that none of its units compiles (round 5's R9).
+        f.commit(&[("crates/r/README.md", "outside every unit\n".to_owned())]);
         let (j, text) = judge_head(&f, "outside");
         assert!(j.refused.is_empty(), "{:#?}", j.refused);
         assert_eq!(j.change, ["unchanged"], "{text}");
@@ -2213,6 +2216,87 @@ mod tests {
             "the old form no longer covers the item: {:#?}",
             j.refused
         );
+    }
+
+    #[test]
+    fn f30_case_5_an_invocation_moves_with_its_launcher_alone() {
+        crate::trust_test_process::bounded!(f30_case_5_an_invocation_moves_with_its_launcher_alone);
+        // `decision_trust-role-programs.md` §4: the front and the root it invokes share `gen+cfg invocation`, proposed
+        // and read back as every item is; an edit outside it is "unchanged", and a launcher edit moves it, reported and
+        // refused until its form is proposed again.
+        use crate::trust::tests::{invoking, INVOKES};
+        let f = invoking("f30-invocation", INVOKES, Some("pub fn run() {}\n"));
+        let _ = judge_head(&f, "first");
+        commit_proposal(&f, "first");
+        let proposal =
+            std::fs::read_to_string(f.repo.join("trust/baseline.eadl")).expect("committed");
+        assert!(proposal.contains("\"gen+cfg invocation\""), "{proposal}");
+        let (j, _) = judge_head(&f, "proposed");
+        assert!(j.refused.is_empty(), "its form read back: {:#?}", j.refused);
+        f.commit(&[("crates/c/README.md", "outside every unit\n".to_owned())]);
+        let (j, text) = judge_head(&f, "outside");
+        assert!(j.refused.is_empty(), "{:#?}", j.refused);
+        assert_eq!(j.change, ["unchanged"], "{text}");
+        f.commit(&[(
+            "crates/archogen-cli/src/sibling.rs",
+            "pub fn run() { /* another contract */ }\n".to_owned(),
+        )]);
+        let (j, text) = judge_head(&f, "launcher");
+        assert!(
+            j.change
+                .iter()
+                .any(|c| c.starts_with("trust-shared-changed: `gen+cfg invocation`")),
+            "{text}"
+        );
+        assert!(
+            j.refused
+                .iter()
+                .any(|r| r.contains("`gen+cfg invocation`'s form")),
+            "the old form no longer covers the item: {:#?}",
+            j.refused
+        );
+    }
+
+    #[test]
+    fn the_book_lists_what_the_report_does_not_see_in_its_order() {
+        crate::trust_test_process::bounded!(
+            the_book_lists_what_the_report_does_not_see_in_its_order
+        );
+        // Round 5's R11: the trust chapter's list, after the paragraph naming `UNSEEN`, holds one entry for each line of
+        // `UNSEEN`, in its order, each opening with that line's lead — its bold words, or its words to the first comma or
+        // semicolon — so neither list gains, loses or reorders an entry alone.
+        let book = std::fs::read_to_string(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../docs/book/src/trust.md"
+        ))
+        .expect("the trust chapter");
+        let after = book
+            .split_once("`xtask/src/trust_gate.rs`); here it is in full:\n")
+            .expect("the paragraph naming `UNSEEN`")
+            .1;
+        let list = after
+            .trim_start_matches('\n')
+            .split("\n\n")
+            .next()
+            .expect("its list");
+        let leads: Vec<String> = list
+            .split("\n- ")
+            .map(|entry| {
+                let entry = entry.trim_start_matches("- ");
+                let lead = match entry.strip_prefix("**") {
+                    Some(bold) => bold.split("**").next().unwrap_or_default(),
+                    None => entry.split([',', ';']).next().unwrap_or_default(),
+                };
+                lead.trim_end_matches(['.', ':']).to_owned()
+            })
+            .collect();
+        assert_eq!(leads.len(), super::UNSEEN.len(), "{leads:#?}");
+        for (lead, line) in leads.iter().zip(super::UNSEEN) {
+            assert!(
+                line.starts_with(lead.as_str()),
+                "the book's `{lead}` opens no `{line}`"
+            );
+        }
     }
 
     #[test]

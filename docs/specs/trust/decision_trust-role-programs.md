@@ -88,7 +88,8 @@ and `trust-form-missing` on the baseline's host. §1's census of names found the
 
 **Outside it, stated in the report:** its run-time reads of the kind modules (`std::fs`); and the transcriptions
 themselves — the model's sources are in the checker's package and the production relation's, from `M3.4`, in the
-generator's, so an edit to either moves no shared item and is reported nowhere; the comparison failing is what holds
+generator's, so from then an edit to either moves no shared item and is reported nowhere (before it the relation,
+compiled beside the pair's builds, is in the derivation's item); the comparison failing is what holds
 them together; and whether a classified unit compares what two roles hold equal, which its review decides.
 
 **Its class** (§5), §4.4's **reference derivation.** The comparison holding the two equal is the coupling itself,

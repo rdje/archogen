@@ -3912,6 +3912,12 @@ pub(crate) mod tests {
                 "bin a",
                 "not the one name `archogen-install.json`",
             ),
+            (
+                "gen",
+                "(invokes cfg) (installed)",
+                "bin a",
+                "`gen`'s `installed` holds [], not the one name `archogen-install.json`",
+            ),
         ] {
             let e = read_roots(&front(on, clauses, gen_target)).expect_err(why);
             assert!(e.contains(why), "{on} {clauses}: {e}");
@@ -3925,6 +3931,13 @@ pub(crate) mod tests {
             e.contains("2 roots have role `generator`, so none is the front"),
             "{e}"
         );
+        // A derivation is no root, so no program the front runs (§4).
+        let derivation = format!(
+            "{}(defderivation d (pair gen cfg) (package \"crates/r\") (test t) (reason \"r\"))\n",
+            front("gen", &format!("(invokes d) {installed}"), "bin a")
+        );
+        let e = read_roots(&derivation).expect_err("a derivation invoked");
+        assert!(e.contains("`gen` invokes `d`, which names no root"), "{e}");
     }
 
     #[test]
@@ -4757,6 +4770,13 @@ pub(crate) mod tests {
             "trust-baseline-stale: trust/roots.eadl: `prod` names the test target `gone` of `crates/r`, which the commit no \
              longer has",
         );
+        // Its package gone, as any form's (round 5's R8).
+        let moved = "(defderivation prod (pair gen cfg) (package \"crates/gone\") (test production) (reason \"r\"))\n";
+        let f = derivations("derivation-package-gone", moved, "", "pub fn d() {}\n", "");
+        says(
+            &refused(f.run()),
+            "trust-baseline-stale: trust/roots.eadl: `prod` names `crates/gone`, which is no package of the commit",
+        );
     }
 
     #[test]
@@ -4797,7 +4817,7 @@ pub(crate) mod tests {
 
     /// A front `gen` whose form holds `clauses`, the configuration checker `cfg` as an executable, a scheduling checker
     /// `chk`, and the launcher with `launcher` as its text, or none (`decision_trust-role-programs.md` §4).
-    fn invoking(name: &str, clauses: &str, launcher: Option<&str>) -> Fixture {
+    pub(crate) fn invoking(name: &str, clauses: &str, launcher: Option<&str>) -> Fixture {
         let roots = format!(
             "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\") {clauses})\n\
              (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n\
@@ -4827,7 +4847,7 @@ pub(crate) mod tests {
         fixture(name, "1.95.0", &files)
     }
 
-    const INVOKES: &str = "(invokes cfg) (installed \"archogen-install.json\")";
+    pub(crate) const INVOKES: &str = "(invokes cfg) (installed \"archogen-install.json\")";
 
     /// The invocation items of an inventory, by pair, with their content.
     fn invocations(inv: &Json) -> Vec<(String, Vec<String>)> {
