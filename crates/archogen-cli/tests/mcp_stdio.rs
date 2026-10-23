@@ -139,7 +139,7 @@ fn both_eras_are_spoken_over_stdio_a_refusal_and_an_unbuilt_tool_among_them() {
         Some(&Value::Bool(true)),
         "an unbuilt tool names its owner"
     );
-    assert!(json::write(result(3)).contains("M2.6"));
+    assert!(json::write(result(3)).contains("M2.21.2"));
     assert_eq!(
         result(4).get("protocolVersion").and_then(Value::as_str),
         Some("2025-11-25")

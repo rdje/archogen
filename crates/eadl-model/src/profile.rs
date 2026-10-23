@@ -134,7 +134,7 @@ pub const RT_STATIC_UP_V1: Profile = Profile {
                 },
                 Part {
                     rule: "bounded kernel critical sections",
-                    stage: Stage::Later { stage: "analysis", owner: "M2.6" },
+                    stage: Stage::Later { stage: "analysis", owner: "M2.21.2" },
                 },
             ],
         },
@@ -156,7 +156,7 @@ pub const RT_STATIC_UP_V1: Profile = Profile {
                 },
                 Part {
                     rule: "bounded release jitter",
-                    stage: Stage::Later { stage: "analysis", owner: "M2.6" },
+                    stage: Stage::Later { stage: "analysis", owner: "M2.21.2" },
                 },
             ],
         },
@@ -170,7 +170,7 @@ pub const RT_STATIC_UP_V1: Profile = Profile {
                 },
                 Part {
                     rule: "bounded jobs",
-                    stage: Stage::Later { stage: "analysis", owner: "M2.6" },
+                    stage: Stage::Later { stage: "analysis", owner: "M2.21.2" },
                 },
                 Part {
                     rule: "no self-suspension within a job",
@@ -216,7 +216,7 @@ pub const RT_STATIC_UP_V1: Profile = Profile {
             parts: &[
                 Part {
                     rule: "timer interrupt plus explicitly modeled bounded sources",
-                    stage: Stage::Later { stage: "analysis", owner: "M2.6" },
+                    stage: Stage::Later { stage: "analysis", owner: "M2.21.2" },
                 },
                 Part {
                     rule: "unknown or uncontrolled interrupt load is unsupported",
@@ -306,7 +306,7 @@ pub const RT_STATIC_UP_V1: Profile = Profile {
                 },
                 Part {
                     rule: "general virtio dependency",
-                    stage: Stage::Later { stage: "resolution", owner: "M3.1" },
+                    stage: Stage::Later { stage: "resolution", owner: "M3.4" },
                 },
             ],
         },

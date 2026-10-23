@@ -242,7 +242,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "the named property to analyze, e.g. deadlines",
             required: true,
         }],
-        maturity: Maturity::Unimplemented { owner: "M2.6" },
+        maturity: Maturity::Unimplemented { owner: "M2.21.2" },
         exposure: Exposure::Tool,
     },
     CommandSpec {
@@ -258,7 +258,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "focused | integration | extended | hardware | assurance",
             required: true,
         }],
-        maturity: Maturity::Unimplemented { owner: "PROGRAM.3" },
+        maturity: Maturity::Unimplemented { owner: "M4.11" },
         // It runs tiers, which drive a toolchain and an emulator: exposed only by its own ruling, never by
         // analogy (the open question on the `API` tree).
         exposure: Exposure::Excluded {
@@ -371,6 +371,46 @@ mod tests {
                 spec.name
             );
         }
+    }
+
+    #[test]
+    fn every_owner_is_a_leaf_a_tree_declares_and_has_not_closed() {
+        // A command that names a closed leaf sends its reader to work that is done (leaf `M3.5.1.5`): `analyze` named
+        // `M2.6` from the day `M2.6` closed until then, and nothing here could see it. Held to the task trees, as
+        // `tests/kind_modules.rs` holds the kind refusal's owner, so closing an owner without moving its command fails.
+        let trees = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(std::path::Path::parent)
+            .expect("crates/<name>/ is two levels below the root")
+            .join("docs/tasks");
+        let declared: String = std::fs::read_dir(&trees)
+            .expect("the task trees")
+            .flatten()
+            .filter_map(|entry| std::fs::read_to_string(entry.path()).ok())
+            .collect();
+        let mut wrong = Vec::new();
+        for spec in COMMANDS {
+            let Some(owner) = spec.maturity.owner() else {
+                continue;
+            };
+            let header = format!("- ID: `{owner}`");
+            let mut lines = declared.lines().skip_while(|line| *line != header);
+            if lines.next().is_none() {
+                wrong.push(format!(
+                    "`{}` names `{owner}`, which no tree declares",
+                    spec.name
+                ));
+                continue;
+            }
+            let status = lines
+                .next()
+                .and_then(|line| line.trim_start().strip_prefix("Status: "))
+                .unwrap_or("");
+            if status.starts_with("`done`") {
+                wrong.push(format!("`{}` names `{owner}`, which is closed", spec.name));
+            }
+        }
+        assert!(wrong.is_empty(), "{}", wrong.join("\n"));
     }
 
     #[test]

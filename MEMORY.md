@@ -14,7 +14,7 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.5`; `PROGRAM` resumes at `PROGRAM.71`.
-- **Next action:** `M3.5.1.5` (P2), the texts within the ruling; then `M3.5.2`–`.6`, `.1.4`, `.1.6`, `M2.21`.
+- **Next action:** `M3.5.1.5.2` (P2), §10.2 and the command table; then `.1.5.3`–`.1.5.4`, `M3.5.2`–`.6`, `.1.4`, `.1.6`.
   `.1.8` waits on the runner: the trust gate refuses the shared digest package on `main` until its form lands.
   The mutation campaign is `M7.6`'s. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
   focused green at `eaf71286`; `archogen check` wiring is `M3.4`'s. The next artifact cleanup is due after

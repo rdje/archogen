@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — no command names a closed piece of work
+
+`ARCHOGEN-M3-0883` (leaf `M3.5.1.5.1`), `2026-10-23`.
+
+- `archogen analyze` and `archogen verify`, and five rules of the profile, named pieces of work already closed. They
+  name open ones now — `verify`'s filed as `M4.11` — and the command table and the profile check that every owner
+  they name is still open.
+
 ## archogen — the install step and its manifest
 
 `ARCHOGEN-M3-0882` (leaf `M3.5.1.3`), `2026-10-23`.

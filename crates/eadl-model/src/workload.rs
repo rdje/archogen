@@ -513,10 +513,22 @@ mod tests {
                         }
                     }
                     Stage::Later { owner, .. } => {
-                        if !declared.contains(&format!("- ID: `{owner}`")) {
+                        // Declared and still open (leaf `M3.5.1.5`): four rules named `M2.6` after it closed.
+                        let header = format!("- ID: `{owner}`");
+                        let mut lines = declared.lines().skip_while(|line| *line != header);
+                        if lines.next().is_none() {
                             wrong.push(format!(
                                 "`{}`: `{owner}` is no leaf a tree declares",
                                 row.concern
+                            ));
+                        } else if lines
+                            .next()
+                            .and_then(|line| line.trim_start().strip_prefix("Status: "))
+                            .is_some_and(|status| status.starts_with("`done`"))
+                        {
+                            wrong.push(format!(
+                                "`{}`: `{}` names `{owner}`, which is closed",
+                                row.concern, part.rule
                             ));
                         }
                     }

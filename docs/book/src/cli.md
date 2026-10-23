@@ -35,8 +35,8 @@ COMMANDS:
     check    elaborate and type-check a description against a profile
     resolve  resolve providers and resources into an independently checked build plan   [unimplemented — tracked by leaf M3.4]
     build    generate, assemble and build a complete system and its simulator   [experimental — the S0 path: one fixed realization, periodic releases, hosted playground; completed by leaf M4.2]
-    analyze  run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.6]
-    verify   run a verification tier over a build   [unimplemented — tracked by leaf PROGRAM.3]
+    analyze  run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.21.2]
+    verify   run a verification tier over a build   [unimplemented — tracked by leaf M4.11]
     explain  explain how one requirement was realized, or why it could not be   [unimplemented — tracked by leaf M3.4]
     replay   replay a recorded failure manifest and check its identity   [unimplemented — tracked by leaf M4.7]
     mcp      serve the engine API to an agent over MCP, on standard input and output
