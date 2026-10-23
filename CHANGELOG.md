@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate reports a step's refusals together
+
+`ARCHOGEN-M3-0911` (leaf `M3.5.2.5.2`), `2026-10-23`.
+
+- A commit the trust gate refuses for several reasons before any build — a missing launcher, a stale form, a
+  package outside the tree, a refused cargo configuration — now hears every one in one report, and a run it cannot
+  judge names the refusals already found. A test compiling a third role's package is told to split or classify
+  it, not offered a pair form that would be refused.
+
 ## archogen — the trust gate's census reads what the compiler compiled
 
 `ARCHOGEN-M3-0910` (leaf `M3.5.2.5.1`), `2026-10-23`.

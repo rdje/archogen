@@ -100,7 +100,8 @@ role package's file reached by a path, an `include!` or a dependency's own path 
 (leaf `M3.5.2.5.1`; a scan of the text before it, `M3.5.2.4.1`, missed spellings). It counts what some build compiles, more than the default build makes, by
 design (leaf `M3.5.2.3.1`). The inventory records the pairs each joins, so the gate's remedy names its pair's form —
 a harness for the reference model's, a derivation for the generator's and a checker's — or, for a unit joining two
-pairs, which no pair form can name, says to split or classify it.
+pairs or compiling a role package of a root beside its pair's two, which no pair form can name without its build being
+refused, says to split or classify it (leaf `M3.5.2.5.2`).
 An integration test that compares the two is named by its pair form; any other such unit is classified by a
 `defprogram` whose target is `(target test|bench|lib-test|bin-test|doctest <name>)`, its reason saying it compares
 nothing the two hold equal. Unnamed, it is reported as an unclassified program is, and refused on the baseline's host
@@ -488,6 +489,11 @@ with refusals reported.
    Reader recovery admits nothing: an extra `)` reports `read-unexpected-close`; a missing closing `)`
    reports `read-unclosed-list`. Neither starts a build.
 2. Build the programs and judge the data their forms hand them, applying every prebuild/build refusal.
+   Its refusals are reported together: a root's data and the launcher are judged first; a link or a submodule
+   under `catalog/`, or a refused cargo configuration, ends the step at once, nothing after it being safe to
+   judge; a package outside the tree, a stale form and the manifest rules are judged together, and none is
+   followed by a build. A failure that leaves the gate unable to judge reports beside it the refusals already
+   found (leaf `M3.5.2.5.2`).
 3. Judge each live generated form's generators and inputs: each must be a commit blob, never a symbolic
    link, declared generated file or header-marked generated file. An unread form receives text checks only.
 4. Judge every generator against every program reading its output. For a program-target entry point, use

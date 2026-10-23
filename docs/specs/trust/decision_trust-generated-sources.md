@@ -94,6 +94,14 @@ inventory's `classifications-unused`, and the gate refuses it on the baseline's 
 form no longer shared and an admission no current site uses (the parent's clarification of `2026-10-06`). The instrument
 follows the parent; no behaviour moves.
 
+*Clarified `2026-10-23`, by `M3.5.2.5.2`, answering round 8's D3:* step (2)'s refusals are reported together. A root's
+data and the launcher are judged first, from the commit's entries. Two refusals leave nothing after them safe to judge
+and end the step with those beside them: a symbolic link or a submodule under `catalog/`, with which no tree is written,
+and a cargo configuration the parent's §3 refuses, under which cargo is never run. Every other — a package outside the
+written tree, a form naming a package or a target the commit no longer has, the parent's workspace and manifest rules —
+is judged on to the step's last judgment before a build, over the packages the tree holds, and no build follows one. A
+run the gate cannot judge past has the refusals its step found before it beside it, a build's failure as any other.
+
 The other forms of `trust/roots.eadl` keep the parent's reader, which reads the file in order and stops at the first of
 them that departs, the gate unable to judge: the `defgenerated` forms before that one are read and their shape and
 text-only refusals reported beside it, and those after it once it is repaired; a departure the parent's reader finds

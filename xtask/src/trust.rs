@@ -1701,6 +1701,12 @@ fn refuse(mut refused: Vec<String>) -> Outcome {
     Outcome::Refused(refused)
 }
 
+/// A run the gate cannot judge past, ended with the refusals its step found before it beside it (the generated-sources
+/// record §2, clarified by `M3.5.2.5.2`).
+fn unable(refused: &[String]) -> impl Fn(String) -> String + '_ {
+    move |why| crate::trust_generated::beside(why, refused)
+}
+
 /// The catalog's rules across one run (§3): every site they refuse, counted once however many programs compile it; the
 /// admissions the sites use; the manifests and the files already judged. A generator's build (the generated-sources
 /// record §5) is judged through the same `Rules` after the programs', so a site a root and a generator both compile is
@@ -1971,18 +1977,21 @@ pub fn inventory_with(
         .filter(|e| e.mode == "120000")
         .map(|e| e.path.clone())
         .collect();
-    let tree: Tree = match tree_of(&git, &entries) {
-        Ok(t) => t,
-        Err(crate::catalog_check::Failure::Refused(r)) => {
-            return Ok(refuse(vec![format!("trust-undeclared-input: {r}")]))
-        }
-        Err(crate::catalog_check::Failure::Unjudged(e)) => return Err(e),
-    };
+    // Every refusal this step makes is reported together (round 8's D3): a root's data and the launcher are judged from
+    // the commit's entries first; a refusal that leaves nothing after it safe to judge — a link or a submodule under
+    // `catalog/`, no tree written, and a cargo configuration §3 refuses, cargo never run — ends the step with those
+    // beside it; every other is judged on to the step's last judgment before a build, and no build follows (the
+    // generated-sources record §2, clarified by `M3.5.2.5.2`).
+    let blobs: BTreeSet<&str> = entries
+        .iter()
+        .filter(|e| e.mode == "100644" || e.mode == "100755")
+        .map(|e| e.path.as_str())
+        .collect();
     let mut refused: Vec<String> = Vec::new();
     // The fixed data a root is handed, by path: a blob of the commit, never a symbolic link (§2, §3; R9 remark 6).
     for p in &roots.programs {
         for d in &p.data {
-            if symlinks.contains(d) || tree.get(d).is_none() {
+            if !blobs.contains(d.as_str()) {
                 refused.push(format!(
                     "trust-undeclared-input: `{}` declares `{d}`, which is not a blob of the commit",
                     p.name
@@ -1993,7 +2002,7 @@ pub fn inventory_with(
     // The launcher an invocation's content names, read with the tree as a root's data is
     // (`decision_trust-role-programs.md` §4).
     for c in roots.front_clauses.iter().filter(|c| c.invokes.is_some()) {
-        if symlinks.contains(LAUNCHER) || tree.get(LAUNCHER).is_none() {
+        if !blobs.contains(LAUNCHER) {
             refused.push(format!(
                 "trust-undeclared-input: `{}` invokes programs, and its launcher `{LAUNCHER}` is not a blob of the commit",
                 c.root
@@ -2001,23 +2010,35 @@ pub fn inventory_with(
         }
     }
 
+    let tree: Tree = match tree_of(&git, &entries) {
+        Ok(t) => t,
+        Err(crate::catalog_check::Failure::Refused(r)) => {
+            refused.push(format!("trust-undeclared-input: {r}"));
+            return Ok(refuse(refused));
+        }
+        Err(crate::catalog_check::Failure::Unjudged(e)) => return Err(unable(&refused)(e)),
+    };
     let tree_dir = out.join("tree");
-    write_tree(&tree, &tree_dir).map_err(|f| format!("{f:?}"))?;
+    write_tree(&tree, &tree_dir)
+        .map_err(|f| format!("{f:?}"))
+        .map_err(unable(&refused))?;
     let cargo_home = out.join("cargo-home");
-    reset_cargo_home(&cargo_home)?; // made anew on every run (§3, R2 B12)
-    let pin = toolchain_file(&tree)?;
+    reset_cargo_home(&cargo_home).map_err(unable(&refused))?; // made anew on every run (§3, R2 B12)
+    let pin = toolchain_file(&tree).map_err(unable(&refused))?;
     // A cargo configuration on the build's path that §3 refuses is a refusal of the commit, never a run that could
     // not judge (`M3.6.3.4`, found running the gate built from a base).
     match configurations_on_paths(&tree_dir, &tree_dir, config_roots, &tree) {
         Ok(()) => {}
         Err(crate::catalog_check::Failure::Refused(r)) => {
-            return Ok(refuse(vec![format!("trust-undeclared-input: {r}")]))
+            refused.push(format!("trust-undeclared-input: {r}"));
+            return Ok(refuse(refused));
         }
-        Err(crate::catalog_check::Failure::Unjudged(e)) => return Err(e),
+        Err(crate::catalog_check::Failure::Unjudged(e)) => return Err(unable(&refused)(e)),
     }
 
     // The workspace's packages, from `cargo metadata`, which runs no package's code.
-    let meta_env = environment(&pin, &cargo_home, &out.join("target-metadata"))?;
+    let meta_env =
+        environment(&pin, &cargo_home, &out.join("target-metadata")).map_err(unable(&refused))?;
     let meta_out = Command::new("cargo")
         // Every feature, so a dependency behind one is an edge as any other (`decision_trust-role-programs.md` §3); the
         // roots' closures hold no feature, which the manifest rules refuse.
@@ -2033,23 +2054,26 @@ pub fn inventory_with(
         .env_clear()
         .envs(meta_env.iter().map(|(k, v)| (k.as_str(), v.as_str())))
         .output()
-        .map_err(|e| format!("`cargo metadata` did not run: {e}"))?;
+        .map_err(|e| format!("`cargo metadata` did not run: {e}"))
+        .map_err(unable(&refused))?;
     if !meta_out.status.success() {
-        return Err(format!(
+        return Err(unable(&refused)(format!(
             "`cargo metadata` failed: {}",
             String::from_utf8_lossy(&meta_out.stderr).trim()
-        ));
+        )));
     }
-    let meta = json::parse(&String::from_utf8_lossy(&meta_out.stdout))?;
+    let meta = json::parse(&String::from_utf8_lossy(&meta_out.stdout)).map_err(unable(&refused))?;
     let root_prefix = format!(
         "{}/",
         fs::canonicalize(&tree_dir)
-            .map_err(|e| e.to_string())?
+            .map_err(|e| e.to_string())
+            .map_err(unable(&refused))?
             .display()
     );
     // A package whose manifest lies outside the written tree is one the commit does not hold, reached by the commit's
     // own manifest: it is refused, naming it, before anything is compiled — never read as the root's, whose directory
-    // is the empty one (`M3.6.9.6.3.2.2.15.2.1.7.2`).
+    // is the empty one (`M3.6.9.6.3.2.2.15.2.1.7.2`) — and judged nowhere else, the step's other judgments made beside
+    // it (`M3.5.2.5.2`).
     let outside: Vec<String> = meta
         .get("packages")
         .map(Json::elements)
@@ -2069,9 +2093,7 @@ pub fn inventory_with(
             })
         })
         .collect();
-    if !outside.is_empty() {
-        return Ok(refuse(outside));
-    }
+    refused.extend(outside);
     let mut package_names: BTreeMap<String, String> = BTreeMap::new();
     let mut id_dir: BTreeMap<String, String> = BTreeMap::new();
     let mut targets: Targets = BTreeMap::new();
@@ -2090,11 +2112,13 @@ pub fn inventory_with(
             .get("manifest_path")
             .and_then(Json::as_str)
             .unwrap_or_default();
-        let dir = manifest_path
+        let Some(dir) = manifest_path
             .strip_prefix(&root_prefix)
             .and_then(|r| r.strip_suffix("Cargo.toml"))
             .map(|d| d.trim_end_matches('/').to_owned())
-            .unwrap_or_default();
+        else {
+            continue; // outside the written tree: refused above
+        };
         let name = p
             .get("name")
             .and_then(Json::as_str)
@@ -2230,9 +2254,7 @@ pub fn inventory_with(
             ));
         }
     }
-    if !stale.is_empty() {
-        return Ok(refuse(stale));
-    }
+    refused.extend(stale);
 
     // The resolved graph: (dependent, dependency, kind).
     let mut graph: Vec<(String, String, String)> = Vec::new();
@@ -2242,15 +2264,20 @@ pub fn inventory_with(
         .map(Json::elements)
         .unwrap_or_default()
     {
-        let from = id_dir
+        // A package outside the written tree has no edge here: it is refused above.
+        let Some(from) = id_dir
             .get(node.get("id").and_then(Json::as_str).unwrap_or_default())
             .cloned()
-            .unwrap_or_default();
+        else {
+            continue;
+        };
         for d in node.get("deps").map(Json::elements).unwrap_or_default() {
-            let to = id_dir
+            let Some(to) = id_dir
                 .get(d.get("pkg").and_then(Json::as_str).unwrap_or_default())
                 .cloned()
-                .unwrap_or_default();
+            else {
+                continue;
+            };
             for k in d.get("dep_kinds").map(Json::elements).unwrap_or_default() {
                 let kind = k
                     .get("kind")
@@ -2278,8 +2305,13 @@ pub fn inventory_with(
 
     // The manifest rules over every package in a program's closure, from the metadata graph, before any build:
     // a build script or a procedural macro is refused here, so none runs (§3, R2 B12); the harness's development
-    // edges are followed, since its build compiles them (R7 3).
-    for p in &roots.programs {
+    // edges are followed, since its build compiles them (R7 3). A program whose package is gone is stale, refused
+    // above, with no closure of the commit's to judge.
+    for p in roots
+        .programs
+        .iter()
+        .filter(|p| package_names.contains_key(&p.package))
+    {
         let mut closure: BTreeSet<String> = BTreeSet::new();
         let mut todo = vec![p.package.clone()];
         while let Some(pkg) = todo.pop() {
@@ -2307,9 +2339,9 @@ pub fn inventory_with(
     let mut builds: BTreeMap<String, Build> = BTreeMap::new();
     let mut failed: Vec<String> = Vec::new();
     for p in &roots.programs {
-        reset_cargo_home(&cargo_home)?;
+        reset_cargo_home(&cargo_home).map_err(unable(&refused))?;
         let target_dir = out.join("target").join(&p.name);
-        let env = environment(&pin, &cargo_home, &target_dir)?;
+        let env = environment(&pin, &cargo_home, &target_dir).map_err(unable(&refused))?;
         match build(
             p,
             &package_names,
@@ -2365,9 +2397,9 @@ pub fn inventory_with(
     let mut census_units: Vec<Unit> = Vec::new();
     let mut census_failed: Vec<String> = Vec::new();
     if failed.is_empty() {
-        reset_cargo_home(&cargo_home)?;
+        reset_cargo_home(&cargo_home).map_err(unable(&refused))?;
         let census_dir = out.join("target-census");
-        let census_env = environment(&pin, &cargo_home, &census_dir)?;
+        let census_env = environment(&pin, &cargo_home, &census_dir).map_err(unable(&refused))?;
         let args = ["test", "--no-run", "--all-targets"].map(str::to_owned);
         for pkg in package_names.keys().filter(|pkg| !reaches_code(pkg)) {
             match compile(
@@ -4055,6 +4087,56 @@ pub(crate) mod tests {
         .expect("a test no pair form names may be classified");
     }
 
+    #[test]
+    fn a_pair_form_failure_found_once_the_file_is_read_has_every_defgenerated_refusal_beside_it() {
+        crate::trust_test_process::bounded!(
+            a_pair_form_failure_found_once_the_file_is_read_has_every_defgenerated_refusal_beside_it
+        );
+        // Round 8's R12; the generated-sources record §2: a departure the reader finds only once the whole file is read
+        // has every `defgenerated` form's refusals beside it, those after it as those before.
+        let around = |forms: &str| {
+            format!(
+                "(defgenerated \"before.rs\" (generator \"g\") (command \"c\"))\n{ROOTS}{PAIRED}{forms}\
+                 (defgenerated \"after.rs\" (generator \"g\") (command \"c\"))\n"
+            )
+        };
+        let harness = |name: &str, pair: &str, test: &str| {
+            format!("(defharness {name} (pair {pair}) (package \"crates/r\") (test {test}))\n")
+        };
+        for (forms, why) in [
+            (
+                harness("h", "missing imp", "t"),
+                "`h`'s pair names `missing`, which names no root",
+            ),
+            (harness("h", "refm refm", "t"), "`h`'s pair names `refm` twice"),
+            (
+                harness("h", "gen chk", "t"),
+                "`h`'s pair has roles `generator` and `scheduling-checker`",
+            ),
+            (
+                "(defderivation d (pair refm imp) (package \"crates/r\") (test t) (reason \"r\"))\n".to_owned(),
+                "`d`'s pair has roles `implementation` and `reference-model`",
+            ),
+            (
+                format!("{}{}", harness("h", "refm imp", "t"), harness("k", "refm imp", "t")),
+                "`h` and `k` name one test target, `t` of `crates/r`",
+            ),
+            (
+                format!(
+                    "{}(defprogram p (package \"crates/r\") (target test t) (reason \"r\"))\n",
+                    harness("h", "refm imp", "t")
+                ),
+                "`p` classifies the test `t` of `crates/r`, which `h` names as a comparison",
+            ),
+        ] {
+            let e = read_roots(&around(&forms)).expect_err(why);
+            assert!(
+                e.contains(why) && e.contains("before.rs") && e.contains("after.rs"),
+                "{why}: {e}"
+            );
+        }
+    }
+
     /// A front, `gen` as an executable, a configuration checker `cfg` as an executable, and the clauses on `on`'s form.
     fn front(on: &str, clauses: &str, gen_target: &str) -> String {
         let clauses_on = |name: &str| if name == on { clauses } else { "" };
@@ -5156,6 +5238,161 @@ pub(crate) mod tests {
         crate::trust_test_process::bounded!(a_front_that_invokes_without_its_launcher_is_refused);
         // `decision_trust-role-programs.md` §4: read with the tree, in step 2, as a root's `(data …)` is.
         let f = invoking("invocation-no-launcher", INVOKES, None);
+        says(
+            &refused(f.run()),
+            "trust-undeclared-input: `gen` invokes programs, and its launcher `crates/archogen-cli/src/sibling.rs` is not a \
+             blob of the commit",
+        );
+    }
+
+    /// [`invoking`] with the front's launcher missing and its form handing it `missing.json`, which the commit lacks.
+    fn step_two(name: &str) -> Fixture {
+        invoking(name, &format!("{INVOKES} (data \"missing.json\")"), None)
+    }
+
+    /// Commit a symbolic link `link` to `to` in `f`'s repository.
+    fn link(f: &Fixture, link: &str, to: &str) {
+        let at = f.repo.join(link);
+        std::fs::create_dir_all(at.parent().unwrap()).unwrap();
+        std::os::unix::fs::symlink(to, &at).unwrap();
+        git(&f.repo, &["add", "-A"]);
+        git(&f.repo, &["commit", "-q", "-m", "link"]);
+    }
+
+    #[test]
+    fn every_refusal_of_step_two_is_reported_together() {
+        crate::trust_test_process::bounded!(every_refusal_of_step_two_is_reported_together);
+        // Round 8's D3; the generated-sources record §2, clarified by `M3.5.2.5.2`: a root's data and the launcher are
+        // judged first, from the commit's entries, so a refusal ending the step early has them beside it.
+        let data = "trust-undeclared-input: `gen` declares `missing.json`, which is not a blob of the commit";
+        let launcher = "trust-undeclared-input: `gen` invokes programs, and its launcher \
+                        `crates/archogen-cli/src/sibling.rs` is not a blob of the commit";
+        // A link under `catalog/`: no tree is written.
+        let f = step_two("step-two-catalog-link");
+        link(&f, "catalog/link", "../Cargo.toml");
+        let r = refused(f.run());
+        for want in [data, launcher, "under `catalog/`"] {
+            says(&r, want);
+        }
+        // A cargo configuration §3 refuses: cargo is never run.
+        let f = step_two("step-two-configuration");
+        write(
+            &f.base,
+            &[(
+                ".cargo/config.toml",
+                "[build]\nrustflags = [\"--cfg\", \"x\"]\n".to_owned(),
+            )],
+        );
+        let r = refused(f.run());
+        for want in [data, launcher, "a cargo configuration under `target/`"] {
+            says(&r, want);
+        }
+        // A package outside the written tree, a stale form and a build script reached: every judgment before a build
+        // is made, and none is built.
+        let external = real_root().join("target/trust-tests/step-two-external");
+        let _ = std::fs::remove_dir_all(&external);
+        write(
+            &external,
+            &[
+                ("x/Cargo.toml", manifest("x", "")),
+                ("x/src/lib.rs", "pub fn x() {}\n".to_owned()),
+            ],
+        );
+        let f = step_two("step-two-judged-on");
+        let roots = std::fs::read_to_string(f.repo.join("trust/roots.eadl"))
+            .unwrap()
+            .replace(
+                "(package \"crates/b\") (target lib) (role-packages \"crates/b\")",
+                "(package \"crates/gone\") (target lib) (role-packages \"crates/gone\")",
+            );
+        f.commit(&[
+            ("trust/roots.eadl", roots),
+            (
+                "crates/a/Cargo.toml",
+                manifest(
+                    "a",
+                    &format!(
+                        "[dependencies]\nx = {{ path = \"{}\" }}\n",
+                        external.join("x").display()
+                    ),
+                ),
+            ),
+            ("crates/c/build.rs", "fn main() {}\n".to_owned()),
+            // A package at the workspace's root, with a build script no program reaches: an outside package read as it,
+            // or an edge to one kept, would reach it.
+            ("Cargo.toml", format!("{WS}{}", manifest("root", ""))),
+            ("src/lib.rs", "pub fn root() {}\n".to_owned()),
+            ("build.rs", "fn main() {}\n".to_owned()),
+        ]);
+        let r = refused(f.run());
+        let manifest_at = std::fs::canonicalize(external.join("x/Cargo.toml")).unwrap();
+        for want in [
+            data.to_owned(),
+            launcher.to_owned(),
+            format!(
+                "trust-undeclared-input: the commit reaches the package `x` at `{}`, outside the written tree",
+                manifest_at.display()
+            ),
+            "trust-baseline-stale: trust/roots.eadl: `chk` names `crates/gone`, which is no package of the commit"
+                .to_owned(),
+            "trust-undeclared-input: `cfg` reaches `crates/c` target `build-script-build` of kind `custom-build`"
+                .to_owned(),
+            "trust-undeclared-input: `cfg` reaches `crates/c`: `crates/c/build.rs`: a package has no build script"
+                .to_owned(),
+        ] {
+            says(&r, &want);
+        }
+        // Those six and no other: the stale form's program and the outside package are judged nowhere else, and the
+        // root's package, which no program reaches, not at all.
+        assert_eq!(r.len(), 6, "{r:#?}");
+        for program in ["gen", "chk", "cfg"] {
+            assert!(
+                !f.base.join("out/target").join(program).exists(),
+                "{program}: nothing built"
+            );
+        }
+        let _ = std::fs::remove_dir_all(external);
+        // A run the gate cannot judge past has the refusals already found beside it: here `cargo metadata`, refusing
+        // a lock a manifest committed without it has made stale.
+        let f = step_two("step-two-unable");
+        write(
+            &f.repo,
+            &[(
+                "crates/b/Cargo.toml",
+                manifest("b", "[dependencies]\nc = { path = \"../c\" }\n"),
+            )],
+        );
+        git(
+            &f.repo,
+            &[
+                "commit",
+                "-q",
+                "-a",
+                "-m",
+                "a dependency, the lock unchanged",
+            ],
+        );
+        let e = match f.try_run_into("out") {
+            Err(e) => e,
+            Ok(Outcome::Written(_)) => panic!("written"),
+            Ok(Outcome::Refused(r)) => panic!("refused, not unable to judge: {r:#?}"),
+        };
+        assert!(
+            e.starts_with("`cargo metadata` failed")
+                && e.contains("and beside it, 2 refusal(s):")
+                && e.contains(data)
+                && e.contains(launcher),
+            "{e}"
+        );
+    }
+
+    #[test]
+    fn a_launcher_that_is_a_symbolic_link_is_refused() {
+        crate::trust_test_process::bounded!(a_launcher_that_is_a_symbolic_link_is_refused);
+        // Round 8's R12: the launcher is read as a root's data is, a blob of the commit and never a symbolic link
+        // (`decision_trust-role-programs.md` §4).
+        let f = invoking("invocation-linked-launcher", INVOKES, None);
+        link(&f, "crates/archogen-cli/src/sibling.rs", "lib.rs");
         says(
             &refused(f.run()),
             "trust-undeclared-input: `gen` invokes programs, and its launcher `crates/archogen-cli/src/sibling.rs` is not a \

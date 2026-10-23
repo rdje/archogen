@@ -1012,7 +1012,7 @@ test -p xtask trust::tests
 expect killed
 why M3.6.1 R9 remark 6: a root's declared run-time data is a blob of the commit, or refused.
 from
-                if symlinks.contains(d) || tree.get(d).is_none() {
+                if !blobs.contains(d.as_str()) {
 to
                 if false {
 end
@@ -2556,7 +2556,8 @@ why M3.6.3.4: a cargo configuration §3 refuses on a build's path was an error, 
 from
             Ok(()) => {}
             Err(crate::catalog_check::Failure::Refused(r)) => {
-                return Ok(refuse(vec![format!("trust-undeclared-input: {r}")]))
+                refused.push(format!("trust-undeclared-input: {r}"));
+                return Ok(refuse(refused));
             }
 to
             Ok(()) => {}

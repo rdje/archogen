@@ -552,6 +552,38 @@ fn differing(was: &BTreeMap<String, String>, now: &BTreeMap<String, String>) -> 
         .collect()
 }
 
+/// What keeps a pair form from naming a unit that joins `pair` (`decision_trust-role-programs.md` §2; round 8's R5): the
+/// role packages in `compiled` a root beside the form's two holds, for the two roots of the pair's roles leaving fewest —
+/// none when some pair form could name it, since a pair form's build compiling another root's role package is refused.
+fn beyond_pair(roots: &crate::trust::Roots, pair: &str, compiled: &BTreeSet<&str>) -> Vec<String> {
+    let Some((a, b)) = pair.split_once('+') else {
+        return Vec::new();
+    };
+    let of = |role: &str| {
+        roots
+            .programs
+            .iter()
+            .filter(|p| p.pair.is_none() && p.role == role)
+            .collect::<Vec<_>>()
+    };
+    let mut fewest: Option<Vec<String>> = None;
+    for x in of(a) {
+        for y in of(b) {
+            let beside: BTreeSet<&String> = roots
+                .programs
+                .iter()
+                .filter(|o| o.pair.is_none() && o.name != x.name && o.name != y.name)
+                .flat_map(|o| o.role_packages.iter())
+                .filter(|rp| compiled.contains(rp.as_str()))
+                .collect();
+            if fewest.as_ref().is_none_or(|f| beside.len() < f.len()) {
+                fewest = Some(beside.into_iter().cloned().collect());
+            }
+        }
+    }
+    fewest.unwrap_or_default()
+}
+
 /// Judge an inventory (§6): `own` is the commit's own baseline, `roots` its own roots file, `base` the base commit's
 /// baseline. On the baseline's host — the inventory's, named by `own` — `trust-form-missing` and `trust-baseline-stale`
 /// apply; the change part is compared only when the base commit's baseline names the inventory's host.
@@ -623,10 +655,28 @@ pub fn judge(
                     }
                 })
                 .collect();
+            // A pair form's build compiling a role package of a root beside its two is refused (§2), so a unit
+            // compiling one is offered none (round 8's R5).
+            let compiled: BTreeSet<&str> = t
+                .get("role-packages")
+                .map(Json::elements)
+                .unwrap_or_default()
+                .iter()
+                .filter_map(Json::as_str)
+                .collect();
+            let beyond = match joins.as_slice() {
+                [pair] => beyond_pair(roots, pair, &compiled),
+                _ => Vec::new(),
+            };
             let remedy = match field("kind") {
                 "test" if joins.len() > 1 => "it joins more than one pair, so no pair form can name it: split it, or \
                                               classify it by a `defprogram` form"
                     .to_owned(),
+                "test" if !beyond.is_empty() => format!(
+                    "it compiles {}, of a root beside its pair's two, so a pair form naming it would be refused: split \
+                     it, or classify it by a `defprogram` form",
+                    beyond.iter().map(|p| format!("`{p}`")).collect::<Vec<_>>().join(", ")
+                ),
                 "test" if !forms.is_empty() => format!(
                     "name it by a {} form if it compares the two roles, or classify it by a `defprogram` form",
                     forms.into_iter().collect::<Vec<_>>().join(" or ")
@@ -1533,6 +1583,69 @@ mod tests {
         for kind in ["the test `compare`", "the lib-test `r`"] {
             assert!(has(&j.change, kind), "{kind}: {:#?}", j.change);
         }
+    }
+
+    #[test]
+    fn a_unit_compiling_a_role_package_beside_its_pair_is_offered_no_pair_form() {
+        crate::trust_test_process::bounded!(
+            a_unit_compiling_a_role_package_beside_its_pair_is_offered_no_pair_form
+        );
+        // Round 8's R5: a pair form's build compiling a role package of a root beside its two is refused
+        // (`decision_trust-role-programs.md` §2), so the remedy offers one only where two roots of the pair's roles hold
+        // every role package the unit compiles.
+        let roots = read_roots(
+            "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n\
+             (defroot chk (role scheduling-checker) (package \"crates/b\") (target lib) (role-packages \"crates/b\"))\n\
+             (defroot refm (role reference-model) (package \"crates/m\") (target lib) (role-packages \"crates/m\"))\n\
+             (defroot imp (role implementation) (package \"crates/i\") (target lib) (role-packages \"crates/i\"))\n\
+             (defroot imp2 (role implementation) (package \"crates/j\") (target lib) (role-packages \"crates/j\"))\n",
+        )
+        .expect("roots");
+        let own = baseline_of(&inv("h", &[CONFIG], &[], (&[], &[])));
+        let unit = |kind: &str, name: &str, packages: &str| {
+            format!(
+                r#"{{"package":"crates/r","kind":"{kind}","name":"{name}","status":"trust-unclassified-program: the {kind} `{name}` of `crates/r` compiles role packages of two roles a property rests on, and no form in trust/roots.eadl names or classifies it","role-packages":[{packages}],"joins":["reference-model+implementation"]}}"#
+            )
+        };
+        let units = [
+            unit("test", "lifecycle", r#""crates/i","crates/m""#),
+            unit("test", "third", r#""crates/b","crates/i","crates/m""#),
+            unit("test", "both", r#""crates/i","crates/j","crates/m""#),
+            unit("lib-test", "r", r#""crates/b","crates/i","crates/m""#),
+        ];
+        let now = inv(
+            "h",
+            &[CONFIG],
+            &units.iter().map(String::as_str).collect::<Vec<_>>(),
+            (&[], &[]),
+        );
+        let base = Base {
+            commit: Some("b"),
+            baseline: Some((&own, "s".to_owned())),
+            root_forms: None,
+        };
+        let j = judge(&now, &roots, &forms(), Some(&own), &base).expect("judged");
+        let missing = |unit: &str, remedy: &str| {
+            format!("trust-form-missing: the {unit} of `crates/r` has no form in trust/roots.eadl — {remedy}")
+        };
+        let beside = |p: &str| {
+            format!(
+                "it compiles `{p}`, of a root beside its pair's two, so a pair form naming it would be refused: split it, \
+                 or classify it by a `defprogram` form"
+            )
+        };
+        for want in [
+            missing(
+                "test `lifecycle`",
+                "name it by a `defharness` form if it compares the two roles, or classify it by a `defprogram` form",
+            ),
+            missing("test `third`", &beside("crates/b")),
+            missing("test `both`", &beside("crates/j")),
+            missing("lib-test `r`", "classify it by a `defprogram` form"),
+        ] {
+            assert!(j.refused.contains(&want), "{want}: {:#?}", j.refused);
+        }
+        assert_eq!(j.refused.len(), 4, "{:#?}", j.refused);
     }
 
     #[test]
