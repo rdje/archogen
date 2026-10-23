@@ -93,8 +93,10 @@ launcher is refused (leaf `M3.5.2.1.3`). A comparison no form names is found by 
 say: every test-like unit — an integration test, a bench, a library's or an executable's unit tests, a library's doc
 tests — that some build of its package makes, whatever its flags, and whose build, by normal and build edges over every
 feature and platform and its package's development edges, compiles role packages of both roles of a pair a property
-rests on (the generator and either checker, the reference model and the implementation) is a program target. It
-counts what some build compiles, more than the default build makes, by design (leaf `M3.5.2.3.1`).
+rests on (the generator and either checker, the reference model and the implementation) is a program target, and so is
+one whose package's files name a role package's file by a literal `#[path]` or `include!`, which compiles it with no
+dependency at all (leaf `M3.5.2.4.1`). It counts what some build compiles, more than the default build makes, by
+design (leaf `M3.5.2.3.1`).
 An integration test that compares the two is named by its pair form; any other such unit is classified by a
 `defprogram` whose target is `(target test|bench|lib-test|bin-test|doctest <name>)`, its reason saying it compares
 nothing the two hold equal. Unnamed, it is reported as an unclassified program is, and refused on the baseline's host
@@ -728,8 +730,11 @@ Every report ends with what the inventory does not see, the same list each time,
   decides that the unit compares nothing the two hold equal;
 - **an edit inside a classified program target.** A classification is reviewed again only when the role packages its
   build compiles grow, so an edit that makes a unit start comparing two roles reads "unchanged" (`M3.6.10` owns it);
-- **a build script's actions, and a package outside the workspace's members.** The census reads the members' build
-  graph: what a build script runs or writes, and another workspace's tests, are outside it.
+- **a build script's actions, and a package outside the workspace's members.** The census reads the graph `cargo
+  metadata` gives, with every member's features, and the literal paths each package's files name: what a build script
+  runs or writes, a path no literal names, a non-member's features and another workspace's tests are outside it;
+- **a program a test runs.** A test that runs another role's program as a process compiles none of it, so the census
+  does not see it.
 
 ## Today and ahead
 

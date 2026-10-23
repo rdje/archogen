@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate sees a test that copies a role's file in
+
+`ARCHOGEN-M3-0906` (leaf `M3.5.2.4.1`), `2026-10-23`.
+
+- A test that compiles another role's file through a path attribute or `include!` now counts as joining that
+  role, with no dependency needed; the report says what the census reads and what it cannot.
+
 ## archogen — the checkers' programs in the trust record, round 7
 
 `ARCHOGEN-M3-0905` (leaf `M3.5.2`), `2026-10-23`.

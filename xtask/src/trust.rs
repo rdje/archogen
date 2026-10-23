@@ -1441,12 +1441,116 @@ fn joined_units(
     roots: &Roots,
     units: &[(String, String, String)],
     graph: &[(String, String, String)],
+    included: &Included,
 ) -> Vec<(String, String, String)> {
     units
         .iter()
-        .filter(|(package, kind, _)| !joined_pairs(roots, package, kind, graph).is_empty())
+        .filter(|(package, kind, _)| {
+            !joined_pairs(roots, package, kind, graph, included).is_empty()
+        })
         .cloned()
         .collect()
+}
+
+/// The role packages each package's sources name by a literal path (`included_role_packages`).
+type Included = BTreeMap<String, BTreeSet<String>>;
+
+/// The role packages each package's `.rs` files reach by a literal path (`decision_trust-role-programs.md` §3; round
+/// 7's D1): a module a `path = "…"` names, or a file `include!` names, is compiled into the crate that names it with no
+/// dependency edge, so every program target of that package counts the role package the path lands in. Read with the
+/// catalog's tokenizer, so a path in a comment is none. Over-approximated: a `path = "…"` anywhere, an attribute's
+/// (`cfg_attr`'s among them) or not, resolved against its file's folder and against that folder and the file's stem,
+/// each beneath the inline modules around it, as rustc resolves it in a `mod.rs` and in another file; an `include!`
+/// against its file's folder. A path no literal names — `include!(concat!(…))` — is outside it.
+fn included_role_packages(
+    tree: &Tree,
+    packages: &BTreeSet<&String>,
+    role_packages: &BTreeSet<&String>,
+) -> Included {
+    use archogen_catalog::package::Kind;
+    use archogen_catalog::tree::{parent, resolve};
+    let mut out = Included::new();
+    for package in packages {
+        for file in tree.under(package).filter(|f| f.ends_with(".rs")) {
+            let Some(bytes) = tree.get(file) else {
+                continue;
+            };
+            let Ok(toks) = package::tokens(bytes) else {
+                continue;
+            };
+            let kind = |i: usize| toks.get(i).map(|t| &t.kind);
+            let ident = |i: usize| match kind(i) {
+                Some(Kind::Ident(n, _)) => Some(n.as_str()),
+                _ => None,
+            };
+            let literal = |i: usize| {
+                toks.get(i)
+                    .filter(|t| matches!(t.kind, Kind::Str))
+                    .map(|t| {
+                        String::from_utf8_lossy(&bytes[t.at..t.end])
+                            .trim_start_matches(['b', 'r'])
+                            .trim_matches('#')
+                            .trim_matches('"')
+                            .to_owned()
+                    })
+            };
+            let dir = parent(file);
+            let stem = file
+                .rsplit('/')
+                .next()
+                .unwrap_or(file)
+                .trim_end_matches(".rs");
+            // The inline modules open at each token: a brace a `mod NAME` opens carries its name.
+            let mut braces: Vec<Option<&str>> = Vec::new();
+            for i in 0..toks.len() {
+                match kind(i) {
+                    Some(Kind::Open('{')) => {
+                        let named = (i >= 2 && ident(i - 2) == Some("mod"))
+                            .then(|| ident(i - 1))
+                            .flatten();
+                        braces.push(named);
+                        continue;
+                    }
+                    Some(Kind::Close('}')) => {
+                        braces.pop();
+                        continue;
+                    }
+                    _ => {}
+                }
+                let inline: Vec<&str> = braces.iter().flatten().copied().collect();
+                let mut targets = Vec::new();
+                if ident(i) == Some("path") && matches!(kind(i + 1), Some(Kind::Punct('='))) {
+                    if let Some(lit) = literal(i + 2) {
+                        for base in [dir.to_owned(), format!("{dir}/{stem}")] {
+                            let base = std::iter::once(base.as_str())
+                                .chain(inline.iter().copied())
+                                .collect::<Vec<_>>()
+                                .join("/");
+                            targets.push(resolve(&base, &lit));
+                        }
+                    }
+                }
+                if ident(i) == Some("include")
+                    && matches!(kind(i + 1), Some(Kind::Punct('!')))
+                    && matches!(kind(i + 2), Some(Kind::Open('(')))
+                {
+                    if let Some(lit) = literal(i + 3) {
+                        targets.push(resolve(dir, &lit));
+                    }
+                }
+                for target in targets.into_iter().flatten() {
+                    for rp in role_packages {
+                        if target.starts_with(&format!("{rp}/")) {
+                            out.entry((*package).clone())
+                                .or_default()
+                                .insert((*rp).clone());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    out
 }
 
 /// The pairs of [`JOINED`] a unit's build joins, each `<role>+<role>`: the generator's and a checker's are a derivation's
@@ -1456,8 +1560,10 @@ fn joined_pairs(
     package: &str,
     kind: &str,
     graph: &[(String, String, String)],
+    included: &Included,
 ) -> Vec<String> {
-    let closure = target_closure(package, kind, graph);
+    let mut closure = target_closure(package, kind, graph);
+    closure.extend(included.get(package).into_iter().flatten().cloned());
     let compiles = |role: &str| {
         roots
             .programs
@@ -1477,6 +1583,7 @@ fn classify_programs(
     roots: &Roots,
     program_targets: &[(String, String, String)],
     graph: &[(String, String, String)],
+    included: &Included,
 ) -> (Vec<Json>, Vec<String>) {
     let role_packages: BTreeSet<&String> = roots
         .programs
@@ -1496,7 +1603,8 @@ fn classify_programs(
                     Target::Lib => false,
                 }
         });
-        let closure = target_closure(package, kind, graph);
+        let mut closure = target_closure(package, kind, graph);
+        closure.extend(included.get(package).into_iter().flatten().cloned());
         let compiled: BTreeSet<String> = closure
             .into_iter()
             .filter(|p| role_packages.contains(p))
@@ -1539,7 +1647,10 @@ fn classify_programs(
         ];
         // The pairs a test-like unit joins, so its remedy names each pair's form (round 6's D3).
         if TEST_KINDS.contains(&kind.as_str()) {
-            entry.push(("joins", strings(joined_pairs(roots, package, kind, graph))));
+            entry.push((
+                "joins",
+                strings(joined_pairs(roots, package, kind, graph, included)),
+            ));
         }
         out.push(obj(entry));
     }
@@ -2005,12 +2116,12 @@ pub fn inventory_with(
             }
             // The units some build of this target makes (`decision_trust-role-programs.md` §3): its own, if it is a test
             // or a bench; a library's or an executable's unit tests; a library's doc tests, which rustdoc runs on a
-            // `lib`, `rlib`, `dylib` or `proc-macro` alone. Flags are not read: `test`, `doctest`, `harness` and
-            // `required-features` change what the default build makes, and `cargo test --lib`, `--test` or `--doc`
-            // builds the unit whatever they say (measured `2026-10-23`, round 6).
+            // `lib`, `rlib` or `proc-macro` alone — cargo refuses a `dylib`'s and a `cdylib`'s (round 7's R4). Flags are
+            // not read: `test`, `doctest`, `harness` and `required-features` change what the default build makes, and
+            // `cargo test --lib`, `--test` or `--doc` builds the unit whatever they say (measured `2026-10-23`, round 6).
             let doctested = kinds
                 .iter()
-                .any(|k| matches!(*k, "lib" | "rlib" | "dylib" | "proc-macro"));
+                .any(|k| matches!(*k, "lib" | "rlib" | "proc-macro"));
             let library = kinds.iter().any(|k| {
                 matches!(
                     *k,
@@ -2135,9 +2246,18 @@ pub fn inventory_with(
     }
 
     // A test-like unit joining two roles is a program target (`decision_trust-role-programs.md` §3).
-    program_targets.extend(joined_units(&roots, &test_units, &graph));
+    // What each package's sources name by a literal path into a role package (`decision_trust-role-programs.md` §3).
+    let every_role_package: BTreeSet<&String> = roots
+        .programs
+        .iter()
+        .filter(|p| p.pair.is_none())
+        .flat_map(|p| p.role_packages.iter())
+        .collect();
+    let included =
+        included_role_packages(&tree, &package_names.keys().collect(), &every_role_package);
+    program_targets.extend(joined_units(&roots, &test_units, &graph, &included));
     let (program_targets, classifications_unused) =
-        classify_programs(&roots, &program_targets, &graph);
+        classify_programs(&roots, &program_targets, &graph, &included);
 
     let mut rules = Rules {
         tree: &tree,
@@ -5176,6 +5296,68 @@ pub(crate) mod tests {
                 ),
                 &[][..],
                 four_unclassified(gc),
+            ),
+            // A literal path into a role package compiles its file with no edge (round 7's D1), `cfg_attr`'s too.
+            (
+                "joined-by-a-path",
+                dev(&dep("g")),
+                &[(
+                    "crates/r/tests/compare.rs",
+                    "#[path = \"../../c/src/lib.rs\"]\nmod checker;\n#[test]\nfn t() { assert_eq!(checker::x(), g::x()); }\n",
+                )][..],
+                four_unclassified(gc),
+            ),
+            (
+                "joined-by-an-include",
+                dev(&dep("g")),
+                &[(
+                    "crates/r/tests/compare.rs",
+                    "mod checker { include!(\"../../c/src/lib.rs\"); }\n#[test]\nfn t() { assert_eq!(checker::x(), g::x()); }\n",
+                )][..],
+                four_unclassified(gc),
+            ),
+            (
+                "joined-by-a-cfg-attr-path",
+                dev(&dep("g")),
+                &[(
+                    "crates/r/tests/compare.rs",
+                    "#[cfg_attr(all(), path = \"../../c/src/lib.rs\")]\nmod checker;\n#[test]\nfn t() {}\n",
+                )][..],
+                four_unclassified(gc),
+            ),
+            (
+                "a-path-into-no-role",
+                dev(&dep("g")),
+                &[(
+                    "crates/r/tests/compare.rs",
+                    "// mod c: #[path = \"../../c/src/lib.rs\"]\n#[path = \"../../h/src/lib.rs\"]\nmod helper;\n#[test]\nfn t() {}\n",
+                )][..],
+                Vec::new(),
+            ),
+            // A `dylib`'s doc tests no build makes (round 7's R4).
+            (
+                "joined-dylib",
+                format!("[lib]\ncrate-type = [\"dylib\"]\n\n{}", dev(&(dep("g") + &dep("c")))),
+                &[][..],
+                {
+                    // The library is a `dylib`, a program target of §2 of its own; it has no doc-test unit.
+                    let mut units = unclassified_units(
+                        "crates/r",
+                        &[("bench", "speed"), ("lib-test", "r"), ("test", "compare")],
+                        gc,
+                    );
+                    units.insert(
+                        1,
+                        (
+                            "dylib".to_owned(),
+                            "r".to_owned(),
+                            "trust-unclassified-program: the dylib `r` of `crates/r` is neither a root nor classified \
+                             in trust/roots.eadl"
+                                .to_owned(),
+                        ),
+                    );
+                    units
+                },
             ),
             ("one-role", dev(&dep("g")), &[][..], Vec::new()),
             ("two-checkers", dev(&(dep("c") + &dep("s"))), &[][..], Vec::new()),

@@ -894,8 +894,12 @@ pub const UNSEEN: &[&str] = &[
      decides that it compares nothing they hold equal (§3)",
     "an edit inside a classified program target: its classification is reviewed again only when the role packages its \
      build compiles grow, so an edit that makes it start comparing two roles reads unchanged (§3; M3.6.10)",
-    "a build script's actions, and a package outside the workspace's members: the census reads the members' build \
-     graph, so what a build script runs or writes, and another workspace's tests, are outside it (§3)",
+    "a build script's actions, and a package outside the workspace's members: the census reads the graph `cargo \
+     metadata` gives, with every member's features, and the literal paths each package's files name, so what a build \
+     script runs or writes, a path no literal names, a non-member's features and another workspace's tests are outside \
+     it (§3)",
+    "a program a test runs: a test that runs another role's program as a process compiles none of it, so the census \
+     does not see it (§3)",
 ];
 
 /// A file of a commit's tree, or none when the tree does not hold it.
