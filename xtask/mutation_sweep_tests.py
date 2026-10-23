@@ -544,7 +544,7 @@ class ObserverCloseTests(DiscoveryFixture):
         expected = {
             'xtask/src/trust_compiler_observer.rs': '58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98',
             'xtask/src/trust_compiler.rs': '1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973',
-            'xtask/src/trust.rs': 'ff7a506058c619dd7a86766a75adcf53234507f053300a17e8e27fac1adf19cc',  # re-pinned by M3.5.2.5.3: `trust-shared-program` counting a file a build read, no command, argument or cwd changed; the observer's close unchanged
+            'xtask/src/trust.rs': '2c08fa34b0fc5eaa13d54ba6cc47c3f0a1f9aaaa8ceefd436364bc0857e18752',  # re-pinned by M3.5.2.6.1: a file counted for its innermost package, no command, argument or cwd changed; the observer's close unchanged
         }
         def verify(inputs):
             for path, digest in expected.items():
@@ -1504,7 +1504,7 @@ os.execvp("rustc", ["rustc"] + arguments)
         ]
         inputs = {path: (ROOT / path).read_bytes() for path in paths}
         expected = {
-            'xtask/src/trust.rs': '4dd69aa7a1360e28ebe3f911c93f33c63d1bf8eaa26a868fc555c7b6fce18806',  # re-pinned by M3.5.2.5.3: `trust-shared-program` counting a file a build read, no command, argument or cwd changed; the caller suffix unchanged
+            'xtask/src/trust.rs': '5140df5390d9dd022f5cb0e2d31f81077f22c23197b6bf763fb718b4f432b07b',  # re-pinned by M3.5.2.6.1: a file counted for its innermost package, no command, argument or cwd changed; the caller suffix unchanged
             'xtask/src/trust_compiler.rs': '634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70',
             'xtask/src/trust_compiler_observer.rs': 'c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f',
             'xtask/src/catalog_build.rs': 'd3e8865c3633de9f4cafb82c3613f0ee82df0c065012b732469cda5951221ed2',
@@ -1971,7 +1971,7 @@ class IteratorTests(DiscoveryFixture):
             entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
             guarded = {
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
-                    "4dd69aa7a1360e28ebe3f911c93f33c63d1bf8eaa26a868fc555c7b6fce18806"),  # re-pinned by M3.5.2.5.3: `trust-shared-program` counting a file a build read, no command, argument or cwd changed; the absolute cwd unchanged
+                    "5140df5390d9dd022f5cb0e2d31f81077f22c23197b6bf763fb718b4f432b07b"),  # re-pinned by M3.5.2.6.1: a file counted for its innermost package, no command, argument or cwd changed; the absolute cwd unchanged
                 "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
                     "634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70"),
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],

@@ -95,8 +95,8 @@ tests — that some build of its package makes, whatever its flags, and whose bu
 feature and platform and its package's development edges, compiles role packages of both roles of a pair a property
 rests on (the generator and either checker, the reference model and the implementation) is a program target. What a
 unit compiles is read from the compiler itself: each package's targets are built once, a test-like target as `cargo
-test` builds it, and a unit counts every file its dependency information names and its closure's libraries' do, so a
-role package's file reached by a path, an `include!` or a dependency's own path joins it however its source spells it
+test` builds it, and a unit counts every file its dependency information names and its closure's libraries' do, each
+for the innermost package holding it (leaf `M3.5.2.6.1`), so a role package's file reached by a path, an `include!` or a dependency's own path joins it however its source spells it
 (leaf `M3.5.2.5.1`; a scan of the text before it, `M3.5.2.4.1`, missed spellings). It counts what some build compiles, more than the default build makes, by
 design (leaf `M3.5.2.3.1`). The inventory records the pairs each joins, so the gate's remedy names its pair's form —
 a harness for the reference model's, a derivation for the generator's and a checker's — or, for a unit joining two

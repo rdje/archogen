@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a file belongs to the package that holds it
+
+`ARCHOGEN-M3-0914` (leaf `M3.5.2.6.1`), `2026-10-23`.
+
+- The trust gate no longer counts a file inside a package nested in a role's directory as that role's: a test or a
+  program depending on the nested package joins and runs nothing of the role around it.
+
 ## archogen — the checkers' programs in the trust record, round 9, and a second change of method
 
 `ARCHOGEN-M3-0913` (leaf `M3.5.2`), `2026-10-23`.

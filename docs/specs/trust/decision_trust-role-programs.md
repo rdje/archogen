@@ -88,7 +88,8 @@ build compiles role packages of the two roles of a pair a property rests on (§5
 reference model and the implementation) — by its normal and build edges over every feature and platform and its
 package's own development edges, or by a file of one that its build read, however its source names it (`M3.5.2.5.1`):
 each package's targets are built once, a test-like target as `cargo test` builds it, and each unit counts the files its
-dependency information names and its closure's libraries' do — is a program target of the parent's §2, whatever its sources name: an integration test named by
+dependency information names and its closure's libraries' do, each for the innermost package holding it by whole path
+components, as a unit's package is decided (round 9's D3) — is a program target of the parent's §2, whatever its sources name: an integration test named by
 a pair form if it compares them, any unit else classified by `defprogram`, `(target test|bench|lib-test|bin-test|doctest
 <name>)`, its reason the claim that it compares nothing they hold equal. Unnamed, it is `trust-unclassified-program`,
 and `trust-form-missing` on the baseline's host. §1's census of names found the two comparisons `RP-H11` names. A

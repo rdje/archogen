@@ -1473,12 +1473,27 @@ fn joined_units(
 struct Census {
     own: BTreeMap<(String, String, String), BTreeSet<String>>,
     libraries: BTreeMap<String, BTreeSet<String>>,
+    /// Every package's directory, so a file is counted for the one holding it.
+    members: BTreeSet<String>,
+}
+
+/// The package of the written tree holding `file`: the innermost of `members` by whole path components, as a unit's
+/// package is decided (R8 2; round 9's D3), never every package whose directory prefixes it — none for a file outside
+/// the tree.
+fn owner_of<'a>(file: &str, members: impl IntoIterator<Item = &'a String>) -> Option<&'a String> {
+    if file.starts_with('/') {
+        return None;
+    }
+    crate::trust_generated::innermost_member(file, members)
 }
 
 impl Census {
     /// The census of `units`, each placed by its crate root among `sources`' targets.
     fn of(units: &[Unit], sources: &TargetSources) -> Self {
-        let mut census = Self::default();
+        let mut census = Self {
+            members: sources.keys().map(|(dir, _, _)| dir.clone()).collect(),
+            ..Self::default()
+        };
         for u in units {
             let Some((dir, kind, name)) = sources
                 .iter()
@@ -1562,9 +1577,9 @@ fn compiled_role_packages(
         .cloned()
         .collect();
     for file in own.chain(libraries) {
-        for rp in &role_packages {
-            if file.starts_with(&format!("{rp}/")) {
-                compiled.insert((*rp).clone());
+        if let Some(owner) = owner_of(file, &census.members) {
+            if role_packages.contains(owner) {
+                compiled.insert(owner.clone());
             }
         }
     }
@@ -2437,18 +2452,25 @@ pub fn inventory_with(
 
     // A program that runs two roles (§2): any root whose build compiles a role package of another role — a library
     // root too, which runs its role until an executable does (R8 remark 13) — and the harness, whose exemption is its
-    // pair's two (R8 remark 12). It compiles a role package one of its units belongs to, or one holding a file a unit
-    // read — by a path or an `include!`, however its source names it — as a program target's are counted
-    // (`decision_trust-role-programs.md` §3; `M3.5.2.5.3`).
+    // pair's two (R8 remark 12). In its own build, it compiles the package each of its units belongs to and the one
+    // holding each file a unit read — by a path or an `include!`, however its source names it — the innermost by
+    // whole components (`M3.5.2.5.3`; round 9's D3, R5).
     for p in &roots.programs {
         let Some(b) = builds.get(&p.name) else {
             continue; // its build failed: the step ends unable to judge
         };
-        let packages: BTreeSet<&String> = b.units.iter().map(|u| &u.package).collect();
-        let read: BTreeSet<&String> = b.units.iter().flat_map(|u| &u.files).collect();
-        let compiles = |rp: &String| {
-            packages.contains(rp) || read.iter().any(|f| f.starts_with(&format!("{rp}/")))
-        };
+        let compiled: BTreeSet<&String> = b
+            .units
+            .iter()
+            .map(|u| &u.package)
+            .chain(
+                b.units
+                    .iter()
+                    .flat_map(|u| &u.files)
+                    .filter_map(|f| owner_of(f, package_names.keys())),
+            )
+            .collect();
+        let compiles = |rp: &String| compiled.contains(rp);
         for other in roots
             .programs
             .iter()
@@ -8878,6 +8900,55 @@ version = "0.1.0"
         );
         // Its pair's own file: the comparison is written.
         written(within);
+    }
+
+    #[test]
+    fn a_file_counts_for_the_innermost_package_holding_it() {
+        crate::trust_test_process::bounded!(a_file_counts_for_the_innermost_package_holding_it);
+        // Round 9's D3: a package nested in a role package's directory is not that role package, as a unit's package is
+        // decided (R8 2), so compiling it joins nothing and runs no second role; compiling the role package itself
+        // does.
+        let inner = [
+            ("crates/c/inner/Cargo.toml", manifest("inner", "")),
+            (
+                "crates/c/inner/src/lib.rs",
+                "pub fn y() -> u32 { 2 }\n".to_owned(),
+            ),
+        ];
+        let extra: Vec<(&str, &str)> = inner.iter().map(|(p, t)| (*p, t.as_str())).collect();
+        let f = joining_with(
+            "nested-in-a-role-package",
+            "[dev-dependencies]\ng = { path = \"../g\" }\ninner = { path = \"../c/inner\" }\n",
+            "",
+            &extra,
+        );
+        assert_eq!(
+            units_of_r(&written(f.run())),
+            [],
+            "the nested package joins nothing"
+        );
+        let f = joining_with(
+            "nested-in-a-role-package-control",
+            "[dev-dependencies]\ng = { path = \"../g\" }\nc = { path = \"../c\" }\n",
+            "",
+            &extra,
+        );
+        assert!(
+            !units_of_r(&written(f.run())).is_empty(),
+            "the role package itself joins"
+        );
+        let root = manifest(
+            "a",
+            "[dependencies]\ng = { path = \"../g\" }\ninner = { path = \"../c/inner\" }\n",
+        );
+        let mut extra = extra.clone();
+        extra.push(("crates/a/Cargo.toml", root.as_str()));
+        extra.push((
+            "crates/a/src/main.rs",
+            "fn main() { g::x(); inner::y(); }\n",
+        ));
+        let f = joining_with("nested-in-a-role-package-root", "", "", &extra);
+        written(f.run());
     }
 
     // ── Round 8 (`M3.6.1` step 9): each reproducer the reader ran, as a fixture ─────────────────────────────────────
