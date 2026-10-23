@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers' programs in the trust record, round 10, and a third change of method
+
+`ARCHOGEN-M3-0918` (leaf `M3.5.2`), `2026-10-23`.
+
+- The tenth review of the trust record found 7 defects and 8 remarks, up a third round: each round found another
+  build configuration the census did not try. The census is to stop depending on any: what a test compiles will be
+  read from cargo's metadata and from every source's inclusion sites, read as text with nothing built, and an
+  oracle will build a corpus of every probe so far in many configurations to check it misses nothing.
+
 ## archogen — the trust gate pairs a comparison with roots alone
 
 `ARCHOGEN-M3-0917` (leaf `M3.5.2.6.4`), `2026-10-23`.

@@ -274,3 +274,36 @@ program made two derivations of one pair share that pair's role packages as item
 them with its pair; and the parent's §4 pairs the harness with every root but its pair's two, not with programs. So a
 comparison is paired with roots alone — the harness with every root but its pair's two, a derivation with none — and
 two comparisons never, the code brought to the parent's text.
+
+**Round 10**, `2026-10-23`, a new context at `df1a3bcf`, read-only and fenced, read against `M3.5.2.6`'s code: probes
+run through the instrument's own `inventory_with` in a scratch copy, each confirmed by cargo's dep-info, and the pin's
+Cargo Book fetched. Verdict: not acceptable, 7 defects and 8 remarks; every round-9 answer landed, four in part. The
+count rose a third round running — 2, 3, 4, 7 — and for one reason: the census measured one build configuration, so
+each round found another — a profile, a target `--all-targets` skips, `harness = false`, `cfg(doctest)`, a non-member,
+a target's other unit — and the table of round 9 only listed them. **The method changed a third time, at the angle**:
+the census no longer depends on any configuration. What enters a unit is what cargo's metadata says, over every
+feature, platform and kind of dependency, its target's crate root, and every source file's inclusion sites read
+lexically — `mod`, `#[path]`, the `include!` family, in code and in doc text — a site naming a file by a literal path
+an edge to the package holding it, any other refused unless admitted, so no spelling hides one; what a build script
+or a procedural macro generates and what a program reads at run time stay outside. Its soundness is held by an oracle:
+a corpus of every probe of rounds 5 to 10, each built in a matrix of configurations, every role package's file any
+of those builds read inside the census's count. Measured first: the tree holds one inclusion that is no literal,
+`crates/rt-analysis/tests/runtime_variant.rs`'s, which an admission will carry after the push that brings the census.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R10-D1 | defect | a `harness = false` target's test unit is read as its library's or not read at all | no build: the census reads sources, whatever a target's flags (`M3.5.2.7.2`); the oracle builds it (`M3.5.2.7.3`) |
+| R10-D2 | defect | a target's non-test unit is often never built — a binary with no tests, an example with required features, a `cdylib` | the same: every source file of a package is read (`M3.5.2.7.1`, `.2`); the oracle builds each (`M3.5.2.7.3`) |
+| R10-D3 | defect | `#[cfg(doctest)] #[doc = include_str!(…)]` brings a role package's file into a doc test, unseen | an inclusion site whatever its `cfg`, and doc text's own inclusion sites read too (`M3.5.2.7.1`) |
+| R10-D4 | defect | non-members are built by the census, against the table | only members' test-like units are counted, a non-member's package by its edges (`M3.5.2.7.2`) |
+| R10-D5 | defect | a failed census build ends step 2 early and drops its refusals | no census build, so no such exit (`M3.5.2.7.2`) |
+| R10-D6 | defect | naming a unit by a pair form silences what the census found beyond its pair | a pair form whose unit's census holds a root's role package beside its pair is refused, `trust-shared-program` (`M3.5.2.7.2`) |
+| R10-D7 | defect | the census breaks case 5 as the parent states it, unstated | it reads every member's sources and nothing it builds; the parent's list of what else the gate reads gains it (`M3.5.2.7.4`) |
+| R10-R8 | remark | the record's status and §1 cite a superseded state | updated, §1 re-measured at `df1a3bcf` (`M3.5.2.7.4`, re-measured again on the new census) |
+| R10-R9 | remark | the table quotes little, cites a rustc page it does not ledger, and its test checks names alone | the table gives way to the rule, its sources the Rust reference and the Cargo Book, quoted and ledgered; the oracle checks what the rule claims (`M3.5.2.7.3`, `.4`) |
+| R10-R10 | remark | feature unification across members is not in the table | moot: every feature at once, by metadata, and no build |
+| R10-R11 | remark | the census silently drops its own refusals | moot: no census build |
+| R10-R12 | remark | the parent's clarification omits the innermost package; §3 says "reads" for "compiles" | both worded (`M3.5.2.7.4`) |
+| R10-R13 | remark | `RP-H18`'s measure cannot be observed before the push after the census | the lexical census needs no host and no build, so `M3.5.8` measures it on any host from the base after the push; said (`M3.5.2.7.4`) |
+| R10-R14 | remark | a unit joining only off the baseline's host cannot be classified | moot: the census is the same on every host |
+| R10-R15 | remark | `UNSEEN`'s launcher line omits "declared from the front's `main.rs`"; `M3.5.3.2` says "derivation" | both worded (`M3.5.2.7.4`) |
