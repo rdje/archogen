@@ -1499,8 +1499,8 @@ fn owner_of<'a>(file: &str, members: impl IntoIterator<Item = &'a String>) -> Op
 
 impl Census {
     /// The census of `reaches`, each crate root's files, filed by its targets in `sources`: a library's for its own unit,
-    /// its unit tests, its doc tests and every unit linking it; an executable's for itself and its unit tests; any other
-    /// target's for itself (`decision_trust-role-programs.md` §3; round 10's change of method).
+    /// its unit tests, its doc tests and every unit linking it, a build script's with it; an executable's for itself and
+    /// its unit tests; any other target's for itself (`decision_trust-role-programs.md` §3; round 10's change of method).
     fn lexical(reaches: &BTreeMap<String, census::Reach>, sources: &TargetSources) -> Self {
         let mut census = Self {
             members: sources.keys().map(|(dir, _, _)| dir.clone()).collect(),
@@ -1539,6 +1539,16 @@ impl Census {
                 "bin" => {
                     own("bin", &nontest);
                     own("bin-test", &all);
+                }
+                // A build script runs as its package builds, so what it compiles is the package's, as its library's
+                // is, for every unit whose closure holds the package (round 11's R9).
+                "custom-build" => {
+                    own(kind, &all);
+                    census
+                        .libraries
+                        .entry(dir.clone())
+                        .or_default()
+                        .extend(nontest.iter().cloned());
                 }
                 other => own(other, &all),
             }
@@ -2176,7 +2186,14 @@ pub fn inventory_with(
                 .filter_map(Json::as_str)
                 .collect();
             let target_name = t.get("name").and_then(Json::as_str).unwrap_or_default();
-            for kind in &kinds {
+            // A member's targets are read, and a non-member's library and build script, which a member's build compiles;
+            // a non-member's tests, benches and examples no build of this workspace makes (round 11's R9).
+            let member = members.contains(&id);
+            let unbuilt = !member
+                && kinds
+                    .iter()
+                    .any(|k| matches!(*k, "test" | "bench" | "example"));
+            for kind in kinds.iter().filter(|_| !unbuilt) {
                 target_sources
                     .entry((dir.clone(), (*kind).to_owned(), target_name.to_owned()))
                     .or_default()
@@ -2196,7 +2213,6 @@ pub fn inventory_with(
             });
             // A member's alone: a non-member is a dependency, its own tests no build of this workspace makes (round 10's
             // D4).
-            let member = members.contains(&id);
             for (unit, built) in [
                 ("test", kinds.contains(&"test")),
                 ("bench", kinds.contains(&"bench")),
@@ -2343,18 +2359,40 @@ pub fn inventory_with(
             *doc_tested.entry(src).or_default() |= DOCTESTED.contains(&kind.as_str());
         }
     }
+    // Judged before any build, and stopping none — reading a source runs nothing — but beside every refusal and every
+    // exit of the step (the generated-sources record §2; round 11's D5).
+    let mut census_refused: Vec<String> = Vec::new();
     let mut reaches: BTreeMap<String, census::Reach> = BTreeMap::new();
     for (src, doc_tested) in doc_tested {
-        let Ok(root) = sources.root(src) else {
-            continue;
+        // A crate root the census cannot read is refused, never passed (round 11's D4).
+        let root = match sources.root(src) {
+            Ok(root) => root,
+            Err(why) => {
+                census_refused.push(format!(
+                    "trust-undeclared-input: the crate root `{src}` {why}, so the census cannot read its target"
+                ));
+                continue;
+            }
         };
         reaches.insert(src.clone(), sources.reach(&root, doc_tested));
     }
+    // A symbolic link in a package's directory, or beside one where a member glob may find it: the written tree holds
+    // none, so a target, a member or a module behind it is one cargo or rustc reads and the census does not (round
+    // 11's D4).
+    let directory = |p: &str| p.rsplit_once('/').map_or("", |(d, _)| d).to_owned();
+    for link in &symlinks {
+        let beside = package_names
+            .keys()
+            .any(|p| directory(p) == directory(link));
+        if beside || owner_of(link, package_names.keys()).is_some() {
+            census_refused.push(format!(
+                "trust-undeclared-input: `{link}` is a symbolic link in a package's directory or beside one, whose \
+                 target the census does not read"
+            ));
+        }
+    }
     let unfollowed: BTreeSet<&census::Unfollowed> =
         reaches.values().flat_map(|r| &r.unfollowed).collect();
-    // Reported with the step's other refusals once its builds are made: reading a source runs nothing, so no build need
-    // wait for it (the generated-sources record §2).
-    let mut census_refused: Vec<String> = Vec::new();
     for u in unfollowed {
         let admission = Admission {
             file: u.file.clone(),
@@ -2397,13 +2435,15 @@ pub fn inventory_with(
         rules.manifests(&p.name, &closure, &mut refused);
     }
     if !refused.is_empty() {
+        refused.extend(census_refused);
         return Ok(refuse(refused));
     }
+    refused.extend(census_refused);
 
     // Build each program clean, its own target directory, a fresh `CARGO_HOME` each. A build that fails leaves the
     // gate unable to judge, but the step runs to its end, every build and judgment in it made, so the refusals it
     // finds are reported beside the failure (the generated-sources record §2).
-    let compiler = compiler::Compiler::prepare(out, &pin, &cargo_home)?;
+    let compiler = compiler::Compiler::prepare(out, &pin, &cargo_home).map_err(unable(&refused))?;
     let mut builds: BTreeMap<String, Build> = BTreeMap::new();
     let mut failed: Vec<String> = Vec::new();
     for p in &roots.programs {
@@ -2498,7 +2538,6 @@ pub fn inventory_with(
         }
     }
 
-    refused.extend(census_refused);
     if !failed.is_empty() {
         return Err(crate::trust_generated::beside(failed.join("\n"), &refused));
     }
@@ -5299,7 +5338,8 @@ pub(crate) mod tests {
     fn the_census_counts_members_tests_alone() {
         crate::trust_test_process::bounded!(the_census_counts_members_tests_alone);
         // Round 10's D4: a non-member a member depends on is read for what its library compiles, as an edge; its own
-        // tests no build of this workspace makes, so none is counted.
+        // tests no build of this workspace makes, so none is counted — nor read, an inclusion no literal pins there
+        // refused nowhere (round 11's R9).
         let f = joining_with(
             "census-non-member",
             "[dev-dependencies]\nn = { path = \"../../other/n\" }\n",
@@ -5311,7 +5351,7 @@ pub(crate) mod tests {
                 ("other/n/src/lib.rs", "pub fn n() {}\n"),
                 (
                     "other/n/tests/t.rs",
-                    "#[path = \"../../../crates/c/src/lib.rs\"]\nmod checker;\n#[path = \"../../../crates/g/src/lib.rs\"]\nmod generator;\n#[test]\nfn t() { assert_eq!(checker::x(), generator::x()); }\n",
+                    "#[path = \"../../../crates/c/src/lib.rs\"]\nmod checker;\n#[path = \"../../../crates/g/src/lib.rs\"]\nmod generator;\n#[test]\nfn t() { assert_eq!(checker::x(), generator::x()); }\nconst T: &str = include_str!(concat!(\"a\"));\n",
                 ),
             ],
         );
@@ -5584,6 +5624,11 @@ pub(crate) mod tests {
             ("Cargo.toml", format!("{WS}{}", manifest("root", ""))),
             ("src/lib.rs", "pub fn root() {}\n".to_owned()),
             ("build.rs", "fn main() {}\n".to_owned()),
+            // An inclusion the census cannot follow, judged with the rest before any build (round 11's D5).
+            (
+                "crates/c/tests/t.rs",
+                "const T: &str = include_str!(concat!(\"a\"));\n".to_owned(),
+            ),
         ]);
         let r = refused(f.run());
         let manifest_at = std::fs::canonicalize(external.join("x/Cargo.toml")).unwrap();
@@ -5600,12 +5645,14 @@ pub(crate) mod tests {
                 .to_owned(),
             "trust-undeclared-input: `cfg` reaches `crates/c`: `crates/c/build.rs`: a package has no build script"
                 .to_owned(),
+            "trust-undeclared-input: `crates/c/tests/t.rs:1`: an inclusion site that is no single string literal"
+                .to_owned(),
         ] {
             says(&r, &want);
         }
-        // Those six and no other: the stale form's program and the outside package are judged nowhere else, and the
+        // Those seven and no other: the stale form's program and the outside package are judged nowhere else, and the
         // root's package, which no program reaches, not at all.
-        assert_eq!(r.len(), 6, "{r:#?}");
+        assert_eq!(r.len(), 7, "{r:#?}");
         for program in ["gen", "chk", "cfg"] {
             assert!(
                 !f.base.join("out/target").join(program).exists(),
@@ -6229,6 +6276,59 @@ pub(crate) mod tests {
             !f.base.join("out/tree/crates/r/RAN").exists(),
             "the build script ran"
         );
+    }
+
+    #[test]
+    fn a_build_script_s_files_count_for_its_package() {
+        crate::trust_test_process::bounded!(a_build_script_s_files_count_for_its_package);
+        // Round 11's R9: a build script runs as its package builds, so a file it compiles counts for every unit whose
+        // closure holds the package — here the checker's, which `crates/r` reaches through `bs` and its build script
+        // alone, beside the generator's by its own edge.
+        let f = joining_with(
+            "census-build-script-files",
+            "[dev-dependencies]\ng = { path = \"../g\" }\nbs = { path = \"../bs\" }\n",
+            "",
+            &[
+                ("crates/bs/Cargo.toml", &manifest("bs", "")),
+                ("crates/bs/src/lib.rs", "pub fn b() {}\n"),
+                (
+                    "crates/bs/build.rs",
+                    "#[path = \"../c/src/lib.rs\"]\nmod checker;\nfn main() {}\n",
+                ),
+            ],
+        );
+        let inv = written(f.run());
+        assert_eq!(
+            units_of_r(&inv),
+            four_unclassified("`crates/c`, `crates/g`")
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_link_by_a_package_and_a_crate_root_no_file_are_refused() {
+        crate::trust_test_process::bounded!(
+            a_link_by_a_package_and_a_crate_root_no_file_are_refused
+        );
+        // Round 11's D4: the written tree holds no symbolic link, so one in a package's directory — a test target
+        // cargo finds there — or beside one, where a member glob finds it, is refused, and so is a crate root the census
+        // cannot read: a test whose `path` names no file of the commit.
+        let f = joining_with(
+            "census-links-and-roots",
+            "[[test]]\nname = \"gone\"\npath = \"../elsewhere/t.rs\"\n",
+            "",
+            &[],
+        );
+        link(&f, "crates/r/tests/linked.rs", "../../i/src/lib.rs");
+        link(&f, "crates/x", "i");
+        let r = refused(f.run());
+        for want in [
+            "trust-undeclared-input: `crates/r/tests/linked.rs` is a symbolic link in a package's directory or beside one",
+            "trust-undeclared-input: `crates/x` is a symbolic link in a package's directory or beside one",
+            "trust-undeclared-input: the crate root `crates/r/../elsewhere/t.rs` is no file of the commit",
+        ] {
+            says(&r, want);
+        }
     }
 
     #[test]

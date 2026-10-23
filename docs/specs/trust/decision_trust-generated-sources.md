@@ -101,6 +101,8 @@ and a cargo configuration the parent's §3 refuses, under which cargo is never r
 written tree, a form naming a package or a target the commit no longer has, the parent's workspace and manifest rules —
 is judged on to the step's last judgment before a build, over the packages the tree holds, and no build follows one. A
 run the gate cannot judge past has the refusals its step found before it beside it, a build's failure as any other.
+The census's reading of the sources is judged there too, and stops no build, reading a source running nothing: its
+refusals stand beside every refusal and every exit of the step (`M3.5.2.8.3`).
 
 The other forms of `trust/roots.eadl` keep the parent's reader, which reads the file in order and stops at the first of
 them that departs, the gate unable to judge: the `defgenerated` forms before that one are read and their shape and

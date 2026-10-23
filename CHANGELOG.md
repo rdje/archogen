@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate refuses what its written tree cannot show
+
+`ARCHOGEN-M3-0926` (leaf `M3.5.2.8.3`), `2026-10-23`.
+
+- The gate writes the commit's files without symbolic links, so a link where cargo looks for packages and targets
+  is now refused, as is a target whose source file the commit lacks. The census's refusals are reported with the
+  gate's other early ones, before anything is built, and a build script's files count for its package.
+
 ## archogen — the trust gate's census reads documentation with no markdown
 
 `ARCHOGEN-M3-0925` (leaf `M3.5.2.8.2`), `2026-10-23`.
