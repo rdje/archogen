@@ -902,9 +902,9 @@ test -p xtask trust::tests
 expect killed
 why M3.6.2: an executable root compiling another role's role package is `trust-shared-program`, refused (§2; R4 5).
 from
-                    if compiled.contains(rp) {
+                    if compiles(rp) {
 to
-                    if compiled.contains(rp) && false {
+                    if compiles(rp) && false {
 end
 
 mutation trust-one-admission-for-many-sites

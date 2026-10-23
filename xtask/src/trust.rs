@@ -2437,12 +2437,18 @@ pub fn inventory_with(
 
     // A program that runs two roles (§2): any root whose build compiles a role package of another role — a library
     // root too, which runs its role until an executable does (R8 remark 13) — and the harness, whose exemption is its
-    // pair's two (R8 remark 12).
+    // pair's two (R8 remark 12). It compiles a role package one of its units belongs to, or one holding a file a unit
+    // read — by a path or an `include!`, however its source names it — as a program target's are counted
+    // (`decision_trust-role-programs.md` §3; `M3.5.2.5.3`).
     for p in &roots.programs {
         let Some(b) = builds.get(&p.name) else {
             continue; // its build failed: the step ends unable to judge
         };
-        let compiled: BTreeSet<&String> = b.units.iter().map(|u| &u.package).collect();
+        let packages: BTreeSet<&String> = b.units.iter().map(|u| &u.package).collect();
+        let read: BTreeSet<&String> = b.units.iter().flat_map(|u| &u.files).collect();
+        let compiles = |rp: &String| {
+            packages.contains(rp) || read.iter().any(|f| f.starts_with(&format!("{rp}/")))
+        };
         for other in roots
             .programs
             .iter()
@@ -2456,7 +2462,7 @@ pub fn inventory_with(
                 continue;
             }
             for rp in &other.role_packages {
-                if compiled.contains(rp) {
+                if compiles(rp) {
                     refused.push(format!(
                         "trust-shared-program: `{}` compiles `{rp}`, a role package of `{}`",
                         p.name, other.name
@@ -8814,6 +8820,64 @@ version = "0.1.0"
             &refused(f.run()),
             "trust-shared-program: `gen` compiles `crates/b`",
         );
+    }
+
+    #[test]
+    fn a_program_compiling_another_role_s_file_by_a_path_runs_two_roles() {
+        crate::trust_test_process::bounded!(
+            a_program_compiling_another_role_s_file_by_a_path_runs_two_roles
+        );
+        // `M3.5.2.5.3`, found answering round 8's R5: a role package holding a file a build read compiles into it as
+        // one its edges reach does, so an admitted `#[path]` onto another role's file runs two roles, a root's build or
+        // a pair form's; onto its pair's own, a comparison's, it does not.
+        let site = "#[path = \"../../b/src/lib.rs\"]\nmod chk_logic;";
+        let f = two_roots(
+            "shared-program-by-path",
+            &format!("{site}\nfn main() {{ chk_logic::f(); }}\n"),
+            "pub fn f() {}\n",
+            &[(
+                "trust/roots.eadl",
+                format!("{ROOTS}{}", admit("crates/a/src/main.rs", "path", site)),
+            )],
+        );
+        says(
+            &refused(f.run()),
+            "trust-shared-program: `gen` compiles `crates/b`, a role package of `chk`",
+        );
+        let comparing = |name: &str, site: &str, call: &str| {
+            let f = derivations(
+                name,
+                &format!(
+                    "{PRODUCTION}{}",
+                    admit("crates/r/tests/production.rs", "path", site)
+                ),
+                "",
+                "",
+                "",
+            );
+            f.commit(&[(
+                "crates/r/tests/production.rs",
+                format!(
+                    "{site}\n#[test]\nfn production() {{ {call}; assert_eq!(r::reading(3), c::reading(3)); }}\n"
+                ),
+            )]);
+            f.run()
+        };
+        says(
+            &refused(comparing(
+                "derivation-path-outside",
+                "#[path = \"../../b/src/lib.rs\"]\nmod chk_logic;",
+                "chk_logic::analysis()",
+            )),
+            "trust-shared-program: `prod` compiles `crates/b`, a role package of `chk`",
+        );
+        let within = comparing(
+            "derivation-path-within",
+            "#[path = \"../../c/src/lib.rs\"]\nmod cfg_logic;",
+            "assert_eq!(cfg_logic::reading(1), 1)",
+        );
+        // Its pair's own file: the comparison is written.
+        written(within);
     }
 
     // ── Round 8 (`M3.6.1` step 9): each reproducer the reader ran, as a fixture ─────────────────────────────────────

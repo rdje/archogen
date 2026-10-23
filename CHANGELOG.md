@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a program compiling another role's file runs two roles
+
+`ARCHOGEN-M3-0912` (leaf `M3.5.2.5.3`), `2026-10-23`.
+
+- A root, or a comparison, that compiles a file of another role's package by a path or an `include!` is now
+  refused as one that depends on that package is, not merely reported as sharing the file. No real program
+  changes.
+
 ## archogen — the trust gate reports a step's refusals together
 
 `ARCHOGEN-M3-0911` (leaf `M3.5.2.5.2`), `2026-10-23`.
