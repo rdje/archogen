@@ -82,7 +82,9 @@ writes yet, since the gate that judges a push is built from the commit before it
   executable roots it runs, each once, and `(installed "archogen-install.json")`, together.
 
 Each departure refuses before a build, as a misnamed harness does, and one test target belongs to one comparison
-only. How a derivation is built and judged, and what an invocation is, land with the rest of `M3.5.2.1`.
+only. A derivation is built, recorded, scanned and held to its pair's role packages as the harness is, but paired with
+no root: its pair takes its item, `shared-derivation`, one item a form (leaf `M3.5.2.1.2`). What an invocation is lands
+with the rest of `M3.5.2.1`.
 
 A program that would run two roles is refused: one program cannot be independent of itself. Every other program the
 workspace can build — an example, a diagnostic tool, the browser module — is classified as not a root, with a reason

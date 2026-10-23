@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a derivation, judged as the harness but for two things
+
+`ARCHOGEN-M3-0891` (leaf `M3.5.2.1.2`), `2026-10-23`.
+
+- The trust gate builds and judges a derivation as it does the comparison harness, but pairs it with no other
+  root and records one item for each, so a comparison of the generator's reading with the checker's is disclosed.
+
 ## archogen — the trust gate reads the checkers' new forms
 
 `ARCHOGEN-M3-0890` (leaf `M3.5.2.1.1`), `2026-10-23`.

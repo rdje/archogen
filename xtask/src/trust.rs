@@ -1375,14 +1375,14 @@ fn classify_programs(
     let role_packages: BTreeSet<&String> = roots
         .programs
         .iter()
-        .filter(|p| p.role != "harness")
+        .filter(|p| p.pair.is_none())
         .flat_map(|p| p.role_packages.iter())
         .collect();
     let mut out = Vec::new();
     let mut matched: BTreeSet<&String> = BTreeSet::new();
     for (package, kind, name) in program_targets {
         let root = roots.programs.iter().find(|p| {
-            p.role != "harness"
+            p.pair.is_none()
                 && p.package == *package
                 && kind == "bin"
                 && p.target == Target::Bin(name.clone())
@@ -1996,7 +1996,8 @@ pub fn inventory_with(
                 continue;
             }
             for (from, to, kind) in &graph {
-                let followed = kind != "dev" || (p.role == "harness" && *from == p.package);
+                // The harness's and a derivation's own development edges (`decision_trust-role-programs.md` §3).
+                let followed = kind != "dev" || (p.pair.is_some() && *from == p.package);
                 if *from == pkg && followed && !closure.contains(to) {
                     todo.push(to.clone());
                 }
@@ -2418,7 +2419,7 @@ pub fn inventory_with(
                     .filter(|(from, to, kind)| {
                         to == pkg
                             && packages.contains(from)
-                            && (kind != "dev" || p.role == "harness" && *from == p.package)
+                            && (kind != "dev" || p.pair.is_some() && *from == p.package)
                     })
                     .map(|(from, _, kind)| format!("{from}:{kind}"))
                     .collect();
@@ -2492,6 +2493,10 @@ pub fn inventory_with(
     let names: Vec<&Program> = roots.programs.iter().collect();
     for (i, a) in names.iter().enumerate() {
         for b in names.iter().skip(i + 1) {
+            // A derivation is paired with no root: its pair takes its item (`decision_trust-role-programs.md` §3).
+            if a.role == "derivation" || b.role == "derivation" {
+                continue;
+            }
             // The harness is paired with every root but its pair's two, whose sharing with it is the pair's own
             // harness item (§4, R8 8).
             let own_pair = |h: &Program, x: &Program| {
@@ -2510,12 +2515,17 @@ pub fn inventory_with(
                     .collect::<BTreeSet<_>>()
             };
             let (pa, pb) = (pk(ba), pk(bb));
-            // The comparison harness a pair's form names is that pair's shared item (§4, R2 B7).
-            let harness = roots.programs.iter().find(|h| {
-                h.pair.as_ref().is_some_and(|(x, y)| {
-                    (x == &a.name && y == &b.name) || (x == &b.name && y == &a.name)
+            // The comparison harness a pair's form names is that pair's shared item (§4, R2 B7), and so is each
+            // derivation its forms name, one item a form (`decision_trust-role-programs.md` §3).
+            let comparisons: Vec<&Program> = roots
+                .programs
+                .iter()
+                .filter(|h| {
+                    h.pair.as_ref().is_some_and(|(x, y)| {
+                        (x == &a.name && y == &b.name) || (x == &b.name && y == &a.name)
+                    })
                 })
-            });
+                .collect();
             let mut items = vec![obj(vec![
                 ("kind", s("build-configuration")),
                 ("content", build_configuration.clone()),
@@ -2528,8 +2538,7 @@ pub fn inventory_with(
                         .filter(|(from, to, kind)| {
                             to == *pkg
                                 && closure.contains(from)
-                                && (kind != "dev"
-                                    || prog.role == "harness" && *from == prog.package)
+                                && (kind != "dev" || prog.pair.is_some() && *from == prog.package)
                         })
                         .map(|(from, _, kind)| format!("{}:{from}:{kind}", prog.name))
                         .collect()
@@ -2648,7 +2657,7 @@ pub fn inventory_with(
                 },
                 &tree,
             ));
-            if let Some(h) = harness {
+            for h in comparisons {
                 // Every unit it compiles beside the pair's two roots' builds (§4, R8 7), and the provenance it reaches
                 // through them, an aspect of the item as its files are (the generated-sources record §5).
                 let beside = beside(&builds[&h.name], ba, bb);
@@ -2656,9 +2665,14 @@ pub fn inventory_with(
                     .iter()
                     .flat_map(|u| u.files.iter().map(|f| format!("{f}={}", file_hash(f))))
                     .collect();
+                let (kind, key) = if h.role == "derivation" {
+                    ("shared-derivation", "derivation")
+                } else {
+                    ("comparison-harness", "harness")
+                };
                 items.push(obj(vec![
-                    ("kind", s("comparison-harness")),
-                    ("harness", s(&h.name)),
+                    ("kind", s(kind)),
+                    (key, s(&h.name)),
                     ("content", strings(content)),
                     (
                         "configuration",
@@ -4345,6 +4359,152 @@ pub(crate) mod tests {
         says(&refused(f.run()), "`no_mangle`, refused");
         let f = harness(
             "harness-proc-macro",
+            "d = { path = \"../d\" }\n",
+            "",
+            "[lib]\nproc-macro = true\n",
+        );
+        says(&refused(f.run()), "reaches `crates/d`");
+    }
+
+    /// The generator `gen`, the configuration checker `cfg`, a scheduling checker `chk`, and `crates/r`, whose tests
+    /// compare the generator's reading with the checker's, the derivation forms `forms` naming them
+    /// (`decision_trust-role-programs.md` §3).
+    fn derivations(
+        name: &str,
+        forms: &str,
+        dev_dep: &str,
+        dev_src: &str,
+        dev_manifest_extra: &str,
+    ) -> Fixture {
+        let roots = format!(
+            "{ROOTS}(defroot cfg (role configuration-checker) (package \"crates/c\") (target lib) (role-packages \"crates/c\"))\n{forms}"
+        );
+        let compare = |what: &str| {
+            format!("#[test]\nfn {what}() {{ assert_eq!(r::reading(3), c::reading(3)); }}\n")
+        };
+        fixture(
+            name,
+            "1.95.0",
+            &[
+                ("Cargo.toml", WS.to_owned()),
+                ("trust/roots.eadl", roots),
+                ("crates/a/Cargo.toml", manifest("a", "")),
+                ("crates/a/src/main.rs", "fn main() {}\n".to_owned()),
+                ("crates/b/Cargo.toml", manifest("b", "")),
+                ("crates/b/src/lib.rs", "pub fn analysis() {}\n".to_owned()),
+                ("crates/c/Cargo.toml", manifest("c", "")),
+                (
+                    "crates/c/src/lib.rs",
+                    "pub fn reading(x: u32) -> u32 { x }\n".to_owned(),
+                ),
+                (
+                    "crates/r/Cargo.toml",
+                    manifest(
+                        "r",
+                        &format!("[dev-dependencies]\nc = {{ path = \"../c\" }}\n{dev_dep}"),
+                    ),
+                ),
+                (
+                    "crates/r/src/lib.rs",
+                    "pub fn reading(x: u32) -> u32 { x }\n".to_owned(),
+                ),
+                ("crates/r/tests/production.rs", compare("production")),
+                ("crates/r/tests/vocabulary.rs", compare("vocabulary")),
+                ("crates/d/Cargo.toml", manifest("d", dev_manifest_extra)),
+                ("crates/d/src/lib.rs", dev_src.to_owned()),
+            ],
+        )
+    }
+
+    const PRODUCTION: &str =
+        "(defderivation prod (pair gen cfg) (package \"crates/r\") (test production) (reason \"the relation\"))\n";
+
+    #[test]
+    fn a_derivation_is_its_pair_s_item_and_no_other_root_s() {
+        crate::trust_test_process::bounded!(a_derivation_is_its_pair_s_item_and_no_other_root_s);
+        // `decision_trust-role-programs.md` §3: built and recorded as the harness, its development edges followed, but
+        // paired with no root, its pair taking its item, one item a form.
+        let vocabulary =
+            "(defderivation voc (pair cfg gen) (package \"crates/r\") (test vocabulary) (reason \"the table\"))\n";
+        let f = derivations(
+            "derivation",
+            &format!("{PRODUCTION}{vocabulary}"),
+            "",
+            "pub fn d() {}\n",
+            "",
+        );
+        let inv = written(f.run());
+        let derived: Vec<(String, String)> = items(&inv)
+            .iter()
+            .filter(|(_, i)| kind(i) == "shared-derivation")
+            .map(|(pair, i)| {
+                (
+                    pair.clone(),
+                    i.get("derivation")
+                        .and_then(Json::as_str)
+                        .unwrap_or_default()
+                        .to_owned(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            derived,
+            [
+                ("gen+cfg".to_owned(), "prod".to_owned()),
+                ("gen+cfg".to_owned(), "voc".to_owned())
+            ],
+            "each derivation its pair's item, one a form"
+        );
+        for (pair, _) in items(&inv) {
+            assert!(
+                !pair.split('+').any(|n| n == "prod" || n == "voc"),
+                "a derivation is paired with no root: {pair}"
+            );
+        }
+        let recorded: Vec<&str> = inv
+            .get("programs")
+            .map(Json::elements)
+            .unwrap_or_default()
+            .iter()
+            .filter(|p| p.get("role").and_then(Json::as_str) == Some("derivation"))
+            .filter_map(|p| p.get("name").and_then(Json::as_str))
+            .collect();
+        assert_eq!(
+            recorded,
+            ["prod", "voc"],
+            "recorded as the harness is, its role `derivation`"
+        );
+    }
+
+    #[test]
+    fn a_derivation_is_held_to_its_pair_s_role_packages_and_its_edges_scanned() {
+        crate::trust_test_process::bounded!(
+            a_derivation_is_held_to_its_pair_s_role_packages_and_its_edges_scanned
+        );
+        // Its exemption from `trust-shared-program` is its pair's role packages alone; its development edges are read
+        // by the catalog's rules as the harness's.
+        let f = derivations(
+            "derivation-third-role",
+            PRODUCTION,
+            "b = { path = \"../b\" }\n",
+            "pub fn d() {}\n",
+            "",
+        );
+        says(
+            &refused(f.run()),
+            "trust-shared-program: `prod` compiles `crates/b`, a role package of `chk`",
+        );
+        let f = derivations(
+            "derivation-no-mangle",
+            PRODUCTION,
+            "d = { path = \"../d\" }\n",
+            "#[no_mangle]\npub fn helper() {}\n",
+            "",
+        );
+        says(&refused(f.run()), "`no_mangle`, refused");
+        let f = derivations(
+            "derivation-proc-macro",
+            PRODUCTION,
             "d = { path = \"../d\" }\n",
             "",
             "[lib]\nproc-macro = true\n",

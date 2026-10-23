@@ -878,9 +878,9 @@ mutation trust-dev-edges-not-followed
 file xtask/src/trust.rs
 test -p xtask trust::tests
 expect killed
-why M3.6.2: the harness's development edges are followed (decision_trust-inventory.md §3; R7 3); without them a procedural macro on a development edge runs unrefused.
+why M3.6.2: the harness's development edges are followed (decision_trust-inventory.md §3; R7 3), and a derivation's (decision_trust-role-programs.md §3, M3.5.2.1.2); without them a procedural macro on a development edge runs unrefused.
 from
-                    let followed = kind != "dev" || (p.role == "harness" && *from == p.package);
+                    let followed = kind != "dev" || (p.pair.is_some() && *from == p.package);
 to
                     let followed = kind != "dev";
 end

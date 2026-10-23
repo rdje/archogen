@@ -68,6 +68,8 @@ fn identity_key(kind: &str) -> Option<&'static str> {
         "file" => Some("file"),
         "copy" => Some("paths"),
         "comparison-harness" => Some("harness"),
+        // One item a `defderivation` form (`decision_trust-role-programs.md` §3).
+        "shared-derivation" => Some("derivation"),
         // A path, or a content's paths, through committed generated sources (the generated-sources record §5).
         "generated-provenance" => Some("item"),
         _ => None,
@@ -1263,6 +1265,30 @@ mod tests {
             "the aspects §4 compares, the identity apart"
         );
         assert!(package.values().all(|d| d.len() == 64));
+    }
+
+    #[test]
+    fn each_derivation_is_an_item_of_its_own() {
+        crate::trust_test_process::bounded!(each_derivation_is_an_item_of_its_own);
+        // `decision_trust-role-programs.md` §3: one item a `defderivation` form, its identity its name, so two forms on
+        // one pair are two items, each proposed and read back.
+        let inv = json::parse(
+            r#"{"identity":{"host":"test-host-triple"},"shared":[{"pair":["gen","cfg"],"items":[
+            {"kind":"shared-derivation","derivation":"prod","content":["p.rs=aa"],"configuration":["--test"]},
+            {"kind":"shared-derivation","derivation":"voc","content":["v.rs=bb"],"configuration":["--test"]}]}]}"#,
+        )
+        .expect("an inventory");
+        let all = items(&inv).expect("two items, not one recorded twice");
+        let names: Vec<String> = all.keys().map(ItemId::name).collect();
+        assert_eq!(
+            names,
+            [
+                "gen+cfg shared-derivation prod",
+                "gen+cfg shared-derivation voc"
+            ]
+        );
+        let baseline = read_baseline(&propose(&inv, None).expect("a proposal")).expect("it reads");
+        assert_eq!(baseline.forms.len(), 2);
     }
 
     #[test]
