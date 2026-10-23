@@ -177,3 +177,27 @@ review.
 | R5-R15 | remark | the transcription line is unconditional, true only from `M3.4` | conditioned (`M3.5.2.2.3`) |
 | R5-R16 | remark | `NO-SUBPROCESS` "admits" a file that does not exist | "is to admit" (§4) |
 | R5-R17 | remark | the arming evidence lives in ignored `target/` | each leaf records its arms; a durable, re-runnable arming is mutation testing, deferred by the ruling of `2026-10-21` — `M7.6` holds it |
+
+**Round 6**, `2026-10-23`, a new context at `0a2f9dd3`, read-only and fenced, read against `M3.5.2.2`'s code: it ran
+sixteen filters of the readers' tests, all passing, re-measured the inventory and the ledger, and probed the census in a
+scratch workspace against cargo's own builds. Verdict: not acceptable, 5 defects and 8 remarks. The readers do what the
+records say; the census from the build counted the units the default build makes, while a build-dependency, a feature
+or a platform reaches others, and said nothing of it. Measured before answering, in a scratch package: `cargo test
+--lib`, `--test` and `--doc` build a target whose `test` or `doctest` flag is off, so a flag changes the default build
+alone. The census now counts what some build can compile, an over-approximation it declares.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R6-D1 | defect | the census misses a role package reached through a build-dependency or an optional dependency, counts another platform's dependencies and targets the default build skips, and states none of it | it counts what some build can compile: every test-like target whatever its flags, over every feature, every platform and build edges, with the package's own development edges — declared; a build script's actions and packages outside the workspace's members stated outside (§3, `UNSEEN`, `M3.5.2.3.1`) |
+| R6-D2 | defect | an edit inside a classified unit is reported nowhere, and nothing says so | stated (§3, `UNSEEN`, the book, `M3.5.2.3.1`); a digest of a classified target's own sources, for every classification, filed as `M3.6.10` |
+| R6-D3 | defect | the remedy names `defderivation` for the reference model's pair | the inventory records the pairs a unit joins; the remedy names each pair's form (`M3.5.2.3.2`) |
+| R6-D4 | defect | `RP-H7` has no order against the reader's push, `M3.5.3` or `M3.5.3.1` | after `M3.5.3.1` and a push carrying `M3.5.2.2`'s reader (`RP-H7`, `M3.4`) |
+| R6-D5 | defect | the book gives every derivation the reference-derivation class | the relation's derivations (the book) |
+| R6-R6 | remark | no fixture joins an executable's unit tests, nor a harness naming a joined test | both added (`M3.5.2.3.1`) |
+| R6-R7 | remark | "keeps a test's crate root" is false for an executable's unit tests | joining gives no crate root a generator file's standing it lacks otherwise (`M3.5.2.3.1`) |
+| R6-R8 | remark | the parent's edge rule is not amended for a joined unit | amended in its clarification (`M3.5.2.3.1`) |
+| R6-R9 | remark | a classification and a pair form on one unit pass, the classification called "no program target" | a read failure (`M3.5.2.3.2`) |
+| R6-R10 | remark | a comparison in a unit other than an integration test has no lawful form | stated: a comparison is an integration test, a pair form's; a classification says its unit compares nothing (§3) |
+| R6-R11 | remark | the front's outside line is unconditional, all three stands `M3.5.1.4`'s | conditioned on it (`M3.5.2.3.2`) |
+| R6-R12 | remark | `RP-H2`'s text describes the retired census of names | a note in *How to apply*: §3's census from the build supersedes it |
+| R6-R13 | remark | no hand-off makes a later `M3.5` leaf name or classify the units it joins | `RP-H16`, to `M3.5` |

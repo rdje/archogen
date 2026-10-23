@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers' programs in the trust record, round 6
+
+`ARCHOGEN-M3-0902` (leaf `M3.5.2`), `2026-10-23`.
+
+- The sixth review found 5 defects and 8 remarks; the census of tests that join two roles counted only what the
+  default build makes. From the next leaf it counts what any build can compile, and says what stays outside.
+
 ## archogen — the engine's API reference, built with the book
 
 `ARCHOGEN-PROGRAM-0901` (leaf `PROGRAM.107`), `2026-10-23`.

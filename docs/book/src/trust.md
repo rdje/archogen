@@ -717,7 +717,8 @@ Every report ends with what the inventory does not see, the same list each time,
 - **the transcriptions a derivation holds together.** The checker's model lives in the checker's package and, from
   `M3.4`, the generator's relation in the generator's, so an edit to either moves no shared item — before `M3.4` the
   relation, compiled beside the pair's builds, is in the derivation's item: only the comparison failing joins them,
-  which is why a derivation's class is a reference derivation, its controls the ones independent of the transcription;
+  which is why the relation's derivations are reference derivations, their controls the ones independent of the
+  transcription;
 - **whether the front runs only, or all, the programs its form invokes.** `NO-SUBPROCESS` admitting the launcher alone,
   the launcher running only what the install manifest names, and the install placing only the invoked roots stand
   there;
