@@ -1514,12 +1514,12 @@ os.execvp("rustc", ["rustc"] + arguments)
             'crates/archogen-catalog/src/manifest.rs': '110c489a0e9d59435c0df770e32d7ab600c4de5cac3a9f0ca1706c25792de01b',
             'crates/archogen-catalog/src/tree.rs': '5bb9030f10feecadd27f02b0d476901b4cec958196c492947290fb8318c1ad78',
             'crates/archogen-catalog/src/grammar.rs': '6b60d509abf08334f308e7fef00b711203288e48e5786802a5c153e50f9bf43f',
-            'xtask/src/main.rs': '48e836b0df5ae788ed0ef071c8eb4c8113cbcc143e89f2362d67df64d3b60723',  # re-pinned by PROGRAM.100: runner only, wiring unchanged
+            'xtask/src/main.rs': 'de1ba9c6b427a24daa66d07ae2523153a4890ed2b2b03297377837efde117582',  # re-pinned by M3.5.1.3: `mod install`, its dispatch arm and help line; the trust commands' wiring unchanged
             'crates/archogen-catalog/src/lib.rs': '1e299ccfab838708b41afc6ba366bb890a09dc5195957bb6690cef509312703a',
-            'xtask/Cargo.toml': '6ee1cf3699670f97a13b3c49a37013f29270b80bf458ed22835bdc9b99be9f9f',
+            'xtask/Cargo.toml': '7ec83341e8ba3104c8483930250683a0750af941be130b31bf950192e46568ab',  # re-pinned by M3.5.1.3: the dependency on archogen-install alone; no reader's wiring changed
             'crates/archogen-catalog/Cargo.toml': '1e8266bd7987f766565e66ddca4d6fbc277bfc853771dfec61fa8050fea0629d',
             'Cargo.toml': '523ef1fdc14883302cf62d951526ae83d78cb38153caf4f9c4f9927f2c986510',
-            'Cargo.lock': '159f30c3d6963882133715024dd02dcd9fde8103f9bfcaefe4398abee11e7770',  # re-pinned by M3.5.1.1: archogen-outcome, over archogen-digest and archogen-json, and archogen-api's edge to it; no reader's wiring changed
+            'Cargo.lock': 'dc9430a86df31bafd0eed68f5aab1499e02dce54fc38f86630b691af0ec9ea1e',  # re-pinned by M3.5.1.3: archogen-install, over archogen-digest and archogen-json, and xtask's edge to it; no reader's wiring changed
             'rust-toolchain.toml': '4706b7b407427c38a3b63860b2e131cacc9eb57569a6755a39e81756cca676cd',
             '.cargo/config.toml': '48296b18a2b27cc7268cf489fc37bdcf24e04d79b914c2237c248e4db1f6fa79',
         }
@@ -1983,7 +1983,9 @@ class IteratorTests(DiscoveryFixture):
                 "gate production": (gate.split("#[cfg(test)]", 1)[0],
                     "8ad36a27c5e585660af256b59050f4393b1fa8601f591bd59de9ba2ffbfb7961"),
                 "repository root": (root, "84ec4298740c835ae19ed9f2cff11f0f985cd59a4f3c5c205e9abd47805b6d77"),
-                "CLI entry": (entry, "3bf4d646e31f96b58fe18697db897614d1e1aac4e11b585e0d02cca641b4ab62"),
+                # re-pinned by M3.5.1.3: the `install` arm, which hands `trust::inventory` the same absolute
+                # `repo_root()`, and an `out` joined to it, as the `trust-inventory` arm does
+                "CLI entry": (entry, "6a5197a45e820280dabbf645753f9ab17744049f9e0da64f8537d2ca3d2073d3"),
             }
             for label, (text, expected) in guarded.items():
                 self.assertEqual(hashlib.sha256(text.encode()).hexdigest(), expected,

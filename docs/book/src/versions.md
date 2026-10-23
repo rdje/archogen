@@ -166,6 +166,17 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Pinned by | its shape — every key path and the kind of value at it — frozen in `crates/archogen-outcome/tests/goldens/archogen-result-1.golden` and compared by `crates/archogen-outcome/tests/record.rs`, never rewritten; the same test reads every record back as itself and reads no damage to a refusal as an acceptance |
 | Keeps | a record labelled `archogen-result/1` has one text, and means the same to every reader of `/1` |
 
+## `install-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | the manifest an install writes beside the programs it placed: the directory, the build they came from, the inventory's sha256, the front and each sibling with its role and sha256 (`M3.5.1.3`, [Installing](cli.md#installing)) |
+| Version | `archogen-install/1` |
+| Declared at | `const:crates/archogen-install/src/lib.rs:FORMAT` |
+| Changes when | a member is added, removed, renamed, re-typed or reinterpreted. A front that meets another identifier refuses the install rather than guess |
+| Pinned by | its shape — every key path and the kind of value at it — frozen in `crates/archogen-install/tests/goldens/archogen-install-1.golden` and compared by `crates/archogen-install/tests/manifest.rs`, never rewritten; the same test reads every manifest back as itself |
+| Keeps | a manifest labelled `archogen-install/1` has one text, and names the same programs to every reader of `/1` |
+
 ## `wasm-request-format`
 
 | Field | Value |

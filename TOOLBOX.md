@@ -4,9 +4,8 @@
 
 ## The rule
 
-- A code change cannot land without **tool-backed WHY + WHERE** and a **measured
-  before→after** recorded in its task-tree leaf (see the acceptance checklist in
-  `DOCTRINE_ENFORCEMENT.md`).
+- A code change cannot land without **tool-backed WHY + WHERE** and a **measured before→after** recorded in its
+  task-tree leaf (see the acceptance checklist in `DOCTRINE_ENFORCEMENT.md`).
 - If no existing tool shows WHY+WHERE, **build one** — a probe, a tracer, a counter, a
   minimal reproduction harness. The diagnostic tool is a first-class deliverable, kept in
   the repo, not a throwaway.
@@ -70,6 +69,7 @@ before forming a theory about any failure.
 | the trust baseline's proposal | what would the baseline say of the commit's shared items — each item's identity and the sha256 of every aspect the inventory records — and on which host were those digests taken? It proposes and never accepts: a review writes each form's classification, property, risk and controls, and `M3.6.5` reads acceptance (exit 0 · 1 the inventory refused · 2 usage) | `cargo xtask trust-baseline --propose [--commit <rev>] [--out <file>]` |
 | the trust gate | does this commit share anything new or changed, against its base commit's forms — and is its own `trust/` whole? Builds the inventory, compares each shared item with the base commit's baseline, writes `target/trust/report.txt` (the change, the standing list), refuses a missing or stale form on the baseline's host, and writes the baseline proposed for the commit beside the report; exit 0 passed, 1 refused, 2 not judged (`M3.6.3.3`, `.4`); in CI built from the base by `scripts/catalog_check.sh` | `cargo xtask trust-gate [--repo <dir>] [--commit <rev>] [--base <rev>] [--out <dir>]` |
 | the package verifier | is this assurance package one build's — inventory, report, artifacts, results and handed dependencies? Refuses each disagreement as `trust-inventory-stale`; the package's layout is `archogen-assurance-package/0`, in `xtask/src/trust_verify.rs` (`M3.6.3.5`, provisional until `M4.7`) | `cargo xtask trust-verify <package>` |
+| the install step | which programs does an install of this commit place, and does each file in the directory hash to what the trust inventory recorded? Builds the inventory, copies the generator's executable and each other executable root's into an absent or empty directory, each hashed before and after, and writes `archogen-install.json` last (exit 0 installed · 1 refused · 2 usage) | `cargo xtask install --to <dir> [--commit <rev>] [--out <dir>]` |
 | the CI provisioner | are the `integration` job's external tools at their pins, from bytes that match the recorded digests? Installs `mdbook` and builds QEMU from its release tarball into `target/ci/tools/`, refusing any download whose sha256 differs from `.github/ci-tools.env`; a tool already at its pin is kept | `bash scripts/ci_provision.sh` · `--self-test` |
 | the CI rehearsal | would the `integration` job pass on the runner, as far as this machine can tell? Runs the job's steps against a checkout made as `actions/checkout` makes it — one commit, nothing untracked, no submodule, no global git config, a home of its own naming no identity — with `GITHUB_PATH` and the job summary honoured; its checkout beside the repository, `../.archogen-ci-rehearsal/`, removed after; not the runner's GNU userland or ELF | `bash scripts/ci_rehearse.sh [<commit>]` |
 | the CI integration job | what does CI do with this tier's verdict? Runs `integration --provisioned` and applies `decision_incomplete-blocking-policy.md`: `0` passes, `1` fails, `20` passes with a warning per owned gap and a job summary; the report is kept in `target/ci/integration.log` | `bash scripts/ci_integration.sh` · `--self-test` |

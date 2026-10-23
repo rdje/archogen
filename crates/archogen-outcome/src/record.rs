@@ -438,61 +438,13 @@ fn finding(finding: &Finding) -> Value {
     ])
 }
 
-/// The values of an object's members, which must be exactly `names`, in that order.
+/// The values of an object's members, which must be exactly `names`, in that order ([`json::members`]).
 fn members<'a, const N: usize>(
     value: &'a Value,
     path: &str,
     names: &[&str; N],
 ) -> Result<[&'a Value; N], Refusal> {
-    let at = |name: &str| {
-        if path.is_empty() {
-            name.to_owned()
-        } else {
-            format!("{path}.{name}")
-        }
-    };
-    let Value::Object(fields) = value else {
-        return Err(Refusal::Shape(format!(
-            "`{}` is not an object",
-            if path.is_empty() { "the record" } else { path }
-        )));
-    };
-    let found: Vec<&str> = fields.iter().map(|(key, _)| key.as_str()).collect();
-    if found != names.as_slice() {
-        let missing: Vec<String> = names
-            .iter()
-            .filter(|n| !found.contains(n))
-            .map(|n| format!("`{}`", at(n)))
-            .collect();
-        let unexpected: Vec<String> = found
-            .iter()
-            .filter(|n| !names.contains(n))
-            .map(|n| format!("`{}`", at(n)))
-            .collect();
-        return Err(Refusal::Shape(
-            if missing.is_empty() && unexpected.is_empty() {
-                format!(
-                    "the members of `{}` are out of order",
-                    if path.is_empty() { "the record" } else { path }
-                )
-            } else {
-                format!(
-                    "missing {}; unexpected {}",
-                    if missing.is_empty() {
-                        "none".to_owned()
-                    } else {
-                        missing.join(", ")
-                    },
-                    if unexpected.is_empty() {
-                        "none".to_owned()
-                    } else {
-                        unexpected.join(", ")
-                    }
-                )
-            },
-        ));
-    }
-    Ok(std::array::from_fn(|index| &fields[index].1))
+    json::members(value, path, names).map_err(Refusal::Shape)
 }
 
 fn text_of<'a>(value: &'a Value, path: &str) -> Result<&'a str, Refusal> {

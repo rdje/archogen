@@ -138,6 +138,28 @@ The vocabulary has a version of its own, `1.1`, since a checker carries it witho
 ([What is versioned](versions.md)). Within its major a status keeps its name, its code and its meaning, and a new
 one moves the minor.
 
+### Installing
+
+An install puts the `archogen` program, and the checkers it runs, in one directory, with a small file beside them
+that says which build they came from. The front reads that file before it runs a checker, so a checker left over
+from another build is refused rather than trusted.
+
+```console
+$ cargo xtask install --to /opt/archogen/bin
+install: placed archogen and 0 sibling(s) in /opt/archogen/bin, from commit …; manifest archogen-install.json
+```
+
+`cargo xtask install` builds the trust inventory of the commit (`HEAD` unless `--commit` names another) and places
+that build's executables: the generator's, `archogen`, and every other root whose target is an executable — none yet,
+since the checkers become executables of their own with `M2.21.3` and `M3.5.6`. Each file is hashed before it is
+copied and where it lands, and refused unless both equal the inventory's sha256. The directory must be absent or
+empty, since an install removes nothing, and the manifest, `archogen-install.json` in the format `archogen-install/1`
+([What is versioned](versions.md)), is written last, so a failed install leaves none. It names the directory, the
+build's commit, tree, compiler and host, the inventory's sha256, and each program's name, role and sha256.
+
+⚠️ The digests catch a checker that is stale or from another build, never tampering: whoever can write the
+directory can replace the front and the manifest together.
+
 ### Diagnostics
 
 Every refusal states what happened and what to do about it, because §5.5 requires a concrete

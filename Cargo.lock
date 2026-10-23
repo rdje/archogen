@@ -44,6 +44,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "archogen-install"
+version = "0.1.0"
+dependencies = [
+ "archogen-digest",
+ "archogen-json",
+]
+
+[[package]]
 name = "archogen-json"
 version = "0.1.0"
 
@@ -115,5 +123,6 @@ dependencies = [
  "archogen-api",
  "archogen-catalog",
  "archogen-evidence",
+ "archogen-install",
  "eadl-front",
 ]

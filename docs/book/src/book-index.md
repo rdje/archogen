@@ -377,10 +377,12 @@ a change that leaves it stale, so it is never edited by hand.
   adequacy](trust-adequacy.md#initial-sourceprovenance-operator-outcomes)
 - Inputs outside the written tree — [Checks that must not share a mistake: the trust
   gate](trust.md#inputs-outside-the-written-tree)
+- install-format — [What is versioned, and what changing it costs](versions.md#install-format)
 - Installation writer lifetime and readback allocation — [Annex C: Trust proof
   records](annex-trust-proofs.md#installation-writer-lifetime-and-readback-allocation)
 - Installed observer byte verification — [Annex C: Trust proof
   records](annex-trust-proofs.md#installed-observer-byte-verification)
+- Installing — [The archogen command line](cli.md#installing)
 - Internal NUL argument validation — [Annex C: Trust proof
   records](annex-trust-proofs.md#internal-nul-argument-validation)
 - **interrupt** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a

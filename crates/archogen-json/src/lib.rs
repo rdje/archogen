@@ -543,9 +543,83 @@ fn write_string(out: &mut String, text: &str) {
     out.push('"');
 }
 
+/// The values of an object's members, which must be exactly `names`, in that order: how a record whose writer writes
+/// one member order is read (`archogen-result/1`, `archogen-install/1`, leaf `M3.5.1.3`). The error names the object
+/// by `path`, the empty path being the whole text, and says what is missing, unexpected or out of order.
+///
+/// # Errors
+///
+/// `value` is not an object, or its members are not `names` in order.
+pub fn members<'a, const N: usize>(
+    value: &'a Value,
+    path: &str,
+    names: &[&str; N],
+) -> Result<[&'a Value; N], String> {
+    let object = if path.is_empty() { "the text" } else { path };
+    let Value::Object(fields) = value else {
+        return Err(format!("`{object}` is not an object"));
+    };
+    let found: Vec<&str> = fields.iter().map(|(key, _)| key.as_str()).collect();
+    if found != names.as_slice() {
+        let at = |name: &str| {
+            if path.is_empty() {
+                format!("`{name}`")
+            } else {
+                format!("`{path}.{name}`")
+            }
+        };
+        let list = |items: Vec<String>| {
+            if items.is_empty() {
+                "none".to_owned()
+            } else {
+                items.join(", ")
+            }
+        };
+        let missing: Vec<String> = names
+            .iter()
+            .filter(|n| !found.contains(n))
+            .map(|n| at(n))
+            .collect();
+        let unexpected: Vec<String> = found
+            .iter()
+            .filter(|n| !names.contains(n))
+            .map(|n| at(n))
+            .collect();
+        return Err(if missing.is_empty() && unexpected.is_empty() {
+            format!("the members of `{object}` are out of order")
+        } else {
+            format!("missing {}; unexpected {}", list(missing), list(unexpected))
+        });
+    }
+    Ok(std::array::from_fn(|index| &fields[index].1))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn members_are_exactly_the_names_in_their_order() {
+        let value = read(br#"{"a":1,"b":"x"}"#, LIMIT).unwrap();
+        let [a, b] = members(&value, "", &["a", "b"]).unwrap();
+        assert_eq!((a, b), (&number("1"), &string("x")));
+        assert_eq!(
+            members(&value, "r", &["b", "a"]).unwrap_err(),
+            "the members of `r` are out of order"
+        );
+        assert_eq!(
+            members(&value, "r", &["a", "c"]).unwrap_err(),
+            "missing `r.c`; unexpected `r.b`"
+        );
+        assert_eq!(
+            members(&value, "", &["a"]).unwrap_err(),
+            "missing none; unexpected `b`"
+        );
+        assert_eq!(
+            members(&string("x"), "", &["a"]).unwrap_err(),
+            "`the text` is not an object"
+        );
+    }
 
     const LIMIT: usize = 1 << 20;
 

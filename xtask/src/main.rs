@@ -45,6 +45,7 @@ mod catalog_check;
 mod dtb;
 mod elf;
 mod generated_header;
+mod install;
 mod json;
 mod mutation;
 mod premises;
@@ -1084,6 +1085,7 @@ fn help() {
         "    cargo xtask trust-gate [--repo <dir>] [--commit <rev>] [--base <rev>] [--out <dir>]"
     );
     println!("    cargo xtask trust-verify <package>");
+    println!("    cargo xtask install --to <dir> [--commit <rev>] [--out <dir>]");
     println!("    cargo xtask mutate [--timeouts-fail] [--only <id> ...]");
     println!();
     println!("TIERS:");
@@ -1128,6 +1130,7 @@ fn main() {
         ["trust-baseline", rest @ ..] => trust_gate::run(&repo_root(), rest),
         ["trust-gate", rest @ ..] => trust_gate::run_gate(&repo_root(), rest),
         ["trust-verify", rest @ ..] => trust_verify::run(rest),
+        ["install", rest @ ..] => install::run(&repo_root(), rest),
         other => {
             eprintln!("xtask: unrecognized arguments {other:?}");
             eprintln!("  hint: cargo xtask verify --tier <{}>", tier_names());

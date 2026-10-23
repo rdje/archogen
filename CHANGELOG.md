@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the install step and its manifest
+
+`ARCHOGEN-M3-0882` (leaf `M3.5.1.3`), `2026-10-23`.
+
+- `cargo xtask install` places the trust build's executables in an empty directory, each checked against the
+  inventory's sha256, and writes `archogen-install/1` last, the manifest the front will read before it runs a checker.
+- Its first real run found that the trust inventory refused the outcome package's commit, `path` handed to a
+  macro; repaired here. That package also makes the digest a shared item, whose baseline form waits on the runner.
+
 ## archogen — the outcome package: one vocabulary, one result record
 
 `ARCHOGEN-M3-0881` (leaf `M3.5.1.1`), `2026-10-23`.

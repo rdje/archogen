@@ -1,0 +1,15 @@
+archogen-install/1
+build.commit: string
+build.host: string
+build.rustc: string
+build.tree: string
+directory: string
+format: string
+front.name: string
+front.role: string
+front.sha256: string
+inventory: string
+siblings: array
+siblings[].name: string
+siblings[].role: string
+siblings[].sha256: string

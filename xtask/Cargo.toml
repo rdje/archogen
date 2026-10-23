@@ -17,4 +17,5 @@ workspace = true
 archogen-api = { path = "../crates/archogen-api" }
 archogen-catalog = { path = "../crates/archogen-catalog" }
 archogen-evidence = { path = "../crates/archogen-evidence" }
+archogen-install = { path = "../crates/archogen-install" }
 eadl-front = { path = "../crates/eadl-front" }
