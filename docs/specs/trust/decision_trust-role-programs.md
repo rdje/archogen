@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-23`
-- **Status:** `active` — written `2026-10-23` by leaf `M3.5.2`; rounds 1 to 7 answered the same day; under review
+- **Status:** `active` — written `2026-10-23` by leaf `M3.5.2`; rounds 1 to 8 answered the same day; under review
   ([`decision_trust-role-programs-reviews.md`](../../reviews/decision_trust-role-programs-reviews.md)), from round 5 read
   against its readers' code and fixtures, `M3.5.2`'s children, its rules in force as each lands.
 - **External sources:** none beyond the parent's: `ROADMAP.md` §4.4 (its "externally invoked tools", and the classes
@@ -36,6 +36,8 @@
 - **What the roles share.** `cargo xtask trust-inventory --commit 0a5a4b12`, `aarch64-apple-darwin`: exit 0, `5
   program(s), 8 pair(s), 10 shared item(s)`, the tenth `generator+scheduling-checker package crates/archogen-digest`,
   reached through `archogen-outcome` (`archogen-api`'s since `5bc5627d`) and through `archogen-evidence`.
+- **The census today** (`b9a070d4`): `crates/rt-core`'s `lifecycle`, unit tests and doc tests join the reference model
+  and the implementation beside the harness, unnamed (`RP-H18`).
 - **The gate is built from the base** (parent `TI-H6`; `.github/workflows/trust-gate.yml`): on a push, the commit
   `main` pointed at before it, which the report names. Its `read_roots` fails on a form or clause it does not know
   (exit 2), and its item encoding is the base's: `origin/main` is `8cdac117`, which does not hold `62099a39`, the
@@ -54,7 +56,8 @@ description and the assignment record it checks are claim subjects, never depend
 
 ### 3. The shared derivation
 
-**A derivation is a comparison harness for the generator and a checker, but for two things:** it is
+**A derivation is a comparison harness for the generator and a checker, but for two things, beside its form's own
+roles, reason and item kind (below):** it is
 paired with no root — its pair takes its item, as a harness's pair does — and no result may name it as its producer.
 Wherever the parent, the generated-sources record or their ledgers name the comparison harness as a program — what it
 compiles, reads and reaches; how it is built, recorded, scanned, admitted, exempted, judged and reported; its item,
@@ -125,7 +128,7 @@ as a sibling (`M3.5.1.3`); from `M3.5.1.4` its siblings are exactly the roots th
 records the manifest beside the artifacts it describes, never as a handed dependency (`M4.7`).
 
 **What stays outside, stated in the report:** that the front runs only, or all, the programs its form invokes.
-`NO-SUBPROCESS` admitting `sibling.rs` alone, declared from the front's `main.rs` (`M3.5.1.4`), the launcher running
+From `M3.5.1.4` — until then no front invokes — `NO-SUBPROCESS` admitting `sibling.rs` alone, declared from the front's `main.rs` (`M3.5.1.4`), the launcher running
 only what the manifest names, and the install placing only invoked roots stand there.
 
 ### 5. What the roles share
@@ -171,7 +174,7 @@ leaves. Both records state, from `b788ec4e`, that these read with it as `M3.5.2`
 
 ## How to apply
 
-**A reader before its form.** The gate is built from the base (§1), so a form's reader lands first (`M3.5.2.1`),
+**A reader before its form.** The gate is built from the base (§1), so a form's reader lands first (`M3.5.2`'s),
 reaches `main` through a cadence push, and only a commit of a later push writes the form. **A form from the runner.**
 The forms of the shared items a commit adds, or whose measured aspects it moves, are the proposal of a runner run whose
 base holds the encoding the judging gate uses — today `62099a39` and, for the new kinds, `3f0a27e0`, decided
@@ -187,18 +190,20 @@ refuses the item until a push holds the form and nothing after it moves the item
 | `RP-H2` | `M3.5.2.1` | The gate reads `defderivation`, the narrowed `defharness`, `(invokes …)` and `(installed …)` as `decision_trust-role-programs.md` §3 and §4 state, reads a derivation as the harness but for its two differences, records and reports both new kinds of item, reports a test naming crates of the generator's and a checker's role packages that no form names, and refuses in `trust-verify` a result whose role is no role of `trust::ROLES` or whose producer is a derivation's artifact; its report's list of what stays outside gains §3's and §4's lines; it is tested on fixtures — each read failure, case 5 inside and outside a derivation's units, a derivation compiling a role package outside its pair, a derivation's target gone, a `#[no_mangle]` and a procedural macro on a derivation's development edge, an unnamed comparison reported, a missing launcher, an invocation moved by a launcher edit, a harness-produced reference-model result accepted, a derivation's and a no-role result refused — the existing pairs of a generator and a checker rewritten; the book's trust chapter says so; and it writes none of these forms. |
 | `RP-H3` | `M3.5.4` | Each `include_str!` site of `crates/archogen-plan-check` is admitted in `trust/roots.eadl` by a `defadmit` of its own. |
 | `RP-H4` | `M3.5.5` | The comparison of the checker's fenced joint reading with `joint::System::read` is a `defderivation` form of its own, written after its reader reaches `main`, its class written by its review. |
-| `RP-H5` | `M3.5.1.4` | The generator's form gains `(invokes configuration-checker)` and `(installed "archogen-install.json")` with the launcher, after `M3.5.6` roots the checker at its executable and in a push after the one that brings `M3.5.2.1`'s reader to `main`, a test holding the installed name to `archogen_install::FILE` and the launcher's path to the file `NO-SUBPROCESS` admits, and `cargo xtask install` places the front and, as siblings, exactly the roots its form invokes. |
+| `RP-H5` | `M3.5.1.4` | The generator's form gains `(invokes configuration-checker)` and `(installed "archogen-install.json")` with the launcher, after `M3.5.6` roots the checker at its executable and in a push after the one that brings `M3.5.2`'s readers, whole, to `main`, a test holding the installed name to `archogen_install::FILE` and the launcher's path to the file `NO-SUBPROCESS` admits, and `cargo xtask install` places the front and, as siblings, exactly the roots its form invokes. |
 | `RP-H6` | `M2.21.5` | The generator's form invokes `scheduling-checker` in the commit in which `archogen analyze` runs `archogen-analyze` through the front's launcher, after `M2.21.3` and `M3.5.1.4`, and the forms of the items that commit adds or moves come from the runner as `decision_trust-role-programs.md`'s *How to apply* says, in a leaf of their own. |
 | `RP-H7` | `M3.4` | `crates/eadl-resolve` joins the generator's role packages in `trust/roots.eadl` in the commit that makes the generator compile it, after `M3.5.3.1`, which admits its two `include_str!` sites, and a push carrying `M3.5.2`'s readers, whole, each of its test-like units no `defderivation` names classified by a `defprogram`, and the forms of the items its new edges add or move come from the runner as `decision_trust-role-programs.md`'s *How to apply* says, in a leaf of their own. |
 | `RP-H8` | `M4.7` | The package records the install manifest of its own trust build beside the artifacts it describes, never as a handed dependency, and `cargo xtask trust-verify` refuses one whose digests are not the inventory's, `TI-H14` amended to say so. |
 | `RP-H9` | `M3.5.1.8` | The form of `generator+scheduling-checker package crates/archogen-digest` comes from the runner as `decision_trust-role-programs.md`'s *How to apply* says — the first run whose base holds `62099a39` — writing its §5's class, property, residual risk and controls. |
 | `RP-H10` | `M3.5.1.6` | `crates/archogen-transport`'s controls are written into `decision_trust-role-programs.md` §5's row, through that record's review, before a checker compiles it. |
-| `RP-H11` | `M3.5.3.1` | `trust/roots.eadl` holds a `defderivation` form for each comparison §1 names — `production` and `vocabulary` in `crates/eadl-resolve` — after `M3.5.2.1`'s reader reaches `main`, `crates/eadl-resolve`'s two `include_str!` sites admitted. |
+| `RP-H11` | `M3.5.3.1` | `trust/roots.eadl` holds a `defderivation` form for each comparison §1 names — `production` and `vocabulary` in `crates/eadl-resolve` — after `M3.5.2`'s readers, whole, reach `main`, `crates/eadl-resolve`'s two `include_str!` sites admitted. |
 | `RP-H12` | `M3.5` | Each leaf of `M3.5` that adds a shared item, or moves one's measured aspects, has its forms come from the runner as `decision_trust-role-programs.md`'s *How to apply* says, in a leaf of their own. |
 | `RP-H13` | `M2.21.3` | The forms of the shared items the scheduling checker's executable root adds, or whose measured aspects it moves, come from the runner as `decision_trust-role-programs.md`'s *How to apply* says, in a leaf of their own. |
 | `RP-H14` | `M3.5.3.2` | The forms of the shared items `M3.5.3`'s root and `M3.5.3.1`'s derivations add come from the runner as `decision_trust-role-programs.md`'s *How to apply* says, each writing its §5's row. |
 | `RP-H15` | `M4.8` | `GS-H10`'s acceptance of the live `defgenerated` forms a root or the comparison harness reaches takes those a derivation reaches, as `decision_trust-role-programs.md` §3 reads a derivation. |
 | `RP-H16` | `M3.5` | Each leaf of `M3.5` whose commit makes a test-like unit join two roles a property rests on names it by a pair form or classifies it by a `defprogram` in that commit, after a push carrying `M3.5.2`'s readers, whole. |
+| `RP-H17` | `M2.21` | Each leaf of `M2.21` whose commit makes a test-like unit join two roles a property rests on names it by a pair form or classifies it by a `defprogram` in that commit, after a push carrying `M3.5.2`'s readers, whole. |
+| `RP-H18` | `M3.5.8` | `trust/roots.eadl` classifies each test-like unit of `crates/rt-core` the census of the judging base finds joining the reference model and the implementation and no pair form names, after the push that brings `M3.5.2`'s readers to `main` and before the push after it. |
 
 ## Review
 
@@ -211,3 +216,4 @@ refuses the item until a push holds the form and nothing after it moves the item
 | 5 | `2026-10-23` | 7 | 10 | not acceptable, read against the code; every finding answered, the census read from the build (`M3.5.2.2`) |
 | 6 | `2026-10-23` | 5 | 8 | not acceptable, read against `M3.5.2.2`'s code; every finding answered, the census counting what some build compiles (`M3.5.2.3`) |
 | 7 | `2026-10-23` | 2 | 6 | not acceptable, read against `M3.5.2.3`'s code; every finding answered, a literal path into a role package joining (`M3.5.2.4`) |
+| 8 | `2026-10-23` | 3 | 10 | not acceptable, read against `M3.5.2.4`'s code; every finding answered, and the method changed: the census read from what rustc compiled (`M3.5.2.5`) |

@@ -219,3 +219,27 @@ helpers, no role's package, so a rule on what a literal path names changes nothi
 | R7-R6 | remark | `joins`, the remedy by pair and the read failure beside a pair form are in no text; the book's rows lag; a unit joining both pairs is told to take a form either refuses | stated; the rows current; such a unit told no pair form names it (`M3.5.2.4.2`) |
 | R7-R7 | remark | the book's "Today and ahead" omits what the census reports today | `rt-core`'s three units and `M3.5.8` named |
 | R7-R8 | remark | a test running another role's program as a process is unseen and unsaid | stated outside (`M3.5.2.4.1`) |
+
+**Round 8**, `2026-10-23`, a new context at `b9a070d4`, read-only and fenced, read against `M3.5.2.4`'s code: 27 tests
+passing; eight probes in a copy of the workspace, each confirmed by cargo's own dep-info. Verdict: not acceptable, 3
+defects and 10 remarks (its verdict line said 11; its findings list ten) — the count rose from round 7's 2, as rounds 5
+to 7 had each found the census missing another spelling of a file inclusion. **The method changed**, as after round 4:
+the census reads what rustc compiled, one build of every test-like target and its dependency information, not what a
+file's text names, so no spelling can hide a file a unit compiles. Measured before answering: a clean build of every
+test-like target of this workspace, release, every feature, takes 28 seconds and writes 112 dependency files.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R8-D1 | defect | `include![…]`, an escaped literal, an untokenizable file and an aliased `include!` hide a comparison from the literal-path census | the census reads what each unit's build compiled, its dep-info, the text scan removed (§3, `M3.5.2.5.1`) |
+| R8-D2 | defect | a path a dependency's file names, a target's own path outside its package and a chain of paths are missed, unsaid | the same: a unit counts every file its build and its dependencies' builds read (`M3.5.2.5.1`) |
+| R8-D3 | defect | the missing-launcher refusal is dropped beside another step-2 refusal | every step-2 refusal reported together (`M3.5.2.5.2`) |
+| R8-R4 | remark | `M3.5.8`, *How to apply*, `RP-H5`, `RP-H11` and `M3.5.3.1` still name a single reader leaf | each names `M3.5.2`'s readers, whole |
+| R8-R5 | remark | a test joining one pair and compiling a third role's package is offered a pair form that would be refused | offered one only when it compiles no other role's package (`M3.5.2.5.2`) |
+| R8-R6 | remark | literal paths count for every program target but not in the generator judgement, and are stated for tests alone | one computation of a program target's role packages, from what its build read, used by both (`M3.5.2.5.1`) |
+| R8-R7 | remark | an uncompiled file's `include!` joins | read from the build, it does not (`M3.5.2.5.1`) |
+| R8-R8 | remark | the book's census sentence reads as if one role's file by a path suffices | rewritten for the build's census (`M3.5.2.5.1`) |
+| R8-R9 | remark | §3's outside list and §4's paragraph drift from `UNSEEN` | §4's conditioned on `M3.5.1.4`; §3's rewritten with the census (`M3.5.2.5.1`) |
+| R8-R10 | remark | the book says infrastructure cannot carry a shared mistake, against §5's digest and toolchain rows and §4.4 | narrowed: it seldom shapes an answer, and its residual risk says when it can |
+| R8-R11 | remark | `RP-H16` binds `M3.5`'s leaves alone; `M2.21`'s can join units too | `RP-H17`, to `M2.21` |
+| R8-R12 | remark | a symbolic-link launcher and the spanning pair-form failures beside every `defgenerated` refusal are untested | a fixture each (`M3.5.2.5.2`) |
+| R8-R13 | remark | §3's "but for two things" omits the form's own differences; `M3.5.8`'s obligation and today's census are in no hand-off or §1 | §3 says them; `RP-H18`, to `M3.5.8`; §1 states the measurement |

@@ -230,7 +230,7 @@ part — its classification, the property it can affect, its residual risk, the 
 
 | Classification | Can a shared item carry a shared mistake? |
 | --- | --- |
-| infrastructure | no — a shared allocator cannot make two programs agree on a wrong answer |
+| infrastructure | seldom — a shared allocator does not shape an answer, though a toolchain's or a digest's fault reaches every role, which its residual risk says |
 | interpretation / normalization | yes — it shapes what both sides *see* |
 | semantic analysis | yes — it shapes what both sides *conclude* |
 | authoritative data | yes |

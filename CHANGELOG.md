@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers' programs in the trust record, round 8, and a change of method
+
+`ARCHOGEN-M3-0909` (leaf `M3.5.2`), `2026-10-23`.
+
+- The eighth review found 3 defects and 10 remarks: each round had found another way to spell a file inclusion the
+  census missed. From the next leaf the census reads what the compiler compiled, so no spelling can hide one.
+
 ## archogen — the specifications folder one step larger
 
 `ARCHOGEN-PROGRAM-0908` (leaf `PROGRAM.108`), `2026-10-23`.
