@@ -103,7 +103,11 @@ Both are exactly the things an API's types and its string encoding depend on.
   *Since `2026-09-30` it is stated and gated:* **no production code under `crates/*/src` spawns a process or
   executes anything.** `NO-SUBPROCESS` (`scripts/check_no_subprocess.sh`) refuses `Command::new`, any path to
   `process::Command`, `.spawn(`, `exec` and `fork` there on every commit. `ExitCode` and `process::exit` pass,
-  and so do test modules, `tests/`, `xtask/` and `scripts/`, which drive a toolchain on purpose.
+  and so do test modules, `tests/`, `xtask/` and `scripts/`, which drive a toolchain on purpose. *Hardened
+  `2026-10-22` (`PROGRAM.105`)*, after an alias, a nested `use` group, an `extern` block declaring `execve` and a call
+  to `posix_spawn` were each measured passing: it reads code with comments and literals stripped and each `use` whole,
+  and closes the three routes a workspace with no dependency has — `std::process` beyond `ExitCode` and `exit`, a
+  foreign function, inline assembly.
 - **The surface is thin today and must not be advertised otherwise.** Per `docs/book/src/cli.md`, only
   `check` is built; `build` is experimental over the S0 path; `resolve`, `analyze`, `verify`, `explain`
   and `replay` are unimplemented (`M3.4`, `M2.6`, `PROGRAM.3`, `M3.4`, `M4.7`). An MCP server shipping

@@ -717,8 +717,14 @@ new one cannot go unrecorded (`PROGRAM.60`).
 archogen describes, checks and generates, and it executes nothing. `archogen build` writes a crate and stops.
 Nothing in the product compiles, links or runs what it wrote, and nothing it does starts another process. That
 is the property that makes it safe to hand archogen to an agent that did not write the description. The
-`NO-SUBPROCESS` doctrine (`scripts/check_no_subprocess.sh`, leaf `API.2`) holds it on every commit: no
-production code under `crates/*/src` may name `Command`, `spawn`, `exec` or `fork`. Test modules, `tests/`,
+`NO-SUBPROCESS` doctrine (`scripts/check_no_subprocess.sh`, leaf `API.2`) holds it on every commit. With no
+third-party dependency, Rust code reaches a process three ways, and each is closed (leaf `PROGRAM.105`): through
+`std::process`, which product code may use only for `ExitCode` and `exit`, however it imports it — an alias or a `use`
+group split over lines included; through a foreign function such as `execve` or `posix_spawn`, which needs an
+`extern` block or `#[link]`, both refused — an `extern "C" fn` the browser module exports is a definition and passes;
+and through inline assembly, refused. `Command::new`, `.spawn(`, `exec` and `fork` stay refused by name. The check
+reads code with comments and string and character literals removed, so a message may name what it refuses, and a file
+it cannot lex to its end is refused rather than passed. Test modules, `tests/`,
 `xtask/` and `scripts/` compile and run things on purpose, and they are outside what it reads. A
 `#[cfg(test)]` on a lone helper does not hide the lines below it. Only one that opens a test module does.
 

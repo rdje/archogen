@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the no-process gate closes every route to a process
+
+`ARCHOGEN-PROGRAM-0878` (leaf `PROGRAM.105`), `2026-10-22`.
+
+- `NO-SUBPROCESS` matched names on single lines, so an alias, a split `use`, a foreign `execve` and `posix_spawn` passed
+  it. It now reads code with comments and literals stripped and refuses the three routes a dependency-free Rust
+  workspace has: `std::process` beyond `ExitCode` and `exit`, foreign functions, and inline assembly.
+
 ## archogen — the checkers' programs and the git-style front: the design, reviewed
 
 `ARCHOGEN-M3-0877` (leaf `M3.5.1`), `2026-10-22`.
