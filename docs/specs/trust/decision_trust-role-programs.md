@@ -65,7 +65,7 @@ construction: no passage needs listing, and a passage added later reads so too.
 names one test target comparing a reading of the generator's with a checker's; each form's
 class is its own review's. Its text read wrong fails `read_roots` (exit 2), as a harness's does: a pair naming no root,
 one root twice, or other than the generator's root and a checker's; a target another form names, a
-harness's or a derivation's. A package or target the commit lacks is `trust-baseline-stale`, from metadata, wherever
+harness's, a derivation's or a classification's. A package or target the commit lacks is `trust-baseline-stale`, from metadata, wherever
 the gate runs. **`defharness` is narrowed:** its pair is one root of role `reference-model` and one of role
 `implementation`, in either order; today's `differential` is.
 

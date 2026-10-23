@@ -475,6 +475,16 @@ fn check_pairs(roots: &Roots) -> Result<(), String> {
             }
         }
     }
+    // A test a pair form names is a comparison; a classification says its unit compares nothing, so the two contradict
+    // (`decision_trust-role-programs.md` §3; round 6's R9).
+    for c in roots.classified.iter().filter(|c| c.kind == "test") {
+        if let Some(pair) = targets.get(&(c.package.as_str(), c.target.as_str())) {
+            return Err(format!(
+                "{ROOTS}: `{}` classifies the test `{}` of `{}`, which `{pair}` names as a comparison",
+                c.name, c.target, c.package
+            ));
+        }
+    }
     Ok(())
 }
 
@@ -1432,23 +1442,35 @@ fn joined_units(
     units: &[(String, String, String)],
     graph: &[(String, String, String)],
 ) -> Vec<(String, String, String)> {
-    let packages_of = |role: &str| -> BTreeSet<&String> {
+    units
+        .iter()
+        .filter(|(package, kind, _)| !joined_pairs(roots, package, kind, graph).is_empty())
+        .cloned()
+        .collect()
+}
+
+/// The pairs of [`JOINED`] a unit's build joins, each `<role>+<role>`: the generator's and a checker's are a derivation's
+/// to name, the reference model's and the implementation's a harness's (`decision_trust-role-programs.md` §3).
+fn joined_pairs(
+    roots: &Roots,
+    package: &str,
+    kind: &str,
+    graph: &[(String, String, String)],
+) -> Vec<String> {
+    let closure = target_closure(package, kind, graph);
+    let compiles = |role: &str| {
         roots
             .programs
             .iter()
             .filter(|p| p.pair.is_none() && p.role == role)
             .flat_map(|p| p.role_packages.iter())
-            .collect()
+            .any(|p| closure.contains(p))
     };
-    let mut out = Vec::new();
-    for (package, kind, name) in units {
-        let closure = target_closure(package, kind, graph);
-        let compiles = |role: &str| packages_of(role).iter().any(|p| closure.contains(*p));
-        if JOINED.iter().any(|(a, b)| compiles(a) && compiles(b)) {
-            out.push((package.clone(), kind.clone(), name.clone()));
-        }
-    }
-    out
+    JOINED
+        .iter()
+        .filter(|(a, b)| compiles(a) && compiles(b))
+        .map(|(a, b)| format!("{a}+{b}"))
+        .collect()
 }
 
 fn classify_programs(
@@ -1508,13 +1530,18 @@ fn classify_programs(
                 "trust-unclassified-program: the {kind} `{name}` of `{package}` is neither a root nor classified in {ROOTS}"
             ),
         };
-        out.push(obj(vec![
+        let mut entry = vec![
             ("package", s(package)),
             ("kind", s(kind)),
             ("name", s(name)),
             ("status", s(status)),
             ("role-packages", strings(compiled)),
-        ]));
+        ];
+        // The pairs a test-like unit joins, so its remedy names each pair's form (round 6's D3).
+        if TEST_KINDS.contains(&kind.as_str()) {
+            entry.push(("joins", strings(joined_pairs(roots, package, kind, graph))));
+        }
+        out.push(obj(entry));
     }
     let unused = roots
         .classified
@@ -3821,6 +3848,21 @@ pub(crate) mod tests {
             e.contains("`d` and `h` name one test target, `production` of `crates/r`"),
             "{e}"
         );
+        // A classification of a test a pair form names says its comparison compares nothing (round 6's R9).
+        let classified = format!(
+            "{}(defprogram p (package \"crates/r\") (target test production) (reason \"r\"))\n",
+            forms("crates/r", "other")
+        );
+        let e = read_roots(&classified).expect_err("a comparison classified");
+        assert!(
+            e.contains("`p` classifies the test `production` of `crates/r`, which `d` names as a comparison"),
+            "{e}"
+        );
+        read_roots(&format!(
+            "{}(defprogram p (package \"crates/r\") (target test another) (reason \"r\"))\n",
+            forms("crates/r", "other")
+        ))
+        .expect("a test no pair form names may be classified");
     }
 
     /// A front, `gen` as an executable, a configuration checker `cfg` as an executable, and the clauses on `on`'s form.
@@ -5018,6 +5060,25 @@ pub(crate) mod tests {
         out
     }
 
+    /// The pairs the inventory records for `package`'s unit of `kind`.
+    fn joins_of(inv: &Json, package: &str, kind: &str) -> Vec<String> {
+        inv.get("program-targets")
+            .map(Json::elements)
+            .unwrap_or_default()
+            .iter()
+            .find(|t| {
+                t.get("package").and_then(Json::as_str) == Some(package)
+                    && t.get("kind").and_then(Json::as_str) == Some(kind)
+            })
+            .and_then(|t| t.get("joins"))
+            .map(Json::elements)
+            .unwrap_or_default()
+            .iter()
+            .filter_map(Json::as_str)
+            .map(str::to_owned)
+            .collect()
+    }
+
     /// `crates/r`'s four test-like units, each unclassified, compiling `compiled`.
     fn four_unclassified(compiled: &str) -> Vec<(String, String, String)> {
         unclassified_units(
@@ -5158,6 +5219,13 @@ pub(crate) mod tests {
         want[2].2 = "classified r-units".to_owned();
         want[3].2 = "derivation compare".to_owned();
         assert_eq!(named, want, "named and classified");
+        // Every joined unit records the pairs it joins, so its remedy names each pair's form (round 6's D3).
+        let pairs = joins_of(
+            &written(joining("joined-pairs", joined, "").run()),
+            "crates/r",
+            "test",
+        );
+        assert_eq!(pairs, ["generator+configuration-checker"]);
 
         let grown = units_of_r(&written(
             joining("joined-grown", joined, &units("\"crates/g\"")).run(),
@@ -5214,6 +5282,19 @@ pub(crate) mod tests {
         let mut want = four_unclassified("`crates/i`, `crates/m`");
         want[3].2 = "harness diff".to_owned();
         assert_eq!(harness, want, "named by a harness");
+        let pairs = joins_of(
+            &written(
+                joining(
+                    "joined-pairs-model",
+                    "[dev-dependencies]\nm = { path = \"../m\" }\ni = { path = \"../i\" }\n",
+                    "",
+                )
+                .run(),
+            ),
+            "crates/r",
+            "test",
+        );
+        assert_eq!(pairs, ["reference-model+implementation"]);
 
         let gone = written(
             joining(

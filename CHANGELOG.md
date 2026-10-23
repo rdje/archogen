@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate names the right form for each pair
+
+`ARCHOGEN-M3-0904` (leaf `M3.5.2.3.2`), `2026-10-23`.
+
+- A test joining the reference model and the implementation is told to take a harness form, one joining the
+  generator and a checker a derivation; a test both named and classified is refused. Round 6 is answered.
+
 ## archogen — the trust gate counts every test any build could compile
 
 `ARCHOGEN-M3-0903` (leaf `M3.5.2.3.1`), `2026-10-23`.

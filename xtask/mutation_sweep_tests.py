@@ -544,7 +544,7 @@ class ObserverCloseTests(DiscoveryFixture):
         expected = {
             'xtask/src/trust_compiler_observer.rs': '58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98',
             'xtask/src/trust_compiler.rs': '1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973',
-            'xtask/src/trust.rs': 'ab26a2788f2ab34c671ab9ad07d5965c57f26b269aea6e048abf1889fe1a3b14',  # re-pinned by M3.5.2.3.1: the census counting what some build compiles, the metadata read with every feature; the observer's close unchanged
+            'xtask/src/trust.rs': 'c17e6d7c72b1e9593ac7a36adcf7f0a09881d4feec2d3f189f9649a06d80c8b5',  # re-pinned by M3.5.2.3.2: the pairs a joined unit joins recorded, a classification beside a pair form refused; the observer's close unchanged
         }
         def verify(inputs):
             for path, digest in expected.items():
@@ -1504,7 +1504,7 @@ os.execvp("rustc", ["rustc"] + arguments)
         ]
         inputs = {path: (ROOT / path).read_bytes() for path in paths}
         expected = {
-            'xtask/src/trust.rs': '963b84d7ac288d97ac3fd4ee8c39cdeec7490ecdc454aa18fd357baa63a22f06',  # re-pinned by M3.5.2.3.1: the census counting what some build compiles, the metadata read with every feature; the caller suffix unchanged
+            'xtask/src/trust.rs': 'bf3b8fbe99e7675ea1a94873802ab58cc44c48631ed94800df6e79a2f1be6ae0',  # re-pinned by M3.5.2.3.2: the pairs a joined unit joins recorded, a classification beside a pair form refused; the caller suffix unchanged
             'xtask/src/trust_compiler.rs': '634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70',
             'xtask/src/trust_compiler_observer.rs': 'c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f',
             'xtask/src/catalog_build.rs': 'd3e8865c3633de9f4cafb82c3613f0ee82df0c065012b732469cda5951221ed2',
@@ -1971,7 +1971,7 @@ class IteratorTests(DiscoveryFixture):
             entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
             guarded = {
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
-                    "963b84d7ac288d97ac3fd4ee8c39cdeec7490ecdc454aa18fd357baa63a22f06"),  # re-pinned by M3.5.2.3.1: the census counting what some build compiles, the metadata read with every feature; its current_dir and the absolute cwd unchanged
+                    "bf3b8fbe99e7675ea1a94873802ab58cc44c48631ed94800df6e79a2f1be6ae0"),  # re-pinned by M3.5.2.3.2: the pairs a joined unit joins recorded, a classification beside a pair form refused; the absolute cwd unchanged
                 "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
                     "634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70"),
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],
@@ -1981,7 +1981,7 @@ class IteratorTests(DiscoveryFixture):
                 "base environment": (environment,
                     "8b6fa81a2d715c2e42f8ab75a02b6e0c037c97d2f55e71c44c21e4a5516ee74c"),
                 "gate production": (gate.split("#[cfg(test)]", 1)[0],
-                    "242e9b7a0973b69f3cf9ec4d06d2592bfb7cf8e5d8ec03d7b22feafef1dfe6e9"),  # re-pinned by M3.5.2.3.1: two lines of what the report does not see; the gate's absolute paths unchanged
+                    "6e5eae268c096db99744c27cfde4294b469a33b9dbafd98d85a9bbb95b9b3b8f"),  # re-pinned by M3.5.2.3.2: the remedy named by pair and the front's line conditioned; the gate's absolute paths unchanged
                 "repository root": (root, "84ec4298740c835ae19ed9f2cff11f0f985cd59a4f3c5c205e9abd47805b6d77"),
                 # re-pinned by M3.5.1.3: the `install` arm, which hands `trust::inventory` the same absolute
                 # `repo_root()`, and an `out` joined to it, as the `trust-inventory` arm does

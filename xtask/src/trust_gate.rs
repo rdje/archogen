@@ -604,11 +604,30 @@ pub fn judge(
         if !classified {
             // A test-like unit joining two roles is named by a pair form, if it compares them, or classified
             // (`decision_trust-role-programs.md` §3).
+            // Each pair's form: the reference model's and the implementation's a harness, any other a derivation.
+            let forms: BTreeSet<&str> = t
+                .get("joins")
+                .map(Json::elements)
+                .unwrap_or_default()
+                .iter()
+                .filter_map(Json::as_str)
+                .map(|pair| {
+                    if pair == "reference-model+implementation" {
+                        "`defharness`"
+                    } else {
+                        "`defderivation`"
+                    }
+                })
+                .collect();
             let remedy = match field("kind") {
-                "test" => "name it by a `defderivation` form if it compares the two roles, or classify it by a \
-                           `defprogram` form",
-                kind if crate::trust::TEST_KINDS.contains(&kind) => "classify it by a `defprogram` form",
-                _ => "classify it, or make it a root",
+                "test" if !forms.is_empty() => format!(
+                    "name it by a {} form if it compares the two roles, or classify it by a `defprogram` form",
+                    forms.into_iter().collect::<Vec<_>>().join(" or ")
+                ),
+                kind if crate::trust::TEST_KINDS.contains(&kind) => {
+                    "classify it by a `defprogram` form".to_owned()
+                }
+                _ => "classify it, or make it a root".to_owned(),
             };
             formless.push(format!(
                 "trust-form-missing: the {} `{}` of `{}` has no form in {} — {remedy}",
@@ -868,8 +887,9 @@ pub const UNSEEN: &[&str] = &[
     "the transcriptions a derivation holds together: an edit to the checker's model moves no shared item, nor, from \
      `M3.4`, one to the generator's relation — before it the relation is compiled beside the pair's builds, in the \
      derivation's item — and only the comparison failing joins them (§3)",
-    "whether the front runs only, or all, the programs its form invokes: `NO-SUBPROCESS`, the launcher reading the \
-     manifest and the install placing the invoked roots stand there (§4)",
+    "whether the front runs only, or all, the programs its form invokes: from `M3.5.1.4`, `NO-SUBPROCESS` admitting \
+     the launcher, the launcher reading the manifest and the install placing only the invoked roots stand there; until \
+     then no front invokes (§4)",
     "whether a unit two roles' packages join compares them: the build finds the joining, and a classification's review \
      decides that it compares nothing they hold equal (§3)",
     "an edit inside a classified program target: its classification is reviewed again only when the role packages its \
@@ -1460,17 +1480,21 @@ mod tests {
         crate::trust_test_process::bounded!(
             a_joined_unit_with_no_form_is_refused_naming_the_forms_that_take_it
         );
-        // `decision_trust-role-programs.md` §3: an integration test joining two roles is named by a derivation if it
-        // compares them, or classified; any other test-like unit is classified; the change part reports each.
+        // `decision_trust-role-programs.md` §3: an integration test joining two roles is named by its pair's form if
+        // it compares them — a derivation for the generator and a checker, a harness for the reference model and the
+        // implementation (round 6's D3) — or classified; any other test-like unit is classified; the change part
+        // reports each.
         let roots = read_roots(ROOTS_TEXT).expect("roots");
         let own = baseline_of(&inv("h", &[CONFIG], &[], (&[], &[])));
-        let unit = |kind: &str, name: &str| {
+        let unit = |kind: &str, name: &str, joins: &str| {
             format!(
-                r#"{{"package":"crates/r","kind":"{kind}","name":"{name}","status":"trust-unclassified-program: the {kind} `{name}` of `crates/r` compiles `crates/a`, `crates/b`, role packages of two roles a property rests on, and no form in trust/roots.eadl names or classifies it"}}"#
+                r#"{{"package":"crates/r","kind":"{kind}","name":"{name}","status":"trust-unclassified-program: the {kind} `{name}` of `crates/r` compiles `crates/a`, `crates/b`, role packages of two roles a property rests on, and no form in trust/roots.eadl names or classifies it","joins":[{joins}]}}"#
             )
         };
-        let (test, lib) = (unit("test", "compare"), unit("lib-test", "r"));
-        let now = inv("h", &[CONFIG], &[&test, &lib], (&[], &[]));
+        let test = unit("test", "compare", r#""generator+configuration-checker""#);
+        let model = unit("test", "lifecycle", r#""reference-model+implementation""#);
+        let lib = unit("lib-test", "r", r#""generator+configuration-checker""#);
+        let now = inv("h", &[CONFIG], &[&test, &model, &lib], (&[], &[]));
         let base = Base {
             commit: Some("b"),
             baseline: Some((&own, "s".to_owned())),
@@ -1480,12 +1504,14 @@ mod tests {
         for want in [
             "trust-form-missing: the test `compare` of `crates/r` has no form in trust/roots.eadl — name it by a \
              `defderivation` form if it compares the two roles, or classify it by a `defprogram` form",
+            "trust-form-missing: the test `lifecycle` of `crates/r` has no form in trust/roots.eadl — name it by a \
+             `defharness` form if it compares the two roles, or classify it by a `defprogram` form",
             "trust-form-missing: the lib-test `r` of `crates/r` has no form in trust/roots.eadl — classify it by a \
              `defprogram` form",
         ] {
             assert!(j.refused.iter().any(|r| r == want), "{want}: {:#?}", j.refused);
         }
-        assert_eq!(j.refused.len(), 2, "{:#?}", j.refused);
+        assert_eq!(j.refused.len(), 3, "{:#?}", j.refused);
         for kind in ["the test `compare`", "the lib-test `r`"] {
             assert!(has(&j.change, kind), "{kind}: {:#?}", j.change);
         }
