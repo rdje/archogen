@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers' programs in the trust record: round 4, and a change of method
+
+`ARCHOGEN-M3-0889` (leaf `M3.5.2`), `2026-10-23`.
+
+- The fourth review found as many defects as the third, so the method changed: one reading rule replaces the list
+  of affected passages that every round found incomplete; a missing comparison is now found by machine; and the next
+  rounds read the record against the gate's code, built next.
+
 ## archogen — the checkers' programs in the trust record, round 3 answered
 
 `ARCHOGEN-M3-0888` (leaf `M3.5.2`), `2026-10-23`.

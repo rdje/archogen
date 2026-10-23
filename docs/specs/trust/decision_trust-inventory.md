@@ -514,13 +514,12 @@ provenance as an aspect, as its files are, and §6's `trust-shared-changed` one 
 record's §7 list omitted, corrected there the same day.
 
 **Clarified `2026-10-23`, in force from `M3.5.2.1`'s commit, by `M3.5.2`,
-[`decision_trust-role-programs.md`](decision_trust-role-programs.md)**, under the director's ruling of `2026-10-22` (findings §16 (a)): the configuration checker's root; the **shared derivation**, the
-generator's relation and the checker's held equal by a comparison test, a form `defderivation` and a shared item of
-its own kind, exempt from `trust-shared-program` for its pair's role packages alone once `M3.4` makes `eadl-resolve` the
-generator's; the front's **invoked programs** and **installed data**, `(invokes …)` and `(installed …)` on its form
+[`decision_trust-role-programs.md`](decision_trust-role-programs.md)**, under the director's ruling of `2026-10-22` (findings §16 (a)): the configuration checker's root; the **shared derivation**, a test
+comparing a reading of the generator's with the configuration checker's, read as a comparison harness but for being
+paired with no root and producing no result, a form `defderivation` and a shared item of its own kind; the front's **invoked programs** and **installed data**, `(invokes …)` and `(installed …)` on its form
 alone, each misuse a read failure, each invocation a shared item; the classes of what the roles share; and
-`defharness`'s pair narrowed to a reference model and an implementation. Each passage that record's §6
-lists reads with it; `TI-H19` is amended above to match, and `TI-H18` stands.
+`defharness`'s pair narrowed to a reference model and an implementation. Every passage naming the harness as a
+program reads a derivation the same way, but for those two things, as that record's §3 says; `TI-H19` is amended above to match, and `TI-H18` stands.
 
 **Case 4 is judged where an inventory is consumed** (R1 A8). The gate builds its own inventory and cannot find it
 stale. `cargo xtask trust-verify <package>` refuses a package whose inventory is missing, whose build identity is not

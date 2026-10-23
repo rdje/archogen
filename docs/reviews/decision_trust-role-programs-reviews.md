@@ -118,3 +118,34 @@ base holds the judging gate's encoding. The author verified D2 (`lifecycle`) and
 | R3-R18 | remark | classification follows an example's development edges too | §1 says so |
 | R3-R19 | remark | `M3.5.1.3`'s plan contradicts R1-D15 | amended |
 | R3-R20 | remark | `RP-H10` names no place for the controls | this record's §5 row, through its review |
+
+**Round 4**, `2026-10-23`, a new context at `b788ec4e`, read-only and fenced; it re-measured §1, the ledger (75, held)
+and `origin/main`'s encoding, and read the gate's judgement of forms and its report. Verdict: not acceptable, 10
+defects and 10 remarks — the second round whose count did not fall. **The method changed** rather than another
+answer of prose with prose: §6's enumeration, which every round found incomplete (R1-D19, R2-D6, R3-D4, R4-D10), is
+replaced by a reading rule complete by construction; a missing comparison, found by hand this round, is found by
+machine — a census of sources, run by the author, that `M3.5.2.1` makes a gate rule; and from round 5 the record is
+read against `M3.5.2.1`'s code and fixtures, so a claim about the gate's behaviour is a test.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R4-D1 | defect | the exemption is not vacuous until `M3.4`: from `M3.5.3.1` the comparison compiles the checker's role package | the checker's from `M3.5.3.1`, the generator's from `M3.4` (§3, the parent's clarification reworded) |
+| R4-D2 | defect | `eadl-resolve/tests/vocabulary.rs` is a second, unnamed comparison; the outside line's reason is false for it | a census by machine — comments and literals stripped, `use` groups whole — finds `production` and `vocabulary`; both named (`RP-H11`); the rule that finds a missing one mechanically (§3, `RP-H2`) |
+| R4-D3 | defect | a transcription's edit moves no shared item and is reported nowhere | said so plainly: the comparison failing is what holds them together (§3) |
+| R4-D4 | defect | the runner rule omits its evidence and that a proposal holds only while nothing after moves the item | ancestry against the base the report names; refused until a push holds the form and nothing after moves it (*How to apply*) |
+| R4-D5 | defect | `M3.5.1.8` still takes the next push's proposal | the first run whose base holds `62099a39` (the leaf and `RP-H9`) |
+| R4-D6 | defect | most new pairs have no property; `eadl-front` would carry the wrong one into the scheduling checker's pair | the property is the pair's, for every pair kind, "none rests on it" for the rest (§5) |
+| R4-D7 | defect | the install sentences omit the front and are false against `install.rs` | the front and, as siblings, every other executable root today, exactly the invoked from `M3.5.1.4` (§4, `RP-H5`) |
+| R4-D8 | defect | the generated-sources clarification pairs the derivation with its own pair | paired with no root, its pair taking its item |
+| R4-D9 | defect | `RP-H13` covers items a root adds, not those it moves | "adds, or whose measured aspects it moves" (`RP-H13`, `RP-H6`) |
+| R4-D10 | defect | §6 misses `GS-H10`, `TI-H8`, `TI-H23`, `GS-H3`, `GS-H11`; `GS-H10` has no owner for a derivation | the enumeration replaced by a reading rule complete by construction (§3, §6); `RP-H15` to `M4.8` |
+| R4-R11 | remark | the launcher-blob rule is placed in no step; the path is the gate's alone | step 2; the path the one `NO-SUBPROCESS` admits, a test holding them equal (§4, `RP-H5`) |
+| R4-R12 | remark | `RP-H2`'s fixtures omit several refusals and items | added |
+| R4-R13 | remark | `M3.5.1.4` and `M3.5.6` are not ordered | the executable root first (`RP-H5`) |
+| R4-R14 | remark | runner leaves unfiled; `M3.5`'s children omit `.2.1`, `.3.1`, `.3.2` | each hand-off files its own; the children listed |
+| R4-R15 | remark | the repair is `M3.6.9.6.3.2.2.9.2`'s, not `M3.6.3.2.1.1`'s | corrected (§1) |
+| R4-R16 | remark | the statement both records carry is already made | "from `b788ec4e`" (§6); the obligation dropped from `RP-H2` |
+| R4-R17 | remark | the parent's clarification is narrower than §3 | reworded to any generator–checker comparison |
+| R4-R18 | remark | only cross-form read failures are found once the whole file is read | split in the generated-sources clarification |
+| R4-R19 | remark | `eadl-front` omits the third reader; own-property controls and the pinned toolchain unlabelled | the third reader added; each labelled (§5) |
+| R4-R20 | remark | "the two siblings" in `M3.5.1`; whether a harness's target counts as another form's | each sibling's hand-off named; a harness's or a derivation's (§3) |
