@@ -544,7 +544,7 @@ class ObserverCloseTests(DiscoveryFixture):
         expected = {
             'xtask/src/trust_compiler_observer.rs': '58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98',
             'xtask/src/trust_compiler.rs': '1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973',
-            'xtask/src/trust.rs': '992b32219da96426c3f46acb2eb71f63a6f8574cab6b744571705418e09ee6b9',  # re-pinned by M3.5.2.7.1: every source's inclusion sites read, `trust_census.rs` declared from here, no command, argument or cwd changed; the observer's close unchanged
+            'xtask/src/trust.rs': 'f0bbcca98a7c38a322c8f63e5e36b137b7994fd71d15c48076fd6e40aec4a843',  # re-pinned by M3.5.2.7.2: the census read from the sources, its build removed, no command, argument or cwd changed; the observer's close unchanged
         }
         def verify(inputs):
             for path, digest in expected.items():
@@ -1504,7 +1504,7 @@ os.execvp("rustc", ["rustc"] + arguments)
         ]
         inputs = {path: (ROOT / path).read_bytes() for path in paths}
         expected = {
-            'xtask/src/trust.rs': '8eca1e113a4c7cab39eceba0697a1b1194f0d9c6367ae5cc9a7ee59cb992a9c3',  # re-pinned by M3.5.2.7.1: every source's inclusion sites read, `trust_census.rs` declared from here, no command, argument or cwd changed; the caller suffix unchanged
+            'xtask/src/trust.rs': '36fa28693a6dc3c02e0a550d32ed66df0e85b8f92e906857bc5a891babaf42e6',  # re-pinned by M3.5.2.7.2: the census read from the sources, its build removed, no command, argument or cwd changed; the caller suffix unchanged
             'xtask/src/trust_compiler.rs': '634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70',
             'xtask/src/trust_compiler_observer.rs': 'c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f',
             'xtask/src/catalog_build.rs': 'd3e8865c3633de9f4cafb82c3613f0ee82df0c065012b732469cda5951221ed2',
@@ -1971,7 +1971,7 @@ class IteratorTests(DiscoveryFixture):
             entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
             guarded = {
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
-                    "8eca1e113a4c7cab39eceba0697a1b1194f0d9c6367ae5cc9a7ee59cb992a9c3"),  # re-pinned by M3.5.2.7.1: every source's inclusion sites read, `trust_census.rs` declared from here, no command, argument or cwd changed; the absolute cwd unchanged
+                    "36fa28693a6dc3c02e0a550d32ed66df0e85b8f92e906857bc5a891babaf42e6"),  # re-pinned by M3.5.2.7.2: the census read from the sources, its build removed, no command, argument or cwd changed; the absolute cwd unchanged
                 "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
                     "634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70"),
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],
@@ -1981,7 +1981,7 @@ class IteratorTests(DiscoveryFixture):
                 "base environment": (environment,
                     "8b6fa81a2d715c2e42f8ab75a02b6e0c037c97d2f55e71c44c21e4a5516ee74c"),
                 "gate production": (gate.split("#[cfg(test)]", 1)[0],
-                    "72872f217f02769a494d6a009fb80718fed29300888b14cd6198cb18b8b14246"),  # re-pinned by M3.5.2.6.4: the remedy's and `UNSEEN`'s launcher words; the gate's absolute paths unchanged
+                    "7469fd02854349bbef4bca2de63b3eba73f8ae3aab4d6563c627002a93df5c9d"),  # re-pinned by M3.5.2.7.2: `UNSEEN`'s census line and the report's left-out line removed; the gate's absolute paths unchanged
                 "repository root": (root, "84ec4298740c835ae19ed9f2cff11f0f985cd59a4f3c5c205e9abd47805b6d77"),
                 # re-pinned by M3.5.1.3: the `install` arm, which hands `trust::inventory` the same absolute
                 # `repo_root()`, and an `out` joined to it, as the `trust-inventory` arm does

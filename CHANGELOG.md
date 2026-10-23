@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's census builds nothing
+
+`ARCHOGEN-M3-0920` (leaf `M3.5.2.7.2`), `2026-10-23`.
+
+- What each test compiles is now read from its sources and cargo's metadata alone, whatever the profile, features,
+  flags or host, so no configuration hides a file. Test-only code of a library counts for its own tests, not for
+  what links it; a non-member's tests are not counted; and a comparison program is held to what its test reaches.
+  On this tree it gives the same answers as before, and takes no build.
+
 ## archogen — the trust gate reads every source's inclusions
 
 `ARCHOGEN-M3-0919` (leaf `M3.5.2.7.1`), `2026-10-23`.

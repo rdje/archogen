@@ -919,22 +919,6 @@ pub fn report(
     for l in UNSEEN {
         out.push_str(&format!("- {l}\n"));
     }
-    // And what this commit's census left out, by name (`decision_trust-role-programs.md` §3; round 9's R8).
-    let left_out: Vec<String> = inventory
-        .and_then(|(inv, _)| inv.get("census-left-out"))
-        .map(Json::elements)
-        .unwrap_or_default()
-        .iter()
-        .filter_map(Json::as_str)
-        .map(|p| format!("`{p}`"))
-        .collect();
-    if !left_out.is_empty() {
-        out.push_str(&format!(
-            "- this commit's census left out {}: each holds or reaches a build script or a procedural macro, so none \
-             was built, and its units are judged by their edges\n",
-            left_out.join(", ")
-        ));
-    }
     out
 }
 
@@ -967,11 +951,9 @@ pub const UNSEEN: &[&str] = &[
      decides that it compares nothing they hold equal (§3)",
     "an edit inside a classified program target: its classification is reviewed again only when the role packages its \
      build compiles grow, so an edit that makes it start comparing two roles reads unchanged (§3; M3.6.10)",
-    "what the census build does not compile: each package's targets built as `cargo test` builds them — the test \
-     profile, default features, this host — and each it skips by name with its required features, so a file only \
-     another profile, platform or feature set compiles, what a doc test's own snippet includes, a package holding or \
-     reaching a build script or a procedural macro, judged by its edges and named below, a non-member's features and \
-     another workspace's tests are outside it (`decision_trust-role-programs.md` §3's table)",
+    "what the census does not read: it reads every target's sources and every dependency edge, every `cfg` and \
+     feature and host at once, with nothing built, so what a build script or a procedural macro generates, a \
+     non-member's tests and another workspace's are outside it (`decision_trust-role-programs.md` §3's table)",
     "a program a test runs: a test that runs another role's program as a process compiles none of it, so the census \
      does not see it (§3)",
 ];
@@ -1751,34 +1733,6 @@ mod tests {
                     row[0]
                 );
             }
-        }
-    }
-
-    #[test]
-    fn the_report_names_the_packages_the_census_left_out() {
-        crate::trust_test_process::bounded!(the_report_names_the_packages_the_census_left_out);
-        // Round 9's R8: a package the census left out is named in the report, after what no inventory sees.
-        let roots = read_roots(ROOTS_TEXT).expect("roots");
-        let own = baseline_of(&inv("h", &[CONFIG], &[], (&[], &[])));
-        let base = Base {
-            commit: Some("b"),
-            baseline: Some((&own, "s".to_owned())),
-            root_forms: None,
-        };
-        let line = "- this commit's census left out `crates/x`, `crates/y`: each holds or reaches a build script or a \
-                    procedural macro, so none was built, and its units are judged by their edges";
-        for (left_out, named) in [(r#"["crates/x","crates/y"]"#, true), ("[]", false)] {
-            let mut now = inv("h", &[CONFIG], &[], (&[], &[]));
-            if let Json::Object(fields) = &mut now {
-                fields.insert(
-                    "census-left-out".to_owned(),
-                    json::parse(left_out).expect("a list"),
-                );
-            }
-            let j = judge(&now, &roots, &forms(), Some(&own), &base).expect("judged");
-            let text = super::report("c", Some((&now, "s")), &base, &j);
-            assert_eq!(text.contains(line), named, "{left_out}: {text}");
-            assert!(text.ends_with(if named { "edges\n" } else { "\n" }));
         }
     }
 

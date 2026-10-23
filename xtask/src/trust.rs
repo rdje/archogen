@@ -591,10 +591,6 @@ pub struct Unit {
     pub files: BTreeSet<String>,
     /// Every `# env-dep` line, with its value.
     pub env: Vec<String>,
-    /// Its crate root, as a repository path.
-    pub root: String,
-    /// Whether it is built as a test harness (`--test`).
-    pub harness: bool,
 }
 
 /// A unit's configuration as an item compares it: its normalised command line and every `# env-dep` line with its
@@ -1055,13 +1051,6 @@ fn observed(
                 continue;
             }
         };
-        let root = tokens
-            .iter()
-            .skip(1)
-            .map(|t| strip(t))
-            .find(|t| targets.contains_key(&(t.clone(), crate_name.clone())))
-            .unwrap_or_default();
-        let harness = tokens.iter().any(|t| t == "--test");
         let d = PathBuf::from(&out_dir).join(format!("{crate_name}{extra}.d"));
         let text = fs::read_to_string(&d).map_err(|e| format!("{}: {e}", d.display()))?;
         let mut files = BTreeSet::new();
@@ -1128,8 +1117,6 @@ fn observed(
             configuration,
             files,
             env: env_deps,
-            root,
-            harness,
         });
     }
     // In a fixed order, not cargo's scheduling order, so one commit's inventory is one sequence of bytes (R8 remark
@@ -1142,90 +1129,6 @@ fn observed(
         ))
     });
     Ok((units, compilations))
-}
-
-/// A target's required features, by package, kind and name, as cargo's metadata states them.
-type RequiredFeatures = BTreeMap<(String, String, String), Vec<String>>;
-
-/// The census build of the package at `pkg` (`decision_trust-role-programs.md` §3; round 9's D1): its targets built as
-/// `cargo test` builds them — the test profile, default features — once as it selects them, once with `--all-targets`,
-/// and then by name, with its required features, each target neither build made: a `test = false` test, a
-/// `bench = false` bench, one whose required features the default set lacks. Every unit compiled is read as a
-/// program's is; its refusals are dropped, since what a census build would refuse is no program's.
-#[allow(clippy::too_many_arguments)]
-fn census_build(
-    pkg: &str,
-    package_names: &BTreeMap<String, String>,
-    targets: &Targets,
-    target_sources: &TargetSources,
-    required: &RequiredFeatures,
-    env: &[(String, String)],
-    tree_dir: &Path,
-    compiler: &compiler::Compiler,
-) -> Result<Vec<Unit>, String> {
-    let name = package_names
-        .get(pkg)
-        .ok_or_else(|| format!("no package at `{pkg}`"))?;
-    let who = format!("the census of `{pkg}`");
-    let suffix = [
-        "--locked",
-        "--offline",
-        "--message-format=json",
-        "-v",
-        "-p",
-        name.as_str(),
-    ];
-    let run = |selection: &[&str]| {
-        let argv: Vec<&str> = ["test", "--no-run"]
-            .into_iter()
-            .chain(selection.iter().copied())
-            .chain(suffix)
-            .collect();
-        observed(
-            &who,
-            &argv,
-            targets,
-            env,
-            tree_dir,
-            compiler,
-            &mut Vec::new(),
-        )
-        .map(|(units, _)| units)
-    };
-    let mut units = run(&[])?;
-    units.extend(run(&["--all-targets"])?);
-    let mut missed: BTreeMap<Vec<String>, Vec<String>> = BTreeMap::new();
-    for ((dir, kind, target), sources) in target_sources.iter().filter(|((d, _, _), _)| d == pkg) {
-        let selector = match kind.as_str() {
-            "bin" | "test" | "bench" | "example" => vec![format!("--{kind}"), target.clone()],
-            "lib" | "rlib" | "dylib" | "cdylib" | "staticlib" => vec!["--lib".to_owned()],
-            _ => continue,
-        };
-        let crate_name = target.replace('-', "_");
-        let made = units
-            .iter()
-            .any(|u| u.package == *dir && u.crate_name == crate_name && sources.contains(&u.root));
-        if !made {
-            missed
-                .entry(
-                    required
-                        .get(&(dir.clone(), kind.clone(), target.clone()))
-                        .cloned()
-                        .unwrap_or_default(),
-                )
-                .or_default()
-                .extend(selector);
-        }
-    }
-    for (features, selectors) in &missed {
-        let features = features.join(",");
-        let mut selection: Vec<&str> = selectors.iter().map(String::as_str).collect();
-        if !features.is_empty() {
-            selection.extend(["--features", features.as_str()]);
-        }
-        units.extend(run(&selection)?);
-    }
-    Ok(units)
 }
 
 /// Build `p` clean in `tree_dir`, into `target_dir`, and read every unit's dependency information and its artifact.
@@ -1568,10 +1471,10 @@ fn joined_units(
         .collect()
 }
 
-/// What the census build compiled (`decision_trust-role-programs.md` §3; round 8's change of method): the files each
-/// target's own unit read, by package, kind and name — a test-like unit's by its kind of [`TEST_KINDS`] — and every file
-/// a package's library units read. Read from the compiler's dependency information, so a file a unit compiles is
-/// counted however its source names it, or whatever names it in a dependency.
+/// What each unit compiles, as the census reads it (`decision_trust-role-programs.md` §3; round 10's change of method):
+/// the files each target's crate root reaches, by package, kind and name — a test-like unit's by its kind of
+/// [`TEST_KINDS`] — and every file a package's library reaches, so a file a unit compiles is counted whatever its
+/// configuration, however its source names it, or whatever names it in a dependency.
 #[derive(Default)]
 struct Census {
     own: BTreeMap<(String, String, String), BTreeSet<String>>,
@@ -1591,56 +1494,50 @@ fn owner_of<'a>(file: &str, members: impl IntoIterator<Item = &'a String>) -> Op
 }
 
 impl Census {
-    /// The census of `units`, each placed by its crate root among `sources`' targets.
-    fn of(units: &[Unit], sources: &TargetSources) -> Self {
+    /// The census of `reaches`, each crate root's files, filed by its targets in `sources`: a library's for its own unit,
+    /// its unit tests, its doc tests and every unit linking it; an executable's for itself and its unit tests; any other
+    /// target's for itself (`decision_trust-role-programs.md` §3; round 10's change of method).
+    fn lexical(reaches: &BTreeMap<String, census::Reach>, sources: &TargetSources) -> Self {
         let mut census = Self {
             members: sources.keys().map(|(dir, _, _)| dir.clone()).collect(),
             ..Self::default()
         };
-        for u in units {
-            let Some((dir, kind, name)) = sources
+        for ((dir, kind, name), srcs) in sources {
+            let reached: Vec<&census::Reach> = srcs.iter().filter_map(|s| reaches.get(s)).collect();
+            let all: BTreeSet<String> = reached
                 .iter()
-                .filter(|((dir, _, name), srcs)| {
-                    *dir == u.package
-                        && srcs.contains(&u.root)
-                        && name.replace('-', "_") == u.crate_name
-                })
-                .map(|(key, _)| key)
-                .min_by_key(|(_, kind, _)| kind != "lib")
-            else {
-                continue;
-            };
-            let library = matches!(
-                kind.as_str(),
-                "lib" | "rlib" | "dylib" | "cdylib" | "staticlib" | "proc-macro"
-            );
-            let unit_kind = match (u.harness, kind.as_str()) {
-                (true, "test" | "bench") => kind.clone(),
-                (true, _) if library => "lib-test".to_owned(),
-                (true, "bin") => "bin-test".to_owned(),
-                _ => kind.clone(),
-            };
-            if library && !u.harness {
-                census
-                    .libraries
-                    .entry(dir.clone())
-                    .or_default()
-                    .extend(u.files.iter().cloned());
-            }
-            // An executable's unit tests compile its sources and more: a binary `cargo test` builds as its harness alone
-            // counts them for the binary too, a superset of what its own build reads.
-            if u.harness && kind == "bin" {
+                .flat_map(|r| r.files.iter().cloned())
+                .collect();
+            // Built for another crate, or as no test: what no item under exactly `cfg(test)` alone reaches.
+            let nontest: BTreeSet<String> = reached
+                .iter()
+                .flat_map(|r| r.nontest.iter().cloned())
+                .collect();
+            let mut own = |unit: &str, files: &BTreeSet<String>| {
                 census
                     .own
-                    .entry((dir.clone(), "bin".to_owned(), name.clone()))
+                    .entry((dir.clone(), unit.to_owned(), name.clone()))
                     .or_default()
-                    .extend(u.files.iter().cloned());
+                    .extend(files.iter().cloned());
+            };
+            match kind.as_str() {
+                "lib" | "rlib" | "dylib" | "cdylib" | "staticlib" | "proc-macro" => {
+                    own(kind, &nontest);
+                    own("lib-test", &all);
+                    // A doc test links its library as a dependency.
+                    own("doctest", &nontest);
+                    census
+                        .libraries
+                        .entry(dir.clone())
+                        .or_default()
+                        .extend(nontest.iter().cloned());
+                }
+                "bin" => {
+                    own("bin", &nontest);
+                    own("bin-test", &all);
+                }
+                other => own(other, &all),
             }
-            census
-                .own
-                .entry((dir.clone(), unit_kind, name.clone()))
-                .or_default()
-                .extend(u.files.iter().cloned());
         }
         census
     }
@@ -2216,7 +2113,6 @@ pub fn inventory_with(
     let mut id_dir: BTreeMap<String, String> = BTreeMap::new();
     let mut targets: Targets = BTreeMap::new();
     let mut target_sources: TargetSources = BTreeMap::new();
-    let mut required_features: RequiredFeatures = BTreeMap::new();
     let mut package_targets: BTreeMap<String, Vec<String>> = BTreeMap::new();
     // Every program target (§2): (package, kind, name).
     let mut program_targets: Vec<(String, String, String)> = Vec::new();
@@ -2226,6 +2122,14 @@ pub fn inventory_with(
     let mut every_target: BTreeMap<String, Vec<(Vec<String>, String)>> = BTreeMap::new();
     // Every test-like unit (`TEST_KINDS`): (package, kind, name), a program target if it joins two roles.
     let mut test_units: Vec<(String, String, String)> = Vec::new();
+    let members: BTreeSet<String> = meta
+        .get("workspace_members")
+        .map(Json::elements)
+        .unwrap_or_default()
+        .iter()
+        .filter_map(Json::as_str)
+        .map(str::to_owned)
+        .collect();
     for p in meta.get("packages").map(Json::elements).unwrap_or_default() {
         let manifest_path = p
             .get("manifest_path")
@@ -2268,25 +2172,11 @@ pub fn inventory_with(
                 .filter_map(Json::as_str)
                 .collect();
             let target_name = t.get("name").and_then(Json::as_str).unwrap_or_default();
-            let features: Vec<String> = t
-                .get("required-features")
-                .map(Json::elements)
-                .unwrap_or_default()
-                .iter()
-                .filter_map(Json::as_str)
-                .map(str::to_owned)
-                .collect();
             for kind in &kinds {
                 target_sources
                     .entry((dir.clone(), (*kind).to_owned(), target_name.to_owned()))
                     .or_default()
                     .insert(src.clone());
-                if !features.is_empty() {
-                    required_features.insert(
-                        (dir.clone(), (*kind).to_owned(), target_name.to_owned()),
-                        features.clone(),
-                    );
-                }
             }
             // The units some build of this target makes (`decision_trust-role-programs.md` §3): its own, if it is a test
             // or a bench; a library's or an executable's unit tests; a library's doc tests, which rustdoc runs on a
@@ -2302,6 +2192,9 @@ pub fn inventory_with(
                     "lib" | "rlib" | "dylib" | "cdylib" | "staticlib" | "proc-macro"
                 )
             });
+            // A member's alone: a non-member is a dependency, its own tests no build of this workspace makes (round 10's
+            // D4).
+            let member = members.contains(&id);
             for (unit, built) in [
                 ("test", kinds.contains(&"test")),
                 ("bench", kinds.contains(&"bench")),
@@ -2309,7 +2202,7 @@ pub fn inventory_with(
                 ("bin-test", kinds.contains(&"bin")),
                 ("doctest", doctested),
             ] {
-                if built {
+                if built && member {
                     test_units.push((dir.clone(), unit.to_owned(), target_name.to_owned()));
                 }
             }
@@ -2454,8 +2347,11 @@ pub fn inventory_with(
     };
     let mut reaches: BTreeMap<String, census::Reach> = BTreeMap::new();
     for src in target_sources.values().flatten() {
-        if !reaches.contains_key(src) && tree.is_file(src) {
-            reaches.insert(src.clone(), census::reach(&tree, &symlinks, src, &outer));
+        let Some(root) = census::normalized(src).filter(|r| tree.is_file(r)) else {
+            continue;
+        };
+        if !reaches.contains_key(src) {
+            reaches.insert(src.clone(), census::reach(&tree, &symlinks, &root, &outer));
         }
     }
     let unfollowed: BTreeSet<&census::Unfollowed> =
@@ -2536,59 +2432,9 @@ pub fn inventory_with(
         }
     }
 
-    // The census (`decision_trust-role-programs.md` §3; rounds 8 and 9's changes of method): each package's targets
-    // built as `cargo test` builds them ([`census_build`]), so what each unit compiles is read from the compiler's
-    // dependency information. It runs no package's code: a package holding a build script or a procedural macro, and
-    // every package whose closure reaches one, is left out, its units judged by their edges alone. A census build that
-    // fails leaves the gate unable to judge, naming its package, as `cargo test` would fail on it (round 9's D2); none
-    // is built once a program's build has failed.
-    let running: BTreeSet<&String> = every_target
-        .iter()
-        .filter(|(_, ts)| {
-            ts.iter().any(|(kinds, _)| {
-                kinds
-                    .iter()
-                    .any(|k| k == "custom-build" || k == "proc-macro")
-            })
-        })
-        .map(|(pkg, _)| pkg)
-        .collect();
-    // What `cargo test` of a package compiles, by §3's edge rule — its own development edges, and normal and build edges
-    // from there, never a dependency's own development edges — so a package is left out only for code its build would
-    // run (round 9's R8).
-    let reaches_code = |pkg: &str| {
-        target_closure(pkg, "test", &graph)
-            .iter()
-            .any(|s| running.contains(s))
-    };
-    let census_left_out: Vec<String> = package_names
-        .keys()
-        .filter(|pkg| reaches_code(pkg))
-        .cloned()
-        .collect();
-    let mut census_units: Vec<Unit> = Vec::new();
-    if failed.is_empty() {
-        reset_cargo_home(&cargo_home).map_err(unable(&refused))?;
-        let census_dir = out.join("target-census");
-        let census_env = environment(&pin, &cargo_home, &census_dir).map_err(unable(&refused))?;
-        for pkg in package_names.keys().filter(|pkg| !reaches_code(pkg)) {
-            let units = census_build(
-                pkg,
-                &package_names,
-                &targets,
-                &target_sources,
-                &required_features,
-                &census_env,
-                &tree_dir,
-                &compiler,
-            )
-            .map_err(|why| {
-                unable(&refused)(format!("the census of `{pkg}` did not build: {why}"))
-            })?;
-            census_units.extend(units);
-        }
-    }
-    let census = Census::of(&census_units, &target_sources);
+    // The census (`decision_trust-role-programs.md` §3; round 10's change of method): each target's files as its crate
+    // root reaches them, read above with nothing built, whatever the profile, the features, the flags or the host.
+    let census = Census::lexical(&reaches, &target_sources);
     // A test-like unit joining two roles is a program target (`decision_trust-role-programs.md` §3).
     program_targets.extend(joined_units(&roots, &test_units, &graph, &census));
     let (program_targets, classifications_unused) =
@@ -2625,7 +2471,14 @@ pub fn inventory_with(
                     .filter_map(|f| owner_of(f, package_names.keys())),
             )
             .collect();
-        let compiles = |rp: &String| compiled.contains(rp);
+        // A pair form's test, as the census reads it too: every configuration's files at once (round 10's D6).
+        let read: BTreeSet<String> = match (&p.pair, &p.target) {
+            (Some(_), Target::Test(t)) => {
+                compiled_role_packages(&roots, &census, &graph, &p.package, "test", t)
+            }
+            _ => BTreeSet::new(),
+        };
+        let compiles = |rp: &String| compiled.contains(rp) || read.contains(rp);
         for other in roots
             .programs
             .iter()
@@ -3367,9 +3220,6 @@ pub fn inventory_with(
         ),
         ("program-targets", Json::Array(program_targets)),
         ("classifications-unused", strings(classifications_unused)),
-        // The packages the census left out, each holding or reaching a build script or a procedural macro, their units
-        // judged by their edges (`decision_trust-role-programs.md` §3; round 9's R8).
-        ("census-left-out", strings(census_left_out)),
     ]);
     fs::create_dir_all(out).map_err(|e| e.to_string())?;
     fs::write(&target_json, json::write(&inv)).map_err(|e| e.to_string())?;
@@ -5385,6 +5235,118 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn a_test_only_inclusion_counts_for_its_crate_s_tests_alone() {
+        crate::trust_test_process::bounded!(
+            a_test_only_inclusion_counts_for_its_crate_s_tests_alone
+        );
+        // `cfg(test)` is set only on the crate a test harness builds: a file a library's `#[cfg(test)]` module alone
+        // includes joins its own unit tests, never a unit that links the library (round 10's change of method).
+        let helper = manifest("t", "[dev-dependencies]\ng = { path = \"../g\" }\n");
+        let f = joining_with(
+            "census-test-only",
+            "[dev-dependencies]\ng = { path = \"../g\" }\nt = { path = \"../t\" }\n",
+            "",
+            &[
+                ("crates/t/Cargo.toml", &helper),
+                (
+                    "crates/t/src/lib.rs",
+                    "pub fn t() {}\n#[cfg(test)]\nmod checks {\n    #[path = \"../../../c/src/lib.rs\"]\n    mod checker;\n    #[test]\n    fn t() { assert_eq!(checker::x(), g::x()); }\n}\n",
+                ),
+            ],
+        );
+        let inv = written(f.run());
+        assert_eq!(
+            units_of_r(&inv),
+            [],
+            "linking the library compiles none of its tests"
+        );
+        assert_eq!(
+            units_of(&inv, "crates/t"),
+            unclassified_units("crates/t", &[("lib-test", "t")], "`crates/c`, `crates/g`"),
+            "its own unit tests compile it"
+        );
+        // And a binary's: its unit tests compile it, the binary built as no test does not.
+        f.commit(&[
+            ("crates/u/Cargo.toml", manifest("u", "[dev-dependencies]\ng = { path = \"../g\" }\n")),
+            (
+                "crates/u/src/main.rs",
+                "fn main() {}\n#[cfg(test)]\nmod checks {\n    #[path = \"../../../c/src/lib.rs\"]\n    mod checker;\n    #[test]\n    fn t() { assert_eq!(checker::x(), g::x()); }\n}\n".to_owned(),
+            ),
+        ]);
+        let inv = written(f.run());
+        let units = units_of(&inv, "crates/u");
+        assert!(
+            units.iter().any(|(kind, name, status)| kind == "bin-test"
+                && name == "u"
+                && status.contains("compiles `crates/c`, `crates/g`")),
+            "{units:?}"
+        );
+        let role_packages = inv
+            .get("program-targets")
+            .map(Json::elements)
+            .unwrap_or_default()
+            .iter()
+            .find(|t| {
+                t.get("kind").and_then(Json::as_str) == Some("bin")
+                    && t.get("name").and_then(Json::as_str) == Some("u")
+            })
+            .and_then(|t| t.get("role-packages"))
+            .map(crate::json::write);
+        assert_eq!(
+            role_packages,
+            Some("[]".to_owned()),
+            "the binary built as no test"
+        );
+    }
+
+    #[test]
+    fn the_census_counts_members_tests_alone() {
+        crate::trust_test_process::bounded!(the_census_counts_members_tests_alone);
+        // Round 10's D4: a non-member a member depends on is read for what its library compiles, as an edge; its own
+        // tests no build of this workspace makes, so none is counted.
+        let f = joining_with(
+            "census-non-member",
+            "[dev-dependencies]\nn = { path = \"../../other/n\" }\n",
+            "",
+            &[
+                ("Cargo.toml", "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\nexclude = [\"other/n\"]\n"),
+                // Its tests reach both roles' files by paths: cargo resolves no non-member's development edges.
+                ("other/n/Cargo.toml", "[package]\nname = \"n\"\nversion = \"0.1.0\"\nedition = \"2021\"\n"),
+                ("other/n/src/lib.rs", "pub fn n() {}\n"),
+                (
+                    "other/n/tests/t.rs",
+                    "#[path = \"../../../crates/c/src/lib.rs\"]\nmod checker;\n#[path = \"../../../crates/g/src/lib.rs\"]\nmod generator;\n#[test]\nfn t() { assert_eq!(checker::x(), generator::x()); }\n",
+                ),
+            ],
+        );
+        let inv = written(f.run());
+        assert_eq!(units_of(&inv, "other/n"), [], "a non-member's tests");
+        assert_eq!(units_of_r(&inv), [], "its library compiles no role package");
+    }
+
+    #[test]
+    fn a_pair_form_is_held_to_its_test_as_the_census_reads_it() {
+        crate::trust_test_process::bounded!(a_pair_form_is_held_to_its_test_as_the_census_reads_it);
+        // Round 10's D6: a derivation's test reaching the scheduling checker's file only in a debug build compiles it
+        // in no release build, and the census, reading every configuration at once, still finds it.
+        let f = derivations("derivation-census-beyond", PRODUCTION, "", "", "");
+        f.commit(&[
+            (
+                "crates/r/tests/production.rs",
+                "#[cfg(debug_assertions)]\nmod sched;\n#[test]\nfn production() { assert_eq!(r::reading(3), c::reading(3)); }\n".to_owned(),
+            ),
+            (
+                "crates/r/tests/sched/mod.rs",
+                "#[path = \"../../../b/src/lib.rs\"]\nmod chk;\n".to_owned(),
+            ),
+        ]);
+        says(
+            &refused(f.run()),
+            "trust-shared-program: `prod` compiles `crates/b`, a role package of `chk`",
+        );
+    }
+
+    #[test]
     fn a_comparison_is_paired_with_roots_alone() {
         crate::trust_test_process::bounded!(a_comparison_is_paired_with_roots_alone);
         // Round 9's R10, the parent's §4: the harness is paired with every root but its pair's two, a derivation with
@@ -6074,11 +6036,13 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn the_census_builds_each_target_as_cargo_test_builds_it() {
-        crate::trust_test_process::bounded!(the_census_builds_each_target_as_cargo_test_builds_it);
-        // Round 9's D1: the census builds as `cargo test` does — its test profile, default features — and by name, with
-        // its required features, each target `cargo test` and `--all-targets` skip; a file only another profile
-        // compiles stays outside, as §3 says.
+    fn the_census_reads_each_target_whatever_its_configuration() {
+        crate::trust_test_process::bounded!(
+            the_census_reads_each_target_whatever_its_configuration
+        );
+        // Rounds 9 and 10: the census reads each target's sources with nothing built, so no flag, feature, profile or
+        // `cfg` hides a file it reaches — `test = false`, required features, a default feature, `debug_assertions` on or
+        // off, a bench `--all-targets` skips, an example's test and other units alike.
         let g = "[dev-dependencies]\ng = { path = \"../g\" }\n";
         let gc = "`crates/c`, `crates/g`";
         let path_c = "#[path = \"../../c/src/lib.rs\"]\nmod checker;\n#[test]\nfn t() { assert_eq!(checker::x(), g::x()); }\n";
@@ -6108,7 +6072,7 @@ pub(crate) mod tests {
                 compare_alone(gc),
             ),
             ("census-debug-assertions", g.to_owned(), under("debug_assertions"), compare_alone(gc)),
-            ("census-release-only", g.to_owned(), under("not(debug_assertions)"), vec![]),
+            ("census-release-only", g.to_owned(), under("not(debug_assertions)"), compare_alone(gc)),
         ];
         for (case, manifest_extra, compare, want) in cases {
             let inv = written(
@@ -6182,32 +6146,23 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn a_census_build_that_fails_leaves_the_gate_unable_to_judge() {
-        crate::trust_test_process::bounded!(
-            a_census_build_that_fails_leaves_the_gate_unable_to_judge
-        );
-        // Round 9's D2: a test `cargo test` cannot build compares nothing the census can see, so the run stops, naming
-        // the package, rather than judging its units by their edges alone.
+    fn a_target_that_does_not_build_is_read_as_any_other() {
+        crate::trust_test_process::bounded!(a_target_that_does_not_build_is_read_as_any_other);
+        // Round 10's D5: nothing is built for the census, so a test `cargo test` cannot build is read for the files it
+        // reaches as any other, and the step runs to its end.
         let f = joining_with(
-            "census-failure",
+            "census-unbuildable",
             "[dev-dependencies]\ng = { path = \"../g\" }\n",
             "",
             &[(
                 "crates/r/tests/compare.rs",
-                "#[cfg(debug_assertions)]\ncompile_error!(\"fails as `cargo test` builds it\");\n#[test]\nfn t() {}\n",
+                "#[cfg(debug_assertions)]\ncompile_error!(\"fails as `cargo test` builds it\");\n#[path = \"../../c/src/lib.rs\"]\nmod checker;\n#[test]\nfn t() { assert_eq!(checker::x(), g::x()); }\n",
             )],
         );
-        let e = match f.try_run_into("out") {
-            Err(e) => e,
-            Ok(Outcome::Written(_)) => panic!("written"),
-            Ok(Outcome::Refused(r)) => panic!("refused: {r:#?}"),
-        };
-        assert!(
-            e.starts_with("the census of `crates/r` did not build:")
-                && e.contains("could not compile `r` (test \"compare\")"),
-            "{e}"
+        assert_eq!(
+            units_of_r(&written(f.run())),
+            compare_alone("`crates/c`, `crates/g`")
         );
-        assert!(!f.base.join("out/trust-dependencies.json").exists());
     }
 
     #[test]
@@ -6254,12 +6209,12 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn a_package_with_a_build_script_is_left_out_of_the_census_and_never_run() {
+    fn a_package_with_a_build_script_is_read_and_its_script_never_run() {
         crate::trust_test_process::bounded!(
-            a_package_with_a_build_script_is_left_out_of_the_census_and_never_run
+            a_package_with_a_build_script_is_read_and_its_script_never_run
         );
-        // `decision_trust-role-programs.md` §3: the census runs no package's code, so a package holding a build script
-        // is left out of its build, its units judged by their edges — here, joining the generator and the checker.
+        // `decision_trust-role-programs.md` §3: the census builds nothing, so a package holding a build script is read as
+        // any other — here, joining the generator and the checker by its edges — and its script never runs.
         let f = joining_with(
             "census-build-script",
             "[dev-dependencies]\ng = { path = \"../g\" }\nc = { path = \"../c\" }\n",
@@ -6278,21 +6233,13 @@ pub(crate) mod tests {
             !f.base.join("out/tree/crates/r/RAN").exists(),
             "the build script ran"
         );
-        assert_eq!(
-            inv.get("census-left-out").map(crate::json::write),
-            Some("[\"crates/r\"]".to_owned()),
-            "named in the inventory"
-        );
     }
 
     #[test]
-    fn a_package_reaching_a_build_script_by_its_own_edges_is_left_out_and_named() {
-        crate::trust_test_process::bounded!(
-            a_package_reaching_a_build_script_by_its_own_edges_is_left_out_and_named
-        );
-        // Round 9's R8: a package is left out when `cargo test` of it would compile a build script — its own, or one
-        // its own development edges or the normal and build edges below them reach — and the inventory names it; a
-        // dependency's own development edge is not followed, so a package reaching one only through it is built.
+    fn a_package_reaching_a_build_script_is_read_as_any_other() {
+        crate::trust_test_process::bounded!(a_package_reaching_a_build_script_is_read_as_any_other);
+        // Rounds 9 and 10: nothing is built for the census, so a package reaching a build script, by its own development
+        // edge or through a dependency's, is read as any other, and the script never runs.
         let path_c = "#[path = \"../../c/src/lib.rs\"]\nmod checker;\n#[test]\nfn t() { assert_eq!(checker::x(), g::x()); }\n";
         let bs = manifest("bs", "");
         let p2 = manifest("p2", "[dev-dependencies]\nbs = { path = \"../bs\" }\n");
@@ -6320,19 +6267,11 @@ pub(crate) mod tests {
             ],
         );
         let inv = written(f.run());
-        let left_out: Vec<&str> = inv
-            .get("census-left-out")
-            .map(Json::elements)
-            .unwrap_or_default()
-            .iter()
-            .filter_map(Json::as_str)
-            .collect();
-        assert_eq!(left_out, ["crates/bs", "crates/p2", "crates/r"]);
-        // `crates/r`, left out, is judged by its edges, which reach no role package of the checker's.
-        assert_eq!(units_of_r(&inv), []);
+        let gc = "`crates/c`, `crates/g`";
+        assert_eq!(units_of_r(&inv), compare_alone(gc));
         assert_eq!(
             units_of(&inv, "crates/q"),
-            unclassified_units("crates/q", &[("test", "compare")], "`crates/c`, `crates/g`")
+            unclassified_units("crates/q", &[("test", "compare")], gc)
         );
         assert!(
             !f.base.join("out/tree/crates/bs/RAN").exists(),
@@ -10601,8 +10540,6 @@ version = "0.1.0"
                     configuration: command.iter().map(|s| (*s).to_owned()).collect(),
                     files: BTreeSet::new(),
                     env: environment.iter().map(|s| (*s).to_owned()).collect(),
-                    root: String::new(),
-                    harness: false,
                 };
                 let key = unit_configuration(&u);
                 assert_eq!(

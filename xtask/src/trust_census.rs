@@ -40,6 +40,9 @@ pub(crate) struct Unfollowed {
 pub(crate) struct Reach {
     /// Every file it reaches, its own among them, each a blob of the tree.
     pub files: BTreeSet<String>,
+    /// Those it reaches through no item under `#[cfg(test)]`: what it compiles when built for another crate, or for
+    /// itself as no test — `cfg(test)` is set only on the crate a test harness builds, never on a dependency.
+    pub nontest: BTreeSet<String>,
     /// Every site it cannot follow.
     pub unfollowed: BTreeSet<Unfollowed>,
 }
@@ -51,17 +54,22 @@ pub(crate) type Outer<'a> = &'a dyn Fn(&str, &str) -> Option<String>;
 /// Every file the crate root `root` reaches in `tree`, `links` the tree's symbolic links.
 pub(crate) fn reach(tree: &Tree, links: &BTreeSet<String>, root: &str, outer: Outer) -> Reach {
     let mut out = Reach::default();
-    let mut seen: BTreeSet<(String, Vec<String>)> = BTreeSet::new();
-    // Each file to read, with the directories its `mod name;` children may lie under.
-    let mut todo: Vec<(String, Vec<String>)> = vec![(root.to_owned(), vec![parent(root)])];
-    while let Some((file, bases)) = todo.pop() {
-        if !seen.insert((file.clone(), bases.clone())) {
+    let mut seen: BTreeSet<(String, Vec<String>, bool)> = BTreeSet::new();
+    // Each file to read, with the directories its `mod name;` children may lie under, and whether it is reached only
+    // through an item under `#[cfg(test)]`.
+    let mut todo: Vec<(String, Vec<String>, bool)> =
+        vec![(root.to_owned(), vec![parent(root)], false)];
+    while let Some((file, bases, test_only)) = todo.pop() {
+        if !seen.insert((file.clone(), bases.clone(), test_only)) {
             continue;
         }
         let Some(source) = tree.get(&file) else {
             continue;
         };
         out.files.insert(file.clone());
+        if !test_only {
+            out.nontest.insert(file.clone());
+        }
         let scan = match scan(&file, source) {
             Ok(scan) => scan,
             Err((at, why)) => {
@@ -114,7 +122,11 @@ pub(crate) fn reach(tree: &Tree, links: &BTreeSet<String>, root: &str, outer: Ou
                         let dir = join_all(base, &m.inline);
                         for candidate in [format!("{}.rs", m.name), format!("{}/mod.rs", m.name)] {
                             if let Some(path) = found(follow(&candidate, &dir, &m.site), &mut out) {
-                                todo.push((path, vec![join(&dir, &m.name)]));
+                                todo.push((
+                                    path,
+                                    vec![join(&dir, &m.name)],
+                                    test_only || m.test_only,
+                                ));
                             }
                         }
                     }
@@ -134,7 +146,7 @@ pub(crate) fn reach(tree: &Tree, links: &BTreeSet<String>, root: &str, outer: Ou
                     for from in froms {
                         if let Some(path) = found(follow(rel, &from, &m.site), &mut out) {
                             let children = children_of_path_module(&path);
-                            todo.push((path, children));
+                            todo.push((path, children, test_only || m.test_only));
                         }
                     }
                 }
@@ -158,9 +170,12 @@ pub(crate) fn reach(tree: &Tree, links: &BTreeSet<String>, root: &str, outer: Ou
                         What::Rust => {
                             let mut children = bases.clone();
                             children.push(parent(&path));
-                            todo.push((path, children));
+                            todo.push((path, children, test_only || inc.test_only));
                         }
                         What::Data => {
+                            if !(test_only || inc.test_only) {
+                                out.nontest.insert(path.clone());
+                            }
                             out.files.insert(path);
                         }
                         // A document a doc attribute includes: its code blocks are doc tests, read for their own sites.
@@ -175,6 +190,9 @@ pub(crate) fn reach(tree: &Tree, links: &BTreeSet<String>, root: &str, outer: Ou
                                         why: DOC_TEST.to_owned(),
                                     });
                                 }
+                            }
+                            if !(test_only || inc.test_only) {
+                                out.nontest.insert(path.clone());
                             }
                             out.files.insert(path);
                         }
@@ -214,6 +232,8 @@ struct Module {
     path: Option<String>,
     /// The inline modules it is declared in, outermost first, each by its `path` attribute or its name.
     inline: Vec<String>,
+    /// Whether it lies in an item under `#[cfg(test)]`.
+    test_only: bool,
     site: Site,
 }
 
@@ -234,6 +254,8 @@ struct Include {
     what: What,
     /// Its one string literal, decoded; none when it is no single string literal.
     literal: Option<String>,
+    /// Whether it lies in an item under `#[cfg(test)]`.
+    test_only: bool,
     site: Site,
 }
 
@@ -276,6 +298,8 @@ fn closing(ts: &[Token], open: usize) -> usize {
 fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
     let ts = tokens(source)?;
     let mut out = Scan::default();
+    let test_only = test_only_spans(&ts);
+    let in_test = |k: usize| test_only.iter().any(|&(a, b)| a <= k && k <= b);
     let text =
         |a: usize, b: usize| String::from_utf8_lossy(&source[ts[a].at..ts[b].end]).into_owned();
     let site = |a: usize, b: usize| Site {
@@ -336,7 +360,9 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                             }
                         }
                     }
-                    if let Some(end) = inclusion(&ts, j, source, file, in_macro, &mut out, &site) {
+                    if let Some(end) =
+                        inclusion(&ts, j, source, file, in_macro, in_test(j), &mut out, &site)
+                    {
                         j = end;
                     }
                     j += 1;
@@ -398,6 +424,7 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                         Some(Kind::Punct(';')) => out.modules.push(Module {
                             path: path.as_ref().map(|(p, _)| p.clone()),
                             inline: inline.iter().map(|(_, c)| c.clone()).collect(),
+                            test_only: in_test(i),
                             site: site(path.as_ref().map_or(i, |(_, at)| *at), i + 2),
                             name: n,
                         }),
@@ -413,7 +440,9 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                 out.unfollowed.push(site(i, i).unfollowed(file, ALIAS));
             }
             Some(_) => {
-                if let Some(end) = inclusion(&ts, i, source, file, in_macro, &mut out, &site) {
+                if let Some(end) =
+                    inclusion(&ts, i, source, file, in_macro, in_test(i), &mut out, &site)
+                {
                     i = end + 1;
                     continue;
                 }
@@ -431,12 +460,14 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
 const ALIAS: &str = "imports or shadows an inclusion macro, so no literal pins what it includes";
 
 /// The inclusion invoked at `i`, if one is: recorded in `out`, its closing delimiter's index returned.
+#[allow(clippy::too_many_arguments)]
 fn inclusion(
     ts: &[Token],
     i: usize,
     source: &[u8],
     file: &str,
     in_macro: bool,
+    test_only: bool,
     out: &mut Scan,
     site: &dyn Fn(usize, usize) -> Site,
 ) -> Option<usize> {
@@ -470,10 +501,69 @@ fn inclusion(
         out.includes.push(Include {
             what,
             literal,
+            test_only,
             site: site(i, close),
         });
     }
     Some(close)
+}
+
+/// The token spans of the items under exactly `#[cfg(test)]` — from the attribute to the item's `;` or its closing
+/// brace — and the whole file under `#![cfg(test)]`. Any other `cfg` is read as on, so the census over-counts.
+fn test_only_spans(ts: &[Token]) -> Vec<(usize, usize)> {
+    let is = |k: usize, kind: Kind| ts.get(k).is_some_and(|t| t.kind == kind);
+    let named = |k: usize, n: &str| ts.get(k).and_then(name) == Some(n);
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < ts.len() {
+        let inner = is(i, Kind::Punct('#')) && is(i + 1, Kind::Punct('!'));
+        let open = if inner { i + 2 } else { i + 1 };
+        let cfg_test = is(i, Kind::Punct('#'))
+            && is(open, Kind::Open('['))
+            && named(open + 1, "cfg")
+            && is(open + 2, Kind::Open('('))
+            && named(open + 3, "test")
+            && is(open + 4, Kind::Close(')'))
+            && is(open + 5, Kind::Close(']'));
+        if !cfg_test {
+            i += 1;
+            continue;
+        }
+        if inner {
+            out.push((0, ts.len()));
+            break;
+        }
+        // The item the attribute stands on: past further attributes, to its `;` or its first brace's close.
+        let mut k = open + 6;
+        while is(k, Kind::Punct('#')) {
+            let o = if is(k + 1, Kind::Punct('!')) {
+                k + 2
+            } else {
+                k + 1
+            };
+            k = closing(ts, o) + 1;
+        }
+        let mut end = ts.len().saturating_sub(1);
+        let mut j = k;
+        while j < ts.len() {
+            match ts[j].kind {
+                Kind::Punct(';') => {
+                    end = j;
+                    break;
+                }
+                Kind::Open('{') => {
+                    end = closing(ts, j);
+                    break;
+                }
+                Kind::Open(_) => j = closing(ts, j),
+                _ => {}
+            }
+            j += 1;
+        }
+        out.push((i, end));
+        i = end + 1;
+    }
+    out
 }
 
 /// Whether the invocation at `i` is a `doc` attribute's value: `doc =` before it.
@@ -651,6 +741,12 @@ fn decode(lit: &[u8]) -> Option<String> {
         }
     }
     Some(out)
+}
+
+/// A crate root as the tree holds it: cargo's metadata names a target's root as its manifest's directory joined with
+/// the target's `path`, `..` kept (`crates/r/../c/src/lib.rs`); none for one out of the tree's text.
+pub(crate) fn normalized(path: &str) -> Option<String> {
+    resolve("", path).ok().flatten()
 }
 
 /// `rel` resolved against the directory `from` of the written tree, lexically: none for an absolute path or one that
@@ -1038,5 +1134,33 @@ mod tests {
         );
         assert_eq!(files(&r), ["r/tests/t.rs"]);
         assert!(r.unfollowed.is_empty(), "{:?}", whys(&r));
+    }
+
+    #[test]
+    fn a_file_reached_through_cfg_test_alone_counts_for_its_crate_s_tests_alone() {
+        // `cfg(test)` is set only on the crate a test harness builds: what an item under exactly `#[cfg(test)]`, or a
+        // file under `#![cfg(test)]`, reaches counts for its own test units, never for it as a dependency or for its
+        // non-test units; any other `cfg` is read as on.
+        let r = of(
+            &[
+                (
+                    "p/src/lib.rs",
+                    "#[cfg(test)]\nmod tests;\n#[cfg(test)]\nconst T: &str = include_str!(\"../../c/a.txt\");\n\
+                     #[cfg(any(test, feature = \"x\"))]\nconst U: &str = include_str!(\"../../c/b.txt\");\nmod inner;\n",
+                ),
+                ("p/src/tests.rs", "const V: &str = include_str!(\"../../c/c.txt\");\n"),
+                ("p/src/inner.rs", "#![cfg(test)]\nconst W: &str = include_str!(\"../../c/d.txt\");\n"),
+                ("c/a.txt", ""),
+                ("c/b.txt", ""),
+                ("c/c.txt", ""),
+                ("c/d.txt", ""),
+            ],
+            "p/src/lib.rs",
+        );
+        for f in ["c/a.txt", "c/b.txt", "c/c.txt", "c/d.txt", "p/src/tests.rs"] {
+            assert!(r.files.contains(f), "{f}: {:?}", files(&r));
+        }
+        let nontest: Vec<&str> = r.nontest.iter().map(String::as_str).collect();
+        assert_eq!(nontest, ["c/b.txt", "p/src/inner.rs", "p/src/lib.rs"]);
     }
 }

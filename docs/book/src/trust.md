@@ -95,14 +95,16 @@ say: every test-like unit — an integration test, a bench, a library's or an ex
 tests — that some build of its package makes, whatever its flags, and whose build, by normal and build edges over every
 feature and platform and its package's development edges, compiles role packages of both roles of a pair a property
 rests on (the generator and either checker, the reference model and the implementation) is a program target. What a
-unit compiles is read from the compiler itself: each package's targets are built as `cargo test` builds them — its
-test profile, default features — once as it selects them, once with `--all-targets`, and by name, with its required
-features, each target neither build made (leaf `M3.5.2.6.2`), and a unit counts every file its dependency information names and its closure's libraries' do, each
+unit compiles is read from its sources: each target's crate root and every file it reaches by `mod`, `#[path]` and
+the `include!` family, with nothing built, whatever the profile, the features, the flags or the host (leaf
+`M3.5.2.7.2`), and a unit counts its own target's files and its closure's libraries', each
 for the innermost package holding it (leaf `M3.5.2.6.1`), so a role package's file reached by a path, an `include!` or a dependency's own path joins it however its source spells it
 (leaf `M3.5.2.5.1`; a scan of the text before it, `M3.5.2.4.1`, missed spellings). It counts what some build compiles, more than the default build makes, by
 design (leaf `M3.5.2.3.1`). Every file a target reaches is read for its inclusion sites — `mod`, `#[path]`, the
 `include!` family, in code and in doc text, whatever their `cfg` — and a site the census cannot follow by its text
-alone is refused unless an admission, rule `inclusion`, names it (leaf `M3.5.2.7.1`). What decides what a unit compiles — target selection, required features, the profile,
+alone is refused unless an admission, rule `inclusion`, names it (leaf `M3.5.2.7.1`). What only a `#[cfg(test)]`
+item reaches counts for its crate's own tests, never for the crate as another links it; a non-member's tests are not
+counted; and a pair form is held to what the census reads of its test as to its build (leaf `M3.5.2.7.2`). What decides what a unit compiles — target selection, required features, the profile,
 `cfg(test)`, features, platform, configuration, file inclusion, dependency kinds, build scripts and procedural macros,
 doc tests, non-members, a program a test runs — is a table in the record's §3, each rule quoted from the Cargo Book of
 the pin ([`rust-toolchain`](ledger.md#rust-toolchain)), each row held by its fixtures and, where part of it is outside
@@ -749,13 +751,9 @@ Every report ends with what the inventory does not see, the same list each time,
   decides that the unit compares nothing the two hold equal;
 - **an edit inside a classified program target.** A classification is reviewed again only when the role packages its
   build compiles grow, so an edit that makes a unit start comparing two roles reads "unchanged" (`M3.6.10` owns it);
-- **what the census build does not compile.** It builds each package's targets as `cargo test` builds them, on this
-  host, and each target that skips by name with its required features: a file only another profile, platform or
-  feature set compiles — `cargo test --release`, `cargo bench` — what a doc test's own snippet includes, a package
-  holding or reaching a build script or a procedural macro — left out, so none runs, judged by its edges and named
-  in the inventory's `census-left-out` and the report — a
-  non-member's features and another workspace's tests are outside it. A census build that fails stops the run, unable
-  to judge, naming its package;
+- **what the census does not read.** It reads every target's sources and every dependency edge, every `cfg`,
+  feature and host at once, with nothing built, so what a build script or a procedural macro generates, a non-member's
+  tests and another workspace's are outside it;
 - **a program a test runs.** A test that runs another role's program as a process compiles none of it, so the census
   does not see it.
 

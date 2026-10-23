@@ -87,10 +87,9 @@ executable's unit tests, a library's doc tests — that some build of its packag
 build compiles role packages of the two roles of a pair a property rests on (§5: the generator and either checker, the
 reference model and the implementation) — by its normal and build edges over every feature and platform and its
 package's own development edges, or by a file of one that its build read, however its source names it (`M3.5.2.5.1`):
-each package's targets are built as `cargo test` builds them — its test profile, default features — once as it selects
-them, once with `--all-targets`, and by name, with its required features, each target neither made (round 9's D1), a
-census build that fails leaving the gate unable to judge, naming its package (D2); and each unit counts the files its
-dependency information names and its closure's libraries' do, each for the innermost package holding it by whole path
+each target's crate root and every file it reaches by `mod`, `#[path]` and the `include!` family are read with nothing
+built, whatever the profile, the features, the flags or the host (round 10's change of method), and each unit counts
+its own target's files and its closure's libraries', each for the innermost package holding it by whole path
 components, as a unit's package is decided (round 9's D3) — is a program target of the parent's §2, whatever its sources name: an integration test named by
 a pair form if it compares them, any unit else classified by `defprogram`, `(target test|bench|lib-test|bin-test|doctest
 <name>)`, its reason the claim that it compares nothing they hold equal. Unnamed, it is `trust-unclassified-program`,
@@ -104,7 +103,11 @@ reaches is read for its inclusion sites — `mod`, `#[path]`, the `include!` fam
 their `cfg` — and a site the census cannot follow by its text, no single string literal, an alias or a macro's, a doc
 test's own, one through a symbolic link, a file that does not tokenize, is refused unless an admission, rule
 `inclusion`, names it by its extent's sha256; a path out of the tree's text is followed where it lands on disk, a file
-outside the written tree joining no role (`M3.5.2.7.1`, `RP-H19`). A file counts for the package holding
+outside the written tree joining no role (`M3.5.2.7.1`, `RP-H19`). What an item under exactly `#[cfg(test)]` alone
+reaches counts for its crate's own test units — `cfg(test)` is set on no dependency — never for its library as another
+unit links it, a doc test among them, nor for a binary built as no test; only a workspace member's test-like units are
+counted, a non-member's library read as an edge; and a pair form's test is held to what the census reads of it as to
+its build, a root's role package beside its pair refused, `trust-shared-program` (`M3.5.2.7.2`). A file counts for the package holding
 it whatever it is — a manifest, a table an `include_str!` reads — so a document another role reads from a role
 package makes that package compiled, joining here and refused under `trust-shared-program`, not the parent's §4 file
 item: share it from a package of no role (round 9's R7).
@@ -116,18 +119,18 @@ fixtures that hold it and, where part of it is outside the census, the report's 
 
 | Input | The build tool's rule | The census | Held by | Report |
 | --- | --- | --- | --- | --- |
-| target selection | `cargo test` builds the library, the binaries, the examples "to ensure they compile", the unit tests and the integration tests; `--all-targets` "is equivalent to specifying `--lib --bins --tests --benches --examples`"; "setting targets to `test = false` will stop them from being tested by default", and an option naming a target "will always test the given target" | built: `cargo test`'s own selection, `--all-targets`, and by name each target neither made | `the_census_builds_each_target_as_cargo_test_builds_it` | — |
-| required features | "if any of the required features are not enabled, the target will be skipped" | built: each skipped target by name, with its required features | `the_census_builds_each_target_as_cargo_test_builds_it` | — |
-| profile | "the `test` profile is the default profile used by cargo test", inheriting `dev`'s `debug-assertions = true` | built in the test profile; another — `--release`, `cargo bench`'s — outside | `the_census_builds_each_target_as_cargo_test_builds_it` | `what the census build does not compile` |
-| `cfg(test)` | "tests have the `cfg(test)` conditional expression enabled whether or not the harness is enabled" | built: a target's test unit and its other unit | `the_census_builds_each_target_as_cargo_test_builds_it` | — |
-| features | a package's default features, unless `--no-default-features` | built: the default set and a target's required set; a dependency behind any feature an edge; any other set outside | `the_census_builds_each_target_as_cargo_test_builds_it`, `a_unit_joining_two_roles_is_a_program_target_whatever_it_names` | `what the census build does not compile` |
-| platform | a `[target.'cfg(…)'.dependencies]` table applies on its platform | a dependency for any platform an edge; a file only another platform compiles outside | `a_unit_joining_two_roles_is_a_program_target_whatever_it_names` | `what the census build does not compile` |
+| target selection | `cargo test` builds the library, the binaries, the examples "to ensure they compile", the unit tests and the integration tests; "setting targets to `test = false` will stop them from being tested by default", and an option naming a target "will always test the given target" | read: every target the metadata lists, whatever its flags, nothing built | `the_census_reads_each_target_whatever_its_configuration` | — |
+| required features | "if any of the required features are not enabled, the target will be skipped" | read: whatever features are on | `the_census_reads_each_target_whatever_its_configuration` | — |
+| profile | "the `test` profile is the default profile used by cargo test", inheriting `dev`'s `debug-assertions = true` | read: no profile decides it, nothing being built | `the_census_reads_each_target_whatever_its_configuration`, `a_target_that_does_not_build_is_read_as_any_other` | — |
+| `cfg(test)` | "tests have the `cfg(test)` conditional expression enabled whether or not the harness is enabled" | read: every `cfg` at once, a target's test unit and its other unit alike | `the_census_reads_each_target_whatever_its_configuration` | — |
+| features | a package's default features, unless `--no-default-features` | read: every `cfg` at once; a dependency behind any feature an edge | `the_census_reads_each_target_whatever_its_configuration`, `a_unit_joining_two_roles_is_a_program_target_whatever_it_names` | — |
+| platform | a `[target.'cfg(…)'.dependencies]` table applies on its platform | read: every `cfg` at once; a dependency for any platform an edge | `a_unit_joining_two_roles_is_a_program_target_whatever_it_names` | — |
 | configuration | `.cargo/config.toml`, `RUSTFLAGS` and `--cfg` reach every unit | refused before any build (the parent's §3), so none applies | `a_cargo_configuration_on_the_build_s_path_is_a_refusal_and_not_an_error` | — |
-| file inclusion | `mod`, `#[path]`, `include!` and its kin; rustc's dependency information names every source file it read | built: every file a unit's dependency information names and its closure's libraries' do, each the innermost package's | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_file_counts_for_the_innermost_package_holding_it` | — |
+| file inclusion | a module's file "mirrors the logical module path"; "for `path` attributes on modules not inside inline module blocks, the file path is relative to the directory the source file is located" (the Rust reference) | read: every file a crate root reaches by `mod`, `#[path]` and the `include!` family, each the innermost package's; a site no literal pins refused unless admitted | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_file_counts_for_the_innermost_package_holding_it`, `an_inclusion_the_census_cannot_follow_is_refused_unless_admitted`, `a_path_attribute_resolves_as_the_reference_says` | — |
 | dependency kinds | normal, build and development dependencies | edges: normal and build, and the unit's own package's development | `a_unit_joining_two_roles_is_a_program_target_whatever_it_names` | — |
-| build scripts, procedural macros | each runs code as its package builds | a package holding or reaching one by those edges left out, so outside the build, named in the inventory and the report, and judged by its edges | `a_package_with_a_build_script_is_left_out_of_the_census_and_never_run`, `a_package_reaching_a_build_script_by_its_own_edges_is_left_out_and_named` | `what the census build does not compile` |
-| doc tests | "each code block compiles to a doctest executable on the fly with `rustc`" | the library's unit; what a snippet itself includes outside | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles` | `what the census build does not compile` |
-| non-members, other workspaces | neither is this build's | outside | — | `what the census build does not compile` |
+| build scripts, procedural macros | each runs code as its package builds | read as any package's sources and never run; what they generate outside | `a_package_with_a_build_script_is_read_and_its_script_never_run`, `a_package_reaching_a_build_script_is_read_as_any_other` | `what the census does not read` |
+| doc tests | "each code block compiles to a doctest executable on the fly with `rustc`" | the library's files; a code block's own inclusion sites refused unless admitted | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_site_no_literal_pins_is_unfollowed` | — |
+| non-members, other workspaces | neither's tests are this workspace's | a non-member's library read as an edge, its tests not counted; another workspace's outside | `the_census_counts_members_tests_alone` | `what the census does not read` |
 | a program a test runs | a process, compiled by no unit of the test | outside | — | `a program a test runs` |
 
 **Outside it, stated in the report:** its run-time reads of the kind modules (`std::fs`); and the transcriptions
@@ -135,11 +138,8 @@ themselves — the model's sources are in the checker's package and the producti
 generator's, so from then an edit to either moves no shared item and is reported nowhere (before it the relation,
 compiled beside the pair's builds, is in the derivation's item); the comparison failing is what holds
 them together; whether a classified unit compares what two roles hold equal, which its review decides, and an edit
-inside it, reviewed again only when its role packages grow (`M3.6.10`); a file only another profile, platform or
-feature set compiles — `cargo test --release`, `cargo bench`, a feature neither the default set nor a target's
-required set enables; what a doc test's own snippet includes; a package holding a build script or a procedural macro,
-or reaching one, which the census does not build and judges by its edges; a non-member's features and another
-workspace's tests; a program a test runs as a process.
+inside it, reviewed again only when its role packages grow (`M3.6.10`); what a build script or a procedural macro
+generates; a non-member's tests and another workspace's; a program a test runs as a process.
 
 **Its class** (§5), §4.4's **reference derivation.** The comparison holding the two equal is the coupling itself,
 not a control: a fault both carry passes it. Controls independent of the transcription: the model's exhaustive
