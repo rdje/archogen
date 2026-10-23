@@ -521,11 +521,12 @@ alone, each misuse a read failure, each invocation a shared item; the classes of
 `defharness`'s pair narrowed to a reference model and an implementation. Every passage naming the harness as a
 program reads a derivation the same way, but for those two things, as that record's §3 says; `TI-H19` is amended above to match, and `TI-H18` stands. A test-like unit
 joining two roles a property rests on is a §2 program target (that record's §3), named or classified, and every
-passage written in that term reads it but the generated-sources record's §5, whose generator files its crate root
-never is; §2's role packages of a program target follow build edges too, over every
-feature and platform, a test-like unit's its package's development edges, as an example's do, and count a role
-package holding a file the census build read for it (that record's §3); `trust-shared-program` counts, in a root's or
-a pair form's own build, its units' packages and the innermost holding a file one of them read (`M3.5.2.5.3`).
+passage written in that term reads it but the generated-sources record's §5: joining gives no crate root a generator
+file's standing it lacks otherwise; §2's role packages of a program target follow build edges too, over every
+feature and platform, a test-like unit's its package's development edges, as an example's do, and count the innermost
+role package holding a file the census reads for it (that record's §3); `trust-shared-program` counts, in a root's or
+a pair form's own build, its units' packages and the innermost holding a file one of them read, and for a pair form
+what the census reads of its test (`M3.5.2.5.3`, `M3.5.2.7.2`).
 
 **Case 4 is judged where an inventory is consumed** (R1 A8). The gate builds its own inventory and cannot find it
 stale. `cargo xtask trust-verify <package>` refuses a package whose inventory is missing, whose build identity is not
@@ -562,8 +563,8 @@ change to nothing the gate reads beyond the roots. It reads more: the pin, whose
 configuration and which admits a few keys, any other leaving the gate unable to judge; every cargo configuration on
 the build's path, a key other than an alias refused; each member's manifest, a program target it adds unclassified;
 the commit's tree, a symbolic link or submodule entry under `catalog/` refused; the comparison harness's units
-beside its pair's builds, the comparison-harness item's; and every member's sources, read for the files each target
-reaches, nothing built (that record's §3). A change to any of these is judged as §6 says, and reads
+beside its pair's builds, the comparison-harness item's; and every member's sources, and every library and build script a
+member's build compiles, read for the files each target reaches, nothing built (that record's §3). A change to any of these is judged as §6 says, and reads
 "unchanged" only when the change part names nothing. Case 5's examples above stand.
 
 ### 7. Where it runs, and what it is not

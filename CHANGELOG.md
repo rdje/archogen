@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust records say what the round-11 census does
+
+`ARCHOGEN-M3-0929` (leaf `M3.5.2.8.5`), `2026-10-24`.
+
+- The parent trust record, the role-programs record, the report and the book now describe the census as it reads
+  today, say what an admitted inclusion leaves unseen, state how the census was measured, and give every unit a
+  census finds unnamed to the leaf that classifies them; the eleventh review's answers are all carried out.
+
 ## archogen — the fifteenth daily artifact cleanup
 
 `ARCHOGEN-PROGRAM-0928` (leaf `PROGRAM.109`), `2026-10-24`.

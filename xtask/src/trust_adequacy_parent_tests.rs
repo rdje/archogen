@@ -5,8 +5,8 @@ use crate::json::Json;
 
 const TABLE: &str = "crates/b/src/table.rs";
 
-/// A program that fails to compile as the gate builds one, in release, and compiles as the census builds it, in the test
-/// profile: a build the gate must never make, which no census build trips (round 9's D2).
+/// A program that fails to compile as the gate builds one, in release, and compiles in the test profile, which `cargo
+/// test` builds (round 9's D2): a build the gate must never make. The census builds nothing (round 10).
 const RELEASE_ONLY_FAILURE: &str =
     "#[cfg(not(debug_assertions))]\ncompile_error!(\"built as the gate builds a program\");\nfn main() {}\n";
 

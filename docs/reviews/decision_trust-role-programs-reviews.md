@@ -308,6 +308,11 @@ of those builds read inside the census's count. Measured first: the tree holds o
 | R10-R14 | remark | a unit joining only off the baseline's host cannot be classified | moot: the census is the same on every host |
 | R10-R15 | remark | `UNSEEN`'s launcher line omits "declared from the front's `main.rs`"; `M3.5.3.2` says "derivation" | both worded (`M3.5.2.7.4`) |
 
+*Corrected `2026-10-24`, by `M3.5.2.8.5`, answering round 11's R13:* R10-R9's answer is not what was built. The table
+stayed rather than giving way to the rule: its rules are quoted from the Cargo Book and the Rust reference, both
+ledgered, its test holds its fixtures and report lines to the code, and the oracle holds the census to rustc
+(`M3.5.2.7.3`, `M3.5.2.7.4`).
+
 **Round 11**, `2026-10-23`, a new context at `7385e261`, read-only and fenced, read against `M3.5.2.7`'s code: probes
 run through the census's own `reach` in a scratch crate, each confirmed by the pin's rustc, rustdoc or cargo, and the
 pin's Cargo Book, Rust reference and rustdoc book fetched. Verdict: not acceptable, 8 defects and 9 remarks; of round

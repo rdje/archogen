@@ -90,8 +90,8 @@ another, the harness with every root but its pair's two (leaf `M3.5.2.6.4`). The
 invokes share an `invocation` item: the invoked root's name, role and target, and the sha256 of the launcher — the
 file the constant `LAUNCHER` in `xtask/src/trust.rs` names, which the front gains with leaf `M3.5.1.4` — so an edit to
 the launcher, whose acceptance contract carries the risk, is reported; a front that invokes while its commit holds no
-launcher is refused (leaf `M3.5.2.1.3`). A comparison no form names is found by the build, not by what its sources
-say: every test-like unit — an integration test, a bench, a library's or an executable's unit tests, a library's doc
+launcher is refused (leaf `M3.5.2.1.3`). A comparison no form names is found by what the census reads of every
+unit, not by the names its sources use: every test-like unit — an integration test, a bench, a library's or an executable's unit tests, a library's doc
 tests — that some build of its package makes, whatever its flags, and whose build, by normal and build edges over every
 feature and platform and its package's development edges, compiles role packages of both roles of a pair a property
 rests on (the generator and either checker, the reference model and the implementation) is a program target. What a
@@ -119,8 +119,9 @@ build scripts read counted, and runs rustdoc on doc tests in each spelling round
 the census refuses (leaves `M3.5.2.7.3`, `M3.5.2.8.4`). It checks what the census counts, not what it refuses beyond
 that, which the fixtures hold, nor what a build script or a procedural macro generates. What decides what a unit compiles — target selection, required features, the profile,
 `cfg(test)`, features, platform, configuration, file inclusion, dependency kinds, build scripts and procedural macros,
-doc tests, non-members, a program a test runs — is a table in the record's §3, each rule quoted from the Cargo Book of
-the pin ([`rust-toolchain`](ledger.md#rust-toolchain)), each row held by its fixtures and, where part of it is outside
+doc tests, non-members, a program a test runs — is a table in the record's §3, each rule quoted from the Cargo Book, the
+rustdoc book or the Rust reference of the pin ([`rust-toolchain`](ledger.md#rust-toolchain),
+[`rust-reference`](ledger.md#rust-reference)), each row held by its fixtures and, where part of it is outside
 the census, by the report's line that says so, a test holding the table to both (leaf `M3.5.2.6.3`). The inventory
 records the pairs each joins, so the gate's remedy names its pair's form —
 a harness for the reference model's, a derivation for the generator's and a checker's — or, for a unit joining two
@@ -766,8 +767,8 @@ Every report ends with what the inventory does not see, the same list each time,
   build compiles grow, so an edit that makes a unit start comparing two roles reads "unchanged" (`M3.6.10` owns it);
 - **what the census does not read.** It reads every target's sources and every dependency edge, every `cfg` — but
   `cfg(test)` on a module, which narrows what that module reaches to its crate's own tests — feature and host at once,
-  with nothing built, so what a build script or a procedural macro generates, a non-member's tests and another
-  workspace's are outside it;
+  with nothing built, so what a build script or a procedural macro generates, the file an admitted inclusion site
+  names, a non-member's tests and another workspace's are outside it;
 - **a program a test runs.** A test that runs another role's program as a process compiles none of it, so the census
   does not see it.
 
@@ -786,8 +787,9 @@ states (`M3.6.6.2`). Measured `2026-10-10`: `trust/roots.eadl` declares none, no
 marks, and every program's provenance is empty. A chain of generators and a generator or input in a vendored checkout
 stay refused, and a tool a script runs believed and named in every report, each for a reason and, where one exists, with
 a route within one step (`M3.6.6.4`, reviewed by a context that did not write it, its review closed `2026-10-10`).
-Measured `2026-10-23`: the census of test-like units finds `crates/rt-core`'s `lifecycle` test, its library's unit tests
-and its doc tests joining the reference model and the implementation beside the harness; their classifications land
+Measured `2026-10-24` on `a7c45a88`, in a snapshot holding the admission of its one site the census cannot follow — the
+commit itself refuses that site until `M3.5.8` admits it (`RP-H19`): the census of test-like units finds
+`crates/rt-core`'s `lifecycle` test, its library's unit tests and its doc tests joining the reference model and the implementation beside the harness; their classifications land
 after the first push that brings the census to `main` and before the one after it (`M3.5.8`).
 
 The accepted mutation criterion, measured controls and exact command examples are in

@@ -953,8 +953,9 @@ pub const UNSEEN: &[&str] = &[
      build compiles grow, so an edit that makes it start comparing two roles reads unchanged (§3; M3.6.10)",
     "what the census does not read: it reads every target's sources and every dependency edge, every `cfg` — but \
      `cfg(test)` on a module, which narrows what that module reaches to its crate's own tests — and feature and host \
-     at once, with nothing built, so what a build script or a procedural macro generates, a non-member's tests and \
-     another workspace's are outside it (`decision_trust-role-programs.md` §3's table)",
+     at once, with nothing built, so what a build script or a procedural macro generates, the file an admitted \
+     inclusion site names, a non-member's tests and another workspace's are outside it \
+     (`decision_trust-role-programs.md` §3's table)",
     "a program a test runs: a test that runs another role's program as a process compiles none of it, so the census \
      does not see it (§3)",
 ];

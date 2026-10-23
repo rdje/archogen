@@ -5936,8 +5936,8 @@ pub(crate) mod tests {
                 &[][..],
                 four_unclassified(gc),
             ),
-            // A file compiled into a unit by any spelling joins that unit, read from what its build compiled (rounds 7
-            // and 8): a literal path, an `include!`, a `cfg_attr`'s path, a bracketed `include!`, an escaped literal, a
+            // A file compiled into a unit by any spelling joins that unit, read from what its sources reach (rounds 7,
+            // 8 and 10): a literal path, an `include!`, a `cfg_attr`'s path, a bracketed `include!`, an escaped literal, a
             // file the catalog's tokenizer refuses, an aliased `include!`, a target whose own path lies outside its
             // package. A path into no role's package, and a file no build compiles, join nothing.
             (
@@ -7873,7 +7873,7 @@ version = "0.1.0"
                 String::new()
             } else {
                 // Not `dead_code`: the test harness allows it on `main`, which a `forbid` refuses (E0453), so `cargo
-                // test` could not build a binary's unit tests, as the census builds them (round 9's D2).
+                // test` could not build a binary's unit tests (round 9's D2), which a build of the workspace makes.
                 format!("[lints.rust]\nunused_variables = \"{level}\"\nunsafe_code = \"{level}\"\nunreachable_code = \"{level}\"\n")
             };
             let dependency = "[dependencies]\ncommon = { path = \"../common\" }\n";
@@ -10106,8 +10106,8 @@ version = "0.1.0"
             &format!("{features}[dev-dependencies]\nr = {{ path = \"../r\" }}\n"),
         );
         let generator_manifest = manifest("g", features);
-        // Each tripwire fires in a release build with default features, as no root is built, and in no census build,
-        // which `cargo test`'s profile makes (round 9's D2).
+        // Each tripwire fires in a release build with default features, as no root is built, and in no `cargo test`
+        // build, whose profile is the test profile (round 9's D2); the census builds nothing (round 10).
         let implementation = "#[cfg(all(feature = \"tripwire\", not(debug_assertions)))]\ncompile_error!(\"role default features were enabled\");\npub fn imp(x: u32) -> u32 { x }\n";
         let generator = "#[cfg(all(feature = \"tripwire\", not(debug_assertions)))]\ncompile_error!(\"generator default features were enabled\");\nmod helper;\nfn main() { let _ = helper::VALUE; }\n";
         let helper = "pub const VALUE: u32 = 3;\n";

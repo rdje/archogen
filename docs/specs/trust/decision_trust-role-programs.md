@@ -36,9 +36,11 @@
 - **What the roles share.** `cargo xtask trust-inventory --commit 0a5a4b12`, `aarch64-apple-darwin`: exit 0, `5
   program(s), 8 pair(s), 10 shared item(s)`, the tenth `generator+scheduling-checker package crates/archogen-digest`,
   reached through `archogen-outcome` (`archogen-api`'s since `5bc5627d`) and through `archogen-evidence`.
-- **The census today** (`12e4a0a9`, read from the sources, nothing built): `crates/rt-core`'s `lifecycle`, unit tests
-  and doc tests join the reference model and the implementation beside the harness, unnamed (`RP-H18`) — the three the
-  retired text scan found at `b9a070d4` and the retired build census at `76e10884`.
+- **The census today** (`a7c45a88`, read from the sources, nothing built, on a snapshot of it holding `RP-H19`'s admission:
+  the commit itself refuses that one site, `crates/rt-analysis/tests/runtime_variant.rs:510`, until `M3.5.8` admits
+  it): `crates/rt-core`'s `lifecycle`, unit tests and doc tests join the reference model and the implementation beside
+  the harness, unnamed (`RP-H18`) — the three the retired text scan found at `b9a070d4` and the retired build census at
+  `76e10884`.
 - **The gate is built from the base** (parent `TI-H6`; `.github/workflows/trust-gate.yml`): on a push, the commit
   `main` pointed at before it, which the report names. Its `read_roots` fails on a form or clause it does not know
   (exit 2), and its item encoding is the base's: `origin/main` is `8cdac117`, which does not hold `62099a39`, the
@@ -82,7 +84,7 @@ from `M3.4`, when `crates/eadl-resolve` becomes one. Building it compiles `eadl-
 item, each admitted by a `defadmit`. The verifier refuses a result whose role is not one of `trust::ROLES`, and one
 whose producer is a derivation's artifact; a reference model's result produced by its pair's harness stays accepted.
 
-**Found by the build, not by names.** Each test-like unit — an integration test, a bench, a library's or an
+**Found by the sources, not by names.** Each test-like unit — an integration test, a bench, a library's or an
 executable's unit tests, a library's doc tests — that some build of its package makes, whatever its flags, and whose
 build compiles role packages of the two roles of a pair a property rests on (§5: the generator and either checker, the
 reference model and the implementation) — by its normal and build edges over every feature and platform and its
@@ -156,7 +158,7 @@ reader's rules' to refuse, as every token not read whole is.
 | features | a package's default features, unless `--no-default-features` | read: every `cfg` at once; a dependency behind any feature an edge | `the_census_reads_each_target_whatever_its_configuration`, `a_unit_joining_two_roles_is_a_program_target_whatever_it_names`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | — |
 | platform | a `[target.'cfg(…)'.dependencies]` table applies on its platform | read: every `cfg` at once; a dependency for any platform an edge | `a_unit_joining_two_roles_is_a_program_target_whatever_it_names` | — |
 | configuration | `.cargo/config.toml`, `RUSTFLAGS` and `--cfg` reach every unit | refused before any build (the parent's §3), so none applies | `a_cargo_configuration_on_the_build_s_path_is_a_refusal_and_not_an_error` | — |
-| file inclusion | a module's file "mirrors the logical module path"; "for `path` attributes on modules not inside inline module blocks, the file path is relative to the directory the source file is located"; a `debugger_visualizer` file "a path relative to the source file" (the Rust reference) | read: every file a crate root reaches by `mod`, `#[path]`, the `include!` family and `debugger_visualizer`, each the innermost package's; every token that can make rustc read a file read whole or refused unless admitted — a macro's module, an assembly directive reading a file, a path out of the tree, through a link or spelt as hosts read apart among them | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_file_counts_for_the_innermost_package_holding_it`, `an_inclusion_the_census_cannot_follow_is_refused_unless_admitted`, `a_path_attribute_resolves_as_the_reference_says`, `a_raw_identifier_and_every_mod_are_read_whole_or_refused`, `every_attribute_and_macro_that_reads_a_file_is_read_whole_or_refused`, `a_path_meets_the_links_at_every_component_and_hosts_read_none_apart`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | — |
+| file inclusion | a module's file "mirrors the logical module path"; "for `path` attributes on modules not inside inline module blocks, the file path is relative to the directory the source file is located"; a `debugger_visualizer` file "a path relative to the source file" (the Rust reference) | read: every file a crate root reaches by `mod`, `#[path]`, the `include!` family and `debugger_visualizer`, each the innermost package's; every token that can make rustc read a file read whole or refused unless admitted — a macro's module, an assembly directive reading a file, a path out of the tree, through a link or spelt as hosts read apart among them; what an admitted site names outside | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_file_counts_for_the_innermost_package_holding_it`, `an_inclusion_the_census_cannot_follow_is_refused_unless_admitted`, `a_path_attribute_resolves_as_the_reference_says`, `a_raw_identifier_and_every_mod_are_read_whole_or_refused`, `every_attribute_and_macro_that_reads_a_file_is_read_whole_or_refused`, `a_path_meets_the_links_at_every_component_and_hosts_read_none_apart`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | `what the census does not read` |
 | dependency kinds | normal, build and development dependencies | edges: normal and build, and the unit's own package's development | `a_unit_joining_two_roles_is_a_program_target_whatever_it_names` | — |
 | build scripts, procedural macros | each runs code as its package builds | read as any package's sources and never run, a build script's files its package's library's; what they generate outside | `a_package_with_a_build_script_is_read_and_its_script_never_run`, `a_package_reaching_a_build_script_is_read_as_any_other`, `a_build_script_s_files_count_for_its_package` | `what the census does not read` |
 | doc tests | "each code block compiles to a doctest executable on the fly with `rustc`"; "Rustdoc also accepts indented code blocks as an alternative to fenced code blocks"; "`compile_fail` tells rustdoc that the compilation should fail" (the rustdoc book); the `doctest` field "is only relevant for libraries" | the library's files; its doc text read with no markdown, each piece by itself, every word that can make a doc test read a file refused unless admitted, but one a backtick opens while the library's doc text names no error code; a binary's or a test's doc text no doc test's | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_site_no_literal_pins_is_unfollowed`, `every_doc_test_rustdoc_may_compile_is_refused_however_it_is_spelt`, `a_backtick_exempts_prose_unless_a_doc_test_names_an_error_code`, `doc_text_is_read_for_doc_tested_libraries_alone`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | — |
@@ -169,7 +171,8 @@ generator's, so from then an edit to either moves no shared item and is reported
 compiled beside the pair's builds, is in the derivation's item); the comparison failing is what holds
 them together; whether a classified unit compares what two roles hold equal, which its review decides, and an edit
 inside it, reviewed again only when its role packages grow (`M3.6.10`); what a build script or a procedural macro
-generates; a non-member's tests and another workspace's; a program a test runs as a process.
+generates; the file an admitted inclusion site names; a non-member's tests and another workspace's; a program a test
+runs as a process.
 
 **Its class** (§5), §4.4's **reference derivation.** The comparison holding the two equal is the coupling itself,
 not a control: a fault both carry passes it. Controls independent of the transcription: the model's exhaustive
@@ -272,7 +275,7 @@ refuses the item until a push holds the form and nothing after it moves the item
 | `RP-H15` | `M4.8` | `GS-H10`'s acceptance of the live `defgenerated` forms a root or the comparison harness reaches takes those a derivation reaches, as `decision_trust-role-programs.md` §3 reads a derivation. |
 | `RP-H16` | `M3.5` | Each leaf of `M3.5` whose commit makes a test-like unit join two roles a property rests on names it by a pair form or classifies it by a `defprogram` in that commit, after a push carrying `M3.5.2`'s readers, whole. |
 | `RP-H17` | `M2.21` | Each leaf of `M2.21` whose commit makes a test-like unit join two roles a property rests on names it by a pair form or classifies it by a `defprogram` in that commit, after a push carrying `M3.5.2`'s readers, whole. |
-| `RP-H18` | `M3.5.8` | `trust/roots.eadl` classifies each test-like unit of `crates/rt-core` the census of the judging base finds joining the reference model and the implementation and no pair form names, after the first push that brings the census to `main` and before the push after it. |
+| `RP-H18` | `M3.5.8` | `trust/roots.eadl` classifies each test-like unit the census of the judging base finds joining two roles a property rests on and no pair form names — today `crates/rt-core`'s `lifecycle`, unit tests and doc tests — after the first push that brings the census to `main` and before the push after it. |
 | `RP-H19` | `M3.5.8` | `trust/roots.eadl` admits, by rule `inclusion`, each site of the tree the census of the judging base cannot follow by its text — `crates/rt-analysis/tests/runtime_variant.rs:510`'s `include_str!(concat!(…))`, as `M3.5.2.7.1` measured it — after the first push that brings the census's reading of the sources to `main` and before the push after it. |
 
 ## Review
