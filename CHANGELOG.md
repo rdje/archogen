@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers' programs in the trust record, round 7
+
+`ARCHOGEN-M3-0905` (leaf `M3.5.2`), `2026-10-23`.
+
+- The seventh review found 2 defects and 6 remarks, down from 5: a test could still compile another role's files
+  by a path attribute, unseen, and two records disagreed on generator files. Both answered; the code follows.
+
 ## archogen — the trust gate names the right form for each pair
 
 `ARCHOGEN-M3-0904` (leaf `M3.5.2.3.2`), `2026-10-23`.

@@ -201,3 +201,21 @@ alone. The census now counts what some build can compile, an over-approximation 
 | R6-R11 | remark | the front's outside line is unconditional, all three stands `M3.5.1.4`'s | conditioned on it (`M3.5.2.3.2`) |
 | R6-R12 | remark | `RP-H2`'s text describes the retired census of names | a note in *How to apply*: §3's census from the build supersedes it |
 | R6-R13 | remark | no hand-off makes a later `M3.5` leaf name or classify the units it joins | `RP-H16`, to `M3.5` |
+
+**Round 7**, `2026-10-23`, a new context at `2258c9fb`, read-only and fenced, read against `M3.5.2.3`'s code: ten filters
+of the readers' tests, all passing; the inventory and ledger re-measured; five probes in a copy of the workspace.
+Verdict: not acceptable, 2 defects and 6 remarks. Every round-6 answer landed in code; the census still read edges
+alone, so a test compiling another role's files by `#[path]` or `include!` passed unseen, and the two clarifications
+disagreed on generator files. Measured before answering: today's `#[path]` sites point into `eadl-front`'s test
+helpers, no role's package, so a rule on what a literal path names changes nothing today.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R7-D1 | defect | a test compiling another role's sources by `#[path]` or `include!`, no dependency edge, is missed, against §3's "whatever its sources name" | a literal `#[path]` or `include!` resolving into a role package counts that package as compiled by its package's test-like units; a path no literal names stated outside (§3, `UNSEEN`, `M3.5.2.4.1`) |
+| R7-D2 | defect | the parent's "every passage" makes a joined unit's crate root a generator file, against the generated-sources clarification and the code; that record's §5 restates the old edge rule | the parent's clause excepts that record's §5; its clarification states the edge rule; a fixture refuses such a crate root as a generator file (`M3.5.2.4.2`) |
+| R7-R3 | remark | a non-member package's feature joins unseen; `UNSEEN` says "the members' build graph" | stated outside, the line saying what the census reads (`M3.5.2.4.1`) |
+| R7-R4 | remark | a `dylib`'s doc tests are counted, which no build makes | a `lib`'s, `rlib`'s or `proc-macro`'s alone (`M3.5.2.4.1`) |
+| R7-R5 | remark | "in force" and the orderings name `M3.5.2.2`; `M3.5`'s children omit `.2.3`; two dead branches; `RP-H16` out of order | each names `M3.5.2`'s readers, whole; the children listed; the branches dropped; `RP-H16` after `RP-H15` |
+| R7-R6 | remark | `joins`, the remedy by pair and the read failure beside a pair form are in no text; the book's rows lag; a unit joining both pairs is told to take a form either refuses | stated; the rows current; such a unit told no pair form names it (`M3.5.2.4.2`) |
+| R7-R7 | remark | the book's "Today and ahead" omits what the census reports today | `rt-core`'s three units and `M3.5.8` named |
+| R7-R8 | remark | a test running another role's program as a process is unseen and unsaid | stated outside (`M3.5.2.4.1`) |

@@ -391,14 +391,15 @@ these:
   under `cfg(target_os = "macos")` is read on that host alone — so on the baseline's host such a file's form is stale,
   and off it the file, marked and undeclared, is refused; the parent's admissions meet the same limit.
 
-**Clarified `2026-10-23`, in force as its readers land (`M3.5.2.1`, `M3.5.2.2`), by
+**Clarified `2026-10-23`, in force as `M3.5.2`'s readers land, by
 [`decision_trust-role-programs.md`](decision_trust-role-programs.md)** (its §3): a **derivation**, the comparison a
 `defderivation` form names, is a program here as the harness is — its reads and reaches count only through the units it
 compiles beside its pair's two builds, its provenance is an aspect of its pair's item, and "other roles" means roles
 other than its pair's two — but it is paired with no root, its pair taking its item. That record's read failures
 spanning forms (pairs, two generator roots, an invoked name, a target two forms name) join §2's departures found once
 the whole file is read; one within a form stops the reader at that form. §7's case-5 list takes a derivation's units.
-Joining gives no crate root a generator file's standing it lacks otherwise (that record's §3).
+Joining gives no crate root a generator file's standing it lacks otherwise (that record's §3); §5's role packages
+follow the parent's edge rule as clarified, build edges, every feature and platform.
 
 ### 9. Hand-offs
 

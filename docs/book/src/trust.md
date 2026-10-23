@@ -72,7 +72,7 @@ including in a harness between valid ones. A harness compares a reference model 
 validates — one root of role `reference-model` and one of role `implementation`, in either order — and any other
 pair refuses, so a comparison of the generator with a checker cannot be written as one.
 
-**Read and built, written by no commit yet** (leaves `M3.5.2.1` and `M3.5.2.2`, `decision_trust-role-programs.md`).
+**Read and built, written by no commit yet** (`M3.5.2`'s readers, `decision_trust-role-programs.md`).
 The gate reads two forms no commit
 writes yet, since the gate that judges a push is built from the commit before it and must already know a form:
 
@@ -746,6 +746,9 @@ states (`M3.6.6.2`). Measured `2026-10-10`: `trust/roots.eadl` declares none, no
 marks, and every program's provenance is empty. A chain of generators and a generator or input in a vendored checkout
 stay refused, and a tool a script runs believed and named in every report, each for a reason and, where one exists, with
 a route within one step (`M3.6.6.4`, reviewed by a context that did not write it, its review closed `2026-10-10`).
+Measured `2026-10-23`: the census of test-like units finds `crates/rt-core`'s `lifecycle` test, its library's unit tests
+and its doc tests joining the reference model and the implementation beside the harness; their classifications land
+after the push that brings the census to `main` and before the one after it (`M3.5.8`).
 
 The accepted mutation criterion, measured controls and exact command examples are in
 [Annex C](annex-trust-proofs.md#mutation-measurements-and-controls). Historical results retain their
