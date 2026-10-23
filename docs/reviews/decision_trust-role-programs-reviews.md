@@ -243,3 +243,28 @@ test-like target of this workspace, release, every feature, takes 28 seconds and
 | R8-R11 | remark | `RP-H16` binds `M3.5`'s leaves alone; `M2.21`'s can join units too | `RP-H17`, to `M2.21` |
 | R8-R12 | remark | a symbolic-link launcher and the spanning pair-form failures beside every `defgenerated` refusal are untested | a fixture each (`M3.5.2.5.2`) |
 | R8-R13 | remark | §3's "but for two things" omits the form's own differences; `M3.5.8`'s obligation and today's census are in no hand-off or §1 | §3 says them; `RP-H18`, to `M3.5.8`; §1 states the measurement |
+
+**Round 9**, `2026-10-23`, a new context at `76e10884`, read-only and fenced, read against `M3.5.2.5`'s code: 16 test
+filters passing; probes run through the instrument's own code in a scratch copy, each confirmed by cargo's dep-info.
+Verdict: not acceptable, 4 defects and 7 remarks; every round-8 answer carried out. The count rose a second round
+running — 2, 3, 4 — each round finding another input deciding what a unit compiles that the census did not take: a
+spelling, a dependency's path, now a profile, a target `--all-targets` skips, a nested package. **The method changed
+again**: what decides what a unit compiles becomes a table in §3, drawn from cargo's and rustc's own documentation,
+quoted and ledgered — each input built as `cargo test` builds it, judged by its edges, or declared outside — each row
+held by a fixture comparing the census with the dep-info cargo writes under that input, and the report's outside list
+and the book's held to the table by a test. Completeness is then argued against the build tool's documented model, not
+found probe by probe.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R9-D1 | defect | the census builds `--release --no-default-features` and `--all-targets`, so a target with `test = false` or `bench = false`, unmet `required-features` or code under `cfg(debug_assertions)` is never seen, and §3, the book and `UNSEEN` say otherwise | the census builds as `cargo test` does — its profile, default features — and builds by name, with its required features, each target `--all-targets` skips (`M3.5.2.6.2`); the inputs a table, each row a fixture against cargo's dep-info (`M3.5.2.6.3`) |
+| R9-D2 | defect | a package whose census build fails is judged by its edges alone, silently, and "compiles nothing" is false | a census build that fails leaves the gate unable to judge, naming the package; the claim dropped (`M3.5.2.6.2`) |
+| R9-D3 | defect | a file counts for every role package whose directory prefixes it, against the parent's R8 2 | it counts for the innermost package holding it, by whole components, in the census and `trust-shared-program` (`M3.5.2.6.1`) |
+| R9-D4 | defect | `RP-H18`, `M3.5.8` and the book key `M3.5.8` on three different pushes | one event, the first push that brings the census to `main`, in all three |
+| R9-R5 | remark | `trust-shared-program` counts the program's own build, not the census's computation, and refuses any root outside the pair, not a role | the parent and the book say so, a root; the code's comment (`M3.5.2.6.4`) |
+| R9-R6 | remark | the remedy says a pair form "would be refused" from the census's every-platform packages | it says one is refused wherever its build compiles them (`M3.5.2.6.4`) |
+| R9-R7 | remark | any file in a role package's directory counts, a manifest or a table read by `include_str!`, unstated against the parent's §4 file item | kept and stated in §3: a document another role reads from a role package makes that package compiled; share it from a package of no role |
+| R9-R8 | remark | the packages left out of the census are named nowhere, reached over wider edges than §3's, "or reaching one" untested | named in the inventory and the report, reached by §3's edge rule, tested (`M3.5.2.6.3`) |
+| R9-R9 | remark | of the `unable` exits only `cargo metadata`'s is tested; step 4's exits drop its refusals | step 4's exits carry them; each exit a fixture can reach tested (`M3.5.2.6.4`) |
+| R9-R10 | remark | a derivation is paired with no program, the harness with every program but its pair's roots | a derivation paired as the harness is, with every program but roots (`M3.5.2.6.4`) |
+| R9-R11 | remark | §1 cites a measurement of the retired scan; the leaves say "four units"; `UNSEEN`'s launcher line drifts from §4 | §1 re-measured at `76e10884`, the same three; the four are the inventory's entries, the harness's among them, as listed; `UNSEEN` in §4's words (`M3.5.2.6.4`) |

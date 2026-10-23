@@ -77,7 +77,7 @@ the role's own logic, its root package always, reviewed with the form — today 
 implementation's `rt-core`; the language's reader and model, `eadl-front` and `eadl-model`, are no role's, so a
 checker that compiles them shares them, reported as case 1 (R7 remark j). **A program that would run two roles is
 refused** (`trust-shared-program`): a root whose build compiles a role package of another role — a library root too,
-which runs its role until an executable does (R8 remark 13) — and the comparison harness compiling one of a role
+which runs its role until an executable does (R8 remark 13) — and the comparison harness compiling one of a root
 outside its pair, its exemption being its pair's two, which it compiles by design (R7 remark d; R8 remark 12). The
 independence §4.4 asks about is between programs, and one program running both roles has none to disclose; every
 package it holds would be shared, and a real case 1 would be lost among them (R2 B5; R4 5). Compiling a role package
@@ -463,7 +463,7 @@ leaves' (R2 B1, B10, B17; R3 C3).
 | `trust-baseline-stale` | refused, on the baseline's host | a baseline form whose item is no longer shared, a root form or classification whose package or program target is gone (R7 remark e), or an admission no current site uses (R8 remark 15): removed, so a sharing removed and reintroduced, or a target re-added under an old name, is reviewed again (R1 A15; R3 C9; R5 remark 12) | — |
 | `trust-undeclared-input` | refused | a name not a blob of the commit, a symbolic link, a file whose bytes after the build are not its blob's, a crate root that is not a `.rs` file, a unit no one target names, an environment variable outside cargo's own, a path left absolute in a unit's configuration, declared run-time data that is not a blob, an admitted `include!` or `path` naming a file that is not `.rs`, an alias or wrapper of a refused construct, or a site the catalog's rules refuse, in any `.rs` file a root or the harness compiles, with no admission of its own (§3) | 3 |
 | `trust-form-missing` | refused, on the baseline's host | a current shared item, root or program target with no form, proposed or accepted, in the commit's own `trust/` — a refused site with no admission is `trust-undeclared-input`'s alone (R8 remark 14) — repaired by the tool's proposal, committed, so the base commit's forms always cover its inventory and case 5's change part is the commit's own (R7 4) | — |
-| `trust-shared-program` | refused | a root whose build compiles a role package of another role, an executable or a library alike, or a harness compiling one of a role outside its pair (§2; R8 remarks 12, 13) | — |
+| `trust-shared-program` | refused | a root whose build compiles a role package of another role, an executable or a library alike, or a harness compiling one of a root outside its pair (§2; R8 remarks 12, 13) | — |
 | `trust-inventory-stale` | refused, at packaging | the inventory missing or not valid UTF-8 JSON, its build identity not the package's commit and toolchain, an artifact's sha256 not the inventory's, the report not of that inventory, a result naming a program other than its role's inventoried artifact or the pair's harness, or a dependency handed to a root that its form does not declare by path and the inventory's sha256 | 4 |
 
 **Clarified `2026-10-06`, by the gate's leaf (`M3.6.3.3`).** A root form or classification naming a package the commit
@@ -524,8 +524,8 @@ joining two roles a property rests on is a §2 program target (that record's §3
 passage written in that term reads it but the generated-sources record's §5, whose generator files its crate root
 never is; §2's role packages of a program target follow build edges too, over every
 feature and platform, a test-like unit's its package's development edges, as an example's do, and count a role
-package holding a file the census build read for it (that record's §3); `trust-shared-program` counts so too, a root's
-or a pair form's build compiling a role package holding a file one of its units read (`M3.5.2.5.3`).
+package holding a file the census build read for it (that record's §3); `trust-shared-program` counts, in a root's or
+a pair form's own build, its units' packages and those holding a file one of them read (`M3.5.2.5.3`).
 
 **Case 4 is judged where an inventory is consumed** (R1 A8). The gate builds its own inventory and cannot find it
 stale. `cargo xtask trust-verify <package>` refuses a package whose inventory is missing, whose build identity is not

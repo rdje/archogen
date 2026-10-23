@@ -36,8 +36,9 @@
 - **What the roles share.** `cargo xtask trust-inventory --commit 0a5a4b12`, `aarch64-apple-darwin`: exit 0, `5
   program(s), 8 pair(s), 10 shared item(s)`, the tenth `generator+scheduling-checker package crates/archogen-digest`,
   reached through `archogen-outcome` (`archogen-api`'s since `5bc5627d`) and through `archogen-evidence`.
-- **The census today** (`b9a070d4`): `crates/rt-core`'s `lifecycle`, unit tests and doc tests join the reference model
-  and the implementation beside the harness, unnamed (`RP-H18`).
+- **The census today** (`76e10884`, read from what rustc compiled): `crates/rt-core`'s `lifecycle`, unit tests and doc
+  tests join the reference model and the implementation beside the harness, unnamed (`RP-H18`) — the three the retired
+  text scan found at `b9a070d4`.
 - **The gate is built from the base** (parent `TI-H6`; `.github/workflows/trust-gate.yml`): on a push, the commit
   `main` pointed at before it, which the report names. Its `read_roots` fails on a form or clause it does not know
   (exit 2), and its item encoding is the base's: `origin/main` is `8cdac117`, which does not hold `62099a39`, the
@@ -95,7 +96,10 @@ comparison is an integration test, a pair form's; a classification says its unit
 some build compiles over-reports what the default build makes, by design (`M3.5.2.3.1`). The inventory
 records each one's pairs (`joins`), so the remedy names its pair's form, or says none can for a unit joining two or
 compiling a role package of a root beside its pair's two, for which a pair form's build is refused (§2; round 8's R5,
-`M3.5.2.5.2`); a classification of a test a pair form names is a read failure.
+`M3.5.2.5.2`); a classification of a test a pair form names is a read failure. A file counts for the package holding
+it whatever it is — a manifest, a table an `include_str!` reads — so a document another role reads from a role
+package makes that package compiled, joining here and refused under `trust-shared-program`, not the parent's §4 file
+item: share it from a package of no role (round 9's R7).
 
 **Outside it, stated in the report:** its run-time reads of the kind modules (`std::fs`); and the transcriptions
 themselves — the model's sources are in the checker's package and the production relation's, from `M3.4`, in the
@@ -208,7 +212,7 @@ refuses the item until a push holds the form and nothing after it moves the item
 | `RP-H15` | `M4.8` | `GS-H10`'s acceptance of the live `defgenerated` forms a root or the comparison harness reaches takes those a derivation reaches, as `decision_trust-role-programs.md` §3 reads a derivation. |
 | `RP-H16` | `M3.5` | Each leaf of `M3.5` whose commit makes a test-like unit join two roles a property rests on names it by a pair form or classifies it by a `defprogram` in that commit, after a push carrying `M3.5.2`'s readers, whole. |
 | `RP-H17` | `M2.21` | Each leaf of `M2.21` whose commit makes a test-like unit join two roles a property rests on names it by a pair form or classifies it by a `defprogram` in that commit, after a push carrying `M3.5.2`'s readers, whole. |
-| `RP-H18` | `M3.5.8` | `trust/roots.eadl` classifies each test-like unit of `crates/rt-core` the census of the judging base finds joining the reference model and the implementation and no pair form names, after the push that brings `M3.5.2`'s readers to `main` and before the push after it. |
+| `RP-H18` | `M3.5.8` | `trust/roots.eadl` classifies each test-like unit of `crates/rt-core` the census of the judging base finds joining the reference model and the implementation and no pair form names, after the first push that brings the census to `main` and before the push after it. |
 
 ## Review
 
@@ -222,3 +226,4 @@ refuses the item until a push holds the form and nothing after it moves the item
 | 6 | `2026-10-23` | 5 | 8 | not acceptable, read against `M3.5.2.2`'s code; every finding answered, the census counting what some build compiles (`M3.5.2.3`) |
 | 7 | `2026-10-23` | 2 | 6 | not acceptable, read against `M3.5.2.3`'s code; every finding answered, a literal path into a role package joining (`M3.5.2.4`) |
 | 8 | `2026-10-23` | 3 | 10 | not acceptable, read against `M3.5.2.4`'s code; every finding answered, and the method changed: the census read from what rustc compiled (`M3.5.2.5`) |
+| 9 | `2026-10-23` | 4 | 7 | not acceptable, read against `M3.5.2.5`'s code; every finding answered, and the method changed again: what decides what a unit compiles a table, each row a fixture against cargo's dep-info (`M3.5.2.6`) |
