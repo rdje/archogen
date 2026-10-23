@@ -860,6 +860,12 @@ pub const UNSEEN: &[&str] = &[
      crate root — which are no provenance files: an edit to them changes no item until the output is regenerated (§8)",
     "what a program reads on another host: a file read only under another target's `cfg` is stale on the baseline's \
      host and, marked and undeclared, refused off it; the admissions meet the same limit (§8)",
+    "what a derivation reads at run time, as a comparison test reads the kind modules (decision_trust-role-programs.md \
+     §3)",
+    "the transcriptions a derivation holds together: an edit to the checker's model or the generator's relation moves \
+     no shared item, and only the comparison failing joins them (§3)",
+    "whether the front runs only, or all, the programs its form invokes: `NO-SUBPROCESS`, the launcher reading the \
+     manifest and the install placing the invoked roots stand there (§4)",
 ];
 
 /// A file of a commit's tree, or none when the tree does not hold it.
@@ -2100,6 +2106,73 @@ mod tests {
             assert_eq!(j.change, ["unchanged"], "{step}");
             assert!(!text.contains("trust-new-shared") && !text.contains("trust-shared-changed"), "{step}: {text}");
         }
+    }
+
+    #[test]
+    fn f30_case_5_a_derivation_s_item_moves_with_its_units_alone() {
+        crate::trust_test_process::bounded!(
+            f30_case_5_a_derivation_s_item_moves_with_its_units_alone
+        );
+        // `decision_trust-role-programs.md` §3, `TI-H9`: on the baseline's host, a change outside a derivation's units is
+        // "unchanged"; one inside them moves its item, reported, and refused until its form is proposed again.
+        use crate::trust::tests::{fixture, manifest, WS};
+        let roots = "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\"))\n\
+                     (defroot cfg (role configuration-checker) (package \"crates/c\") (target lib) (role-packages \"crates/c\"))\n\
+                     (defderivation prod (pair gen cfg) (package \"crates/r\") (test production) (reason \"the relation\"))\n";
+        let test = |body: &str| format!("#[test]\nfn production() {{ {body} }}\n");
+        let f = fixture(
+            "f30-derivation",
+            "1.95.0",
+            &[
+                ("Cargo.toml", WS.to_owned()),
+                ("trust/roots.eadl", roots.to_owned()),
+                ("crates/a/Cargo.toml", manifest("a", "")),
+                ("crates/a/src/main.rs", "fn main() {}\n".to_owned()),
+                ("crates/c/Cargo.toml", manifest("c", "")),
+                (
+                    "crates/c/src/lib.rs",
+                    "pub fn reading(x: u32) -> u32 { x }\n".to_owned(),
+                ),
+                (
+                    "crates/r/Cargo.toml",
+                    manifest("r", "[dev-dependencies]\nc = { path = \"../c\" }\n"),
+                ),
+                (
+                    "crates/r/src/lib.rs",
+                    "pub fn reading(x: u32) -> u32 { x }\n".to_owned(),
+                ),
+                (
+                    "crates/r/tests/production.rs",
+                    test("assert_eq!(r::reading(3), c::reading(3));"),
+                ),
+            ],
+        );
+        let _ = judge_head(&f, "first");
+        commit_proposal(&f, "first");
+        let (j, _) = judge_head(&f, "proposed");
+        assert!(j.refused.is_empty(), "every form present: {:#?}", j.refused);
+        f.commit(&[("README.md", "outside every unit\n".to_owned())]);
+        let (j, text) = judge_head(&f, "outside");
+        assert!(j.refused.is_empty(), "{:#?}", j.refused);
+        assert_eq!(j.change, ["unchanged"], "{text}");
+        f.commit(&[(
+            "crates/r/tests/production.rs",
+            test("assert_eq!(r::reading(4), c::reading(4));"),
+        )]);
+        let (j, text) = judge_head(&f, "inside");
+        assert!(
+            j.change
+                .iter()
+                .any(|c| c.starts_with("trust-shared-changed: `gen+cfg shared-derivation prod`")),
+            "{text}"
+        );
+        assert!(
+            j.refused
+                .iter()
+                .any(|r| r.contains("`gen+cfg shared-derivation prod`'s form")),
+            "the old form no longer covers the item: {:#?}",
+            j.refused
+        );
     }
 
     #[test]

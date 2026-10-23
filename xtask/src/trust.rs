@@ -4685,6 +4685,21 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn a_derivation_naming_a_test_target_its_package_lacks_is_stale() {
+        crate::trust_test_process::bounded!(
+            a_derivation_naming_a_test_target_its_package_lacks_is_stale
+        );
+        // `decision_trust-role-programs.md` §3: from metadata, wherever the gate runs, as any form's target.
+        let gone = "(defderivation prod (pair gen cfg) (package \"crates/r\") (test gone) (reason \"the relation\"))\n";
+        let f = derivations("derivation-gone", gone, "", "pub fn d() {}\n", "");
+        says(
+            &refused(f.run()),
+            "trust-baseline-stale: trust/roots.eadl: `prod` names the test target `gone` of `crates/r`, which the commit no \
+             longer has",
+        );
+    }
+
+    #[test]
     fn a_derivation_is_held_to_its_pair_s_role_packages_and_its_edges_scanned() {
         crate::trust_test_process::bounded!(
             a_derivation_is_held_to_its_pair_s_role_packages_and_its_edges_scanned

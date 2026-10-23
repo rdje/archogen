@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's readers for the checkers' programs, whole
+
+`ARCHOGEN-M3-0895` (leaf `M3.5.2.1.6`), `2026-10-23`.
+
+- Every report now says it does not see a derivation's run-time reads, an edit to either transcription it holds
+  together, or which programs the front really runs. With two last fixtures the gate's readers are whole; no form
+  uses them until they are on `main`.
+
 ## archogen — a comparison found by machine
 
 `ARCHOGEN-M3-0894` (leaf `M3.5.2.1.5`), `2026-10-23`.

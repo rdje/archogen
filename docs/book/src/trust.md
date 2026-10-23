@@ -707,6 +707,14 @@ Every report ends with what the inventory does not see, the same list each time,
 - **what a program reads on another host.** A module compiled only under another target's `cfg` is read on that host
   alone, so on the baseline's host its form is stale, and off it the file, marked and undeclared, is refused.
   Admissions meet the same limit.
+- **what a derivation reads at run time**, as a comparison test reads the kind modules from disk;
+- **the transcriptions a derivation holds together.** The checker's model lives in the checker's package and the
+  generator's relation in the generator's, so an edit to either moves no shared item: only the comparison failing joins
+  them, which is why a derivation's class is a reference derivation, its controls the ones independent of the
+  transcription;
+- **whether the front runs only, or all, the programs its form invokes.** `NO-SUBPROCESS` admitting the launcher alone,
+  the launcher running only what the install manifest names, and the install placing only the invoked roots stand
+  there.
 
 ## Today and ahead
 
