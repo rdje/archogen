@@ -33,6 +33,13 @@ judge a description any other way.
      a kind module, an unreadable import, a language definition that failed to load;
    - on acceptance, the profile and language version it was judged under, the declarations, the
      module-tree instances and the closure.
+
+   *Amended `2026-10-23` (leaf `M3.5.1.1`): the vocabulary moved on, into `crates/archogen-outcome`, no role's,
+   when the checkers became executables of their own (`docs/tasks/M3.md`, `M3.5.1`): each writes its outcome in
+   a result record, `archogen-result/1`, and carries the vocabulary without the API, so the vocabulary has a version
+   of its own, `1.1`. The API re-exports it, so `archogen_api::Status` names what it named, and keeps the mapping
+   from a verdict, `archogen_api::verdict_status`. A third process-level status joined: `stale-input`, exit `3`, for
+   inputs that do not belong together.*
 4. **Rendering stays with the consumer.** The API returns structure. The CLI prints it as it prints today,
    and a binding serializes it. Serialization is a transport concern, and a dependency for it would live
    in the transport crate ([[zero-dependency-engine-core]]).
@@ -45,7 +52,8 @@ judge a description any other way.
    *Fixed `2026-09-30`, when `API.3` closed (leaf `API.3.4`). It is registered in `docs/book/src/versions.md`,
    whose gate learned the API version's shape so that a bump cannot land unrecorded. `1.1` added the response's
    engine version (leaf `API.4.1`, [[api-instance]]), a field, so a minor. `1.2` added `check_with` and its
-   `Limits` (leaf `API.4.2`), an operation's variant, so a minor.*
+   `Limits` (leaf `API.4.2`), an operation's variant, so a minor. `1.3` added the status `stale-input` (leaf
+   `M3.5.1.1`), the vocabulary growing, so a minor.*
 6. **Parity, both ways, gated** (`ROADMAP.md` §10.4: "a capability that exists only behind the CLI does not
    exist programmatically, and the reverse"):
    - *structurally:* the CLI's source calls no judging entry point of the engine (`check`,

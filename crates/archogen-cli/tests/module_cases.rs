@@ -155,7 +155,7 @@ fn every_case_gets_exactly_the_answer_its_header_declares() {
             .clone()
             .unwrap_or_else(|| panic!("{}: a refusing case must declare its `code:`", case.path));
         let want: BTreeSet<String> = [code].into_iter().collect();
-        if status != Status::from_verdict(case.expect) || found != want || !out.is_empty() {
+        if status != archogen_api::verdict_status(case.expect) || found != want || !out.is_empty() {
             wrong.push(format!(
                 "{}: expected {:?} with exactly {want:?}, got {status:?} with {found:?}:\n{err}",
                 case.path, case.expect

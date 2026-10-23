@@ -2,7 +2,7 @@
 //! order, no whitespace between tokens, and one way to write each string, so two builds of the same answer write
 //! the same bytes.
 
-use archogen_api::{Response, SourceMap, Status};
+use archogen_api::{verdict_status, Response, SourceMap};
 use eadl_front::{Diagnostic, Label, Severity};
 
 /// A JSON text under construction.
@@ -169,7 +169,7 @@ pub fn encode(response: &Response) -> String {
         Some(judged) => {
             json.raw("{");
             json.key("verdict");
-            json.string(Status::from_verdict(judged.verdict).slug());
+            json.string(verdict_status(judged.verdict).slug());
             json.raw(",");
             json.key("language");
             json.string(judged.language);

@@ -9,8 +9,8 @@
 use std::path::{Path, PathBuf};
 
 use archogen_api::{
-    check, MemoryModules, ModuleSource, NoModules, Request, Response, Status, KIND_MODULE_OWNER,
-    OPERATIONS, VERSION,
+    check, verdict_status, MemoryModules, ModuleSource, NoModules, Request, Response, Status,
+    KIND_MODULE_OWNER, OPERATIONS, VERSION,
 };
 
 fn repo_root() -> PathBuf {
@@ -40,7 +40,7 @@ fn assert_consistent(what: &str, response: &Response) {
         Some(judged) => {
             assert_eq!(
                 response.status,
-                Status::from_verdict(judged.verdict),
+                verdict_status(judged.verdict),
                 "{what}: a judged response's status is its verdict"
             );
             assert!(response.notes.is_empty(), "{what}: {:?}", response.notes);
@@ -240,12 +240,12 @@ fn a_description_that_does_not_read_gets_the_read_pass_verdict() {
 
 #[test]
 fn the_version_and_the_operations_are_declared() {
-    assert_eq!(VERSION.to_string(), "1.2");
+    assert_eq!(VERSION.to_string(), "1.3");
     assert_eq!(OPERATIONS, ["check"]);
 }
 
 /// The version that last changed the response's shape below: `1.1` added `engine`. `1.2` added an operation, not a
-/// field, so it left the shape alone.
+/// field, so it left the shape alone, and `1.3` a status, a value of the field `status`.
 const SHAPE_OF: archogen_api::Version = archogen_api::Version { major: 1, minor: 1 };
 
 #[test]

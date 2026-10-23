@@ -80,12 +80,12 @@ one judged and refused, and one the API does not judge.
 
 ```console
 $ cargo run -q -p archogen-api --example in_memory
-api 1.2 · engine 0.1.0 · status ok
+api 1.3 · engine 0.1.0 · status ok
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
-api 1.2 · engine 0.1.0 · status invalid-description
+api 1.3 · engine 0.1.0 · status invalid-description
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
   quantity-unknown-unit: `parsec` is not a known unit
-api 1.2 · engine 0.1.0 · status unsupported-profile
+api 1.3 · engine 0.1.0 · status unsupported-profile
   not judged: `rt-dynamic-mp` is not a supported profile
 ```
 
@@ -94,10 +94,11 @@ above, so this page cannot go on showing output the API no longer gives.
 
 ### The version and what it promises
 
-The API's version is `1.2`, apart from the language's (`eadl/1`) and the profile's, as §15 requires.
+The API's version is `1.3`, apart from the language's (`eadl/1`) and the profile's, as §15 requires.
 Every response names the API version and the engine version, and a judged one also names the language
 version and the profile it was judged under. `1.0` was fixed when the API was declared. `1.1` added the
-engine version, a new field, and `1.2` added `check_with`, below. Both are minors, as the promise says. Within a major, an operation is never removed, a response field
+engine version, a new field, `1.2` added `check_with`, below, and `1.3` the status `stale-input`, the vocabulary
+growing. All three are minors, as the promise says. Within a major, an operation is never removed, a response field
 is never removed or given a new meaning, and the outcome vocabulary only grows. Adding an operation
 or a field is a minor. A description whose verdict changes under the same language version is not an
 API change: it is a language change, and it goes through the migration notes
@@ -161,7 +162,7 @@ modules as length-prefixed text. The answer is JSON in one fixed encoding, and i
 API's response, including the diagnostics rendered exactly as the command line prints them:
 
 ```text
-{"format":"archogen-wasm-response/1","api":"1.2","engine":"0.1.0","status":"ok","exit":0,"notes":[],"hint":null,
+{"format":"archogen-wasm-response/1","api":"1.3","engine":"0.1.0","status":"ok","exit":0,"notes":[],"hint":null,
  "diagnostics":[],"rendered":"","judged":{"verdict":"ok","language":"eadl/1","profile":"rt-static-up-v1", …}}
 ```
 

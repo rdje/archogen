@@ -138,11 +138,33 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Field | Value |
 | --- | --- |
 | Surface | the engine API: the one contract every consumer judges a description through, the CLI today and the wasm and [MCP](ledger.md#mcp-specification) bindings to come ([The engine API](engine-api.md)) |
-| Version | `1.2` — `1.0` fixed `2026-09-30` when leaf `API.3` closed; `1.1` added the response's engine version (`API.4.1`); `1.2` added `check_with` and its `Limits` (`API.4.2`) |
+| Version | `1.3` — `1.0` fixed `2026-09-30` when leaf `API.3` closed; `1.1` added the response's engine version (`API.4.1`); `1.2` added `check_with` and its `Limits` (`API.4.2`); `1.3` added the status `stale-input`, the vocabulary growing (`M3.5.1.1`) |
 | Declared at | `const:crates/archogen-api/src/lib.rs:VERSION` |
 | Changes when | an operation or a response field is added, which is a minor; an operation or a field removed, or a field given a new meaning, which is a new major |
 | Pinned by | the exhaustive reading of `Response` and `Judgement` in `crates/archogen-api/tests/check.rs`, which stops compiling when a field is added or removed and names the version its shape belongs to; the three parity legs of `crates/archogen-cli/tests/api_parity.rs`. The bump itself is the author's act: nothing can tell a new field from a renamed one |
 | Keeps | within a major, what a consumer reads from a response stays true, and its outcome vocabulary only grows |
+
+## `status-vocabulary`
+
+| Field | Value |
+| --- | --- |
+| Surface | the outcome vocabulary: every status an API response, an exit code or a checker's result record carries, with its code and its family, apart from the engine API since a checker carries it without the API ([The `archogen` command line](cli.md), exit codes) |
+| Version | `1.1` — `1.0`, the eleven statuses the engine API carried from leaf `API.3.2`; `1.1` added `stale-input`, exit `3` (`M3.5.1.1`) |
+| Declared at | `const:crates/archogen-outcome/src/status.rs:VOCABULARY` |
+| Changes when | a status is added, which is a minor; a status removed, renamed, renumbered, moved between families or given a new meaning, which is a new major |
+| Pinned by | one golden per minor, `crates/archogen-outcome/tests/goldens/status-vocabulary-<major>.<minor>.golden`, each listing what that minor holds and compared by `crates/archogen-outcome/tests/vocabulary.rs`, never rewritten; each status's `since`, the minor it entered at |
+| Keeps | within a major, a status means what it meant and keeps its code, and a reader of an earlier minor refuses only a status it does not know |
+
+## `result-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | the record a checker writes for the front that ran it and the build that consumes it: who wrote it and its sha256, what it judged, the profile, the status and every finding (`M3.5.1`) |
+| Version | `archogen-result/1` |
+| Declared at | `const:crates/archogen-outcome/src/record.rs:FORMAT` |
+| Changes when | a member is added, removed, renamed, re-typed or reinterpreted. A reader that meets another identifier refuses the record rather than guess |
+| Pinned by | its shape — every key path and the kind of value at it — frozen in `crates/archogen-outcome/tests/goldens/archogen-result-1.golden` and compared by `crates/archogen-outcome/tests/record.rs`, never rewritten; the same test reads every record back as itself and reads no damage to a refusal as an acceptance |
+| Keeps | a record labelled `archogen-result/1` has one text, and means the same to every reader of `/1` |
 
 ## `wasm-request-format`
 

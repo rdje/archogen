@@ -125,12 +125,18 @@ any description:
 | --- | --- | --- |
 | `0` | `ok` | the command completed and its result was affirmative |
 | `2` | `usage` | the command line was malformed |
+| `3` | `stale-input` | the inputs do not belong together — a plan resolved from another description, a build made from another plan — so nothing was judged; resolve, or build, again |
 | `20` | `unimplemented` | the command is part of the §10.2 target but is not built yet |
 
 `tool-failure` sits with the diagnostic results because §5.5 defines it there, but it shares
 its code with nothing: a toolchain that failed has not produced a valid system, and must
 never be readable as one. `unimplemented` is temporary — it disappears command by command as
-the owning leaves land.
+the owning leaves land. `stale-input` is permanent: a checker answers it when what it was handed was not made
+together, and it says nothing about the system either.
+
+The vocabulary has a version of its own, `1.1`, since a checker carries it without the engine API
+([What is versioned](versions.md)). Within its major a status keeps its name, its code and its meaning, and a new
+one moves the minor.
 
 ### Diagnostics
 

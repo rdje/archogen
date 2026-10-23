@@ -12,5 +12,6 @@ description = "The engine API of the archogen eADL-to-OS generation toolchain"
 workspace = true
 
 [dependencies]
+archogen-outcome = { path = "../archogen-outcome" }
 eadl-front = { path = "../eadl-front" }
 eadl-model = { path = "../eadl-model" }

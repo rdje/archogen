@@ -623,6 +623,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Required crate-name minimum membership — [Annex C: Trust proof
   records](annex-trust-proofs.md#required-crate-name-minimum-membership)
 - Requirements and sides — [Matching an offer to a requirement](matching.md#requirements-and-sides)
+- result-format — [What is versioned, and what changing it costs](versions.md#result-format)
 - **RFC** — [definition](glossary.md), [What this project relies on from outside](ledger.md), [Annex B: The checks that
   keep the repository honest](annex-repository.md)
 - rfc-8259 — [What this project relies on from outside](ledger.md#rfc-8259)
@@ -688,6 +689,7 @@ a change that leaves it stale, so it is never edited by hand.
 - States and priorities — [The runtime: decisions, not actions](runtime.md#states-and-priorities)
 - Status is derived, never written — [Where the engine's knowledge comes from: the
   catalog](catalog.md#status-is-derived-never-written)
+- status-vocabulary — [What is versioned, and what changing it costs](versions.md#status-vocabulary)
 - **STI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Supported no-suffix collector regression — [Annex C: Trust proof
   records](annex-trust-proofs.md#supported-no-suffix-collector-regression)

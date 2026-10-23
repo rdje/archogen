@@ -14,8 +14,8 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.5`; `PROGRAM` resumes at `PROGRAM.71`.
-- **Next action:** `M3.5.1.1` (P2), the outcome package — `Status` moved, `stale-input`, `archogen-result/1` over
-  `archogen-json` and `archogen-digest`; then `.1.3`–`.1.6`, `M3.5.2`–`.6`, `M2.21`.
+- **Next action:** `M3.5.1.3` (P2), `cargo xtask install` and `archogen-install/1`; then `.1.4`–`.1.6`, `M3.5.2`–`.6`,
+  `M2.21`.
   The mutation campaign is `M7.6`'s. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
   focused green at `eaf71286`; `archogen check` wiring is `M3.4`'s. The next artifact cleanup is due after
   `2026-10-23T15:54`. A test's deadline is one only a hang reaches (`PROGRAM.99`).

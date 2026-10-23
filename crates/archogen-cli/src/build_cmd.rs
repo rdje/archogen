@@ -95,7 +95,8 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
             // `Status::ToolFailure` instead, so a build refusing `(period 10 parsec)` exited **70** and
             // told the author to file a bug about the toolchain for a symbol they mistyped — leaf
             // `M1.28.1`.
-            let status = Status::from_verdict(eadl_front::Verdict::of_code(diagnostic.code));
+            let status =
+                archogen_api::verdict_status(eadl_front::Verdict::of_code(diagnostic.code));
             let _ = write!(err, "{}", diagnostic.render(&response.sources));
             let _ = writeln!(
                 err,

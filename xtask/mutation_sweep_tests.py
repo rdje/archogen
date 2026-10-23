@@ -1519,7 +1519,7 @@ os.execvp("rustc", ["rustc"] + arguments)
             'xtask/Cargo.toml': '6ee1cf3699670f97a13b3c49a37013f29270b80bf458ed22835bdc9b99be9f9f',
             'crates/archogen-catalog/Cargo.toml': '1e8266bd7987f766565e66ddca4d6fbc277bfc853771dfec61fa8050fea0629d',
             'Cargo.toml': '523ef1fdc14883302cf62d951526ae83d78cb38153caf4f9c4f9927f2c986510',
-            'Cargo.lock': '86b3a9953bd69bfcb7f09ba87c17ed6e4801ade339bfe9d675aee87e58dee295',  # re-pinned by M3.5.1.7: one dependency-free package, archogen-json, and archogen-cli's edge to it; no reader's wiring changed
+            'Cargo.lock': '159f30c3d6963882133715024dd02dcd9fde8103f9bfcaefe4398abee11e7770',  # re-pinned by M3.5.1.1: archogen-outcome, over archogen-digest and archogen-json, and archogen-api's edge to it; no reader's wiring changed
             'rust-toolchain.toml': '4706b7b407427c38a3b63860b2e131cacc9eb57569a6755a39e81756cca676cd',
             '.cargo/config.toml': '48296b18a2b27cc7268cf489fc37bdcf24e04d79b914c2237c248e4db1f6fa79',
         }

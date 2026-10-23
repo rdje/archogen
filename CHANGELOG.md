@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the outcome package: one vocabulary, one result record
+
+`ARCHOGEN-M3-0881` (leaf `M3.5.1.1`), `2026-10-23`.
+
+- The status vocabulary moves into `crates/archogen-outcome`, no role's, with a version of its own, `1.1`, and a new
+  status, `stale-input`, exit `3`: the inputs do not belong together, so nothing was judged. Engine API `1.3`.
+- `archogen-result/1`, the record a checker will write: one text per record, and no damage to a refusal's record
+  reads as an acceptance, which a sweep of more than 200 000 damaged texts checks on every run.
+
 ## archogen — the JSON reader and writer in a package of their own
 
 `ARCHOGEN-M3-0880` (leaf `M3.5.1.7`), `2026-10-23`.

@@ -499,7 +499,7 @@ fn assert_matches(value: &Value, response: &Response) {
             );
             assert_eq!(
                 encoded.get("verdict").str(),
-                Status::from_verdict(judged.verdict).slug()
+                archogen_api::verdict_status(judged.verdict).slug()
             );
             assert_eq!(encoded.get("language").str(), judged.language);
             assert_eq!(encoded.get("profile").str(), judged.profile);

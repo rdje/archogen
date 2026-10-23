@@ -6,6 +6,7 @@ version = 4
 name = "archogen-api"
 version = "0.1.0"
 dependencies = [
+ "archogen-outcome",
  "eadl-front",
  "eadl-model",
 ]
@@ -45,6 +46,14 @@ dependencies = [
 [[package]]
 name = "archogen-json"
 version = "0.1.0"
+
+[[package]]
+name = "archogen-outcome"
+version = "0.1.0"
+dependencies = [
+ "archogen-digest",
+ "archogen-json",
+]
 
 [[package]]
 name = "archogen-s0"

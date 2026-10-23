@@ -19,15 +19,18 @@
 mod status;
 
 use std::cell::{Cell, RefCell};
-use std::fmt;
 
 use eadl_front::{elaborate_source, read, Position, Verdict};
 use eadl_model::check::{check_program, default_profile, shipped_registry, Outcome};
 use eadl_model::profile::{self, Profile};
 
+/// The outcome vocabulary and the version type: `archogen-outcome`'s since leaf `M3.5.1.1`, no role's, so that a
+/// checker carries them without the API; re-exported, so `archogen_api::Status` and `archogen_api::Version` name what
+/// they named.
+pub use archogen_outcome::{Status, Version};
 pub use eadl_front::{Diagnostic, Form, MemoryModules, ModuleSource, SourceId, SourceMap};
 pub use eadl_model::check::Closure;
-pub use status::Status;
+pub use status::verdict_status;
 
 /// This API's version: apart from the language's (`eadl/1`) and the profiles', as `ROADMAP.md` §15 requires.
 ///
@@ -36,28 +39,14 @@ pub use status::Status;
 /// operation or a field is a minor; anything else is a new major. A description whose verdict changes under
 /// the same language version is a language change, recorded in `docs/semantics/migrations/`, not an API
 /// change. `1.0` was fixed `2026-09-30`, when leaf `API.3` closed; `1.1` added [`Response::engine`] (leaf
-/// `API.4.1`); `1.2` added [`check_with`] and [`Limits`] (leaf `API.4.2`). `docs/book/src/versions.md` registers it.
-pub const VERSION: Version = Version { major: 1, minor: 2 };
+/// `API.4.1`); `1.2` added [`check_with`] and [`Limits`] (leaf `API.4.2`); `1.3` added the status `stale-input`, the
+/// vocabulary growing (leaf `M3.5.1.1`). `docs/book/src/versions.md` registers it.
+pub const VERSION: Version = Version { major: 1, minor: 3 };
 
 /// The engine version: the one the workspace's members share, which `archogen --version` reports and
 /// `docs/book/src/versions.md` registers as `engine`. With [`VERSION`] it names the build a response came from
 /// (`docs/decisions/decision_api-instance.md`).
 pub const ENGINE: &str = env!("CARGO_PKG_VERSION");
-
-/// A major and a minor version.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Version {
-    /// Changes when a promise of the previous major is broken.
-    pub major: u32,
-    /// Changes when an operation or a response field is added.
-    pub minor: u32,
-}
-
-impl fmt::Display for Version {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}.{}", self.major, self.minor)
-    }
-}
 
 /// The operations this API exposes, each by the name `crates/archogen-cli/src/spec.rs` gives its command.
 /// Parity with the CLI's built commands is gated on it (leaf `API.3.3`).
@@ -262,7 +251,7 @@ impl Response {
         Self {
             version: VERSION,
             engine: ENGINE,
-            status: Status::from_verdict(outcome.verdict),
+            status: verdict_status(outcome.verdict),
             notes: Vec::new(),
             hint: None,
             diagnostics: outcome.diagnostics,

@@ -420,7 +420,7 @@ test -p archogen-api --test check
 expect killed
 why API.3.2: a judged response whose status is not its verdict is the failure §10.4 exists to prevent — an unanswered question read as established. Here every judged response says ok.
 from
-                status: Status::from_verdict(outcome.verdict),
+                status: verdict_status(outcome.verdict),
 to
                 status: Status::Ok,
 end

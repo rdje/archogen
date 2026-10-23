@@ -1,0 +1,12 @@
+status-vocabulary 1.0
+0 ok process
+2 usage process
+10 invalid-description result
+11 missing-fact result
+12 unsupported-profile result
+13 infeasible-configuration result
+14 analysis-inconclusive result
+15 not-established result
+16 counterexample result
+20 unimplemented process
+70 tool-failure result

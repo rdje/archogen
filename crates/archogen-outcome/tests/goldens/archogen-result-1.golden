@@ -1,0 +1,25 @@
+archogen-result/1
+exit: number
+findings: array
+findings[].code: string
+findings[].message: string
+findings[].primary.column: number
+findings[].primary.line: number
+findings[].primary.message: string
+findings[].primary.source: string
+findings[].repair: string
+findings[].secondary: array
+findings[].secondary[].column: number
+findings[].secondary[].line: number
+findings[].secondary[].message: string
+findings[].secondary[].source: string
+findings[].severity: string
+format: string
+producer.name: string
+producer.sha256: string
+profile: string
+status: string
+subject.build: string
+subject.plan: string
+subject.program: string
+vocabulary: string
