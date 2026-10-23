@@ -14,12 +14,15 @@
 pub mod build_cmd;
 pub mod check_cmd;
 pub mod cli;
-pub mod json;
 pub mod mcp;
 pub mod spec;
 pub mod status;
 
 use std::io::Write;
+
+/// The MCP server's JSON, [`archogen_json`] under the name it had here until leaf `M3.5.1.7` gave it a package of its
+/// own, so that a checker's result record is read by the one reader the server's messages are.
+pub use archogen_json as json;
 
 pub use cli::{Invocation, Parsed, Refusal};
 pub use status::Status;

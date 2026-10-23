@@ -1,6 +1,11 @@
 //! The MCP server's JSON (leaf `API.6.3`; `docs/decisions/decision_mcp-server.md` §5, §6): a reader that refuses
 //! every text RFC 8259 does not admit and bounds what it will read, and a writer with one way to write each value.
 //!
+//! ⭐ **A package of its own** (leaf `M3.5.1.7`). It was `archogen_cli::json`, which still names it. A checker's result
+//! record, `archogen-result/1`, is JSON, and whoever reads one decides whether a plan is built (`M3.5.1`); that reader
+//! is this one, so a record naming a member twice is refused here as a message is, and no second reader can disagree
+//! with the first about what a record said. No role owns it: a checker compiles it without the command line.
+//!
 //! ⭐ **Why the server's own.** The server reads untrusted text from whoever drives it. A reader written here is
 //! code this repository reviews, with a nesting bound and a size bound it chooses, and no dependency to trust
 //! (§6: "no dependency, no process"). It reads one JSON text into a [`Value`]; what a message means is the server's.

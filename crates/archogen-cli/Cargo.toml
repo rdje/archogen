@@ -20,6 +20,7 @@ workspace = true
 
 [dependencies]
 archogen-api = { path = "../archogen-api" }
+archogen-json = { path = "../archogen-json" }
 archogen-s0 = { path = "../archogen-s0" }
 # The response's encoding, so the MCP server answers the bytes the wasm binding does (leaf `API.6.4`).
 archogen-wasm = { path = "../archogen-wasm" }

@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the JSON reader and writer in a package of their own
+
+`ARCHOGEN-M3-0880` (leaf `M3.5.1.7`), `2026-10-23`.
+
+- The MCP server's strict JSON reader and its writer move whole into `crates/archogen-json`, so a checker's result
+  record will be read by the same reader as the server's messages; `archogen_cli::json` still names it.
+
 ## archogen — sha256 in a package of its own
 
 `ARCHOGEN-M3-0879` (leaf `M3.5.1.2`), `2026-10-23`.

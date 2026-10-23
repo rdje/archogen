@@ -226,7 +226,7 @@ with the versions it does:
 ← {"jsonrpc":"2.0","id":2,"error":{"code":-32022,"message":"protocol version `2024-11-05` is not served per request: `2026-07-28` is, and `2025-11-25` after `initialize`","data":{"supported":["2026-07-28","2025-11-25"],"requested":"2024-11-05"}}}
 ```
 
-The server reads with its own JSON reader (`crates/archogen-cli/src/json.rs`, leaf `API.6.3`): text over a bound, or
+The server reads with its own JSON reader (`crates/archogen-json/src/lib.rs`, leaf `API.6.3`): text over a bound, or
 nested too deep, or naming one field twice, is refused before anything is judged. It spawns nothing and opens no
 file. Its verdicts are the command line's: a test speaks to the built binary in both eras and checks every
 single-file case of the conformance suite both ways.

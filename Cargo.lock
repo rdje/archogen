@@ -24,6 +24,7 @@ name = "archogen-cli"
 version = "0.1.0"
 dependencies = [
  "archogen-api",
+ "archogen-json",
  "archogen-s0",
  "archogen-wasm",
  "eadl-front",
@@ -40,6 +41,10 @@ version = "0.1.0"
 dependencies = [
  "archogen-digest",
 ]
+
+[[package]]
+name = "archogen-json"
+version = "0.1.0"
 
 [[package]]
 name = "archogen-s0"
