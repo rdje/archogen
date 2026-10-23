@@ -5,6 +5,12 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the specifications folder one step larger
+
+`ARCHOGEN-PROGRAM-0908` (leaf `PROGRAM.108`), `2026-10-23`.
+
+- `docs/specs/` may hold 640 KiB, measured and recorded, so the open trust review's answers have room.
+
 ## archogen — a test joining two pairs is told it must be split or classified
 
 `ARCHOGEN-M3-0907` (leaf `M3.5.2.4.2`), `2026-10-23`.

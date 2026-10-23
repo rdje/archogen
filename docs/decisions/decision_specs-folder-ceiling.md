@@ -34,6 +34,13 @@ runtime analysis variant's design, accepted with `M2.11`'s fifth review and unch
 about 50 commits at the overall rate. Weighed and refused: moving a record that is still amended, or whose citations
 cannot all follow it (`PROGRAM.102` names each).
 
+**Raised `2026-10-23` to 655 360 (640 KiB)** (`PROGRAM.108`). Measured at `b9a070d4`, `git ls-files docs/specs | xargs
+cat | wc -c`: 589 151 of 589 824, 673 to spare; at `efedf6d6`, the last raise, 563 064 — 26 087 bytes in 41
+commits, 13 of them to the folder, nearly all the checkers' trust record and the two it amends, read against the
+gate's code from its fifth review round and amended at each. Its review is open and each round's answer needs a few
+hundred bytes there; one 64 KiB step holds it and the records still to move in. Weighed and refused: trimming the
+record's settled prose to fit, which edits what a review has read.
+
 ## Why
 
 **Measured `2026-10-05`**, `git ls-files <folder> | xargs cat | wc -c`: `docs/decisions/` held 393 061 bytes of its

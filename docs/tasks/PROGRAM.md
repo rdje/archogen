@@ -926,6 +926,16 @@ mdBook that is the director's window into the project.
   Verification: the book and its reference built; both gates' self-tests; six arms; the trust inventory; focused.
   Commit: `ARCHOGEN-PROGRAM-0901 (leaf PROGRAM.107)`
 
+- ID: `PROGRAM.108`
+  Status: `done` — P2: `docs/specs/` at its byte ceiling blocks `M3.5.2`'s round-8 answers
+  Reproduce / issue: `2026-10-23`, `git ls-files docs/specs | xargs cat | wc -c`: 589 151, against 589 824
+    (`README_POLICY.md`; `docs/decisions/decision_specs-folder-ceiling.md`), 673 to spare; the trust role-programs
+    record's open review amends it and the two records it amends at each round.
+  Goal: the total one 64 KiB step higher, 589 824 → 655 360, by a dated paragraph in the ceiling's record, as
+    `PROGRAM.102` raised it; the routes table and the size-containment row re-measured.
+  Verification: the folder measured, 589 151 of 655 360; `bash scripts/check_doctrines.sh` green on the staged tree.
+  Commit: `ARCHOGEN-PROGRAM-0908 (leaf PROGRAM.108)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1116,6 +1126,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `2026-10-22` | `PROGRAM.102` | both folders measured before and after; the routes gate; the pin through each half-done move; the crate's suite; the index, anchor, ledger, register and map gates; the focused tier on the staged tree | 392950 → 355040, 524246 → 563064 of 589824; refused then OK; compile refusal, 1 failed, then 1 passed; 87 passed; OK; `passed — 3 passed, 0 failed` |
 | `2026-10-23` | `PROGRAM.106` | each figure of `docs/TASK_TREE_SEALING.md` against its record and the tree at `b9d52e1c`; links; doctrines | re-derived, three corrected; resolving; green |
 | `2026-10-23` | `PROGRAM.107` | the book and its reference built; both gates' self-tests; six arms; clippy; every Python proof; the trust inventory; focused on the staged tree | exit 0; 7, 26 and 9 pass; each failing; exit 0; `OK`; 10 shared items; `tier focused: passed` |
+| `2026-10-23` | `PROGRAM.108` | the specs folder before and after; the routes gate | 589 151 of 589 824, then of 655 360; held |
 
 ## Commit Log
 
@@ -1144,6 +1155,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.105` | `ARCHOGEN-PROGRAM-0878 (leaf PROGRAM.105)` | **`NO-SUBPROCESS` closes the three routes to a process**: code read with comments and literals stripped and each `use` whole; `std::process` beyond `ExitCode` and `exit`, foreign functions and inline assembly refused; thirteen arms, each failing under the bug it guards |
 | `PROGRAM.106` | `ARCHOGEN-PROGRAM-0900 (leaf PROGRAM.106)` | **task-tree sealing, portable**: the trigger, the principles, the rules, the seal and the gate, an adoption path, the lessons and a checklist, for any project on any harness; `PROGRAM.107`, the rustdoc reference, filed on the director's go |
 | `PROGRAM.107` | `ARCHOGEN-PROGRAM-0901 (leaf PROGRAM.107)` | **the API reference**: rustdoc of seven crates built with the book under `api/`, each denying missing docs, links checked both ways, a doc test; five doc links and eight missing docs repaired on the way; `PROGRAM.71` next in this tree |
+| `PROGRAM.108` | `ARCHOGEN-PROGRAM-0908 (leaf PROGRAM.108)` | **the specs folder one step higher**: 640 KiB, measured, for the open trust review's answers |
 
 ## Changelog
 
