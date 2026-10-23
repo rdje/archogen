@@ -99,7 +99,12 @@ test profile, default features — once as it selects them, once with `--all-tar
 features, each target neither build made (leaf `M3.5.2.6.2`), and a unit counts every file its dependency information names and its closure's libraries' do, each
 for the innermost package holding it (leaf `M3.5.2.6.1`), so a role package's file reached by a path, an `include!` or a dependency's own path joins it however its source spells it
 (leaf `M3.5.2.5.1`; a scan of the text before it, `M3.5.2.4.1`, missed spellings). It counts what some build compiles, more than the default build makes, by
-design (leaf `M3.5.2.3.1`). The inventory records the pairs each joins, so the gate's remedy names its pair's form —
+design (leaf `M3.5.2.3.1`). What decides what a unit compiles — target selection, required features, the profile,
+`cfg(test)`, features, platform, configuration, file inclusion, dependency kinds, build scripts and procedural macros,
+doc tests, non-members, a program a test runs — is a table in the record's §3, each rule quoted from the Cargo Book of
+the pin ([`rust-toolchain`](ledger.md#rust-toolchain)), each row held by its fixtures and, where part of it is outside
+the census, by the report's line that says so, a test holding the table to both (leaf `M3.5.2.6.3`). The inventory
+records the pairs each joins, so the gate's remedy names its pair's form —
 a harness for the reference model's, a derivation for the generator's and a checker's — or, for a unit joining two
 pairs or compiling a role package of a root beside its pair's two, which no pair form can name without its build being
 refused, says to split or classify it (leaf `M3.5.2.5.2`).
@@ -744,7 +749,8 @@ Every report ends with what the inventory does not see, the same list each time,
 - **what the census build does not compile.** It builds each package's targets as `cargo test` builds them, on this
   host, and each target that skips by name with its required features: a file only another profile, platform or
   feature set compiles — `cargo test --release`, `cargo bench` — what a doc test's own snippet includes, a package
-  holding or reaching a build script or a procedural macro — left out, so none runs, and judged by its edges — a
+  holding or reaching a build script or a procedural macro — left out, so none runs, judged by its edges and named
+  in the inventory's `census-left-out` and the report — a
   non-member's features and another workspace's tests are outside it. A census build that fails stops the run, unable
   to judge, naming its package;
 - **a program a test runs.** A test that runs another role's program as a process compiles none of it, so the census

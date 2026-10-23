@@ -2508,22 +2508,19 @@ pub fn inventory_with(
         })
         .map(|(pkg, _)| pkg)
         .collect();
+    // What `cargo test` of a package compiles, by §3's edge rule — its own development edges, and normal and build edges
+    // from there, never a dependency's own development edges — so a package is left out only for code its build would
+    // run (round 9's R8).
     let reaches_code = |pkg: &str| {
-        let mut seen: BTreeSet<&str> = BTreeSet::new();
-        let mut todo = vec![pkg];
-        while let Some(at) = todo.pop() {
-            if !seen.insert(at) {
-                continue;
-            }
-            for (from, to, _) in &graph {
-                if from == at {
-                    todo.push(to);
-                }
-            }
-        }
-        seen.iter()
-            .any(|s| running.iter().any(|r| r.as_str() == *s))
+        target_closure(pkg, "test", &graph)
+            .iter()
+            .any(|s| running.contains(s))
     };
+    let census_left_out: Vec<String> = package_names
+        .keys()
+        .filter(|pkg| reaches_code(pkg))
+        .cloned()
+        .collect();
     let mut census_units: Vec<Unit> = Vec::new();
     if failed.is_empty() {
         reset_cargo_home(&cargo_home).map_err(unable(&refused))?;
@@ -3317,6 +3314,9 @@ pub fn inventory_with(
         ),
         ("program-targets", Json::Array(program_targets)),
         ("classifications-unused", strings(classifications_unused)),
+        // The packages the census left out, each holding or reaching a build script or a procedural macro, their units
+        // judged by their edges (`decision_trust-role-programs.md` §3; round 9's R8).
+        ("census-left-out", strings(census_left_out)),
     ]);
     fs::create_dir_all(out).map_err(|e| e.to_string())?;
     fs::write(&target_json, json::write(&inv)).map_err(|e| e.to_string())?;
@@ -6083,6 +6083,66 @@ pub(crate) mod tests {
         );
         assert!(
             !f.base.join("out/tree/crates/r/RAN").exists(),
+            "the build script ran"
+        );
+        assert_eq!(
+            inv.get("census-left-out").map(crate::json::write),
+            Some("[\"crates/r\"]".to_owned()),
+            "named in the inventory"
+        );
+    }
+
+    #[test]
+    fn a_package_reaching_a_build_script_by_its_own_edges_is_left_out_and_named() {
+        crate::trust_test_process::bounded!(
+            a_package_reaching_a_build_script_by_its_own_edges_is_left_out_and_named
+        );
+        // Round 9's R8: a package is left out when `cargo test` of it would compile a build script — its own, or one
+        // its own development edges or the normal and build edges below them reach — and the inventory names it; a
+        // dependency's own development edge is not followed, so a package reaching one only through it is built.
+        let path_c = "#[path = \"../../c/src/lib.rs\"]\nmod checker;\n#[test]\nfn t() { assert_eq!(checker::x(), g::x()); }\n";
+        let bs = manifest("bs", "");
+        let p2 = manifest("p2", "[dev-dependencies]\nbs = { path = \"../bs\" }\n");
+        let q = manifest(
+            "q",
+            "[dependencies]\np2 = { path = \"../p2\" }\n\n[dev-dependencies]\ng = { path = \"../g\" }\n",
+        );
+        let f = joining_with(
+            "census-reach",
+            "[dev-dependencies]\ng = { path = \"../g\" }\nbs = { path = \"../bs\" }\n",
+            "",
+            &[
+                ("crates/bs/Cargo.toml", &bs),
+                ("crates/bs/src/lib.rs", "pub fn b() {}\n"),
+                (
+                    "crates/bs/build.rs",
+                    "fn main() { std::fs::write(\"RAN\", \"\").unwrap(); }\n",
+                ),
+                ("crates/p2/Cargo.toml", &p2),
+                ("crates/p2/src/lib.rs", "pub fn p() {}\n"),
+                ("crates/q/Cargo.toml", &q),
+                ("crates/q/src/lib.rs", "pub fn q() {}\n"),
+                ("crates/q/tests/compare.rs", path_c),
+                ("crates/r/tests/compare.rs", path_c),
+            ],
+        );
+        let inv = written(f.run());
+        let left_out: Vec<&str> = inv
+            .get("census-left-out")
+            .map(Json::elements)
+            .unwrap_or_default()
+            .iter()
+            .filter_map(Json::as_str)
+            .collect();
+        assert_eq!(left_out, ["crates/bs", "crates/p2", "crates/r"]);
+        // `crates/r`, left out, is judged by its edges, which reach no role package of the checker's.
+        assert_eq!(units_of_r(&inv), []);
+        assert_eq!(
+            units_of(&inv, "crates/q"),
+            unclassified_units("crates/q", &[("test", "compare")], "`crates/c`, `crates/g`")
+        );
+        assert!(
+            !f.base.join("out/tree/crates/bs/RAN").exists(),
             "the build script ran"
         );
     }

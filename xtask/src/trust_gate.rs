@@ -919,6 +919,22 @@ pub fn report(
     for l in UNSEEN {
         out.push_str(&format!("- {l}\n"));
     }
+    // And what this commit's census left out, by name (`decision_trust-role-programs.md` §3; round 9's R8).
+    let left_out: Vec<String> = inventory
+        .and_then(|(inv, _)| inv.get("census-left-out"))
+        .map(Json::elements)
+        .unwrap_or_default()
+        .iter()
+        .filter_map(Json::as_str)
+        .map(|p| format!("`{p}`"))
+        .collect();
+    if !left_out.is_empty() {
+        out.push_str(&format!(
+            "- this commit's census left out {}: each holds or reaches a build script or a procedural macro, so none \
+             was built, and its units are judged by their edges\n",
+            left_out.join(", ")
+        ));
+    }
     out
 }
 
@@ -954,8 +970,8 @@ pub const UNSEEN: &[&str] = &[
     "what the census build does not compile: each package's targets built as `cargo test` builds them — the test \
      profile, default features, this host — and each it skips by name with its required features, so a file only \
      another profile, platform or feature set compiles, what a doc test's own snippet includes, a package holding or \
-     reaching a build script or a procedural macro, judged by its edges, a non-member's features and another \
-     workspace's tests are outside it (§3)",
+     reaching a build script or a procedural macro, judged by its edges and named below, a non-member's features and \
+     another workspace's tests are outside it (`decision_trust-role-programs.md` §3's table)",
     "a program a test runs: a test that runs another role's program as a process compiles none of it, so the census \
      does not see it (§3)",
 ];
@@ -1647,6 +1663,123 @@ mod tests {
             assert!(j.refused.contains(&want), "{want}: {:#?}", j.refused);
         }
         assert_eq!(j.refused.len(), 4, "{:#?}", j.refused);
+    }
+
+    #[test]
+    fn the_census_table_is_held_by_its_fixtures_and_the_report() {
+        crate::trust_test_process::bounded!(
+            the_census_table_is_held_by_its_fixtures_and_the_report
+        );
+        // Round 9's change of method: `decision_trust-role-programs.md` §3's table of what decides what a unit compiles
+        // keeps its rows, each naming fixtures this crate holds as tests, and each row with a part outside the census
+        // naming the line of `UNSEEN` that states it — so no row is dropped, held by nothing, or unsaid in the report.
+        const INPUTS: [&str; 13] = [
+            "target selection",
+            "required features",
+            "profile",
+            "`cfg(test)`",
+            "features",
+            "platform",
+            "configuration",
+            "file inclusion",
+            "dependency kinds",
+            "build scripts, procedural macros",
+            "doc tests",
+            "non-members, other workspaces",
+            "a program a test runs",
+        ];
+        let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+        let record = std::fs::read_to_string(format!(
+            "{root}/docs/specs/trust/decision_trust-role-programs.md"
+        ))
+        .expect("the record");
+        let rows: Vec<Vec<&str>> = record
+            .split_once("**What decides what a unit compiles**")
+            .expect("the table's paragraph")
+            .1
+            .lines()
+            .skip_while(|l| !l.starts_with('|'))
+            .take_while(|l| l.starts_with('|'))
+            .skip(2)
+            .map(|l| l.trim_matches('|').split(" | ").map(str::trim).collect())
+            .collect();
+        let mut sources = String::new();
+        let mut todo = vec![std::path::PathBuf::from(format!("{root}/xtask/src"))];
+        while let Some(dir) = todo.pop() {
+            for entry in std::fs::read_dir(dir).expect("the sources") {
+                let path = entry.expect("an entry").path();
+                if path.is_dir() {
+                    todo.push(path);
+                } else if path.extension().is_some_and(|e| e == "rs") {
+                    sources.push_str(&std::fs::read_to_string(&path).expect("a source"));
+                }
+            }
+        }
+        let named = |cell: &str| -> Vec<String> {
+            cell.split('`')
+                .skip(1)
+                .step_by(2)
+                .map(str::to_owned)
+                .collect()
+        };
+        assert_eq!(
+            rows.iter().map(|r| r[0]).collect::<Vec<_>>(),
+            INPUTS,
+            "the table's inputs"
+        );
+        for row in &rows {
+            assert_eq!(row.len(), 5, "{row:?}");
+            for fixture in named(row[3]) {
+                assert!(
+                    sources.contains(&format!("#[test]\n    fn {fixture}() {{"))
+                        || sources.contains(&format!("#[test]\nfn {fixture}() {{")),
+                    "{}: `{fixture}` is no test",
+                    row[0]
+                );
+            }
+            let leads = named(row[4]);
+            assert_eq!(
+                row[2].contains("outside"),
+                !leads.is_empty(),
+                "{}: an outside part and its report line go together",
+                row[0]
+            );
+            for lead in leads {
+                assert!(
+                    super::UNSEEN.iter().any(|l| l.starts_with(&lead)),
+                    "{}: no line of `UNSEEN` opens `{lead}`",
+                    row[0]
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn the_report_names_the_packages_the_census_left_out() {
+        crate::trust_test_process::bounded!(the_report_names_the_packages_the_census_left_out);
+        // Round 9's R8: a package the census left out is named in the report, after what no inventory sees.
+        let roots = read_roots(ROOTS_TEXT).expect("roots");
+        let own = baseline_of(&inv("h", &[CONFIG], &[], (&[], &[])));
+        let base = Base {
+            commit: Some("b"),
+            baseline: Some((&own, "s".to_owned())),
+            root_forms: None,
+        };
+        let line = "- this commit's census left out `crates/x`, `crates/y`: each holds or reaches a build script or a \
+                    procedural macro, so none was built, and its units are judged by their edges";
+        for (left_out, named) in [(r#"["crates/x","crates/y"]"#, true), ("[]", false)] {
+            let mut now = inv("h", &[CONFIG], &[], (&[], &[]));
+            if let Json::Object(fields) = &mut now {
+                fields.insert(
+                    "census-left-out".to_owned(),
+                    json::parse(left_out).expect("a list"),
+                );
+            }
+            let j = judge(&now, &roots, &forms(), Some(&own), &base).expect("judged");
+            let text = super::report("c", Some((&now, "s")), &base, &j);
+            assert_eq!(text.contains(line), named, "{left_out}: {text}");
+            assert!(text.ends_with(if named { "edges\n" } else { "\n" }));
+        }
     }
 
     #[test]

@@ -104,6 +104,27 @@ it whatever it is — a manifest, a table an `include_str!` reads — so a docum
 package makes that package compiled, joining here and refused under `trust-shared-program`, not the parent's §4 file
 item: share it from a package of no role (round 9's R7).
 
+**What decides what a unit compiles** (round 9's change of method), drawn from the Cargo Book and the rustc of the pin
+([`rust-toolchain`](../../book/src/ledger.md#rust-toolchain)), each rule quoted as the Book states it. Each row names the
+fixtures that hold it and, where part of it is outside the census, the report's line that says so; a test,
+`the_census_table_is_held_by_its_fixtures_and_the_report`, reads this table and holds both to the code.
+
+| Input | The build tool's rule | The census | Held by | Report |
+| --- | --- | --- | --- | --- |
+| target selection | `cargo test` builds the library, the binaries, the examples "to ensure they compile", the unit tests and the integration tests; `--all-targets` "is equivalent to specifying `--lib --bins --tests --benches --examples`"; "setting targets to `test = false` will stop them from being tested by default", and an option naming a target "will always test the given target" | built: `cargo test`'s own selection, `--all-targets`, and by name each target neither made | `the_census_builds_each_target_as_cargo_test_builds_it` | — |
+| required features | "if any of the required features are not enabled, the target will be skipped" | built: each skipped target by name, with its required features | `the_census_builds_each_target_as_cargo_test_builds_it` | — |
+| profile | "the `test` profile is the default profile used by cargo test", inheriting `dev`'s `debug-assertions = true` | built in the test profile; another — `--release`, `cargo bench`'s — outside | `the_census_builds_each_target_as_cargo_test_builds_it` | `what the census build does not compile` |
+| `cfg(test)` | "tests have the `cfg(test)` conditional expression enabled whether or not the harness is enabled" | built: a target's test unit and its other unit | `the_census_builds_each_target_as_cargo_test_builds_it` | — |
+| features | a package's default features, unless `--no-default-features` | built: the default set and a target's required set; a dependency behind any feature an edge; any other set outside | `the_census_builds_each_target_as_cargo_test_builds_it`, `a_unit_joining_two_roles_is_a_program_target_whatever_it_names` | `what the census build does not compile` |
+| platform | a `[target.'cfg(…)'.dependencies]` table applies on its platform | a dependency for any platform an edge; a file only another platform compiles outside | `a_unit_joining_two_roles_is_a_program_target_whatever_it_names` | `what the census build does not compile` |
+| configuration | `.cargo/config.toml`, `RUSTFLAGS` and `--cfg` reach every unit | refused before any build (the parent's §3), so none applies | `a_cargo_configuration_on_the_build_s_path_is_a_refusal_and_not_an_error` | — |
+| file inclusion | `mod`, `#[path]`, `include!` and its kin; rustc's dependency information names every source file it read | built: every file a unit's dependency information names and its closure's libraries' do, each the innermost package's | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_file_counts_for_the_innermost_package_holding_it` | — |
+| dependency kinds | normal, build and development dependencies | edges: normal and build, and the unit's own package's development | `a_unit_joining_two_roles_is_a_program_target_whatever_it_names` | — |
+| build scripts, procedural macros | each runs code as its package builds | a package holding or reaching one by those edges left out, so outside the build, named in the inventory and the report, and judged by its edges | `a_package_with_a_build_script_is_left_out_of_the_census_and_never_run`, `a_package_reaching_a_build_script_by_its_own_edges_is_left_out_and_named` | `what the census build does not compile` |
+| doc tests | "each code block compiles to a doctest executable on the fly with `rustc`" | the library's unit; what a snippet itself includes outside | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles` | `what the census build does not compile` |
+| non-members, other workspaces | neither is this build's | outside | — | `what the census build does not compile` |
+| a program a test runs | a process, compiled by no unit of the test | outside | — | `a program a test runs` |
+
 **Outside it, stated in the report:** its run-time reads of the kind modules (`std::fs`); and the transcriptions
 themselves — the model's sources are in the checker's package and the production relation's, from `M3.4`, in the
 generator's, so from then an edit to either moves no shared item and is reported nowhere (before it the relation,

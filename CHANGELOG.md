@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — what a test compiles is a table the trust gate is held to
+
+`ARCHOGEN-M3-0916` (leaf `M3.5.2.6.3`), `2026-10-23`.
+
+- Everything that decides what a test compiles — which targets are built, the profile, features, platform, files a
+  source includes, build scripts — is now one table in the trust record, each rule quoted from cargo's own
+  documentation. A test checks that every row is held by a real fixture and that whatever the census does not see
+  is said in the gate's report. The report also names the packages the census leaves out.
+
 ## archogen — the trust gate's census builds tests as `cargo test` does
 
 `ARCHOGEN-M3-0915` (leaf `M3.5.2.6.2`), `2026-10-23`.
