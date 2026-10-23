@@ -515,11 +515,11 @@ record's §7 list omitted, corrected there the same day.
 
 **Clarified `2026-10-23`, by `M3.5.2`, [`decision_trust-role-programs.md`](decision_trust-role-programs.md)**, under the
 director's ruling of `2026-10-22` (findings §16 (a)): the configuration checker's root; the **shared derivation**, the
-generator's relation and the checker's held equal by a comparison that compiles both roles' packages, a form
-`defderivation` and a shared item of its own kind, exempt from `trust-shared-program` for its pair alone; a root's
-**invoked programs** and **installed data**, `(invokes …)` and `(installed …)`, refused as `trust-invocation` when an
-invocation names no other role's executable root, and each invocation a shared item; and the classes of what the
-roles share; `defharness`'s pair narrowed to a reference model and its implementation. Each passage that record's §6
+generator's relation and the checker's held equal by a comparison test, a form `defderivation` and a shared item of
+its own kind, exempt from `trust-shared-program` for its pair's role packages alone once `M3.4` makes `eadl-resolve` the
+generator's; the front's **invoked programs** and **installed data**, `(invokes …)` and `(installed …)` on its form
+alone, each misuse a read failure, each invocation a shared item; the classes of what the roles share; and
+`defharness`'s pair narrowed to a reference model and an implementation. Each passage that record's §6
 lists reads with it; `TI-H19` is amended above to match, and `TI-H18` stands.
 
 **Case 4 is judged where an inventory is consumed** (R1 A8). The gate builds its own inventory and cannot find it

@@ -2,180 +2,187 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-23`
-- **Status:** `active` — written `2026-10-23` by leaf `M3.5.2`; round 1 answered the same day; under independent review
+- **Status:** `active` — written `2026-10-23` by leaf `M3.5.2`; rounds 1 and 2 answered the same day; under review
   ([`decision_trust-role-programs-reviews.md`](../../reviews/decision_trust-role-programs-reviews.md))
 - **External sources:** none beyond the parent's: `ROADMAP.md` §4.4 (its "externally invoked tools", and the classes
   of a shared item, "reference derivation" among them) and §14.4's cases.
 - **Owner / source:** leaf `M3.5.2` (`docs/tasks/M3.md`), as `M3.5`'s and `M3.5.1`'s reviewed designs assign it, under
   the director's ruling of `2026-10-22` (findings §16 (a): each checker an executable of its own, the human command
-  line alone running it, as git runs a sibling). It amends [`decision_trust-inventory.md`](decision_trust-inventory.md),
-  cited below as "the parent", whose terms — root, role package, the comparison harness, program target, shared item,
-  form, the baseline's host — it uses unchanged.
+  line alone running it). It amends [`decision_trust-inventory.md`](decision_trust-inventory.md), "the parent", and
+  [`decision_trust-generated-sources.md`](decision_trust-generated-sources.md), whose terms it uses unchanged.
 
 ## The fact / decision
 
 ### 1. What the parent cannot yet hold, measured
 
 - **One derivation, invisible.** `M3.5` moves the substitutability relation's executable model, byte for byte, into
-  the configuration checker's package, `crates/archogen-plan-check` (`M3.5.3`), and keeps the comparison holding the
-  generator's production relation equal to it where it is, `crates/eadl-resolve/tests/production.rs` over
-  `tests/common/universe.rs`, taking the checker's package as a development dependency. The two relations are then one
-  derivation, held equal, and more than a shared reading of one record: the production relation follows the model
-  line for line in places (`side_items`, `side_name_lists`, `horizon`; `M3.3`). The parent builds no test target but
-  the harness's and follows no development edge but the harness's (parent §3; `PROGRAM_KINDS` in
-  `xtask/src/trust.rs` names no test), so the comparison, and every other `eadl-resolve` test that compiles the
-  checker's package, is **invisible** to the gate — neither reported nor refused.
-- **A harness for any pair.** The parent's prose gives a harness to a reference model and the implementation it
-  validates (parent §2, §4), and the instrument reads a `defharness` naming any two roots (`check_pairs`). The same
-  comparison could be written as a harness, which is paired with every other root and accepted as a result's producer
-  (`trust_verify.rs`, `TI-H8`) — wrong of a comparison that produces no claim's result.
+  `crates/archogen-plan-check` (`M3.5.3`), and keeps the comparison holding the generator's production relation equal
+  to it in `crates/eadl-resolve/tests/production.rs`, over `tests/common/universe.rs`, the checker's package a
+  development dependency. The two are one derivation, held equal, and share transcribed code, not only a reading of
+  one record: the production relation follows the model line for line in places (`side_items`, `side_name_lists`,
+  `horizon`; `M3.3`). The parent builds no test target but the harness's and follows no development edge but the
+  harness's (parent §3; `PROGRAM_KINDS` names no test), so that comparison, and every other test compiling the
+  checker's package, is **invisible** — neither reported nor refused.
+- **A harness for any pair.** The parent's prose gives a harness to a reference model's pair; the instrument reads a
+  `defharness` naming any two roots (`check_pairs`), pairs it with every other root, and the verifier accepts a
+  result whose role text is a recorded program's (`trust_verify.rs`), so a comparison producing no claim's result
+  could be written as one and pass as a producer.
 - **A program that runs another.** The front, `archogen`, will run `archogen-plan-check` and `archogen-analyze` as
-  processes (`ROADMAP.md` §10.2; `M3.5.1.4`). The parent sees what a root compiles and the data its form hands it
-  (parent §3), not a program it executes, nor the install manifest it reads (`archogen-install/1`, `M3.5.1.3`), which
-  is no blob of the commit. §4.4's "externally invoked tools" are, in their context, the tools a build executes;
-  reading them as the programs a root runs is this record's extension, as it was `M3.5.1`'s.
-- **What the roles now share.** `cargo xtask trust-inventory --commit 0a5a4b12`, on `aarch64-apple-darwin`: exit 0,
-  `5 program(s), 8 pair(s), 10 shared item(s), 14 refused site(s) each admitted`, the tenth
-  `generator+scheduling-checker package crates/archogen-digest` — reached on the generator's side through
-  `archogen-outcome`, a dependency of `archogen-api` since `5bc5627d` (`M3.5.1.1`), and on the scheduling checker's
-  through `archogen-evidence`. The generator compiles `archogen-json` directly since `e9245a45` (`M3.5.1.7`) and
-  through `archogen-outcome` since `5bc5627d`. The digest item's form waits on the baseline's host (`M3.5.1.8`).
+  processes (`ROADMAP.md` §10.2; `M3.5.1.4`) and read the install manifest (`archogen-install/1`), no blob of the
+  commit. The parent sees what a root compiles and the data its form hands it (§3). §4.4's "externally invoked tools"
+  are, in context, a build's; reading them as the programs a root runs is this record's extension, as `M3.5.1`'s.
+- **What the roles share.** `cargo xtask trust-inventory --commit 0a5a4b12`, `aarch64-apple-darwin`: exit 0, `5
+  program(s), 8 pair(s), 10 shared item(s)`, the tenth `generator+scheduling-checker package crates/archogen-digest`,
+  reached through `archogen-outcome` (`archogen-api`'s since `5bc5627d`, `M3.5.1.1`) and through `archogen-evidence`.
+  The generator compiles `archogen-json` directly since `e9245a45` (`M3.5.1.7`). That item's form waits on the
+  baseline's host (`M3.5.1.8`).
+- **The gate is built from the base** (parent `TI-H6`; `.github/workflows/trust-gate.yml`): on a push, the commit
+  `main` pointed at before it. Its `read_roots` fails on a form or clause it does not know, so a commit writing a new
+  kind of form is unjudged (exit 2) until a push has brought the reader to `main` first.
 
 ### 2. The configuration checker's root
 
-From `M3.5.3` the role is rooted at its library, as the parent §2 roots a role no executable runs yet:
-`(defroot configuration-checker (role configuration-checker) (package "crates/archogen-plan-check") (target lib)
-(role-packages "crates/archogen-plan-check"))`, replacing `(defrole configuration-checker (leaf "M3.5"))`; from `M3.5.6`
-its target is the executable, `(target bin archogen-plan-check)`. The kind modules, `docs/semantics/kinds/core.eadl`
-and `os-rt.eadl`, are compiled in by `include_str!` from `M3.5.4`, when check (2) re-checks the description — the
-model moved at `M3.5.3` holds its own vocabulary and reads no kind module — as `archogen-api` compiles them, so the two
-roots' compilations read the same two files: shared items of the parent §4's second kind, each `include_str!` site
-admitted by a `defadmit` of its own (parent §3). They are not `(data …)`; any other fixed data the checker comes to
-read at run time — an adapter's or a catalog's knowledge, which `M3.5` foresees — is declared there by path, as the
-parent §2 asks. The description and the assignment record it checks are claim subjects, never dependencies (`TI-H19`).
+From `M3.5.3` the role is rooted at its library, as the parent §2 roots a role no executable runs yet: `(defroot
+configuration-checker (role configuration-checker) (package "crates/archogen-plan-check") (target lib) (role-packages
+"crates/archogen-plan-check"))`, replacing `(defrole configuration-checker …)`; from `M3.5.6` its target is `(target bin
+archogen-plan-check)`. The kind modules, `docs/semantics/kinds/core.eadl` and `os-rt.eadl`, are compiled in by
+`include_str!` from `M3.5.4`, when check (2) re-checks the description — the model moved at `M3.5.3` reads none — as
+`archogen-api` compiles them: shared files of the parent §4's second kind, each site admitted by a `defadmit` of its
+own. They are not `(data …)`; any other fixed data it comes to read at run time is declared there by path. The
+description and the assignment record it checks are claim subjects, never dependencies (`TI-H19`).
 
 ### 3. The shared derivation
 
 **The form.** `(defderivation <name> (pair generator configuration-checker) (package "<dir>") (test <target>) (reason
-"…"))` names one test target. Its reading fails, as the parent's does for a harness's shape, so the gate cannot judge
-(`read_roots`, exit 2): a pair naming no root or one root twice, a pair other than the generator's root and the
-configuration checker's, a package the commit lacks, a test target its package lacks, two forms naming one target.
-**`defharness` is narrowed to match:** its pair is a reference model and the implementation it validates, refused
-otherwise, so a comparison of the generator and a checker is written one way.
+"…"))`, one test target a form. Its text read wrong fails `read_roots` (exit 2), as a harness's does (`check_pairs`):
+a pair naming no root, one root twice, or other than the generator's root and the configuration checker's; a target
+two forms name. A package or target the commit lacks is `trust-baseline-stale`, from metadata, wherever the gate runs.
+**`defharness` is narrowed:** its pair is one root of role `reference-model` and one of role `implementation`, in
+either order; today's `differential` is.
 
-**Its build and item.** The gate builds the named test target as it builds the harness's — `cargo test --no-run
---test <target>`, its development edges followed — and records the units it compiles beside its pair's two builds.
-That set is a shared item of its pair and of no other root, of kind `shared-derivation`, its aspects the harness
-item's: content, configuration and provenance. It produces no claim's result, so no result may name it as its
-producer (`TI-H8` unchanged: "its role's inventoried artifact or the pair's harness"). Its exemption from
-`trust-shared-program` is its pair's role packages alone; one of any other role is refused, as for the harness.
-Until `M3.4` makes `crates/eadl-resolve` a role package of the generator the exemption is vacuous — the comparison
-compiles the checker's role package and no other role's — and the item is reported all the same, which is the
-disclosure. **Outside it:** the comparison reads the kind modules at run time (`production.rs`, `std::fs`), a test's
-reading, not a compiled input; the report states it, as the parent §3 states what remains outside.
+**Its build, record and item.** Built as the harness — `cargo test --release --no-run -p <package> --test <target>`,
+the parent's flags, in its own target directory, the development edges of its own package followed — and recorded in
+the inventory's programs as the harness is, its role `derivation`, its artifact the test binary. The units it
+compiles beside its pair's two builds are a shared item of its pair and of no other root: kind `shared-derivation`,
+identity `<a>+<b> shared-derivation <name>`, the pair in the inventory's order, one item a form, aspects the harness
+item's — content, configuration, provenance. It is a **program** in the generated-sources record's sense, its pair's
+two exempt there as the harness's are. Its exemption from `trust-shared-program` is its pair's role packages alone.
+Until `M3.4` makes `crates/eadl-resolve` the generator's, the exemption is vacuous and the item reported all the
+same. Building it compiles `eadl-resolve`'s library, whose two `include_str!` sites (`src/vocabulary.rs`:
+`kinds/deffact.eadl`, `vocabulary/vocabulary.eadl`) enter the default-deny scope and the item's content, each
+admitted by a `defadmit`. No result may name it as its producer: the verifier refuses a result whose producer's role
+is `derivation` or no role of `trust::ROLES`. **Outside it:** its run-time reads of the kind modules (`std::fs`),
+stated in the report. A test or bench target whose package's normal and development closure, read from metadata,
+holds role packages of two roles and that no form names is **reported**, so no comparison stays unseen.
 
-**Its class** (§5): §4.4's **reference derivation**. The property: the checker's relation is the generator's,
-transcribed once — the model from the relation record, the production relation from the model, line for line in
-places — and held equal. The residual risk: a misreading of the record, or a fault in transcribed code, that both
-carry passes the checker. The controls: the record's 31 review rounds, the model's exhaustive checker and its corpus,
-and the comparison over the bounded universe on every commit, each mechanized; the order of every amendment — the
-checker's model first, the generator's relation after — a procedure, not a check. What the checker adds of its own is
-the plan's identity, its completeness and the joint rules (`M3.5`). The comparison of the checker's fenced joint
-reading with `joint::System::read` (`M3.5.5`) compares two readings written apart: a form of its own, whose class
-its review writes, never this one's.
+**Its class** (§5), §4.4's **reference derivation.** The comparison holding the two equal is the coupling itself,
+not a control: a fault both carry passes it. Controls independent of the transcription: the model's exhaustive
+checker for the properties the relation record states, and the falsification corpus written from the record (both
+built); F12's hand-written corruptions and accepted plans (`M3.5.4`, `M3.5.5`, *pending*); the frozen verdicts once
+`M3.4` wires the relation into `archogen check` (*pending*). The record's 31 review rounds, and amending the checker's
+model before the generator's relation, are procedures. The comparison of the checker's fenced joint reading with
+`joint::System::read` (`M3.5.5`) compares two readings written apart: a form of its own, its class its review's.
 
 ### 4. Invoked programs and installed data
 
-**`(invokes <root> …)`**, on the front's form alone — the root whose role is the generator's and whose target is an
-executable. Refused as `trust-invocation`, decided from the forms' text before any build, wherever the gate runs:
-`invokes` on any other root's form; on a front whose target is not an executable; an empty clause; a root named twice;
-a name that is no root, or is the generator's root, a root whose target is not an executable, the harness or a
-derivation. Otherwise each invocation is a shared item of the two roots, of kind `invocation`, its identity
-`<front>+<invoked> invocation`, its one aspect the content — the sha256 of the invoked root's name, role and target —
-so a new or changed invocation is reported for review, as a new consumer is. A process is not a compilation: the
-invoked root's packages are not the front's, and an invocation is never `trust-shared-program`.
+**`(invokes <root> …)` and `(installed "archogen-install.json")`**, on the front's form alone — the root of role
+`generator` whose target is an executable. Each read wrong fails `read_roots` (exit 2): either clause on another
+root's form or on a front not an executable; an empty clause or a root named twice; an invoked name that is no root,
+the generator's, a root whose target is not an executable, the harness or a derivation; `(installed …)` holding more
+than one name, a name other than `archogen-install.json` (`archogen_install::FILE`), or no `(invokes …)` beside it.
+An invocation is a shared item of the two roots: kind `invocation`, identity `<a>+<b> invocation`, the pair in the
+inventory's order; its content the invoked root's name, role and target and the sha256 of the launcher, `crates/
+archogen-cli/src/sibling.rs`, whose acceptance contract carries its risk; so a new or changed invocation, or launcher,
+is reported. A process is not a compilation: an invocation is never `trust-shared-program`. The installed name is no
+blob and no `(data …)`: the blob rule of `trust-undeclared-input` does not reach it, and the inventory hashes nothing
+for it; the install derives its digests from the inventory and places exactly the invoked roots (`M3.5.1.3`), and the
+package records it beside the artifacts it describes, never as a handed dependency (`M4.7`).
 
-**`(installed "archogen-install.json")`**, on the front's form alone: a bare file name, the manifest
-`cargo xtask install` writes beside the front (`archogen_install::FILE`). It is no blob and no `(data …)`, so the
-blob rule of `trust-undeclared-input` does not apply and the inventory hashes nothing for it: the install derives every
-digest it holds from the inventory (`M3.5.1.3`), and places exactly the roots the front's form invokes. The package
-records it beside the artifacts it describes, never as a handed dependency, and its verifier holds its digests to the
-inventory's (`M4.7`).
+**What stays outside, stated in the report:** that the front runs only, or all, the programs its form invokes.
+`NO-SUBPROCESS` admitting `sibling.rs` alone, declared from the front's `main.rs` (`M3.5.1.4`), the launcher running
+only what the manifest names, and the install placing only invoked roots stand there.
 
-**What stays outside, stated in the report.** The gate cannot see that the front runs only, or all, the programs its
-form invokes. `NO-SUBPROCESS` admitting one file, `sibling.rs`, declared from the front's `main.rs` alone
-(`M3.5.1.4`), the launcher running only what the manifest names, and the install placing only invoked roots stand
-there; a test holds the form's `(installed …)` name to `archogen_install::FILE`.
+### 5. What the roles share
 
-### 5. What the roles share, each with its class and residual risk
+Proposed for each form's review (parent §5): one class, the property it can affect, its residual risk and controls;
+*pending* names the owner.
 
-Proposed for each form's review (parent §5), one class an item; a control marked *pending* has its owner.
+| Item | Pairs | Class | Property | Residual risk | Controls |
+| --- | --- | --- | --- | --- | --- |
+| `crates/eadl-front` | generator, configuration checker | interpretation/normalization | configuration validity | a misreading both make | the conformance suite, the frozen verdicts |
+| `crates/eadl-model` | generator, configuration checker | semantic/analysis logic | configuration validity | a wrong quantity, comparison or pass both apply | its tests, the frozen verdicts, the profile's classified rules |
+| the kind modules, two files | generator, configuration checker | authoritative data | configuration validity | a wrong definition both read | `LANGUAGE-FREEZE`, the migration notes |
+| `crates/archogen-digest` | every pair it joins | infrastructure | every checked result's identity | a wrong digest in every role's records | three oracles: derived constants, published examples, the system tool's boundaries |
+| `crates/archogen-outcome` | every pair it joins | interpretation/normalization | every checked result | a refusal read as an acceptance for every role | one text per record, its consistency rules, the damage sweep; the exit code's second channel *pending* `M3.5.1.4` |
+| `crates/archogen-json` | every pair it joins | interpretation/normalization | every checked result | a parsing fault common to every record and server | RFC 8259 strictness, a member named twice refused; the records' readers re-write what they read |
+| `crates/archogen-transport` | every pair it joins | interpretation/normalization | every served result | a framing fault common to every server | *pending* `M3.5.1.6` |
+| the shared derivation | generator, configuration checker | reference derivation | configuration validity | as §3 | as §3 |
+| an invocation | the front and each invoked root | interpretation/normalization | every checked result | the front reporting a refused or unchecked plan as checked | *pending* `M3.5.1.4`: the exit code agreeing with the record, the subject's digests, the program's sha256 |
+| the build configuration | every new pair | infrastructure | every result | a toolchain, profile or flag fault common to every role | the pinned toolchain (`SOURCE-LEDGER`), the item compared on the baseline's host |
 
-| Item | Pairs | Class | Residual risk | Controls |
-| --- | --- | --- | --- | --- |
-| `crates/eadl-front` | generator, configuration checker | interpretation/normalization | a misreading of a description both make | the conformance suite, the frozen verdicts |
-| `crates/eadl-model` | generator, configuration checker | semantic/analysis logic | a wrong quantity, comparison or pass both apply | its tests, the frozen verdicts, the profile's classified rules |
-| the kind modules, two files | generator, configuration checker | authoritative data | a wrong definition both read | `LANGUAGE-FREEZE` and the migration notes |
-| `crates/archogen-digest` | every pair it joins | infrastructure | a wrong digest in every role's records | three oracles: the derived constants, the published examples, the system tool's boundaries |
-| `crates/archogen-outcome` | every pair it joins | interpretation/normalization: its reader decides acceptance | one fault reading a refusal as an acceptance for every role | one text per record, the consistency rules, the damage sweep; the exit code as a second channel, *pending* `M3.5.1.4` |
-| `crates/archogen-json` | every pair it joins | interpretation/normalization | a parsing fault common to every record and server | RFC 8259 strictness, a member named twice refused; the records' readers re-write what they read |
-| `crates/archogen-transport` | every pair it joins | interpretation/normalization | a framing fault common to every server | *pending* `M3.5.1.6`, which writes this row's controls before a checker compiles it |
-| the shared derivation (§3) | generator, configuration checker | reference derivation | as §3 | as §3 |
-| an invocation (§4) | the front and each invoked root | interpretation/normalization | the front reporting a refused or unchecked plan as checked | *pending* `M3.5.1.4`: the exit code agreeing with the record, the subject's digests, the program's sha256 |
-| the build configuration | every new pair | infrastructure | as the parent's build-configuration items | as theirs |
+`crates/archogen-install` is the front's alone; `xtask` is no root. `eadl-front` and `eadl-model` join the scheduling
+checker's pairs when it reads descriptions (`M2.7.5`); each new pair's rows are this table's.
 
-`crates/archogen-install` is the front's alone, and `xtask`, which writes the manifest, is no root. `eadl-front` and
-`eadl-model` join the scheduling checker's pairs when it reads descriptions (`M2.7.5`, parent §1); each new pair's rows
-are this table's.
+### 6. What the parent, and the generated-sources record, read with it
 
-### 6. What the parent reads with it
-
-- **The opening, the change part, the standing list and `TI-H2`** take each `defderivation` form and each invocation:
-  added, changed or removed against the base commit's in the change part, named in the standing list until accepted.
-- **§2:** the configuration checker's root, as §2 above; the forms gain `defderivation`; `defharness`'s pair is a
-  reference model and its implementation; the front's form gains `(invokes …)` and `(installed …)`; the exemption from
-  `trust-shared-program` extends to a derivation's pair; and its sentence on `archogen analyze` and `archogen
-  resolve` is answered — each checker is an executable of its own, which the front invokes.
-- **§3:** "Where it builds" builds a derivation's test target as the harness's; the default-deny scope, the
-  admissions and their counting cover its closure as the programs'; what is recorded for each root gains the front's
-  invocations and installed file; what remains outside gains a derivation's run-time reads and §4's last paragraph.
-- **§4 and §5:** two kinds of shared item, the shared derivation and the invocation, with the aspects above; a form
-  proposes their digests as it does any item's.
-- **§6:** `trust-invocation`, refused, as §4; `trust-new-shared`, `trust-shared-changed` and `trust-form-missing` take
-  both kinds; the blob rule of `trust-undeclared-input` exempts `(installed …)`; `trust-baseline-stale` takes a
-  derivation whose package or test target is gone, and an invocation whose root is gone.
-- **`TI-H9`**'s case-5 sets take a derivation's units; **`TI-H24`**'s fixtures gain the derivation's and the
-  invocation's; **`TI-H19`** is amended in the parent's ledger in this change; `TI-H18` stands.
+- **The parent's opening:** "a change outside every root and every program target" reads "… every program target and
+  every derivation's units"; **the change part, the standing list and `TI-H2`** take each `defderivation` form and
+  invocation, added, changed or removed; **case 5** and `M3.6.7`'s list of what the gate reads beyond the roots take a
+  derivation's units as the harness's; **`TI-H9`**'s sets likewise.
+- **§2:** the checker's root (§2 above); `defderivation`; `defharness` narrowed; the front's two clauses; the
+  exemption extended to a derivation's pair; the sentence on `archogen analyze` and `archogen resolve` answered — each
+  checker an executable the front invokes.
+- **§3:** "the comparison harness a pair's form names is built" and the build configuration's "overrides for a
+  package some root or the harness compiles" take a derivation; "development edges not followed … but the harness's
+  own" and the artifact bullet take a derivation's; the default-deny scope and admissions cover its closure; what is
+  recorded per root gains the front's invocations and installed name; what remains outside gains §3's and §4's lines.
+- **§4, §5:** the two kinds of item, their identities and aspects, and their forms' digests.
+- **§6:** the derivation's and the clauses' read failures (§3, §4); `trust-new-shared`, `trust-shared-changed` and
+  `trust-form-missing` take both kinds; `trust-undeclared-input`'s "a root or the harness compiles" takes a derivation,
+  its blob rule not the installed name; `trust-shared-program`'s exemption a derivation's pair; `trust-baseline-stale`
+  a derivation whose package or target is gone.
+- **Case 4, `trust-inventory-stale` and §7's package contents** gain the install manifest, as `M4.7` records it;
+  **How to apply**'s "a comparison harness is named in its pair's form" gains a derivation; **`TI-H24`** its fixtures.
+- **The generated-sources record:** §1's "a program is a root or the comparison harness" gains a derivation; §5's
+  `trust-shared-program`, "for the harness, than its pair's two", gains a derivation; §7's case-5 list its units.
+- **`TI-H19`** is amended in the parent's ledger in this change; `TI-H18` stands.
 
 ## Why
 
 - **Disclosed, not hidden.** A derivation two roles share is the loss of independence §4.4 exists to surface; a form
   of its own puts it before a reviewer with its class, where today the gate sees nothing of it.
 - **One way to write a comparison.** A harness and a derivation differ in what they may produce and whom they are
-  paired with; a comparison that could be written as either would take whichever its author found convenient.
-- **A process is an input.** The program a root runs is another root's artifact, and the invocation item names it.
+  paired with; a comparison writable as either would take whichever its author found convenient.
+- **A process is an input.** The program a root runs is another root's artifact, and the invocation names it.
 
 ## How to apply
 
-Each form's reading is built in the leaf where the form first has a subject (the hand-offs below). Until then a form
-of these kinds fails `read_roots`, so the gate cannot judge (exit 2), and none is written early.
+**Two pushes for every new form.** Because the gate is built from the base (§1), a form's reader lands first
+(`M3.5.2.1`), reaches `main` through a cadence push, and only a commit of a later push writes the form. The forms of
+the shared items a commit adds are its push's runner proposal, committed in a leaf of their own that waits on the
+runner, writing §5's row — as `M3.5.1.8`, and `M3.6.3.2.1.1` for a refreshed encoding; until then the gate on the
+baseline's host refuses `trust-form-missing`, which the push's report states.
 
 <!-- machine-read: handoffs -->
 | Id | Leaf | Hand-off |
 | --- | --- | --- |
-| `RP-H1` | `M3.5.3` | The configuration checker's library is its root in `trust/roots.eadl` from the commit that creates `crates/archogen-plan-check`, replacing `(defrole configuration-checker …)`, and the forms of the items it adds are the runner's proposal at the next authorized cadence push, each carrying `decision_trust-role-programs.md` §5's class. |
-| `RP-H2` | `M3.5.3` | The gate reads `defderivation` as `decision_trust-role-programs.md` §3 states and refuses a `defharness` whose pair is not a reference model and the implementation it validates, each tested on fixtures; `trust/roots.eadl` holds the form for the relation's comparison; the book's trust chapter lists the form and its item. |
+| `RP-H1` | `M3.5.3` | The configuration checker's library is its root in `trust/roots.eadl` from the commit that creates `crates/archogen-plan-check`, replacing `(defrole configuration-checker …)`. |
+| `RP-H2` | `M3.5.2.1` | The gate reads `defderivation`, the narrowed `defharness`, `(invokes …)` and `(installed …)` as `decision_trust-role-programs.md` §3 and §4 state, records and reports both new kinds of item, reports a test or bench target compiling two roles' role packages that no form names, and refuses in `trust-verify` a result whose producer is a derivation or no role's; its report's list of what stays outside gains §3's and §4's lines; each tested on fixtures, `TI-H9`'s and `TI-H24`'s among them, the existing pairs of a generator and a checker rewritten; the book's trust chapter says so; and it writes none of these forms. |
 | `RP-H3` | `M3.5.4` | Each `include_str!` site of `crates/archogen-plan-check` is admitted in `trust/roots.eadl` by a `defadmit` of its own. |
-| `RP-H4` | `M3.5.5` | The comparison of the checker's fenced joint reading with `joint::System::read` is a `defderivation` form of its own, its class written by its review. |
-| `RP-H5` | `M3.5.1.4` | The gate reads `(invokes …)` and `(installed …)` on the front's form alone as `decision_trust-role-programs.md` §4 states, refusing `trust-invocation` and reporting each invocation as a shared item, tested on fixtures; the generator's form gains `(invokes configuration-checker)` and `(installed "archogen-install.json")` with the launcher, a test holding the name to `archogen_install::FILE`; `cargo xtask install` places exactly the roots the front's form invokes; the book's trust chapter lists both clauses and the code. |
-| `RP-H6` | `M2.21.3` | The generator's form invokes `scheduling-checker` from the commit that roots the scheduling checker at its executable. |
-| `RP-H7` | `M3.4` | `crates/eadl-resolve` joins the generator's role packages in `trust/roots.eadl` in the commit that makes the generator compile it. |
-| `RP-H8` | `M4.7` | The package records the install manifest beside the artifacts it describes, never as a handed dependency, and `cargo xtask trust-verify` refuses one whose digests are not the inventory's, `TI-H8` and `TI-H14` amended to say so. |
-| `RP-H9` | `M3.5.1.8` | The form of `generator+scheduling-checker package crates/archogen-digest` carries `decision_trust-role-programs.md` §5's class, risk and controls. |
+| `RP-H4` | `M3.5.5` | The comparison of the checker's fenced joint reading with `joint::System::read` is a `defderivation` form of its own, written after its reader reaches `main`, its class written by its review. |
+| `RP-H5` | `M3.5.1.4` | The generator's form gains `(invokes configuration-checker)` and `(installed "archogen-install.json")` with the launcher, in a push after the one that brings `M3.5.2.1`'s reader to `main`, a test holding the name to `archogen_install::FILE`, and `cargo xtask install` places exactly the roots the front's form invokes. |
+| `RP-H6` | `M2.21.3` | The generator's form invokes `scheduling-checker` from the commit, after both this leaf and `M3.5.1.4`, in which `archogen analyze` runs the sibling. |
+| `RP-H7` | `M3.4` | `crates/eadl-resolve` joins the generator's role packages in `trust/roots.eadl` in the commit that makes the generator compile it, its two `include_str!` sites admitted unless `M3.5.3.1` has admitted them. |
+| `RP-H8` | `M4.7` | The package records the install manifest of its own trust build beside the artifacts it describes, never as a handed dependency, and `cargo xtask trust-verify` refuses one whose digests are not the inventory's, `TI-H14` amended to say so. |
+| `RP-H9` | `M3.5.1.8` | The form of `generator+scheduling-checker package crates/archogen-digest` writes `decision_trust-role-programs.md` §5's class, property, residual risk and controls. |
 | `RP-H10` | `M3.5.1.6` | `crates/archogen-transport`'s row of `decision_trust-role-programs.md` §5 has its controls written before a checker compiles it. |
+| `RP-H11` | `M3.5.3.1` | `trust/roots.eadl` holds the `defderivation` form for the relation's comparison, after `M3.5.2.1`'s reader reaches `main`, `crates/eadl-resolve`'s two `include_str!` sites admitted unless `M3.4` has admitted them, and the forms of the items `M3.5.3`'s root adds are its push's runner proposal, each writing `decision_trust-role-programs.md` §5's row. |
+| `RP-H12` | `M3.5` | Each leaf of `M3.5` that adds a shared item commits its forms from its push's runner proposal in a leaf of their own that waits on the runner, each writing `decision_trust-role-programs.md` §5's row. |
+| `RP-H13` | `M2.21.3` | The forms of the shared items the scheduling checker's executable root adds are its push's runner proposal, committed in a leaf of their own that waits on the runner, each writing `decision_trust-role-programs.md` §5's row. |
 
 ## Review
 
 | Round | Date | Defects | Remarks | Verdict |
 | --- | --- | --- | --- | --- |
 | 1 | `2026-10-23` | 23 | 10 | not acceptable; every finding answered |
+| 2 | `2026-10-23` | 14 | 6 | not acceptable; every finding answered |

@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers' programs in the trust record, round 2 answered
+
+`ARCHOGEN-M3-0887` (leaf `M3.5.2`), `2026-10-23`.
+
+- The second review found that the trust gate, built from the base commit, cannot read a new kind of form in the push
+  that brings its reader: every reader now lands first, in a leaf of its own, and every form a push later. Its other
+  13 defects are answered too.
+
 ## archogen — the checkers' programs in the trust record, under review
 
 `ARCHOGEN-M3-0886` (leaf `M3.5.2`), `2026-10-23`.

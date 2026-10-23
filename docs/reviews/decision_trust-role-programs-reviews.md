@@ -60,3 +60,32 @@ R1-D1, D2 and D3 in the code before answering.
 | R1-R8 | remark | cite a committed revision and host | `0a5a4b12`, `aarch64-apple-darwin` (§1) |
 | R1-R9 | remark | reading §4.4's tools as programs a root runs is an extension | said so (§1) |
 | R1-R10 | remark | "refused as unknown" is imprecise: `read_roots` fails, exit 2 | corrected (*How to apply*, §3) |
+
+**Round 2**, `2026-10-23`, a new context at `6fccaabc`, read-only and fenced; it re-measured §1 (5 programs, 8 pairs,
+10 shared items) and the hand-off ledger (71, held), and read the gate's workflow and the verifier. Verdict: not
+acceptable, 14 defects and 6 remarks, several made by round 1's answer. The heaviest: the gate is built from the base,
+so a form cannot be judged in the push that brings its reader — every reader now lands first, in `M3.5.2.1`, and every
+form a push later. The author verified it in `.github/workflows/trust-gate.yml` and `read_roots` before answering.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R2-D1 | defect | the gate is built from the base, whose `read_roots` fails on an unknown form or clause, so a form written in the push that brings its reader is unjudged (exit 2) | readers in `M3.5.2.1`, writing no form; each form in a later push (*How to apply*, `RP-H5`, `RP-H11`, `RP-H4`); verified in `trust-gate.yml` and `read_roots` |
+| R2-D2 | defect | §3 makes a missing package a read failure, §6 `trust-baseline-stale`; `read_roots` reads text only | text faults read failures; a missing package or target `trust-baseline-stale`, from metadata, wherever the gate runs (§3) |
+| R2-D3 | defect | building the comparison compiles `eadl-resolve`, whose two `include_str!` sites no form admits | stated (§3); admitted by `M3.5.3.1` or `M3.4`, whichever is first (`RP-H11`, `RP-H7`) |
+| R2-D4 | defect | the derivation item has no identity; a second form for one pair would collide | `<a>+<b> shared-derivation <name>`, one item a form (§3) |
+| R2-D5 | defect | "no result may name it" is not enforced: the verifier accepts a matching role text; how a derivation is recorded is unstated | recorded as the harness, role `derivation`; the verifier refuses a derivation's or no role's result (§3, `RP-H2`) |
+| R2-D6 | defect | §6 misses the opening, case 5 and `M3.6.7`'s list, §3's build and edge sentences, two §6 rows, case 4 and §7, *How to apply*, and the generated-sources record | §6 lists each, the generated-sources record's three passages among them; a derivation is a program there |
+| R2-D7 | defect | §5 has no property; no owner writes the forms of items arriving at later leaves; `M3.5.1.8` contradicts `RP-H9` | a property column; `RP-H11`, `RP-H12`, `RP-H13`; `M3.5.1.8` aligned |
+| R2-D8 | defect | the build-configuration row's risk and controls say nothing | written (§5) |
+| R2-D9 | defect | the comparison cannot catch a fault both carry; the review rounds are a procedure | the comparison named the coupling; independent controls listed, *pending* where owned; procedures named (§3) |
+| R2-D10 | defect | `RP-H6` has the wrong trigger and no order against `M3.5.1.4` | "after both, the commit in which `archogen analyze` runs the sibling"; the order in `M2.21.3` |
+| R2-D11 | defect | `RP-H8` amends `TI-H8`, owned by a leaf sealed by then | `TI-H14` alone, `M4.7`'s own (`RP-H8`) |
+| R2-D12 | defect | five passages of the tree contradict round 1's answers | each amended |
+| R2-D13 | defect | `(installed …)` has no refusals | listed with `(invokes …)`'s (§4) |
+| R2-D14 | defect | other two-role tests stay invisible, and no one owns the report's list of what stays outside | an unnamed two-role test target reported from metadata; the list's lines `RP-H2`'s (§3, §4) |
+| R2-R15 | remark | narrow `defharness` by roles, either order; three fixtures assert a generator–checker pair | worded so (§3); the fixtures rewritten (`RP-H2`) |
+| R2-R16 | remark | the invocation's content misses the launcher, and its identity takes the inventory's order | the launcher's sha256 an aspect; the inventory's order (§4) |
+| R2-R17 | remark | uncoded shape errors beside a coded `trust-invocation`; the build command lacks the parent's flags; edges from its own package | every text fault a read failure, as the harness's, `trust-invocation` retired; the parent's command; its own package's edges (§3, §4) |
+| R2-R18 | remark | the parent's clarification overstates: "a root's" invocations, an exemption vacuous until `M3.4`, a narrow refusal | reworded |
+| R2-R19 | remark | name the case-5 and channel fixtures | in `RP-H2` |
+| R2-R20 | remark | `RP-H8` holds only when the package carries the install's own trust build | said so |
