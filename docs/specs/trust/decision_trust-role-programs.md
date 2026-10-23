@@ -54,17 +54,17 @@ description and the assignment record it checks are claim subjects, never depend
 
 ### 3. The shared derivation
 
-**A derivation is a comparison harness for the generator and the configuration checker, but for two things:** it is
+**A derivation is a comparison harness for the generator and a checker, but for two things:** it is
 paired with no root — its pair takes its item, as a harness's pair does — and no result may name it as its producer.
 Wherever the parent, the generated-sources record or their ledgers name the comparison harness as a program — what it
 compiles, reads and reaches; how it is built, recorded, scanned, admitted, exempted, judged and reported; its item,
 its provenance and its forms — a derivation is read the same way, but for those two things. That is complete by
 construction: no passage needs listing, and a passage added later reads so too.
 
-**The form.** `(defderivation <name> (pair generator configuration-checker) (package "<dir>") (test <target>) (reason
-"…"))` names one test target comparing a reading of the generator's with the configuration checker's; each form's
+**The form.** `(defderivation <name> (pair generator <checker>) (package "<dir>") (test <target>) (reason "…"))`
+names one test target comparing a reading of the generator's with a checker's; each form's
 class is its own review's. Its text read wrong fails `read_roots` (exit 2), as a harness's does: a pair naming no root,
-one root twice, or other than the generator's root and the configuration checker's; a target another form names, a
+one root twice, or other than the generator's root and a checker's; a target another form names, a
 harness's or a derivation's. A package or target the commit lacks is `trust-baseline-stale`, from metadata, wherever
 the gate runs. **`defharness` is narrowed:** its pair is one root of role `reference-model` and one of role
 `implementation`, in either order; today's `differential` is.
@@ -78,15 +78,18 @@ from `M3.4`, when `crates/eadl-resolve` becomes one. Building it compiles `eadl-
 item, each admitted by a `defadmit`. The verifier refuses a result whose role is not one of `trust::ROLES`, and one
 whose producer is a derivation's artifact; a reference model's result produced by its pair's harness stays accepted.
 
-**Found by machine, not by hand.** A test target whose sources — comments and literals stripped, each `use` read
-whole — name a crate of the generator's role packages and a crate of a checker's, and that no form names, is reported
-as `trust-unclassified-program` is, so a missing comparison is found; the census above is that rule's measurement
-before `M3.4`, when `eadl-resolve` is still no role's, and `RP-H11` names both its findings.
+**Found by the build, not by names.** Each test-like unit — an integration test, a bench, a library's or an
+executable's unit tests, a library's doc tests — of a package whose build, its own development edges followed, compiles
+role packages of the two roles of a pair a property rests on (§5: the generator and either checker, the reference model
+and the implementation) is a program target of the parent's §2, whatever its sources name: an integration test named by
+a pair form if it compares them, any unit else classified by `defprogram`, `(target test|bench|lib-test|bin-test|doctest
+<name>)`, its reason the claim that it compares nothing they hold equal. Unnamed, it is `trust-unclassified-program`,
+and `trust-form-missing` on the baseline's host. §1's census of names found the two comparisons `RP-H11` names.
 
 **Outside it, stated in the report:** its run-time reads of the kind modules (`std::fs`); and the transcriptions
 themselves — the model's sources are in the checker's package and the production relation's, from `M3.4`, in the
 generator's, so an edit to either moves no shared item and is reported nowhere; the comparison failing is what holds
-them together.
+them together; and whether a classified unit compares what two roles hold equal, which its review decides.
 
 **Its class** (§5), §4.4's **reference derivation.** The comparison holding the two equal is the coupling itself,
 not a control: a fault both carry passes it. Controls independent of the transcription: the model's exhaustive
@@ -177,11 +180,11 @@ refuses the item until a push holds the form and nothing after it moves the item
 | `RP-H4` | `M3.5.5` | The comparison of the checker's fenced joint reading with `joint::System::read` is a `defderivation` form of its own, written after its reader reaches `main`, its class written by its review. |
 | `RP-H5` | `M3.5.1.4` | The generator's form gains `(invokes configuration-checker)` and `(installed "archogen-install.json")` with the launcher, after `M3.5.6` roots the checker at its executable and in a push after the one that brings `M3.5.2.1`'s reader to `main`, a test holding the installed name to `archogen_install::FILE` and the launcher's path to the file `NO-SUBPROCESS` admits, and `cargo xtask install` places the front and, as siblings, exactly the roots its form invokes. |
 | `RP-H6` | `M2.21.5` | The generator's form invokes `scheduling-checker` in the commit in which `archogen analyze` runs `archogen-analyze` through the front's launcher, after `M2.21.3` and `M3.5.1.4`, and the forms of the items that commit adds or moves come from the runner as `decision_trust-role-programs.md`'s *How to apply* says, in a leaf of their own. |
-| `RP-H7` | `M3.4` | `crates/eadl-resolve` joins the generator's role packages in `trust/roots.eadl` in the commit that makes the generator compile it, its two `include_str!` sites admitted unless `M3.5.3.1` has admitted them, and the forms of the items its new edges add or move come from the runner as `decision_trust-role-programs.md`'s *How to apply* says, in a leaf of their own. |
+| `RP-H7` | `M3.4` | `crates/eadl-resolve` joins the generator's role packages in `trust/roots.eadl` in the commit that makes the generator compile it, its two `include_str!` sites admitted unless `M3.5.3.1` has admitted them, each of its test-like units no `defderivation` names classified by a `defprogram`, and the forms of the items its new edges add or move come from the runner as `decision_trust-role-programs.md`'s *How to apply* says, in a leaf of their own. |
 | `RP-H8` | `M4.7` | The package records the install manifest of its own trust build beside the artifacts it describes, never as a handed dependency, and `cargo xtask trust-verify` refuses one whose digests are not the inventory's, `TI-H14` amended to say so. |
 | `RP-H9` | `M3.5.1.8` | The form of `generator+scheduling-checker package crates/archogen-digest` comes from the runner as `decision_trust-role-programs.md`'s *How to apply* says — the first run whose base holds `62099a39` — writing its §5's class, property, residual risk and controls. |
 | `RP-H10` | `M3.5.1.6` | `crates/archogen-transport`'s controls are written into `decision_trust-role-programs.md` §5's row, through that record's review, before a checker compiles it. |
-| `RP-H11` | `M3.5.3.1` | `trust/roots.eadl` holds a `defderivation` form for each comparison the census names — `production` and `vocabulary` in `crates/eadl-resolve` — after `M3.5.2.1`'s reader reaches `main`, `crates/eadl-resolve`'s two `include_str!` sites admitted unless `M3.4` has admitted them. |
+| `RP-H11` | `M3.5.3.1` | `trust/roots.eadl` holds a `defderivation` form for each comparison §1 names — `production` and `vocabulary` in `crates/eadl-resolve` — after `M3.5.2.1`'s reader reaches `main`, `crates/eadl-resolve`'s two `include_str!` sites admitted unless `M3.4` has admitted them. |
 | `RP-H12` | `M3.5` | Each leaf of `M3.5` that adds a shared item, or moves one's measured aspects, has its forms come from the runner as `decision_trust-role-programs.md`'s *How to apply* says, in a leaf of their own. |
 | `RP-H13` | `M2.21.3` | The forms of the shared items the scheduling checker's executable root adds, or whose measured aspects it moves, come from the runner as `decision_trust-role-programs.md`'s *How to apply* says, in a leaf of their own. |
 | `RP-H14` | `M3.5.3.2` | The forms of the shared items `M3.5.3`'s root and `M3.5.3.1`'s derivations add come from the runner as `decision_trust-role-programs.md`'s *How to apply* says, each writing its §5's row. |

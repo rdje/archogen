@@ -601,11 +601,13 @@ pub fn judge(
             c.package == field("package") && c.kind == field("kind") && c.target == field("name")
         });
         if !classified {
-            // A test is named by a `defderivation`, never classified (`decision_trust-role-programs.md` §3).
-            let remedy = if field("kind") == "test" {
-                "name it by a `defderivation` form"
-            } else {
-                "classify it, or make it a root"
+            // A test-like unit joining two roles is named by a pair form, if it compares them, or classified
+            // (`decision_trust-role-programs.md` §3).
+            let remedy = match field("kind") {
+                "test" => "name it by a `defderivation` form if it compares the two roles, or classify it by a \
+                           `defprogram` form",
+                kind if crate::trust::TEST_KINDS.contains(&kind) => "classify it by a `defprogram` form",
+                _ => "classify it, or make it a root",
             };
             formless.push(format!(
                 "trust-form-missing: the {} `{}` of `{}` has no form in {} — {remedy}",
@@ -866,6 +868,8 @@ pub const UNSEEN: &[&str] = &[
      no shared item, and only the comparison failing joins them (§3)",
     "whether the front runs only, or all, the programs its form invokes: `NO-SUBPROCESS`, the launcher reading the \
      manifest and the install placing the invoked roots stand there (§4)",
+    "whether a unit two roles' packages join compares them: the build finds the joining, and a classification's review \
+     decides that it compares nothing they hold equal (§3)",
 ];
 
 /// A file of a commit's tree, or none when the tree does not hold it.
@@ -1443,6 +1447,42 @@ mod tests {
                 "trust-unclassified-program: the bin `x` of `crates/x` is neither a root nor classified in trust/roots.eadl"
             ]
         );
+    }
+
+    #[test]
+    fn a_joined_unit_with_no_form_is_refused_naming_the_forms_that_take_it() {
+        crate::trust_test_process::bounded!(
+            a_joined_unit_with_no_form_is_refused_naming_the_forms_that_take_it
+        );
+        // `decision_trust-role-programs.md` §3: an integration test joining two roles is named by a derivation if it
+        // compares them, or classified; any other test-like unit is classified; the change part reports each.
+        let roots = read_roots(ROOTS_TEXT).expect("roots");
+        let own = baseline_of(&inv("h", &[CONFIG], &[], (&[], &[])));
+        let unit = |kind: &str, name: &str| {
+            format!(
+                r#"{{"package":"crates/r","kind":"{kind}","name":"{name}","status":"trust-unclassified-program: the {kind} `{name}` of `crates/r` compiles `crates/a`, `crates/b`, role packages of two roles a property rests on, and no form in trust/roots.eadl names or classifies it"}}"#
+            )
+        };
+        let (test, lib) = (unit("test", "compare"), unit("lib-test", "r"));
+        let now = inv("h", &[CONFIG], &[&test, &lib], (&[], &[]));
+        let base = Base {
+            commit: Some("b"),
+            baseline: Some((&own, "s".to_owned())),
+            root_forms: None,
+        };
+        let j = judge(&now, &roots, &forms(), Some(&own), &base).expect("judged");
+        for want in [
+            "trust-form-missing: the test `compare` of `crates/r` has no form in trust/roots.eadl — name it by a \
+             `defderivation` form if it compares the two roles, or classify it by a `defprogram` form",
+            "trust-form-missing: the lib-test `r` of `crates/r` has no form in trust/roots.eadl — classify it by a \
+             `defprogram` form",
+        ] {
+            assert!(j.refused.iter().any(|r| r == want), "{want}: {:#?}", j.refused);
+        }
+        assert_eq!(j.refused.len(), 2, "{:#?}", j.refused);
+        for kind in ["the test `compare`", "the lib-test `r`"] {
+            assert!(has(&j.change, kind), "{kind}: {:#?}", j.change);
+        }
     }
 
     #[test]

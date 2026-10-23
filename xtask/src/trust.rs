@@ -95,6 +95,20 @@ pub struct Admission {
 /// `src/bin/*.rs` — an example, and a library built as a `cdylib`, `staticlib` or `dylib`.
 pub const PROGRAM_KINDS: &[&str] = &["bin", "example", "cdylib", "staticlib", "dylib"];
 
+/// The test-like units `cargo test` and `cargo bench` build, each compiling its package's development edges: an
+/// integration test, a bench, a library's unit tests, an executable's unit tests and a library's doc tests. One is a
+/// program target when its build joins two roles of a pair in [`JOINED`] (`decision_trust-role-programs.md` §3).
+pub const TEST_KINDS: &[&str] = &["test", "bench", "lib-test", "bin-test", "doctest"];
+
+/// The pairs of roles a property rests on (`decision_trust-role-programs.md` §5): a test-like unit whose build compiles
+/// a role package of a root of each is a program target, named by a pair form or classified, whatever its sources
+/// name, so no spelling hides a comparison (round 5's D1).
+const JOINED: &[(&str, &str)] = &[
+    ("generator", "configuration-checker"),
+    ("generator", "scheduling-checker"),
+    ("reference-model", "implementation"),
+];
+
 /// A program target that is not a root, classified by review (§2): the reason, and the role packages its build
 /// compiles, so a set that grows is unreviewed again (R2 B6; R4 5; R5 remark 13).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -103,7 +117,7 @@ pub struct Classification {
     pub name: String,
     /// Its package's directory, relative to the repository.
     pub package: String,
-    /// Which of [`PROGRAM_KINDS`] it is.
+    /// Which of [`PROGRAM_KINDS`] or [`TEST_KINDS`] it is.
     pub kind: String,
     /// The target's name.
     pub target: String,
@@ -162,8 +176,8 @@ const FORMS: &[(&str, &[&str])] = &[
         ],
     ),
     ("defharness", &["pair", "package", "test"]),
-    // A comparison of a reading of the generator's with the configuration checker's, read as the harness but for its
-    // pairing and its results (`decision_trust-role-programs.md` §3, leaf `M3.5.2.1.1`).
+    // A comparison of a reading of the generator's with a checker's, read as the harness but for its pairing and its
+    // results (`decision_trust-role-programs.md` §3, leaf `M3.5.2.1.1`).
     ("defderivation", &["pair", "package", "test", "reason"]),
     ("defadmit", &["file", "rule", "sha256", "reason"]),
     // A program target that is not a root (§2): `M3.6.3.1`.
@@ -366,11 +380,16 @@ fn read_form(form: &Form, roots: &mut Roots, names: &mut BTreeSet<String>) -> Re
         "defprogram" => {
             one(form, "reason", &name)?;
             let (kind, target) = match values(form, "target").as_slice() {
-                [k, n] if PROGRAM_KINDS.contains(&k.as_str()) => (k.clone(), n.clone()),
+                [k, n]
+                    if PROGRAM_KINDS.contains(&k.as_str()) || TEST_KINDS.contains(&k.as_str()) =>
+                {
+                    (k.clone(), n.clone())
+                }
                 _ => {
                     return Err(format!(
-                        "{ROOTS}: `{name}`'s target is `(target KIND NAME)`, KIND one of {}",
-                        PROGRAM_KINDS.join(", ")
+                        "{ROOTS}: `{name}`'s target is `(target KIND NAME)`, KIND one of {}, {}",
+                        PROGRAM_KINDS.join(", "),
+                        TEST_KINDS.join(", ")
                     ))
                 }
             };
@@ -425,18 +444,26 @@ fn check_pairs(roots: &Roots) -> Result<(), String> {
             return Err(format!("{ROOTS}: `{}`'s pair names `{a}` twice", h.name));
         }
         // A harness compares a reference model with the implementation it validates, a derivation the generator with
-        // the configuration checker, in either order (`decision_trust-role-programs.md` §3).
-        let want: [&str; 2] = if h.role == "harness" {
-            ["implementation", "reference-model"]
+        // either checker, in either order (`decision_trust-role-programs.md` §3; round 5's D2).
+        let wants: &[[&str; 2]] = if h.role == "harness" {
+            &[["implementation", "reference-model"]]
         } else {
-            ["configuration-checker", "generator"]
+            &[
+                ["configuration-checker", "generator"],
+                ["generator", "scheduling-checker"],
+            ]
         };
         let mut roles = [root(a), root(b)].map(|p| p.map_or("", |p| p.role.as_str()));
         roles.sort_unstable();
-        if roles != want {
+        if !wants.contains(&roles) {
+            let want = if h.role == "harness" {
+                "`implementation` and `reference-model`"
+            } else {
+                "`generator` and `configuration-checker` or `scheduling-checker`"
+            };
             return Err(format!(
-                "{ROOTS}: `{}`'s pair has roles `{}` and `{}`; a {}'s has `{}` and `{}`",
-                h.name, roles[0], roles[1], h.role, want[0], want[1]
+                "{ROOTS}: `{}`'s pair has roles `{}` and `{}`; a {}'s has {want}",
+                h.name, roles[0], roles[1], h.role
             ));
         }
         if let Target::Test(t) = &h.target {
@@ -1369,8 +1396,9 @@ fn tool_line(program: &str, args: &[&str], env: &[(String, String)], cwd: &Path)
 /// `trust-baseline-stale` on the baseline's host (§6, R7 remark e). A target's role packages are those its build
 /// compiles — its package's closure by normal edges, an example's by its package's development edges too, since an
 /// example compiles them (R5 remark 13) — among every root's role packages.
-/// A program target's closure, as its build compiles it: its package's by normal edges, an example's by its package's
-/// development edges too, since an example compiles them (§2, R5 remark 13).
+/// A program target's closure, as its build compiles it: its package's by normal edges, an example's and a test-like
+/// unit's by its package's development edges too, since they compile them (§2, R5 remark 13;
+/// `decision_trust-role-programs.md` §3).
 fn target_closure(
     package: &str,
     kind: &str,
@@ -1383,8 +1411,10 @@ fn target_closure(
             continue;
         }
         for (from, to, edge) in graph {
-            let followed =
-                edge == "normal" || (kind == "example" && edge == "dev" && from == package);
+            let followed = edge == "normal"
+                || ((kind == "example" || TEST_KINDS.contains(&kind))
+                    && edge == "dev"
+                    && from == package);
             if *from == pkg && followed && !closure.contains(to) {
                 todo.push(to.clone());
             }
@@ -1393,165 +1423,31 @@ fn target_closure(
     closure
 }
 
-/// Every integration test whose sources name a crate of the generator's role packages and a crate of a checker's, and
-/// that no `defharness` or `defderivation` names, as an unclassified program target is reported: so a comparison two
-/// roles share is found by machine, not by hand (`decision_trust-role-programs.md` §3).
-fn unnamed_comparisons(
+/// Each test-like unit whose build — its package's closure, its development edges followed — compiles a role package of
+/// a root of each role of a pair in [`JOINED`]: a program target, whatever its sources name
+/// (`decision_trust-role-programs.md` §3; round 5's D1). A unit compiling one role's alone is none.
+fn joined_units(
     roots: &Roots,
-    tree: &Tree,
-    every_target: &BTreeMap<String, Vec<(Vec<String>, String)>>,
-    target_sources: &TargetSources,
-) -> Vec<Json> {
-    let lib_crate = |dir: &str| {
-        every_target.get(dir).and_then(|targets| {
-            targets
-                .iter()
-                .find(|(kinds, _)| kinds.iter().any(|k| k == "lib" || k == "rlib"))
-                .map(|(_, name)| name.replace('-', "_"))
-        })
-    };
-    let crates_of = |roles: &[&str]| -> BTreeSet<String> {
+    units: &[(String, String, String)],
+    graph: &[(String, String, String)],
+) -> Vec<(String, String, String)> {
+    let packages_of = |role: &str| -> BTreeSet<&String> {
         roots
             .programs
             .iter()
-            .filter(|p| p.pair.is_none() && roles.contains(&p.role.as_str()))
+            .filter(|p| p.pair.is_none() && p.role == role)
             .flat_map(|p| p.role_packages.iter())
-            .filter_map(|dir| lib_crate(dir))
             .collect()
     };
-    let generator = crates_of(&["generator"]);
-    let checkers = crates_of(&["configuration-checker", "scheduling-checker"]);
     let mut out = Vec::new();
-    for (dir, targets) in every_target {
-        for (_, name) in targets
-            .iter()
-            .filter(|(kinds, _)| kinds.iter().any(|k| k == "test"))
-        {
-            let named = roots.programs.iter().any(|p| {
-                p.pair.is_some() && &p.package == dir && p.target == Target::Test(name.clone())
-            });
-            if named {
-                continue;
-            }
-            let crates: BTreeSet<String> = target_sources
-                .get(&(dir.clone(), "test".to_owned(), name.clone()))
-                .into_iter()
-                .flatten()
-                .flat_map(|src| named_crates(tree, src))
-                .collect();
-            let g = crates.iter().find(|c| generator.contains(*c));
-            let c = crates.iter().find(|c| checkers.contains(*c));
-            if let (Some(g), Some(c)) = (g, c) {
-                out.push(obj(vec![
-                    ("package", s(dir)),
-                    ("kind", s("test")),
-                    ("name", s(name)),
-                    (
-                        "status",
-                        s(format!(
-                            "trust-unclassified-program: the test `{name}` of `{dir}` names `{g}`, the generator's, \
-                             and `{c}`, a checker's, and no `defderivation` names it"
-                        )),
-                    ),
-                ]));
-            }
+    for (package, kind, name) in units {
+        let closure = target_closure(package, kind, graph);
+        let compiles = |role: &str| packages_of(role).iter().any(|p| closure.contains(*p));
+        if JOINED.iter().any(|(a, b)| compiles(a) && compiles(b)) {
+            out.push((package.clone(), kind.clone(), name.clone()));
         }
     }
     out
-}
-
-/// The crates a crate's sources name — a path's first segment, a `use`'s root, an `extern crate` — read from `root`
-/// and every module file its `mod` declarations reach, a `#[path]` followed as rustc follows it; read with the
-/// catalog's tokenizer, so a name in a comment or a literal is none.
-fn named_crates(tree: &Tree, root: &str) -> BTreeSet<String> {
-    use archogen_catalog::package::Kind;
-    let mut named = BTreeSet::new();
-    let mut seen = BTreeSet::new();
-    // (a file, whether it is a crate root or a `mod.rs`, whose modules lie beside it rather than below it)
-    let mut todo = vec![(root.to_owned(), true)];
-    while let Some((file, owns_dir)) = todo.pop() {
-        if !seen.insert(file.clone()) {
-            continue;
-        }
-        let Some(bytes) = tree.get(&file) else {
-            continue;
-        };
-        let Ok(toks) = package::tokens(bytes) else {
-            continue;
-        };
-        let ident = |i: usize| match toks.get(i).map(|t| &t.kind) {
-            Some(Kind::Ident(n, _)) => Some(n.as_str()),
-            _ => None,
-        };
-        let punct = |i: usize, c: char| matches!(toks.get(i).map(|t| &t.kind), Some(Kind::Punct(p)) if *p == c);
-        let (dir, stem) = file
-            .rsplit_once('/')
-            .map_or(("", file.as_str()), |(d, f)| (d, f));
-        let stem = stem.trim_end_matches(".rs");
-        let below = if owns_dir {
-            dir.to_owned()
-        } else {
-            format!("{dir}/{stem}")
-        };
-        let mut path_attribute: Option<String> = None;
-        for i in 0..toks.len() {
-            // `#[path = "…"]`, for the `mod` that follows it.
-            if ident(i) == Some("path")
-                && matches!(
-                    toks.get(i.wrapping_sub(1)).map(|t| &t.kind),
-                    Some(Kind::Open('['))
-                )
-                && punct(i + 1, '=')
-            {
-                if let Some(t) = toks.get(i + 2).filter(|t| matches!(t.kind, Kind::Str)) {
-                    let text = String::from_utf8_lossy(&bytes[t.at..t.end]);
-                    path_attribute = Some(text.trim_matches('"').to_owned());
-                }
-            }
-            let Some(name) = ident(i) else { continue };
-            let after_path_separator = i >= 2 && punct(i - 1, ':') && punct(i - 2, ':');
-            if punct(i + 1, ':') && punct(i + 2, ':') && !after_path_separator {
-                named.insert(name.to_owned());
-            }
-            if (name == "use" || (name == "crate" && ident(i.wrapping_sub(1)) == Some("extern")))
-                && ident(i + 1).is_some()
-            {
-                named.insert(ident(i + 1).unwrap_or_default().to_owned());
-            }
-            if name == "mod" && punct(i + 2, ';') {
-                if let Some(module) = ident(i + 1) {
-                    match path_attribute.take() {
-                        Some(relative) => {
-                            todo.push((normalized(&format!("{dir}/{relative}")), true))
-                        }
-                        None => {
-                            todo.push((format!("{below}/{module}.rs"), false));
-                            todo.push((format!("{below}/{module}/mod.rs"), true));
-                        }
-                    }
-                }
-            }
-        }
-    }
-    for ignored in ["crate", "self", "super", "std", "core", "alloc"] {
-        named.remove(ignored);
-    }
-    named
-}
-
-/// `path` with each `..` taking the segment before it away, and each `.` dropped.
-fn normalized(path: &str) -> String {
-    let mut parts: Vec<&str> = Vec::new();
-    for part in path.split('/') {
-        match part {
-            "." | "" => {}
-            ".." => {
-                parts.pop();
-            }
-            other => parts.push(other),
-        }
-    }
-    parts.join("/")
 }
 
 fn classify_programs(
@@ -1568,11 +1464,14 @@ fn classify_programs(
     let mut out = Vec::new();
     let mut matched: BTreeSet<&String> = BTreeSet::new();
     for (package, kind, name) in program_targets {
+        // A root names its executable, and a harness or a derivation its test (`decision_trust-role-programs.md` §3).
         let root = roots.programs.iter().find(|p| {
-            p.pair.is_none()
-                && p.package == *package
-                && kind == "bin"
-                && p.target == Target::Bin(name.clone())
+            p.package == *package
+                && match &p.target {
+                    Target::Bin(b) => p.pair.is_none() && kind == "bin" && b == name,
+                    Target::Test(t) => p.pair.is_some() && kind == "test" && t == name,
+                    Target::Lib => false,
+                }
         });
         let closure = target_closure(package, kind, graph);
         let compiled: BTreeSet<String> = closure
@@ -1584,6 +1483,7 @@ fn classify_programs(
             .iter()
             .find(|c| c.package == *package && c.kind == *kind && c.target == *name);
         let status = match (root, classification) {
+            (Some(r), _) if r.pair.is_some() => format!("{} {}", r.role, r.name),
             (Some(r), _) => format!("root {}", r.name),
             (None, Some(c)) => {
                 matched.insert(&c.name);
@@ -1598,6 +1498,11 @@ fn classify_programs(
                     )
                 }
             }
+            (None, None) if TEST_KINDS.contains(&kind.as_str()) => format!(
+                "trust-unclassified-program: the {kind} `{name}` of `{package}` compiles {}, role packages of two roles a \
+                 property rests on, and no form in {ROOTS} names or classifies it",
+                compiled.iter().map(|c| format!("`{c}`")).collect::<Vec<_>>().join(", ")
+            ),
             (None, None) => format!(
                 "trust-unclassified-program: the {kind} `{name}` of `{package}` is neither a root nor classified in {ROOTS}"
             ),
@@ -2013,6 +1918,8 @@ pub fn inventory_with(
     let mut program_roots: BTreeMap<String, Vec<(String, String, String)>> = BTreeMap::new();
     // Every target, by package: its kinds and its name, so a root's target is known to exist.
     let mut every_target: BTreeMap<String, Vec<(Vec<String>, String)>> = BTreeMap::new();
+    // Every test-like unit (`TEST_KINDS`): (package, kind, name), a program target if it joins two roles.
+    let mut test_units: Vec<(String, String, String)> = Vec::new();
     for p in meta.get("packages").map(Json::elements).unwrap_or_default() {
         let manifest_path = p
             .get("manifest_path")
@@ -2058,6 +1965,26 @@ pub fn inventory_with(
                     .entry((dir.clone(), (*kind).to_owned(), target_name.to_owned()))
                     .or_default()
                     .insert(src.clone());
+            }
+            // The units `cargo test` and `cargo bench` build of this target: its own, if it is a test or a bench; its
+            // unit tests, if its `test` flag is set; a library's doc tests, if its `doctest` flag is.
+            let flag = |k: &str| matches!(t.get(k), Some(Json::Bool(true)));
+            let library = kinds.iter().any(|k| {
+                matches!(
+                    *k,
+                    "lib" | "rlib" | "dylib" | "cdylib" | "staticlib" | "proc-macro"
+                )
+            });
+            for (unit, built) in [
+                ("test", kinds.contains(&"test")),
+                ("bench", kinds.contains(&"bench")),
+                ("lib-test", library && flag("test")),
+                ("bin-test", kinds.contains(&"bin") && flag("test")),
+                ("doctest", library && flag("doctest")),
+            ] {
+                if built {
+                    test_units.push((dir.clone(), unit.to_owned(), target_name.to_owned()));
+                }
             }
             if let Some(kind) = PROGRAM_KINDS.iter().find(|k| kinds.contains(k)) {
                 program_targets.push((dir.clone(), (*kind).to_owned(), target_name.to_owned()));
@@ -2165,15 +2092,10 @@ pub fn inventory_with(
         }
     }
 
-    let (mut program_targets, classifications_unused) =
+    // A test-like unit joining two roles is a program target (`decision_trust-role-programs.md` §3).
+    program_targets.extend(joined_units(&roots, &test_units, &graph));
+    let (program_targets, classifications_unused) =
         classify_programs(&roots, &program_targets, &graph);
-    // A comparison no form names, found by machine (`decision_trust-role-programs.md` §3).
-    program_targets.extend(unnamed_comparisons(
-        &roots,
-        &tree,
-        &every_target,
-        &target_sources,
-    ));
 
     let mut rules = Rules {
         tree: &tree,
@@ -3080,6 +3002,7 @@ pub(crate) mod tests {
 
     use super::{
         inventory_with, read_roots, site_extent, Digest, FrontClauses, Outcome, Target, FORMS,
+        TEST_KINDS,
     };
     use crate::json::Json;
     use std::ffi::OsStr;
@@ -3813,22 +3736,20 @@ pub(crate) mod tests {
         }
     }
 
-    /// The generator, the configuration checker and a scheduling checker, with a derivation over `pair`.
+    /// The generator, both checkers, a reference model and an implementation, with a derivation over `pair`.
     fn derivation(pair: &str, extra: &str) -> String {
         format!(
-            "{ROOTS}(defroot cfg (role configuration-checker) (package \"crates/c\") (target lib))\n\
+            "{ROOTS}{PAIRED}(defroot cfg (role configuration-checker) (package \"crates/c\") (target lib))\n\
              (defderivation d (pair {pair}) (package \"crates/r\") (test production) {extra})\n"
         )
     }
 
     #[test]
-    fn a_derivation_compares_the_generator_and_the_configuration_checker() {
-        crate::trust_test_process::bounded!(
-            a_derivation_compares_the_generator_and_the_configuration_checker
-        );
-        // `decision_trust-role-programs.md` §3: its pair's roles, in either order, and a reason; every departure a read
-        // failure, as a harness's.
-        for pair in ["gen cfg", "cfg gen"] {
+    fn a_derivation_compares_the_generator_and_a_checker() {
+        crate::trust_test_process::bounded!(a_derivation_compares_the_generator_and_a_checker);
+        // `decision_trust-role-programs.md` §3: its pair's roles — the generator and either checker, round 5's D2 — in
+        // either order, and a reason; every departure a read failure, as a harness's.
+        for pair in ["gen cfg", "cfg gen", "gen chk", "chk gen"] {
             let roots = read_roots(&derivation(pair, "(reason \"the relation's comparison\")"))
                 .expect("the generator and the configuration checker");
             let d = roots
@@ -3842,9 +3763,15 @@ pub(crate) mod tests {
         let reason = "(reason \"r\")";
         for (pair, extra, why) in [
             (
-                "gen chk",
+                "cfg chk",
                 reason,
-                "`d`'s pair has roles `generator` and `scheduling-checker`; a derivation's has",
+                "`d`'s pair has roles `configuration-checker` and `scheduling-checker`; a derivation's has `generator` \
+                 and `configuration-checker` or `scheduling-checker`",
+            ),
+            (
+                "gen refm",
+                reason,
+                "`d`'s pair has roles `generator` and `reference-model`; a derivation's has",
             ),
             ("gen gen", reason, "`d`'s pair names `gen` twice"),
             (
@@ -4273,7 +4200,7 @@ pub(crate) mod tests {
         crate::trust_test_process::bounded!(a_classification_is_read_strictly);
         for (text, why) in [
             (
-                "(defprogram x (package \"p\") (target test t) (reason \"r\"))",
+                "(defprogram x (package \"p\") (target lib t) (reason \"r\"))",
                 "KIND one of",
             ),
             (
@@ -4294,6 +4221,14 @@ pub(crate) mod tests {
         .expect("reads");
         assert_eq!(roots.classified[0].kind, "cdylib");
         assert!(roots.classified[0].role_packages.contains("q"));
+        // A test-like unit joining two roles is classified as a program target is (`decision_trust-role-programs.md` §3).
+        for kind in TEST_KINDS {
+            let roots = read_roots(&format!(
+                "(defprogram x (package \"p\") (target {kind} t) (reason \"r\"))"
+            ))
+            .expect(kind);
+            assert_eq!(roots.classified[0].kind, *kind);
+        }
     }
 
     #[test]
@@ -4961,108 +4896,197 @@ pub(crate) mod tests {
         );
     }
 
-    /// The generator `gen`, its role packages `crates/a` and `crates/g`, the configuration checker `cfg` in `crates/c`,
-    /// and `crates/r`, whose test `compare` reads `test_src` beside `extra` files; `forms` appended to the roots.
-    fn comparisons(name: &str, test_src: &str, extra: &[(&str, &str)], forms: &str) -> Fixture {
+    /// Five roots — the generator `gen` (`crates/a`, its role packages `crates/a` and `crates/g`), the configuration
+    /// checker `cfg` (`crates/c`), the scheduling checker `chk` (`crates/s`), the reference model `refm` (`crates/m`) and
+    /// the implementation `imp` (`crates/i`) — a helper `crates/h` over `crates/g` and `crates/c` whose own tests are
+    /// off, and `crates/r`, whose development dependencies are `dev`: a library with a doc comment, a test `compare`
+    /// that names no crate, and a bench `speed`; `forms` appended to the roots.
+    fn joining(name: &str, dev: &str, forms: &str) -> Fixture {
         let roots = format!(
             "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\" \"crates/g\"))\n\
-             (defroot cfg (role configuration-checker) (package \"crates/c\") (target lib) (role-packages \"crates/c\"))\n{forms}"
+             (defroot cfg (role configuration-checker) (package \"crates/c\") (target lib))\n\
+             (defroot chk (role scheduling-checker) (package \"crates/s\") (target lib))\n\
+             (defroot refm (role reference-model) (package \"crates/m\") (target lib))\n\
+             (defroot imp (role implementation) (package \"crates/i\") (target lib))\n{forms}"
         );
-        let mut files = vec![
-            ("Cargo.toml", WS.to_owned()),
-            ("trust/roots.eadl", roots),
+        let library = |n: &str| {
             (
-                "crates/a/Cargo.toml",
+                format!("crates/{n}/src/lib.rs"),
+                "pub fn x() -> u32 { 1 }\n".to_owned(),
+            )
+        };
+        let mut files: Vec<(String, String)> = vec![
+            ("Cargo.toml".into(), WS.to_owned()),
+            ("trust/roots.eadl".into(), roots),
+            (
+                "crates/a/Cargo.toml".into(),
                 manifest("a", "[dependencies]\ng = { path = \"../g\" }\n"),
             ),
-            ("crates/a/src/main.rs", "fn main() { g::x(); }\n".to_owned()),
-            ("crates/g/Cargo.toml", manifest("g", "")),
+            ("crates/a/src/main.rs".into(), "fn main() { g::x(); }\n".to_owned()),
             (
-                "crates/g/src/lib.rs",
-                "pub fn x() -> u32 { 1 }\n".to_owned(),
-            ),
-            ("crates/c/Cargo.toml", manifest("c", "")),
-            (
-                "crates/c/src/lib.rs",
-                "pub fn x() -> u32 { 1 }\n".to_owned(),
-            ),
-            (
-                "crates/r/Cargo.toml",
+                "crates/h/Cargo.toml".into(),
                 manifest(
-                    "r",
-                    "[dev-dependencies]\ng = { path = \"../g\" }\nc = { path = \"../c\" }\n",
+                    "h",
+                    "[lib]\ntest = false\ndoctest = false\n\n[dependencies]\ng = { path = \"../g\" }\nc = { path = \"../c\" }\n",
                 ),
             ),
-            ("crates/r/src/lib.rs", "pub fn r() {}\n".to_owned()),
-            ("crates/r/tests/compare.rs", test_src.to_owned()),
+            (
+                "crates/h/src/lib.rs".into(),
+                "pub use c::x as checked;\npub use g::x as generated;\n".to_owned(),
+            ),
+            ("crates/r/Cargo.toml".into(), manifest("r", dev)),
+            ("crates/r/src/lib.rs".into(), "//! r\npub fn r() {}\n".to_owned()),
+            ("crates/r/tests/compare.rs".into(), "#[test]\nfn t() {}\n".to_owned()),
+            ("crates/r/benches/speed.rs".into(), "fn main() {}\n".to_owned()),
         ];
-        files.extend(extra.iter().map(|(path, text)| (*path, (*text).to_owned())));
+        for n in ["g", "c", "s", "m", "i"] {
+            files.push((format!("crates/{n}/Cargo.toml"), manifest(n, "")));
+            files.push(library(n));
+        }
+        let files: Vec<(&str, String)> =
+            files.iter().map(|(p, t)| (p.as_str(), t.clone())).collect();
         fixture(name, "1.95.0", &files)
     }
 
-    /// The unnamed comparisons an inventory reports.
-    fn unnamed(inv: &Json) -> Vec<String> {
-        inv.get("program-targets")
+    /// Each program target of `crates/r` the inventory reports, by kind and name, with its status.
+    fn units_of_r(inv: &Json) -> Vec<(String, String, String)> {
+        let field = |t: &Json, k: &str| {
+            t.get(k)
+                .and_then(Json::as_str)
+                .unwrap_or_default()
+                .to_owned()
+        };
+        let mut out: Vec<_> = inv
+            .get("program-targets")
             .map(Json::elements)
             .unwrap_or_default()
             .iter()
-            .filter(|t| t.get("kind").and_then(Json::as_str) == Some("test"))
-            .filter_map(|t| t.get("status").and_then(Json::as_str).map(str::to_owned))
+            .filter(|t| field(t, "package") == "crates/r")
+            .map(|t| (field(t, "kind"), field(t, "name"), field(t, "status")))
+            .collect();
+        out.sort();
+        out
+    }
+
+    /// `crates/r`'s four test-like units, each unclassified, compiling `compiled`.
+    fn four_unclassified(compiled: &str) -> Vec<(String, String, String)> {
+        [("bench", "speed"), ("doctest", "r"), ("lib-test", "r"), ("test", "compare")]
+            .iter()
+            .map(|(kind, name)| {
+                (
+                    (*kind).to_owned(),
+                    (*name).to_owned(),
+                    format!(
+                        "trust-unclassified-program: the {kind} `{name}` of `crates/r` compiles {compiled}, role \
+                         packages of two roles a property rests on, and no form in trust/roots.eadl names or \
+                         classifies it"
+                    ),
+                )
+            })
             .collect()
     }
 
     #[test]
-    fn a_comparison_no_form_names_is_found_by_machine() {
-        crate::trust_test_process::bounded!(a_comparison_no_form_names_is_found_by_machine);
-        // `decision_trust-role-programs.md` §3: a test naming a crate of the generator's role packages and one of a
-        // checker's, and named by no form, is reported; its names read from its modules, `#[path]` followed, and never
-        // from a comment or a literal.
-        let both = "#[test]\nfn same() { assert_eq!(g::x(), c::x()); }\n";
-        let want = "trust-unclassified-program: the test `compare` of `crates/r` names `g`, the generator's, and `c`, a \
-                    checker's, and no `defderivation` names it";
-        assert_eq!(
-            unnamed(&written(comparisons("comparison", both, &[], "").run())),
-            [want]
+    fn a_unit_joining_two_roles_is_a_program_target_whatever_it_names() {
+        crate::trust_test_process::bounded!(
+            a_unit_joining_two_roles_is_a_program_target_whatever_it_names
         );
+        // `decision_trust-role-programs.md` §3, round 5's D1: the build decides, not the sources' names — each test-like
+        // unit of a package whose build compiles role packages of the two roles of a pair a property rests on, through
+        // a renamed dependency or a helper's as directly, is a program target; one role's alone, or two roles no
+        // property pairs, none.
+        let dep = |n: &str| format!("{n} = {{ path = \"../{n}\" }}\n");
+        let dev = |deps: &str| format!("[dev-dependencies]\n{deps}");
+        let gc = "`crates/c`, `crates/g`";
+        for (case, deps, want) in [
+            ("joined", dep("g") + &dep("c"), four_unclassified(gc)),
+            ("joined-helper", dep("h"), four_unclassified(gc)),
+            (
+                "joined-renamed",
+                dep("g") + "chk = { package = \"c\", path = \"../c\" }\n",
+                four_unclassified(gc),
+            ),
+            (
+                "joined-scheduling",
+                dep("g") + &dep("s"),
+                four_unclassified("`crates/g`, `crates/s`"),
+            ),
+            (
+                "joined-reference",
+                dep("m") + &dep("i"),
+                four_unclassified("`crates/i`, `crates/m`"),
+            ),
+            ("one-role", dep("g"), Vec::new()),
+            ("two-checkers", dep("c") + &dep("s"), Vec::new()),
+            ("generator-and-model", dep("g") + &dep("m"), Vec::new()),
+        ] {
+            let inv = written(joining(case, &dev(&deps), "").run());
+            assert_eq!(units_of_r(&inv), want, "{case}");
+            // The helper joins both roles, but its unit tests and doc tests are off, so cargo builds none of them.
+            assert!(
+                !inv.get("program-targets")
+                    .map(Json::elements)
+                    .unwrap_or_default()
+                    .iter()
+                    .any(|t| t.get("package").and_then(Json::as_str) == Some("crates/h")),
+                "{case}: a unit its flags turn off"
+            );
+        }
+    }
+
+    #[test]
+    fn a_joined_unit_is_named_by_its_pair_form_or_classified() {
+        crate::trust_test_process::bounded!(a_joined_unit_is_named_by_its_pair_form_or_classified);
+        // `decision_trust-role-programs.md` §3: a joined integration test a derivation names is that derivation's; any
+        // joined unit a `defprogram` classifies is classified, unreviewed again once it compiles more; a classification
+        // left on a unit that no longer joins two roles names no program target.
+        let joined = "[dev-dependencies]\ng = { path = \"../g\" }\nc = { path = \"../c\" }\n";
         let derivation =
             "(defderivation compare (pair gen cfg) (package \"crates/r\") (test compare) (reason \"the comparison\"))\n";
-        assert!(
-            unnamed(&written(
-                comparisons("comparison-named", both, &[], derivation).run()
-            ))
-            .is_empty(),
-            "named by a form, not reported"
-        );
-        let one = "#[test]\nfn one() { assert_eq!(g::x(), 1); }\n";
-        assert!(
-            unnamed(&written(
-                comparisons("comparison-one-role", one, &[], "").run()
-            ))
-            .is_empty(),
-            "one role's crates alone"
-        );
-        let quiet = "// c::x() would compare\n#[test]\nfn one() { assert_eq!(g::x(), \"c::x\".len() as u32 - 3); }\n";
-        assert!(
-            unnamed(&written(
-                comparisons("comparison-quiet", quiet, &[], "").run()
-            ))
-            .is_empty(),
-            "a name in a comment or a literal is none"
-        );
-        let through_path = "#[path = \"../shared/both.rs\"]\nmod both;\n";
-        let module = "#[test]\nfn same() { assert_eq!(g::x(), c::x()); }\n";
+        let units = |reviewed: &str| {
+            format!(
+                "(defprogram r-units (package \"crates/r\") (target lib-test r) (reason \"the library's own tests\") \
+                 (role-packages {reviewed}))\n"
+            )
+        };
+        let named = units_of_r(&written(
+            joining(
+                "joined-named",
+                joined,
+                &format!("{derivation}{}", units("\"crates/c\" \"crates/g\"")),
+            )
+            .run(),
+        ));
+        let mut want = four_unclassified("`crates/c`, `crates/g`");
+        want[2].2 = "classified r-units".to_owned();
+        want[3].2 = "derivation compare".to_owned();
+        assert_eq!(named, want, "named and classified");
+
+        let grown = units_of_r(&written(
+            joining("joined-grown", joined, &units("\"crates/g\"")).run(),
+        ));
         assert_eq!(
-            unnamed(&written(
-                comparisons(
-                    "comparison-path",
-                    through_path,
-                    &[("crates/r/shared/both.rs", module)],
-                    ""
-                )
-                .run()
-            )),
-            [want],
-            "a `#[path]` module's names count"
+            grown[2].2,
+            "trust-unclassified-program: `r-units` compiles `crates/c` beside the role packages its classification \
+             reviewed"
+        );
+
+        let gone = written(
+            joining(
+                "joined-gone",
+                "[dev-dependencies]\ng = { path = \"../g\" }\n",
+                &units("\"crates/c\" \"crates/g\""),
+            )
+            .run(),
+        );
+        assert_eq!(
+            gone.get("classifications-unused")
+                .map(Json::elements)
+                .unwrap_or_default()
+                .iter()
+                .filter_map(Json::as_str)
+                .collect::<Vec<_>>(),
+            ["r-units: the lib-test `r` of `crates/r` is no program target of the commit"]
         );
     }
 

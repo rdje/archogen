@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate finds a comparison by what it compiles
+
+`ARCHOGEN-M3-0898` (leaf `M3.5.2.2.2`), `2026-10-23`.
+
+- Every test, bench, unit test or doc test whose package compiles the code of two roles a claim keeps apart is now a
+  program the gate names or a review classifies, whatever its sources call the crates; a derivation may pair the
+  generator with either checker. Today it finds three of `rt-core`'s tests, classified after the next push.
+
 ## archogen — the trust gate reads a clause whole, and a front's fault at its form
 
 `ARCHOGEN-M3-0897` (leaf `M3.5.2.2.1`), `2026-10-23`.

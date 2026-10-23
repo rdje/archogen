@@ -2367,10 +2367,9 @@ test -p xtask trust::tests::every_program_target_is_a_root_or_classified_and_the
 expect killed
 why M3.6.3.1: an example compiles its package's development dependencies, so its role packages follow them (record §2, R5 remark 13).
 from
-                let followed =
-                    edge == "normal" || (kind == "example" && edge == "dev" && from == package);
+                    || ((kind == "example" || TEST_KINDS.contains(&kind))
 to
-                let followed = edge == "normal";
+                    || ((kind == "an example never" || TEST_KINDS.contains(&kind))
 end
 
 mutation trust-grown-classification-unreported
@@ -2401,10 +2400,9 @@ test -p xtask trust::tests::every_program_target_is_a_root_or_classified_and_the
 expect killed
 why M3.6.3.1: a root's own binary is its root's program target, never an unclassified one (record §2).
 from
-                    && p.target == Target::Bin(name.clone())
+                        Target::Bin(b) => p.pair.is_none() && kind == "bin" && b == name,
 to
-                    && p.target == Target::Bin(name.clone())
-                    && p.name.is_empty()
+                        Target::Bin(b) => p.pair.is_none() && kind == "bin" && b == name && p.name.is_empty(),
 end
 
 mutation baseline-package-identity-lost

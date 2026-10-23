@@ -75,8 +75,8 @@ pair refuses, so a comparison of the generator with a checker cannot be written 
 **Read, not yet built** (leaf `M3.5.2.1.1`, `decision_trust-role-programs.md`). The gate now reads two forms no commit
 writes yet, since the gate that judges a push is built from the commit before it and must already know a form:
 
-- `(defderivation <name> (pair generator configuration-checker) (package "<dir>") (test <target>) (reason "…"))`,
-  a test comparing a reading of the generator's with the configuration checker's, its pair one root of each role, in
+- `(defderivation <name> (pair generator <checker>) (package "<dir>") (test <target>) (reason "…"))`, a test
+  comparing a reading of the generator's with either checker's, its pair the generator's root and that checker's, in
   either order, and a reason;
 - on the front's form alone — the one root of role `generator`, an executable — `(invokes <root> …)`, the other
   executable roots it runs, each once, and `(installed "archogen-install.json")`, together.
@@ -88,10 +88,14 @@ no root: its pair takes its item, `shared-derivation`, one item a form (leaf `M3
 invokes share an `invocation` item: the invoked root's name, role and target, and the sha256 of the launcher — the
 file the constant `LAUNCHER` in `xtask/src/trust.rs` names, which the front gains with leaf `M3.5.1.4` — so an edit to
 the launcher, whose acceptance contract carries the risk, is reported; a front that invokes while its commit holds no
-launcher is refused (leaf `M3.5.2.1.3`). A comparison no form names is found by machine: an integration test whose
-sources — its crate root and the modules it declares, a `#[path]` followed — name a crate of the generator's role
-packages and one of a checker's, never in a comment or a literal, and that no pair form names, is reported as an
-unclassified program is, and refused on the baseline's host until a `defderivation` names it (leaf `M3.5.2.1.5`).
+launcher is refused (leaf `M3.5.2.1.3`). A comparison no form names is found by the build, not by what its sources
+say: every test-like unit — an integration test, a bench, a library's or an executable's unit tests, a library's doc
+tests — of a package whose build, its development edges followed, compiles role packages of both roles of a pair a
+property rests on (the generator and either checker, the reference model and the implementation) is a program target.
+An integration test that compares the two is named by its pair form; any other such unit is classified by a
+`defprogram` whose target is `(target test|bench|lib-test|bin-test|doctest <name>)`, its reason saying it compares
+nothing the two hold equal. Unnamed, it is reported as an unclassified program is, and refused on the baseline's host
+(leaf `M3.5.2.2.2`; a census of names before it, `M3.5.2.1.5`, missed a comparison spelt another way).
 
 A program that would run two roles is refused: one program cannot be independent of itself. Every other program the
 workspace can build — an example, a diagnostic tool, the browser module — is classified as not a root, with a reason
@@ -715,7 +719,9 @@ Every report ends with what the inventory does not see, the same list each time,
   transcription;
 - **whether the front runs only, or all, the programs its form invokes.** `NO-SUBPROCESS` admitting the launcher alone,
   the launcher running only what the install manifest names, and the install placing only the invoked roots stand
-  there.
+  there;
+- **whether a unit two roles' packages join compares them.** The build finds the joining; a classification's review
+  decides that the unit compares nothing the two hold equal.
 
 ## Today and ahead
 
