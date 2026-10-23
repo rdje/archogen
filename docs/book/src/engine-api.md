@@ -265,9 +265,10 @@ module themselves.
   the standard library has none to read.
 
 The table also says, for each command, whether a programmatic consumer is offered it: `check`,
-`resolve`, `analyze`, `explain` and `replay` are; `build` and `verify` are excluded, each citing
+`resolve`, `explain` and `replay` are; `build` and `verify` are excluded, each citing
 §10.4, and a test reads the exclusion from the table (leaf `API.6.2`). The table excludes `mcp`, the server itself,
-as well.
+as well, and since `2026-10-23` the checkers' own commands, `plan-check` and `analyze`: the generator's server can run
+neither, in its program or as a process, so each checker serves its own tools (findings §16 (a), leaf `M3.5.1.5.2`).
 
 ## Today and ahead
 
@@ -275,7 +276,8 @@ as well.
   server — each held to the same answers by tests: the command line's parity legs, the integration tier's
   `wasm-binding` step, and the MCP server's stdio test over the conformance cases in both protocol eras.
 - **Ahead:** each command the table lists as offered joins the API when its own leaf builds it: `resolve` and
-  `explain` (`M3.4`), `analyze` (`M2.6`), `replay` (`M4.7`). The MCP server lists them already, each naming that
-  leaf. `verify` waits for a ruling of its own (`PROGRAM.3`), and `build` stays outside, by §10.4.
+  `explain` (`M3.4`), `replay` (`M4.7`). The MCP server lists them already, each naming that leaf. `analyze` and
+  `plan-check` are the checkers' own tools, served by their own servers (`M2.21.4`, `M3.5.1.6`); `verify` waits for
+  a ruling of its own and its builder, `M4.11`; and `build` stays outside, by §10.4.
 - ⚠️ **Open for the director:** whether every response carries a §5.5 verdict, as the ruling says, or only a
   response that reports one, as §10.4 says. This chapter follows §10.4 (One outcome vocabulary).

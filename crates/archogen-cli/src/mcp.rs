@@ -762,7 +762,7 @@ mod tests {
             .iter()
             .filter_map(|tool| tool.get("name").and_then(Value::as_str))
             .collect();
-        assert_eq!(names, ["check", "resolve", "analyze", "explain", "replay"]);
+        assert_eq!(names, ["check", "resolve", "explain", "replay"]);
         for tool in tools {
             assert_eq!(
                 json::write(tool.get("annotations").unwrap()),

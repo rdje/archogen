@@ -139,10 +139,10 @@ recurrence.
 is now classified rule by rule, beside its text in `crates/eadl-model/src/profile.rs` (leaf `M1.10`).
 A rule is enforced by `archogen check` now, usually through an exclusion such as `runtime-heap`, or by
 a verification step, as "Rust `no_std` core" is. Otherwise it belongs to a stage not yet built, and
-names the leaf that builds it: the analysis in `M2.6`, the build in `M4`. The rest are not rules a
+names the leaf that builds it: the analysis in `M2.21.2`, the build in `M4`. The rest are not rules a
 description can break, and each says why. A test holds every exclusion and every leaf the
-classification names to something that exists, so a rule cannot be routed to a leaf that is not
-there.
+classification names to something that exists, and every leaf to one still open, so a rule cannot be routed to a
+leaf that is not there or is done (leaf `M3.5.1.5.1`).
 
 ### The examples
 

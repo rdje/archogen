@@ -32,14 +32,15 @@ USAGE:
     archogen help <COMMAND>
 
 COMMANDS:
-    check    elaborate and type-check a description against a profile
-    resolve  resolve providers and resources into an independently checked build plan   [unimplemented — tracked by leaf M3.4]
-    build    generate, assemble and build a complete system and its simulator   [experimental — the S0 path: one fixed realization, periodic releases, hosted playground; completed by leaf M4.2]
-    analyze  run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.21.2]
-    verify   run a verification tier over a build   [unimplemented — tracked by leaf M4.11]
-    explain  explain how one requirement was realized, or why it could not be   [unimplemented — tracked by leaf M3.4]
-    replay   replay a recorded failure manifest and check its identity   [unimplemented — tracked by leaf M4.7]
-    mcp      serve the engine API to an agent over MCP, on standard input and output
+    check       elaborate and type-check a description against a profile
+    resolve     resolve providers and resources into an independently checked build plan   [unimplemented — tracked by leaf M3.4]
+    plan-check  check a resolved plan against its description, by the independent configuration checker   [unimplemented — tracked by leaf M3.5.6]
+    build       generate, assemble and build a complete system and its simulator   [experimental — the S0 path: one fixed realization, periodic releases, hosted playground; completed by leaf M4.2]
+    analyze     run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.21.2]
+    verify      run a verification tier over a build   [unimplemented — tracked by leaf M4.11]
+    explain     explain how one requirement was realized, or why it could not be   [unimplemented — tracked by leaf M3.4]
+    replay      replay a recorded failure manifest and check its identity   [unimplemented — tracked by leaf M4.7]
+    mcp         serve the engine API to an agent over MCP, on standard input and output
 ```
 
 ## The precise rules
@@ -49,10 +50,11 @@ COMMANDS:
 | Command | Does | Built by |
 | --- | --- | --- |
 | `archogen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | **built** — a description is one file or a module tree; see [Checking a description](checking.md) and [Modules and composition](modules.md) |
-| `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN>` | resolve providers and resources into an independently checked build plan | leaf `M3.4` |
+| `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked]` | resolve providers and resources into an independently checked build plan | leaf `M3.4` |
+| `archogen plan-check <DESCRIPTION> <PLAN>` | check a resolved plan against its description, by the independent configuration checker | leaf `M3.5.6` |
 | `archogen build <DESCRIPTION> [--profile <P>] --out <DIR>` | generate, assemble and build a complete system and its simulator | **experimental** — the S0 path only, see [The S0 early generation path](s0.md); leaf `M4.2` completes it |
-| `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.6` |
-| `archogen verify <BUILD> --tier <TIER>` | run a verification tier | leaf `PROGRAM.3` |
+| `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.21.2` |
+| `archogen verify <BUILD> --tier <TIER>` | run a verification tier | leaf `M4.11` |
 | `archogen explain <BUILD> --requirement <REQUIREMENT>` | explain how one requirement was realized, or why it could not be | leaf `M3.4` |
 | `archogen replay <MANIFEST>` | replay a recorded failure manifest and check its identity | leaf `M4.7` |
 | `archogen mcp` | serve the engine API to an agent over [MCP](ledger.md#mcp-specification), on standard input and output — §10.4's server, not one of §10.2's seven | **built** — leaf `API.6.4`; the tools it offers are this table's, `build` and `verify` excluded |
@@ -82,7 +84,7 @@ Two states would have forced a choice between two false statements. Marking it *
 and a help text that lies about a gap teaches users to stop reading it. `ROADMAP.md` §12 S0
 settles it by requiring the early generation path's output to be marked experimental.
 
-The remaining five commands are not built, and they say so precisely:
+The remaining six commands are not built, and they say so precisely:
 
 ```console
 $ archogen resolve examples/periodic-three/system.eadl --out plan.json
@@ -98,6 +100,15 @@ tracked work, not an unknown.
 The `[unimplemented]` marker comes from the same table the parser validates against, so a
 command becomes real and stops advertising itself as unbuilt in **one** change — a test asserts
 that `check` no longer carries the marker and `resolve` still does.
+
+**The checkers are programs of their own** (ruled `2026-10-22`, findings §16 (a); built by `M3.5.1.4`, `M3.5.6` and
+`M2.21`). The configuration checker is `archogen-plan-check` and the scheduling checker `archogen-analyze`,
+executables [an install](#installing) places beside `archogen`. `archogen plan-check` and `archogen analyze` will run
+them as git runs its sibling commands, handing over their arguments unparsed, and `archogen resolve` will search,
+then run `archogen-plan-check` over the plan it wrote — or, with `--unchecked`, write the plan alone, a downgrade you
+ask for by name. Each checker writes a result record, `archogen-result/1`, and exits with its status's code, and the
+front accepts a result only when the two agree. So no program runs two roles' logic, and the generator's MCP server
+offers neither checker's command: each checker serves its own tools.
 
 ### Exit codes
 

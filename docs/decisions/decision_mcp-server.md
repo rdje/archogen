@@ -29,6 +29,12 @@
    deliberate choice, not an accident of a name list. Each tool carries its maturity and owner in its `_meta` under
    the prefix `io.github.rdje.archogen/`, and the annotations `readOnlyHint: true`, `destructiveHint: false`,
    `idempotentHint: true`, `openWorldHint: false`, which are true of every operation the surface offers.
+   *Amended `2026-10-23` (leaf `M3.5.1.5.2`), by the director's ruling of `2026-10-22` (findings §16 (a)): the
+   checkers are executables of their own, so this server, which is the generator's program, can run neither — not in
+   its own code (`trust-shared-program`) and not as a process (`NO-SUBPROCESS`). `analyze` is no longer one of its
+   tools, and `plan-check`, the configuration checker's command, never was: each is excluded citing the ruling, a test
+   asserts it, and each checker serves its own tools (`M2.21.4`, `M3.5.1.6`). The tools today are `check`, `resolve`,
+   `explain` and `replay`.*
 3. **A tool takes the engine API's request, not the command line's.** The command line names a file; the server
    has no filesystem authority (§10.4), so `check` takes the description's text, its profile and the texts of its
    modules — `archogen_api::Request` — under the API's byte budget, and answers `archogen_api::Response`.

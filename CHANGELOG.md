@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers in the command line's target
+
+`ARCHOGEN-M3-0884` (leaf `M3.5.1.5.2`), `2026-10-23`.
+
+- `ROADMAP.md` §10.2 and the command table gain `archogen plan-check` and `archogen resolve --unchecked`, both
+  unbuilt; the generator's MCP server no longer lists `analyze`, since it can never run a checker; each checker
+  will serve its own tools. The surface test now reads the command names from the roadmap itself.
+
 ## archogen — no command names a closed piece of work
 
 `ARCHOGEN-M3-0883` (leaf `M3.5.1.5.1`), `2026-10-23`.

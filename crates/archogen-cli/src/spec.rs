@@ -160,8 +160,8 @@ const LOCKED: OptionSpec = OptionSpec {
     required: false,
 };
 
-/// The seven commands of the §10.2 interface target, in the order the roadmap lists them, and `mcp`, the server
-/// §10.4 names (leaf `API.6.4`).
+/// The commands of the §10.2 interface target, in the order the roadmap lists them — `plan-check` among them since the
+/// ruling of `2026-10-22` (findings §16 (a), leaf `M3.5.1.5.2`) — and `mcp`, the server §10.4 names (leaf `API.6.4`).
 pub const COMMANDS: &[CommandSpec] = &[
     CommandSpec {
         name: "check",
@@ -197,9 +197,38 @@ pub const COMMANDS: &[CommandSpec] = &[
                 help: "where to write the resolved plan",
                 required: true,
             },
+            // The search alone (findings §16 (a), `M3.5.1`): without it the front runs `archogen-plan-check` over the
+            // plan; with it nothing checks the plan, and the user wrote that downgrade (§10.2).
+            OptionSpec {
+                long: "unchecked",
+                value: None,
+                help: "write the plan without running the configuration checker over it — a downgrade, never a quiet one",
+                required: false,
+            },
         ],
         maturity: Maturity::Unimplemented { owner: "M3.4" },
         exposure: Exposure::Tool,
+    },
+    CommandSpec {
+        name: "plan-check",
+        summary: "check a resolved plan against its description, by the independent configuration checker",
+        positionals: &[
+            PositionalSpec {
+                name: "DESCRIPTION",
+                help: "path to the eADL system description",
+            },
+            PositionalSpec {
+                name: "PLAN",
+                help: "path to a plan written by `archogen resolve`",
+            },
+        ],
+        options: &[],
+        // `archogen-plan-check`, an executable of its own, which the front runs as git runs a sibling command
+        // (findings §16 (a), `M3.5.1`); the generator's server never runs it, so it is that checker's own tool.
+        maturity: Maturity::Unimplemented { owner: "M3.5.6" },
+        exposure: Exposure::Excluded {
+            reason: "findings §16 (a): the configuration checker's own tool, served by its own server",
+        },
     },
     CommandSpec {
         name: "build",
@@ -243,7 +272,12 @@ pub const COMMANDS: &[CommandSpec] = &[
             required: true,
         }],
         maturity: Maturity::Unimplemented { owner: "M2.21.2" },
-        exposure: Exposure::Tool,
+        // `archogen-analyze`, an executable of its own (findings §16 (a), `M2.21`): the generator's server can never run
+        // it — not in its program (`trust-shared-program`) and not as a process (`NO-SUBPROCESS`) — so it is the
+        // scheduling checker's own tool (`M2.21.4`).
+        exposure: Exposure::Excluded {
+            reason: "findings §16 (a): the scheduling checker's own tool, served by its own server",
+        },
     },
     CommandSpec {
         name: "verify",
@@ -324,14 +358,26 @@ mod tests {
 
     #[test]
     fn the_surface_is_exactly_the_roadmap_interface_target() {
-        // ROADMAP.md §10.2 lists the first seven and no others, and §10.4 names the server's command. A command
-        // added here without a roadmap change is scope drift; one removed is a broken user contract.
-        let names: Vec<&str> = COMMANDS.iter().map(|spec| spec.name).collect();
-        assert_eq!(
-            names,
-            vec!["check", "resolve", "build", "analyze", "verify", "explain", "replay", "mcp"]
-        );
+        // ROADMAP.md §10.2's command lines, in their order, are the table's commands less `mcp`, and §10.4 names the
+        // server's command. Read from the roadmap rather than restated here (leaf `M3.5.1.5.2`): a command added here
+        // without the roadmap is scope drift, one in the roadmap and missing here a broken user contract.
         let roadmap = include_str!("../../../ROADMAP.md");
+        let target: Vec<&str> = roadmap
+            .split("### 10.2 ")
+            .nth(1)
+            .and_then(|rest| rest.split("```bash\n").nth(1))
+            .and_then(|block| block.split("```").next())
+            .expect("ROADMAP.md §10.2 has its command block")
+            .lines()
+            .filter_map(|line| line.strip_prefix("archogen ")?.split(' ').next())
+            .collect();
+        let names: Vec<&str> = COMMANDS.iter().map(|spec| spec.name).collect();
+        assert_eq!(names.last(), Some(&"mcp"));
+        assert_eq!(
+            names[..names.len() - 1],
+            target[..],
+            "the table against §10.2's lines"
+        );
         let section = roadmap
             .split("### 10.4 ")
             .nth(1)
@@ -348,15 +394,25 @@ mod tests {
         // ROADMAP.md §10.4: "Both builds are outside the programmatic interface", and `verify` waits for its own
         // ruling. Read from the table, so moving either to `Tool` fails here, in the change that does it.
         let offered: Vec<&str> = tools().map(|spec| spec.name).collect();
-        assert_eq!(
-            offered,
-            vec!["check", "resolve", "analyze", "explain", "replay"]
-        );
+        assert_eq!(offered, vec!["check", "resolve", "explain", "replay"]);
         for name in ["build", "verify"] {
             let spec = command(name).expect("the command exists");
             assert!(
                 matches!(spec.exposure, Exposure::Excluded { reason } if reason.contains("§10.4")),
                 "`{name}` must be excluded, citing §10.4"
+            );
+        }
+    }
+
+    #[test]
+    fn no_checker_is_offered_by_the_generator_s_server() {
+        // The generator's program never runs a checker, in its own code or as a process (findings §16 (a)), so a
+        // checker's command is that checker's own tool, never one of the generator's server.
+        for name in ["plan-check", "analyze"] {
+            let spec = command(name).expect("the command exists");
+            assert!(
+                matches!(spec.exposure, Exposure::Excluded { reason } if reason.contains("§16 (a)")),
+                "`{name}` must be excluded, citing the ruling"
             );
         }
     }
@@ -485,5 +541,11 @@ mod tests {
         assert!(usage.contains("[--profile <PROFILE>]"), "{usage}");
         assert!(usage.contains("[--locked]"), "{usage}");
         assert!(usage.contains(" --out <PLAN>"), "{usage}");
+        assert!(usage.contains("[--unchecked]"), "{usage}");
+        let plan_check = command("plan-check").expect("plan-check exists");
+        assert_eq!(
+            plan_check.usage(),
+            "archogen plan-check <DESCRIPTION> <PLAN>"
+        );
     }
 }

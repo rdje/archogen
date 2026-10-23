@@ -505,6 +505,7 @@ The following commands are an interface target to implement, not commands that e
 ```bash
 archogen check examples/periodic-three/system.eadl --profile rt-static-up-v1
 archogen resolve examples/periodic-three/system.eadl --locked --out build/plan.json
+archogen plan-check examples/periodic-three/system.eadl build/plan.json
 archogen build examples/periodic-three/system.eadl --locked --out build/periodic-three
 archogen analyze build/periodic-three --property deadlines
 archogen verify build/periodic-three --tier emulator
@@ -513,6 +514,17 @@ archogen replay artifacts/failure/replay.json
 ```
 
 Separate source acceptance, build success, conditional analysis, test results, and requested assurance. A build may be useful for experimentation even when stronger assurance is unavailable. An explicit assurance request fails if required evidence is missing; it is never quietly downgraded to “tests passed.”
+
+**The checkers are programs of their own.** Added by director ruling `2026-10-22` (findings §16 (a),
+`docs/decisions/decision_findings-for-director-review.md`; designed in `docs/tasks/M3.md`, `M3.5.1`). The
+configuration checker is the executable `archogen-plan-check` and the scheduling checker `archogen-analyze`: each
+reads files, writes a result record (`archogen-result/1`) and exits with its status's code, so no program runs two
+roles' logic (§4.4). `archogen` runs them as git runs its sibling commands — `archogen plan-check` and
+`archogen analyze` hand their arguments to the sibling unparsed, and `archogen resolve` searches, then runs
+`archogen-plan-check` over the plan it wrote. `archogen resolve --unchecked` is the search alone: a downgrade the
+user writes, never a quiet one. The command line runs only a sibling its install manifest (`archogen-install/1`)
+names, checked against its sha256 first, and accepts a result only when the record and the process's exit code
+agree.
 
 ### 10.3 Build outputs
 

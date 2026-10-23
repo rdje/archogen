@@ -79,7 +79,7 @@ fn both_eras_are_spoken_over_stdio_a_refusal_and_an_unbuilt_tool_among_them() {
         format!(r#"{{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{{{META}}}}}"#),
         format!(r#"{{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{{{META}}}}}"#),
         check_request(3, "broken.eadl", "(defblock"),
-        format!(r#"{{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{{{META},"name":"analyze","arguments":{{}}}}}}"#),
+        format!(r#"{{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{{{META},"name":"explain","arguments":{{}}}}}}"#),
         r#"{"jsonrpc":"2.0","id":5,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}"#.to_owned(),
         r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#.to_owned(),
         r#"{"jsonrpc":"2.0","id":6,"method":"tools/list"}"#.to_owned(),
@@ -139,7 +139,7 @@ fn both_eras_are_spoken_over_stdio_a_refusal_and_an_unbuilt_tool_among_them() {
         Some(&Value::Bool(true)),
         "an unbuilt tool names its owner"
     );
-    assert!(json::write(result(3)).contains("M2.21.2"));
+    assert!(json::write(result(3)).contains("M3.4"));
     assert_eq!(
         result(4).get("protocolVersion").and_then(Value::as_str),
         Some("2025-11-25")
