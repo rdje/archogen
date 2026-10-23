@@ -91,8 +91,10 @@ file the constant `LAUNCHER` in `xtask/src/trust.rs` names, which the front gain
 the launcher, whose acceptance contract carries the risk, is reported; a front that invokes while its commit holds no
 launcher is refused (leaf `M3.5.2.1.3`). A comparison no form names is found by the build, not by what its sources
 say: every test-like unit — an integration test, a bench, a library's or an executable's unit tests, a library's doc
-tests — of a package whose build, its development edges followed, compiles role packages of both roles of a pair a
-property rests on (the generator and either checker, the reference model and the implementation) is a program target.
+tests — that some build of its package makes, whatever its flags, and whose build, by normal and build edges over every
+feature and platform and its package's development edges, compiles role packages of both roles of a pair a property
+rests on (the generator and either checker, the reference model and the implementation) is a program target. It
+counts what some build compiles, more than the default build makes, by design (leaf `M3.5.2.3.1`).
 An integration test that compares the two is named by its pair form; any other such unit is classified by a
 `defprogram` whose target is `(target test|bench|lib-test|bin-test|doctest <name>)`, its reason saying it compares
 nothing the two hold equal. Unnamed, it is reported as an unclassified program is, and refused on the baseline's host
@@ -723,7 +725,11 @@ Every report ends with what the inventory does not see, the same list each time,
   the launcher running only what the install manifest names, and the install placing only the invoked roots stand
   there;
 - **whether a unit two roles' packages join compares them.** The build finds the joining; a classification's review
-  decides that the unit compares nothing the two hold equal.
+  decides that the unit compares nothing the two hold equal;
+- **an edit inside a classified program target.** A classification is reviewed again only when the role packages its
+  build compiles grow, so an edit that makes a unit start comparing two roles reads "unchanged" (`M3.6.10` owns it);
+- **a build script's actions, and a package outside the workspace's members.** The census reads the members' build
+  graph: what a build script runs or writes, and another workspace's tests, are outside it.
 
 ## Today and ahead
 

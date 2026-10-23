@@ -398,8 +398,7 @@ compiles beside its pair's two builds, its provenance is an aspect of its pair's
 other than its pair's two — but it is paired with no root, its pair taking its item. That record's read failures
 spanning forms (pairs, two generator roots, an invoked name, a target two forms name) join §2's departures found once
 the whole file is read; one within a form stops the reader at that form. §7's case-5 list takes a derivation's units.
-A test-like unit that record's §3 makes a program target keeps a test's crate root, which §5 refuses as a generator
-file.
+Joining gives no crate root a generator file's standing it lacks otherwise (that record's §3).
 
 ### 9. Hand-offs
 

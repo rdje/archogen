@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate counts every test any build could compile
+
+`ARCHOGEN-M3-0903` (leaf `M3.5.2.3.1`), `2026-10-23`.
+
+- A test that joins two roles is found whether it reaches them through a build script's dependency, a feature or
+  another platform's dependency, and whatever flags say it is skipped by default; the report says what stays outside.
+
 ## archogen — the checkers' programs in the trust record, round 6
 
 `ARCHOGEN-M3-0902` (leaf `M3.5.2`), `2026-10-23`.

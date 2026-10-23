@@ -872,6 +872,10 @@ pub const UNSEEN: &[&str] = &[
      manifest and the install placing the invoked roots stand there (§4)",
     "whether a unit two roles' packages join compares them: the build finds the joining, and a classification's review \
      decides that it compares nothing they hold equal (§3)",
+    "an edit inside a classified program target: its classification is reviewed again only when the role packages its \
+     build compiles grow, so an edit that makes it start comparing two roles reads unchanged (§3; M3.6.10)",
+    "a build script's actions, and a package outside the workspace's members: the census reads the members' build \
+     graph, so what a build script runs or writes, and another workspace's tests, are outside it (§3)",
 ];
 
 /// A file of a commit's tree, or none when the tree does not hold it.

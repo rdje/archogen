@@ -1396,9 +1396,9 @@ fn tool_line(program: &str, args: &[&str], env: &[(String, String)], cwd: &Path)
 /// `trust-baseline-stale` on the baseline's host (§6, R7 remark e). A target's role packages are those its build
 /// compiles — its package's closure by normal edges, an example's by its package's development edges too, since an
 /// example compiles them (R5 remark 13) — among every root's role packages.
-/// A program target's closure, as its build compiles it: its package's by normal edges, an example's and a test-like
-/// unit's by its package's development edges too, since they compile them (§2, R5 remark 13;
-/// `decision_trust-role-programs.md` §3).
+/// A program target's closure, as some build of it compiles it: its package's by normal and build edges, an example's
+/// and a test-like unit's by its package's development edges too, since they compile them (§2, R5 remark 13;
+/// `decision_trust-role-programs.md` §3). An edge for any platform counts, so a closure is the union over platforms.
 fn target_closure(
     package: &str,
     kind: &str,
@@ -1412,6 +1412,7 @@ fn target_closure(
         }
         for (from, to, edge) in graph {
             let followed = edge == "normal"
+                || edge == "build"
                 || ((kind == "example" || TEST_KINDS.contains(&kind))
                     && edge == "dev"
                     && from == package);
@@ -1863,7 +1864,16 @@ pub fn inventory_with(
     // The workspace's packages, from `cargo metadata`, which runs no package's code.
     let meta_env = environment(&pin, &cargo_home, &out.join("target-metadata"))?;
     let meta_out = Command::new("cargo")
-        .args(["metadata", "--offline", "--locked", "--format-version", "1"])
+        // Every feature, so a dependency behind one is an edge as any other (`decision_trust-role-programs.md` §3); the
+        // roots' closures hold no feature, which the manifest rules refuse.
+        .args([
+            "metadata",
+            "--offline",
+            "--locked",
+            "--all-features",
+            "--format-version",
+            "1",
+        ])
         .current_dir(&tree_dir)
         .env_clear()
         .envs(meta_env.iter().map(|(k, v)| (k.as_str(), v.as_str())))
@@ -1966,9 +1976,14 @@ pub fn inventory_with(
                     .or_default()
                     .insert(src.clone());
             }
-            // The units `cargo test` and `cargo bench` build of this target: its own, if it is a test or a bench; its
-            // unit tests, if its `test` flag is set; a library's doc tests, if its `doctest` flag is.
-            let flag = |k: &str| matches!(t.get(k), Some(Json::Bool(true)));
+            // The units some build of this target makes (`decision_trust-role-programs.md` §3): its own, if it is a test
+            // or a bench; a library's or an executable's unit tests; a library's doc tests, which rustdoc runs on a
+            // `lib`, `rlib`, `dylib` or `proc-macro` alone. Flags are not read: `test`, `doctest`, `harness` and
+            // `required-features` change what the default build makes, and `cargo test --lib`, `--test` or `--doc`
+            // builds the unit whatever they say (measured `2026-10-23`, round 6).
+            let doctested = kinds
+                .iter()
+                .any(|k| matches!(*k, "lib" | "rlib" | "dylib" | "proc-macro"));
             let library = kinds.iter().any(|k| {
                 matches!(
                     *k,
@@ -1978,9 +1993,9 @@ pub fn inventory_with(
             for (unit, built) in [
                 ("test", kinds.contains(&"test")),
                 ("bench", kinds.contains(&"bench")),
-                ("lib-test", library && flag("test")),
-                ("bin-test", kinds.contains(&"bin") && flag("test")),
-                ("doctest", library && flag("doctest")),
+                ("lib-test", library),
+                ("bin-test", kinds.contains(&"bin")),
+                ("doctest", doctested),
             ] {
                 if built {
                     test_units.push((dir.clone(), unit.to_owned(), target_name.to_owned()));
@@ -4922,6 +4937,11 @@ pub(crate) mod tests {
     /// off, and `crates/r`, whose development dependencies are `dev`: a library with a doc comment, a test `compare`
     /// that names no crate, and a bench `speed`; `forms` appended to the roots.
     fn joining(name: &str, dev: &str, forms: &str) -> Fixture {
+        joining_with(name, dev, forms, &[])
+    }
+
+    /// [`joining`], `crates/r`'s manifest holding `dev` beside its package table, and `extra` files besides.
+    fn joining_with(name: &str, dev: &str, forms: &str, extra: &[(&str, &str)]) -> Fixture {
         let roots = format!(
             "(defroot gen (role generator) (package \"crates/a\") (target bin a) (role-packages \"crates/a\" \"crates/g\"))\n\
              (defroot cfg (role configuration-checker) (package \"crates/c\") (target lib))\n\
@@ -4963,6 +4983,11 @@ pub(crate) mod tests {
             files.push((format!("crates/{n}/Cargo.toml"), manifest(n, "")));
             files.push(library(n));
         }
+        files.extend(
+            extra
+                .iter()
+                .map(|(p, t)| ((*p).to_owned(), (*t).to_owned())),
+        );
         let files: Vec<(&str, String)> =
             files.iter().map(|(p, t)| (p.as_str(), t.clone())).collect();
         fixture(name, "1.95.0", &files)
@@ -4970,6 +4995,11 @@ pub(crate) mod tests {
 
     /// Each program target of `crates/r` the inventory reports, by kind and name, with its status.
     fn units_of_r(inv: &Json) -> Vec<(String, String, String)> {
+        units_of(inv, "crates/r")
+    }
+
+    /// Each program target of `package` the inventory reports, by kind and name, with its status.
+    fn units_of(inv: &Json, package: &str) -> Vec<(String, String, String)> {
         let field = |t: &Json, k: &str| {
             t.get(k)
                 .and_then(Json::as_str)
@@ -4981,7 +5011,7 @@ pub(crate) mod tests {
             .map(Json::elements)
             .unwrap_or_default()
             .iter()
-            .filter(|t| field(t, "package") == "crates/r")
+            .filter(|t| field(t, "package") == package)
             .map(|t| (field(t, "kind"), field(t, "name"), field(t, "status")))
             .collect();
         out.sort();
@@ -4990,14 +5020,32 @@ pub(crate) mod tests {
 
     /// `crates/r`'s four test-like units, each unclassified, compiling `compiled`.
     fn four_unclassified(compiled: &str) -> Vec<(String, String, String)> {
-        [("bench", "speed"), ("doctest", "r"), ("lib-test", "r"), ("test", "compare")]
+        unclassified_units(
+            "crates/r",
+            &[
+                ("bench", "speed"),
+                ("doctest", "r"),
+                ("lib-test", "r"),
+                ("test", "compare"),
+            ],
+            compiled,
+        )
+    }
+
+    /// `units` of `package`, each unclassified, compiling `compiled`.
+    fn unclassified_units(
+        package: &str,
+        units: &[(&str, &str)],
+        compiled: &str,
+    ) -> Vec<(String, String, String)> {
+        units
             .iter()
             .map(|(kind, name)| {
                 (
                     (*kind).to_owned(),
                     (*name).to_owned(),
                     format!(
-                        "trust-unclassified-program: the {kind} `{name}` of `crates/r` compiles {compiled}, role \
+                        "trust-unclassified-program: the {kind} `{name}` of `{package}` compiles {compiled}, role \
                          packages of two roles a property rests on, and no form in trust/roots.eadl names or \
                          classifies it"
                     ),
@@ -5011,45 +5059,74 @@ pub(crate) mod tests {
         crate::trust_test_process::bounded!(
             a_unit_joining_two_roles_is_a_program_target_whatever_it_names
         );
-        // `decision_trust-role-programs.md` §3, round 5's D1: the build decides, not the sources' names — each test-like
-        // unit of a package whose build compiles role packages of the two roles of a pair a property rests on, through
-        // a renamed dependency or a helper's as directly, is a program target; one role's alone, or two roles no
-        // property pairs, none.
+        // `decision_trust-role-programs.md` §3, rounds 5 and 6: the build decides, not the sources' names — each
+        // test-like unit some build of its package makes, whose build compiles role packages of the two roles of a
+        // pair a property rests on, is a program target: through a renamed dependency, a helper's, a build-dependency,
+        // a feature or another platform's dependency as directly, whatever its flags say; one role's alone, or two
+        // roles no property pairs, none.
         let dep = |n: &str| format!("{n} = {{ path = \"../{n}\" }}\n");
         let dev = |deps: &str| format!("[dev-dependencies]\n{deps}");
         let gc = "`crates/c`, `crates/g`";
-        for (case, deps, want) in [
-            ("joined", dep("g") + &dep("c"), four_unclassified(gc)),
-            ("joined-helper", dep("h"), four_unclassified(gc)),
+        let gs = "`crates/g`, `crates/s`";
+        let build_script: &[(&str, &str)] = &[("crates/r/build.rs", "fn main() {}\n")];
+        for (case, manifest_extra, extra, want) in [
+            ("joined", dev(&(dep("g") + &dep("c"))), &[][..], four_unclassified(gc)),
+            ("joined-helper", dev(&dep("h")), &[][..], four_unclassified(gc)),
             (
                 "joined-renamed",
-                dep("g") + "chk = { package = \"c\", path = \"../c\" }\n",
+                dev(&(dep("g") + "chk = { package = \"c\", path = \"../c\" }\n")),
+                &[][..],
+                four_unclassified(gc),
+            ),
+            ("joined-scheduling", dev(&(dep("g") + &dep("s"))), &[][..], four_unclassified(gs)),
+            (
+                "joined-reference",
+                dev(&(dep("m") + &dep("i"))),
+                &[][..],
+                four_unclassified("`crates/i`, `crates/m`"),
+            ),
+            (
+                "joined-by-a-build-dependency",
+                format!("[build-dependencies]\n{}\n{}", dep("s"), dev(&dep("g"))),
+                build_script,
+                four_unclassified(gs),
+            ),
+            (
+                "joined-behind-a-feature",
+                format!(
+                    "[dependencies]\nc = {{ path = \"../c\", optional = true }}\n\n[features]\ncmp = [\"dep:c\"]\n\n{}",
+                    dev(&dep("g"))
+                ),
+                &[][..],
                 four_unclassified(gc),
             ),
             (
-                "joined-scheduling",
-                dep("g") + &dep("s"),
-                four_unclassified("`crates/g`, `crates/s`"),
+                "joined-on-another-platform",
+                format!("{}\n[target.'cfg(windows)'.dev-dependencies]\n{}", dev(&dep("g")), dep("s")),
+                &[][..],
+                four_unclassified(gs),
             ),
             (
-                "joined-reference",
-                dep("m") + &dep("i"),
-                four_unclassified("`crates/i`, `crates/m`"),
+                "joined-flags-off",
+                format!(
+                    "[lib]\ntest = false\ndoctest = false\n\n[features]\ncmp = []\n\n[[test]]\nname = \"compare\"\n\
+                     test = false\nrequired-features = [\"cmp\"]\n\n[[bench]]\nname = \"speed\"\ntest = false\n\n{}",
+                    dev(&(dep("g") + &dep("c")))
+                ),
+                &[][..],
+                four_unclassified(gc),
             ),
-            ("one-role", dep("g"), Vec::new()),
-            ("two-checkers", dep("c") + &dep("s"), Vec::new()),
-            ("generator-and-model", dep("g") + &dep("m"), Vec::new()),
+            ("one-role", dev(&dep("g")), &[][..], Vec::new()),
+            ("two-checkers", dev(&(dep("c") + &dep("s"))), &[][..], Vec::new()),
+            ("generator-and-model", dev(&(dep("g") + &dep("m"))), &[][..], Vec::new()),
         ] {
-            let inv = written(joining(case, &dev(&deps), "").run());
+            let inv = written(joining_with(case, &manifest_extra, "", extra).run());
             assert_eq!(units_of_r(&inv), want, "{case}");
-            // The helper joins both roles, but its unit tests and doc tests are off, so cargo builds none of them.
-            assert!(
-                !inv.get("program-targets")
-                    .map(Json::elements)
-                    .unwrap_or_default()
-                    .iter()
-                    .any(|t| t.get("package").and_then(Json::as_str) == Some("crates/h")),
-                "{case}: a unit its flags turn off"
+            // The helper joins both roles; its unit tests and doc tests are off, and some build still makes them.
+            assert_eq!(
+                units_of(&inv, "crates/h"),
+                unclassified_units("crates/h", &[("doctest", "h"), ("lib-test", "h")], gc),
+                "{case}: a unit its flags turn off counts"
             );
         }
     }
@@ -5090,6 +5167,53 @@ pub(crate) mod tests {
             "trust-unclassified-program: `r-units` compiles `crates/c` beside the role packages its classification \
              reviewed"
         );
+
+        // An executable's unit tests join as a library's do; the executable itself is a program target of §2.
+        let binary = written(
+            joining_with(
+                "joined-binary",
+                "",
+                "",
+                &[
+                    (
+                        "crates/x/Cargo.toml",
+                        "[package]\nname = \"x\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\n\
+                         g = { path = \"../g\" }\nc = { path = \"../c\" }\n",
+                    ),
+                    ("crates/x/src/main.rs", "fn main() {}\n"),
+                ],
+            )
+            .run(),
+        );
+        let mut want =
+            unclassified_units("crates/x", &[("bin-test", "x")], "`crates/c`, `crates/g`");
+        want.insert(
+            0,
+            (
+            "bin".to_owned(),
+            "x".to_owned(),
+            "trust-unclassified-program: the bin `x` of `crates/x` is neither a root nor classified in trust/roots.eadl"
+                .to_owned(),
+            ),
+        );
+        assert_eq!(
+            units_of(&binary, "crates/x"),
+            want,
+            "an executable's unit tests"
+        );
+
+        // A joined integration test a harness names is the harness's.
+        let harness = units_of_r(&written(
+            joining(
+                "joined-harness",
+                "[dev-dependencies]\nm = { path = \"../m\" }\ni = { path = \"../i\" }\n",
+                "(defharness diff (pair refm imp) (package \"crates/r\") (test compare))\n",
+            )
+            .run(),
+        ));
+        let mut want = four_unclassified("`crates/i`, `crates/m`");
+        want[3].2 = "harness diff".to_owned();
+        assert_eq!(harness, want, "named by a harness");
 
         let gone = written(
             joining(
