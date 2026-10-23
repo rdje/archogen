@@ -63,6 +63,12 @@ judge a description any other way.
    - *by behaviour:* over every tracked description, `archogen check`'s exit code and printed codes equal
      the API's status and diagnostic codes.
 
+   *Amended `2026-10-23` (leaf `M3.5.1.5.3`), by the ruling of `2026-10-22` (findings §16 (a)): the checkers' own
+   commands, `plan-check` and `analyze`, are no operation of this API — the generator's program runs no checker — and
+   when they run they join the by-operation leg's exclusions, citing the ruling, beside `build` and `mcp`. `resolve`,
+   when `M3.4` builds it, is this API's operation with `unchecked` set alone, refusing a request without it with the
+   reason and the repair, and its behaviour leg compares it with `archogen resolve --unchecked`.*
+
 ## Why
 
 - **One vocabulary rather than two.** The exit contract already sorts every outcome: `0` and `10`–`16`

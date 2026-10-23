@@ -132,6 +132,12 @@ rule that a response the API did not judge must still carry a §5.5 verdict, and
 on the reading. Changing it later is a change to one enum and its projection, before the version is
 fixed at `API.3`'s close.
 
+*Noted `2026-10-23` (leaf `M3.5.1.1`):* a third status now says a description was not judged: `stale-input`, exit
+`3`, which a checker answers when the inputs it was handed do not belong together — a plan resolved from another
+description, a build made from another plan. Under the reading above it is what `unimplemented` and `usage` are:
+never `ok`, never a §5.5 verdict, and the repair is to resolve, or build, again. The vocabulary it belongs to is now
+`crates/archogen-outcome`'s, version `1.1`. The question is still yours, and it now covers three statuses.
+
 ## 10. How far the hold on `scripts/` reaches (`2026-09-30`) — **ruled the same day**
 
 Sealed, byte for byte, in [`decision_findings-for-director-review/10.md`](../decision-history/decision_findings-for-director-review/10.md) — settled, and never edited again.

@@ -108,6 +108,11 @@ Both are exactly the things an API's types and its string encoding depend on.
   to `posix_spawn` were each measured passing: it reads code with comments and literals stripped and each `use` whole,
   and closes the three routes a workspace with no dependency has — `std::process` beyond `ExitCode` and `exit`, a
   foreign function, inline assembly.
+  *Ruled `2026-10-22` (findings §16 (a)), amended `2026-10-23` (leaf `M3.5.1.5.3`):* the property narrows to the
+  programmatic surface — the engine API, the wasm module and every MCP server run nothing — while the human command
+  line runs the checkers' executables as git runs its siblings, from one file `NO-SUBPROCESS` will admit by path, the
+  launcher handed in by `main.rs` alone so the type system keeps the programmatic surface from reaching it
+  (`ROADMAP.md` §10.2, §10.4; `M3.5.1.4`). Until that leaf lands the gate refuses a process in every crate, as above.
 - **The surface is thin today and must not be advertised otherwise.** Per `docs/book/src/cli.md`, only
   `check` is built; `build` is experimental over the S0 path; `resolve`, `analyze`, `verify`, `explain`
   and `replay` are unimplemented (`M3.4`, `M2.6`, `PROGRAM.3`, `M3.4`, `M4.7`). An MCP server shipping

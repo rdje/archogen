@@ -57,6 +57,10 @@
 6. **No dependency, no process.** The server, its reader and its writer are code in `crates/archogen-cli`, which
    depends on the engine API and not the reverse, so the checker and the generator share nothing new (§10.4,
    F30). It spawns nothing (`NO-SUBPROCESS`).
+   *Amended `2026-10-23` (leaf `M3.5.1.5.3`): the reader and the writer are `crates/archogen-json`'s since
+   `M3.5.1.7`, no role's, re-exported as `archogen_cli::json`, so a checker's own server (`M3.5.1.6`) reads with the
+   same code — a shared item the trust inventory will disclose when a checker compiles it. The server still spawns
+   nothing, after the ruling of `2026-10-22` as before: the command line alone runs the checkers.*
 
 ## As built (`2026-10-02`, leaf `API.6.4`)
 

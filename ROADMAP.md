@@ -555,6 +555,15 @@ profile and returns a structured result. It is transport-neutral: the command li
 the MCP server are three consumers of one contract, not three implementations of it. A capability that
 exists only behind the CLI does not exist programmatically, and the reverse.
 
+**The programmatic surface runs nothing.** Added by director ruling `2026-10-22` (findings §16 (a); §10.2). The
+checkers are executables of their own, and only the human command line runs them, as git runs its siblings: the
+engine API, the wasm module and the generator's MCP server run no checker, neither in their own program nor as a
+process. So a checker's operation is that checker's own — each serves its own tools, over a transport no role owns
+(`docs/tasks/M3.md`, `M3.5.1.6`) — and the engine API and the generator's server offer `resolve` only with
+`unchecked` set, refusing a request without it with the reason and the repair: compose it with
+`archogen-plan-check`'s own tool. No tool's summary claims a check it does not run, and the unchecked plan is offered
+alike on the command line and programmatically.
+
 **Bindings.** A `wasm32-unknown-unknown` build, so the description-side toolchain runs in a browser or a
 worker; and an MCP server, so any agent — an LLM, a swarm, an orchestrator — can drive a running archogen
 instance. The server is a capability of the built binary: it is spawned per instance and listened to, and

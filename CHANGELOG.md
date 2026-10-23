@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the programmatic surface runs nothing
+
+`ARCHOGEN-M3-0885` (leaf `M3.5.1.5.3`), `2026-10-23`.
+
+- `ROADMAP.md` §10.4 and the interface, engine-API and MCP records say what the ruling changes there: only the
+  command line runs a checker; the API and the servers offer `resolve` as the search alone; each checker serves its
+  own tools. Findings §9 gains its third not-judged status, `stale-input`.
+
 ## archogen — the checkers in the command line's target
 
 `ARCHOGEN-M3-0884` (leaf `M3.5.1.5.2`), `2026-10-23`.

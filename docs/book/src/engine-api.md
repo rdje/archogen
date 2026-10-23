@@ -67,6 +67,11 @@ why, and `notes` explain it:
   false statement about the description;
 - a language definition that fails to load, or a description too large to address: `tool-failure`.
 
+The vocabulary itself belongs to no role: it lives in `crates/archogen-outcome`, with a version of its own, `1.1`,
+because the checkers carry it without the API (leaf `M3.5.1.1`; [What is versioned](versions.md)). `1.1` added a
+status no request to this API answers today: `stale-input`, exit `3`, which a checker answers when what it was
+handed was not made together — a plan resolved from another description, a build made from another plan.
+
 A response is never missing its status, and a response that was not judged is never `ok`. The
 failure §10.4 guards against is an unanswered question read as an answer, and it needs a response
 with no outcome, or with a default one. This one has neither. ⚠️ The director's ruling says every
@@ -278,6 +283,8 @@ neither, in its program or as a process, so each checker serves its own tools (f
 - **Ahead:** each command the table lists as offered joins the API when its own leaf builds it: `resolve` and
   `explain` (`M3.4`), `replay` (`M4.7`). The MCP server lists them already, each naming that leaf. `analyze` and
   `plan-check` are the checkers' own tools, served by their own servers (`M2.21.4`, `M3.5.1.6`); `verify` waits for
-  a ruling of its own and its builder, `M4.11`; and `build` stays outside, by §10.4.
+  a ruling of its own and its builder, `M4.11`; and `build` stays outside, by §10.4. When `resolve` joins, it joins
+  as the search alone, `unchecked` set: this API runs no checker, so it refuses a request that asks for one, with the
+  repair — compose it with `archogen-plan-check`'s own tool (`ROADMAP.md` §10.4).
 - ⚠️ **Open for the director:** whether every response carries a §5.5 verdict, as the ruling says, or only a
   response that reports one, as §10.4 says. This chapter follows §10.4 (One outcome vocabulary).
