@@ -14,7 +14,7 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.5`; `PROGRAM` resumes at `PROGRAM.71`.
-- **Next action:** `M3.5.2.9.1` (P2), the census's alphabet and doc text, then `.2`–`.5` and round 13;
+- **Next action:** `M3.5.2.9.2` (P2), the census's paths, then `.3`–`.5` and round 13;
   then `M3.5.3`; `M3.5.8` after the next push.
   `.1.8` waits on the runner: the trust gate refuses the shared digest package on `main` until its form lands.
   The mutation campaign is `M7.6`'s. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),

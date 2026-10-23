@@ -5,7 +5,12 @@
 //! returned unfollowed, for the inventory to refuse unless an admission names it, so a spelling the census does not
 //! know is a refusal, never a miss (round 11's change of method): no single string literal, an alias or a macro's, a
 //! module a macro's expansion places, an assembly directive reading a file, a path out of the tree, through a symbolic
-//! link or spelt as hosts read apart, a file that does not tokenize, a doc test's own.
+//! link or spelt as hosts read apart, a file that does not tokenize, a doc test's own. And it reads only what it can
+//! check it reads as rustc does (round 12's change of method): outside comments and literals, a file's every byte is
+//! printable ASCII or a space, a tab, a form feed, a newline or a carriage return — the whitespace rustc and the
+//! catalog's lexer both skip — and a file holding any other there, or opening with a shebang line rustc would remove,
+//! is refused whole, so no Unicode space, control byte or byte-order mark can part what the census reads from what
+//! rustc does.
 //!
 //! The Rust reference of the pin decides where a module's file is: "When the module does not have a `path` attribute,
 //! the path to the file mirrors the logical module path"; "For `path` attributes on modules not inside inline module
@@ -134,9 +139,7 @@ impl<'a> Sources<'a> {
                         file: file.clone(),
                         line: line_of(source, at),
                         sha256: Digest::of(source).hex(),
-                        why: format!(
-                            "does not tokenize ({why}), so the census cannot read what it includes"
-                        ),
+                        why: format!("{why}, so the census cannot read what it includes"),
                     });
                     continue;
                 }
@@ -233,6 +236,7 @@ impl<'a> Sources<'a> {
                             What::Doc => {
                                 if let Some(text) = self.tree.get(&path).filter(|_| doc_tested) {
                                     let whole = Fragment {
+                                        at: 0,
                                         line: 1,
                                         text: String::from_utf8_lossy(text).into_owned(),
                                     };
@@ -253,7 +257,8 @@ impl<'a> Sources<'a> {
     }
 }
 
-const DOC_TEST: &str = "is in a doc test, whose files rustdoc resolves apart from the crate";
+const DOC_TEST: &str = "is a word in doc text that can make a doc test read a file, prose or code alike — no markdown \
+                        is read — which the census does not follow";
 
 /// Where a site is: its line and the text of its extent.
 #[derive(Debug, Clone)]
@@ -385,6 +390,38 @@ fn merged(ts: Vec<Token>) -> Vec<Token> {
     out
 }
 
+/// Where `source` leaves the census's alphabet, and why, if it does (round 12's change of method). The catalog's lexer
+/// skips a space, a tab, a form feed, a newline and a carriage return, and reads every other byte outside a comment or
+/// a literal as part of a token: a byte outside ASCII joins an identifier, a control byte is a punctuation token. So
+/// an identifier holding a byte outside ASCII — a byte-order mark, a Unicode space such as U+200E, or a name — or a
+/// punctuation token outside printable ASCII is where rustc and the census may read the file apart, and refused; and so
+/// is a first line `#!` that is no inner attribute, a shebang rustc removes before it reads.
+fn outside_alphabet(source: &[u8], ts: &[Token]) -> Option<(usize, String)> {
+    let inner_attribute = ts.len() >= 3
+        && ts[0].at == 0
+        && ts[1].kind == Kind::Punct('!')
+        && ts[2].kind == Kind::Open('[');
+    if source.starts_with(b"#!") && !inner_attribute {
+        return Some((
+            0,
+            "opens with a shebang line, which rustc removes before it reads".to_owned(),
+        ));
+    }
+    ts.iter().find_map(|t| match &t.kind {
+        Kind::Ident(_, true) => Some((
+            t.at,
+            "holds a character outside ASCII outside a comment or a literal — a byte-order mark, a Unicode space, a \
+             name — outside the census's alphabet"
+                .to_owned(),
+        )),
+        Kind::Punct(c) if !(' '..='~').contains(c) => Some((
+            t.at,
+            format!("holds the byte {:#04x} outside a comment or a literal, outside the census's alphabet", *c as u32),
+        )),
+        _ => None,
+    })
+}
+
 /// The index of the delimiter closing the one opened at `open`, or the last token's.
 fn closing(ts: &[Token], open: usize) -> usize {
     let mut depth = 0usize;
@@ -448,7 +485,11 @@ fn regions(ts: &[Token]) -> Vec<Region> {
 
 /// The sites of one Rust source, its doc text's among them.
 fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
-    let ts = merged(tokens(source)?);
+    let ts = tokens(source).map_err(|(at, why)| (at, format!("does not tokenize ({why})")))?;
+    if let Some(outside) = outside_alphabet(source, &ts) {
+        return Err(outside);
+    }
+    let ts = merged(ts);
     let regions = regions(&ts);
     let mut out = Scan {
         test_file: test_file(&ts),
@@ -514,10 +555,18 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                     }
                     if key == Some("doc") && assigned {
                         match value {
-                            Some(v) => out.doc.push(Fragment {
-                                line: line_of(source, v.at),
-                                text: decode(&source[v.at..v.end]).unwrap_or_default(),
-                            }),
+                            Some(v) => match decode(&source[v.at..v.end]) {
+                                Some(text) => out.doc.push(Fragment {
+                                    at: v.at,
+                                    line: line_of(source, v.at),
+                                    text,
+                                }),
+                                // Never read as empty: what it holds is unknown (round 12's D5).
+                                None => out.unfollowed.push(site(i, close).unfollowed(
+                                    file,
+                                    "is a `doc` literal the census cannot decode, so the doc tests it holds are unread",
+                                )),
+                            },
                             // `doc = include_str!("…")`: the inclusion, read below, is the document.
                             None if doc_included(&ts, j + 2, close) => {}
                             None => out.unfollowed.push(site(i, close).unfollowed(
@@ -913,6 +962,7 @@ fn doc_comments(source: &[u8], ts: &[Token]) -> Vec<Fragment> {
                     || line.starts_with(b"//!")
                 {
                     out.push(Fragment {
+                        at: a + k,
                         line: line_of(source, a + k),
                         text: String::from_utf8_lossy(&line[3..]).into_owned(),
                     });
@@ -944,6 +994,7 @@ fn doc_comments(source: &[u8], ts: &[Token]) -> Vec<Fragment> {
                         || block.starts_with(b"/*!");
                 if doc && block.len() >= 5 {
                     out.push(Fragment {
+                        at: a + k,
                         line: line_of(source, a + k),
                         text: String::from_utf8_lossy(&block[3..block.len() - 2]).into_owned(),
                     });
@@ -960,6 +1011,8 @@ fn doc_comments(source: &[u8], ts: &[Token]) -> Vec<Fragment> {
 /// One piece of a file's doc text: a doc comment's body, a `doc` attribute's literal, or a document one includes.
 #[derive(Debug, Clone)]
 struct Fragment {
+    /// Its first byte's offset in the source, which orders it among the file's others.
+    at: usize,
     /// Its first line, 1-based.
     line: usize,
     text: String,
@@ -968,8 +1021,10 @@ struct Fragment {
 /// The words in doc text that can make a doc test read a file — an inclusion or assembly macro before `!`, an alias
 /// or a comment, a `mod` before its name, a debugger visualizer; an assembler directive needs an assembly macro, or a
 /// macro of the library's, whose definition is refused — each found by
-/// its word alone, with no markdown read, so no fence, indentation or info string hides one, and each piece read by
-/// itself, a word ending one a trigger, so no split does (round 11's D1).
+/// its word alone, with no markdown read, so no fence, indentation or info string hides one; read past any whitespace
+/// and any character outside printable ASCII, U+200E's and U+200F's among them (round 12's D6); and the pieces joined
+/// in source order, as rustdoc joins an item's, so no split hides one, and only a word ending the whole is a trigger by
+/// its place alone (round 12's R11).
 /// One a backtick opens, with no quote or star between, is exempt: no compiled Rust holds a backtick outside a literal
 /// or comment, so a doc test holding it there either holds the word inside that literal or comment, or cannot
 /// compile — whatever a file it includes says, unless a `compile_fail` block names an error code (`exempt`).
@@ -982,16 +1037,18 @@ struct DocText {
 }
 
 impl DocText {
-    /// The triggers of `file`'s doc text, each fragment read by itself.
+    /// The triggers of `file`'s doc text, its pieces joined in source order by a newline.
     fn read(&mut self, file: &str, fragments: &[Fragment]) {
-        for f in fragments {
-            self.read_one(file, f);
-        }
-    }
-
-    fn read_one(&mut self, file: &str, fragment: &Fragment) {
-        let text = fragment.text.as_str();
-        // Each line's start, so a trigger's site is its line: the extent an admission names.
+        let mut fragments: Vec<&Fragment> = fragments.iter().collect();
+        fragments.sort_by_key(|f| f.at);
+        // The joined text's lines, each with the source line it came from: a trigger's site is its line, the extent an
+        // admission names.
+        let lines: Vec<(usize, &str)> = fragments
+            .iter()
+            .flat_map(|f| f.text.split('\n').enumerate().map(|(k, l)| (f.line + k, l)))
+            .collect();
+        let text = lines.iter().map(|(_, l)| *l).collect::<Vec<_>>().join("\n");
+        let text = text.as_str();
         let starts: Vec<usize> = std::iter::once(0)
             .chain(text.match_indices('\n').map(|(k, _)| k + 1))
             .collect();
@@ -1011,18 +1068,33 @@ impl DocText {
             if w.len() == 5 && w.starts_with('E') && w[1..].bytes().all(|b| b.is_ascii_digit()) {
                 self.error_code = true;
             }
-            let rest = text[k..].trim_start_matches(|c: char| c.is_whitespace() || c == '*');
+            // Past what rustc may read as whitespace: the text's own, a block comment's stars, a control character and
+            // any character outside ASCII.
+            let skip =
+                |c: char| c.is_whitespace() || c == '*' || c.is_ascii_control() || !c.is_ascii();
+            let rest = text[k..].trim_start_matches(skip);
             let then_word = |x: &str| {
                 rest.strip_prefix(x)
                     .is_some_and(|r| !r.bytes().next().is_some_and(word))
             };
             let trigger = match w {
                 "include" | "include_str" | "include_bytes" | "asm" | "global_asm"
-                | "naked_asm" => rest.is_empty() || rest.starts_with(['!', '/']) || then_word("as"),
-                "mod" => {
+                | "naked_asm" => {
                     rest.is_empty()
-                        || rest
-                            .starts_with(|c: char| c == '$' || c == '_' || c.is_ascii_alphabetic())
+                        || rest.starts_with('!')
+                        || rest.starts_with("/*")
+                        || rest.starts_with("//")
+                        || then_word("as")
+                }
+                // Before anything that can begin a name: a letter, `_`, `$`, `r#`, or any character outside ASCII.
+                "mod" => {
+                    let next = text[k..].trim_start_matches(|c: char| {
+                        c.is_ascii_whitespace() || c == '*' || c.is_ascii_control()
+                    });
+                    next.is_empty()
+                        || next.starts_with(|c: char| {
+                            c == '$' || c == '_' || c.is_ascii_alphabetic() || !c.is_ascii()
+                        })
                 }
                 "debugger_visualizer" => true,
                 _ => false,
@@ -1035,15 +1107,12 @@ impl DocText {
                 .rfind('`')
                 .is_some_and(|bt| !run[bt + 1..].contains(['"', '\'', '*']));
             let row = starts.partition_point(|&s| s <= a) - 1;
-            let extent = text[starts[row]..]
-                .split('\n')
-                .next()
-                .unwrap_or_default()
-                .trim_end_matches('\r');
+            let (line, extent) = lines[row];
+            let extent = extent.trim_end_matches('\r');
             self.triggers.push((
                 Unfollowed {
                     file: file.to_owned(),
-                    line: fragment.line + row,
+                    line,
                     sha256: Digest::of(extent.as_bytes()).hex(),
                     why: DOC_TEST.to_owned(),
                 },
@@ -1101,7 +1170,14 @@ fn decode(lit: &[u8]) -> Option<String> {
                     .collect();
                 out.push(char::from_u32(u32::from_str_radix(&hex, 16).ok()?)?);
             }
-            // A line continuation: the newline and the whitespace after it are dropped.
+            // A line continuation: the newline and the whitespace after it are dropped — a CRLF is a newline to rustc,
+            // which normalises it before it reads (round 12's D5).
+            '\r' if chars.peek() == Some(&'\n') => {
+                chars.next();
+                while chars.peek().is_some_and(|c| c.is_whitespace()) {
+                    chars.next();
+                }
+            }
             '\n' => {
                 while chars.peek().is_some_and(|c| c.is_whitespace()) {
                     chars.next();
@@ -1552,6 +1628,115 @@ mod tests {
             "{:?}",
             whys(&r)
         );
+    }
+
+    #[test]
+    fn the_census_reads_its_alphabet_alone_and_refuses_what_lies_outside() {
+        // Round 12's D1, D5: rustc reads a vertical tab, U+200E and U+2028 as whitespace, removes a byte-order mark and
+        // a shebang line, and normalises a CRLF; the catalog's lexer does none of these. So a file holding, outside a
+        // comment or a literal, a byte outside printable ASCII and its four whitespace characters, or opening with a
+        // shebang, is refused whole — never read apart from rustc. Inside a comment or a literal any character stays.
+        let c = ("c/src/lib.rs", "pub fn x() {}\n");
+        for (case, source, why) in [
+            (
+                "a vertical tab before `!`",
+                "const T: &str = include_str\x0b!(\"../../c/src/lib.rs\");\n",
+                "byte 0x0b",
+            ),
+            (
+                "U+200E before `!`",
+                "const T: &str = include_str\u{200e}!(\"../../c/src/lib.rs\");\n",
+                "outside ASCII",
+            ),
+            (
+                "U+2028 after `mod`",
+                "#[path = \"../../c/src/lib.rs\"]\nmod\u{2028}r;\n",
+                "outside ASCII",
+            ),
+            (
+                "a vertical tab in an attribute",
+                "#\x0b[path = \"../../c/src/lib.rs\"]\nmod lib;\n",
+                "byte 0x0b",
+            ),
+            (
+                "a byte-order mark",
+                "\u{feff}include!(\"../../c/src/lib.rs\");\n",
+                "outside ASCII",
+            ),
+            (
+                "a shebang line",
+                "#!/x \"\nconst T: &str = include_str!(\"../../c/src/lib.rs\"); // \"\n",
+                "shebang",
+            ),
+        ] {
+            let r = of(&[("r/tests/t.rs", source), c], "r/tests/t.rs");
+            assert!(refused(&r, why), "{case}: {:?}", whys(&r));
+            assert!(!r.files.contains("c/src/lib.rs"), "{case}: {:?}", files(&r));
+        }
+        // A character outside ASCII inside a comment or a literal, and an inner attribute first, are read as ever.
+        let r = of(
+            &[
+                (
+                    "r/tests/t.rs",
+                    "#![allow(unused)] // — a comment\nconst S: &str = \"é\u{2028}\";\nconst T: &str = include_str!(\"../../c/src/lib.rs\");\n",
+                ),
+                c,
+            ],
+            "r/tests/t.rs",
+        );
+        assert!(r.unfollowed.is_empty(), "{:?}", whys(&r));
+        assert!(r.files.contains("c/src/lib.rs"), "{:?}", files(&r));
+        // `\` before a CRLF continues a literal's line, as before a newline.
+        let r = of(
+            &[
+                (
+                    "r/tests/t.rs",
+                    "const T: &str = include_str!(\"../../c/\\\r\n    src/lib.rs\");\r\n",
+                ),
+                c,
+            ],
+            "r/tests/t.rs",
+        );
+        assert!(r.files.contains("c/src/lib.rs"), "{:?}", whys(&r));
+        // A `doc` literal that does not decode is refused, never read as empty.
+        let r = of(
+            &[("r/src/lib.rs", "#[doc = \"\\q\"]\npub fn f() {}\n")],
+            "r/src/lib.rs",
+        );
+        assert!(refused(&r, "cannot decode"), "{:?}", whys(&r));
+    }
+
+    #[test]
+    fn doc_text_is_read_past_every_space_and_joined_so_prose_stays_prose() {
+        // Round 12's D6: a trigger past U+200E or U+200F, and `mod` before a name outside ASCII, are triggers. R11: the
+        // pieces joined in source order, a word ending a line is read with the next, so prose ending a line in
+        // `include` or `asm`, or `include/exclude`, is no trigger — but a split over attributes still is.
+        for (case, source) in [
+            ("U+200E before `!`", "/// ```\n/// const _: &str = include_str\u{200e}!(\"x\");\n/// ```\npub fn d() {}\n"),
+            ("U+200F after `mod`", "/// ```\n/// #[path = \"x.rs\"] mod\u{200f}x;\n/// fn main() {}\n/// ```\npub fn d() {}\n"),
+            ("a name outside ASCII", "/// ```\n/// #[path = \"x.rs\"] mod é;\n/// fn main() {}\n/// ```\npub fn d() {}\n"),
+            ("split over attributes", "#[doc = \"include\"]\n#[doc = \"!(\\\"x\\\");\"]\npub fn d() {}\n"),
+        ] {
+            let r = of(&[("r/src/lib.rs", source)], "r/src/lib.rs");
+            assert!(refused(&r, "doc test"), "{case}: {:?}", whys(&r));
+        }
+        for (case, source) in [
+            (
+                "`include` ending a line",
+                "/// Which files to include\n/// and which to leave.\npub fn d() {}\n",
+            ),
+            (
+                "`include/exclude`",
+                "/// The include/exclude patterns.\npub fn d() {}\n",
+            ),
+            (
+                "`asm` ending a line",
+                "/// Written in asm\n/// by hand.\npub fn d() {}\n",
+            ),
+        ] {
+            let r = of(&[("r/src/lib.rs", source)], "r/src/lib.rs");
+            assert!(r.unfollowed.is_empty(), "{case}: {:?}", whys(&r));
+        }
     }
 
     #[test]

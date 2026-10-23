@@ -51,8 +51,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#approved-disposable-fixture-verification)
 - Artifact hash checks under escaped paths — [Annex C: Trust proof
   records](annex-trust-proofs.md#artifact-hash-checks-under-escaped-paths)
-- **ASCII** — [definition](glossary.md), [Annex B: The checks that keep the repository honest](annex-repository.md),
-  [Annex C: Trust proof records](annex-trust-proofs.md)
+- **ASCII** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Annex B: The
+  checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **assembly** — [definition](glossary.md), [Modules and composition](modules.md), [Where the engine's knowledge comes
   from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
   decisions, not actions](runtime.md), [Verifying the toolchain](verification.md), [What this project relies on from

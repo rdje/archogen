@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's census reads only its alphabet
+
+`ARCHOGEN-M3-0931` (leaf `M3.5.2.9.1`), `2026-10-24`.
+
+- The census now refuses a source file holding, outside its comments and literals, any character but printable
+  ASCII and ordinary whitespace — a Unicode space, a control byte, a byte-order mark — or opening with a shebang,
+  since the compiler and the census could read such a file differently. Documentation is read with its pieces
+  joined, past every kind of space, so prose stays prose and no split or odd space hides a doc test.
+
 ## archogen — the checkers' programs in the trust record, round 12, and a fifth change of method
 
 `ARCHOGEN-M3-0930` (leaf `M3.5.2`), `2026-10-24`.
