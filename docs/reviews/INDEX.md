@@ -31,7 +31,7 @@ No bootstrap read includes this directory.
 | [`rt-static-up-v1-faults-observation-reviews.md`](rt-static-up-v1-faults-observation-reviews.md) | [`rt-static-up-v1-faults-observation.md`](../profiles/rt-static-up-v1-faults-observation.md), the fault paths' observation events | 7 | closed: round 7 found no defect (`M2.15`) |
 | [`decision_trust-generated-refusals-reviews.md`](decision_trust-generated-refusals-reviews.md) | [`decision_trust-generated-refusals.md`](../specs/trust/decision_trust-generated-refusals.md) | 23 | closed: `2026-10-10`, round 23 found no defect; rounds 1–22 answered, rounds 5, 14, 16 to 20 by method (`M3.6.6.4`) |
 | [`decision_trust-generated-adequacy-reviews.md`](decision_trust-generated-adequacy-reviews.md) | [`decision_trust-generated-adequacy.md`](../specs/trust/decision_trust-generated-adequacy.md) | 3 | closed: `2026-10-11`, round 3 found zero defects and one remark, existing invocation-error kills owned by M3.6.9.1; accepted design, strict outcomes built; remaining implementation pending |
-| [`decision_trust-role-programs-reviews.md`](decision_trust-role-programs-reviews.md) | [`decision_trust-role-programs.md`](../specs/trust/decision_trust-role-programs.md) | 12 | open: rounds 1 to 12, 103 defects and 101 remarks, answered `2026-10-24`; round 13 after `M3.5.2.9` |
+| [`decision_trust-role-programs-reviews.md`](decision_trust-role-programs-reviews.md) | [`decision_trust-role-programs.md`](../specs/trust/decision_trust-role-programs.md) | 13 | open: rounds 1 to 13, 108 defects and 107 remarks, answered `2026-10-24`; round 14 after `M3.5.2.10` |
 
 ## Counted by `REVIEW-COUNTS`
 

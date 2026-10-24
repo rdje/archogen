@@ -390,3 +390,30 @@ strings, none inside `#![…]`; no package holds a build script.
 | R12-R15 | remark | a non-member's binaries are read and refused, unstated | stated (`M3.5.2.9.5`) |
 | R12-R16 | remark | no fixture holds a census refusal beside a build's failure; the rustdoc leg checks a file, not a block; the oracle skips an invocation with no dep-info untraced | a fixture (`M3.5.2.9.3`); a refusal per block, every skip counted and bounded (`M3.5.2.9.4`) |
 | R12-R17 | remark | checked and holding: the reading rule, the forms' read failures and items, §5, `M3.5.8`'s order, the hand-offs, the other quotes and hashes | no change |
+
+**Round 13**, `2026-10-24`, a new context at `07fc73f0`, read-only and fenced, read against `M3.5.2.9`'s code: probes
+run through the census's own `Sources::reach` in a scratch crate, each first shown by the pin's rustc dep-info or by
+rustdoc's failure to read to reach another package's file, and the pin's documentation read. Verdict: not acceptable,
+5 defects and 6 remarks; every round-12 answer landed as text, code and tests. The count fell for the first time since
+round 6 — 10, 5 — round 12's method holding where it reaches; the premise it stated is false in three channels it had
+not: an inclusion or assembly macro, or a debugger visualizer's key, named through a macro's metavariable, read as a
+plain token; a shebang decided from the catalog's tokens, which drop the doc comment that ends rustc's look-ahead; and
+the children of a `#[path]` inline module in a non-mod-rs file, which lie under the file's own directory. **The method
+is carried into them**: each channel refused or read as rustc reads it, and the generated corpus extended to each —
+every head a file can open with, every macro spelling of a trigger, every path module in a mod-rs and a non-mod-rs
+file — so the premise is stated as what is checked and no more. Measured first: the tree holds no metavariable invoked
+as a macro, none keying or filling an attribute, and no file opening with `#!` but an inner attribute.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R13-D1 | defect | an inclusion or assembly macro, or a `debugger_visualizer` key, named by a macro's metavariable — in code or in a doc test — is neither followed nor refused | refused: a metavariable invoked as a macro, an attribute a metavariable keys or fills, an inclusion or assembly name passed to a macro uninvoked; in doc text, an inclusion word before `)`, `,`, `]` or `}`, and a metavariable before `!` (`M3.5.2.10.1`) |
+| R13-D2 | defect | the census's shebang rule is not rustc's: a doc comment ends rustc's look-ahead, and the catalog's lexer drops it | the shebang decided by the repository's rule held to the pin, `generated_header::rust_shebang` (`M3.5.2.10.2`) |
+| R13-D3 | defect | a `#[path]` inline module's children in a non-mod-rs file are sought under the module-named directory, not the file's own | an inline module's children sought under the file's own directory beside the module-named one (`M3.5.2.10.2`) |
+| R13-D4 | defect | the premise, §3's claims and the oracle's account overstate what the generated leg checks | the premise stated as what is checked; generated legs for a file's head, a trigger's macro spellings and path modules in both kinds of file (`M3.5.2.10.3`, `.4`) |
+| R13-D5 | defect | the claims D1–D3 contradict are held by no test | a fixture for each, failing first (`M3.5.2.10.1`, `.2`) |
+| R13-R6 | remark | round 12 is carried out but where D1–D4 show its premise unmet | answered by D1–D4's |
+| R13-R7 | remark | checked and holding: the reading rule, the forms' read failures, step 2's order, the item encodings | no change |
+| R13-R8 | remark | `M3.5.8`'s measure, the base's inventory, is refused for `RP-H19`'s site and writes nothing | "measured with `RP-H19`'s admission in place", as §1 is (`M3.5.2.10.4`) |
+| R13-R9 | remark | `UNSEEN`'s census line omits where the narrowing holds | worded as the `cfg(test)` row (`M3.5.2.10.4`) |
+| R13-R10 | remark | no row of the table names the generated leg's test | named (`M3.5.2.10.4`) |
+| R13-R11 | remark | every quote holds but one, "Tests have" written with a small `t` | quoted exactly (`M3.5.2.10.4`) |
