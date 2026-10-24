@@ -448,3 +448,18 @@ keyword-named macro, no `doc(test(…))`, every package a member with no optiona
 | R14-R7 | remark | R13-D1's and R13-D3's logged answers are not what was built | corrected in this log, above |
 | R14-R8 | remark | the backtick exemption holds for the outcome, but rustc still reads the included file | said as a stated trade, no reading, in §3 and the book (`M3.5.2.11.4`) |
 | R14-R9 | remark | checked and holding: the reading rule, the forms' read failures, the shebang rule and `KEPT`, fifteen lexical edge cases, the tree's refusals, §5, step 2's and step 4's order, `M3.5.8`, the hand-offs | no change |
+
+**Round 15**, `2026-10-24`, a new context at `9c1c8c0d`, read-only and fenced, read against `M3.5.2.11`'s code: probes
+run through the census's own `Sources::reach` and confirmed by the pin's rustc and cargo, every quote of the table
+checked against the pin's installed documentation, and the eight questions answered whole. Verdict: acceptable, no
+defect and 2 remarks; every round-14 answer carried out, the census sound within its named channels, the reading rule
+complete by construction, `UNSEEN` and the book true and complete, the hand-offs quoted word for word. A
+counter-example sought through an external crate's exported macro behind a non-member's feature is neutralised: any
+build enabling it resolves that crate outside the written tree, which the inventory refuses. **The review closes**:
+the defects fell over fifteen rounds to none, the census read only where it can check it reads as rustc does, and
+held there by fixtures and generated legs against the pin.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R15-R1 | remark | a plain `#[path = "x"] mod name;` reads `name.rs` beside `x`, which rustc never reads — an over-read, never a miss | said in §3: beside a plain `path`, which holds everywhere, the module's own file is an over-approximation the census accepts, which can refuse but never miss (`M3.5.2`) |
+| R15-R2 | remark | §1's census cites `a7c45a88`, a commit before rounds 12 to 14 | re-measured at `9c1c8c0d` on a snapshot holding `RP-H19`'s admission: the same thirteen program targets, `crates/rt-core`'s three unnamed; §1 cites it (`M3.5.2`) |

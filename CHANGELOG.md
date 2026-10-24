@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers' programs in the trust record, reviewed
+
+`ARCHOGEN-M3-0946` (leaf `M3.5.2`), `2026-10-24`.
+
+- The fifteenth review of the record that makes the generator's and the configuration checker's comparison a form of
+  the trust gate's own found no defect, so its review closes: the census of what each test compiles is read only
+  where it can be checked against the compiler, and held there by tests the compiler itself runs. The next step
+  moves the configuration checker into a crate of its own.
+
 ## archogen — the trust report says how far the census is checked
 
 `ARCHOGEN-M3-0945` (leaf `M3.5.2.11.4`), `2026-10-24`.
