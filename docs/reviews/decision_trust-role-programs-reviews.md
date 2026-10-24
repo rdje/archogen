@@ -417,3 +417,34 @@ as a macro, none keying or filling an attribute, and no file opening with `#!` b
 | R13-R9 | remark | `UNSEEN`'s census line omits where the narrowing holds | worded as the `cfg(test)` row (`M3.5.2.10.4`) |
 | R13-R10 | remark | no row of the table names the generated leg's test | named (`M3.5.2.10.4`) |
 | R13-R11 | remark | every quote holds but one, "Tests have" written with a small `t` | quoted exactly (`M3.5.2.10.4`) |
+
+*Corrected `2026-10-24`, recording round 14, answering its R7:* two of R13's answers are not what was built. R13-D1's
+doc-text triggers — an inclusion word before `)`, `,`, `]` or `}`, a metavariable before `!` — gave way to `macro_rules`
+as a trigger, a `macro_export` refused and std's macros kept (`M3.5.2.10.1`): a repetition's separator can be any token,
+a word among them, so no character after a passed name marks it. R13-D3's union — the file's own directory beside the
+module-named one — gave way to rustc's computation, `inline_dirs` (`M3.5.2.10.2`), which round 14's D1 found wrong in a
+block, where the union would have held.
+
+**Round 14**, `2026-10-24`, a new context at `a0dbb242`, read-only and fenced, read against `M3.5.2.10`'s code: probes
+run through the census's own `Sources::reach`, each first shown by the pin's rustc dep-info, cargo or rustdoc, and the
+pin's documentation fetched. Verdict: not acceptable, 4 defects and 5 remarks; every round-13 answer landed as text,
+code and tests, and the four generated legs pass. The count fell again — 5, 4 — and each defect is a spelling within a
+channel the rules name or beside one, not a channel unnamed: an inline module opened in a block, where rustc does not
+take the non-mod-rs module's name; a macro named by a keyword of a later edition, `gen`, `try`, `async`, `await` or
+`dyn`, which the census reads as no macro; an attribute rustdoc injects into every doc test, `#![doc(test(attr(…)))]`,
+resolved from the doc test's file; and an edge a non-member's own feature adds, which `--all-features` does not enable.
+Each is answered as the method answers: read as rustc reads it, measured by the pin first, or refused, and the
+generated legs extended to it. Measured first: the tree holds none of the four — no inline module in a block, no
+keyword-named macro, no `doc(test(…))`, every package a member with no optional dependency.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R14-D1 | defect | a `path` child of an inline module opened in a block, in a non-mod-rs file, is sought under the module-named directory; rustc's block takes no such name | the block rule read as rustc reads it, measured by the pin first; block chains in the paths leg; a fixture failing first (`M3.5.2.11.1`) |
+| R14-D2 | defect | a macro named `gen`, `try`, `async`, `await` or `dyn` is read as a keyword, so its arguments are read as written, a `mod` in them passes and a `cfg(test)` there narrows | only the keywords of every edition read as no macro; keyword-named macros in the macro leg; a fixture failing first (`M3.5.2.11.1`) |
+| R14-D3 | defect | `#![doc(test(attr(debugger_visualizer(…))))]` is injected into every doc test and resolved from its file; the census follows it from the library's root | the contents of a `doc` attribute's `test(…)` read as every doc test's doc text, its triggers refused; a rustdoc case (`M3.5.2.11.2`) |
+| R14-D4 | defect | an edge behind a non-member's own feature is in no graph the census reads: `--all-features` enables members' alone | every package's declared path dependencies, optional ones included, edges beside the resolve's; a corpus non-member and its feature in the matrix (`M3.5.2.11.3`) |
+| R14-R5 | remark | the report does not carry the premise's limit | `UNSEEN`'s census line and the book's entry say it (`M3.5.2.11.4`) |
+| R14-R6 | remark | nine quotes of the table lowercase a capital of the pin's | quoted exactly (`M3.5.2.11.4`) |
+| R14-R7 | remark | R13-D1's and R13-D3's logged answers are not what was built | corrected in this log, above |
+| R14-R8 | remark | the backtick exemption holds for the outcome, but rustc still reads the included file | said as a stated trade, no reading, in §3 and the book (`M3.5.2.11.4`) |
+| R14-R9 | remark | checked and holding: the reading rule, the forms' read failures, the shebang rule and `KEPT`, fifteen lexical edge cases, the tree's refusals, §5, step 2's and step 4's order, `M3.5.8`, the hand-offs | no change |

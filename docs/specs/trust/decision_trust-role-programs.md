@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-23`
-- **Status:** `active` — written `2026-10-23` by leaf `M3.5.2`; rounds 1 to 13 answered by `2026-10-24`; under review
+- **Status:** `active` — written `2026-10-23` by leaf `M3.5.2`; rounds 1 to 14 answered by `2026-10-24`; under review
   ([`decision_trust-role-programs-reviews.md`](../../reviews/decision_trust-role-programs-reviews.md)), from round 5 read
   against its readers' code and fixtures, `M3.5.2`'s children, its rules in force as each lands.
 - **External sources:** none beyond the parent's: `ROADMAP.md` §4.4 (its "externally invoked tools", and the classes
@@ -333,3 +333,4 @@ refuses the item until a push holds the form and nothing after it moves the item
 | 11 | `2026-10-23` | 8 | 9 | not acceptable, read against `M3.5.2.7`'s code; every finding answered, and the method changed a fourth time: every token that can make rustc or rustdoc read a file read whole or refused, doc text read with no markdown, the oracle running rustdoc and each unit's closure (`M3.5.2.8`) |
 | 12 | `2026-10-24` | 10 | 7 | not acceptable, read against `M3.5.2.8`'s code; every finding answered, and the method changed a fifth time: the census reads only what it can check it reads as rustc does — an alphabet it checks, every path followed with the module's own file or refused, no narrowing a build script can undo — the rest refused, its reading held against rustc by a generated corpus (`M3.5.2.9`) |
 | 13 | `2026-10-24` | 5 | 6 | not acceptable, read against `M3.5.2.9`'s code, the count falling; every finding answered, round 12's method carried into the three channels it had not reached — a macro's metavariable, a file's head, an inline module's path — the generated corpus extended to each (`M3.5.2.10`) |
+| 14 | `2026-10-24` | 4 | 5 | not acceptable, read against `M3.5.2.10`'s code, the count falling; every finding answered, each a spelling within or beside a named channel — an inline module in a block, a keyword-named macro, a doc test's injected attribute, a non-member's feature — read as rustc reads it or refused, the generated legs extended (`M3.5.2.11`) |

@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the checkers' programs in the trust record, round 14
+
+`ARCHOGEN-M3-0941` (leaf `M3.5.2`), `2026-10-24`.
+
+- The fourteenth review found 4 defects and 5 remarks, fewer again: four more ways of naming a file the census
+  misses — a module declared inside a function, a macro whose name is a keyword only in newer editions, an attribute
+  the documentation tool adds to every example, and an optional dependency of a package outside the workspace. Each
+  is to be read as the compiler reads it or refused, and the generated tests extended to it.
+
 ## archogen — the trust records say what the round-13 census checks
 
 `ARCHOGEN-M3-0940` (leaf `M3.5.2.10.4`), `2026-10-24`.
