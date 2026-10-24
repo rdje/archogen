@@ -1,9 +1,10 @@
 //! What a target compiles, read from its sources with nothing built (`docs/specs/trust/decision_trust-role-programs.md`
 //! §3; round 10's change of method): from its crate root, every file `mod`, `#[path]` and the `include!` family reach,
-//! whatever their `cfg`, so no profile, feature, flag or host decides it. Every token that can make rustc read a file
-//! — a `mod`, an inclusion or assembly macro, a `path`, `doc` or `debugger_visualizer` attribute — is read whole or
-//! returned unfollowed, for the inventory to refuse unless an admission names it, so a spelling the census does not
-//! know is a refusal, never a miss (round 11's change of method): no single string literal, an alias or a macro's, a
+//! whatever their `cfg`, so no profile, feature, flag or host decides it. Every token it knows can make rustc read a
+//! file — a `mod`, an inclusion or assembly macro, a `path`, `doc` or `debugger_visualizer` attribute — is read whole
+//! or returned unfollowed, for the inventory to refuse unless an admission names it, so a spelling of those the census
+//! does not know is a refusal, never a miss (round 11's change of method), and a channel it does not name no part of
+//! that rule, which its oracle's generated legs probe in four families, no further (round 13's D4): no single string literal, an alias or a macro's, a
 //! module a macro's expansion places, an assembly directive reading a file, a path out of the tree, through a symbolic
 //! link or spelt as hosts read apart, a file that does not tokenize, a doc test's own. A macro may rearrange what it is
 //! given (round 13's D1): in the arguments of any macro but std's that keep theirs in place, named as std's, every name

@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust records say what the round-13 census checks
+
+`ARCHOGEN-M3-0940` (leaf `M3.5.2.10.4`), `2026-10-24`.
+
+- The trust records, the report and the book now say the census reads the ways of naming a file it knows, and is
+  held to the compiler as far as its tests reach, no further, instead of claiming every way; and they say where a
+  test-only module narrows what is counted, and how the next measurement is to be taken.
+
 ## archogen — the census's oracle compiles every head, macro spelling and inline path
 
 `ARCHOGEN-M3-0939` (leaf `M3.5.2.10.3`), `2026-10-24`.

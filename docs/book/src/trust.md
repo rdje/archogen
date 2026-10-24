@@ -101,12 +101,12 @@ the `include!` family, with nothing built, whatever the profile, the features, t
 for the innermost package holding it (leaf `M3.5.2.6.1`), so a role package's file reached by a path, an `include!` or a dependency's own path joins it however its source spells it
 (leaf `M3.5.2.7.1`; a scan of the text, `M3.5.2.4.1`, and a census of builds, `M3.5.2.5.1`, before it missed spellings
 and configurations). It counts what some build compiles, more than the default build makes, by
-design (leaf `M3.5.2.3.1`). Every file a target reaches is read for every token that can make rustc read a file —
+design (leaf `M3.5.2.3.1`). Every file a target reaches is read for every token the census knows can make rustc read a file —
 `mod`, `#[path]`, the `include!` family, a `debugger_visualizer` file, an assembly macro's template, in code and in doc
 text, whatever their `cfg` — and one the census does not read whole — a module a macro's expansion places, an assembly
 directive reading a file, a path out of the tree, through a symbolic link or spelt as hosts read apart — is refused
-unless an admission, rule `inclusion`, names it, so a spelling it does not know is a refusal, never a miss (leaves
-`M3.5.2.7.1`, `M3.5.2.8.1`). A macro may rearrange what it is given: in the arguments of any macro but std's that keep
+unless an admission, rule `inclusion`, names it, so a spelling of those it does not know is a refusal, never a miss
+(leaves `M3.5.2.7.1`, `M3.5.2.8.1`); a channel it does not name is a gap no check of its finds. A macro may rearrange what it is given: in the arguments of any macro but std's that keep
 theirs in place, every name of a macro that reads a file, a `mod` and a debugger visualizer are refused, and in a
 `macro_rules!` body those, a macro a metavariable names and an attribute one fills; so are a name of those std macros
 bound to another, a `macro_use`, a `macro_export` and a doc test's `macro_rules`, so every macro a crate or a doc test
@@ -131,7 +131,9 @@ compiles one the census refuses (leaves `M3.5.2.7.3`, `M3.5.2.8.4`); and a gener
 reference's lexical constructs with a trigger between, so where the census reads a literal or a comment to end is held
 to rustc's (leaf `M3.5.2.9.4`); three more compile every head a file can open with, every spelling of a trigger
 through a macro, and every inline module's children in every kind of file (leaf `M3.5.2.10.3`). It checks what the census counts, not what it refuses beyond
-that, which the fixtures hold, nor what a build script or a procedural macro generates. What decides what a unit compiles — target selection, required features, the profile,
+that, which the fixtures hold, nor what a build script or a procedural macro generates; and its generated legs hold
+their own families, no more, so the census reads as rustc does as far as its rules reach and these checks hold them (leaf
+`M3.5.2.10.4`). What decides what a unit compiles — target selection, required features, the profile,
 `cfg(test)`, features, platform, configuration, source text, file inclusion, macros, dependency kinds, build scripts and procedural macros,
 doc tests, non-members, a program a test runs — is a table in the record's §3, each rule quoted from the Cargo Book, the
 rustdoc book or the Rust reference of the pin ([`rust-toolchain`](ledger.md#rust-toolchain),
@@ -780,7 +782,8 @@ Every report ends with what the inventory does not see, the same list each time,
 - **an edit inside a classified program target.** A classification is reviewed again only when the role packages its
   build compiles grow, so an edit that makes a unit start comparing two roles reads "unchanged" (`M3.6.10` owns it);
 - **what the census does not read.** It reads every target's sources and every dependency edge, every `cfg` — but
-  `cfg(test)` on a module, which narrows what that module reaches to its crate's own tests — feature and host at once,
+  `cfg(test)` on a module no macro holds, or at a module file's head, which narrows what that module reaches to its
+  crate's own tests, nowhere in a package holding a build script — feature and host at once,
   with nothing built, so what a build script or a procedural macro generates, the file an admitted inclusion site
   names, a non-member's tests and another workspace's are outside it;
 - **a program a test runs.** A test that runs another role's program as a process compiles none of it, so the census

@@ -1,5 +1,5 @@
 //! The census's oracle (`docs/specs/trust/decision_trust-role-programs.md` §3; round 10's change of method, leaf
-//! `M3.5.2.7.3`): a corpus of the probes rounds 5 to 11 ran, built in a matrix of configurations, every file of the
+//! `M3.5.2.7.3`): a corpus of the probes rounds 5 to 12 ran, built in a matrix of configurations, every file of the
 //! tree any build's unit read — its own, and those of every crate it links and of their build scripts — counted by the
 //! census for that unit and its closure (round 11's D8, leaf `M3.5.2.8.4`); and rustdoc run on a doc-tested library,
 //! every block it compiled one the census refuses. Its reading of the builds is its own — a compiler wrapper logging
@@ -9,8 +9,9 @@
 //! comment ends to rustc's: every pair of the reference's lexical constructs before a trigger, compiled by the pin in one
 //! crate (round 12's change of method); and three more its reading of a file's head, of a trigger a macro spells and of
 //! an inline module's children, each compiled so (round 13's D4). What it does not check: what the census refuses, which the fixtures hold; what
-//! it over-counts; a non-member's tests, which no build of the workspace makes; and what a build script or a procedural
-//! macro generates.
+//! it over-counts; a non-member's tests, which no build of the workspace makes; what a build script or a procedural
+//! macro generates; and a spelling beyond its families, or through a channel the census does not name (round 13's
+//! D4).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
