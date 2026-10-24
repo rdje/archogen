@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the census's oracle generates every pairing of the language's literals and comments
+
+`ARCHOGEN-M3-0934` (leaf `M3.5.2.9.4`), `2026-10-24`.
+
+- A new test builds, with the pinned compiler, every pairing of the language's string, character and comment forms
+  around a file inclusion, and checks the census reads each where the compiler does; four deliberate lexer faults
+  each make it fail. The probe corpus gains the twelfth review's cases.
+
 ## archogen — the trust gate's census narrows nothing a build script can configure
 
 `ARCHOGEN-M3-0933` (leaf `M3.5.2.9.3`), `2026-10-24`.

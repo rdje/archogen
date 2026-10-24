@@ -145,20 +145,25 @@ book of the pin ([`rust-toolchain`](../../book/src/ledger.md#rust-toolchain)) or
 ([`rust-reference`](../../book/src/ledger.md#rust-reference)). Each row the census reads or refuses names the fixtures
 that hold it, and each row with a part outside the census the report's line that says so; a test,
 `the_census_table_is_held_by_its_fixtures_and_the_report`, reads this table and holds both to the code. And the census
-is held to rustc and rustdoc themselves: an oracle builds a corpus of every probe of rounds 5 to 11 that the census
+is held to rustc and rustdoc themselves: an oracle builds a corpus of every probe of rounds 5 to 12 that the census
 counts — those it refuses, a link or an assembly directive, are the fixtures' — in twelve configurations, `cargo
 test`'s own selection, every target, release, every feature, none, a plain build in both profiles, each target a
 selection skips by name with its required features, through a compiler wrapper of its own, and finds every file of
 the tree that a unit, every crate it links, transitively, and their packages' build scripts read counted by the
 census for that unit and its closure, over a renamed, an optional, a platform's and a development dependency; and it
-runs rustdoc on a library whose doc tests, one in each spelling round 11 found, each include a file the corpus lacks,
-so rustdoc's failures name every block it compiled, and finds each refused (`M3.5.2.7.3`, `M3.5.2.8.4`). Where the
+runs rustdoc on a library whose doc tests, one in each spelling rounds 11 and 12 found, each include a file the corpus
+lacks, so rustdoc's failures name every block it compiled, and finds each refused (`M3.5.2.7.3`, `M3.5.2.8.4`); and a
+generated leg holds the census's reading of where a literal or a comment ends to rustc's — every lexical construct of
+the reference's, strings of every prefix and hash count, characters and lifetimes, comments nested and not, alone and
+in every ordered pair with a trigger between, compiled by the pin as one crate, each trigger's file counted or refused
+— which fails on each of four misread boundaries (`M3.5.2.9.4`). Where the
 Rust reference is silent, the children of a `path`-loaded module and a module an `include!`d file declares, the pin's
 own refusal of a missing child names the directory, the loaded file's, which the census follows. The oracle checks
 what the census counts and that it refuses what rustdoc compiles; not what it refuses beyond that, which the fixtures
 hold, nor what it counts beyond what a build reads, a non-member's tests, which no build of the workspace makes, or
-what a build script or a procedural macro generates. Its corpus is the probes, so a spelling none holds is the
-reader's rules' to refuse, as every token not read whole is.
+what a build script or a procedural macro generates. Its corpus is finite: that the census reads as rustc does rests
+on the alphabet it checks, which leaves rustc and the catalog's lexer only where literals and comments end to agree on,
+and the generated leg holds that; every other spelling is a token the census does not read whole, refused.
 
 | Input | The build tool's rule | The census | Held by | Report |
 | --- | --- | --- | --- | --- |

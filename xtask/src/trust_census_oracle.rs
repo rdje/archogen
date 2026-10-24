@@ -5,9 +5,11 @@
 //! every block it compiled one the census refuses. Its reading of the builds is its own — a compiler wrapper logging
 //! each invocation, rustc's dependency information, and rustdoc's own failure to read a file each doc test names — so
 //! it shares no code with the instrument's reader of a build, and the census is held to what rustc and rustdoc did,
-//! not to what the census's author expected. What it does not check: what the census refuses, which the fixtures
-//! hold; what it over-counts; a non-member's tests, which no build of the workspace makes; and what a build script or
-//! a procedural macro generates.
+//! not to what the census's author expected. And a generated leg holds the census's reading of where a literal or a
+//! comment ends to rustc's: every pair of the reference's lexical constructs before a trigger, compiled by the pin in one
+//! crate (round 12's change of method). What it does not check: what the census refuses, which the fixtures hold; what
+//! it over-counts; a non-member's tests, which no build of the workspace makes; and what a build script or a procedural
+//! macro generates.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -27,7 +29,7 @@ fn corpus() -> Vec<(&'static str, String)> {
     vec![
         (
             "Cargo.toml",
-            "[workspace]\nresolver = \"2\"\nmembers = [\"p\", \"q\", \"n\", \"r\", \"k\", \"e\", \"o\", \"u\", \"dv\", \"bsd\", \"d\"]\n".to_owned(),
+            "[workspace]\nresolver = \"2\"\nmembers = [\"p\", \"q\", \"n\", \"r\", \"k\", \"e\", \"o\", \"u\", \"dv\", \"bsd\", \"d\", \"bc\"]\n".to_owned(),
         ),
         // Every `cfg` a build can turn, every target flag, every spelling of an inclusion.
         (
@@ -143,9 +145,19 @@ fn corpus() -> Vec<(&'static str, String)> {
              keep!(include_str!(\"kept.txt\"));\n\
              #[doc = ::core::include_str!(\"doc.md\")]\npub struct Documented;\n\
              pub fn captured() -> impl Sized + use<> {}\n\
-             pub const AFTER_USE: &str = include_str!(\"after_use.txt\");\n"
+             pub const AFTER_USE: &str = include_str!(\"after_use.txt\");\n\
+             #[cfg_attr(test, path = \"mock.rs\")]\npub mod defaulted;\n"
                 .to_owned(),
         ),
+        // Round 12's D2: a `cfg_attr`'s `path` beside a module's own file, which a build with the `cfg` off reads.
+        ("k/src/mock.rs", String::new()),
+        ("k/src/defaulted.rs", "pub const D: &str = include_str!(\"defaulted.txt\");\n".to_owned()),
+        ("k/src/defaulted.txt", "d\n".to_owned()),
+        // Round 12's D7: a build script setting `cfg(test)` on its own library, as every build of it compiles it.
+        ("bc/Cargo.toml", manifest("bc", "")),
+        ("bc/build.rs", "fn main() {\n    println!(\"cargo::rustc-cfg=test\");\n}\n".to_owned()),
+        ("bc/src/lib.rs", "#[cfg(test)]\n#[path = \"bc_only.rs\"]\npub mod r;\n".to_owned()),
+        ("bc/src/bc_only.rs", module.clone()),
         ("k/src/type.rs", module.clone()),
         ("k/src/pretty.py", "# a debugger script\n".to_owned()),
         ("k/src/field.txt", "f\n".to_owned()),
@@ -194,7 +206,7 @@ fn corpus() -> Vec<(&'static str, String)> {
             "#![doc = include_str!(\"../README.md\")]\n\
              pub mod fence_tildes;\npub mod fence_four;\npub mod indented;\npub mod rust_foo;\npub mod ignored;\n\
              pub mod ignore_windows;\npub mod split_attributes;\npub mod mixed;\npub mod crlf;\npub mod nested_block;\n\
-             pub mod block_star;\n"
+             pub mod block_star;\npub mod lrm;\npub mod mod_nonascii;\npub mod crlf_literal;\n"
                 .to_owned(),
         ),
         ("d/README.md", "Text.\n\n    include!(\"oracle_doc_missing/readme.rs\");\n".to_owned()),
@@ -241,6 +253,20 @@ fn corpus() -> Vec<(&'static str, String)> {
             "d/src/nested_block.rs",
             "/** a /* b */ c\n\n```\ninclude!(\"oracle_doc_missing/nested_block.rs\");\n```\n*/\npub fn f() {}\n"
                 .to_owned(),
+        ),
+        // Round 12's D5, D6: U+200E before `!`, a module named outside ASCII, `\\` before a CRLF in a `doc` literal.
+        (
+            "d/src/lrm.rs",
+            "/// ```\n/// include_str\u{200e}!(\"oracle_doc_missing/lrm.rs\");\n/// ```\npub fn f() {}\n".to_owned(),
+        ),
+        (
+            "d/src/mod_nonascii.rs",
+            "/// ```\n/// #[path = \"oracle_doc_missing/mod_nonascii.rs\"]\n/// mod é;\n/// fn main() {}\n/// ```\npub fn f() {}\n"
+                .to_owned(),
+        ),
+        (
+            "d/src/crlf_literal.rs",
+            "#[doc = \"```\\ninclude!(\\\"oracle_doc_missing/crlf_literal.rs\\\");\\n```\\\r\n\"]\npub fn f() {}\n".to_owned(),
         ),
         (
             "d/src/block_star.rs",
@@ -453,6 +479,8 @@ fn the_census_counts_every_file_any_build_of_the_corpus_reads() {
     };
     let mut checked = 0usize;
     let mut linked = 0usize;
+    // A corpus target's invocation whose dependency information is missing: none may be (round 12's R16).
+    let mut unread: Vec<String> = Vec::new();
     let mut read: BTreeSet<String> = BTreeSet::new();
     let mut missed: Vec<String> = Vec::new();
     for (n, config) in MATRIX.iter().enumerate() {
@@ -511,6 +539,7 @@ fn the_census_counts_every_file_any_build_of_the_corpus_reads() {
             };
             let dep_info = Path::new(&out_dir).join(format!("{crate_name}{extra}.d"));
             let Ok(d) = std::fs::read_to_string(&dep_info) else {
+                unread.push(format!("{config:?}: `{}`", dep_info.display()));
                 continue;
             };
             let id = units.len();
@@ -636,6 +665,10 @@ fn the_census_counts_every_file_any_build_of_the_corpus_reads() {
     missed.sort();
     missed.dedup();
     assert!(missed.is_empty(), "{missed:#?}");
+    assert!(
+        unread.is_empty(),
+        "invocations with no dependency information: {unread:#?}"
+    );
     // Not vacuous: every package's units, in every configuration, were read; units linking others were followed; and
     // each probe's file was read by some build.
     assert!(checked >= 60, "{checked} units checked");
@@ -668,6 +701,9 @@ const DOC_CASES: &[(&str, &str)] = &[
     ("nested_block", "d/src/nested_block.rs"),
     ("block_star", "d/src/block_star.rs"),
     ("readme", "d/README.md"),
+    ("lrm", "d/src/lrm.rs"),
+    ("mod_nonascii", "d/src/mod_nonascii.rs"),
+    ("crlf_literal", "d/src/crlf_literal.rs"),
 ];
 
 /// A file each of round 11's probes makes some build read, so none is vacuous: the code probes' and the closure's.
@@ -687,4 +723,155 @@ const PROBED: &[&str] = &[
     "dv/src/dv_only.rs",
     "bsd/helper/script.rs",
     "n/src/deep/included.rs",
+    "k/src/defaulted.txt",
+    "bc/src/bc_only.rs",
 ];
+
+/// The reference's lexical constructs, each a self-contained item or comment, which round 12's generated leg reads
+/// before a trigger (round 12's D8): every kind of string — plain, raw with hashes, byte, C — holding quotes, comment
+/// openers and escapes; a continuation; characters and byte characters holding quotes; lifetimes and a label; nested
+/// block comments and line comments holding quotes; doc comments; a raw identifier; a macro's arguments; numbers.
+const CONSTRUCTS: &[&str] = &[
+    r###"const _: &str = "a\"b // /* ";"###,
+    r###"const _: &str = r#"a"b // /* "#;"###,
+    r###"const _: &str = r##"a"#b"##;"###,
+    r###"const _: &[u8] = b"a\"b";"###,
+    r###"const _: &[u8] = br#"a"b"#;"###,
+    r###"const _: &core::ffi::CStr = c"a\"b";"###,
+    r###"const _: &core::ffi::CStr = cr#"a"b"#;"###,
+    r###"const _: char = '"';"###,
+    r###"const _: char = '\'';"###,
+    r###"const _: u8 = b'"';"###,
+    r###"const _: u8 = b'\'';"###,
+    r###"const _: char = '\u{22}';"###,
+    r###"const _: &str = "\\";"###,
+    "const _: &str = \"a\\\n    b\";",
+    r###"const _: &str = "'";"###,
+    r###"const _: fn(&'static str) = |_| {};"###,
+    r###"const _: () = { 'a: loop { break 'a; } };"###,
+    r###"/* a /* b " */ ' */"###,
+    r###"/* a /* b */ " */"###,
+    r###"const _: &str = "a\" /* \" */ ";"###,
+    "// a \" ' /*",
+    "/** a \" ' */\nconst _: () = ();",
+    "/// a \" '\nconst _: () = ();",
+    r###"const _: () = { let r#type = 1; let _ = r#type; };"###,
+    r###"m!("a // b" /* c */ 'd' r#"e"#);"###,
+    r###"const _: f64 = 1.0e10_f64;"###,
+    r###"const _: u32 = 0x1f_u32;"###,
+];
+
+/// The trigger a generated case ends with, by its number: an `include_str!`, an `include!`, a `path` module and a
+/// module by its name, in turn — each naming a file of the case alone.
+fn trigger(n: usize) -> (String, Vec<(String, String)>) {
+    match n % 4 {
+        0 => (
+            format!("const _: &str = include_str!(\"g{n}.txt\");"),
+            vec![(format!("gen/src/g{n}.txt"), String::new())],
+        ),
+        1 => (
+            format!("include!(\"g{n}.rs\");"),
+            vec![(format!("gen/src/g{n}.rs"), "const _: () = ();\n".to_owned())],
+        ),
+        2 => (
+            format!("#[path = \"g{n}_p.rs\"]\nmod g{n}_p;"),
+            vec![(format!("gen/src/g{n}_p.rs"), String::new())],
+        ),
+        _ => (
+            format!("mod g{n}_m;"),
+            vec![(format!("gen/src/c{n}/g{n}_m.rs"), String::new())],
+        ),
+    }
+}
+
+#[test]
+fn the_census_reads_every_pairing_of_lexical_constructs_as_rustc_does() {
+    crate::trust_test_process::bounded!(
+        the_census_reads_every_pairing_of_lexical_constructs_as_rustc_does
+    );
+    // Round 12's change of method: the census's reading of where a literal or a comment ends is held to rustc's over
+    // a generated corpus — every construct alone and every ordered pair of them, each case a module of one crate ending
+    // in a trigger, which rustc reads unless a construct swallows it. Every file rustc reads, the census counts or
+    // refuses a site in its case; a construct the census misreads past its end would hide the trigger.
+    // Each construct alone, then every ordered pair with the trigger between them: a construct the census misreads past
+    // its end swallows the trigger, and the next can close what it opened, so the misreading hides it without an error.
+    let mut cases: Vec<(&str, &str)> = CONSTRUCTS.iter().map(|a| (*a, "")).collect();
+    for a in CONSTRUCTS {
+        for b in CONSTRUCTS {
+            cases.push((a, b));
+        }
+    }
+    let mut files: Vec<(String, String)> = vec![(
+        "gen/src/lib.rs".to_owned(),
+        format!(
+            "#![allow(unused)]\nmacro_rules! m {{\n    ($($t:tt)*) => {{}};\n}}\n{}",
+            (0..cases.len())
+                .map(|n| format!("mod c{n};\n"))
+                .collect::<String>()
+        ),
+    )];
+    for (n, (a, b)) in cases.iter().enumerate() {
+        let (live, made) = trigger(n);
+        files.push((format!("gen/src/c{n}.rs"), format!("{a}\n{live}\n{b}\n")));
+        files.extend(made);
+    }
+    let named: Vec<(&str, String)> = files.iter().map(|(p, t)| (p.as_str(), t.clone())).collect();
+    let f = crate::trust::tests::fixture("census-generated", "1.95.0", &named);
+    let repo = std::fs::canonicalize(&f.repo).expect("the corpus");
+    let out = f.base.join("generated-out");
+    std::fs::create_dir_all(&out).expect("the output");
+    let rustc = Command::new("rustc")
+        .args([
+            "--edition",
+            "2021",
+            "--crate-type",
+            "lib",
+            "--crate-name",
+            "gen",
+            "--emit=dep-info,metadata",
+        ])
+        .arg("--out-dir")
+        .arg(&out)
+        .arg("gen/src/lib.rs")
+        .env("RUSTUP_TOOLCHAIN", "1.95.0")
+        .current_dir(&repo)
+        .output()
+        .expect("rustc");
+    assert!(
+        rustc.status.success(),
+        "{}",
+        String::from_utf8_lossy(&rustc.stderr)
+    );
+    let d = std::fs::read_to_string(out.join("gen.d")).expect("its dependency information");
+    let read: BTreeSet<String> = prerequisites(&d)
+        .iter()
+        .filter_map(|p| {
+            let c = std::fs::canonicalize(repo.join(p)).ok()?;
+            Some(c.strip_prefix(&repo).ok()?.to_string_lossy().into_owned())
+        })
+        .collect();
+    let tree = Tree::new(
+        files
+            .iter()
+            .map(|(p, t)| (p.clone(), t.as_bytes().to_vec())),
+    );
+    let links = BTreeSet::new();
+    let census = Sources::new(&tree, &links).reach("gen/src/lib.rs", false);
+    let mut missed = Vec::new();
+    for (n, case) in cases.iter().enumerate() {
+        let (_, made) = trigger(n);
+        let case_file = format!("gen/src/c{n}.rs");
+        for (file, _) in made {
+            let refused = census.unfollowed.iter().any(|u| u.file == case_file);
+            if read.contains(&file) && !census.files.contains(&file) && !refused {
+                missed.push(format!("case {n}, {case:?}: rustc read `{file}`, which the census neither counts nor refuses"));
+            }
+        }
+    }
+    assert!(missed.is_empty(), "{missed:#?}");
+    // Not vacuous: every case's trigger is live, so rustc read each case's file.
+    let triggered = (0..cases.len())
+        .filter(|&n| trigger(n).1.iter().all(|(file, _)| read.contains(file)))
+        .count();
+    assert_eq!(triggered, cases.len(), "cases whose trigger rustc read");
+}

@@ -118,10 +118,12 @@ crate's own tests, never for the crate as another links it, nor in a package hol
 `cargo::rustc-cfg` can set `cfg(test)` (leaf `M3.5.2.9.3`); `cfg(test)` anywhere else is read as on; a non-member's tests are not
 read; a build script's files count as its package's; a symbolic link in or beside a package's directory, and a crate
 root the census cannot read, are refused (leaf `M3.5.2.8.3`); and a pair form is held to what the census reads of its test as to its build (leaf `M3.5.2.7.2`). An oracle
-holds the census to rustc and rustdoc: it builds a corpus of every probe of rounds 5 to 11 that the census counts in
+holds the census to rustc and rustdoc: it builds a corpus of every probe of rounds 5 to 12 that the census counts in
 twelve configurations through a compiler wrapper of its own and finds every file a unit, every crate it links and their
-build scripts read counted, and runs rustdoc on doc tests in each spelling round 11 found, every block it compiles one
-the census refuses (leaves `M3.5.2.7.3`, `M3.5.2.8.4`). It checks what the census counts, not what it refuses beyond
+build scripts read counted, and runs rustdoc on doc tests in each spelling rounds 11 and 12 found, every block it
+compiles one the census refuses (leaves `M3.5.2.7.3`, `M3.5.2.8.4`); and a generated leg compiles every pair of the
+reference's lexical constructs with a trigger between, so where the census reads a literal or a comment to end is held
+to rustc's (leaf `M3.5.2.9.4`). It checks what the census counts, not what it refuses beyond
 that, which the fixtures hold, nor what a build script or a procedural macro generates. What decides what a unit compiles — target selection, required features, the profile,
 `cfg(test)`, features, platform, configuration, file inclusion, dependency kinds, build scripts and procedural macros,
 doc tests, non-members, a program a test runs — is a table in the record's §3, each rule quoted from the Cargo Book, the
