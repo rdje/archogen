@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust record's review history archived
+
+`ARCHOGEN-M3-0947` (leaf `M3`), `2026-10-24`.
+
+- The closed review's history of the record for the checkers' programs moves, byte for byte, to the archive of
+  closed reviews, a short pointer left at its old place; the finished task subtree is sealed.
+
 ## archogen — the checkers' programs in the trust record, reviewed
 
 `ARCHOGEN-M3-0946` (leaf `M3.5.2`), `2026-10-24`.
