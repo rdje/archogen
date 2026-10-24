@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust records say what the round-12 census does
+
+`ARCHOGEN-M3-0935` (leaf `M3.5.2.9.5`), `2026-10-24`.
+
+- The trust records, the report and the book now say that a test reading another role's files at run time is
+  unseen, when the census's refusals stand beside the gate's others, where their quotations come from, and what a
+  non-member contributes; the shared lexer's own gap, in the gate's older token rules, is filed with its owner.
+
 ## archogen — the census's oracle generates every pairing of the language's literals and comments
 
 `ARCHOGEN-M3-0934` (leaf `M3.5.2.9.4`), `2026-10-24`.

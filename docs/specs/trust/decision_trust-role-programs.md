@@ -88,7 +88,7 @@ whose producer is a derivation's artifact; a reference model's result produced b
 executable's unit tests, a library's doc tests — that some build of its package makes, whatever its flags, and whose
 build compiles role packages of the two roles of a pair a property rests on (§5: the generator and either checker, the
 reference model and the implementation) — by its normal and build edges over every feature and platform and its
-package's own development edges, or by a file of one that its build read, however its source names it (`M3.5.2.5.1`):
+package's own development edges, or by a file of one that its sources reach, however they name it (`M3.5.2.7.1`):
 each target's crate root and every file it reaches by `mod`, `#[path]` and the `include!` family are read with nothing
 built, whatever the profile, the features, the flags or the host (round 10's change of method), and each unit counts
 its own target's files and its closure's libraries', each for the innermost package holding it by whole path
@@ -130,11 +130,11 @@ outside any macro, or a module file whose leading inner attributes hold `#![cfg(
 crate's own test units — `cfg(test)` is set on no dependency but by a build script's `cargo::rustc-cfg`, so a package
 holding one narrows nothing (`M3.5.2.9.3`) — never for its library as another unit links it, a doc
 test among them, nor for a binary built as no test; `cfg(test)` anywhere else is read as on (`M3.5.2.8.1`); only a
-workspace member's test-like units are counted, a non-member's library and build script read as an edge, its tests,
-benches and examples unread; a build script's files count as its package's library's; a symbolic link in a package's
+workspace member's test-like units are counted, a non-member's library, build script and executables read as an
+edge — a build of the workspace can make each — its tests, benches and examples unread; a build script's files count as its package's library's; a symbolic link in a package's
 directory or beside one, where a member glob may find it, and a crate root the census cannot read are refused — the
 written tree holds no link — and the census's refusals, judged before any build, stop none and stand beside every
-refusal and exit of their step (`M3.5.2.8.3`); and a pair form's test is held to what the census reads of it as to
+refusal and exit of their step after the census reads, past `cargo metadata` (`M3.5.2.8.3`); and a pair form's test is held to what the census reads of it as to
 its build, a root's role package beside its pair refused, `trust-shared-program` (`M3.5.2.7.2`). A file counts for the package holding
 it whatever it is — a manifest, a table an `include_str!` reads — so a document another role compiles from a role
 package makes that package compiled, joining here and refused under `trust-shared-program`, not the parent's §4 file
@@ -142,7 +142,8 @@ item: share it from a package of no role (round 9's R7).
 
 **What decides what a unit compiles** (rounds 9 and 10's changes of method), each rule quoted from the Cargo Book or the rustdoc
 book of the pin ([`rust-toolchain`](../../book/src/ledger.md#rust-toolchain)) or the Rust reference it ships
-([`rust-reference`](../../book/src/ledger.md#rust-reference)). Each row the census reads or refuses names the fixtures
+([`rust-reference`](../../book/src/ledger.md#rust-reference)) where its cell holds quotation marks, and said in their
+terms where it does not. Each row the census reads or refuses names the fixtures
 that hold it, and each row with a part outside the census the report's line that says so; a test,
 `the_census_table_is_held_by_its_fixtures_and_the_report`, reads this table and holds both to the code. And the census
 is held to rustc and rustdoc themselves: an oracle builds a corpus of every probe of rounds 5 to 12 that the census
@@ -177,8 +178,8 @@ and the generated leg holds that; every other spelling is a token the census doe
 | file inclusion | a module's file "mirrors the logical module path"; "for `path` attributes on modules not inside inline module blocks, the file path is relative to the directory the source file is located"; a `debugger_visualizer` file "a path relative to the source file" (the Rust reference) | read: every file a crate root reaches by `mod`, `#[path]`, the `include!` family and `debugger_visualizer`, each the innermost package's, a module's own file beside every `path` attribute, an inner one refused; every token that can make rustc read a file read whole or refused unless admitted — a macro's module, an assembly directive reading a file, a path out of the tree, through a link or spelt as hosts read apart among them, and a file outside the census's alphabet whole; what an admitted site names outside | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_file_counts_for_the_innermost_package_holding_it`, `an_inclusion_the_census_cannot_follow_is_refused_unless_admitted`, `a_path_attribute_resolves_as_the_reference_says`, `a_raw_identifier_and_every_mod_are_read_whole_or_refused`, `every_attribute_and_macro_that_reads_a_file_is_read_whole_or_refused`, `a_path_meets_the_links_at_every_component_and_hosts_read_none_apart`, `the_census_reads_its_alphabet_alone_and_refuses_what_lies_outside`, `every_path_is_followed_with_the_module_s_own_file_or_refused`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | `what the census does not read` |
 | dependency kinds | normal, build and development dependencies | edges: normal and build, and the unit's own package's development | `a_unit_joining_two_roles_is_a_program_target_whatever_it_names` | — |
 | build scripts, procedural macros | each runs code as its package builds; "the rustc-cfg instruction tells Cargo to pass the given value to the --cfg flag to the compiler" | read as any package's sources and never run, a build script's files its package's library's, its package narrowing no `cfg(test)`; what they generate outside | `a_package_with_a_build_script_is_read_and_its_script_never_run`, `a_package_reaching_a_build_script_is_read_as_any_other`, `a_build_script_s_files_count_for_its_package`, `a_build_script_can_set_cfg_test_so_its_package_narrows_nothing` | `what the census does not read` |
-| doc tests | "each code block compiles to a doctest executable on the fly with `rustc`"; "Rustdoc also accepts indented code blocks as an alternative to fenced code blocks"; "`compile_fail` tells rustdoc that the compilation should fail" (the rustdoc book); the `doctest` field "is only relevant for libraries" | the library's files; its doc text read with no markdown, its pieces joined in source order, every word that can make a doc test read a file refused unless admitted, but one a backtick opens while the library's doc text names no error code; a binary's or a test's doc text no doc test's | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_site_no_literal_pins_is_unfollowed`, `every_doc_test_rustdoc_may_compile_is_refused_however_it_is_spelt`, `a_backtick_exempts_prose_unless_a_doc_test_names_an_error_code`, `doc_text_is_read_for_doc_tested_libraries_alone`, `doc_text_is_read_past_every_space_and_joined_so_prose_stays_prose`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | — |
-| non-members, other workspaces | neither's tests are this workspace's | a non-member's library read as an edge, its tests, benches and examples unread; another workspace's outside | `the_census_counts_members_tests_alone` | `what the census does not read` |
+| doc tests | "each code block compiles to a doctest executable on the fly with `rustc`" (the Cargo Book's `cargo test`); "Rustdoc also accepts indented code blocks as an alternative to fenced code blocks"; "`compile_fail` tells rustdoc that the compilation should fail" (the rustdoc book); the `doctest` field "is only relevant for libraries" (the Cargo Book's targets) | the library's files; its doc text read with no markdown, its pieces joined in source order, every word that can make a doc test read a file refused unless admitted, but one a backtick opens while the library's doc text names no error code; a binary's or a test's doc text no doc test's | `a_unit_joins_by_what_a_dependency_or_a_chain_of_paths_compiles`, `a_site_no_literal_pins_is_unfollowed`, `every_doc_test_rustdoc_may_compile_is_refused_however_it_is_spelt`, `a_backtick_exempts_prose_unless_a_doc_test_names_an_error_code`, `doc_text_is_read_for_doc_tested_libraries_alone`, `doc_text_is_read_past_every_space_and_joined_so_prose_stays_prose`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | — |
+| non-members, other workspaces | neither's tests are this workspace's | a non-member's library, build script and executables read as an edge, its tests, benches and examples unread; another workspace's outside | `the_census_counts_members_tests_alone` | `what the census does not read` |
 | a program a test runs | a process, compiled by no unit of the test | outside | — | `a program a test runs` |
 
 **Outside it, stated in the report:** its run-time reads of the kind modules (`std::fs`); and the transcriptions
@@ -188,7 +189,8 @@ compiled beside the pair's builds, is in the derivation's item); the comparison 
 them together; whether a classified unit compares what two roles hold equal, which its review decides, and an edit
 inside it, reviewed again only when its role packages grow (`M3.6.10`); what a build script or a procedural macro
 generates; the file an admitted inclusion site names; a non-member's tests and another workspace's; a program a test
-runs as a process.
+runs as a process; and what a test-like unit reads at run time, `std::fs` naming another role's files — a test
+compiles none of them (round 12's D9).
 
 **Its class** (§5), §4.4's **reference derivation.** The comparison holding the two equal is the coupling itself,
 not a control: a fault both carry passes it. Controls independent of the transcription: the model's exhaustive
@@ -269,7 +271,7 @@ base holds the encoding the judging gate uses — today `62099a39` and, for the 
 by ancestry against the base the report names — committed in a leaf of their own that waits on the runner, writing §5's
 row and recording that base. A proposal holds for the item as the run measured it, so the gate on the baseline's host
 refuses the item until a push holds the form and nothing after it moves the item; each push's report says which.
-**The census `RP-H2` names**, of names, is superseded by §3's from the build (`M3.5.2.2.2`).
+**The census `RP-H2` names**, of names, is superseded by §3's, read from the sources (`M3.5.2.2.2`, `M3.5.2.7`).
 
 <!-- machine-read: handoffs -->
 | Id | Leaf | Hand-off |

@@ -958,6 +958,9 @@ pub const UNSEEN: &[&str] = &[
      (`decision_trust-role-programs.md` §3's table)",
     "a program a test runs: a test that runs another role's program as a process compiles none of it, so the census \
      does not see it (§3)",
+    "what a test-like unit reads at run time: a test reading another role's files by `std::fs` — \
+     `crates/archogen-catalog/tests/package.rs` reads `crates/rt-core`'s sources — compiles none of them, so the census \
+     does not see it (§3)",
 ];
 
 /// A file of a commit's tree, or none when the tree does not hold it.

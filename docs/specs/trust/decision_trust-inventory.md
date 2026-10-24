@@ -563,8 +563,8 @@ change to nothing the gate reads beyond the roots. It reads more: the pin, whose
 configuration and which admits a few keys, any other leaving the gate unable to judge; every cargo configuration on
 the build's path, a key other than an alias refused; each member's manifest, a program target it adds unclassified;
 the commit's tree, a symbolic link or submodule entry under `catalog/` refused; the comparison harness's units
-beside its pair's builds, the comparison-harness item's; and every member's sources, and every library and build script a
-member's build compiles, read for the files each target reaches, nothing built (that record's §3). A change to any of these is judged as §6 says, and reads
+beside its pair's builds, the comparison-harness item's; and every member's sources, and every library, build script and executable
+a member's build can compile, read for the files each target reaches, nothing built (that record's §3). A change to any of these is judged as §6 says, and reads
 "unchanged" only when the change part names nothing. Case 5's examples above stand.
 
 ### 7. Where it runs, and what it is not

@@ -99,7 +99,8 @@ unit compiles is read from its sources: each target's crate root and every file 
 the `include!` family, with nothing built, whatever the profile, the features, the flags or the host (leaf
 `M3.5.2.7.2`), and a unit counts its own target's files and its closure's libraries', each
 for the innermost package holding it (leaf `M3.5.2.6.1`), so a role package's file reached by a path, an `include!` or a dependency's own path joins it however its source spells it
-(leaf `M3.5.2.5.1`; a scan of the text before it, `M3.5.2.4.1`, missed spellings). It counts what some build compiles, more than the default build makes, by
+(leaf `M3.5.2.7.1`; a scan of the text, `M3.5.2.4.1`, and a census of builds, `M3.5.2.5.1`, before it missed spellings
+and configurations). It counts what some build compiles, more than the default build makes, by
 design (leaf `M3.5.2.3.1`). Every file a target reaches is read for every token that can make rustc read a file —
 `mod`, `#[path]`, the `include!` family, a `debugger_visualizer` file, an assembly macro's template, in code and in doc
 text, whatever their `cfg` — and one the census does not read whole — a module a macro's expansion places, an assembly
@@ -777,6 +778,9 @@ Every report ends with what the inventory does not see, the same list each time,
   with nothing built, so what a build script or a procedural macro generates, the file an admitted inclusion site
   names, a non-member's tests and another workspace's are outside it;
 - **a program a test runs.** A test that runs another role's program as a process compiles none of it, so the census
+  does not see it;
+- **what a test-like unit reads at run time.** A test reading another role's files by `std::fs` —
+  `crates/archogen-catalog/tests/package.rs` reads `crates/rt-core`'s sources — compiles none of them, so the census
   does not see it.
 
 ## Today and ahead

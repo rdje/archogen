@@ -2372,7 +2372,7 @@ pub fn inventory_with(
         }
     }
     // Judged before any build, and stopping none — reading a source runs nothing — but beside every refusal and every
-    // exit of the step (the generated-sources record §2; round 11's D5).
+    // exit of the step after it reads, past `cargo metadata` (the generated-sources record §2; round 11's D5).
     let mut census_refused: Vec<String> = Vec::new();
     let mut reaches: BTreeMap<String, census::Reach> = BTreeMap::new();
     for (src, doc_tested) in doc_tested {
