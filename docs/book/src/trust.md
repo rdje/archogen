@@ -116,7 +116,8 @@ with a line rustc removes as a shebang, by rustc's own rule, refused whole (leav
 file beside it, an inner one refused, every path value checked as it is read (leaf `M3.5.2.9.2`), and an inline module's `path` relative to its file's own
 directory, a non-mod-rs file's too, as the pin seeks it (leaf `M3.5.2.10.2`), a block taking no non-mod-rs module's
 name (leaf `M3.5.2.11.1`). A library's doc text is read with no markdown — every doc
-comment, `doc` literal and document it includes, joined in source order — and each word in it that can make a doc test
+comment, `doc` literal and document it includes, joined in source order, and what a `doc(test(…))` adds to every doc
+test (leaf `M3.5.2.11.2`) — and each word in it that can make a doc test
 read a file, read past any whitespace or character outside ASCII, is refused, but one a
 backtick opens while no doc text of the library names an error code: no compiled Rust holds a backtick outside a
 literal or comment, so such a doc test cannot compile, whatever a file it includes says (leaf `M3.5.2.8.2`). What only

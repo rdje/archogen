@@ -208,7 +208,7 @@ fn corpus() -> Vec<(&'static str, String)> {
             "#![doc = include_str!(\"../README.md\")]\n\
              pub mod fence_tildes;\npub mod fence_four;\npub mod indented;\npub mod rust_foo;\npub mod ignored;\n\
              pub mod ignore_windows;\npub mod split_attributes;\npub mod mixed;\npub mod crlf;\npub mod nested_block;\n\
-             pub mod block_star;\npub mod lrm;\npub mod mod_nonascii;\npub mod crlf_literal;\npub mod macro_named;\n"
+             pub mod block_star;\npub mod lrm;\npub mod mod_nonascii;\npub mod crlf_literal;\npub mod macro_named;\npub mod injected;\n"
                 .to_owned(),
         ),
         ("d/README.md", "Text.\n\n    include!(\"oracle_doc_missing/readme.rs\");\n".to_owned()),
@@ -269,6 +269,13 @@ fn corpus() -> Vec<(&'static str, String)> {
         (
             "d/src/crlf_literal.rs",
             "#[doc = \"```\\ninclude!(\\\"oracle_doc_missing/crlf_literal.rs\\\");\\n```\\\r\n\"]\npub fn f() {}\n".to_owned(),
+        ),
+        // Round 14's D3: an attribute rustdoc adds to every doc test of a module, read from the doc test's own file.
+        (
+            "d/src/injected.rs",
+            "#![doc(test(attr(debugger_visualizer(gdb_script_file = \"oracle_doc_missing/injected.rs\"))))]\n\
+             /// ```\n/// fn main() {}\n/// ```\npub fn f() {}\n"
+                .to_owned(),
         ),
         // Round 13's D1: a doc test's own macro, passed an inclusion's name apart from its `!`.
         (
@@ -714,6 +721,7 @@ const DOC_CASES: &[(&str, &str)] = &[
     ("mod_nonascii", "d/src/mod_nonascii.rs"),
     ("crlf_literal", "d/src/crlf_literal.rs"),
     ("macro_named", "d/src/macro_named.rs"),
+    ("injected", "d/src/injected.rs"),
 ];
 
 /// A file each of round 11's probes makes some build read, so none is vacuous: the code probes' and the closure's.

@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — an attribute the documentation tool adds to every example is read
+
+`ARCHOGEN-M3-0943` (leaf `M3.5.2.11.2`), `2026-10-24`.
+
+- The trust gate's census now reads what a `doc(test(…))` attribute adds to every documentation example as part of
+  those examples, so a file it would make them read is refused; the compiler-backed test checks it.
+
 ## archogen — a module inside a function and a macro named by a newer keyword read as the compiler reads them
 
 `ARCHOGEN-M3-0942` (leaf `M3.5.2.11.1`), `2026-10-24`.

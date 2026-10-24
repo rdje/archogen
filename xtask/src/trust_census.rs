@@ -720,6 +720,20 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                             )),
                         }
                     }
+                    // `doc(test(…))`: rustdoc adds what it holds to every doc test of the item's documentation, read
+                    // from that doc test's own file, so it is read as their doc text (round 14's D3).
+                    if key == Some("doc") && is(j + 1, Kind::Open('(')) {
+                        let list = closing(&ts, j + 1);
+                        for k in j + 2..list {
+                            if name(&ts[k]) == Some("test") && is(k + 1, Kind::Open('(')) {
+                                out.doc.push(Fragment {
+                                    at: ts[k].at,
+                                    line: line_of(source, ts[k].at),
+                                    text: text(k + 1, closing(&ts, k + 1)),
+                                });
+                            }
+                        }
+                    }
                     if matches!(key, Some("natvis_file" | "gdb_script_file")) && assigned {
                         match value.and_then(|v| decode(&source[v.at..v.end])) {
                             Some(p) if within.is_none() => out.includes.push(Include {
@@ -1205,7 +1219,8 @@ fn doc_comments(source: &[u8], ts: &[Token]) -> Vec<Fragment> {
     out
 }
 
-/// One piece of a file's doc text: a doc comment's body, a `doc` attribute's literal, or a document one includes.
+/// One piece of a file's doc text: a doc comment's body, a `doc` attribute's literal, a document one includes, or what
+/// a `doc` attribute's `test(…)` adds to every doc test (round 14's D3).
 #[derive(Debug, Clone)]
 struct Fragment {
     /// Its first byte's offset in the source, which orders it among the file's others.
@@ -1920,6 +1935,7 @@ mod tests {
         // a block whose info string is `rust,foo`, `ignore` or `ignore-windows`, a test split over `#[doc]` attributes or
         // mixed with comments, a CRLF file, a nested block comment's — so no markdown is read: every trigger a doc-tested
         // library's doc text holds is refused, whatever the block around it, a `text` block's too.
+        let mut missed = Vec::new();
         for (case, source) in [
             ("tildes", "/// ~~~\n/// include!(\"../../c/x.rs\");\n/// ~~~\npub fn d() {}\n"),
             ("four backticks", "/// ````\n/// include!(\"../../c/x.rs\");\n/// ````\npub fn d() {}\n"),
@@ -1957,10 +1973,33 @@ mod tests {
                 "/// ```\n/// const T: &str = include_str\n/// !(\"x\");\n/// ```\npub fn d() {}\n",
             ),
             ("a visualizer", "/// ```\n/// #![debugger_visualizer(gdb_script_file = \"x.py\")]\n/// ```\npub fn d() {}\n"),
+            // Round 14's D3: an attribute rustdoc injects into every doc test, resolved from the doc test's own file.
+            (
+                "an attribute rustdoc injects",
+                "#![doc(test(attr(debugger_visualizer(gdb_script_file = \"../../c/x.py\"))))]\n\
+                 /// ```\n/// fn main() {}\n/// ```\npub fn d() {}\n",
+            ),
+            (
+                "an attribute rustdoc injects, on an item",
+                "#[doc(test(attr(debugger_visualizer(natvis_file = \"../../c/x.natvis\"))))]\npub mod m {\n\
+                 /// ```\n    /// fn main() {}\n    /// ```\n    pub fn d() {}\n}\n",
+            ),
         ] {
             let r = of(&[("r/src/lib.rs", source)], "r/src/lib.rs");
-            assert!(refused(&r, "doc test"), "{case}: {:?}", whys(&r));
+            if !refused(&r, "doc test") {
+                missed.push(format!("{case}: {:?}", whys(&r)));
+            }
         }
+        assert!(missed.is_empty(), "{missed:#?}");
+        // An attribute rustdoc injects that reads no file is no trigger.
+        let r = of(
+            &[(
+                "r/src/lib.rs",
+                "#![doc(test(attr(deny(warnings), allow(unused))))]\n/// ```\n/// fn main() {}\n/// ```\npub fn d() {}\n",
+            )],
+            "r/src/lib.rs",
+        );
+        assert!(r.unfollowed.is_empty(), "{:?}", whys(&r));
         // A document a `doc` attribute includes is the library's doc text too, an indented block's trigger refused there.
         let r = of(
             &[
