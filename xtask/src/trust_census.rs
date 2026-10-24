@@ -5,7 +5,12 @@
 //! returned unfollowed, for the inventory to refuse unless an admission names it, so a spelling the census does not
 //! know is a refusal, never a miss (round 11's change of method): no single string literal, an alias or a macro's, a
 //! module a macro's expansion places, an assembly directive reading a file, a path out of the tree, through a symbolic
-//! link or spelt as hosts read apart, a file that does not tokenize, a doc test's own. And it reads only what it can
+//! link or spelt as hosts read apart, a file that does not tokenize, a doc test's own. A macro may rearrange what it is
+//! given (round 13's D1): in the arguments of any macro but std's that keep theirs in place, named as std's, every name
+//! of a macro that reads a file, invoked or not, a `mod` and a debugger visualizer are refused; in a `macro_rules!` body
+//! those, a macro a metavariable names and an attribute one fills; and a name of those std macros bound to another, a
+//! `macro_use`, a `macro_export` and a doc test's `macro_rules`, so every macro a crate or a doc test calls is std's or
+//! read where it is called. And it reads only what it can
 //! check it reads as rustc does (round 12's change of method): outside comments and literals, a file's every byte is
 //! printable ASCII or a space, a tab, a form feed, a newline or a carriage return — the whitespace rustc and the
 //! catalog's lexer both skip — and a file holding any other there, or opening with a shebang line rustc would remove,
@@ -345,6 +350,51 @@ const KEYWORDS: &[&str] = &[
 const ALIAS: &str =
     "imports or shadows an inclusion or assembly macro, so no literal pins what it reads";
 
+/// The macros of std whose arguments rustc reads in place — as expressions, a format string's arguments, a pattern —
+/// so a file an inclusion among them names is read as it is written. Any other macro may rearrange what it is given:
+/// "the ident, lifetime, and tt fragment types are an exception, and can be matched by literal tokens", and a
+/// repetition's "separator token can be any token other than a delimiter or one of the repetition operators" (the Rust
+/// reference), so a name passed apart from its `!`, or a literal apart from its name, reads what no literal pins.
+const KEPT: &[&str] = &[
+    "assert",
+    "assert_eq",
+    "assert_ne",
+    "dbg",
+    "debug_assert",
+    "debug_assert_eq",
+    "debug_assert_ne",
+    "eprint",
+    "eprintln",
+    "format",
+    "format_args",
+    "matches",
+    "panic",
+    "print",
+    "println",
+    "todo",
+    "unimplemented",
+    "unreachable",
+    "vec",
+    "write",
+    "writeln",
+];
+
+/// The words of a debugger visualizer, which names a file to read.
+const VISUALIZER: [&str; 3] = ["debugger_visualizer", "natvis_file", "gdb_script_file"];
+
+/// Where a site lies whose expansion decides what it reads: a macro's body, or the arguments of one not `KEPT`.
+const INSIDE: &str = "inside a macro";
+const REARRANGED: &str = "in the arguments of a macro that may rearrange them";
+
+const REBINDS: &str = "defines or imports a macro by a name of std's whose arguments the census reads in place, so the \
+                       census cannot know what it does with them";
+const RENAMES: &str =
+    "renames a crate `std`, `core` or `alloc`, whose macros the census reads as std's";
+const EXPORTS: &str =
+    "exports a macro another crate may call, a doc test among them, whose expansion may rearrange \
+                       what that crate passes it";
+const IMPORTS_ALL: &str = "imports macros by no name, so a name of std's may be another macro's";
+
 /// An identifier's name, a raw one's without its `r#`.
 fn name(t: &Token) -> Option<&str> {
     match &t.kind {
@@ -439,14 +489,30 @@ fn closing(ts: &[Token], open: usize) -> usize {
 }
 
 /// Where a token lies: in a `macro_rules!` body, whose expansion decides what its tokens name, or in another macro's
-/// arguments, whose expansion may place, move or drop what they declare.
+/// arguments, whose expansion may place, move or drop what they declare — and rearrange them, unless every macro whose
+/// arguments hold it is one of std's `KEPT`, named as std's (round 13's D1).
 #[derive(Debug, Clone, Copy, Default)]
 struct Region {
     body: bool,
     args: bool,
+    rearranged: bool,
 }
 
-/// Each token's region: a body from `macro_rules! name`'s delimiter, arguments from any other `name!`'s.
+impl Region {
+    /// Where an expansion decides what a site here reads, if one does: inside a body, or in arguments it may rearrange.
+    fn within(self) -> Option<&'static str> {
+        if self.body {
+            Some(INSIDE)
+        } else if self.rearranged {
+            Some(REARRANGED)
+        } else {
+            None
+        }
+    }
+}
+
+/// Each token's region: a body from `macro_rules! name`'s delimiter, arguments from any other `name!`'s, rearranged
+/// unless that macro is `KEPT`.
 fn regions(ts: &[Token]) -> Vec<Region> {
     let mut out = vec![Region::default(); ts.len()];
     let opens = |k: usize| ts.get(k).is_some_and(|t| matches!(t.kind, Kind::Open(_)));
@@ -470,15 +536,55 @@ fn regions(ts: &[Token]) -> Vec<Region> {
             continue;
         };
         let close = closing(ts, open);
+        let kept = !body && name(t).is_some_and(|n| KEPT.contains(&n)) && named_as_std(ts, i);
         for r in out.iter_mut().take(close).skip(open + 1) {
             if body {
                 r.body = true;
             } else {
                 r.args = true;
+                r.rearranged |= !kept;
             }
         }
     }
     out
+}
+
+/// Whether the macro named at `i` is named as std's: by its name alone, or by a path from `std`, `core` or `alloc`.
+fn named_as_std(ts: &[Token], i: usize) -> bool {
+    let colons = |k: usize| {
+        k >= 2 && ts[k - 1].kind == Kind::Punct(':') && ts[k - 2].kind == Kind::Punct(':')
+    };
+    if !colons(i) {
+        return true;
+    }
+    let mut s = i;
+    while colons(s) && s >= 3 && matches!(ts[s - 3].kind, Kind::Ident(..)) {
+        s -= 3;
+    }
+    let metavariable = s >= 1 && ts[s - 1].kind == Kind::Punct('$');
+    s < i && !metavariable && matches!(name(&ts[s]), Some("std" | "core" | "alloc"))
+}
+
+/// Whether the token at `j` names a macro that reads a file — or, with `visualizer`, a debugger visualizer — with no `!`
+/// and delimiter after it and no `$` before it: a name a macro's expansion may place before a `!` (round 13's D1).
+fn passed(ts: &[Token], j: usize, visualizer: bool) -> bool {
+    let invoked = ts.get(j + 1).is_some_and(|t| t.kind == Kind::Punct('!'))
+        && ts
+            .get(j + 2)
+            .is_some_and(|t| matches!(t.kind, Kind::Open(_)));
+    let metavariable = j >= 1 && ts[j - 1].kind == Kind::Punct('$');
+    name(&ts[j]).is_some_and(|n| {
+        INCLUDES.contains(&n) || ASM.contains(&n) || (visualizer && VISUALIZER.contains(&n))
+    }) && !invoked
+        && !metavariable
+}
+
+/// Why a name `passed` is refused, `within` where it lies.
+fn passed_why(within: &str) -> String {
+    format!(
+        "names a macro that reads a file, or a debugger visualizer, {within}, so what it reads is decided by its \
+         expansion"
+    )
 }
 
 /// The sites of one Rust source, its doc text's among them.
@@ -504,8 +610,9 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
     };
     // Inline modules open: (the brace depth inside them, their directory component).
     let mut inline: Vec<(usize, Vec<String>)> = Vec::new();
-    // Whether a `use` item is open, up to its `;`.
+    // Whether a `use` item is open, up to its `;`, and whether its path begins at `std`, `core` or `alloc`.
     let mut in_use = false;
+    let mut use_std = false;
     let mut depth = 0usize;
     // A `path` attribute seen, carried to the `mod` item it precedes: its value and its `#`'s index.
     let mut pending_path: Vec<(String, usize)> = Vec::new();
@@ -525,6 +632,17 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
             let open = if bang { i + 2 } else { i + 1 };
             if is(open, Kind::Open('[')) {
                 let close = closing(&ts, open);
+                let within = region.within();
+                if region.body
+                    && ts[open + 1..close]
+                        .iter()
+                        .any(|t| t.kind == Kind::Punct('$'))
+                {
+                    out.unfollowed.push(site(i, close).unfollowed(
+                        file,
+                        "is an attribute a metavariable keys or fills, so what it reads is decided by its expansion",
+                    ));
+                }
                 let mut j = open + 1;
                 while j < close {
                     let key = name(&ts[j]);
@@ -537,6 +655,15 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                              attribute's expansion",
                         ));
                     }
+                    match key {
+                        Some("macro_export") => out
+                            .unfollowed
+                            .push(site(i, close).unfollowed(file, EXPORTS)),
+                        Some("macro_use") => out
+                            .unfollowed
+                            .push(site(i, close).unfollowed(file, IMPORTS_ALL)),
+                        _ => {}
+                    }
                     if key == Some("path") && assigned {
                         match value.and_then(|v| decode(&source[v.at..v.end])) {
                             // An inner `path` names its own module's directory, which the census does not apply
@@ -547,17 +674,17 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                                  does not apply",
                             )),
                             // Checked as it is read, an inline module's directory among them (round 12's D4).
-                            Some(p) if !region.body => match path_spelling(&p) {
+                            Some(p) if within.is_none() => match path_spelling(&p) {
                                 Some(why) => out.unfollowed.push(site(i, close).unfollowed(file, why)),
                                 None => pending_path.push((p, i)),
                             },
                             _ => out.unfollowed.push(site(i, close).unfollowed(
                                 file,
-                                if region.body {
-                                    "is a `path` attribute inside a macro, so the file it names is decided by its \
-                                     expansion"
-                                } else {
-                                    "is a `path` attribute whose value is no single string literal"
+                                &match within {
+                                    Some(w) => format!(
+                                        "is a `path` attribute {w}, so the file it names is decided by its expansion"
+                                    ),
+                                    None => "is a `path` attribute whose value is no single string literal".to_owned(),
                                 },
                             )),
                         }
@@ -587,7 +714,7 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                     }
                     if matches!(key, Some("natvis_file" | "gdb_script_file")) && assigned {
                         match value.and_then(|v| decode(&source[v.at..v.end])) {
-                            Some(p) if !region.body => out.includes.push(Include {
+                            Some(p) if within.is_none() => out.includes.push(Include {
                                 what: What::Data,
                                 literal: Some(p),
                                 test_only: in_test(j),
@@ -599,23 +726,39 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                             )),
                         }
                     }
-                    if let Some(end) = inclusion(
-                        &ts,
-                        j,
-                        source,
-                        file,
-                        region.body,
-                        in_test(j),
-                        &mut out,
-                        &site,
-                    ) {
+                    if let Some(end) =
+                        inclusion(&ts, j, source, file, within, in_test(j), &mut out, &site)
+                    {
                         j = end;
+                    } else if let Some(w) = within.filter(|_| passed(&ts, j, false)) {
+                        out.unfollowed
+                            .push(site(i, close).unfollowed(file, &passed_why(w)));
                     }
                     j += 1;
                 }
                 i = close + 1;
                 continue;
             }
+        }
+        // A macro a metavariable or a repetition names, `$m!(…)` or `$($m)?!(…)`, `!=` none: its expansion decides what
+        // it reads (round 13's D1).
+        let repetition = |k: usize| {
+            ts.get(k).is_some_and(|t| t.kind == Kind::Close(')'))
+                || (k >= 1 && ts.get(k - 1).is_some_and(|t| t.kind == Kind::Close(')')))
+        };
+        if region.body
+            && ts[i].kind == Kind::Punct('!')
+            && !ts
+                .get(i + 1)
+                .is_some_and(|t| t.kind == Kind::Punct('=') && t.at == ts[i].end)
+            && i >= 2
+            && ((matches!(ts[i - 1].kind, Kind::Ident(..)) && ts[i - 2].kind == Kind::Punct('$'))
+                || (matches!(ts[i - 1].kind, Kind::Punct('*' | '+' | '?')) && repetition(i - 2)))
+        {
+            out.unfollowed.push(site(i - 2, i).unfollowed(
+                file,
+                "is a macro a metavariable names, so what it reads is decided by its expansion",
+            ));
         }
         match &ts[i].kind {
             Kind::Open('{') => depth += 1,
@@ -634,10 +777,22 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
         }
         if keyword(&ts[i], "use") {
             // `use<…>` is a precise capture, which begins no item.
-            in_use = in_use || !is(i + 1, Kind::Punct('<'));
+            if !in_use && !is(i + 1, Kind::Punct('<')) {
+                in_use = true;
+                let root = if is(i + 1, Kind::Punct(':')) {
+                    i + 3
+                } else {
+                    i + 1
+                };
+                use_std = ts
+                    .get(root)
+                    .and_then(name)
+                    .is_some_and(|r| matches!(r, "std" | "core" | "alloc"));
+            }
         } else if keyword(&ts[i], "mod") {
-            // A `mod` read whole, or refused: outside any macro, `mod name;` or `mod name { … }`; in a macro's body or
-            // arguments only an inline module, which loads no file, the expansion deciding every other.
+            // A `mod` read whole, or refused: outside any macro, `mod name;` or `mod name { … }`; in a macro's body, or
+            // in the arguments of std's that keep them in place, only an inline module, which loads no file, the
+            // expansion deciding every other; in any other macro's arguments none, as it may rearrange them.
             let declared = ts
                 .get(i + 1)
                 .filter(|t| matches!(t.kind, Kind::Ident(..)))
@@ -646,7 +801,7 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
             let inline_module = declared.is_some() && is(i + 2, Kind::Open('{'));
             let paths = std::mem::take(&mut pending_path);
             let at = site(i, (i + 2).min(ts.len() - 1));
-            if region.body {
+            if region.body && !region.rearranged {
                 let metavariable = is(i + 1, Kind::Punct('$'))
                     && ts
                         .get(i + 2)
@@ -659,7 +814,7 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                     ));
                 }
             } else if region.args {
-                if !inline_module {
+                if region.rearranged || !inline_module {
                     out.unfollowed.push(at.unfollowed(
                         file,
                         "is a module in a macro's arguments, so its file is decided by the macro's expansion",
@@ -689,32 +844,43 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                 }
             }
         } else if let Some(n) = name(&ts[i]) {
-            let shadows = n == "macro_rules"
-                && is(i + 1, Kind::Punct('!'))
-                && ts
-                    .get(i + 2)
-                    .and_then(name)
-                    .is_some_and(|m| INCLUDES.contains(&m) || ASM.contains(&m));
+            let defined = if n == "macro_rules" && is(i + 1, Kind::Punct('!')) {
+                ts.get(i + 2).and_then(name)
+            } else {
+                None
+            };
+            let shadows = defined.is_some_and(|m| INCLUDES.contains(&m) || ASM.contains(&m));
             let imports = in_use
                 && (INCLUDES.contains(&n)
                     || (ASM.contains(&n) && ts.get(i + 1).is_some_and(|t| keyword(t, "as"))));
+            // A name of std's `KEPT` bound to another macro: defined, or imported from elsewhere (round 13's D1).
+            let rebinds = defined.is_some_and(|m| KEPT.contains(&m))
+                || (in_use && !use_std && KEPT.contains(&n));
+            let renames = keyword(&ts[i], "extern")
+                && ts.get(i + 1).is_some_and(|t| keyword(t, "crate"))
+                && ts.get(i + 3).is_some_and(|t| keyword(t, "as"))
+                && ts
+                    .get(i + 4)
+                    .and_then(name)
+                    .is_some_and(|r| matches!(r, "std" | "core" | "alloc"));
+            let within = region.within();
             if shadows || imports {
                 out.unfollowed
                     .push(site(i, (i + 2).min(ts.len() - 1)).unfollowed(file, ALIAS));
-            } else if let Some(end) = inclusion(
-                &ts,
-                i,
-                source,
-                file,
-                region.body,
-                in_test(i),
-                &mut out,
-                &site,
-            )
-            .or_else(|| assembly(&ts, i, source, file, region.body, &mut out, &site))
+            } else if rebinds || renames {
+                out.unfollowed.push(
+                    site(i, (i + 4).min(ts.len() - 1))
+                        .unfollowed(file, if renames { RENAMES } else { REBINDS }),
+                );
+            } else if let Some(end) =
+                inclusion(&ts, i, source, file, within, in_test(i), &mut out, &site)
+                    .or_else(|| assembly(&ts, i, source, file, within, &mut out, &site))
             {
                 i = end + 1;
                 continue;
+            } else if let Some(w) = within.filter(|_| passed(&ts, i, true)) {
+                out.unfollowed
+                    .push(site(i, i).unfollowed(file, &passed_why(w)));
             }
         }
         i += 1;
@@ -730,7 +896,7 @@ fn inclusion(
     i: usize,
     source: &[u8],
     file: &str,
-    in_macro: bool,
+    within: Option<&str>,
     test_only: bool,
     out: &mut Scan,
     site: &dyn Fn(usize, usize) -> Site,
@@ -756,10 +922,10 @@ fn inclusion(
         _ if within_doc(ts, i) => What::Doc,
         _ => What::Data,
     };
-    if in_macro {
+    if let Some(w) = within {
         out.unfollowed.push(site(i, close).unfollowed(
             file,
-            "is an inclusion inside a macro, so the file it names is decided by its expansion",
+            &format!("is an inclusion {w}, so the file it names is decided by its expansion"),
         ));
     } else {
         out.includes.push(Include {
@@ -779,7 +945,7 @@ fn assembly(
     i: usize,
     source: &[u8],
     file: &str,
-    in_macro: bool,
+    within: Option<&str>,
     out: &mut Scan,
     site: &dyn Fn(usize, usize) -> Site,
 ) -> Option<usize> {
@@ -802,17 +968,25 @@ fn assembly(
             DIRECTIVES.iter().any(|d| s.contains(d))
         })
     });
-    let why = if in_macro {
-        Some("is an assembly macro inside a macro, so its template is decided by its expansion")
+    let why = if let Some(w) = within {
+        Some(format!(
+            "is an assembly macro {w}, so its template is decided by its expansion"
+        ))
     } else if assembled {
-        Some("is an assembly template a macro assembles, so the census cannot read its directives")
+        Some(
+            "is an assembly template a macro assembles, so the census cannot read its directives"
+                .to_owned(),
+        )
     } else if directive {
-        Some("is an assembly template holding a directive that reads a file or assembles one")
+        Some(
+            "is an assembly template holding a directive that reads a file or assembles one"
+                .to_owned(),
+        )
     } else {
         None
     };
     if let Some(why) = why {
-        out.unfollowed.push(site(i, close).unfollowed(file, why));
+        out.unfollowed.push(site(i, close).unfollowed(file, &why));
     }
     Some(close)
 }
@@ -1027,8 +1201,9 @@ struct Fragment {
 }
 
 /// The words in doc text that can make a doc test read a file — an inclusion or assembly macro before `!`, an alias
-/// or a comment, a `mod` before its name, a debugger visualizer; an assembler directive needs an assembly macro, or a
-/// macro of the library's, whose definition is refused — each found by
+/// or a comment, a `mod` before its name, a debugger visualizer, a `macro_rules`, whose macro may rearrange what the
+/// doc test passes it, every other macro it can call std's or a `macro_export`'s, refused (round 13's D1); an assembler
+/// directive needs an assembly macro, or a macro of the library's, whose definition is refused — each found by
 /// its word alone, with no markdown read, so no fence, indentation or info string hides one; read past any whitespace
 /// and any character outside printable ASCII, U+200E's and U+200F's among them (round 12's D6); and the pieces joined
 /// in source order, as rustdoc joins an item's, so no split hides one, and only a word ending the whole is a trigger by
@@ -1104,7 +1279,7 @@ impl DocText {
                             c == '$' || c == '_' || c.is_ascii_alphabetic() || !c.is_ascii()
                         })
                 }
-                "debugger_visualizer" => true,
+                "debugger_visualizer" | "macro_rules" => true,
                 _ => false,
             };
             if !trigger {
@@ -2012,7 +2187,8 @@ mod tests {
                      pub fn h(x: u8) -> u8 {\n    match x {\n        #[cfg(test)]\n        0 => 1,\n        _ => 2,\n    }\n}\n\
                      const A: &str = include_str!(\"../../c/arm.txt\");\n\
                      mod im {\n    #![cfg(test)]\n    const I: &str = include_str!(\"../../c/inline.txt\");\n}\n\
-                     wrap! {\n    #[cfg(test)]\n    mod wrapped {\n        const W: &str = include_str!(\"../../c/macro.txt\");\n    }\n}\n\
+                     const _: () = assert!({\n    #[cfg(test)]\n    mod wrapped {\n        \
+                     const W: &str = include_str!(\"../../c/macro.txt\");\n    }\n    true\n});\n\
                      include!(\"inc.rs\");\nmod inner;\n",
                 ),
                 ("p/src/tests.rs", "const V: &str = include_str!(\"../../c/c.txt\");\n"),
@@ -2059,7 +2235,8 @@ mod tests {
     fn a_raw_identifier_and_every_mod_are_read_whole_or_refused() {
         // Round 11's D3: `r#type` is one identifier, its module `type.rs`, an inline one `type/`; and a `mod` the census
         // cannot read whole — in a macro's arguments, declared by a macro, inside an attribute, or spelt otherwise — is
-        // refused, never passed. A macro's inline module loads no file.
+        // refused, never passed. An inline module loads no file in a `macro_rules!` body, nor in the arguments of std's
+        // macros that keep them in place; any other macro's arguments it may rearrange (round 13's D1).
         let r = of(
             &[
                 (
@@ -2088,6 +2265,11 @@ mod tests {
                 "a macro's arguments",
             ),
             (
+                "an inline module in a macro's arguments",
+                "wrap! { mod y { } }\n",
+                "a macro's arguments",
+            ),
+            (
                 "a macro's",
                 "macro_rules! m { ($n:ident) => { mod $n; }; }\n",
                 "a macro declares",
@@ -2108,7 +2290,8 @@ mod tests {
         let r = of(
             &[(
                 "p/src/lib.rs",
-                "macro_rules! m { ($n:ident) => { mod $n { pub fn f() {} } mod fixed {} }; }\nwrap! { mod y { } }\n",
+                "macro_rules! m { ($n:ident) => { mod $n { pub fn f() {} } mod fixed {} }; }\n\
+                 const _: () = assert!({\n    mod y {}\n    true\n});\n",
             )],
             "p/src/lib.rs",
         );
@@ -2190,6 +2373,149 @@ mod tests {
             let r = of(&[("r/src/lib.rs", source)], "r/src/lib.rs");
             assert!(refused(&r, why), "{case}: {:?}", whys(&r));
         }
+    }
+
+    #[test]
+    fn a_macro_that_may_rearrange_its_arguments_is_read_whole_or_refused() {
+        // Round 13's D1: a macro's expansion may rearrange the tokens it is given — "the ident, lifetime, and tt fragment
+        // types are an exception, and can be matched by literal tokens", and a repetition's "separator token can be any
+        // token other than a delimiter or one of the repetition operators" (the Rust reference) — so an inclusion's name
+        // passed apart from its `!`, or its literal apart from its name, reads what no literal pins. In the arguments of
+        // any macro but std's that keep them in place, and in a `macro_rules!` body, each is refused; so are a macro a
+        // metavariable names, an attribute a metavariable fills, a name of those std macros bound to another, a
+        // `macro_use`, a `macro_export`, and a doc test defining a macro.
+        let mut missed = Vec::new();
+        for (case, source, why) in [
+            (
+                "a name a metavariable invokes",
+                "macro_rules! call { ($m:ident) => { $m!(\"../../c/x.txt\") }; }\n\
+                 pub const S: &str = call!(include_str);\n",
+                "a metavariable names",
+            ),
+            (
+                "the name passed",
+                "macro_rules! call { ($m:ident) => { $m!(\"../../c/x.txt\") }; }\n\
+                 pub const S: &str = call!(include_str);\n",
+                "in the arguments of a macro that may rearrange them",
+            ),
+            (
+                "a literal rewritten",
+                "macro_rules! call { ($a:tt $b:tt ($p:literal)) => { $a $b (concat!(\"../../c/\", $p)) }; }\n\
+                 pub const S: &str = call!(include_str!(\"x.txt\"));\n",
+                "an inclusion in the arguments of a macro that may rearrange them",
+            ),
+            (
+                "a separator dropped",
+                "macro_rules! call { ($($t:tt) sep *) => { $($t)* }; }\n\
+                 pub const S: &str = call!(include_str sep ! sep (\"x.txt\"));\n",
+                "in the arguments of a macro that may rearrange them",
+            ),
+            (
+                "a name apart from its `!` in a body",
+                "macro_rules! m { ($b:tt) => { pub const S: &str = include_str $b (\"x.txt\"); }; }\nm!(!);\n",
+                "inside a macro",
+            ),
+            (
+                "a repetition before `!`",
+                "macro_rules! m { ($($n:ident)?) => { pub const S: &str = $($n)?!(\"x.txt\"); }; }\n",
+                "a metavariable names",
+            ),
+            (
+                "a visualizer's key a metavariable gives",
+                "macro_rules! vis { ($k:ident) => { #[debugger_visualizer($k = \"../../c/v.natvis\")] pub mod v {} }; }\n",
+                "a metavariable keys or fills",
+            ),
+            (
+                "an attribute a metavariable fills",
+                "macro_rules! m { ($a:meta) => { #[$a] pub mod v {} }; }\n",
+                "a metavariable keys or fills",
+            ),
+            (
+                "a visualizer's key passed",
+                "vis!(natvis_file);\n",
+                "in the arguments of a macro that may rearrange them",
+            ),
+            (
+                "a visualizer passed whole",
+                "wrap! { #[debugger_visualizer(natvis_file = \"v.natvis\")] pub struct V; }\n",
+                "debugger_visualizer",
+            ),
+            (
+                "an assembly template passed",
+                "wrap!(core::arch::global_asm!(\"nop\"));\n",
+                "an assembly macro in the arguments",
+            ),
+            (
+                "an inline module passed",
+                "macro_rules! semi { ($m:tt $n:ident {}) => { $m $n; }; }\nsemi!(mod x {});\n",
+                "a macro's arguments",
+            ),
+            (
+                "a std macro by another's path",
+                "pub fn f() -> bool { other::assert_eq!(include_str!(\"x.txt\"), \"\"); true }\n",
+                "an inclusion in the arguments of a macro that may rearrange them",
+            ),
+            (
+                "a std macro's name defined",
+                "macro_rules! vec { ($($t:tt)*) => { $($t)* }; }\n",
+                "a name of std's",
+            ),
+            (
+                "a std macro's name imported",
+                "use crate::other::assert_eq;\n",
+                "a name of std's",
+            ),
+            ("std renamed", "extern crate core as std;\n", "renames a crate"),
+            (
+                "macros imported by no name",
+                "#[macro_use]\nextern crate n;\n",
+                "by no name",
+            ),
+            (
+                "a macro exported",
+                "#[macro_export]\nmacro_rules! m { () => {} }\n",
+                "another crate may call",
+            ),
+            (
+                "a doc test defining a macro",
+                "/// ```\n/// macro_rules! call { ($m:ident) => { $m!(\"../../c/x.rs\"); }; }\n/// call!(include);\n/// ```\n\
+                 pub fn d() {}\n",
+                "doc test",
+            ),
+        ] {
+            let r = of(
+                &[("r/src/lib.rs", source), ("r/src/x.txt", ""), ("r/src/x.rs", "")],
+                "r/src/lib.rs",
+            );
+            if !refused(&r, why) {
+                missed.push(format!("{case}: {:?}", whys(&r)));
+            }
+        }
+        assert!(missed.is_empty(), "{missed:#?}");
+        // Std's macros that keep their arguments in place, by their names or std's paths: an inclusion in one is read as
+        // written, a variable named as a macro is none, an inline module in a block loads no file; and a body's `!=`, a
+        // metavariable another macro is passed, an import of std's modules.
+        let r = of(
+            &[
+                (
+                    "r/src/lib.rs",
+                    "use std::panic::catch_unwind;\nuse core::panic::PanicInfo;\n\
+                     pub fn f(asm: u8) -> String {\n    assert_eq!(asm, 1);\n    \
+                     ::std::assert!(true, \"{}\", include_str!(\"u.txt\"));\n    \
+                     format!(\"{}\", include_str!(\"t.txt\"))\n}\n\
+                     const _: () = assert!({\n    mod y {}\n    true\n});\n\
+                     macro_rules! ne { ($a:expr, $b:expr) => { $a != $b }; }\n\
+                     macro_rules! run { ($name:ident) => { stringify!($name) }; }\n",
+                ),
+                ("r/src/t.txt", ""),
+                ("r/src/u.txt", ""),
+            ],
+            "r/src/lib.rs",
+        );
+        for f in ["r/src/t.txt", "r/src/u.txt"] {
+            assert!(r.files.contains(f), "{f}: {:?}", files(&r));
+        }
+        assert!(r.unfollowed.is_empty(), "{:?}", whys(&r));
     }
 
     #[test]

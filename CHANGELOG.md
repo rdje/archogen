@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a macro that may rearrange what it is given is read whole or refused
+
+`ARCHOGEN-M3-0937` (leaf `M3.5.2.10.1`), `2026-10-24`.
+
+- The trust gate's census now refuses a file's name, a module or a debugger visualizer handed to a macro that can
+  reorder what it is given — any macro but std's own expression macros such as `assert_eq!` and `format!` — and
+  the same inside a macro's definition, with a macro or an attribute built from its parameters; reusing a name of
+  std's for another macro, importing macros wholesale, exporting one, and a doc test defining its own are refused
+  too.
+
 ## archogen — the checkers' programs in the trust record, round 13
 
 `ARCHOGEN-M3-0936` (leaf `M3.5.2`), `2026-10-24`.

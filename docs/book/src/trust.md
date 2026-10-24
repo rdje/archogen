@@ -106,7 +106,11 @@ design (leaf `M3.5.2.3.1`). Every file a target reaches is read for every token 
 text, whatever their `cfg` — and one the census does not read whole — a module a macro's expansion places, an assembly
 directive reading a file, a path out of the tree, through a symbolic link or spelt as hosts read apart — is refused
 unless an admission, rule `inclusion`, names it, so a spelling it does not know is a refusal, never a miss (leaves
-`M3.5.2.7.1`, `M3.5.2.8.1`). The census reads only what it can check it reads as rustc does: outside comments and
+`M3.5.2.7.1`, `M3.5.2.8.1`). A macro may rearrange what it is given: in the arguments of any macro but std's that keep
+theirs in place, every name of a macro that reads a file, a `mod` and a debugger visualizer are refused, and in a
+`macro_rules!` body those, a macro a metavariable names and an attribute one fills; so are a name of those std macros
+bound to another, a `macro_use`, a `macro_export` and a doc test's `macro_rules`, so every macro a crate or a doc test
+calls is std's, or read where it is called (leaf `M3.5.2.10.1`). The census reads only what it can check it reads as rustc does: outside comments and
 literals, printable ASCII and the four whitespace characters both skip, a file holding any other byte there or opening
 with a shebang line refused whole (leaf `M3.5.2.9.1`); every `path` attribute is followed with the module's own
 file beside it, an inner one refused, every path value checked as it is read (leaf `M3.5.2.9.2`). A library's doc text is read with no markdown — every doc
@@ -121,12 +125,12 @@ read; a build script's files count as its package's; a symbolic link in or besid
 root the census cannot read, are refused (leaf `M3.5.2.8.3`); and a pair form is held to what the census reads of its test as to its build (leaf `M3.5.2.7.2`). An oracle
 holds the census to rustc and rustdoc: it builds a corpus of every probe of rounds 5 to 12 that the census counts in
 twelve configurations through a compiler wrapper of its own and finds every file a unit, every crate it links and their
-build scripts read counted, and runs rustdoc on doc tests in each spelling rounds 11 and 12 found, every block it
+build scripts read counted, and runs rustdoc on doc tests in each spelling rounds 11 to 13 found, every block it
 compiles one the census refuses (leaves `M3.5.2.7.3`, `M3.5.2.8.4`); and a generated leg compiles every pair of the
 reference's lexical constructs with a trigger between, so where the census reads a literal or a comment to end is held
 to rustc's (leaf `M3.5.2.9.4`). It checks what the census counts, not what it refuses beyond
 that, which the fixtures hold, nor what a build script or a procedural macro generates. What decides what a unit compiles — target selection, required features, the profile,
-`cfg(test)`, features, platform, configuration, file inclusion, dependency kinds, build scripts and procedural macros,
+`cfg(test)`, features, platform, configuration, file inclusion, macros, dependency kinds, build scripts and procedural macros,
 doc tests, non-members, a program a test runs — is a table in the record's §3, each rule quoted from the Cargo Book, the
 rustdoc book or the Rust reference of the pin ([`rust-toolchain`](ledger.md#rust-toolchain),
 [`rust-reference`](ledger.md#rust-reference)), each row held by its fixtures and, where part of it is outside

@@ -124,8 +124,9 @@ fn corpus() -> Vec<(&'static str, String)> {
         ),
         ("r/src/lib.rs", "pub fn r() {}\n".to_owned()),
         // Round 11's code probes: `cfg(test)` on a field, a variant, a parameter and an arm, and inside an inline module, a
-        // raw-identifier module, an inclusion in a macro's arguments, a debugger visualizer, a `doc` attribute's document
-        // by a qualified path, and a precise capture before an inclusion.
+        // raw-identifier module, an inclusion in a macro's arguments — std's, which keep them in place, as round 13's D1
+        // refuses any other's — a debugger visualizer, a `doc` attribute's document by a qualified path, and a precise
+        // capture before an inclusion.
         ("k/Cargo.toml", manifest("k", "")),
         (
             "k/src/lib.rs",
@@ -141,8 +142,7 @@ fn corpus() -> Vec<(&'static str, String)> {
              pub const ARM: &str = include_str!(\"arm.txt\");\n\
              mod im {\n    #![cfg(test)]\n}\n\
              pub const INNER: &str = include_str!(\"inner.txt\");\n\
-             macro_rules! keep {\n    ($e:expr) => {\n        pub const KEPT: &str = $e;\n    };\n}\n\
-             keep!(include_str!(\"kept.txt\"));\n\
+             pub fn kept() -> String {\n    format!(\"{}\", include_str!(\"kept.txt\"))\n}\n\
              #[doc = ::core::include_str!(\"doc.md\")]\npub struct Documented;\n\
              pub fn captured() -> impl Sized + use<> {}\n\
              pub const AFTER_USE: &str = include_str!(\"after_use.txt\");\n\
@@ -206,7 +206,7 @@ fn corpus() -> Vec<(&'static str, String)> {
             "#![doc = include_str!(\"../README.md\")]\n\
              pub mod fence_tildes;\npub mod fence_four;\npub mod indented;\npub mod rust_foo;\npub mod ignored;\n\
              pub mod ignore_windows;\npub mod split_attributes;\npub mod mixed;\npub mod crlf;\npub mod nested_block;\n\
-             pub mod block_star;\npub mod lrm;\npub mod mod_nonascii;\npub mod crlf_literal;\n"
+             pub mod block_star;\npub mod lrm;\npub mod mod_nonascii;\npub mod crlf_literal;\npub mod macro_named;\n"
                 .to_owned(),
         ),
         ("d/README.md", "Text.\n\n    include!(\"oracle_doc_missing/readme.rs\");\n".to_owned()),
@@ -267,6 +267,13 @@ fn corpus() -> Vec<(&'static str, String)> {
         (
             "d/src/crlf_literal.rs",
             "#[doc = \"```\\ninclude!(\\\"oracle_doc_missing/crlf_literal.rs\\\");\\n```\\\r\n\"]\npub fn f() {}\n".to_owned(),
+        ),
+        // Round 13's D1: a doc test's own macro, passed an inclusion's name apart from its `!`.
+        (
+            "d/src/macro_named.rs",
+            "/// ```\n/// macro_rules! call {\n///     ($m:ident) => {\n///         $m!(\"oracle_doc_missing/macro_named.rs\");\n\
+             ///     };\n/// }\n/// call!(include);\n/// ```\npub fn f() {}\n"
+                .to_owned(),
         ),
         (
             "d/src/block_star.rs",
@@ -704,6 +711,7 @@ const DOC_CASES: &[(&str, &str)] = &[
     ("lrm", "d/src/lrm.rs"),
     ("mod_nonascii", "d/src/mod_nonascii.rs"),
     ("crlf_literal", "d/src/crlf_literal.rs"),
+    ("macro_named", "d/src/macro_named.rs"),
 ];
 
 /// A file each of round 11's probes makes some build read, so none is vacuous: the code probes' and the closure's.
