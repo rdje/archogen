@@ -191,7 +191,7 @@ the one code that names more than one rule today says so.
 
 The substitutability relation decides whether what one provider offers satisfies one requirement. Its design is
 `docs/decisions/decision_substitutability-relation.md`, reviewed until a round found no defect, and its executable
-model is `crates/eadl-resolve/src/model/`; this section is normative over the production code in `crates/eadl-resolve`,
+model is `crates/archogen-plan-check/src/model/`; this section is normative over the production code in `crates/eadl-resolve`,
 which is held to the model over the model checker's whole universe (`crates/eadl-resolve/tests/production.rs`).
 `archogen check` does not call the relation yet: `M3.4` wires it, keeping or migrating every verdict it moves.
 

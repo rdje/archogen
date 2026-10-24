@@ -420,7 +420,7 @@ nothing more: no join, no meet, no best offer, and no lattice (§7).
 ## Today and ahead
 
 The relation is a library, complete for `M3.1`, and held to the design's executable model
-(`crates/eadl-resolve/src/model/`) over the model checker's whole universe by `crates/eadl-resolve/tests/production.rs`.
+(`crates/archogen-plan-check/src/model/`) over the model checker's whole universe by `crates/eadl-resolve/tests/production.rs`.
 Measured `2026-10-06`: 154 381 provider-and-requirement pairs judged alike, 72 234 provider declarations read alike,
 and the horizon agreeing with a simulation of the counter's reads on every case of the checker's grid. Each rule
 has a catalogued mutation that its test must kill (`xtask/mutations.txt`).

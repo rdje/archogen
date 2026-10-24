@@ -2,8 +2,8 @@
 //! families `tests/checker.rs` enumerates (leaf `M3.1.1.1`), defined once for the model's checker and for the
 //! production relation's comparison with the model (`tests/production.rs`, `SR-H7`).
 
+use archogen_plan_check::model::{Direction, Domain, Entry, Role, VOCABULARY};
 use eadl_model::{Dimension, Rational};
-use eadl_resolve::model::{Direction, Domain, Entry, Role, VOCABULARY};
 
 /// An amount whose conversion to another unit overflows the exact arithmetic (R18 1, R19 1, R25 1).
 pub const TINY: &str = "0.0000000000000000000000000000001 ns";

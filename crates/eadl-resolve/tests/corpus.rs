@@ -5,11 +5,11 @@
 //! this file, or the checker, gets wrong — so every finding that came with one lands here first, failing, and then
 //! the rule that makes it pass (`docs/decisions/decision_executable-design-reviews.md`).
 
-use eadl_front::{read, Form, SourceMap};
-use eadl_resolve::model::{
+use archogen_plan_check::model::{
     clause_satisfied, judge, read_clause, read_constraint, read_declaration_name, read_needs,
     read_provider, read_service, read_side, read_uses, NotJudged, Verdict,
 };
+use eadl_front::{read, Form, SourceMap};
 
 fn forms(text: &str) -> Vec<Form> {
     let mut sources = SourceMap::new();
@@ -902,7 +902,7 @@ fn a_clause_is_satisfied_when_each_constraint_is_a_statement_apart() {
     assert!(clause_satisfied(&p, &[]));
 }
 
-fn clause(text: &str) -> Result<Vec<eadl_resolve::model::Requirement>, NotJudged> {
+fn clause(text: &str) -> Result<Vec<archogen_plan_check::model::Requirement>, NotJudged> {
     read_clause(&forms(text)[0])
 }
 

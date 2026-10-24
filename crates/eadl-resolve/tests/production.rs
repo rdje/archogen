@@ -2,7 +2,7 @@
 //! `docs/decisions/decision_substitutability-relation.md` §11).
 //!
 //! ⭐ **One universe, two readings.** `tests/common/universe.rs` holds the inputs `tests/checker.rs` enumerates; here
-//! each is read by the production code (`eadl_resolve::offer`, `value`) and by the model (`eadl_resolve::model`),
+//! each is read by the production code (`eadl_resolve::offer`, `value`) and by the model (`archogen_plan_check::model`),
 //! and the two must agree: both refuse, or both read the same state for every fact, every spelling of a value kept,
 //! in written order. The model is the reference because a design review read it beside the record for fifteen rounds;
 //! a disagreement is a defect in one of them, found by a machine rather than by the next reader.
@@ -18,11 +18,11 @@ use common::universe::{
 };
 use std::collections::{BTreeMap, BTreeSet};
 
+use archogen_plan_check::model;
 use eadl_front::{read, Form, SourceMap};
 use eadl_model::check::shipped_registry;
 use eadl_model::quantity::{unit, Quantity};
 use eadl_model::Rational;
-use eadl_resolve::model;
 use eadl_resolve::offer::{self, State};
 use eadl_resolve::refusal::Code;
 use eadl_resolve::relation::{self, Verdict};

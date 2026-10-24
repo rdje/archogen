@@ -37,6 +37,11 @@ mod common;
 
 use std::collections::BTreeSet;
 
+use archogen_plan_check::model::{
+    judge, read_clause, read_constraint, read_needs, read_provider, read_service, read_side,
+    side_name_lists, Direction, Domain, NotJudged, Requirement, Role, Value, Verdict, CLAUSE_WORDS,
+    VOCABULARY,
+};
 use common::universe::{
     outside, samples, small_items, widest_advance, written_offers, LISTS_FOR_NAMES, NAMES_NOTHING,
     ORDER_POOL, PLACES, REFUSED_PLACES, RESPELT, RESPELT_BOUNDS, TINY,
@@ -44,11 +49,6 @@ use common::universe::{
 use eadl_front::{read, Form, SourceMap};
 use eadl_model::quantity::{unit, Quantity};
 use eadl_model::{Dimension, Rational};
-use eadl_resolve::model::{
-    judge, read_clause, read_constraint, read_needs, read_provider, read_service, read_side,
-    side_name_lists, Direction, Domain, NotJudged, Requirement, Role, Value, Verdict, CLAUSE_WORDS,
-    VOCABULARY,
-};
 
 fn forms(text: &str) -> Vec<Form> {
     let mut sources = SourceMap::new();
@@ -58,11 +58,13 @@ fn forms(text: &str) -> Vec<Form> {
     doc.forms
 }
 
-fn provider(offers: &str) -> Result<eadl_resolve::model::Provider, eadl_resolve::model::Refused> {
+fn provider(
+    offers: &str,
+) -> Result<archogen_plan_check::model::Provider, archogen_plan_check::model::Refused> {
     read_provider(&forms(&format!("(defblock p {offers})"))[0])
 }
 
-fn constraint(text: &str) -> Result<Requirement, eadl_resolve::model::NotJudged> {
+fn constraint(text: &str) -> Result<Requirement, archogen_plan_check::model::NotJudged> {
     read_constraint(&forms(text)[0])
 }
 
@@ -135,7 +137,7 @@ fn oracle(domain: Domain, name: &str, offered: &str, required: &str, dir: Direct
         Domain::Set(_) => {
             let (o, mut r) = (set(offered), set(required));
             // §2's set row: the members the entry's `implies` names join the required set (R17 1, 2).
-            if let Some(e) = eadl_resolve::model::vocab::entry(name) {
+            if let Some(e) = archogen_plan_check::model::vocab::entry(name) {
                 r.extend(e.implies.iter().map(|m| (*m).to_string()));
             }
             match dir {
@@ -820,7 +822,10 @@ fn a_clause_is_decided_in_one_unit_and_unsupported_past_the_arithmetic() {
                     let tiny = |v: &str| v.ends_with(" ns") && v.starts_with("0.000");
                     let past = tiny(a) != tiny(b);
                     assert_eq!(
-                        matches!(read, Err(eadl_resolve::model::NotJudged::Unsupported(_))),
+                        matches!(
+                            read,
+                            Err(archogen_plan_check::model::NotJudged::Unsupported(_))
+                        ),
                         past,
                         "{x} beside {y}: {read:?}"
                     );
@@ -986,7 +991,7 @@ fn every_item_of_requires_has_its_one_code() {
         let want = match form {
             Form::List { items, .. } => match items.first() {
                 Some(Form::Symbol { name, .. }) => {
-                    if eadl_resolve::model::vocab::entry(name).is_some() {
+                    if archogen_plan_check::model::vocab::entry(name).is_some() {
                         continue; // a fact's constraint: its value decides, which the other properties hold
                     }
                     "unsupported-profile"
@@ -1236,8 +1241,8 @@ fn the_vocabulary_is_the_record_s_table_row_by_row() {
         );
         assert_eq!(consumed[e.name], e.consumed, "{}: §1.1's use", e.name);
         let held = e.function.map(|f| match f {
-            eadl_resolve::model::Function::Of(name) => name.to_string(),
-            eadl_resolve::model::Function::Each => "each".to_string(),
+            archogen_plan_check::model::Function::Of(name) => name.to_string(),
+            archogen_plan_check::model::Function::Each => "each".to_string(),
         });
         assert_eq!(function[e.name], held, "{}: §1.1's function", e.name);
         let derived: Vec<String> = e.derived_from.iter().map(|s| (*s).to_string()).collect();

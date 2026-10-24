@@ -64,6 +64,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "archogen-plan-check"
+version = "0.1.0"
+dependencies = [
+ "eadl-front",
+ "eadl-model",
+]
+
+[[package]]
 name = "archogen-s0"
 version = "0.1.0"
 dependencies = [
@@ -94,6 +102,7 @@ dependencies = [
 name = "eadl-resolve"
 version = "0.1.0"
 dependencies = [
+ "archogen-plan-check",
  "eadl-front",
  "eadl-model",
 ]

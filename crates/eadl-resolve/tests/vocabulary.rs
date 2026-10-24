@@ -1,18 +1,18 @@
 //! The typed vocabulary table (leaf `M3.1.2.2`, `docs/decisions/decision_substitutability-relation.md` §1.1).
 //!
 //! Two kinds of leg. The shipped table is held, entry by entry, to the executable model's hand-held `/1`
-//! (`eadl_resolve::model::VOCABULARY`), which `tests/checker.rs` holds to the record's §1.1 table row by row: so the
+//! (`archogen_plan_check::model::VOCABULARY`), which `tests/checker.rs` holds to the record's §1.1 table row by row: so the
 //! file, the model and the record say one thing, and a fault in reading the file cannot hide behind the model, which
 //! does not read it. Then each refusal the reader makes is a test on a vocabulary holding one fault, with an arm the
 //! reader must accept beside it, so the test fails when the rule is removed and does not pass by refusing everything.
 
 use std::path::{Path, PathBuf};
 
+use archogen_plan_check::model::{self, CLAUSE_WORDS, VOCABULARY};
 use eadl_front::SourceMap;
 use eadl_model::check::shipped_registry;
 use eadl_model::kind::Registry;
 use eadl_model::Dimension;
-use eadl_resolve::model::{self, CLAUSE_WORDS, VOCABULARY};
 use eadl_resolve::vocabulary::{
     clause_words, Cause, Direction, Domain, Function, Role, Rule, Usage, Vocabulary,
 };

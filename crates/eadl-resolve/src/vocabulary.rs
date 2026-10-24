@@ -16,7 +16,7 @@
 //! declared twice (reference §7 rule 6); and that no fact is named like a clause word of the description kinds,
 //! since an offer or a requirement on it would read as a clause (record §1.1, R31 1).
 //!
-//! ⛔ **Written from the record, not from the executable model.** [`crate::model::vocab`] holds `/1` by hand, on
+//! ⛔ **Written from the record, not from the executable model.** `archogen_plan_check::model::vocab` holds `/1` by hand, on
 //! purpose, so a fault in reading the file cannot also be the model's: `tests/vocabulary.rs` holds this table to
 //! the model's entry by entry.
 //!

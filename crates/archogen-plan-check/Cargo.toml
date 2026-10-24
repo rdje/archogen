@@ -1,0 +1,18 @@
+# The configuration checker (ROADMAP.md §4.4, §7.1; docs/tasks/M3.md `M3.5`): an assignment record judged against its
+# description, independently of the generator. Today it holds the substitutability relation's executable model, moved
+# from eadl-resolve as a pure rename (leaf M3.5.3); the checks come with M3.5.4 and the executable with M3.5.6. Its
+# library is the configuration checker's root (docs/specs/trust/decision_trust-role-programs.md §2). Dependency-free:
+# docs/decisions/decision_zero-dependency-engine-core.md.
+[package]
+name = "archogen-plan-check"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "The configuration checker: an assignment record judged against its description, apart from the generator"
+
+[lints]
+workspace = true
+
+[dependencies]
+eadl-front = { path = "../eadl-front" }
+eadl-model = { path = "../eadl-model" }

@@ -149,6 +149,6 @@ Presence asks whether a fact is known. The next question is whether what a provi
 requirement asks — whether a 64-bit counter satisfies a service that needs 32 bits, or an idle-only timer one that must
 keep running. That is matching, and [Matching an offer to a requirement](matching.md) treats it. Its design, reviewed
 until a round found no defect, is `docs/decisions/decision_substitutability-relation.md`, and its code is
-`crates/eadl-resolve`, held to the design's executable model (`crates/eadl-resolve/src/model/`, with its checker in
+`crates/eadl-resolve`, held to the design's executable model (`crates/archogen-plan-check/src/model/`, with its checker in
 `crates/eadl-resolve/tests/checker.rs` and its corpus in `crates/eadl-resolve/tests/corpus.rs`). `archogen check` does
 not call it yet.

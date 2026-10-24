@@ -4,6 +4,12 @@
 # that must see it, and whether they KILL it or, for a blind spot kept on purpose as a reproduction,
 # let it SURVIVE. `from`/`to` lines are indented four spaces beyond the code's own indentation.
 # An entry comes from a defect found or a control run by hand; its `why` says which.
+#
+# The relation's executable model moved from crates/eadl-resolve/src/model/ to crates/archogen-plan-check/src/model/ as
+# a pure rename (leaf `M3.5.3`, `2026-10-24`): the 58 entries naming it follow their files, nothing re-run; their `test`
+# arguments are unchanged — a `-p eadl-resolve` run compiles the moved model, mutation and all, through its development
+# dependency — so each verdict carries over by construction, re-measured in the campaign at completion
+# (docs/decisions/decision_mutation-testing-after-completion.md).
 
 mutation lcm-to-max
 file crates/archogen-s0/src/interpret.rs
@@ -804,7 +810,7 @@ to
 end
 
 mutation model-horizon-full-modulus
-file crates/eadl-resolve/src/model/value.rs
+file crates/archogen-plan-check/src/model/value.rs
 test -p eadl-resolve --test checker
 expect killed
 why M3.1.1.1: the horizon is (modulus − 1) / rate (the substitutability record's R14 N9); modulus / rate meets "unambiguous across T" where two reads T apart can be equal. The simulation must see it.
@@ -815,7 +821,7 @@ to
 end
 
 mutation model-power-state-without-run
-file crates/eadl-resolve/src/model/value.rs
+file crates/archogen-plan-check/src/model/value.rs
 test -p eadl-resolve --test checker
 expect killed
 why M3.1.1.1: a power-state requirement asks for run too (R16 2); without it an idle-only provider passes as a capability.
@@ -826,7 +832,7 @@ to
 end
 
 mutation model-direction-of-the-fact
-file crates/eadl-resolve/src/model/judge.rs
+file crates/archogen-plan-check/src/model/judge.rs
 test -p eadl-resolve --test checker
 expect killed
 why M3.1.1.1: a constraint is judged in its written direction, the fact's or exactly (R12 L2); judged in the fact's direction alone, 64 bit meets (exactly 32 bit).
@@ -837,7 +843,7 @@ to
 end
 
 mutation model-false-meets-presence
-file crates/eadl-resolve/src/model/judge.rs
+file crates/archogen-plan-check/src/model/judge.rs
 test -p eadl-resolve --test checker
 expect killed
 why M3.1.1.1: a boolean named in needs is (f true), so (f false) meets no presence (R7 G2; R9 I6).
@@ -848,7 +854,7 @@ to
 end
 
 mutation model-two-values-admitted
-file crates/eadl-resolve/src/model/provider.rs
+file crates/archogen-plan-check/src/model/provider.rs
 test -p eadl-resolve --test checker
 expect killed
 why M3.1.1.1: one provider offering one declared fact with two values is invalid-description (R5 E10; R10 J8).
@@ -864,7 +870,7 @@ to
 end
 
 mutation model-bound-read-as-value
-file crates/eadl-resolve/src/model/provider.rs
+file crates/archogen-plan-check/src/model/provider.rs
 test -p eadl-resolve --test checker
 expect killed
 why M3.1.1.1: an abstract platform's bound is not a value and meets no valued constraint (record §2; R10 J4, J8).
@@ -1051,7 +1057,7 @@ to
 end
 
 mutation model-implies-ignored
-file crates/eadl-resolve/src/model/judge.rs
+file crates/archogen-plan-check/src/model/judge.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 17: the members a set fact's entry implies join the required set under every direction (§1.1's implies, §2); ignored, an idle-only provider meets a power-state requirement.
@@ -1062,7 +1068,7 @@ to
 end
 
 mutation model-statement-under-exactly-refused
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 17: a statement reads bare or under exactly, the one direction either side may always write (§1.1, rule 6).
@@ -1073,7 +1079,7 @@ to
 end
 
 mutation model-overflow-read-as-two-values
-file crates/eadl-resolve/src/model/provider.rs
+file crates/archogen-plan-check/src/model/provider.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 17: the same value offered twice whose comparison overflows is unsupported-profile, never two values (§5, §2).
@@ -1084,7 +1090,7 @@ to
 end
 
 mutation model-group-in-written-order
-file crates/eadl-resolve/src/model/judge.rs
+file crates/archogen-plan-check/src/model/judge.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 17: a group's outcome does not depend on the order its parts are written in (rule 5).
@@ -1095,7 +1101,7 @@ to
 end
 
 mutation model-modulus-zero-admitted
-file crates/eadl-resolve/src/model/value.rs
+file crates/archogen-plan-check/src/model/value.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 17: a counter-modulus of 0 is invalid-description wherever written (§4, §8).
@@ -1106,7 +1112,7 @@ to
 end
 
 mutation model-first-value-only
-file crates/eadl-resolve/src/model/provider.rs
+file crates/archogen-plan-check/src/model/provider.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 18: every pair of a fact's offers is compared; comparing each with the first only, an overflowing first made two plain values unrefused, and the reading hung on the offers' order (§5).
@@ -1117,7 +1123,7 @@ to
 end
 
 mutation model-absent-list-read-as-name
-file crates/eadl-resolve/src/model/provider.rs
+file crates/archogen-plan-check/src/model/provider.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 18: `absent` names a fact by its name alone; a value inside it read as the whole fact absent, an infeasibility the description never stated (§8); round 26: a list there refused whatever its head.
@@ -1130,7 +1136,7 @@ to
 end
 
 mutation model-clause-uses-read-as-constraint
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 20: a clause's `uses` names declarations; read as a constraint it made 51 of the corpus's 101 clauses `unsupported-profile` and hid a contradiction behind it (§1, rule 5).
@@ -1141,7 +1147,7 @@ to
 end
 
 mutation model-clause-past-arithmetic-silent
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 20: whether a clause's constraints hold together, past the arithmetic, is `unsupported-profile`; ignored, a contradiction in two units was read without a word (§2, rule 5).
@@ -1152,7 +1158,7 @@ to
 end
 
 mutation model-clause-unsupported-outranks-invalid
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 21: a clause is `invalid-description` when any item or contradiction gives it, whatever else; an undeclared fact written first hid a contradiction behind `unsupported-profile` (rule 5).
@@ -1163,7 +1169,7 @@ to
 end
 
 mutation model-side-first-clause-only
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 21: a side is every `requires` clause of a declaration; read one clause at a time, a contradiction split across two passed and `SR-H8` let the adapter through (rules 5, 6).
@@ -1174,7 +1180,7 @@ to
 end
 
 mutation model-side-needs-ignored
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 21: a side holds the `needs` its declaration writes; ignored, `(requires (uart false))` beside `(needs uart)` passed (rule 3, rule 5).
@@ -1185,7 +1191,7 @@ to
 end
 
 mutation model-bare-name-unread
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 21: a bare name inside `requires`, fact or not, states no constraint and is `invalid-description`; read as no fact, it vanished and its clause was judged without it (§1, §8).
@@ -1196,7 +1202,7 @@ to
 end
 
 mutation model-group-head-first
-file crates/eadl-resolve/src/model/judge.rs
+file crates/archogen-plan-check/src/model/judge.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 22: a group's head is ranked among its parts, as the flat spelling is judged; returned first, an undescribed head hid a refused part (rule 5).
@@ -1207,7 +1213,7 @@ to
 end
 
 mutation model-non-name-item-unread
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 22: an item of `requires` with no name at its head is `invalid-description`; read as no fact, it vanished from its clause (§1, §8).
@@ -1218,7 +1224,7 @@ to
 end
 
 mutation model-side-uses-ignored
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 22: a side reads its declaration's own `uses`, an operand naming a fact refused (§1).
@@ -1229,7 +1235,7 @@ to
 end
 
 mutation model-service-statement-admitted
-file crates/eadl-resolve/src/model/provider.rs
+file crates/archogen-plan-check/src/model/provider.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 22: a service is refused where rule 6 refuses, an offer of a statement fact (§3 rule 6); the provider and the service read an offer through one function since round 23.
@@ -1242,7 +1248,7 @@ to
 end
 
 mutation model-same-unit-compared-in-base
-file crates/eadl-resolve/src/model/value.rs
+file crates/archogen-plan-check/src/model/value.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 19: two amounts in one unit are compared as written; converted to the base unit first, one value written twice overflowed and failed a presence requirement it met written once (§5).
@@ -1253,7 +1259,7 @@ to
 end
 
 mutation model-contradictory-clause-admitted
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 19: constraints of one clause on one fact that no value satisfies together are refused; admitted, a mediation statement written both ways passed and `SR-H8` let the adapter through (§3 rules 5, 6; §8).
@@ -1266,7 +1272,7 @@ to
 end
 
 mutation model-platform-name-lists-unread
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 23: a side reads every `needs` and `uses` presence reads, a system's `platform` clause among them; skipped, a fact entered the closure the relation never judged (§1, §3 rules 3, 5).
@@ -1277,7 +1283,7 @@ to
 end
 
 mutation model-nested-name-lists-unread
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 23: a `needs` or `uses` at any depth of a clause is read, as presence reads it; read one level down only, a nested operand naming a fact passed (§1, §3 rule 3).
@@ -1288,7 +1294,7 @@ to
 end
 
 mutation model-needs-operand-naming-nothing-dropped
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 23: an operand of `needs` that names nothing is `invalid-description`; read as no fact, `(needs 5)` vanished (§1, §8).
@@ -1299,7 +1305,7 @@ to
 end
 
 mutation model-offer-naming-nothing-dropped
-file crates/eadl-resolve/src/model/provider.rs
+file crates/archogen-plan-check/src/model/provider.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 23: an item of `offers` that names nothing is `invalid-description`; read as no fact, `(offers 5)` was a provider offering nothing (§8).
@@ -1310,7 +1316,7 @@ to
 end
 
 mutation model-service-read-apart
-file crates/eadl-resolve/src/model/provider.rs
+file crates/archogen-plan-check/src/model/provider.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 24: a service is read as a provider is, a declaration contradicting itself refused whoever writes it (`ROADMAP.md` §5.3); read item by item, as rounds 22 and 23 had it, two values of one fact in a service passed (§1, §8).
@@ -1321,7 +1327,7 @@ to
 end
 
 mutation model-nested-requires-unread
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 24: a `requires` is read wherever presence reads a `needs`, a system's `platform` clause among them; read at the declaration's own level only, `(platform (requires (tick-unit ns) (tick-unit us)))` passed (§1, §3 rule 5, `SR-H15`).
@@ -1332,7 +1338,7 @@ to
 end
 
 mutation model-nested-requires-read-as-constraint
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 24: a `requires` inside another is a clause of its own; read as an item, it was a constraint on an undeclared fact named `requires`, `unsupported-profile` (§1).
@@ -1343,7 +1349,7 @@ to
 end
 
 mutation model-headless-clause-read
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 24 remark 3: a clause headed by no name is skipped as presence skips it, so presence's closure is the oracle over every placement; read, `(5 (needs uart))` named a fact presence never reads (§1).
@@ -1355,7 +1361,7 @@ to
 end
 
 mutation model-first-spelling-only
-file crates/eadl-resolve/src/model/judge.rs
+file crates/archogen-plan-check/src/model/judge.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 25: one value in several spellings is decided by any comparison that does not overflow; by the first written alone, `(offers (delivery-bound 1 ms) (delivery-bound 1000000 ns))` was `unsupported-profile` against a bound in `ns` and `Refused` reversed (§5).
@@ -1366,7 +1372,7 @@ to
 end
 
 mutation model-side-name-unread
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 25 remark 4: a side's declaration named like a fact is refused whatever its kind; unread, `(defpolicy preemptive (requires (preemptive true)))` read (§1.1, §8).
@@ -1377,7 +1383,7 @@ to
 end
 
 mutation model-requires-in-requires-unread
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 24: a `requires` inside another is a clause of the side; dropped, `(requires (requires (tick-unit ns) (tick-unit us)))` passed (§1, §3 rule 5).
@@ -1388,7 +1394,7 @@ to
 end
 
 mutation model-nested-clause-folded
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 26: a `requires` nested in a clause is a clause with a verdict of its own; folded into the outer one, `(requires (tick-unit ns) (requires (counter-width 32 bit)))` was unsatisfied where its own constraint held (§3 rule 5).
@@ -1399,7 +1405,7 @@ to
 end
 
 mutation model-needs-list-operand-admitted
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 26: an operand of `needs` is a name; a list headed by a service's name dropped what followed it, `(needs (time.monotonic (tick-unit us)))` read with nothing judged (§1, §8).
@@ -1412,7 +1418,7 @@ to
 end
 
 mutation model-uses-list-operand-admitted
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 26: an operand of `uses` is a name; `(uses (time.monotonic (requires (tick-unit us))))` beside `(requires (tick-unit ns))` hid a contradiction (§1, §8).
@@ -1425,7 +1431,7 @@ to
 end
 
 mutation model-bound-clash-admitted
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 27: an equality a bound on its fact refuses is a contradiction, proved by that comparison whatever else overflows; admitted, `(exactly 0.000000000001 ns)` beside `(at-most 0.0000000000005 ns)` was read (§3 rule 5).
@@ -1444,7 +1450,7 @@ to
 end
 
 mutation model-side-spellings-not-one-value
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 27: equalities that compare equal are one value in several spellings; kept apart, a side holding one amount in `s` and in `ns` was `unsupported-profile` beside a bound it met (§3 rule 5, §5).
@@ -1459,7 +1465,7 @@ to
 end
 
 mutation model-side-bound-first-spelling-only
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 27: a bound on a side is decided through any spelling of its fact's value that compares; through the first written alone, `(exactly 0.000000000000000000001 s)` before `(exactly 0.000000000001 ns)` left `(at-most 0.000000000009000000000000000001 ns)` undecided (§3 rule 5, §5).
@@ -1470,7 +1476,7 @@ to
 end
 
 mutation model-clause-offer-admitted
-file crates/eadl-resolve/src/model/provider.rs
+file crates/archogen-plan-check/src/model/provider.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 27 remark 2: an item of `offers` that is a clause is refused, its contents read by nothing; admitted, `(offers (requires (tick-unit ns) (tick-unit us)))` hid a contradiction (§1, §8).
@@ -1481,7 +1487,7 @@ to
 end
 
 mutation model-side-uncompared-spellings-read-as-one
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 28: two equalities whose comparison overflows are not known to be one value; read as one, `(exactly 0.0000000000000000000000000000001 ns)` beside `(exactly 0.0000000000000000000000000000000001 us)` was read where nothing decides it (§3 rule 5, §5).
@@ -1494,7 +1500,7 @@ to
 end
 
 mutation model-nested-clause-in-offer-admitted
-file crates/eadl-resolve/src/model/provider.rs
+file crates/archogen-plan-check/src/model/provider.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 28 remark 3: a clause inside an offer at any depth is refused, read by nothing; admitted one level down, `(offers (foo (requires (tick-unit ns) (tick-unit us))))` hid a contradiction (§1, §8).
@@ -1505,7 +1511,7 @@ to
 end
 
 mutation model-platform-stray-admitted
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 29: a system's `platform` clause holds `needs`, `uses` and `requires` alone; admitted, `(platform (uses soc.p) (offers (or-through-mediation allowed)))` was an offer of a statement fact nothing read (§1, §8).
@@ -1521,7 +1527,7 @@ to
 end
 
 mutation model-offers-inside-requires-admitted
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 29: an `offers` or `absent` inside `requires`, at any depth, stands where a constraint does and is refused; admitted, `(requires (offers (or-through-mediation allowed)))` was `unsupported-profile` (§1, §8).
@@ -1532,7 +1538,7 @@ to
 end
 
 mutation model-interval-refusal-hides-overflow
-file crates/eadl-resolve/src/model/value.rs
+file crates/archogen-plan-check/src/model/value.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 29 remark 2: two intervals are one comparison, past the arithmetic when either endpoint is; with a refusing endpoint deciding, `same` and `satisfies` disagreed on one pair (§2; R18 7).
@@ -1546,7 +1552,7 @@ to
 end
 
 mutation model-vocab-clock-rate-faster-is-better
-file crates/eadl-resolve/src/model/vocab.rs
+file crates/archogen-plan-check/src/model/vocab.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 29 remark 3: a row of the vocabulary is pinned to the record's §1.1; `clock-rate` read `at-least`, §5.2's "a faster clock is better" as a rule, passed every other property.
@@ -1561,7 +1567,7 @@ to
 end
 
 mutation model-vocab-release-accuracy-turned
-file crates/eadl-resolve/src/model/vocab.rs
+file crates/archogen-plan-check/src/model/vocab.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 29 remark 3: `release-accuracy` turned to `at-least` failed only an incidental fixture before the vocabulary was pinned to §1.1.
@@ -1576,7 +1582,7 @@ to
 end
 
 mutation model-vocab-implies-dropped
-file crates/eadl-resolve/src/model/vocab.rs
+file crates/archogen-plan-check/src/model/vocab.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 29 remark 3: `available-in-state`'s `implies run` is §1.1's; dropped, a requirement of `idle` was met by an offer that never runs (R16 2).
@@ -1587,7 +1593,7 @@ to
 end
 
 mutation model-offer-clause-words-narrowed
-file crates/eadl-resolve/src/model/provider.rs
+file crates/archogen-plan-check/src/model/provider.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 30: an item of `offers` holds no clause, any a kind declares; with the relation's five alone, `(offers (refines soc.abstract))` read as an offer and the refinement went unchecked (§1, §8; `ROADMAP.md` §5.1.1).
@@ -1598,7 +1604,7 @@ to
 end
 
 mutation model-constraint-clause-words-narrowed
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 30: inside `requires` every clause word but `needs`, `uses` and `requires` stands where a constraint does; with `offers` and `absent` alone, `(requires (refines soc.abstract))` was `unsupported-profile` (§1, §8).
@@ -1609,7 +1615,7 @@ to
 end
 
 mutation model-clause-words-drifted
-file crates/eadl-resolve/src/model/requirement.rs
+file crates/archogen-plan-check/src/model/requirement.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 30: the clause words are every clause a kind of `/1` declares, pinned to `docs/semantics/kinds/`; one dropped, the model's grammar drifted from the kinds unseen (§1).
@@ -1621,7 +1627,7 @@ to
 end
 
 mutation model-enumeration-any-symbol
-file crates/eadl-resolve/src/model/value.rs
+file crates/archogen-plan-check/src/model/value.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 30 remark 2: a value outside its enumeration is refused wherever written; admitted, `(tick-unit ps)` met `(tick-unit ps)` (§2, §8).
@@ -1634,7 +1640,7 @@ to
 end
 
 mutation model-set-repetition-admitted
-file crates/eadl-resolve/src/model/value.rs
+file crates/archogen-plan-check/src/model/value.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 30 remark 2: a set is written without repetition; admitted, `(available-in-state run run)` read as one member (§2's set row).
@@ -1645,7 +1651,7 @@ to
 end
 
 mutation model-count-any-unit
-file crates/eadl-resolve/src/model/value.rs
+file crates/archogen-plan-check/src/model/value.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 30 remark 2: a count's unit is dimensionless or absent; any admitted, `(queue-capacity 8 bit)` read as 8 (§2's count row).
@@ -1656,7 +1662,7 @@ to
 end
 
 mutation model-count-negative
-file crates/eadl-resolve/src/model/value.rs
+file crates/archogen-plan-check/src/model/value.rs
 test -p eadl-resolve
 expect killed
 why M3.1.1 round 30 remark 2: a count is non-negative; `-1` admitted, `(counter-modulus -5)` read (§2's count row).

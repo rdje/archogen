@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the configuration checker has a crate of its own
+
+`ARCHOGEN-M3-0948` (leaf `M3.5.3`), `2026-10-24`.
+
+- `crates/archogen-plan-check` now exists, holding the relation's executable model, moved byte for byte from the
+  relation crate; its tests stay where they were and use it as a development dependency. The trust gate roots the
+  configuration checker at its library, and the mutation catalogue's entries follow the moved files.
+
 ## archogen — the trust record's review history archived
 
 `ARCHOGEN-M3-0947` (leaf `M3`), `2026-10-24`.
