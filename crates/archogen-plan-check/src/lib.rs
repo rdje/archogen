@@ -8,6 +8,8 @@
 //! (leaf `M3.5.3`); its exhaustive checker, its falsification corpus and the comparison that holds the generator's
 //! production relation equal to it stay in `crates/eadl-resolve/tests`, which takes this crate as a development
 //! dependency — the checker's relation and the generator's one derivation held equal, which the trust gate holds as a
-//! shared derivation (`M3.5.3.1`). The record's checks come with `M3.5.4`, the executable with `M3.5.6`.
+//! shared derivation (`M3.5.3.1`). [`assignment`] reads and writes the record it judges, `archogen-assignment/1`
+//! (`M3.5.4.1`); the record's checks come with the rest of `M3.5.4`, the executable with `M3.5.6`.
 
+pub mod assignment;
 pub mod model;

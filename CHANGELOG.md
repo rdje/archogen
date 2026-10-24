@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the assignment record the configuration checker judges
+
+`ARCHOGEN-M3-0950` (leaf `M3.5.4.1`), `2026-10-24`.
+
+- The configuration checker now reads and writes `archogen-assignment/1`, the record of what the search chose for
+  one system: the profile, the system, a digest of the whole elaborated program, where the image goes, and one
+  binding per requester and fact, in one canonical text pinned by a golden file and the version register.
+
 ## archogen — the configuration checker has a crate of its own
 
 `ARCHOGEN-M3-0948` (leaf `M3.5.3`), `2026-10-24`.

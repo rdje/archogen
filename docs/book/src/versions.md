@@ -166,6 +166,17 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Pinned by | its shape — every key path and the kind of value at it — frozen in `crates/archogen-outcome/tests/goldens/archogen-result-1.golden` and compared by `crates/archogen-outcome/tests/record.rs`, never rewritten; the same test reads every record back as itself and reads no damage to a refusal as an acceptance |
 | Keeps | a record labelled `archogen-result/1` has one text, and means the same to every reader of `/1` |
 
+## `assignment-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | the record of what the search chose for one system — the profile, the system, the elaborated program's digest, the placement memory and one binding per requester and fact — which the configuration checker judges against the description and the plan carries (`M3.5.4.1`) |
+| Version | `archogen-assignment/1` |
+| Declared at | `const:crates/archogen-plan-check/src/assignment.rs:FORMAT` |
+| Changes when | a clause is added, removed, renamed, re-typed, reordered or reinterpreted, a provider or requester kind is added, or the program's digest is computed otherwise. A reader that meets another identifier refuses the record rather than guess |
+| Pinned by | its canonical text — every clause, the bindings' order and the digest of a fixed program — frozen in `crates/archogen-plan-check/tests/goldens/archogen-assignment-1.golden` and compared by `crates/archogen-plan-check/tests/record.rs`, never rewritten; the same test reads every record back as itself and refuses another format, a provider kind `/1` does not name and a binding out of order or twice. The search's writer (`M3.4`) is held to the same golden |
+| Keeps | a record labelled `archogen-assignment/1` has one text, and names the same program and bindings to every reader of `/1` |
+
 ## `install-format`
 
 | Field | Value |

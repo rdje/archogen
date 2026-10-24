@@ -1519,7 +1519,7 @@ os.execvp("rustc", ["rustc"] + arguments)
             'xtask/Cargo.toml': '7ec83341e8ba3104c8483930250683a0750af941be130b31bf950192e46568ab',  # re-pinned by M3.5.1.3: the dependency on archogen-install alone; no reader's wiring changed
             'crates/archogen-catalog/Cargo.toml': '1e8266bd7987f766565e66ddca4d6fbc277bfc853771dfec61fa8050fea0629d',
             'Cargo.toml': '523ef1fdc14883302cf62d951526ae83d78cb38153caf4f9c4f9927f2c986510',
-            'Cargo.lock': 'fe4015772f94dfb69fe20445624379d5d71b277c3f63bf6f6b69e7a2ac42fd0e',  # re-pinned by M3.5.3: archogen-plan-check, over eadl-front and eadl-model, and eadl-resolve's development edge to it; no reader's wiring changed
+            'Cargo.lock': 'e15af6a09ade7388e097f9f81f13cb5be63b96391c1a4f75f4a3a8d5055c144b',  # re-pinned by M3.5.4.1: archogen-plan-check's edge to archogen-digest; no reader's wiring changed
             'rust-toolchain.toml': '4706b7b407427c38a3b63860b2e131cacc9eb57569a6755a39e81756cca676cd',
             '.cargo/config.toml': '48296b18a2b27cc7268cf489fc37bdcf24e04d79b914c2237c248e4db1f6fa79',
         }

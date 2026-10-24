@@ -67,6 +67,7 @@ dependencies = [
 name = "archogen-plan-check"
 version = "0.1.0"
 dependencies = [
+ "archogen-digest",
  "eadl-front",
  "eadl-model",
 ]

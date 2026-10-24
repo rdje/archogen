@@ -57,6 +57,7 @@ a change that leaves it stale, so it is never edited by hand.
   from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
   decisions, not actions](runtime.md), [Verifying the toolchain](verification.md), [What this project relies on from
   outside](ledger.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- assignment-format — [What is versioned, and what changing it costs](versions.md#assignment-format)
 - **AUTOSAR** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What this project relies
   on from outside](ledger.md)
 - autosar-os — [What this project relies on from outside](ledger.md#autosar-os)
@@ -567,7 +568,8 @@ a change that leaves it stale, so it is never edited by hand.
 - provenance-format — [What is versioned, and what changing it costs](versions.md#provenance-format)
 - **provider** — [definition](glossary.md), [Introduction](introduction.md), [The boundary: functionality versus
   implementation](boundary.md), [Presence, absence, and relevance](presence.md), [Matching an offer to a
-  requirement](matching.md), [The S0 early generation path](s0.md)
+  requirement](matching.md), [The S0 early generation path](s0.md), [What is versioned, and what changing it
+  costs](versions.md)
 - Publication guard for renderer control bytes — [Annex C: Trust proof
   records](annex-trust-proofs.md#publication-guard-for-renderer-control-bytes)
 

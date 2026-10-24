@@ -1,0 +1,8 @@
+(format "archogen-assignment/1")
+(profile rt-static-up-v1)
+(system app.rt)
+(program "f116a4715daf8b404d559b210f6f0d09c060158b1c1493fb133bf50197545620")
+(placement platform.soc.bus soc.ram)
+(bind clock.time.monotonic counter-width platform.timer.timer.counter)
+(bind clock.time.monotonic unambiguous-horizon platform.timer.timer.counter)
+(bind (task app.rt sensor) time.monotonic platform.timer.timer.counter)

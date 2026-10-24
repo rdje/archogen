@@ -14,5 +14,6 @@ description = "The configuration checker: an assignment record judged against it
 workspace = true
 
 [dependencies]
+archogen-digest = { path = "../archogen-digest" }
 eadl-front = { path = "../eadl-front" }
 eadl-model = { path = "../eadl-model" }
