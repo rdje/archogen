@@ -544,7 +544,7 @@ class ObserverCloseTests(DiscoveryFixture):
         expected = {
             'xtask/src/trust_compiler_observer.rs': '58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98',
             'xtask/src/trust_compiler.rs': '1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973',
-            'xtask/src/trust.rs': 'c51791aa1079e17209abf8342b4a805a2d7cbfd863c518685a107c39b004c23b',  # re-pinned by M3.5.2.8.3: crate roots and links refused, the census's refusals beside every exit; the observer's close unchanged
+            'xtask/src/trust.rs': 'b5a21bf575c428908f81100441bb9f944031b0bc23ccf376c8c547cb1da7d001',  # re-pinned by M3.5.2.9.3: a package holding a build script narrows nothing; the observer's close unchanged
         }
         def verify(inputs):
             for path, digest in expected.items():
@@ -1504,7 +1504,7 @@ os.execvp("rustc", ["rustc"] + arguments)
         ]
         inputs = {path: (ROOT / path).read_bytes() for path in paths}
         expected = {
-            'xtask/src/trust.rs': '1b05f35d3e5332d4bf99c72bb71edbfa32b70b687c7423c97e036035019372fe',  # re-pinned by M3.5.2.8.3: crate roots and links refused, the census's refusals beside every exit; the caller suffix unchanged
+            'xtask/src/trust.rs': '09a17508fa316e3c2d9e7a99bb3a11514eb39c415cf2497113ad4a7a9eabe38c',  # re-pinned by M3.5.2.9.3: a package holding a build script narrows nothing; the caller suffix unchanged
             'xtask/src/trust_compiler.rs': '634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70',
             'xtask/src/trust_compiler_observer.rs': 'c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f',
             'xtask/src/catalog_build.rs': 'd3e8865c3633de9f4cafb82c3613f0ee82df0c065012b732469cda5951221ed2',
@@ -1971,7 +1971,7 @@ class IteratorTests(DiscoveryFixture):
             entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
             guarded = {
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
-                    "1b05f35d3e5332d4bf99c72bb71edbfa32b70b687c7423c97e036035019372fe"),  # re-pinned by M3.5.2.8.3: crate roots and links refused, the census's refusals beside every exit; the absolute cwd unchanged
+                    "09a17508fa316e3c2d9e7a99bb3a11514eb39c415cf2497113ad4a7a9eabe38c"),  # re-pinned by M3.5.2.9.3: a package holding a build script narrows nothing; the absolute cwd unchanged
                 "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
                     "634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70"),
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],

@@ -51,7 +51,8 @@ pub(crate) struct Reach {
     /// Every file it reaches, its own among them, each a blob of the tree.
     pub files: BTreeSet<String>,
     /// Those it reaches through no module under `#[cfg(test)]`: what it compiles when built for another crate, or for
-    /// itself as no test — `cfg(test)` is set only on the crate a test harness builds, never on a dependency.
+    /// itself as no test — `cfg(test)` is set only on the crate a test harness builds, never on a dependency but by a
+    /// build script, whose package `Census::lexical` narrows nothing.
     pub nontest: BTreeSet<String>,
     /// Every site it cannot follow.
     pub unfollowed: BTreeSet<Unfollowed>,

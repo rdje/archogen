@@ -1506,17 +1506,29 @@ impl Census {
             members: sources.keys().map(|(dir, _, _)| dir.clone()).collect(),
             ..Self::default()
         };
+        // A package holding a build script narrows nothing: its `cargo::rustc-cfg=test` sets `cfg(test)` on its own
+        // crates however cargo builds them, for another crate among them (round 12's D7).
+        let scripted: BTreeSet<&String> = sources
+            .keys()
+            .filter(|(_, kind, _)| kind == "custom-build")
+            .map(|(dir, _, _)| dir)
+            .collect();
         for ((dir, kind, name), srcs) in sources {
             let reached: Vec<&census::Reach> = srcs.iter().filter_map(|s| reaches.get(s)).collect();
             let all: BTreeSet<String> = reached
                 .iter()
                 .flat_map(|r| r.files.iter().cloned())
                 .collect();
-            // Built for another crate, or as no test: what no item under exactly `cfg(test)` alone reaches.
-            let nontest: BTreeSet<String> = reached
-                .iter()
-                .flat_map(|r| r.nontest.iter().cloned())
-                .collect();
+            // Built for another crate, or as no test: what no module under exactly `cfg(test)` alone reaches, but all a
+            // package holding a build script reaches.
+            let nontest: BTreeSet<String> = if scripted.contains(dir) {
+                all.clone()
+            } else {
+                reached
+                    .iter()
+                    .flat_map(|r| r.nontest.iter().cloned())
+                    .collect()
+            };
             let mut own = |unit: &str, files: &BTreeSet<String>| {
                 census
                     .own
@@ -5714,6 +5726,35 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn a_census_refusal_stands_beside_a_build_s_failure() {
+        crate::trust_test_process::bounded!(a_census_refusal_stands_beside_a_build_s_failure);
+        // Round 12's R16: the census's refusals stop no build, so a build that fails leaves the gate unable to judge with
+        // them beside it, as at every exit after the census reads.
+        let f = two_roots(
+            "census-beside-a-build-failure",
+            "#[cfg(not(debug_assertions))]\ncompile_error!(\"built as the gate builds a program\");\nfn main() {}\n",
+            "pub fn f() {}\n",
+            &[(
+                "crates/b/tests/t.rs",
+                "const T: &str = include_str!(concat!(\"a\"));\n".to_owned(),
+            )],
+        );
+        let e = match f.try_run_into("out") {
+            Err(e) => e,
+            Ok(Outcome::Written(_)) => panic!("written"),
+            Ok(Outcome::Refused(r)) => panic!("refused, not unable to judge: {r:#?}"),
+        };
+        assert!(
+            e.contains("could not compile `a`")
+                && e.contains("and beside it, 1 refusal(s):")
+                && e.contains(
+                    "`crates/b/tests/t.rs:1`: an inclusion site that is no single string literal"
+                ),
+            "{e}"
+        );
+    }
+
+    #[test]
     fn a_launcher_that_is_a_symbolic_link_is_refused() {
         crate::trust_test_process::bounded!(a_launcher_that_is_a_symbolic_link_is_refused);
         // Round 8's R12: the launcher is read as a root's data is, a blob of the commit and never a symbolic link
@@ -6294,6 +6335,37 @@ pub(crate) mod tests {
                 (
                     "crates/bs/build.rs",
                     "#[path = \"../c/src/lib.rs\"]\nmod checker;\nfn main() {}\n",
+                ),
+            ],
+        );
+        let inv = written(f.run());
+        assert_eq!(
+            units_of_r(&inv),
+            four_unclassified("`crates/c`, `crates/g`")
+        );
+    }
+
+    #[test]
+    fn a_build_script_can_set_cfg_test_so_its_package_narrows_nothing() {
+        crate::trust_test_process::bounded!(
+            a_build_script_can_set_cfg_test_so_its_package_narrows_nothing
+        );
+        // Round 12's D7: "The rustc-cfg instruction tells Cargo to pass the given value to the --cfg flag to the
+        // compiler", so a build script's `cargo::rustc-cfg=test` sets `cfg(test)` on its library as `crates/r` links it:
+        // the module under `#[cfg(test)]`, reaching the checker's file, counts for every unit linking it.
+        let f = joining_with(
+            "census-build-script-cfg",
+            "[dev-dependencies]\ng = { path = \"../g\" }\nl = { path = \"../l\" }\n",
+            "",
+            &[
+                ("crates/l/Cargo.toml", &manifest("l", "")),
+                (
+                    "crates/l/build.rs",
+                    "fn main() {\n    println!(\"cargo::rustc-cfg=test\");\n}\n",
+                ),
+                (
+                    "crates/l/src/lib.rs",
+                    "#[cfg(test)]\n#[path = \"../../c/src/lib.rs\"]\npub mod r;\n",
                 ),
             ],
         );

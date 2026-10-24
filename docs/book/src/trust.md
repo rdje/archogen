@@ -113,8 +113,9 @@ comment, `doc` literal and document it includes, joined in source order — and 
 read a file, read past any whitespace or character outside ASCII, is refused, but one a
 backtick opens while no doc text of the library names an error code: no compiled Rust holds a backtick outside a
 literal or comment, so such a doc test cannot compile, whatever a file it includes says (leaf `M3.5.2.8.2`). What only
-a `#[cfg(test)]` module reaches, outside any macro, counts for its crate's own
-tests, never for the crate as another links it; `cfg(test)` anywhere else is read as on; a non-member's tests are not
+a `#[cfg(test)]` module reaches, outside any macro, or a module file opening with `#![cfg(test)]`, counts for its
+crate's own tests, never for the crate as another links it, nor in a package holding a build script, whose
+`cargo::rustc-cfg` can set `cfg(test)` (leaf `M3.5.2.9.3`); `cfg(test)` anywhere else is read as on; a non-member's tests are not
 read; a build script's files count as its package's; a symbolic link in or beside a package's directory, and a crate
 root the census cannot read, are refused (leaf `M3.5.2.8.3`); and a pair form is held to what the census reads of its test as to its build (leaf `M3.5.2.7.2`). An oracle
 holds the census to rustc and rustdoc: it builds a corpus of every probe of rounds 5 to 11 that the census counts in

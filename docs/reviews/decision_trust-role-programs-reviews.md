@@ -386,7 +386,7 @@ strings, none inside `#![…]`; no package holds a build script.
 | R12-R11 | remark | prose refused with a doc test's reason: `include` ending a line, `include/exclude`, `asm` ending a line | `/` a trigger only as a comment's `/*` or `//`; the reason worded for prose (`M3.5.2.9.1`) |
 | R12-R12 | remark | the doc tests row's first quote is the Cargo Book's, not the rustdoc book's; "each rule quoted" overstated | attributed; the lead says which rows quote and which paraphrase (`M3.5.2.9.5`) |
 | R12-R13 | remark | build-era words survive in *How to apply*, §3 and the book | worded (`M3.5.2.9.5`) |
-| R12-R14 | remark | the book's narrowing omits the `#![cfg(test)]` module file | worded (`M3.5.2.9.5`) |
+| R12-R14 | remark | the book's narrowing omits the `#![cfg(test)]` module file | worded (`M3.5.2.9.3`) |
 | R12-R15 | remark | a non-member's binaries are read and refused, unstated | stated (`M3.5.2.9.5`) |
 | R12-R16 | remark | no fixture holds a census refusal beside a build's failure; the rustdoc leg checks a file, not a block; the oracle skips an invocation with no dep-info untraced | a fixture (`M3.5.2.9.3`); a refusal per block, every skip counted and bounded (`M3.5.2.9.4`) |
 | R12-R17 | remark | checked and holding: the reading rule, the forms' read failures and items, §5, `M3.5.8`'s order, the hand-offs, the other quotes and hashes | no change |
