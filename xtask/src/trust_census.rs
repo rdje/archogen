@@ -13,9 +13,9 @@
 //! read where it is called. And it reads only what it can
 //! check it reads as rustc does (round 12's change of method): outside comments and literals, a file's every byte is
 //! printable ASCII or a space, a tab, a form feed, a newline or a carriage return — the whitespace rustc and the
-//! catalog's lexer both skip — and a file holding any other there, or opening with a shebang line rustc would remove,
-//! is refused whole, so no Unicode space, control byte or byte-order mark can part what the census reads from what
-//! rustc does.
+//! catalog's lexer both skip — and a file holding any other there, or opening with a line rustc removes as a shebang,
+//! by rustc's own rule (round 13's D2), is refused whole, so no Unicode space, control byte or byte-order mark can part
+//! what the census reads from what rustc does.
 //!
 //! The Rust reference of the pin decides where a module's file is: "When the module does not have a `path` attribute,
 //! the path to the file mirrors the logical module path"; "For `path` attributes on modules not inside inline module
@@ -25,8 +25,11 @@
 //! silent — the children of a module a `path` attribute loads, the `mod` items of a file an `include!` brings in — the
 //! pin decides, measured `2026-10-23` by its own refusal of a missing child: "create file \"src/pl/child.rs\" or
 //! \"src/pl/child/mod.rs\"" for `src/pl/loaded.rs`, "\"src/inc/c.rs\"" for `src/inc/i.rs` — each under the loaded
-//! file's own directory, which the census's oracle holds on every build of its corpus. A `debugger_visualizer` file is
-//! "a path relative to the source file".
+//! file's own directory, which the census's oracle holds on every build of its corpus. And an inline module's `path` is
+//! relative to its file's own directory, a non-mod-rs file's too, the non-mod-rs module's name taken only by an inline
+//! module with none: measured `2026-10-24`, "create file \"src/p/child.rs\"" for `#[path = "p"] mod x { mod child; }`
+//! in `src/foo.rs`, "\"src/foo/a/p/child.rs\"" with `mod a { … }` around it (round 13's D3). A `debugger_visualizer`
+//! file is "a path relative to the source file".
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -172,33 +175,30 @@ impl<'a> Sources<'a> {
             };
             for m in &scan.modules {
                 let test_only = test_only || m.test_only;
+                // Where the inline modules holding it put it, as rustc computes it (round 13's D3).
+                let within: Vec<(String, String)> = bases
+                    .iter()
+                    .flat_map(|base| inline_dirs(&dir, base, &m.inline))
+                    .collect();
                 // `mod name;`: its file mirrors its module path, under each directory this file's children may lie in —
                 // read beside any `path` attribute too, since a `cfg_attr`'s holds only where its `cfg` does, and rustc
                 // reads the module's own file elsewhere (round 12's D2).
-                for dir in bases.iter().flat_map(|base| expansions(base, &m.inline)) {
+                for (_, under) in &within {
                     for candidate in [format!("{}.rs", m.name), format!("{}/mod.rs", m.name)] {
-                        if let Some(path) = found(follow(&candidate, &dir, &m.site), &mut out) {
-                            todo.push((path, vec![join(&dir, &m.name)], test_only, true));
+                        if let Some(path) = found(follow(&candidate, under, &m.site), &mut out) {
+                            todo.push((path, vec![join(under, &m.name)], test_only, true));
                         }
                     }
                 }
-                // `#[path = "…"] mod name;`: relative to this file's directory, or inside inline modules to it with the
-                // inline components — after the non-mod-rs file's own name, when it is one. Each `path` attribute the
-                // item carries, `cfg_attr`'s in every configuration, is followed.
+                // `#[path = "…"] mod name;`: relative to this file's directory, or inside inline modules to theirs —
+                // after the non-mod-rs file's own name, when one has no `path` of its own. Each `path` attribute the item
+                // carries, `cfg_attr`'s in every configuration, is followed.
                 match m.paths.as_slice() {
                     [] => {}
                     rels => {
-                        let mut froms = Vec::new();
-                        if m.inline.is_empty() {
-                            froms.push(dir.clone());
-                        } else {
-                            froms.extend(expansions(&dir, &m.inline));
-                            if let Some(stem) = non_mod_rs_stem(&file, root) {
-                                froms.extend(expansions(&join(&dir, &stem), &m.inline));
-                            }
-                        }
-                        for (from, rel) in
-                            froms.iter().flat_map(|f| rels.iter().map(move |r| (f, r)))
+                        for (from, rel) in within
+                            .iter()
+                            .flat_map(|(at, _)| rels.iter().map(move |r| (at, r)))
                         {
                             if let Some(path) = found(follow(rel, from, &m.site), &mut out) {
                                 let children = children_of_path_module(&path);
@@ -443,13 +443,15 @@ fn merged(ts: Vec<Token>) -> Vec<Token> {
 /// a literal as part of a token: a byte outside ASCII joins an identifier, a control byte is a punctuation token. So
 /// an identifier holding a byte outside ASCII — a byte-order mark, a Unicode space such as U+200E, or a name — or a
 /// punctuation token outside printable ASCII is where rustc and the census may read the file apart, and refused; and so
-/// is a first line `#!` that is no inner attribute, a shebang rustc removes before it reads.
+/// is a first line rustc reads as a shebang, which it removes before it reads — decided by rustc's rule, the
+/// repository's own `generated_header::rust_shebang`, which `the_shebang_rule_is_rustc_s` holds to the pin: the
+/// catalog's tokens drop the doc comment that ends rustc's look-ahead for `[`, so they cannot decide it (round 13's D2).
 fn outside_alphabet(source: &[u8], ts: &[Token]) -> Option<(usize, String)> {
-    let inner_attribute = ts.len() >= 3
-        && ts[0].at == 0
-        && ts[1].kind == Kind::Punct('!')
-        && ts[2].kind == Kind::Open('[');
-    if source.starts_with(b"#!") && !inner_attribute {
+    let shebang = source.starts_with(b"#!")
+        && crate::generated_header::rust_shebang(
+            &String::from_utf8_lossy(source).chars().collect::<Vec<_>>(),
+        );
+    if shebang {
         return Some((
             0,
             "opens with a shebang line, which rustc removes before it reads".to_owned(),
@@ -1431,12 +1433,6 @@ fn children_of_path_module(path: &str) -> Vec<String> {
     vec![parent(path)]
 }
 
-/// A non-mod-rs file's module name: none for the crate root and a `mod.rs`.
-fn non_mod_rs_stem(file: &str, root: &str) -> Option<String> {
-    let name = file.rsplit('/').next().unwrap_or(file);
-    (file != root && name != "mod.rs").then(|| name.strip_suffix(".rs").unwrap_or(name).to_owned())
-}
-
 fn parent(path: &str) -> String {
     path.rsplit_once('/')
         .map_or(String::new(), |(d, _)| d.to_owned())
@@ -1450,15 +1446,31 @@ fn join(dir: &str, part: &str) -> String {
     }
 }
 
-/// Every directory `parts`' alternatives make under `dir`, one component each, outermost first.
-fn expansions(dir: &str, parts: &[Vec<String>]) -> Vec<String> {
-    parts
-        .iter()
-        .fold(vec![dir.to_owned()], |dirs, alternatives| {
-            dirs.iter()
-                .flat_map(|d| alternatives.iter().map(move |a| join(d, a)))
+/// Where the inline modules `inline` put what they hold, as rustc computes it — each pair the directory a `path` is
+/// relative to and the one a module's own file lies under: at a file's top its own directory, `dir`, and its children's,
+/// `base`, the non-mod-rs module's name after `dir` when it is one; an inline module's `path`, each of its alternatives,
+/// relative to the first, its own name after the second, and both the same below it. Measured by the pin `2026-10-24`
+/// (round 13's D3): `#[path = "p"] mod x { mod child; }` in `src/foo.rs` seeks `src/p/child.rs`.
+fn inline_dirs(dir: &str, base: &str, inline: &[Vec<String>]) -> Vec<(String, String)> {
+    inline.iter().fold(
+        vec![(dir.to_owned(), base.to_owned())],
+        |states, alternatives| {
+            let Some((name, paths)) = alternatives.split_last() else {
+                return states;
+            };
+            states
+                .iter()
+                .flat_map(|(at, under)| {
+                    paths
+                        .iter()
+                        .map(|p| join(at, p))
+                        .chain(std::iter::once(join(under, name)))
+                        .map(|d| (d.clone(), d))
+                        .collect::<Vec<_>>()
+                })
                 .collect()
-        })
+        },
+    )
 }
 
 fn line_of(source: &[u8], at: usize) -> usize {
@@ -1575,6 +1587,122 @@ mod tests {
             "{:?}",
             files(&q)
         );
+        // Round 13's D3, measured by the pin's own refusal of a missing child (`2026-10-24`): an inline module's `path`
+        // is relative to its file's own directory, a non-mod-rs file's too, the non-mod-rs module's name taken only by
+        // an inline module with none; a file a `path` loads, or an `include!`, is read as a mod-rs file, whatever its name.
+        let lib = ("p/src/lib.rs", "pub mod foo;\n");
+        let cases = [
+            (
+                "a non-mod-rs file's inline path",
+                vec![
+                    lib,
+                    (
+                        "p/src/foo.rs",
+                        "#[path = \"p\"] pub mod x { pub mod child; }\n",
+                    ),
+                ],
+                "p/src/p/child.rs",
+            ),
+            (
+                "a path out of its package",
+                vec![
+                    lib,
+                    (
+                        "p/src/foo.rs",
+                        "#[path = \"../../role\"] pub mod x { pub mod child; }\n",
+                    ),
+                ],
+                "role/child.rs",
+            ),
+            (
+                "a child's path in a non-mod-rs file's inline module",
+                vec![
+                    lib,
+                    (
+                        "p/src/foo.rs",
+                        "pub mod x { #[path = \"q.rs\"] pub mod child; }\n",
+                    ),
+                ],
+                "p/src/foo/x/q.rs",
+            ),
+            (
+                "an inline path under an inline module",
+                vec![
+                    lib,
+                    (
+                        "p/src/foo.rs",
+                        "pub mod a { #[path = \"p\"] pub mod x { pub mod child; } }\n",
+                    ),
+                ],
+                "p/src/foo/a/p/child.rs",
+            ),
+            (
+                "an inline module under an inline path",
+                vec![
+                    lib,
+                    (
+                        "p/src/foo.rs",
+                        "#[path = \"p\"] pub mod a { pub mod x { pub mod child; } }\n",
+                    ),
+                ],
+                "p/src/p/x/child.rs",
+            ),
+            (
+                "a child's path under an inline path",
+                vec![
+                    lib,
+                    (
+                        "p/src/foo.rs",
+                        "#[path = \"p\"] pub mod x { #[path = \"q.rs\"] pub mod child; }\n",
+                    ),
+                ],
+                "p/src/p/q.rs",
+            ),
+            (
+                "a file a path loads",
+                vec![
+                    ("p/src/lib.rs", "#[path = \"d/foo.rs\"] pub mod m;\n"),
+                    ("p/src/d/foo.rs", "pub mod x { pub mod child; }\n"),
+                ],
+                "p/src/d/x/child.rs",
+            ),
+            (
+                "an included file",
+                vec![
+                    ("p/src/lib.rs", "include!(\"inc/i.rs\");\n"),
+                    ("p/src/inc/i.rs", "pub mod x { pub mod child; }\n"),
+                ],
+                "p/src/inc/x/child.rs",
+            ),
+            (
+                "the crate root's inline path",
+                vec![(
+                    "p/src/lib.rs",
+                    "#[path = \"p\"] pub mod x { pub mod child; }\n",
+                )],
+                "p/src/p/child.rs",
+            ),
+            (
+                "a mod-rs file's inline path",
+                vec![
+                    lib,
+                    (
+                        "p/src/foo/mod.rs",
+                        "#[path = \"p\"] pub mod x { pub mod child; }\n",
+                    ),
+                ],
+                "p/src/foo/p/child.rs",
+            ),
+        ];
+        let mut missed = Vec::new();
+        for (case, mut sources, child) in cases {
+            sources.push((child, ""));
+            let r = of(&sources, "p/src/lib.rs");
+            if !r.files.contains(child) || !r.unfollowed.is_empty() {
+                missed.push(format!("{case}: {:?}, {:?}", files(&r), whys(&r)));
+            }
+        }
+        assert!(missed.is_empty(), "{missed:#?}");
     }
 
     #[test]
@@ -1835,6 +1963,7 @@ mod tests {
         // comment or a literal, a byte outside printable ASCII and its four whitespace characters, or opening with a
         // shebang, is refused whole — never read apart from rustc. Inside a comment or a literal any character stays.
         let c = ("c/src/lib.rs", "pub fn x() {}\n");
+        let mut missed = Vec::new();
         for (case, source, why) in [
             (
                 "a vertical tab before `!`",
@@ -1866,10 +1995,38 @@ mod tests {
                 "#!/x \"\nconst T: &str = include_str!(\"../../c/src/lib.rs\"); // \"\n",
                 "shebang",
             ),
+            // Round 13's D2: a doc comment ends rustc's look-ahead for `[`, and the catalog's lexer drops it, so a raw
+            // string opened after it swallows what rustc reads once it removes the line.
+            (
+                "a shebang an outer block doc comment ends",
+                "#!/** */[a = r#\"\nconst T: &str = include_str!(\"../../c/src/lib.rs\");\nconst U: &str = r#\"\n\"#;\n",
+                "shebang",
+            ),
+            (
+                "a shebang an inner block doc comment ends",
+                "#!/*! */[a = r#\"\nconst T: &str = include_str!(\"../../c/src/lib.rs\");\nconst U: &str = r#\"\n\"#;\n",
+                "shebang",
+            ),
         ] {
             let r = of(&[("r/tests/t.rs", source), c], "r/tests/t.rs");
-            assert!(refused(&r, why), "{case}: {:?}", whys(&r));
-            assert!(!r.files.contains("c/src/lib.rs"), "{case}: {:?}", files(&r));
+            if !refused(&r, why) || r.files.contains("c/src/lib.rs") {
+                missed.push(format!("{case}: {:?}, {:?}", whys(&r), files(&r)));
+            }
+        }
+        assert!(missed.is_empty(), "{missed:#?}");
+        // An inner attribute after plain comments and whitespace is no shebang, as rustc reads it.
+        for source in [
+            "#!/* c */[allow(unused)]\nconst T: &str = include_str!(\"../../c/src/lib.rs\");\n",
+            "#!// c\n[allow(unused)]\nconst T: &str = include_str!(\"../../c/src/lib.rs\");\n",
+            "#! [allow(unused)]\nconst T: &str = include_str!(\"../../c/src/lib.rs\");\n",
+        ] {
+            let r = of(&[("r/tests/t.rs", source), c], "r/tests/t.rs");
+            assert!(r.unfollowed.is_empty(), "{source:?}: {:?}", whys(&r));
+            assert!(
+                r.files.contains("c/src/lib.rs"),
+                "{source:?}: {:?}",
+                files(&r)
+            );
         }
         // A character outside ASCII inside a comment or a literal, and an inner attribute first, are read as ever.
         let r = of(

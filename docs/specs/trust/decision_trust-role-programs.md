@@ -117,7 +117,8 @@ refused, so every macro a crate or a doc test calls is std's, or read where it i
 census reads only what it can check it reads as rustc does: outside comments and literals a file's every byte is printable ASCII, a space, a tab, a form feed,
 a newline or a carriage return — the whitespace rustc and the catalog's lexer both skip, where rustc also skips a
 vertical tab and five Unicode spaces — so a file holding any other byte there, a character outside ASCII in a name
-among them, or opening with a shebang line rustc removes, is refused whole (`M3.5.2.9.1`); `\` before a CRLF
+among them, or opening with a line rustc removes as a shebang, by rustc's own rule — the repository's, held to the pin — is
+refused whole (`M3.5.2.9.1`, `M3.5.2.10.2`); `\` before a CRLF
 continues a literal's line, as rustc normalises it, and a `doc` literal the census cannot decode is refused. Every
 `path` attribute is followed with the module's own file beside it — a `cfg_attr`'s holds only where its `cfg` does,
 and rustc reads the module's own file elsewhere — an inline module's name beside its paths alike; an inner `path`
@@ -164,7 +165,9 @@ the reference's, strings of every prefix and hash count, characters and lifetime
 in every ordered pair with a trigger between, compiled by the pin as one crate, each trigger's file counted or refused
 — which fails on each of four misread boundaries (`M3.5.2.9.4`). Where the
 Rust reference is silent, the children of a `path`-loaded module and a module an `include!`d file declares, the pin's
-own refusal of a missing child names the directory, the loaded file's, which the census follows. The oracle checks
+own refusal of a missing child names the directory, the loaded file's, which the census follows; and it names an inline
+module's `path` relative to its file's own directory, a non-mod-rs file's too, the non-mod-rs module's name taken only
+by an inline module with none (`M3.5.2.10.2`). The oracle checks
 what the census counts and that it refuses what rustdoc compiles; not what it refuses beyond that, which the fixtures
 hold, nor what it counts beyond what a build reads, a non-member's tests, which no build of the workspace makes, or
 what a build script or a procedural macro generates. Its corpus is finite: that the census reads as rustc does rests

@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a file's first line and an inline module's path read as the compiler reads them
+
+`ARCHOGEN-M3-0938` (leaf `M3.5.2.10.2`), `2026-10-24`.
+
+- The trust gate's census now decides whether a file opens with a shebang line by the compiler's own rule, which
+  the repository already held to the pinned compiler, and finds the files of modules nested in a module whose path
+  is set where the compiler finds them, as measured on the pinned compiler.
+
 ## archogen — a macro that may rearrange what it is given is read whole or refused
 
 `ARCHOGEN-M3-0937` (leaf `M3.5.2.10.1`), `2026-10-24`.
