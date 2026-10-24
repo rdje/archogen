@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the census's oracle compiles every head, macro spelling and inline path
+
+`ARCHOGEN-M3-0939` (leaf `M3.5.2.10.3`), `2026-10-24`.
+
+- The test that holds the trust gate's census to the compiler now also compiles every way a file can begin, every
+  way a macro can spell a file's name, and every way nested modules can place a file, and checks the census counts
+  or refuses each file the compiler read; each new check fails against the census as it stood before this round's
+  fixes.
+
 ## archogen — a file's first line and an inline module's path read as the compiler reads them
 
 `ARCHOGEN-M3-0938` (leaf `M3.5.2.10.2`), `2026-10-24`.

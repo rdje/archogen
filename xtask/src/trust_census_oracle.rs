@@ -7,7 +7,8 @@
 //! it shares no code with the instrument's reader of a build, and the census is held to what rustc and rustdoc did,
 //! not to what the census's author expected. And a generated leg holds the census's reading of where a literal or a
 //! comment ends to rustc's: every pair of the reference's lexical constructs before a trigger, compiled by the pin in one
-//! crate (round 12's change of method). What it does not check: what the census refuses, which the fixtures hold; what
+//! crate (round 12's change of method); and three more its reading of a file's head, of a trigger a macro spells and of
+//! an inline module's children, each compiled so (round 13's D4). What it does not check: what the census refuses, which the fixtures hold; what
 //! it over-counts; a non-member's tests, which no build of the workspace makes; and what a build script or a procedural
 //! macro generates.
 
@@ -17,7 +18,7 @@ use std::process::Command;
 
 use archogen_catalog::tree::Tree;
 
-use super::Sources;
+use super::{Reach, Sources};
 use crate::json::{self, Json};
 
 /// The corpus: one workspace, a package for each family of probe.
@@ -769,9 +770,9 @@ const CONSTRUCTS: &[&str] = &[
     r###"const _: u32 = 0x1f_u32;"###,
 ];
 
-/// The trigger a generated case ends with, by its number: an `include_str!`, an `include!`, a `path` module and a
-/// module by its name, in turn — each naming a file of the case alone.
-fn trigger(n: usize) -> (String, Vec<(String, String)>) {
+/// The trigger a generated case ends with, by its number and its module's prefix: an `include_str!`, an `include!`, a
+/// `path` module and a module by its name, in turn — each naming a file of the case alone.
+fn trigger(n: usize, prefix: char) -> (String, Vec<(String, String)>) {
     match n % 4 {
         0 => (
             format!("const _: &str = include_str!(\"g{n}.txt\");"),
@@ -787,7 +788,7 @@ fn trigger(n: usize) -> (String, Vec<(String, String)>) {
         ),
         _ => (
             format!("mod g{n}_m;"),
-            vec![(format!("gen/src/c{n}/g{n}_m.rs"), String::new())],
+            vec![(format!("gen/src/{prefix}{n}/g{n}_m.rs"), String::new())],
         ),
     }
 }
@@ -819,12 +820,40 @@ fn the_census_reads_every_pairing_of_lexical_constructs_as_rustc_does() {
         ),
     )];
     for (n, (a, b)) in cases.iter().enumerate() {
-        let (live, made) = trigger(n);
+        let (live, made) = trigger(n, 'c');
         files.push((format!("gen/src/c{n}.rs"), format!("{a}\n{live}\n{b}\n")));
         files.extend(made);
     }
+    let (read, census) = compiled("census-generated", &files);
+    let mut missed = Vec::new();
+    for (n, case) in cases.iter().enumerate() {
+        let (_, made) = trigger(n, 'c');
+        let case_file = format!("gen/src/c{n}.rs");
+        for (file, _) in made {
+            let refused = census.unfollowed.iter().any(|u| u.file == case_file);
+            if read.contains(&file) && !census.files.contains(&file) && !refused {
+                missed.push(format!("case {n}, {case:?}: rustc read `{file}`, which the census neither counts nor refuses"));
+            }
+        }
+    }
+    assert!(missed.is_empty(), "{missed:#?}");
+    // Not vacuous: every case's trigger is live, so rustc read each case's file.
+    let triggered = (0..cases.len())
+        .filter(|&n| {
+            trigger(n, 'c')
+                .1
+                .iter()
+                .all(|(file, _)| read.contains(file))
+        })
+        .count();
+    assert_eq!(triggered, cases.len(), "cases whose trigger rustc read");
+}
+
+/// What the pin's rustc reads compiling the crate `gen/src/lib.rs` of `files`, by its dependency information, and what
+/// the census reads of it, as a crate rustdoc does not test.
+fn compiled(name: &str, files: &[(String, String)]) -> (BTreeSet<String>, Reach) {
     let named: Vec<(&str, String)> = files.iter().map(|(p, t)| (p.as_str(), t.clone())).collect();
-    let f = crate::trust::tests::fixture("census-generated", "1.95.0", &named);
+    let f = crate::trust::tests::fixture(name, "1.95.0", &named);
     let repo = std::fs::canonicalize(&f.repo).expect("the corpus");
     let out = f.base.join("generated-out");
     std::fs::create_dir_all(&out).expect("the output");
@@ -851,7 +880,7 @@ fn the_census_reads_every_pairing_of_lexical_constructs_as_rustc_does() {
         String::from_utf8_lossy(&rustc.stderr)
     );
     let d = std::fs::read_to_string(out.join("gen.d")).expect("its dependency information");
-    let read: BTreeSet<String> = prerequisites(&d)
+    let read = prerequisites(&d)
         .iter()
         .filter_map(|p| {
             let c = std::fs::canonicalize(repo.join(p)).ok()?;
@@ -865,21 +894,362 @@ fn the_census_reads_every_pairing_of_lexical_constructs_as_rustc_does() {
     );
     let links = BTreeSet::new();
     let census = Sources::new(&tree, &links).reach("gen/src/lib.rs", false);
+    (read, census)
+}
+
+/// The heads a file can open with (round 13's D2): a line rustc removes as a shebang — `#!` before anything but `[`,
+/// past whitespace and plain comments, or a doc comment ending its look-ahead, whatever follows the comment — and an
+/// inner attribute after whitespace and plain comments, which rustc keeps; a byte-order mark before either, which
+/// rustc removes; a doc comment before an inner attribute.
+const HEADS: &[&str] = &[
+    "#!/x \"",
+    "#!",
+    "#!/** */[a = r#\"",
+    "#!/*! */[a = r#\"",
+    "#!/// d [a = r#\"",
+    "#!//! d [a = r#\"",
+    "#![allow(unused)]",
+    "#! [allow(unused)]",
+    "#!\t[allow(unused)]",
+    "#!\n[allow(unused)]",
+    "#!/* c */[allow(unused)]",
+    "#!/**/[allow(unused)]",
+    "#!/***/[allow(unused)]",
+    "#!/* a /** b */ */[allow(unused)]",
+    "#!// c\n[allow(unused)]",
+    "#!//// c\n[allow(unused)]",
+    "\u{feff}#![allow(unused)]",
+    "\u{feff}#!/x",
+    "//! d\n#![allow(unused)]",
+    "/*! d */ #![allow(unused)]",
+];
+
+#[test]
+fn the_census_reads_every_head_a_file_can_open_with_as_rustc_does() {
+    crate::trust_test_process::bounded!(
+        the_census_reads_every_head_a_file_can_open_with_as_rustc_does
+    );
+    // Round 13's D4: each head opens a module file, then each trigger in turn, then a raw string closing what a head
+    // misread as an attribute opened — so rustc reads the trigger whatever the head, and a census misreading the head
+    // hides it without an error.
+    let count = HEADS.len() * 4;
+    let mut files: Vec<(String, String)> = vec![(
+        "gen/src/lib.rs".to_owned(),
+        (0..count).map(|n| format!("mod h{n};\n")).collect(),
+    )];
+    for n in 0..count {
+        let (live, made) = trigger(n, 'h');
+        files.push((
+            format!("gen/src/h{n}.rs"),
+            format!("{}\n{live}\nconst _: &str = r#\"\n\"#;\n", HEADS[n / 4]),
+        ));
+        files.extend(made);
+    }
+    let (read, census) = compiled("census-heads", &files);
     let mut missed = Vec::new();
-    for (n, case) in cases.iter().enumerate() {
-        let (_, made) = trigger(n);
-        let case_file = format!("gen/src/c{n}.rs");
-        for (file, _) in made {
-            let refused = census.unfollowed.iter().any(|u| u.file == case_file);
+    for n in 0..count {
+        let case_file = format!("gen/src/h{n}.rs");
+        let refused = census.unfollowed.iter().any(|u| u.file == case_file);
+        for (file, _) in trigger(n, 'h').1 {
             if read.contains(&file) && !census.files.contains(&file) && !refused {
-                missed.push(format!("case {n}, {case:?}: rustc read `{file}`, which the census neither counts nor refuses"));
+                missed.push(format!(
+                    "head {:?}, case {n}: rustc read `{file}`, which the census neither counts nor refuses",
+                    HEADS[n / 4]
+                ));
             }
         }
     }
     assert!(missed.is_empty(), "{missed:#?}");
-    // Not vacuous: every case's trigger is live, so rustc read each case's file.
-    let triggered = (0..cases.len())
-        .filter(|&n| trigger(n).1.iter().all(|(file, _)| read.contains(file)))
+    // Not vacuous: rustc read every case's trigger.
+    let triggered = (0..count)
+        .filter(|&n| {
+            trigger(n, 'h')
+                .1
+                .iter()
+                .all(|(file, _)| read.contains(file))
+        })
         .count();
-    assert_eq!(triggered, cases.len(), "cases whose trigger rustc read");
+    assert_eq!(triggered, count, "cases whose trigger rustc read");
+}
+
+/// The spellings of a trigger through a macro (round 13's D1): forwarded whole, its name passed apart from its `!`, its
+/// literal rewritten, its tokens apart by a separator, a body's own, a repetition's name, in std's macros that keep
+/// their arguments in place, an attribute a metavariable fills.
+const SPELLINGS: usize = 8;
+
+/// The kinds of trigger a macro may spell: an `include_str!`, an `include!`, a `path` module, a module by its name, a
+/// debugger visualizer — each naming a file of the case alone.
+const KINDS: usize = 5;
+
+/// Case `n`'s module `m{n}`, spelling `n / KINDS` of kind `n % KINDS`, and the files it makes rustc read; none where
+/// the spelling cannot hold the kind.
+fn spelt(n: usize) -> Option<(String, Vec<(String, String)>)> {
+    let (live, made): (&str, (String, &str)) = match n % KINDS {
+        0 => (
+            "const _: &str = include_str!(\"g{n}.txt\");",
+            (format!("gen/src/g{n}.txt"), ""),
+        ),
+        1 => (
+            "include!(\"g{n}.rs\");",
+            (format!("gen/src/g{n}.rs"), "const _: () = ();\n"),
+        ),
+        2 => (
+            "#[path = \"g{n}_p.rs\"]\nmod g{n}_p;",
+            (format!("gen/src/g{n}_p.rs"), ""),
+        ),
+        3 => ("mod g{n}_m;", (format!("gen/src/m{n}/g{n}_m.rs"), "")),
+        _ => (
+            "#[debugger_visualizer(gdb_script_file = \"g{n}.py\")]\nmod v{n} {}",
+            (format!("gen/src/g{n}.py"), "# a debugger script\n"),
+        ),
+    };
+    let live = live.replace("{n}", &n.to_string());
+    let tokens: &[&str] = match n % KINDS {
+        0 => &[
+            "const",
+            "_",
+            ":",
+            "&",
+            "str",
+            "=",
+            "include_str",
+            "!",
+            "(\"g{n}.txt\")",
+            ";",
+        ],
+        1 => &["include", "!", "(\"g{n}.rs\")", ";"],
+        2 => &["#", "[path = \"g{n}_p.rs\"]", "mod", "g{n}_p", ";"],
+        3 => &["mod", "g{n}_m", ";"],
+        _ => &[
+            "#",
+            "[debugger_visualizer(gdb_script_file = \"g{n}.py\")]",
+            "mod",
+            "v{n}",
+            "{}",
+        ],
+    };
+    let apart = tokens.join(" sep ").replace("{n}", &n.to_string());
+    let mut made = vec![(made.0, made.1.to_owned())];
+    let code = match (n / KINDS, n % KINDS) {
+        (0, _) => format!("macro_rules! f{n} {{\n    ($($t:tt)*) => {{ $($t)* }};\n}}\nf{n}!({live});\n"),
+        (1, 0) => format!(
+            "macro_rules! f{n} {{\n    ($m:ident) => {{ const _: &str = $m!(\"g{n}.txt\"); }};\n}}\nf{n}!(include_str);\n"
+        ),
+        (1, 1) => format!("macro_rules! f{n} {{\n    ($m:ident) => {{ $m!(\"g{n}.rs\"); }};\n}}\nf{n}!(include);\n"),
+        (1, 2) => format!(
+            "macro_rules! f{n} {{\n    ($m:tt) => {{ #[path = \"g{n}_p.rs\"] $m g{n}_p; }};\n}}\nf{n}!(mod);\n"
+        ),
+        (1, 3) => format!("macro_rules! f{n} {{\n    ($m:tt) => {{ $m g{n}_m; }};\n}}\nf{n}!(mod);\n"),
+        (1, _) => format!(
+            "macro_rules! f{n} {{\n    ($k:ident) => {{ #[debugger_visualizer($k = \"g{n}.py\")] mod v{n} {{}} }};\n}}\n\
+             f{n}!(gdb_script_file);\n"
+        ),
+        (2, 0) => format!(
+            "macro_rules! f{n} {{\n    ($a:tt $b:tt ($p:literal)) => {{ const _: &str = $a $b (concat!(\"g\", $p)); }};\n}}\n\
+             f{n}!(include_str!(\"{n}.txt\"));\n"
+        ),
+        (2, 1) => format!(
+            "macro_rules! f{n} {{\n    ($a:tt $b:tt ($p:literal)) => {{ $a $b (concat!(\"g\", $p)); }};\n}}\n\
+             f{n}!(include!(\"{n}.rs\"));\n"
+        ),
+        (3, _) => format!("macro_rules! f{n} {{\n    ($($t:tt) sep *) => {{ $($t)* }};\n}}\nf{n}!({apart});\n"),
+        (4, _) => format!("macro_rules! f{n} {{\n    () => {{ {live} }};\n}}\nf{n}!();\n"),
+        (5, 0) => format!(
+            "macro_rules! f{n} {{\n    ($($m:ident)?) => {{ const _: &str = $($m)?!(\"g{n}.txt\"); }};\n}}\n\
+             f{n}!(include_str);\n"
+        ),
+        (5, 1) => format!(
+            "macro_rules! f{n} {{\n    ($($m:ident)?) => {{ $($m)?!(\"g{n}.rs\"); }};\n}}\nf{n}!(include);\n"
+        ),
+        (6, 0) => format!("pub fn f{n}() -> usize {{\n    format!(\"{{}}\", include_str!(\"g{n}.txt\")).len()\n}}\n"),
+        (6, 1) => {
+            made[0].1 = "true\n".to_owned();
+            format!("pub fn f{n}() -> bool {{\n    assert!(include!(\"g{n}.rs\"));\n    true\n}}\n")
+        }
+        (6, 2) => format!(
+            "pub fn f{n}() -> bool {{\n    assert!({{\n        #[path = \"g{n}_p.rs\"]\n        mod g{n}_p;\n        true\n    }});\n    \
+             true\n}}\n"
+        ),
+        (7, 2) => format!(
+            "macro_rules! f{n} {{\n    ($a:meta) => {{ #[$a] mod g{n}_p; }};\n}}\nf{n}!(path = \"g{n}_p.rs\");\n"
+        ),
+        (7, 4) => format!(
+            "macro_rules! f{n} {{\n    ($a:meta) => {{ #[$a] mod v{n} {{}} }};\n}}\n\
+             f{n}!(debugger_visualizer(gdb_script_file = \"g{n}.py\"));\n"
+        ),
+        _ => return None,
+    };
+    Some((format!("#![allow(unused)]\n{code}"), made))
+}
+
+#[test]
+fn the_census_reads_every_macro_spelling_of_a_trigger_as_rustc_does() {
+    crate::trust_test_process::bounded!(
+        the_census_reads_every_macro_spelling_of_a_trigger_as_rustc_does
+    );
+    // Round 13's D4: every spelling of every kind of trigger through a macro, each a module of one crate. Every file
+    // rustc reads, the census counts or refuses a site in its case.
+    let cases: Vec<usize> = (0..SPELLINGS * KINDS)
+        .filter(|&n| spelt(n).is_some())
+        .collect();
+    let mut files: Vec<(String, String)> = vec![(
+        "gen/src/lib.rs".to_owned(),
+        cases.iter().map(|n| format!("mod m{n};\n")).collect(),
+    )];
+    for &n in &cases {
+        let (code, made) = spelt(n).expect("a case");
+        files.push((format!("gen/src/m{n}.rs"), code));
+        files.extend(made);
+    }
+    let (read, census) = compiled("census-macros", &files);
+    let mut missed = Vec::new();
+    for &n in &cases {
+        let case_file = format!("gen/src/m{n}.rs");
+        let refused = census.unfollowed.iter().any(|u| u.file == case_file);
+        for (file, _) in spelt(n).expect("a case").1 {
+            if read.contains(&file) && !census.files.contains(&file) && !refused {
+                missed.push(format!(
+                    "spelling {}, kind {}: rustc read `{file}`, which the census neither counts nor refuses",
+                    n / KINDS,
+                    n % KINDS
+                ));
+            }
+        }
+    }
+    assert!(missed.is_empty(), "{missed:#?}");
+    // Not vacuous: rustc read every case's files, and std's macros' inclusion is counted, not refused.
+    let triggered = cases
+        .iter()
+        .filter(|&&n| {
+            spelt(n)
+                .expect("a case")
+                .1
+                .iter()
+                .all(|(file, _)| read.contains(file))
+        })
+        .count();
+    assert_eq!(triggered, cases.len(), "cases whose files rustc read");
+    let kept = format!("gen/src/g{}.txt", 6 * KINDS);
+    assert!(census.files.contains(&kept), "{kept}: {:?}", census.files);
+}
+
+/// Case `n`'s module declaration (round 13's D3): in a file of one kind — the crate root, a non-mod-rs file, a mod-rs
+/// file, a file a `path` loads, a file an `include!` brings in — under one chain of inline modules, each with or
+/// without a `path`, a child with or without its own: the files written, the child's file under every directory any
+/// reading could seek it in, and what the crate root holds of it.
+fn declared(n: usize) -> (Vec<(String, String)>, String) {
+    const CHAINS: [&[bool]; 7] = [
+        &[],
+        &[false],
+        &[true],
+        &[false, false],
+        &[false, true],
+        &[true, false],
+        &[true, true],
+    ];
+    let kind = n / (CHAINS.len() * 2);
+    let chain = CHAINS[(n / 2) % CHAINS.len()];
+    let with_path = n % 2 == 1;
+    let child = if with_path {
+        format!("#[path = \"q{n}.rs\"]\npub mod c{n};\n")
+    } else {
+        format!("pub mod c{n};\n")
+    };
+    let mut body = child;
+    for (k, path) in chain.iter().enumerate().rev() {
+        let attribute = if *path {
+            format!("#[path = \"p{n}_{k}\"]\n")
+        } else {
+            String::new()
+        };
+        body = format!("{attribute}pub mod a{n}_{k} {{\n{body}}}\n");
+    }
+    let (file, root) = match kind {
+        0 => (None, body.clone()),
+        1 => (Some(format!("gen/src/f{n}.rs")), format!("pub mod f{n};\n")),
+        2 => (
+            Some(format!("gen/src/f{n}/mod.rs")),
+            format!("pub mod f{n};\n"),
+        ),
+        3 => (
+            Some(format!("gen/src/lp/f{n}.rs")),
+            format!("#[path = \"lp/f{n}.rs\"]\npub mod f{n};\n"),
+        ),
+        _ => (
+            Some(format!("gen/src/inc/f{n}.rs")),
+            format!("include!(\"inc/f{n}.rs\");\n"),
+        ),
+    };
+    let at = file.clone().unwrap_or_else(|| "gen/src/lib.rs".to_owned());
+    let dir = at.rsplit_once('/').map_or("", |(d, _)| d).to_owned();
+    let stem = at
+        .rsplit('/')
+        .next()
+        .unwrap_or_default()
+        .trim_end_matches(".rs")
+        .to_owned();
+    let mut dirs = vec![dir.clone(), format!("{dir}/{stem}")];
+    for (k, path) in chain.iter().enumerate() {
+        dirs = dirs
+            .iter()
+            .flat_map(|d| {
+                let mut next = vec![format!("{d}/a{n}_{k}")];
+                if *path {
+                    next.push(format!("{d}/p{n}_{k}"));
+                }
+                next
+            })
+            .collect();
+    }
+    let leaf = if with_path {
+        format!("q{n}.rs")
+    } else {
+        format!("c{n}.rs")
+    };
+    let mut files: Vec<(String, String)> = dirs
+        .iter()
+        .map(|d| (format!("{d}/{leaf}"), String::new()))
+        .collect();
+    if let Some(file) = file {
+        files.push((file, body));
+    }
+    (files, root)
+}
+
+#[test]
+fn the_census_reads_every_inline_module_s_children_where_rustc_does() {
+    crate::trust_test_process::bounded!(
+        the_census_reads_every_inline_module_s_children_where_rustc_does
+    );
+    // Round 13's D3 and D4: every kind of file, every chain of up to two inline modules, each with or without a `path`,
+    // a child with or without its own — the child's file written under every directory any reading could seek it in,
+    // so rustc reads one and the census must count that one; and none of these plain spellings refused.
+    let count = 5 * 7 * 2;
+    let mut lib = String::new();
+    let mut files: Vec<(String, String)> = Vec::new();
+    for n in 0..count {
+        let (written, root) = declared(n);
+        lib.push_str(&root);
+        files.extend(written);
+    }
+    files.push(("gen/src/lib.rs".to_owned(), lib));
+    let (read, census) = compiled("census-paths", &files);
+    assert!(census.unfollowed.is_empty(), "{:?}", census.unfollowed);
+    let missed: Vec<&String> = read.iter().filter(|f| !census.files.contains(*f)).collect();
+    assert!(
+        missed.is_empty(),
+        "rustc read what the census does not count: {missed:#?}"
+    );
+    // Not vacuous: rustc read every case's child.
+    let children = (0..count)
+        .filter(|&n| {
+            let leaf = if n % 2 == 1 {
+                format!("/q{n}.rs")
+            } else {
+                format!("/c{n}.rs")
+            };
+            read.iter().any(|f| f.ends_with(&leaf))
+        })
+        .count();
+    assert_eq!(children, count, "cases whose child rustc read");
 }

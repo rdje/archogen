@@ -1660,7 +1660,7 @@ mod tests {
         // Round 9's change of method: `decision_trust-role-programs.md` §3's table of what decides what a unit compiles
         // keeps its rows, each naming fixtures this crate holds as tests, and each row with a part outside the census
         // naming the line of `UNSEEN` that states it — so no row is dropped, held by nothing, or unsaid in the report.
-        const INPUTS: [&str; 14] = [
+        const INPUTS: [&str; 15] = [
             "target selection",
             "required features",
             "profile",
@@ -1668,6 +1668,7 @@ mod tests {
             "features",
             "platform",
             "configuration",
+            "source text",
             "file inclusion",
             "macros",
             "dependency kinds",

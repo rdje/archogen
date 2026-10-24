@@ -129,9 +129,10 @@ twelve configurations through a compiler wrapper of its own and finds every file
 build scripts read counted, and runs rustdoc on doc tests in each spelling rounds 11 to 13 found, every block it
 compiles one the census refuses (leaves `M3.5.2.7.3`, `M3.5.2.8.4`); and a generated leg compiles every pair of the
 reference's lexical constructs with a trigger between, so where the census reads a literal or a comment to end is held
-to rustc's (leaf `M3.5.2.9.4`). It checks what the census counts, not what it refuses beyond
+to rustc's (leaf `M3.5.2.9.4`); three more compile every head a file can open with, every spelling of a trigger
+through a macro, and every inline module's children in every kind of file (leaf `M3.5.2.10.3`). It checks what the census counts, not what it refuses beyond
 that, which the fixtures hold, nor what a build script or a procedural macro generates. What decides what a unit compiles — target selection, required features, the profile,
-`cfg(test)`, features, platform, configuration, file inclusion, macros, dependency kinds, build scripts and procedural macros,
+`cfg(test)`, features, platform, configuration, source text, file inclusion, macros, dependency kinds, build scripts and procedural macros,
 doc tests, non-members, a program a test runs — is a table in the record's §3, each rule quoted from the Cargo Book, the
 rustdoc book or the Rust reference of the pin ([`rust-toolchain`](ledger.md#rust-toolchain),
 [`rust-reference`](ledger.md#rust-reference)), each row held by its fixtures and, where part of it is outside
