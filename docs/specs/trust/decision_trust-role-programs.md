@@ -87,7 +87,8 @@ whose producer is a derivation's artifact; a reference model's result produced b
 **Found by the sources, not by names.** Each test-like unit — an integration test, a bench, a library's or an
 executable's unit tests, a library's doc tests — that some build of its package makes, whatever its flags, and whose
 build compiles role packages of the two roles of a pair a property rests on (§5: the generator and either checker, the
-reference model and the implementation) — by its normal and build edges over every feature and platform and its
+reference model and the implementation) — by its normal and build edges over every feature and platform, a
+non-member's own feature's among them, its declared dependencies edges (round 14's D4, `M3.5.2.11.3`), and its
 package's own development edges, or by a file of one that its sources reach, however they name it (`M3.5.2.7.1`):
 each target's crate root and every file it reaches by `mod`, `#[path]` and the `include!` family are read with nothing
 built, whatever the profile, the features, the flags or the host (round 10's change of method), and each unit counts
@@ -158,9 +159,9 @@ terms where it does not. Each row the census reads or refuses names the fixtures
 that hold it, and each row with a part outside the census the report's line that says so; a test,
 `the_census_table_is_held_by_its_fixtures_and_the_report`, reads this table and holds both to the code. And the census
 is held to rustc and rustdoc themselves: an oracle builds a corpus of every probe of rounds 5 to 12 that the census
-counts — those it refuses, a link or an assembly directive, are the fixtures' — in twelve configurations, `cargo
+counts — those it refuses, a link or an assembly directive, are the fixtures' — in a matrix of configurations, `cargo
 test`'s own selection, every target, release, every feature, none, a plain build in both profiles, each target a
-selection skips by name with its required features, through a compiler wrapper of its own, and finds every file of
+selection skips by name with its required features, a non-member's own feature, through a compiler wrapper of its own, and finds every file of
 the tree that a unit, every crate it links, transitively, and their packages' build scripts read counted by the
 census for that unit and its closure, over a renamed, an optional, a platform's and a development dependency; and it
 runs rustdoc on a library whose doc tests, one in each spelling rounds 11 to 13 found, each include a file the corpus
@@ -196,7 +197,7 @@ checked.
 | required features | "if any of the required features are not enabled, the target will be skipped" | read: whatever features are on | `the_census_reads_each_target_whatever_its_configuration`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | — |
 | profile | "the `test` profile is the default profile used by cargo test", inheriting `dev`'s `debug-assertions = true` | read: no profile decides it, nothing being built | `the_census_reads_each_target_whatever_its_configuration`, `a_target_that_does_not_build_is_read_as_any_other`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | — |
 | `cfg(test)` | "Tests have the `cfg(test)` conditional expression enabled whether or not the harness is enabled" | read: every `cfg` at once but this one on a module no macro holds, or at a module file's head — what only such a module reaches counts for its crate's own test units, never for a unit linking it or built as no test, nor in a package holding a build script, which can set it | `a_test_only_inclusion_counts_for_its_crate_s_tests_alone`, `a_file_reached_through_cfg_test_alone_counts_for_its_crate_s_tests_alone`, `a_build_script_can_set_cfg_test_so_its_package_narrows_nothing`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | — |
-| features | a package's default features, unless `--no-default-features` | read: every `cfg` at once; a dependency behind any feature an edge | `the_census_reads_each_target_whatever_its_configuration`, `a_unit_joining_two_roles_is_a_program_target_whatever_it_names`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | — |
+| features | a package's default features, unless `--no-default-features` | read: every `cfg` at once; a dependency behind any feature an edge, a non-member's own feature's among them; one on a package no resolve lists refused | `the_census_reads_each_target_whatever_its_configuration`, `a_unit_joining_two_roles_is_a_program_target_whatever_it_names`, `a_non_member_s_dependency_no_resolve_lists_is_refused`, `the_census_counts_every_file_any_build_of_the_corpus_reads` | — |
 | platform | a `[target.'cfg(…)'.dependencies]` table applies on its platform | read: every `cfg` at once; a dependency for any platform an edge | `a_unit_joining_two_roles_is_a_program_target_whatever_it_names` | — |
 | configuration | `.cargo/config.toml`, `RUSTFLAGS` and `--cfg` reach every unit | refused before any build (the parent's §3), so none applies; a build script's `--cfg` is the build scripts row's | `a_cargo_configuration_on_the_build_s_path_is_a_refusal_and_not_an_error` | — |
 | source text | "if the first character in the sequence is U+FEFF (BYTE ORDER MARK), it is removed"; "each pair of characters U+000D (CR) immediately followed by U+000A (LF) is replaced by a single U+000A (LF)"; "if the remaining sequence begins with the characters #!, the characters up to and including the first U+000A (LF) are removed", but not if they "are followed (ignoring intervening comments or whitespace) by a [ token" (the Rust reference) | read: printable ASCII, a space, a tab, a form feed, a newline and a carriage return where no comment or literal holds them, `\` before a CRLF continuing a literal's line; refused whole: any other byte there, a byte-order mark among them, and a line rustc removes as a shebang, by rustc's own rule, a doc comment ending its look-ahead | `the_census_reads_its_alphabet_alone_and_refuses_what_lies_outside`, `the_census_reads_every_pairing_of_lexical_constructs_as_rustc_does`, `the_census_reads_every_head_a_file_can_open_with_as_rustc_does` | — |

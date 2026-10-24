@@ -1424,6 +1424,105 @@ fn tool_line(program: &str, args: &[&str], env: &[(String, String)], cwd: &Path)
     )
 }
 
+/// The census's dependency graph, by package directory — (dependent, dependency, kind) — and the refusals it finds:
+/// the resolve's edges, over every member's feature (`cargo metadata --all-features`), and a non-member's declared
+/// normal and build dependencies, which no resolve holds when only its own feature enables them (round 14's D4). One
+/// computation for the inventory and the census's oracle.
+fn dependency_graph(
+    meta: &Json,
+    id_dir: &BTreeMap<String, String>,
+    members: &BTreeSet<String>,
+    root_prefix: &str,
+) -> (Vec<(String, String, String)>, Vec<String>) {
+    let mut refused: Vec<String> = Vec::new();
+    let mut graph: Vec<(String, String, String)> = Vec::new();
+    for node in meta
+        .get("resolve")
+        .and_then(|r| r.get("nodes"))
+        .map(Json::elements)
+        .unwrap_or_default()
+    {
+        // A package outside the written tree has no edge here: the inventory refuses it.
+        let Some(from) = id_dir
+            .get(node.get("id").and_then(Json::as_str).unwrap_or_default())
+            .cloned()
+        else {
+            continue;
+        };
+        for d in node.get("deps").map(Json::elements).unwrap_or_default() {
+            let Some(to) = id_dir
+                .get(d.get("pkg").and_then(Json::as_str).unwrap_or_default())
+                .cloned()
+            else {
+                continue;
+            };
+            for k in d.get("dep_kinds").map(Json::elements).unwrap_or_default() {
+                let kind = k
+                    .get("kind")
+                    .and_then(Json::as_str)
+                    .unwrap_or("normal")
+                    .to_owned();
+                graph.push((from.clone(), to.clone(), kind));
+            }
+        }
+    }
+    // A non-member's declared normal and build dependencies, optional ones among them, are edges beside the resolve's:
+    // `--all-features` enables members' features alone, so an edge a non-member's own feature adds is in no resolve
+    // (round 14's D4). One on a package no resolve lists — no lock holds it, so a build enabling it adds it — is a
+    // package the census cannot read, refused; one outside the written tree the inventory refuses.
+    let listed: BTreeMap<String, Option<String>> = meta
+        .get("packages")
+        .map(Json::elements)
+        .unwrap_or_default()
+        .iter()
+        .filter_map(|p| p.get("manifest_path").and_then(Json::as_str))
+        .filter_map(|m| m.strip_suffix("/Cargo.toml"))
+        .map(|d| {
+            let inside = format!("{d}/")
+                .strip_prefix(root_prefix)
+                .map(|r| r.trim_end_matches('/').to_owned());
+            (d.to_owned(), inside)
+        })
+        .collect();
+    for p in meta.get("packages").map(Json::elements).unwrap_or_default() {
+        let id = p.get("id").and_then(Json::as_str).unwrap_or_default();
+        let Some(from) = id_dir.get(id).filter(|_| !members.contains(id)).cloned() else {
+            continue;
+        };
+        for d in p
+            .get("dependencies")
+            .map(Json::elements)
+            .unwrap_or_default()
+        {
+            let kind = d.get("kind").and_then(Json::as_str).unwrap_or("normal");
+            let Some(path) = d
+                .get("path")
+                .and_then(Json::as_str)
+                .filter(|_| kind != "dev")
+            else {
+                continue;
+            };
+            match listed.get(path) {
+                Some(Some(to)) => graph.push((from.clone(), to.clone(), kind.to_owned())),
+                Some(None) => {}
+                None => {
+                    let below = format!("{path}/");
+                    let shown = below
+                        .strip_prefix(root_prefix)
+                        .map_or(path, |r| r.trim_end_matches('/'));
+                    refused.push(format!(
+                        "trust-undeclared-input: `{from}` declares a dependency on `{shown}`, which no resolve of the \
+                         commit lists, so the census cannot read what it compiles"
+                    ));
+                }
+            }
+        }
+    }
+    graph.sort();
+    graph.dedup();
+    (graph, refused)
+}
+
 /// Every program target of the commit, each a root's, classified, unclassified, or classified with role packages that
 /// have grown since its review (§2), and every classification whose program target is gone, which the gate refuses as
 /// `trust-baseline-stale` on the baseline's host (§6, R7 remark e). A target's role packages are those its build
@@ -2312,38 +2411,9 @@ pub fn inventory_with(
     }
     refused.extend(stale);
 
-    // The resolved graph: (dependent, dependency, kind).
-    let mut graph: Vec<(String, String, String)> = Vec::new();
-    for node in meta
-        .get("resolve")
-        .and_then(|r| r.get("nodes"))
-        .map(Json::elements)
-        .unwrap_or_default()
-    {
-        // A package outside the written tree has no edge here: it is refused above.
-        let Some(from) = id_dir
-            .get(node.get("id").and_then(Json::as_str).unwrap_or_default())
-            .cloned()
-        else {
-            continue;
-        };
-        for d in node.get("deps").map(Json::elements).unwrap_or_default() {
-            let Some(to) = id_dir
-                .get(d.get("pkg").and_then(Json::as_str).unwrap_or_default())
-                .cloned()
-            else {
-                continue;
-            };
-            for k in d.get("dep_kinds").map(Json::elements).unwrap_or_default() {
-                let kind = k
-                    .get("kind")
-                    .and_then(Json::as_str)
-                    .unwrap_or("normal")
-                    .to_owned();
-                graph.push((from.clone(), to.clone(), kind));
-            }
-        }
-    }
+    // The census's graph: (dependent, dependency, kind), the resolve's and a non-member's declared dependencies.
+    let (graph, undeclared) = dependency_graph(&meta, &id_dir, &members, &root_prefix);
+    refused.extend(undeclared);
 
     let mut rules = Rules {
         tree: &tree,
@@ -5373,6 +5443,38 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn a_non_member_s_dependency_no_resolve_lists_is_refused() {
+        crate::trust_test_process::bounded!(a_non_member_s_dependency_no_resolve_lists_is_refused);
+        // Round 14's D4: a non-member's declared dependencies are edges beside the resolve's; one on a package no resolve
+        // lists — a non-member's optional dependency on another, which no lock holds, so a build enabling it adds it —
+        // is a package the census cannot read, refused.
+        let f = joining_with(
+            "census-non-member-unlisted",
+            "[dev-dependencies]\nn = { path = \"../../other/n\" }\n",
+            "",
+            &[
+                (
+                    "Cargo.toml",
+                    "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\nexclude = [\"other/n\", \"other/m\"]\n",
+                ),
+                (
+                    "other/n/Cargo.toml",
+                    "[package]\nname = \"n\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\n\
+                     m = { path = \"../m\", optional = true }\n\n[features]\ny = [\"dep:m\"]\n",
+                ),
+                ("other/n/src/lib.rs", "pub fn n() {}\n"),
+                ("other/m/Cargo.toml", "[package]\nname = \"m\"\nversion = \"0.1.0\"\nedition = \"2021\"\n"),
+                ("other/m/src/lib.rs", "pub fn m() {}\n"),
+            ],
+        );
+        says(
+            &refused(f.run()),
+            "trust-undeclared-input: `other/n` declares a dependency on `other/m`, which no resolve of the commit lists, \
+             so the census cannot read what it compiles",
+        );
+    }
+
+    #[test]
     fn a_pair_form_is_held_to_its_test_as_the_census_reads_it() {
         crate::trust_test_process::bounded!(a_pair_form_is_held_to_its_test_as_the_census_reads_it);
         // Round 10's D6: a derivation's test reaching the scheduling checker's file only in a debug build compiles it
@@ -6074,6 +6176,24 @@ pub(crate) mod tests {
                     );
                     units
                 },
+            ),
+            // Round 14's D4: a non-member's own feature adds an edge `--all-features` enables in no resolve.
+            (
+                "joined-behind-a-non-member-s-feature",
+                dev(&(dep("g") + "n = { path = \"../../other/n\" }\n")),
+                &[
+                    (
+                        "Cargo.toml",
+                        "[workspace]\nresolver = \"2\"\nmembers = [\"crates/*\"]\nexclude = [\"other/n\"]\n",
+                    ),
+                    (
+                        "other/n/Cargo.toml",
+                        "[package]\nname = \"n\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\n\
+                         c = { path = \"../../crates/c\", optional = true }\n\n[features]\ny = [\"dep:c\"]\n",
+                    ),
+                    ("other/n/src/lib.rs", "pub fn n() {}\n"),
+                ][..],
+                four_unclassified(gc),
             ),
             ("one-role", dev(&dep("g")), &[][..], Vec::new()),
             ("two-checkers", dev(&(dep("c") + &dep("s"))), &[][..], Vec::new()),

@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — an optional dependency of a package outside the workspace is followed
+
+`ARCHOGEN-M3-0944` (leaf `M3.5.2.11.3`), `2026-10-24`.
+
+- The trust gate's census now follows a dependency that a package outside the workspace enables only through its own
+  feature, and refuses one it cannot read; the compiler-backed test builds with such a feature and uses the census's
+  own graph instead of a copy.
+
 ## archogen — an attribute the documentation tool adds to every example is read
 
 `ARCHOGEN-M3-0943` (leaf `M3.5.2.11.2`), `2026-10-24`.

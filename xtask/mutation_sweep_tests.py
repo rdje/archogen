@@ -544,7 +544,7 @@ class ObserverCloseTests(DiscoveryFixture):
         expected = {
             'xtask/src/trust_compiler_observer.rs': '58b1a5e56f61488cb3d6eefc6bea0809f076d378fa93d4a04df84649caf7ac98',
             'xtask/src/trust_compiler.rs': '1c5e2739a3ebcf1d1b1d5c5a34bb1e1fde189e7b7e54d1faa023e0d5f9d6d973',
-            'xtask/src/trust.rs': '8c55ce774f46845c204b3cbf8d340a8ab04c99065cffde62c5ad11fabcc7ec5b',  # re-pinned by M3.5.2.9.5: the census's refusals worded after it reads; the observer's close unchanged
+            'xtask/src/trust.rs': '86f364a51c12d5181a4d8d38f5462a983b8980db3e8edd3ad1620d0938b8d741',  # re-pinned by M3.5.2.11.3: the census's graph one function, a non-member's declared edges and refusal added; the observer's close unchanged
         }
         def verify(inputs):
             for path, digest in expected.items():
@@ -1504,7 +1504,7 @@ os.execvp("rustc", ["rustc"] + arguments)
         ]
         inputs = {path: (ROOT / path).read_bytes() for path in paths}
         expected = {
-            'xtask/src/trust.rs': 'e70634cba7f7fb9a3ff086f3cb4bf9b40648a666459a56ae9f8adc906d41d43d',  # re-pinned by M3.5.2.9.5: the census's refusals worded after it reads; the caller suffix unchanged
+            'xtask/src/trust.rs': 'eb227e291b9d6436767b9bd0acd3661d2e7f6422d5acd08904d709fd0ba7b97d',  # re-pinned by M3.5.2.11.3: the census's graph one function, a non-member's declared edges and refusal added; the caller suffix unchanged
             'xtask/src/trust_compiler.rs': '634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70',
             'xtask/src/trust_compiler_observer.rs': 'c625e10018af3a1b4fd8c96ece4b21b5afdba53cd9b77bd8c619ab6a2037743f',
             'xtask/src/catalog_build.rs': 'd3e8865c3633de9f4cafb82c3613f0ee82df0c065012b732469cda5951221ed2',
@@ -1971,7 +1971,7 @@ class IteratorTests(DiscoveryFixture):
             entry = main[main.index("fn main()"):main.index("\n#[cfg(test)]", main.index("fn main()"))]
             guarded = {
                 "trust production": (trust.split("#[cfg(test)]", 1)[0],
-                    "e70634cba7f7fb9a3ff086f3cb4bf9b40648a666459a56ae9f8adc906d41d43d"),  # re-pinned by M3.5.2.9.5: the census's refusals worded after it reads; the absolute cwd unchanged
+                    "eb227e291b9d6436767b9bd0acd3661d2e7f6422d5acd08904d709fd0ba7b97d"),  # re-pinned by M3.5.2.11.3: the census's graph one function, a non-member's declared edges and refusal added; the absolute cwd unchanged
                 "compiler controller": (controller.split("#[cfg(test)]", 1)[0],
                     "634034fc7f85d67cb843251b15b2065ba229aee6692c6b68987c717383915b70"),
                 "compiler observer": (observer.split("#[cfg(test)]", 1)[0],

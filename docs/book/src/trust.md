@@ -93,7 +93,7 @@ the launcher, whose acceptance contract carries the risk, is reported; a front t
 launcher is refused (leaf `M3.5.2.1.3`). A comparison no form names is found by what the census reads of every
 unit, not by the names its sources use: every test-like unit — an integration test, a bench, a library's or an executable's unit tests, a library's doc
 tests — that some build of its package makes, whatever its flags, and whose build, by normal and build edges over every
-feature and platform and its package's development edges, compiles role packages of both roles of a pair a property
+feature and platform, a non-member's own feature's among them (leaf `M3.5.2.11.3`), and its package's development edges, compiles role packages of both roles of a pair a property
 rests on (the generator and either checker, the reference model and the implementation) is a program target. What a
 unit compiles is read from its sources: each target's crate root and every file it reaches by `mod`, `#[path]` and
 the `include!` family, with nothing built, whatever the profile, the features, the flags or the host (leaf
@@ -127,7 +127,7 @@ crate's own tests, never for the crate as another links it, nor in a package hol
 read; a build script's files count as its package's; a symbolic link in or beside a package's directory, and a crate
 root the census cannot read, are refused (leaf `M3.5.2.8.3`); and a pair form is held to what the census reads of its test as to its build (leaf `M3.5.2.7.2`). An oracle
 holds the census to rustc and rustdoc: it builds a corpus of every probe of rounds 5 to 12 that the census counts in
-twelve configurations through a compiler wrapper of its own and finds every file a unit, every crate it links and their
+a matrix of configurations through a compiler wrapper of its own and finds every file a unit, every crate it links and their
 build scripts read counted, and runs rustdoc on doc tests in each spelling rounds 11 to 13 found, every block it
 compiles one the census refuses (leaves `M3.5.2.7.3`, `M3.5.2.8.4`); and a generated leg compiles every pair of the
 reference's lexical constructs with a trigger between, so where the census reads a literal or a comment to end is held

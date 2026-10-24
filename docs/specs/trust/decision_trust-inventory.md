@@ -523,7 +523,7 @@ program reads a derivation the same way, but for those two things, as that recor
 joining two roles a property rests on is a §2 program target (that record's §3), named or classified, and every
 passage written in that term reads it but the generated-sources record's §5: joining gives no crate root a generator
 file's standing it lacks otherwise; §2's role packages of a program target follow build edges too, over every
-feature and platform, a test-like unit's its package's development edges, as an example's do, and count the innermost
+feature and platform, a non-member's own among them, a test-like unit's its package's development edges, as an example's do, and count the innermost
 role package holding a file the census reads for it (that record's §3); `trust-shared-program` counts, in a root's or
 a pair form's own build, its units' packages and the innermost holding a file one of them read, and for a pair form
 what the census reads of its test (`M3.5.2.5.3`, `M3.5.2.7.2`).

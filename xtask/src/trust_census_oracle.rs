@@ -31,7 +31,8 @@ fn corpus() -> Vec<(&'static str, String)> {
     vec![
         (
             "Cargo.toml",
-            "[workspace]\nresolver = \"2\"\nmembers = [\"p\", \"q\", \"n\", \"r\", \"k\", \"e\", \"o\", \"u\", \"dv\", \"bsd\", \"d\", \"bc\"]\n".to_owned(),
+            "[workspace]\nresolver = \"2\"\nmembers = [\"p\", \"q\", \"n\", \"r\", \"k\", \"e\", \"o\", \"u\", \"dv\", \"bsd\", \"d\", \"bc\", \"ro\", \"uf\"]\n\
+             exclude = [\"nf\"]\n".to_owned(),
         ),
         // Every `cfg` a build can turn, every target flag, every spelling of an inclusion.
         (
@@ -160,6 +161,22 @@ fn corpus() -> Vec<(&'static str, String)> {
         ("bc/build.rs", "fn main() {\n    println!(\"cargo::rustc-cfg=test\");\n}\n".to_owned()),
         ("bc/src/lib.rs", "#[cfg(test)]\n#[path = \"bc_only.rs\"]\npub mod r;\n".to_owned()),
         ("bc/src/bc_only.rs", module.clone()),
+        // Round 14's D4: a non-member's own feature, which `--all-features` does not enable, adding an edge to `ro`; a
+        // member's test links the non-member.
+        (
+            "nf/Cargo.toml",
+            manifest(
+                "nf",
+                "[dependencies]\nro = { path = \"../ro\", optional = true }\n\n[features]\ny = [\"dep:ro\"]\n",
+            ),
+        ),
+        ("nf/src/lib.rs", "pub fn nf() {}\n".to_owned()),
+        ("ro/Cargo.toml", manifest("ro", "")),
+        ("ro/src/lib.rs", "#[path = \"ro_only.rs\"]\npub mod ro_only;\n".to_owned()),
+        ("ro/src/ro_only.rs", module.clone()),
+        ("uf/Cargo.toml", manifest("uf", "[dev-dependencies]\nnf = { path = \"../nf\" }\n")),
+        ("uf/src/lib.rs", "pub fn uf() {}\n".to_owned()),
+        ("uf/tests/t.rs", "#[test]\nfn t() {}\n".to_owned()),
         ("k/src/type.rs", module.clone()),
         ("k/src/pretty.py", "# a debugger script\n".to_owned()),
         ("k/src/field.txt", "f\n".to_owned()),
@@ -292,10 +309,12 @@ fn corpus() -> Vec<(&'static str, String)> {
 }
 
 /// The configurations each built in: `cargo test`'s own selection, every target, release, every feature, a plain
-/// build in both profiles, and each target a selection skips, by name, with its required features.
+/// build in both profiles, each target a selection skips, by name, with its required features, and a non-member's own
+/// feature, which `--all-features` does not enable (round 14's D4).
 const MATRIX: &[&[&str]] = &[
     &["test", "--no-run"],
     &["test", "--no-run", "--all-targets"],
+    &["test", "--no-run", "--all-targets", "--features", "nf/y"],
     &["test", "--no-run", "--all-targets", "--release"],
     &["test", "--no-run", "--all-targets", "--all-features"],
     &["test", "--no-run", "--all-targets", "--no-default-features"],
@@ -436,7 +455,7 @@ fn the_census_counts_every_file_any_build_of_the_corpus_reads() {
     }
     let census = crate::trust::Census::lexical(&reaches, &sources);
 
-    // Each package's dependency edges, by directory, for the census's closure of a unit.
+    // Each package's dependency edges, by directory, for the census's closure of a unit: the census's own graph.
     let mut id_dir: BTreeMap<String, String> = BTreeMap::new();
     for p in meta.get("packages").map(Json::elements).unwrap_or_default() {
         let manifest = p
@@ -451,28 +470,16 @@ fn the_census_counts_every_file_any_build_of_the_corpus_reads() {
             id_dir.insert(id.to_owned(), dir.trim_end_matches('/').to_owned());
         }
     }
-    let mut graph: Vec<(String, String, String)> = Vec::new();
-    for node in meta
-        .get("resolve")
-        .and_then(|r| r.get("nodes"))
+    let members: BTreeSet<String> = meta
+        .get("workspace_members")
         .map(Json::elements)
         .unwrap_or_default()
-    {
-        let Some(from) = id_dir.get(node.get("id").and_then(Json::as_str).unwrap_or_default())
-        else {
-            continue;
-        };
-        for d in node.get("deps").map(Json::elements).unwrap_or_default() {
-            let Some(to) = id_dir.get(d.get("pkg").and_then(Json::as_str).unwrap_or_default())
-            else {
-                continue;
-            };
-            for k in d.get("dep_kinds").map(Json::elements).unwrap_or_default() {
-                let kind = k.get("kind").and_then(Json::as_str).unwrap_or("normal");
-                graph.push((from.clone(), to.clone(), kind.to_owned()));
-            }
-        }
-    }
+        .iter()
+        .filter_map(Json::as_str)
+        .map(str::to_owned)
+        .collect();
+    let (graph, undeclared) = crate::trust::dependency_graph(&meta, &id_dir, &members, &prefix);
+    assert!(undeclared.is_empty(), "{undeclared:?}");
 
     // Every build of the matrix, through the oracle's own wrapper.
     let wrapper = f.base.join("oracle-rustc");
