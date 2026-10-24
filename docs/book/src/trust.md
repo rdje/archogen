@@ -107,14 +107,15 @@ text, whatever their `cfg` — and one the census does not read whole — a modu
 directive reading a file, a path out of the tree, through a symbolic link or spelt as hosts read apart — is refused
 unless an admission, rule `inclusion`, names it, so a spelling of those it does not know is a refusal, never a miss
 (leaves `M3.5.2.7.1`, `M3.5.2.8.1`); a channel it does not name is a gap no check of its finds. A macro may rearrange what it is given: in the arguments of any macro but std's that keep
-theirs in place, every name of a macro that reads a file, a `mod` and a debugger visualizer are refused, and in a
+theirs in place, whatever its name, a keyword only a later edition reserves among them, every name of a macro that reads a file, a `mod` and a debugger visualizer are refused, and in a
 `macro_rules!` body those, a macro a metavariable names and an attribute one fills; so are a name of those std macros
 bound to another, a `macro_use`, a `macro_export` and a doc test's `macro_rules`, so every macro a crate or a doc test
 calls is std's, or read where it is called (leaf `M3.5.2.10.1`). The census reads only what it can check it reads as rustc does: outside comments and
 literals, printable ASCII and the four whitespace characters both skip, a file holding any other byte there or opening
 with a line rustc removes as a shebang, by rustc's own rule, refused whole (leaves `M3.5.2.9.1`, `M3.5.2.10.2`); every `path` attribute is followed with the module's own
 file beside it, an inner one refused, every path value checked as it is read (leaf `M3.5.2.9.2`), and an inline module's `path` relative to its file's own
-directory, a non-mod-rs file's too, as the pin seeks it (leaf `M3.5.2.10.2`). A library's doc text is read with no markdown — every doc
+directory, a non-mod-rs file's too, as the pin seeks it (leaf `M3.5.2.10.2`), a block taking no non-mod-rs module's
+name (leaf `M3.5.2.11.1`). A library's doc text is read with no markdown — every doc
 comment, `doc` literal and document it includes, joined in source order — and each word in it that can make a doc test
 read a file, read past any whitespace or character outside ASCII, is refused, but one a
 backtick opens while no doc text of the library names an error code: no compiled Rust holds a backtick outside a

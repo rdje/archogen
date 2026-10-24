@@ -28,7 +28,7 @@
 //! \"src/pl/child/mod.rs\"" for `src/pl/loaded.rs`, "\"src/inc/c.rs\"" for `src/inc/i.rs` — each under the loaded
 //! file's own directory, which the census's oracle holds on every build of its corpus. And an inline module's `path` is
 //! relative to its file's own directory, a non-mod-rs file's too, the non-mod-rs module's name taken only by an inline
-//! module with none: measured `2026-10-24`, "create file \"src/p/child.rs\"" for `#[path = "p"] mod x { mod child; }`
+//! module with none outside a block (round 14's D1): measured `2026-10-24`, "create file \"src/p/child.rs\"" for `#[path = "p"] mod x { mod child; }`
 //! in `src/foo.rs`, "\"src/foo/a/p/child.rs\"" with `mod a { … }` around it (round 13's D3). A `debugger_visualizer`
 //! file is "a path relative to the source file".
 
@@ -288,9 +288,9 @@ struct Module {
     name: String,
     /// Its `path` attributes, decoded: one, or one a `cfg_attr` each — every one a candidate.
     paths: Vec<String>,
-    /// The inline modules it is declared in, outermost first, each by its `path` attributes or its name: every
-    /// alternative a directory its children may lie under.
-    inline: Vec<Vec<String>>,
+    /// The inline modules it is declared in, outermost first, each by its `path` attributes or its name — every
+    /// alternative a directory its children may lie under — and whether it opens in a block (round 14's D1).
+    inline: Vec<(Vec<String>, bool)>,
     /// Whether it lies in a module under `#[cfg(test)]`.
     test_only: bool,
     site: Site,
@@ -339,13 +339,15 @@ const ASM: [&str; 3] = ["asm", "global_asm", "naked_asm"];
 /// of the template can follow; matched in any case, anywhere in it.
 const DIRECTIVES: [&str; 6] = ["incbin", "include", ".macro", ".irp", ".rept", ".altmacro"];
 
-/// Rust's keywords, strict and reserved: one before `!` names no macro (`if !(…)`); a raw one does.
+/// Rust's keywords in every edition, strict and reserved: one before `!` names no macro (`if !(…)`); a raw one does.
+/// A keyword only a later edition reserves — `async`, `await`, `dyn` and `try` from 2018, `gen` from 2024 — is a
+/// name an earlier edition's macro may bear, and the census reads no edition (round 14's D2).
 const KEYWORDS: &[&str] = &[
-    "as", "async", "await", "break", "const", "continue", "crate", "dyn", "else", "enum", "extern",
-    "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub",
-    "ref", "return", "self", "Self", "static", "struct", "super", "trait", "true", "type",
-    "unsafe", "use", "where", "while", "abstract", "become", "box", "do", "final", "gen", "macro",
-    "override", "priv", "try", "typeof", "unsized", "virtual", "yield",
+    "as", "break", "const", "continue", "crate", "else", "enum", "extern", "false", "fn", "for",
+    "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return",
+    "self", "Self", "static", "struct", "super", "trait", "true", "type", "unsafe", "use", "where",
+    "while", "abstract", "become", "box", "do", "final", "macro", "override", "priv", "typeof",
+    "unsized", "virtual", "yield",
 ];
 
 const ALIAS: &str =
@@ -611,8 +613,11 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
         line: line_of(source, ts[a].at),
         extent: text(a, b),
     };
-    // Inline modules open: (the brace depth inside them, their directory component).
-    let mut inline: Vec<(usize, Vec<String>)> = Vec::new();
+    // Inline modules open: (the brace depth inside them, their directory component, whether each opens in a block).
+    let mut inline: Vec<(usize, Vec<String>, bool)> = Vec::new();
+    // Each brace open, and whether it is an inline module's — any other a block's, a function's, a constant's or an
+    // expression's, where rustc takes no non-mod-rs module's name (round 14's D1).
+    let mut braces: Vec<bool> = Vec::new();
     // Whether a `use` item is open, up to its `;`, and whether its path begins at `std`, `core` or `alloc`.
     let mut in_use = false;
     let mut use_std = false;
@@ -764,11 +769,15 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
             ));
         }
         match &ts[i].kind {
-            Kind::Open('{') => depth += 1,
+            Kind::Open('{') => {
+                depth += 1;
+                braces.push(inline.last().is_some_and(|(d, ..)| *d == depth));
+            }
             Kind::Close('}') => {
-                if inline.last().is_some_and(|(d, _)| *d == depth) {
+                if inline.last().is_some_and(|(d, ..)| *d == depth) {
                     inline.pop();
                 }
+                braces.pop();
                 depth = depth.saturating_sub(1);
                 pending_path.clear();
             }
@@ -828,7 +837,10 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                     (Some(n), false) if is(i + 2, Kind::Punct(';')) => out.modules.push(Module {
                         site: site(paths.first().map_or(i, |(_, at)| *at), i + 2),
                         paths: paths.into_iter().map(|(p, _)| p).collect(),
-                        inline: inline.iter().map(|(_, c)| c.clone()).collect(),
+                        inline: inline
+                            .iter()
+                            .map(|(_, c, block)| (c.clone(), *block))
+                            .collect(),
                         test_only: in_test(i),
                         name: n,
                     }),
@@ -838,7 +850,7 @@ fn scan(file: &str, source: &[u8]) -> Result<Scan, (usize, String)> {
                     (Some(n), true) => {
                         let mut alternatives: Vec<String> = paths.into_iter().map(|(p, _)| p).collect();
                         alternatives.push(n);
-                        inline.push((depth + 1, alternatives));
+                        inline.push((depth + 1, alternatives, braces.last() == Some(&false)));
                     }
                     _ => out.unfollowed.push(at.unfollowed(
                         file,
@@ -1450,12 +1462,14 @@ fn join(dir: &str, part: &str) -> String {
 /// Where the inline modules `inline` put what they hold, as rustc computes it — each pair the directory a `path` is
 /// relative to and the one a module's own file lies under: at a file's top its own directory, `dir`, and its children's,
 /// `base`, the non-mod-rs module's name after `dir` when it is one; an inline module's `path`, each of its alternatives,
-/// relative to the first, its own name after the second, and both the same below it. Measured by the pin `2026-10-24`
-/// (round 13's D3): `#[path = "p"] mod x { mod child; }` in `src/foo.rs` seeks `src/p/child.rs`.
-fn inline_dirs(dir: &str, base: &str, inline: &[Vec<String>]) -> Vec<(String, String)> {
+/// relative to the first, its own name after the second — after the first, in a block, which takes no non-mod-rs
+/// module's name — and both the same below it. Measured by the pin `2026-10-24`: `#[path = "p"] mod x { mod child; }`
+/// in `src/foo.rs` seeks `src/p/child.rs` (round 13's D3); `fn f() { mod a { #[path = "q.rs"] mod b; } }` there,
+/// `src/a/q.rs` (round 14's D1).
+fn inline_dirs(dir: &str, base: &str, inline: &[(Vec<String>, bool)]) -> Vec<(String, String)> {
     inline.iter().fold(
         vec![(dir.to_owned(), base.to_owned())],
-        |states, alternatives| {
+        |states, (alternatives, block)| {
             let Some((name, paths)) = alternatives.split_last() else {
                 return states;
             };
@@ -1465,7 +1479,7 @@ fn inline_dirs(dir: &str, base: &str, inline: &[Vec<String>]) -> Vec<(String, St
                     paths
                         .iter()
                         .map(|p| join(at, p))
-                        .chain(std::iter::once(join(under, name)))
+                        .chain(std::iter::once(join(if *block { at } else { under }, name)))
                         .map(|d| (d.clone(), d))
                         .collect::<Vec<_>>()
                 })
@@ -1590,7 +1604,8 @@ mod tests {
         );
         // Round 13's D3, measured by the pin's own refusal of a missing child (`2026-10-24`): an inline module's `path`
         // is relative to its file's own directory, a non-mod-rs file's too, the non-mod-rs module's name taken only by
-        // an inline module with none; a file a `path` loads, or an `include!`, is read as a mod-rs file, whatever its name.
+        // an inline module with none outside a block; a file a `path` loads, or an `include!`, is read as a mod-rs file,
+        // whatever its name.
         let lib = ("p/src/lib.rs", "pub mod foo;\n");
         let cases = [
             (
@@ -1693,6 +1708,58 @@ mod tests {
                     ),
                 ],
                 "p/src/foo/p/child.rs",
+            ),
+            // Round 14's D1, measured by the pin's own failure to read a missing child (`2026-10-24`): in a block rustc
+            // takes no non-mod-rs module's name, so an inline module opened there lies under the file's own directory.
+            (
+                "a block's inline module in a non-mod-rs file",
+                vec![lib, ("p/src/foo.rs", "pub fn f() { mod a { #[path = \"q.rs\"] pub mod b; } }\n")],
+                "p/src/a/q.rs",
+            ),
+            (
+                "a block's inline module in the crate root",
+                vec![("p/src/lib.rs", "pub fn f() { mod a { #[path = \"q.rs\"] pub mod b; } }\n")],
+                "p/src/a/q.rs",
+            ),
+            (
+                "a block's own path module",
+                vec![lib, ("p/src/foo.rs", "pub fn f() { #[path = \"q.rs\"] mod b; }\n")],
+                "p/src/q.rs",
+            ),
+            (
+                "a block under an inline module",
+                vec![lib, ("p/src/foo.rs", "pub mod m { pub fn f() { mod a { #[path = \"q.rs\"] pub mod b; } } }\n")],
+                "p/src/foo/m/a/q.rs",
+            ),
+            (
+                "two inline modules in a block",
+                vec![lib, ("p/src/foo.rs", "pub fn f() { mod a { mod c { #[path = \"q.rs\"] pub mod b; } } }\n")],
+                "p/src/a/c/q.rs",
+            ),
+            (
+                "a const's block",
+                vec![lib, ("p/src/foo.rs", "const _: () = { mod a { #[path = \"q.rs\"] pub mod b; } };\n")],
+                "p/src/a/q.rs",
+            ),
+            (
+                "a block's inline path",
+                vec![lib, ("p/src/foo.rs", "pub fn f() { #[path = \"p\"] mod a { #[path = \"q.rs\"] pub mod b; } }\n")],
+                "p/src/p/q.rs",
+            ),
+            (
+                "a block in a mod-rs file",
+                vec![lib, ("p/src/foo/mod.rs", "pub fn f() { mod a { #[path = \"q.rs\"] pub mod b; } }\n")],
+                "p/src/foo/a/q.rs",
+            ),
+            (
+                "a block in a block's inline module",
+                vec![lib, ("p/src/foo.rs", "pub fn f() { mod a { pub fn g() { mod c { #[path = \"q.rs\"] pub mod b; } } } }\n")],
+                "p/src/a/c/q.rs",
+            ),
+            (
+                "a const's block under an inline module",
+                vec![lib, ("p/src/foo.rs", "pub mod m { const _: () = { mod a { #[path = \"q.rs\"] pub mod b; } }; }\n")],
+                "p/src/foo/m/a/q.rs",
             ),
         ];
         let mut missed = Vec::new();
@@ -2639,6 +2706,30 @@ mod tests {
                 "/// ```\n/// macro_rules! call { ($m:ident) => { $m!(\"../../c/x.rs\"); }; }\n/// call!(include);\n/// ```\n\
                  pub fn d() {}\n",
                 "doc test",
+            ),
+            // Round 14's D2: a name a later edition reserves is a macro's in an earlier one — `gen` before 2024, `try`,
+            // `async`, `await` and `dyn` in 2015.
+            (
+                "a macro `gen` names",
+                "macro_rules! gen { ($a:tt $b:tt ($p:literal)) => { pub const S: &str = $a $b (concat!(\"../../c/\", $p)); }; }\n\
+                 gen!(include_str!(\"x.txt\"));\n",
+                "an inclusion in the arguments of a macro that may rearrange them",
+            ),
+            ("a macro `try` names", "try! { mod x; }\n", "a macro's arguments"),
+            (
+                "a macro `async` names",
+                "async!(include_str);\n",
+                "in the arguments of a macro that may rearrange them",
+            ),
+            (
+                "a macro `await` names",
+                "await!(core::arch::global_asm!(\"nop\"));\n",
+                "an assembly macro in the arguments",
+            ),
+            (
+                "a macro `dyn` names",
+                "dyn!(gdb_script_file);\n",
+                "in the arguments of a macro that may rearrange them",
             ),
         ] {
             let r = of(

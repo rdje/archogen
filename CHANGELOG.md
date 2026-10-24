@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a module inside a function and a macro named by a newer keyword read as the compiler reads them
+
+`ARCHOGEN-M3-0942` (leaf `M3.5.2.11.1`), `2026-10-24`.
+
+- The trust gate's census now finds the files of modules declared inside a function or a constant where the
+  compiler does, as measured on the pinned compiler, and treats a macro named `gen`, `try`, `async`, `await` or
+  `dyn` as the macro it is in older editions; the generated tests cover both.
+
 ## archogen — the checkers' programs in the trust record, round 14
 
 `ARCHOGEN-M3-0941` (leaf `M3.5.2`), `2026-10-24`.

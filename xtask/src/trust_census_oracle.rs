@@ -853,15 +853,20 @@ fn the_census_reads_every_pairing_of_lexical_constructs_as_rustc_does() {
 /// What the pin's rustc reads compiling the crate `gen/src/lib.rs` of `files`, by its dependency information, and what
 /// the census reads of it, as a crate rustdoc does not test.
 fn compiled(name: &str, files: &[(String, String)]) -> (BTreeSet<String>, Reach) {
+    compiled_in(name, "2021", files)
+}
+
+/// What the pin's rustc reads compiling the crate `gen/src/lib.rs` of `files` in `edition`, and what the census reads of
+/// it — which reads no edition.
+fn compiled_in(name: &str, edition: &str, files: &[(String, String)]) -> (BTreeSet<String>, Reach) {
     let named: Vec<(&str, String)> = files.iter().map(|(p, t)| (p.as_str(), t.clone())).collect();
     let f = crate::trust::tests::fixture(name, "1.95.0", &named);
     let repo = std::fs::canonicalize(&f.repo).expect("the corpus");
     let out = f.base.join("generated-out");
     std::fs::create_dir_all(&out).expect("the output");
     let rustc = Command::new("rustc")
+        .args(["--edition", edition])
         .args([
-            "--edition",
-            "2021",
             "--crate-type",
             "lib",
             "--crate-name",
@@ -975,16 +980,38 @@ fn the_census_reads_every_head_a_file_can_open_with_as_rustc_does() {
 
 /// The spellings of a trigger through a macro (round 13's D1): forwarded whole, its name passed apart from its `!`, its
 /// literal rewritten, its tokens apart by a separator, a body's own, a repetition's name, in std's macros that keep
-/// their arguments in place, an attribute a metavariable fills.
-const SPELLINGS: usize = 8;
+/// their arguments in place, an attribute a metavariable fills, a macro a later edition's keyword names.
+const SPELLINGS: usize = 9;
 
 /// The kinds of trigger a macro may spell: an `include_str!`, an `include!`, a `path` module, a module by its name, a
 /// debugger visualizer — each naming a file of the case alone.
 const KINDS: usize = 5;
 
-/// Case `n`'s module `m{n}`, spelling `n / KINDS` of kind `n % KINDS`, and the files it makes rustc read; none where
-/// the spelling cannot hold the kind.
+/// Case `n`'s module `m{n}`, spelling `n / KINDS` of kind `n % KINDS`, its macros named `f{n}` but spelling 8's, which
+/// forwards a trigger whole or rewrites its literal through a macro named `gen`, a keyword from 2024 (round 14's D2).
 fn spelt(n: usize) -> Option<(String, Vec<(String, String)>)> {
+    match n / KINDS {
+        8 => spelt_as(n, if n % KINDS < 2 { 2 } else { 0 }, "gen"),
+        spelling => spelt_as(n, spelling, &format!("f{n}")),
+    }
+}
+
+/// The names a later edition reserves that a 2015 macro may bear (round 14's D2): `try`, `async`, `await`, `dyn`.
+const RESERVED_LATER: [&str; 4] = ["try", "async", "await", "dyn"];
+
+/// Case `n` of the 2015 crate: through a macro named `RESERVED_LATER[n / KINDS]`, forwarding a trigger whole or
+/// rewriting its literal; no module by its name, which 2015 declares in no non-mod-rs file.
+fn spelt_2015(n: usize) -> Option<(String, Vec<(String, String)>)> {
+    let name = RESERVED_LATER.get(n / KINDS)?;
+    match n % KINDS {
+        3 => None,
+        kind => spelt_as(n, if kind < 2 { 2 } else { 0 }, name),
+    }
+}
+
+/// Case `n`'s module `m{n}`, spelling `spelling` of kind `n % KINDS` through macros named `name`, and the files it makes
+/// rustc read; none where the spelling cannot hold the kind.
+fn spelt_as(n: usize, spelling: usize, name: &str) -> Option<(String, Vec<(String, String)>)> {
     let (live, made): (&str, (String, &str)) = match n % KINDS {
         0 => (
             "const _: &str = include_str!(\"g{n}.txt\");",
@@ -1031,36 +1058,36 @@ fn spelt(n: usize) -> Option<(String, Vec<(String, String)>)> {
     };
     let apart = tokens.join(" sep ").replace("{n}", &n.to_string());
     let mut made = vec![(made.0, made.1.to_owned())];
-    let code = match (n / KINDS, n % KINDS) {
-        (0, _) => format!("macro_rules! f{n} {{\n    ($($t:tt)*) => {{ $($t)* }};\n}}\nf{n}!({live});\n"),
+    let code = match (spelling, n % KINDS) {
+        (0, _) => format!("macro_rules! {name} {{\n    ($($t:tt)*) => {{ $($t)* }};\n}}\n{name}!({live});\n"),
         (1, 0) => format!(
-            "macro_rules! f{n} {{\n    ($m:ident) => {{ const _: &str = $m!(\"g{n}.txt\"); }};\n}}\nf{n}!(include_str);\n"
+            "macro_rules! {name} {{\n    ($m:ident) => {{ const _: &str = $m!(\"g{n}.txt\"); }};\n}}\n{name}!(include_str);\n"
         ),
-        (1, 1) => format!("macro_rules! f{n} {{\n    ($m:ident) => {{ $m!(\"g{n}.rs\"); }};\n}}\nf{n}!(include);\n"),
+        (1, 1) => format!("macro_rules! {name} {{\n    ($m:ident) => {{ $m!(\"g{n}.rs\"); }};\n}}\n{name}!(include);\n"),
         (1, 2) => format!(
-            "macro_rules! f{n} {{\n    ($m:tt) => {{ #[path = \"g{n}_p.rs\"] $m g{n}_p; }};\n}}\nf{n}!(mod);\n"
+            "macro_rules! {name} {{\n    ($m:tt) => {{ #[path = \"g{n}_p.rs\"] $m g{n}_p; }};\n}}\n{name}!(mod);\n"
         ),
-        (1, 3) => format!("macro_rules! f{n} {{\n    ($m:tt) => {{ $m g{n}_m; }};\n}}\nf{n}!(mod);\n"),
+        (1, 3) => format!("macro_rules! {name} {{\n    ($m:tt) => {{ $m g{n}_m; }};\n}}\n{name}!(mod);\n"),
         (1, _) => format!(
-            "macro_rules! f{n} {{\n    ($k:ident) => {{ #[debugger_visualizer($k = \"g{n}.py\")] mod v{n} {{}} }};\n}}\n\
-             f{n}!(gdb_script_file);\n"
+            "macro_rules! {name} {{\n    ($k:ident) => {{ #[debugger_visualizer($k = \"g{n}.py\")] mod v{n} {{}} }};\n}}\n\
+             {name}!(gdb_script_file);\n"
         ),
         (2, 0) => format!(
-            "macro_rules! f{n} {{\n    ($a:tt $b:tt ($p:literal)) => {{ const _: &str = $a $b (concat!(\"g\", $p)); }};\n}}\n\
-             f{n}!(include_str!(\"{n}.txt\"));\n"
+            "macro_rules! {name} {{\n    ($a:tt $b:tt ($p:literal)) => {{ const _: &str = $a $b (concat!(\"g\", $p)); }};\n}}\n\
+             {name}!(include_str!(\"{n}.txt\"));\n"
         ),
         (2, 1) => format!(
-            "macro_rules! f{n} {{\n    ($a:tt $b:tt ($p:literal)) => {{ $a $b (concat!(\"g\", $p)); }};\n}}\n\
-             f{n}!(include!(\"{n}.rs\"));\n"
+            "macro_rules! {name} {{\n    ($a:tt $b:tt ($p:literal)) => {{ $a $b (concat!(\"g\", $p)); }};\n}}\n\
+             {name}!(include!(\"{n}.rs\"));\n"
         ),
-        (3, _) => format!("macro_rules! f{n} {{\n    ($($t:tt) sep *) => {{ $($t)* }};\n}}\nf{n}!({apart});\n"),
-        (4, _) => format!("macro_rules! f{n} {{\n    () => {{ {live} }};\n}}\nf{n}!();\n"),
+        (3, _) => format!("macro_rules! {name} {{\n    ($($t:tt) sep *) => {{ $($t)* }};\n}}\n{name}!({apart});\n"),
+        (4, _) => format!("macro_rules! {name} {{\n    () => {{ {live} }};\n}}\n{name}!();\n"),
         (5, 0) => format!(
-            "macro_rules! f{n} {{\n    ($($m:ident)?) => {{ const _: &str = $($m)?!(\"g{n}.txt\"); }};\n}}\n\
-             f{n}!(include_str);\n"
+            "macro_rules! {name} {{\n    ($($m:ident)?) => {{ const _: &str = $($m)?!(\"g{n}.txt\"); }};\n}}\n\
+             {name}!(include_str);\n"
         ),
         (5, 1) => format!(
-            "macro_rules! f{n} {{\n    ($($m:ident)?) => {{ $($m)?!(\"g{n}.rs\"); }};\n}}\nf{n}!(include);\n"
+            "macro_rules! {name} {{\n    ($($m:ident)?) => {{ $($m)?!(\"g{n}.rs\"); }};\n}}\n{name}!(include);\n"
         ),
         (6, 0) => format!("pub fn f{n}() -> usize {{\n    format!(\"{{}}\", include_str!(\"g{n}.txt\")).len()\n}}\n"),
         (6, 1) => {
@@ -1072,11 +1099,11 @@ fn spelt(n: usize) -> Option<(String, Vec<(String, String)>)> {
              true\n}}\n"
         ),
         (7, 2) => format!(
-            "macro_rules! f{n} {{\n    ($a:meta) => {{ #[$a] mod g{n}_p; }};\n}}\nf{n}!(path = \"g{n}_p.rs\");\n"
+            "macro_rules! {name} {{\n    ($a:meta) => {{ #[$a] mod g{n}_p; }};\n}}\n{name}!(path = \"g{n}_p.rs\");\n"
         ),
         (7, 4) => format!(
-            "macro_rules! f{n} {{\n    ($a:meta) => {{ #[$a] mod v{n} {{}} }};\n}}\n\
-             f{n}!(debugger_visualizer(gdb_script_file = \"g{n}.py\"));\n"
+            "macro_rules! {name} {{\n    ($a:meta) => {{ #[$a] mod v{n} {{}} }};\n}}\n\
+             {name}!(debugger_visualizer(gdb_script_file = \"g{n}.py\"));\n"
         ),
         _ => return None,
     };
@@ -1134,36 +1161,80 @@ fn the_census_reads_every_macro_spelling_of_a_trigger_as_rustc_does() {
     assert!(census.files.contains(&kept), "{kept}: {:?}", census.files);
 }
 
+#[test]
+fn the_census_reads_every_macro_a_name_2018_reserves_bears_as_rustc_does() {
+    crate::trust_test_process::bounded!(
+        the_census_reads_every_macro_a_name_2018_reserves_bears_as_rustc_does
+    );
+    // Round 14's D2: the names 2018 reserves, each a 2015 macro's, in a crate of that edition, forwarding a trigger or
+    // rewriting its literal. Every file rustc reads, the census counts or refuses a site in its case; and rustc reads
+    // each case's files.
+    let cases: Vec<usize> = (0..RESERVED_LATER.len() * KINDS)
+        .filter(|&n| spelt_2015(n).is_some())
+        .collect();
+    let mut files: Vec<(String, String)> = vec![(
+        "gen/src/lib.rs".to_owned(),
+        cases.iter().map(|n| format!("mod m{n};\n")).collect(),
+    )];
+    for &n in &cases {
+        let (code, made) = spelt_2015(n).expect("a case");
+        files.push((format!("gen/src/m{n}.rs"), code));
+        files.extend(made);
+    }
+    let (read, census) = compiled_in("census-macros-2015", "2015", &files);
+    let mut missed = Vec::new();
+    for &n in &cases {
+        let case_file = format!("gen/src/m{n}.rs");
+        let refused = census.unfollowed.iter().any(|u| u.file == case_file);
+        for (file, _) in spelt_2015(n).expect("a case").1 {
+            if !read.contains(&file) {
+                missed.push(format!(
+                    "`{}`, kind {}: rustc did not read `{file}`",
+                    RESERVED_LATER[n / KINDS],
+                    n % KINDS
+                ));
+            } else if !census.files.contains(&file) && !refused {
+                missed.push(format!(
+                    "`{}`, kind {}: rustc read `{file}`, which the census neither counts nor refuses",
+                    RESERVED_LATER[n / KINDS],
+                    n % KINDS
+                ));
+            }
+        }
+    }
+    assert!(missed.is_empty(), "{missed:#?}");
+}
+
 /// Case `n`'s module declaration (round 13's D3): in a file of one kind — the crate root, a non-mod-rs file, a mod-rs
 /// file, a file a `path` loads, a file an `include!` brings in — under one chain of inline modules, each with or
-/// without a `path`, a child with or without its own: the files written, the child's file under every directory any
-/// reading could seek it in, and what the crate root holds of it.
-fn declared(n: usize) -> (Vec<(String, String)>, String) {
-    const CHAINS: [&[bool]; 7] = [
-        &[],
-        &[false],
-        &[true],
-        &[false, false],
-        &[false, true],
-        &[true, false],
-        &[true, true],
-    ];
+/// without a `path`, or a block (round 14's D1), a child with or without its own: the files written, the child's file
+/// under every directory any reading could seek it in, and what the crate root holds of it; none for a child with no
+/// `path` in a block, which rustc refuses.
+fn declared(n: usize) -> Option<(Vec<(String, String)>, String)> {
     let kind = n / (CHAINS.len() * 2);
     let chain = CHAINS[(n / 2) % CHAINS.len()];
     let with_path = n % 2 == 1;
+    if chain.contains('b') && !with_path {
+        return None;
+    }
     let child = if with_path {
         format!("#[path = \"q{n}.rs\"]\npub mod c{n};\n")
     } else {
         format!("pub mod c{n};\n")
     };
     let mut body = child;
-    for (k, path) in chain.iter().enumerate().rev() {
-        let attribute = if *path {
-            format!("#[path = \"p{n}_{k}\"]\n")
-        } else {
-            String::new()
+    for (k, level) in chain
+        .chars()
+        .enumerate()
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+    {
+        body = match level {
+            'b' => format!("pub fn b{n}_{k}() {{\n{body}}}\n"),
+            'p' => format!("#[path = \"p{n}_{k}\"]\npub mod a{n}_{k} {{\n{body}}}\n"),
+            _ => format!("pub mod a{n}_{k} {{\n{body}}}\n"),
         };
-        body = format!("{attribute}pub mod a{n}_{k} {{\n{body}}}\n");
     }
     let (file, root) = match kind {
         0 => (None, body.clone()),
@@ -1190,12 +1261,12 @@ fn declared(n: usize) -> (Vec<(String, String)>, String) {
         .trim_end_matches(".rs")
         .to_owned();
     let mut dirs = vec![dir.clone(), format!("{dir}/{stem}")];
-    for (k, path) in chain.iter().enumerate() {
+    for (k, level) in chain.chars().enumerate().filter(|(_, l)| *l != 'b') {
         dirs = dirs
             .iter()
             .flat_map(|d| {
                 let mut next = vec![format!("{d}/a{n}_{k}")];
-                if *path {
+                if level == 'p' {
                     next.push(format!("{d}/p{n}_{k}"));
                 }
                 next
@@ -1214,8 +1285,14 @@ fn declared(n: usize) -> (Vec<(String, String)>, String) {
     if let Some(file) = file {
         files.push((file, body));
     }
-    (files, root)
+    Some((files, root))
 }
+
+/// The chains of `declared`, outermost first: `n` an inline module, `p` one with a `path`, `b` a block, a function's
+/// body (round 14's D1).
+const CHAINS: [&str; 13] = [
+    "", "n", "p", "nn", "np", "pn", "pp", "b", "bn", "bp", "nbn", "bnn", "pbn",
+];
 
 #[test]
 fn the_census_reads_every_inline_module_s_children_where_rustc_does() {
@@ -1224,12 +1301,15 @@ fn the_census_reads_every_inline_module_s_children_where_rustc_does() {
     );
     // Round 13's D3 and D4: every kind of file, every chain of up to two inline modules, each with or without a `path`,
     // a child with or without its own — the child's file written under every directory any reading could seek it in,
-    // so rustc reads one and the census must count that one; and none of these plain spellings refused.
-    let count = 5 * 7 * 2;
+    // so rustc reads one and the census must count that one; and none of these plain spellings refused. Round 14's D1:
+    // and a block among them, which takes no non-mod-rs module's name.
+    let cases: Vec<usize> = (0..5 * CHAINS.len() * 2)
+        .filter(|&n| declared(n).is_some())
+        .collect();
     let mut lib = String::new();
     let mut files: Vec<(String, String)> = Vec::new();
-    for n in 0..count {
-        let (written, root) = declared(n);
+    for &n in &cases {
+        let (written, root) = declared(n).expect("a case");
         lib.push_str(&root);
         files.extend(written);
     }
@@ -1242,7 +1322,9 @@ fn the_census_reads_every_inline_module_s_children_where_rustc_does() {
         "rustc read what the census does not count: {missed:#?}"
     );
     // Not vacuous: rustc read every case's child.
-    let children = (0..count)
+    let children = cases
+        .iter()
+        .copied()
         .filter(|&n| {
             let leaf = if n % 2 == 1 {
                 format!("/q{n}.rs")
@@ -1252,5 +1334,5 @@ fn the_census_reads_every_inline_module_s_children_where_rustc_does() {
             read.iter().any(|f| f.ends_with(&leaf))
         })
         .count();
-    assert_eq!(children, count, "cases whose child rustc read");
+    assert_eq!(children, cases.len(), "cases whose child rustc read");
 }
