@@ -120,7 +120,8 @@ comment, `doc` literal and document it includes, joined in source order, and wha
 test (leaf `M3.5.2.11.2`) — and each word in it that can make a doc test
 read a file, read past any whitespace or character outside ASCII, is refused, but one a
 backtick opens while no doc text of the library names an error code: no compiled Rust holds a backtick outside a
-literal or comment, so such a doc test cannot compile, whatever a file it includes says (leaf `M3.5.2.8.2`). What only
+literal or comment, so such a doc test cannot compile, whatever a file it includes says (leaf `M3.5.2.8.2`) — a stated
+trade, no reading, as rustc still reads that file (leaf `M3.5.2.11.4`). What only
 a `#[cfg(test)]` module reaches, outside any macro, or a module file opening with `#![cfg(test)]`, counts for its
 crate's own tests, never for the crate as another links it, nor in a package holding a build script, whose
 `cargo::rustc-cfg` can set `cfg(test)` (leaf `M3.5.2.9.3`); `cfg(test)` anywhere else is read as on; a non-member's tests are not
@@ -787,7 +788,9 @@ Every report ends with what the inventory does not see, the same list each time,
   `cfg(test)` on a module no macro holds, or at a module file's head, which narrows what that module reaches to its
   crate's own tests, nowhere in a package holding a build script — feature and host at once,
   with nothing built, so what a build script or a procedural macro generates, the file an admitted inclusion site
-  names, a non-member's tests and another workspace's are outside it;
+  names, a non-member's tests and another workspace's, and the file a doc test the backtick exemption excuses still
+  reads, are outside it; and it reads as rustc does as far as its rules name the channels and its generated legs check
+  their families, no further;
 - **a program a test runs.** A test that runs another role's program as a process compiles none of it, so the census
   does not see it;
 - **what a test-like unit reads at run time.** A test reading another role's files by `std::fs` —

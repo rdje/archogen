@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust report says how far the census is checked
+
+`ARCHOGEN-M3-0945` (leaf `M3.5.2.11.4`), `2026-10-24`.
+
+- The trust report, the record and the book now say that the census matches the compiler only as far as its rules
+  and generated tests reach, and that an exempt documentation example still reads the file it names; nine quotations
+  of the compiler's documentation are now exact.
+
 ## archogen — an optional dependency of a package outside the workspace is followed
 
 `ARCHOGEN-M3-0944` (leaf `M3.5.2.11.3`), `2026-10-24`.
