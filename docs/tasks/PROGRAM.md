@@ -831,6 +831,29 @@ mdBook that is the director's window into the project.
     - [x] LOCKSTEP — the hook, the arm and `PROGRAM.113`'s record.
   Commit: `ARCHOGEN-PROGRAM-0977 (leaf PROGRAM.113.2)`
 
+- ID: `PROGRAM.113.3`
+  Status: `done` — the arms read their output without a pipe, so `pipefail` cannot turn a match into a failure
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: `.2`'s trace on the runner, run `40333831327` on `80719f25`, read `mask 0 54|fire 1|print task-history: docs/tasks/Q.md — sealed 1 subtree|mask 2 0|`, the output's first line the seal's own — the seal held the signal, said its outcome and was proven; the arm failed in its own check, `printf '%s' "$out" | grep -qE '^task-history: … sealed '` under `set -o pipefail`: GNU grep's `-q` exits at its first match while `printf` is still writing an output the size of the gate's Python, which bash's notice of a signalled job repeats (`git show d7fa9c69:scripts/check_task_history.sh` holds 55174 bytes of it, the base `8cdac117` 35958), so `printf` meets a closed pipe and the pipeline fails though `grep` matched — on Linux's pipe, never on this host's larger one or BSD grep, which reads to the end.
+    - [x] FIX — every `printf '%s' "$out" | grep -q…` in the script, fifty on forty-five lines, made `grep -q… <<< "$out"`: no pipeline, so no `pipefail`.
+    - [x] ADDRESSED — the mechanism alone, GNU grep under `pipefail` on a matching first line: through the pipe `20/20 pass` at 70 kB and `0/20 pass` at 300 kB; through the here-string `20/20 pass` at 1 MB; the arms with each signalled run's output padded by 300 kB, under GNU grep, before the fix `bash scripts/check_task_history.sh --self-test`: `159 pass / 12 fail (171 arms)`, after it `171 pass / 0 fail (171 arms)`; unpadded, with this host's grep and with GNU grep, `171 pass / 0 fail (171 arms)`.
+    - [x] NO REGRESSION — `bash scripts/check_task_history.sh`: OK; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 358 s.
+    - [x] LOCKSTEP — the script; `PROGRAM.114` filed for the idiom elsewhere.
+  Commit: `ARCHOGEN-PROGRAM-0978 (leaf PROGRAM.113.3)`
+
+- ID: `PROGRAM.114`
+  Status: `pending` — filed `2026-10-26` by `PROGRAM.113.3`
+  Goal: no gate script reads a captured output through `printf … | grep -q` under `pipefail`, where an output larger
+    than a pipe turns a match into a failure on Linux.
+  Reproduce / issue: the census of `scripts/*.sh` running under `pipefail` finds the idiom 78 times outside
+    `check_task_history.sh`, most in self-test arms — `check_frozen_evaluation.sh` 7, `check_task_acceptance.sh` 6,
+    `check_feedback_register.sh` 5, and more; each latent, failing only once its output outgrows a pipe, as
+    `PROGRAM.113.3` measured.
+  Direction: each made a here-string, and a doctrine leg refusing the idiom in a `pipefail` script, its RED arm the
+    pipe the padded experiment broke.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -900,7 +923,7 @@ roadmap item X live?".
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.73`, `.78` and `.113` — are filed and owned. Every closed
+`PROGRAM.73`, `.78`, `.113` and `.114` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1043,6 +1066,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.113` | `ARCHOGEN-PROGRAM-0974 (leaf PROGRAM.113)` | **filed**: the task-history self-test's `SIGALRM` arm failed once on the Linux runner and passed on re-run; to be reproduced on Linux before any change |
 | `PROGRAM.113.1` | `ARCHOGEN-PROGRAM-0976 (leaf PROGRAM.113.1)` | **the diagnostic**: the signal arms' failure line carries the seal's evidence, the runner's log keeping only that line; the failures now steady on CI |
 | `PROGRAM.113.2` | `ARCHOGEN-PROGRAM-0977 (leaf PROGRAM.113.2)` | **the trace**: the signal arms record the signal sent, each mask change and each outcome printed, in order, for the runner to show where Linux departs |
+| `PROGRAM.113.3` | `ARCHOGEN-PROGRAM-0978 (leaf PROGRAM.113.3)` | **the cause and its fix**: GNU grep's `-q` closing the pipe under `pipefail` while `printf` still writes a large output; every such read in the script a here-string; `PROGRAM.114` filed for the 78 elsewhere |
 
 ## Changelog
 

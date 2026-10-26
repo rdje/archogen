@@ -1175,13 +1175,13 @@ MD
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if printf '%s' "$out" | grep -q '^Traceback'; then
+    if grep -q '^Traceback' <<< "$out"; then
       echo "SELF-TEST: $name — a traceback, where a refusal is named:" >&2; printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2; return
     fi
-    if [ "$want" -ne 0 ] && printf '%s' "$out" | grep -qE '^task-history: [^ ]+ — sealed '; then
+    if [ "$want" -ne 0 ] && grep -qE '^task-history: [^ ]+ — sealed ' <<< "$out"; then
       echo "SELF-TEST: $name — a refused run that says it sealed:" >&2; printf '%s\n' "$out" | grep -E '^task-history: [^ ]+ — sealed ' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"
@@ -1305,9 +1305,9 @@ PYFIX
   while IFS=$'\t' read -r census_mode census_want census_must; do
     arms=$((arms + 1))
     out="$(CENSUS_FIXTURE="$census_work" CENSUS_MODE="$census_mode" PATH="$census_work/bin:$PATH" bash "$SELF" --census SYNTH 2>&1)"; rc=$?
-    if [ "$rc" -eq "$census_want" ] && printf '%s' "$out" | grep -qF -- "$census_must" &&
-       ! printf '%s' "$out" | grep -qE 'Traceback|finite census shim:' &&
-       { [ "$census_want" -eq 0 ] || ! printf '%s' "$out" | grep -q '^census: SYNTH —'; }; then
+    if [ "$rc" -eq "$census_want" ] && grep -qF -- "$census_must" <<< "$out" &&
+       ! grep -qE 'Traceback|finite census shim:' <<< "$out" &&
+       { [ "$census_want" -eq 0 ] || ! grep -q '^census: SYNTH —' <<< "$out"; }; then
       ok=$((ok + 1)); echo "  ✅ selected-tree census $census_mode (R35 D1 / R36)"
     else
       echo "SELF-TEST: selected-tree census $census_mode — rc $rc:" >&2
@@ -1462,7 +1462,7 @@ PY
   for which in "docs/task-history/INDEX.md failed, so leg 3" "docs/task-history failed, so legs 3 and 5"; do
     arms=$((arms + 1))
     if out="$(cd "$work" && PATH="$work/fakebin:$PATH" bash "$SELF" 2>&1)"; then echo "SELF-TEST: a failed history read passed" >&2
-    elif printf '%s' "$out" | grep -qF -- "\`git log\` of $which"; then ok=$((ok + 1)); echo "  ✅ a failed read of \`git log\` of ${which%%,*} is a breach"
+    elif grep -qF -- "\`git log\` of $which" <<< "$out"; then ok=$((ok + 1)); echo "  ✅ a failed read of \`git log\` of ${which%%,*} is a breach"
     else echo "SELF-TEST: a failed history read was refused for another reason" >&2; fi
   done
   restore
@@ -1529,7 +1529,7 @@ PY
   git clone -q --depth 1 "file://$work" "$work-shallow" 2>/dev/null
   arms=$((arms + 1))
   if out="$(cd "$work-shallow" && bash "$SELF" 2>&1)"; then echo "SELF-TEST: a shallow clone passed" >&2
-  elif printf '%s' "$out" | grep -qF "the repository is shallow"; then ok=$((ok + 1)); echo "  ✅ a shallow clone is refused"
+  elif grep -qF "the repository is shallow" <<< "$out"; then ok=$((ok + 1)); echo "  ✅ a shallow clone is refused"
   else echo "SELF-TEST: a shallow clone was refused for another reason" >&2; fi
   rm -rf "$work-shallow"
   sub docs/tasks/T.md '^- ID: `T\.1\.2`\n  Status: .*\n' ''
@@ -1563,8 +1563,8 @@ PY
   printf -- '# V\n\n## Task Tree\n\n- ID: `V.1`\n  Status: `done`\n  Goal: a closed subtree the seal would take\n  Commit: `ARCHOGEN-V-0003`\n\n- ID: `T.9`\n  Status: `pending`\n  Goal: a leaf filed under another tree\x27s name\n' > "$work/docs/tasks/V.md"
   arm "a leaf filed under another tree's name is refused" 1 "is not under its tree's name V"
   arms=$((arms + 1)); out="$(cd "$work" && bash "$SELF" --seal V 2>&1)"
-  if printf '%s' "$out" | grep -qF "not under its tree's name V — a leaf is filed in its own tree; nothing was written" &&
-     ! printf '%s' "$out" | grep -qF "rolled back"; then ok=$((ok + 1)); echo "  ✅ and the seal of that tree refuses before it writes anything"
+  if grep -qF "not under its tree's name V — a leaf is filed in its own tree; nothing was written" <<< "$out" &&
+     ! grep -qF "rolled back" <<< "$out"; then ok=$((ok + 1)); echo "  ✅ and the seal of that tree refuses before it writes anything"
   else echo "SELF-TEST: the seal of a tree holding a foreign leaf wrote before refusing:" >&2; printf '%s\n' "$out" | sed -n '1,2p' | sed 's/^/    /' >&2; fi
   restore
   printf '\n- ID: `T.1.9`\n  Status: `done`\n  Goal: a closed leaf added late under a sealed subtree\n' >> "$work/docs/tasks/T.md"
@@ -1681,9 +1681,9 @@ PY
   sub docs/tasks/T.md '^(- ID: `T\.2\.10`\n  Status: )`active`' '\1`done`'
   commit
   arms=$((arms + 1)); out="$(cd "$work" && bash "$SELF" --seal T 2>&1)"
-  if printf '%s' "$out" | grep -qF "sealed 1 subtree(s), 4 leaves: T.2;" &&
-     printf '%s' "$out" | grep -qF "warning — T.2 is \`done\` and its Commit field names no commit" &&
-     ! printf '%s' "$out" | grep -qF "warning — T.2.2 is"; then
+  if grep -qF "sealed 1 subtree(s), 4 leaves: T.2;" <<< "$out" &&
+     grep -qF "warning — T.2 is \`done\` and its Commit field names no commit" <<< "$out" &&
+     ! grep -qF "warning — T.2.2 is" <<< "$out"; then
     ok=$((ok + 1)); echo "  ✅ a parent closing later is sealed beside its sealed parts, warning of a leaf that names no commit alone"
   else echo "SELF-TEST: a parent closing later was not sealed beside its parts, with its one warning:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; fi
   arm "and all its files pass, each tree's rows in its own table" 0 "12 sealed file(s)"
@@ -1751,13 +1751,13 @@ PY
     arms=$((arms + 1))
     out="$(cd "$work" && PATH="$fake:$PATH" bash "$SELF" --seal Q 2>&1)"; rc=$?
     if [ "$how" = interrupt ]; then
-      if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qE '^task-history: [^ ]+ — sealed ' && printf '%s' "$out" | grep -qF "interrupted once the seal was done; its outcome is said above" && proven; then
+      if [ "$rc" -eq 130 ] && grep -qE '^task-history: [^ ]+ — sealed ' <<< "$out" && grep -qF "interrupted once the seal was done; its outcome is said above" <<< "$out" && proven; then
         ok=$((ok + 1)); echo "  ✅ an interrupt mid-proof waits for the seal, which is proven and kept"
       else
         echo "SELF-TEST: an interrupt mid-proof — rc $rc, or the seal not finished and proven:" >&2
         printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2
       fi
-    elif [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -qF UnicodeDecodeError && ! printf '%s' "$out" | grep -qE '^task-history: [^ ]+ — sealed ' && clean &&
+    elif [ "$rc" -ne 0 ] && grep -qF UnicodeDecodeError <<< "$out" && ! grep -qE '^task-history: [^ ]+ — sealed ' <<< "$out" && clean &&
          [ ! -d "$work/docs/task-history/Q" ]; then
       ok=$((ok + 1)); echo "  ✅ git output that is not UTF-8, mid-proof, rolls the seal back"
     else
@@ -1874,14 +1874,14 @@ HOOK
     arms=$((arms + 1))
     rm -f "$SCRATCH/trace"
     out="$(cd "$work" && ulimit -c 0 && SEAL_HOOK="$when" SEAL_TRACE="$SCRATCH/trace" PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
-    if case " $want " in *" $rc "*) true ;; *) false ;; esac && printf '%s' "$out" | grep -qE '^task-history: [^ ]+ — sealed ' && proven; then
+    if case " $want " in *" $rc "*) true ;; *) false ;; esac && grep -qE '^task-history: [^ ]+ — sealed ' <<< "$out" && proven; then
       ok=$((ok + 1)); echo "  ✅ $what waits for the seal, proven and kept, then exits $rc"
     else
       # The evidence on the one line the self-test runner keeps (`^SELF-TEST`), so a failure on a runner names its own
       # cause (PROGRAM.113): whether the seal said it sealed, whether the file it seals exists, its last words, and what
       # the gate said in the proof.
       local said=no kept=no proof
-      printf '%s' "$out" | grep -qE '^task-history: [^ ]+ — sealed ' && said=yes
+      grep -qE '^task-history: [^ ]+ — sealed ' <<< "$out" && said=yes
       [ -f "$work/docs/task-history/Q/Q.1.md" ] && kept=yes
       proof="$(cd "$work" && bash "$SELF" 2>&1 | tail -2 | tr '\n' ' ')"
       echo "SELF-TEST: $what — rc $rc, not $want, or the seal not finished and proven: sealed line $said, Q.1.md $kept; output: $(printf '%s' "$out" | tail -3 | tr '\n' ' ' | cut -c1-400); gate: $(printf '%s' "$proof" | cut -c1-200); trace: $(tr '\n' '|' < "$SCRATCH/trace" 2>/dev/null | cut -c1-400); first: $(printf '%s\n' "$out" | head -2 | tr '\n' '|' | cut -c1-200)" >&2
@@ -1892,7 +1892,7 @@ HOOK
   # A stop before the mask is set finds nothing written, and says so (review R14 D1 c).
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=early PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
-  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qF "interrupted before the seal wrote anything" && clean &&
+  if [ "$rc" -eq 130 ] && grep -qF "interrupted before the seal wrote anything" <<< "$out" && clean &&
      [ ! -e "$work/docs/task-history/Q" ]; then
     ok=$((ok + 1)); echo "  ✅ a stop before the first write leaves nothing written, and says so"
   else
@@ -1904,8 +1904,8 @@ HOOK
   # then the stop takes effect (reviews R14 D1 b, AG1).
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=errhold PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
-  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qF "stopped on OSError: the index is held, so it was rolled back" &&
-     printf '%s' "$out" | grep -qF "interrupted once the seal was done; its outcome is said above" && clean &&
+  if [ "$rc" -eq 130 ] && grep -qF "stopped on OSError: the index is held, so it was rolled back" <<< "$out" &&
+     grep -qF "interrupted once the seal was done; its outcome is said above" <<< "$out" && clean &&
      [ ! -e "$work/docs/task-history/Q" ]; then
     ok=$((ok + 1)); echo "  ✅ an error under a held stop is rolled back and said before the stop takes effect"
   else
@@ -1920,7 +1920,7 @@ HOOK
   cp "$work/docs/tasks/K.md" "$SCRATCH/K.keep"
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=restore PYTHONPATH="$hook" bash "$SELF" --seal K 2>&1)"; rc=$?
-  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qF "so it was rolled back" && cmp -s "$SCRATCH/K.keep" "$work/docs/tasks/K.md" &&
+  if [ "$rc" -eq 130 ] && grep -qF "so it was rolled back" <<< "$out" && cmp -s "$SCRATCH/K.keep" "$work/docs/tasks/K.md" &&
      [ ! -e "$work/docs/task-history/K" ] && git -C "$work" diff --quiet -- docs/task-history; then
     ok=$((ok + 1)); echo "  ✅ an interrupt during a refused seal's rollback waits for it to end"
   else
@@ -1932,7 +1932,7 @@ HOOK
   cp "$SCRATCH/K.keep" "$work/docs/tasks/K.md"
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=refusedhold PYTHONPATH="$hook" bash "$SELF" --seal K 2>&1)"; rc=$?
-  if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -qF "and its rollback left what it named above" && ! printf '%s' "$out" | grep -qF "so it was rolled back"; then
+  if [ "$rc" -eq 1 ] && grep -qF "and its rollback left what it named above" <<< "$out" && ! grep -qF "so it was rolled back" <<< "$out"; then
     ok=$((ok + 1)); echo "  ✅ a refused seal whose rollback is not whole does not say it was rolled back"
   else
     echo "SELF-TEST: a refused seal whose rollback is not whole — rc $rc, or it says rolled back:" >&2
@@ -1942,9 +1942,9 @@ HOOK
   cp "$SCRATCH/K.keep" "$work/docs/tasks/K.md"
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=refusedint PYTHONPATH="$hook" bash "$SELF" --seal K 2>&1)"; rc=$?
-  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qF "and its rollback left what it named above" &&
-     printf '%s' "$out" | grep -qF "interrupted once the seal was done; its outcome is said above" &&
-     ! printf '%s' "$out" | grep -qF "rolled back"; then
+  if [ "$rc" -eq 130 ] && grep -qF "and its rollback left what it named above" <<< "$out" &&
+     grep -qF "interrupted once the seal was done; its outcome is said above" <<< "$out" &&
+     ! grep -qF "rolled back" <<< "$out"; then
     ok=$((ok + 1)); echo "  ✅ an interrupt under a rollback that is not whole never says rolled back"
   else
     echo "SELF-TEST: an interrupt under a rollback that is not whole — rc $rc, or it says rolled back:" >&2
@@ -1957,10 +1957,10 @@ HOOK
   # it names, never saying the seal was rolled back (review R23 D2).
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=plant PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
-  if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -qF "File exists" &&
+  if [ "$rc" -ne 0 ] && grep -qF "File exists" <<< "$out" &&
      [ "$(cat "$work/docs/task-history/Q/Q.1.md" 2>/dev/null)" = "another writer's" ] && git -C "$work" diff --quiet -- docs/tasks docs/task-history &&
-     printf '%s' "$out" | grep -qF "docs/task-history/Q, a folder the seal made, not removed: it is not empty" &&
-     printf '%s' "$out" | grep -qF "and its rollback left what it named above" && ! printf '%s' "$out" | grep -qF "so it was rolled back"; then
+     grep -qF "docs/task-history/Q, a folder the seal made, not removed: it is not empty" <<< "$out" &&
+     grep -qF "and its rollback left what it named above" <<< "$out" && ! grep -qF "so it was rolled back" <<< "$out"; then
     ok=$((ok + 1)); echo "  ✅ another writer's file at a sealed path is left as it was, its folder named, the rollback not called whole"
   else
     echo "SELF-TEST: another writer's file at a sealed path — rc $rc, or the rollback removed it:" >&2
@@ -1971,7 +1971,7 @@ HOOK
   ln -s "$SCRATCH/elsewhere.md" "$work/docs/tasks/.Q.md.seal-4242"
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=tmplink PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
-  if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -qF "an entry at a temporary file's path; nothing was written" &&
+  if [ "$rc" -eq 1 ] && grep -qF "an entry at a temporary file's path; nothing was written" <<< "$out" &&
      [ ! -e "$SCRATCH/elsewhere.md" ] && [ -L "$work/docs/tasks/.Q.md.seal-4242" ] && [ ! -L "$work/docs/tasks/Q.md" ] &&
      [ ! -e "$work/docs/task-history/Q" ] && git -C "$work" diff --quiet -- docs/tasks docs/task-history; then
     ok=$((ok + 1)); echo "  ✅ a link at the temporary path is refused before the first write, and left as it was"
@@ -1984,7 +1984,7 @@ HOOK
   mkdir -p "$work/docs/task-history"; printf 'another writer\n' > "$work/docs/task-history/.INDEX.md.seal-4242"
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=tmplink PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
-  if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -qF "an entry at a temporary file's path; nothing was written" &&
+  if [ "$rc" -eq 1 ] && grep -qF "an entry at a temporary file's path; nothing was written" <<< "$out" &&
      [ "$(cat "$work/docs/task-history/.INDEX.md.seal-4242")" = "another writer" ] && [ ! -e "$work/docs/task-history/Q" ] &&
      git -C "$work" diff --quiet -- docs/tasks docs/task-history; then
     ok=$((ok + 1)); echo "  ✅ a plain file at the index's temporary path is refused before the first write"
@@ -2015,7 +2015,7 @@ HOOK
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=tmprace SEAL_ELSEWHERE="$SCRATCH/elsewhere.md" PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
   planted="$(find "$work/docs/tasks" -maxdepth 1 -name '.Q.md.seal-*' -type l 2>/dev/null | head -1)"
-  if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -qF "stopped on FileExistsError" && [ -n "$planted" ] &&
+  if [ "$rc" -eq 1 ] && grep -qF "stopped on FileExistsError" <<< "$out" && [ -n "$planted" ] &&
      [ ! -e "$SCRATCH/elsewhere.md" ] && [ ! -L "$work/docs/tasks/Q.md" ] && [ ! -e "$work/docs/task-history/Q" ] &&
      git -C "$work" diff --quiet -- docs/tasks docs/task-history; then
     ok=$((ok + 1)); echo "  ✅ a link raced in at the temporary path is never written through, and is left as it was"
@@ -2031,7 +2031,7 @@ HOOK
   printf '\n- ID: `U.2.1`\n  Status: `pending`\n  Goal: reopened, not committed\n' >> "$work/docs/tasks/U.md"
   arms=$((arms + 1))
   out="$(cd "$work" && bash "$SELF" --seal U 2>&1)"; rc=$?
-  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -qE '^task-history: [^ ]+ — sealed 1 subtree\(s\), 1 leaves: U\.1;' &&
+  if [ "$rc" -eq 0 ] && grep -qE '^task-history: [^ ]+ — sealed 1 subtree\(s\), 1 leaves: U\.1;' <<< "$out" &&
      [ -f "$work/docs/task-history/U/U.1.md" ] && grep -q '^  Goal: another, reopened below' "$work/docs/tasks/U.md" &&
      (cd "$work" && bash "$SELF" >/dev/null 2>&1); then
     ok=$((ok + 1)); echo "  ✅ a seal goes past an uncommitted edit that only reopens a subtree it leaves live"
@@ -2065,9 +2065,9 @@ HOOK
   # seal that wrote nothing (review R16 AG2).
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=mkdirplant PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
-  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qF "stopped on FileExistsError" &&
-     printf '%s' "$out" | grep -qF "interrupted once the seal was done; its outcome is said above" &&
-     ! printf '%s' "$out" | grep -qF "before the seal wrote anything"; then
+  if [ "$rc" -eq 130 ] && grep -qF "stopped on FileExistsError" <<< "$out" &&
+     grep -qF "interrupted once the seal was done; its outcome is said above" <<< "$out" &&
+     ! grep -qF "before the seal wrote anything" <<< "$out"; then
     ok=$((ok + 1)); echo "  ✅ a stop held from the folder's creation names the outcome said, the start recorded first"
   else
     echo "SELF-TEST: a stop held from the folder's creation — rc $rc, or the wrong message:" >&2
@@ -2077,8 +2077,8 @@ HOOK
   # The first write itself failing under a held interrupt: the start was recorded before it (review R16 AG2).
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=mkdirfail PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
-  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qF "stopped on OSError: the folder is held" &&
-     printf '%s' "$out" | grep -qF "interrupted once the seal was done; its outcome is said above" && clean; then
+  if [ "$rc" -eq 130 ] && grep -qF "stopped on OSError: the folder is held" <<< "$out" &&
+     grep -qF "interrupted once the seal was done; its outcome is said above" <<< "$out" && clean; then
     ok=$((ok + 1)); echo "  ✅ a first write that fails under a held stop finds the start recorded before it"
   else
     echo "SELF-TEST: a first write that fails under a held stop — rc $rc, or the wrong message:" >&2
@@ -2089,8 +2089,8 @@ HOOK
   # went nowhere (reviews R17 D1, D2, D3).
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=tree PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1 >&-)"; rc=$?
-  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qF "once the seal was done; its outcome could not be said" &&
-     ! printf '%s' "$out" | grep -q 'Traceback' && proven; then
+  if [ "$rc" -eq 130 ] && grep -qF "once the seal was done; its outcome could not be said" <<< "$out" &&
+     ! grep -q 'Traceback' <<< "$out" && proven; then
     ok=$((ok + 1)); echo "  ✅ an interrupt with the output closed exits 130 and says its outcome went unsaid"
   else
     echo "SELF-TEST: an interrupt with the output closed — rc $rc:" >&2; printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2
@@ -2098,7 +2098,7 @@ HOOK
   restore
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=tree PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&-)"; rc=$?
-  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qE '^task-history: [^ ]+ — sealed ' && proven; then
+  if [ "$rc" -eq 130 ] && grep -qE '^task-history: [^ ]+ — sealed ' <<< "$out" && proven; then
     ok=$((ok + 1)); echo "  ✅ an interrupt with the error output closed exits 130, the seal kept"
   else
     echo "SELF-TEST: an interrupt with the error output closed — rc $rc" >&2
@@ -2114,7 +2114,7 @@ HOOK
   rm -f "$SCRATCH/rc"; restore
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=early PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1 >&-)"; rc=$?
-  if [ "$rc" -eq 130 ] && printf '%s' "$out" | grep -qF "before the seal wrote anything" && ! printf '%s' "$out" | grep -q 'Traceback' && clean; then
+  if [ "$rc" -eq 130 ] && grep -qF "before the seal wrote anything" <<< "$out" && ! grep -q 'Traceback' <<< "$out" && clean; then
     ok=$((ok + 1)); echo "  ✅ an interrupt before any write, the output closed, exits 130"
   else
     echo "SELF-TEST: an interrupt before any write with the output closed — rc $rc" >&2
@@ -2135,7 +2135,7 @@ HOOK
   # A hang-up ignored on entry, as under nohup, stays ignored: the seal runs to its end and the run passes (review R12).
   arms=$((arms + 1))
   out="$(cd "$work" && trap '' HUP && SEAL_HOOK=hup PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
-  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -qE '^task-history: [^ ]+ — sealed '; then
+  if [ "$rc" -eq 0 ] && grep -qE '^task-history: [^ ]+ — sealed ' <<< "$out"; then
     ok=$((ok + 1)); echo "  ✅ a hang-up ignored on entry stays ignored, and the seal runs to its end"
   else
     echo "SELF-TEST: a hang-up ignored on entry — rc $rc, the seal not made:" >&2
@@ -2146,7 +2146,7 @@ HOOK
   # nothing it could not undo (review R12 AG-d).
   arms=$((arms + 1))
   out="$(cd "$work" && SEAL_HOOK=vanish PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
-  if [ "$rc" -eq 1 ] && ! printf '%s' "$out" | grep -qF "could not undo" && clean && [ ! -e "$work/docs/task-history/Q" ]; then
+  if [ "$rc" -eq 1 ] && ! grep -qF "could not undo" <<< "$out" && clean && [ ! -e "$work/docs/task-history/Q" ]; then
     ok=$((ok + 1)); echo "  ✅ a noted file never created is no file the rollback fails to remove"
   else
     echo "SELF-TEST: a noted file never created — rc $rc, or the rollback named it:" >&2
@@ -2189,7 +2189,7 @@ HOOK
   chmod +x "$fake/git"
   arm_path() { local name="$1" must="$2"; shift 2; arms=$((arms + 1))
     out="$(cd "$work" && PATH="$fake:$PATH" bash "$SELF" "$@" 2>&1)"; rc=$?
-    if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -qF -- "$must"; then return 0; fi
+    if [ "$rc" -ne 0 ] && grep -qF -- "$must" <<< "$out"; then return 0; fi
     echo "SELF-TEST: $name — rc $rc, not about \`$must\`:" >&2; printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2; return 1
   }
   if arm_path "a restore that fails" "INDEX.md, not restored" --seal Q && git -C "$work" diff --quiet -- docs/tasks; then
@@ -2200,7 +2200,7 @@ HOOK
   printf -- '# S\n\n## Task Tree\n\n- ID: `S.1`\n  Status: `done`\n  Goal: one closed subtree\n  Commit: `ARCHOGEN-S-0001`\n\n- ID: `S.2`\n  Status: `done`\n  Goal: another\n  Commit: `ARCHOGEN-S-0002`\n' > "$work/docs/tasks/S.md"
   commit
   printf '#!/bin/sh\nfor a in "$@"; do [ "$a" = "--is-shallow-repository" ] && for f in S.1 S.2; do rm docs/task-history/S/$f.md; mkdir docs/task-history/S/$f.md; : > docs/task-history/S/$f.md/x; done; done\nexec "%s" "$@"\n' "$(command -v git)" > "$fake/git"
-  if arm_path "removals that fail" "S/S.1.md, not removed" --seal S && printf '%s' "$out" | grep -qF "S/S.2.md, not removed"; then
+  if arm_path "removals that fail" "S/S.1.md, not removed" --seal S && grep -qF "S/S.2.md, not removed" <<< "$out"; then
     ok=$((ok + 1)); echo "  ✅ every removal the rollback cannot make is named, the first failure stopping none"
   else echo "SELF-TEST: a removal that failed stopped the next, or went unnamed" >&2; fi
   rm -rf "$work/docs/task-history/S" "$fake"; restore

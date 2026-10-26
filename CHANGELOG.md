@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the self-test failure on CI found and fixed
+
+`ARCHOGEN-PROGRAM-0978` (leaf `PROGRAM.113.3`), `2026-10-26`.
+
+- The task-history gate's own tests failed on CI's Linux runner, not because the gate was wrong but because each test
+  piped a large output into `grep -q`: GNU grep stops reading at its first match, the writer then meets a closed pipe,
+  and `pipefail` turns the match into a failure. They now read the output without a pipe; the same pattern elsewhere is
+  filed.
+
 ## archogen — the failing self-test arms trace what happened
 
 `ARCHOGEN-PROGRAM-0977` (leaf `PROGRAM.113.2`), `2026-10-26`.
