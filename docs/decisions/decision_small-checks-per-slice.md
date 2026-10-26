@@ -27,11 +27,16 @@ What it means here, slice by slice:
   inventory on a snapshot when a slice changes what a trust root compiles — seconds, and the gate CI runs on push.
 - **Commit integrity stays mandatory**: the pre-commit hooks and every doctrine they run, and `make focused`, which
   `UNTRACKED-CODE` requires stamped on the staged tree.
-- **Deferred** until the agreed feature set is implemented: the whole `cargo test -p xtask`, the mutation-sweep proofs
-  (`xtask/mutation_sweep_tests.py`) and the premises they pin — a lockfile a slice moves is re-pinned there — the
-  workspace-wide clippy, full CI, the census's oracle beyond the changed legs, and every other broad audit. Today's
-  feature set is `M3.5`'s, the configuration checker, and its deferred verification is `M3.5.9`, pending until the last
-  of `M3.5`'s feature leaves lands.
+- **What `make focused` runs stays at every commit**, since commit integrity is mandatory: its tier in
+  `xtask/src/main.rs` is `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings` and
+  `cargo test --all` — the workspace's clippy, the whole xtask suite and the mutation sweep's premise tests
+  (`xtask/mutation_sweep_tests.py`) among them. No slice runs them a second time beside it, and a pin a slice moves —
+  the lockfile's, in that file — is re-pinned by that slice, its reason on the pin's line. Corrected `2026-10-26` by
+  `PROGRAM.112`: this bullet first listed them as deferred, and `M3.5.4.5`'s focused run refused the pin it had left.
+- **Deferred** until the agreed feature set is implemented: what `make focused` does not run — the integration tier and
+  full CI, the mutation sweeps themselves, the census's oracle beyond the changed legs, and every other broad audit.
+  Today's feature set is `M3.5`'s, the configuration checker, and its deferred verification is `M3.5.9`, pending until
+  the last of `M3.5`'s feature leaves lands.
 - **What a leaf says**: "implemented, focused checks passing" until `M3.5.9` has run; never "verified" before.
 - A daily artifact cleanup keeps what makes it safe — the handoff census, regenerable caches alone, each removal
   proven gone — and drops the exhaustive identity audit of everything it kept.

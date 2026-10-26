@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — doctrine 22's record states what every commit still runs
+
+`ARCHOGEN-PROGRAM-0959` (leaf `PROGRAM.112`), `2026-10-26`.
+
+- The record of the director's doctrine 22 no longer lists as deferred what `make focused` runs at every commit —
+  workspace clippy and the whole test suite — and says a pin a change moves is re-pinned by that change.
+
 ## archogen — the plan checks' subtree sealed, their migration note a record
 
 `ARCHOGEN-M3-0958` (leaf `M3`), `2026-10-26`.

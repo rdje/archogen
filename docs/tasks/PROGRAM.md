@@ -764,6 +764,21 @@ mdBook that is the director's window into the project.
   Verification: the census, the removal report.
   Commit: `ARCHOGEN-PROGRAM-0953 (leaf PROGRAM.111)`
 
+- ID: `PROGRAM.112`
+  Status: `done` — doctrine 22's record corrected: what `make focused` runs is not deferred
+  Built: `docs/decisions/decision_small-checks-per-slice.md`'s deferred bullet split in two — what `make focused` runs,
+    its tier `cargo fmt --all -- --check`, workspace clippy and `cargo test --all`, stays at every commit, a pin a slice
+    moves re-pinned by that slice; what it does not run — the integration tier and CI, the sweeps themselves, the
+    oracle, audits — deferred to `M3.5.9`; its index row likewise.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the record listed the whole xtask suite, the sweep's pinned premises and workspace clippy as deferred, and `make focused`, mandatory at every commit, runs all three; WHERE, `git show d8153b33:docs/decisions/decision_small-checks-per-slice.md`, its *Deferred* bullet, against `xtask/src/main.rs`'s `focused` tier, `steps: &[FMT, CLIPPY, TESTS]` — found when `M3.5.4.5`'s focused run refused the lockfile pin the record had deferred.
+    - [x] FIX — the record's two bullets and its index row.
+    - [x] ADDRESSED — `bash scripts/check_doctrines.sh` through the hooks: the record indexed and within the folder's ceiling.
+    - [x] NO REGRESSION — a records-only change; no code changed.
+    - [x] LOCKSTEP — the record, its index and the tree.
+  Verification: the doctrines.
+  Commit: `ARCHOGEN-PROGRAM-0959 (leaf PROGRAM.112)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -971,6 +986,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.109` | `ARCHOGEN-PROGRAM-0928 (leaf PROGRAM.109)` | **the fifteenth daily artifact cleanup**: only the idle main and wasm debug incremental caches removed, 29847 files / 4245385971 logical bytes; every other entry under `target/` identical or accounted; `PROGRAM.100`–`.102` and `.104`–`.108` sealed |
 | `PROGRAM.110` | `ARCHOGEN-PROGRAM-0952 (leaf PROGRAM.110)` | **the verification doctrine 22 recorded**: small checks per slice, full verification after the feature set, deferred to `M3.5.9` for `M3.5` |
 | `PROGRAM.111` | `ARCHOGEN-PROGRAM-0953 (leaf PROGRAM.111)` | **the sixteenth daily artifact cleanup**: only idle incremental caches removed, 8854 files / 1586169011 bytes, a light run under doctrine 22 |
+| `PROGRAM.112` | `ARCHOGEN-PROGRAM-0959 (leaf PROGRAM.112)` | **doctrine 22's record corrected**: what `make focused` runs — workspace clippy, `cargo test --all`, the sweep's premises — stays at every commit, a pin a slice moves re-pinned by it; the rest deferred to `M3.5.9` |
 
 ## Changelog
 
