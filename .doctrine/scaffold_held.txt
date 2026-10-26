@@ -1,0 +1,26 @@
+# .doctrine/scaffold_held.txt — the files this repository holds for its scaffold and never edits, one path per line
+# (leaf PROGRAM.116). Read by SCRATCH-LOCALITY and PIPE-READS: a breach in a file listed here is counted and
+# reported for the scaffold's owner, not refused; every other file is archogen's, and a breach in it is fixed here.
+#
+# The director's ruling of 2026-09-30 (findings §10, sealed in
+# docs/decision-history/decision_findings-for-director-review/10.md): "only [template] inherited script you haven't
+# modified. Those you modified are yours now." Measured that day: a file is held when it came with the template's
+# initial import and no later commit has changed it — seventeen files. `.githooks/pre-commit` has since left the hold:
+# leaf M2.7.4.4 (`e2b034dc`, 2026-10-03) added the catalog gate's call to it, which makes it archogen's by the
+# ruling's own rule. A file leaves this list when archogen changes it, and nothing joins it.
+scripts/bootstrap.sh
+scripts/check_docpaths.sh
+scripts/check_doctrines.sh
+scripts/check_gap_claims.sh
+scripts/check_lesson_promotion.sh
+scripts/check_live_doc_currency.sh
+scripts/check_memory_architecture.sh
+scripts/check_no_background_jobs.sh
+scripts/check_readme_stability.sh
+scripts/check_routing_evidence.sh
+scripts/check_table_arity.sh
+scripts/check_task_tree_ownership.sh
+scripts/check_waiver_routing.sh
+knowledge-map/scripts/gen_knowledge_map.sh
+knowledge-map/scripts/check_knowledge_map.sh
+.githooks/commit-msg

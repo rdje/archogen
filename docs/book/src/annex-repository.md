@@ -49,9 +49,11 @@ system's temporary directory. `SCRATCH-LOCALITY` reads every tracked shell scrip
 refuses a `mktemp` with no template under `target/`, a line naming the system temporary directory, and a
 Rust `temp_dir()` call. When it was written, one ordinary run of the doctrines and their self-tests made
 **26** temporary directories and files, **every one** of them off this volume, from 18 places in 15
-files. Four of those places are in files this project takes from its scaffold. A local edit there would
-be erased by the next sync, so the check lists them without refusing them, and the change they need is
-written down for the scaffold's owner in `docs/decisions/decision_scratch-on-the-repository-volume.md`.
+files. Under the director's ruling of `2026-09-30`, a file this project takes from its scaffold is held — never
+edited here — only while the project has never changed it; `.doctrine/scaffold_held.txt` lists those files. Two of
+the places are in such a file, so the check lists them without refusing them, and the change they need is written
+down for the scaffold's owner in `docs/decisions/decision_scratch-on-the-repository-volume.md`. Two more were in
+`check_task_acceptance.sh`, which the project had changed and so owns; they are fixed (leaf `PROGRAM.116`).
 
 Moving a fixture changes what surrounds it. Two self-tests broke when their scratch moved under
 `target/`: one because git ignores that whole directory, and one because [Cargo](ledger.md#rust-toolchain), walking up from the
@@ -136,8 +138,8 @@ there while the seal they tested was sound, their outputs having grown past the 
 
 `PIPE-READS` (`scripts/check_pipe_reads.sh`) refuses that form in every tracked script that runs under `pipefail`; the
 output is read from a here-string instead, `grep -q … <<< "$out"`, which has no pipe to close. As with scratch, the
-places in files this project takes from its scaffold are listed, not refused, their change written down for the
-scaffold's owner in the leaf that wrote the check, `PROGRAM.114`.
+places in the files held for the scaffold (`.doctrine/scaffold_held.txt`) are listed, not refused, their change
+written down for the scaffold's owner in the leaf that wrote the check, `PROGRAM.114`.
 
 ## Before handing the workspace over
 

@@ -181,7 +181,8 @@ slice_leaf() {
 
 # ── RED arms ─────────────────────────────────────────────────────────────────────────────────
 if [ "${1:-}" = "--self-test" ]; then
-  SELF="$(mktemp -d)"; trap 'rm -rf "$SELF"' EXIT
+  mkdir -p "$ROOT/target/doctrine_scratch"
+  SELF="$(mktemp -d "$ROOT/target/doctrine_scratch/task_acceptance_selftest.XXXXXX")"; trap 'rm -rf "$SELF"' EXIT
   arms=0; ok=0
 
   # One throwaway repository per arm, so an arm cannot inherit another's staging and so the real
@@ -257,9 +258,9 @@ MD
     out="$( cd "$repo" && "$OLDSELF" 2>&1 )"; rc=$?
     verdict=bad
     if [ "$want" = fail ]; then
-      if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -q 'TASK-ACCEPTANCE'; then verdict=good; fi
+      if [ "$rc" -eq 1 ] && grep -q 'TASK-ACCEPTANCE' <<< "$out"; then verdict=good; fi
     else
-      if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q 'task-acceptance: OK'; then verdict=good; fi
+      if [ "$rc" -eq 0 ] && grep -q 'task-acceptance: OK' <<< "$out"; then verdict=good; fi
     fi
     if [ "$verdict" = good ]; then
       ok=$((ok + 1))
@@ -302,7 +303,7 @@ MD
   arms=$((arms + 1))
   printf 'WORK-0001 (leaf T.1): a subject\n' > "$repo/git_message_brief.txt"
   out="$( cd "$repo" && TASK_ACCEPTANCE_LEAF=T.2 "$OLDSELF" 2>&1 )"; rc=$?
-  if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -q 'T\.2'; then
+  if [ "$rc" -eq 1 ] && grep -q 'T\.2' <<< "$out"; then
     ok=$((ok + 1)); printf 'SELF-TEST: ✅ arm %s\n' "6 (env override beats the message file)"
   else
     printf 'SELF-TEST: ❌ arm %s — wanted exit 1 naming T.2, got exit %s\n%s\n' \
@@ -325,7 +326,7 @@ MD
   ( cd "$repo" && git rm -q --cached docs/tasks/TREE.md >/dev/null 2>&1 )
   printf 'WORK-0001 (leaf T.1): a subject\n' > "$repo/git_message_brief.txt"
   out="$( cd "$repo" && "$OLDSELF" 2>&1 )"; rc=$?
-  if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -q 'NO owning task-tree leaf'; then
+  if [ "$rc" -eq 1 ] && grep -q 'NO owning task-tree leaf' <<< "$out"; then
     ok=$((ok + 1)); printf 'SELF-TEST: ✅ arm %s\n' "8 (code with no leaf staged)"
   else
     printf 'SELF-TEST: ❌ arm %s — wanted exit 1 and the no-leaf refusal, got exit %s\n%s\n' \
@@ -337,7 +338,7 @@ MD
   printf 'WORK-0001 (leaf T.1): a subject\n' > "$repo/git_message_brief.txt"
   out="$( cd "$repo" && "$OLDSELF" 2>&1 )"; rc=$?
   arms=$((arms + 1))
-  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q 'leaf T\.1'; then
+  if [ "$rc" -eq 0 ] && grep -q 'leaf T\.1' <<< "$out"; then
     ok=$((ok + 1)); printf 'SELF-TEST: ✅ arm %s\n' "9 (the OK message names the leaf it read)"
   else
     printf 'SELF-TEST: ❌ arm %s — exit %s\n%s\n' "9 (the OK message names the leaf it read)" "$rc" \
@@ -353,7 +354,7 @@ MD
   printf 'WORK-0001 (leaf T.7): a subject\n' > "$repo/git_message_brief.txt"
   out="$( cd "$repo" && "$OLDSELF" 2>&1 )"; rc=$?
   arms=$((arms + 1))
-  if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -q 'is closed and sealed'; then
+  if [ "$rc" -eq 1 ] && grep -q 'is closed and sealed' <<< "$out"; then
     ok=$((ok + 1)); printf 'SELF-TEST: ✅ arm %s\n' "10 (a sealed owner is named as closed)"
   else
     printf 'SELF-TEST: ❌ arm %s — wanted exit 1 and the sealed refusal, got exit %s\n%s\n' \
@@ -371,7 +372,8 @@ staged="$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)"
 # grep a FILE, never `printf "$var" | grep -q`: under pipefail, grep -q exits at the first match
 # and the producer takes SIGPIPE, so the pipeline reports FAILURE ON SUCCESS once the input is
 # large. That failure mode is silent and, at a `|| continue`, fails OPEN.
-tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+mkdir -p "$ROOT/target/doctrine_scratch"
+tmp="$(mktemp -d "$ROOT/target/doctrine_scratch/task_acceptance.XXXXXX")"; trap 'rm -rf "$tmp"' EXIT
 printf '%s\n' "$staged" > "$tmp/staged.txt"
 
 grep -E "$code_re" "$tmp/staged.txt" > "$tmp/code.txt" 2>/dev/null || true

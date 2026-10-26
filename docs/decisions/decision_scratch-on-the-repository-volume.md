@@ -15,8 +15,11 @@ which must stand alone in someone else's checkout, derives its root from its own
 work tree if there is one and its own directory otherwise, and writes under `<root>/target/feedback_scratch/`.
 `SCRATCH-LOCALITY` (`scripts/check_scratch_locality.sh`) enforces it on every commit.
 
-Four sites in two **scaffold-owned** files cannot be fixed here. The change they need is written below for
-whoever owns the scaffold. ⛔ It is never sent there by an archogen agent
+Two sites in one file held for the scaffold cannot be fixed here: under the director's ruling of `2026-09-30`
+(findings §10), a file taken from the template is held only while archogen has never changed it, and
+`.doctrine/scaffold_held.txt` lists those files. The change they need is written below for whoever owns the scaffold.
+Two more sites, in `check_task_acceptance.sh`, were counted here as the scaffold's until `PROGRAM.116` (`2026-10-26`)
+read the ruling, which names that file archogen's; they are fixed here. ⛔ It is never sent there by an archogen agent
 ([[decision_repository-boundary-read-only]]).
 
 ## Why
@@ -48,7 +51,7 @@ Read at `bedrock` `5af0c1c` (`bedrock-scaffold 0.10.0`), read-only. This reposit
 
 | File | Here (`0.8.1`) | Upstream (`0.10.0`) |
 | --- | --- | --- |
-| `scripts/check_task_acceptance.sh` | `:184` `SELF="$(mktemp -d)"` (its self-test) · `:358` `tmp="$(mktemp -d)"` | `:53` `tmp="$(mktemp -d)"` |
+| `scripts/check_task_acceptance.sh` | fixed here — **archogen's** under the ruling, changed by `PROGRAM.21` (`PROGRAM.116`) | `:53` `tmp="$(mktemp -d)"` |
 | `scripts/check_waiver_routing.sh` | `:73` `added_file="$(mktemp)"` · `:93` `win_file="$(mktemp)"` | the same two lines |
 | `scripts/update_scaffold.sh` | fixed here — **project-owned**: not in its own `NEUTRAL` array | `:37` `tmp="$(mktemp -d)"` |
 
@@ -89,5 +92,5 @@ Two cautions for the scaffold, which serves more than Rust projects:
   change reads as a broken instrument, or worse, as a passing one.
 - **On a scaffold sync** (`PROGRAM.26`): upstream's updater still makes a bare `mktemp`. The adopted copy keeps
   this repository's fix, and `SCRATCH-LOCALITY` refuses the adoption otherwise. If a sync brings a fixed
-  `check_task_acceptance.sh` or `check_waiver_routing.sh`, the gate's list of scaffold-owned sites shrinks by
+  `check_waiver_routing.sh`, its two sites leave with the old copy, and the gate's report of held sites shrinks by
   itself.

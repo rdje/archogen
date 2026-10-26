@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the scaffold's files are the ones the director's ruling holds
+
+`ARCHOGEN-PROGRAM-0989` (leaf `PROGRAM.116`), `2026-10-26`.
+
+- Two checks treated every file the scaffold updater lists as off-limits, though the director had ruled that a file
+  this project has changed is its own. They now read the ruling's list, and the acceptance check's own scratch and
+  reads — the kind that failed on CI earlier the same day — are fixed rather than reported upstream.
+
 ## archogen — what the configuration checker shares with the generator, classified
 
 `ARCHOGEN-M3-0988` (leaf `M3.5.6.5`), `2026-10-26`.

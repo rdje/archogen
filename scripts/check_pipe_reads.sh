@@ -11,9 +11,11 @@
 # The fix is a here-string, `grep -q … <<< "$out"`: no pipeline, so `pipefail` has nothing to fail.
 #
 # POPULATION: every tracked shell script — `scripts/*.sh`, `.githooks/*`, `knowledge-map/scripts/*.sh` — that sets
-# `pipefail`; a comment line is not code. OWNERSHIP is derived as `SCRATCH-LOCALITY` derives it: a file named in
-# `scripts/update_scaffold.sh`'s NEUTRAL array is the scaffold's, its sites COUNTED AND REPORTED, NOT REFUSED — another
-# repository owns that file, and its change is recorded in `PROGRAM.114` for whoever owns the scaffold.
+# `pipefail`; a comment line is not code. OWNERSHIP is read as `SCRATCH-LOCALITY` reads it: a file
+# `.doctrine/scaffold_held.txt` names is held for the scaffold under the director's ruling of 2026-09-30 (findings §10),
+# its sites COUNTED AND REPORTED, NOT REFUSED, and their change recorded in `PROGRAM.114` for whoever owns the scaffold;
+# every other file is archogen's, one on the updater's NEUTRAL list included once archogen has changed it
+# (`PROGRAM.116`).
 #
 # ⚠️ HONEST LIMIT: the form is matched by its text — `printf '%s'` or `'%s\n'`, or `echo`, of one variable, piped into
 # a `grep` whose flags hold `q`. A read spelled otherwise (a `cat` of a file, a function wrapping the pipe) is not
@@ -40,11 +42,10 @@ if listed.returncode != 0:
     print("PIPE-READS: `git ls-files` failed, so nothing was scanned — a failed read is never a clean tree", file=sys.stderr)
     sys.exit(1)
 scaffold = set()
-if os.path.exists("scripts/update_scaffold.sh"):
-    text = open("scripts/update_scaffold.sh", encoding="utf-8").read()
-    block = re.search(r"^NEUTRAL=\(\n(.*?)^\)", text, re.M | re.S)
-    if block:
-        scaffold = {l.strip() for l in block.group(1).split("\n") if l.strip() and not l.strip().startswith("#")}
+if os.path.exists(".doctrine/scaffold_held.txt"):
+    for l in open(".doctrine/scaffold_held.txt", encoding="utf-8").read().split("\n"):
+        if l.strip() and not l.strip().startswith("#"):
+            scaffold.add(l.strip())
 fails, owed, scanned = [], [], 0
 for path in listed.stdout.split():
     try:
@@ -79,7 +80,8 @@ self_test() {
   local pipe_read="printf '%s' \"\$out\" | grep"
   fresh() {
     rm -rf "$work"; mkdir -p "$work/scripts"; git -C "$work" init -q
-    printf 'NEUTRAL=(\n  scripts/neutral.sh\n)\n' > "$work/scripts/update_scaffold.sh"
+    mkdir -p "$work/.doctrine"; printf '# held\nscripts/neutral.sh\n' > "$work/.doctrine/scaffold_held.txt"
+    printf 'NEUTRAL=(\n  scripts/neutral.sh\n  scripts/changed.sh\n)\n' > "$work/scripts/update_scaffold.sh"
     printf '#!/usr/bin/env bash\nset -uo pipefail\nout=x\ngrep -qF x <<< "$out"\n' > "$work/scripts/clean.sh"
     git -C "$work" add -A
   }
@@ -117,6 +119,10 @@ $pipe_read -qF x"
 out=x
 $pipe_read -qF x"
   arm "a scaffold-owned site is reported, not refused" 0 "scaffold-owned, reported not refused: scripts/neutral.sh:4"
+  fresh; put changed.sh "set -uo pipefail
+out=x
+$pipe_read -qF x"
+  arm "a file on the updater's NEUTRAL list that archogen changed is its own, and refused" 1 "scripts/changed.sh:4"
   # The rule's reason: a here-string reads an output far past any pipe, under pipefail, as the match it is.
   arms=$((arms + 1))
   local big; big="needle"$'\n'"$(head -c 1000000 /dev/zero | tr '\0' 'x')"
