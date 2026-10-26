@@ -15,5 +15,6 @@ workspace = true
 
 [dependencies]
 archogen-digest = { path = "../archogen-digest" }
+archogen-outcome = { path = "../archogen-outcome" }
 eadl-front = { path = "../eadl-front" }
 eadl-model = { path = "../eadl-model" }

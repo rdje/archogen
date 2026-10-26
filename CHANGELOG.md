@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the configuration checker refuses a stale or misnamed plan
+
+`ARCHOGEN-M3-0951` (leaf `M3.5.4.2`), `2026-10-26`.
+
+- The configuration checker's first check: a plan written for another version of the description is refused as
+  stale, with the repair "resolve again", before anything else is judged; a plan that does not read, or names
+  another profile or a system the description does not declare, is refused as a corrupted plan.
+
 ## archogen — the assignment record the configuration checker judges
 
 `ARCHOGEN-M3-0950` (leaf `M3.5.4.1`), `2026-10-24`.
