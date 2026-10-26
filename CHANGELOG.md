@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the configuration checker compiles to a browser module of its own
+
+`ARCHOGEN-M3-1000` (leaf `M3.5.7.1`), `2026-10-27`.
+
+- `crates/archogen-plan-check-wasm` is the configuration checker's own WebAssembly module, sharing nothing with the
+  generator's: a page hands it the description, its modules and the plan as texts, and it answers the same result
+  record the executable and the MCP tool write, naming itself. It imports nothing. Its loader and the checks of the
+  compiled module are the next leaf's.
+
 ## archogen — the configuration checker serves its own MCP tool
 
 `ARCHOGEN-M3-0998` (leaf `M3.5.1.6.4`), `2026-10-27`.

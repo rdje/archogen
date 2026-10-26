@@ -1,0 +1,28 @@
+# The configuration checker's browser module (ROADMAP.md §10.4; docs/tasks/M3.md `M3.5.7`), as
+# docs/decisions/decision_wasm-binding.md §11 decides it: the `cdylib` is the artifact a page loads, the `rlib` lets
+# the host's tests call the same functions. Its own module, never the generator's: it depends on the configuration
+# checker's packages alone, so a page judging a plan runs no generator code (a test of this manifest holds it).
+[package]
+name = "archogen-plan-check-wasm"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "The configuration checker's WebAssembly module: three exports, a framed request, the result record"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+archogen-digest = { path = "../archogen-digest" }
+archogen-json = { path = "../archogen-json" }
+archogen-outcome = { path = "../archogen-outcome" }
+archogen-plan-check = { path = "../archogen-plan-check" }
+eadl-front = { path = "../eadl-front" }
+
+[dev-dependencies]
+# The tests hold the module's record to the MCP tool's, served over the transport, for the same texts.
+archogen-transport = { path = "../archogen-transport" }
+eadl-model = { path = "../eadl-model" }

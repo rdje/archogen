@@ -36,7 +36,6 @@ use archogen_plan_check::judgement::{self, Inputs, Unjudged};
 use archogen_plan_check::mcp::{self, Checker};
 use archogen_plan_check::NAME;
 use eadl_front::module::{DirectoryModules, ModuleSource};
-use eadl_model::profile::{Profile, RT_STATIC_UP_V1};
 
 /// How it is called.
 const USAGE: &str =
@@ -201,19 +200,9 @@ fn run(
         }) => (profile, result, description, plan),
         Err(why) => return refuse(err, Status::Usage, &why),
     };
-    let profile: &Profile = match profile.as_deref() {
-        None => &RT_STATIC_UP_V1,
-        Some(id) if id == RT_STATIC_UP_V1.id => &RT_STATIC_UP_V1,
-        Some(other) => {
-            return refuse(
-                err,
-                Status::Usage,
-                &format!(
-                    "the profile `{other}` is not one this checker has; it has `{}`",
-                    RT_STATIC_UP_V1.id
-                ),
-            )
-        }
+    let profile = match judgement::profile(profile.as_deref()) {
+        Ok(profile) => profile,
+        Err(why) => return refuse(err, Status::Usage, &why),
     };
     let producer = match me() {
         Ok(producer) => producer,

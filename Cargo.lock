@@ -80,6 +80,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "archogen-plan-check-wasm"
+version = "0.1.0"
+dependencies = [
+ "archogen-digest",
+ "archogen-json",
+ "archogen-outcome",
+ "archogen-plan-check",
+ "archogen-transport",
+ "eadl-front",
+ "eadl-model",
+]
+
+[[package]]
 name = "archogen-s0"
 version = "0.1.0"
 dependencies = [

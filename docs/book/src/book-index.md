@@ -377,6 +377,7 @@ a change that leaves it stale, so it is never edited by hand.
 
 - **ID** — [definition](glossary.md), [The S0 early generation path](s0.md), [Verifying the toolchain](verification.md),
   [Annex C: Trust proof records](annex-trust-proofs.md)
+- In a browser — [Checking a plan](plan-check.md#in-a-browser)
 - Incremental matcher reasons — [Annex C: Trust proof records](annex-trust-proofs.md#incremental-matcher-reasons)
 - Initial cache and current-reason assessment — [Annex C: Trust proof
   records](annex-trust-proofs.md#initial-cache-and-current-reason-assessment)
@@ -531,6 +532,10 @@ a change that leaves it stale, so it is never edited by hand.
 - pgen — [What this project relies on from outside](ledger.md#pgen)
 - **PID** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **PID0** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- plan-check-wasm-refusal-format — [What is versioned, and what changing it
+  costs](versions.md#plan-check-wasm-refusal-format)
+- plan-check-wasm-request-format — [What is versioned, and what changing it
+  costs](versions.md#plan-check-wasm-request-format)
 - Planning the operator measurements — [Generated-sources test
   adequacy](trust-adequacy.md#planning-the-operator-measurements)
 - **PLIC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)

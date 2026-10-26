@@ -145,6 +145,24 @@ fixed allowance for the envelope, is refused unread. The tool is read-only: it t
 
 `--mcp` stands alone; through `archogen plan-check`, which gives the checker no input, the server ends at once.
 
+### In a browser
+
+A page can judge a plan too, with no program installed: the checker compiles to a WebAssembly module of its own,
+`crates/archogen-plan-check-wasm`, which shares nothing with the generator's module — a page judging a plan runs no
+code of the search that wrote it. The module imports nothing, so a page that loads it gives it no way to reach
+anything; it is driven through three functions, `plan_check_input`, `plan_check` and `plan_check_output`, as the
+generator's module is through its own.
+
+The page hands it the same texts the MCP tool takes — the description, its modules, the profile, the plan — and the
+module's own fingerprint, which the page computes from the bytes it loaded, since a module cannot read its own file.
+It answers the **result record**, the one the executable and the tool write for the same texts, naming itself
+`archogen-plan-check-wasm` and that fingerprint: a record from a page is never taken for the installed checker's. A
+request it cannot judge — framed wrongly, a fingerprint misspelt, another profile, texts past the 4 MiB budget — gets
+a short refusal of its own format, `archogen-plan-check-wasm-refusal/1`, saying what to change, and no record.
+
+The request's layout, field by field, is `docs/decisions/decision_wasm-binding.md` §11. The loader a page uses, and
+the checks that the compiled module answers as the host build does, are leaf `M3.5.7.2`'s.
+
 ### What binds, and what does not
 
 Not everything a description requires is served by one provider:
@@ -200,6 +218,8 @@ the record, or both — for check 4, also at what the provider states. The langu
 - `crates/archogen-plan-check/src/judgement.rs` — one judgement made the result record, which the executable writes
   and the tool answers;
 - `crates/archogen-plan-check/src/mcp.rs` — the tool `plan-check`, over `crates/archogen-transport`;
+- `crates/archogen-plan-check-wasm/src/lib.rs` — the browser module: its answer and its three exports, over
+  `crates/archogen-plan-check-wasm/src/request.rs`, the request's framing;
 - `crates/archogen-plan-check/src/joint.rs` — check 5, the joint rules, written from `docs/semantics/model.md` §8
   alone, never from the search's own version of them. One reading of it is public, `joint::system`: a system's
   hardware, the declarations it reaches and the requesters it serves, computed by the code the rules judge with, so
@@ -210,7 +230,9 @@ the record, or both — for check 4, also at what the provider states. The langu
 - `crates/archogen-plan-check/tests/system_reading.rs` — `joint::system` on systems whose hardware lies at depth,
   behind a service or behind a module's import, written by a fenced context too;
 - `crates/archogen-plan-check/tests/mcp.rs` — the tool: its listing, the arguments it refuses, its budget, and its
-  record read back and held equal to the executable's for the same texts.
+  record read back and held equal to the executable's for the same texts;
+- `crates/archogen-plan-check-wasm/tests/module.rs` — the browser module on the host: its record the tool's for the
+  same texts, its refusals, its exports, and no generator package in what it compiles.
 
 ## Today and ahead
 
@@ -223,4 +245,5 @@ derivation the two roles share (leaf `M3.5.5.7.2`). The program is the configura
 gate, and `archogen plan-check` runs it from the front (leaf `M3.5.1.4.1`). The front's half of a checked plan is
 built too — it runs the checker over a plan of its own and believes the result only when the record, the exit code
 and its own reckoning agree (`M3.5.1.4.3`); `archogen resolve`, which calls it after its search writes the plan, is
-`M3.4`'s. The checker serves its own MCP tool (leaf `M3.5.1.6.4`); a browser module for it is `M3.5.7`'s.
+`M3.4`'s. The checker serves its own MCP tool (leaf `M3.5.1.6.4`) and has a browser module of its own (`M3.5.7.1`), whose
+loader and artifact checks are `M3.5.7.2`'s.

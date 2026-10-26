@@ -4,7 +4,7 @@
 //! `archogen-plan-check --mcp`.
 //!
 //! `plan-check` takes texts, never paths: the description's, each module's it imports and the plan's, under this
-//! server's own byte budget, [`BYTES`] — the checker depends on no engine API, so the budget is its own. It answers the
+//! checker's own byte budget, [`judgement::BYTES`], which the browser module counts alike. It answers the
 //! result record the executable writes for the same texts ([`judgement::judge`]): the record's bytes as the one text
 //! block, the same JSON as `structuredContent`, and `isError` unless its status is `ok`, so a client that reads nothing
 //! but `isError` never takes a refusal for a pass. An argument it cannot use, a profile it does not have and texts past
@@ -19,17 +19,12 @@ use archogen_outcome::record::Producer;
 use archogen_outcome::Status;
 use archogen_transport::{object, string, text_block, tool_error, Failure, Tools};
 use eadl_front::module::MemoryModules;
-use eadl_model::profile::{Profile, RT_STATIC_UP_V1};
+use eadl_model::profile::Profile;
 
-use crate::judgement::{self, Inputs, Unjudged};
+use crate::judgement::{self, Inputs, Unjudged, BYTES, PLAN_NAME};
 
 /// The tool's name.
 pub const TOOL: &str = "plan-check";
-
-/// The most text one call may bring: the description, every module given and the plan, counted together. The
-/// generator's budget for a description and its modules is 1 MiB (`archogen_api::DEFAULT_BYTES`); this one counts the
-/// plan too, and is four times that. The checks' work is linear in it, as the engine's is.
-pub const BYTES: usize = 4 * 1024 * 1024;
 
 /// The longest line read: a JSON writer may spell any byte as six (`\u0001`), so six times the budget and a fixed
 /// allowance for the envelope — no text within the budget is refused for how it was escaped. A longer line is refused
@@ -38,9 +33,6 @@ pub const LINE_LIMIT: usize = 6 * BYTES + 64 * 1024;
 
 /// How findings name the description when the call names it not.
 const DESCRIPTION_NAME: &str = "description.eadl";
-
-/// How findings name the plan.
-const PLAN_NAME: &str = "plan.json";
 
 /// One sentence for a client to hand its model, in `server/discover` and `initialize`.
 const INSTRUCTIONS: &str = "archogen-plan-check checks a resolved plan against its eADL description, apart from the \
@@ -179,18 +171,9 @@ fn request(arguments: &Value) -> Result<Request<'_>, String> {
         Some(_) => Err(format!("`{key}` is not a string")),
     };
     let name = optional("name")?.unwrap_or(DESCRIPTION_NAME);
-    let profile = match optional("profile")? {
-        None => &RT_STATIC_UP_V1,
-        Some(id) if id == RT_STATIC_UP_V1.id => &RT_STATIC_UP_V1,
-        Some(other) => {
-            return Err(format!(
-                "the profile `{other}` is not one this checker has; it has `{}`",
-                RT_STATIC_UP_V1.id
-            ))
-        }
-    };
-    let mut bytes = description.len() + plan.len();
+    let profile = judgement::profile(optional("profile")?)?;
     let mut modules = MemoryModules::new();
+    let mut texts = vec![description, plan];
     match arguments.get("modules") {
         None => {}
         Some(Value::Object(entries)) => {
@@ -198,17 +181,13 @@ fn request(arguments: &Value) -> Result<Request<'_>, String> {
                 let Some(module_text) = value.as_str() else {
                     return Err(format!("module `{module}`'s text is not a string"));
                 };
-                bytes = bytes.saturating_add(module_text.len());
+                texts.push(module_text);
                 modules = modules.with(module, module_text);
             }
         }
         Some(_) => return Err("`modules` is not an object".to_owned()),
     }
-    if bytes > BYTES {
-        return Err(format!(
-            "the texts are {bytes} bytes together, past this checker's budget of {BYTES}"
-        ));
-    }
+    judgement::budget(texts)?;
     Ok(Request {
         name,
         description,

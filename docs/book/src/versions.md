@@ -221,6 +221,28 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Pinned by | its shape — every key path and the kinds of value at it — frozen in `crates/archogen-wasm/tests/goldens/archogen-wasm-response-1.golden` and compared by `crates/archogen-wasm/tests/binding.rs`, never rewritten; the same test compares every field with the API's response |
 | Keeps | a page that reads `archogen-wasm-response/1` finds every key where it was, with the same kind of value |
 
+## `plan-check-wasm-request-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | the request a page writes to the configuration checker's own wasm module: length-prefixed fields for the module's digest, the description, its profile, its modules and the plan ([Checking a plan](plan-check.md#in-a-browser), `docs/decisions/decision_wasm-binding.md` §11) |
+| Version | `archogen-plan-check-wasm-request/1` |
+| Declared at | `const:crates/archogen-plan-check-wasm/src/lib.rs:REQUEST_FORMAT` |
+| Changes when | a field is added, removed, reordered or reinterpreted. A request naming another format is refused `usage`, never judged |
+| Pinned by | the framing tests of `crates/archogen-plan-check-wasm/tests/module.rs`: a request reads back as it was framed, and each refusal names its field and byte offset |
+| Keeps | a loader that writes `archogen-plan-check-wasm-request/1` is read the same way by every module that accepts it |
+
+## `plan-check-wasm-refusal-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | the answer the configuration checker's wasm module gives a request it cannot judge — its format, status, exit code and a note — where a request it judges is answered with the result record, `result-format` (`docs/decisions/decision_wasm-binding.md` §11) |
+| Version | `archogen-plan-check-wasm-refusal/1` |
+| Declared at | `const:crates/archogen-plan-check-wasm/src/lib.rs:REFUSAL_FORMAT` |
+| Changes when | a key is added, removed, renamed, reordered or re-typed |
+| Pinned by | `crates/archogen-plan-check-wasm/tests/module.rs`, which reads every refusal it makes and holds its keys, in their order, and their kinds |
+| Keeps | a page that meets `archogen-plan-check-wasm-refusal/1` finds why nothing was judged where it was |
+
 ## How an engine change is held to what descriptions mean
 
 The engine changes more often than the language. Each time it does, every description in the

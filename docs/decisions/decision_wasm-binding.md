@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-09-30`
-- **Status:** `active`
+- **Status:** `active` — §11, the configuration checker's own module, added `2026-10-27` by leaf `M3.5.7.1`
 - **External sources:** [the Rust toolchain](../book/src/ledger.md#rust-toolchain), for the `wasm32-unknown-unknown`
   target it already pins; [Node](../book/src/ledger.md#node), which runs the artifact in the tier (`API.5.3`)
 - **Owner / source:** leaf `API.5.1` (`docs/tasks/API.md`), deciding the transport that
@@ -146,6 +146,49 @@ not with a reading of the source. That the crate names no `std::fs`, `std::proce
 - A response also names the API version and the engine version, as every API response does.
 - Any change to what §4 or §6 says moves the format's number, and the register's entry says what changed.
 
+### 11. The configuration checker's module
+
+*Added `2026-10-27` (leaf `M3.5.7.1`), by the ruling of `2026-10-22` (findings §16 (a)): a checker's operation is
+that checker's own, so a page that judges a plan loads the checker's module, never the generator's.* §1 to §10 are
+the generator's module; this section is the checker's, which takes their shape and none of their code.
+
+- **Where it lives.** `crates/archogen-plan-check-wasm`, `cdylib` and `rlib` as §1 builds the generator's. It depends
+  on `archogen-plan-check` and the packages that role already compiles, never on a generator's package —
+  `archogen-api`, `archogen-wasm`, `eadl-resolve`, `archogen-cli` — which `tests/module.rs` asserts over the
+  workspace's own metadata. The trust gate classifies its `cdylib` as no root, `plan-check-browser-module` in
+  `trust/roots.eadl`; no install holds it.
+- **What it exports.** `plan_check_input(len) -> address`, `plan_check() -> length` and
+  `plan_check_output() -> address`, used as §2's three are; the memory and the linker's two globals besides, and no
+  import (§7). Its cap is `INPUT_CAP`, twice the checker's budget for the texts, the rest room for names and frames.
+  No `unsafe` block but the three `#[no_mangle]` attributes (§3).
+- **The request**, `archogen-plan-check-wasm-request/1`, framed as §4 frames the generator's — each field a 4-byte
+  little-endian length and that many bytes of UTF-8 — in order:
+  1. a field holding exactly `archogen-plan-check-wasm-request/1`;
+  2. a field holding the module's own digest, `sha256:` and 64 lowercase hexadecimal digits, which the loader
+     computes from the bytes it instantiated: a module cannot read its own file;
+  3. a field holding the description's name, and 4. one holding its text;
+  5. a field holding the profile's identifier, or an empty field for the checker's default;
+  6. the number of modules, as a 4-byte little-endian integer, then each module's name and text;
+  7. a field holding the plan's text.
+  Nothing may follow the plan.
+- **The answer** is the configuration checker's result record, `archogen-result/1`, as
+  `archogen_plan_check::judgement::judge` writes it — the record the executable and its [MCP](../book/src/ledger.md#mcp-specification) tool write for the same
+  texts, byte for byte. Its producer is `archogen-plan-check-wasm` and the digest the request gave: a name of its own,
+  so no reader takes a page's record for the installed executable's, whose name the front requires; and the digest is
+  the loader's word, as any result from outside a trust build's install is experimental (`TI-H14`). Findings name
+  the plan `plan.json` and each module `<module>.eadl`, as the MCP tool names them. The budget is the checker's,
+  `judgement::BYTES`, 4 MiB of the description, the modules and the plan together, which the MCP tool counts alike.
+- **A request it cannot judge** — a frame broken as §4 lists, a digest misspelt, a profile the checker does not have,
+  texts past the budget — is answered, not judged: `{"format":"archogen-plan-check-wasm-refusal/1","status":"usage",
+  "exit":2,"note":"…"}`, the note naming the field and its byte offset where a frame broke, and no record, as the
+  executable's usage error writes none. A verdict that makes no record is the same refusal under `tool-failure`, exit
+  `70`. Both end with a newline, as a record does, and are written by `archogen-json`.
+- **What it is checked against.** On the host, `tests/module.rs`: its record is `judge`'s and the MCP tool's for the
+  same texts and producer, over accepted, corrupted, stale, a module's and a refused description's plans; each
+  refusal names what to change; the exports carry a request in and the answer out. As an artifact, a loader and the
+  artifact's checks of §7 and §8's kind are leaf `M3.5.7.2`'s.
+- **Versions.** Both formats are `pub const`s of the crate, in the register (§10).
+
 ## Why
 
 - **Three raw exports rather than generated bindings.** The workspace takes no dependency
@@ -165,7 +208,7 @@ not with a reading of the source. That the crate names no `std::fs`, `std::proce
 ## How to apply
 
 - **Changing the request or the response:** change §4 or §6 here, move the format's number in the crate, and
-  update the register's entry.
+  update the register's entry. The configuration checker's module likewise, by §11.
 - **Adding an export, or any import:** that is a change to this record first. An import gives the module a way out,
   and §7's check refuses it until the record admits it.
 - Related: [[decision_engine-api]], [[decision_api-instance]], [[decision_programmatic-interface]],

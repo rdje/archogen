@@ -1,17 +1,61 @@
 //! One judgement as the result record says it (leaf `M3.5.1.6.4`): every check run over a description's text and a
 //! plan's bytes ([`check::plan_file`]), and the verdict made `archogen-result/1` — its producer the program that ran,
 //! its subject the program the description became and the sha256 of the plan's bytes. The executable's record and its
-//! MCP tool's answer are both made here, so the two faces write one record for one judgement.
+//! MCP tool's answer are both made here, so the two faces write one record for one judgement — and the browser
+//! module's (`M3.5.7.1`), which with the tool takes texts rather than files, under one budget ([`BYTES`]) and one
+//! name for the plan ([`PLAN_NAME`]).
 
 use archogen_digest::Digest;
 use archogen_outcome::record::{Judged, Producer, Record, Refusal, Subject};
 use archogen_outcome::Status;
 use eadl_front::module::ModuleSource;
 use eadl_front::{SourceError, SourceMap};
-use eadl_model::profile::Profile;
+use eadl_model::profile::{Profile, RT_STATIC_UP_V1};
 
 use crate::assignment::program_text;
 use crate::check;
+
+/// The most text one judgement given as texts may bring: the description, every module given and the plan, counted
+/// together, by the MCP tool and the browser module alike. The generator's budget for a description and its modules is
+/// 1 MiB (`archogen_api::DEFAULT_BYTES`); this one counts the plan too, and is four times that. The checks' work is
+/// linear in it, as the engine's is. The checker depends on no engine API, so the budget is its own.
+pub const BYTES: usize = 4 * 1024 * 1024;
+
+/// How findings name a plan given as text.
+pub const PLAN_NAME: &str = "plan.json";
+
+/// The texts' bytes together, or why they are past [`BYTES`].
+///
+/// # Errors
+///
+/// What to change: the texts' size and the budget.
+pub fn budget<'a>(texts: impl IntoIterator<Item = &'a str>) -> Result<usize, String> {
+    let bytes = texts
+        .into_iter()
+        .fold(0usize, |bytes, text| bytes.saturating_add(text.len()));
+    if bytes > BYTES {
+        return Err(format!(
+            "the texts are {bytes} bytes together, past this checker's budget of {BYTES}"
+        ));
+    }
+    Ok(bytes)
+}
+
+/// The profile `id` names, [`RT_STATIC_UP_V1`] when it names none.
+///
+/// # Errors
+///
+/// A profile this checker does not have, and the one it has.
+pub fn profile(id: Option<&str>) -> Result<&'static Profile, String> {
+    match id {
+        None => Ok(&RT_STATIC_UP_V1),
+        Some(id) if id == RT_STATIC_UP_V1.id => Ok(&RT_STATIC_UP_V1),
+        Some(other) => Err(format!(
+            "the profile `{other}` is not one this checker has; it has `{}`",
+            RT_STATIC_UP_V1.id
+        )),
+    }
+}
 
 /// What one judgement reads.
 #[derive(Clone, Copy)]

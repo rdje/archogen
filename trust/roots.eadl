@@ -85,6 +85,12 @@
   (reason "prints the host build's answers, which scripts/wasm_binding.sh compares with the module's; a test tool")
   (role-packages "crates/archogen-api"))
 
+(defprogram plan-check-browser-module
+  (package "crates/archogen-plan-check-wasm")
+  (target cdylib archogen_plan_check_wasm)
+  (reason "the configuration checker's module a browser loads, its own and never the generator's (M3.5.7); it answers plan checks with the result record, naming itself, and no install holds it")
+  (role-packages "crates/archogen-plan-check"))
+
 (defprogram rt-core-units
   (package "crates/rt-core")
   (target lib-test rt_core)
