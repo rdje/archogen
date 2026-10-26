@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the failing self-test arms trace what happened
+
+`ARCHOGEN-PROGRAM-0977` (leaf `PROGRAM.113.2`), `2026-10-26`.
+
+- The task-history gate's signal tests now record, in order, the signal sent, each change of the signal mask and each
+  outcome printed, so CI's next run shows where the Linux runner departs from the designed sequence.
+
 ## archogen — the failing self-test arms now say why
 
 `ARCHOGEN-PROGRAM-0976` (leaf `PROGRAM.113.1`), `2026-10-26`.

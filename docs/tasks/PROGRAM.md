@@ -821,6 +821,16 @@ mdBook that is the director's window into the project.
     - [x] LOCKSTEP — the arm and `PROGRAM.113`'s record.
   Commit: `ARCHOGEN-PROGRAM-0976 (leaf PROGRAM.113.1)`
 
+- ID: `PROGRAM.113.2`
+  Status: `done` — the signal arms trace the seal: the signal sent, each mask change, each outcome printed
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: `.1`'s evidence from the run on `d7fa9c69` — `sealed line no, Q.1.md yes`, the gate's proof OK — fits both a line printed and lost and a process ended before it printed, and one run cannot tell them apart; WHERE, `git show d7fa9c69:scripts/check_task_history.sh`, the arm's failure line, no order of events.
+    - [x] FIX — the test hook writes, unbuffered and in order, to a trace file the arm names: `fire N` as the signal is sent, `mask HOW COUNT` at each mask change, `print …` before each `task-history:` outcome; the arm's failure line quotes the trace and the output's first lines.
+    - [x] ADDRESSED — the `SIGALRM` arm forced to fail, its wanted code `1` and restored after: `trace: mask 1 23|fire 14|print task-history: docs/tasks/Q.md — sealed 1 subtree|mask 3 0|`, the designed order on this host; `bash scripts/check_task_history.sh --self-test`: `171 pass / 0 fail (171 arms)`.
+    - [x] NO REGRESSION — test-only code, the gate's own unchanged; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 308 s.
+    - [x] LOCKSTEP — the hook, the arm and `PROGRAM.113`'s record.
+  Commit: `ARCHOGEN-PROGRAM-0977 (leaf PROGRAM.113.2)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1032,6 +1042,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.71` | `ARCHOGEN-PROGRAM-0971 (leaf PROGRAM.71)` | **the task-history index append-only in order**: leg 3 refuses committed rows that no longer stand first and in their order; an arm; `PROGRAM.72` next |
 | `PROGRAM.113` | `ARCHOGEN-PROGRAM-0974 (leaf PROGRAM.113)` | **filed**: the task-history self-test's `SIGALRM` arm failed once on the Linux runner and passed on re-run; to be reproduced on Linux before any change |
 | `PROGRAM.113.1` | `ARCHOGEN-PROGRAM-0976 (leaf PROGRAM.113.1)` | **the diagnostic**: the signal arms' failure line carries the seal's evidence, the runner's log keeping only that line; the failures now steady on CI |
+| `PROGRAM.113.2` | `ARCHOGEN-PROGRAM-0977 (leaf PROGRAM.113.2)` | **the trace**: the signal arms record the signal sent, each mask change and each outcome printed, in order, for the runner to show where Linux departs |
 
 ## Changelog
 

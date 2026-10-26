@@ -1772,9 +1772,23 @@ PY
   cat > "$hook/sitecustomize.py" <<'HOOK'
 import builtins, os, signal
 WHEN, FIRED, TREES = os.environ.get("SEAL_HOOK", ""), set(), []
+TRACE = os.environ.get("SEAL_TRACE", "")
+def trace(what):
+    # Each event, unbuffered and in order, where the arm reads it — so a process a signal ends still leaves what it did
+    # before (PROGRAM.113.2).
+    if TRACE:
+        fd = os.open(TRACE, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o644)
+        os.write(fd, (what + "\n").encode("utf-8", "replace")); os.close(fd)
 def fire(sig=signal.SIGINT):
     if sig not in FIRED:
-        FIRED.add(sig); os.kill(os.getpid(), sig)
+        FIRED.add(sig); trace("fire %d" % sig); os.kill(os.getpid(), sig)
+if TRACE:
+    real_print = builtins.print
+    def printer(*a, **k):
+        if a and str(a[0]).startswith("task-history:"):
+            trace("print " + str(a[0])[:48])
+        return real_print(*a, **k)
+    builtins.print = printer
 if WHEN:
     real_replace, real_open, real_makedirs, real_mask = os.replace, builtins.open, os.makedirs, signal.pthread_sigmask
     if WHEN == "tmplink":
@@ -1797,6 +1811,7 @@ if WHEN:
     def mask(how, sigs):
         if WHEN == "early":  # a stop before the mask is set: before the first write
             fire()
+        trace("mask %d %d" % (how, len(set(sigs))))
         return real_mask(how, sigs)
     def replace(src, dst, *a, **k):
         if WHEN in ("refusedhold", "refusedint") and os.path.abspath(str(dst)).endswith("/docs/tasks/K.md"):
@@ -1857,7 +1872,8 @@ HOOK
       double) what="an interrupt, then a request to terminate, mid-seal"; want="130 143" ;;
     esac
     arms=$((arms + 1))
-    out="$(cd "$work" && ulimit -c 0 && SEAL_HOOK="$when" PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
+    rm -f "$SCRATCH/trace"
+    out="$(cd "$work" && ulimit -c 0 && SEAL_HOOK="$when" SEAL_TRACE="$SCRATCH/trace" PYTHONPATH="$hook" bash "$SELF" --seal Q 2>&1)"; rc=$?
     if case " $want " in *" $rc "*) true ;; *) false ;; esac && printf '%s' "$out" | grep -qE '^task-history: [^ ]+ — sealed ' && proven; then
       ok=$((ok + 1)); echo "  ✅ $what waits for the seal, proven and kept, then exits $rc"
     else
@@ -1868,7 +1884,7 @@ HOOK
       printf '%s' "$out" | grep -qE '^task-history: [^ ]+ — sealed ' && said=yes
       [ -f "$work/docs/task-history/Q/Q.1.md" ] && kept=yes
       proof="$(cd "$work" && bash "$SELF" 2>&1 | tail -2 | tr '\n' ' ')"
-      echo "SELF-TEST: $what — rc $rc, not $want, or the seal not finished and proven: sealed line $said, Q.1.md $kept; output: $(printf '%s' "$out" | tail -3 | tr '\n' ' ' | cut -c1-400); gate: $(printf '%s' "$proof" | cut -c1-400)" >&2
+      echo "SELF-TEST: $what — rc $rc, not $want, or the seal not finished and proven: sealed line $said, Q.1.md $kept; output: $(printf '%s' "$out" | tail -3 | tr '\n' ' ' | cut -c1-400); gate: $(printf '%s' "$proof" | cut -c1-200); trace: $(tr '\n' '|' < "$SCRATCH/trace" 2>/dev/null | cut -c1-400); first: $(printf '%s\n' "$out" | head -2 | tr '\n' '|' | cut -c1-200)" >&2
       printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2
     fi
     restore
