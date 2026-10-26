@@ -13,12 +13,22 @@
 //! re-checked (`M3.5.4.3`, `.6`), and the bindings over [`requesters`] (`M3.5.4.4`), then the joint rules (`M3.5.5`); the executable comes with
 //! `M3.5.6`. Of the joint rules' module, [`joint`], one reading alone is public: [`joint::system`], a system's
 //! hardware, the declarations it reaches and the requesters it serves as check (5) reads them, for a comparison test
-//! another crate holds (`M3.5.5.7.1`).
+//! another crate holds (`M3.5.5.7.1`). [`judgement`] makes one judgement the result record, which the executable writes
+//! and [`mcp`]'s tool answers inline (`M3.5.1.6.4`).
 
 pub mod assignment;
 mod bindings;
 pub mod check;
 pub mod joint;
+pub mod judgement;
+pub mod mcp;
 pub mod model;
 pub mod providers;
 pub mod requesters;
+
+/// The executable's name: the result record's producer, and its MCP server's.
+pub const NAME: &str = "archogen-plan-check";
+
+/// The package's version, as its MCP server names itself; a test holds it to the manifest's, a value the trust gate
+/// refuses to see compiled in through `env!`.
+pub const VERSION: &str = "0.1.0";

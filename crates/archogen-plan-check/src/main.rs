@@ -6,6 +6,7 @@
 //!
 //! ```text
 //! archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN
+//! archogen-plan-check --mcp
 //! ```
 //!
 //! `archogen plan-check` hands its arguments here unparsed, as git hands a command to its sibling, so this is also the
@@ -19,38 +20,43 @@
 //!
 //! ⛔ **The record lands whole or not at all**: it is written beside its path and renamed into place, so a reader never
 //! meets half of one.
+//!
+//! `--mcp` serves the same judgement as an MCP tool ([`archogen_plan_check::mcp`], leaf `M3.5.1.6.4`), one JSON-RPC
+//! message per line on standard input and output until the input ends; its records name the same producer, the file
+//! that runs, read once when it starts.
 
-use std::io::Write;
+use std::io::{BufRead, Write};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use archogen_digest::Digest;
-use archogen_outcome::record::{Finding, Judged, Producer, Record, Severity, Subject};
+use archogen_outcome::record::{Finding, Producer, Severity};
 use archogen_outcome::Status;
-use archogen_plan_check::assignment::program_text;
-use archogen_plan_check::check;
+use archogen_plan_check::judgement::{self, Inputs, Unjudged};
+use archogen_plan_check::mcp::{self, Checker};
+use archogen_plan_check::NAME;
 use eadl_front::module::{DirectoryModules, ModuleSource};
-use eadl_front::SourceMap;
 use eadl_model::profile::{Profile, RT_STATIC_UP_V1};
-
-/// This executable's name, the record's producer.
-const NAME: &str = "archogen-plan-check";
 
 /// How it is called.
 const USAGE: &str =
-    "usage: archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN";
+    "usage: archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN
+       archogen-plan-check --mcp";
 
 /// What `--help` prints.
 const HELP: &str = "archogen-plan-check — check a resolved plan against its description, apart from the search that \
 wrote it
 
 usage: archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN
+       archogen-plan-check --mcp
 
   DESCRIPTION      the eADL description, a module or a plain description
   PLAN             the assignment record the search wrote for it, archogen-assignment/1
   --result PATH    where the result record, archogen-result/1, is written; without it, on standard output
   --               every argument after it is a path, even one that begins with `-`
   --profile ID     the profile the plan was resolved under (default: rt-static-up-v1)
+  --mcp            serve the same check as the MCP tool `plan-check`, which takes the texts rather than paths: one
+                   JSON-RPC message per line on standard input and output, until the input ends; alone
 
 The exit code is the result's status, as `archogen` writes it: 0 ok; 2 usage, no record written; 3 stale-input, the
 plan written for another description — resolve again; 10 to 13 the description's own status; 70 tool-failure, a
@@ -60,6 +66,7 @@ fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let status = run(
         &args,
+        &mut std::io::stdin().lock(),
         &mut std::io::stdout().lock(),
         &mut std::io::stderr().lock(),
     );
@@ -70,6 +77,7 @@ fn main() -> ExitCode {
 enum Asked {
     Help,
     Version,
+    Serve,
     Check {
         profile: Option<String>,
         result: Option<PathBuf>,
@@ -79,7 +87,7 @@ enum Asked {
 }
 
 fn parse(args: &[String]) -> Result<Asked, String> {
-    let (mut profile, mut result) = (None, None);
+    let (mut profile, mut result, mut serve) = (None, None, false);
     let mut rest = args.iter();
     let mut paths: Vec<&String> = Vec::new();
     while let Some(arg) = rest.next() {
@@ -94,6 +102,7 @@ fn parse(args: &[String]) -> Result<Asked, String> {
         match arg.as_str() {
             "-h" | "--help" => return Ok(Asked::Help),
             "--version" => return Ok(Asked::Version),
+            "--mcp" => serve = true,
             "--profile" => value("--profile", &mut profile)?,
             "--result" => value("--result", &mut result)?,
             "--" => {
@@ -107,6 +116,13 @@ fn parse(args: &[String]) -> Result<Asked, String> {
             }
             _ => paths.push(arg),
         }
+    }
+    if serve {
+        return if profile.is_none() && result.is_none() && paths.is_empty() {
+            Ok(Asked::Serve)
+        } else {
+            Err("`--mcp` takes no other argument: the tool's calls carry the texts".to_owned())
+        };
     }
     match paths.as_slice() {
         [description, plan] => Ok(Asked::Check {
@@ -122,6 +138,17 @@ fn parse(args: &[String]) -> Result<Asked, String> {
     }
 }
 
+/// This program as a record names it: its name, and the sha256 of the file that runs.
+fn me() -> Result<Producer, String> {
+    std::env::current_exe()
+        .and_then(std::fs::read)
+        .map(|bytes| Producer {
+            name: NAME.to_owned(),
+            sha256: Digest::of(&bytes),
+        })
+        .map_err(|error| format!("cannot read its own executable to name it: {error}"))
+}
+
 /// Refuse the invocation: nothing was judged, so no record is written.
 fn refuse(err: &mut dyn Write, status: Status, why: &str) -> Status {
     let _ = writeln!(err, "{NAME}: {}: {why}", status.slug());
@@ -131,7 +158,12 @@ fn refuse(err: &mut dyn Write, status: Status, why: &str) -> Status {
     status
 }
 
-fn run(args: &[String], out: &mut dyn Write, err: &mut dyn Write) -> Status {
+fn run(
+    args: &[String],
+    input: &mut dyn BufRead,
+    out: &mut dyn Write,
+    err: &mut dyn Write,
+) -> Status {
     let (profile, result, description, plan) = match parse(args) {
         Ok(Asked::Help) => {
             let _ = writeln!(out, "{HELP}");
@@ -146,6 +178,20 @@ fn run(args: &[String], out: &mut dyn Write, err: &mut dyn Write) -> Status {
                 archogen_outcome::record::FORMAT
             );
             return Status::Ok;
+        }
+        Ok(Asked::Serve) => {
+            let producer = match me() {
+                Ok(producer) => producer,
+                Err(why) => return refuse(err, Status::ToolFailure, &why),
+            };
+            return match mcp::serve(input, out, &Checker::new(producer)) {
+                Ok(()) => Status::Ok,
+                Err(error) => refuse(
+                    err,
+                    Status::ToolFailure,
+                    &format!("the server's streams failed: {error}"),
+                ),
+            };
         }
         Ok(Asked::Check {
             profile,
@@ -169,15 +215,9 @@ fn run(args: &[String], out: &mut dyn Write, err: &mut dyn Write) -> Status {
             )
         }
     };
-    let me = match std::env::current_exe().and_then(std::fs::read) {
-        Ok(bytes) => Digest::of(&bytes),
-        Err(error) => {
-            return refuse(
-                err,
-                Status::ToolFailure,
-                &format!("cannot read its own executable to name it: {error}"),
-            )
-        }
+    let producer = match me() {
+        Ok(producer) => producer,
+        Err(why) => return refuse(err, Status::ToolFailure, &why),
     };
     let text = match std::fs::read_to_string(&description) {
         Ok(text) => text,
@@ -202,23 +242,22 @@ fn run(args: &[String], out: &mut dyn Write, err: &mut dyn Write) -> Status {
             )
         }
     };
-    // A plan that is no UTF-8 text does not read as a record: check (1) says so.
-    let plan_text = String::from_utf8_lossy(&plan_bytes);
-    let mut sources = SourceMap::new();
-    let Ok(id) = sources.add(description.display().to_string(), text) else {
-        return refuse(
-            err,
-            Status::Usage,
-            &format!(
-                "the description {} is too large to address",
-                description.display()
-            ),
-        );
-    };
     let modules = DirectoryModules::new(description.parent().unwrap_or_else(|| Path::new("")));
-    let plan_name = plan.display().to_string();
-    let (program, verdict) =
-        check::plan_file(&mut sources, id, &modules, profile, &plan_name, &plan_text);
+    let (description_name, plan_name) = (
+        description.display().to_string(),
+        plan.display().to_string(),
+    );
+    let judged = judgement::judge(
+        producer,
+        &Inputs {
+            description_name: &description_name,
+            description: &text,
+            modules: &modules,
+            profile,
+            plan_name: &plan_name,
+            plan: &plan_bytes,
+        },
+    );
     if let Some((file, error)) = modules.unreadable().first() {
         return refuse(
             err,
@@ -226,27 +265,19 @@ fn run(args: &[String], out: &mut dyn Write, err: &mut dyn Write) -> Status {
             &format!("cannot read {file}, which the description imports: {error}"),
         );
     }
-    let (status, findings) = match verdict {
-        Ok(()) => (Status::Ok, Vec::new()),
-        Err(refused) => (refused.status, refused.findings),
-    };
-    render(err, &findings);
-    let record = Record::new(
-        Producer {
-            name: NAME.to_owned(),
-            sha256: me,
-        },
-        Subject {
-            program: Digest::of(program_text(&program).as_bytes()),
-            judged: Judged::Plan(Digest::of(&plan_bytes)),
-        },
-        profile.id.to_owned(),
-        status,
-        findings,
-    );
-    let record = match record {
+    let record = match judged {
         Ok(record) => record,
-        Err(refusal) => {
+        Err(Unjudged::TooLarge(_)) => {
+            return refuse(
+                err,
+                Status::Usage,
+                &format!(
+                    "the description {} is too large to address",
+                    description.display()
+                ),
+            )
+        }
+        Err(Unjudged::Record(refusal)) => {
             return refuse(
                 err,
                 Status::ToolFailure,
@@ -254,6 +285,8 @@ fn run(args: &[String], out: &mut dyn Write, err: &mut dyn Write) -> Status {
             )
         }
     };
+    render(err, record.findings());
+    let status = record.status();
     let written = match &result {
         Some(file) => write(file, &record.write())
             .map_err(|error| format!("cannot write the result record {}: {error}", file.display())),

@@ -72,7 +72,9 @@ name = "archogen-plan-check"
 version = "0.1.0"
 dependencies = [
  "archogen-digest",
+ "archogen-json",
  "archogen-outcome",
+ "archogen-transport",
  "eadl-front",
  "eadl-model",
 ]

@@ -29,7 +29,8 @@ one.
 > `docs/semantics/model.md` §7, never the generator's code; (5) the bindings hold together by §8's joint rules, today
 > rule 7's hardware, rules 2–4's channels, rule 5's ownership, rule 10's placement, rule 9's privilege at the
 > profile's level and rule 13's one provider per function and qualifiers. A corrupted plan is `tool-failure`. The
-> library is `crates/archogen-plan-check`; the executable `archogen-plan-check` is still to come.
+> library is `crates/archogen-plan-check`; the executable `archogen-plan-check` runs it on files, and serves it to an
+> agent as the [MCP](ledger.md#mcp-specification) tool `plan-check`, which takes the texts.
 
 ## How it works
 
@@ -119,6 +120,31 @@ cannot read, writes no record and exits `2`: nothing was judged.
 A plain description, a file of declarations with no `defmodule`, is read as one module of its own for the plan's
 fingerprint; so a plan names it as surely as a module.
 
+### As an MCP tool
+
+An agent — a model, a script, an orchestrator — reaches the same check without files. `archogen-plan-check --mcp`
+serves one tool, `plan-check`, over MCP, one message per line on standard input and output until the input ends, as
+`archogen mcp` serves the generator's: both run over one framing, `crates/archogen-transport`, which belongs to no
+role.
+
+```text
+archogen-plan-check --mcp
+```
+
+The tool takes **texts, never paths**: `description` and `plan`, and optionally `name` (how findings name the
+description, `description.eadl` when absent), `profile`, and `modules`, each module the description imports mapped to
+its text. Findings name the plan `plan.json`. It answers the **result record** itself: the record's bytes as the one
+text block, the same JSON as the structured content, and `isError` unless the status is `ok` — so a client that reads
+nothing but `isError` never takes a refusal for a pass. It is the record the executable writes for files holding the
+same texts, byte for byte, naming the same program, the file that runs.
+
+Like a call the executable cannot take, an argument the tool cannot use is answered with what to change and judges
+nothing: an unknown argument, a missing text, a profile the checker does not have, or texts past its budget of
+4 MiB, the description, the modules and the plan counted together. A line longer than six times that budget, and a
+fixed allowance for the envelope, is refused unread. The tool is read-only: it touches no file and starts no program.
+
+`--mcp` stands alone; through `archogen plan-check`, which gives the checker no input, the server ends at once.
+
 ### What binds, and what does not
 
 Not everything a description requires is served by one provider:
@@ -171,6 +197,9 @@ the record, or both — for check 4, also at what the provider states. The langu
   requirement located by the checker and held by a test to the reference model's own reading;
 - `crates/archogen-plan-check/src/bindings.rs` — checks 3 and 4;
 - `crates/archogen-plan-check/src/providers.rs` — check 2's provider-level rules;
+- `crates/archogen-plan-check/src/judgement.rs` — one judgement made the result record, which the executable writes
+  and the tool answers;
+- `crates/archogen-plan-check/src/mcp.rs` — the tool `plan-check`, over `crates/archogen-transport`;
 - `crates/archogen-plan-check/src/joint.rs` — check 5, the joint rules, written from `docs/semantics/model.md` §8
   alone, never from the search's own version of them. One reading of it is public, `joint::system`: a system's
   hardware, the declarations it reaches and the requesters it serves, computed by the code the rules judge with, so
@@ -179,7 +208,9 @@ the record, or both — for check 4, also at what the provider states. The langu
 - `crates/archogen-plan-check/tests/plan_joint_fenced.rs` — each of check 5's rules, accepted and corrupted plans run
   through checks 1 to 4 and then check 5, written with it by the fenced context;
 - `crates/archogen-plan-check/tests/system_reading.rs` — `joint::system` on systems whose hardware lies at depth,
-  behind a service or behind a module's import, written by a fenced context too.
+  behind a service or behind a module's import, written by a fenced context too;
+- `crates/archogen-plan-check/tests/mcp.rs` — the tool: its listing, the arguments it refuses, its budget, and its
+  record read back and held equal to the executable's for the same texts.
 
 ## Today and ahead
 
@@ -192,4 +223,4 @@ derivation the two roles share (leaf `M3.5.5.7.2`). The program is the configura
 gate, and `archogen plan-check` runs it from the front (leaf `M3.5.1.4.1`). The front's half of a checked plan is
 built too — it runs the checker over a plan of its own and believes the result only when the record, the exit code
 and its own reckoning agree (`M3.5.1.4.3`); `archogen resolve`, which calls it after its search writes the plan, is
-`M3.4`'s.
+`M3.4`'s. The checker serves its own MCP tool (leaf `M3.5.1.6.4`); a browser module for it is `M3.5.7`'s.

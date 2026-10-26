@@ -67,6 +67,17 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Pinned by | the frozen verdict of every description in the repository (`crates/archogen-cli/tests/verdicts.rs`, 120 today), and the conformance suite |
 | Keeps | the language's and the profile's guarantees above, which do not depend on the engine's version |
 
+## `configuration-checker`
+
+| Field | Value |
+| --- | --- |
+| Surface | the configuration checker's own version, as its [MCP](ledger.md#mcp-specification) server names itself in `serverInfo` ([Checking a plan](plan-check.md#as-an-mcp-tool)) |
+| Version | `0.1.0` |
+| Declared at | `const:crates/archogen-plan-check/src/lib.rs:VERSION` |
+| Changes when | the checker's package version does, at a release: a literal, because the trust gate refuses a value compiled in through `env!` in a root |
+| Pinned by | `crates/archogen-plan-check/tests/mcp.rs`, which holds it equal to the package manifest's version (`M3.5.1.6.4`) |
+| Keeps | a client reads which checker answered; what it judges and writes is pinned by `result-format` and `assignment-format`, not by this number |
+
 ## `catalog-s0`
 
 | Field | Value |

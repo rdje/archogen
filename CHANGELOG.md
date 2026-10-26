@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the configuration checker serves its own MCP tool
+
+`ARCHOGEN-M3-0998` (leaf `M3.5.1.6.4`), `2026-10-27`.
+
+- `archogen-plan-check --mcp` serves the plan check to an agent as the MCP tool `plan-check`: the description's and
+  the plan's texts in, never paths, and the result record answered inline — the same record, byte for byte, that the
+  executable writes for files holding the same texts. It runs over the protocol package the generator's server uses.
+
 ## archogen — the MCP protocol package reviewed, and four faults fixed
 
 `ARCHOGEN-M3-0997` (leaf `M3.5.1.6.3`), `2026-10-26`.

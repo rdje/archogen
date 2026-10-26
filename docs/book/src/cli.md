@@ -116,7 +116,8 @@ result — `archogen resolve` will, before it builds on a plan — it believes t
 code agree, it names as its producer the program the front verified, and its subject is the very program and plan,
 under the very profile, the front computed; anything else is `tool-failure` naming what disagreed, and a checker that
 finds the description itself wanting is the two roles disagreeing, both verdicts named (leaf `M3.5.1.4.3`). So no program runs two roles' logic, and the generator's MCP server
-offers neither checker's command: each checker serves its own tools.
+offers neither checker's command: each checker serves its own tools — `archogen-plan-check --mcp` serves `plan-check`
+([Checking a plan](plan-check.md)).
 
 ### Exit codes
 

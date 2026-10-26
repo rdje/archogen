@@ -236,8 +236,9 @@ The server reads with its own JSON reader (`crates/archogen-json/src/lib.rs`, le
 nested too deep, or naming one field twice, is refused before anything is judged. The protocol itself — the lines and
 their bound, both eras, the shape of every answer and error — lives in a package of no role's,
 `crates/archogen-transport/src/lib.rs` (leaf `M3.5.1.6.1`), behind a trait that a server fills with its own name and
-tools; `archogen mcp` fills it with the command table's, and each checker will fill it with its own, so a checker's
-server speaks the protocol exactly as the generator's does without sharing any of its tools. A tool answers a JSON
+tools; `archogen mcp` fills it with the command table's, and each checker with its own — `archogen-plan-check --mcp`
+serves `plan-check` since leaf `M3.5.1.6.4` ([Checking a plan](plan-check.md)) — so a checker's server speaks the
+protocol exactly as the generator's does without sharing any of its tools. A tool answers a JSON
 object; under `2026-07-28` the framing adds `resultType` and merges the server's identity into the result's own
 `_meta`, so a result never names a member twice, and a tool's result that is no object, writes what is the
 server's, or does not read back, is the server's failure, `-32603`, in either era. The package is tested on its own,
@@ -316,7 +317,7 @@ the language and the MCP surface are not Rust items, and stay the book's alone.
   `wasm-binding` step, and the MCP server's stdio test over the conformance cases in both protocol eras.
 - **Ahead:** each command the table lists as offered joins the API when its own leaf builds it: `resolve` and
   `explain` (`M3.4`), `replay` (`M4.7`). The MCP server lists them already, each naming that leaf. `analyze` and
-  `plan-check` are the checkers' own tools, served by their own servers (`M2.21.4`, `M3.5.1.6`); `verify` waits for
+  `plan-check` are the checkers' own tools, served by their own servers (`M2.21.4`; `M3.5.1.6.4`, built); `verify` waits for
   a ruling of its own and its builder, `M4.11`; and `build` stays outside, by §10.4. When `resolve` joins, it joins
   as the search alone, `unchecked` set: this API runs no checker, so it refuses a request that asks for one, with the
   repair — compose it with `archogen-plan-check`'s own tool (`ROADMAP.md` §10.4).

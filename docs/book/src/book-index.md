@@ -53,6 +53,7 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#approved-disposable-fixture-verification)
 - Artifact hash checks under escaped paths — [Annex C: Trust proof
   records](annex-trust-proofs.md#artifact-hash-checks-under-escaped-paths)
+- As an MCP tool — [Checking a plan](plan-check.md#as-an-mcp-tool)
 - **ASCII** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Annex B: The
   checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **assembly** — [definition](glossary.md), [Modules and composition](modules.md), [Where the engine's knowledge comes
@@ -195,6 +196,7 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#configuration-checkpoint-integration)
 - Configuration refusal held directly — [Annex C: Trust proof
   records](annex-trust-proofs.md#configuration-refusal-held-directly)
+- configuration-checker — [What is versioned, and what changing it costs](versions.md#configuration-checker)
 - Content hashes — [What a report may claim](evidence.md#content-hashes)
 - Contradictions are rejected, never resolved — [Presence, absence, and
   relevance](presence.md#contradictions-are-rejected-never-resolved)
@@ -416,11 +418,11 @@ a change that leaves it stale, so it is never edited by hand.
   [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository
   honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Joint rules — [Matching an offer to a requirement](matching.md#joint-rules)
-- **JSON** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md),
-  [Generated-sources test adequacy](trust-adequacy.md), [The engine API](engine-api.md), [Verifying the
-  toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
-  changing it costs](versions.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C:
-  Trust proof records](annex-trust-proofs.md)
+- **JSON** — [definition](glossary.md), [Checking a plan](plan-check.md), [Checks that must not share a mistake: the
+  trust gate](trust.md), [Generated-sources test adequacy](trust-adequacy.md), [The engine API](engine-api.md),
+  [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned,
+  and what changing it costs](versions.md), [Annex B: The checks that keep the repository honest](annex-repository.md),
+  [Annex C: Trust proof records](annex-trust-proofs.md)
 - JSON used by the tooling — [Annex B: The checks that keep the repository
   honest](annex-repository.md#json-used-by-the-tooling)
 
@@ -447,8 +449,9 @@ a change that leaves it stale, so it is never edited by hand.
 
 - Masking — [The runtime: decisions, not actions](runtime.md#masking)
 - **MB** — [definition](glossary.md), [The engine API](engine-api.md)
-- **MCP** — [definition](glossary.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
-  the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md)
+- **MCP** — [definition](glossary.md), [Checking a plan](plan-check.md), [The archogen command line](cli.md), [The
+  engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
+  costs](versions.md)
 - mcp-specification — [What this project relies on from outside](ledger.md#mcp-specification)
 - mdbook — [What this project relies on from outside](ledger.md#mdbook)
 - **MEI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)

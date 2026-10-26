@@ -35,6 +35,10 @@
    tools, and `plan-check`, the configuration checker's command, never was: each is excluded citing the ruling, a test
    asserts it, and each checker serves its own tools (`M2.21.4`, `M3.5.1.6`). The tools today are `check`, `resolve`,
    `explain` and `replay`.*
+   *Since `2026-10-27` (leaf `M3.5.1.6.4`) the configuration checker's server is built: `archogen-plan-check --mcp`,
+   its one tool `plan-check` over the same framing, `crates/archogen-transport` — texts in, the result record answered
+   inline, `isError` unless it accepts, under the checker's own byte budget, §3 to §5's choices made for its own
+   request (the book's *Checking a plan*).*
 3. **A tool takes the engine API's request, not the command line's.** The command line names a file; the server
    has no filesystem authority (§10.4), so `check` takes the description's text, its profile and the texts of its
    modules — `archogen_api::Request` — under the API's byte budget, and answers `archogen_api::Response`.
