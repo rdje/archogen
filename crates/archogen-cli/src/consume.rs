@@ -1,0 +1,243 @@
+//! The front's contract for a result it consumes (leaf `M3.5.1.4.3`; `M3.5.1`'s design, *The contract between front
+//! and sibling*): `archogen resolve` (`M3.4`) runs the configuration checker over the plan it wrote, and builds on that
+//! plan only when the checker's record, the checker's process and what the front computed itself all agree.
+//!
+//! ⭐ **Two channels, and the front's own reckoning.** The record says what the checker found; the process's exit code
+//! says it again, so one fault in the record's writer or reader cannot turn a refusal into an acceptance alone. The
+//! record must also name the program the launcher verified as its producer, and as its subject the very program and
+//! plan the front computed digests of, under the profile the front asked for — so a record left by another run, or
+//! written about other inputs, is never taken for this one's.
+//!
+//! ⛔ **Anything else is `tool-failure`, naming what disagreed**: a signal, a code no status has, no record, a record
+//! that does not read, a code and a status that differ, another producer, subject or profile. And a checker that finds
+//! the description itself wanting — a status of the description's own, or a stale plan the front wrote moments ago —
+//! is the two roles disagreeing about one input, which no single verdict may hide: `tool-failure` naming both.
+
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
+
+use archogen_digest::Digest;
+use archogen_outcome::record::{Judged, Record};
+
+use crate::cli::Refusal;
+use crate::launch::{Ended, Launch};
+use crate::status::Status;
+
+/// The configuration checker's executable.
+pub const PLAN_CHECKER: &str = "archogen-plan-check";
+
+/// The record's name in the front's own directory.
+pub const RECORD: &str = "plan-check.json";
+
+/// The most of a record the front reads.
+const RECORD_LIMIT: usize = 1 << 20;
+
+/// What the front computed itself, which the checker's record must name.
+#[derive(Debug, Clone, Copy)]
+pub struct Expected<'a> {
+    /// The description, as the front read it.
+    pub description: &'a Path,
+    /// The plan the front wrote for it.
+    pub plan: &'a Path,
+    /// The digest of the elaborated program the description became, as the front computed it.
+    pub program: Digest,
+    /// The sha256 of the plan's bytes, as the front wrote them.
+    pub plan_sha256: Digest,
+    /// The profile the plan was resolved under.
+    pub profile: &'a str,
+}
+
+/// Run the configuration checker through `launcher` over the plan `expected` names, its record written in `dir`, a
+/// directory of the front's own under the command's output; its standard error relayed to `err`.
+///
+/// Returns a record the front can believe: its status the checker's verdict on the plan — `ok`, or `tool-failure` for
+/// a plan the rules refuse, which is a corrupted plan (`ROADMAP.md` §5.5).
+///
+/// # Errors
+///
+/// A `tool-failure` [`Refusal`] naming what disagreed, or both verdicts where the roles disagree.
+pub fn check_plan(
+    launcher: &dyn Launch,
+    expected: &Expected<'_>,
+    dir: &Path,
+    err: &mut dyn Write,
+) -> Result<Record, Refusal> {
+    let record_file = place_record(dir)?;
+    let description = absolute(expected.description, "the description")?;
+    let plan = absolute(expected.plan, "the plan")?;
+    let args: Vec<String> = vec![
+        "--profile".to_owned(),
+        expected.profile.to_owned(),
+        "--result".to_owned(),
+        record_file.to_string_lossy().into_owned(),
+        "--".to_owned(),
+        description.to_string_lossy().into_owned(),
+        plan.to_string_lossy().into_owned(),
+    ];
+    let launched = launcher
+        .launch(PLAN_CHECKER, &args, &mut std::io::sink(), err)
+        .map_err(|unlaunched| failure(unlaunched.message, unlaunched.repair))?;
+    let code = match launched.ended {
+        Ended::Code(code) => code,
+        Ended::Abnormally(how) => {
+            return Err(fault(format!(
+                "`{PLAN_CHECKER}` ended without an exit code: {how}"
+            )))
+        }
+    };
+    let record = read_record(&record_file, code)?;
+    let mut disagree = Vec::new();
+    if record.status().code() != code {
+        disagree.push(format!(
+            "it exited with {code}, and its record's status is `{}`, {}",
+            record.status().slug(),
+            record.status().code()
+        ));
+    }
+    let producer = record.producer();
+    if producer.name != PLAN_CHECKER || producer.sha256 != launched.sha256 {
+        disagree.push(format!(
+            "its record names `{}` {} as its producer, and `{PLAN_CHECKER}` {} ran",
+            producer.name, producer.sha256, launched.sha256
+        ));
+    }
+    let subject = record.subject();
+    if subject.program != expected.program {
+        disagree.push(format!(
+            "its record judged the program {}, and the description became {}",
+            subject.program, expected.program
+        ));
+    }
+    if subject.judged != Judged::Plan(expected.plan_sha256) {
+        disagree.push(format!(
+            "its record judged {}, and the plan is {}",
+            judged(&subject.judged),
+            expected.plan_sha256
+        ));
+    }
+    if record.profile() != expected.profile {
+        disagree.push(format!(
+            "its record is under the profile `{}`, and the plan under `{}`",
+            record.profile(),
+            expected.profile
+        ));
+    }
+    if !disagree.is_empty() {
+        return Err(fault(format!(
+            "`{PLAN_CHECKER}`'s result does not hold together: {}",
+            disagree.join("; ")
+        )));
+    }
+    match record.status() {
+        Status::Ok | Status::ToolFailure => Ok(record),
+        status @ (Status::StaleInput
+        | Status::InvalidDescription
+        | Status::MissingFact
+        | Status::UnsupportedProfile
+        | Status::InfeasibleConfiguration) => Err(failure(
+            format!(
+                "the roles disagree: the generator accepted the description and wrote this plan, and the configuration \
+                 checker finds it `{}`",
+                status.slug()
+            ),
+            "report it, with the checker's findings above: one of the two programs misreads this description"
+                .to_owned(),
+        )),
+        status => Err(fault(format!(
+            "`{PLAN_CHECKER}` answered `{}`, a status it never gives a plan",
+            status.slug()
+        ))),
+    }
+}
+
+/// The record's place in `dir`, the directory made and any earlier record there removed, so none is taken for this
+/// run's.
+fn place_record(dir: &Path) -> Result<PathBuf, Refusal> {
+    std::fs::create_dir_all(dir).map_err(|error| {
+        failure(
+            format!(
+                "cannot make the directory {} for the checker's record: {error}",
+                dir.display()
+            ),
+            "check that the output directory can be written".to_owned(),
+        )
+    })?;
+    let dir = absolute(dir, "the record's directory")?;
+    let record = dir.join(RECORD);
+    match std::fs::remove_file(&record) {
+        Ok(()) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => {
+            return Err(failure(
+                format!(
+                    "cannot remove the earlier record {}: {error}",
+                    record.display()
+                ),
+                "remove it, or choose another output directory".to_owned(),
+            ))
+        }
+    }
+    Ok(record)
+}
+
+/// `file` as an absolute, canonical path, which the checker reads as the front does whatever its own directory.
+fn absolute(file: &Path, what: &str) -> Result<PathBuf, Refusal> {
+    std::fs::canonicalize(file).map_err(|error| {
+        failure(
+            format!(
+                "cannot name {what}, {}, absolutely: {error}",
+                file.display()
+            ),
+            "check that it exists and can be read".to_owned(),
+        )
+    })
+}
+
+/// The record at `file`, which the checker that exited with `code` wrote.
+fn read_record(file: &Path, code: i32) -> Result<Record, Refusal> {
+    let mut bytes = Vec::new();
+    let read = std::fs::File::open(file).and_then(|opened| {
+        opened
+            .take(u64::try_from(RECORD_LIMIT).unwrap_or(u64::MAX) + 1)
+            .read_to_end(&mut bytes)
+    });
+    match read {
+        Ok(_) => Record::read(&bytes, RECORD_LIMIT).map_err(|refusal| {
+            fault(format!(
+                "`{PLAN_CHECKER}`'s record {}: {refusal}",
+                file.display()
+            ))
+        }),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Err(fault(format!(
+            "`{PLAN_CHECKER}` exited with {code} and wrote no record, so nothing was judged"
+        ))),
+        Err(error) => Err(fault(format!(
+            "cannot read `{PLAN_CHECKER}`'s record {}: {error}",
+            file.display()
+        ))),
+    }
+}
+
+fn judged(judged: &Judged) -> String {
+    match judged {
+        Judged::Plan(digest) => format!("the plan {digest}"),
+        Judged::Build(digest) => format!("a build, {digest}"),
+    }
+}
+
+fn failure(message: String, repair: String) -> Refusal {
+    Refusal {
+        status: Status::ToolFailure,
+        message,
+        repair,
+    }
+}
+
+/// A disagreement between the checker's two channels, or between them and the front: no input of the user's is at
+/// fault.
+fn fault(message: String) -> Refusal {
+    failure(
+        message,
+        "report it, with what the checker wrote above: the checker and the front disagree about one run".to_owned(),
+    )
+}

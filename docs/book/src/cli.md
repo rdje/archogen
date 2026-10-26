@@ -111,8 +111,11 @@ ask for by name. The front runs only a sibling the install vouches for: the inst
 `archogen-install/1`, must name the directory it lies in and the running `archogen`'s own fingerprint, and the
 sibling's bytes must be the fingerprint the manifest gives it — so an older checker left beside a newer front is
 refused, not run. A copy of `archogen` that no install placed runs no checker, and says how to install one. Each
-checker writes a result record, `archogen-result/1`, and exits with its status's code, and the front accepts a result
-it consumes only when the two agree. So no program runs two roles' logic, and the generator's MCP server
+checker writes a result record, `archogen-result/1`, and exits with its status's code. When the front consumes a
+result — `archogen resolve` will, before it builds on a plan — it believes the record only when its status and the exit
+code agree, it names as its producer the program the front verified, and its subject is the very program and plan,
+under the very profile, the front computed; anything else is `tool-failure` naming what disagreed, and a checker that
+finds the description itself wanting is the two roles disagreeing, both verdicts named (leaf `M3.5.1.4.3`). So no program runs two roles' logic, and the generator's MCP server
 offers neither checker's command: each checker serves its own tools.
 
 ### Exit codes

@@ -9,6 +9,8 @@
 
 use std::io::Write;
 
+use archogen_digest::Digest;
+
 use crate::status::Status;
 
 /// How a sibling's process ended.
@@ -18,6 +20,16 @@ pub enum Ended {
     Code(i32),
     /// It ended with no exit code — a signal stopped it — as the platform describes the ending.
     Abnormally(String),
+}
+
+/// A sibling the front ran: how its process ended, and the sha256 of the program it verified before running it — the
+/// producer a record it wrote must name.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Launched {
+    /// How the process ended.
+    pub ended: Ended,
+    /// The sha256 of the file that ran, as the install's manifest gives it and the front checked it.
+    pub sha256: Digest,
 }
 
 /// Why the front did not run a sibling: what it could not vouch for or could not do, and the repair.
@@ -43,7 +55,7 @@ pub trait Launch {
         args: &[String],
         out: &mut dyn Write,
         err: &mut dyn Write,
-    ) -> Result<Ended, Unlaunched>;
+    ) -> Result<Launched, Unlaunched>;
 }
 
 /// The launcher every surface but the `archogen` executable holds: it runs nothing.
@@ -57,7 +69,7 @@ impl Launch for NoLaunch {
         _args: &[String],
         _out: &mut dyn Write,
         _err: &mut dyn Write,
-    ) -> Result<Ended, Unlaunched> {
+    ) -> Result<Launched, Unlaunched> {
         Err(Unlaunched {
             message: format!("`{program}` is a program of its own, and this surface runs no program"),
             repair: format!(

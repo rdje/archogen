@@ -189,6 +189,7 @@ Where the two meet, a test compares them: `crates/eadl-resolve/tests/system_read
 a system — its hardware, what it reaches, whom it serves — equal to check 5's over every tracked system and over
 thousands of generated ones, which name each other at every position a description can; the trust gate lists it as a
 derivation the two roles share (leaf `M3.5.5.7.2`). The program is the configuration checker's root in the trust
-gate, and `archogen plan-check` runs it from the front (leaf `M3.5.1.4.1`). Still to come: `archogen resolve` running
-it over the plan it wrote, accepting the result only when the record and the exit code agree (`M3.5.1.4.3`). The
-search that writes the record is `M3.4`'s.
+gate, and `archogen plan-check` runs it from the front (leaf `M3.5.1.4.1`). The front's half of a checked plan is
+built too — it runs the checker over a plan of its own and believes the result only when the record, the exit code
+and its own reckoning agree (`M3.5.1.4.3`); `archogen resolve`, which calls it after its search writes the plan, is
+`M3.4`'s.

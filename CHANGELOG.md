@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the front believes a checker's result only when it holds together
+
+`ARCHOGEN-M3-0992` (leaf `M3.5.1.4.3`), `2026-10-26`.
+
+- When `archogen` runs the configuration checker over a plan of its own, as `archogen resolve` will, it now believes
+  the result only when the record, the program's exit code and its own fingerprints of the description and the plan
+  all agree; anything else is reported as a toolchain failure naming what disagreed.
+
 ## archogen — `archogen plan-check` runs the configuration checker
 
 `ARCHOGEN-M3-0991` (leaf `M3.5.1.4.1`), `2026-10-26`.

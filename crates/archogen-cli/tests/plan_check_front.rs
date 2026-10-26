@@ -6,9 +6,10 @@
 use std::cell::RefCell;
 use std::io::Write;
 
-use archogen_cli::launch::{Ended, Launch, Unlaunched};
+use archogen_cli::launch::{Ended, Launch, Launched, Unlaunched};
 use archogen_cli::spec::COMMANDS;
 use archogen_cli::{run, run_with_input, Status};
+use archogen_digest::Digest;
 
 /// A launcher that records each request and answers with `answer`, writing `said` to the sibling's two streams.
 struct Fake {
@@ -32,13 +33,16 @@ impl Launch for Fake {
         args: &[String],
         out: &mut dyn Write,
         err: &mut dyn Write,
-    ) -> Result<Ended, Unlaunched> {
+    ) -> Result<Launched, Unlaunched> {
         self.asked
             .borrow_mut()
             .push((program.to_owned(), args.to_vec()));
         let _ = writeln!(out, "the sibling's output");
         let _ = writeln!(err, "the sibling's findings");
-        self.answer.clone()
+        self.answer.clone().map(|ended| Launched {
+            ended,
+            sha256: Digest::of(b"the sibling"),
+        })
     }
 }
 

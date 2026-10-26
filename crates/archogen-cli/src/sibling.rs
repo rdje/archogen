@@ -20,7 +20,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-use archogen_cli::launch::{Ended, Launch, Unlaunched};
+use archogen_cli::launch::{Ended, Launch, Launched, Unlaunched};
 use archogen_digest::Digest;
 use archogen_install::{Manifest, FILE};
 
@@ -38,7 +38,7 @@ impl Launch for Installed {
         args: &[String],
         out: &mut dyn Write,
         err: &mut dyn Write,
-    ) -> Result<Ended, Unlaunched> {
+    ) -> Result<Launched, Unlaunched> {
         let (dir, front) = install()?;
         let manifest = manifest(&dir, program)?;
         if manifest.directory() != dir.to_string_lossy() {
@@ -117,9 +117,12 @@ impl Launch for Installed {
                 "check the streams `archogen` writes to",
             ));
         }
-        Ok(match output.status.code() {
-            Some(code) => Ended::Code(code),
-            None => Ended::Abnormally(output.status.to_string()),
+        Ok(Launched {
+            ended: match output.status.code() {
+                Some(code) => Ended::Code(code),
+                None => Ended::Abnormally(output.status.to_string()),
+            },
+            sha256: entry.sha256,
         })
     }
 }

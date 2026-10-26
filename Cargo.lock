@@ -28,6 +28,7 @@ dependencies = [
  "archogen-digest",
  "archogen-install",
  "archogen-json",
+ "archogen-outcome",
  "archogen-s0",
  "archogen-wasm",
  "eadl-front",

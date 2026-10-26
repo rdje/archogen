@@ -14,6 +14,7 @@
 pub mod build_cmd;
 pub mod check_cmd;
 pub mod cli;
+pub mod consume;
 pub mod launch;
 pub mod mcp;
 pub mod spec;
@@ -85,7 +86,7 @@ fn sibling(
     err: &mut dyn Write,
 ) -> Status {
     let refusal = match launcher.launch(program, args, out, err) {
-        Ok(ended) => match launch::status_of(&ended) {
+        Ok(launched) => match launch::status_of(&launched.ended) {
             Ok(status) => return status,
             Err(why) => Refusal {
                 status: Status::ToolFailure,
