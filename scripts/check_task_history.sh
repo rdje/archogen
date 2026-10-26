@@ -557,10 +557,18 @@ def gate():
                 if name not in index and name not in logs_index: note("%s has no table in %s" % (p, INDEX))
             elif name != "INDEX.md":
                 note("%s is neither the index nor a tree's folder" % p)
-    # Leg 3, history-wide: every row any committed index held, of either kind, and every sealed file as the commit that
-    # added it wrote it.
-    current = {t: set(r) for t, r in index.items()}
-    current_logs = {t: set(r) for t, r in logs_index.items()}
+    # Leg 3, history-wide: every row any committed index held, of either kind, still standing in the order it was
+    # appended — each committed table's rows a prefix of the current one's, so a row inserted above them or moved is
+    # refused as a changed one is (PROGRAM.71) — and every sealed file as the commit that added it wrote it.
+    current = {t: list(r) for t, r in index.items()}
+    current_logs = {t: list(r) for t, r in logs_index.items()}
+
+    def in_order(table, committed, now, what, commit):
+        missing = [r for r in committed if r not in now]
+        for r in missing:
+            note("%s's %s%s row `%s`, committed in %s, is gone or changed — the index is append-only" % (INDEX, table, what, r[0], commit[:12]))
+        if not missing and now[:len(committed)] != list(committed):
+            note("%s's %s%s rows committed in %s no longer stand first and in their order — a row was inserted above them or moved; the index is append-only" % (INDEX, table, what, commit[:12]))
     index_log = git("log", "--full-history", "--format=%H", "--", INDEX)
     if index_log is None:
         note("`git log` of %s failed, so leg 3 cannot hold — a failed read is never an empty history" % INDEX)
@@ -575,13 +583,9 @@ def gate():
             continue
         old_sub, old_logs = rows(old, "%s:%s" % (commit[:12], INDEX))
         for tname, trows in old_sub.items():
-            for r in trows:
-                if r not in current.get(tname, set()):
-                    note("%s's %s row `%s`, committed in %s, is gone or changed — the index is append-only" % (INDEX, tname, r[0], commit[:12]))
+            in_order(tname, trows, current.get(tname, []), "", commit)
         for tname, trows in old_logs.items():
-            for r in trows:
-                if r not in current_logs.get(tname, set()):
-                    note("%s's %s log-row table row `%s`, committed in %s, is gone or changed — the index is append-only" % (INDEX, tname, r[0], commit[:12]))
+            in_order(tname, trows, current_logs.get(tname, []), " log-row table", commit)
     added = {}
     log = git("log", "--full-history", "--diff-filter=A", "--format=@%H", "--name-only", "--", HIST)
     if log is None:
@@ -1491,6 +1495,18 @@ SHIM
   sub docs/task-history/INDEX.md '^(\| `T\.1` \|.*\| `)[0-9-]+(` \|)$' '\g<1>1999-01-01\2'
   commit
   arm "a committed row that changed is refused across history" 1 "the index is append-only"
+  git -C "$work" reset -q --hard HEAD~1
+  # A committed row moved above another (PROGRAM.71): every row still stands, unchanged, out of the order it was
+  # appended in — as a row inserted above committed rows would be.
+  python3 - "$work" <<'PY'
+import sys
+i = sys.argv[1] + "/docs/task-history/INDEX.md"; lines = open(i).read().split("\n")
+rows = [n for n, l in enumerate(lines) if l.startswith("| `T.")]
+lines[rows[0]], lines[rows[1]] = lines[rows[1]], lines[rows[0]]
+open(i, "w").write("\n".join(lines))
+PY
+  commit
+  arm "a committed row moved above another is refused across history (PROGRAM.71)" 1 "the index is append-only"
   git -C "$work" reset -q --hard HEAD~1
   python3 - "$work" <<'PY'
 import hashlib, re, sys

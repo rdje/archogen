@@ -530,7 +530,7 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.70.md`](../task-history/PROGRAM/PROGRAM.70.md); commit `ARCHOGEN-PROGRAM-0524`
 
 - ID: `PROGRAM.71`
-  Status: `pending` — filed `2026-10-10` by `PROGRAM.69`'s review round 7, its P1
+  Status: `done` — filed `2026-10-10` by `PROGRAM.69`'s review round 7, its P1
   Goal: the history's index is append-only in order as well as in presence, as its record says ("Rows are only ever
   appended").
   Reproduce / issue: `scripts/check_task_history.sh`'s leg 3 compares each committed index's rows with the current
@@ -539,6 +539,17 @@ mdBook that is the director's window into the project.
   mutation of `add_rows` that puts new rows first passes every arm. Present at `fea69ad`, before `PROGRAM.69`.
   Direction: leg 3 also requires each committed index's rows to stand, in their order, as a prefix of the current
   table's — or the record and the gate's line say "present and unchanged" rather than "append-only"; an arm either way.
+  Built: the first direction, so the record's "Rows are only ever appended" and the gate's "append-only" stay true:
+    leg 3 keeps each table's rows as a list, and refuses a committed table whose rows, all present and unchanged, no
+    longer stand first and in their order — a row inserted above them or moved — beside its refusal of a row gone or
+    changed; an arm moving a committed row above another.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: leg 3 compared rows as sets, so their order was not judged; WHERE, `git show b3266f25:scripts/check_task_history.sh`, `current = {t: set(r) for t, r in index.items()}`.
+    - [x] FIX — leg 3's `in_order`, lists for sets; the arm.
+    - [x] ADDRESSED — the arm before the fix: `bash scripts/check_task_history.sh --self-test`: `170 pass / 1 fail (171 arms)`, the moved row `expected exit 1, got 0`; after it: `171 pass / 0 fail (171 arms)`; the leaf's mutant, `add_rows` putting new rows first, `161 pass / 11 fail (172 arms)`, where it passed every arm before.
+    - [x] NO REGRESSION — `bash scripts/check_task_history.sh`: OK over the real history, every committed table a prefix in order; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 256 s.
+    - [x] LOCKSTEP — the gate and its arm; the record and the gate's line, already saying "append-only", now held to it.
+  Commit: `ARCHOGEN-PROGRAM-0971 (leaf PROGRAM.71)`
 
 - ID: `PROGRAM.72`
   Status: `pending` — filed `2026-10-10` by `PROGRAM.69`'s review round 8, its P1
@@ -844,11 +855,11 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.71` | `pending` | next ordinary program-spine repair: task-history index row order |
+| 1 | `PROGRAM.72` | `pending` | next ordinary program-spine repair: a tree file in a sub-folder of `docs/tasks/` |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.72`, `.73` and `.78` — are filed and owned. Every closed
+`PROGRAM.73` and `.78` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -987,6 +998,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.110` | `ARCHOGEN-PROGRAM-0952 (leaf PROGRAM.110)` | **the verification doctrine 22 recorded**: small checks per slice, full verification after the feature set, deferred to `M3.5.9` for `M3.5` |
 | `PROGRAM.111` | `ARCHOGEN-PROGRAM-0953 (leaf PROGRAM.111)` | **the sixteenth daily artifact cleanup**: only idle incremental caches removed, 8854 files / 1586169011 bytes, a light run under doctrine 22 |
 | `PROGRAM.112` | `ARCHOGEN-PROGRAM-0959 (leaf PROGRAM.112)` | **doctrine 22's record corrected**: what `make focused` runs — workspace clippy, `cargo test --all`, the sweep's premises — stays at every commit, a pin a slice moves re-pinned by it; the rest deferred to `M3.5.9` |
+| `PROGRAM.71` | `ARCHOGEN-PROGRAM-0971 (leaf PROGRAM.71)` | **the task-history index append-only in order**: leg 3 refuses committed rows that no longer stand first and in their order; an arm; `PROGRAM.72` next |
 
 ## Changelog
 

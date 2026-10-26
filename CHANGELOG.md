@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the task history's index is append-only in order
+
+`ARCHOGEN-PROGRAM-0971` (leaf `PROGRAM.71`), `2026-10-26`.
+
+- The task-history gate now refuses a committed row of the index moved, or a row inserted above committed ones, as
+  well as one removed or changed: the index is append-only, as its record says.
+
 ## archogen — the trust gate judges the configuration checker as the program it is
 
 `ARCHOGEN-M3-0970` (leaf `M3.5.6.2`), `2026-10-26`.
