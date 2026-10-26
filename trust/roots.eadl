@@ -213,7 +213,7 @@
 (defadmit
   (file "crates/archogen-wasm/Cargo.toml")
   (rule "`crates/archogen-wasm/Cargo.toml`: `lib.crate-type` holds `crate-type`, which can make the package another kind of crate")
-  (sha256 "d70b6e20510eda7b3c5ac323903510c33ea974b5c62c48861edb898df344240a")
+  (sha256 "0e0c7093fb58f61d570f12fc01bb391070690d82a1170026d9e6688caa64ea2d")
   (reason "crates/archogen-wasm/Cargo.toml: the wasm module's `cdylib` crate type, the one way to build a module a browser loads (`ROADMAP.md` §10.4)"))
 
 (defadmit

@@ -709,14 +709,14 @@ to
 end
 
 mutation wasm-json-long-escape
-file crates/archogen-wasm/src/json.rs
+file crates/archogen-json/src/lib.rs
 test -p archogen-wasm --test binding every_control_character
 expect killed
-why API.5.2: the record's §6 fixes one spelling per string, so `\f` written as `\u000c` is still valid JSON and still a different response; two builds of the same answer must write the same bytes.
+why API.5.2: the record's §6 fixes one spelling per string, so `\f` written as `\u000c` is still valid JSON and still a different response; two builds of the same answer must write the same bytes. Since M3.5.1.6.2 the binding writes its strings through archogen-json's `write_string`, and the entry follows the escape there, its test unchanged: the binding's test compiles the writer it uses.
 from
-                    '\u{0c}' => self.0.push_str("\\f"),
+                '\u{0c}' => out.push_str("\\f"),
 to
-                    '\u{0c}' => self.0.push_str("\\u000c"),
+                '\u{0c}' => out.push_str("\\u000c"),
 end
 
 mutation wasm-framing-accepts-a-module-twice

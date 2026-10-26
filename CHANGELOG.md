@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the browser module and the MCP server write strings one way
+
+`ARCHOGEN-M3-0996` (leaf `M3.5.1.6.2`), `2026-10-26`.
+
+- The browser module's JSON encoder now writes every string through the same writer the MCP server uses, instead of
+  its own copy; its answers are unchanged, byte for byte.
+
 ## archogen — the MCP protocol is a package every server can share
 
 `ARCHOGEN-M3-0995` (leaf `M3.5.1.6.1`), `2026-10-26`.

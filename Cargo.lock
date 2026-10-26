@@ -97,6 +97,7 @@ name = "archogen-wasm"
 version = "0.1.0"
 dependencies = [
  "archogen-api",
+ "archogen-json",
  "eadl-front",
 ]
 
