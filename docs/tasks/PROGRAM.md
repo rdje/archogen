@@ -734,6 +734,22 @@ mdBook that is the director's window into the project.
     apply.
   Commit: `ARCHOGEN-PROGRAM-0928 (leaf PROGRAM.109)`
 
+- ID: `PROGRAM.110`
+  Status: `done` — the director's verification doctrine 22 (`2026-10-26`) recorded: small checks per slice, full
+    verification after the feature set
+  Built: `docs/decisions/decision_small-checks-per-slice.md`, the doctrine word for word and what it means here — the
+    changed crate's tests and clippy and, for a slice changing what a root compiles, the trust inventory; the hooks and
+    `make focused` kept as commit integrity; the full xtask suite, the proofs and their pins, workspace clippy and CI
+    deferred — indexed; `M3.5.9`, `M3.5`'s deferred verification, filed pending after its feature leaves.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the doctrine existed only in the session; WHERE, `git grep -n "doctrine 22" -- docs`: no line before this commit.
+    - [x] FIX — the record, its index row, `M3.5.9`.
+    - [x] ADDRESSED — `bash scripts/check_doctrines.sh`: green, the record indexed and inside the folder's ceiling.
+    - [x] NO REGRESSION — a records-only change; no code changed.
+    - [x] LOCKSTEP — the decisions index and the tree.
+  Verification: the doctrines.
+  Commit: `ARCHOGEN-PROGRAM-0952 (leaf PROGRAM.110)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -939,6 +955,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0460 (leaf PROGRAM)` | **`PROGRAM.57`, `PROGRAM.58` and `PROGRAM.59` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` would have grown 1 331 bytes over its 819 200-byte ceiling with `M3.1.2`'s decomposition |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0489 (leaf PROGRAM)` | **`PROGRAM.10` and `.61`–`.65` sealed**, 13 closed leaves into `docs/task-history/PROGRAM/`, when `README-ROUTES` refused `docs/tasks/` at 820 957 bytes over its 819 200; `docs/tasks/` 817 470 → 752 861 bytes, measured from `HEAD` and the tree |
 | `PROGRAM.109` | `ARCHOGEN-PROGRAM-0928 (leaf PROGRAM.109)` | **the fifteenth daily artifact cleanup**: only the idle main and wasm debug incremental caches removed, 29847 files / 4245385971 logical bytes; every other entry under `target/` identical or accounted; `PROGRAM.100`–`.102` and `.104`–`.108` sealed |
+| `PROGRAM.110` | `ARCHOGEN-PROGRAM-0952 (leaf PROGRAM.110)` | **the verification doctrine 22 recorded**: small checks per slice, full verification after the feature set, deferred to `M3.5.9` for `M3.5` |
 
 ## Changelog
 

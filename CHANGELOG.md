@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — small checks per slice, full verification after the feature set
+
+`ARCHOGEN-PROGRAM-0952` (leaf `PROGRAM.110`), `2026-10-26`.
+
+- The director's verification doctrine is recorded: each slice now runs only the checks of what it changed and the
+  commit's own integrity checks; the full test suites, proofs and CI run once, after the configuration checker's
+  features are in, under a task of their own.
+
 ## archogen — the configuration checker refuses a stale or misnamed plan
 
 `ARCHOGEN-M3-0951` (leaf `M3.5.4.2`), `2026-10-26`.

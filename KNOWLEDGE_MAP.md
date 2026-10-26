@@ -201,6 +201,7 @@ justifies the split — the rows below appear as that happens.
 - [`decision_s0-retirement.md`](docs/decisions/decision_s0-retirement.md)
 - [`decision_scaffold-updater-adopted.md`](docs/decisions/decision_scaffold-updater-adopted.md)
 - [`decision_scratch-on-the-repository-volume.md`](docs/decisions/decision_scratch-on-the-repository-volume.md)
+- [`decision_small-checks-per-slice.md`](docs/decisions/decision_small-checks-per-slice.md)
 - [`decision_specifications-home.md`](docs/decisions/decision_specifications-home.md)
 - [`decision_specs-folder-ceiling.md`](docs/decisions/decision_specs-folder-ceiling.md)
 - [`decision_substitutability-relation.md`](docs/decisions/decision_substitutability-relation.md)
