@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the configuration checker judges each binding
+
+`ARCHOGEN-M3-0956` (leaf `M3.5.4.4`), `2026-10-26`.
+
+- The configuration checker now refuses a plan that leaves a requirement unbound, binds what nothing requires, a
+  requester its system does not serve or a provider the description does not declare, or binds a requirement to a
+  provider that does not satisfy it; each finding points at the requirement in the description and the binding in
+  the plan.
+
 ## archogen — the configuration checker refuses an impossible provider or memory map
 
 `ARCHOGEN-M3-0955` (leaf `M3.5.4.6`), `2026-10-26`.

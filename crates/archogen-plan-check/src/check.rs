@@ -10,7 +10,7 @@
 
 use archogen_outcome::record::{Finding, Label, Severity};
 use archogen_outcome::Status;
-use eadl_front::{Diagnostic, Program, SourceMap, Verdict as Concluded};
+use eadl_front::{Diagnostic, Program, SourceMap, Span, Verdict as Concluded};
 use eadl_model::check::{check_program, shipped_registry};
 use eadl_model::profile::Profile;
 
@@ -24,6 +24,13 @@ pub const PLAN_STALE: &str = "plan-stale";
 
 /// Check (2)'s code, where the checker itself refuses the description rather than one of the language's passes.
 pub const PLAN_DESCRIPTION: &str = "plan-description";
+
+/// Check (3)'s code: a requirement that binds left unbound, a binding of no requirement or of a requester the system
+/// does not serve, or a provider that is none of the description's blocks or platforms.
+pub const PLAN_BINDING: &str = "plan-binding";
+
+/// Check (4)'s code: a binding the model's judgement does not satisfy.
+pub const PLAN_UNSATISFIED: &str = "plan-unsatisfied";
 
 /// The kind modules the checker compiles in: the language definition its re-check of the description reads, shared
 /// with the generator as files and never as a package (`TI-H19`, as `M3.5.2` amends it); each `include_str!` site
@@ -170,6 +177,26 @@ pub fn description(
     })
 }
 
+/// Checks (3) and (4) (`M3.5.4.4`; [`crate::bindings`]): each requirement that binds is bound once, each binding is
+/// one requirement's, of a requester the system serves, to one of the description's blocks or platforms; and each
+/// binding is satisfied, by the model's judgement. `assignment` is what check (1) read from `text`, the record `name`
+/// names; `sources` holds the description's files, as elaborated into `program`.
+///
+/// # Errors
+///
+/// The [`Verdict`] refusing it: `tool-failure`, a finding per mismatch under [`PLAN_BINDING`] or [`PLAN_UNSATISFIED`];
+/// or the description's status under [`PLAN_DESCRIPTION`] where the model refuses what a requester requires or a bound
+/// provider offers.
+pub fn bindings(
+    sources: &SourceMap,
+    program: &Program,
+    name: &str,
+    text: &str,
+    assignment: &Assignment,
+) -> Result<(), Verdict> {
+    crate::bindings::check(sources, program, name, text, assignment)
+}
+
 /// The status for a §5.5 verdict of the language's check: the checker's own mapping, as total as the vocabulary.
 #[must_use]
 pub const fn status_of(verdict: Concluded) -> Status {
@@ -208,6 +235,18 @@ fn finding(sources: &SourceMap, diagnostic: &Diagnostic) -> Finding {
         primary: label(&diagnostic.primary),
         secondary: diagnostic.secondary.iter().map(label).collect(),
         repair: diagnostic.repair.clone(),
+    }
+}
+
+/// A finding's place in the description: `span`'s file, line and column.
+pub(crate) fn at(sources: &SourceMap, span: Span, message: &str) -> Label {
+    let source = sources.get(span.source);
+    let position = source.map(|s| s.position(span.start));
+    Label {
+        source: source.map_or_else(String::new, |s| s.name.clone()),
+        line: position.map_or(1, |p| p.line),
+        column: position.map_or(1, |p| p.column),
+        message: message.to_owned(),
     }
 }
 

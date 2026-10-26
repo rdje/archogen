@@ -8,12 +8,12 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use archogen_outcome::record::{Finding, Label, Severity};
+use archogen_outcome::record::{Finding, Severity};
 use archogen_outcome::Status;
 use eadl_front::{Form, Program, SourceMap, Span};
 use eadl_model::quantity::{Dimension, Quantity};
 
-use crate::check::{Verdict, PLAN_DESCRIPTION};
+use crate::check::{at, Verdict, PLAN_DESCRIPTION};
 use crate::model::vocab::{Domain, VOCABULARY};
 
 /// A region a provider offers, read whole (rule 5): its bytes `[base, base + size)`, or at least its base byte where
@@ -135,23 +135,12 @@ pub fn refusals(sources: &SourceMap, program: &Program) -> Result<(), Verdict> {
                 code: PLAN_DESCRIPTION.to_owned(),
                 severity: Severity::Error,
                 message: r.message,
-                primary: label(sources, r.span),
+                primary: at(sources, r.span, "here"),
                 secondary: Vec::new(),
                 repair: r.repair.to_owned(),
             })
             .collect(),
     })
-}
-
-fn label(sources: &SourceMap, span: Span) -> Label {
-    let source = sources.get(span.source);
-    let position = source.map(|s| s.position(span.start));
-    Label {
-        source: source.map_or_else(String::new, |s| s.name.clone()),
-        line: position.map_or(1, |p| p.line),
-        column: position.map_or(1, |p| p.column),
-        message: "here".to_owned(),
-    }
 }
 
 /// The items of each top-level clause of `form` headed `head`.
