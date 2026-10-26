@@ -100,15 +100,18 @@ an old plan through: check 4 judges the new requirement and refuses.
 
 ### Running the checker
 
-The checks run as a program of their own, `archogen-plan-check`, which an install places beside `archogen`:
+The checks run as a program of their own, `archogen-plan-check`, which an install places beside `archogen`, and
+which `archogen plan-check` runs, handing over its arguments as they are:
 
 ```text
-archogen-plan-check [--profile ID] --result PATH -- DESCRIPTION PLAN
+archogen plan-check examples/periodic-three/system.eadl build/plan.json
+archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN
 ```
 
 It reads the description — a module, whose imports it finds in the module's directory, or a plain description — and
-the plan; runs every check in order; writes its **result record**, `archogen-result/1`, to `PATH`; and exits with the
-result's status code. The record names the program that ran, by its name and the fingerprint of its own file, and what
+the plan; runs every check in order; writes its **result record**, `archogen-result/1`, to `PATH`, or to standard
+output when no path is given; and exits with the result's status code. `--` before the two paths lets one begin with
+a dash. The record names the program that ran, by its name and the fingerprint of its own file, and what
 it judged: the fingerprint of the program the description became and of the plan. So whoever started it — `archogen`,
 a script, a CI job — accepts a result only when the record and the exit code agree. A call it cannot take, or a file it
 cannot read, writes no record and exits `2`: nothing was judged.
@@ -185,6 +188,7 @@ program. Check 5's rules were written, like the rest, by a context that never re
 Where the two meet, a test compares them: `crates/eadl-resolve/tests/system_reading.rs` holds the search's reading of
 a system — its hardware, what it reaches, whom it serves — equal to check 5's over every tracked system and over
 thousands of generated ones, which name each other at every position a description can; the trust gate lists it as a
-derivation the two roles share (leaf `M3.5.5.7.2`). The program is the configuration checker's root in the trust gate. Still
-to come: `archogen plan-check` and `archogen resolve` running that program from the front. The search that writes the
-record is `M3.4`'s.
+derivation the two roles share (leaf `M3.5.5.7.2`). The program is the configuration checker's root in the trust
+gate, and `archogen plan-check` runs it from the front (leaf `M3.5.1.4.1`). Still to come: `archogen resolve` running
+it over the plan it wrote, accepting the result only when the record and the exit code agree (`M3.5.1.4.3`). The
+search that writes the record is `M3.4`'s.

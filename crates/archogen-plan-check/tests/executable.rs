@@ -245,8 +245,12 @@ fn a_usage_error_writes_no_record() {
     let p = p.to_str().unwrap();
     let missing = dir.join("absent.eadl");
     for (case, args) in [
-        ("no result path", vec!["--", d, p]),
         ("no paths", vec!["--result", r]),
+        ("three paths", vec!["--result", r, "--", d, p, p]),
+        (
+            "an unknown option before the paths",
+            vec!["--result", r, "-x", d, p],
+        ),
         ("one path", vec!["--result", r, "--", d]),
         (
             "an unknown option",
@@ -272,6 +276,32 @@ fn a_usage_error_writes_no_record() {
             "{case}"
         );
         assert!(!result.exists(), "{case}: a record was written");
+    }
+}
+
+#[test]
+fn the_roadmap_s_form_writes_the_record_on_standard_output() {
+    // `ROADMAP.md` §10.2's `archogen plan-check DESCRIPTION PLAN`, handed here unparsed (leaf `M3.5.1.4.1`): no result
+    // path, no `--`, the record on standard output and the exit code its status's.
+    let dir = scratch();
+    let description = dir.join("system.eadl");
+    std::fs::write(&description, PLAIN).unwrap();
+    let plan_path = dir.join("plan.eadl");
+    std::fs::write(
+        &plan_path,
+        plan(&description, "console.write", "console.uart"),
+    )
+    .unwrap();
+    let (d, p) = (description.to_str().unwrap(), plan_path.to_str().unwrap());
+    for args in [vec![d, p], vec!["--", d, p], vec![d, "--", p]] {
+        let output = run(&args);
+        let record = Record::read(&output.stdout, 1 << 20).expect("the record on standard output");
+        assert_eq!(record.status(), Status::Ok, "{args:?}");
+        assert_eq!(output.status.code(), Some(0), "{args:?}");
+        assert!(
+            std::fs::read_dir(&dir).unwrap().count() == 2,
+            "{args:?}: a file was written beside the inputs"
+        );
     }
 }
 

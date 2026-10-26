@@ -1,11 +1,16 @@
 //! `archogen-plan-check` (leaf `M3.5.6.1`): the configuration checker's executable — the contract between the
 //! `archogen` front and its sibling, as `M3.5.1`'s design states it. It reads a description and the assignment record a
-//! search wrote for it, runs every check in order ([`check::plan_file`]), writes `archogen-result/1` where it is told,
-//! and exits with the status's code, so the front accepts a result only when the record and the exit code agree.
+//! search wrote for it, runs every check in order ([`check::plan_file`]), writes `archogen-result/1` where it is told —
+//! on standard output when it is told nowhere — and exits with the status's code, so the front accepts a result only
+//! when the record and the exit code agree.
 //!
 //! ```text
-//! archogen-plan-check [--profile ID] --result PATH -- DESCRIPTION PLAN
+//! archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN
 //! ```
+//!
+//! `archogen plan-check` hands its arguments here unparsed, as git hands a command to its sibling, so this is also the
+//! form `ROADMAP.md` §10.2 writes, `archogen plan-check DESCRIPTION PLAN` (leaf `M3.5.1.4.1`); the front, when it runs
+//! the checker over a plan of its own, names the record's path and puts the paths after `--`.
 //!
 //! ⭐ **The record names what ran and what it judged**: the producer is this executable's name and the sha256 of the
 //! file that ran, read through `current_exe`; the subject is the digest of the program the description became and the
@@ -32,17 +37,19 @@ use eadl_model::profile::{Profile, RT_STATIC_UP_V1};
 const NAME: &str = "archogen-plan-check";
 
 /// How it is called.
-const USAGE: &str = "usage: archogen-plan-check [--profile ID] --result PATH -- DESCRIPTION PLAN";
+const USAGE: &str =
+    "usage: archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN";
 
 /// What `--help` prints.
 const HELP: &str = "archogen-plan-check — check a resolved plan against its description, apart from the search that \
 wrote it
 
-usage: archogen-plan-check [--profile ID] --result PATH -- DESCRIPTION PLAN
+usage: archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN
 
   DESCRIPTION      the eADL description, a module or a plain description
   PLAN             the assignment record the search wrote for it, archogen-assignment/1
-  --result PATH    where the result record, archogen-result/1, is written
+  --result PATH    where the result record, archogen-result/1, is written; without it, on standard output
+  --               every argument after it is a path, even one that begins with `-`
   --profile ID     the profile the plan was resolved under (default: rt-static-up-v1)
 
 The exit code is the result's status, as `archogen` writes it: 0 ok; 2 usage, no record written; 3 stale-input, the
@@ -65,7 +72,7 @@ enum Asked {
     Version,
     Check {
         profile: Option<String>,
-        result: PathBuf,
+        result: Option<PathBuf>,
         description: PathBuf,
         plan: PathBuf,
     },
@@ -74,7 +81,7 @@ enum Asked {
 fn parse(args: &[String]) -> Result<Asked, String> {
     let (mut profile, mut result) = (None, None);
     let mut rest = args.iter();
-    let mut paths: Option<Vec<&String>> = None;
+    let mut paths: Vec<&String> = Vec::new();
     while let Some(arg) = rest.next() {
         let mut value = |option: &str, slot: &mut Option<String>| match rest.next() {
             _ if slot.is_some() => Err(format!("`{option}` is given twice")),
@@ -90,25 +97,28 @@ fn parse(args: &[String]) -> Result<Asked, String> {
             "--profile" => value("--profile", &mut profile)?,
             "--result" => value("--result", &mut result)?,
             "--" => {
-                paths = Some(rest.by_ref().collect());
+                paths.extend(rest.by_ref());
                 break;
             }
-            other => {
+            other if other.starts_with('-') && other.len() > 1 => {
                 return Err(format!(
-                "`{other}` is no option of this checker; the description and the plan follow `--`"
+                "`{other}` is no option of this checker; a path that begins with `-` follows `--`"
             ))
             }
+            _ => paths.push(arg),
         }
     }
-    let result = result.ok_or("`--result PATH` names where the result record is written")?;
-    match paths.as_deref() {
-        Some([description, plan]) => Ok(Asked::Check {
+    match paths.as_slice() {
+        [description, plan] => Ok(Asked::Check {
             profile,
-            result: PathBuf::from(result),
+            result: result.map(PathBuf::from),
             description: PathBuf::from(description),
             plan: PathBuf::from(plan),
         }),
-        _ => Err("the description and the plan, two paths, follow `--`".to_owned()),
+        _ => Err(format!(
+            "two paths, the description and the plan, are expected, and {} were given",
+            paths.len()
+        )),
     }
 }
 
@@ -244,15 +254,16 @@ fn run(args: &[String], out: &mut dyn Write, err: &mut dyn Write) -> Status {
             )
         }
     };
-    if let Err(error) = write(&result, &record.write()) {
-        return refuse(
-            err,
-            Status::ToolFailure,
-            &format!(
-                "cannot write the result record {}: {error}",
-                result.display()
-            ),
-        );
+    let written = match &result {
+        Some(file) => write(file, &record.write())
+            .map_err(|error| format!("cannot write the result record {}: {error}", file.display())),
+        None => out
+            .write_all(record.write().as_bytes())
+            .and_then(|()| out.flush())
+            .map_err(|error| format!("cannot write the result record on standard output: {error}")),
+    };
+    if let Err(why) = written {
+        return refuse(err, Status::ToolFailure, &why);
     }
     let _ = writeln!(
         err,

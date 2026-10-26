@@ -109,6 +109,10 @@ pub struct CommandSpec {
     pub positionals: &'static [PositionalSpec],
     /// The options, in display order.
     pub options: &'static [OptionSpec],
+    /// The sibling program that answers this command, for a command `archogen` runs as git runs its sibling commands:
+    /// every argument after the command's name is handed to it unparsed, and `archogen help` renders its own help
+    /// (`M3.5.1`, *One table per command*). `None` for a command the front answers itself.
+    pub sibling: Option<&'static str>,
     /// How much of the §10.2 contract this command delivers today.
     pub maturity: Maturity,
     /// Whether a programmatic consumer is offered it (§10.4).
@@ -178,6 +182,7 @@ pub const COMMANDS: &[CommandSpec] = &[
         // Built by leaf M1.8. Changing this row is what removes the command's tag from
         // `archogen --help`, in the same change that makes it real — the help text is rendered
         // from this table, so the two cannot disagree.
+        sibling: None,
         maturity: Maturity::Built,
         exposure: Exposure::Tool,
     },
@@ -206,6 +211,7 @@ pub const COMMANDS: &[CommandSpec] = &[
                 required: false,
             },
         ],
+        sibling: None,
         maturity: Maturity::Unimplemented { owner: "M3.4" },
         exposure: Exposure::Tool,
     },
@@ -224,9 +230,10 @@ pub const COMMANDS: &[CommandSpec] = &[
         ],
         options: &[],
         // `archogen-plan-check`, an executable of its own, which the front runs as git runs a sibling command
-        // (findings §16 (a), `M3.5.1`); the generator's server never runs it, so it is that checker's own tool. The
-        // executable exists (`M3.5.6`); the front running it is the launcher's, `M3.5.1.4`.
-        maturity: Maturity::Unimplemented { owner: "M3.5.1.4" },
+        // (findings §16 (a), `M3.5.1`; built by `M3.5.6`, run through the launcher since `M3.5.1.4.1`); the
+        // generator's server never runs it, so it is that checker's own tool.
+        sibling: Some("archogen-plan-check"),
+        maturity: Maturity::Built,
         exposure: Exposure::Excluded {
             reason: "findings §16 (a): the configuration checker's own tool, served by its own server",
         },
@@ -251,6 +258,7 @@ pub const COMMANDS: &[CommandSpec] = &[
         // ⚠️ Runs today over the S0 path only (leaf `S0.3`): one fixed engine-owned realization,
         // periodic releases, the hosted playground. §12 S0 requires that output to be marked
         // experimental, so the surface marks the command.
+        sibling: None,
         maturity: Maturity::Experimental {
             scope: "the S0 path: one fixed realization, periodic releases, hosted playground",
             completed_by: "M4.2",
@@ -272,6 +280,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "the named property to analyze, e.g. deadlines",
             required: true,
         }],
+        sibling: None,
         maturity: Maturity::Unimplemented { owner: "M2.21.2" },
         // `archogen-analyze`, an executable of its own (findings §16 (a), `M2.21`): the generator's server can never run
         // it — not in its program (`trust-shared-program`) and not as a process (`NO-SUBPROCESS`) — so it is the
@@ -293,6 +302,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "focused | integration | extended | hardware | assurance",
             required: true,
         }],
+        sibling: None,
         maturity: Maturity::Unimplemented { owner: "M4.11" },
         // It runs tiers, which drive a toolchain and an emulator: exposed only by its own ruling, never by
         // analogy (the open question on the `API` tree).
@@ -313,6 +323,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "the requirement ID to explain, e.g. timer.deadline",
             required: true,
         }],
+        sibling: None,
         maturity: Maturity::Unimplemented { owner: "M3.4" },
         exposure: Exposure::Tool,
     },
@@ -324,6 +335,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "path to a replay manifest recorded by a failing run",
         }],
         options: &[],
+        sibling: None,
         maturity: Maturity::Unimplemented { owner: "M4.7" },
         exposure: Exposure::Tool,
     },
@@ -333,6 +345,7 @@ pub const COMMANDS: &[CommandSpec] = &[
         positionals: &[],
         options: &[],
         // Built by leaf API.6.4 (docs/decisions/decision_mcp-server.md).
+        sibling: None,
         maturity: Maturity::Built,
         exposure: Exposure::Excluded {
             reason: "ROADMAP.md §10.4: the server itself, through which the tools are offered",

@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — `archogen plan-check` runs the configuration checker
+
+`ARCHOGEN-M3-0991` (leaf `M3.5.1.4.1`), `2026-10-26`.
+
+- `archogen plan-check DESCRIPTION PLAN` now runs the configuration checker, a program of its own installed beside
+  `archogen`, as git runs its sibling commands. It runs a checker only after confirming the installed program is the
+  one the install placed, and nothing but the command line can start it: the library, the engine API and the MCP
+  server still run no program.
+
 ## archogen — the scaffold's files are the ones the director's ruling holds
 
 `ARCHOGEN-PROGRAM-0989` (leaf `PROGRAM.116`), `2026-10-26`.

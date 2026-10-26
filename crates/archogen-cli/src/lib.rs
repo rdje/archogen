@@ -14,11 +14,14 @@
 pub mod build_cmd;
 pub mod check_cmd;
 pub mod cli;
+pub mod launch;
 pub mod mcp;
 pub mod spec;
 pub mod status;
 
 use std::io::Write;
+
+use launch::{Launch, NoLaunch};
 
 /// The MCP server's JSON, [`archogen_json`] under the name it had here until leaf `M3.5.1.7` gave it a package of its
 /// own, so that a checker's result record is read by the one reader the server's messages are.
@@ -34,19 +37,23 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 ///
 /// Returns the [`Status`] the process should exit with. Errors from the writers are reported
 /// as [`Status::ToolFailure`]: a toolchain that cannot deliver its own output has not
-/// produced a result, and §5.5 forbids presenting that as a valid system.
+/// produced a result, and §5.5 forbids presenting that as a valid system. It runs no program: a command a sibling
+/// program answers is refused here, which only the `archogen` executable runs ([`launch`]).
 pub fn run<A, S>(args: A, out: &mut dyn Write, err: &mut dyn Write) -> Status
 where
     A: IntoIterator<Item = S>,
     S: Into<String>,
 {
-    run_with_input(args, &mut std::io::empty(), out, err)
+    run_with_input(args, &mut std::io::empty(), &NoLaunch, out, err)
 }
 
-/// [`run`], with the input a command that reads one takes: `archogen mcp` serves its messages from it.
+/// [`run`], with the input a command that reads one takes — `archogen mcp` serves its messages from it — and the
+/// launcher a command a sibling program answers is run through, which only the `archogen` executable's `main` holds
+/// one of that starts a process.
 pub fn run_with_input<A, S>(
     args: A,
     input: &mut dyn std::io::BufRead,
+    launcher: &dyn Launch,
     out: &mut dyn Write,
     err: &mut dyn Write,
 ) -> Status
@@ -56,11 +63,45 @@ where
 {
     match cli::parse(args) {
         Ok(Invocation::Help(None)) => emit(out, &cli::help_overview()),
-        Ok(Invocation::Help(Some(name))) => emit(out, &cli::help_command(name)),
+        Ok(Invocation::Help(Some(name))) => match spec::command(name).and_then(|spec| spec.sibling)
+        {
+            // A sibling's help is its own: the front holds none of its options to describe.
+            Some(program) => sibling(program, &["--help".to_owned()], launcher, out, err),
+            None => emit(out, &cli::help_command(name)),
+        },
         Ok(Invocation::Version) => emit(out, &format!("archogen {VERSION}\n")),
-        Ok(Invocation::Run(parsed)) => dispatch(&parsed, input, out, err),
+        Ok(Invocation::Run(parsed)) => dispatch(&parsed, input, launcher, out, err),
         Err(refusal) => report(err, &refusal),
     }
+}
+
+/// A command a sibling program answers: `args` handed over unparsed, the sibling's exit code answered when the status
+/// vocabulary holds it; a sibling the front cannot run, or one ending with no status, `tool-failure`.
+fn sibling(
+    program: &str,
+    args: &[String],
+    launcher: &dyn Launch,
+    out: &mut dyn Write,
+    err: &mut dyn Write,
+) -> Status {
+    let refusal = match launcher.launch(program, args, out, err) {
+        Ok(ended) => match launch::status_of(&ended) {
+            Ok(status) => return status,
+            Err(why) => Refusal {
+                status: Status::ToolFailure,
+                message: format!("`{program}` {why}"),
+                repair: format!(
+                    "run `{program}` again; if it ends so again, report it, with what it wrote above"
+                ),
+            },
+        },
+        Err(unlaunched) => Refusal {
+            status: Status::ToolFailure,
+            message: unlaunched.message,
+            repair: unlaunched.repair,
+        },
+    };
+    report(err, &refusal)
 }
 
 fn emit(out: &mut dyn Write, text: &str) -> Status {
@@ -94,10 +135,14 @@ fn report(err: &mut dyn Write, refusal: &Refusal) -> Status {
 fn dispatch(
     parsed: &Parsed,
     input: &mut dyn std::io::BufRead,
+    launcher: &dyn Launch,
     out: &mut dyn Write,
     err: &mut dyn Write,
 ) -> Status {
     let spec = parsed.spec();
+    if let Some(program) = spec.sibling {
+        return sibling(program, &parsed.positionals, launcher, out, err);
+    }
     match spec.name {
         "check" => return check_cmd::run(parsed, out, err),
         "build" => return build_cmd::run(parsed, out, err),

@@ -34,7 +34,7 @@ USAGE:
 COMMANDS:
     check       elaborate and type-check a description against a profile
     resolve     resolve providers and resources into an independently checked build plan   [unimplemented — tracked by leaf M3.4]
-    plan-check  check a resolved plan against its description, by the independent configuration checker   [unimplemented — tracked by leaf M3.5.6]
+    plan-check  check a resolved plan against its description, by the independent configuration checker
     build       generate, assemble and build a complete system and its simulator   [experimental — the S0 path: one fixed realization, periodic releases, hosted playground; completed by leaf M4.2]
     analyze     run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.21.2]
     verify      run a verification tier over a build   [unimplemented — tracked by leaf M4.11]
@@ -51,7 +51,7 @@ COMMANDS:
 | --- | --- | --- |
 | `archogen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | **built** — a description is one file or a module tree; see [Checking a description](checking.md) and [Modules and composition](modules.md) |
 | `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked]` | resolve providers and resources into an independently checked build plan | leaf `M3.4` |
-| `archogen plan-check <DESCRIPTION> <PLAN>` | check a resolved plan against its description, by the independent configuration checker | leaf `M3.5.1.4`, which runs the checker's own executable, `archogen-plan-check`, built by `M3.5.6`; see [Checking a plan](plan-check.md) |
+| `archogen plan-check <DESCRIPTION> <PLAN>` | check a resolved plan against its description, by the independent configuration checker | **built** — runs the configuration checker's own executable, `archogen-plan-check`, from an install, its arguments handed over unparsed; see [Checking a plan](plan-check.md) |
 | `archogen build <DESCRIPTION> [--profile <P>] --out <DIR>` | generate, assemble and build a complete system and its simulator | **experimental** — the S0 path only, see [The S0 early generation path](s0.md); leaf `M4.2` completes it |
 | `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.21.2` |
 | `archogen verify <BUILD> --tier <TIER>` | run a verification tier | leaf `M4.11` |
@@ -103,11 +103,16 @@ that `check` no longer carries the marker and `resolve` still does.
 
 **The checkers are programs of their own** (ruled `2026-10-22`, findings §16 (a); built by `M3.5.1.4`, `M3.5.6` and
 `M2.21`). The configuration checker is `archogen-plan-check` and the scheduling checker `archogen-analyze`,
-executables [an install](#installing) places beside `archogen`. `archogen plan-check` and `archogen analyze` will run
-them as git runs its sibling commands, handing over their arguments unparsed, and `archogen resolve` will search,
-then run `archogen-plan-check` over the plan it wrote — or, with `--unchecked`, write the plan alone, a downgrade you
-ask for by name. Each checker writes a result record, `archogen-result/1`, and exits with its status's code, and the
-front accepts a result only when the two agree. So no program runs two roles' logic, and the generator's MCP server
+executables [an install](#installing) places beside `archogen`. `archogen plan-check` runs the first as git runs its
+sibling commands, handing over its arguments unparsed — `--help` among them, so `archogen help plan-check` is the
+checker's own help — and relaying its output and exit code (leaf `M3.5.1.4.1`); `archogen analyze` will run the
+second so, and `archogen resolve` will search, then run `archogen-plan-check` over the plan it wrote — or, with `--unchecked`, write the plan alone, a downgrade you
+ask for by name. The front runs only a sibling the install vouches for: the install manifest beside it,
+`archogen-install/1`, must name the directory it lies in and the running `archogen`'s own fingerprint, and the
+sibling's bytes must be the fingerprint the manifest gives it — so an older checker left beside a newer front is
+refused, not run. A copy of `archogen` that no install placed runs no checker, and says how to install one. Each
+checker writes a result record, `archogen-result/1`, and exits with its status's code, and the front accepts a result
+it consumes only when the two agree. So no program runs two roles' logic, and the generator's MCP server
 offers neither checker's command: each checker serves its own tools.
 
 ### Exit codes

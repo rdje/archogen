@@ -24,7 +24,8 @@ pub enum Invocation {
 pub struct Parsed {
     /// The command that was named.
     pub name: &'static str,
-    /// Positional values, in declaration order.
+    /// Positional values, in declaration order; for a command a sibling program answers, every argument after the
+    /// command's name, unparsed.
     pub positionals: Vec<String>,
     /// Options that were supplied, in the order they appeared. A flag carries `None`.
     pub options: Vec<(&'static str, Option<String>)>,
@@ -110,6 +111,16 @@ where
 
     let spec = command(first).ok_or_else(|| unknown_command(first))?;
     let rest = &args[1..];
+
+    // A command a sibling program answers takes its arguments unparsed, `--help` among them, as git hands a command to
+    // its sibling: the front holds none of its options, so it can judge none of them (leaf `M3.5.1.4.1`).
+    if spec.sibling.is_some() {
+        return Ok(Invocation::Run(Parsed {
+            name: spec.name,
+            positionals: rest.to_vec(),
+            options: Vec::new(),
+        }));
+    }
 
     // `--help` anywhere in a command's arguments asks for that command's help, before any
     // requirement is enforced: a user who does not yet know the options cannot be expected to

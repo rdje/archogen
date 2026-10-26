@@ -28,6 +28,14 @@
 # code with its comments and string and character literals removed — so a doc comment or a message may name what it
 # refuses — and each `use` statement joined onto its first line, however rustfmt breaks it.
 #
+# THE ONE FILE ADMITTED (leaf `M3.5.1.4.1`, `M3.5.1`'s design, *The front's place in the code*): the human CLI runs its
+# sibling executables, `archogen-plan-check` and later `archogen-analyze`, as git runs its sibling commands, and the
+# code that starts them is one file, `crates/archogen-cli/src/sibling.rs`, admitted BY ITS PATH for `std::process` and
+# the spawn patterns alone — a foreign function or inline assembly there is refused as anywhere. It stays the
+# executable's: `mod sibling` anywhere but `crates/archogen-cli/src/main.rs`, and every `path` attribute and `include!`
+# in production code — the ways one file can be compiled into another module — are refused, so the library, the MCP
+# server and the browser module cannot reach it.
+#
 # ⚠️ HONEST LIMIT: it reads text, lexed lightly. A route through a macro whose expansion it cannot see, or a
 # dependency, is not seen; the workspace has none, which keeps the second theoretical. A module of the product's own
 # named `process` would be read as `std::process`. Code placed after a test module is treated as test code.
@@ -46,6 +54,12 @@ SPAWN='(^|[^A-Za-z0-9_])Command::new|process::Command([^A-Za-z0-9_]|$)|use std::
 # `#[link]`; an `extern "C" fn` definition is not a block and passes.
 FOREIGN='(^|[^A-Za-z0-9_])extern[[:space:]]*(""[[:space:]]*)?\{|#!?[[:space:]]*\[[[:space:]]*link[[:space:]]*[](]'
 ASSEMBLY='(^|[^A-Za-z0-9_])(asm|global_asm|naked_asm)[[:space:]]*![[:space:]]*[[({]'
+# The launcher, the one file admitted to start a process, and the one file that may declare it.
+ADMITTED="crates/archogen-cli/src/sibling.rs"
+DECLARER="crates/archogen-cli/src/main.rs"
+LAUNCHER_MOD='(^|[^A-Za-z0-9_])mod[[:space:]]+sibling([^A-Za-z0-9_]|$)'
+# A file compiled into another module: a `path` attribute, inner or outer, or `include!`.
+RELOCATION='#!?[[:space:]]*\[[[:space:]]*path([^A-Za-z0-9_]|$)|(^|[^A-Za-z0-9_])include[[:space:]]*!'
 fail=0
 note() { printf 'NO-SUBPROCESS: %s\n' "$1" >&2; fail=$((fail + 1)); }
 
@@ -161,14 +175,28 @@ scan() {
       note "$file cannot be read: it ends inside a comment or a string, so nothing after its opening can be vouched for"
       continue
     fi
+    if [ "$file" != "$ADMITTED" ]; then
+      while IFS= read -r hit; do
+        [ -n "$hit" ] || continue
+        note "$file:${hit%%:*} spawns or names a subprocess in production code:${hit#*:}"
+      done < <(printf '%s\n' "$text" | grep -E -- "$SPAWN")
+      while IFS= read -r hit; do
+        [ -n "$hit" ] || continue
+        note "$file:${hit%%:*} reaches std::process beyond ExitCode and exit:${hit#*:}"
+      done < <(printf '%s\n' "$text" | process_paths)
+    else
+      admitted=$((admitted + 1))
+    fi
+    if [ "$file" != "$DECLARER" ]; then
+      while IFS= read -r hit; do
+        [ -n "$hit" ] || continue
+        note "$file:${hit%%:*} declares the launcher, which only $DECLARER may:${hit#*:}"
+      done < <(printf '%s\n' "$text" | grep -E -- "$LAUNCHER_MOD")
+    fi
     while IFS= read -r hit; do
       [ -n "$hit" ] || continue
-      note "$file:${hit%%:*} spawns or names a subprocess in production code:${hit#*:}"
-    done < <(printf '%s\n' "$text" | grep -E -- "$SPAWN")
-    while IFS= read -r hit; do
-      [ -n "$hit" ] || continue
-      note "$file:${hit%%:*} reaches std::process beyond ExitCode and exit:${hit#*:}"
-    done < <(printf '%s\n' "$text" | process_paths)
+      note "$file:${hit%%:*} compiles a file into another module (a path attribute or include!), which could carry the launcher into the library:${hit#*:}"
+    done < <(printf '%s\n' "$text" | grep -E -- "$RELOCATION")
     while IFS= read -r hit; do
       [ -n "$hit" ] || continue
       note "$file:${hit%%:*} declares a foreign function (an extern block or #[link]), the route to execve or posix_spawn:${hit#*:}"
@@ -245,11 +273,28 @@ self_test() {
   arm "a lifetime is no character literal" 1 "io.rs:1 spawns"
   fresh; printf 'pub const S: &str = "never closed;\n' > "$work/crates/eng/src/io.rs"
   arm "a file ending inside a string cannot be vouched for" 1 "io.rs cannot be read"
+  # The one file admitted (leaf `M3.5.1.4.1`): by its path, for the spawn routes alone, and declared by main.rs alone.
+  local launcher='use std::process::{Command, Stdio};
+pub fn go() { let _ = Command::new("x").stdin(Stdio::null()).output(); }'
+  fresh; mkdir -p "$work/crates/archogen-cli/src"; printf '%s\n' "$launcher" > "$work/crates/archogen-cli/src/sibling.rs"
+  printf 'mod sibling;\nfn main() {}\n' > "$work/crates/archogen-cli/src/main.rs"
+  arm "the launcher, declared by main.rs, starts its sibling and passes" 0 ""
+  fresh; mkdir -p "$work/crates/archogen-cli/src"; printf '%s\n' "$launcher" > "$work/crates/archogen-cli/src/launch.rs"
+  arm "the same code in any other file is refused: the admission is the path's" 1 "launch.rs:1 reaches std::process"
+  fresh; mkdir -p "$work/crates/archogen-cli/src"; printf '%s\n' "$launcher" > "$work/crates/archogen-cli/src/sibling.rs"
+  printf 'pub mod sibling;\n' > "$work/crates/archogen-cli/src/lib.rs"
+  arm "the launcher declared by the library is refused" 1 "lib.rs:1 declares the launcher"
+  fresh; printf '#[path = "../../archogen-cli/src/sibling.rs"]\nmod relaunch;\n' > "$work/crates/eng/src/io.rs"
+  arm "a path attribute, which could compile the launcher into another module, is refused" 1 "io.rs:1 compiles a file into another module"
+  fresh; printf 'include!("../../archogen-cli/src/sibling.rs");\n' > "$work/crates/eng/src/io.rs"
+  arm "an include! of a source file is refused" 1 "io.rs:1 compiles a file into another module"
+  fresh; mkdir -p "$work/crates/archogen-cli/src"; printf 'extern "C" { fn execve(p: *const u8) -> i32; }\n' > "$work/crates/archogen-cli/src/sibling.rs"
+  arm "a foreign function in the launcher is refused as anywhere" 1 "sibling.rs:1 declares a foreign function"
   fresh; git -C "$work" rm -q -r --cached crates; rm -rf "$work/crates"
   arm "no product source at all is a breach, not a pass" 1 "an empty population is a breach"
   rm -rf "$work"
   arms=$((arms + 1))
-  if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the real product spawns nothing"
+  if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the real product spawns nothing but its admitted launcher"
   else echo "SELF-TEST: the real tree is refused — run the check to see why" >&2; fi
   echo "no-subprocess self-test: $ok pass / $((arms - ok)) fail ($arms arms)"
   [ "$ok" -eq "$arms" ]
@@ -259,11 +304,11 @@ if [ "${1:-}" = "--self-test" ]; then
   exit $?
 fi
 
-checked=0
+checked=0; admitted=0
 scan
 if [ "$fail" -ne 0 ]; then
-  echo "NO-SUBPROCESS: $fail breach(es) — the product computes over descriptions and executes nothing (§10.4)" >&2
+  echo "NO-SUBPROCESS: $fail breach(es) — the product computes over descriptions and executes nothing but the front's sibling programs, from $ADMITTED alone (§10.4)" >&2
   exit 1
 fi
-echo "no-subprocess: OK ($checked production source file(s) under crates/*/src; none spawns a process)"
+echo "no-subprocess: OK ($checked production source file(s) under crates/*/src; none spawns a process but the $admitted admitted launcher, $ADMITTED)"
 exit 0

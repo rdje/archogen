@@ -25,6 +25,8 @@ name = "archogen-cli"
 version = "0.1.0"
 dependencies = [
  "archogen-api",
+ "archogen-digest",
+ "archogen-install",
  "archogen-json",
  "archogen-s0",
  "archogen-wasm",

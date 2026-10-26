@@ -96,7 +96,7 @@ comparison only, never classified beside it (leaf `M3.5.2.3.2`). A derivation is
 no root: its pair takes its item, `shared-derivation`, one item a form (leaf `M3.5.2.1.2`); no comparison is paired with
 another, the harness with every root but its pair's two (leaf `M3.5.2.6.4`). The front and each root it
 invokes share an `invocation` item: the invoked root's name, role and target, and the sha256 of the launcher — the
-file the constant `LAUNCHER` in `xtask/src/trust.rs` names, which the front gains with leaf `M3.5.1.4` — so an edit to
+file the constant `LAUNCHER` in `xtask/src/trust.rs` names, `crates/archogen-cli/src/sibling.rs` since leaf `M3.5.1.4.1` — so an edit to
 the launcher, whose acceptance contract carries the risk, is reported; a front that invokes while its commit holds no
 launcher is refused (leaf `M3.5.2.1.3`). A comparison no form names is found by what the census reads of every
 unit, not by the names its sources use: every test-like unit — an integration test, a bench, a library's or an executable's unit tests, a library's doc

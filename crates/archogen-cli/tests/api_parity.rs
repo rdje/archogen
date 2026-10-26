@@ -122,6 +122,10 @@ const EXCLUDED: &[(&str, &str)] = &[
         "mcp",
         "§10.4: the server is a transport for the operations, not one of them",
     ),
+    (
+        "plan-check",
+        "findings §16 (a): the configuration checker's own program, which the generator's API never runs",
+    ),
 ];
 
 /// Every way the API's operations and the commands that run disagree.

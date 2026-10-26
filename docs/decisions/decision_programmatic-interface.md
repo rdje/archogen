@@ -112,7 +112,11 @@ Both are exactly the things an API's types and its string encoding depend on.
   programmatic surface — the engine API, the wasm module and every MCP server run nothing — while the human command
   line runs the checkers' executables as git runs its siblings, from one file `NO-SUBPROCESS` will admit by path, the
   launcher handed in by `main.rs` alone so the type system keeps the programmatic surface from reaching it
-  (`ROADMAP.md` §10.2, §10.4; `M3.5.1.4`). Until that leaf lands the gate refuses a process in every crate, as above.
+  (`ROADMAP.md` §10.2, §10.4; `M3.5.1.4`). *Landed `2026-10-26` (leaf `M3.5.1.4.1`):* the gate admits
+  `crates/archogen-cli/src/sibling.rs` by its path, for `std::process` and the spawn patterns alone, and refuses
+  `mod sibling` anywhere but the executable's `main.rs`, and every `path` attribute and `include!` in production code,
+  so no other module can compile it; the library's `run`, the engine API, the wasm module and the MCP server hold a
+  launcher that runs nothing.
 - **The surface is thin today and must not be advertised otherwise.** Per `docs/book/src/cli.md`, only
   `check` is built; `build` is experimental over the S0 path; `resolve`, `analyze`, `verify`, `explain`
   and `replay` are unimplemented (`M3.4`, `M2.6`, `PROGRAM.3`, `M3.4`, `M4.7`). An MCP server shipping

@@ -715,8 +715,13 @@ new one cannot go unrecorded (`PROGRAM.60`).
 ### The product runs nothing
 
 archogen describes, checks and generates, and it executes nothing. `archogen build` writes a crate and stops.
-Nothing in the product compiles, links or runs what it wrote, and nothing it does starts another process. That
-is the property that makes it safe to hand archogen to an agent that did not write the description. The
+Nothing in the product compiles, links or runs what it wrote. That is the property that makes it safe to hand
+archogen to an agent that did not write the description. One exception is made, for the person at the command line
+alone: `archogen plan-check` runs the configuration checker, `archogen-plan-check`, a program of its own, as git runs
+its sibling commands (`ROADMAP.md` §10.2). The code that starts it is one file, `crates/archogen-cli/src/sibling.rs`,
+which only the `archogen` executable's `main.rs` declares and hands to the command line; the library, the engine API,
+the browser module and the [MCP](ledger.md#mcp-specification) server hold a launcher that runs nothing, so no agent driving archogen through them can
+make it start a program (leaf `M3.5.1.4.1`). The
 `NO-SUBPROCESS` doctrine (`scripts/check_no_subprocess.sh`, leaf `API.2`) holds it on every commit. With no
 third-party dependency, Rust code reaches a process three ways, and each is closed (leaf `PROGRAM.105`): through
 `std::process`, which product code may use only for `ExitCode` and `exit`, however it imports it — an alias or a `use`
@@ -724,7 +729,9 @@ group split over lines included; through a foreign function such as `execve` or 
 `extern` block or `#[link]`, both refused — an `extern "C" fn` the browser module exports is a definition and passes;
 and through inline assembly, refused. `Command::new`, `.spawn(`, `exec` and `fork` stay refused by name. The check
 reads code with comments and string and character literals removed, so a message may name what it refuses, and a file
-it cannot lex to its end is refused rather than passed. Test modules, `tests/`,
+it cannot lex to its end is refused rather than passed. It admits the launcher by its path, for those process routes
+alone, and refuses `mod sibling` anywhere but `main.rs` and every `path` attribute and `include!` in product code, the
+ways another module could compile that file. Test modules, `tests/`,
 `xtask/` and `scripts/` compile and run things on purpose, and they are outside what it reads. A
 `#[cfg(test)]` on a lone helper does not hide the lines below it. Only one that opens a test module does.
 

@@ -61,6 +61,9 @@
    `M3.5.1.7`, no role's, re-exported as `archogen_cli::json`, so a checker's own server (`M3.5.1.6`) reads with the
    same code — a shared item the trust inventory will disclose when a checker compiles it. The server still spawns
    nothing, after the ruling of `2026-10-22` as before: the command line alone runs the checkers.*
+   *Since `2026-10-26` (leaf `M3.5.1.4.1`) that is structural: `mcp::serve` takes no launcher, and the one that runs a
+   program, `sibling.rs`, is declared by the `archogen` executable's `main.rs` alone, the one file `NO-SUBPROCESS`
+   admits.*
 
 ## As built (`2026-10-02`, leaf `API.6.4`)
 
