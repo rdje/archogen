@@ -38,6 +38,22 @@
   (target bin archogen-plan-check)
   (role-packages "crates/archogen-plan-check"))
 
+; The comparisons holding a reading of the generator's equal to the configuration checker's, each a derivation of its
+; own (docs/specs/trust/decision_trust-role-programs.md §3, leaf M3.5.3.1): paired with no root, its pair taking its
+; item, its class its own review's (§5). Proposed, unaccepted until M3.6.5 reads acceptance.
+
+(defderivation production
+  (pair generator configuration-checker)
+  (package "crates/eadl-resolve")
+  (test production)
+  (reason "holds the production relation equal to the checker's executable model over the model checker's universe: each input read by both, both refusing or both reading the same state, the relation's verdict the same (decision_substitutability-relation.md §11)"))
+
+(defderivation vocabulary
+  (pair generator configuration-checker)
+  (package "crates/eadl-resolve")
+  (test vocabulary)
+  (reason "holds the typed vocabulary table the generator reads from vocabulary.eadl equal, entry by entry, to the checker's hand-held table (decision_substitutability-relation.md §1.1)"))
+
 ; Every other program target of the workspace, classified as not a root (§2, leaf M3.6.3.1): the reason, and the role
 ; packages its build compiles — its package's normal edges, an example's development edges too — so a set that grows
 ; is unreviewed again. Proposed, unaccepted until M3.6.5 reads acceptance. Measured 2026-10-06 by
@@ -137,6 +153,18 @@
   (rule "include_str")
   (sha256 "8b9a2e4f89d1847a6091e5d2b2cefb0122c4f42aa49902360ee4d7f55e2d0b92")
   (reason "crates/archogen-plan-check/src/check.rs:38: embeds a shipped kind module as text, the data the configuration checker's re-check of the description registers (RP-H3)"))
+
+(defadmit
+  (file "crates/eadl-resolve/src/vocabulary.rs")
+  (rule "include_str")
+  (sha256 "2ca99a78a746233ded77cfda9dcaca6bb3b2598b0c600e9c503a85e845b80ebd")
+  (reason "crates/eadl-resolve/src/vocabulary.rs:40: embeds the shipped kind `deffact` as text, which the relation's vocabulary reader registers before it reads the table; compiled into the `production` and `vocabulary` derivations (RP-H11)"))
+
+(defadmit
+  (file "crates/eadl-resolve/src/vocabulary.rs")
+  (rule "include_str")
+  (sha256 "93c094a0bcdbb8a84fec85b746d82f723ad1b06a936b90cf359b9337ea3c9d6b")
+  (reason "crates/eadl-resolve/src/vocabulary.rs:41: embeds the shipped vocabulary `/1` as text, the table the relation reads; compiled into the `production` and `vocabulary` derivations (RP-H11)"))
 
 (defadmit
   (file "crates/rt-analysis/tests/runtime_variant.rs")

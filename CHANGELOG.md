@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate sees the relation's two comparisons
+
+`ARCHOGEN-M3-0981` (leaf `M3.5.3.1`), `2026-10-26`.
+
+- The two tests that hold the generator's relation equal to the configuration checker's model, `production` and
+  `vocabulary`, are now named in `trust/roots.eadl`, so the trust gate builds them, scans what they compile and lists
+  each as a reading the two roles share.
+
 ## archogen — a check's own reading cannot fail it
 
 `ARCHOGEN-PROGRAM-0980` (leaf `PROGRAM.114`), `2026-10-26`.

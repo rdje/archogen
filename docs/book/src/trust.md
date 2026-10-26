@@ -21,8 +21,8 @@ everything they used, kept current, with each shared spreadsheet flagged for rev
 > **In one minute, for engineers.** `trust/roots.eadl` names each **root** — the program that runs a role — and
 > classifies every other program target of the workspace. `cargo xtask trust-inventory` builds each root clean from
 > the commit's blobs, reads what [rustc](ledger.md#rust-toolchain) read, and lists every **shared item** two roots have in common: a package, a
-> file, a byte-for-byte copy, the comparison harness, the build configuration, what a committed generated source was
-> made from. `trust/baseline.eadl` holds one
+> file, a byte-for-byte copy, a comparison (the harness or a derivation), the build configuration, what a committed
+> generated source was made from. `trust/baseline.eadl` holds one
 > **form** per shared item, proposed by the tool and accepted only by a protected review (`M3.6.5`).
 > `cargo xtask trust-gate` compares a commit's inventory with its base commit's forms and writes a report in two
 > parts, the change and the standing list; `cargo xtask trust-verify` checks a package that carries an inventory. It
@@ -74,15 +74,18 @@ including in a harness between valid ones. A harness compares a reference model 
 validates — one root of role `reference-model` and one of role `implementation`, in either order — and any other
 pair refuses, so a comparison of the generator with a checker cannot be written as one.
 
-**Read and built, written by no commit yet** (`M3.5.2`'s readers, `decision_trust-role-programs.md`).
-The gate reads two forms no commit
-writes yet, since the gate that judges a push is built from the commit before it and must already know a form:
+**Read before they are written** (`M3.5.2`'s readers, `decision_trust-role-programs.md`). The gate that judges a push
+is built from the commit before it, so it must know a form before any commit writes one. It reads two more:
 
 - `(defderivation <name> (pair generator <checker>) (package "<dir>") (test <target>) (reason "…"))`, a test
   comparing a reading of the generator's with either checker's, its pair the generator's root and that checker's, in
-  either order, and a reason;
+  either order, and a reason. The first two are the relation's comparisons in `crates/eadl-resolve` (leaf
+  `M3.5.3.1`): `production`, the production relation against the checker's executable model, and `vocabulary`, the
+  typed table against the checker's own, entry by entry. Building them compiles `eadl-resolve`'s library, whose two
+  `include_str!` sites, the shipped kind `deffact` and vocabulary `/1`, are each admitted by a `defadmit`;
 - on the front's form alone — the one root of role `generator`, an executable — `(invokes <root> …)`, the other
-  executable roots it runs, each once, and `(installed "archogen-install.json")`, together.
+  executable roots it runs, each once, and `(installed "archogen-install.json")`, together, written by no commit yet
+  (`M3.5.1.4`).
 
 Each departure refuses before a build, as a misnamed harness does — a clause holding anything but names among them,
 and a fault within one form stopping the reading at that form (leaf `M3.5.2.2.1`) — and one test target belongs to one
