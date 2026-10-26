@@ -350,6 +350,24 @@ fn placement(
             }
         }
     }
+    // A reserved range against placement memory is a hole the plan avoids, so its extent is the plan's to know: one
+    // whose overlap no size decides leaves the description a fact short, as a device's does (rule 10).
+    for p in &placements {
+        for hole in owned.iter().copied().filter(|r| r.reserved) {
+            if overlap(p, hole) == Overlap::Undecided {
+                say(
+                    Status::MissingFact,
+                    format!(
+                        "whether `{}`'s reserved range `{}` is a hole in `{}`'s placement memory `{}` is undecided: a \
+                         region states no size (rule 10, as rule 5 reads it)",
+                        hole.provider, hole.name, p.provider, p.name
+                    ),
+                    hole.span,
+                    "state each region's `(size …)`",
+                );
+            }
+        }
+    }
     for (i, a) in placements.iter().enumerate() {
         for b in &placements[i + 1..] {
             let (first, second) = if (a.provider.as_str(), a.name.as_str())

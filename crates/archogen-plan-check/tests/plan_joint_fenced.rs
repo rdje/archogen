@@ -615,6 +615,61 @@ fn rule_5_a_provider_composing_another_through_uses_owns_its_bytes_with_it() {
     assert_eq!(d.bound(&binds), Ok(()));
 }
 
+/// A counter and a console whose regions overlap, each composed by the platform; the console names what `link` writes,
+/// beside the declaration `more`.
+fn linked(link: &str, more: &str) -> Description {
+    describe(&format!(
+        "
+      (defblock timer.a (offers (counter-width 32 bit) (reachable-at-privilege machine)
+        (region regs (base 0x1000_0000) (size 4 KiB))))
+      (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)
+        (region regs (base 0x1000_0800) (size 4 KiB))) {link})
+      {more}
+      (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.a console.uart)))
+      (defservice time.monotonic (requires (counter-width 32 bit)))
+      (defservice console.write (requires (needs observable-output)))
+      (defsystem s (requires (uses time.monotonic console.write)) (platform (uses soc)))"
+    ))
+}
+
+#[test]
+fn rule_5_composition_is_a_block_s_or_a_platform_s_uses_and_never_a_service_s() {
+    // Rule 5: one composes the other when it names it through `uses`, at any depth through blocks and platforms, whose
+    // `uses` alone is composition — directly, through a block, or through a platform; the two own the bytes together.
+    for (link, more) in [
+        ("(uses timer.a)", ""),
+        (
+            "(uses bus.bridge)",
+            "(defblock bus.bridge (offers (bus-width 32 bit)) (uses timer.a))",
+        ),
+        (
+            "(uses board)",
+            "(defplatform board (offers (core-count 1 tick)) (requires (uses timer.a)))",
+        ),
+    ] {
+        assert_eq!(linked(link, more).bound(&two_devices()), Ok(()), "{link}");
+    }
+    // A service's `uses` is a binding — here its own requirement bound to the counter — and composes nothing: the
+    // console reaching the counter only through one composes nothing, and their overlap is a conflict.
+    let d = linked(
+        "(uses time.source)",
+        "(defservice time.source (requires (counter-width 32 bit)) (uses timer.a))",
+    );
+    let mut binds = two_devices().to_vec();
+    binds.push((named("time.source"), "counter-width", "timer.a"));
+    let findings = refusal(d.bound(&binds), 5, true);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let message = &findings[0].message;
+    assert!(
+        message.contains("`console.uart`")
+            && message.contains("`timer.a`")
+            && message.contains("[0x10000000, 0x10001000)")
+            && message.contains("[0x10000800, 0x10001800)")
+            && message.contains("own the same bytes"),
+        "{message}"
+    );
+}
+
 // ------------------------------------------------------------------------------------------------------------------
 // Rule 9: privilege at the profile's level.
 
@@ -847,7 +902,7 @@ const MAP: &str = "(region ram (base 0x8000_0000) (size 128 MiB) (executable tru
   (region fw (base 0x8000_0000) (size 1 MiB) (reserved true))
   (region rom (base 0x2000_0000) (size 1 MiB) (executable true) (reserved true))
   (region regs (base 0x1000_0000) (size 4 KiB))
-  (region boot (base 0x0) (reserved true))";
+  (region boot (base 0x0) (size 64 KiB) (reserved true))";
 
 fn write() -> [Bind; 1] {
     [(named("console.write"), "observable-output", "console.uart")]
@@ -855,7 +910,8 @@ fn write() -> [Bind; 1] {
 
 #[test]
 fn rule_10_a_plan_places_the_image_in_placement_memory_of_the_system_s_hardware() {
-    // A reserved region over placement memory is a hole, and one without size a hole too, claiming nothing.
+    // A reserved range over placement memory is a hole the plan avoids; ranges wholly below it, each with its size,
+    // overlap none of it. A region against placement memory with no size is the description's unknown (rule 10).
     let d = memory(MAP);
     assert_eq!(d.joint(&d.plan(Some(("soc", "ram")), &write())), Ok(()));
     // A system with no placement memory is said nothing of.
@@ -927,6 +983,78 @@ fn rule_10_a_claim_without_size_below_placement_memory_is_the_description_s_miss
         message.contains("`regs` has no size") && message.contains("`ram`"),
         "{message}"
     );
+}
+
+#[test]
+fn rule_10_a_reserved_range_against_placement_memory_with_no_size_is_the_description_s_missing_fact(
+) {
+    // Rule 10 names a reserved range, whose extent is the hole the plan avoids, among the regions against placement
+    // memory: where it or the memory has no size and the other's bytes lie above its base, whether they overlap is
+    // `missing-fact`. Check (2) refuses each case first, description-wide, so check (5) is reached directly through
+    // `joint`, with a plan checks (1), (3) and (4) accept.
+    for (regions, open) in [
+        // A reserved range with no size below placement memory: whether it reaches into it is unknown.
+        (
+            "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+             (region boot (base 0x7fff_0000) (reserved true))",
+            "`boot` has no size",
+        ),
+        // So for an executable one: reserved, it is no placement memory, and a reserved range.
+        (
+            "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+             (region rom (base 0x2000_0000) (executable true) (reserved true))",
+            "`rom` has no size",
+        ),
+        // Placement memory with no size below a reserved range: whether it reaches the range is unknown.
+        (
+            "(region ram (base 0x8000_0000) (executable true))
+             (region fw (base 0x9000_0000) (size 1 MiB) (reserved true))",
+            "`ram` has no size",
+        ),
+    ] {
+        let d = memory(regions);
+        let plan = d.plan(Some(("soc", "ram")), &write());
+        let text = plan.to_canonical();
+        assert!(record(&d.program, &RT_STATIC_UP_V1, RECORD, &text).is_ok());
+        let first = description(&d.sources, &d.program, &RT_STATIC_UP_V1)
+            .expect_err("check (2) refuses it first");
+        assert_eq!(first.status, Status::MissingFact, "{first:#?}");
+        assert_eq!(
+            bindings(&d.sources, &d.program, RECORD, &text, &plan),
+            Ok(())
+        );
+        let message = refused_description(
+            joint(
+                &d.sources,
+                &d.program,
+                &RT_STATIC_UP_V1,
+                RECORD,
+                &text,
+                &plan,
+            ),
+            Status::MissingFact,
+            10,
+        );
+        assert!(
+            message.contains(open) && message.contains("`ram`") && message.contains("is unknown"),
+            "{regions}: {message}"
+        );
+    }
+    // Decided with no size, as rule 5 reads it: a reserved range above placement memory's last byte overlaps none of
+    // it, and one whose base lies inside it owns that byte, a hole there. Checks (1) to (4) accept, and check (5) too.
+    for regions in [
+        "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+         (region top (base 0x9000_0000) (reserved true))",
+        "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+         (region fw (base 0x8001_0000) (reserved true))",
+    ] {
+        let d = memory(regions);
+        assert_eq!(
+            d.joint(&d.plan(Some(("soc", "ram")), &write())),
+            Ok(()),
+            "{regions}"
+        );
+    }
 }
 
 // ------------------------------------------------------------------------------------------------------------------

@@ -191,6 +191,35 @@ fn rule_10_placement_memory_is_judged_over_the_system_s_hardware() {
         )),
         Ok(())
     );
+    // A reserved range is a hole the plan avoids, so its extent matters as a device's does: one with no size below the
+    // memory, or memory with no size below one, leaves the description a fact short; a sized hole inside, or one with
+    // no size above the memory's end, decides itself.
+    let (status, messages) = refused(&system(
+        ram,
+        "(region rom (base 0x7fff_0000) (reserved true))",
+        "(region other (base 0x0) (size 4 KiB))",
+    ));
+    assert_eq!(status, Status::MissingFact, "{messages:?}");
+    assert!(
+        messages.iter().any(|m| m.contains(
+            "whether `a`'s reserved range `rom` is a hole in `soc`'s placement memory `ram`"
+        )),
+        "{messages:?}"
+    );
+    let (status, messages) = refused(&system(
+        "(region ram (base 0x7000_0000) (executable true))",
+        fw,
+        "(region other (base 0x0) (size 4 KiB))",
+    ));
+    assert_eq!(status, Status::MissingFact, "{messages:?}");
+    assert_eq!(
+        judged(&system(
+            ram,
+            "(region rom (base 0x9000_0000) (reserved true))",
+            "(region other (base 0x0) (size 4 KiB))"
+        )),
+        Ok(())
+    );
     // A block no system's hardware reaches is judged by no system.
     assert_eq!(
         judged(&format!(

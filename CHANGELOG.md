@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the configuration checker follows the settled joint rules
+
+`ARCHOGEN-M3-0986` (leaf `M3.5.5.7.5`), `2026-10-26`.
+
+- The configuration checker no longer lets two devices share an address because a service links them, and it refuses
+  a description whose reserved memory range states no size where that size would decide what the image must avoid.
+
 ## archogen — the joint rules say what the two readings decided
 
 `ARCHOGEN-M3-0985` (leaf `M3.5.5.7.3`), `2026-10-26`.

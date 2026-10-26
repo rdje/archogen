@@ -51,7 +51,8 @@ fn task(system: &str, task: &str) -> Requester {
 #[test]
 fn a_platform_and_the_blocks_it_composes_at_any_depth_are_the_system_s_hardware() {
     // Rule 7: the platform clause names `soc`; `soc` names `console.uart` inside `requires`, which names `timer.counter`
-    // in a clause of its own — every block or platform those name in turn, at any depth. `spare.uart` nothing names.
+    // in a clause of its own — every block or platform those blocks and platforms name in turn through `uses` or
+    // `needs`, a clause of their own or inside `requires`, at any depth. `spare.uart` nothing names.
     let (_, program) = describe(
         "
   (defblock timer.counter (offers (counter-width 32 bit)))
@@ -80,8 +81,8 @@ fn a_platform_and_the_blocks_it_composes_at_any_depth_are_the_system_s_hardware(
 
 #[test]
 fn a_service_naming_a_block_does_not_make_it_hardware() {
-    // Rule 7, as the joint module reads "those": the hardware closure follows `uses` and `needs` out of blocks and
-    // platforms alone, so the block the service `console.write` uses is reached and served, but no hardware.
+    // Rule 7: a declaration of another kind ends the hardware's path — a block that only a service names is not
+    // hardware — so the block the service `console.write` uses is reached and served, but no hardware.
     let (_, program) = describe(
         "
   (defblock console.uart (offers (observable-output true)))

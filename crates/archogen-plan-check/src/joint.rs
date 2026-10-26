@@ -11,9 +11,12 @@
 //! ⭐ **Two kinds of finding.** A conflict or an unknown the rules find in the plan is the plan's — a plan the search
 //! wrote that the rules refuse is a corrupted plan, never a valid system (`ROADMAP.md` §5.5) — so it is [`PLAN_JOINT`]
 //! under `tool-failure`, its message naming its rule. What §8 makes the description's own status whatever the
-//! assignment — a caller stating levels that do not hold the profile's (rule 9, judged first), a region placement
-//! cannot be told apart from (rule 10), a side or a provider the relation does not read — is [`PLAN_DESCRIPTION`] under
-//! that status, and refuses before any finding of the plan's.
+//! assignment — a caller stating levels that do not hold the profile's (rule 9, judged first), a region that does not
+//! read (rule 5), a region against placement memory whose overlap no size decides (rule 10), a side or a provider the
+//! relation does not read — is [`PLAN_DESCRIPTION`] under that status, and refuses before any finding of the plan's.
+//! Rule 5's unread region and rule 10's unknown are check (2)'s first, description-wide ([`crate::providers`]), so
+//! [`check::plan`] never reaches check (5) with one; check (5) judges them again, over the system's hardware, so its
+//! own verdict holds where it is called alone.
 //!
 //! ⛔ **The level is the profile's, never the record's**: `Profile::caller_level`, so a corrupted level cannot pass.
 //!
@@ -27,24 +30,20 @@
 //!   task is its own clauses; any other declaration is its whole side, as §7 rule 4 reads one.
 //! - Rule 1: a binding whose requester names no declaration or no task of its system, or whose fact the vocabulary does
 //!   not declare — a `uses` is composition, never a binding — is refused here too, though check (3) refuses it first.
-//! - Rule 7: "every block or platform those name in turn" reads `those` as the blocks and platforms already found, so
-//!   the hardware closure follows `uses` and `needs` out of blocks and platforms alone; a service naming a block does
-//!   not make it hardware.
 //! - Rule 7: the system serves its own level, its tasks and every declaration reached from any of them — the platform
 //!   clause included — through `uses` and `needs`, at any depth and through declarations of every kind; a task of
 //!   another system is refused under rule 7, an assignment being one system's.
 //! - Rule 7: the positions read for `uses` and `needs` are a side's (§7 rule 4): any depth of any clause but `offers`,
-//!   `absent` and `refines`.
-//! - Rules 2 and 3: the count is of requesters, not bindings, so one requester binding both consumed facts to one
-//!   provider takes one channel; rule 4's service is one requester however many users reach it, as the record names
-//!   it once.
-//! - Rule 3: `channels` declared absent at a provider two requesters take channels at is a conflict, no channel being
-//!   offered; check (2) refuses such a provider first when it offers a consumed function `true`.
-//! - Rule 5: a provider is bound when a binding names it; the `placement` clause binds nothing. Every region but
-//!   placement memory is owned, reserved ones included. Composition is `uses` alone, at any depth, through
-//!   declarations of every kind.
-//! - Rules 5 and 10: a region without `size` owns its base byte, so another's bytes there overlap it; bytes strictly
-//!   above its base are the unknown.
+//!   `absent` and `refines` — on a block or platform the kinds admit, the positions rule 7 names, a clause of its own
+//!   or inside `requires`. Rule 5's `uses` is read at the same positions.
+//! - Rule 3: a provider offering a consumed function `true` with `channels` absent or `0` is the description's
+//!   `invalid-description`, refused when it is read — check (2)'s, first. Check (5) meets one only when called past
+//!   check (2), and there counts what it offers: `channels` absent or `0` holds no channel for two requesters taking
+//!   one, a conflict.
+//! - Rule 10: "the other's bytes lie at or above its base … as rule 5 reads it" takes rule 5's base byte, which a
+//!   region without `size` owns: another's bytes at the base overlap it — a reserved range's base inside placement
+//!   memory is a hole there, its extent past that byte not judged — and the unknown is bytes above the base, none at
+//!   it.
 //! - Rules 5 and 10: `size` is a quantity of information — a number and a unit — whole and positive in bytes; a bare
 //!   number is no size.
 //! - Rule 9: "levels that do not hold the system's" is a stated set without the level; a set holding it and others
@@ -52,19 +51,11 @@
 //!   serves, bound or not.
 //! - Rule 9: an empty `caller_level` is no level given, and the rule says nothing; one outside
 //!   `reachable-at-privilege`'s domain is the engine's input error, refused as `tool-failure` before anything is judged.
-//! - Rule 10: a record with no `placement` for a system whose hardware has placement memory places the image nowhere,
-//!   that assignment's conflict. The unknown of an unsized claim is judged here, over the system's hardware, as the
-//!   description's `missing-fact` — check (2) refuses it first, description-wide: a claim is placement memory or a
-//!   device's registers, a reserved region being a hole and no claim. A region that does not read is likewise check
-//!   (2)'s first, and the description's verdict here.
 //! - Several verdicts of the description's: `invalid-description` before `unsupported-profile` before `missing-fact`,
 //!   every finding kept.
 //! - Rule 13: a function's requirements are every requirement the requester writes on a fact of it, a group by its head.
-//!   "Meets them all" is every one satisfied; "refutes none" is none refused or absent. The unknown names every
-//!   provider refuting none.
-//! - Rule 13: a qualifier is judged for every requester the system serves that writes one, at the providers bound for
-//!   its own functions and for those of every requester it reaches through `uses` and `needs`, at any depth; a
-//!   judgement past the exact arithmetic is an unknown.
+//! - Rule 13: a qualifier is judged for every requester the system serves that writes one; the requesters it reaches
+//!   through `uses` and `needs` are reached at any depth; a qualifier judged past the exact arithmetic is an unknown.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
@@ -150,8 +141,8 @@ pub(crate) fn check(
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SystemReading {
     /// The system's hardware (rule 7): the blocks and platforms its `platform` clause, its own `uses` and `needs` or
-    /// its tasks name, and every block or platform those name in turn through `uses` and `needs`, at any depth — a
-    /// service naming a block does not make it hardware.
+    /// its tasks name, and every block or platform those blocks and platforms name in turn through `uses` or `needs`,
+    /// at any depth — a declaration of another kind ends the path, so a block only a service names is no hardware.
     pub hardware: BTreeSet<String>,
     /// Every declaration the system's closure reaches through `uses` and `needs` (rule 7), at any depth and through
     /// declarations of every kind.
@@ -499,12 +490,6 @@ impl Region {
     /// Placement memory: executable and not reserved (rule 10), owned by none.
     const fn placement(&self) -> bool {
         self.executable && !self.reserved
-    }
-
-    /// A claim on its bytes, as rule 10 counts them: placement memory or a device's registers; a reserved region is a
-    /// hole, and claims nothing.
-    const fn claims(&self) -> bool {
-        !self.reserved
     }
 
     /// The bytes known to be its own, `[lo, hi)`: a region without size owns at least its base byte.
@@ -1105,7 +1090,9 @@ impl<'a, 'p> Judgement<'a, 'p> {
         }
     }
 
-    /// Rule 5: two distinct bound providers, neither composing the other through `uses`, own no byte in common.
+    /// Rule 5: two distinct bound providers, neither composing the other, own no byte in common — one composing another
+    /// that it names through `uses`, at any depth through blocks and platforms, whose `uses` alone is composition; a
+    /// service's `uses` is a binding and composes nothing.
     fn ownership(&mut self) {
         let bound: BTreeSet<String> = self
             .assignment
@@ -1123,7 +1110,7 @@ impl<'a, 'p> Judgement<'a, 'p> {
                 .collect();
             let composes = self.world.get(provider).map_or_else(BTreeSet::new, |d| {
                 let named = self.world.names(d.instance, d.form, &["uses"]);
-                self.world.closure(named, &["uses"], |_| true)
+                self.world.closure(named, &["uses"], |d| d.kind.provides())
             });
             owned.push((provider.clone(), regions, composes));
         }
@@ -1298,8 +1285,9 @@ impl<'a, 'p> Judgement<'a, 'p> {
         }
     }
 
-    /// Rule 10: the plan places the image in placement memory of the system's hardware, where it has any; and where a
-    /// claim on placement memory has no size, whether it overlaps another is the description's unknown.
+    /// Rule 10: the plan places the image in placement memory of the system's hardware, where it has any; and where
+    /// placement memory, or a region against it — a device's registers, placement memory or a reserved range, whose
+    /// extent is the hole the plan avoids — has no size, whether they overlap is the description's unknown.
     fn placement(&mut self) {
         let hardware: Vec<String> = self.hardware.iter().cloned().collect();
         let regions: Vec<Region> = hardware.iter().flat_map(|h| self.regions(h)).collect();
@@ -1364,14 +1352,13 @@ impl<'a, 'p> Judgement<'a, 'p> {
             }
             None => {}
         }
-        let claims: Vec<&Region> = regions.iter().filter(|r| r.claims()).collect();
-        for (i, a) in claims.iter().enumerate() {
-            for b in &claims[i + 1..] {
+        for (i, a) in regions.iter().enumerate() {
+            for b in &regions[i + 1..] {
                 if !(a.placement() || b.placement()) || overlap(a, b) != Overlap::Unknown {
                     continue;
                 }
                 let (open, other) = if a.end.is_none() { (a, b) } else { (b, a) };
-                let primary = self.at(open.span, "a claim with no size");
+                let primary = self.at(open.span, "a region with no size");
                 let secondary = vec![self.at(other.span, "bytes above its base")];
                 self.refuse_description(
                     Status::MissingFact,

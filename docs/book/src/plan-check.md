@@ -58,8 +58,10 @@ system's name, `(task heartbeat beat)`, so no declaration can be mistaken for a 
    toolchain, so it gets a status of its own, `stale-input`, and the advice is to resolve again.
 2. **The description is checked again.** The checker runs the language's own checks over the description, with the
    language definition compiled into the checker, and adds a few rules about providers that only a planner meets: a
-   timer offering a channel-taking function while declaring no channel, a memory region that does not read, or
-   memory for the program overlapped by a device. A description the toolchain refuses never has a plan accepted.
+   timer offering a channel-taking function while declaring no channel, a memory region that does not read, memory
+   for the program overlapped by a device, or a region with no size where its size alone would say whether it meets
+   that memory — a reserved range among them, since the plan must know the extent of what it avoids. A description
+   the toolchain refuses never has a plan accepted.
 3. **Every need is bound, once, to a real provider.** The checker works out, from the description alone, who asks
    for something: the system, each of its tasks, and every service or part they use. It finds each need where the
    description writes it. Then every need on a function of a device must have exactly one binding, every binding
@@ -78,7 +80,8 @@ system's name, `(task heartbeat beat)`, so no declaration can be mistaken for a 
    counts once, since it programs the timer for all of them; and where a timer does not say how many channels it has,
    two needs on it cannot be known to fit. Third, does any address belong to two parts at once? Two parts the plan uses
    whose registers share an address would fight over it — unless one is built from the other, in which case they are
-   one part. Memory for the program belongs to no part, and a part the plan does not use claims nothing. Fourth, does
+   one part; only blocks and platforms build, so a part reached through a service is still a part of its own. Memory
+   for the program belongs to no part, and a part the plan does not use claims nothing. Fourth, does
    the plan say where the program goes, and is that memory the program can run from, on the system's own hardware?
    Fifth, can each caller reach what it is bound to? The profile runs the runtime, the tasks and the services at one
    processor level — `machine` under `rt-static-up-v1` — and every part a task or service is bound to must be reachable
