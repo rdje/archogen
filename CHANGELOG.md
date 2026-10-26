@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the configuration checker refuses an impossible provider or memory map
+
+`ARCHOGEN-M3-0955` (leaf `M3.5.4.6`), `2026-10-26`.
+
+- The configuration checker now refuses a description whose provider offers a function that takes a channel while
+  declaring none, whose memory region is not well formed, or whose placement memory is overlapped by a device or
+  another memory or reserved whole.
+
 ## archogen — the configuration checker re-checks the description
 
 `ARCHOGEN-M3-0954` (leaf `M3.5.4.3`), `2026-10-26`.

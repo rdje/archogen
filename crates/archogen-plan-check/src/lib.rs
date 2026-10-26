@@ -15,3 +15,4 @@
 pub mod assignment;
 pub mod check;
 pub mod model;
+pub mod providers;

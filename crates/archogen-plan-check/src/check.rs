@@ -132,8 +132,9 @@ pub fn record(
 }
 
 /// Check (2) (`M3.5.4.3`): the description re-checked with `eadl-model`'s passes — schema, presence, refinement and
-/// profile admission, the ones the toolchain's own check runs — over the kind modules the checker compiles in, so a
-/// description the toolchain refuses never has a plan accepted. `sources` holds the description's files, as
+/// profile admission, the ones the toolchain's own check runs — over the kind modules the checker compiles in, then
+/// the provider-level refusals of rules 3, 5 and 10 ([`crate::providers`]), so a description the toolchain refuses
+/// never has a plan accepted. `sources` holds the description's files, as
 /// elaborated into `program`.
 ///
 /// # Errors
@@ -156,7 +157,8 @@ pub fn description(
     })?;
     let outcome = check_program(program, &registry, profile);
     if outcome.is_ok() {
-        return Ok(());
+        // The provider-level refusals of rules 3, 5 and 10, which the language's passes do not run (`M3.5.4.6`).
+        return crate::providers::refusals(sources, program);
     }
     Err(Verdict {
         status: status_of(outcome.verdict),
