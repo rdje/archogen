@@ -224,8 +224,9 @@ pub const COMMANDS: &[CommandSpec] = &[
         ],
         options: &[],
         // `archogen-plan-check`, an executable of its own, which the front runs as git runs a sibling command
-        // (findings §16 (a), `M3.5.1`); the generator's server never runs it, so it is that checker's own tool.
-        maturity: Maturity::Unimplemented { owner: "M3.5.6" },
+        // (findings §16 (a), `M3.5.1`); the generator's server never runs it, so it is that checker's own tool. The
+        // executable exists (`M3.5.6`); the front running it is the launcher's, `M3.5.1.4`.
+        maturity: Maturity::Unimplemented { owner: "M3.5.1.4" },
         exposure: Exposure::Excluded {
             reason: "findings §16 (a): the configuration checker's own tool, served by its own server",
         },

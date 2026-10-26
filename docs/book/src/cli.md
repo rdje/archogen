@@ -51,7 +51,7 @@ COMMANDS:
 | --- | --- | --- |
 | `archogen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | **built** — a description is one file or a module tree; see [Checking a description](checking.md) and [Modules and composition](modules.md) |
 | `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked]` | resolve providers and resources into an independently checked build plan | leaf `M3.4` |
-| `archogen plan-check <DESCRIPTION> <PLAN>` | check a resolved plan against its description, by the independent configuration checker | leaf `M3.5.6` |
+| `archogen plan-check <DESCRIPTION> <PLAN>` | check a resolved plan against its description, by the independent configuration checker | leaf `M3.5.1.4`, which runs the checker's own executable, `archogen-plan-check`, built by `M3.5.6`; see [Checking a plan](plan-check.md) |
 | `archogen build <DESCRIPTION> [--profile <P>] --out <DIR>` | generate, assemble and build a complete system and its simulator | **experimental** — the S0 path only, see [The S0 early generation path](s0.md); leaf `M4.2` completes it |
 | `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.21.2` |
 | `archogen verify <BUILD> --tier <TIER>` | run a verification tier | leaf `M4.11` |
@@ -161,8 +161,8 @@ install: placed archogen and 0 sibling(s) in /opt/archogen/bin, from commit …;
 ```
 
 `cargo xtask install` builds the trust inventory of the commit (`HEAD` unless `--commit` names another) and places
-that build's executables: the generator's, `archogen`, and every other root whose target is an executable — none yet,
-since the checkers become executables of their own with `M2.21.3` and `M3.5.6`. Each file is hashed before it is
+that build's executables: the generator's, `archogen`, and every other root whose target is an executable — the
+configuration checker's, `archogen-plan-check`, since `M3.5.6`, and the scheduling checker's with `M2.21.3`. Each file is hashed before it is
 copied and where it lands, and refused unless both equal the inventory's sha256. The directory must be absent or
 empty, since an install removes nothing, and the manifest, `archogen-install.json` in the format `archogen-install/1`
 ([What is versioned](versions.md)), is written last, so a failed install leaves none. It names the directory, the

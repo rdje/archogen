@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — what the configuration checker shares with the generator, classified
+
+`ARCHOGEN-M3-0988` (leaf `M3.5.6.5`), `2026-10-26`.
+
+- Each item the configuration checker shares with another program — the language reader, the model, the record and
+  JSON packages, the kind definitions, the digest package, the toolchain — now carries in the trust gate's baseline
+  what kind of item it is, the property it can affect, the error both could make and what checks it independently,
+  ready for review.
+
 ## archogen — the shared digest package classified for timing
 
 `ARCHOGEN-M3-0987` (leaf `M3.5.1.8`), `2026-10-26`.
