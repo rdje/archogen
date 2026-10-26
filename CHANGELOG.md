@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate judges the configuration checker as the program it is
+
+`ARCHOGEN-M3-0970` (leaf `M3.5.6.2`), `2026-10-26`.
+
+- The trust gate's record of the configuration checker now names its executable, `archogen-plan-check`, rather than
+  its library, so an install places it beside `archogen`.
+
 ## archogen — the configuration checker runs as its own program
 
 `ARCHOGEN-M3-0969` (leaf `M3.5.6.1`), `2026-10-26`.

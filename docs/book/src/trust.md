@@ -53,7 +53,8 @@ without a role-packages clause, its set still contains `crates/archogen-cli`. Ev
 head.
 A missing name, integer or clause in that position refuses before a build. `defadmit` deliberately has no name.
 A role without a root names its future task, as `(defrole configuration-checker (leaf "M3.5"))` did until leaf
-`M3.5.3` rooted the configuration checker at its library, `crates/archogen-plan-check`.
+`M3.5.3` rooted the configuration checker at its library, `crates/archogen-plan-check`; leaf `M3.5.6.2` moved the root
+onto its executable, `(target bin archogen-plan-check)`, the program an install places beside `archogen`.
 Its `leaf` clause requires one textual value; absent, empty or multiple-value clauses refuse.
 This placeholder creates no program.
 Clauses may appear in any order, but each clause is allowed only once and only if the form takes it.

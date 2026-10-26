@@ -35,7 +35,7 @@
 (defroot configuration-checker
   (role configuration-checker)
   (package "crates/archogen-plan-check")
-  (target lib)
+  (target bin archogen-plan-check)
   (role-packages "crates/archogen-plan-check"))
 
 ; Every other program target of the workspace, classified as not a root (§2, leaf M3.6.3.1): the reason, and the role

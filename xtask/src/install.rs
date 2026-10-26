@@ -6,7 +6,8 @@
 //! sha256 come from it, and each file is hashed before it is copied and again where it lands, so a copy that is not
 //! the inventoried artifact is refused. Which roots are programs to place is read from the commit's own
 //! `trust/roots.eadl`: the generator's executable is the front, and every other root whose target is an executable is
-//! a sibling — none today, the checkers' roots moving onto their executables with `M2.21.3` and `M3.5.6`.
+//! a sibling — the configuration checker's, `archogen-plan-check`, since `M3.5.6.2`; the scheduling checker's with
+//! `M2.21.3`.
 //!
 //! ⛔ **It removes nothing, and a failed install leaves no manifest.** The directory must be absent or empty, and the
 //! manifest is written last, through a file renamed into place, so the front never reads a manifest naming a program
