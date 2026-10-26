@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-10-26
 - leaf: M3.5.5.1 (`docs/tasks/M3.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/reference.md#diagnostics
 - invalidates: none — no description changes meaning; the reference states the code of the checker's check (5)
 

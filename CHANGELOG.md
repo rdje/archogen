@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the configuration checker counts a timer's channels
+
+`ARCHOGEN-M3-0962` (leaf `M3.5.5.2`), `2026-10-26`.
+
+- The configuration checker refuses a plan that binds more delays and deadlines to a timer than it has channels, or
+  two to a timer whose channels are not described; a service several tasks share counts once.
+
 ## archogen — the configuration checker judges bindings together: a system's own hardware
 
 `ARCHOGEN-M3-0961` (leaf `M3.5.5.1`), `2026-10-26`.

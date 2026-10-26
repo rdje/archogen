@@ -220,10 +220,10 @@ a change that leaves it stale, so it is never edited by hand.
 - **deadline** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [Reading a
   description](reading.md), [Quantities and units](quantities.md), [Describing a workload](workload.md), [What a report
-  may claim](evidence.md), [Matching an offer to a requirement](matching.md), [What the scheduling checker
-  establishes](analysis.md), [The runtime: decisions, not actions](runtime.md), [The engine API](engine-api.md),
-  [Verifying the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md), [Annex C:
-  Trust proof records](annex-trust-proofs.md)
+  may claim](evidence.md), [Matching an offer to a requirement](matching.md), [Checking a plan](plan-check.md), [What
+  the scheduling checker establishes](analysis.md), [The runtime: decisions, not actions](runtime.md), [The engine
+  API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
+  costs](versions.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Dependency path assessment contracts — [Annex C: Trust proof
   records](annex-trust-proofs.md#dependency-path-assessment-contracts)
 - Dependency path-domain assessment — [Annex C: Trust proof
