@@ -109,6 +109,18 @@
   (reason "crates/archogen-api/src/lib.rs:81: embeds a shipped kind module as text, the data `archogen-api` registers"))
 
 (defadmit
+  (file "crates/archogen-plan-check/src/check.rs")
+  (rule "include_str")
+  (sha256 "8b9a2e4f89d1847a6091e5d2b2cefb0122c4f42aa49902360ee4d7f55e2d0b92")
+  (reason "crates/archogen-plan-check/src/check.rs:34: embeds a shipped kind module as text, the data the configuration checker's re-check of the description registers (RP-H3)"))
+
+(defadmit
+  (file "crates/archogen-plan-check/src/check.rs")
+  (rule "include_str")
+  (sha256 "8b9a2e4f89d1847a6091e5d2b2cefb0122c4f42aa49902360ee4d7f55e2d0b92")
+  (reason "crates/archogen-plan-check/src/check.rs:38: embeds a shipped kind module as text, the data the configuration checker's re-check of the description registers (RP-H3)"))
+
+(defadmit
   (file "crates/archogen-cli/src/spec.rs")
   (rule "include_str")
   (sha256 "372ccdafb5eeab0235f3dff631ea29fc16d4310e66875a80092b2bdfe4394725")

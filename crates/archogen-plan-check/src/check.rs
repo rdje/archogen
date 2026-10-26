@@ -10,7 +10,8 @@
 
 use archogen_outcome::record::{Finding, Label, Severity};
 use archogen_outcome::Status;
-use eadl_front::{Program, SourceMap};
+use eadl_front::{Diagnostic, Program, SourceMap, Verdict as Concluded};
+use eadl_model::check::{check_program, shipped_registry};
 use eadl_model::profile::Profile;
 
 use crate::assignment::{program_digest, Assignment};
@@ -20,6 +21,23 @@ pub const PLAN_RECORD: &str = "plan-record";
 
 /// The stale plan's code: the record's digest is not the elaborated program's.
 pub const PLAN_STALE: &str = "plan-stale";
+
+/// Check (2)'s code, where the checker itself refuses the description rather than one of the language's passes.
+pub const PLAN_DESCRIPTION: &str = "plan-description";
+
+/// The kind modules the checker compiles in: the language definition its re-check of the description reads, shared
+/// with the generator as files and never as a package (`TI-H19`, as `M3.5.2` amends it); each `include_str!` site
+/// admitted in `trust/roots.eadl` by a `defadmit` of its own (`RP-H3`).
+const KIND_MODULES: &[(&str, &str)] = &[
+    (
+        "docs/semantics/kinds/core.eadl",
+        include_str!("../../../docs/semantics/kinds/core.eadl"),
+    ),
+    (
+        "docs/semantics/kinds/os-rt.eadl",
+        include_str!("../../../docs/semantics/kinds/os-rt.eadl"),
+    ),
+];
 
 /// What a check found against a plan: the status it refuses with, and every finding.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -111,6 +129,84 @@ pub fn record(
         ));
     }
     Ok(assignment)
+}
+
+/// Check (2) (`M3.5.4.3`): the description re-checked with `eadl-model`'s passes — schema, presence, refinement and
+/// profile admission, the ones the toolchain's own check runs — over the kind modules the checker compiles in, so a
+/// description the toolchain refuses never has a plan accepted. `sources` holds the description's files, as
+/// elaborated into `program`.
+///
+/// # Errors
+///
+/// The [`Verdict`] refusing it: the description's own status and each of its diagnostics as a finding; `tool-failure`
+/// if the checker's kind modules do not load.
+pub fn description(
+    sources: &SourceMap,
+    program: &Program,
+    profile: &Profile,
+) -> Result<(), Verdict> {
+    let mut all = sources.clone();
+    let kinds: Vec<(String, String)> = KIND_MODULES
+        .iter()
+        .map(|(name, text)| ((*name).to_owned(), (*text).to_owned()))
+        .collect();
+    let registry = shipped_registry(&mut all, &kinds).map_err(|diagnostics| Verdict {
+        status: Status::ToolFailure,
+        findings: diagnostics.iter().map(|d| finding(&all, d)).collect(),
+    })?;
+    let outcome = check_program(program, &registry, profile);
+    if outcome.is_ok() {
+        return Ok(());
+    }
+    Err(Verdict {
+        status: status_of(outcome.verdict),
+        findings: outcome
+            .diagnostics
+            .iter()
+            .map(|d| finding(&all, d))
+            .collect(),
+    })
+}
+
+/// The status for a §5.5 verdict of the language's check: the checker's own mapping, as total as the vocabulary.
+#[must_use]
+pub const fn status_of(verdict: Concluded) -> Status {
+    match verdict {
+        Concluded::Ok => Status::Ok,
+        Concluded::InvalidDescription => Status::InvalidDescription,
+        Concluded::MissingFact => Status::MissingFact,
+        Concluded::UnsupportedProfile => Status::UnsupportedProfile,
+        Concluded::InfeasibleConfiguration => Status::InfeasibleConfiguration,
+        Concluded::AnalysisInconclusive => Status::AnalysisInconclusive,
+        Concluded::NotEstablished => Status::NotEstablished,
+        Concluded::Counterexample => Status::Counterexample,
+        Concluded::ToolFailure => Status::ToolFailure,
+    }
+}
+
+/// A diagnostic of the language's check as a finding of the result record, each span by its file, line and column.
+fn finding(sources: &SourceMap, diagnostic: &Diagnostic) -> Finding {
+    let label = |label: &eadl_front::Label| {
+        let source = sources.get(label.span.source);
+        let position = source.map(|s| s.position(label.span.start));
+        Label {
+            source: source.map_or_else(String::new, |s| s.name.clone()),
+            line: position.map_or(1, |p| p.line),
+            column: position.map_or(1, |p| p.column),
+            message: label.message.clone(),
+        }
+    };
+    Finding {
+        code: diagnostic.code.to_owned(),
+        severity: match diagnostic.severity {
+            eadl_front::Severity::Error => Severity::Error,
+            eadl_front::Severity::Warning => Severity::Warning,
+        },
+        message: diagnostic.message.clone(),
+        primary: label(&diagnostic.primary),
+        secondary: diagnostic.secondary.iter().map(label).collect(),
+        repair: diagnostic.repair.clone(),
+    }
 }
 
 /// The record's span for a finding: the clause `head` opens, where it reads, else the record's first line.
