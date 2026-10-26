@@ -24,6 +24,7 @@
 
 - [What a report may claim](evidence.md)
 - [Matching an offer to a requirement](matching.md)
+- [Checking a plan](plan-check.md)
 - [What the scheduling checker establishes](analysis.md)
 - [Where the engine's knowledge comes from: the catalog](catalog.md)
 - [Checks that must not share a mistake: the trust gate](trust.md)

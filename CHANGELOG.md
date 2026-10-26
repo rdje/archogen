@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a plan is checked whole, and its verdicts are stated
+
+`ARCHOGEN-M3-0957` (leaf `M3.5.4.5`), `2026-10-26`.
+
+- The configuration checker runs its checks in order over a plan, and every corruption of fixture F12 is refused
+  under a code of its own. The codes are stated in the language reference, each with an input that fires it, and a
+  new book chapter, *Checking a plan*, explains them.
+
 ## archogen — the configuration checker judges each binding
 
 `ARCHOGEN-M3-0956` (leaf `M3.5.4.4`), `2026-10-26`.

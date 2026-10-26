@@ -197,6 +197,26 @@ pub fn bindings(
     crate::bindings::check(sources, program, name, text, assignment)
 }
 
+/// Every check over one plan, in order (`M3.5`'s design, *Its verdicts*; `M3.5.4.5`): check (1), a stale plan
+/// refused before any judgement; check (2), the description; checks (3) and (4), the bindings — the first that refuses
+/// the verdict. `text` is the record `name` names; `sources` holds the description's files, as elaborated into
+/// `program`.
+///
+/// # Errors
+///
+/// The [`Verdict`] of the first check that refuses.
+pub fn plan(
+    sources: &SourceMap,
+    program: &Program,
+    profile: &Profile,
+    name: &str,
+    text: &str,
+) -> Result<(), Verdict> {
+    let assignment = record(program, profile, name, text)?;
+    description(sources, program, profile)?;
+    bindings(sources, program, name, text, &assignment)
+}
+
 /// The status for a §5.5 verdict of the language's check: the checker's own mapping, as total as the vocabulary.
 #[must_use]
 pub const fn status_of(verdict: Concluded) -> Status {

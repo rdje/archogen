@@ -714,6 +714,40 @@ fn emitted_diagnostics(text: &str) -> BTreeSet<(String, String)> {
     out
 }
 
+/// Every code a **production** half declares as a constant whose value begins with one of `prefixes` — the codes a
+/// source names once and writes into a record rather than through `Diagnostic::`: the configuration checker's
+/// findings, `pub const PLAN_BINDING: &str = "plan-binding";` (leaf `M3.5.4.5`). Each is an error, as the checker
+/// writes every finding. ⛔ Only a governed prefix counts: `kind.rs`'s `DEFKIND` and `language_version.rs`'s `HEAD`
+/// are code-shaped words that are no diagnostic.
+fn declared_codes(text: &str, prefixes: &BTreeSet<String>) -> BTreeSet<(String, String)> {
+    let production = text
+        .split_once("#[cfg(test)]")
+        .map_or(text, |(head, _)| head);
+    let mut out = BTreeSet::new();
+    for (at, _) in production.match_indices("const ") {
+        let declaration = &production[at..];
+        let Some(end) = declaration.find(';') else {
+            continue;
+        };
+        let Some((_, value)) = declaration[..end].split_once(": &str = \"") else {
+            continue;
+        };
+        let Some(code) = value.strip_suffix('"') else {
+            continue;
+        };
+        if prefixes
+            .iter()
+            .any(|prefix| code.starts_with(prefix.as_str()))
+            && code
+                .chars()
+                .all(|ch| ch.is_ascii_lowercase() || ch.is_ascii_digit() || ch == '-')
+        {
+            out.insert(("error".to_string(), code.to_string()));
+        }
+    }
+    out
+}
+
 /// The sources the reference declares itself normative over, with their line numbers.
 fn declared_sources(document: &str) -> Vec<(usize, String)> {
     machine_table(document, "normative-sources")
@@ -758,6 +792,7 @@ fn census_violations_of(path: &str, document: &str) -> Vec<String> {
     let mut out = Vec::new();
     let section = diagnostics_section(document);
     let sources = declared_sources(document);
+    let prefixes = governed_prefixes(document);
     if sources.is_empty() {
         out.push(format!(
             "{path} declares no normative source, so the diagnostic census has no population and \
@@ -816,7 +851,10 @@ fn census_violations_of(path: &str, document: &str) -> Vec<String> {
                 continue;
             }
         };
-        for (severity, code) in emitted_diagnostics(&text) {
+        for (severity, code) in emitted_diagnostics(&text)
+            .into_iter()
+            .chain(declared_codes(&text, &prefixes))
+        {
             if severity != "error" {
                 out.push(violation_in(
                 path,
@@ -1274,7 +1312,12 @@ fn book_code_violations(documents: &[(&str, &str)], chapters: &[(String, String)
         let emitted: BTreeSet<String> = declared_sources(document)
             .iter()
             .filter_map(|(_, source)| std::fs::read_to_string(repo_root().join(source)).ok())
-            .flat_map(|text| emitted_diagnostics(&text).into_iter().map(|(_, code)| code))
+            .flat_map(|text| {
+                emitted_diagnostics(&text)
+                    .into_iter()
+                    .chain(declared_codes(&text, &prefixes))
+                    .map(|(_, code)| code)
+            })
             .collect();
         let stated: BTreeSet<String> = machine_table(document, "diagnostics")
             .iter()
@@ -2113,6 +2156,24 @@ fn arm_11_the_census_sees_a_code_written_on_the_line_after_its_constructor() {
         emitted_diagnostics(r#"Diagnostic::warning("module-slow", "m", l, "h")"#)
             .contains(&("warning".to_string(), "module-slow".to_string())),
         "a non-error severity was not recorded, so rule 1 would be checked by nothing"
+    );
+}
+
+#[test]
+fn arm_11b_the_census_sees_a_code_declared_as_a_constant_of_a_governed_prefix_only() {
+    // The configuration checker names each code once, as a constant its findings carry (leaf `M3.5.4.5`).
+    let prefixes = BTreeSet::from(["plan-".to_string()]);
+    let text = "/// Check (3)'s code.\npub const PLAN_BINDING: &str = \"plan-binding\";\n\
+                pub const DEFKIND: &str = \"defkind\";\nconst FORMAT: &str = \"archogen-assignment/1\";\n\
+                #[cfg(test)]\nmod tests {\n    const PLAN_EXAMPLE: &str = \"plan-example\";\n}\n";
+    assert_eq!(
+        declared_codes(text, &prefixes),
+        BTreeSet::from([("error".to_string(), "plan-binding".to_string())]),
+        "only a production constant whose value begins with a governed prefix is a code"
+    );
+    assert!(
+        declared_codes(text, &BTreeSet::new()).is_empty(),
+        "a document governing no prefix claims no constant"
     );
 }
 

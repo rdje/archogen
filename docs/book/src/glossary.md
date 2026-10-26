@@ -162,6 +162,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
 
 - **assembly** — code written in the processor's own language, one instruction a line; the port needs a little, and
   the catalog admits it narrowly. See [Where the engine's knowledge comes from: the catalog](catalog.md).
+- **assignment record** — the search's answer, written down: which provider serves each requirement of one system, with
+  a fingerprint of the description it was made for. See [Checking a plan](plan-check.md).
 - **capability vocabulary** — the list of facts a requirement may constrain, each with its kind of value and the
   direction in which an offered value satisfies a required one. See [Matching an offer to a requirement](matching.md).
 - **catalog** — the reviewed building blocks a generated system is assembled from, each pinned by a hash of its
@@ -203,6 +205,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
 - **shared item** — anything two checked programs both use — a package, a file, a generated source's provenance —
   which the trust gate lists until a person has reviewed it. See [Checks that must not share a mistake: the trust
   gate](trust.md).
+- **stale plan** — a plan whose description changed after it was made, refused before any other check with the advice
+  to resolve again. See [Checking a plan](plan-check.md).
 - **task** — one piece of work a system does over and over, such as reading a sensor every 10 ms. See [Describing a
   workload](workload.md).
 - **trap** — the processor stopping its current code to run the system's own, because of an interrupt or an

@@ -14,6 +14,9 @@
 //! - `kinds <text>` — a kind module, loaded by `shipped_registry`, the loader `archogen check` uses. The CLI
 //!   registers only the kinds it embeds, so no description can reach a `defkind`-level `schema-*` code. After
 //!   an optional `<validate>`, declarations are validated against the registry that module built;
+//! - `plan <text> <plan> <record>` — a description, the module `app`, and an assignment record checked against it by
+//!   the configuration checker's checks in order, as its executable will run them (`M3.5.4.5`; the executable is
+//!   `M3.5.6`'s); `<digest>` in the record stands for the elaborated program's digest;
 //! - `none: <reason>` — no writable input fires the code. The reason is review, and it may not be empty.
 //!
 //! `<0xNN>` names a character, decoded by the same `reference_table` reader the reference's other tables use —
@@ -24,9 +27,13 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use archogen_cli::run;
+use archogen_plan_check::assignment::program_digest;
+use archogen_plan_check::check::plan;
+use eadl_front::module::{elaborate, MemoryModules};
 use eadl_front::SourceMap;
 use eadl_model::check::shipped_registry;
 use eadl_model::kind::validate;
+use eadl_model::profile::RT_STATIC_UP_V1;
 
 #[allow(dead_code)]
 #[path = "../../eadl-front/tests/common/reference_table.rs"]
@@ -41,6 +48,8 @@ enum Probe {
     Modules(String, Vec<(String, String)>),
     /// A kind module, and the declarations validated against the registry it builds (`<validate>`).
     Kinds(String, String),
+    /// A description, the module `app`, and an assignment record checked against it (`<plan>`).
+    Plan(String, String),
     Limit(String),
 }
 
@@ -96,8 +105,14 @@ fn parse_cell(cell: &str) -> Result<Probe, String> {
             }
             Ok(Probe::Modules(root, modules))
         }
+        "plan" => {
+            let (description, record) = rest.split_once("<plan>").ok_or_else(|| {
+                "`plan` holds no `<plan>` between its description and its record".to_string()
+            })?;
+            Ok(Probe::Plan(decode(description)?, decode(record)?))
+        }
         other => Err(format!(
-            "`{other}` is not a verb — the verbs are `check`, `modules`, `kinds` and `none:`"
+            "`{other}` is not a verb — the verbs are `check`, `modules`, `kinds`, `plan` and `none:`"
         )),
     }
 }
@@ -178,6 +193,24 @@ fn fire(probe: &Probe) -> BTreeSet<String> {
                     }
                     codes
                 }
+            }
+        }
+        Probe::Plan(description, record) => {
+            // The checker's library, every check in the order its executable runs them, until `M3.5.6` builds it.
+            let modules = MemoryModules::new().with("app", description);
+            let mut sources = SourceMap::new();
+            let (program, diagnostics) = elaborate(&mut sources, &modules, "app");
+            if diagnostics.has_errors() {
+                return diagnostics
+                    .items()
+                    .iter()
+                    .map(|d| d.code.to_string())
+                    .collect();
+            }
+            let record = record.replace("<digest>", &program_digest(&program));
+            match plan(&sources, &program, &RT_STATIC_UP_V1, "plan.eadl", &record) {
+                Ok(()) => BTreeSet::new(),
+                Err(verdict) => verdict.findings.into_iter().map(|f| f.code).collect(),
             }
         }
     }
@@ -278,6 +311,31 @@ fn a_modules_cell_writes_the_module_files_beside_the_description() {
         "| `module-name-mismatch` | … | … | `modules (defmodule app (version 1 0) (import hw.misnamed)) <mod hw.misnamed>(defmodule hw.other (version 1 0))` |",
     ]);
     assert_reported(&fires_violations("fixture.md", &doc), 0, &[]);
+}
+
+#[test]
+fn a_plan_cell_runs_the_configuration_checker_over_the_record_and_its_description() {
+    let description =
+        "(defmodule app (version 1 0) (defblock console.uart (offers (observable-output true))) \
+                       (defservice console.write (requires (needs observable-output))) \
+                       (defsystem s (requires (uses console.write)) (platform (uses console.uart))))";
+    let record = "(format \"archogen-assignment/1\") (profile rt-static-up-v1) (system s) (program \"<digest>\")";
+    let doc = table(&[
+        &format!("| `plan-binding` | … | … | `plan {description} <plan>{record}` |"),
+        &format!(
+            "| `plan-stale` | … | … | `plan {description} <plan>{}` |",
+            record.replace("<digest>", "<64*0>")
+        ),
+        &format!("| `plan-unsatisfied` | … | … | `plan {description} <plan>{record}` |"),
+        "| `plan-record` | … | … | `plan (defmodule app (version 1 0)) (format \"x\")` |",
+    ]);
+    // The unbound requirement fires; the stale digest fires before any judgement; the third row's input fires
+    // `plan-binding`, not its code; the fourth names no `<plan>`.
+    assert_reported(
+        &fires_violations("fixture.md", &doc),
+        2,
+        &["`plan-unsatisfied`'s input fires", "holds no `<plan>`"],
+    );
 }
 
 #[test]
