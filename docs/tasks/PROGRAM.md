@@ -790,6 +790,21 @@ mdBook that is the director's window into the project.
   Verification: the doctrines.
   Commit: `ARCHOGEN-PROGRAM-0959 (leaf PROGRAM.112)`
 
+- ID: `PROGRAM.113`
+  Status: `pending` — filed `2026-10-26` from the CI run on `d5123578`
+  Goal: `scripts/check_task_history.sh`'s self-test arm "a SIGALRM just after the tree's rename" holds on every run of
+    the Linux runner, or the reason it cannot is stated and the arm says so.
+  Reproduce / issue: the `doctrines` workflow's run `40323084588`, attempt 1, on `ubuntu-latest`: the arm `rc 142, not
+    142, or the seal not finished and proven`, the seal's output empty — the process ended by the signal before the
+    seal printed, as though `SIGALRM` were not held; the same run's `SIGQUIT`, `SIGUSR1` and `SIGUSR2` arms passed, and
+    attempt 2 of the same commit passed whole; the arm passed on this host (`aarch64-apple-darwin`) and in the base's
+    last green run. Intermittent, so one run diagnoses nothing.
+  Direction: tools first — a Linux reproduction (a container or the runner) running the arm in a loop under load,
+    recording the process's threads and signal masks (`/proc/self/status`'s `SigBlk`) at the rename; then the mask, the
+    arm or the record fixed by what it shows. Not patched blind.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -859,7 +874,7 @@ roadmap item X live?".
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.73` and `.78` — are filed and owned. Every closed
+`PROGRAM.73`, `.78` and `.113` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -999,6 +1014,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.111` | `ARCHOGEN-PROGRAM-0953 (leaf PROGRAM.111)` | **the sixteenth daily artifact cleanup**: only idle incremental caches removed, 8854 files / 1586169011 bytes, a light run under doctrine 22 |
 | `PROGRAM.112` | `ARCHOGEN-PROGRAM-0959 (leaf PROGRAM.112)` | **doctrine 22's record corrected**: what `make focused` runs — workspace clippy, `cargo test --all`, the sweep's premises — stays at every commit, a pin a slice moves re-pinned by it; the rest deferred to `M3.5.9` |
 | `PROGRAM.71` | `ARCHOGEN-PROGRAM-0971 (leaf PROGRAM.71)` | **the task-history index append-only in order**: leg 3 refuses committed rows that no longer stand first and in their order; an arm; `PROGRAM.72` next |
+| `PROGRAM.113` | `ARCHOGEN-PROGRAM-0974 (leaf PROGRAM.113)` | **filed**: the task-history self-test's `SIGALRM` arm failed once on the Linux runner and passed on re-run; to be reproduced on Linux before any change |
 
 ## Changelog
 

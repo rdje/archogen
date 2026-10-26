@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — an intermittent self-test arm filed
+
+`ARCHOGEN-PROGRAM-0974` (leaf `PROGRAM.113`), `2026-10-26`.
+
+- One of the task-history gate's own tests failed once on CI's Linux runner and passed when re-run; it is filed to be
+  reproduced on Linux and fixed by what that shows.
+
 ## archogen — the trust gate's forms for what the configuration checker shares
 
 `ARCHOGEN-M3-0973` (leaf `M3.5.6.5`), `2026-10-26`.
