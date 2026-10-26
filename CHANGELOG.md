@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate knows the front runs the configuration checker
+
+`ARCHOGEN-M3-0993` (leaf `M3.5.1.4.4`), `2026-10-26`.
+
+- `trust/roots.eadl` now says the `archogen` front runs the configuration checker and reads the install manifest, so
+  the trust gate records that invocation and the launcher it goes through, and `cargo xtask install` places exactly
+  the programs the front runs.
+
 ## archogen — the front believes a checker's result only when it holds together
 
 `ARCHOGEN-M3-0992` (leaf `M3.5.1.4.3`), `2026-10-26`.

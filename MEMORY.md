@@ -14,9 +14,9 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.5`; `PROGRAM` resumes at `PROGRAM.72`.
-- **Next action:** CI green on `34b6abeb` (2026-10-26); `M3.5.5.7.4` after the push; next
-  `M3.5.1.4.4`, `RP-H5`'s clauses; `M3.5.3.2` waits on the runner for `M3.5.3.1`'s two derivation items; `PROGRAM.115` filed;
-  full verification `M3.5.9` after `M3.5`'s features (doctrine 22).
+- **Next action:** CI green on `34b6abeb` (2026-10-26); next `M3.5.1.6` (transport, the checkers' MCP),
+  then `M3.4` (the search, unblocked). After the push, the runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`.
+  `PROGRAM.115` filed; full verification `M3.5.9` after `M3.5`'s features (doctrine 22).
   The mutation campaign is `M7.6`'s. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
   focused green at `eaf71286`; `archogen check` wiring is `M3.4`'s. The next artifact cleanup is due after
   `2026-10-27T08:56` UTC (`PROGRAM.111` ran `2026-10-26T08:56:05Z`). A test's deadline is one only a hang reaches (`PROGRAM.99`).

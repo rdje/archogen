@@ -87,8 +87,10 @@ is built from the commit before it, so it must know a form before any commit wri
   reading of a system against the one the configuration checker's joint check judges with, which a context that
   never read the search's wrote;
 - on the front's form alone — the one root of role `generator`, an executable — `(invokes <root> …)`, the other
-  executable roots it runs, each once, and `(installed "archogen-install.json")`, together, written by no commit yet
-  (`M3.5.1.4`).
+  executable roots it runs, each once, and `(installed "archogen-install.json")`, together. The generator's form holds
+  them since leaf `M3.5.1.4.4`: `(invokes configuration-checker)`, so the inventory records the front and the checker
+  sharing an invocation, the launcher's sha256 within it, and `cargo xtask install` places exactly the roots the
+  front invokes.
 
 Each departure refuses before a build, as a misnamed harness does — a clause holding anything but names among them,
 and a fault within one form stopping the reading at that form (leaf `M3.5.2.2.1`) — and one test target belongs to one

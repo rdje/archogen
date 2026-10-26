@@ -169,8 +169,9 @@ install: placed archogen and 0 sibling(s) in /opt/archogen/bin, from commit …;
 ```
 
 `cargo xtask install` builds the trust inventory of the commit (`HEAD` unless `--commit` names another) and places
-that build's executables: the generator's, `archogen`, and every other root whose target is an executable — the
-configuration checker's, `archogen-plan-check`, since `M3.5.6`, and the scheduling checker's with `M2.21.3`. Each file is hashed before it is
+that build's executables: the generator's, `archogen`, and exactly the roots its form in `trust/roots.eadl` says it
+invokes — the configuration checker's, `archogen-plan-check`, since leaf `M3.5.1.4.4`, and the scheduling checker's
+when `M2.21` adds it. Each file is hashed before it is
 copied and where it lands, and refused unless both equal the inventory's sha256. The directory must be absent or
 empty, since an install removes nothing, and the manifest, `archogen-install.json` in the format `archogen-install/1`
 ([What is versioned](versions.md)), is written last, so a failed install leaves none. It names the directory, the

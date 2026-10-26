@@ -71,7 +71,7 @@
   (classification interpretation-normalization)
   (property "configuration validity (ROADMAP.md §7.1)")
   (risk "a refusal read as an acceptance for every role")
-  (controls "its own tests: one text per record, its consistency rules, the damage sweep; the exit code's second channel pending M3.5.1.4"))
+  (controls "its own tests: one text per record, its consistency rules, the damage sweep; the exit code's second channel, which the front checks (M3.5.1.4.3)"))
 
 (defshared "generator+configuration-checker package crates/eadl-front"
   (pair "generator" "configuration-checker")
