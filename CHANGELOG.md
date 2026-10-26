@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's forms, measured by the gate that judges them
+
+`ARCHOGEN-M3-0975` (leaf `M3.5.6.5`), `2026-10-26`.
+
+- The trust gate now running on `main` measures one aspect of eight shared items otherwise than the older gate that
+  proposed their forms; its own proposal replaces them, awaiting review.
+
 ## archogen — an intermittent self-test arm filed
 
 `ARCHOGEN-PROGRAM-0974` (leaf `PROGRAM.113`), `2026-10-26`.
