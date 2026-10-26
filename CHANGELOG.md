@@ -5,6 +5,12 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the sixteenth artifact cleanup
+
+`ARCHOGEN-PROGRAM-0953` (leaf `PROGRAM.111`), `2026-10-26`.
+
+- Idle compiler caches removed, about 1.6 GB, every one rebuilt by the next build.
+
 ## archogen — small checks per slice, full verification after the feature set
 
 `ARCHOGEN-PROGRAM-0952` (leaf `PROGRAM.110`), `2026-10-26`.

@@ -19,7 +19,7 @@
   `.1.8` waits on the runner: the trust gate refuses the shared digest package on `main` until its form lands.
   The mutation campaign is `M7.6`'s. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
   focused green at `eaf71286`; `archogen check` wiring is `M3.4`'s. The next artifact cleanup is due after
-  `2026-10-24T22:20` UTC (`PROGRAM.109` ran `2026-10-23T22:20:24Z`). A test's deadline is one only a hang reaches (`PROGRAM.99`).
+  `2026-10-27T08:56` UTC (`PROGRAM.111` ran `2026-10-26T08:56:05Z`). A test's deadline is one only a hang reaches (`PROGRAM.99`).
   **Mutation testing is stopped** until the functionality is locked
   (`decision_mutation-testing-after-completion.md`, `2026-10-21`): every pending `M3.6.9` leaf is `blocked`;
   every decision advances the project first. `M3.6.9.6.3.2.2.15.2.1.8.2` stays owned, a suspected defect, P2.
