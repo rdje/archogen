@@ -32,6 +32,9 @@ pub const PLAN_BINDING: &str = "plan-binding";
 /// Check (4)'s code: a binding the model's judgement does not satisfy.
 pub const PLAN_UNSATISFIED: &str = "plan-unsatisfied";
 
+/// Check (5)'s code: the bindings of one assignment do not hold together by `docs/semantics/model.md` §8's joint rules.
+pub const PLAN_JOINT: &str = "plan-joint";
+
 /// The kind modules the checker compiles in: the language definition its re-check of the description reads, shared
 /// with the generator as files and never as a package (`TI-H19`, as `M3.5.2` amends it); each `include_str!` site
 /// admitted in `trust/roots.eadl` by a `defadmit` of its own (`RP-H3`).
@@ -198,8 +201,8 @@ pub fn bindings(
 }
 
 /// Every check over one plan, in order (`M3.5`'s design, *Its verdicts*; `M3.5.4.5`): check (1), a stale plan
-/// refused before any judgement; check (2), the description; checks (3) and (4), the bindings — the first that refuses
-/// the verdict. `text` is the record `name` names; `sources` holds the description's files, as elaborated into
+/// refused before any judgement; check (2), the description; checks (3) and (4), the bindings; check (5), the joint
+/// rules (`M3.5.5`) — the first that refuses the verdict. `text` is the record `name` names; `sources` holds the description's files, as elaborated into
 /// `program`.
 ///
 /// # Errors
@@ -214,7 +217,26 @@ pub fn plan(
 ) -> Result<(), Verdict> {
     let assignment = record(program, profile, name, text)?;
     description(sources, program, profile)?;
-    bindings(sources, program, name, text, &assignment)
+    bindings(sources, program, name, text, &assignment)?;
+    joint(sources, program, name, text, &assignment)
+}
+
+/// Check (5) (`M3.5.5`; [`crate::joint`]): the bindings of one system's assignment hold together by
+/// `docs/semantics/model.md` §8's joint rules, judged after checks (3) and (4) accept each binding alone. `assignment`
+/// is what check (1) read from `text`, the record `name` names; `sources` holds the description's files, as elaborated
+/// into `program`.
+///
+/// # Errors
+///
+/// The [`Verdict`] refusing it: `tool-failure`, a finding per conflict or unknown under [`PLAN_JOINT`].
+pub fn joint(
+    sources: &SourceMap,
+    program: &Program,
+    name: &str,
+    text: &str,
+    assignment: &Assignment,
+) -> Result<(), Verdict> {
+    crate::joint::check(sources, program, name, text, assignment)
 }
 
 /// The status for a §5.5 verdict of the language's check: the checker's own mapping, as total as the vocabulary.

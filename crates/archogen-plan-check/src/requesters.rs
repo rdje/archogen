@@ -179,14 +179,7 @@ fn refusal<'a>(name: &'a str, form: &'a Form) -> impl FnOnce(NotJudged) -> Refus
 ///
 /// The first side the model refuses, with its declaration.
 pub fn served<'p>(program: &'p Program, system: &str) -> Result<Served<'p>, Refused> {
-    let mut declarations: BTreeMap<String, (usize, &Form)> = BTreeMap::new();
-    for instance in &program.instances {
-        for form in &instance.declarations {
-            if let Some(name) = form.items().get(1).and_then(Form::as_symbol) {
-                declarations.insert(instance.qualify(name), (instance.id, form));
-            }
-        }
-    }
+    let declarations = declarations(program);
     let mut served = Served::default();
     let Some(&(id, form)) = declarations.get(system) else {
         return Ok(served);
@@ -227,4 +220,82 @@ pub fn served<'p>(program: &'p Program, system: &str) -> Result<Served<'p>, Refu
         served.sides.insert(requester, side);
     }
     Ok(served)
+}
+
+/// Every declaration of `program` by its qualified name, with the instance that wrote it.
+#[must_use]
+pub fn declarations(program: &Program) -> BTreeMap<String, (usize, &Form)> {
+    let mut out = BTreeMap::new();
+    for instance in &program.instances {
+        for form in &instance.declarations {
+            if let Some(name) = form.items().get(1).and_then(Form::as_symbol) {
+                out.insert(instance.qualify(name), (instance.id, form));
+            }
+        }
+    }
+    out
+}
+
+/// Rule 7: a system's hardware — the blocks and platforms its `platform` clause, its own `uses` and `needs` and its
+/// tasks' name, and every block or platform those name in turn through `uses` or `needs`, a clause of their own or
+/// inside `requires`, at any depth; `refines` no edge.
+#[must_use]
+pub fn hardware(
+    program: &Program,
+    declarations: &BTreeMap<String, (usize, &Form)>,
+    system: &str,
+) -> BTreeSet<String> {
+    let Some(&(id, system)) = declarations.get(system) else {
+        return BTreeSet::new();
+    };
+    let is_hardware = |name: &String| {
+        declarations
+            .get(name)
+            .is_some_and(|(_, form)| matches!(form.head(), Some("defblock" | "defplatform")))
+    };
+    let mut seeds = Vec::new();
+    names(system, &mut seeds, true);
+    let mut reached = BTreeSet::new();
+    let mut todo: Vec<String> = resolve(program, id, &seeds)
+        .into_iter()
+        .filter(is_hardware)
+        .collect();
+    while let Some(provider) = todo.pop() {
+        if !reached.insert(provider.clone()) {
+            continue;
+        }
+        let (pid, form) = declarations[&provider];
+        let mut named = Vec::new();
+        names(form, &mut named, false);
+        todo.extend(
+            resolve(program, pid, &named)
+                .into_iter()
+                .filter(is_hardware),
+        );
+    }
+    reached
+}
+
+/// The operands of every `uses` and `needs` a declaration writes — its own, inside `requires`, and, for a system,
+/// inside its `platform` clause and its tasks.
+fn names<'f>(form: &'f Form, out: &mut Vec<(&'f str, Span)>, system: bool) {
+    for clause in &form.items()[1..] {
+        match clause.head() {
+            Some("uses" | "needs") => out.extend(
+                clause.items()[1..]
+                    .iter()
+                    .filter_map(|f| f.as_symbol().map(|name| (name, f.span()))),
+            ),
+            Some("requires") => names(clause, out, false),
+            Some("platform" | "task") if system => names(clause, out, false),
+            _ => {}
+        }
+    }
+}
+
+fn resolve(program: &Program, id: usize, names: &[(&str, Span)]) -> Vec<String> {
+    names
+        .iter()
+        .filter_map(|(name, span)| program.resolve(id, name, *span).ok().flatten())
+        .collect()
 }

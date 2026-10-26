@@ -15,6 +15,7 @@ use eadl_model::quantity::{Dimension, Quantity};
 
 use crate::check::{at, Verdict, PLAN_DESCRIPTION};
 use crate::model::vocab::{Domain, VOCABULARY};
+use crate::requesters::{declarations, hardware};
 
 /// A region a provider offers, read whole (rule 5): its bytes `[base, base + size)`, or at least its base byte where
 /// it states no size.
@@ -85,15 +86,7 @@ struct Refused {
 /// `unsupported-profile`, else `missing-fact`, every refusal a finding.
 pub fn refusals(sources: &SourceMap, program: &Program) -> Result<(), Verdict> {
     let mut refused = Vec::new();
-    // Every declaration by its qualified name, with the instance that wrote it.
-    let mut declarations: BTreeMap<String, (usize, &Form)> = BTreeMap::new();
-    for instance in &program.instances {
-        for form in &instance.declarations {
-            if let Some(name) = form.items().get(1).and_then(Form::as_symbol) {
-                declarations.insert(instance.qualify(name), (instance.id, form));
-            }
-        }
-    }
+    let declarations = declarations(program);
     let mut regions: BTreeMap<String, Vec<Region>> = BTreeMap::new();
     for (qualified, (_, form)) in &declarations {
         if matches!(form.head(), Some("defblock" | "defplatform")) {
@@ -105,9 +98,9 @@ pub fn refusals(sources: &SourceMap, program: &Program) -> Result<(), Verdict> {
         }
     }
     let mut said = BTreeSet::new();
-    for (qualified, (id, form)) in &declarations {
+    for (qualified, (_, form)) in &declarations {
         if form.head() == Some("defsystem") {
-            let hardware = hardware(program, &declarations, *id, form);
+            let hardware = hardware(program, &declarations, qualified);
             let owned: Vec<&Region> = hardware
                 .iter()
                 .filter_map(|provider| regions.get(provider))
@@ -310,67 +303,6 @@ fn bytes(number: &Form, unit: &Form, within: Span) -> Result<i128, (Status, Stri
         ));
     }
     Ok(bits.numerator() / 8)
-}
-
-/// Rule 7: a system's hardware — the blocks and platforms its `platform` clause, its own `uses` and `needs` and its
-/// tasks' name, and every block or platform those name in turn through `uses` or `needs`, a clause of their own or
-/// inside `requires`, at any depth; `refines` no edge.
-fn hardware(
-    program: &Program,
-    declarations: &BTreeMap<String, (usize, &Form)>,
-    id: usize,
-    system: &Form,
-) -> BTreeSet<String> {
-    let is_hardware = |name: &String| {
-        declarations
-            .get(name)
-            .is_some_and(|(_, form)| matches!(form.head(), Some("defblock" | "defplatform")))
-    };
-    let mut seeds = Vec::new();
-    names(system, &mut seeds, true);
-    let mut reached = BTreeSet::new();
-    let mut todo: Vec<String> = resolve(program, id, &seeds)
-        .into_iter()
-        .filter(is_hardware)
-        .collect();
-    while let Some(provider) = todo.pop() {
-        if !reached.insert(provider.clone()) {
-            continue;
-        }
-        let (pid, form) = declarations[&provider];
-        let mut named = Vec::new();
-        names(form, &mut named, false);
-        todo.extend(
-            resolve(program, pid, &named)
-                .into_iter()
-                .filter(is_hardware),
-        );
-    }
-    reached
-}
-
-/// The operands of every `uses` and `needs` a declaration writes — its own, inside `requires`, and, for a system,
-/// inside its `platform` clause and its tasks.
-fn names<'f>(form: &'f Form, out: &mut Vec<(&'f str, Span)>, system: bool) {
-    for clause in &form.items()[1..] {
-        match clause.head() {
-            Some("uses" | "needs") => out.extend(
-                clause.items()[1..]
-                    .iter()
-                    .filter_map(|f| f.as_symbol().map(|name| (name, f.span()))),
-            ),
-            Some("requires") => names(clause, out, false),
-            Some("platform" | "task") if system => names(clause, out, false),
-            _ => {}
-        }
-    }
-}
-
-fn resolve(program: &Program, id: usize, names: &[(&str, Span)]) -> Vec<String> {
-    names
-        .iter()
-        .filter_map(|(name, span)| program.resolve(id, name, *span).ok().flatten())
-        .collect()
 }
 
 /// Rule 10 over one system's hardware's regions: placement memory overlapped by a device's registers or by another

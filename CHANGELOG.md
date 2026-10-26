@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the configuration checker judges bindings together: a system's own hardware
+
+`ARCHOGEN-M3-0961` (leaf `M3.5.5.1`), `2026-10-26`.
+
+- The configuration checker's fifth check refuses a plan that binds a need to a part the system's platform never
+  composes, under the new code `plan-joint`, stated in the language reference with an input that fires it.
+
 ## archogen — doctrine 22's record states what every commit still runs
 
 `ARCHOGEN-PROGRAM-0959` (leaf `PROGRAM.112`), `2026-10-26`.

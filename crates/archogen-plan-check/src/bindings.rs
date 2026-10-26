@@ -51,7 +51,7 @@ fn binds(fact: &str) -> Binds {
 }
 
 /// The fact a requirement is on: a group's head for a group.
-fn fact_of(requirement: &Requirement) -> &str {
+pub(crate) fn fact_of(requirement: &Requirement) -> &str {
     match requirement {
         Requirement::Presence(fact)
         | Requirement::Constraint { fact, .. }
@@ -61,14 +61,14 @@ fn fact_of(requirement: &Requirement) -> &str {
 }
 
 /// A requester as a finding names it.
-fn who(requester: &Requester) -> String {
+pub(crate) fn who(requester: &Requester) -> String {
     match requester {
         Requester::Named(name) => format!("`{name}`"),
         Requester::Task { system, task } => format!("the task `{task}` of `{system}`"),
     }
 }
 
-fn finding(
+pub(crate) fn finding(
     code: &str,
     message: String,
     primary: Label,
@@ -151,14 +151,7 @@ pub(crate) fn check(
     }
     let declared: BTreeMap<String, &Form> = program.qualified_declarations().into_iter().collect();
     let places = places(name, text);
-    let place = |key: &(Requester, String)| {
-        places.get(key).cloned().unwrap_or_else(|| Label {
-            source: name.to_owned(),
-            line: 1,
-            column: 1,
-            message: "the record".to_owned(),
-        })
-    };
+    let place = |key: &(Requester, String)| place(&places, name, key);
     let mut found = Vec::new();
     // Check (3): each requirement that binds is bound.
     for (key, located) in &expected {
@@ -353,8 +346,22 @@ fn offers<'f>(provider: &'f Form, requirement: &Requirement) -> Vec<&'f Form> {
         .collect()
 }
 
+/// A binding's place in the record, else the record's first line.
+pub(crate) fn place(
+    places: &BTreeMap<(Requester, String), Label>,
+    name: &str,
+    key: &(Requester, String),
+) -> Label {
+    places.get(key).cloned().unwrap_or_else(|| Label {
+        source: name.to_owned(),
+        line: 1,
+        column: 1,
+        message: "the record".to_owned(),
+    })
+}
+
 /// Each binding's place in the record, by its requester and fact.
-fn places(name: &str, text: &str) -> BTreeMap<(Requester, String), Label> {
+pub(crate) fn places(name: &str, text: &str) -> BTreeMap<(Requester, String), Label> {
     let mut sources = SourceMap::new();
     let Ok(id) = sources.add(name, text) else {
         return BTreeMap::new();

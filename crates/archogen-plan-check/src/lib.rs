@@ -10,11 +10,13 @@
 //! dependency — the checker's relation and the generator's one derivation held equal, which the trust gate holds as a
 //! shared derivation (`M3.5.3.1`). [`assignment`] reads and writes the record it judges, `archogen-assignment/1`
 //! (`M3.5.4.1`); [`check`] runs the checks on it, check (1) and the stale plan first (`M3.5.4.2`), the description
-//! re-checked (`M3.5.4.3`, `.6`), and the bindings over [`requesters`] (`M3.5.4.4`); the executable comes with `M3.5.6`.
+//! re-checked (`M3.5.4.3`, `.6`), and the bindings over [`requesters`] (`M3.5.4.4`), then the joint rules (`M3.5.5`); the executable comes with
+//! `M3.5.6`.
 
 pub mod assignment;
 mod bindings;
 pub mod check;
+mod joint;
 pub mod model;
 pub mod providers;
 pub mod requesters;

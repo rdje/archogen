@@ -26,8 +26,9 @@ one.
 > `stale-input`; (2) the description is re-checked, by the language's passes and the provider-level rules; (3) each
 > requirement that binds is bound once, each binding is a requirement's, of a requester the system serves, to a
 > declared block or platform; (4) each binding is satisfied by the model's judgement — the reference model of
-> `docs/semantics/model.md` §7, never the generator's code. A corrupted plan is `tool-failure`. The library is
-> `crates/archogen-plan-check`; the joint rules (check 5) and the executable `archogen-plan-check` are still to come.
+> `docs/semantics/model.md` §7, never the generator's code; (5) the bindings hold together by §8's joint rules, today
+> rule 7's hardware. A corrupted plan is `tool-failure`. The library is `crates/archogen-plan-check`; the rest of the
+> joint rules and the executable `archogen-plan-check` are still to come.
 
 ## How it works
 
@@ -65,6 +66,12 @@ system's name, `(task heartbeat beat)`, so no declaration can be mistaken for a 
 4. **Every binding holds.** Each need is judged against the provider it is bound to, by the same reference model the
    rules were written from. A counter of 16 bits does not serve a need for at least 32, and a part that does not
    describe a fact does not serve a need for it.
+5. **The bindings hold together.** Some mistakes only show when the bindings are read side by side. Today the checker
+   asks one such question: is every provider part of the system's own **hardware** — the platform its `platform`
+   clause names, the blocks and platforms the system and its tasks name, and everything those compose? A serial port
+   on the board that the system's platform never composes serves nobody, however well it would match. Only blocks and
+   platforms compose: a service that names a block does not bring it into the system, and a platform that refines
+   another keeps that platform's promises, not its parts.
 
 The checker re-reads the needs every time. Changing a requirement and recomputing the fingerprint by hand does not get
 an old plan through: check 4 judges the new requirement and refuses.
@@ -106,6 +113,7 @@ Each check reports under a code of its own. The codes are stated, with what fire
 | `plan-description` | 2 | the checker's own rules refuse a description the language's passes accept |
 | `plan-binding` | 3 | a need left unbound, a binding of no need or of a requester the system does not serve, a provider not declared |
 | `plan-unsatisfied` | 4 | a binding the reference model does not satisfy |
+| `plan-joint` | 5 | the bindings do not hold together: today, a provider outside the system's hardware |
 
 Each finding names the requester and the fact, and points at the requirement in the description, the binding's line in
 the record, or both — for check 4, also at what the provider states. The language's own diagnostics keep their codes.
@@ -119,11 +127,13 @@ the record, or both — for check 4, also at what the provider states. The langu
   requirement located by the checker and held by a test to the reference model's own reading;
 - `crates/archogen-plan-check/src/bindings.rs` — checks 3 and 4;
 - `crates/archogen-plan-check/src/providers.rs` — check 2's provider-level rules;
+- `crates/archogen-plan-check/src/joint.rs` — check 5, the joint rules, written from `docs/semantics/model.md` §8
+  alone, never from the search's own version of them;
 - `crates/archogen-plan-check/tests/plan_f12.rs` — the corruptions of fixture F12, each refused under its code.
 
 ## Today and ahead
 
-The checks above run as a library, and each code's input runs through it. Still to come: the joint rules — channels,
-ownership, privilege, placement and one provider per function — as check 5, written by a context that never reads the
-search's own version of them; and the `archogen-plan-check` program itself, which `archogen plan-check` and `archogen
-resolve` will run. The search that writes the record is `M3.4`'s.
+The checks above run as a library, and each code's input runs through it. Still to come: the rest of check 5's joint
+rules — channels, ownership, privilege, placement and one provider per function — written, like rule 7, by a context
+that never reads the search's own version of them; and the `archogen-plan-check` program itself, which `archogen
+plan-check` and `archogen resolve` will run. The search that writes the record is `M3.4`'s.
