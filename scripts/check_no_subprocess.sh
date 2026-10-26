@@ -157,7 +157,7 @@ scan() {
     [ -f "$file" ] || continue
     checked=$((checked + 1))
     text="$(production "$file" | stripped | joined)"
-    if printf '%s\n' "$text" | grep -qx '0: UNTERMINATED'; then
+    if grep -qx '0: UNTERMINATED' <<< "$text"; then
       note "$file cannot be read: it ends inside a comment or a string, so nothing after its opening can be vouched for"
       continue
     fi
@@ -196,7 +196,7 @@ self_test() {
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"

@@ -123,6 +123,22 @@ children beyond its former `.89` endpoint. The latest-only record retains the re
 exact recorded time. Cleanup ran shortly before the daily boundary ahead of the next long
 controller sweep; current controller measurement resumes next.
 
+
+## A check's own reading cannot fail it
+
+A check often captures a command's output and asks whether a line is in it. Written as a pipe — the output printed into
+`grep -q` — that question can come back wrong. `grep -q` stops at the first match; GNU grep then closes the pipe while
+the printing side is still writing, the write fails, and a script running under `pipefail` counts the pipeline as
+failed though the line was there. It only happens when the output is bigger than a pipe holds, which a Linux pipe
+reaches long before a macOS one, and BSD grep reads to the end anyway: so it passes on a developer's machine and fails
+on CI, now and then. It did, on the CI runs after the push of `d5123578`: the task-history gate's own tests failed
+there while the seal they tested was sound, their outputs having grown past the pipe with the gate's own source.
+
+`PIPE-READS` (`scripts/check_pipe_reads.sh`) refuses that form in every tracked script that runs under `pipefail`; the
+output is read from a here-string instead, `grep -q … <<< "$out"`, which has no pipe to close. As with scratch, the
+places in files this project takes from its scaffold are listed, not refused, their change written down for the
+scaffold's owner in the leaf that wrote the check, `PROGRAM.114`.
+
 ## Before handing the workspace over
 
 Prepare the temporary environment in each new shell before diagnostics, including shell input that

@@ -410,7 +410,7 @@ self_test() {
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,4p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"
@@ -419,7 +419,7 @@ self_test() {
     local name="$1" want="$2" must="$3" out rc; shift 3
     arms=$((arms + 1))
     out="$(cd "$work" && bash "$SELF" "$@" 2>&1)"; rc=$?
-    if [ "$rc" -ne "$want" ] || { [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; }; then
+    if [ "$rc" -ne "$want" ] || { [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; }; then
       echo "SELF-TEST: $name — expected exit $want and \`$must\`, got $rc:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"
@@ -569,7 +569,7 @@ PY
   git clone -q --depth 1 "file://$work" "$work-shallow" 2>/dev/null
   arms=$((arms + 1))
   if out="$(cd "$work-shallow" && bash "$SELF" 2>&1)"; then echo "SELF-TEST: a shallow clone passed" >&2
-  elif printf '%s' "$out" | grep -qF "the repository is shallow"; then ok=$((ok + 1)); echo "  ✅ a shallow clone is refused"
+  elif grep -qF "the repository is shallow" <<< "$out"; then ok=$((ok + 1)); echo "  ✅ a shallow clone is refused"
   else echo "SELF-TEST: a shallow clone was refused for another reason:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; fi
   rm -rf "$work-shallow"
   printf 'noise\n' > "$work/$H/.DS_Store"

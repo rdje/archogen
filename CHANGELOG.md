@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a check's own reading cannot fail it
+
+`ARCHOGEN-PROGRAM-0980` (leaf `PROGRAM.114`), `2026-10-26`.
+
+- Every check in this repository's scripts that piped a captured output into `grep -q` now reads it without a pipe,
+  and a new gate, `PIPE-READS`, refuses the pattern, which can turn a passing check into a failure on Linux.
+
 ## archogen — the self-test failure on CI found and fixed
 
 `ARCHOGEN-PROGRAM-0978` (leaf `PROGRAM.113.3`), `2026-10-26`.

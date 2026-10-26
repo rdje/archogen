@@ -97,7 +97,7 @@ for chapter in "$SRC"/*.md; do
   # `SUMMARY.md` is a table of contents, not a chapter. This is the same population the count line
   # below has always reported, so the figure does not move when the loop is restructured.
   [ "$stem" = SUMMARY ] || chapters=$((chapters + 1))
-  if printf '%s' "$stem" | grep -qE "$NO_ANCHOR_NEEDED"; then
+  if grep -qE "$NO_ANCHOR_NEEDED" <<< "$stem"; then
     check_document "$chapter" chapter no
   else
     check_document "$chapter" chapter yes

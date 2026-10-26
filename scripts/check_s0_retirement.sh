@@ -107,7 +107,7 @@ while IFS= read -r file; do
   [ -n "$file" ] || continue
   # The CLI manifest names it as a dependency; that is how the one real consumer reaches it.
   [ "$file" = "crates/archogen-cli/Cargo.toml" ] && continue
-  if ! printf '%s' "$file" | grep -qE "$ALLOWED_CONSUMERS"; then
+  if ! grep -qE "$ALLOWED_CONSUMERS" <<< "$file"; then
     note "$file imports the S0 prototype. Only its declared consumers may — the supported path
   must not come to depend on a crate scheduled for deletion. If this is deliberate, widen
   ALLOWED_CONSUMERS in this check and say why in $RECORD"

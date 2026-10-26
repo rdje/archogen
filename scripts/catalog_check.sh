@@ -304,7 +304,7 @@ RS
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | tail -4 | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | tail -4 | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"
@@ -321,7 +321,7 @@ RS
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | tail -4 | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | tail -4 | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"
@@ -357,7 +357,7 @@ touch \"$marker\"
   # judged commit instead.
   arms=$((arms + 1))
   out="$(cd "$repo" && bash "$SELF" --base "$same" --judged "$same" --checker checker:checker 2>&1)"; rc=$?
-  if [ "$rc" -eq 3 ] && printf '%s' "$out" | grep -qF "the checkout is not the base"; then
+  if [ "$rc" -eq 3 ] && grep -qF "the checkout is not the base" <<< "$out"; then
     ok=$((ok + 1)); echo "  ✅ a base other than the checkout is refused"
   else echo "SELF-TEST: a base other than the checkout — expected exit 3, got $rc" >&2; fi
   printf 'x\n' > "$repo/untracked.txt"

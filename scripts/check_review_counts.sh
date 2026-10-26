@@ -349,8 +349,8 @@ self_test() {
   arm() { # $1 = name, $2 = expected rc, $3 = text the output must carry
     local out rc; arms=$((arms + 1))
     out="$(cd "$work" && bash "$SELF" 2>&1)"; rc=$?
-    if [ "$rc" -eq "$2" ] && printf '%s' "$out" | grep -qF -- "$3" &&
-       ! printf '%s' "$out" | grep -qF 'Traceback'; then ok=$((ok + 1)); echo "  ✅ $1"
+    if [ "$rc" -eq "$2" ] && grep -qF -- "$3" <<< "$out" &&
+       ! grep -qF 'Traceback' <<< "$out"; then ok=$((ok + 1)); echo "  ✅ $1"
     else echo "SELF-TEST: $1 — rc $rc:" >&2; printf '%s\n' "$out" | head -3 | sed 's/^/    /' >&2; fi
   }
   GOOD_A='| 2 | 6 | 1, and 2 arm gaps (x), and 1 pre-existing arm gap (y) | v |'

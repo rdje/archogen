@@ -845,7 +845,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0978 (leaf PROGRAM.113.3)`
 
 - ID: `PROGRAM.114`
-  Status: `pending` — filed `2026-10-26` by `PROGRAM.113.3`
+  Status: `done` — filed `2026-10-26` by `PROGRAM.113.3`
   Goal: no gate script reads a captured output through `printf … | grep -q` under `pipefail`, where an output larger
     than a pipe turns a match into a failure on Linux.
   Reproduce / issue: the census of `scripts/*.sh` running under `pipefail` finds the idiom 78 times outside
@@ -854,6 +854,30 @@ mdBook that is the director's window into the project.
     `PROGRAM.113.3` measured.
   Direction: each made a here-string, and a doctrine leg refusing the idiom in a `pipefail` script, its RED arm the
     pipe the padded experiment broke.
+  Built: every such read in this repository's `pipefail` scripts made a here-string — seventy-six, in forty files,
+    one by hand where its patterns come from a process substitution — and `PIPE-READS`, `scripts/check_pipe_reads.sh`,
+    refusing the form in any tracked shell script that sets `pipefail`, a comment not code, registered in
+    `scripts/check_doctrines.project.sh`, described in the book's Annex B. The scaffold's eleven sites —
+    `check_task_acceptance.sh` six, `check_lesson_promotion.sh` two, `check_routing_evidence.sh` two,
+    `check_no_background_jobs.sh` one — are reported, not refused, as `SCRATCH-LOCALITY` reports its own; the change
+    they need, for whoever owns the scaffold, never sent there by an archogen agent: each `printf '%s' "$x" | grep -q…`
+    or `echo "$x" | grep -q…` made `grep -q… <<< "$x"`. `DOCTRINE_ENFORCEMENT.md` is at its ceiling — twenty-six bytes
+    free — so its row waits on that table's compaction, `PROGRAM.115`.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the idiom `PROGRAM.113.3` measured failing a matched check on Linux stood in other gates' self-tests, latent until an output outgrows a pipe; WHERE, `git show 34b6abeb:scripts/check_frozen_evaluation.sh` and the census's forty-four files.
+    - [x] FIX — the reads converted; the gate, its registration and the book.
+    - [x] ADDRESSED — `bash scripts/check_pipe_reads.sh`: `pipe-reads: OK (74 pipefail script(s) scanned; 11 site(s) in scaffold-owned files reported, …)`; `bash scripts/check_pipe_reads.sh --self-test`: `pipe-reads self-test: 8 pass / 0 fail (8 arms)`; one owned site put back refused, `scripts/check_decision_index.sh:69`; every touched gate's self-test under GNU grep passing, `scripts/run_self_tests.sh`'s two real-tree arms again after the index and the ceiling were answered.
+    - [x] NO REGRESSION — `bash scripts/check_doctrines.sh`: every doctrine but `TASK-ACCEPTANCE`, which this leaf answers; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 268 s.
+    - [x] LOCKSTEP — the scripts, the gate's registration, the book; the enforcement table's row `PROGRAM.115`'s.
+  Commit: `ARCHOGEN-PROGRAM-0980 (leaf PROGRAM.114)`
+
+- ID: `PROGRAM.115`
+  Status: `pending` — filed `2026-10-26` by `PROGRAM.114`
+  Goal: `DOCTRINE_ENFORCEMENT.md` compacted under its ceiling with room for `PIPE-READS`'s row, or its ceiling raised
+    by a decision record.
+  Reproduce / issue: `bash scripts/check_readme_routes.sh` with the row added: `DOCTRINE_ENFORCEMENT.md: 37469 bytes,
+    over its ceiling of 36864`; without it the table holds 36838, twenty-six bytes free. The table is scaffold-owned,
+    so a compaction is the scaffold's change too, written down for its owner.
   Verification: `pending`
   Commit: `pending`
 
@@ -926,7 +950,7 @@ roadmap item X live?".
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.73`, `.78` and `.114` — are filed and owned. Every closed
+`PROGRAM.73`, `.78` and `.115` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1071,6 +1095,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.113.2` | `ARCHOGEN-PROGRAM-0977 (leaf PROGRAM.113.2)` | **the trace**: the signal arms record the signal sent, each mask change and each outcome printed, in order, for the runner to show where Linux departs |
 | `PROGRAM.113.3` | `ARCHOGEN-PROGRAM-0978 (leaf PROGRAM.113.3)` | **the cause and its fix**: GNU grep's `-q` closing the pipe under `pipefail` while `printf` still writes a large output; every such read in the script a here-string; `PROGRAM.114` filed for the 78 elsewhere |
 | `PROGRAM.113` | `ARCHOGEN-PROGRAM-0979 (leaf PROGRAM.113)` | **closed, CI green**: the arms' own check at fault, not the seal; the three runs on `34b6abeb` each `success` |
+| `PROGRAM.114` | `ARCHOGEN-PROGRAM-0980 (leaf PROGRAM.114)` | **`PIPE-READS`**: every pipe read under `pipefail` a here-string, the gate refusing the form, the scaffold's sites reported and their change written down; `PROGRAM.115` filed |
 
 ## Changelog
 

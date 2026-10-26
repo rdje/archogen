@@ -42,7 +42,7 @@ arm() {
     echo "SELF-TEST: $name — expected exit $want, got $rc" >&2
     printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
   fi
-  if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+  if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
     echo "SELF-TEST: $name — exit $rc, but not about \`$must\`, so it is not this arm's outcome:" >&2
     printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
   fi

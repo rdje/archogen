@@ -100,9 +100,9 @@ check_vendor() { # $1 = vendor directory name
   listed="$(table "$index" "Totals by state" | tail -n +2 | cut -f1 | tr -d '`')"
   printf '%s\n' "$rows" | cut -f4 | sort -u | while IFS= read -r s; do
     [ -n "$s" ] || continue
-    printf '%s\n' "$listed" | grep -qxF -- "$s" || echo "FEEDBACK-REGISTER: $index: state \`$s\` is used by the register and missing from Totals by state" >&2
+    grep -qxF -- "$s" <<< "$listed" || echo "FEEDBACK-REGISTER: $index: state \`$s\` is used by the register and missing from Totals by state" >&2
   done
-  [ -z "$(printf '%s\n' "$rows" | cut -f4 | sort -u | while IFS= read -r s; do [ -n "$s" ] && ! printf '%s\n' "$listed" | grep -qxF -- "$s" && echo x; done)" ] || fail=$((fail + 1))
+  [ -z "$(printf '%s\n' "$rows" | cut -f4 | sort -u | while IFS= read -r s; do [ -n "$s" ] && ! grep -qxF -- "$s" <<< "$listed" && echo x; done)" ] || fail=$((fail + 1))
   # 4. totals by severity, unresolved only
   local sev
   while IFS=$'\t' read -r sev count; do
@@ -133,11 +133,11 @@ vendors() {
   local all staged
   all="$(for i in "$BASE"/*/INDEX.md; do [ -f "$i" ] && basename "$(dirname "$i")"; done)"
   staged="$(git diff --cached --name-only 2>/dev/null)"
-  if [ -z "$staged" ] || printf '%s\n' "$staged" | grep -qxF "$BASE/README.md"; then
+  if [ -z "$staged" ] || grep -qxF "$BASE/README.md" <<< "$staged"; then
     printf '%s\n' "$all"; return
   fi
   printf '%s\n' "$staged" | sed -nE "s#^$BASE/([^/]+)/.*#\\1#p" | sort -u | while IFS= read -r v; do
-    printf '%s\n' "$all" | grep -qxF -- "$v" && printf '%s\n' "$v"
+    grep -qxF -- "$v" <<< "$all" && printf '%s\n' "$v"
   done
 }
 
@@ -198,7 +198,7 @@ MD
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"

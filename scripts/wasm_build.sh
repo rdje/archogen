@@ -89,7 +89,7 @@ self_test() {
     arms=$((arms + 1))
     got="$(cd "$work" && bash "$SELF" --list 2>"$work/.err" | paste -sd, -)"; err="$(cat "$work/.err")"
     if [ "$got" != "$want" ]; then echo "SELF-TEST: $name — in scope '$got', expected '$want'" >&2; return; fi
-    if [ -n "$must" ] && ! printf '%s' "$err" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$err"; then
       echo "SELF-TEST: $name — the exclusion does not say \`$must\`: $err" >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"

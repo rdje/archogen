@@ -84,7 +84,7 @@ STUB
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,4p' | sed 's/^/    /' >&2; return
     fi
-    if ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,4p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"
@@ -143,7 +143,7 @@ case "${1:-}" in
       note "NO RELEASE IS PINNED YET (QEMU_VERSION_PINNED=none-yet)"
       note "  pin the installed release in $ENV_FILE, then re-run --check"
       rc=1
-    elif ! printf '%s' "$installed" | grep -qF "$QEMU_VERSION_PINNED"; then
+    elif ! grep -qF "$QEMU_VERSION_PINNED" <<< "$installed"; then
       note "PINNED RELEASE MISMATCH: pinned '$QEMU_VERSION_PINNED', installed '$installed'"
       note "  a different release is a different virtual platform (§3.2)"
       rc=1

@@ -10,6 +10,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 - A bug report says what its issue says — [Annex B: The checks that keep the repository
   honest](annex-repository.md#a-bug-report-says-what-its-issue-says)
+- A check's own reading cannot fail it — [Annex B: The checks that keep the repository
+  honest](annex-repository.md#a-checks-own-reading-cannot-fail-it)
 - A colon in the target directory — [Annex C: Trust proof
   records](annex-trust-proofs.md#a-colon-in-the-target-directory)
 - A commit holds what was run — [Annex B: The checks that keep the repository
@@ -72,7 +74,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Before handing the workspace over — [Annex B: The checks that keep the repository
   honest](annex-repository.md#before-handing-the-workspace-over)
 - Bounds remember where they came from — [What a report may claim](evidence.md#bounds-remember-where-they-came-from)
-- **BSD** — [definition](glossary.md), [Verifying the toolchain](verification.md)
+- **BSD** — [definition](glossary.md), [Verifying the toolchain](verification.md), [Annex B: The checks that keep the
+  repository honest](annex-repository.md)
 - Building one — [The S0 early generation path](s0.md#building-one)
 
 ## C
@@ -335,7 +338,7 @@ a change that leaves it stale, so it is never edited by hand.
 - github-actions — [What this project relies on from outside](ledger.md#github-actions)
 - github-actions-syntax — [What this project relies on from outside](ledger.md#github-actions-syntax)
 - **GNU** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Verifying the
-  toolchain](verification.md)
+  toolchain](verification.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - **GPG** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **GREEN** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 

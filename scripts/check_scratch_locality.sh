@@ -58,7 +58,7 @@ owned_by_scaffold="$(scaffold_owned)"
 
 # $1 = file, $2 = line number, $3 = what is wrong
 breach() {
-  if printf '%s\n' "$owned_by_scaffold" | grep -qxF -- "$1"; then
+  if grep -qxF -- "$1" <<< "$owned_by_scaffold"; then
     owed=$((owed + 1))
     printf '  scaffold-owned, reported not refused: %s:%s\n' "$1" "$2"
   else
@@ -123,7 +123,7 @@ self_test() {
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"

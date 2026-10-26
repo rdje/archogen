@@ -179,7 +179,7 @@ control() {
       else DEBT="$DEBT $leaf"; fi
       ;;
     [A-Z]*)
-      printf '%s\n' "$DOCTRINES" | grep -qxF -- "$cell" ||
+      grep -qxF -- "$cell" <<< "$DOCTRINES" ||
         note "\`$dest\`'s $dim is deferred to '$cell', which is not a registered doctrine"
       ;;
     *[!0-9]*)
@@ -224,7 +224,7 @@ scan() {
         ovf="$ovf"$'\n'"$p"
         local to; to="$(governing_row "$p")"
         [ -n "$to" ] || { note "\`$row\` sends its overflow on to \`$p\`, which no row governs"; continue; }
-        printf '%s' "$reached" | grep -qxF -- "$to" || { reached="$reached$to"$'\n'; next="$next$to"$'\n'; }
+        grep -qxF -- "$to" <<< "$reached" || { reached="$reached$to"$'\n'; next="$next$to"$'\n'; }
       done
     done
     frontier="$next"
@@ -388,7 +388,7 @@ SH
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"
@@ -523,7 +523,7 @@ SH
   local edit_out edit_rc
   arms=$((arms + 1))
   edit_out="$(edit README_POLICY.md 's/[' 2>&1)"; edit_rc=$?
-  if [ "$edit_rc" -eq 2 ] && printf '%s' "$edit_out" | grep -qF 'fixture edit failed for README_POLICY.md'; then
+  if [ "$edit_rc" -eq 2 ] && grep -qF 'fixture edit failed for README_POLICY.md' <<< "$edit_out"; then
     ok=$((ok + 1)); echo "  ✅ failed fixture preparation refuses before any verdict"
   else
     echo "SELF-TEST: failed fixture preparation must exit 2, got $edit_rc" >&2

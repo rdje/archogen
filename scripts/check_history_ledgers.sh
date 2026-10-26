@@ -177,7 +177,7 @@ check_one() { # name file dir pattern window
     GIT_NO_REPLACE_OBJECTS=1 git show "$commit:$INDEX" > "$SCRATCH/old-index.md" 2>/dev/null || continue
     while IFS= read -r headrow; do
       [ -n "$headrow" ] || continue
-      printf '%s\n' "$current" | grep -qxF -- "$headrow" ||
+      grep -qxF -- "$headrow" <<< "$current" ||
         note "$INDEX's $name row \`${headrow%%$'\t'*}\`, committed in ${commit:0:12}, is gone or changed — the index is append-only"
     done < <(rows "$name" "$SCRATCH/old-index.md")
   done
@@ -249,7 +249,7 @@ self_test() {
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"
@@ -310,7 +310,7 @@ PYF
   git clone -q --depth 1 "file://$work" "$work-shallow" 2>/dev/null
   arms=$((arms + 1))
   if out="$(cd "$work-shallow" && bash "$SELF" 2>&1)"; then echo "SELF-TEST: a shallow clone passed" >&2
-  elif printf '%s' "$out" | grep -qF "the repository is shallow"; then ok=$((ok + 1)); echo "  ✅ a shallow clone is refused"
+  elif grep -qF "the repository is shallow" <<< "$out"; then ok=$((ok + 1)); echo "  ✅ a shallow clone is refused"
   else echo "SELF-TEST: a shallow clone was refused for another reason" >&2; fi
   rm -rf "$work-shallow"
   { head -n 4 "$work/CHANGELOG.md"; for i in $(seq 65 -1 46); do printf '## archogen — entry %s\n\n`ARCHOGEN-T-%04d` (leaf T.%s).\n\n- a line\n\n' "$i" "$i" "$i"; done; tail -n +5 "$work/CHANGELOG.md"; } > "$work/c"

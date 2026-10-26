@@ -87,7 +87,7 @@ unclassified() {
   local file="$1" known
   known="$(printf '%s\n' "$REG" | awk -F'\t' -v f="$file" '$1 == f { print $2 }')"
   figures | while IFS= read -r phrase; do
-    printf '%s\n' "$known" | grep -qxF -- "$phrase" || printf '%s\n' "$phrase"
+    grep -qxF -- "$phrase" <<< "$known" || printf '%s\n' "$phrase"
   done
 }
 
@@ -103,7 +103,7 @@ scan() {
         if [ -z "$gate" ] || [ ! -f "$gate" ]; then note "$REGISTER: \`$phrase\` in $file is gated by \`${gate:-nothing}\`, which does not exist"
         elif ! grep -qF -- "$file" "$gate"; then note "$REGISTER: \`$phrase\` in $file is gated by $gate, which never reads $file"; fi ;;
       record)
-        printf '%s' "$why" | grep -qE '20[0-9]{2}-[0-9]{2}-[0-9]{2}' || note "$REGISTER: \`$phrase\` in $file is a record with no measurement date" ;;
+        grep -qE '20[0-9]{2}-[0-9]{2}-[0-9]{2}' <<< "$why" || note "$REGISTER: \`$phrase\` in $file is a record with no measurement date" ;;
       not-a-count)
         [ -n "$(printf '%s' "$why" | tr -d '[:space:]')" ] || note "$REGISTER: \`$phrase\` in $file is not-a-count with no reason" ;;
       *) note "$REGISTER: \`$phrase\` in $file has class '$class' — write gated, record or not-a-count" ;;
@@ -146,7 +146,7 @@ self_test() {
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"

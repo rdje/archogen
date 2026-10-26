@@ -142,7 +142,7 @@ scan() {
       note "$loc is claimed by more than one entry: $(printf '%s' "$owners" | paste -sd, -)"
     else
       version="$(printf '%s\n' "$table" | awk -F'\t' -v id="$owners" '$1 == id && $2 == "Version" { print $3; exit }')"
-      printf '%s' "$version" | grep -qF -- "$val" ||
+      grep -qF -- "$val" <<< "$version" ||
         note "entry \`$owners\` does not carry the declared value of $loc — the code says '$val'; move the entry with the code"
     fi
   done <<< "$held"
@@ -185,7 +185,7 @@ self_test() {
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"

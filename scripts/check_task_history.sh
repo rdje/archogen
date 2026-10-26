@@ -1449,7 +1449,7 @@ PY
   commit
   printf '\n## Commit Log\n\n| Leaf | Commit | Notes |\n| --- | --- | --- |\n| `T.6` | `ARCHOGEN-T-0023 (leaf T.6)` | closed |\n' >> "$work/docs/tasks/T.md"
   arm "a commit the sealing commit's Commit Log names is the stub's" 0 "sealed 1 subtree(s), 1 leaves: T.6;" --seal T
-  ! printf '%s' "$LAST" | grep -qF "warning — T.6" ||
+  ! grep -qF "warning — T.6" <<< "$LAST" ||
     { arms=$((arms + 1)); echo "SELF-TEST: a leaf whose commit the log names was warned of (review R22 AG2)" >&2; }
   grep -q '^  Status: `done` — sealed in \[`T/T.6.md`\](../task-history/T/T.6.md); commit in the tree'\''s Commit Log$' "$work/docs/tasks/T.md" ||
     { arms=$((arms + 1)); echo "SELF-TEST: a commit the Commit Log names did not reach the stub" >&2; }
@@ -1723,7 +1723,7 @@ PY
   printf -- '# P\n\n## Task Tree\n\n- ID: `P`\n  Status: `active`\n  Goal: %s\n\n- ID: `P.1`\n  Status: `done`\n  Goal: %s\n  Commit: `ARCHOGEN-P-0001`\n' "$(python3 -c 'print("x" * 10000)')" "$(python3 -c 'print("y" * 8000)')" > "$work/docs/tasks/P.md"
   commit
   limit=16 arm "a rollback a full disk stops names what it could not undo" 1 "could not undo docs/tasks/P.md, not restored" --seal P
-  printf '%s' "$LAST" | grep -qF "and its rollback left what it named above" && ! printf '%s' "$LAST" | grep -qF "rolled back" ||
+  grep -qF "and its rollback left what it named above" <<< "$LAST" && ! grep -qF "rolled back" <<< "$LAST" ||
     { arms=$((arms + 1)); echo "SELF-TEST: an error's rollback that was not whole says it was rolled back (review R15 AG2)" >&2; }
   grep -q '^  Status: `done` — sealed in' "$work/docs/tasks/P.md" && [ -f "$work/docs/task-history/P/P.1.md" ] &&
     [ -z "$(git -C "$work" status --porcelain -- docs/task-history/INDEX.md)" ] ||
@@ -1998,7 +1998,7 @@ HOOK
   printf -- '# H\n\n## Task Tree\n\n- ID: `H.1`\n  Status: `done`\n  Goal: a closed subtree, its field pending\n  Commit: `pending`\n\n## Commit Log\n\n| Leaf | Commit | Notes |\n| --- | --- | --- |\n| `H.1` | `ARCHOGEN-H-0001 (leaf H.1)` | closed |\n' > "$work/docs/tasks/H.md"
   commit
   arm "a done leaf whose field reads pending is sealed, and warned of whatever the log holds" 0 "sealed 1 subtree(s), 1 leaves: H.1;" --seal H
-  printf '%s' "$LAST" | grep -qF "warning — H.1 is \`done\` and its Commit field names no commit" ||
+  grep -qF "warning — H.1 is \`done\` and its Commit field names no commit" <<< "$LAST" ||
     { arms=$((arms + 1)); echo "SELF-TEST: a done leaf whose field reads pending was not warned of (review R22 AG2)" >&2; }
   rm -rf "$work/docs/task-history/H"; restore; git -C "$work" rm -q docs/tasks/H.md; commit
   # A sealed file a file-size limit stops as it is written: noted before the write, so the rollback removes what the
@@ -2006,7 +2006,7 @@ HOOK
   printf -- '# L\n\n## Task Tree\n\n- ID: `L`\n  Status: `active`\n  Goal: open\n\n- ID: `L.1`\n  Status: `done`\n  Goal: %s\n  Commit: `ARCHOGEN-L-0001`\n' "$(python3 -c 'print("y" * 20000)')" > "$work/docs/tasks/L.md"
   commit
   limit=16 arm "a sealed file a full disk stops halfway is removed again" 1 "File too large" --seal L
-  printf '%s' "$LAST" | grep -qF "so it was rolled back" && [ ! -e "$work/docs/task-history/L" ] &&
+  grep -qF "so it was rolled back" <<< "$LAST" && [ ! -e "$work/docs/task-history/L" ] &&
     git -C "$work" diff --quiet -- docs/tasks ||
     { arms=$((arms + 1)); echo "SELF-TEST: a sealed file stopped halfway was left behind (review R22 AG1)" >&2; }
   restore; git -C "$work" rm -q docs/tasks/L.md; commit
