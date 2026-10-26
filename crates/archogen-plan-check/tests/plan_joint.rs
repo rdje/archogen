@@ -592,3 +592,166 @@ fn rule_9_a_caller_stating_levels_that_do_not_hold_the_profile_s_is_unsupported_
         "{verdict:?}"
     );
 }
+
+/// A time service reading a counter, on a platform with a fast counter and a slow one; `timer` and `slow` are what
+/// each offers beside its width, `timer_absent` what the fast one declares absent, `reads` what the service writes
+/// beside its own requirements, `more` further declarations and `uses` what the task uses.
+fn counters(
+    timer: &str,
+    timer_absent: &str,
+    slow: &str,
+    reads: &str,
+    more: &str,
+    uses: &str,
+) -> String {
+    format!(
+        "(defblock timer (offers (counter-width 32 bit) (reachable-at-privilege machine){timer}){timer_absent})
+(defblock slow (offers (counter-width 16 bit) (reachable-at-privilege machine){slow}))
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer slow console.uart)))
+(defservice time.read (requires (counter-width (at-least 16 bit)) (needs tick-rate){reads}))
+{more}
+(defsystem s
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses {uses}))
+  (platform (uses soc)))
+"
+    )
+}
+
+const RATE: &str = " (tick-rate 1 MHz)";
+
+const WHOLE: [(&str, &str, &str); 2] = [
+    ("time.read", "counter-width", "timer"),
+    ("time.read", "tick-rate", "timer"),
+];
+
+#[test]
+fn rule_13_one_requester_s_function_is_bound_whole() {
+    let both_rated = counters(RATE, "", RATE, "", "", "time.read");
+    assert_eq!(devices_plan(&both_rated, &WHOLE, None), Ok(()));
+    // Two functions at two providers, and two requesters of one function at two, are each whole.
+    let with_output = counters(
+        RATE,
+        "",
+        RATE,
+        " (needs observable-output)",
+        "",
+        "time.read",
+    );
+    assert_eq!(
+        devices_plan(
+            &with_output,
+            &[
+                WHOLE[0],
+                WHOLE[1],
+                ("time.read", "observable-output", "console.uart")
+            ],
+            None
+        ),
+        Ok(())
+    );
+    let two_readers = counters(
+        RATE,
+        "",
+        RATE,
+        "",
+        "(defservice time.other (requires (needs tick-rate)))",
+        "time.read time.other",
+    );
+    assert_eq!(
+        devices_plan(
+            &two_readers,
+            &[WHOLE[0], WHOLE[1], ("time.other", "tick-rate", "slow")],
+            None
+        ),
+        Ok(())
+    );
+}
+
+#[test]
+fn rule_13_a_function_split_across_providers_is_judged_at_each() {
+    let split = [
+        ("time.read", "counter-width", "timer"),
+        ("time.read", "tick-rate", "slow"),
+    ];
+    // The service requires 32 bits, which the slow counter refutes; in the last case it requires a tick rate of 1 MHz
+    // exactly, which the fast one, at 2 MHz, refutes.
+    for (case, timer, exact, said) in [
+        ("one meets them all", RATE, false, "`timer` meets them all"),
+        (
+            "one refutes none",
+            "",
+            false,
+            "`timer` refutes none: whether it would is unknown",
+        ),
+        (
+            "each refutes one",
+            " (tick-rate 2 MHz)",
+            true,
+            "none meets them all: a conflict",
+        ),
+    ] {
+        let mut declarations = counters(timer, "", RATE, "", "", "time.read")
+            .replace("(at-least 16 bit)", "(at-least 32 bit)");
+        if exact {
+            declarations = declarations.replace("(needs tick-rate)", "(tick-rate 1 MHz)");
+        }
+        let finding = joint_finding(devices_plan(&declarations, &split, None).unwrap_err());
+        assert!(
+            finding
+                .message
+                .contains("`time.read`'s requirements on the function `counter`")
+                && finding.message.contains(said)
+                && finding.message.contains("rule 13"),
+            "{case}: {finding:?}"
+        );
+    }
+}
+
+#[test]
+fn rule_13_a_qualifier_is_judged_at_every_provider_its_requester_relies_on() {
+    let idle = " (available-in-state idle)";
+    let met = counters(
+        &format!("{RATE} (available-in-state run idle)"),
+        "",
+        RATE,
+        idle,
+        "",
+        "time.read",
+    );
+    assert_eq!(devices_plan(&met, &WHOLE, None), Ok(()));
+    for (timer, said) in [
+        (format!("{RATE} (available-in-state run)"), "a conflict"),
+        (RATE.to_owned(), "an unknown"),
+    ] {
+        let finding = joint_finding(
+            devices_plan(
+                &counters(&timer, "", RATE, idle, "", "time.read"),
+                &WHOLE,
+                None,
+            )
+            .unwrap_err(),
+        );
+        assert!(
+            finding.message.contains(
+                "`time.read`'s qualifier `(available-in-state idle)` does not hold at `timer`"
+            ) && finding.message.contains(said),
+            "{timer}: {finding:?}"
+        );
+    }
+    // Through `uses`: a hook relying on no function itself is judged at what the service it uses is bound to.
+    let hook = counters(
+        &format!("{RATE} (available-in-state run)"),
+        "",
+        RATE,
+        "",
+        "(defservice idle.hook (requires (available-in-state idle) (uses time.read)))",
+        "idle.hook",
+    );
+    let finding = joint_finding(devices_plan(&hook, &WHOLE, None).unwrap_err());
+    assert!(
+        finding.message.contains("`idle.hook`'s qualifier")
+            && finding.message.contains("bound for `time.read`'s"),
+        "{finding:?}"
+    );
+}

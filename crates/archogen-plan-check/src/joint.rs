@@ -22,6 +22,12 @@
 //! calls from levels that do not hold it is the description's `unsupported-profile`, judged first. Then each provider
 //! bound for a caller is reachable at the level: a set without it, or `reachable-at-privilege` absent, a conflict;
 //! undescribed or offered without a value, an unknown. With no level given, the rule says nothing.
+//!
+//! Rule 13 (`M3.5.5.5`): one requester's bindings for the facts of one function are to one provider. Where they are to
+//! several, each of those requirements is judged at each of them: one meeting them all makes the split a conflict; none
+//! meeting them all and one refuting none, an unknown naming it; otherwise a conflict. A qualifier, `(function each)`,
+//! that binds nothing is judged at every provider bound for its requester's functions and those of each requester it
+//! reaches: refused or absent a conflict, unknown or undescribed an unknown. `reachable-at-privilege` is rule 9's.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -31,14 +37,15 @@ use eadl_front::{Form, Program, SourceMap};
 use eadl_model::profile::Profile;
 
 use crate::assignment::{Assignment, Requester};
-use crate::bindings::{fact_of, finding, place, places, who};
+use crate::bindings::{fact_of, finding, outcome, place, places, who, written};
 use crate::check::{at, label, Verdict, PLAN_DESCRIPTION, PLAN_JOINT};
-use crate::model::provider::{self, Stated};
+use crate::model::judge::{judge, Verdict as Judged};
+use crate::model::provider::{self, Provider, Stated};
 use crate::model::requirement::Requirement;
 use crate::model::value::Value;
-use crate::model::vocab;
+use crate::model::vocab::{self, Function, Role};
 use crate::providers::{overlap, regions, Overlap, Region};
-use crate::requesters::{declarations, hardware, served, Served};
+use crate::requesters::{declarations, hardware, served, Located, Served};
 
 /// Check (5) of `assignment`, which checks (1)–(4) accepted, over the elaborated `program`, `sources` its files; `name`
 /// and `text` the record's, for the spans of its bindings.
@@ -154,6 +161,15 @@ pub(crate) fn check(
     if !level.is_empty() {
         privilege(&declarations, assignment, level, &places, name, &mut found);
     }
+    functions(
+        sources,
+        &served,
+        &declarations,
+        assignment,
+        &places,
+        name,
+        &mut found,
+    );
     if found.is_empty() {
         Ok(())
     } else {
@@ -533,5 +549,178 @@ fn privilege(
             Vec::new(),
             repair,
         ));
+    }
+}
+
+/// The function a fact describes, if a named one.
+fn function_of(fact: &str) -> Option<&'static str> {
+    match vocab::entry(fact).and_then(|e| e.function) {
+        Some(Function::Of(function)) => Some(function),
+        _ => None,
+    }
+}
+
+/// Whether a requirement is on a qualifier rule 13 judges: `(function each)`, a guarantee, but `reachable-at-privilege`.
+fn qualifier(requirement: &Requirement) -> bool {
+    let fact = fact_of(requirement);
+    fact != "reachable-at-privilege"
+        && vocab::entry(fact)
+            .is_some_and(|e| e.role == Role::Guarantee && e.function == Some(Function::Each))
+}
+
+/// One requester's bindings for one function, by the provider each is to.
+type ByProvider<'a> = BTreeMap<&'a str, Vec<&'a (Requester, String)>>;
+
+/// Rule 13 over the assignment: each requester's bindings for one function at one provider, and each qualifier that
+/// binds nothing judged at the providers bound for the functions its requester relies on.
+fn functions(
+    sources: &SourceMap,
+    served: &Served<'_>,
+    declarations: &BTreeMap<String, (usize, &Form)>,
+    assignment: &Assignment,
+    places: &BTreeMap<(Requester, String), Label>,
+    name: &str,
+    found: &mut Vec<archogen_outcome::record::Finding>,
+) {
+    // Every bound provider, read once: check (4) read each, so none refuses here.
+    let readings: BTreeMap<&str, Provider> = assignment
+        .bindings
+        .values()
+        .filter_map(|p| {
+            let (_, form) = declarations.get(p)?;
+            provider::read(form).ok().map(|read| (p.as_str(), read))
+        })
+        .collect();
+    // One function at one provider, per requester.
+    let mut split: BTreeMap<(&Requester, &str), ByProvider<'_>> = BTreeMap::new();
+    for (key, provider) in &assignment.bindings {
+        if let Some(function) = function_of(&key.1) {
+            split
+                .entry((&key.0, function))
+                .or_default()
+                .entry(provider.as_str())
+                .or_default()
+                .push(key);
+        }
+    }
+    for ((requester, function), providers) in split {
+        if providers.len() < 2 {
+            continue;
+        }
+        let requirements: Vec<&Located> = served
+            .sides
+            .get(requester)
+            .into_iter()
+            .flat_map(|side| &side.requirements)
+            .filter(|l| function_of(fact_of(&l.requirement)) == Some(function))
+            .collect();
+        let (mut whole, mut refutes_none) = (None, None);
+        for provider in providers.keys() {
+            let Some(read) = readings.get(provider) else {
+                continue;
+            };
+            let verdicts: Vec<Judged> = requirements
+                .iter()
+                .map(|l| judge(read, &l.requirement))
+                .collect();
+            if verdicts.iter().all(|v| *v == Judged::Satisfied) {
+                whole.get_or_insert(*provider);
+            } else if !verdicts
+                .iter()
+                .any(|v| matches!(v, Judged::Refused | Judged::Absent))
+            {
+                refutes_none.get_or_insert(*provider);
+            }
+        }
+        let at_each = providers
+            .iter()
+            .map(|(p, keys)| {
+                let facts: Vec<String> = keys.iter().map(|(_, f)| format!("`{f}`")).collect();
+                format!("`{p}` for {}", facts.join(", "))
+            })
+            .collect::<Vec<_>>()
+            .join("; ");
+        let (why, repair) = match (whole, refutes_none) {
+            (Some(p), _) => (
+                format!("`{p}` meets them all, so binding them apart is a conflict"),
+                "resolve again: a plan binds one requester's requirements on one function to one provider",
+            ),
+            (None, Some(p)) => (
+                format!(
+                    "none meets them all, and `{p}` refutes none: whether it would is unknown until its facts are \
+                     described"
+                ),
+                "resolve again only once the provider's facts are described",
+            ),
+            (None, None) => (
+                "none meets them all: a conflict".to_owned(),
+                "resolve again: a requester relying on two devices of one function writes two requesters",
+            ),
+        };
+        let mut labels = providers
+            .values()
+            .flatten()
+            .map(|key| place(places, name, key));
+        let primary = labels.next().expect("a split binds two providers");
+        found.push(finding(
+            PLAN_JOINT,
+            format!(
+                "{}'s requirements on the function `{function}` are bound to several providers — {at_each}: {why} \
+                 (rule 13)",
+                who(requester)
+            ),
+            primary,
+            labels.collect(),
+            repair,
+        ));
+    }
+    // The qualifiers, at what their requesters rely on.
+    for (requester, side) in &served.sides {
+        let qualifiers: Vec<&Located> = side
+            .requirements
+            .iter()
+            .filter(|l| qualifier(&l.requirement))
+            .collect();
+        if qualifiers.is_empty() {
+            continue;
+        }
+        let relied: BTreeSet<&Requester> = std::iter::once(requester)
+            .chain(served.reach(requester))
+            .collect();
+        let mut bound: BTreeMap<&str, &(Requester, String)> = BTreeMap::new();
+        for (key, provider) in &assignment.bindings {
+            if relied.contains(&key.0) && function_of(&key.1).is_some() {
+                bound.entry(provider.as_str()).or_insert(key);
+            }
+        }
+        // Relying on no function bound, the qualifier binds as any requirement: checks (3) and (4) judged it.
+        for l in qualifiers {
+            for (provider, key) in &bound {
+                let Some(read) = readings.get(provider) else {
+                    continue;
+                };
+                let verdict = judge(read, &l.requirement);
+                let kind = match verdict {
+                    Judged::Satisfied | Judged::Statement => continue,
+                    Judged::Refused | Judged::Absent => "a conflict",
+                    Judged::Unknown | Judged::Undescribed | Judged::Unsupported => "an unknown",
+                };
+                found.push(finding(
+                    PLAN_JOINT,
+                    format!(
+                        "{}'s qualifier `{}` does not hold at `{provider}`, bound for {}'s `{}`: {} — {kind}, since a \
+                         qualifier describes every function its requirer relies on (rule 13)",
+                        who(requester),
+                        written(sources, l),
+                        who(&key.0),
+                        key.1,
+                        outcome(verdict, provider)
+                    ),
+                    at(sources, l.span, "the qualifier"),
+                    vec![place(places, name, key)],
+                    "resolve again: a provider a requester relies on meets its qualifiers",
+                ));
+            }
+        }
     }
 }

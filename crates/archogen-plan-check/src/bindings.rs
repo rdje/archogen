@@ -288,7 +288,7 @@ pub(crate) fn check(
 }
 
 /// What the description writes of a requirement, its whitespace collapsed: `(needs f)` for a fact `needs` names.
-fn written(sources: &SourceMap, located: &Located) -> String {
+pub(crate) fn written(sources: &SourceMap, located: &Located) -> String {
     if let Requirement::Presence(fact) = &located.requirement {
         return format!("(needs {fact})");
     }
@@ -302,7 +302,7 @@ fn written(sources: &SourceMap, located: &Located) -> String {
 }
 
 /// What the model found at the provider, said.
-fn outcome(verdict: Judged, provider: &str) -> String {
+pub(crate) fn outcome(verdict: Judged, provider: &str) -> String {
     match verdict {
         Judged::Refused => format!("what `{provider}` offers lies outside it"),
         Judged::Absent => format!("`{provider}` declares it absent"),

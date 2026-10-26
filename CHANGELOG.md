@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the configuration checker uses each device whole
+
+`ARCHOGEN-M3-0965` (leaf `M3.5.5.5`), `2026-10-26`.
+
+- The configuration checker refuses a plan that reads one counter's width and another's rate for the same service,
+  and checks a need that qualifies everything a service relies on — such as being available while the processor
+  idles — against every part that service is bound to.
+
 ## archogen — the configuration checker checks every caller can reach its parts
 
 `ARCHOGEN-M3-0964` (leaf `M3.5.5.4`), `2026-10-26`.
