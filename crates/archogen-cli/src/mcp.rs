@@ -1,4 +1,6 @@
-//! `archogen mcp` — the MCP server (leaf `API.6.4`), as `docs/decisions/decision_mcp-server.md` decides it.
+//! `archogen mcp` — the MCP server (leaf `API.6.4`), as `docs/decisions/decision_mcp-server.md` decides it: the
+//! generator's tools over `archogen-transport`'s framing, which holds the protocol and serves each role's own tools
+//! alike (leaf `M3.5.1.6.1`).
 //!
 //! One JSON-RPC 2.0 message per line on stdin, one answer per line on stdout, nothing else on stdout, and the
 //! server returns when stdin ends. It speaks both protocol eras the record names:
@@ -19,23 +21,19 @@
 //! An answer to a request whose id could not be read carries no id, which both revisions' schemas allow and neither
 //! lets be `null`; a request's id is a string or an integral number.
 //!
-//! ⛔ It reads with [`crate::json`], under [`LINE_LIMIT`]; it spawns nothing and touches no file.
+//! ⛔ It reads with [`crate::json`], under [`LINE_LIMIT`]; it spawns nothing and touches no file — it holds no
+//! launcher (`crate::launch`), so it can make archogen start no program.
 
 use std::io::{self, BufRead, Write};
 
 use archogen_api::{check_with, Limits, MemoryModules, Request, Status};
+use archogen_transport::{object, string, text_block, tool_error, Failure, Tools};
 
-use crate::json::{self, Number, Value};
+use crate::json::{self, Value};
 use crate::spec::{self, CommandSpec, Maturity};
 
-/// The protocol revision a request names in its `_meta`.
-pub const MODERN: &str = "2026-07-28";
-/// The revision `initialize` selects.
-pub const LEGACY: &str = "2025-11-25";
+pub use archogen_transport::{LEGACY, MODERN};
 
-const META_VERSION: &str = "io.modelcontextprotocol/protocolVersion";
-const META_CAPABILITIES: &str = "io.modelcontextprotocol/clientCapabilities";
-const META_SERVER_INFO: &str = "io.modelcontextprotocol/serverInfo";
 /// The prefix of the keys this server adds to a tool's `_meta` (the record's §2).
 const PREFIX: &str = "io.github.rdje.archogen/";
 
@@ -45,356 +43,77 @@ const PREFIX: &str = "io.github.rdje.archogen/";
 /// (the record's §5).
 pub const LINE_LIMIT: usize = 6 * archogen_api::DEFAULT_BYTES + 64 * 1024;
 
-const PARSE_ERROR: i64 = -32700;
-const INVALID_REQUEST: i64 = -32600;
-const METHOD_NOT_FOUND: i64 = -32601;
-const INVALID_PARAMS: i64 = -32602;
-const INTERNAL_ERROR: i64 = -32603;
-const UNSUPPORTED_PROTOCOL_VERSION: i64 = -32022;
-
 /// One sentence for a client to hand its model, in `server/discover` and `initialize`.
 const INSTRUCTIONS: &str = "archogen checks eADL system descriptions: call `check` with a description's text, and \
 read the verdict in the result's `status`; the other tools are listed with the task-tree leaf that will build them.";
 
-/// The server's state: whether `initialize` has selected the earlier revision for this process.
-#[derive(Debug, Default)]
-pub struct Server {
-    legacy: bool,
-}
+/// The generator's tools: the command table's ([`crate::spec::tools`]).
+#[derive(Debug, Clone, Copy, Default)]
+struct Engine;
 
-/// Serve `input` until it ends, answering each line on `output`.
-pub fn serve(input: &mut dyn BufRead, output: &mut dyn Write) -> io::Result<()> {
-    let mut server = Server::default();
-    loop {
-        let (line, too_long) = match read_line(input)? {
-            None => return Ok(()),
-            Some(read) => read,
+impl Tools for Engine {
+    fn name(&self) -> &str {
+        "archogen"
+    }
+
+    fn version(&self) -> &str {
+        crate::VERSION
+    }
+
+    fn instructions(&self) -> &str {
+        INSTRUCTIONS
+    }
+
+    fn list(&self) -> Vec<Value> {
+        spec::tools().map(tool).collect()
+    }
+
+    fn knows(&self, name: &str) -> bool {
+        spec::tools().any(|spec| spec.name == name)
+    }
+
+    fn call(&self, name: &str, arguments: &Value) -> Result<Value, Failure> {
+        let Some(spec) = spec::tools().find(|spec| spec.name == name) else {
+            return Err(Failure::Params(format!("no tool `{name}`")));
         };
-        if !too_long && line.iter().all(|byte| matches!(byte, b' ' | b'\t' | b'\r')) {
-            continue; // a blank line is no message
-        }
-        let answer = if too_long {
-            Some(error(
-                None,
-                PARSE_ERROR,
-                &format!("the message is longer than {LINE_LIMIT} bytes, and was not read"),
-                None,
-            ))
-        } else {
-            server.answer(&line)
-        };
-        if let Some(answer) = answer {
-            output.write_all(answer.as_bytes())?;
-            output.write_all(b"\n")?;
-            output.flush()?;
+        match (&spec.maturity, spec.name) {
+            (Maturity::Built, "check") => check(arguments),
+            (Maturity::Built, name) => Err(Failure::Internal(format!(
+                "`{name}` is marked built and this server has no handler for it"
+            ))),
+            (maturity, name) => {
+                let owner = maturity.owner().unwrap_or("its leaf");
+                Ok(tool_error(&format!(
+                    "`{name}` is not built yet: task-tree leaf {owner} owns it (docs/TASK_TREE.md)"
+                )))
+            }
         }
     }
 }
 
-/// The next line without its terminator, and whether it ran past [`LINE_LIMIT`] — in which case only that much is
-/// kept and the rest is consumed unread. `None` at the end of the input.
-fn read_line(input: &mut dyn BufRead) -> io::Result<Option<(Vec<u8>, bool)>> {
-    let mut line = Vec::new();
-    let mut too_long = false;
-    let mut any = false;
-    loop {
-        let buffer = input.fill_buf()?;
-        if buffer.is_empty() {
-            return Ok(any.then_some((line, too_long)));
-        }
-        any = true;
-        let (chunk, found) = match buffer.iter().position(|&byte| byte == b'\n') {
-            Some(end) => (&buffer[..end], true),
-            None => (buffer, false),
-        };
-        if !too_long {
-            if line.len() + chunk.len() > LINE_LIMIT {
-                too_long = true;
-                line.clear();
-            } else {
-                line.extend_from_slice(chunk);
-            }
-        }
-        let used = chunk.len() + usize::from(found);
-        input.consume(used);
-        if found {
-            return Ok(Some((line, too_long)));
-        }
+/// The server's state: whether `initialize` has selected the earlier revision for this process.
+pub struct Server(archogen_transport::Server<'static>);
+
+impl Default for Server {
+    fn default() -> Self {
+        Self(archogen_transport::Server::new(&Engine, LINE_LIMIT))
     }
 }
 
 impl Server {
     /// The answer to one line, or `None` for a notification.
     pub fn answer(&mut self, line: &[u8]) -> Option<String> {
-        let message = match json::read(line, LINE_LIMIT) {
-            Ok(message) => message,
-            Err(refusal) => {
-                return Some(error(
-                    None,
-                    PARSE_ERROR,
-                    &format!("parse error: {refusal}"),
-                    None,
-                ));
-            }
-        };
-        if !matches!(message, Value::Object(_)) {
-            return Some(error(
-                None,
-                INVALID_REQUEST,
-                "a message is a JSON object",
-                None,
-            ));
-        }
-        let version_ok = message.get("jsonrpc").and_then(Value::as_str) == Some("2.0");
-        let method = message.get("method").and_then(Value::as_str);
-        // A response is a client's answer to a request of the server's, and this server sends none: it is ignored.
-        if method.is_none() && (message.get("result").is_some() || message.get("error").is_some()) {
-            return None;
-        }
-        let id = match message.get("id") {
-            None => {
-                // A notification is never answered; a message with neither an id nor a method is no request.
-                return if version_ok && method.is_some() {
-                    None
-                } else {
-                    Some(error(
-                        None,
-                        INVALID_REQUEST,
-                        "a request has `jsonrpc: \"2.0\"`, an id and a method",
-                        None,
-                    ))
-                };
-            }
-            Some(Value::Number(number)) if !integral(number.as_str()) => {
-                return Some(error(
-                    None,
-                    INVALID_REQUEST,
-                    "a request's id is a string or an integral number",
-                    None,
-                ));
-            }
-            Some(id @ (Value::String(_) | Value::Number(_))) => id.clone(),
-            Some(_) => {
-                return Some(error(
-                    None,
-                    INVALID_REQUEST,
-                    "a request's id is a string or an integral number",
-                    None,
-                ));
-            }
-        };
-        let (true, Some(method)) = (version_ok, method) else {
-            return Some(error(
-                Some(&id),
-                INVALID_REQUEST,
-                "a request has `jsonrpc: \"2.0\"`, an id and a method",
-                None,
-            ));
-        };
-        let empty = Value::Object(Vec::new());
-        let params = match message.get("params") {
-            None => &empty,
-            Some(params @ Value::Object(_)) => params,
-            Some(_) => {
-                return Some(error(
-                    Some(&id),
-                    INVALID_PARAMS,
-                    "a request's params are an object",
-                    None,
-                ))
-            }
-        };
-        Some(self.request(&id, method, params))
-    }
-
-    fn request(&mut self, id: &Value, method: &str, params: &Value) -> String {
-        let meta = params.get("_meta");
-        let modern = meta.is_some_and(|meta| {
-            meta.get(META_VERSION).is_some() || meta.get(META_CAPABILITIES).is_some()
-        });
-        if modern {
-            return modern_request(id, method, params);
-        }
-        match method {
-            "initialize" => self.initialize(id, params),
-            "ping" => result(id, Value::Object(Vec::new())),
-            "tools/list" | "tools/call" if self.legacy => legacy_request(id, method, params),
-            _ if self.legacy => error(
-                Some(id),
-                METHOD_NOT_FOUND,
-                &format!(
-                    "no method `{method}` in `{LEGACY}`; a `{MODERN}` request names its version in `_meta` \
-                     (`{META_VERSION}`)"
-                ),
-                None,
-            ),
-            "tools/list" | "tools/call" | "server/discover" => error(
-                Some(id),
-                INVALID_PARAMS,
-                &format!(
-                    "a request names its protocol version in `_meta` (`{META_VERSION}`, with \
-                     `{META_CAPABILITIES}`), or follows `initialize`"
-                ),
-                None,
-            ),
-            _ => error(Some(id), METHOD_NOT_FOUND, &format!("no method `{method}`"), None),
-        }
-    }
-
-    /// `initialize`: the earlier revision, for the rest of the process. The client's version is answered with
-    /// `2025-11-25`, the one earlier revision this server supports, whatever it named (the lifecycle's version
-    /// negotiation: the same version if supported, otherwise another the server supports).
-    fn initialize(&mut self, id: &Value, params: &Value) -> String {
-        let well_formed = params
-            .get("protocolVersion")
-            .and_then(Value::as_str)
-            .is_some()
-            && matches!(params.get("capabilities"), Some(Value::Object(_)))
-            && matches!(params.get("clientInfo"), Some(Value::Object(_)));
-        if !well_formed {
-            return error(
-                Some(id),
-                INVALID_PARAMS,
-                "`initialize` takes `protocolVersion`, `capabilities` and `clientInfo`",
-                None,
-            );
-        }
-        self.legacy = true;
-        result(
-            id,
-            object(vec![
-                ("protocolVersion", string(LEGACY)),
-                ("capabilities", tools_capability()),
-                ("serverInfo", server_info()),
-                ("instructions", string(INSTRUCTIONS)),
-            ]),
-        )
+        self.0.answer(line)
     }
 }
 
-/// A request under `2026-07-28`: its `_meta` checked, then answered on its own.
-fn modern_request(id: &Value, method: &str, params: &Value) -> String {
-    let meta = params.get("_meta");
-    let Some(version) = meta.and_then(|meta| meta.get(META_VERSION)) else {
-        return error(
-            Some(id),
-            INVALID_PARAMS,
-            &format!("`_meta` lacks `{META_VERSION}`"),
-            None,
-        );
-    };
-    let Some(version) = version.as_str() else {
-        return error(
-            Some(id),
-            INVALID_PARAMS,
-            &format!("`_meta`'s `{META_VERSION}` is not a string"),
-            None,
-        );
-    };
-    if !matches!(
-        meta.and_then(|meta| meta.get(META_CAPABILITIES)),
-        Some(Value::Object(_))
-    ) {
-        return error(
-            Some(id),
-            INVALID_PARAMS,
-            &format!("`_meta` lacks `{META_CAPABILITIES}` as an object"),
-            None,
-        );
-    }
-    if version != MODERN {
-        return error(
-            Some(id),
-            UNSUPPORTED_PROTOCOL_VERSION,
-            &format!(
-                "protocol version `{version}` is not served per request: `{MODERN}` is, and `{LEGACY}` after `initialize`"
-            ),
-            Some(object(vec![
-                ("supported", Value::Array(vec![string(MODERN), string(LEGACY)])),
-                ("requested", string(version)),
-            ])),
-        );
-    }
-    let answered = match method {
-        "server/discover" => Ok(object(vec![
-            (
-                "supportedVersions",
-                Value::Array(vec![string(MODERN), string(LEGACY)]),
-            ),
-            ("capabilities", tools_capability()),
-            ("instructions", string(INSTRUCTIONS)),
-            ("ttlMs", integer(0)),
-            ("cacheScope", string("public")),
-        ])),
-        "tools/list" => list_tools(params).map(|tools| {
-            object(vec![
-                ("tools", tools),
-                ("ttlMs", integer(0)),
-                ("cacheScope", string("public")),
-            ])
-        }),
-        "tools/call" => call_tool(params),
-        _ => {
-            return error(
-                Some(id),
-                METHOD_NOT_FOUND,
-                &format!("no method `{method}` in `{MODERN}`"),
-                None,
-            )
-        }
-    };
-    match answered {
-        Ok(Value::Object(mut members)) => {
-            members.push(("resultType".to_owned(), string("complete")));
-            members.push((
-                "_meta".to_owned(),
-                object(vec![(META_SERVER_INFO, server_info())]),
-            ));
-            result(id, Value::Object(members))
-        }
-        Ok(other) => result(id, other),
-        Err(failure) => failure.answer(id),
-    }
-}
-
-/// `tools/list` or `tools/call` under `2025-11-25`, after `initialize`.
-fn legacy_request(id: &Value, method: &str, params: &Value) -> String {
-    let answered = if method == "tools/list" {
-        list_tools(params).map(|tools| object(vec![("tools", tools)]))
-    } else {
-        call_tool(params)
-    };
-    match answered {
-        Ok(value) => result(id, value),
-        Err(failure) => failure.answer(id),
-    }
-}
-
-/// Why a request was answered with an error rather than a result.
-enum Failure {
-    /// The request's params are not what its method takes: `-32602`.
-    Params(String),
-    /// The server failed, not the request: `-32603`.
-    Internal(String),
-}
-
-impl Failure {
-    fn answer(self, id: &Value) -> String {
-        match self {
-            Self::Params(message) => error(Some(id), INVALID_PARAMS, &message, None),
-            Self::Internal(message) => error(Some(id), INTERNAL_ERROR, &message, None),
-        }
-    }
-}
-
-/// The tool list, from the command table. This server has one page, so no cursor names a place in it.
-fn list_tools(params: &Value) -> Result<Value, Failure> {
-    if params.get("cursor").is_some() {
-        return Err(Failure::Params(
-            "the tool list has one page, so no cursor names a place in it".to_owned(),
-        ));
-    }
-    Ok(Value::Array(spec::tools().map(tool).collect()))
+/// Serve `input` until it ends, answering each line on `output`.
+///
+/// # Errors
+///
+/// The streams' own failure.
+pub fn serve(input: &mut dyn BufRead, output: &mut dyn Write) -> io::Result<()> {
+    archogen_transport::serve(input, output, &Engine, LINE_LIMIT)
 }
 
 /// One tool: its name and summary, its arguments' schema, the annotations true of every operation offered, and
@@ -486,49 +205,6 @@ fn check_schema() -> Value {
     ])
 }
 
-/// `tools/call`'s result, or why the request is no call (`-32602`) or the server failed (`-32603`). A call that
-/// names a tool and gives it an object is answered with a result, an argument the tool cannot use included.
-fn call_tool(params: &Value) -> Result<Value, Failure> {
-    let Some(name) = params.get("name").and_then(Value::as_str) else {
-        return Err(Failure::Params(
-            "`tools/call` names its tool in `name`".to_owned(),
-        ));
-    };
-    let Some(spec) = spec::tools().find(|spec| spec.name == name) else {
-        return Err(Failure::Params(format!("no tool `{name}`")));
-    };
-    let empty = Value::Object(Vec::new());
-    let arguments = match params.get("arguments") {
-        None => &empty,
-        Some(arguments @ Value::Object(_)) => arguments,
-        Some(_) => {
-            return Err(Failure::Params(
-                "a tool's arguments are an object".to_owned(),
-            ))
-        }
-    };
-    match (&spec.maturity, spec.name) {
-        (Maturity::Built, "check") => check(arguments),
-        (Maturity::Built, name) => Err(Failure::Internal(format!(
-            "`{name}` is marked built and this server has no handler for it"
-        ))),
-        (maturity, name) => {
-            let owner = maturity.owner().unwrap_or("its leaf");
-            Ok(tool_error(&format!(
-                "`{name}` is not built yet: task-tree leaf {owner} owns it (docs/TASK_TREE.md)"
-            )))
-        }
-    }
-}
-
-/// A tool's result for a call it could not carry out: its text, and `isError: true`.
-fn tool_error(text: &str) -> Value {
-    object(vec![
-        ("content", Value::Array(vec![text_block(text)])),
-        ("isError", Value::Bool(true)),
-    ])
-}
-
 /// `check`: the arguments read as the engine API's request, judged, and answered in the wasm binding's encoding.
 /// An argument it cannot use is a tool error, with what to change.
 fn check(arguments: &Value) -> Result<Value, Failure> {
@@ -606,86 +282,6 @@ fn judge(
         ("structuredContent", structured),
         ("isError", Value::Bool(response.status != Status::Ok)),
     ]))
-}
-
-fn text_block(text: &str) -> Value {
-    object(vec![("type", string("text")), ("text", string(text))])
-}
-
-fn tools_capability() -> Value {
-    object(vec![(
-        "tools",
-        object(vec![("listChanged", Value::Bool(false))]),
-    )])
-}
-
-fn server_info() -> Value {
-    object(vec![
-        ("name", string("archogen")),
-        ("version", string(env!("CARGO_PKG_VERSION"))),
-    ])
-}
-
-fn result(id: &Value, result: Value) -> String {
-    json::write(&object(vec![
-        ("jsonrpc", string("2.0")),
-        ("id", id.clone()),
-        ("result", result),
-    ]))
-}
-
-/// An error answer. `id` is `None` when the request's id could not be read: the answer then carries none, which
-/// both revisions' schemas allow (`id?: RequestId`) and neither lets be `null`.
-fn error(id: Option<&Value>, code: i64, message: &str, data: Option<Value>) -> String {
-    let mut fields = vec![("code", integer(code)), ("message", string(message))];
-    if let Some(data) = data {
-        fields.push(("data", data));
-    }
-    let mut members = vec![("jsonrpc", string("2.0"))];
-    if let Some(id) = id {
-        members.push(("id", id.clone()));
-    }
-    members.push(("error", object(fields)));
-    json::write(&object(members))
-}
-
-/// Whether a number's text is an integer's — `7`, `1e2`, `1.0`, `150e-1` — as JSON Schema's `integer`, which both
-/// revisions' `RequestId` uses, reads one; `1.5` and `1e-1` are not.
-fn integral(text: &str) -> bool {
-    let text = text.trim_start_matches('-');
-    let (mantissa, exponent) = match text.find(['e', 'E']) {
-        Some(at) => (&text[..at], &text[at + 1..]),
-        None => (text, "0"),
-    };
-    let exponent: i64 = exponent.parse().unwrap_or(i64::MAX);
-    let (whole, fraction) = mantissa.split_once('.').unwrap_or((mantissa, ""));
-    let fraction = fraction.trim_end_matches('0');
-    if whole.trim_start_matches('0').is_empty() && fraction.is_empty() {
-        return true; // zero
-    }
-    if exponent >= 0 {
-        i64::try_from(fraction.len()).is_ok_and(|digits| digits <= exponent)
-    } else {
-        let zeros = whole.len() - whole.trim_end_matches('0').len();
-        fraction.is_empty() && i64::try_from(zeros).is_ok_and(|zeros| zeros >= -exponent)
-    }
-}
-
-fn object<K: Into<String>>(members: Vec<(K, Value)>) -> Value {
-    Value::Object(
-        members
-            .into_iter()
-            .map(|(key, value)| (key.into(), value))
-            .collect(),
-    )
-}
-
-fn string(text: &str) -> Value {
-    Value::String(text.to_owned())
-}
-
-fn integer(value: i64) -> Value {
-    Value::Number(Number::from(value))
 }
 
 #[cfg(test)]
@@ -1142,27 +738,6 @@ mod tests {
             ));
             let read = json::read(encoded.as_bytes(), usize::MAX).expect("the encoding is JSON");
             assert_eq!(json::write(&read), encoded, "{text:?}");
-        }
-    }
-
-    #[test]
-    fn a_number_is_integral_as_json_schema_reads_one() {
-        for text in [
-            "0",
-            "-0",
-            "7",
-            "-7",
-            "1e2",
-            "1E+2",
-            "1.0",
-            "150e-1",
-            "0.0e5",
-            "12345678901234567890",
-        ] {
-            assert!(integral(text), "{text}");
-        }
-        for text in ["1.5", "1e-1", "15e-2", "0.5", "-2.25"] {
-            assert!(!integral(text), "{text}");
         }
     }
 

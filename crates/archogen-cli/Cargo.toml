@@ -25,6 +25,8 @@ archogen-digest = { path = "../archogen-digest" }
 archogen-install = { path = "../archogen-install" }
 # The checker's result record, which the front reads before it builds on a plan (leaf `M3.5.1.4.3`).
 archogen-outcome = { path = "../archogen-outcome" }
+# The MCP server's framing, which each role's server shares (leaf `M3.5.1.6.1`).
+archogen-transport = { path = "../archogen-transport" }
 archogen-json = { path = "../archogen-json" }
 archogen-s0 = { path = "../archogen-s0" }
 # The response's encoding, so the MCP server answers the bytes the wasm binding does (leaf `API.6.4`).

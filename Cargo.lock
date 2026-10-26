@@ -30,6 +30,7 @@ dependencies = [
  "archogen-json",
  "archogen-outcome",
  "archogen-s0",
+ "archogen-transport",
  "archogen-wasm",
  "eadl-front",
  "eadl-model",
@@ -82,6 +83,13 @@ version = "0.1.0"
 dependencies = [
  "eadl-front",
  "eadl-model",
+]
+
+[[package]]
+name = "archogen-transport"
+version = "0.1.0"
+dependencies = [
+ "archogen-json",
 ]
 
 [[package]]

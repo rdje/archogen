@@ -1,0 +1,17 @@
+# The MCP server's framing (leaf M3.5.1.6.1, `M3.5.1`'s design): one JSON-RPC 2.0 message per line under a bound, both
+# protocol eras the MCP record names, and the envelopes of their answers, behind a `Tools` trait each server fills
+# with its own tools. No role's: the generator's server runs over it, and each checker's will (`M3.5.1.6.4`,
+# `M2.21.4`), so a framing fault would be common to every server — the residual risk its row in
+# docs/specs/trust/decision_trust-role-programs.md §5 states. Dependency-free but for archogen-json.
+[package]
+name = "archogen-transport"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "The MCP server's line framing, protocol eras and JSON-RPC envelopes, under each role's own tools"
+
+[lints]
+workspace = true
+
+[dependencies]
+archogen-json = { path = "../archogen-json" }

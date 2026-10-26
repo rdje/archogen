@@ -233,8 +233,12 @@ with the versions it does:
 ```
 
 The server reads with its own JSON reader (`crates/archogen-json/src/lib.rs`, leaf `API.6.3`): text over a bound, or
-nested too deep, or naming one field twice, is refused before anything is judged. It spawns nothing and opens no
-file. Its verdicts are the command line's: a test speaks to the built binary in both eras and checks every
+nested too deep, or naming one field twice, is refused before anything is judged. The protocol itself — the lines and
+their bound, both eras, the shape of every answer and error — lives in a package of no role's,
+`crates/archogen-transport/src/lib.rs` (leaf `M3.5.1.6.1`), behind a trait that a server fills with its own name and
+tools; `archogen mcp` fills it with the command table's, and each checker will fill it with its own, so a checker's
+server speaks the protocol exactly as the generator's does without sharing any of its tools. It spawns nothing and
+opens no file. Its verdicts are the command line's: a test speaks to the built binary in both eras and checks every
 single-file case of the conformance suite both ways.
 
 ### What each consumer can do, and what it receives

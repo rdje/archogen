@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the MCP protocol is a package every server can share
+
+`ARCHOGEN-M3-0995` (leaf `M3.5.1.6.1`), `2026-10-26`.
+
+- The MCP server's protocol handling moved out of the command line into `crates/archogen-transport`, a package of no
+  role's, so each checker can serve its own tools over the same protocol without sharing the generator's. `archogen
+  mcp` answers exactly as before.
+
 ## archogen — the trust gate knows the front runs the configuration checker
 
 `ARCHOGEN-M3-0993` (leaf `M3.5.1.4.4`), `2026-10-26`.
