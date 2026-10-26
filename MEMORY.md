@@ -14,7 +14,7 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.5`; `PROGRAM` resumes at `PROGRAM.72`.
-- **Next action:** CI green on `34b6abeb` (2026-10-26); next `M3.5.1.6` (transport, the checkers' MCP),
+- **Next action:** CI green on `34b6abeb` (2026-10-26); next `M3.5.1.6.1` (the transport package),
   then `M3.4` (the search, unblocked). After the push, the runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`.
   `PROGRAM.115` filed; full verification `M3.5.9` after `M3.5`'s features (doctrine 22).
   The mutation campaign is `M7.6`'s. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
