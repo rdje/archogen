@@ -17,6 +17,10 @@
 //!
 //! ⛔ **The level is the profile's, never the record's**: `Profile::caller_level`, so a corrupted level cannot pass.
 //!
+//! ⭐ **The system reading is public**, for a comparison test another crate holds: [`system`] gives one system's
+//! hardware, the declarations its closure reaches and the requesters it serves as a [`SystemReading`] — computed by the
+//! very code the rules judge an assignment with, never a second copy of it. Everything else here stays the crate's.
+//!
 //! # Where §8's text leaves a choice, the reading taken
 //!
 //! - Rule 1: a system's own level is every clause of its `defsystem` but its tasks, its `platform` clause among them; a
@@ -114,10 +118,7 @@ pub(crate) fn check(
         });
     }
     let world = World::read(program);
-    let Some(system) = world
-        .get(&assignment.system)
-        .filter(|d| d.kind == Kind::System)
-    else {
+    let Some(system) = world.system(&assignment.system) else {
         return Err(Verdict {
             status: Status::ToolFailure,
             findings: vec![error(
@@ -142,6 +143,75 @@ pub(crate) fn check(
     judgement.functions();
     judgement.qualifiers();
     judgement.verdict()
+}
+
+/// One system as check (5) reads it (model §8 rules 1 and 7): what the rules judge its assignment against, each
+/// declaration by its qualified name, as module resolution qualifies it (`eadl_front::Instance::qualify`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SystemReading {
+    /// The system's hardware (rule 7): the blocks and platforms its `platform` clause, its own `uses` and `needs` or
+    /// its tasks name, and every block or platform those name in turn through `uses` and `needs`, at any depth — a
+    /// service naming a block does not make it hardware.
+    pub hardware: BTreeSet<String>,
+    /// Every declaration the system's closure reaches through `uses` and `needs` (rule 7), at any depth and through
+    /// declarations of every kind.
+    pub reached: BTreeSet<String>,
+    /// Every requester the system serves (rules 1 and 7): its own level, each of its tasks, each declaration reached.
+    pub served: BTreeSet<Requester>,
+}
+
+/// The system `name` of the elaborated `program`, read as check (5) reads it before judging an assignment for it:
+/// `None` when `name` is no declaration of kind system there — where check (5) refuses a plan for it as for no system.
+#[must_use]
+pub fn system(program: &Program, name: &str) -> Option<SystemReading> {
+    let world = World::read(program);
+    let declaration = world.system(name)?;
+    let Reading {
+        hardware,
+        reached,
+        served,
+    } = Reading::of(&world, name, declaration);
+    Some(SystemReading {
+        hardware,
+        reached,
+        served: served.into_iter().collect(),
+    })
+}
+
+/// One system's reading, as the rules judge with it: [`SystemReading`]'s, the requesters served in the order they are
+/// judged — its own level, its tasks as it writes them, then each declaration reached.
+struct Reading {
+    hardware: BTreeSet<String>,
+    reached: BTreeSet<String>,
+    served: Vec<Requester>,
+}
+
+impl Reading {
+    /// The reading of `system`, the declaration of kind system `name` names in `world` (rules 1 and 7).
+    fn of<'p>(world: &World<'p>, name: &str, system: Declaration<'p>) -> Self {
+        let named = world.names(system.instance, system.form, &["needs", "uses"]);
+        let hardware = world.closure(named.clone(), &["needs", "uses"], |d| d.kind.provides());
+        let reached = world.closure(named, &["needs", "uses"], |_| true);
+        let tasks = system
+            .form
+            .items()
+            .iter()
+            .filter(|clause| clause.head() == Some("task"))
+            .filter_map(|clause| clause.items().get(1).and_then(Form::as_symbol))
+            .map(|task| Requester::Task {
+                system: name.to_owned(),
+                task: task.to_owned(),
+            });
+        let served = std::iter::once(Requester::Named(name.to_owned()))
+            .chain(tasks)
+            .chain(reached.iter().cloned().map(Requester::Named))
+            .collect();
+        Self {
+            hardware,
+            reached,
+            served,
+        }
+    }
 }
 
 /// The levels of `reachable-at-privilege`'s domain, as the vocabulary declares them.
@@ -250,6 +320,11 @@ impl<'p> World<'p> {
 
     fn get(&self, name: &str) -> Option<Declaration<'p>> {
         self.declarations.get(name).copied()
+    }
+
+    /// The declaration `name` names, when it is of kind system: what an assignment is for (rule 7).
+    fn system(&self, name: &str) -> Option<Declaration<'p>> {
+        self.get(name).filter(|d| d.kind == Kind::System)
     }
 
     fn provides(&self, name: &str) -> bool {
@@ -646,6 +721,9 @@ struct Judgement<'a, 'p> {
     hardware: BTreeSet<String>,
     /// Every declaration the system's closure reaches through `uses` and `needs` (rule 7).
     reached: BTreeSet<String>,
+    /// Every requester the system serves (rule 7), in the order judged: its own level, its tasks, each declaration
+    /// reached.
+    served: Vec<Requester>,
     requirements: BTreeMap<Requester, Option<Vec<Requirement>>>,
     providers: BTreeMap<String, Option<Provider>>,
     regions: BTreeMap<String, Vec<Region>>,
@@ -663,9 +741,11 @@ impl<'a, 'p> Judgement<'a, 'p> {
         assignment: &'a Assignment,
         record: RecordText<'a>,
     ) -> Self {
-        let named = world.names(system.instance, system.form, &["needs", "uses"]);
-        let hardware = world.closure(named.clone(), &["needs", "uses"], |d| d.kind.provides());
-        let reached = world.closure(named, &["needs", "uses"], |_| true);
+        let Reading {
+            hardware,
+            reached,
+            served,
+        } = Reading::of(&world, &assignment.system, system);
         Self {
             sources,
             world,
@@ -674,6 +754,7 @@ impl<'a, 'p> Judgement<'a, 'p> {
             record,
             hardware,
             reached,
+            served,
             requirements: BTreeMap::new(),
             providers: BTreeMap::new(),
             regions: BTreeMap::new(),
@@ -856,24 +937,10 @@ impl<'a, 'p> Judgement<'a, 'p> {
         }
     }
 
-    /// Every requester the system serves (rule 7): its own level, each of its tasks, each declaration it reaches.
+    /// Every requester the system serves (rule 7): its own level, each of its tasks, each declaration it reaches — as
+    /// [`Reading::of`] read them.
     fn served(&self) -> Vec<Requester> {
-        let system = &self.assignment.system;
-        let tasks = self
-            .system
-            .form
-            .items()
-            .iter()
-            .filter(|clause| clause.head() == Some("task"))
-            .filter_map(|clause| clause.items().get(1).and_then(Form::as_symbol))
-            .map(|task| Requester::Task {
-                system: system.clone(),
-                task: task.to_owned(),
-            });
-        std::iter::once(Requester::Named(system.clone()))
-            .chain(tasks)
-            .chain(self.reached.iter().cloned().map(Requester::Named))
-            .collect()
+        self.served.clone()
     }
 
     /// Rules 1 and 7: each binding is a requester's the system serves, of a vocabulary fact, to a block or platform of

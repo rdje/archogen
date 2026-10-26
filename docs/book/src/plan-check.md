@@ -166,15 +166,19 @@ the record, or both — for check 4, also at what the provider states. The langu
 - `crates/archogen-plan-check/src/bindings.rs` — checks 3 and 4;
 - `crates/archogen-plan-check/src/providers.rs` — check 2's provider-level rules;
 - `crates/archogen-plan-check/src/joint.rs` — check 5, the joint rules, written from `docs/semantics/model.md` §8
-  alone, never from the search's own version of them;
-- `crates/archogen-plan-check/tests/plan_f12.rs` — the corruptions of fixture F12, each refused under its code.
+  alone, never from the search's own version of them. One reading of it is public, `joint::system`: a system's
+  hardware, the declarations it reaches and the requesters it serves, computed by the code the rules judge with, so
+  that another crate can compare it with the search's;
+- `crates/archogen-plan-check/tests/plan_f12.rs` — the corruptions of fixture F12, each refused under its code;
 - `crates/archogen-plan-check/tests/plan_joint_fenced.rs` — each of check 5's rules, accepted and corrupted plans run
-  through checks 1 to 4 and then check 5, written with it by the fenced context.
+  through checks 1 to 4 and then check 5, written with it by the fenced context;
+- `crates/archogen-plan-check/tests/system_reading.rs` — `joint::system` on systems whose hardware lies at depth,
+  behind a service or behind a module's import, written by a fenced context too.
 
 ## Today and ahead
 
 The checks above run as a library, and as the `archogen-plan-check` program; each code's input runs through the
 program. Check 5's rules were written, like the rest, by a context that never read the search's own version of them; a
-comparison of the two readings comes after. Still to come: `archogen plan-check` and `archogen resolve` running that
-program from the front, and its place as the configuration checker's root in the trust gate. The search that writes
-the record is `M3.4`'s.
+comparison of the two readings comes after. The program is the configuration checker's root in the trust gate. Still
+to come: `archogen plan-check` and `archogen resolve` running that program from the front. The search that writes the
+record is `M3.4`'s.

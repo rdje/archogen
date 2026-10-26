@@ -14,7 +14,7 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.5`; `PROGRAM` resumes at `PROGRAM.72`.
-- **Next action:** CI green on `34b6abeb` (2026-10-26); next `M3.5.5.7.1` (a fenced subagent), `.7.2`–`.7.3`, `M3.5.6.5` and `M3.5.1.8`'s §5 rows,
+- **Next action:** CI green on `34b6abeb` (2026-10-26); next `M3.5.5.7.2` (draft in `target/m35572/`), `.7.3` (notes in `target/m35573/`), `M3.5.6.5` and `M3.5.1.8`'s §5 rows,
   `M3.5.1.4`; `M3.5.3.2` waits on the runner for `M3.5.3.1`'s two derivation items; `PROGRAM.115` filed;
   full verification `M3.5.9` after `M3.5`'s features (doctrine 22).
   `.1.8` waits on the runner: the trust gate refuses the shared digest package on `main` until its form lands.

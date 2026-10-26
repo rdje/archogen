@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the configuration checker's reading of a system can be compared
+
+`ARCHOGEN-M3-0983` (leaf `M3.5.5.7.1`), `2026-10-26`.
+
+- The configuration checker now offers, as a public function, how its joint check reads a system: its hardware, what
+  it reaches and whom it serves. A context that never saw the generator's code made the change, so a test can compare
+  the two readings without either having shaped the other.
+
 ## archogen — the trust gate sees the relation's two comparisons
 
 `ARCHOGEN-M3-0981` (leaf `M3.5.3.1`), `2026-10-26`.
