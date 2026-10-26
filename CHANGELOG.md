@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the plan checks' subtree sealed, their migration note a record
+
+`ARCHOGEN-M3-0958` (leaf `M3`), `2026-10-26`.
+
+- The closed `M3.5.4` — the assignment record and checks (1)–(4) — sealed into the task history, and the note
+  covering the plan codes' rows in the language reference marked applied.
+
 ## archogen — a plan is checked whole, and its verdicts are stated
 
 `ARCHOGEN-M3-0957` (leaf `M3.5.4.5`), `2026-10-26`.

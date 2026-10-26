@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-10-26
 - leaf: M3.5.4.5 (`docs/tasks/M3.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/reference.md#diagnostics, docs/semantics/reference.md#normative-sources
 - invalidates: none — no description changes meaning; the reference states the codes of a new door into the toolchain, a plan checked against its description
 
