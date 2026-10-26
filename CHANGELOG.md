@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust inventory writes again, every program accounted for
+
+`ARCHOGEN-M3-0972` (leaf `M3.5.8`), `2026-10-26`.
+
+- The trust inventory admits the one inclusion site it could not follow and classifies the runtime core's three test
+  programs, so it writes its record with every program target accounted for.
+- The generator's tests no longer compile the configuration checker: the checker's codes are now exercised by the
+  checker's own tests, through its executable.
+
 ## archogen — the task history's index is append-only in order
 
 `ARCHOGEN-PROGRAM-0971` (leaf `PROGRAM.71`), `2026-10-26`.

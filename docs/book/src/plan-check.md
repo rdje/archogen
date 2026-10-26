@@ -141,7 +141,8 @@ wrong with it. A stale plan is the user's input out of date, and is refused befo
 ### Codes
 
 Each check reports under a code of its own. The codes are stated, with what fires them and an input that does, in
-`docs/semantics/reference.md` §4; `crates/archogen-cli/tests/fires_on.rs` runs each input through the checker:
+`docs/semantics/reference.md` §4; `crates/archogen-plan-check/tests/fires_on.rs` runs each input through the
+`archogen-plan-check` program:
 
 | Code | Check | Fires when |
 | --- | --- | --- |
@@ -173,7 +174,7 @@ the record, or both — for check 4, also at what the provider states. The langu
 ## Today and ahead
 
 The checks above run as a library, and as the `archogen-plan-check` program; each code's input runs through the
-library. Check 5's rules were written, like the rest, by a context that never read the search's own version of them; a
+program. Check 5's rules were written, like the rest, by a context that never read the search's own version of them; a
 comparison of the two readings comes after. Still to come: `archogen plan-check` and `archogen resolve` running that
 program from the front, and its place as the configuration checker's root in the trust gate. The search that writes
 the record is `M3.4`'s.

@@ -104,14 +104,16 @@ unambiguous: a backslash in that column is always the start of one of the escape
 ⭐ **§4's `fires on` column is an input, and it is run** (leaf `M1.26.2`). A row whose code no input can
 reach any more would otherwise read exactly like a live rule, because the census only asks whether a source
 still contains the constructor. So each cell names a door into the toolchain and what to feed it, and
-`crates/archogen-cli/tests/fires_on.rs` executes every one and requires the row's code among what fires:
+`crates/archogen-cli/tests/fires_on.rs` executes every one and requires the row's code among what fires — the `plan`
+verb's in the configuration checker's own package, `crates/archogen-plan-check/tests/fires_on.rs`, through its
+executable, so the generator's package compiles no checker:
 
 | Verb | Means |
 | --- | --- |
 | `check T` | `T` is a description, checked as `archogen check` checks one |
 | `modules T <mod N> U …` | `T` is a description, and each `<mod N>` segment is the module file `N.eadl` beside it |
 | `kinds K <validate> D` | `K` is a kind module, loaded as the toolchain loads its own; then each declaration in `D` is validated against the registry `K` built |
-| `plan T <plan> R` | `T` is a description, the module `app`, and `R` an assignment record, checked against it by the configuration checker's checks in order under `rt-static-up-v1`; `<digest>` in `R` stands for the elaborated program's digest |
+| `plan T <plan> R` | `T` is a description, the module `app`, and `R` an assignment record, checked against it by the `archogen-plan-check` executable under `rt-static-up-v1`; `<digest>` in `R` stands for the elaborated program's digest |
 | `none: R` | no writable input fires the code, for the reason `R`, which may not be empty |
 
 The `<0xNN>` and `<N*C>` markers work in these cells as in a source cell. A cell nothing can parse is a violation, and

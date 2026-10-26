@@ -61,6 +61,24 @@
   (reason "prints the host build's answers, which scripts/wasm_binding.sh compares with the module's; a test tool")
   (role-packages "crates/archogen-api"))
 
+(defprogram rt-core-units
+  (package "crates/rt-core")
+  (target lib-test rt_core)
+  (reason "the runtime core's unit tests: they test the implementation's own decisions and use no item of the reference model, which they compile only because the package's development edge to `crates/rt-reference`, the `differential` harness's, reaches every test target (RP-H18)")
+  (role-packages "crates/rt-core" "crates/rt-reference"))
+
+(defprogram rt-core-doctests
+  (package "crates/rt-core")
+  (target doctest rt_core)
+  (reason "the runtime core's doc tests: they test the implementation's own decisions and use no item of the reference model, which they compile only because the package's development edge to `crates/rt-reference`, the `differential` harness's, reaches every test target (RP-H18)")
+  (role-packages "crates/rt-core" "crates/rt-reference"))
+
+(defprogram rt-core-lifecycle
+  (package "crates/rt-core")
+  (target test lifecycle)
+  (reason "the task lifecycle's contract tests, written against ROADMAP.md's stated behaviour: they test the implementation's own decisions and use no item of the reference model, which they compile only because the package's development edge to `crates/rt-reference`, the `differential` harness's, reaches every test target (RP-H18)")
+  (role-packages "crates/rt-core" "crates/rt-reference"))
+
 (defprogram diagnose
   (package "crates/eadl-front")
   (target example diagnose)
@@ -119,6 +137,12 @@
   (rule "include_str")
   (sha256 "8b9a2e4f89d1847a6091e5d2b2cefb0122c4f42aa49902360ee4d7f55e2d0b92")
   (reason "crates/archogen-plan-check/src/check.rs:38: embeds a shipped kind module as text, the data the configuration checker's re-check of the description registers (RP-H3)"))
+
+(defadmit
+  (file "crates/rt-analysis/tests/runtime_variant.rs")
+  (rule "inclusion")
+  (sha256 "3982179e27a7a4de86f9eff624e8ff6bfe808962dd27897567945ab829f1e76c")
+  (reason "crates/rt-analysis/tests/runtime_variant.rs:510: include_str!(concat!(\"../../../\", record_path!())) reads docs/specs/analysis/decision_runtime-analysis-variant.md, the record the test holds the model's identifier to; its file is named by the expansion, which the census cannot follow by its text (RP-H19)"))
 
 (defadmit
   (file "crates/archogen-cli/src/spec.rs")

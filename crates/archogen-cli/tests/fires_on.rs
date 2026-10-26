@@ -15,8 +15,9 @@
 //!   registers only the kinds it embeds, so no description can reach a `defkind`-level `schema-*` code. After
 //!   an optional `<validate>`, declarations are validated against the registry that module built;
 //! - `plan <text> <plan> <record>` — a description, the module `app`, and an assignment record checked against it by
-//!   the configuration checker's checks in order, as its executable will run them (`M3.5.4.5`; the executable is
-//!   `M3.5.6`'s); `<digest>` in the record stands for the elaborated program's digest;
+//!   the configuration checker; `<digest>` in the record stands for the elaborated program's digest. Parsed here, a
+//!   cell that is no input a violation as any other is, and run by `crates/archogen-plan-check/tests/fires_on.rs`
+//!   through the `archogen-plan-check` executable (leaf `M3.5.8`), so the generator's package compiles no checker;
 //! - `none: <reason>` — no writable input fires the code. The reason is review, and it may not be empty.
 //!
 //! `<0xNN>` names a character, decoded by the same `reference_table` reader the reference's other tables use —
@@ -27,13 +28,9 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use archogen_cli::run;
-use archogen_plan_check::assignment::program_digest;
-use archogen_plan_check::check::plan;
-use eadl_front::module::{elaborate, MemoryModules};
 use eadl_front::SourceMap;
 use eadl_model::check::shipped_registry;
 use eadl_model::kind::validate;
-use eadl_model::profile::RT_STATIC_UP_V1;
 
 #[allow(dead_code)]
 #[path = "../../eadl-front/tests/common/reference_table.rs"]
@@ -195,24 +192,8 @@ fn fire(probe: &Probe) -> BTreeSet<String> {
                 }
             }
         }
-        Probe::Plan(description, record) => {
-            // The checker's library, every check in the order its executable runs them, until `M3.5.6` builds it.
-            let modules = MemoryModules::new().with("app", description);
-            let mut sources = SourceMap::new();
-            let (program, diagnostics) = elaborate(&mut sources, &modules, "app");
-            if diagnostics.has_errors() {
-                return diagnostics
-                    .items()
-                    .iter()
-                    .map(|d| d.code.to_string())
-                    .collect();
-            }
-            let record = record.replace("<digest>", &program_digest(&program));
-            match plan(&sources, &program, &RT_STATIC_UP_V1, "plan.eadl", &record) {
-                Ok(()) => BTreeSet::new(),
-                Err(verdict) => verdict.findings.into_iter().map(|f| f.code).collect(),
-            }
-        }
+        // Run in the configuration checker's own package, through its executable (`fires_violations`).
+        Probe::Plan(..) => BTreeSet::new(),
     }
 }
 
@@ -236,7 +217,8 @@ fn fires_violations(path: &str, document: &str) -> Vec<String> {
             Err(reason) => out.push(format!(
                 "{path}:{line}: `{code}`'s `fires on` cell is not an input: {reason}"
             )),
-            Ok(Probe::Limit(_)) => {}
+            // A stated limit fires nothing; a `plan` cell, parsed, is run by the checker's package (module doc).
+            Ok(Probe::Limit(_) | Probe::Plan(..)) => {}
             Ok(probe) => {
                 let fired = fire(&probe);
                 if !fired.contains(code) {
@@ -314,27 +296,29 @@ fn a_modules_cell_writes_the_module_files_beside_the_description() {
 }
 
 #[test]
-fn a_plan_cell_runs_the_configuration_checker_over_the_record_and_its_description() {
-    let description =
-        "(defmodule app (version 1 0) (defblock console.uart (offers (observable-output true))) \
-                       (defservice console.write (requires (needs observable-output))) \
-                       (defsystem s (requires (uses console.write)) (platform (uses console.uart))))";
-    let record = "(format \"archogen-assignment/1\") (profile rt-static-up-v1) (system s) (program \"<digest>\")";
+fn a_plan_cell_is_parsed_here_and_run_by_the_checker_s_package() {
+    let cell =
+        "plan (defmodule app (version 1 0)) <plan>(program \"<4*0>\") (program \"<digest>\")";
+    // Decoded by the shared reader, `<digest>` left for the checker's test to fill.
+    assert_eq!(
+        parse_cell(cell),
+        Ok(Probe::Plan(
+            "(defmodule app (version 1 0))".to_string(),
+            "(program \"0000\") (program \"<digest>\")".to_string()
+        ))
+    );
     let doc = table(&[
-        &format!("| `plan-binding` | … | … | `plan {description} <plan>{record}` |"),
-        &format!(
-            "| `plan-stale` | … | … | `plan {description} <plan>{}` |",
-            record.replace("<digest>", "<64*0>")
-        ),
-        &format!("| `plan-unsatisfied` | … | … | `plan {description} <plan>{record}` |"),
+        &format!("| `plan-binding` | … | … | `{cell}` |"),
         "| `plan-record` | … | … | `plan (defmodule app (version 1 0)) (format \"x\")` |",
     ]);
-    // The unbound requirement fires; the stale digest fires before any judgement; the third row's input fires
-    // `plan-binding`, not its code; the fourth names no `<plan>`.
+    // The well-formed cell is not run here; the one with no `<plan>` is no input, a violation.
     assert_reported(
         &fires_violations("fixture.md", &doc),
-        2,
-        &["`plan-unsatisfied`'s input fires", "holds no `<plan>`"],
+        1,
+        &[
+            "`plan-record`'s `fires on` cell is not an input",
+            "holds no `<plan>`",
+        ],
     );
 }
 

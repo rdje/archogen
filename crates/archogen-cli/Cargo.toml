@@ -26,8 +26,3 @@ archogen-s0 = { path = "../archogen-s0" }
 archogen-wasm = { path = "../archogen-wasm" }
 eadl-front = { path = "../eadl-front" }
 eadl-model = { path = "../eadl-model" }
-
-[dev-dependencies]
-# The `fires on` driver's `plan` verb runs the configuration checker's library until its executable exists (leaves
-# `M3.5.4.5`, `M3.5.6`): a development edge, which no root's build follows.
-archogen-plan-check = { path = "../archogen-plan-check" }
