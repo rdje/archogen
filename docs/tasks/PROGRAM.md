@@ -791,7 +791,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0959 (leaf PROGRAM.112)`
 
 - ID: `PROGRAM.113`
-  Status: `active` — filed `2026-10-26` from the CI run on `d5123578`
+  Status: `done` — filed `2026-10-26` from the CI run on `d5123578`
   Goal: `scripts/check_task_history.sh`'s self-test arm "a SIGALRM just after the tree's rename" holds on every run of
     the Linux runner, or the reason it cannot is stated and the arm says so.
   Reproduce / issue: the `doctrines` workflow's run `40323084588`, attempt 1, on `ubuntu-latest`: the arm `rc 142, not
@@ -808,8 +808,11 @@ mdBook that is the director's window into the project.
     `^SELF-TEST` lines, so the arms' evidence never reached the log: the arm's failure line now carries it — whether the
     seal said it sealed, whether `Q.1.md` exists, the seal's last words and the gate's verdict in the proof — as the
     tool the next run reads (`ARCHOGEN-PROGRAM-0976`).
-  Verification: `pending`
-  Commit: `pending`
+  Closed (`2026-10-26`): `.1` put the arms' evidence on the line the runner keeps, `.2` traced the seal, which showed
+    it sound and the arms' own check at fault, `.3` read every output through a here-string; the runs on `34b6abeb` —
+    `doctrines` `40337545873`, `rust` `40337545686`, `trust-gate` `40337546070` — each `success`.
+  Verification: the three runs on `34b6abeb`, green.
+  Commit: `ARCHOGEN-PROGRAM-0978 (leaf PROGRAM.113.3)`, its last child's
 
 - ID: `PROGRAM.113.1`
   Status: `done` — the signal arms' failure line carries the seal's evidence, the one line the runner keeps
@@ -923,7 +926,7 @@ roadmap item X live?".
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.73`, `.78`, `.113` and `.114` — are filed and owned. Every closed
+`PROGRAM.73`, `.78` and `.114` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1067,6 +1070,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.113.1` | `ARCHOGEN-PROGRAM-0976 (leaf PROGRAM.113.1)` | **the diagnostic**: the signal arms' failure line carries the seal's evidence, the runner's log keeping only that line; the failures now steady on CI |
 | `PROGRAM.113.2` | `ARCHOGEN-PROGRAM-0977 (leaf PROGRAM.113.2)` | **the trace**: the signal arms record the signal sent, each mask change and each outcome printed, in order, for the runner to show where Linux departs |
 | `PROGRAM.113.3` | `ARCHOGEN-PROGRAM-0978 (leaf PROGRAM.113.3)` | **the cause and its fix**: GNU grep's `-q` closing the pipe under `pipefail` while `printf` still writes a large output; every such read in the script a here-string; `PROGRAM.114` filed for the 78 elsewhere |
+| `PROGRAM.113` | `ARCHOGEN-PROGRAM-0979 (leaf PROGRAM.113)` | **closed, CI green**: the arms' own check at fault, not the seal; the three runs on `34b6abeb` each `success` |
 
 ## Changelog
 
