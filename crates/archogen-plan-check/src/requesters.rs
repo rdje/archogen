@@ -237,8 +237,9 @@ pub fn declarations(program: &Program) -> BTreeMap<String, (usize, &Form)> {
 }
 
 /// Rule 7: a system's hardware — the blocks and platforms its `platform` clause, its own `uses` and `needs` and its
-/// tasks' name, and every block or platform those name in turn through `uses` or `needs`, a clause of their own or
-/// inside `requires`, at any depth; `refines` no edge.
+/// tasks' name, and every block or platform those blocks and platforms name in turn through `uses` or `needs`, a clause
+/// of their own or inside `requires`, at any depth, a declaration of another kind ending the path; `refines` no edge.
+/// `crates/eadl-resolve/tests/system_reading.rs` holds it equal to check (5)'s reading and the generator's.
 #[must_use]
 pub fn hardware(
     program: &Program,

@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the joint rules say what the two readings decided
+
+`ARCHOGEN-M3-0985` (leaf `M3.5.5.7.3`), `2026-10-26`.
+
+- The joint rules' text now settles five points the configuration checker's independent author had to guess at, and
+  two the generator and the checker read differently: only blocks and platforms compose one another, and a reserved
+  memory range with no size leaves the description short of a fact. The checker follows in the next leaf.
+
 ## archogen — the generator and the checker read every system alike
 
 `ARCHOGEN-M3-0984` (leaf `M3.5.5.7.2`), `2026-10-26`.

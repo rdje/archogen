@@ -741,7 +741,7 @@ fn every_finding_s_diagnostic_carries_its_code() {
     assert_eq!(seen, ["infeasible-configuration", "missing-fact"]);
 }
 
-// Connectivity and routes (leaf `M3.3.3`, model §8 rules 7 and 8): `SR-H15`'s last clause in the checker's form, and the
+// Connectivity and routes (leaf `M3.3.3`, model §8 rules 7 and 8): `SR-H15`'s last clause, the joint check's, and the
 // interrupts an assignment relies on.
 
 /// `docs/semantics/modules/hw.bus.eadl`'s edges, flattened: a platform naming a block through `needs`, one refining

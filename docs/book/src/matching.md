@@ -212,7 +212,8 @@ comparator directly, and an absolute deadline through firmware that programs the
 A service needing each is satisfied alone; bound together, the two providers own overlapping bytes — the firmware's
 window holds the comparator's registers — and the assignment is refused. A provider nothing is bound to owns
 nothing, so an unused device costs nothing; and a provider never conflicts with one it composes through `uses`, as
-a platform's window holds its own blocks.
+a platform's window holds its own blocks. Only blocks and platforms compose: a service's `uses` is a need of its own,
+so a block reached through a service is still a part of its own.
 
 A refused assignment is not yet a refused description: another assignment may hold. `M3.4`'s search tries them, and
 the description is `infeasible-configuration` only when every assignment is refused. Both cases are descriptions
@@ -220,8 +221,9 @@ under `crates/eadl-resolve/tests/joint/`, and `crates/eadl-resolve/tests/joint.r
 beside controls that hold.
 
 **A device the system does not have.** An assignment is one system's, and a block or platform it binds is part of
-that system's **hardware**: what its `platform` clause names, what its own and its tasks' `uses` and `needs` name, and
-what those name in turn, at any depth. A block that offers the right fact but sits on no platform the system uses
+that system's **hardware**: the blocks and platforms its `platform` clause names, or its own and its tasks' `uses` and
+`needs` name, and the blocks and platforms those name in turn, at any depth — a service between them ends the path, so a
+block that only a service names is not hardware. A block that offers the right fact but sits on no platform the system uses
 cannot serve it:
 
 ```text
@@ -295,8 +297,11 @@ obligation — `ram`, with the hole `fw.range` — which the plan lays the image
 device's registers inside `ram`, or a second placement region overlapping it, are two claims on the same bytes,
 `invalid-description`: *`dev`'s region `dev.regs` lies in `soc`'s placement memory `ram`*, with the repair *mark the
 range `(reserved true)`, or move it out of the memory*. A region that is both executable and reserved is no placement
-memory, and a region's sub-forms are written once each, a flag `true` or `false`. The plan chooses the region the image
-goes in — a choice of anything but placement memory is refused — and lays out the offsets later (`M4.1`). The hosted
+memory, and a region's sub-forms are written once each, a flag `true` or `false`. Where a region states no size and
+its size alone would decide whether it meets placement memory — a device's registers, a second placement region, or a
+reserved range, whose extent is the hole the plan must avoid — the description is `missing-fact`. The plan chooses the
+region the image goes in — leaving none chosen where there is placement memory, or choosing anything else, is refused
+— and lays out the offsets later (`M4.1`). The hosted
 playground offers no such region and needs none: its host provides memory.
 
 A required **ordering** between two effects — `(ordering (before (write device.control)) (after (write

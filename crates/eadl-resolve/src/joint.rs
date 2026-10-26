@@ -8,10 +8,11 @@
 //! - **Channels** (F08). A requester bound to a consumed fact — `use consumed` in the vocabulary — at the value `true`
 //!   takes one of the provider's `channels`, and a provider serves no more requesters than it has.
 //! - **Ownership** (F09). A provider bound in the assignment owns every region it offers, and the regions of two such
-//!   providers do not overlap, unless one composes the other through `uses`.
+//!   providers do not overlap, unless one composes the other: names it through `uses`, at any depth through blocks and
+//!   platforms, whose `uses` alone is composition (model §8 rules 1 and 5).
 //! - **Connectivity** (leaf `M3.3.3`). An assignment is one [`System`]'s, and a block or platform it binds a requester
 //!   of that system to is part of the system's hardware — `SR-H15`'s "a provider on a platform the system does not use
-//!   never satisfying", in the checker's form.
+//!   never satisfying", the joint check's.
 //! - **Routes.** Each provider the assignment relies on for an interrupt — a source, or a timer's alarm — is reported
 //!   as an [`Obligation::Route`]: the description states that the provider is part of the system, and the path from
 //!   it to the core, with its latency, is the catalog's to state and the plan's to enable.
@@ -1564,7 +1565,7 @@ impl<'v> Joint<'v> {
         }
     }
 
-    /// `SR-H15`'s last clause, in the checker's form: a block or platform bound for a requester the system serves is
+    /// `SR-H15`'s last clause, the joint check's: a block or platform bound for a requester the system serves is
     /// part of the system's hardware.
     fn connectivity(&self, system: &System, assignment: &[Binding], report: &mut Report) {
         for b in assignment.iter().filter(|b| system.serves(&b.requester)) {

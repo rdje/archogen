@@ -11,6 +11,10 @@
 //! level, its tasks and every declaration it reaches (rules 1 and 7). A disagreement is a defect in one of them, found
 //! by a machine rather than by the next reader.
 //!
+//! ⭐ **The checker's other reading of rule 7 too.** Checks (2) and (3) read a system's hardware with
+//! `requesters::hardware`, which a context that had read the generator's wrote: it is held to check (5)'s on every
+//! system as well (leaf `M3.5.5.7.3`), so the checker reads one hardware for every check.
+//!
 //! ⭐ **And every shape the tracked systems do not hold.** The tracked systems are written to be read, so few name a
 //! service from a block, a declaration from inside `offers` or a task's `needs`: a second leg generates systems — a
 //! seeded sequence, the same on every run — whose declarations name each other at every position the language gives
@@ -28,7 +32,7 @@ use std::path::{Path, PathBuf};
 
 use archogen_plan_check::assignment::Requester;
 use archogen_plan_check::check::{plain, plan_file};
-use archogen_plan_check::joint;
+use archogen_plan_check::{joint, requesters as checks};
 use eadl_front::module::DirectoryModules;
 use eadl_front::{read, Form, Program, SourceMap};
 use eadl_model::profile::RT_STATIC_UP_V1;
@@ -133,6 +137,13 @@ fn compare(shown: &str, program: &Program, wrong: &mut Vec<String>) -> usize {
             wrong.push(format!(
                 "{shown}: `{name}`'s hardware — the generator's {:?}, the checker's {:?}",
                 generator.hardware, checker.hardware
+            ));
+        }
+        let shared = checks::hardware(program, &checks::declarations(program), name);
+        if shared != checker.hardware {
+            wrong.push(format!(
+                "{shown}: `{name}`'s hardware — checks (2) and (3)'s {shared:?}, check (5)'s {:?}",
+                checker.hardware
             ));
         }
         if generator.reached != checker.reached {

@@ -252,10 +252,11 @@ configuration checker judges a plan's bindings again by those that refuse an ass
    is a function a requester programs. A binding takes a channel when its requirement is on a consumed fact and is met
    by the value `true`: `(needs f)`, `(f true)` or the group whose head it is. `(f false)` takes none, and a shared
    fact never does, however many read it.
-3. **Channels** (F08). The requesters taking channels at one provider number at most its `channels`; more is a
-   conflict. One requester needs no count. Two or more where `channels` is undescribed, or offered without a value, is
-   `missing-fact`. A provider that offers a consumed function `true` and declares `channels` absent, or `0`, is
-   `invalid-description`, refused when it is read, whether or not anything binds it.
+3. **Channels** (F08). The requesters taking channels at one provider number at most its `channels`; more is a conflict.
+   A requester counts once at a provider, however many of its bindings take a channel there. One requester needs no
+   count. Two or more where `channels` is undescribed, or offered without a value, is `missing-fact`. A provider that
+   offers a consumed function `true` and declares `channels` absent, or `0`, is `invalid-description`, refused when it
+   is read, whether or not anything binds it.
 4. **A service several users reach is one requester.** Its users are the tasks and services that use it; a system's
    own `uses` says what the system includes, and is no second user. Such a service's realization serves them through
    the channel it takes, so it is the multiplexer: the assignment reports that it owes them the shared semantics and a
@@ -264,27 +265,30 @@ configuration checker judges a plan's bindings again by those that refuse an ass
 5. **Ownership** (F09). A provider owns each `(region NAME (base B) (size S))` it offers: the bytes `[B, B+S)`, `B` a
    non-negative address and `S` a positive whole number of bytes. Its other sub-forms are `(executable true)` or `false`
    and `(reserved true)` or `false`; each sub-form at most once, and any other, a second one or another value is
-   `invalid-description` (`M3.3.5.1`). Placement memory — executable, unreserved — is rule 10's, owned by none. Two distinct
-   providers both bound in an assignment whose bytes overlap are a conflict, unless one composes the other through
-   `uses`, at any depth. A region without `size` owns at least its base byte; where another bound provider owns bytes
-   above its base, whether they overlap is `missing-fact`. A region without a base, with two, or with a size that is
-   not a positive whole number of bytes is `invalid-description`; one past the exact arithmetic `unsupported-profile`.
-   A provider nothing is bound to owns nothing: an unused device costs nothing (`ROADMAP.md` §5.3) but the bytes it
-   occupies in memory, which rule 10 charges.
+   `invalid-description` (`M3.3.5.1`). Placement memory — executable, unreserved — is rule 10's, owned by none. Two
+   distinct providers both bound in an assignment — named by a binding; the placement a plan gives binds nothing — whose
+   bytes overlap are a conflict, unless one composes the other: names it through `uses`, at any depth through blocks and
+   platforms, whose `uses` alone is composition (rule 1); a service's `uses` is a binding and composes nothing. A region
+   without `size` owns at least its base byte; where another bound provider owns bytes above its base, whether they
+   overlap is `missing-fact`. A region without a base, with two, or with a size that is not a positive whole number of
+   bytes is `invalid-description`; one past the exact arithmetic `unsupported-profile`. A provider nothing is bound to
+   owns nothing: an unused device costs nothing (`ROADMAP.md` §5.3) but the bytes it occupies in memory, which rule 10
+   charges.
 6. **One assignment, then the search.** A conflict refuses the assignment it is found in, and an unknown blocks it.
    The description is `infeasible-configuration` when every assignment has a conflict, and `missing-fact` when some
    assignment is blocked by unknowns alone — `M3.4`'s search to conclude, never a single assignment's. Each finding
    names the provider, the requesters with where they require the fact, and the count or the two ranges, with a
    repair: another provider, a sharing realization, or the fact described.
 7. **One system's assignment, and its hardware** (`M3.3.3`). An assignment is one system's: a description of several
-   systems is resolved system by system, so channels count and ownership compares within one. A system's **hardware**
-   is the blocks and platforms its `platform` clause, its own `uses` and `needs` or its tasks' name, and every block or
-   platform those name in turn through `uses` or `needs` — a clause of their own, or inside `requires` — at any depth.
-   `refines` is no edge: a refinement keeps the abstract platform's obligations (§3), not its blocks. A requester the
-   system serves — its own level, one of its tasks, or a declaration its closure reaches through `uses` and `needs` —
-   bound to a block or platform outside that hardware is a conflict naming the requester, the provider and the system:
-   `SR-H15`'s "a provider on a platform the system does not use never satisfying", the joint check's. What the
-   description's code then is, is `SR-H18`'s, `M3.4`'s to decide. An adapter or a catalog record is composed by no
+   systems is resolved system by system, so channels count and ownership compares within one. A system's **hardware** is
+   the blocks and platforms its `platform` clause, its own `uses` and `needs` or its tasks' name, and every block or
+   platform those blocks and platforms name in turn through `uses` or `needs` — a clause of their own, or inside
+   `requires` — at any depth. A declaration of another kind ends the path: a block that only a service names is not
+   hardware. `refines` is no edge: a refinement keeps the abstract platform's obligations (§3), not its blocks. A
+   requester the system serves — its own level, one of its tasks, or a declaration its closure reaches through `uses`
+   and `needs` — bound to a block or platform outside that hardware is a conflict naming the requester, the provider and
+   the system: `SR-H15`'s "a provider on a platform the system does not use never satisfying", the joint check's. What
+   the description's code then is, is `SR-H18`'s, `M3.4`'s to decide. An adapter or a catalog record is composed by no
    platform, and takes the system of the requesters bound to it (`M3.2`, `M3.7`).
 8. **Routes** (`M3.3.3`). Under one active core, an assignment reports a **route obligation** for each provider its
    system's requesters rely on for an interrupt: a *source*, bound through `interrupt-source` at `true`, with what it
@@ -308,15 +312,17 @@ configuration checker judges a plan's bindings again by those that refuse an ass
    another's offered one first, description-wide.
 10. **Placement** (`M3.3.5.1`; `SR-H13`, amended `2026-10-22`). Judged once per system, over its hardware, never per
    assignment. **Placement memory** is a region `(executable true)` and not `(reserved true)`: where a plan places the
-   image — M3 chooses the region, `M4.1` the offsets. A reserved region overlapping it is a **hole** the plan avoids, and
-   each placement region is reported with its holes as a **placement obligation**, for `M4.1` to lay out around and
+   image — M3 chooses the region, `M4.1` the offsets. A reserved region overlapping it is a **hole** the plan avoids,
+   and each placement region is reported with its holes as a **placement obligation**, for `M4.1` to lay out around and
    `M4.4` (F20) to verify. A region neither executable nor reserved — a device's registers — overlapping placement
    memory, or two placement regions overlapping, are two claims on the same bytes, and placement memory reserved in
-   every byte leaves nothing to place in: each `invalid-description`, bound or not, composed or not. Where a region has no
-   size and the other's bytes lie at or above its base, whether they overlap is `missing-fact`, as rule 5 reads it. A
-   placement given to an assignment that is not placement memory of the system's hardware is a conflict of that
-   assignment. A system with no placement memory is said nothing of — the hosted playground provides memory — and a
-   system's regions against a target's own map are `M4.4`'s.
+   every byte leaves nothing to place in: each `invalid-description`, bound or not, composed or not. Where placement
+   memory, or a region against it — a device's registers, placement memory, or a reserved range, whose extent is the
+   hole the plan avoids — has no size and the other's bytes lie at or above its base, whether they overlap is
+   `missing-fact`, as rule 5 reads it. A plan records a placement exactly where the system has placement memory: one
+   recording none there places the image nowhere, and one naming what is not placement memory of the system's hardware,
+   each a conflict of that assignment. A system with no placement memory is said nothing of — the hosted playground
+   provides memory — and a system's regions against a target's own map are `M4.4`'s.
 11. **Ordering** (`M3.3.5.2`; `SR-H13`). A required ordering — `(ordering (before …) (after …))` — is `unsupported-profile`
    under `rt-static-up-v1`: `ordering` has no entry in `/1`, and a constraint on an undeclared fact is that (§7, record
    §1.1). Its entry and domain wait for the profile that admits `dma`, whose exclusion names ordering among its
@@ -336,14 +342,14 @@ configuration checker judges a plan's bindings again by those that refuse an ass
    function are to one provider: a service reading time reads one counter. Where an assignment binds them to several,
    each of those requirements is judged at each of those providers: if one provider meets them all, the split is that
    assignment's conflict, another binding them whole; if none meets them all and one refutes none — leaving facts
-   undescribed or unknown — it is an unknown naming that provider and those facts, since describing them makes it whole
-   (`SR-H18`'s `missing-fact`; past the arithmetic, `unsupported-profile`); otherwise a conflict naming each provider
-   and what it is bound for. So one requester has at most one provider per function, and a description wanting two
-   counters writes two requesters. The rule is per requester, so it needs no system, and never spans requesters: a
-   task's group head beside its system's own sub-fact, two requesters, is `SR-H17`'s, `M3.4`'s. A **qualifier**,
-   `(function each)`, describes every function its requirer relies on: each requirement on one is judged at every
-   provider bound for the requester's functions and for those of each requester it reaches through `uses` and `needs`
-   — refused or absent a conflict, unknown or undescribed an unknown — and makes no binding of its own; a requester
-   relying on no function bound binds it as any requirement. `reachable-at-privilege` is the qualifier rule 9 judges
-   against the level the system is given, and this rule never repeats it. An adapter offering a function's facts is
-   one provider for this rule (`M3.2`).
+   undescribed or unknown — it is an unknown naming each such provider and the facts it leaves, since describing them
+   makes it whole (`SR-H18`'s `missing-fact`; past the arithmetic, `unsupported-profile`); otherwise a conflict naming
+   each provider and what it is bound for. So one requester has at most one provider per function, and a description
+   wanting two counters writes two requesters. The rule is per requester, so it needs no system, and never spans
+   requesters: a task's group head beside its system's own sub-fact, two requesters, is `SR-H17`'s, `M3.4`'s. A
+   **qualifier**, `(function each)`, describes every function its requirer relies on: each requirement on one is judged
+   at every provider bound for the requester's functions and for those of each requester it reaches through `uses` and
+   `needs` — refused or absent a conflict, unknown or undescribed an unknown — and makes no binding of its own; a
+   requester relying on no function bound binds it as any requirement. `reachable-at-privilege` is the qualifier rule 9
+   judges against the level the system is given, and this rule never repeats it. An adapter offering a function's facts
+   is one provider for this rule (`M3.2`).
