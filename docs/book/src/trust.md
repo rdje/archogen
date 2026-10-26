@@ -82,7 +82,10 @@ is built from the commit before it, so it must know a form before any commit wri
   either order, and a reason. The first two are the relation's comparisons in `crates/eadl-resolve` (leaf
   `M3.5.3.1`): `production`, the production relation against the checker's executable model, and `vocabulary`, the
   typed table against the checker's own, entry by entry. Building them compiles `eadl-resolve`'s library, whose two
-  `include_str!` sites, the shipped kind `deffact` and vocabulary `/1`, are each admitted by a `defadmit`;
+  `include_str!` sites, the shipped kind `deffact` and vocabulary `/1`, are each admitted by a `defadmit`. The third,
+  `system-reading` (leaf `M3.5.5.7.2`), compares two readings written apart rather than a transcription: the search's
+  reading of a system against the one the configuration checker's joint check judges with, which a context that
+  never read the search's wrote;
 - on the front's form alone — the one root of role `generator`, an executable — `(invokes <root> …)`, the other
   executable roots it runs, each once, and `(installed "archogen-install.json")`, together, written by no commit yet
   (`M3.5.1.4`).

@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the generator and the checker read every system alike
+
+`ARCHOGEN-M3-0984` (leaf `M3.5.5.7.2`), `2026-10-26`.
+
+- A new test holds the generator's reading of a system — its hardware, what it reaches, whom it serves — equal to the
+  configuration checker's, which was written apart, over every tracked system and thousands of generated ones; the
+  trust gate lists the test as a reading the two roles share.
+
 ## archogen — the configuration checker's reading of a system can be compared
 
 `ARCHOGEN-M3-0983` (leaf `M3.5.5.7.1`), `2026-10-26`.

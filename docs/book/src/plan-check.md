@@ -178,7 +178,10 @@ the record, or both — for check 4, also at what the provider states. The langu
 ## Today and ahead
 
 The checks above run as a library, and as the `archogen-plan-check` program; each code's input runs through the
-program. Check 5's rules were written, like the rest, by a context that never read the search's own version of them; a
-comparison of the two readings comes after. The program is the configuration checker's root in the trust gate. Still
+program. Check 5's rules were written, like the rest, by a context that never read the search's own version of them.
+Where the two meet, a test compares them: `crates/eadl-resolve/tests/system_reading.rs` holds the search's reading of
+a system — its hardware, what it reaches, whom it serves — equal to check 5's over every tracked system and over
+thousands of generated ones, which name each other at every position a description can; the trust gate lists it as a
+derivation the two roles share (leaf `M3.5.5.7.2`). The program is the configuration checker's root in the trust gate. Still
 to come: `archogen plan-check` and `archogen resolve` running that program from the front. The search that writes the
 record is `M3.4`'s.
