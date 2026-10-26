@@ -293,7 +293,7 @@ pub(crate) fn at(sources: &SourceMap, span: Span, message: &str) -> Label {
 }
 
 /// The record's span for a finding: the clause `head` opens, where it reads, else the record's first line.
-fn label(name: &str, text: &str, head: &str) -> Label {
+pub(crate) fn label(name: &str, text: &str, head: &str) -> Label {
     let mut sources = SourceMap::new();
     let position = sources.add(name, text).ok().and_then(|id| {
         let (document, _) = eadl_front::read(&sources, id);

@@ -298,3 +298,210 @@ fn rule_2_a_consumed_fact_takes_a_channel_when_met_by_true_and_never_by_false() 
         Ok(())
     );
 }
+
+/// A console and a debug probe, each with registers; `probe` is the probe's region's sub-forms, `uart_uses` what the
+/// console's block composes, `used` the services the task uses, `ram` the platform's other offers.
+fn devices(probe: &str, uart_uses: &str, used: &str, ram: &str) -> String {
+    format!(
+        "(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)
+  (region uart.regs (base 0x1000_0000) (size 256 byte))){uart_uses})
+(defblock debug.probe (offers (debug-port true) (reachable-at-privilege machine) (region probe.regs {probe})))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine){ram}) (requires (uses console.uart debug.probe)))
+(defservice console.write (requires (needs observable-output)))
+(defservice debug.write (requires (needs debug-port)))
+(defsystem s
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses {used}))
+  (platform (uses soc)))
+"
+    )
+}
+
+/// The services' bindings, those `used` names, and a placement, every check run.
+fn devices_plan(
+    declarations: &str,
+    used: &[(&str, &str, &str)],
+    placement: Option<(&str, &str)>,
+) -> Result<(), Verdict> {
+    let (sources, program) = elaborated(declarations);
+    let bindings = used
+        .iter()
+        .map(|(requester, fact, provider)| {
+            (
+                (
+                    Requester::Named((*requester).to_owned()),
+                    (*fact).to_owned(),
+                ),
+                (*provider).to_owned(),
+            )
+        })
+        .collect();
+    let record = Assignment {
+        profile: RT_STATIC_UP_V1.id.to_owned(),
+        system: "s".to_owned(),
+        program: program_digest(&program),
+        placement: placement.map(|(p, r)| (p.to_owned(), r.to_owned())),
+        bindings,
+    };
+    plan(
+        &sources,
+        &program,
+        &RT_STATIC_UP_V1,
+        "plan.eadl",
+        &record.to_canonical(),
+    )
+}
+
+const BOTH: [(&str, &str, &str); 2] = [
+    ("console.write", "observable-output", "console.uart"),
+    ("debug.write", "debug-port", "debug.probe"),
+];
+
+#[test]
+fn rule_5_two_bound_providers_owning_the_same_bytes_conflict() {
+    let overlapping = "(base 0x1000_0080) (size 256 byte)";
+    let finding = joint_finding(
+        devices_plan(
+            &devices(overlapping, "", "console.write debug.write", ""),
+            &BOTH,
+            None,
+        )
+        .unwrap_err(),
+    );
+    assert!(
+        finding
+            .message
+            .contains("`console.uart`'s region `uart.regs`, [0x10000000, 0x10000100)")
+            && finding
+                .message
+                .contains("`debug.probe`'s region `probe.regs`")
+            && finding.message.contains("rule 5"),
+        "{finding:?}"
+    );
+    assert_eq!(finding.primary.source, "app.case.eadl");
+    // Adjacent bytes are no overlap; one composing the other through `uses` owns them together; a provider nothing is
+    // bound to owns nothing.
+    for (case, declarations, used) in [
+        (
+            "adjacent",
+            devices(
+                "(base 0x1000_0100) (size 256 byte)",
+                "",
+                "console.write debug.write",
+                "",
+            ),
+            &BOTH[..],
+        ),
+        (
+            "composed",
+            devices(
+                overlapping,
+                " (requires (uses debug.probe))",
+                "console.write debug.write",
+                "",
+            ),
+            &BOTH[..],
+        ),
+        (
+            "unbound",
+            devices(overlapping, "", "console.write", ""),
+            &BOTH[..1],
+        ),
+    ] {
+        assert_eq!(devices_plan(&declarations, used, None), Ok(()), "{case}");
+    }
+}
+
+#[test]
+fn rule_5_a_region_without_a_size_below_another_s_bytes_is_an_unknown() {
+    let finding = joint_finding(
+        devices_plan(
+            &devices("(base 0x0fff_ff00)", "", "console.write debug.write", ""),
+            &BOTH,
+            None,
+        )
+        .unwrap_err(),
+    );
+    assert!(
+        finding
+            .message
+            .contains("`debug.probe`'s region `probe.regs` states no size")
+            && finding.message.contains("unknown"),
+        "{finding:?}"
+    );
+}
+
+#[test]
+fn rule_10_the_record_places_the_image_exactly_in_placement_memory_of_the_system_s_hardware() {
+    let ram = " (region ram (base 0x8000_0000) (size 128 MiB) (executable true))";
+    let with_ram = devices(
+        "(base 0x1000_0100) (size 256 byte)",
+        "",
+        "console.write",
+        ram,
+    );
+    let console = &BOTH[..1];
+    assert_eq!(
+        devices_plan(&with_ram, console, Some(("soc", "ram"))),
+        Ok(())
+    );
+    for (case, declarations, placement, said) in [
+        (
+            "placed nowhere",
+            with_ram.clone(),
+            None,
+            "places its image nowhere",
+        ),
+        (
+            "placed in a device's registers",
+            with_ram.clone(),
+            Some(("console.uart", "uart.regs")),
+            "no placement memory",
+        ),
+        (
+            "placed where the system has no placement memory",
+            devices(
+                "(base 0x1000_0100) (size 256 byte)",
+                "",
+                "console.write",
+                "",
+            ),
+            Some(("soc", "ram")),
+            "no placement memory",
+        ),
+    ] {
+        let finding = joint_finding(devices_plan(&declarations, console, placement).unwrap_err());
+        assert!(
+            finding.message.contains(said) && finding.message.contains("rule 10"),
+            "{case}: {finding:?}"
+        );
+        assert_eq!(finding.primary.source, "plan.eadl", "{case}");
+    }
+}
+
+#[test]
+fn rule_5_placement_memory_is_owned_by_none() {
+    // A boot ROM reserved inside the platform's memory, both bound, neither composing the other: the memory is
+    // placement memory, rule 10's, and the ROM a hole in it — no two providers own the same bytes.
+    let declarations = "(defblock boot.rom (offers (debug-port true) (reachable-at-privilege machine)
+  (region rom (base 0x8000_0000) (size 4 KiB) (reserved true))))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)
+  (region ram (base 0x8000_0000) (size 128 MiB) (executable true))))
+(defservice cpu.info (requires (needs core-count)))
+(defservice debug.write (requires (needs debug-port)))
+(defsystem s
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses cpu.info debug.write))
+  (requires (uses boot.rom))
+  (platform (uses soc)))
+";
+    assert_eq!(
+        devices_plan(
+            declarations,
+            &[
+                ("cpu.info", "core-count", "soc"),
+                ("debug.write", "debug-port", "boot.rom")
+            ],
+            Some(("soc", "ram"))
+        ),
+        Ok(())
+    );
+}

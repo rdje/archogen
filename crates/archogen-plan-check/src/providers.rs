@@ -20,19 +20,19 @@ use crate::requesters::{declarations, hardware};
 /// A region a provider offers, read whole (rule 5): its bytes `[base, base + size)`, or at least its base byte where
 /// it states no size.
 #[derive(Debug, Clone)]
-struct Region {
-    provider: String,
-    name: String,
-    base: i128,
-    size: Option<i128>,
-    executable: bool,
-    reserved: bool,
-    span: Span,
+pub(crate) struct Region {
+    pub(crate) provider: String,
+    pub(crate) name: String,
+    pub(crate) base: i128,
+    pub(crate) size: Option<i128>,
+    pub(crate) executable: bool,
+    pub(crate) reserved: bool,
+    pub(crate) span: Span,
 }
 
 impl Region {
     /// Rule 10's placement memory: executable and not reserved.
-    const fn placement(&self) -> bool {
+    pub(crate) const fn placement(&self) -> bool {
         self.executable && !self.reserved
     }
 
@@ -42,7 +42,7 @@ impl Region {
     }
 
     /// The bytes it is known to own: all of them, or its base byte alone.
-    fn known_end(&self) -> i128 {
+    pub(crate) fn known_end(&self) -> i128 {
         self.base + self.size.unwrap_or(1)
     }
 }
@@ -50,13 +50,13 @@ impl Region {
 /// Whether two regions' bytes meet: surely, surely not, or undecided where one states no size and the other's bytes
 /// lie at or above its base (rule 5).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Overlap {
+pub(crate) enum Overlap {
     Yes,
     No,
     Undecided,
 }
 
-fn overlap(a: &Region, b: &Region) -> Overlap {
+pub(crate) fn overlap(a: &Region, b: &Region) -> Overlap {
     if a.base < b.known_end() && b.base < a.known_end() {
         return Overlap::Yes;
     }
@@ -181,6 +181,11 @@ fn channels(provider: &str, form: &Form, refused: &mut Vec<Refused>) {
             repair: "offer `(channels N)`, N at least 1, or offer the function `false`",
         });
     }
+}
+
+/// Every region `provider` offers that reads whole (rule 5), each other dropped: check (2) has refused it.
+pub(crate) fn regions(provider: &str, form: &Form) -> Vec<Region> {
+    read_regions(provider, form, &mut Vec::new())
 }
 
 /// Rule 5: every region a provider offers, those read whole returned; every other refused.

@@ -27,7 +27,7 @@ one.
 > requirement that binds is bound once, each binding is a requirement's, of a requester the system serves, to a
 > declared block or platform; (4) each binding is satisfied by the model's judgement — the reference model of
 > `docs/semantics/model.md` §7, never the generator's code; (5) the bindings hold together by §8's joint rules, today
-> rule 7's hardware and rules 2–4's channels. A corrupted plan is `tool-failure`. The library is `crates/archogen-plan-check`; the rest of the
+> rule 7's hardware, rules 2–4's channels, rule 5's ownership and rule 10's placement. A corrupted plan is `tool-failure`. The library is `crates/archogen-plan-check`; the rest of the
 > joint rules and the executable `archogen-plan-check` are still to come.
 
 ## How it works
@@ -67,7 +67,7 @@ system's name, `(task heartbeat beat)`, so no declaration can be mistaken for a 
    rules were written from. A counter of 16 bits does not serve a need for at least 32, and a part that does not
    describe a fact does not serve a need for it.
 5. **The bindings hold together.** Some mistakes only show when the bindings are read side by side. Today the checker
-   asks two such questions. First, is every provider part of the system's own **hardware** — the platform its
+   asks four such questions. First, is every provider part of the system's own **hardware** — the platform its
    `platform` clause names, the blocks and platforms the system and its tasks name, and everything those compose? A
    serial port on the board that the system's platform never composes serves nobody, however well it would match.
    Only blocks and platforms compose: a service that names a block does not bring it into the system, and a platform
@@ -75,7 +75,10 @@ system's name, `(task heartbeat beat)`, so no declaration can be mistaken for a 
    **channels**? A need that programs a timer — a delay, a deadline — takes one of its channels, while a need that only
    reads it takes none. A timer with two channels serves two such needs, not three; a service several tasks share
    counts once, since it programs the timer for all of them; and where a timer does not say how many channels it has,
-   two needs on it cannot be known to fit.
+   two needs on it cannot be known to fit. Third, does any address belong to two parts at once? Two parts the plan uses
+   whose registers share an address would fight over it — unless one is built from the other, in which case they are
+   one part. Memory for the program belongs to no part, and a part the plan does not use claims nothing. Fourth, does
+   the plan say where the program goes, and is that memory the program can run from, on the system's own hardware?
 
 The checker re-reads the needs every time. Changing a requirement and recomputing the fingerprint by hand does not get
 an old plan through: check 4 judges the new requirement and refuses.
@@ -117,7 +120,7 @@ Each check reports under a code of its own. The codes are stated, with what fire
 | `plan-description` | 2 | the checker's own rules refuse a description the language's passes accept |
 | `plan-binding` | 3 | a need left unbound, a binding of no need or of a requester the system does not serve, a provider not declared |
 | `plan-unsatisfied` | 4 | a binding the reference model does not satisfy |
-| `plan-joint` | 5 | the bindings do not hold together: a provider outside the system's hardware, more needs taking a channel than a provider has, or two where its channels are unknown |
+| `plan-joint` | 5 | the bindings do not hold together: a provider outside the system's hardware, more needs taking a channel than a provider has or two where its channels are unknown, two bound parts owning one address, or the image placed nowhere or outside placement memory |
 
 Each finding names the requester and the fact, and points at the requirement in the description, the binding's line in
 the record, or both — for check 4, also at what the provider states. The language's own diagnostics keep their codes.
@@ -138,6 +141,6 @@ the record, or both — for check 4, also at what the provider states. The langu
 ## Today and ahead
 
 The checks above run as a library, and each code's input runs through it. Still to come: the rest of check 5's joint
-rules — ownership, privilege, placement and one provider per function — written, like the first, by a context
+rules — privilege and one provider per function — written, like the first, by a context
 that never reads the search's own version of them; and the `archogen-plan-check` program itself, which `archogen
 plan-check` and `archogen resolve` will run. The search that writes the record is `M3.4`'s.

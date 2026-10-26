@@ -11,8 +11,13 @@
 //! `true` — `(needs f)`, `(f true)` or the group whose head it is. The requesters taking a channel at one provider,
 //! each counted once — a service several users reach is one requester — number at most its `channels`: more is a
 //! conflict, and two or more where `channels` is undescribed or offered without a value an unknown. One needs no count.
+//!
+//! Rule 5 (`M3.5.5.3`): two distinct providers both bound whose regions share bytes are a conflict, unless one composes
+//! the other through `uses`, at any depth; a region without a size, another's bytes above its base, an unknown.
+//! Placement memory is owned by none, and a provider nothing is bound to owns nothing. Rule 10's assignment half: the
+//! record places the image exactly where the system's hardware has placement memory, and in a region of it.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use archogen_outcome::record::Label;
 use archogen_outcome::Status;
@@ -20,11 +25,12 @@ use eadl_front::{Form, Program, SourceMap};
 
 use crate::assignment::{Assignment, Requester};
 use crate::bindings::{fact_of, finding, place, places, who};
-use crate::check::{at, Verdict, PLAN_JOINT};
+use crate::check::{at, label, Verdict, PLAN_JOINT};
 use crate::model::provider::{self, Stated};
 use crate::model::requirement::Requirement;
 use crate::model::value::Value;
 use crate::model::vocab;
+use crate::providers::{overlap, regions, Overlap, Region};
 use crate::requesters::{declarations, hardware, served, Served};
 
 /// Check (5) of `assignment`, which checks (1)–(4) accepted, over the elaborated `program`, `sources` its files; `name`
@@ -116,6 +122,16 @@ pub(crate) fn check(
         let primary = secondary.remove(0);
         found.push(finding(PLAN_JOINT, message, primary, secondary, repair));
     }
+    ownership(sources, program, &declarations, assignment, &mut found);
+    placement(
+        sources,
+        name,
+        text,
+        &declarations,
+        &hardware,
+        assignment,
+        &mut found,
+    );
     if found.is_empty() {
         Ok(())
     } else {
@@ -180,4 +196,188 @@ fn channels_written(form: &Form) -> impl Iterator<Item = &Form> {
         .filter(|clause| matches!(clause.head(), Some("offers" | "absent")))
         .flat_map(|clause| clause.items().iter().skip(1))
         .filter(|item| item.as_symbol().or_else(|| item.head()) == Some("channels"))
+}
+
+/// A region's bytes, as a finding writes them.
+fn bytes(region: &Region) -> String {
+    match region.size {
+        Some(_) => format!("[{:#x}, {:#x})", region.base, region.known_end()),
+        None => format!("from {:#x}, its size unstated", region.base),
+    }
+}
+
+/// Rule 5 over the providers bound in the assignment: the regions two of them own sharing bytes, unless one composes the
+/// other.
+fn ownership(
+    sources: &SourceMap,
+    program: &Program,
+    declarations: &BTreeMap<String, (usize, &Form)>,
+    assignment: &Assignment,
+    found: &mut Vec<archogen_outcome::record::Finding>,
+) {
+    let bound: BTreeSet<&str> = assignment
+        .bindings
+        .values()
+        .map(String::as_str)
+        .filter(|p| declarations.contains_key(*p))
+        .collect();
+    // What each owns: placement memory is rule 10's, owned by none.
+    let owned: Vec<(&str, Vec<Region>)> = bound
+        .iter()
+        .map(|p| {
+            let regions = regions(p, declarations[*p].1)
+                .into_iter()
+                .filter(|r| !r.placement())
+                .collect();
+            (*p, regions)
+        })
+        .collect();
+    for (i, (p, mine)) in owned.iter().enumerate() {
+        for (q, theirs) in &owned[i + 1..] {
+            if composes(program, declarations, p, q) || composes(program, declarations, q, p) {
+                continue;
+            }
+            for a in mine {
+                for b in theirs {
+                    let (message, repair) = match overlap(a, b) {
+                        Overlap::No => continue,
+                        Overlap::Yes => (
+                            format!(
+                                "`{p}`'s region `{}`, {}, and `{q}`'s region `{}`, {}, share bytes, and both are bound \
+                                 while neither composes the other: two providers owning the same bytes is a conflict \
+                                 (rule 5)",
+                                a.name,
+                                bytes(a),
+                                b.name,
+                                bytes(b)
+                            ),
+                            "resolve again with another provider; where one is part of the other, the description \
+                             says so through `uses`",
+                        ),
+                        Overlap::Undecided => {
+                            let (sizeless, other) = if a.size.is_none() { (a, b) } else { (b, a) };
+                            (
+                                format!(
+                                    "`{}`'s region `{}` states no size, and `{}`'s region `{}`, {}, owns bytes above \
+                                     its base: whether two bound providers own the same bytes is unknown (rule 5)",
+                                    sizeless.provider,
+                                    sizeless.name,
+                                    other.provider,
+                                    other.name,
+                                    bytes(other)
+                                ),
+                                "resolve again only once the region's size is described",
+                            )
+                        }
+                    };
+                    found.push(finding(
+                        PLAN_JOINT,
+                        message,
+                        at(sources, a.span, "a region"),
+                        vec![at(sources, b.span, "the other")],
+                        repair,
+                    ));
+                }
+            }
+        }
+    }
+}
+
+/// Whether `from` composes `to` through `uses` — its own, or inside `requires` — at any depth.
+fn composes(
+    program: &Program,
+    declarations: &BTreeMap<String, (usize, &Form)>,
+    from: &str,
+    to: &str,
+) -> bool {
+    fn used<'f>(form: &'f Form, out: &mut Vec<&'f Form>) {
+        for clause in form.items().iter().skip(1) {
+            match clause.head() {
+                Some("uses") => out.extend(clause.items().iter().skip(1)),
+                Some("requires") => used(clause, out),
+                _ => {}
+            }
+        }
+    }
+    let mut seen = BTreeSet::new();
+    let mut todo = vec![from.to_owned()];
+    while let Some(next) = todo.pop() {
+        if !seen.insert(next.clone()) {
+            continue;
+        }
+        let Some(&(id, form)) = declarations.get(&next) else {
+            continue;
+        };
+        let mut operands = Vec::new();
+        used(form, &mut operands);
+        for operand in operands {
+            let Some(name) = operand.as_symbol() else {
+                continue;
+            };
+            if let Ok(Some(qualified)) = program.resolve(id, name, operand.span()) {
+                if qualified == to {
+                    return true;
+                }
+                todo.push(qualified);
+            }
+        }
+    }
+    false
+}
+
+/// Rule 10's assignment half: the record's placement present exactly where the system's hardware has placement memory,
+/// and naming a region of it.
+fn placement(
+    sources: &SourceMap,
+    name: &str,
+    text: &str,
+    declarations: &BTreeMap<String, (usize, &Form)>,
+    hardware: &BTreeSet<String>,
+    assignment: &Assignment,
+    found: &mut Vec<archogen_outcome::record::Finding>,
+) {
+    let memory: Vec<Region> = hardware
+        .iter()
+        .filter_map(|p| declarations.get(p).map(|(_, form)| regions(p, form)))
+        .flatten()
+        .filter(Region::placement)
+        .collect();
+    let system = &assignment.system;
+    let beside = |memory: &[Region]| {
+        memory
+            .iter()
+            .map(|r| at(sources, r.span, "placement memory"))
+            .collect::<Vec<_>>()
+    };
+    match &assignment.placement {
+        None if !memory.is_empty() => found.push(finding(
+            PLAN_JOINT,
+            format!(
+                "the system `{system}`'s hardware has placement memory, `{}`'s `{}`, and the plan places its image \
+                 nowhere (rule 10)",
+                memory[0].provider, memory[0].name
+            ),
+            label(name, text, "system"),
+            beside(&memory),
+            "resolve again: a plan for a system with placement memory chooses a region of it",
+        )),
+        Some((provider, region))
+            if !memory
+                .iter()
+                .any(|m| m.provider == *provider && m.name == *region) =>
+        {
+            found.push(finding(
+                PLAN_JOINT,
+                format!(
+                    "the plan places the image in `{provider}`'s region `{region}`, which is no placement memory of \
+                     the system `{system}`'s hardware — executable, unreserved, of a block or platform it uses \
+                     (rule 10)"
+                ),
+                label(name, text, "placement"),
+                beside(&memory),
+                "resolve again: a plan places the image in placement memory of its system's own hardware",
+            ));
+        }
+        _ => {}
+    }
 }

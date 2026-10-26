@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the configuration checker guards addresses and where the program goes
+
+`ARCHOGEN-M3-0963` (leaf `M3.5.5.3`), `2026-10-26`.
+
+- The configuration checker refuses a plan that uses two parts whose registers share an address, unless one is built
+  from the other, and a plan that places the program nowhere, or anywhere but memory it can run from on the system's
+  own hardware.
+
 ## archogen — the configuration checker counts a timer's channels
 
 `ARCHOGEN-M3-0962` (leaf `M3.5.5.2`), `2026-10-26`.
