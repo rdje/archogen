@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — F12's joint corruptions, and the joint check's independence found missing
+
+`ARCHOGEN-M3-0966` (leaf `M3.5.5.6`), `2026-10-26`.
+
+- Fixture F12 now corrupts a valid plan once per joint rule, and the configuration checker refuses each.
+- The joint check was meant to be written by a context that never read the generator's version of the same rules;
+  the session that wrote it had read that version four days earlier. It is to be re-written by a fresh context.
+
 ## archogen — the configuration checker uses each device whole
 
 `ARCHOGEN-M3-0965` (leaf `M3.5.5.5`), `2026-10-26`.

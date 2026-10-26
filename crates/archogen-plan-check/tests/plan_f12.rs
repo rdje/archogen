@@ -7,7 +7,8 @@ use std::collections::BTreeMap;
 use archogen_outcome::Status;
 use archogen_plan_check::assignment::{program_digest, Assignment, Requester};
 use archogen_plan_check::check::{
-    plan, Verdict, PLAN_BINDING, PLAN_DESCRIPTION, PLAN_RECORD, PLAN_STALE, PLAN_UNSATISFIED,
+    plan, Verdict, PLAN_BINDING, PLAN_DESCRIPTION, PLAN_JOINT, PLAN_RECORD, PLAN_STALE,
+    PLAN_UNSATISFIED,
 };
 use eadl_front::module::{elaborate, MemoryModules};
 use eadl_front::{Program, SourceMap};
@@ -209,4 +210,124 @@ fn a_description_the_toolchain_refuses_has_no_plan_accepted() {
             vec![PLAN_DESCRIPTION.to_owned()]
         )
     );
+}
+
+/// F12's joint corruptions: a system whose tasks each need a timer's one channel, whose time service reads a counter and
+/// whose console writes through a serial port, placed in the platform's memory; beside the parts a valid plan binds,
+/// parts that each joint rule refuses a binding to.
+const JOINT: &str = "\
+(defblock timer (offers (relative-delay true) (channels 1) (counter-width 32 bit) (tick-rate 1 MHz)
+  (counter-modulus (pow2 32)) observation-coherent (available-in-state run idle) (reachable-at-privilege machine)
+  (region timer.regs (base 0x1000_0000) (size 256 byte))))
+(defblock timer2 (offers (relative-delay true) (channels 1) (counter-width 32 bit) (tick-rate 1 MHz)
+  (counter-modulus (pow2 32)) observation-coherent (available-in-state run idle) (reachable-at-privilege machine)
+  (region timer2.regs (base 0x1000_1000) (size 256 byte))))
+(defblock quiet (offers (counter-width 32 bit) (tick-rate 1 MHz) (counter-modulus (pow2 32)) observation-coherent
+  (available-in-state idle) (reachable-at-privilege machine)))
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)
+  (region uart.regs (base 0x1000_2000) (size 256 byte))))
+(defblock ghost.uart (offers (observable-output true) (reachable-at-privilege machine)
+  (region ghost.regs (base 0x1000_0080) (size 256 byte))))
+(defblock user.uart (offers (observable-output true) (reachable-at-privilege user)))
+(defblock spare.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)
+  (region ram (base 0x8000_0000) (size 128 MiB) (executable true)))
+  (requires (uses timer timer2 quiet console.uart ghost.uart user.uart)))
+(defservice time.monotonic
+  (requires (counter-width (at-least 32 bit)) (available-in-state run) (needs tick-rate observation-coherent)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem s
+  (task beat (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1)
+    (uses time.monotonic console.write) (needs relative-delay))
+  (task tock (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (needs relative-delay))
+  (platform (uses soc)))
+";
+
+fn task(name: &str) -> Requester {
+    Requester::Task {
+        system: "s".to_owned(),
+        task: name.to_owned(),
+    }
+}
+
+/// The plan a search would write for [`JOINT`].
+fn joint_plan() -> Assignment {
+    let mut bindings = BTreeMap::new();
+    for (requester, fact, provider) in [
+        (task("beat"), "relative-delay", "timer"),
+        (task("tock"), "relative-delay", "timer2"),
+        (named("time.monotonic"), "counter-width", "timer"),
+        (named("time.monotonic"), "tick-rate", "timer"),
+        (named("time.monotonic"), "observation-coherent", "timer"),
+        (named("console.write"), "observable-output", "console.uart"),
+    ] {
+        bindings.insert((requester, fact.to_owned()), provider.to_owned());
+    }
+    Assignment {
+        profile: RT_STATIC_UP_V1.id.to_owned(),
+        system: "s".to_owned(),
+        program: program_digest(&elaborated(JOINT).1),
+        placement: Some(("soc".to_owned(), "ram".to_owned())),
+        bindings,
+    }
+}
+
+#[test]
+fn the_joint_plan_a_search_writes_is_accepted() {
+    assert_eq!(checked(JOINT, &joint_plan().to_canonical()), Ok(()));
+}
+
+#[test]
+fn one_corruption_per_joint_rule_is_refused() {
+    let rebound = |requester: Requester, facts: &[&str], provider: &str| {
+        let mut plan = joint_plan();
+        for fact in facts {
+            plan.bindings
+                .insert((requester.clone(), (*fact).to_owned()), provider.to_owned());
+        }
+        plan
+    };
+    let console = || named("console.write");
+    let clock = || named("time.monotonic");
+    let mut unplaced = joint_plan();
+    unplaced.placement = None;
+    for (rule, plan) in [
+        (
+            "rule 7",
+            rebound(console(), &["observable-output"], "spare.uart"),
+        ),
+        (
+            "rule 3",
+            rebound(task("tock"), &["relative-delay"], "timer"),
+        ),
+        (
+            "rule 5",
+            rebound(console(), &["observable-output"], "ghost.uart"),
+        ),
+        (
+            "rule 9",
+            rebound(console(), &["observable-output"], "user.uart"),
+        ),
+        ("rule 10", unplaced),
+        ("rule 13", rebound(clock(), &["tick-rate"], "timer2")),
+        (
+            "rule 13",
+            rebound(
+                clock(),
+                &["counter-width", "tick-rate", "observation-coherent"],
+                "quiet",
+            ),
+        ),
+    ] {
+        let verdict = checked(JOINT, &plan.to_canonical()).unwrap_err();
+        assert_eq!(verdict.status, Status::ToolFailure, "{rule}: {verdict:?}");
+        assert!(
+            verdict.findings.iter().all(|f| f.code == PLAN_JOINT)
+                && verdict
+                    .findings
+                    .iter()
+                    .any(|f| f.message.contains(&format!("({rule})"))),
+            "{rule}: {verdict:?}"
+        );
+    }
 }

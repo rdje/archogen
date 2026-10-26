@@ -241,7 +241,9 @@ The relation judges one binding at a time (§7). An **assignment** binds each re
 the relation satisfies it at, and these rules judge the bindings together (`crates/eadl-resolve/src/joint.rs`). Their
 design is `M3.3`'s in `docs/tasks/M3.md`, and connectivity's and routes' `M3.3.3`'s, each reviewed once by a context that
 did not write it, as are privilege's, placement's, the initialization graph's and the functions', `M3.3.4`'s to
-`M3.3.7`'s. `archogen check` does not call them yet: `M3.4` searches for an assignment and wires both in.
+`M3.3.7`'s. `archogen check` does not call them yet: `M3.4` searches for an assignment and wires both in. The
+configuration checker judges a plan's bindings again by those that refuse an assignment — rules 1 to 5, 7, 9, 10 and
+13 — as its check (5), written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.5.5`).
 
 1. **Requesters.** A requester is a task, for what the task itself writes; a service; or any other declaration, for
    what it writes at its own level outside its tasks. Two tasks of one system are two requesters, though §7 reads them
@@ -281,7 +283,7 @@ did not write it, as are privilege's, placement's, the initialization graph's an
    `refines` is no edge: a refinement keeps the abstract platform's obligations (§3), not its blocks. A requester the
    system serves — its own level, one of its tasks, or a declaration its closure reaches through `uses` and `needs` —
    bound to a block or platform outside that hardware is a conflict naming the requester, the provider and the system:
-   `SR-H15`'s "a provider on a platform the system does not use never satisfying", in the checker's form. What the
+   `SR-H15`'s "a provider on a platform the system does not use never satisfying", the joint check's. What the
    description's code then is, is `SR-H18`'s, `M3.4`'s to decide. An adapter or a catalog record is composed by no
    platform, and takes the system of the requesters bound to it (`M3.2`, `M3.7`).
 8. **Routes** (`M3.3.3`). Under one active core, an assignment reports a **route obligation** for each provider its
