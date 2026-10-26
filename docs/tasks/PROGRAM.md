@@ -791,7 +791,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0959 (leaf PROGRAM.112)`
 
 - ID: `PROGRAM.113`
-  Status: `pending` — filed `2026-10-26` from the CI run on `d5123578`
+  Status: `active` — filed `2026-10-26` from the CI run on `d5123578`
   Goal: `scripts/check_task_history.sh`'s self-test arm "a SIGALRM just after the tree's rename" holds on every run of
     the Linux runner, or the reason it cannot is stated and the arm says so.
   Reproduce / issue: the `doctrines` workflow's run `40323084588`, attempt 1, on `ubuntu-latest`: the arm `rc 142, not
@@ -802,8 +802,24 @@ mdBook that is the director's window into the project.
   Direction: tools first — a Linux reproduction (a container or the runner) running the arm in a loop under load,
     recording the process's threads and signal masks (`/proc/self/status`'s `SigBlk`) at the rename; then the mask, the
     arm or the record fixed by what it shows. Not patched blind.
+  Since (`2026-10-26`): the runs on `e089751f` (`40326236217`) and `a809a826` (`40327569374`) failed four and five of
+    the signal arms after the tree's rename — `HUP`, `QUIT`, `USR1`, `USR2`, `ALRM`, never `INT` or `TERM` — each with
+    its expected exit code, so the failures are steady on the runner, not one run's. The self-test runner keeps only
+    `^SELF-TEST` lines, so the arms' evidence never reached the log: the arm's failure line now carries it — whether the
+    seal said it sealed, whether `Q.1.md` exists, the seal's last words and the gate's verdict in the proof — as the
+    tool the next run reads (`ARCHOGEN-PROGRAM-0976`).
   Verification: `pending`
   Commit: `pending`
+
+- ID: `PROGRAM.113.1`
+  Status: `done` — the signal arms' failure line carries the seal's evidence, the one line the runner keeps
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the self-test runner keeps a failing gate's `^SELF-TEST` lines alone, and the arm printed its evidence on the lines after, so the runner's log said only that the arms failed; WHERE, `git show a809a826:scripts/run_self_tests.sh`, its line 110, `grep -E '^SELF-TEST|self-test' | head -8`.
+    - [x] FIX — the arm's failure line names whether the seal said it sealed, whether `Q.1.md` exists, the seal's last words and the gate's verdict in the proof.
+    - [x] ADDRESSED — the `SIGALRM` arm forced to fail, its wanted code set to `1` and restored after: its line read `sealed line yes, Q.1.md yes; output: …; gate: task-history: OK …`; `bash scripts/check_task_history.sh --self-test`: `171 pass / 0 fail (171 arms)`.
+    - [x] NO REGRESSION — `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 337 s; the gate's behaviour unchanged, the arm's message alone longer.
+    - [x] LOCKSTEP — the arm and `PROGRAM.113`'s record.
+  Commit: `ARCHOGEN-PROGRAM-0976 (leaf PROGRAM.113.1)`
 
 ## Roadmap coverage map
 
@@ -1015,6 +1031,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.112` | `ARCHOGEN-PROGRAM-0959 (leaf PROGRAM.112)` | **doctrine 22's record corrected**: what `make focused` runs — workspace clippy, `cargo test --all`, the sweep's premises — stays at every commit, a pin a slice moves re-pinned by it; the rest deferred to `M3.5.9` |
 | `PROGRAM.71` | `ARCHOGEN-PROGRAM-0971 (leaf PROGRAM.71)` | **the task-history index append-only in order**: leg 3 refuses committed rows that no longer stand first and in their order; an arm; `PROGRAM.72` next |
 | `PROGRAM.113` | `ARCHOGEN-PROGRAM-0974 (leaf PROGRAM.113)` | **filed**: the task-history self-test's `SIGALRM` arm failed once on the Linux runner and passed on re-run; to be reproduced on Linux before any change |
+| `PROGRAM.113.1` | `ARCHOGEN-PROGRAM-0976 (leaf PROGRAM.113.1)` | **the diagnostic**: the signal arms' failure line carries the seal's evidence, the runner's log keeping only that line; the failures now steady on CI |
 
 ## Changelog
 

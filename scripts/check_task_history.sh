@@ -1861,7 +1861,14 @@ HOOK
     if case " $want " in *" $rc "*) true ;; *) false ;; esac && printf '%s' "$out" | grep -qE '^task-history: [^ ]+ — sealed ' && proven; then
       ok=$((ok + 1)); echo "  ✅ $what waits for the seal, proven and kept, then exits $rc"
     else
-      echo "SELF-TEST: $what — rc $rc, not $want, or the seal not finished and proven:" >&2
+      # The evidence on the one line the self-test runner keeps (`^SELF-TEST`), so a failure on a runner names its own
+      # cause (PROGRAM.113): whether the seal said it sealed, whether the file it seals exists, its last words, and what
+      # the gate said in the proof.
+      local said=no kept=no proof
+      printf '%s' "$out" | grep -qE '^task-history: [^ ]+ — sealed ' && said=yes
+      [ -f "$work/docs/task-history/Q/Q.1.md" ] && kept=yes
+      proof="$(cd "$work" && bash "$SELF" 2>&1 | tail -2 | tr '\n' ' ')"
+      echo "SELF-TEST: $what — rc $rc, not $want, or the seal not finished and proven: sealed line $said, Q.1.md $kept; output: $(printf '%s' "$out" | tail -3 | tr '\n' ' ' | cut -c1-400); gate: $(printf '%s' "$proof" | cut -c1-400)" >&2
       printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2
     fi
     restore
