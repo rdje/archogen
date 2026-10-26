@@ -134,10 +134,10 @@
   (kind package)
   (item "crates/archogen-digest")
   (digest "configuration=7144d5cdd5ab7db061b6cc6304dce72ea129ea21928d7c4f2a4d216eb1a3d5a8" "content=5e1a95cecebb21562bbf67545c6c12888d5769728301a1b711c848d02312f6c7" "edges=9c8508e3309d4fcc35a7adb77368c4f057b8bb643b4e8d24e9edd190e04cf280" "manifest=964d9b5b0098be0e7111b4d1884010cb614b0233ffc7c353949d64e235b3e373" "readers=5b9bb7ccc703d84ba43460043d5b5a7033bd063664b89e8ab562bef351cd2f4e")
-  (classification unstated)
-  (property "unstated")
-  (risk "unstated")
-  (controls "unstated"))
+  (classification infrastructure)
+  (property "timing (ROADMAP.md §7.1)")
+  (risk "a wrong digest in every role's records")
+  (controls "three oracles independent of it: derived constants, published examples, the system tool's boundaries"))
 
 (defshared "implementation+configuration-checker build-configuration"
   (pair "implementation" "configuration-checker")

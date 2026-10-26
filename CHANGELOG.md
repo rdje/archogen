@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the shared digest package classified for timing
+
+`ARCHOGEN-M3-0987` (leaf `M3.5.1.8`), `2026-10-26`.
+
+- The trust gate's form for the digest package the generator and the scheduling checker both build now states what
+  it is, what it can affect and what independently checks it, ready for review.
+
 ## archogen — the configuration checker follows the settled joint rules
 
 `ARCHOGEN-M3-0986` (leaf `M3.5.5.7.5`), `2026-10-26`.
