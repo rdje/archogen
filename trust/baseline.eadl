@@ -5,6 +5,94 @@
 
 (defbaseline (host "x86_64-unknown-linux-gnu"))
 
+(defshared "differential+configuration-checker build-configuration"
+  (pair "differential" "configuration-checker")
+  (kind build-configuration)
+  (digest "content=ea753dea2cfd216c3a3f44e2f6be9a3889ec767adf7f7e1d9fccd83caa5ed67d")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "generator+configuration-checker build-configuration"
+  (pair "generator" "configuration-checker")
+  (kind build-configuration)
+  (digest "content=ea753dea2cfd216c3a3f44e2f6be9a3889ec767adf7f7e1d9fccd83caa5ed67d")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "generator+configuration-checker file docs/semantics/kinds/core.eadl"
+  (pair "generator" "configuration-checker")
+  (kind file)
+  (item "docs/semantics/kinds/core.eadl")
+  (digest "sha256=bc17c3609fa91950a88fa3401d3188a4b6cb4a250866248c390cf468135c761c")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "generator+configuration-checker file docs/semantics/kinds/os-rt.eadl"
+  (pair "generator" "configuration-checker")
+  (kind file)
+  (item "docs/semantics/kinds/os-rt.eadl")
+  (digest "sha256=ee11a9daec2bd4b344094e268ee95d00f4673f18612a45f8bec81ce53861ec5c")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "generator+configuration-checker package crates/archogen-digest"
+  (pair "generator" "configuration-checker")
+  (kind package)
+  (item "crates/archogen-digest")
+  (digest "configuration=355c186c4262ee697b476125b3e7be3350173da9e45befaa85bef2d7b8fd8e5f" "content=5e1a95cecebb21562bbf67545c6c12888d5769728301a1b711c848d02312f6c7" "edges=0378cab4154850ebd2c6866d16b5e2ccb4bdce4d1eeb2314b77da9ea06d01388" "manifest=964d9b5b0098be0e7111b4d1884010cb614b0233ffc7c353949d64e235b3e373" "readers=3d02d9c8765238b4c9fc9115a67c50bb8b4b32aadc7bd49fd5e2c750ab5716b9")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "generator+configuration-checker package crates/archogen-json"
+  (pair "generator" "configuration-checker")
+  (kind package)
+  (item "crates/archogen-json")
+  (digest "configuration=cc2a8174c0f149ac4c9f686659c4cec03c489f8f0e4eed52661679ec91430839" "content=c474ddce7169a2f2aa032692288f3088284a12b195f76eb836947ceb4e844ded" "edges=3a359b0d4906bf5bb3fd5f7f4710521cb6c567eb96d5e0b6ee0d638ecde51f47" "manifest=655074bf40ea409f63bfd6f3608ccc754182ae46e0e8ebd5d8b6cab8934bf623" "readers=e88a61fc36fc26e1fcd2ed7744725298b9651fb947b4877a3c32d0f38271b9df")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "generator+configuration-checker package crates/archogen-outcome"
+  (pair "generator" "configuration-checker")
+  (kind package)
+  (item "crates/archogen-outcome")
+  (digest "configuration=7e4ba8bca29674895bf47730e23bd223786e7d45696b9ee74737c6893c17a30a" "content=0165af52e9937c6ccdeb4f02b3cf17de952eabb9edb24b056b63230d2a23648d" "edges=020b7224d343e86e4879dda2b6bd79a8ebe8cb746d0d6dd2fefc3de04ba050bc" "manifest=da1a6e6a76702fcfd9756decd231c7b7f901b052964c2120f1f371791d4adcbd" "readers=4cb8da678ccb71d1afaf6e63e283201c0b64f5669b902428272ae0db72f96f01")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "generator+configuration-checker package crates/eadl-front"
+  (pair "generator" "configuration-checker")
+  (kind package)
+  (item "crates/eadl-front")
+  (digest "configuration=cb513e4038ae0372d99440f8befc641f66c43cd31f11f58a9385e9c4e8e45fd9" "content=fafd9106ebbe9f31f90df97e43dabf35f448b5983c473b2588a3f73c0c2ad20a" "edges=78c20d97935226a836700a11a9448fe6fc383623668e50f4e3623531107b1c23" "manifest=7eb7db0e9ce528e5bdaa03a5cc499aca35fa338066fd566e69a0b75fa8b32dfc" "readers=2ae1641982924b4fb816ce08f1eb722038759808f331b0ff71f3372afdf0835f")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "generator+configuration-checker package crates/eadl-model"
+  (pair "generator" "configuration-checker")
+  (kind package)
+  (item "crates/eadl-model")
+  (digest "configuration=0e9b2dbdf92f0d6d422ce5de743a5c07943c2ef34f37e49d8d0953c4c567af27" "content=1c7e7ac3ba864521d2508ee9e8fdf13bd5958716c1585f234500606ad9e4966a" "edges=1b98b3e4c3923ceea9e0fc28504f8530455f6283f88eb07a36b72d3fe6f01cd3" "manifest=13df6af767589dd13dc2ba97b9a7abec83c5e9a72dde0ebcbb5779ae9c41f579" "readers=33d892aa75ab7649f25ce081c0998f4bd5cc832ad0a8014a7b25e35cd5615b83")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
 (defshared "generator+differential build-configuration"
   (pair "generator" "differential")
   (kind build-configuration)
@@ -41,6 +129,34 @@
   (risk "unstated")
   (controls "unstated"))
 
+(defshared "generator+scheduling-checker package crates/archogen-digest"
+  (pair "generator" "scheduling-checker")
+  (kind package)
+  (item "crates/archogen-digest")
+  (digest "configuration=355c186c4262ee697b476125b3e7be3350173da9e45befaa85bef2d7b8fd8e5f" "content=5e1a95cecebb21562bbf67545c6c12888d5769728301a1b711c848d02312f6c7" "edges=9c8508e3309d4fcc35a7adb77368c4f057b8bb643b4e8d24e9edd190e04cf280" "manifest=964d9b5b0098be0e7111b4d1884010cb614b0233ffc7c353949d64e235b3e373" "readers=5b9bb7ccc703d84ba43460043d5b5a7033bd063664b89e8ab562bef351cd2f4e")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "implementation+configuration-checker build-configuration"
+  (pair "implementation" "configuration-checker")
+  (kind build-configuration)
+  (digest "content=ea753dea2cfd216c3a3f44e2f6be9a3889ec767adf7f7e1d9fccd83caa5ed67d")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "reference-model+configuration-checker build-configuration"
+  (pair "reference-model" "configuration-checker")
+  (kind build-configuration)
+  (digest "content=ea753dea2cfd216c3a3f44e2f6be9a3889ec767adf7f7e1d9fccd83caa5ed67d")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
 (defshared "reference-model+implementation build-configuration"
   (pair "reference-model" "implementation")
   (kind build-configuration)
@@ -55,6 +171,25 @@
   (kind comparison-harness)
   (item "differential")
   (digest "configuration=07f16b74d8115a1101419c5ddcb3a30fbed4ac0317ca8962e15d3ddee274c5ed" "content=b615871baff9f7fc1144302ae704201c20ef9f99b17de3073d9167678afe0294" "provenance=44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "scheduling-checker+configuration-checker build-configuration"
+  (pair "scheduling-checker" "configuration-checker")
+  (kind build-configuration)
+  (digest "content=ea753dea2cfd216c3a3f44e2f6be9a3889ec767adf7f7e1d9fccd83caa5ed67d")
+  (classification unstated)
+  (property "unstated")
+  (risk "unstated")
+  (controls "unstated"))
+
+(defshared "scheduling-checker+configuration-checker package crates/archogen-digest"
+  (pair "scheduling-checker" "configuration-checker")
+  (kind package)
+  (item "crates/archogen-digest")
+  (digest "configuration=355c186c4262ee697b476125b3e7be3350173da9e45befaa85bef2d7b8fd8e5f" "content=5e1a95cecebb21562bbf67545c6c12888d5769728301a1b711c848d02312f6c7" "edges=79601966812f995412edf7fce8c7d1eec4517afc719cda5c504ddbc53083074e" "manifest=964d9b5b0098be0e7111b4d1884010cb614b0233ffc7c353949d64e235b3e373" "readers=d48335ae4f312efdd10da9b7ab6ecaab87c73ab3ad4020b80d100443e0d37233")
   (classification unstated)
   (property "unstated")
   (risk "unstated")

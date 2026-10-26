@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the trust gate's forms for what the configuration checker shares
+
+`ARCHOGEN-M3-0973` (leaf `M3.5.6.5`), `2026-10-26`.
+
+- The trust gate's first run after the push found fourteen items two programs now share — mostly what the
+  configuration checker shares with the generator — with no form; the forms it proposed on its own host are committed,
+  awaiting review, so CI judges them.
+
 ## archogen — the trust inventory writes again, every program accounted for
 
 `ARCHOGEN-M3-0972` (leaf `M3.5.8`), `2026-10-26`.
