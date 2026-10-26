@@ -149,7 +149,8 @@ the record, or both — for check 4, also at what the provider states. The langu
 - `crates/archogen-plan-check/src/joint.rs` — check 5, the joint rules, written from `docs/semantics/model.md` §8
   alone, never from the search's own version of them;
 - `crates/archogen-plan-check/tests/plan_f12.rs` — the corruptions of fixture F12, each refused under its code.
-- `crates/archogen-plan-check/tests/plan_joint.rs` — each of check 5's rules, its cases run through every check in order.
+- `crates/archogen-plan-check/tests/plan_joint_fenced.rs` — each of check 5's rules, accepted and corrupted plans run
+  through checks 1 to 4 and then check 5, written with it by the fenced context.
 
 ## Today and ahead
 

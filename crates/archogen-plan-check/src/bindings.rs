@@ -51,7 +51,7 @@ fn binds(fact: &str) -> Binds {
 }
 
 /// The fact a requirement is on: a group's head for a group.
-pub(crate) fn fact_of(requirement: &Requirement) -> &str {
+fn fact_of(requirement: &Requirement) -> &str {
     match requirement {
         Requirement::Presence(fact)
         | Requirement::Constraint { fact, .. }
@@ -61,14 +61,14 @@ pub(crate) fn fact_of(requirement: &Requirement) -> &str {
 }
 
 /// A requester as a finding names it.
-pub(crate) fn who(requester: &Requester) -> String {
+fn who(requester: &Requester) -> String {
     match requester {
         Requester::Named(name) => format!("`{name}`"),
         Requester::Task { system, task } => format!("the task `{task}` of `{system}`"),
     }
 }
 
-pub(crate) fn finding(
+fn finding(
     code: &str,
     message: String,
     primary: Label,
@@ -288,7 +288,7 @@ pub(crate) fn check(
 }
 
 /// What the description writes of a requirement, its whitespace collapsed: `(needs f)` for a fact `needs` names.
-pub(crate) fn written(sources: &SourceMap, located: &Located) -> String {
+fn written(sources: &SourceMap, located: &Located) -> String {
     if let Requirement::Presence(fact) = &located.requirement {
         return format!("(needs {fact})");
     }
@@ -302,7 +302,7 @@ pub(crate) fn written(sources: &SourceMap, located: &Located) -> String {
 }
 
 /// What the model found at the provider, said.
-pub(crate) fn outcome(verdict: Judged, provider: &str) -> String {
+fn outcome(verdict: Judged, provider: &str) -> String {
     match verdict {
         Judged::Refused => format!("what `{provider}` offers lies outside it"),
         Judged::Absent => format!("`{provider}` declares it absent"),
@@ -347,7 +347,7 @@ fn offers<'f>(provider: &'f Form, requirement: &Requirement) -> Vec<&'f Form> {
 }
 
 /// A binding's place in the record, else the record's first line.
-pub(crate) fn place(
+fn place(
     places: &BTreeMap<(Requester, String), Label>,
     name: &str,
     key: &(Requester, String),
@@ -361,7 +361,7 @@ pub(crate) fn place(
 }
 
 /// Each binding's place in the record, by its requester and fact.
-pub(crate) fn places(name: &str, text: &str) -> BTreeMap<(Requester, String), Label> {
+fn places(name: &str, text: &str) -> BTreeMap<(Requester, String), Label> {
     let mut sources = SourceMap::new();
     let Ok(id) = sources.add(name, text) else {
         return BTreeMap::new();

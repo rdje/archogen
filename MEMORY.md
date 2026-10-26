@@ -14,8 +14,7 @@
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.5`; `PROGRAM` resumes at `PROGRAM.71`.
-- **Next action:** `M3.5.5.8` (P2), check (5) re-written by a fresh fenced context (the fence broke: this session read
-  `joint.rs` on 2026-10-22); then `.7` after the push; `M3.5.3.1` and `M3.5.8` after
+- **Next action:** `M3.5.6` (P2), the configuration checker's executable; `M3.5.5.7` after the cadence push; `M3.5.3.1` and `M3.5.8` after
   the next push; full verification `M3.5.9` after `M3.5`'s features (doctrine 22).
   `.1.8` waits on the runner: the trust gate refuses the shared digest package on `main` until its form lands.
   The mutation campaign is `M7.6`'s. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
