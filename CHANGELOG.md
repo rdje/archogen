@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the configuration checker runs as its own program
+
+`ARCHOGEN-M3-0969` (leaf `M3.5.6.1`), `2026-10-26`.
+
+- `archogen-plan-check DESCRIPTION PLAN` checks a plan against its description, writes a result record naming the
+  program that ran and what it judged, and exits with the result's status — the program `archogen` will run beside
+  itself. A plain description, with no module, is read as one module of its own.
+
 ## archogen — the joint check, re-written independently
 
 `ARCHOGEN-M3-0967` (leaf `M3.5.5.8`), `2026-10-26`.

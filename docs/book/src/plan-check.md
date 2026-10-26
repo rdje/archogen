@@ -95,6 +95,24 @@ system's name, `(task heartbeat beat)`, so no declaration can be mistaken for a 
 The checker re-reads the needs every time. Changing a requirement and recomputing the fingerprint by hand does not get
 an old plan through: check 4 judges the new requirement and refuses.
 
+### Running the checker
+
+The checks run as a program of their own, `archogen-plan-check`, which an install places beside `archogen`:
+
+```text
+archogen-plan-check [--profile ID] --result PATH -- DESCRIPTION PLAN
+```
+
+It reads the description — a module, whose imports it finds in the module's directory, or a plain description — and
+the plan; runs every check in order; writes its **result record**, `archogen-result/1`, to `PATH`; and exits with the
+result's status code. The record names the program that ran, by its name and the fingerprint of its own file, and what
+it judged: the fingerprint of the program the description became and of the plan. So whoever started it — `archogen`,
+a script, a CI job — accepts a result only when the record and the exit code agree. A call it cannot take, or a file it
+cannot read, writes no record and exits `2`: nothing was judged.
+
+A plain description, a file of declarations with no `defmodule`, is read as one module of its own for the plan's
+fingerprint; so a plan names it as surely as a module.
+
 ### What binds, and what does not
 
 Not everything a description requires is served by one provider:
@@ -154,7 +172,8 @@ the record, or both — for check 4, also at what the provider states. The langu
 
 ## Today and ahead
 
-The checks above run as a library, and each code's input runs through it. Check 5's rules were written, like the rest,
-by a context that never read the search's own version of them; a comparison of the two readings comes after. Still to
-come: the `archogen-plan-check` program itself, which `archogen plan-check` and `archogen resolve` will run. The search
-that writes the record is `M3.4`'s.
+The checks above run as a library, and as the `archogen-plan-check` program; each code's input runs through the
+library. Check 5's rules were written, like the rest, by a context that never read the search's own version of them; a
+comparison of the two readings comes after. Still to come: `archogen plan-check` and `archogen resolve` running that
+program from the front, and its place as the configuration checker's root in the trust gate. The search that writes
+the record is `M3.4`'s.

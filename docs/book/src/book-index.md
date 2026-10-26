@@ -106,10 +106,10 @@ a change that leaves it stale, so it is never edited by hand.
 - Checking restored inputs — [Annex B: The checks that keep the repository
   honest](annex-repository.md#checking-restored-inputs)
 - chipdoc — [What this project relies on from outside](ledger.md#chipdoc)
-- **CI** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [The archogen
-  command line](cli.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What this project
-  relies on from outside](ledger.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex
-  C: Trust proof records](annex-trust-proofs.md)
+- **CI** — [definition](glossary.md), [Checking a plan](plan-check.md), [Checks that must not share a mistake: the trust
+  gate](trust.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying the
+  toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex B: The checks that keep the
+  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Claims cite what they read — [Where the engine's knowledge comes from: the
   catalog](catalog.md#claims-cite-what-they-read)
 - **CLI** — [definition](glossary.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
@@ -406,12 +406,12 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## J
 
-- **job** — [definition](glossary.md), [Introduction](introduction.md), [The supported profile](profile.md), [What the
-  scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The
-  runtime: decisions, not actions](runtime.md), [Where generated systems run](targets.md), [Verifying the
-  toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
-  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust
-  proof records](annex-trust-proofs.md)
+- **job** — [definition](glossary.md), [Introduction](introduction.md), [The supported profile](profile.md), [Checking a
+  plan](plan-check.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes
+  from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [Where generated systems
+  run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md),
+  [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository
+  honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Joint rules — [Matching an offer to a requirement](matching.md#joint-rules)
 - **JSON** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md),
   [Generated-sources test adequacy](trust-adequacy.md), [The engine API](engine-api.md), [Verifying the
@@ -648,6 +648,7 @@ a change that leaves it stale, so it is never edited by hand.
   outside](ledger.md)
 - rp2350 — [What this project relies on from outside](ledger.md#rp2350)
 - run_cargo locality preflight — [Annex C: Trust proof records](annex-trust-proofs.md#run_cargo-locality-preflight)
+- Running the checker — [Checking a plan](plan-check.md#running-the-checker)
 - **runtime** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [What a report may claim](evidence.md), [Matching an offer to a
   requirement](matching.md), [Checking a plan](plan-check.md), [What the scheduling checker establishes](analysis.md),

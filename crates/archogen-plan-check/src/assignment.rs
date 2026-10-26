@@ -309,7 +309,8 @@ fn canonical(items: &[Form]) -> String {
 /// path — the root's, written `.`, first — a line `instance PATH MODULE MAJOR.MINOR`, a line `with NAME VALUE` for
 /// each parameter binding by name, its value in canonical form, then each declaration it contributes in canonical
 /// form, one per line, in source order. So a change to an imported module, to its `with` or to its version is a
-/// change of the digest, and whitespace and comments are none.
+/// change of the digest, and whitespace and comments are none. A plain description — no `defmodule` — is one root
+/// instance of no module, version `0.0` ([`crate::check::plain`]): `instance . - 0.0`.
 #[must_use]
 pub fn program_text(program: &Program) -> String {
     let mut instances: Vec<_> = program.instances.iter().collect();

@@ -10,8 +10,10 @@
 
 use archogen_outcome::record::{Finding, Label, Severity};
 use archogen_outcome::Status;
-use eadl_front::{Diagnostic, Program, SourceMap, Span, Verdict as Concluded};
-use eadl_model::check::{check_program, shipped_registry};
+use eadl_front::module::{elaborate_source, Instance, ModuleSource, Version};
+use eadl_front::{Diagnostic, Program, SourceId, SourceMap, Span, Verdict as Concluded};
+use eadl_model::check::{check, check_program, shipped_registry};
+use eadl_model::kind::Registry;
 use eadl_model::profile::Profile;
 
 use crate::assignment::{program_digest, Assignment};
@@ -156,6 +158,14 @@ pub fn description(
     program: &Program,
     profile: &Profile,
 ) -> Result<(), Verdict> {
+    let (all, registry) = registry(sources)?;
+    let outcome = check_program(program, &registry, profile);
+    judged(sources, program, &all, &outcome)
+}
+
+/// The language definition the checker compiles in, loaded beside the description's files: the sources it adds, and
+/// the registry of kinds.
+fn registry(sources: &SourceMap) -> Result<(SourceMap, Registry), Verdict> {
     let mut all = sources.clone();
     let kinds: Vec<(String, String)> = KIND_MODULES
         .iter()
@@ -165,9 +175,18 @@ pub fn description(
         status: Status::ToolFailure,
         findings: diagnostics.iter().map(|d| finding(&all, d)).collect(),
     })?;
-    let outcome = check_program(program, &registry, profile);
+    Ok((all, registry))
+}
+
+/// Check (2)'s verdict from the language's `outcome`: its own status and diagnostics where it refuses, else the
+/// provider-level refusals of rules 3, 5 and 10, which the language's passes do not run (`M3.5.4.6`).
+fn judged(
+    sources: &SourceMap,
+    program: &Program,
+    all: &SourceMap,
+    outcome: &eadl_model::check::Outcome,
+) -> Result<(), Verdict> {
     if outcome.is_ok() {
-        // The provider-level refusals of rules 3, 5 and 10, which the language's passes do not run (`M3.5.4.6`).
         return crate::providers::refusals(sources, program);
     }
     Err(Verdict {
@@ -175,9 +194,96 @@ pub fn description(
         findings: outcome
             .diagnostics
             .iter()
-            .map(|d| finding(&all, d))
+            .map(|d| finding(all, d))
             .collect(),
     })
+}
+
+/// The module a plain description's one root instance names: no module name is `-` (`docs/semantics/reference.md` §6
+/// rule 8), so no module's instance writes the same line of the digest.
+pub const PLAIN: &str = "-";
+
+/// A plain description — a file with no `defmodule` among its forms — as one root instance (`M3.5.6`'s decision): no
+/// module, version `0.0`, the declarations the language's check read, in source order; so the record's digest is
+/// defined for it, `program_text` writing `instance . - 0.0`.
+#[must_use]
+pub fn plain(declarations: Vec<eadl_front::Form>) -> Program {
+    // Built outside `vec!`: the trust inventory's catalog refuses the word `path` inside a macro's arguments.
+    let root = Instance {
+        id: 0,
+        module: PLAIN.to_owned(),
+        version: Version { major: 0, minor: 0 },
+        path: String::new(),
+        alias: String::new(),
+        exports: Vec::new(),
+        bindings: Vec::new(),
+        imports: Vec::new(),
+        declarations,
+    };
+    Program {
+        instances: vec![root],
+    }
+}
+
+/// Every check over one plan whose description is the file `id` of `sources`, as the executable reads one
+/// (`M3.5.6.1`): a module elaborated, its imports found through `modules`; a plain description read by the language's
+/// own check and taken as one root instance ([`plain`]). A description that does not read or does not elaborate is
+/// refused under its own status before the plan is judged, since no program exists for the plan's digest to name;
+/// otherwise check (1) first — a stale plan before any judgement — then checks (2) to (5), as [`plan`] runs them.
+/// `text` is the record `name` names. Returns the program the description became, as far as it did — the result
+/// record's subject — with the verdict.
+pub fn plan_file(
+    sources: &mut SourceMap,
+    id: SourceId,
+    modules: &dyn ModuleSource,
+    profile: &Profile,
+    name: &str,
+    text: &str,
+) -> (Program, Result<(), Verdict>) {
+    let module = eadl_front::read(sources, id)
+        .0
+        .forms
+        .iter()
+        .any(|form| form.head() == Some("defmodule"));
+    if module {
+        let (program, diagnostics) = elaborate_source(sources, modules, id);
+        if diagnostics.has_errors() {
+            let verdict = diagnostics
+                .items()
+                .iter()
+                .map(|d| Concluded::of_code(d.code))
+                .max_by_key(|v| v.precedence())
+                .unwrap_or(Concluded::InvalidDescription);
+            let refused = Verdict {
+                status: status_of(verdict),
+                findings: diagnostics
+                    .items()
+                    .iter()
+                    .map(|d| finding(sources, d))
+                    .collect(),
+            };
+            return (program, Err(refused));
+        }
+        let verdict = plan(sources, &program, profile, name, text);
+        return (program, verdict);
+    }
+    let (all, registry) = match registry(sources) {
+        Ok(loaded) => loaded,
+        Err(refused) => return (plain(Vec::new()), Err(refused)),
+    };
+    let outcome = check(&all, id, &registry, profile);
+    let program = plain(outcome.declarations.clone());
+    if eadl_front::read(sources, id).1.has_errors() {
+        let verdict = judged(sources, &program, &all, &outcome);
+        return (program, verdict);
+    }
+    let verdict = (|| {
+        let assignment = record(&program, profile, name, text)?;
+        judged(sources, &program, &all, &outcome)?;
+        bindings(sources, &program, name, text, &assignment)?;
+        joint(sources, &program, profile, name, text, &assignment)
+    })();
+    (program, verdict)
 }
 
 /// Checks (3) and (4) (`M3.5.4.4`; [`crate::bindings`]): each requirement that binds is bound once, each binding is
