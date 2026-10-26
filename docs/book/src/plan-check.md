@@ -27,7 +27,8 @@ one.
 > requirement that binds is bound once, each binding is a requirement's, of a requester the system serves, to a
 > declared block or platform; (4) each binding is satisfied by the model's judgement — the reference model of
 > `docs/semantics/model.md` §7, never the generator's code; (5) the bindings hold together by §8's joint rules, today
-> rule 7's hardware, rules 2–4's channels, rule 5's ownership and rule 10's placement. A corrupted plan is `tool-failure`. The library is `crates/archogen-plan-check`; the rest of the
+> rule 7's hardware, rules 2–4's channels, rule 5's ownership, rule 10's placement and rule 9's privilege at the
+> profile's level. A corrupted plan is `tool-failure`. The library is `crates/archogen-plan-check`; the rest of the
 > joint rules and the executable `archogen-plan-check` are still to come.
 
 ## How it works
@@ -67,7 +68,7 @@ system's name, `(task heartbeat beat)`, so no declaration can be mistaken for a 
    rules were written from. A counter of 16 bits does not serve a need for at least 32, and a part that does not
    describe a fact does not serve a need for it.
 5. **The bindings hold together.** Some mistakes only show when the bindings are read side by side. Today the checker
-   asks four such questions. First, is every provider part of the system's own **hardware** — the platform its
+   asks five such questions. First, is every provider part of the system's own **hardware** — the platform its
    `platform` clause names, the blocks and platforms the system and its tasks name, and everything those compose? A
    serial port on the board that the system's platform never composes serves nobody, however well it would match.
    Only blocks and platforms compose: a service that names a block does not bring it into the system, and a platform
@@ -79,6 +80,12 @@ system's name, `(task heartbeat beat)`, so no declaration can be mistaken for a 
    whose registers share an address would fight over it — unless one is built from the other, in which case they are
    one part. Memory for the program belongs to no part, and a part the plan does not use claims nothing. Fourth, does
    the plan say where the program goes, and is that memory the program can run from, on the system's own hardware?
+   Fifth, can each caller reach what it is bound to? The profile runs the runtime, the tasks and the services at one
+   processor level — `machine` under `rt-static-up-v1` — and every part a task or service is bound to must be reachable
+   from it; a part that does not say where it can be reached from cannot be known to be. The level comes from the
+   profile, never from the plan, so a plan cannot pass by claiming another. A service that says it calls from a level
+   the profile does not run anything at describes something this profile cannot build: that is the description's
+   `unsupported-profile`, said before anything else of the plan.
 
 The checker re-reads the needs every time. Changing a requirement and recomputing the fingerprint by hand does not get
 an old plan through: check 4 judges the new requirement and refuses.
@@ -120,7 +127,7 @@ Each check reports under a code of its own. The codes are stated, with what fire
 | `plan-description` | 2 | the checker's own rules refuse a description the language's passes accept |
 | `plan-binding` | 3 | a need left unbound, a binding of no need or of a requester the system does not serve, a provider not declared |
 | `plan-unsatisfied` | 4 | a binding the reference model does not satisfy |
-| `plan-joint` | 5 | the bindings do not hold together: a provider outside the system's hardware, more needs taking a channel than a provider has or two where its channels are unknown, two bound parts owning one address, or the image placed nowhere or outside placement memory |
+| `plan-joint` | 5 | the bindings do not hold together: a provider outside the system's hardware, more needs taking a channel than a provider has or two where its channels are unknown, two bound parts owning one address, the image placed nowhere or outside placement memory, or a caller's provider not reachable at the profile's level |
 
 Each finding names the requester and the fact, and points at the requirement in the description, the binding's line in
 the record, or both — for check 4, also at what the provider states. The language's own diagnostics keep their codes.
@@ -141,6 +148,6 @@ the record, or both — for check 4, also at what the provider states. The langu
 ## Today and ahead
 
 The checks above run as a library, and each code's input runs through it. Still to come: the rest of check 5's joint
-rules — privilege and one provider per function — written, like the first, by a context
+rules — one provider per function, and the qualifiers — written, like the first, by a context
 that never reads the search's own version of them; and the `archogen-plan-check` program itself, which `archogen
 plan-check` and `archogen resolve` will run. The search that writes the record is `M3.4`'s.

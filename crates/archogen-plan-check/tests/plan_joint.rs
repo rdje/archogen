@@ -505,3 +505,90 @@ fn rule_5_placement_memory_is_owned_by_none() {
         Ok(())
     );
 }
+
+/// A console service, and a debug probe on the platform that needs output too, both at a serial port that offers
+/// `offer` beside its output and declares `absent` absent; the service states `states` beside its need.
+fn privileged(offer: &str, absent: &str, states: &str) -> String {
+    format!(
+        "(defblock console.uart (offers (observable-output true){offer}){absent})
+(defblock probe (offers (debug-port true)) (requires (needs observable-output)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses console.uart probe)))
+(defservice console.write (requires (needs observable-output){states}))
+(defsystem s
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (platform (uses soc)))
+"
+    )
+}
+
+const BOTH_AT_UART: [(&str, &str, &str); 2] = [
+    ("console.write", "observable-output", "console.uart"),
+    ("probe", "observable-output", "console.uart"),
+];
+
+#[test]
+fn rule_9_each_provider_bound_for_a_caller_is_reachable_at_the_profile_s_level() {
+    for offer in [
+        " (reachable-at-privilege machine)",
+        " (reachable-at-privilege machine supervisor)",
+    ] {
+        assert_eq!(
+            devices_plan(&privileged(offer, "", ""), &BOTH_AT_UART, None),
+            Ok(()),
+            "{offer}"
+        );
+    }
+    for (offer, absent, said) in [
+        (
+            " (reachable-at-privilege user)",
+            "",
+            "reachable from `user` and not at `machine`",
+        ),
+        ("", " (absent reachable-at-privilege)", "absent"),
+        (" reachable-at-privilege", "", "without a value"),
+        ("", "", "does not describe `reachable-at-privilege`"),
+    ] {
+        let finding = joint_finding(
+            devices_plan(&privileged(offer, absent, ""), &BOTH_AT_UART, None).unwrap_err(),
+        );
+        // The service calls; the probe, a block, has no level and is judged by nothing here.
+        assert!(
+            finding
+                .message
+                .contains("`console.write` is bound to `console.uart`")
+                && finding.message.contains(said)
+                && finding.message.contains("rule 9"),
+            "{offer:?} {absent:?}: {finding:?}"
+        );
+    }
+}
+
+#[test]
+fn rule_9_a_caller_stating_levels_that_do_not_hold_the_profile_s_is_unsupported_first() {
+    let offer = " (reachable-at-privilege machine)";
+    assert_eq!(
+        devices_plan(
+            &privileged(offer, "", " (reachable-at-privilege machine)"),
+            &BOTH_AT_UART,
+            None
+        ),
+        Ok(())
+    );
+    let verdict = devices_plan(
+        &privileged(offer, "", " (reachable-at-privilege user)"),
+        &BOTH_AT_UART,
+        None,
+    )
+    .unwrap_err();
+    assert_eq!(verdict.status, Status::UnsupportedProfile, "{verdict:?}");
+    assert_eq!(verdict.findings.len(), 1, "{verdict:?}");
+    assert_eq!(
+        verdict.findings[0].code,
+        archogen_plan_check::check::PLAN_DESCRIPTION
+    );
+    assert!(
+        verdict.findings[0].message.contains("calls from `user`")
+            && verdict.findings[0].primary.source == "app.case.eadl",
+        "{verdict:?}"
+    );
+}

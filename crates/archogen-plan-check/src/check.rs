@@ -218,25 +218,27 @@ pub fn plan(
     let assignment = record(program, profile, name, text)?;
     description(sources, program, profile)?;
     bindings(sources, program, name, text, &assignment)?;
-    joint(sources, program, name, text, &assignment)
+    joint(sources, program, profile, name, text, &assignment)
 }
 
 /// Check (5) (`M3.5.5`; [`crate::joint`]): the bindings of one system's assignment hold together by
-/// `docs/semantics/model.md` §8's joint rules, judged after checks (3) and (4) accept each binding alone. `assignment`
-/// is what check (1) read from `text`, the record `name` names; `sources` holds the description's files, as elaborated
-/// into `program`.
+/// `docs/semantics/model.md` §8's joint rules, judged after checks (3) and (4) accept each binding alone, the system's
+/// level the `profile`'s and never the record's. `assignment` is what check (1) read from `text`, the record `name`
+/// names; `sources` holds the description's files, as elaborated into `program`.
 ///
 /// # Errors
 ///
-/// The [`Verdict`] refusing it: `tool-failure`, a finding per conflict or unknown under [`PLAN_JOINT`].
+/// The [`Verdict`] refusing it: `tool-failure`, a finding per conflict or unknown under [`PLAN_JOINT`]; or, judged
+/// first, `unsupported-profile` under [`PLAN_DESCRIPTION`] where a caller states levels that do not hold the profile's.
 pub fn joint(
     sources: &SourceMap,
     program: &Program,
+    profile: &Profile,
     name: &str,
     text: &str,
     assignment: &Assignment,
 ) -> Result<(), Verdict> {
-    crate::joint::check(sources, program, name, text, assignment)
+    crate::joint::check(sources, program, profile, name, text, assignment)
 }
 
 /// The status for a §5.5 verdict of the language's check: the checker's own mapping, as total as the vocabulary.

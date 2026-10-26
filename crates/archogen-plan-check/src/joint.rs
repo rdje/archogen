@@ -16,16 +16,23 @@
 //! the other through `uses`, at any depth; a region without a size, another's bytes above its base, an unknown.
 //! Placement memory is owned by none, and a provider nothing is bound to owns nothing. Rule 10's assignment half: the
 //! record places the image exactly where the system's hardware has placement memory, and in a region of it.
+//!
+//! Rule 9 (`M3.5.5.4`): the level a plan binds the system's callers to is the profile's, never the record's. A caller —
+//! the system's own level, a task, a service or a policy, never a block or platform, which has no level — stating it
+//! calls from levels that do not hold it is the description's `unsupported-profile`, judged first. Then each provider
+//! bound for a caller is reachable at the level: a set without it, or `reachable-at-privilege` absent, a conflict;
+//! undescribed or offered without a value, an unknown. With no level given, the rule says nothing.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use archogen_outcome::record::Label;
 use archogen_outcome::Status;
 use eadl_front::{Form, Program, SourceMap};
+use eadl_model::profile::Profile;
 
 use crate::assignment::{Assignment, Requester};
 use crate::bindings::{fact_of, finding, place, places, who};
-use crate::check::{at, label, Verdict, PLAN_JOINT};
+use crate::check::{at, label, Verdict, PLAN_DESCRIPTION, PLAN_JOINT};
 use crate::model::provider::{self, Stated};
 use crate::model::requirement::Requirement;
 use crate::model::value::Value;
@@ -38,6 +45,7 @@ use crate::requesters::{declarations, hardware, served, Served};
 pub(crate) fn check(
     sources: &SourceMap,
     program: &Program,
+    profile: &Profile,
     name: &str,
     text: &str,
     assignment: &Assignment,
@@ -48,6 +56,17 @@ pub(crate) fn check(
     // Check (3) read every served requester's side; one it refuses never reaches here.
     let served = served(program, system).unwrap_or_default();
     let places = places(name, text);
+    let level = profile.caller_level;
+    // Rule 9, judged first: no context exists at the levels a caller states that do not hold the profile's.
+    if !level.is_empty() {
+        let unsupported = stated_levels(sources, &served, &declarations, system, level);
+        if !unsupported.is_empty() {
+            return Err(Verdict {
+                status: Status::UnsupportedProfile,
+                findings: unsupported,
+            });
+        }
+    }
     let mut found = Vec::new();
     // Rule 7: each binding to the system's own hardware.
     for (key, provider) in &assignment.bindings {
@@ -132,6 +151,9 @@ pub(crate) fn check(
         assignment,
         &mut found,
     );
+    if !level.is_empty() {
+        privilege(&declarations, assignment, level, &places, name, &mut found);
+    }
     if found.is_empty() {
         Ok(())
     } else {
@@ -379,5 +401,137 @@ fn placement(
             ));
         }
         _ => {}
+    }
+}
+
+/// Whether a requester calls (rule 9): the system's own level, a task, a service or a policy; a block or a platform has
+/// no level.
+fn caller(requester: &Requester, declarations: &BTreeMap<String, (usize, &Form)>) -> bool {
+    match requester {
+        Requester::Task { .. } => true,
+        Requester::Named(name) => declarations.get(name).is_some_and(|(_, form)| {
+            matches!(form.head(), Some("defsystem" | "defservice" | "defpolicy"))
+        }),
+    }
+}
+
+/// Levels as a finding writes them.
+fn levels(set: &BTreeSet<String>) -> String {
+    set.iter()
+        .map(|l| format!("`{l}`"))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// Rule 9's first half: each caller's requirement on `reachable-at-privilege` whose levels do not hold `level`.
+fn stated_levels(
+    sources: &SourceMap,
+    served: &Served<'_>,
+    declarations: &BTreeMap<String, (usize, &Form)>,
+    system: &str,
+    level: &str,
+) -> Vec<archogen_outcome::record::Finding> {
+    let mut out = Vec::new();
+    for (requester, side) in &served.sides {
+        if !caller(requester, declarations) {
+            continue;
+        }
+        for l in &side.requirements {
+            let Requirement::Constraint {
+                fact,
+                value: Value::Set(stated),
+                ..
+            } = &l.requirement
+            else {
+                continue;
+            };
+            if fact == "reachable-at-privilege" && !stated.contains(level) {
+                out.push(finding(
+                    PLAN_DESCRIPTION,
+                    format!(
+                        "{} states it calls from {}, which do not hold the level the profile gives the system \
+                         `{system}`, `{level}`: no context at those levels exists under it (rule 9)",
+                        who(requester),
+                        levels(stated)
+                    ),
+                    at(sources, l.span, "the requirement"),
+                    Vec::new(),
+                    "state the level the profile gives its system, or check the description under a profile with \
+                     the level it states",
+                ));
+            }
+        }
+    }
+    out
+}
+
+/// Rule 9's second half: each provider bound for a caller reachable at `level`.
+fn privilege(
+    declarations: &BTreeMap<String, (usize, &Form)>,
+    assignment: &Assignment,
+    level: &str,
+    places: &BTreeMap<(Requester, String), Label>,
+    name: &str,
+    found: &mut Vec<archogen_outcome::record::Finding>,
+) {
+    let mut judged = BTreeSet::new();
+    for (key, provider) in &assignment.bindings {
+        let requester = &key.0;
+        if !caller(requester, declarations) || !judged.insert((requester, provider)) {
+            continue;
+        }
+        let Some(&(_, form)) = declarations.get(provider) else {
+            continue;
+        };
+        let stated = provider::read(form)
+            .ok()
+            .and_then(|p| p.stated.get("reachable-at-privilege").cloned());
+        let offered = match &stated {
+            Some(Stated::Valued(values)) => values.iter().find_map(|v| match v {
+                Value::Set(set) => Some(set.clone()),
+                _ => None,
+            }),
+            _ => None,
+        };
+        let who = who(requester);
+        let (message, repair) = match (&stated, offered) {
+            (_, Some(set)) if set.contains(level) => continue,
+            (_, Some(set)) => (
+                format!(
+                    "{who} is bound to `{provider}`, reachable from {} and not at `{level}`, the level the profile \
+                     gives the system: a conflict (rule 9)",
+                    levels(&set)
+                ),
+                "resolve again: a caller's providers are reachable at the level the profile gives its system",
+            ),
+            (Some(Stated::Absent), None) => (
+                format!(
+                    "{who} is bound to `{provider}`, which declares `reachable-at-privilege` absent — reachable from \
+                     no level, `{level}` neither: a conflict (rule 9)"
+                ),
+                "resolve again: a caller's providers are reachable at the level the profile gives its system",
+            ),
+            (Some(Stated::Unvalued), None) => (
+                format!(
+                    "{who} is bound to `{provider}`, which offers `reachable-at-privilege` without a value: whether \
+                     it is reachable at `{level}` is unknown (rule 9)"
+                ),
+                "resolve again only once the provider's level is described",
+            ),
+            _ => (
+                format!(
+                    "{who} is bound to `{provider}`, which does not describe `reachable-at-privilege`: whether it is \
+                     reachable at `{level}` is unknown (rule 9)"
+                ),
+                "resolve again only once the provider's level is described",
+            ),
+        };
+        found.push(finding(
+            PLAN_JOINT,
+            message,
+            place(places, name, key),
+            Vec::new(),
+            repair,
+        ));
     }
 }

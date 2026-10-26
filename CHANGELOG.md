@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the configuration checker checks every caller can reach its parts
+
+`ARCHOGEN-M3-0964` (leaf `M3.5.5.4`), `2026-10-26`.
+
+- The configuration checker refuses a plan that binds a task or service to a part it cannot reach at the processor
+  level the profile runs everything at, and reports a service that says it calls from another level as a
+  description this profile cannot build.
+
 ## archogen — the configuration checker guards addresses and where the program goes
 
 `ARCHOGEN-M3-0963` (leaf `M3.5.5.3`), `2026-10-26`.
