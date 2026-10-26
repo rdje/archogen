@@ -2,9 +2,13 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-23`
-- **Status:** `active` — written `2026-10-23` by leaf `M3.5.2`; rounds 1 to 15 answered by `2026-10-24`; review closed, round 15 finding no defect
-  ([`decision_trust-role-programs-reviews.md`](../../reviews/decision_trust-role-programs-reviews.md)), from round 5 read
-  against its readers' code and fixtures, `M3.5.2`'s children, its rules in force as each lands.
+- **Status:** `active` — written `2026-10-23` by leaf `M3.5.2`; rounds 1 to 15 answered by `2026-10-24`, round 15
+  finding no defect ([`decision_trust-role-programs-reviews.md`](../../reviews/decision_trust-role-programs-reviews.md)),
+  from round 5 read against its readers' code and fixtures, `M3.5.2`'s children, its rules in force as each lands;
+  reopened `2026-10-26` by `RP-H10` for §5's `crates/archogen-transport` row, rounds 16 to 18 answered, round 19 stopped
+  by the director's re-stated ruling against mutation testing before feature completeness
+  ([`decision_trust-role-programs-transport-reviews.md`](../../reviews/decision_trust-role-programs-transport-reviews.md),
+  `M3.5.1.6.3`; the suites' adequacy `M7.6`'s).
 - **External sources:** none beyond the parent's: `ROADMAP.md` §4.4 (its "externally invoked tools", and the classes
   of a shared item, "reference derivation" among them), §7.1's properties and §14.4's cases.
 - **Owner / source:** leaf `M3.5.2` (`docs/tasks/M3.md`), as `M3.5`'s and `M3.5.1`'s reviewed designs assign it, under
@@ -271,7 +275,7 @@ none rests on its independence, and its form says so.
 | `crates/archogen-digest` | every pair it joins | infrastructure | a wrong digest in every role's records | three oracles independent of it: derived constants, published examples, the system tool's boundaries |
 | `crates/archogen-outcome` | every pair it joins | interpretation/normalization | a refusal read as an acceptance for every role | its own tests — one text per record, its consistency rules, the damage sweep; the exit code's second channel (`M3.5.1.4.3`) |
 | `crates/archogen-json` | every pair it joins | interpretation/normalization | a parsing fault common to every record and server | its own tests — RFC 8259 strictness, a member named twice refused; the records' readers re-write what they read |
-| `crates/archogen-transport` | every pair it joins | interpretation/normalization | a framing fault common to every server | *pending* `M3.5.1.6` |
+| `crates/archogen-transport` | every pair it joins | interpretation/normalization | a framing fault common to every server — a message misread, an answer misframed or under another request's id, an error answered as a result or the reverse, a tool's result rewritten; the project's one reading of the MCP revisions, which every server, its tests and its model share (answers' shapes against the pinned schemas *pending* `M3.5.1.6.5`); U+2028, U+2029 and U+0085 written raw, the MCP record's choice | its own tests over a fake server (`crates/archogen-transport/tests/`): every answer compared line for line with a model of the MCP record's rules written apart, over generated sequences of requests crossing `initialize`, members dropped, mistyped, changed or added; each site's whole answer, its case traced to it; the line framing (`M3.5.1.6.3`); the generator's server's tests, run unchanged over it; *pending* `M3.5.1.6.4`: each checker's server's tests, its inline result record read back by that record's strict reader |
 | the relation's derivations, `production` and `vocabulary` | generator, configuration checker | reference derivation | as §3 | as §3 |
 | an invocation | the front and each invoked root | interpretation/normalization | the front reporting a refused or unchecked result as checked | the exit code agreeing with the record, the subject's digests, the program's sha256 (`M3.5.1.4.3`); the sibling's sha256 checked against the install's manifest before it runs (`M3.5.1.4.1`) |
 | the build configuration | every new pair | infrastructure | a toolchain, profile or flag fault common to every role | the pinned toolchain (`SOURCE-LEDGER`) and the item compared on the baseline's host, change control |
@@ -349,3 +353,7 @@ refuses the item until a push holds the form and nothing after it moves the item
 | 13 | `2026-10-24` | 5 | 6 | not acceptable, read against `M3.5.2.9`'s code, the count falling; every finding answered, round 12's method carried into the three channels it had not reached — a macro's metavariable, a file's head, an inline module's path — the generated corpus extended to each (`M3.5.2.10`) |
 | 14 | `2026-10-24` | 4 | 5 | not acceptable, read against `M3.5.2.10`'s code, the count falling; every finding answered, each a spelling within or beside a named channel — an inline module in a block, a keyword-named macro, a doc test's injected attribute, a non-member's feature — read as rustc reads it or refused, the generated legs extended (`M3.5.2.11`) |
 | 15 | `2026-10-24` | 0 | 2 | acceptable, read against `M3.5.2.11`'s code: no defect, the census sound within its named channels; both remarks answered in the record; the review closes (`M3.5.2`) |
+| 16 | `2026-10-26` | 6 | 6 | not acceptable, the review reopened by `RP-H10` on §5's `crates/archogen-transport` row, read against the package: every finding answered — the package's own suite rewritten to kill each of 21 hand mutants, a doubled `_meta` fixed, the row's risk and controls restated, a control apart from the project's reading filed (`M3.5.1.6.3`) |
+| 17 | `2026-10-26` | 4 | 7 | not acceptable: round 16's answers held for what it named, and the suite had been written to kill a list; every finding answered, and the method changed — one table case for every answer site, the whole line asserted, held to the source by a census (`M3.5.1.6.3`) |
+| 18 | `2026-10-26` | 4 | 6 | not acceptable: two faults in the package, a bad `_meta` let through in the earlier era and an id whose exponent overflowed, and a table of sites missing the conditions inside them; every finding answered, and the method changed again — every answer compared with an independent model over generated sequences, the table's cases held to their sites by a trace (`M3.5.1.6.3`) |
+| 19 | `2026-10-26` | — | — | stopped by the director's ruling of `2026-10-26`, no mutation testing before feature completeness; the row stands as round 18's answers leave it, the review closed, the suites' adequacy `M7.6`'s (`M3.5.1.6.3`) |

@@ -237,7 +237,14 @@ nested too deep, or naming one field twice, is refused before anything is judged
 their bound, both eras, the shape of every answer and error — lives in a package of no role's,
 `crates/archogen-transport/src/lib.rs` (leaf `M3.5.1.6.1`), behind a trait that a server fills with its own name and
 tools; `archogen mcp` fills it with the command table's, and each checker will fill it with its own, so a checker's
-server speaks the protocol exactly as the generator's does without sharing any of its tools. It spawns nothing and
+server speaks the protocol exactly as the generator's does without sharing any of its tools. A tool answers a JSON
+object; under `2026-07-28` the framing adds `resultType` and merges the server's identity into the result's own
+`_meta`, so a result never names a member twice, and a tool's result that is no object, writes what is the
+server's, or does not read back, is the server's failure, `-32603`, in either era. The package is tested on its own,
+over a fake server: every answer it gives is compared with an independent model of the protocol's rules over thousands
+of generated message sequences, each a well-formed request with a few members dropped, mistyped or added; and a table
+gives the whole answer of every place in the source that writes one, each case checked to reach the place it names
+(leaf `M3.5.1.6.3`). It spawns nothing and
 opens no file. Its verdicts are the command line's: a test speaks to the built binary in both eras and checks every
 single-file case of the conformance suite both ways.
 

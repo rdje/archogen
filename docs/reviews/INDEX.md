@@ -32,6 +32,7 @@ No bootstrap read includes this directory.
 | [`decision_trust-generated-refusals-reviews.md`](decision_trust-generated-refusals-reviews.md) | [`decision_trust-generated-refusals.md`](../specs/trust/decision_trust-generated-refusals.md) | 23 | closed: `2026-10-10`, round 23 found no defect; rounds 1–22 answered, rounds 5, 14, 16 to 20 by method (`M3.6.6.4`) |
 | [`decision_trust-generated-adequacy-reviews.md`](decision_trust-generated-adequacy-reviews.md) | [`decision_trust-generated-adequacy.md`](../specs/trust/decision_trust-generated-adequacy.md) | 3 | closed: `2026-10-11`, round 3 found zero defects and one remark, existing invocation-error kills owned by M3.6.9.1; accepted design, strict outcomes built; remaining implementation pending |
 | [`decision_trust-role-programs-reviews.md`](decision_trust-role-programs-reviews.md) | [`decision_trust-role-programs.md`](../specs/trust/decision_trust-role-programs.md) | 15 | closed: round 15 found no defect `2026-10-24`, rounds 1 to 15 holding 112 defects and 114 remarks, every one answered (`M3.5.2`) |
+| [`decision_trust-role-programs-transport-reviews.md`](decision_trust-role-programs-transport-reviews.md) | §5's `crates/archogen-transport` row of [`decision_trust-role-programs.md`](../specs/trust/decision_trust-role-programs.md), reopened by `RP-H10` | 4 | stopped: rounds 16–18 answered, 14 defects and 19 remarks; round 19 stopped `2026-10-26` by the director's ruling against mutation testing before feature completeness (`M3.5.1.6.3`; the suites' adequacy `M7.6`'s) |
 
 ## Counted by `REVIEW-COUNTS`
 

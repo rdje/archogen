@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the MCP protocol package reviewed, and four faults fixed
+
+`ARCHOGEN-M3-0997` (leaf `M3.5.1.6.3`), `2026-10-26`.
+
+- The shared MCP protocol package's entry in the trust record now states what it risks and what checks it. Reviewing
+  it found four faults, all fixed: a tool's metadata written twice, a bad one let through in the older protocol era, a
+  request id that could crash a debug build, and an unreadable tool answer passed on. The package now has tests of its
+  own, comparing every answer with an independent model of the protocol's rules.
+
 ## archogen — the browser module and the MCP server write strings one way
 
 `ARCHOGEN-M3-0996` (leaf `M3.5.1.6.2`), `2026-10-26`.

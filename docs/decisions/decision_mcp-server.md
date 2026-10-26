@@ -88,9 +88,17 @@ by `API.6.5`'s review:
   response's `id` optional and type it a string or an integer, so `null`, which JSON-RPC 2.0 would write, is not
   theirs. A request's id is a string or an integral number, as JSON Schema's `integer` reads one; `1.5` is refused.
 - A response the client sends is ignored, since this server sends no request; a blank line is skipped.
-- Chosen and not changed: the line separators U+2028 and U+0085 reach stdout unescaped, as the wasm binding writes
+- Chosen and not changed: the line separators U+2028, U+2029 and U+0085 reach stdout unescaped, as the wasm binding writes
   them, since the stdio transport frames messages by `\n` alone; and a per-request `_meta` naming `2025-11-25` is
   refused with `-32022`, whose message says that revision opens with `initialize`.
+- *Added `2026-10-26` (leaf `M3.5.1.6.3`, review round 16's R16-D4 of `decision_trust-role-programs.md`), the framing
+  now `crates/archogen-transport`'s:* a tool's result is a JSON object, and under `2026-07-28` the server merges its
+  `serverInfo` into the `_meta` a tool's result carries of its own, never writing a second one — the pinned schema's
+  `Result` has one `_meta?: ResultMetaObject`, its `serverInfo` the server's, and requires `resultType`, which the
+  server writes. A result that is no object, holds `resultType`, holds a `_meta` that is no object or names
+  `serverInfo`, or does not read back under the strict reader — a member named twice — is the server's failure,
+  `-32603`, in either era, the framing checking it before either era answers (review round 18's R18-D1). Re-read at the
+  ledger's commit for this, the schema's hash unchanged.
 
 ## Why
 
