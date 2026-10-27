@@ -144,6 +144,13 @@ Sealed, byte for byte, in [`decision_findings-for-director-review/10.md`](../dec
 
 ## 11. The catalog's premise 3 needs `main` protected, and that is not how this project commits today (`2026-09-30`)
 
+**Ruled `2026-10-27`** (`M2.7.6.6`): protect `main` and name a reviewer — the director chose "Protect main + reviewer",
+then, asked why the repository could not stay where it is, kept it on the personal account `rdje`: "All of my project
+are on Personal Account". A second human reviewer being "difficult to find", the director chose "Me, agents on a
+machine acct": the director, `rdje`, is the code owner and approves; the agents commit and push from one free machine
+account. The exact settings and workflow are `docs/decisions/decision_main-protection.md`, confirmed by the director
+before anything is applied.
+
 The catalog design's threat model, which you ruled, assumes that the published main line is protected (§0, premise
 3). Its tenth review showed what that takes on the hosting side. CI that runs after a push to `main` cannot block
 that push. Blocking needs:

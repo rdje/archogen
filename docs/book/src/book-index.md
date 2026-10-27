@@ -349,6 +349,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Generated sources — [Checks that must not share a mistake: the trust gate](trust.md#generated-sources)
 - github-actions — [What this project relies on from outside](ledger.md#github-actions)
 - github-actions-syntax — [What this project relies on from outside](ledger.md#github-actions-syntax)
+- github-machine-account — [What this project relies on from outside](ledger.md#github-machine-account)
+- github-merge-queue — [What this project relies on from outside](ledger.md#github-merge-queue)
 - **GNU** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Verifying the
   toolchain](verification.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - **GPG** — [definition](glossary.md), [What this project relies on from outside](ledger.md)

@@ -423,3 +423,31 @@ Producer observations, normalization proofs, counterexamples and revalidation re
 | Known limitations | a secondary account of George et al. (1996), whose report was not read; it concerns tasks, and the plan applies it to interrupt sources served without nesting, which the variant's condition 5 makes non-pre-emptive among themselves |
 | Revalidation trigger | the plan's source order resting on more than the non-optimality of deadline-monotonic ordering and the applicability of Audsley's algorithm |
 | Named as | `Davis` |
+
+## `github-merge-queue`
+
+| Field | Value |
+| --- | --- |
+| Source | GitHub changelog, "Pull request merge queue is now generally available", `2023-07-12` |
+| Version | the post as served on `2026-10-27` |
+| Pinned at | not pinned — read at `https://github.blog/changelog/2023-07-12-pull-request-merge-queue-is-now-generally-available/`; no build or check reads it |
+| Retrieved | `2026-10-27` |
+| Hash | sha256 `651a42b7567f8494b9a30e4aa0d1f301545ef56d2d82dad9cbcaab5a679a565a` of the page read |
+| Scope | one sentence, quoted in `docs/decisions/decision_main-protection.md` §1 for why `rdje/archogen`, a repository owned by a personal account, uses "branches up to date" rather than a merge queue: "Merge queue is available on private and public repos on the GitHub Enterprise Cloud plan and all public repos owned by organizations." |
+| Known limitations | a 2023 announcement; GitHub's current documentation pages read the same day state no availability either way |
+| Revalidation trigger | a merge queue becoming available to repositories owned by personal accounts, or the repository moving to an organization |
+| Named as | `merge queue is now generally available` |
+
+## `github-machine-account`
+
+| Field | Value |
+| --- | --- |
+| Source | GitHub's Terms of Service, section B, "Account Terms" |
+| Version | the page as served on `2026-10-27` |
+| Pinned at | not pinned — read at `https://docs.github.com/en/site-policy/github-terms/github-terms-of-service`; no build or check reads it |
+| Retrieved | `2026-10-27` |
+| Hash | sha256 `f8f54975ce02aecbaf5001a0f9ba869229734eb83652c3a37dfe8bf6d338aaa6` of the page read |
+| Scope | two sentences, quoted in `docs/decisions/decision_main-protection.md` §2 for the agents' push identity: "A machine account is used exclusively for performing automated tasks." and "You may maintain no more than one free machine account in addition to your free Personal Account." |
+| Known limitations | terms GitHub may change; the arrangement rests on the director keeping a single personal account and a single machine account |
+| Revalidation trigger | a change to GitHub's account terms, or a second machine account wanted |
+| Named as | `GitHub's terms of service` |

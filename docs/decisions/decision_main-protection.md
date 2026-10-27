@@ -1,0 +1,161 @@
+# `main` protected on the personal account: the ruleset, the settings and the batch workflow
+
+- **Type:** `decision`
+- **Date:** `2026-10-27`
+- **Status:** `active` — written for the director's confirmation; nothing here is applied before it (`M2.7.6.6`, `.1`)
+- **Owner / source:** findings §11 (`decision_findings-for-director-review.md`), ruled by the director on `2026-10-27`:
+  - "Protect main + reviewer";
+  - kept on the personal account `rdje`: "All of my project are on Personal Account";
+  - a second human reviewer being "difficult to find", "Me, agents on a machine acct".
+
+  Leaf `M2.7.6.6` (`docs/tasks/M2.md`); `M2.7.6`'s requirements of the hosting.
+
+## The fact / decision
+
+In plain words: on GitHub, `main` changes only when a pull request is merged, after the required checks pass and the
+director approves it. The agents keep committing on their local `main` as before. When a batch is due, they push it to
+a branch of its own, open one pull request with an independent agent's review of it, and GitHub merges it once the
+director has approved. Nobody pushes to `main` directly, the director included.
+
+### 1. What is applied, exactly
+
+**The repository's settings** (`PATCH /repos/rdje/archogen`), so the hosting makes every merge commit and no other
+kind of merge:
+
+```json
+{ "allow_merge_commit": true, "allow_squash_merge": false, "allow_rebase_merge": false, "delete_branch_on_merge": true }
+```
+
+Two settings §11 asks for already hold, read on `2026-10-27` (`GET /repos/rdje/archogen/actions/permissions/workflow`):
+`"default_workflow_permissions":"read"`, and `"can_approve_pull_request_reviews":false`.
+
+**The ruleset** (`POST /repos/rdje/archogen/rulesets`), whose bypass list is empty, so it binds the director's own
+account too:
+
+```json
+{
+  "name": "main",
+  "target": "branch",
+  "enforcement": "active",
+  "bypass_actors": [],
+  "conditions": { "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] } },
+  "rules": [
+    { "type": "deletion" },
+    { "type": "non_fast_forward" },
+    { "type": "pull_request", "parameters": {
+        "required_approving_review_count": 1,
+        "dismiss_stale_reviews_on_push": true,
+        "require_code_owner_review": true,
+        "require_last_push_approval": true,
+        "required_review_thread_resolution": false,
+        "allowed_merge_methods": ["merge"] } },
+    { "type": "required_status_checks", "parameters": {
+        "strict_required_status_checks_policy": true,
+        "do_not_enforce_on_create": false,
+        "required_status_checks": [
+          { "context": "enforce", "integration_id": 15368 },
+          { "context": "focused", "integration_id": 15368 },
+          { "context": "integration", "integration_id": 15368 },
+          { "context": "trust-gate", "integration_id": 15368 },
+          { "context": "catalog-check", "integration_id": 15368 } ] } }
+  ]
+}
+```
+
+- The checks are each job CI runs on a pull request: `enforce` (`doctrines.yml`), `focused` and `integration`
+  (`rust.yml`), `trust-gate` (`trust-gate.yml`) and `catalog-check` (`catalog-check.yml`).
+- `15368` is the `github-actions` app, read from `origin/main`'s own check runs on `2026-10-27`. A status from any
+  other source does not satisfy a check.
+- "Branches up to date" (`strict_required_status_checks_policy`) runs the checks on the result of the merge, which is
+  §11's alternative to a merge queue. A merge queue is "available on private and public repos on the GitHub Enterprise
+  Cloud plan and all public repos owned by organizations" ([merge queue is now generally
+  available](../book/src/ledger.md#github-merge-queue)), so not on this account.
+
+**`.github/CODEOWNERS`**, the only ownership file (`M2.7.6.5`). Every path is owned by the director, so every pull
+request needs the director's approval:
+
+```text
+* @rdje
+```
+
+**The machine account** is a collaborator with the **Write** role, not Admin, so it can push branches and open pull
+requests, and can neither approve its own nor change the rules.
+
+### 2. The machine account: the director's steps
+
+GitHub's terms allow it: "You may maintain no more than one free machine account in addition to your free Personal
+Account", and "A machine account is used exclusively for performing automated tasks" ([GitHub's terms of service,
+machine account](../book/src/ledger.md#github-machine-account)).
+
+1. Create a free GitHub account for the agents, with its own email address. Its name is the director's choice.
+2. From `rdje`, invite it to `rdje/archogen` with the **Write** role, and accept the invitation from it.
+3. Give the agents its credentials; none is ever written into the repository:
+   - for pushing, an SSH key the agents generate on this machine, its public half added to the machine account;
+   - for opening pull requests, a fine-grained token of the machine account, scoped to `rdje/archogen` alone, with
+     Contents read and write, Pull requests read and write, and Metadata read. The token is kept in the macOS
+     Keychain, under an item `M2.7.6.6.2` names.
+4. The agents then set this repository's git configuration: the machine account's name and email as commit author,
+   and a remote that pushes over its key (`M2.7.6.6.2`).
+
+### 3. The batch workflow
+
+1. The agents commit on local `main`, under `COMMIT.md`'s workflow and every hook, as before.
+2. A batch is due at the push cadence (`bash scripts/push_cadence.sh` at its ruled threshold), or to restore failing
+   CI, as the cadence ruling already says, and the director is told first.
+3. A fresh agent context reviews the batch's diff and writes a summary of what changed and what it found.
+4. `bash scripts/open_batch.sh` (`M2.7.6.6.4`):
+   - pushes local `main` to `batch/<YYYY-MM-DD>-<n>` as the machine account;
+   - opens one pull request into `main`, its body the summary and the commit list;
+   - turns on auto-merge with a merge commit.
+5. CI runs the required checks on the merge result. The director reads the summary and the diff, and approves.
+6. GitHub makes the merge commit, signed with its own key, and deletes the branch.
+7. The agents fast-forward local `main` to `origin/main` (`git merge --ff-only origin/main`). A merge commit has
+   their batch as its second parent, so local `main` never diverges.
+
+The cadence keeps its meaning: the number of commits local `main` is ahead of `origin/main`.
+
+### 4. What it guarantees, and what it does not
+
+**Guaranteed by the hosting:**
+- `main` changes only by a merged pull request;
+- its required checks passed, from `github-actions`, on the merge result;
+- the director approved it after its last push;
+- no force-push and no deletion;
+- the director's own account bound like any other.
+
+**Residuals, each stated:**
+- **A spoofed status.** A personal account has no ruleset-required workflows, so a pull request's own copy of the
+  workflows runs, and could post a status of a required check's name. `CODEOWNERS`' `*` makes the director's approval
+  needed for every pull request, one adding or editing a workflow among them, so such a status merges nothing without
+  the director. `M2.7.6`'s design states this, and its next review round reads it (`M2.7.6.4`).
+- **An approval is only as good as its review.** Each pull request carries an independent agent's summary, and the
+  director's approval rests on it and on the diff. The author is the agents and the approver the director, so the
+  roles differ, as §11 asks: "Code-owner approval must come from an identity other than the author's".
+- **The owner keeps the owner's power.** `rdje` can edit the ruleset. That is recorded, not prevented.
+
+### 5. The named commit
+
+The catalog's premise 3 holds from the first merge commit made under these rules, recorded where the claim tooling
+holds it (`M2.7.6.6.5`). From then, a production claim refuses any first-parent commit of `main` that is not a merge the
+hosting made and signed (§11).
+
+## Why
+
+- §11's settings are the only way to make CI block a change, rather than report it after it has landed. The catalog's
+  facts are trusted by every later build.
+- Staying on the personal account loses one setting, ruleset-required workflows. Code ownership of every path gives
+  the same protection for the price of the director's approval, which the director gives anyway.
+- The director as approver, with the agents on a machine account, separates authoring from approving without a second
+  person.
+
+**Alternatives weighed:** an organization on the Team plan (pinned workflows; declined, the director's projects stay
+on personal accounts); an automated reviewer as approver (no human in the loop); no approver at all (a weaker premise
+3).
+
+## How to apply
+
+- Nothing is applied before the director confirms this record (`M2.7.6.6.1`), and creates the machine account
+  (`.2`).
+- `.3` applies §1 with `gh`, and reads each setting back equal to it.
+- Related: [[decision_findings-for-director-review]] §11, [[decision_push-cadence]],
+  `docs/specs/catalog/decision_catalog-records.md` (premise 3).

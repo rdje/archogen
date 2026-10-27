@@ -192,6 +192,7 @@ justifies the split — the rows below appear as that happens.
 - [`decision_findings-for-director-review.md`](docs/decisions/decision_findings-for-director-review.md)
 - [`decision_history-ledgers.md`](docs/decisions/decision_history-ledgers.md)
 - [`decision_incomplete-blocking-policy.md`](docs/decisions/decision_incomplete-blocking-policy.md)
+- [`decision_main-protection.md`](docs/decisions/decision_main-protection.md)
 - [`decision_mcp-server.md`](docs/decisions/decision_mcp-server.md)
 - [`decision_mutation-testing-after-completion.md`](docs/decisions/decision_mutation-testing-after-completion.md)
 - [`decision_priority-comparison-direction.md`](docs/decisions/decision_priority-comparison-direction.md)
