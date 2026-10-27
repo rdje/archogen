@@ -1,9 +1,12 @@
 ; case: invalid-contradictory-presence
 ; expect: invalid-description
-; why: One fact declared both offered and absent. §5.3: reject contradictory declarations
-;   rather than choosing one.
+; why: One declaration says a fact is both offered and absent. §5.3: reject contradictory declarations
+;   rather than choosing one. A contradiction is one declaration's: two blocks, one offering a fact and
+;   one declaring it absent, are two devices' two statements, each judged on its own (model §2 rule 1;
+;   docs/decisions/decision_absence-per-provider.md, leaf M3.4.8, which rewrote this case from that
+;   two-block spelling — docs/semantics/migrations/eadl-1-an-absence-is-a-declaration-s-statement.md).
 ;
 (eadl-version eadl/1)
 
-(defblock a (offers low-power-timer))
-(defblock b (offers x) (absent low-power-timer))
+(defblock a (offers low-power-timer) (absent low-power-timer))
+(defblock b (offers x))

@@ -1,6 +1,7 @@
 //! **F04** — a relevant capability is undescribed → `missing-fact`.
 //! **F05** — an irrelevant capability is undescribed → the unrelated system stays admissible.
-//! **F06** — contradictory offered/absent declarations → `invalid-description`.
+//! **F06** — contradictory offered/absent declarations → `invalid-description`: one declaration's, as model §2 rule 1
+//! reads per declaration (leaf `M3.4.8`).
 //!
 //! `ROADMAP.md` §13.1, first gate M1.
 //!
@@ -125,21 +126,24 @@ fn f04_and_f05_cannot_both_be_satisfied_by_a_constant_answer() {
 }
 
 #[test]
-fn f06_a_fact_both_offered_and_absent_is_an_invalid_description() {
+fn f06_a_fact_one_declaration_both_offers_and_declares_absent_is_an_invalid_description() {
+    // A contradiction is one declaration saying both of itself (model §2 rule 1, leaf `M3.4.8`).
     let (report, rendered) = check(
         r"
         (defsystem app.rt (uses time.monotonic))
         (defservice time.monotonic (needs low-power-timer))
-        (defblock timer.a (offers low-power-timer))
-        (defblock timer.b (absent low-power-timer))
+        (defblock timer.a (offers low-power-timer) (absent low-power-timer))
         ",
     );
     assert!(!report.is_admissible());
     assert!(rendered.contains("invalid-description"), "{rendered}");
-    assert!(rendered.contains("both offered and absent"), "{rendered}");
-    // Both sides must be named: the author looking at one cannot see the other.
     assert!(
-        rendered.contains("declared absent by `timer.b`"),
+        rendered.contains("`low-power-timer` is declared both offered and absent by `timer.a`"),
+        "{rendered}"
+    );
+    // Both sites are named: the author looking at one cannot see the other.
+    assert!(
+        rendered.contains("declared absent by `timer.a`"),
         "{rendered}"
     );
     assert!(
@@ -162,13 +166,97 @@ fn f06_a_contradiction_outside_the_closure_is_still_a_contradiction() {
         (defsystem app.rt (uses time.monotonic))
         (defservice time.monotonic (needs counter-width))
         (defblock timer.counter (offers counter-width))
-        (defblock a (offers never-used))
-        (defblock b (absent never-used))
+        (defblock a (offers never-used) (absent never-used))
         ",
     );
     assert!(!report.is_admissible());
     assert!(rendered.contains("invalid-description"), "{rendered}");
     assert!(rendered.contains("never-used"), "{rendered}");
+}
+
+#[test]
+fn an_absence_and_an_offer_at_two_declarations_are_two_statements() {
+    // `docs/decisions/decision_absence-per-provider.md`: a serial port without a debug port beside one with one is two
+    // devices, not a contradiction; the fact is offered, so a requirement on it is the search's to bind.
+    let (report, rendered) = check(
+        r"
+        (defsystem app.rt (uses debug.console))
+        (defservice debug.console (needs debug-port))
+        (defblock uart.a (absent debug-port))
+        (defblock uart.b (offers debug-port))
+        ",
+    );
+    assert!(report.is_admissible(), "{rendered}");
+}
+
+#[test]
+fn an_absence_covers_what_its_declaration_composes_and_no_more() {
+    // Review round 3's R3-3: the scope runs one way. A platform offering a fact while a block it composes declares it
+    // absent is accepted — the platform's offer needs only one of its parts to hold it — while the platform declaring
+    // it absent over a part that offers it says both of itself (`tests/refinement_through.rs`).
+    let (report, rendered) = check(
+        r"
+        (defsystem app.rt (uses debug.console))
+        (defservice debug.console (needs debug-port))
+        (defblock uart.a (absent debug-port))
+        (defplatform board (offers debug-port) (requires (uses uart.a)))
+        ",
+    );
+    assert!(report.is_admissible(), "{rendered}");
+    let (report, rendered) = check(
+        r"
+        (defblock uart.b (offers debug-port))
+        (defplatform board (absent debug-port) (uses uart.b))
+        ",
+    );
+    assert!(!report.is_admissible(), "{rendered}");
+    assert!(
+        rendered.contains(
+            "`debug-port` is declared absent by `board` and offered by `uart.b`, which it composes"
+        ),
+        "{rendered}"
+    );
+}
+
+#[test]
+fn every_declaration_is_compared_a_service_s_and_a_later_one_s_among_them() {
+    // Every declaration's statements count, not the first of each fact: a service contradicting itself, written after
+    // two blocks that do not, is refused, and named.
+    let (report, rendered) = check(
+        r"
+        (defsystem app.rt (uses time.monotonic))
+        (defservice time.monotonic (needs counter-width))
+        (defblock timer.counter (offers counter-width low-power-timer))
+        (defblock timer.other (absent low-power-timer))
+        (defservice low-power.policy (offers low-power-timer) (absent low-power-timer))
+        ",
+    );
+    assert!(!report.is_admissible());
+    assert!(
+        rendered.contains(
+            "`low-power-timer` is declared both offered and absent by `low-power.policy`"
+        ),
+        "{rendered}"
+    );
+    assert!(
+        !rendered.contains("by `timer.counter`") && !rendered.contains("by `timer.other`"),
+        "two declarations are two statements:\n{rendered}"
+    );
+}
+
+#[test]
+fn a_required_fact_is_absent_only_where_no_declaration_offers_it() {
+    // Rule 2 reads the description: absent where some declaration declares it absent and none offers it.
+    let (absent, rendered) = check(
+        r"
+        (defsystem app.rt (uses debug.console))
+        (defservice debug.console (needs debug-port))
+        (defblock uart.a (absent debug-port))
+        (defblock uart.b (absent debug-port))
+        ",
+    );
+    assert!(!absent.is_admissible());
+    assert!(rendered.contains("infeasible-configuration"), "{rendered}");
 }
 
 #[test]

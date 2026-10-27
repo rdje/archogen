@@ -69,8 +69,11 @@ pub struct Declaration {
 /// Everything a set of declarations says about facts, plus what needs what.
 #[derive(Debug, Clone, Default)]
 pub struct FactMap {
-    offered: BTreeMap<String, Declaration>,
-    absent: BTreeMap<String, Declaration>,
+    /// Every provider's offer of each fact, in the order written — not the first alone: an offer and an absence are
+    /// compared provider by provider (model §2 rule 1, `docs/decisions/decision_absence-per-provider.md`).
+    offered: BTreeMap<String, Vec<Declaration>>,
+    /// Every provider's absence of each fact, in the order written.
+    absent: BTreeMap<String, Vec<Declaration>>,
     /// Every name this description declares — a block, a service, a policy, a system.
     ///
     /// ⭐ A composition reference is not a fact request. `(requires (uses timer.counter))` on a
@@ -83,15 +86,8 @@ pub struct FactMap {
     needs: BTreeMap<String, Vec<(String, Span)>>,
     /// What the system requests.
     requested: Vec<(String, Span)>,
-    /// `concrete` → `abstract` for every `(refines …)` claim.
-    ///
-    /// ⭐ A refinement pair is not one fact set. The abstract and the concrete description are
-    /// *alternative* accounts of the same thing, so a fact the abstract declares absent and the
-    /// concrete offers is not a contradiction inside one description — it is a violated
-    /// **exclusion obligation**, which `refinement.rs` reports with both sides and the
-    /// obligation named. Found by the semantic corpus: the refinement case was being reported
-    /// as `invalid-description` by this module before the refinement checker ever saw it.
-    refines: BTreeMap<String, String>,
+    /// Each block's and platform's direct composition, by [`composition`] (leaf `M3.4.8`).
+    composes: BTreeMap<String, Vec<String>>,
 }
 
 /// The outcome of a presence check.
@@ -142,6 +138,9 @@ impl FactMap {
         if owner != "<unnamed>" {
             self.declared.insert(owner.clone());
         }
+        if matches!(form.head(), Some("defblock" | "defplatform")) {
+            self.composes.insert(owner.clone(), composition(form));
+        }
 
         for clause in form.items().iter().skip(1) {
             let Some(head) = clause.head() else { continue };
@@ -158,11 +157,11 @@ impl FactMap {
                         self.requested.push(name);
                     }
                 }
-                "refines" => {
-                    if let Some((target, _)) = names_in(clause).into_iter().next() {
-                        self.refines.insert(owner.clone(), target);
-                    }
-                }
+                // A refinement pair is two declarations, one owing the other model §3's obligations,
+                // which `refinement.rs` checks — a fact the abstract declares absent and the concrete
+                // offers is a violated exclusion obligation, never this module's contradiction, which
+                // is one declaration's (leaf `M3.4.8`).
+                "refines" => {}
                 _ => {
                     // `requires` and other clauses can nest `uses`/`needs`, so recurse into
                     // anything that is not itself a presence clause.
@@ -201,12 +200,8 @@ impl FactMap {
                 span,
             };
             match slot {
-                Slot::Offered => {
-                    self.offered.entry(name).or_insert(entry);
-                }
-                Slot::Absent => {
-                    self.absent.entry(name).or_insert(entry);
-                }
+                Slot::Offered => self.offered.entry(name).or_default().push(entry),
+                Slot::Absent => self.absent.entry(name).or_default().push(entry),
             }
         }
     }
@@ -314,30 +309,57 @@ impl FactMap {
         //
         // §5.3: "Reject contradictory declarations rather than choosing one." Choosing one
         // would be a silent decision about which half of the description the author meant, and
-        // the author is the only one who knows.
-        for (fact, offered) in &self.offered {
-            if let Some(absent) = self.absent.get(fact) {
-                if self.related_by_refinement(&offered.declared_by, &absent.declared_by) {
-                    // Owned by the refinement checker, which reports it as a violated
-                    // exclusion obligation with both sides and the obligation named.
-                    continue;
+        // the author is the only one who knows. A contradiction is one declaration saying both of
+        // itself, or of a part it composes: at two other declarations, an offer and an absence are
+        // two statements of two devices, each judged on its own, as two values are (model §2 rule 1,
+        // leaf `M3.4.8`,
+        // `docs/decisions/decision_absence-per-provider.md`). Every declaration is compared, so a
+        // contradiction written after another provider's statement is never hidden by it.
+        for (fact, absences) in &self.absent {
+            let Some(offers) = self.offered.get(fact) else {
+                continue;
+            };
+            for absent in absences {
+                let parts = self.composed_by(&absent.declared_by);
+                for offered in offers {
+                    let (message, offered_label) = if offered.declared_by == absent.declared_by {
+                        (
+                            format!(
+                                "`{fact}` is declared both offered and absent by `{}`",
+                                offered.declared_by
+                            ),
+                            format!("declared offered by `{}`", offered.declared_by),
+                        )
+                    } else if parts.contains(&offered.declared_by) {
+                        // A declaration's absence covers what it is made of (model §2 rule 1): a platform
+                        // composing a block that offers what it declares absent says both of itself.
+                        (
+                            format!(
+                                "`{fact}` is declared absent by `{}` and offered by `{}`, which it composes",
+                                absent.declared_by, offered.declared_by
+                            ),
+                            format!(
+                                "offered by `{}`, part of `{}`",
+                                offered.declared_by, absent.declared_by
+                            ),
+                        )
+                    } else {
+                        continue;
+                    };
+                    diagnostics.push(
+                        Diagnostic::error(
+                            "invalid-description",
+                            message,
+                            Label::new(
+                                absent.span,
+                                format!("declared absent by `{}`", absent.declared_by),
+                            ),
+                            "remove one declaration — a contradiction is not resolved by preferring \
+                             one side, because only the author knows which half was meant",
+                        )
+                        .with_secondary(Label::new(offered.span, offered_label)),
+                    );
                 }
-                diagnostics.push(
-                    Diagnostic::error(
-                        "invalid-description",
-                        format!("`{fact}` is declared both offered and absent"),
-                        Label::new(
-                            absent.span,
-                            format!("declared absent by `{}`", absent.declared_by),
-                        ),
-                        "remove one declaration — a contradiction is not resolved by preferring \
-                         one side, because only the author knows which half was meant",
-                    )
-                    .with_secondary(Label::new(
-                        offered.span,
-                        format!("declared offered by `{}`", offered.declared_by),
-                    )),
-                );
             }
         }
 
@@ -353,7 +375,7 @@ impl FactMap {
             // block that declares a capability absent does not stop being absent because it is
             // also declared.
             if self.presence(fact) == Presence::Absent {
-                let declaration = &self.absent[fact];
+                let declaration = &self.absent[fact][0];
                 diagnostics.push(
                     Diagnostic::error(
                         "infeasible-configuration",
@@ -410,27 +432,18 @@ impl FactMap {
         }
     }
 
-    /// Whether one of these two declarations refines the other, directly or transitively.
-    fn related_by_refinement(&self, a: &str, b: &str) -> bool {
-        self.refines_chain(a, b) || self.refines_chain(b, a)
-    }
-
-    fn refines_chain(&self, from: &str, to: &str) -> bool {
-        let mut current = from;
-        // Bounded by the number of edges, so a cycle in `refines` cannot spin here.
-        for _ in 0..self.refines.len() + 1 {
-            let Some(next) = self.refines.get(current) else {
-                return false;
-            };
-            if next == to {
-                return true;
+    /// Every block and platform `name` composes, at any composition depth.
+    fn composed_by(&self, name: &str) -> BTreeSet<String> {
+        let mut seen = BTreeSet::new();
+        let mut next: Vec<&String> = self.composes.get(name).into_iter().flatten().collect();
+        while let Some(part) = next.pop() {
+            if part != name && self.composes.contains_key(part) && seen.insert(part.clone()) {
+                next.extend(self.composes.get(part).into_iter().flatten());
             }
-            current = next;
         }
-        false
+        seen
     }
 
-    /// A span to point at for a fact: its own `needs` edge if there is one, else the request.
     fn request_span(&self, fact: &str) -> Span {
         for edges in self.needs.values() {
             for (name, span) in edges {
@@ -456,6 +469,34 @@ impl FactMap {
 enum Slot {
     Offered,
     Absent,
+}
+
+/// What a block or a platform composes directly: every name a `uses` list of its holds, wherever the declaration
+/// writes one — at its top, inside `requires`, inside a nested `requires` — but inside `offers`, `absent` or
+/// `refines`, which name facts and a refinement target. A block's or a platform's `uses` alone is composition (model §8
+/// rules 1 and 5); the one reading model §2 rule 1 and §3 rule 3 share (leaf `M3.4.8`).
+#[must_use]
+pub fn composition(form: &Form) -> Vec<String> {
+    fn walk(form: &Form, out: &mut Vec<String>) {
+        match form.head() {
+            Some("offers" | "absent" | "refines") => {}
+            Some("uses") => out.extend(names_in(form).into_iter().map(|(name, _)| name)),
+            _ => {
+                for item in form.items().iter().skip(1) {
+                    if matches!(item, Form::List { .. }) {
+                        walk(item, out);
+                    }
+                }
+            }
+        }
+    }
+    let mut out = Vec::new();
+    for item in form.items().iter().skip(2) {
+        if matches!(item, Form::List { .. }) {
+            walk(item, &mut out);
+        }
+    }
+    out
 }
 
 /// The names a clause mentions: a bare symbol argument, or the head of a nested form.

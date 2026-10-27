@@ -15,8 +15,8 @@ fact is refused: archogen will not guess which half was meant.
 > **In one minute, for engineers.** Offered is a claim, not evidence; absent is a definite negative; undescribed is
 > neither. By `ROADMAP.md` §5.3, an unknown inside the transitive closure of the requested services is
 > `missing-fact`, and one outside it is metadata that `archogen check` lists and nothing fails. A required fact
-> declared absent is `infeasible-configuration`; offered and absent together is `invalid-description`, reachable
-> or not. F04, F05 and F06 run against one description, so neither blocking on every unknown nor on none passes.
+> declared absent is `infeasible-configuration`; one declaration offering and declaring absent one fact is
+> `invalid-description`, reachable or not, as is one declaring absent what a part it composes offers; two other declarations' statements are two. F04, F05 and F06 run against one description, so neither blocking on every unknown nor on none passes.
 > The pass is `crates/eadl-model/src/presence.rs`, and it is not provider resolution.
 
 ## How it works
@@ -99,21 +99,34 @@ has already said it does not have.
 
 ### Contradictions are rejected, never resolved
 
+A contradiction is one declaration saying both of itself — F06's case, `docs/semantics/cases/invalid-contradictory-presence.eadl`:
+
 ```text
-error[invalid-description]: `low-power-timer` is declared both offered and absent
-  --> t.eadl:5:9
-  |
-5 |         (defblock timer.b (absent low-power-timer))
-  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ declared absent by `timer.b`
-  --> t.eadl:4:9
-  |
-4 |         (defblock timer.a (offers low-power-timer))
-  |         ------------------------------------------ declared offered by `timer.a`
-  = hint: remove one declaration — a contradiction is not resolved by preferring one side,
-          because only the author knows which half was meant
+$ archogen check docs/semantics/cases/invalid-contradictory-presence.eadl
+error[invalid-description]: `low-power-timer` is declared both offered and absent by `a`
+  --> docs/semantics/cases/invalid-contradictory-presence.eadl:11:46
+   |
+11 | (defblock a (offers low-power-timer) (absent low-power-timer))
+   |                                              ^^^^^^^^^^^^^^^ declared absent by `a`
+  --> docs/semantics/cases/invalid-contradictory-presence.eadl:11:21
+   |
+11 | (defblock a (offers low-power-timer) (absent low-power-timer))
+   |                     --------------- declared offered by `a`
+  = hint: remove one declaration — a contradiction is not resolved by preferring one side, because only the author knows which half was meant
+archogen: invalid-description: 1 diagnostic(s) in docs/semantics/cases/invalid-contradictory-presence.eadl
 ```
 
 Both sites are named, because the author looking at one of them cannot see the other.
+
+Two declarations are two statements. A serial port declaring `(absent debug-port)` beside another offering
+`debug-port` describes two devices, not a contradiction, and nothing refuses it: the fact is offered, and a requirement
+on it is the search's to bind to the port that has it. A declaration's absence does cover what it is made of: a
+board declaring `(absent debug-port)` while composing — through any `uses` it writes, at any depth — a port offering
+it says both of itself, and is refused as F06 is. Every declaration is compared, a service's too, not the first
+of each fact (leaf `M3.4.8`, `docs/decisions/decision_absence-per-provider.md`, which made the rule per declaration
+from description-wide; F06's case wrote its blocks so before it). An abstract platform's absence is another matter, model
+§3's: a platform refining it must not offer the fact, nor compose a block that does, nor may any refinement further
+down its chain.
 
 Unlike an unknown fact, a contradiction is invalid whether or not it is reachable. §5.3 states
 the relevance rule for unknowns specifically, and states the rejection rule for contradictions
@@ -139,7 +152,7 @@ resolver nobody reviewed.
 
 `crates/eadl-model/src/presence.rs`, run as the fifth pass of `archogen check`. Fixtures **F04**
 (a relevant capability undescribed → `missing-fact`), **F05** (an irrelevant one → the system
-stays admissible) and **F06** (offered and absent together → `invalid-description`) are the two
+stays admissible) and **F06** (one declaration offering and declaring absent one fact → `invalid-description`) are the two
 halves of §5.3's single decision, in `crates/eadl-model/tests/f04_f06_presence.rs`, with worked
 cases in `docs/semantics/cases/`.
 

@@ -565,6 +565,12 @@ decided in this record.
   `SR-H16` gives the question to `M3.4`, decided in a reviewed record with its reason — two blocks that differ in one
   fact writing `(f false)` at one being two providers' two values, each judged on its own (§5; R24 5; R26 5; R27 3;
   R29 6).
+  *Decided `2026-10-27` by leaf `M3.4.8` in a reviewed record of its own,
+  [`decision_absence-per-provider.md`](decision_absence-per-provider.md): a fact is not both offered and absent by
+  one declaration, itself or through what it composes, two other declarations' offer and absence being two
+  statements, each judged on its own; model §2 rule 1
+  reads per declaration, every declaration compared; and model §3 rule 3 keeps an exclusion through what a refinement
+  composes and through a chain of refinements.*
 - A negative requirement, which `ROADMAP.md` §5.1.1 lists among what refinement checks, is model §3's there, an
   absence kept (model §3 rule 3). A requirement that a provider *not* have a fact has no spelling in `/1`:
   `(requires (absent f))` is a provider's clause where a constraint stands, `invalid-description` (§1, §8; R29 1), and

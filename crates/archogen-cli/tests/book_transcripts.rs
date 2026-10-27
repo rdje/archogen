@@ -34,7 +34,6 @@ const BACKLOG: &[&str] = &[
     "boundary.md: error[boundary-implementation-in-description]: `wcet` is implementation, and eADL contains no implementation @ examples/sensor.eadl:4:5",
     "presence.md: error[missing-fact]: `wrap-behavior` is required by this system and nothing describes it",
     "presence.md: error[infeasible-configuration]: `low-power-timer` is required by this system but declared absent",
-    "presence.md: error[invalid-description]: `low-power-timer` is declared both offered and absent @ t.eadl:5:9",
     "reading.md: error[read-malformed-number]: `3ms` is not a number @ examples/sensor.eadl:4:13",
     "reading.md: error[read-unclosed-list]: this list is never closed @ examples/time.eadl:3:1",
     "refinement.md: error[refinement-violated]: `soc.concrete` does not offer `wrap-behavior`, which `soc.abstract` guarantees",

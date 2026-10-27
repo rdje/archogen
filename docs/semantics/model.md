@@ -83,10 +83,19 @@ A quantity is written as a number followed by a unit, such as `10 ms` or `48 MHz
 A platform declares what it **offers** and what it declares **absent**; a system **requires** facts
 (`crates/eadl-model/src/presence.rs`). Absent is a definite answer, not a gap.
 
-1. **A fact is not both offered and absent.** A contradiction is not resolved by preferring one side,
-   because only the author knows which half was meant: `invalid-description`.
-2. **A required fact that is declared absent makes the configuration infeasible.** Either the requirement
-   or the platform is wrong: `infeasible-configuration`.
+1. **A fact is not both offered and absent by one declaration.** A block, a platform or a service that offers
+   a fact and declares it absent contradicts itself, and a contradiction is not resolved by preferring one side,
+   because only the author knows which half was meant: `invalid-description`. A declaration's absence covers what it
+   is made of: a block or platform declaring a fact absent while a block or platform it composes — through every
+   `uses` it writes, at any composition depth (§8 rules 1 and 5) — offers it says both of itself, `invalid-description`
+   too. Two other declarations' offer and absence are two statements of two devices, each judged on its own, as two
+   values are; every declaration is compared, not the first of each fact (`docs/decisions/decision_absence-per-provider.md`, leaf `M3.4.8`, which made this rule
+   per declaration from description-wide; `docs/semantics/migrations/eadl-1-an-absence-is-a-declaration-s-statement.md`).
+2. **A required fact that is declared absent makes the configuration infeasible.** A fact is absent to the
+   description when some declaration declares it absent and none offers it: either the requirement or the platform
+   is wrong, `infeasible-configuration`. A fact a block or platform offers is the search's to bind (`M3.4`); one
+   offered only outside the system's hardware or only by a service, which the search binds to nothing, is accepted
+   here and refused by the search until `M3.4.7` makes the check adopt its verdict.
 3. **A required fact that nothing describes is missing.** It lies inside the dependency closure of what
    the system requests, so no decision that depends on it can be made: `missing-fact`.
 4. **What lies outside the closure fails nothing, and stays visible** (§5.3). An undescribed fact that nothing
@@ -115,7 +124,10 @@ violated: `refinement-violated`.
    accepted. A fact offered more than once, as a `region` is per named region, is kept one offer at a
    time (leaf `M1.40`).
 3. **An absence is kept.** A fact the abstract platform declares absent is not offered by the concrete
-   one. An explicit absence is a constraint something relies on, not an omission to fill in.
+   one, nor by any block or platform the concrete one composes — every one a `uses` it writes names, at its top or
+   inside a `requires`, and theirs in turn, at any composition depth (§8 rules 1 and 5) — and a concrete platform keeps
+   the absences of every platform up the chain its abstract one refines. An explicit absence is a constraint something relies on, not an omission to fill in, and is lost neither
+   through what a refinement is made of nor through a chain (leaf `M3.4.8`).
 4. **The target is declared.** A refinement names the platform it refines, and that platform must be
    present in the description (`crates/eadl-model/src/check.rs`). A target described nowhere is
    `missing-fact`: the contract the obligations are owed to is unavailable, so none of them can be
@@ -179,10 +191,10 @@ the one code that names more than one rule today says so.
 | `quantity-overflow` | a decimal is too precise to represent exactly (§1 rule 5) | reduce the precision, or change the unit so fewer digits are needed | `check (defblock timer.counter (offers (tick-rate 0.0000000000000000000000000000000000000001 MHz)))` |
 | `quantity-invalid` | no input today: the totality arm for a refusal `Quantity::new` may grow (§1 rule 6) | write a quantity as a number followed by a known unit | `none: the catch-all arm of Quantity::read, for a refusal Quantity::new may grow later; today it refuses only what the frequency and duration rows state, and each has its own code (section 1 rule 6)` |
 | `priority-below-one` | a task's priority is below 1 (§4 rule 5) | write a rank of 1 or more: 1 is the highest priority, and a larger number is a lower one | `check (defsystem s (task t (period 10 ms) (deadline 10 ms) (priority 0)))` |
-| `invalid-description` | a description contradicts itself: a fact both offered and absent (§2 rule 1), or a task with two release models (§4 rule 1); or the substitutability relation refuses what it writes, each refusal naming its cause (§7 rule 6); or a provider offers a consumed function with no channel, or a region that names no byte range (§8 rules 3 and 5), or a system's memory map makes two claims on one byte or reserves all its placement memory (§8 rule 10) | remove one of the two declarations; only the author knows which was meant | `check (defblock b (offers counter-width) (absent counter-width))` |
+| `invalid-description` | a description contradicts itself: a fact one declaration both offers and declares absent, itself or through what it composes (§2 rule 1), or a task with two release models (§4 rule 1); or the substitutability relation refuses what it writes, each refusal naming its cause (§7 rule 6); or a provider offers a consumed function with no channel, or a region that names no byte range (§8 rules 3 and 5), or a system's memory map makes two claims on one byte or reserves all its placement memory (§8 rule 10) | remove one of the two declarations; only the author knows which was meant | `check (defblock b (offers counter-width) (absent counter-width))` |
 | `infeasible-configuration` | a required fact is declared absent (§2 rule 2); or an assignment gives a provider more requesters than channels, or two bound providers overlapping bytes, or a requester bound to a block or platform outside its system's hardware (§8 rules 3, 5 and 7), or a caller bound to a provider not reachable at its system's level, or declared reachable from none (§8 rule 9), or a placement given outside placement memory (§8 rule 10), once no assignment avoids it | correct the requirement or the platform | `check (defblock timer.counter (offers counter-width) (absent low-power-timer)) (defservice time.lowpower (requires (needs low-power-timer))) (defsystem s (requires (uses time.lowpower)))` |
 | `missing-fact` | something the system requires is described nowhere: a required fact (§2 rule 3), a task's release model (§4 rule 1), or the platform a refinement names (§3 rule 4); or what §8 cannot judge an assignment without — a provider's `channels`, a region's size, a bound provider's level (§8 rules 3, 5, 9 and 10) | declare the fact offered or absent on the platform; give a task a `period` or a `min-separation`; for a refinement, import the module that declares the target, or correct its name | `check (defservice time.monotonic (requires (needs wrap-behavior))) (defsystem s (requires (uses time.monotonic)))` |
-| `refinement-violated` | a concrete platform breaks an obligation of the abstract one it refines (§3 rules 1–3) | honour the obligation the diagnostic names: offer the guarantee, give the bounded value, or drop what the abstract declares absent | `check (defplatform soc.abstract (offers counter-width) (absent debug-port)) (defplatform soc.concrete (refines soc.abstract) (offers counter-width debug-port))` |
+| `refinement-violated` | a concrete platform breaks an obligation of the abstract one it refines, or of a platform up its chain (§3 rules 1–3) | honour the obligation the diagnostic names: offer the guarantee, give the bounded value, or drop what the abstract declares absent | `check (defplatform soc.abstract (offers counter-width) (absent debug-port)) (defplatform soc.concrete (refines soc.abstract) (offers counter-width debug-port))` |
 | `unsupported-profile` | the description asks for something the active profile does not admit (§4 rules 2–4 and 6); or the substitutability relation meets a constraint on a fact no rule decides, or a comparison past the exact arithmetic (§7 rule 6), a region's range among them (§8 rule 5); or a caller stating a level its system does not run its callers at (§8 rule 9) | request a profile that supports it, or change the description to fit this one; nothing is silently weakened | `check (defsystem s (task a (period 10 ms) (deadline 10 ms) (priority 1)) (task b (period 10 ms) (deadline 10 ms) (priority 1)))` |
 | `tool-failure` | the toolchain could not proceed (§4 rule 7) | this is a failure of the toolchain, not a verdict about the description; report it | `none: only a shipped kind module over 4 GiB reaches it, and the kind modules are embedded in the toolchain (shipped_registry in crates/eadl-model/src/check.rs)` |
 | `boundary-implementation-in-description` | a construct is implementation, which eADL does not contain (§5) | move it to the layer the diagnostic names; the description states what, not how | `check (defsystem app.rt (task sensor (period 10 ms) (deadline 10 ms) (wcet 850 us)))` |
@@ -308,8 +320,9 @@ configuration checker judges a plan's bindings again by those that refuse an ass
    a record as a block — is reachable at the level: a set without it is a conflict; a level undescribed or offered bare
    is an unknown, and one declared absent, reachable from no level, a conflict — the codes the relation gives a requirer
    that states a level (`SR-H18`), so `SR-H12`'s "refused" is the assignment's, and the description's only by rule 6.
-   With no level given, these rules say nothing. At `archogen check`, §2 rule 1 refuses one block's absent level beside
-   another's offered one first, description-wide.
+   With no level given, these rules say nothing. One block's absent level beside another's offered one is two
+   declarations' statements, which §2 rule 1 no longer refuses (leaf `M3.4.8`), so these rules judge them, each
+   provider on its own.
 10. **Placement** (`M3.3.5.1`; `SR-H13`, amended `2026-10-22`). Judged once per system, over its hardware, never per
    assignment. **Placement memory** is a region `(executable true)` and not `(reserved true)`: where a plan places the
    image — M3 chooses the region, `M4.1` the offsets. A reserved region overlapping it is a **hole** the plan avoids,

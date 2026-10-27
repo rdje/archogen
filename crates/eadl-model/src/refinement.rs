@@ -489,6 +489,77 @@ pub fn check(abstract_: &Facets, concrete: &Facets) -> RefinementReport {
 }
 
 /// What one offer of the abstract description costs the concrete one, which offers the same fact as `refined`.
+/// Model §3 rule 3 through a chain and through composition (leaf `M3.4.8`,
+/// `docs/decisions/decision_absence-per-provider.md`): every absence the abstract description and what it refines in
+/// turn — `ancestors`, nearest first — declare is kept by `concrete` and by every declaration it `composes`, at any
+/// depth through blocks and platforms. An absence is one declaration's statement, so two unrelated declarations do not
+/// contradict each other (model §2 rule 1); a refinement owes its abstract's exclusions with what it is made of, and a
+/// chain of refinements owes every link's. The pair's own case — the abstract's absence against the concrete's own
+/// offer — is [`check`]'s, reported once there.
+#[must_use]
+pub fn exclusions_through(
+    abstract_: &Facets,
+    ancestors: &[&Facets],
+    concrete: &Facets,
+    composes: &[&Facets],
+) -> Vec<Diagnostic> {
+    let mut violations = Vec::new();
+    if !concrete.readable {
+        return violations;
+    }
+    for owner in std::iter::once(abstract_).chain(ancestors.iter().copied()) {
+        if !owner.readable {
+            continue;
+        }
+        for (name, absent_span) in &owner.absent {
+            let found = std::iter::once(concrete)
+                .chain(composes.iter().copied())
+                .filter(|offerer| offerer.readable)
+                .filter(|offerer| {
+                    !(std::ptr::eq(owner, abstract_) && std::ptr::eq(*offerer, concrete))
+                })
+                .find_map(|offerer| {
+                    offerer
+                        .offers
+                        .get(name)
+                        .and_then(|offers| offers.first())
+                        .map(|offer| (offerer, offer))
+                });
+            let Some((offerer, offer)) = found else {
+                continue;
+            };
+            let through = if std::ptr::eq(offerer, concrete) {
+                String::new()
+            } else {
+                format!(" through `{}`, which it composes", offerer.name)
+            };
+            let owed = if std::ptr::eq(owner, abstract_) {
+                format!("`{}` declares absent", owner.name)
+            } else {
+                format!(
+                    "`{}` declares absent, and `{}` refines it in turn",
+                    owner.name, abstract_.name
+                )
+            };
+            violations.push(
+                Diagnostic::error(
+                    "refinement-violated",
+                    format!("`{}` offers `{name}`{through}, which {owed}", concrete.name),
+                    Label::new(offer.span, "offered here"),
+                    format!(
+                        "violated obligation `{}`: {} — an explicit absence is a constraint something relies on, \
+                         kept through what a refinement composes and through every refinement it refines",
+                        Obligation::Exclusion.slug(),
+                        Obligation::Exclusion.statement()
+                    ),
+                )
+                .with_secondary(Label::new(*absent_span, "declared absent here")),
+            );
+        }
+    }
+    violations
+}
+
 fn keep(
     abstract_: &Facets,
     concrete: &Facets,

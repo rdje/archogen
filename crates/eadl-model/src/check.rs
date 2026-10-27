@@ -514,6 +514,32 @@ struct Refinements {
     violated: Vec<Diagnostic>,
 }
 
+/// Every block and platform `name` composes, at any composition depth, by [`crate::presence::composition`]'s reading —
+/// a block's or a platform's every `uses` (model §8 rules 1 and 5).
+fn composed(forms: &[Form], name: &str) -> Vec<String> {
+    let hardware = |form: &&Form| matches!(form.head(), Some("defblock" | "defplatform"));
+    let declared = |wanted: &str| {
+        forms
+            .iter()
+            .filter(hardware)
+            .find(|form| form.items().get(1).and_then(Form::as_symbol) == Some(wanted))
+    };
+    let mut seen: Vec<String> = Vec::new();
+    let mut next: Vec<String> = declared(name)
+        .map(crate::presence::composition)
+        .unwrap_or_default();
+    while let Some(part) = next.pop() {
+        if part == name || seen.contains(&part) {
+            continue;
+        }
+        if let Some(form) = declared(&part) {
+            next.extend(crate::presence::composition(form));
+            seen.push(part);
+        }
+    }
+    seen
+}
+
 /// Check every `(refines …)` claim in the description.
 fn refinements(forms: &[Form]) -> Refinements {
     let mut unreadable = Vec::new();
@@ -550,6 +576,26 @@ fn refinements(forms: &[Form]) -> Refinements {
             continue;
         };
         violated.extend(refinement::check(abstract_, concrete).diagnostics());
+        // Model §3 rule 3 through the chain the abstract refines and what the concrete composes (leaf `M3.4.8`).
+        let named = |name: &str| facets.iter().find(|f| f.name == name);
+        let mut ancestors: Vec<&Facets> = Vec::new();
+        let mut link = abstract_;
+        while let Some(next) = link
+            .refines
+            .as_ref()
+            .and_then(|(target, _)| named(target))
+            .filter(|next| ancestors.len() < facets.len() && !std::ptr::eq(*next, concrete))
+        {
+            ancestors.push(next);
+            link = next;
+        }
+        let composes: Vec<&Facets> = composed(forms, &concrete.name)
+            .iter()
+            .filter_map(|name| named(name))
+            .collect();
+        violated.extend(refinement::exclusions_through(
+            abstract_, &ancestors, concrete, &composes,
+        ));
     }
     Refinements {
         unreadable,

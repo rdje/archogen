@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — an absence is one device's statement
+
+`ARCHOGEN-M3-1010` (leaf `M3.4.8`), `2026-10-27`.
+
+- A description of two devices, one declaring a fact absent and another offering it, is no longer refused as a
+  contradiction: each statement is judged on its own, as two different values already were. One declaration
+  offering and declaring absent one fact — itself or through a part it composes — is still refused.
+- A platform refining another keeps the absences of every platform up its chain, and cannot bring a refused fact
+  back through a part it composes; the message names the part.
+
 ## archogen — a group of requirements is met by one provider
 
 `ARCHOGEN-M3-1009` (leaf `M3.4.9`), `2026-10-27`.

@@ -45,7 +45,7 @@ A concrete description can claim to satisfy an abstract one:
 | --- | --- |
 | **guarantee** | the abstract offers a fact and the concrete does not, or offers it only as `false` |
 | **constraint** | a value the concrete gives does not satisfy a bound the abstract states, or the concrete does not offer a value the abstract offers |
-| **exclusion** | the abstract declares a fact absent and the concrete offers it |
+| **exclusion** | the abstract — or any platform up the chain it refines — declares a fact absent, and the concrete offers it, or composes a block or platform that does |
 
 "This refinement is invalid" sends an author to re-read two descriptions and guess. This does
 not:
@@ -91,6 +91,15 @@ error[refinement-violated]: `soc.concrete` offers `dma`, which `soc.abstract` de
 An abstract description declares a fact absent *because something depends on its absence*. A
 refinement that quietly adds it has changed what the abstract description meant, while still
 looking like it says strictly more.
+
+It does not escape the obligation by adding the fact through a part. A concrete platform that composes a block
+offering what its abstract declares absent — through any `uses` it writes, at its top or inside a `requires`, at any
+composition depth — breaks the exclusion as
+surely as offering it itself, and the message names the part; and a platform refining one that refines another owes
+the first one's absences too, so none is lost down a chain (leaf `M3.4.8`,
+`crates/eadl-model/tests/refinement_through.rs`). Blocks that are no refinement of each other are another matter:
+one declaring a fact absent beside one offering it, which it does not compose, is two devices, not a contradiction
+([Presence](presence.md)).
 
 ### Why a bound carries a direction
 
