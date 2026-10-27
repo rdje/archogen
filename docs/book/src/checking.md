@@ -152,27 +152,28 @@ The verdict maps to the process exit code through one table, and a test asserts 
 total — so the number a script branches on and the word a human reads come from the same place:
 
 ```console
-$ archogen check examples/alternative-timer/system.eadl ; echo $?
-error[missing-fact]: `absolute-deadline` is required by this system and no declaration offers it; the engine's adapter `deadline-over-delay` offers it over a block or platform offering what it needs, and `timer.delay` offers part of that and leaves `counter-modulus` undescribed
-  --> examples/alternative-timer/system.eadl:52:25
-   |
-52 |   (needs time.monotonic absolute-deadline))
-   |                         ^^^^^^^^^^^^^^^^^ required through this request
-  --> examples/alternative-timer/system.eadl:27:11
-   |
-27 |   (absent absolute-deadline))
-   |           ----------------- declared absent by `timer.delay`
-  = hint: describe `counter-modulus` at `timer.delay`: then `deadline-over-delay`'s path exists by name, and the search judges it by value — or declare `absolute-deadline` offered where a provider has it
-archogen: missing-fact: 1 diagnostic(s) in examples/alternative-timer/system.eadl
+$ archogen check docs/semantics/cases/missing-relevant-fact.eadl ; echo $?
+error[missing-fact]: `wrap-behavior` is required by this system and nothing describes it
+  --> docs/semantics/cases/missing-relevant-fact.eadl:9:59
+  |
+9 | (defservice time.monotonic (requires (needs counter-width wrap-behavior)))
+  |                                                           ^^^^^^^^^^^^^ required through this request
+  = hint: declare `wrap-behavior` as offered or absent on the platform — it is inside the dependency closure of what this system requests, so no decision that depends on it can be made
+archogen: missing-fact: 1 diagnostic(s) in docs/semantics/cases/missing-relevant-fact.eadl
 11
 ```
 
-That is `uc3`: the platform offers only a relative delay timer, the workload requires absolute
-deadlines, and the engine's adapter that would program one through the other needs the timer's
-modulus, which the description does not state — so the refusal names the one fact whose
-description would open the path (leaf `M3.2.4`). Describing it is a change to the description,
-brought to the director first, and its policy waits on the catalog's records (`M3.7`); then the
-same description builds.
+That is F04, a relevant capability left undescribed: the service needs the counter's wrap behaviour, and no block
+says whether it has one, so no decision resting on it can be made.
+
+`uc3`, `examples/alternative-timer`, was this section's example until `2026-10-27`. Its platform offers only a
+relative delay timer, and its workload requires absolute deadlines. The engine's adapter that programs one through the
+other needs the timer's modulus, which the description did not state, so the refusal named that one fact (leaf
+`M3.2.4`). The timer now states it, `(counter-modulus 4294967296)`, the count a 32-bit counter running through its
+width wraps at (leaf `M3.4.7.1`). That is a fact about the hardware: no requirement or absence moved, and the timer
+still declares absolute deadlines absent. So `archogen check` accepts it, and the search realizes its deadlines through
+the adapter. What still stops `uc3` building is its scheduling policy's constraints, which only a catalog record can
+offer (`M3.7`).
 
 ### Refused by name
 

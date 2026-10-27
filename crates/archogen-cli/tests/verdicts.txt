@@ -126,7 +126,7 @@
 0 - docs/semantics/modules/hw.timer.eadl
 0 - docs/semantics/modules/os.time.eadl
 20 - docs/semantics/vocabulary/vocabulary.eadl
-11 missing-fact examples/alternative-timer/system.eadl
+0 - examples/alternative-timer/system.eadl
 12 unsupported-profile examples/bounded-queue/system.eadl
 0 - examples/high-interference/system.eadl
 0 - examples/periodic-three/system.eadl

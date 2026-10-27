@@ -334,14 +334,12 @@ fn the_examples_directory_agrees_with_the_pipeline() {
     for (relative, expected) in [
         ("examples/periodic-three/system.eadl", Verdict::Ok),
         ("examples/high-interference/system.eadl", Verdict::Ok),
-        (
-            "examples/alternative-timer/system.eadl",
-            Verdict::MissingFact,
-        ),
-        // ⭐ uc3 and uc4 are both refused, for reasons that must not be confused. uc3's refusal
-        // is TEMPORARY — the same description must build once M3.2 supplies indirect
-        // realization. uc4's is PERMANENT for this profile: admitting it requires a new named
-        // profile with its own analysis obligations, not a wider `rt-static-up-v1`.
+        // ⭐ uc3 is accepted since its timer states its modulus (leaf `M3.4.7.1`): M3.2's adapter realizes
+        // its absolute deadline past the timer's declared absence, and what remains, its policy's
+        // constraints, is the search's to refuse until M3.7. uc4's refusal is PERMANENT for this
+        // profile: admitting it requires a new named profile with its own analysis obligations, not a
+        // wider `rt-static-up-v1`. The two must not be confused.
+        ("examples/alternative-timer/system.eadl", Verdict::Ok),
         (
             "examples/bounded-queue/system.eadl",
             Verdict::UnsupportedProfile,

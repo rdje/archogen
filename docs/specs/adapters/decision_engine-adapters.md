@@ -258,10 +258,12 @@ tracked description, names each verdict that moves in a migration note, and move
 `examples/alternative-timer`'s `time.deadline` is met by `deadline-over-delay` over `timer.delay`, which offers
 `relative-delay`, once `timer.delay` states its modulus: the kind needs `counter-modulus` beneath, and its
 `supported-horizon` is `timer.delay`'s unambiguous horizon, derived from that modulus — `(2^32 − 1) / 1 MHz`,
-`4294.967295 s`, past `10 s`. The description states `counter-width 32 bit` and no modulus, so it must gain
+`4294.967295 s`, past `10 s`. The description stated `counter-width 32 bit` and no modulus, so it had to gain
 `(counter-modulus 4294967296)`: `M3.4.7`'s migration, `counter-modulus` beside `counter-width`, which changes the
-description and so goes to the director before it is made (`SR-H10`; relation record §10). `M3.2` makes no change to
-it. Its policy's constraints wait on a catalog record (`M3.7`). So `uc3` resolves once `M3.2`, that migration and
+description and so went to the director before it was made (`SR-H10`; relation record §10). *Made `2026-10-27` by
+leaf `M3.4.7.1`, under the director's delegation of that day: "is yours to take, but it better be sota, signoff and
+production-ready" (`docs/semantics/migrations/eadl-1-uc3-states-its-modulus.md`); `archogen check` accepts it, and
+`archogen resolve` refuses only its policy's constraints.* `M3.2` itself made no change to it. Its policy's constraints wait on a catalog record (`M3.7`). So `uc3` resolves once `M3.2`, that migration and
 `M3.7` have landed, and `examples/README.md`'s seal names the three in `.6`'s commit. `SR-H10`'s last step —
 `uc3` building as the README seals — is written into `M3.4.7`'s leaf with this record, with the condition that the
 description's change goes to the director first: `M3.2` closes having built the path, and the leaf that migrates the

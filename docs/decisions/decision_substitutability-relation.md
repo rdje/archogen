@@ -416,8 +416,8 @@ description gaining a fact §3.1 names, not a requirement weakened. The target's
 `(2^64 − 1) / 10 000 000 s = 1 844 674 407 370.9551615 s`, and fits the arithmetic. With `(counter-modulus 4294967296)`
 at `10 MHz`, the horizon is
 `4294967295 / 10 000 000 s = 429.4967295 s`, and `time.monotonic`'s `(unambiguous-horizon (at-least 60 s))` is
-satisfied; `timer.delay` in `examples/alternative-timer/system.eadl`, at `1 MHz` and with that modulus stated, would
-have `4294.967295 s`, slower and better here. A 16-bit counter, `(counter-modulus 65536)` at `10 MHz`, has
+satisfied; `timer.delay` in `examples/alternative-timer/system.eadl`, at `1 MHz` and stating that modulus since
+`2026-10-27` (leaf `M3.4.7.1`), has `4294.967295 s`, slower and better here. A 16-bit counter, `(counter-modulus 65536)` at `10 MHz`, has
 `65535 / 10 000 000 s = 6.5535 ms` and
 fails the same requirement: the faster wrapping counter §5.2 warns of, caught because the direction belongs to the
 horizon and the derivation to the vocabulary, not to anyone's sense of which counter is better. A reload counter,
@@ -610,6 +610,10 @@ the review history the rounds that found each.
 | `SR-H20` | `M3.4` | Every verdict `crates/archogen-cli/tests/verdicts.txt` and `module_cases.rs` freeze is kept, or changed only in the commit that names the case, the rule that moves it and its migration — a description gaining a fact, the target's agreement and its ledger source included — ordered after `M3.3` and `M3.7` where a migration needs them, the seven `0` verdicts `M3.1.1`'s round 14 measured among them. |
 | `SR-H21` | `M3.7` | The catalog record decision's §2 is amended so a contract facet states offers and absences of vocabulary facts, read by the relation's reader and judged like a block's, and a record whose path crosses a mediation boundary says so and enters only through `M3.2`'s search, where the requirer wrote `or-through-mediation` as `allowed`, bare or under `exactly`. |
 | `SR-H22` | `M3.7` | A design reviewed by a context that did not write it answers how a record's offer or absence meets a block's absence or offer, named in model §2 rule 2's amendment and decided with `M3.4`, and how a record's preconditions become offered sets judged by inclusion, a record with a precondition no entry states being no provider. |
+
+*`2026-10-27`: `SR-H10`'s description change — `timer.delay`'s `(counter-modulus 4294967296)` — was brought to the
+director, who delegated it that day ("is yours to take, but it better be sota, signoff and production-ready"); leaf
+`M3.4.7.1` made it (`docs/semantics/migrations/eadl-1-uc3-states-its-modulus.md`).*
 
 ## Why
 
