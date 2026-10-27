@@ -370,6 +370,14 @@ refused and the budget runs out before the search could show it: `analysis-incon
 search writes for a tracked description is one the configuration checker accepts, which a test holds over all of them
 (`crates/eadl-resolve/tests/plan.rs`).
 
+The search can also say what it did with one requirement (`eadl_resolve::search::explain`, leaf `M3.4.13.1`), the
+account `archogen explain` prints. It runs the same search and, for the requirement asked, lists each provider of the
+hardware with its answer — meets it, offers a value it refuses, declares it absent, leaves it undescribed. Then it
+names the provider the plan binds and, for each other one that meets it, what the joint rules say with that one in
+its place — for one the search tried first, the reason it moved on. Or, with no plan, it says why: this requirement's own
+refusal, or another's that stopped the search while this one was met. It reads nothing the search does not, so the
+account and the plan cannot disagree.
+
 ## The precise rules
 
 The design is `docs/decisions/decision_substitutability-relation.md`; `docs/semantics/model.md` §7 is normative over
@@ -464,6 +472,15 @@ What it chose is written by `crates/eadl-resolve/src/plan.rs` (`M3.4.3`) as `arc
 configuration checker judges: the generator's own writer and its own digest of the elaborated program, sharing no code
 with the checker's reader, both held to one golden and to each other by `crates/eadl-resolve/tests/plan.rs`. A
 requester is a declaration or a task of a system, written `(task SYSTEM TASK)`, so a task never reads as a service.
+
+An account of a requirement (`explain`, `M3.4.13.1`) is the same run with its pairs selected by fact, then by requester
+or task: each provider of the hardware in the policy's order with its answer to the pair — satisfied when it meets
+every requirement, otherwise the first of refused, absent, unsupported, unknown and undescribed, the ranking a failed
+pair's code is read by, one function for both; the pair's `SR-H18` diagnostic when it has no candidate; and with a
+plan the provider bound and, for each other candidate, the joint rules' first conflict or unknown with it in the bound
+one's place, every other binding unchanged, or none where they accept that assignment too. A candidate ordered before
+the bound one makes an assignment the walk judged and refused; one after it, an assignment the walk never reached. A
+search stopped before its pairs — a refusal of what the description writes, or of the system's map — judges none.
 
 ### What is not claimed
 

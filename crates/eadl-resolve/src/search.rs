@@ -27,10 +27,18 @@
 //! refused, the first one free of conflicts gives its unknowns — describing what they lack might make it whole — and
 //! otherwise the first one's conflicts are the conflict set. The description's verdict is the highest of its
 //! diagnostics' codes by [`Verdict::precedence`].
+//!
+//! **One requirement explained** ([`explain`], leaf `M3.4.13.1`). The same run, its pairs read once: for each pair
+//! selected, every provider of the hardware with its answer, the search's own diagnostic when none meets it, and —
+//! when the search writes a plan — the provider bound and, for each other meeting it, the joint rules' first refusal
+//! of the plan with it in the bound one's place, every other binding unchanged. The walk judges assignments in order,
+//! the plan the first it accepts, so an other ordered before the bound one makes an assignment the walk judged and
+//! refused — its refusal is the walk's own — and one ordered after it an assignment the walk never reached, judged
+//! here by the same rules.
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use eadl_front::{Diagnostic, Form, Label, Verdict};
+use eadl_front::{Diagnostic, Form, Label, Span, Verdict};
 
 use crate::joint::{requesters, Binding, Joint, Kind, Obligation, Report, Requester, System};
 use crate::offer::{self, Provider};
@@ -166,16 +174,135 @@ pub fn search(
     policy: &Policy,
     limits: Limits,
 ) -> Search {
+    run(
+        declarations,
+        system,
+        level,
+        vocabulary,
+        policy,
+        limits,
+        None,
+    )
+    .search
+}
+
+/// Which requirements of a fact [`explain`] gives an account of.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Select<'a> {
+    /// Every requester of the system writing one.
+    Every,
+    /// A declaration's — a service, a policy, the system at its own level — by its name.
+    Requester(&'a str),
+    /// A task's of the system, by its name within it.
+    Task(&'a str),
+}
+
+impl Select<'_> {
+    /// Whether `who` is selected.
+    fn admits(self, who: &Who) -> bool {
+        match (self, who) {
+            (Self::Every, _) => true,
+            (Self::Requester(name), Who::Named(named)) => *named == name,
+            (Self::Task(name), Who::Task { task, .. }) => *task == name,
+            _ => false,
+        }
+    }
+}
+
+/// One requirement explained: a requester's requirements on one fact, as the search judged them (leaf `M3.4.13.1`).
+#[derive(Debug, Clone)]
+pub struct Account {
+    /// Who requires it, as the plan names a requester.
+    pub requester: Who,
+    /// The fact.
+    pub fact: String,
+    /// Where each of its requirements is written.
+    pub clauses: Vec<Span>,
+    /// Each provider of the system's hardware, in the selection policy's order, with its answer: satisfied when it
+    /// meets every requirement, otherwise the first of refused, absent, unsupported, unknown and undescribed among
+    /// them, as a failed search ranks them.
+    pub answers: Vec<(String, Answer)>,
+    /// Why no provider meets it, when none does: the search's own diagnostic.
+    pub unmet: Option<Diagnostic>,
+    /// The provider the plan binds, when the search writes one.
+    pub bound: Option<String>,
+    /// With a plan, each other provider meeting it, in the policy's order, and the joint rules' first refusal of the
+    /// plan with it in the bound one's place, every other binding unchanged — `None` where they accept it too, the
+    /// policy's order having put the bound one first.
+    pub instead: Vec<(String, Option<Diagnostic>)>,
+}
+
+/// What [`explain`] answers: the search, as [`search`] concludes it, and an account of each requirement selected.
+#[derive(Debug, Clone)]
+pub struct Explanation {
+    /// The search's conclusion.
+    pub search: Search,
+    /// Whether the search reached its requirements; `false` when it stopped first — a refusal of what the description
+    /// writes, or of the system's map — so that no requirement was judged.
+    pub judged: bool,
+    /// Every requirement the system's requesters write, as (requester, fact), in the search's order.
+    pub required: Vec<(Who, String)>,
+    /// An account of each requirement on the fact asked of the requesters selected, in the search's order.
+    pub accounts: Vec<Account>,
+}
+
+/// What [`explain`] is asked: a fact, and whose requirements on it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Asked<'a> {
+    /// The fact.
+    pub fact: &'a str,
+    /// The requesters whose requirements on it are explained.
+    pub select: Select<'a>,
+}
+
+/// Search `system` as [`search`] does, and give an account of each requirement `asked` names.
+#[must_use]
+pub fn explain(
+    declarations: &[Form],
+    system: &Form,
+    level: &str,
+    vocabulary: &Vocabulary,
+    policy: &Policy,
+    limits: Limits,
+    asked: Asked<'_>,
+) -> Explanation {
+    run(
+        declarations,
+        system,
+        level,
+        vocabulary,
+        policy,
+        limits,
+        Some(asked),
+    )
+}
+
+/// The search, and with `asked` the account [`explain`] gives.
+fn run(
+    declarations: &[Form],
+    system: &Form,
+    level: &str,
+    vocabulary: &Vocabulary,
+    policy: &Policy,
+    limits: Limits,
+    asked: Option<Asked<'_>>,
+) -> Explanation {
+    let stopped = |search: Search| Explanation {
+        search,
+        judged: false,
+        required: Vec::new(),
+        accounts: Vec::new(),
+    };
     let read = System::read(system, declarations);
     let read = match read.at(level, vocabulary) {
         Ok(read) => read,
         Err(why) => {
-            return refused(vec![Diagnostic::error(
+            return stopped(refused(vec![Diagnostic::error(
                 "tool-failure",
                 format!("the search was given a level it cannot bind callers at: {why}"),
                 Label::new(system.span(), "the system searched"),
                 "report it: the profile names a level the vocabulary does not have",
-            )])
+            )]))
         }
     };
     let hardware = |decl: &Form| matches!(decl.head(), Some("defblock" | "defplatform"));
@@ -198,21 +325,23 @@ pub fn search(
         }
     }
     if !diagnostics.is_empty() {
-        return refused(diagnostics);
+        return stopped(refused(diagnostics));
     }
     let joint = match Joint::new(&providers, &all, vocabulary) {
         Ok(joint) => joint,
-        Err(findings) => return refused(findings.iter().map(|f| f.diagnostic()).collect()),
+        Err(findings) => {
+            return stopped(refused(findings.iter().map(|f| f.diagnostic()).collect()))
+        }
     };
     let map = joint.map(&read);
     if !map.refused.is_empty() || !map.unknowns.is_empty() {
-        return refused(
+        return stopped(refused(
             map.refused
                 .iter()
                 .chain(&map.unknowns)
                 .map(|f| f.diagnostic())
                 .collect(),
-        );
+        ));
     }
     let placement = map.obligations.iter().find_map(|o| match o {
         Obligation::Placement {
@@ -231,16 +360,115 @@ pub fn search(
         .collect();
     let ordered = policy.order(&in_hardware);
     let pairs = pairs(&all, &read, &ordered, vocabulary);
+    let required: Vec<(Who, String)> = pairs
+        .iter()
+        .map(|pair| (Who::of(pair.requester, &read.name), pair.fact.clone()))
+        .collect();
+    let asked: Vec<usize> = match asked {
+        Some(asked) => (0..pairs.len())
+            .filter(|&at| required[at].1 == asked.fact && asked.select.admits(&required[at].0))
+            .collect(),
+        None => Vec::new(),
+    };
+    let unmet_of = |pair: &Pair<'_>| unmet(pair, &read, &in_hardware, vocabulary);
+    let mut accounts: Vec<Account> = asked
+        .iter()
+        .map(|&at| {
+            let pair = &pairs[at];
+            Account {
+                requester: required[at].0.clone(),
+                fact: pair.fact.clone(),
+                clauses: pair.requirements.iter().map(|r| r.span()).collect(),
+                answers: ordered
+                    .iter()
+                    .map(|provider| {
+                        (
+                            provider.name.clone(),
+                            answer(provider, &pair.requirements, vocabulary),
+                        )
+                    })
+                    .collect(),
+                unmet: pair.candidates.is_empty().then(|| unmet_of(pair)),
+                bound: None,
+                instead: Vec::new(),
+            }
+        })
+        .collect();
     let unmet: Vec<Diagnostic> = pairs
         .iter()
         .filter(|pair| pair.candidates.is_empty())
-        .map(|pair| unmet(pair, &read, &in_hardware, vocabulary))
+        .map(unmet_of)
         .collect();
+    let explained = |search: Search, accounts: Vec<Account>| Explanation {
+        search,
+        judged: true,
+        required: required.clone(),
+        accounts,
+    };
     if !unmet.is_empty() {
-        return refused(unmet);
+        return explained(refused(unmet), accounts);
     }
     let joint = joint.for_system(read.clone());
-    walk(&joint, &read, &pairs, placement, limits)
+    let search = walk(&joint, &read, &pairs, placement, limits);
+    if let Search::Resolved(resolution) = &search {
+        let chosen: Vec<&String> = pairs
+            .iter()
+            .zip(&required)
+            .map(|(_, key)| &resolution.bindings[key])
+            .collect();
+        for (account, &at) in accounts.iter_mut().zip(&asked) {
+            let bound = chosen[at];
+            account.bound = Some(bound.clone());
+            account.instead = pairs[at]
+                .candidates
+                .iter()
+                .filter(|candidate| *candidate != bound)
+                .map(|candidate| {
+                    let mut providers = chosen.clone();
+                    providers[at] = candidate;
+                    let report = joint.check(&assignment(&pairs, &providers));
+                    let first = report.conflicts.iter().chain(&report.unknowns).next();
+                    (candidate.clone(), first.map(|f| f.diagnostic()))
+                })
+                .collect();
+        }
+    }
+    explained(search, accounts)
+}
+
+/// The bindings of `pairs`, each to the provider at its place in `providers`.
+fn assignment(pairs: &[Pair<'_>], providers: &[&String]) -> Vec<Binding> {
+    pairs
+        .iter()
+        .zip(providers)
+        .flat_map(|(pair, provider)| {
+            pair.requirements.iter().map(move |requirement| Binding {
+                requester: pair.requester.name.clone(),
+                requirement: (*requirement).clone(),
+                provider: (*provider).clone(),
+            })
+        })
+        .collect()
+}
+
+/// `provider`'s answer to `requirements`, one requester's on one fact: satisfied when it meets every one, otherwise the
+/// first of refused, absent, unsupported, unknown and undescribed among their answers, as record §3 rule 5 ranks a
+/// group's — the one reading of a provider's answer, by which [`pairs`] finds candidates and [`unmet`] codes a
+/// refusal, and which [`Account::answers`] reports.
+fn answer(provider: &Provider, requirements: &[&Requirement], vocabulary: &Vocabulary) -> Answer {
+    let rank = |answer: &Answer| match answer {
+        Answer::Refused => 0,
+        Answer::Absent => 1,
+        Answer::Unsupported => 2,
+        Answer::Unknown => 3,
+        _ => 4,
+    };
+    requirements
+        .iter()
+        .map(|r| judge(provider, r, vocabulary))
+        .filter(|a| !matches!(a, Answer::Satisfied | Answer::Statement))
+        .min_by_key(rank)
+        .unwrap_or(Answer::Satisfied)
 }
 
 /// Every pair the requesters `system` serves write, in declaration order, each requester's facts in the order it first
@@ -269,11 +497,7 @@ fn pairs<'d>(
         for (fact, requirements) in facts {
             let candidates = ordered
                 .iter()
-                .filter(|provider| {
-                    requirements
-                        .iter()
-                        .all(|r| judge(provider, r, vocabulary) == Answer::Satisfied)
-                })
+                .filter(|provider| answer(provider, &requirements, vocabulary) == Answer::Satisfied)
                 .map(|provider| provider.name.clone())
                 .collect();
             out.push(Pair {
@@ -302,29 +526,12 @@ fn unmet(
     for requirement in &pair.requirements {
         constrained(requirement, vocabulary, &mut facts);
     }
-    let rank = |answer: &Answer| match answer {
-        Answer::Refused => 0,
-        Answer::Absent => 1,
-        Answer::Unsupported => 2,
-        Answer::Unknown => 3,
-        _ => 4,
-    };
     let mut taking_part: Vec<(&Provider, Answer)> = Vec::new();
     for provider in hardware {
-        let answers: Vec<Answer> = pair
-            .requirements
-            .iter()
-            .map(|r| judge(provider, r, vocabulary))
-            .filter(|a| !matches!(a, Answer::Satisfied | Answer::Statement))
-            .collect();
-        let answered = answers.iter().any(|a| *a != Answer::Undescribed);
+        // No provider of the hardware meets the pair, so each answer is one of the five a failed search ranks.
+        let worst = answer(provider, &pair.requirements, vocabulary);
         let states = facts.iter().any(|fact| provider.state(fact).is_some());
-        if answered || states {
-            let worst = answers
-                .iter()
-                .min_by_key(|a| rank(a))
-                .copied()
-                .unwrap_or(Answer::Undescribed);
+        if worst != Answer::Undescribed || states {
             taking_part.push((provider, worst));
         }
     }
@@ -449,18 +656,12 @@ fn walk(
             };
         }
         steps += 1;
-        let bindings: Vec<Binding> = pairs
+        let providers: Vec<&String> = pairs
             .iter()
             .zip(&choice)
-            .flat_map(|(pair, &at)| {
-                pair.requirements.iter().map(move |requirement| Binding {
-                    requester: pair.requester.name.clone(),
-                    requirement: (*requirement).clone(),
-                    provider: pair.candidates[at].clone(),
-                })
-            })
+            .map(|(pair, &at)| &pair.candidates[at])
             .collect();
-        let report = joint.check(&bindings);
+        let report = joint.check(&assignment(pairs, &providers));
         if report.holds() {
             return Search::Resolved(Resolution {
                 system: system.name.clone(),

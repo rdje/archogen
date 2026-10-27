@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the search explains one requirement
+
+`ARCHOGEN-M3-1012` (leaf `M3.4.13.1`), `2026-10-27`.
+
+- The search can now say what it did with one requirement: each provider of the system's hardware and whether it
+  meets it, refuses it, declares it absent or leaves it undescribed; the provider the plan binds, and what goes wrong
+  with each other one in its place; or why no plan was written. `archogen explain`, which will print it, is next.
+
 ## archogen — an absence is one device's statement
 
 `ARCHOGEN-M3-1010` (leaf `M3.4.8`), `2026-10-27`.
