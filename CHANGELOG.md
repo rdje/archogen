@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the search chooses a system's providers
+
+`ARCHOGEN-M3-1003` (leaf `M3.4.2`), `2026-10-27`.
+
+- The resolver can now choose, for one system, a provider for each thing each of its users requires, among the
+  system's own hardware, in a fixed order, until the joint rules accept the whole choice — or say why none exists, in
+  the roadmap's diagnostic terms, or stop at a budget without claiming impossibility. `archogen resolve`, which will
+  run it, comes next.
+
 ## archogen — the checker's browser module, loaded and checked as a page runs it
 
 `ARCHOGEN-M3-1001` (leaf `M3.5.7.2`), `2026-10-27`.

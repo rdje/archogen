@@ -624,13 +624,13 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#relative-gate-caller-assessment)
 - **release** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [Quantities and units](quantities.md), [Describing a
-  workload](workload.md), [Checking a description](checking.md), [What the scheduling checker establishes](analysis.md),
-  [Where the engine's knowledge comes from: the catalog](catalog.md), [Checks that must not share a mistake: the trust
-  gate](trust.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where
-  generated systems run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex A: The runtime's rules in
-  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust
-  proof records](annex-trust-proofs.md)
+  workload](workload.md), [Checking a description](checking.md), [Matching an offer to a requirement](matching.md),
+  [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the
+  catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime: decisions, not
+  actions](runtime.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the
+  toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
+  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that
+  keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Relevance decides whether an unknown matters — [Presence, absence, and
   relevance](presence.md#relevance-decides-whether-an-unknown-matters)
 - Remaining diagnostic-producer assessment — [Annex C: Trust proof
@@ -783,6 +783,8 @@ a change that leaves it stale, so it is never edited by hand.
 - The roots — [Checks that must not share a mistake: the trust gate](trust.md#the-roots)
 - The run's order — [Checks that must not share a mistake: the trust gate](trust.md#the-runs-order)
 - The sealed set — [The use cases](usecases.md#the-sealed-set)
+- The search — [Matching an offer to a requirement](matching.md#the-search)
+- The search's rules — [Matching an offer to a requirement](matching.md#the-searchs-rules)
 - The semantic corpus — [Checking a description](checking.md#the-semantic-corpus)
 - The server an agent spawns — [The engine API](engine-api.md#the-server-an-agent-spawns)
 - The status pages stay short — [Annex B: The checks that keep the repository

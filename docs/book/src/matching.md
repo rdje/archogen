@@ -341,8 +341,24 @@ behaviour no block states yet, with their only routes (`crates/eadl-resolve/test
 
 Matching does not choose. For one requirement it lists every provider in the order given, with its verdict, the
 value it found, the derivation it used and the direction it judged in; for a `requires` clause, whether each provider
-satisfies all of it. Choosing among them, combining them and checking capacity and ownership is the resolver's work
-in later leaves.
+satisfies all of it. Choosing among them, combining them and checking capacity and ownership is the search's.
+
+### The search
+
+The search (`crates/eadl-resolve/src/search.rs`, leaf `M3.4.2`) chooses, for one system, one provider for each thing
+each of its users requires: each service, policy, task and the system itself, one provider per fact it requires. It
+looks only among the system's own hardware, in a fixed order — the engine's preferred providers first, then the
+description's order — and tries whole assignments one after another until the joint rules accept one. The same
+description always gets the same plan. It has a budget: when that runs out first, the answer is
+`analysis-inconclusive` and no plan, never "impossible".
+
+When it fails, it says why in the terms of `ROADMAP.md` §5.5. A requirement nothing in the hardware meets is
+`missing-fact` when nobody states the fact or states it without a value, `infeasible-configuration` when every one that
+states it refuses it or declares it absent, and `unsupported-profile` when a value lies past the exact arithmetic. When
+every assignment breaks a joint rule, the conflicts of the first are the reason; when one breaks none but leaves a fact
+unknown, that is `missing-fact`. A requirement only the realization can meet — a scheduling policy's `priorities`, a
+release's accuracy — finds no provider until the catalog's records become providers (`M3.7`), as the relation's record
+says (§9).
 
 ## The precise rules
 
@@ -417,6 +433,17 @@ the route obligations (rule 8), privilege over a system's callers, given its lev
 system (rule 10), ordering, unsupported under this profile (rule 11), the initialization graph (rule 12), and one
 function at one provider, with the qualifiers (rule 13).
 
+### The search's rules
+
+`crates/eadl-resolve/src/search.rs`, over one instance's declarations. A *pair* is one requester's requirements on one
+fact, statements apart; its candidates are the system's hardware (rule 7) at which the relation satisfies every one of
+them, in the policy's order. Complete assignments are judged in lexicographic order of the pairs' choices, the first
+pair varying slowest, and none partially: rule 13 classes a function split as a conflict or an unknown by the
+requester's other requirements of the function, so a partial assignment's conflict is no proof. The system's first
+placement region (rule 10) is chosen, and its callers bound at the profile's level (rule 9). A pair with no candidate
+takes `SR-H18`'s code over the providers whose answer is not undescribed; when every assignment fails, the first free
+of conflicts gives its unknowns, else the first one's conflicts; the verdict is the highest by precedence.
+
 ### What is not claimed
 
 The relation is a predicate on one requirement and one provider. Per fact its direction induces a preorder and
@@ -429,6 +456,12 @@ The relation is a library, complete for `M3.1`, and held to the design's executa
 Measured `2026-10-06`: 154 381 provider-and-requirement pairs judged alike, 72 234 provider declarations read alike,
 and the horizon agreeing with a simulation of the counter's reads on every case of the checker's grid. Each rule
 has a catalogued mutation that its test must kill (`xtask/mutations.txt`).
+
+The search chooses over it (`M3.4.2`); `archogen resolve`, which runs it, is `M3.4.4`'s. Over the tracked examples it
+resolves every one of `s0-heartbeat`'s descriptions and refuses each other example: their timers offer a width and no modulus,
+from which the vocabulary derives no horizon, and their policies' constraints wait on the catalog — `missing-fact` —
+while `alternative-timer`'s absolute deadline, which its timer declares absent, is `infeasible-configuration` until
+`M3.2`'s adapter offers it past that absence.
 
 `archogen check` does not call it yet, so no verdict a description gets today comes from it. Leaf `M3.4` wires it in,
 over the providers of each system's hardware — a block no system uses decides nothing, as an unused device costs
