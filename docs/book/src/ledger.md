@@ -409,3 +409,17 @@ Producer observations, normalization proofs, counterexamples and revalidation re
 | Known limitations | a practitioner's article, not a standard; it says nothing of how large a folder of records may grow, and this project's file names are by subject, not numbered |
 | Revalidation trigger | a lifecycle rule for records resting on more of the article than these sentences |
 | Named as | `Nygard` |
+
+## `davis-speedup-factors`
+
+| Field | Value |
+| --- | --- |
+| Source | Robert I. Davis, Alan Burns, Sanjoy Baruah, Thomas Rothvoß, Laurent George, Oliver Gettings, "Exact Comparison of Fixed Priority and EDF Scheduling based on Speedup Factors for both Pre-emptive and Non-pre-emptive Paradigms", *Real-Time Systems*, 2015 |
+| Version | the authors' copy, eighteen pages, as served from the University of York |
+| Pinned at | not pinned — read at `https://www-users.cs.york.ac.uk/rd17/papers/RTS2015Speedup.pdf`; no build or check reads it |
+| Retrieved | `2026-10-27` |
+| Hash | sha256 `3f7f38344030aa5a3deb141e8b339ef4381512342835764604628f30029dd952` of the PDF read |
+| Scope | its §1.3's account of fixed-priority non-pre-emptive scheduling, quoted in `docs/decisions/decision_runtime-plan.md` §2.5 for the runtime plan's order among interrupt sources: "George et al. (1996) showed that unlike in the pre-emptive case, DMPO is not optimal for constrained-deadline task sets scheduled by FP-NP. Further, they showed that the Optimal Priority Assignment algorithm given by Audsley (1991) is applicable" |
+| Known limitations | a secondary account of George et al. (1996), whose report was not read; it concerns tasks, and the plan applies it to interrupt sources served without nesting, which the variant's condition 5 makes non-pre-emptive among themselves |
+| Revalidation trigger | the plan's source order resting on more than the non-optimality of deadline-monotonic ordering and the applicability of Audsley's algorithm |
+| Named as | `Davis` |

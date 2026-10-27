@@ -226,6 +226,7 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#daily-artifact-cleanup-on-2026-10-22)
 - Daily artifact cleanup on 2026-10-24 — [Annex B: The checks that keep the repository
   honest](annex-repository.md#daily-artifact-cleanup-on-2026-10-24)
+- davis-speedup-factors — [What this project relies on from outside](ledger.md#davis-speedup-factors)
 - **deadline** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [Reading a
   description](reading.md), [Quantities and units](quantities.md), [Presence, absence, and relevance](presence.md),
@@ -266,6 +267,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Disposable Git fixtures policy conflict — [Annex C: Trust proof
   records](annex-trust-proofs.md#disposable-git-fixtures-policy-conflict)
 - **DMA** — [definition](glossary.md), [The supported profile](profile.md), [Refinement](refinement.md)
+- **DMPO** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **DSP** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 
 ## E
@@ -279,6 +281,7 @@ a change that leaves it stale, so it is never edited by hand.
   generated systems run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from
   outside](ledger.md), [What is versioned, and what changing it costs](versions.md)
 - **EBNF** — [definition](glossary.md), [Verifying the toolchain](verification.md)
+- **EDF** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Effects and remaining scope — [Generated-sources test adequacy](trust-adequacy.md#effects-and-remaining-scope)
 - **EIP** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Elaboration produces instances, not modules — [Modules and
@@ -334,6 +337,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Finite Cargo path iterator proofs — [Annex C: Trust proof
   records](annex-trust-proofs.md#finite-cargo-path-iterator-proofs)
 - First reported output failure — [Annex C: Trust proof records](annex-trust-proofs.md#first-reported-output-failure)
+- **FP-NP** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - freertos-kernel — [What this project relies on from outside](ledger.md#freertos-kernel)
 - fsmgen — [What this project relies on from outside](ledger.md#fsmgen)
 

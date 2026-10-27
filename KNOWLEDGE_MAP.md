@@ -200,6 +200,7 @@ justifies the split — the rows below appear as that happens.
 - [`decision_repository-boundary-read-only.md`](docs/decisions/decision_repository-boundary-read-only.md)
 - [`decision_reviews-folder-ceiling.md`](docs/decisions/decision_reviews-folder-ceiling.md)
 - [`decision_runtime-contract-gaps.md`](docs/decisions/decision_runtime-contract-gaps.md)
+- [`decision_runtime-plan.md`](docs/decisions/decision_runtime-plan.md)
 - [`decision_s0-retirement.md`](docs/decisions/decision_s0-retirement.md)
 - [`decision_scaffold-updater-adopted.md`](docs/decisions/decision_scaffold-updater-adopted.md)
 - [`decision_scratch-on-the-repository-volume.md`](docs/decisions/decision_scratch-on-the-repository-volume.md)

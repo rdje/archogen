@@ -40,6 +40,9 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
   whether interrupts are enabled. See [What this project relies on from outside](ledger.md).
 - **DMA** — Direct Memory Access: a device moving data to or from memory without the processor; excluded from the
   first profile. See [The supported profile](profile.md).
+- **DMPO** — Deadline Monotonic Priority Ordering: priorities given by relative deadline, the shortest first;
+  optimal for pre-emptive fixed priorities with constrained deadlines, and not for non-pre-emptive ones. See [What
+  this project relies on from outside](ledger.md#davis-speedup-factors).
 - **DSP** — Digital Signal Processor: a processor specialised for signal arithmetic. See [What this project relies
   on from outside](ledger.md).
 - **eADL** — Extended Architecture Description Language: the description language archogen reads. *Extended* in
@@ -48,12 +51,17 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
   boundary](boundary.md) and [Reading a description](reading.md).
 - **EBNF** — Extended Backus–Naur Form: a notation for writing down a language's grammar. See [Verifying the
   toolchain](verification.md).
+- **EDF** — Earliest Deadline First: running the ready job whose absolute deadline is nearest; a dynamic-priority
+  rule this profile does not use. See [What this project relies on from outside](ledger.md#davis-speedup-factors).
 - **EIP** — External Interrupt Pending: the [PLIC specification](ledger.md#riscv-plic)'s name for the pending bit it
   raises at a hart.
 - **ELF** — Executable and Linkable Format: the object-file format Linux and bare-metal toolchains use, where each
   function may sit in a section of its own; macOS uses Mach-O instead. See [Verifying the toolchain](verification.md).
 - **EOF** — End Of File: the point past a file's or a stream's last byte; a record cut off there is malformed.
   See [Trust proofs](annex-trust-proofs.md#dependency-path-domain-repair-commit-note-routing).
+- **FP-NP** — Fixed Priority, Non-Pre-emptive: fixed priorities, each job running to its end once started; how this
+  profile serves interrupts, which do not nest. See [What this project relies on from
+  outside](ledger.md#davis-speedup-factors).
 - **GB**, **KB**, **MB** — gigabyte, kilobyte, megabyte, in this book's prose; the language's own units are the
   binary `KiB` and `MiB`. See [Quantities and units](quantities.md).
 - **GNU** — the GNU project ("GNU's Not Unix"): here, the flavour of the standard command-line tools a Linux runner
