@@ -21,11 +21,13 @@
 //! `uses` and `needs`, and at those that are no edge, `offers` and `refines`, beside a name no declaration bears, and
 //! holds the two readings equal on each.
 //!
-//! ⚠️ **What it does not compare.** A program of several instances: `System::read` reads one instance's declarations by
-//! their own names, so the generator's reading of a program is `M3.4`'s, and the comparison takes such programs when it
-//! lands; every program skipped must be a module case, so an example that starts importing fails here first. The rules
-//! that judge an assignment's bindings, past rules 1 and 7: `M3.5.5.7.3` settles with the generator the readings §8
-//! left open to the fenced context.
+//! A program of several instances is read by the generator as the language checks it, one description of qualified
+//! names (`eadl_model::check::resolved_declarations`, leaf `M3.4.10`), and compared like any other.
+//!
+//! ⚠️ **What it does not compare.** A module that does not elaborate, which has no program to read, and a tree whose
+//! names do not resolve — `module-not-exported`, which the language refuses, so the search never reads it: every one
+//! skipped must be a module case. The rules that judge an assignment's bindings, past rules 1 and 7: `M3.5.5.7.3` settles with
+//! the generator the readings §8 left open to the fenced context.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -115,7 +117,13 @@ fn requesters(declarations: &[Form]) -> BTreeSet<Requester> {
 /// Both readings of every system `program`'s one root instance declares, each difference pushed onto `wrong` as
 /// `shown` names it; the number of systems compared.
 fn compare(shown: &str, program: &Program, wrong: &mut Vec<String>) -> usize {
-    let declarations = &program.instances[0].declarations;
+    let flattened;
+    let declarations: &[Form] = if program.instances.len() == 1 {
+        &program.instances[0].declarations
+    } else {
+        flattened = eadl_model::check::resolved_declarations(program).0;
+        &flattened
+    };
     let candidates = requesters(declarations);
     let mut compared = 0;
     for decl in declarations
@@ -200,7 +208,11 @@ fn the_generator_and_the_checker_read_every_system_alike() {
             "plan.eadl",
             "",
         );
-        if program.instances.len() != 1 {
+        let unresolved = program.instances.len() > 1
+            && !eadl_model::check::resolved_declarations(&program)
+                .1
+                .is_empty();
+        if program.instances.is_empty() || unresolved {
             several.push(shown);
             continue;
         }
@@ -218,9 +230,8 @@ fn the_generator_and_the_checker_read_every_system_alike() {
         .collect();
     assert!(
         outside.is_empty(),
-        "programs outside the module cases that are not one root instance — several instances, which `System::read` \
-         does not read, or none, a module that does not elaborate — so the comparison skips them; `M3.4`'s reading of \
-         a program is due: {outside:?}"
+        "programs outside the module cases with no instance, or with names that do not resolve, which the comparison \
+         skips: {outside:?}"
     );
 }
 

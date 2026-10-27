@@ -9,21 +9,20 @@
 //!
 //! The order: the request is checked as [`check_with`] checks it, and a description the check does not accept is
 //! answered with the check's own response; its program is the one the check elaborated, or a plain description's
-//! declarations as one root instance; one system, the only one or the one named; then the search
+//! declarations as one root instance, read as one description as the language checks it — a module tree's names
+//! qualified by §6 rules 9 and 10 (`eadl_model::check::resolved_declarations`); one system, the only one or the one
+//! named; then the search
 //! ([`eadl_resolve::search::search`]) under the profile's caller level, and the plan written as
 //! `archogen-assignment/1` ([`eadl_resolve::plan`]).
 
 use eadl_front::{Form, Program, SourceMap};
-use eadl_model::check::shipped_registry;
+use eadl_model::check::{resolved_declarations, shipped_registry};
 use eadl_model::profile;
 use eadl_resolve::plan;
 use eadl_resolve::search::{search, Limits as Budget, Policy, Search};
 use eadl_resolve::vocabulary::Vocabulary;
 
 use crate::{checked, kind_modules, verdict_status, Limits, Request, Response, Status};
-
-/// The leaf that searches programs of several instances.
-pub const SEVERAL_INSTANCES: &str = "M3.4.10";
 
 /// What `resolve` asks beyond `check`'s request.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -90,22 +89,15 @@ pub fn resolve_with(request: &Request<'_>, resolve: &Resolve<'_>, limits: Limits
         Some(program) => program,
         None => plan::plain(judged.declarations.clone()),
     };
-    if program.instances.len() != 1 {
-        return refused(Response::not_judged(
-            Status::UnsupportedProfile,
-            response.sources,
-            vec![format!(
-                "`resolve` searches a description of one instance today, and {} elaborates to {} instances",
-                request.name,
-                program.instances.len()
-            )],
-            Some(format!(
-                "programs of several instances are task-tree leaf {SEVERAL_INSTANCES}'s (docs/TASK_TREE.md)"
-            )),
-            Vec::new(),
-        ));
-    }
-    let declarations: &[Form] = &program.root().declarations;
+    // One description, as the language checks it: a program of several instances flattened by §6 rules 9 and 10, its
+    // names qualified as the plan names them (leaf `M3.4.10`); the check accepted it, so every operand resolved.
+    let flattened;
+    let declarations: &[Form] = if program.instances.len() == 1 {
+        &program.root().declarations
+    } else {
+        flattened = resolved_declarations(&program).0;
+        &flattened
+    };
     let name_of = |f: &Form| {
         f.items()
             .get(1)

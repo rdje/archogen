@@ -271,7 +271,7 @@ none rests on its independence, and its form says so.
 | Item | Pairs | Class | Residual risk | Controls |
 | --- | --- | --- | --- | --- |
 | `crates/eadl-front` | generator, configuration checker | interpretation/normalization | a misreading both make | the third reader (`scripts/third_opinion.sh`); its own conformance suite; the frozen verdicts, change control |
-| `crates/eadl-model` | generator, configuration checker | semantic/analysis logic | a wrong quantity, comparison or pass both apply | the profile's classified rules; its own tests; the frozen verdicts, change control |
+| `crates/eadl-model` | generator, configuration checker | semantic/analysis logic | a wrong quantity, comparison or pass both apply; a module tree's names resolved wrongly for both, the generator's search reading a tree through the language check's own resolution (`resolved_declarations`, `M3.4.10`) | the profile's classified rules; its own tests; the frozen verdicts, change control; over every accepted tree, the search's reading of each system compared with check (5)'s fenced one (`crates/eadl-resolve/tests/system_reading.rs`) |
 | the kind modules, two files | generator, configuration checker | authoritative data | a wrong definition both read | `LANGUAGE-FREEZE` and the migration notes, change control |
 | `crates/archogen-digest` | every pair it joins | infrastructure | a wrong digest in every role's records | three oracles independent of it: derived constants, published examples, the system tool's boundaries |
 | `crates/archogen-outcome` | every pair it joins | interpretation/normalization | a refusal read as an acceptance for every role | its own tests — one text per record, its consistency rules, the damage sweep; the exit code's second channel (`M3.5.1.4.3`) |

@@ -375,9 +375,13 @@ mod tests {
         let (status, out, err) = invoke(&["resolve", "--help"]);
         assert_eq!(status, Status::Ok);
         assert!(out.contains("archogen resolve <DESCRIPTION>"), "{out}");
+        // The leaf the command table names, whatever it is today — `resolve` is experimental, completed by `M3.7`.
+        let owner = crate::spec::command("resolve")
+            .and_then(|spec| spec.maturity.owner())
+            .expect("an experimental command names the leaf that completes it");
         assert!(
-            out.contains("M3.4"),
-            "command help must name the owning leaf:\n{out}"
+            out.contains(owner),
+            "command help must name the owning leaf, {owner}:\n{out}"
         );
         assert!(err.is_empty(), "{err}");
     }

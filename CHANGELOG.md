@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — module trees resolve
+
+`ARCHOGEN-M3-1008` (leaf `M3.4.10`), `2026-10-27`.
+
+- `archogen resolve` and the engine API's `resolve` search a description made of imported modules, reading it as the
+  language check does, so a plan names an imported provider by its path, such as `hw.console.uart`; the independent
+  checker accepts those plans.
+
 ## archogen — agents can ask for a plan
 
 `ARCHOGEN-M3-1007` (leaf `M3.4.6`), `2026-10-27`.

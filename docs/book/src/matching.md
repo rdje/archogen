@@ -445,7 +445,9 @@ function at one provider, with the qualifiers (rule 13).
 
 ### The search's rules
 
-`crates/eadl-resolve/src/search.rs`, over one instance's declarations. A *pair* is one requester's requirements on one
+`crates/eadl-resolve/src/search.rs`, over one description's declarations — a module tree's as the language checks it,
+each renamed to its instance's path and each name it writes resolved where it was written (reference §6 rules 9 and 10;
+`eadl_model::check::resolved_declarations`, leaf `M3.4.10`). A *pair* is one requester's requirements on one
 fact, statements apart; its candidates are the system's hardware (rule 7) at which the relation satisfies every one of
 them, in the policy's order. Complete assignments are judged in lexicographic order of the pairs' choices, the first
 pair varying slowest, and none partially: rule 13 classes a function split as a conflict or an unknown by the

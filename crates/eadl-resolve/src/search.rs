@@ -153,8 +153,9 @@ struct Pair<'d> {
     candidates: Vec<String>,
 }
 
-/// Search `system`, a `defsystem` of `declarations` — one instance's: a plain description, or a module of one
-/// instance — for a plan whose callers are bound at `level`, the profile's.
+/// Search `system`, a `defsystem` of `declarations` — one description's: a plain description, a module of one instance,
+/// or a module tree read as the language checks it, its names qualified (`eadl_model::check::resolved_declarations`,
+/// leaf `M3.4.10`) — for a plan whose callers are bound at `level`, the profile's.
 #[must_use]
 pub fn search(
     declarations: &[Form],

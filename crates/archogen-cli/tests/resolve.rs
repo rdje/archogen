@@ -314,12 +314,6 @@ fn every_refusal_before_a_plan_writes_none_and_runs_nothing() {
             "declares no system `c`",
         ),
         (
-            "several instances",
-            vec![instances],
-            Status::UnsupportedProfile,
-            "task-tree leaf M3.4.10's",
-        ),
-        (
             "nothing meets a requirement",
             vec![periodic],
             Status::MissingFact,
@@ -338,6 +332,18 @@ fn every_refusal_before_a_plan_writes_none_and_runs_nothing() {
             "{case}: the checker was run"
         );
     }
+    // A module tree of several instances resolves, its names qualified as the language qualifies them (leaf `M3.4.10`).
+    let (got, _, err) = resolve(
+        &[&instances, "--out", out, "--unchecked"],
+        &Checker::answering(Answer::Unlaunched),
+    );
+    assert_eq!(got, Status::Ok, "{err}");
+    let written = std::fs::read_to_string(&plan).expect("a plan");
+    assert!(
+        written.ends_with("(bind console.write observable-output hw.console.uart)\n"),
+        "{written}"
+    );
+    std::fs::remove_file(&plan).unwrap();
     // `--system` naming one of two resolves it.
     let two = dir.join("two.eadl").display().to_string();
     let (got, out_text, err) = resolve(

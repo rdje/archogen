@@ -62,8 +62,8 @@ A `Response` holds:
 resolve when the description declares several, and `unchecked`, which must be set. This API is the generator's and
 runs no checker, so asked without it, it refuses with the repair — compose the plan with `archogen-plan-check`'s own
 tool (`ROADMAP.md` §10.4). Asked with it, it checks the description as `check` does and answers the check's response
-for one it does not accept; otherwise it searches one system ([Matching](matching.md#the-search)) of a program of one
-instance — several are leaf `M3.4.10`'s — and answers a `Resolution`: the response, and the `Plan` — the system, the
+for one it does not accept; otherwise it searches one system ([Matching](matching.md#the-search)) — a module tree read
+as the language checks it, its names qualified by their instance's path (leaf `M3.4.10`) — and answers a `Resolution`: the response, and the `Plan` — the system, the
 plan's text, the program's digest and its bindings — present exactly when the response is `ok`. A search that finds
 none answers under its own status, its diagnostics saying why, with no plan; a spent budget is `analysis-inconclusive`.
 `archogen resolve` asks it so, writes the plan, and runs the checker over it as a process, which the command line

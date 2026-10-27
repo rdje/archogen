@@ -1,6 +1,6 @@
 //! The engine API's `resolve` (leaf `M3.4.4`, API `1.4`): the search alone, asked with `unchecked` set and refused
-//! without it (`ROADMAP.md` §10.4); a plain description and a module of one instance resolved to the plan
-//! `archogen-assignment/1` writes; and every answer that is no plan — the check's, the request's, the search's —
+//! without it (`ROADMAP.md` §10.4); a plain description, a module of one instance and a module tree of several resolved
+//! to the plan `archogen-assignment/1` writes; and every answer that is no plan — the check's, the request's, the search's —
 //! carrying its status and what to change.
 
 use archogen_api::{resolve_with, Limits, MemoryModules, Request, Resolve, Status};
@@ -77,10 +77,9 @@ fn a_plain_description_and_a_module_of_one_instance_resolve_to_their_plans() {
 }
 
 #[test]
-fn every_answer_that_is_no_plan_says_why() {
-    let two =
-        format!("{PLAIN}(defsystem t (requires (uses console.write)) (platform (uses soc)))\n");
-    let several = "(defmodule app (version 1 0) (import hw (as hw))
+fn a_module_tree_of_several_instances_resolves_its_names_qualified() {
+    // Leaf `M3.4.10`: the tree read as the language checks it, so the plan names the imported provider by its path.
+    let app = "(defmodule app (version 1 0) (import hw (as hw))
   (defservice console.write (requires (needs observable-output)))
   (defsystem s (requires (uses console.write)) (platform (uses hw.soc))))";
     let hw = MemoryModules::new().with(
@@ -89,6 +88,26 @@ fn every_answer_that_is_no_plan_says_why() {
   (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
   (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart))))",
     );
+    let resolution = ask(app, &hw, UNCHECKED);
+    assert_eq!(
+        resolution.response.status,
+        Status::Ok,
+        "{:?}",
+        resolution.response.notes
+    );
+    let plan = resolution.plan.expect("a plan");
+    assert!(
+        plan.text
+            .ends_with("(bind console.write observable-output hw.console.uart)\n"),
+        "{}",
+        plan.text
+    );
+}
+
+#[test]
+fn every_answer_that_is_no_plan_says_why() {
+    let two =
+        format!("{PLAIN}(defsystem t (requires (uses console.write)) (platform (uses soc)))\n");
     // Offered, so the check's presence pass accepts it, and at a value the requirement refuses: the search's.
     let unmet = PLAIN.replace("(observable-output true)", "(observable-output false)");
     for (case, text, modules, resolve, status, says) in [
@@ -118,14 +137,6 @@ fn every_answer_that_is_no_plan_says_why() {
             },
             Status::Usage,
             "declares no system `u`",
-        ),
-        (
-            "several instances",
-            several.to_owned(),
-            hw,
-            UNCHECKED,
-            Status::UnsupportedProfile,
-            "elaborates to 2 instances",
         ),
         (
             "a requirement nothing meets",

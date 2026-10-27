@@ -248,7 +248,7 @@ fn the_positive_corpus_every_plan_the_search_writes_the_checker_accepts_and_twic
     // `M3.5`'s filing to `M3.4`: every plan of the positive corpus is accepted by `archogen-plan-check`. The corpus is
     // derived: every tracked description the language's check accepts, as the engine API runs it before `resolve`
     // searches — never the checker's answer to an empty plan, whose check (1) refuses it before it re-checks the
-    // description — and each system of a program of one instance the search resolves.
+    // description — and each system the search resolves, a module tree's among them.
     let v = vocabulary();
     let (mut resolved, mut refused) = (0, 0);
     for path in tracked() {
@@ -272,33 +272,35 @@ fn the_positive_corpus_every_plan_the_search_writes_the_checker_accepts_and_twic
             continue;
         }
         let (program, _) = judge("");
-        if program.instances.len() != 1 {
-            continue;
-        }
-        let declarations = &program.root().declarations;
+        // A module tree is read as the language checks it, its names qualified (leaf `M3.4.10`).
+        let flattened;
+        let declarations: &[Form] = if program.instances.len() == 1 {
+            &program.root().declarations
+        } else {
+            flattened = eadl_model::check::resolved_declarations(&program).0;
+            &flattened
+        };
         for system in declarations
             .iter()
             .filter(|f| f.head() == Some("defsystem"))
         {
-            let once = search(
-                declarations,
-                system,
-                RT_STATIC_UP_V1.caller_level,
-                &v,
-                &Policy::default(),
-                Limits::DEFAULT,
-            );
-            let twice = search(
-                declarations,
-                system,
-                RT_STATIC_UP_V1.caller_level,
-                &v,
-                &Policy::default(),
-                Limits::DEFAULT,
-            );
-            let (Search::Resolved(once), Search::Resolved(twice)) = (once, twice) else {
+            let searched = || {
+                search(
+                    declarations,
+                    system,
+                    RT_STATIC_UP_V1.caller_level,
+                    &v,
+                    &Policy::default(),
+                    Limits::DEFAULT,
+                )
+            };
+            // A refusal is searched once — F11's fixture spends the whole budget — and a plan twice, to hold it alike.
+            let Search::Resolved(once) = searched() else {
                 refused += 1;
                 continue;
+            };
+            let Search::Resolved(twice) = searched() else {
+                panic!("{}: resolved once and not twice", path.display());
             };
             let digest = plan::program_digest(&program);
             let text_once = plan::write(&once, RT_STATIC_UP_V1.id, &digest);

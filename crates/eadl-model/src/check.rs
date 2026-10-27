@@ -212,6 +212,19 @@ pub fn check(
 /// judged by the same rules as a single description and cannot drift from it.
 #[must_use]
 pub fn check_program(program: &Program, registry: &Registry, active_profile: &Profile) -> Outcome {
+    let (forms, unresolved) = resolved_declarations(program);
+    let mut findings = Vec::new();
+    push(&mut findings, Verdict::InvalidDescription, unresolved);
+    passes(forms, registry, active_profile, findings)
+}
+
+/// A module tree's declarations as one description, by `docs/semantics/reference.md` §6 rules 9 and 10: each renamed
+/// to the path of its instance, and every operand of a `uses`, `needs` or `refines` clause resolved in the scope of the
+/// instance that wrote it — what [`check_program`] judges, and what the search reads a program of several instances
+/// as (leaf `M3.4.10`), so the two read one tree one way. Returns the declarations, and a diagnostic for each operand
+/// that does not resolve.
+#[must_use]
+pub fn resolved_declarations(program: &Program) -> (Vec<Form>, Vec<Diagnostic>) {
     let mut unresolved = Vec::new();
     let forms: Vec<Form> = program
         .instances
@@ -226,9 +239,7 @@ pub fn check_program(program: &Program, registry: &Registry, active_profile: &Pr
                 .collect::<Vec<_>>()
         })
         .collect();
-    let mut findings = Vec::new();
-    push(&mut findings, Verdict::InvalidDescription, unresolved);
-    passes(forms, registry, active_profile, findings)
+    (forms, unresolved)
 }
 
 /// Rule 9 for the declaration's own name, and rule 10 for every name it writes.

@@ -70,8 +70,8 @@ judge a description any other way.
    when `M3.4` builds it, is this API's operation with `unchecked` set alone, refusing a request without it with the
    reason and the repair, and its behaviour leg compares it with `archogen resolve --unchecked`.*
    *Built `2026-10-27` (leaf `M3.4.4`): `resolve_with` checks the request as `check_with` does and answers the check's
-   response for a description it does not accept; otherwise one system — the only one, or `Resolve::system` — of a
-   program of one instance is searched and its plan, `archogen-assignment/1`, answered beside the response
+   response for a description it does not accept; otherwise one system — the only one, or `Resolve::system` — is
+   searched, a module tree read as the language checks it (`M3.4.10`), and its plan, `archogen-assignment/1`, answered beside the response
    (`Resolution`), the search's refusal or a spent budget answered under its own status with no plan. `archogen
    resolve` asks it with `unchecked` set and adds what the API cannot: the file, and the configuration checker run as
    a process. Its behaviour leg holds the two to one answer over every tracked description, the plan byte for byte.*
