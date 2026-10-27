@@ -12,7 +12,7 @@ use eadl_front::module::DirectoryModules;
 use eadl_front::{Form, Program, SourceMap};
 use eadl_model::check::shipped_registry;
 use eadl_model::profile::RT_STATIC_UP_V1;
-use eadl_resolve::plan::{self, write, FORMAT};
+use eadl_resolve::plan::{self, FORMAT};
 use eadl_resolve::search::{search, Limits, Policy, Resolution, Search, Who};
 use eadl_resolve::vocabulary::Vocabulary;
 
@@ -124,7 +124,7 @@ fn the_writer_writes_the_format_s_golden() {
     )
     .expect("the golden");
     assert_eq!(
-        write(
+        plan::write(
             &resolution,
             RT_STATIC_UP_V1.id,
             "f116a4715daf8b404d559b210f6f0d09c060158b1c1493fb133bf50197545620"
@@ -179,7 +179,7 @@ fn a_resolved_example_s_plan_is_read_back_and_accepted_by_the_checker() {
     ) else {
         panic!("s0-heartbeat resolves");
     };
-    let text = write(
+    let text = plan::write(
         &resolution,
         RT_STATIC_UP_V1.id,
         &plan::program_digest(&program),

@@ -95,10 +95,10 @@ a change that leaves it stale, so it is never edited by hand.
   board](tour.md), [What a report may claim](evidence.md), [Matching an offer to a requirement](matching.md), [What the
   scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md),
   [Checks that must not share a mistake: the trust gate](trust.md), [The runtime: decisions, not actions](runtime.md),
-  [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the
-  toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
-  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex C: Trust proof
-  records](annex-trust-proofs.md)
+  [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [The archogen command line](cli.md),
+  [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned,
+  and what changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex C: Trust
+  proof records](annex-trust-proofs.md)
 - Catalog builder dependency-reader assessment — [Annex C: Trust proof
   records](annex-trust-proofs.md#catalog-builder-dependency-reader-assessment)
 - Catalog dependency-reader cleanup — [Annex C: Trust proof
@@ -785,6 +785,8 @@ a change that leaves it stale, so it is never edited by hand.
 - The sealed set — [The use cases](usecases.md#the-sealed-set)
 - The search — [Matching an offer to a requirement](matching.md#the-search)
 - The search's rules — [Matching an offer to a requirement](matching.md#the-searchs-rules)
+- The second operation: resolve, the search alone — [The engine
+  API](engine-api.md#the-second-operation-resolve-the-search-alone)
 - The semantic corpus — [Checking a description](checking.md#the-semantic-corpus)
 - The server an agent spawns — [The engine API](engine-api.md#the-server-an-agent-spawns)
 - The status pages stay short — [Annex B: The checks that keep the repository

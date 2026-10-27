@@ -1,0 +1,224 @@
+//! `resolve` (leaf `M3.4.4`; `ROADMAP.md` §10.4, `docs/decisions/decision_engine-api.md` §6): one system of an
+//! accepted description searched for a plan — the search alone, which a consumer asks with `unchecked` set.
+//!
+//! ⭐ **The programmatic surface runs nothing** (§10.4, the ruling of `2026-10-22`). The configuration checker is a
+//! program of its own, and this API is the generator's, so it can run no checker: asked without `unchecked`, it
+//! refuses with the reason and the repair — compose the plan with `archogen-plan-check`'s own tool — and asked with
+//! it, it answers the plan the search wrote, which nothing has checked. `archogen resolve` asks it so, then runs the
+//! checker over the plan as a process, which the command line alone may (`M3.5.1`'s design).
+//!
+//! The order: the request is checked as [`check_with`] checks it, and a description the check does not accept is
+//! answered with the check's own response; its program is the one the check elaborated, or a plain description's
+//! declarations as one root instance; one system, the only one or the one named; then the search
+//! ([`eadl_resolve::search::search`]) under the profile's caller level, and the plan written as
+//! `archogen-assignment/1` ([`eadl_resolve::plan`]).
+
+use eadl_front::{Form, Program, SourceMap};
+use eadl_model::check::shipped_registry;
+use eadl_model::profile;
+use eadl_resolve::plan;
+use eadl_resolve::search::{search, Limits as Budget, Policy, Search};
+use eadl_resolve::vocabulary::Vocabulary;
+
+use crate::{checked, kind_modules, verdict_status, Limits, Request, Response, Status};
+
+/// The leaf that searches programs of several instances.
+pub const SEVERAL_INSTANCES: &str = "M3.4.10";
+
+/// What `resolve` asks beyond `check`'s request.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct Resolve<'a> {
+    /// The system to resolve, when the description declares several.
+    pub system: Option<&'a str>,
+    /// The search alone, nothing checking the plan: the one way this API answers `resolve` (§10.4).
+    pub unchecked: bool,
+}
+
+/// A plan the search wrote.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Plan {
+    /// The system it is for.
+    pub system: String,
+    /// The plan, `archogen-assignment/1`'s canonical text.
+    pub text: String,
+    /// The digest of the elaborated program it names, 64 lowercase hexadecimal digits.
+    pub program: String,
+    /// How many bindings it holds.
+    pub bindings: usize,
+}
+
+/// What `resolve` answers: the response — the check's, or why no plan was written — and the plan, when there is one.
+#[derive(Debug)]
+pub struct Resolution {
+    /// `ok` with a plan; otherwise the check's refusal, the search's, or the request's.
+    pub response: Response,
+    /// The plan, present exactly when `response` is `ok`.
+    pub plan: Option<Plan>,
+}
+
+/// Resolve `request`'s description within `limits`, as `resolve` asks.
+#[must_use]
+pub fn resolve_with(request: &Request<'_>, resolve: &Resolve<'_>, limits: Limits) -> Resolution {
+    let refused = |response: Response| Resolution {
+        response,
+        plan: None,
+    };
+    if !resolve.unchecked {
+        return refused(Response::not_judged(
+            Status::Usage,
+            SourceMap::new(),
+            vec![
+                "this API runs no checker, so it answers `resolve` as the search alone, asked with `unchecked` set"
+                    .to_owned(),
+            ],
+            Some(
+                "ask again with `unchecked`, and compose the plan with `archogen-plan-check`'s own tool to have it \
+                 checked (ROADMAP.md §10.4)"
+                    .to_owned(),
+            ),
+            Vec::new(),
+        ));
+    }
+    let mut elaborated = None;
+    let response = checked(request, limits, &mut elaborated);
+    let Some(judged) = response.judged.as_ref().filter(|_| response.is_ok()) else {
+        return refused(response);
+    };
+    let active = profile::supported(judged.profile)
+        .expect("the description was judged under a profile this build supports");
+    let program: Program = match elaborated {
+        Some(program) => program,
+        None => plan::plain(judged.declarations.clone()),
+    };
+    if program.instances.len() != 1 {
+        return refused(Response::not_judged(
+            Status::UnsupportedProfile,
+            response.sources,
+            vec![format!(
+                "`resolve` searches a description of one instance today, and {} elaborates to {} instances",
+                request.name,
+                program.instances.len()
+            )],
+            Some(format!(
+                "programs of several instances are task-tree leaf {SEVERAL_INSTANCES}'s (docs/TASK_TREE.md)"
+            )),
+            Vec::new(),
+        ));
+    }
+    let declarations: &[Form] = &program.root().declarations;
+    let name_of = |f: &Form| {
+        f.items()
+            .get(1)
+            .and_then(Form::as_symbol)
+            .unwrap_or_default()
+            .to_owned()
+    };
+    let systems: Vec<&Form> = declarations
+        .iter()
+        .filter(|f| f.head() == Some("defsystem"))
+        .collect();
+    let listed = systems
+        .iter()
+        .map(|f| format!("`{}`", name_of(f)))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let usage = |sources: SourceMap, note: String, hint: String| {
+        refused(Response::not_judged(
+            Status::Usage,
+            sources,
+            vec![note],
+            Some(hint),
+            Vec::new(),
+        ))
+    };
+    let system = match (resolve.system, systems.as_slice()) {
+        (Some(wanted), _) => match systems.iter().find(|f| name_of(f) == wanted) {
+            Some(system) => *system,
+            None => {
+                return usage(
+                    response.sources,
+                    format!("{} declares no system `{wanted}`", request.name),
+                    format!("name one it declares: {listed}"),
+                )
+            }
+        },
+        (None, [only]) => *only,
+        (None, []) => {
+            return usage(
+                response.sources,
+                format!(
+                    "{} declares no system, so there is nothing to resolve",
+                    request.name
+                ),
+                "a plan is one system's: declare one with `defsystem`".to_owned(),
+            )
+        }
+        (None, _) => {
+            return usage(
+                response.sources,
+                format!(
+                    "{} declares several systems, and a plan is one system's",
+                    request.name
+                ),
+                format!("choose one by name — `system` in the request, `--system` on the command line: {listed}"),
+            )
+        }
+    };
+    let mut vocabulary_sources = SourceMap::new();
+    let vocabulary = shipped_registry(&mut vocabulary_sources, &kind_modules())
+        .ok()
+        .and_then(|registry| Vocabulary::shipped(&mut vocabulary_sources, &registry).ok());
+    let Some(vocabulary) = vocabulary else {
+        return refused(Response::not_judged(
+            Status::ToolFailure,
+            response.sources,
+            vec!["the shipped vocabulary could not be read".to_owned()],
+            None,
+            Vec::new(),
+        ));
+    };
+    let unresolved = |sources: SourceMap, status: Status, diagnostics| {
+        refused(Response::not_judged(
+            status,
+            sources,
+            vec![format!(
+                "system `{}` of {} cannot be resolved — no plan was written",
+                name_of(system),
+                request.name
+            )],
+            None,
+            diagnostics,
+        ))
+    };
+    match search(
+        declarations,
+        system,
+        active.caller_level,
+        &vocabulary,
+        &Policy::default(),
+        Budget::DEFAULT,
+    ) {
+        Search::Resolved(resolution) => {
+            let digest = plan::program_digest(&program);
+            let text = plan::write(&resolution, active.id, &digest);
+            Resolution {
+                plan: Some(Plan {
+                    system: resolution.system,
+                    text,
+                    program: digest,
+                    bindings: resolution.bindings.len(),
+                }),
+                response,
+            }
+        }
+        Search::Refused {
+            verdict,
+            diagnostics,
+        } => unresolved(response.sources, verdict_status(verdict), diagnostics),
+        Search::Inconclusive { diagnostic, .. } => unresolved(
+            response.sources,
+            Status::AnalysisInconclusive,
+            vec![diagnostic],
+        ),
+    }
+}

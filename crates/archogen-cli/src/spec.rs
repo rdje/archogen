@@ -210,9 +210,21 @@ pub const COMMANDS: &[CommandSpec] = &[
                 help: "write the plan without running the configuration checker over it — a downgrade, never a quiet one",
                 required: false,
             },
+            OptionSpec {
+                long: "system",
+                value: Some("NAME"),
+                help: "the system to resolve, when the description declares several",
+                required: false,
+            },
         ],
         sibling: None,
-        maturity: Maturity::Unimplemented { owner: "M3.4" },
+        // The search over the description's own blocks and platforms (leaf `M3.4.4`); the engine API's and the MCP
+        // server's `resolve`, unchecked, are `M3.4.6`'s, which completes it.
+        maturity: Maturity::Experimental {
+            scope: "one system of a description of one instance, over its own blocks and platforms; catalog \
+                    providers wait on M3.7",
+            completed_by: "M3.4.6",
+        },
         exposure: Exposure::Tool,
     },
     CommandSpec {
@@ -324,7 +336,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             required: true,
         }],
         sibling: None,
-        maturity: Maturity::Unimplemented { owner: "M3.4" },
+        maturity: Maturity::Unimplemented { owner: "M3.4.13" },
         exposure: Exposure::Tool,
     },
     CommandSpec {

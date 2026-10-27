@@ -483,9 +483,9 @@ test -p archogen-cli --test api_parity
 expect killed
 why API.3.3: `build` is outside the programmatic interface by §10.4. An API that offered it would hand a remote consumer a filesystem authority; the operation leg must refuse it.
 from
-    pub const OPERATIONS: &[&str] = &["check"];
+    pub const OPERATIONS: &[&str] = &["check", "resolve"];
 to
-    pub const OPERATIONS: &[&str] = &["check", "build"];
+    pub const OPERATIONS: &[&str] = &["check", "resolve", "build"];
 end
 
 mutation nesting-unbounded

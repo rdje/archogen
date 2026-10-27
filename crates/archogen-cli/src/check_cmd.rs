@@ -64,6 +64,22 @@ pub(crate) fn ask(
     before_reading: impl FnOnce(&mut dyn Write) -> Option<Status>,
     err: &mut dyn Write,
 ) -> Result<Response, Status> {
+    // No budget: the command line is its own consumer, and trusts the files it was given. The budget protects an
+    // instance's host from a consumer it does not control (`docs/decisions/decision_api-instance.md`); the list,
+    // module and elaboration limits of the language still apply, because they are the language's.
+    ask_with(path, requested, before_reading, err, |request| {
+        archogen_api::check_with(request, Limits::NONE)
+    })
+}
+
+/// [`ask`], the API asked by `operation` — `check`, or `resolve` (leaf `M3.4.4`) — over the same request.
+pub(crate) fn ask_with<T>(
+    path: &str,
+    requested: Option<&str>,
+    before_reading: impl FnOnce(&mut dyn Write) -> Option<Status>,
+    err: &mut dyn Write,
+    operation: impl FnOnce(&Request<'_>) -> T,
+) -> Result<T, Status> {
     // Resolve the profile before reading anything else: a description checked against a profile nobody
     // supports has not been checked, and an unreadable file reported after an unsupported profile would send
     // the author to fix the wrong thing.
@@ -86,18 +102,12 @@ pub(crate) fn ask(
         }
     };
     let modules = DirectoryModules::new(Path::new(path).parent().unwrap_or_else(|| Path::new("")));
-    // No budget: the command line is its own consumer, and trusts the files it was given. The budget protects an
-    // instance's host from a consumer it does not control (`docs/decisions/decision_api-instance.md`); the list,
-    // module and elaboration limits of the language still apply, because they are the language's.
-    Ok(archogen_api::check_with(
-        &Request {
-            name: path,
-            text: &text,
-            profile: requested,
-            modules: &modules,
-        },
-        Limits::NONE,
-    ))
+    Ok(operation(&Request {
+        name: path,
+        text: &text,
+        profile: requested,
+        modules: &modules,
+    }))
 }
 
 /// Run `archogen check`.

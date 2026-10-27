@@ -5,6 +5,18 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — `archogen resolve` writes a checked plan
+
+`ARCHOGEN-M3-1005` (leaf `M3.4.4`), `2026-10-27`.
+
+- `archogen resolve DESCRIPTION --out PLAN` chooses one system's providers, writes the plan, and runs the independent
+  configuration checker over it; its exit status is the checker's verdict. `--unchecked` writes the plan alone and
+  says so. Through a real install, `s0-heartbeat`'s plan is written and accepted by the checker.
+- The engine API gains `resolve` (API `1.4`), the search alone, so a program can ask for a plan too; the command line
+  goes through it, held to the same answer over every description in the repository.
+- It is experimental: it searches a description's own blocks and platforms, so descriptions whose requirements only a
+  realization meets wait on the catalog's providers.
+
 ## archogen — the search writes its plan
 
 `ARCHOGEN-M3-1004` (leaf `M3.4.3`), `2026-10-27`.

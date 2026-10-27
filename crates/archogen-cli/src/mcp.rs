@@ -128,9 +128,11 @@ fn tool(spec: &CommandSpec) -> Value {
     if let Some(owner) = owner {
         meta.push((format!("{PREFIX}owner"), string(owner)));
     }
-    // A model reads a tool's description; few clients show it `_meta`. So an unbuilt tool says so where it is read.
+    // A model reads a tool's description; few clients show it `_meta`. So a tool this server cannot run says so where it
+    // is read — an unimplemented one, and an experimental one, which runs on the command line alone until its owner
+    // offers it here (`resolve`, leaf `M3.4.4`): a call of either answers "not built yet", and the description agrees.
     let description = match owner {
-        Some(owner) if maturity == "unimplemented" => {
+        Some(owner) => {
             format!(
                 "{} — not built yet: task-tree leaf {owner} owns it",
                 spec.summary
@@ -378,7 +380,15 @@ mod tests {
                 .get("_meta")
                 .and_then(|meta| meta.get("io.github.rdje.archogen/owner"))
                 .and_then(Value::as_str),
-            Some("M3.4")
+            Some("M3.4.6")
+        );
+        assert_eq!(
+            tools[1]
+                .get("_meta")
+                .and_then(|meta| meta.get("io.github.rdje.archogen/maturity"))
+                .and_then(Value::as_str),
+            Some("experimental"),
+            "`resolve` runs on the command line, and its programmatic face is `M3.4.6`'s"
         );
     }
 

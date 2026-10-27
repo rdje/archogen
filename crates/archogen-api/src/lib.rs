@@ -45,11 +45,12 @@
 
 #![deny(missing_docs)]
 
+mod resolve;
 mod status;
 
 use std::cell::{Cell, RefCell};
 
-use eadl_front::{elaborate_source, read, Position, Verdict};
+use eadl_front::{elaborate_source, read, Position, Program, Verdict};
 use eadl_model::check::{check_program, default_profile, shipped_registry, Outcome};
 use eadl_model::profile::{self, Profile};
 
@@ -59,6 +60,7 @@ use eadl_model::profile::{self, Profile};
 pub use archogen_outcome::{Status, Version};
 pub use eadl_front::{Diagnostic, Form, MemoryModules, ModuleSource, SourceId, SourceMap};
 pub use eadl_model::check::Closure;
+pub use resolve::{resolve_with, Plan, Resolution, Resolve};
 pub use status::verdict_status;
 
 /// This API's version: apart from the language's (`eadl/1`) and the profiles', as `ROADMAP.md` §15 requires.
@@ -69,8 +71,9 @@ pub use status::verdict_status;
 /// the same language version is a language change, recorded in `docs/semantics/migrations/`, not an API
 /// change. `1.0` was fixed `2026-09-30`, when leaf `API.3` closed; `1.1` added [`Response::engine`] (leaf
 /// `API.4.1`); `1.2` added [`check_with`] and [`Limits`] (leaf `API.4.2`); `1.3` added the status `stale-input`, the
-/// vocabulary growing (leaf `M3.5.1.1`). `docs/book/src/versions.md` registers it.
-pub const VERSION: Version = Version { major: 1, minor: 3 };
+/// vocabulary growing (leaf `M3.5.1.1`); `1.4` added the operation `resolve`, [`resolve_with`], the search alone (leaf
+/// `M3.4.4`). `docs/book/src/versions.md` registers it.
+pub const VERSION: Version = Version { major: 1, minor: 4 };
 
 /// The engine version: the one the workspace's members share, which `archogen --version` reports and
 /// `docs/book/src/versions.md` registers as `engine`. With [`VERSION`] it names the build a response came from
@@ -79,7 +82,7 @@ pub const ENGINE: &str = env!("CARGO_PKG_VERSION");
 
 /// The operations this API exposes, each by the name `crates/archogen-cli/src/spec.rs` gives its command.
 /// Parity with the CLI's built commands is gated on it (leaf `API.3.3`).
-pub const OPERATIONS: &[&str] = &["check"];
+pub const OPERATIONS: &[&str] = &["check", "resolve"];
 
 /// The leaf that loads a kind module a user writes (`ROADMAP.md` §5.6 rule 1): extension experiment 1, a new
 /// kind built from the existing declaration constructs.
@@ -316,6 +319,12 @@ pub fn check(request: &Request<'_>) -> Response {
 /// description, because a judgement cut short is not one.
 #[must_use]
 pub fn check_with(request: &Request<'_>, limits: Limits) -> Response {
+    checked(request, limits, &mut None)
+}
+
+/// [`check_with`], and the program a module file was elaborated to when the description is accepted, in `elaborated`
+/// — what [`resolve_with`] searches, so it is elaborated once.
+fn checked(request: &Request<'_>, limits: Limits, elaborated: &mut Option<Program>) -> Response {
     if let Some(budget) = limits.bytes {
         if request.text.len() > budget {
             return over_budget(format!(
@@ -329,10 +338,13 @@ pub fn check_with(request: &Request<'_>, limits: Limits) -> Response {
             remaining: Cell::new(budget - request.text.len()),
             over: RefCell::new(None),
         };
-        let response = judge(&Request {
-            modules: &budgeted,
-            ..*request
-        });
+        let response = judge(
+            &Request {
+                modules: &budgeted,
+                ..*request
+            },
+            elaborated,
+        );
         if let Some((module, size, left)) = budgeted.over.into_inner() {
             return over_budget(format!(
                 "the modules {} imports come to more than this instance's budget of {budget} bytes for one \
@@ -342,7 +354,7 @@ pub fn check_with(request: &Request<'_>, limits: Limits) -> Response {
         }
         return response;
     }
-    judge(request)
+    judge(request, elaborated)
 }
 
 /// The response for a request over its budget: `tool-failure`, never a partial result.
@@ -360,8 +372,8 @@ fn over_budget(note: String) -> Response {
     )
 }
 
-/// The judgement itself, with no budget.
-fn judge(request: &Request<'_>) -> Response {
+/// The judgement itself, with no budget; a module file's program, once accepted, in `elaborated`.
+fn judge(request: &Request<'_>, elaborated: &mut Option<Program>) -> Response {
     if let Some(refused) = refuse_profile(request.profile) {
         return refused;
     }
@@ -455,6 +467,7 @@ fn judge(request: &Request<'_>) -> Response {
         })
         .collect();
     let outcome = check_program(&program, &registry, active);
+    *elaborated = Some(program);
     Response::judged(outcome, Some(instances), active, id, sources)
 }
 

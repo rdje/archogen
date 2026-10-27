@@ -7,7 +7,7 @@
   (role generator)
   (package "crates/archogen-cli")
   (target bin archogen)
-  (role-packages "crates/archogen-cli" "crates/archogen-api" "crates/archogen-s0")
+  (role-packages "crates/archogen-cli" "crates/archogen-api" "crates/archogen-s0" "crates/eadl-resolve")
   (invokes configuration-checker)
   (installed "archogen-install.json"))
 
@@ -71,19 +71,19 @@
   (package "crates/archogen-api")
   (target example in_memory)
   (reason "shows the engine API answering a request from memory; run by the book's example test, no claim rests on it")
-  (role-packages "crates/archogen-api"))
+  (role-packages "crates/archogen-api" "crates/eadl-resolve"))
 
 (defprogram browser-module
   (package "crates/archogen-wasm")
   (target cdylib archogen_wasm)
   (reason "the module a browser loads, ROADMAP.md §10.4's consumer of the engine API; it answers check requests and is no role's program")
-  (role-packages "crates/archogen-api"))
+  (role-packages "crates/archogen-api" "crates/eadl-resolve"))
 
 (defprogram browser-module-answers
   (package "crates/archogen-wasm")
   (target example answers)
   (reason "prints the host build's answers, which scripts/wasm_binding.sh compares with the module's; a test tool")
-  (role-packages "crates/archogen-api"))
+  (role-packages "crates/archogen-api" "crates/eadl-resolve"))
 
 (defprogram plan-check-browser-module
   (package "crates/archogen-plan-check-wasm")
@@ -96,6 +96,84 @@
   (target example answers)
   (reason "derives the population and prints the host build's answers, which scripts/plan_check_wasm.sh compares with the module's and the executable's; a test tool")
   (role-packages "crates/archogen-plan-check"))
+
+(defprogram resolve-units
+  (package "crates/eadl-resolve")
+  (target lib-test eadl_resolve)
+  (reason "the resolver's unit tests: they test the generator's own reading, relation, joint rules, search and plan and use no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check` — the `production`, `vocabulary` and `system-reading` derivations', the model's checker's and corpus's — reaches every test target (RP-H7)")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram resolve-doctests
+  (package "crates/eadl-resolve")
+  (target doctest eadl_resolve)
+  (reason "the resolver's doc tests: they use no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check` — the `production`, `vocabulary` and `system-reading` derivations', the model's checker's and corpus's — reaches every test target (RP-H7)")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram resolve-declarations
+  (package "crates/eadl-resolve")
+  (target test declarations)
+  (reason "the relation's reading of declarations: it tests the generator's own reader and uses no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check` — the `production`, `vocabulary` and `system-reading` derivations', the model's checker's and corpus's — reaches every test target (RP-H7)")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram resolve-diagnostics
+  (package "crates/eadl-resolve")
+  (target test diagnostics)
+  (reason "the relation's diagnostics as the toolchain prints them: it uses no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check` — the `production`, `vocabulary` and `system-reading` derivations', the model's checker's and corpus's — reaches every test target (RP-H7)")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram resolve-function-census
+  (package "crates/eadl-resolve")
+  (target test function_census)
+  (reason "the census of each vocabulary function's facts over the joint rules: it uses no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check` — the `production`, `vocabulary` and `system-reading` derivations', the model's checker's and corpus's — reaches every test target (RP-H7)")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram resolve-joint
+  (package "crates/eadl-resolve")
+  (target test joint)
+  (reason "the generator's joint rules over complete assignments, F08 and F09: it uses no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check` — the `production`, `vocabulary` and `system-reading` derivations', the model's checker's and corpus's — reaches every test target (RP-H7)")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram resolve-privilege-census
+  (package "crates/eadl-resolve")
+  (target test privilege_census)
+  (reason "the census of privilege over the joint rules: it uses no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check` — the `production`, `vocabulary` and `system-reading` derivations', the model's checker's and corpus's — reaches every test target (RP-H7)")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram resolve-search
+  (package "crates/eadl-resolve")
+  (target test search)
+  (reason "the search's tests (M3.4.2): it uses no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check` — the `production`, `vocabulary` and `system-reading` derivations', the model's checker's and corpus's — reaches every test target (RP-H7)")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram resolve-timer-cases
+  (package "crates/eadl-resolve")
+  (target test timer_cases)
+  (reason "the record's timer cases through the generator's relation: it uses no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check` — the `production`, `vocabulary` and `system-reading` derivations', the model's checker's and corpus's — reaches every test target (RP-H7)")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram resolve-values
+  (package "crates/eadl-resolve")
+  (target test values)
+  (reason "the relation's value domains: it uses no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check` — the `production`, `vocabulary` and `system-reading` derivations', the model's checker's and corpus's — reaches every test target (RP-H7)")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram resolve-model-checker
+  (package "crates/eadl-resolve")
+  (target test checker)
+  (reason "the configuration checker's model's bounded exhaustive checker, a design review's tool (M3.1.1.1): it runs `archogen_plan_check::model` alone and uses no item of the generator's package it lives in, where the model's tests stayed when M3.5.3 moved the model to the checker; it compiles the resolver as the package of its own target")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram resolve-model-corpus
+  (package "crates/eadl-resolve")
+  (target test corpus)
+  (reason "the configuration checker's model's falsification corpus (M3.1.1.1): it runs `archogen_plan_check::model` alone and uses no item of the generator's package it lives in, where the model's tests stayed when M3.5.3 moved the model to the checker; it compiles the resolver as the package of its own target")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram resolve-plan
+  (package "crates/eadl-resolve")
+  (target test plan)
+  (reason "holds the generator's plan writer (M3.4.3) to the format's golden and to the configuration checker's reader, program text and checks: two roles' writers of one format compared, so a divergence is found here rather than as a stale plan on every run; each writer is its own role's code, and no claim of the checker's independence rests on this test")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
 
 (defprogram rt-core-units
   (package "crates/rt-core")
@@ -143,7 +221,7 @@
   (package "xtask")
   (target bin xtask)
   (reason "the repository's tiers, gates and measuring instruments, this gate's among them; it judges commits, and no claim's result is its output")
-  (role-packages "crates/archogen-api"))
+  (role-packages "crates/archogen-api" "crates/eadl-resolve"))
 
 ; The sites the catalog's rules refuse in today's roots, each admitted by review once M3.6.5 reads acceptance: the
 ; file, the rule as the catalog's scanner names it, and the sha256 of the site's extent — the statement or item it

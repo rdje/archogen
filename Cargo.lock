@@ -9,6 +9,7 @@ dependencies = [
  "archogen-outcome",
  "eadl-front",
  "eadl-model",
+ "eadl-resolve",
 ]
 
 [[package]]

@@ -325,6 +325,105 @@ fn over_every_description_the_cli_says_what_the_api_says() {
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
 }
 
+/// What `archogen resolve --unchecked` said about `path`, in-process, and the plan it wrote at `plan`.
+fn cli_resolves(path: &Path, plan: &Path) -> (Said, Option<String>) {
+    let _ = fs::remove_file(plan);
+    let mut out: Vec<u8> = Vec::new();
+    let mut err: Vec<u8> = Vec::new();
+    let status = run(
+        [
+            "resolve".to_string(),
+            path.display().to_string(),
+            "--out".to_string(),
+            plan.display().to_string(),
+            "--unchecked".to_string(),
+        ],
+        &mut out,
+        &mut err,
+    );
+    let err = String::from_utf8_lossy(&err);
+    let prefix = format!("archogen: {}: ", status.slug());
+    let said = Said {
+        status,
+        codes: err
+            .lines()
+            .filter_map(|line| line.strip_prefix("error[")?.split_once(']'))
+            .map(|(code, _)| code.to_string())
+            .collect(),
+        notes: err
+            .lines()
+            .filter_map(|line| line.strip_prefix(prefix.as_str()))
+            .filter(|rest| !rest.contains(" diagnostic(s) in "))
+            .map(str::to_string)
+            .collect(),
+    };
+    (said, fs::read_to_string(plan).ok())
+}
+
+/// The engine API's `resolve` on `path`, unchecked, with the module path the CLI uses: what it said, and its plan.
+fn api_resolves(path: &Path) -> (Said, Option<String>) {
+    let text = fs::read_to_string(path).expect("readable");
+    let name = path.display().to_string();
+    let modules = DirectoryModules::new(path.parent().expect("a file has a directory"));
+    let resolution = archogen_api::resolve_with(
+        &Request {
+            name: &name,
+            text: &text,
+            profile: None,
+            modules: &modules,
+        },
+        &archogen_api::Resolve {
+            system: None,
+            unchecked: true,
+        },
+        archogen_api::Limits::NONE,
+    );
+    let response = resolution.response;
+    (
+        Said {
+            status: response.status,
+            codes: response
+                .diagnostics
+                .iter()
+                .map(|diagnostic| diagnostic.code.to_string())
+                .collect(),
+            notes: response.notes,
+        },
+        resolution.plan.map(|plan| plan.text),
+    )
+}
+
+#[test]
+fn over_every_description_resolve_says_what_the_api_says_and_writes_its_plan() {
+    // The record's §6, amended `2026-10-23`: `resolve`'s behaviour leg compares the API's, unchecked, with
+    // `archogen resolve --unchecked` (leaf `M3.4.4`).
+    let root = repo_root();
+    let plan = Path::new(env!("CARGO_TARGET_TMPDIR"))
+        .join(format!("api-parity-plan-{}.json", std::process::id()));
+    let mut statuses = std::collections::BTreeSet::new();
+    let mut plans = 0;
+    let mut wrong = Vec::new();
+    for path in descriptions(&root) {
+        let (cli, cli_plan) = cli_resolves(&path, &plan);
+        let (api, api_plan) = api_resolves(&path);
+        statuses.insert(cli.status.code());
+        plans += usize::from(cli_plan.is_some());
+        if cli != api || cli_plan != api_plan {
+            wrong.push(format!(
+                "{}:\n  cli {cli:?} {}\n  api {api:?} {}",
+                path.display(),
+                cli_plan.is_some(),
+                api_plan.is_some()
+            ));
+        }
+    }
+    let _ = fs::remove_file(&plan);
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+    // Plans written and refusals of several kinds, or the leg compares one outcome and calls it parity.
+    assert!(plans > 0, "no description resolved");
+    assert!(statuses.len() > 2, "{statuses:?}");
+}
+
 #[test]
 fn arm_3_a_surface_that_drops_a_diagnostic_or_a_note_is_reported() {
     let said = |status, codes: &[&str], notes: &[&str]| Said {

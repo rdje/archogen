@@ -15,7 +15,8 @@
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M3` → frontier `M3.5`; `PROGRAM` resumes at `PROGRAM.72`.
 - **Next action:** CI green on `34b6abeb` (2026-10-26); `M3.5.1.6.4` done (the checker's own MCP); `M3.5.7`
-  (its browser module) done; `M3.4` (the search): `.4.2`, `.4.3` done, `.4.4` next (`archogen resolve`). After the push, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`.
+  (its browser module) done; `M3.4`: `.4.2`–`.4.4` done (`archogen resolve`);
+  next `.4.5` (F10, F11, the corpus). After the push, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`.
   `PROGRAM.115` filed; full verification `M3.5.9` after `M3.5`'s features (doctrine 22).
   The mutation campaign is `M7.6`'s. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
   focused green at `eaf71286`; `archogen check` wiring is `M3.4`'s. The next artifact cleanup is due after

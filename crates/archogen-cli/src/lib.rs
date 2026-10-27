@@ -17,6 +17,7 @@ pub mod cli;
 pub mod consume;
 pub mod launch;
 pub mod mcp;
+pub mod resolve_cmd;
 pub mod spec;
 pub mod status;
 
@@ -147,6 +148,7 @@ fn dispatch(
     match spec.name {
         "check" => return check_cmd::run(parsed, out, err),
         "build" => return build_cmd::run(parsed, out, err),
+        "resolve" => return resolve_cmd::run(parsed, launcher, out, err),
         "mcp" => {
             return match mcp::serve(input, out) {
                 Ok(()) => Status::Ok,
@@ -240,10 +242,10 @@ mod tests {
 
     #[test]
     fn an_unbuilt_command_exits_unimplemented_and_names_its_leaf() {
-        // `resolve` is still unbuilt. This arm moved off `check` when leaf M1.8 built it — the
-        // property under test is the routing of an unbuilt command, not any particular command
-        // being unbuilt, so it follows the surface rather than pinning it.
-        let (status, out, err) = invoke(&["resolve", "examples/x.eadl", "--out", "plan.json"]);
+        // `replay` is still unbuilt. This arm moved off `check` when leaf M1.8 built it, and off `resolve` when
+        // leaf M3.4.4 did — the property under test is the routing of an unbuilt command, not any particular
+        // command being unbuilt, so it follows the surface rather than pinning it.
+        let (status, out, err) = invoke(&["replay", "artifacts/failure/replay.json"]);
         assert_eq!(status, Status::Unimplemented);
         assert_eq!(status.code(), 20);
         assert!(
@@ -252,7 +254,7 @@ mod tests {
         );
         assert!(err.contains("unimplemented"), "{err}");
         assert!(
-            err.contains("M3.4"),
+            err.contains("M4.7"),
             "the refusal must name the owning leaf: {err}"
         );
     }
@@ -270,13 +272,22 @@ mod tests {
             !check_line.contains("unimplemented"),
             "`check` is built but still advertised as unimplemented: {check_line}"
         );
+        let replay_line = out
+            .lines()
+            .find(|line| line.trim_start().starts_with("replay "))
+            .expect("replay is listed");
+        assert!(
+            replay_line.contains("unimplemented"),
+            "`replay` is unbuilt and should say so: {replay_line}"
+        );
+        // An experimental command says so, and what completes it (leaf M3.4.4).
         let resolve_line = out
             .lines()
             .find(|line| line.trim_start().starts_with("resolve "))
             .expect("resolve is listed");
         assert!(
-            resolve_line.contains("unimplemented"),
-            "`resolve` is unbuilt and should say so: {resolve_line}"
+            resolve_line.contains("experimental") && resolve_line.contains("M3.4.6"),
+            "`resolve` is experimental and should say so: {resolve_line}"
         );
     }
 

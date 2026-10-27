@@ -53,7 +53,8 @@ judge a description any other way.
    whose gate learned the API version's shape so that a bump cannot land unrecorded. `1.1` added the response's
    engine version (leaf `API.4.1`, [[api-instance]]), a field, so a minor. `1.2` added `check_with` and its
    `Limits` (leaf `API.4.2`), an operation's variant, so a minor. `1.3` added the status `stale-input` (leaf
-   `M3.5.1.1`), the vocabulary growing, so a minor.*
+   `M3.5.1.1`), the vocabulary growing, so a minor. `1.4` added the operation `resolve` (leaf `M3.4.4`), so a
+   minor.*
 6. **Parity, both ways, gated** (`ROADMAP.md` §10.4: "a capability that exists only behind the CLI does not
    exist programmatically, and the reverse"):
    - *structurally:* the CLI's source calls no judging entry point of the engine (`check`,
@@ -68,6 +69,12 @@ judge a description any other way.
    when they run they join the by-operation leg's exclusions, citing the ruling, beside `build` and `mcp`. `resolve`,
    when `M3.4` builds it, is this API's operation with `unchecked` set alone, refusing a request without it with the
    reason and the repair, and its behaviour leg compares it with `archogen resolve --unchecked`.*
+   *Built `2026-10-27` (leaf `M3.4.4`): `resolve_with` checks the request as `check_with` does and answers the check's
+   response for a description it does not accept; otherwise one system — the only one, or `Resolve::system` — of a
+   program of one instance is searched and its plan, `archogen-assignment/1`, answered beside the response
+   (`Resolution`), the search's refusal or a spent budget answered under its own status with no plan. `archogen
+   resolve` asks it with `unchecked` set and adds what the API cannot: the file, and the configuration checker run as
+   a process. Its behaviour leg holds the two to one answer over every tracked description, the plan byte for byte.*
 
 ## Why
 

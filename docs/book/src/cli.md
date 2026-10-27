@@ -33,12 +33,12 @@ USAGE:
 
 COMMANDS:
     check       elaborate and type-check a description against a profile
-    resolve     resolve providers and resources into an independently checked build plan   [unimplemented — tracked by leaf M3.4]
+    resolve     resolve providers and resources into an independently checked build plan   [experimental — one system of a description of one instance, over its own blocks and platforms; catalog providers wait on M3.7; completed by leaf M3.4.6]
     plan-check  check a resolved plan against its description, by the independent configuration checker
     build       generate, assemble and build a complete system and its simulator   [experimental — the S0 path: one fixed realization, periodic releases, hosted playground; completed by leaf M4.2]
     analyze     run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.21.2]
     verify      run a verification tier over a build   [unimplemented — tracked by leaf M4.11]
-    explain     explain how one requirement was realized, or why it could not be   [unimplemented — tracked by leaf M3.4]
+    explain     explain how one requirement was realized, or why it could not be   [unimplemented — tracked by leaf M3.4.13]
     replay      replay a recorded failure manifest and check its identity   [unimplemented — tracked by leaf M4.7]
     mcp         serve the engine API to an agent over MCP, on standard input and output
 ```
@@ -50,12 +50,12 @@ COMMANDS:
 | Command | Does | Built by |
 | --- | --- | --- |
 | `archogen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | **built** — a description is one file or a module tree; see [Checking a description](checking.md) and [Modules and composition](modules.md) |
-| `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked]` | resolve providers and resources into an independently checked build plan | leaf `M3.4` |
+| `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked] [--system <NAME>]` | resolve providers and resources into an independently checked build plan | **experimental** — one system of a description of one instance, over its own blocks and platforms, the plan checked by `archogen-plan-check`; `--locked` refused until `M4.1`; leaf `M3.4.6` completes it, `M3.7` adds the catalog's providers |
 | `archogen plan-check <DESCRIPTION> <PLAN>` | check a resolved plan against its description, by the independent configuration checker | **built** — runs the configuration checker's own executable, `archogen-plan-check`, from an install, its arguments handed over unparsed; see [Checking a plan](plan-check.md) |
 | `archogen build <DESCRIPTION> [--profile <P>] --out <DIR>` | generate, assemble and build a complete system and its simulator | **experimental** — the S0 path only, see [The S0 early generation path](s0.md); leaf `M4.2` completes it |
 | `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.21.2` |
 | `archogen verify <BUILD> --tier <TIER>` | run a verification tier | leaf `M4.11` |
-| `archogen explain <BUILD> --requirement <REQUIREMENT>` | explain how one requirement was realized, or why it could not be | leaf `M3.4` |
+| `archogen explain <BUILD> --requirement <REQUIREMENT>` | explain how one requirement was realized, or why it could not be | leaf `M3.4.13` |
 | `archogen replay <MANIFEST>` | replay a recorded failure manifest and check its identity | leaf `M4.7` |
 | `archogen mcp` | serve the engine API to an agent over [MCP](ledger.md#mcp-specification), on standard input and output — §10.4's server, not one of §10.2's seven | **built** — leaf `API.6.4`; the tools it offers are this table's, `build` and `verify` excluded |
 
@@ -84,12 +84,12 @@ Two states would have forced a choice between two false statements. Marking it *
 and a help text that lies about a gap teaches users to stop reading it. `ROADMAP.md` §12 S0
 settles it by requiring the early generation path's output to be marked experimental.
 
-The remaining six commands are not built, and they say so precisely:
+The commands not built yet say so precisely:
 
 ```console
-$ archogen resolve examples/periodic-three/system.eadl --out plan.json
-archogen: unimplemented: `archogen resolve` is not implemented yet
-  hint: it is part of the interface target in ROADMAP.md §10.2; the work is tracked by task-tree leaf M3.4 (docs/TASK_TREE.md)
+$ archogen replay artifacts/failure/replay.json
+archogen: unimplemented: `archogen replay` is not implemented yet
+  hint: it is part of the interface target in ROADMAP.md §10.2; the work is tracked by task-tree leaf M4.7 (docs/TASK_TREE.md)
 $ echo $?
 20
 ```
@@ -99,20 +99,44 @@ tracked work, not an unknown.
 
 The `[unimplemented]` marker comes from the same table the parser validates against, so a
 command becomes real and stops advertising itself as unbuilt in **one** change — a test asserts
-that `check` no longer carries the marker and `resolve` still does.
+that `check` no longer carries the marker, `replay` still does, and `resolve`, built `2026-10-27`, says it is
+experimental.
+
+`archogen resolve` (leaf `M3.4.4`) chooses one system's providers and writes the plan, `archogen-assignment/1`
+([Matching](matching.md#the-search)), then runs the configuration checker over it, so the plan it reports was judged
+by a program that shares none of its code; with `--unchecked` it writes the plan alone and says so:
+
+```console
+$ archogen resolve system.eadl --out plan.json --unchecked
+system.eadl: resolved system `heartbeat` against profile `rt-static-up-v1` into plan.json (1 binding(s))
+  experimental: one system of a description of one instance, over its own blocks and platforms; catalog providers wait on M3.7; completed by M3.4.6
+archogen: unchecked: `--unchecked` — the plan was not checked by `archogen-plan-check`; nothing independent judged it
+$ cat plan.json
+(format "archogen-assignment/1")
+(profile rt-static-up-v1)
+(system heartbeat)
+(program "69e3669f8a0565716da5d870bd4083f4a4de025c447c4697049e2ca2f2b1674b")
+(bind console.write observable-output console.uart)
+```
+
+That is `examples/s0-heartbeat/system.eadl`. Without `--unchecked`, an install's `archogen-plan-check` judges the plan,
+its record written in `plan.json.check/`, and the command's status is the checker's verdict. A description the search
+cannot resolve writes no plan and exits with the search's verdict — `periodic-three` is `missing-fact` today, its
+timer offering a width and no modulus and its policy's constraints waiting on the catalog — and `--locked` is refused
+until lock data exists (`M4.1`). `--system` names the system when a description declares several.
 
 **The checkers are programs of their own** (ruled `2026-10-22`, findings §16 (a); built by `M3.5.1.4`, `M3.5.6` and
 `M2.21`). The configuration checker is `archogen-plan-check` and the scheduling checker `archogen-analyze`,
 executables [an install](#installing) places beside `archogen`. `archogen plan-check` runs the first as git runs its
 sibling commands, handing over its arguments unparsed — `--help` among them, so `archogen help plan-check` is the
 checker's own help — and relaying its output and exit code (leaf `M3.5.1.4.1`); `archogen analyze` will run the
-second so, and `archogen resolve` will search, then run `archogen-plan-check` over the plan it wrote — or, with `--unchecked`, write the plan alone, a downgrade you
-ask for by name. The front runs only a sibling the install vouches for: the install manifest beside it,
+second so, and `archogen resolve` searches, then runs `archogen-plan-check` over the plan it wrote — or, with
+`--unchecked`, writes the plan alone, a downgrade you ask for by name (leaf `M3.4.4`). The front runs only a sibling the install vouches for: the install manifest beside it,
 `archogen-install/1`, must name the directory it lies in and the running `archogen`'s own fingerprint, and the
 sibling's bytes must be the fingerprint the manifest gives it — so an older checker left beside a newer front is
 refused, not run. A copy of `archogen` that no install placed runs no checker, and says how to install one. Each
 checker writes a result record, `archogen-result/1`, and exits with its status's code. When the front consumes a
-result — `archogen resolve` will, before it builds on a plan — it believes the record only when its status and the exit
+result — `archogen resolve` does, before it reports a plan — it believes the record only when its status and the exit
 code agree, it names as its producer the program the front verified, and its subject is the very program and plan,
 under the very profile, the front computed; anything else is `tool-failure` naming what disagreed, and a checker that
 finds the description itself wanting is the two roles disagreeing, both verdicts named (leaf `M3.5.1.4.3`). So no program runs two roles' logic, and the generator's MCP server
@@ -189,7 +213,7 @@ repair direction on every diagnostic:
 ```console
 $ archogen resolve system.eadl
 archogen: usage: `archogen resolve` requires `--out`
-  hint: archogen resolve <DESCRIPTION> [--profile <PROFILE>] [--locked] --out <PLAN> — where to write the resolved plan
+  hint: archogen resolve <DESCRIPTION> [--profile <PROFILE>] [--locked] --out <PLAN> [--unchecked] [--system <NAME>] — where to write the resolved plan
 
 $ archogen check system.eadl --strict
 archogen: usage: unknown option `--strict` for `archogen check`
