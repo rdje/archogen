@@ -58,7 +58,9 @@ too, so a cell a decision fixes changes kind only by a new ruling.
 
 **The lifecycle that keeps the working set small.** `docs/decisions/` is the working set: records under review, or
 still being amended. An accepted design moves to `docs/specs/<subject>/`, as [[decision_specifications-home]]
-rules. `PROGRAM.117.2` is to make that move one scripted, verified step.
+rules. The move is one scripted, verified step, `bash scripts/move_record.sh [--dry-run] <record> <destination>`
+(`PROGRAM.117.2`). It rewrites the record's own links and every live citation, and lists what it leaves: a
+revision's path, the archives, the rolling ledgers, the verbatim proofs and the files held for the scaffold.
 
 A superseded record is marked `superseded by` its successor and stays where its citations find it. Sealed
 history cites records by path and cannot be repointed. This is the practice of the architecture-decision-record
@@ -150,8 +152,9 @@ ruling, by this record, and by its review.
 - **A folder listing 64 entries.** Give a subject with several records a sub-folder of its own, or move accepted
   designs on to `docs/specs/<subject>/`. `DECISION-INDEX` finds a record in a sub-folder by the path its index
   gives. Link the sub-folder from `knowledge-map/subsystems.md`: the generated map reads `docs/decisions/*.md` flat.
-  Register the sub-folder as a row of its own only when it needs other per-file ceilings. `PROGRAM.117.2` will make
-  the move one step.
+  Register the sub-folder as a row of its own only when it needs other per-file ceilings. Move each record with
+  `bash scripts/move_record.sh`, a dry run first; a batch past a folder's step names its leaf in
+  `README_ROUTES_GROWTH_LEAF`.
 - **A row beneath a column a decision fixes** writes a number of that column's kind there, even a file another
   doctrine bounds: a deferral would leave the decision's bound.
 - **Three quarters of a guard.**

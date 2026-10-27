@@ -996,14 +996,28 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1020 (leaf PROGRAM.117.1)`
 
 - ID: `PROGRAM.117.2`
-  Status: `pending`
+  Status: `done` — `2026-10-27`
   Goal: one scripted, verified step moves records — an accepted design from `docs/decisions/` to
     `docs/specs/<subject>/`, or a subject's records into a sub-folder of their own — their relative links rewritten,
     every path-form citation in a live file repointed, sealed history and scaffold-held files left and reported, the
     index rows updated, a new sub-folder linked from `knowledge-map/subsystems.md`; a batch past a folder's step,
     262144 bytes, names its leaf in `README_ROUTES_GROWTH_LEAF`; a superseded record stays in place
     (`decision_ceilings-bound-reads.md`).
-  Commit: `pending`
+  Built: `scripts/move_record.sh [--dry-run] <record> <destination>`. It refuses a record that is not a tracked `.md`
+    under the two folders, an index or the template, a destination outside them or existing, and — for a move —
+    unstaged changes. It `git mv`s the record, rewrites its own relative links, and repoints every written-out path
+    and every relative markdown link that resolved to it in a live file. It leaves and lists a `<revision>:<path>`,
+    the four archives, `CHANGELOG.md` and `DEV_NOTES.md`, `annex-trust-proofs.md`'s verbatim proofs and the held
+    files; it never lists or opens `docs/evaluation/`. It stages the move only when no live file names the old path,
+    runs `DECISION-INDEX`, and names a new folder for the knowledge map and a rewritten Rust source or trust root for
+    `cargo xtask trust-inventory`. `TOOLBOX.md`'s README-routes row, the record and the book's repository annex say so.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: a record's move was a census by reading, its citations found and judged by hand (`PROGRAM.43`, `.56`, `.102`); WHERE, `PROGRAM.102`'s move, `git show --stat --format= efedf6d6`: `20 files changed, 94 insertions(+), 39 deletions(-)`, each edit chosen by reading, its FIX "every path-form citation repointed … bare names left … sealed history untouched".
+    - [x] FIX — `scripts/move_record.sh`; `TOOLBOX.md`; the record's lifecycle and how-to; the book's repository annex.
+    - [x] ADDRESSED — `bash scripts/move_record.sh --self-test`: `move-record self-test: 24 pass / 0 fail (24 arms)`, the sealed fixture unreadable throughout. On this tree, `bash scripts/move_record.sh --dry-run docs/decisions/decision_engine-api.md docs/specs/api/`: `move-record: planned, nothing changed (--dry-run)`, 12 citations and 2 links rewritten, 9 left as verbatim proofs — `git grep -c docs/decisions/decision_engine-api.md` counts 21 = 12 + 9.
+    - [x] NO REGRESSION — `bash -n scripts/move_record.sh` exit 0; `bash scripts/check_doctrines.sh` passes; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 318 s
+    - [x] LOCKSTEP — the tool, `TOOLBOX.md`, the record, the book, the snapshots.
+  Commit: `ARCHOGEN-PROGRAM-1022 (leaf PROGRAM.117.2)`
 
 - ID: `PROGRAM.117.3`
   Status: `pending` — filed `2026-10-27` by `PROGRAM.117.1`'s review (D4)
@@ -1104,9 +1118,8 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.117.2` | `pending` | the director's ask of `2026-10-27`: the record-move tool the lifecycle of `PROGRAM.117.1`'s record needs |
-| 2 | `PROGRAM.72` | `pending` | next ordinary program-spine repair: a tree file in a sub-folder of `docs/tasks/` |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.72` | `pending` | next ordinary program-spine repair: a tree file in a sub-folder of `docs/tasks/` |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
 `PROGRAM.73`, `.78`, `.115`, `.117.3` and `.118` — are filed and owned. Every closed
@@ -1258,6 +1271,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.116` | `ARCHOGEN-PROGRAM-0989 (leaf PROGRAM.116)` | **what is held for the scaffold, from the ruling**: `.doctrine/scaffold_held.txt`, sixteen files, read by `SCRATCH-LOCALITY` and `PIPE-READS`; `check_task_acceptance.sh`'s eight sites fixed; `PROGRAM.115`'s premise corrected |
 | `PROGRAM.117.1` | `ARCHOGEN-PROGRAM-1020 (leaf PROGRAM.117.1)` | **record folders bound by reads, not totals** (the director's ruling of `2026-10-27`): `fan-out 64` and a 16 MiB `guard` with its three-quarter ruling and per-commit step for `docs/decisions/`, `docs/specs/`, `docs/reviews/`; `--report`; three ceiling records superseded; `.3` filed |
 | `PROGRAM.119` | `ARCHOGEN-PROGRAM-1021 (leaf PROGRAM.119)` | **seventeenth daily artifact cleanup**: the main and wasm debug incremental caches, 52855 files / 5496697254 bytes, removed after `handoff: OK` |
+| `PROGRAM.117.2` | `ARCHOGEN-PROGRAM-1022 (leaf PROGRAM.117.2)` | **the record mover**: `scripts/move_record.sh`, a dry run and a verified, staged move; live citations repointed, the past left and listed |
 
 ## Changelog
 

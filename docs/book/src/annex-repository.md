@@ -811,13 +811,18 @@ there an ordinary split adds no room. Book files remain excluded from every ance
 above what a decision fixes, which the policy lists and the check enforces, and a maximum and its cell must be of one
 kind: a number, a fan-out or a guard. `--report` prints each folder's files, widest listing and total, its growth
 since the newest commit at least a fortnight old, and when at that pace the check would refuse it: at three
-quarters of a guard with no ruling beside it, at its bound otherwise. The decisions folder was split by subject on
+quarters of a guard with no ruling beside it, at its bound otherwise. An accepted design moves to the
+specifications by one scripted step, `scripts/move_record.sh`. It rewrites the record's own links and every live
+citation of its path, and leaves what records the past: a path written at a revision, the archives, the rolling
+ledgers, the verbatim proofs and the files held for the scaffold. A dry run lists each, and the step stages the
+move only after no live file names the old path. The decisions folder was split by subject on
 `2026-09-30`, and `DECISION-INDEX` keeps every record in a sub-folder listed in its index.
 
 ```console
 $ bash scripts/check_readme_routes.sh              # the gate
 $ bash scripts/check_readme_routes.sh --self-test  # its RED arms, on scratch repositories
 $ bash scripts/check_readme_routes.sh --report     # each folder's totals and growth: telemetry, not a verdict
+$ bash scripts/move_record.sh --dry-run <record> <destination>   # plan a record's move: what changes, what stays
 ```
 
 ## "Next" means what the task tree says
