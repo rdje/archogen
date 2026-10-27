@@ -369,7 +369,8 @@ a change that leaves it stale, so it is never edited by hand.
 - How time is charged — [What the scheduling checker establishes](analysis.md#how-time-is-charged)
 - How to read this book — [Introduction](introduction.md#how-to-read-this-book)
 - How we know it is right — [The runtime: decisions, not actions](runtime.md#how-we-know-it-is-right)
-- **HTML** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- **HTML** — [definition](glossary.md), [What this project relies on from outside](ledger.md), [Annex C: Trust proof
+  records](annex-trust-proofs.md)
 - **HTTP** — [definition](glossary.md), [Checking a plan](plan-check.md), [The engine API](engine-api.md), [What this
   project relies on from outside](ledger.md)
 - **HTTPS** — [definition](glossary.md), [Checking a plan](plan-check.md), [What this project relies on from
@@ -443,6 +444,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **LF** — [definition](glossary.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex
   C: Trust proof records](annex-trust-proofs.md)
 - linkedspec — [What this project relies on from outside](ledger.md#linkedspec)
+- linux-sched-clock — [What this project relies on from outside](ledger.md#linux-sched-clock)
+- linux-timekeeping — [What this project relies on from outside](ledger.md#linux-timekeeping)
 - **LLVM** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Local build storage — [Where the engine's knowledge comes from: the catalog](catalog.md#local-build-storage)
 - --locked is refused, not ignored — [The S0 early generation path](s0.md#--locked-is-refused-not-ignored)

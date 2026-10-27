@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — indirect realization designed
+
+`ARCHOGEN-M3-1014` (leaf `M3.2.1`), `2026-10-27`.
+
+- How the engine will meet a requirement no device offers directly is decided and reviewed: an adapter the engine
+  supplies — a deadline programmed through a relative delay timer, or a counter extended to 64 bits — bound only where
+  the description's own devices cannot do it, every plan that binds one listing what it still owes. The adapters
+  themselves are built next.
+
 ## archogen — `archogen explain`
 
 `ARCHOGEN-M3-1013` (leaf `M3.4.13.2`), `2026-10-27`.

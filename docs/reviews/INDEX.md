@@ -34,6 +34,7 @@ No bootstrap read includes this directory.
 | [`decision_trust-role-programs-reviews.md`](decision_trust-role-programs-reviews.md) | [`decision_trust-role-programs.md`](../specs/trust/decision_trust-role-programs.md) | 15 | closed: round 15 found no defect `2026-10-24`, rounds 1 to 15 holding 112 defects and 114 remarks, every one answered (`M3.5.2`) |
 | [`decision_trust-role-programs-transport-reviews.md`](decision_trust-role-programs-transport-reviews.md) | §5's `crates/archogen-transport` row of [`decision_trust-role-programs.md`](../specs/trust/decision_trust-role-programs.md), reopened by `RP-H10` | 4 | stopped: rounds 16–18 answered, 14 defects and 19 remarks; round 19 stopped `2026-10-26` by the director's ruling against mutation testing before feature completeness (`M3.5.1.6.3`; the suites' adequacy `M7.6`'s) |
 | [`decision_absence-per-provider-reviews.md`](decision_absence-per-provider-reviews.md) | [`decision_absence-per-provider.md`](../decisions/decision_absence-per-provider.md) | 3 | closed: `2026-10-27`, round 3 found no defect; rounds 1–3 found 13, 8 and 5, round 3's wording and a lag of its leaf, all answered (`M3.4.8`) |
+| [`decision_engine-adapters-reviews.md`](decision_engine-adapters-reviews.md) | [`decision_engine-adapters.md`](../specs/adapters/decision_engine-adapters.md) | 3 | closed: `2026-10-27`, round 3 found no defect; rounds 1–3 found 25, 12 and 4, all answered (`M3.2.1`) |
 
 ## Counted by `REVIEW-COUNTS`
 

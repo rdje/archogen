@@ -367,3 +367,31 @@ Producer observations, normalization proofs, counterexamples and revalidation re
 | Known limitations | grammar reference, not a conformance certificate. The tooling stores numbers as text and strings as Rust scalar strings; its existing lone-surrogate refusal is narrower than §8.2's grammar. §9 permits extensions, while this reader's contract is strict |
 | Revalidation trigger | parser/representation changes, relevant errata or adoption of a replacement edition |
 | Named as | `RFC 8259` |
+
+## `linux-timekeeping`
+
+| Field | Value |
+| --- | --- |
+| Source | The Linux kernel documentation, *Clock sources, Clock events, sched_clock() and delay timers* |
+| Version | the page as served for kernel documentation `7.3.0`, the version its sidebar shows |
+| Pinned at | not pinned — read at `https://docs.kernel.org/timers/timekeeping.html`; no build or check reads it |
+| Retrieved | `2026-10-27` |
+| Hash | sha256 `9553bd8bcc8d9f4b3064496a5aff4005b13dedbf8ca43b1ee553e2bff0f70d4e` of the HTML read |
+| Scope | one sentence, quoted as precedent for `deadline-over-delay` in `docs/specs/adapters/decision_engine-adapters.md` §2: clock events "take a desired time specification value and calculate the values to poke into hardware timer registers" |
+| Known limitations | another kernel's documentation, describing what it does: a precedent for a mechanism, not a requirement on this engine, and a page that may change between documentation versions |
+| Revalidation trigger | a decision resting on more of the kernel's clock-event behaviour than these sentences |
+| Named as | `clock event` |
+
+## `linux-sched-clock`
+
+| Field | Value |
+| --- | --- |
+| Source | The Linux kernel source, `kernel/time/sched_clock.c` |
+| Version | tag `v6.12` |
+| Pinned at | not pinned — read at `https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/time/sched_clock.c`; no build or check reads it |
+| Retrieved | `2026-10-27` |
+| Hash | sha256 `575b92848e1bbe8339887f94befd9758fe330dc03649bfdd94e459143505a6f5` of the file read |
+| Scope | the header comment and three mechanisms, quoted as precedent for `epoch-extender` in `docs/specs/adapters/decision_engine-adapters.md` §2: "Generic sched_clock() support, to extend low level hardware time counters to full 64-bit ns values" (lines 3–4); the epoch advanced by `update_sched_clock`, "Atomically update the sched_clock() epoch", from a timer restarted every `wrap_kt`, "Calculate how many nanosecs until we risk wrapping" (lines 136–161, 184–186); and reads under a `seqcount_latch_t` (line 39) |
+| Known limitations | source code of another kernel: what it does, not what an adapter here must, and its update interval is computed by that kernel's own helper, whose margin this engine does not inherit |
+| Revalidation trigger | an obligation of `epoch-extender` resting on more of this file than these lines |
+| Named as | `sched_clock` |

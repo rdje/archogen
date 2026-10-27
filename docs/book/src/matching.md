@@ -500,13 +500,18 @@ it, is `M3.4.4`'s. Over the tracked examples it
 resolves every one of `s0-heartbeat`'s descriptions and refuses each other example: their timers offer a width and no modulus,
 from which the vocabulary derives no horizon, and their policies' constraints wait on the catalog — `missing-fact` —
 while `alternative-timer`'s absolute deadline, which its timer declares absent, is `infeasible-configuration` until
-`M3.2`'s adapter offers it past that absence.
+`M3.2`'s adapter offers it past that absence — once its timer states its modulus, a change to the description the
+director approves first, and `missing-fact` from `M3.2.4` until then, describing the modulus being the repair
+(`docs/specs/adapters/decision_engine-adapters.md` §7, §8).
 
 `archogen check` does not call it yet, so no verdict a description gets today comes from it. Leaf `M3.4` wires it in,
 over the providers of each system's hardware — a block no system uses decides nothing, as an unused device costs
 nothing — deciding a description's `missing-fact` or `infeasible-configuration` from the
-enumeration and keeping or migrating every verdict it moves. `M3.2` adds adapters — a provider in its own right, such
-as an epoch extender — offered only where a requirer allows mediation; `M3.3` judges what one provider cannot: its
+enumeration and keeping or migrating every verdict it moves. `M3.2` adds adapters, designed in
+`docs/specs/adapters/decision_engine-adapters.md`: providers the engine supplies, each programming one of the description's
+devices, bound only where no assignment of the description's own providers holds — `/1`'s are a deadline programmed
+through a relative delay and an epoch extender, each plan binding one conditional on the obligations it names, and a
+mediating kind, which `/1` has none of, offered only where a requirer allows mediation; `M3.3` judges what one provider cannot: its
 channels and owned regions (`M3.3.2`), connectivity and routes (`M3.3.3`) and privilege given a level (`M3.3.4.1`) are
 judged today, over an assignment a test proposes, and placement over a system's map (`M3.3.5.1`); ordering is
 unsupported under this profile (`M3.3.5.2`), the initialization graph derived (`M3.3.7`), and one function held at
