@@ -366,3 +366,20 @@ configuration checker judges a plan's bindings again by those that refuse an ass
    requester relying on no function bound binds it as any requirement. `reachable-at-privilege` is the qualifier rule 9
    judges against the level the system is given, and this rule never repeats it. An adapter offering a function's facts
    is one provider for this rule (`M3.2`).
+14. **One time base** (`M3.2.3.1`; `docs/specs/adapters/decision_engine-adapters.md` §4). Where a requester is bound for
+   `absolute-deadline`, every other requester it reaches through `needs` and `uses` that is bound for a fact of the
+   function `counter` that is not consumed is bound at the same device — a provider being its own device, an adapter's
+   instance the provider it programs: a deadline programmed in one counter's time and read in another's is a conflict
+   naming both requesters and both devices. Its own facts of the function are rule 13's. It is wider than any one
+   service's time on purpose: `/1`'s vocabulary cannot tell a time base from another use of a counter, so a description
+   wanting a second counter for another purpose writes it as a requester the deadline's does not reach. Measured over
+   every tracked description on `2026-10-27`, it refuses none.
+15. **An adapter's instance** (`M3.2`; the record §1, §4), a provider the engine supplies over one device, is judged by
+   these rules as one: a provider for its offers and a requester for what its kind requires beneath (rule 1); served by
+   a system when a requester it serves is, taking that system (rule 7) — its device must be of the system's hardware,
+   the instance itself being none; owning no region and composing nothing, so ownership never compares it and the
+   initialization graph keeps its edges, its device before it and it before its requesters (rules 5 and 12); a binding
+   to it makes no route, its own binding beneath making its device's timer route, which carries the requesters bound
+   to it (rule 8); a caller at its kind's level, stating that level for the callers bound to it (rule 9); one provider
+   of its function (rule 13). An exclusive kind's instance serves one requester and takes its own channel beneath
+   (rules 2 and 3). Rules 1–13 are amended to that effect; the search binds no instance until `M3.2.3.2`.

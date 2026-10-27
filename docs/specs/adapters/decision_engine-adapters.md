@@ -161,11 +161,14 @@ Model §8, for the generator (`eadl_resolve::joint`) and the checker (its check 
 - **Rule 13**: it is one provider of its function, as the rule's note for `M3.2` says.
 - **Rule 14, new: one time base** (the `M3.3.6` note: "a deadline service's alarm in the time base of the counter
   `time.monotonic` reads, agreement across requesters, is this leaf's to keep"). Where a requester is bound for
-  `absolute-deadline`, every requester it reaches through `needs` and `uses`, itself included, that is bound for a fact
+  `absolute-deadline`, every other requester it reaches through `needs` and `uses` that is bound for a fact
   of the function `counter` that is not consumed is bound at the same device — a provider being its own device, an
   instance's its provider's. Two devices are a conflict naming both requesters and both devices: a deadline programmed
-  in one counter's time and read in another's. It judges direct bindings too, and `.3` measures what it moves. It is
-  deliberately wider than the note: `/1`'s vocabulary cannot tell a time base from another use of a counter, so any
+  in one counter's time and read in another's. It judges direct bindings too, and `.3` measures what it moves.
+  *Amended `2026-10-27` by leaf `M3.2.3.1`: "itself included" read the deadline's own requester twice — its own facts
+  of the function are rule 13's, whose codes tell a split from one describing a fact would make whole (`SR-H17`), and
+  judging them here turned that `missing-fact` into a conflict — so rule 14 judges every other requester it reaches,
+  as this rule now says.* It is deliberately wider than the note: `/1`'s vocabulary cannot tell a time base from another use of a counter, so any
   counter a deadline's requester reaches may be the one its absolute times come from; a description wanting a second
   counter for another purpose writes it as a requester the deadline's does not reach.
 - **Obligations**: each instance bound adds its kind's obligations and cost interrupts to the assignment's, once per

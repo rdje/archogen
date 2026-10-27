@@ -11,15 +11,16 @@
 //! refusal those readers make of a description's side or offers is made of a kind's (record §1.6), and what this module
 //! adds is only what a description cannot write — a value passed through, an obliged bound, the instance's shape.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use eadl_front::{read, Form, SourceMap, Span};
 use eadl_model::check::shipped_registry;
 use eadl_model::kind::{duplicate_names, validate};
 
-use crate::offer;
+use crate::offer::{self, Provider, State, Statement};
+use crate::relation::{outcome, Outcome};
 use crate::requirement::{read_side, Requirement};
-use crate::value::Value;
+use crate::value::{self, Value};
 use crate::vocabulary::{Direction, Domain, Function, Usage, Vocabulary};
 
 /// The catalog's version: the identifier a plan of `archogen-assignment/2` names it by (record §5).
@@ -111,6 +112,8 @@ pub struct Kind {
     pub costs: Vec<Owed>,
     /// Whether it crosses a mediation boundary (`SR-H8`).
     pub mediates: bool,
+    /// Its literal offers and its level as `reachable-at-privilege`, as the relation's offer reader reads a provider's.
+    pub literal: Provider,
 }
 
 impl Kind {
@@ -137,6 +140,145 @@ impl Kind {
     pub fn offer(&self, fact: &str) -> Option<&Offer> {
         self.offers.iter().find(|offer| offer.fact == fact)
     }
+
+    /// The instance of this kind over `over`, the provider it programs, serving `serves` — an exclusive kind's one
+    /// requester, with every requirement it writes, which its obliged facts read (record §1.5, §3.1). Its offers are a
+    /// provider the relation judges as any other: a value as the offer reader read it, a fact passed through as the
+    /// relation reads it at `over`, derived there or offered, an obliged bound at its requester's tightest, bare where it
+    /// writes none; its level is `reachable-at-privilege`. It stands where `over` is declared.
+    #[must_use]
+    pub fn instance(
+        &self,
+        over: &Provider,
+        serves: Option<(&str, &[Requirement])>,
+        vocabulary: &Vocabulary,
+    ) -> Instance {
+        let name = instance_name(
+            &self.name,
+            &over.name,
+            serves.map(|(requester, _)| requester),
+        );
+        let mut facts = BTreeMap::new();
+        let state = |state: State| Statement {
+            state,
+            spans: vec![over.span],
+        };
+        for offer in &self.offers {
+            let stated = match &offer.offered {
+                Offered::Value(_) => self.literal.state(&offer.fact).cloned(),
+                Offered::From(from) => match outcome(over, from, vocabulary) {
+                    Ok(Outcome::Valued(values)) => Some(State::Valued(values)),
+                    Ok(Outcome::Derived { value, .. }) => Some(State::Valued(vec![value])),
+                    Ok(Outcome::Absent) => Some(State::Absent),
+                    Ok(Outcome::Unknown) => Some(State::Unvalued),
+                    Ok(_) => None,
+                    Err(_) => Some(State::Overflow),
+                },
+                Offered::Obliged => Some(
+                    serves
+                        .and_then(|(_, requirements)| {
+                            tightest(&offer.fact, requirements, vocabulary)
+                        })
+                        .map_or(State::Unvalued, |value| State::Valued(vec![value])),
+                ),
+            };
+            if let Some(stated) = stated {
+                facts.insert(offer.fact.clone(), state(stated));
+            }
+        }
+        if let Some(level) = self.literal.facts.get("reachable-at-privilege") {
+            facts.insert(
+                "reachable-at-privilege".to_string(),
+                state(level.state.clone()),
+            );
+        }
+        Instance {
+            kind: self.name.clone(),
+            over: over.name.clone(),
+            serves: serves.map(|(requester, _)| requester.to_string()),
+            provider: Provider {
+                name,
+                span: over.span,
+                facts,
+            },
+        }
+    }
+}
+
+/// An instance's name, as the joint rules key a provider and a requester: `(adapter KIND OVER)`, or `(adapter KIND OVER
+/// REQUESTER)` for an exclusive kind's — a form, which no declaration's name can be (record §5).
+#[must_use]
+pub fn instance_name(kind: &str, over: &str, serves: Option<&str>) -> String {
+    match serves {
+        Some(requester) => format!("(adapter {kind} {over} {requester})"),
+        None => format!("(adapter {kind} {over})"),
+    }
+}
+
+/// Whether `name` is an instance's.
+#[must_use]
+pub fn is_instance(name: &str) -> bool {
+    name.starts_with("(adapter ")
+}
+
+/// The tightest bound `requirements` write on `fact`, a group's sub-constraints among them: an `exactly` bound's value,
+/// else the least of the `at-most` bounds, or the greatest of the `at-least` ones (record §1.5).
+fn tightest(fact: &str, requirements: &[Requirement], vocabulary: &Vocabulary) -> Option<Value> {
+    let mut bounds = Vec::new();
+    fn collect<'r>(
+        fact: &str,
+        requirement: &'r Requirement,
+        out: &mut Vec<(Direction, &'r Value)>,
+    ) {
+        match requirement {
+            Requirement::Constraint {
+                fact: on,
+                direction,
+                value,
+                ..
+            } if on == fact => out.push((*direction, value)),
+            Requirement::Group { parts, .. } => {
+                for part in parts {
+                    collect(fact, part, out);
+                }
+            }
+            _ => {}
+        }
+    }
+    for requirement in requirements {
+        collect(fact, requirement, &mut bounds);
+    }
+    if let Some((_, exact)) = bounds.iter().find(|(d, _)| *d == Direction::Exact) {
+        return Some((*exact).clone());
+    }
+    let entry = vocabulary.fact(fact)?;
+    let (order, implied) = (entry.order(), entry.implies.as_slice());
+    let mut best: Option<&Value> = None;
+    for (direction, value) in bounds {
+        best = match best {
+            None => Some(value),
+            // Keep the current bound when it already meets this one; otherwise this one is tighter.
+            Some(current) => match value::satisfies(current, value, direction, order, implied) {
+                Ok(true) => Some(current),
+                _ => Some(value),
+            },
+        };
+    }
+    best.cloned()
+}
+
+/// One instance of a kind: its kind, the provider it programs, the requester an exclusive kind's serves, and what it
+/// offers, as a provider named by [`instance_name`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct Instance {
+    /// Its kind's name.
+    pub kind: String,
+    /// The provider it programs, of the description's hardware.
+    pub over: String,
+    /// The one requester it serves, for an exclusive kind.
+    pub serves: Option<String>,
+    /// What it offers, as the relation judges a provider; its name is its own.
+    pub provider: Provider,
 }
 
 /// Why the catalog, or an entry of it, is refused (record §1.6).
@@ -724,6 +866,7 @@ fn entry(
             obligations,
             costs,
             mediates,
+            literal: provider.expect("no refusal, so the literal offers read"),
         })
     } else {
         Err(refusals)

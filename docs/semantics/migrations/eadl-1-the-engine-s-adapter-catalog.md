@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-10-27
 - leaf: M3.2.2 (`docs/tasks/M3.md`)
-- status: pending
+- status: applied
 - constructs: suite/docs/semantics/kinds/defadapter.eadl, suite/docs/semantics/adapters/adapters.eadl
 - invalidates: none, measured — every tracked description's `archogen check` verdict, frozen in `crates/archogen-cli/tests/verdicts.txt`, is unchanged; the table gains the two new files at exit 20; outside this repository, a description that writes a `defadapter` outside a module, which was `invalid-description` (`schema-unknown-kind`) and is now answered exit 20 as the engine's own knowledge
 

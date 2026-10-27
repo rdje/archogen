@@ -151,6 +151,12 @@
   (reason "the search's tests (M3.4.2): it uses no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check` — the `production`, `vocabulary` and `system-reading` derivations', the model's checker's and corpus's — reaches every test target (RP-H7)")
   (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
 
+(defprogram resolve-adapter-joint
+  (package "crates/eadl-resolve")
+  (target test adapter_joint)
+  (reason "an adapter's instance and the generator's joint rules over one (M3.2.3.1): it uses no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check` — the `production`, `vocabulary`, `system-reading` and `adapters` derivations', the model's checker's and corpus's — reaches every test target (RP-H7)")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
+
 (defprogram resolve-explain
   (package "crates/eadl-resolve")
   (target test explain)

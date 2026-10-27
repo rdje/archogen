@@ -39,6 +39,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use eadl_front::{Diagnostic, Form, Label, Span};
 use eadl_model::{Dimension, Quantity};
 
+use crate::adapter::Instance;
 use crate::offer::{Provider, State};
 use crate::relation::{judge, Verdict};
 use crate::requirement::side_name_lists;
@@ -55,6 +56,9 @@ pub enum Kind {
     Service,
     /// Any other declaration, for what it writes at its own level, outside its tasks.
     Other,
+    /// An engine adapter's instance, for what its kind requires of the provider it programs: a caller at its kind's
+    /// level (`docs/specs/adapters/decision_engine-adapters.md` §4, rules 1 and 9).
+    Adapter,
 }
 
 /// One requester, its requirements and the declarations its `uses` names.
@@ -272,6 +276,8 @@ pub struct Binding {
 
 /// The fact a requester released by an interrupt requires of its source.
 const INTERRUPT_SOURCE: &str = "interrupt-source";
+/// A deadline programmed at an absolute time, whose time base rule 14 holds to one device.
+const ABSOLUTE_DEADLINE: &str = "absolute-deadline";
 /// The source's own bound on how often it fires, which the analysis reads with the route.
 const MIN_ARRIVAL_SEPARATION: &str = "min-arrival-separation";
 /// The levels a function is reachable from, and the level a caller states it calls from.
@@ -527,6 +533,22 @@ pub enum Finding {
         /// The system.
         system: String,
     },
+    /// A deadline programmed at one device and a time read from another, by requesters the deadline's reaches (model
+    /// §8 rule 14, `docs/specs/adapters/decision_engine-adapters.md` §4).
+    TwoTimeBases {
+        /// The requester bound for the deadline.
+        requester: String,
+        /// Where it requires it.
+        span: Span,
+        /// The device the deadline is programmed at.
+        device: String,
+        /// The requester reading a time-base fact.
+        reader: String,
+        /// Where it requires that fact.
+        read: Span,
+        /// The device it reads it at.
+        read_device: String,
+    },
 }
 
 impl Finding {
@@ -537,6 +559,7 @@ impl Finding {
             Self::OverChannels { .. }
             | Self::Overlap { .. }
             | Self::Unconnected { .. }
+            | Self::TwoTimeBases { .. }
             | Self::OutOfLevel { .. }
             | Self::PlacementIllegal { .. }
             | Self::LevelUnstated { absent: true, .. } => "infeasible-configuration",
@@ -678,6 +701,26 @@ impl Finding {
                 ),
             )
             .with_secondary(Label::new(*declared, "declared here, outside it")),
+            Self::TwoTimeBases {
+                requester,
+                span,
+                device,
+                reader,
+                read,
+                read_device,
+            } => Diagnostic::error(
+                "infeasible-configuration",
+                format!(
+                    "`{requester}` programs a deadline in `{device}`'s time, and `{reader}`, which it reaches, reads \
+                     time from `{read_device}`: one deadline, two time bases"
+                ),
+                Label::new(*span, "the deadline required here"),
+                format!(
+                    "bind the deadline and the time it is read in at one device; a counter read for another purpose \
+                     belongs to a requester `{requester}` does not reach"
+                ),
+            )
+            .with_secondary(Label::new(*read, "the time read here")),
             Self::MapContradiction {
                 system,
                 memory,
@@ -1021,6 +1064,8 @@ pub struct Joint<'v> {
     providers: BTreeMap<String, Provider>,
     /// Each requester's requirements on a qualifier but `reachable-at-privilege`, rule 9's (rule 13).
     qualified: BTreeMap<String, Vec<Requirement>>,
+    /// Each engine adapter's instance the rules may meet, by name, with the provider it programs (`M3.2.3.1`).
+    instances: BTreeMap<String, String>,
 }
 
 impl<'v> Joint<'v> {
@@ -1141,7 +1186,77 @@ impl<'v> Joint<'v> {
                     )
                 })
                 .collect(),
+            instances: BTreeMap::new(),
         })
+    }
+
+    /// The rules with the instances an assignment may bind (`docs/specs/adapters/decision_engine-adapters.md` §4): each
+    /// a provider for its offers — no hardware, owning no region and composing nothing, so ownership never compares it
+    /// and the initialization graph keeps its edges — and a requester for what its kind requires beneath, a caller at the
+    /// level it states.
+    #[must_use]
+    pub fn with_instances(mut self, instances: &[Instance]) -> Self {
+        for instance in instances {
+            let name = instance.provider.name.clone();
+            let channels = match instance.provider.state("channels") {
+                Some(State::Valued(values)) => match values.first() {
+                    Some(Value::Count(n)) => Channels::Count(*n),
+                    _ => Channels::Unknown,
+                },
+                None => Channels::Undescribed,
+                Some(_) => Channels::Unknown,
+            };
+            let level = instance.provider.state(REACHABLE_AT_PRIVILEGE).cloned();
+            if let Some(State::Valued(values)) = &level {
+                if let Some(Value::Set(levels)) = values.first() {
+                    self.stated
+                        .insert(name.clone(), (levels.clone(), instance.provider.span));
+                }
+            }
+            self.held.insert(
+                name.clone(),
+                Held {
+                    span: instance.provider.span,
+                    hardware: false,
+                    separation: None,
+                    level,
+                    channels,
+                    regions: Vec::new(),
+                    composes: BTreeSet::new(),
+                },
+            );
+            self.providers
+                .insert(name.clone(), instance.provider.clone());
+            self.requesters.insert(name.clone(), Kind::Adapter);
+            self.names.insert(name.clone(), BTreeSet::new());
+            self.instances.insert(name, instance.over.clone());
+        }
+        self
+    }
+
+    /// `system` as one assignment's rules read it: an instance is served when a requester it serves is, at any depth
+    /// (record §4, rule 7: it takes the system of the requesters bound to it).
+    fn serving(&self, system: &System, assignment: &[Binding]) -> System {
+        let mut system = system.clone();
+        loop {
+            let reached: Vec<String> = assignment
+                .iter()
+                .filter(|b| self.instances.contains_key(&b.provider) && system.serves(&b.requester))
+                .map(|b| b.provider.clone())
+                .filter(|p| !system.reached.contains(p))
+                .collect();
+            if reached.is_empty() {
+                return system;
+            }
+            system.reached.extend(reached);
+        }
+    }
+
+    /// The device `provider` stands for: itself, or the provider an instance programs.
+    fn device<'a>(&'a self, provider: &'a str) -> &'a str {
+        self.instances
+            .get(provider)
+            .map_or(provider, String::as_str)
     }
 
     /// The rules for one system's assignment: connectivity and routes judge the bindings of the requesters it serves.
@@ -1161,8 +1276,10 @@ impl<'v> Joint<'v> {
         self.functions(assignment, &mut report);
         self.qualifiers(assignment, &mut report);
         if let Some(system) = &self.system {
+            let system = &self.serving(system, assignment);
             self.connectivity(system, assignment, &mut report);
             self.routes(system, assignment, &mut report);
+            self.time_base(system, assignment, &mut report);
             if let Some(level) = &system.level {
                 self.privilege(system, level, assignment, &mut report);
             }
@@ -1351,6 +1468,7 @@ impl<'v> Joint<'v> {
     /// itself, and from a used service or policy to each that names it. Nothing is refused.
     #[must_use]
     pub fn initialization(&self, system: &System, assignment: &[Binding]) -> Initialization {
+        let system = &self.serving(system, assignment);
         let kind = |name: &str| self.requesters.get(name).copied();
         let is_node_requester = |name: &str| {
             name != system.name
@@ -1587,7 +1705,10 @@ impl<'v> Joint<'v> {
     /// One route obligation per provider the system's requesters rely on for an interrupt, and per kind.
     fn routes(&self, system: &System, assignment: &[Binding], report: &mut Report) {
         let mut routes: BTreeMap<(&str, bool), BTreeSet<&str>> = BTreeMap::new();
-        for b in assignment.iter().filter(|b| system.serves(&b.requester)) {
+        for b in assignment
+            .iter()
+            .filter(|b| system.serves(&b.requester) && !self.instances.contains_key(&b.provider))
+        {
             let source = b.requirement.fact() == INTERRUPT_SOURCE && met_by_true(&b.requirement);
             let timer = takes_a_channel(&b.requirement, self.vocabulary).is_some();
             for (is_source, relied) in [(true, source), (false, timer)] {
@@ -1595,7 +1716,7 @@ impl<'v> Joint<'v> {
                     routes
                         .entry((b.provider.as_str(), is_source))
                         .or_default()
-                        .insert(b.requester.as_str());
+                        .extend(self.relying(system, assignment, &b.requester));
                 }
             }
         }
@@ -1614,6 +1735,79 @@ impl<'v> Joint<'v> {
                 requesters: requesters.into_iter().map(str::to_string).collect(),
                 level: system.level.clone(),
             });
+        }
+    }
+
+    /// Who relies on a binding of `requester`'s for an interrupt: itself, or, for an instance, the requesters the system
+    /// serves that are bound to it (record §4, rule 8).
+    fn relying<'a>(
+        &self,
+        system: &System,
+        assignment: &'a [Binding],
+        requester: &'a str,
+    ) -> Vec<&'a str> {
+        if self.instances.contains_key(requester) {
+            assignment
+                .iter()
+                .filter(|b| b.provider == requester && system.serves(&b.requester))
+                .map(|b| b.requester.as_str())
+                .collect()
+        } else {
+            vec![requester]
+        }
+    }
+
+    /// Model §8 rule 14, one time base (`docs/specs/adapters/decision_engine-adapters.md` §4): where a requester is bound
+    /// for `absolute-deadline`, every other requester it reaches through `needs` and `uses`, bound for a fact of the
+    /// function `counter` that is not consumed, is bound at the same device — an instance's being its provider. A
+    /// deadline programmed in one counter's time and read in another's is a conflict. Its own facts of the function are
+    /// rule 13's, whose codes tell a split from one describing a fact would make whole (`SR-H17`).
+    fn time_base(&self, system: &System, assignment: &[Binding], report: &mut Report) {
+        let counter = |fact: &str| {
+            self.vocabulary.fact(fact).is_some_and(|f| {
+                f.usage == Usage::Shared && f.function == Some(Function::Of("counter".to_string()))
+            })
+        };
+        let mut found = BTreeSet::new();
+        for deadline in assignment
+            .iter()
+            .filter(|b| system.serves(&b.requester) && b.requirement.fact() == ABSOLUTE_DEADLINE)
+        {
+            let device = self.device(&deadline.provider);
+            let mut reached = BTreeSet::new();
+            let mut todo = vec![deadline.requester.as_str()];
+            while let Some(at) = todo.pop() {
+                for next in self.names.get(at).into_iter().flatten() {
+                    if self.requesters.contains_key(next)
+                        && next != &deadline.requester
+                        && reached.insert(next.as_str())
+                    {
+                        todo.push(next.as_str());
+                    }
+                }
+            }
+            for read in assignment
+                .iter()
+                .filter(|b| reached.contains(b.requester.as_str()) && counter(b.requirement.fact()))
+            {
+                let read_device = self.device(&read.provider);
+                if read_device != device
+                    && found.insert((
+                        deadline.requester.clone(),
+                        read.requester.clone(),
+                        read_device.to_string(),
+                    ))
+                {
+                    report.conflicts.push(Finding::TwoTimeBases {
+                        requester: deadline.requester.clone(),
+                        span: deadline.requirement.span(),
+                        device: device.to_string(),
+                        reader: read.requester.clone(),
+                        read: read.requirement.span(),
+                        read_device: read_device.to_string(),
+                    });
+                }
+            }
         }
     }
 

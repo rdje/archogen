@@ -216,6 +216,16 @@ fn named(f: &Finding) -> String {
             "{} unconnected {requester} -> {provider} outside {system}",
             f.code()
         ),
+        Finding::TwoTimeBases {
+            requester,
+            device,
+            reader,
+            read_device,
+            ..
+        } => format!(
+            "{} time bases {requester} at {device} / {reader} at {read_device}",
+            f.code()
+        ),
         Finding::LevelUnsupported {
             requester,
             stated,

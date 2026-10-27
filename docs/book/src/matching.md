@@ -473,6 +473,13 @@ configuration checker judges: the generator's own writer and its own digest of t
 with the checker's reader, both held to one golden and to each other by `crates/eadl-resolve/tests/plan.rs`. A
 requester is a declaration or a task of a system, written `(task SYSTEM TASK)`, so a task never reads as a service.
 
+An adapter's instance is judged by the joint rules as one provider (model §8 rules 14 and 15, `M3.2.3.1`): its offers
+computed from the device it programs — a value its kind writes, a fact passed through as the relation reads it at the
+device, derived there or offered, a bound it is obliged to at its requester's tightest — and itself a requester of that
+device, served when a requester it serves is, a caller at its kind's level, owning nothing and composing nothing, its
+device's route carrying its requesters. Rule 14 holds a deadline and every time its requester reaches to one device.
+The search proposes no instance yet (`M3.2.3.2`).
+
 An account of a requirement (`explain`, `M3.4.13.1`) is the same run with its pairs selected by fact, then by requester
 or task: each provider of the hardware in the policy's order with its answer to the pair — satisfied when it meets
 every requirement, otherwise the first of refused, absent, unsupported, unknown and undescribed, the ranking a failed

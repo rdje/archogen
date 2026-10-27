@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — an adapter judged with the rest of a system
+
+`ARCHOGEN-M3-1016` (leaf `M3.2.3.1`), `2026-10-27`.
+
+- An adapter's instance now has its offers worked out from the timer it programs, and the rules that judge a whole
+  system's choices judge it too: its timer must belong to the system, it takes its own channel there, and its
+  interrupt is the timer's. A new rule refuses a deadline programmed on one timer while the time it is read in comes
+  from another; over every tracked description it refuses nothing. The search does not propose adapters yet.
+
 ## archogen — the adapter catalog
 
 `ARCHOGEN-M3-1015` (leaf `M3.2.2`), `2026-10-27`.
