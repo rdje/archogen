@@ -156,7 +156,7 @@ leaf_status_in() {
 
 # The bytes the index holds under $1, book files aside: what a commit made now would hold there.
 index_bytes() {
-  git ls-files -s -- "$1" | awk -F'\t' '$2 !~ /^docs\/book\// { split($1, m, " "); print m[2] }' |
+  git ls-files -s -- "$1" | awk -F'\t' '$2 !~ /^"?docs\/book\// { split($1, m, " "); print m[2] }' |
     git cat-file --batch-check='%(objectsize)' | awk 'NF == 1 && $1 ~ /^[0-9]+$/ { s += $1; next } { bad = 1 } END { print bad ? "unreadable" : s + 0 }'
 }
 
@@ -438,23 +438,31 @@ scan() {
     [ "$route" = "$want" ] || note "\`$dest\`'s route is '$route', and what routes to it derives '$want'"
 
     if [ "${dest%/}" != "$dest" ]; then
-      local listed; listed="$(git ls-files -- "$dest")"
-      if [ -z "$listed" ]; then note "\`$dest\` is registered, and nothing under it is tracked"; continue; fi
+      # Paths read whole, NUL-separated: `git ls-files` without `-z` quotes a name holding a tab, a quote or a byte
+      # past ASCII, and a word-split list breaks one holding a space (`PROGRAM.118`).
+      local listed=() p
+      while IFS= read -r -d '' p; do listed+=("$p"); done < <(git ls-files -z -- "$dest")
+      if [ "${#listed[@]}" -eq 0 ]; then note "\`$dest\` is registered, and nothing under it is tracked"; continue; fi
       # Per-file figures over the files this row governs; counts/totals include ordinary nested partitions.
       # Book files belong only to unbounded book-route metrics. Ancestors retain their existing controls over
       # other material, including the archive-stub exception to the file count alone.
-      local n=0 ml=0 mb=0 tb=0 l b f own="" counted="" wide where was staged
-      while IFS= read -r f; do
+      local n=0 ml=0 mb=0 tb=0 l b f own=() counted="" wide where was staged
+      for f in "${listed[@]}"; do
         if [[ "$f" == docs/book/* && "$dest" != docs/book/* ]]; then
           continue
         fi
+        case "$f" in *$'\n'*)
+          note "a tracked path under \`$dest\` holds a newline, which no listing reads whole — rename it: $(printf '%q' "$f")"
+          continue
+          ;;
+        esac
         is_archive_stub "$f" || { n=$((n + 1)); counted="$counted$f"$'\n'; }
         b=$(wc -c < "$f" | tr -d ' '); tb=$((tb + b))
         [ "$(governing_row "$f")" = "$dest" ] || continue
-        own="$own$f"$'\n'
+        own+=("$f")
         l=$(wc -l < "$f" | tr -d ' ')
         [ "$l" -gt "$ml" ] && ml=$l; [ "$b" -gt "$mb" ] && mb=$b
-      done <<< "$listed"
+      done
       case "$dest:$files" in
         docs/book/*) control "$dest" "tracked files, archive stubs aside" "$files" "$n" ;;
         *':fan-out '*)
@@ -465,14 +473,13 @@ scan() {
       esac
       control "$dest" "lines in its largest file" "$lines" "$ml"
       control "$dest" "bytes in its largest file" "$bytes" "$mb"
-      # shellcheck disable=SC2086
-      control "$dest" "bytes on its longest line" "$width" "$( [ -n "$own" ] && longest $own || echo 0 )"
+      control "$dest" "bytes on its longest line" "$width" "$( [ "${#own[@]}" -gt 0 ] && longest "${own[@]}" || echo 0 )"
       case "$dest:$total" in
         docs/book/*) control "$dest" "bytes in total" "$total" "$tb" ;;
         *':guard '*)
           was=""; staged=""
           if [ -n "$HAS_HEAD" ]; then
-            was="$(git ls-tree -r -l HEAD -- "$dest" | awk -F'\t' '$2 !~ /^docs\/book\// { split($1, m, " "); s += m[4] } END { print s + 0 }')"
+            was="$(git ls-tree -r -l HEAD -- "$dest" | awk -F'\t' '$2 !~ /^"?docs\/book\// { split($1, m, " "); s += m[4] } END { print s + 0 }')"
             staged="$(index_bytes "$dest")"
           fi
           guarded "$dest" "$total" "$tb" "$was" "$staged"
@@ -565,14 +572,13 @@ report() {
     dest="${dest//\`/}"
     case "$dest" in docs/book/*|'') continue ;; */) ;; *) continue ;; esac
     n=0; tb=0; counted=""
-    while IFS= read -r f; do
-      [ -n "$f" ] || continue
+    while IFS= read -r -d '' f; do
       [[ "$f" == docs/book/* ]] && continue
       b=$(wc -c < "$f" | tr -d ' '); tb=$((tb + b))
       is_archive_stub "$f" || { n=$((n + 1)); counted="$counted$f"$'\n'; }
-    done <<< "$(git ls-files -- "$dest")"
+    done < <(git ls-files -z -- "$dest")
     IFS=$'\t' read -r wide where <<< "$(widest "$dest" <<< "$counted")"
-    was="$(git ls-tree -r -l "$base" -- "$dest" | awk -F'\t' '$2 !~ /^docs\/book\// { split($1, m, " "); s += m[4] } END { print s + 0 }')"
+    was="$(git ls-tree -r -l "$base" -- "$dest" | awk -F'\t' '$2 !~ /^"?docs\/book\// { split($1, m, " "); s += m[4] } END { print s + 0 }')"
     IFS=$'\t' read -r kind limit <<< "$(kind_of "$cell")"; whole "$limit" || limit=""
     # A guard with no ruling clause refuses at three quarters of it; that is the date that matters.
     refuse="$limit"
@@ -775,6 +781,14 @@ SH
   edit README_POLICY.md 's@^\(| `docs/` .*\) 1 | 100 |@\1 3 | 100 |@'
   for i in $(seq 40); do printf '%049d\n' 0; done > "$work/docs/extra.md"; git -C "$work" add -A
   arm "the ancestor still limits non-book bytes" 1 "bytes in total, over its ceiling of 1000"
+  # Paths read whole (PROGRAM.118): a name holding a space, or a byte past ASCII, is measured as any other; a name
+  # holding a newline, which no listing reads whole, is refused.
+  fresh; printf '%0250d\n' 0 > "$work/docs/tasks/a b.md"; git -C "$work" add -A
+  arm "a file whose name holds a space is measured, its longest line among the row's" 1 "docs/tasks/: 250 bytes on its longest line, over its ceiling of 200"
+  fresh; for i in $(seq 42); do printf '%049d\n' 0; done > "$work/docs/tasks/é.md"; git -C "$work" add -A
+  arm "a file whose name holds a byte past ASCII is measured" 1 "docs/tasks/: 2100 bytes in its largest file, over its ceiling of 2000"
+  fresh; printf 'n\n' > "$work/docs/tasks/x"$'\n'"y.md"; git -C "$work" add -A
+  arm "a file whose name holds a newline is refused, not misread" 1 "holds a newline, which no listing reads whole"
   # Ceilings that bound reads (PROGRAM.117): `docs/tasks/` at `fan-out $1`, its total a `guard 4000`.
   bounded() {
     edit README_POLICY.md 's/^\(| `docs\/tasks\/` | navigation + overflow | W | partitioned_canonical |\) 4 |\(.*\)| 4000 |/\1 fan-out '"$1"' |\2| guard 4000 |/'

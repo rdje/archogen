@@ -1030,13 +1030,22 @@ mdBook that is the director's window into the project.
   Commit: `pending`
 
 - ID: `PROGRAM.118`
-  Status: `pending` — P3, filed `2026-10-27` by `PROGRAM.117.1`'s third review round
+  Status: `done` — P3, filed `2026-10-27` by `PROGRAM.117.1`'s third review round, fixed the same day
   Goal: `README-ROUTES`' on-disk measures read every tracked path whole: a NUL-separated `git ls-files -z`, never its
     quoted output or a word-split list.
   Reproduce / issue: `git ls-files` quotes a path holding a tab, a quote or a non-ASCII byte, so `wc` fails on it and
     the file drops out of its row's measures; `longest $own` splits a path holding a space, so awk cannot open it and
     the row's longest line reads 0. The guard's total inherits it; the step, measured from the index, does not.
-  Commit: `pending`
+  Built: the directory branch and `--report` read `git ls-files -z` into an array; `longest` takes the row's files as
+    a quoted array; a tracked path holding a newline is refused, named by `%q`; the blob-size sums' book filter takes
+    the leading quote `git` writes before an unusual name.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the loops read `git ls-files`' quoted, newline-separated output and passed the row's files to awk word-split; WHERE, `git grep -n "longest \$own" HEAD -- scripts/check_readme_routes.sh`: the unquoted call, measured by the round's reviewer as awk's "can't open file docs/tasks/a".
+    - [x] FIX — the NUL-separated reads, the quoted array, the newline refusal, the quote-tolerant filters.
+    - [x] ADDRESSED — `bash scripts/check_readme_routes.sh --self-test`: `readme-routes self-test: 116 pass / 0 fail (116 arms)`, three new: a name with a space measured (`250 bytes on its longest line, over its ceiling of 200`), one past ASCII (`2100 bytes in its largest file`), one with a newline refused.
+    - [x] NO REGRESSION — `bash -n scripts/check_readme_routes.sh` exit 0; `bash scripts/check_readme_routes.sh`: `readme-routes: OK (25 destination(s) governed)`; `bash scripts/check_doctrines.sh` passes; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 376 s
+    - [x] LOCKSTEP — the check alone; its header's honest limits unchanged, the defect being no limit but a fault.
+  Commit: `ARCHOGEN-PROGRAM-1028 (leaf PROGRAM.118)`
 
 - ID: `PROGRAM.119`
   Status: `done` — seventeenth daily artifact cleanup; the record's last run `2026-10-26T08:56:05+00:00`, over 24 h
@@ -1122,7 +1131,7 @@ roadmap item X live?".
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.73`, `.78`, `.115`, `.117.3` and `.118` — are filed and owned. Every closed
+`PROGRAM.73`, `.78`, `.115` and `.117.3` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1272,6 +1281,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.117.1` | `ARCHOGEN-PROGRAM-1020 (leaf PROGRAM.117.1)` | **record folders bound by reads, not totals** (the director's ruling of `2026-10-27`): `fan-out 64` and a 16 MiB `guard` with its three-quarter ruling and per-commit step for `docs/decisions/`, `docs/specs/`, `docs/reviews/`; `--report`; three ceiling records superseded; `.3` filed |
 | `PROGRAM.119` | `ARCHOGEN-PROGRAM-1021 (leaf PROGRAM.119)` | **seventeenth daily artifact cleanup**: the main and wasm debug incremental caches, 52855 files / 5496697254 bytes, removed after `handoff: OK` |
 | `PROGRAM.117.2` | `ARCHOGEN-PROGRAM-1022 (leaf PROGRAM.117.2)` | **the record mover**: `scripts/move_record.sh`, a dry run and a verified, staged move; live citations repointed, the past left and listed |
+| `PROGRAM.118` | `ARCHOGEN-PROGRAM-1028 (leaf PROGRAM.118)` | **`README-ROUTES` reads every path whole**: NUL-separated listings, the row's files quoted, a newline in a name refused |
 
 ## Changelog
 
