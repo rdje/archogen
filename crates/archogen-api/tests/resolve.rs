@@ -1,6 +1,6 @@
 //! The engine API's `resolve` (leaf `M3.4.4`, API `1.4`): the search alone, asked with `unchecked` set and refused
 //! without it (`ROADMAP.md` §10.4); a plain description, a module of one instance and a module tree of several resolved
-//! to the plan `archogen-assignment/1` writes; and every answer that is no plan — the check's, the request's, the search's —
+//! to the plan `archogen-assignment/2` writes; and every answer that is no plan — the check's, the request's, the search's —
 //! carrying its status and what to change.
 
 use archogen_api::{resolve_with, Limits, MemoryModules, Request, Resolve, Status};
@@ -56,8 +56,8 @@ fn a_plain_description_and_a_module_of_one_instance_resolve_to_their_plans() {
     assert_eq!(
         plan.text,
         format!(
-            "(format \"archogen-assignment/1\")\n(profile rt-static-up-v1)\n(system s)\n(program \"{}\")\n\
-             (bind console.write observable-output console.uart)\n",
+            "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system s)\n(program \"{}\")\n\
+             (adapters adapters/1)\n(bind console.write observable-output console.uart)\n",
             plan.program
         )
     );
@@ -216,30 +216,39 @@ fn f10_through_the_api_is_infeasible_and_says_the_engine_lacks_the_path() {
 }
 
 #[test]
-fn a_plan_through_an_adapter_is_not_written_until_its_format_exists() {
-    // Leaf `M3.2.3.2`: the check accepts the description and the search binds the engine's epoch extender over the
-    // short counter, and `archogen-assignment/1` names blocks and platforms alone, so no plan is written; the note names
-    // the instance and the leaf that brings `/2`. (The deadline fixture is presence's `missing-fact` until `M3.2.4`.)
+fn a_plan_through_an_adapter_names_the_instance_and_what_it_binds_beneath() {
+    // Leaf `M3.2.5`: the check accepts the description, the search binds the engine's epoch extender over the short
+    // counter, and `archogen-assignment/2` names the instance as a provider and as the requester of what its kind needs
+    // beneath (`docs/specs/adapters/decision_engine-adapters.md` §5).
     let text = std::fs::read_to_string(
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../eadl-resolve/tests/search/adapter-epoch-extender.eadl"),
     )
     .expect("the fixture");
     let resolution = ask(&text, &MemoryModules::new(), UNCHECKED);
-    assert_eq!(resolution.response.status, Status::Unimplemented);
-    assert!(resolution.plan.is_none());
-    let note = &resolution.response.notes[0];
-    assert!(
-        note.contains("(adapter epoch-extender timer.short)"),
-        "{note}"
-    );
-    assert!(
-        resolution
-            .response
-            .hint
-            .as_deref()
-            .is_some_and(|hint| hint.contains("M3.2.5")),
+    assert_eq!(
+        resolution.response.status,
+        Status::Ok,
         "{:?}",
-        resolution.response.hint
+        resolution.response.notes
+    );
+    let plan = resolution.plan.expect("a plan");
+    let lines: Vec<&str> = plan.text.lines().collect();
+    assert_eq!(lines[0], "(format \"archogen-assignment/2\")");
+    assert_eq!(lines[4], "(adapters adapters/1)");
+    let binds: Vec<&str> = lines[5..].to_vec();
+    assert_eq!(
+        binds,
+        [
+            "(bind time.monotonic counter-width (adapter epoch-extender timer.short))",
+            "(bind time.monotonic observation-coherent (adapter epoch-extender timer.short))",
+            "(bind time.monotonic tick-rate (adapter epoch-extender timer.short))",
+            "(bind time.monotonic unambiguous-horizon (adapter epoch-extender timer.short))",
+            "(bind (adapter epoch-extender timer.short) counter-modulus timer.short)",
+            "(bind (adapter epoch-extender timer.short) observation-coherent timer.short)",
+            "(bind (adapter epoch-extender timer.short) relative-delay timer.short)",
+            "(bind (adapter epoch-extender timer.short) tick-rate timer.short)",
+            "(bind (adapter epoch-extender timer.short) wrap-behavior timer.short)",
+        ]
     );
 }

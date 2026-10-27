@@ -72,7 +72,7 @@ fn plan(description: &str, modules: &MemoryModules, provider: &str) -> String {
             Requester::Named("console.write".to_owned()),
             "observable-output".to_owned(),
         ),
-        provider.to_owned(),
+        provider.into(),
     );
     Assignment {
         profile: RT_STATIC_UP_V1.id.to_owned(),

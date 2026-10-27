@@ -13,7 +13,7 @@
 //! qualified by §6 rules 9 and 10 (`eadl_model::check::resolved_declarations`); one system, the only one or the one
 //! named; then the search
 //! ([`eadl_resolve::search::search`]) under the profile's caller level, and the plan written as
-//! `archogen-assignment/1` ([`eadl_resolve::plan`]).
+//! `archogen-assignment/2` ([`eadl_resolve::plan`]).
 
 use eadl_front::{Form, Program, SourceMap};
 use eadl_model::check::{resolved_declarations, shipped_registry};
@@ -39,7 +39,7 @@ pub struct Resolve<'a> {
 pub struct Plan {
     /// The system it is for.
     pub system: String,
-    /// The plan, `archogen-assignment/1`'s canonical text.
+    /// The plan, `archogen-assignment/2`'s canonical text.
     pub text: String,
     /// The digest of the elaborated program it names, 64 lowercase hexadecimal digits.
     pub program: String,
@@ -259,28 +259,6 @@ pub(crate) fn concluded(request: &Request<'_>, ready: Ready<'_>, found: Search) 
         plan: None,
     };
     match found {
-        // `archogen-assignment/1` names blocks and platforms alone: a plan binding an adapter's instance is written once
-        // `/2` exists (leaf `M3.2.5`), and none is written until then.
-        Search::Resolved(resolution) if !resolution.instances.is_empty() => Resolution {
-            response: Response::not_judged(
-                Status::Unimplemented,
-                ready.response.sources,
-                vec![format!(
-                    "system `{}` of {} resolves through an engine adapter, `{}`, which `archogen-assignment/1` cannot \
-                     name — no plan was written",
-                    name_of(ready.system),
-                    request.name,
-                    resolution.instances[0].provider.name
-                )],
-                Some(
-                    "the plan format that names an adapter's instance, `archogen-assignment/2`, is task-tree leaf \
-                     M3.2.5 (docs/TASK_TREE.md)"
-                        .to_owned(),
-                ),
-                Vec::new(),
-            ),
-            plan: None,
-        },
         Search::Resolved(resolution) => {
             let digest = plan::program_digest(ready.program);
             let text = plan::write(&resolution, ready.active.id, &digest);

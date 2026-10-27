@@ -84,33 +84,49 @@ fn tracked() -> Vec<PathBuf> {
 
 #[test]
 fn the_writer_writes_the_format_s_golden() {
+    // `/2` (leaf `M3.2.5`, `docs/specs/adapters/decision_engine-adapters.md` §5): the checker's golden, written apart
+    // from this writer, binds a shared and two exclusive engine adapter instances — one serving a name, one a task —
+    // beside the plain bindings, and this writer writes it byte for byte from the resolution the search would hold.
     assert_eq!(
         FORMAT,
         assignment::FORMAT,
         "the two constants name one format"
     );
+    let timer = "platform.timer.timer.counter";
+    let v = vocabulary();
+    let catalog = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+        .expect("the shipped catalog reads");
+    let instance = |kind: &str, serves: Option<&str>| {
+        let name = eadl_resolve::adapter::instance_name(kind, timer, serves);
+        eadl_resolve::adapter::Instance {
+            kind: kind.to_owned(),
+            over: timer.to_owned(),
+            serves: serves.map(str::to_owned),
+            provider: eadl_resolve::offer::Provider {
+                name,
+                span: eadl_front::Span::new(eadl_front::SourceId(0), 0, 0),
+                facts: std::collections::BTreeMap::new(),
+            },
+            beneath: catalog.kind(kind).expect("a kind").beneath_names.clone(),
+        }
+    };
+    let extender = instance("epoch-extender", None);
+    let for_name = instance("deadline-over-delay", Some("clock.time.monotonic"));
+    let for_task = instance("deadline-over-delay", Some("app.rt/sensor"));
+    let named = || Who::Named("clock.time.monotonic".to_owned());
+    let task = || Who::Task {
+        system: "app.rt".to_owned(),
+        task: "sensor".to_owned(),
+    };
     let mut bindings = std::collections::BTreeMap::new();
     for (who, fact, provider) in [
-        (
-            Who::Named("clock.time.monotonic".to_owned()),
-            "counter-width",
-            "platform.timer.timer.counter",
-        ),
-        (
-            Who::Named("clock.time.monotonic".to_owned()),
-            "unambiguous-horizon",
-            "platform.timer.timer.counter",
-        ),
-        (
-            Who::Task {
-                system: "app.rt".to_owned(),
-                task: "sensor".to_owned(),
-            },
-            "time.monotonic",
-            "platform.timer.timer.counter",
-        ),
+        (named(), "absolute-deadline", &for_name),
+        (named(), "counter-width", &extender),
+        (named(), "unambiguous-horizon", &extender),
+        (task(), "absolute-deadline", &for_task),
+        (task(), "tick-rate", &extender),
     ] {
-        bindings.insert((who, fact.to_owned()), provider.to_owned());
+        bindings.insert((who, fact.to_owned()), provider.provider.name.clone());
     }
     let resolution = Resolution {
         system: "app.rt".to_owned(),
@@ -118,10 +134,10 @@ fn the_writer_writes_the_format_s_golden() {
         bindings,
         obligations: Vec::new(),
         steps: 1,
-        instances: Vec::new(),
+        instances: vec![extender.clone(), for_name.clone(), for_task.clone()],
     };
     let golden = std::fs::read_to_string(
-        root().join("crates/archogen-plan-check/tests/goldens/archogen-assignment-1.golden"),
+        root().join("crates/archogen-plan-check/tests/goldens/archogen-assignment-2.golden"),
     )
     .expect("the golden");
     assert_eq!(
@@ -246,6 +262,11 @@ fn language_accepts(path: &Path, text: &str) -> bool {
 
 #[test]
 fn the_positive_corpus_every_plan_the_search_writes_the_checker_accepts_and_twice_alike() {
+    let policy = Policy {
+        adapters: eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &vocabulary())
+            .expect("the shipped catalog reads"),
+        ..Policy::default()
+    };
     // `M3.5`'s filing to `M3.4`: every plan of the positive corpus is accepted by `archogen-plan-check`. The corpus is
     // derived: every tracked description the language's check accepts, as the engine API runs it before `resolve`
     // searches — never the checker's answer to an empty plan, whose check (1) refuses it before it re-checks the
@@ -285,13 +306,15 @@ fn the_positive_corpus_every_plan_the_search_writes_the_checker_accepts_and_twic
             .iter()
             .filter(|f| f.head() == Some("defsystem"))
         {
+            // With the engine's own adapters, as it runs (leaf `M3.2.5`): a plan binding an instance is the checker's to
+            // judge like any other.
             let searched = || {
                 search(
                     declarations,
                     system,
                     RT_STATIC_UP_V1.caller_level,
                     &v,
-                    &Policy::default(),
+                    &policy,
                     Limits::DEFAULT,
                 )
             };

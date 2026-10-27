@@ -8,8 +8,8 @@
 //! (leaf `M3.5.3`); its exhaustive checker, its falsification corpus and the comparison that holds the generator's
 //! production relation equal to it stay in `crates/eadl-resolve/tests`, which takes this crate as a development
 //! dependency — the checker's relation and the generator's one derivation held equal, which the trust gate holds as a
-//! shared derivation (`M3.5.3.1`). [`assignment`] reads and writes the record it judges, `archogen-assignment/1`
-//! (`M3.5.4.1`); [`check`] runs the checks on it, check (1) and the stale plan first (`M3.5.4.2`), the description
+//! shared derivation (`M3.5.3.1`). [`assignment`] reads and writes the record it judges, `archogen-assignment/2`
+//! (`M3.5.4.1`; `/2` by `M3.2.5`), an engine adapter's instance judged by the checker's own table, [`adapters`]; [`check`] runs the checks on it, check (1) and the stale plan first (`M3.5.4.2`), the description
 //! re-checked (`M3.5.4.3`, `.6`), and the bindings over [`requesters`] (`M3.5.4.4`), then the joint rules (`M3.5.5`); the executable comes with
 //! `M3.5.6`. Of the joint rules' module, [`joint`], one reading alone is public: [`joint::system`], a system's
 //! hardware, the declarations it reaches and the requesters it serves as check (5) reads them, for a comparison test
@@ -20,6 +20,7 @@ pub mod adapters;
 pub mod assignment;
 mod bindings;
 pub mod check;
+mod instances;
 pub mod joint;
 pub mod judgement;
 pub mod mcp;

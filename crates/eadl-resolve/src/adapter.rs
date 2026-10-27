@@ -201,6 +201,7 @@ impl Kind {
                 span: over.span,
                 facts,
             },
+            beneath: self.beneath_names.clone(),
         }
     }
 }
@@ -279,6 +280,8 @@ pub struct Instance {
     pub serves: Option<String>,
     /// What it offers, as the relation judges a provider; its name is its own.
     pub provider: Provider,
+    /// Every fact its kind's `beneath` names, in written order: each one of its own bindings to `over` (record §5).
+    pub beneath: Vec<String>,
 }
 
 /// Why the catalog, or an entry of it, is refused (record §1.6).

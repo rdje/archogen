@@ -470,7 +470,7 @@ or flat: one side's facts of one function are met at one provider (rule 13), its
 met apart, and two requesters — a system's own level and the service its task uses — are bound each on its own
 (`SR-H17`, leaf `M3.4.9`).
 
-What it chose is written by `crates/eadl-resolve/src/plan.rs` (`M3.4.3`) as `archogen-assignment/1`, the record the
+What it chose is written by `crates/eadl-resolve/src/plan.rs` (`M3.4.3`) as `archogen-assignment/2` (`M3.2.5`), the record the
 configuration checker judges: the generator's own writer and its own digest of the elaborated program, sharing no code
 with the checker's reader, both held to one golden and to each other by `crates/eadl-resolve/tests/plan.rs`. A
 requester is a declaration or a task of a system, written `(task SYSTEM TASK)`, so a task never reads as a service.

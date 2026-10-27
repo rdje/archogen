@@ -99,7 +99,7 @@ fn plan(
                         Requester::Named((*requester).to_owned()),
                         (*fact).to_owned(),
                     ),
-                    (*provider).to_owned(),
+                    (*provider).into(),
                 )
             })
             .collect(),

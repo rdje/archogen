@@ -233,7 +233,7 @@ fn check_5_judges_a_binding_against_the_hardware_the_reading_gives() {
             placement: None,
             bindings: BTreeMap::from([(
                 (named("console.write"), "observable-output".to_owned()),
-                provider.to_owned(),
+                provider.into(),
             )]),
         };
         let text = assignment.to_canonical();

@@ -14,7 +14,7 @@ can ask what that choice did with one requirement, and why.
 > **In one minute, for engineers.** `crates/archogen-api` declares three versioned operations: `check`, description
 > text plus a profile in, a `Response` carrying §5.5's verdict, diagnostics and the engine's version out; `resolve`,
 > the search alone, asked with `unchecked` set, which answers the same response and, for one system, the plan
-> `archogen-assignment/1`; and `explain`, the same search's account of each requirement on one fact. It reads no
+> `archogen-assignment/2`; and `explain`, the same search's account of each requirement on one fact. It reads no
 > file, writes none, spawns nothing, and compiles for `wasm32-unknown-unknown`. An instance is one running copy of one
 > build, stateless between requests; a byte budget bounds each request. The CLI is held to it by parity tests; a wasm
 > binding serves a web page; `archogen mcp` serves agents over MCP, both of its protocol eras.

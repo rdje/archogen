@@ -1,15 +1,18 @@
 //! Check (5), the joint rules, as the fenced context of `M3.5.5.8` reads them from `docs/semantics/model.md` §8: per
 //! rule, a plan accepted and its corruptions refused. Each plan goes through checks (1) to (4) first, which must
 //! accept it — a plan they refuse is no case of check (5) — then through [`joint_fenced`]; the few corruptions check
-//! (3) refuses first are run apart, to hold check (5)'s own reading of them.
+//! (3) refuses first are run apart, to hold check (5)'s own reading of them. An engine adapter's instance is judged by
+//! the rules as model §8 rule 15 and `docs/specs/adapters/decision_engine-adapters.md` §4 say, and one time base by rule
+//! 14, each from the record and the model alone.
 
 use std::collections::BTreeMap;
 
 use archogen_outcome::record::{Finding, Severity};
 use archogen_outcome::Status;
-use archogen_plan_check::assignment::{program_digest, Assignment, Requester};
+use archogen_plan_check::assignment::{program_digest, Assignment, Instance, Provider, Requester};
 use archogen_plan_check::check::{
-    bindings, description, joint, record, Verdict, PLAN_DESCRIPTION, PLAN_JOINT,
+    bindings, description, joint, record, Verdict, PLAN_BINDING, PLAN_DESCRIPTION, PLAN_JOINT,
+    PLAN_RECORD, PLAN_UNSATISFIED,
 };
 use eadl_front::module::{elaborate, MemoryModules};
 use eadl_front::{Program, SourceMap};
@@ -53,7 +56,17 @@ fn task(system: &str, task: &str) -> Requester {
     }
 }
 
-/// One binding: requester, fact, provider.
+/// An engine adapter's instance as a requester, from its canonical text.
+fn instance(text: &str) -> Requester {
+    Requester::parse(text).unwrap_or_else(|refusal| panic!("{text}: {refusal}"))
+}
+
+/// A provider from its canonical text: a name, or an instance.
+fn provider(text: &str) -> Provider {
+    Provider::parse(text).unwrap_or_else(|refusal| panic!("{text}: {refusal}"))
+}
+
+/// One binding: requester, fact, provider — a name, or an instance's canonical text.
 type Bind = (Requester, &'static str, &'static str);
 
 impl Description {
@@ -66,7 +79,7 @@ impl Description {
             placement: placement.map(|(p, r)| (p.to_owned(), r.to_owned())),
             bindings: binds
                 .iter()
-                .map(|(r, f, p)| ((r.clone(), (*f).to_owned()), (*p).to_owned()))
+                .map(|(r, f, p)| ((r.clone(), (*f).to_owned()), provider(p)))
                 .collect::<BTreeMap<_, _>>(),
         }
     }
@@ -936,13 +949,13 @@ fn rule_10_a_placement_that_is_not_placement_memory_of_the_hardware_is_refused()
         let findings = refusal(d.joint(&plan), 10, true);
         assert_eq!(findings.len(), 1, "{findings:#?}");
         assert!(findings[0].message.contains(why), "{findings:#?}");
-        // At the record's `placement` clause.
+        // At the record's `placement` clause, after `/2`'s `adapters` clause.
         assert_eq!(
             (
                 findings[0].primary.source.as_str(),
                 findings[0].primary.line
             ),
-            (RECORD, 5)
+            (RECORD, 6)
         );
     }
     // A plan placing the image nowhere, where the hardware has placement memory.
@@ -1212,4 +1225,549 @@ fn rule_13_never_repeats_rule_9_s_qualifier() {
         "",
     );
     assert_eq!(d.bound(&split("timer.a", "timer.a")), Ok(()));
+}
+
+// ------------------------------------------------------------------------------------------------------------------
+// Rule 15: an engine adapter's instance, judged by rules 1–3, 5, 7, 9 and 13; and rule 14, one time base.
+
+/// What `deadline-over-delay` requires beneath, as a plan binds it: each fact once, sorted.
+const BENEATH_DEADLINE: [&str; 4] = [
+    "counter-modulus",
+    "observation-coherent",
+    "relative-delay",
+    "tick-rate",
+];
+
+/// What `epoch-extender` requires beneath.
+const BENEATH_EXTENDER: [&str; 5] = [
+    "counter-modulus",
+    "observation-coherent",
+    "relative-delay",
+    "tick-rate",
+    "wrap-behavior",
+];
+
+/// Counters an engine adapter may program, and a deadline service: `timer.d`, a relative timer of 32 bits at 1 MHz
+/// offering what `d` adds, its channels among them; `timer.short`, a 16-bit modular counter of one channel; `timer.e`, a
+/// second counter, offering what `e` adds; `timer.u`, reachable from `user` alone; `timer.abs`, a comparator programmed
+/// with absolute times itself, of two channels; `timer.far`, on no platform the system uses. Then the services `more` declares, and the
+/// system `system`.
+fn adapted(d: &str, e: &str, more: &str, system: &str) -> Description {
+    describe(&format!(
+        "
+      (defblock timer.d (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz)
+        (observation-coherent true) {d} (reachable-at-privilege machine)))
+      (defblock timer.short (offers (relative-delay true) (counter-modulus 65536) (counter-width 16 bit) (tick-rate 1 MHz)
+        (observation-coherent true) (wrap-behavior modular) (channels 1 tick) (reachable-at-privilege machine)))
+      (defblock timer.e (offers (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+        (reachable-at-privilege machine) {e}))
+      (defblock timer.u (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz)
+        (observation-coherent true) (channels 1 tick) (reachable-at-privilege user)))
+      (defblock timer.abs (offers (absolute-deadline true) (supported-horizon 3600 s) (counter-modulus 4294967296)
+        (tick-rate 1 MHz) (channels 2 tick) (reachable-at-privilege machine)))
+      (defblock timer.far (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz)
+        (observation-coherent true) (channels 1 tick) (reachable-at-privilege machine)))
+      (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine))
+        (requires (uses timer.d timer.short timer.e timer.u timer.abs)))
+      (defservice alarm
+        (requires (absolute-deadline (supported-horizon (at-least 10 s)) (delivery-bound (at-most 100 us)))))
+      {more}
+      {system}"
+    ))
+}
+
+/// The system using the deadline service alone.
+const ALARMED: &str = "(defsystem s (requires (uses alarm)) (platform (uses soc)))";
+
+/// The deadline service's own translator over `timer.d`.
+const ALARM: &str = "(adapter deadline-over-delay timer.d alarm)";
+
+/// The bindings beneath of the instance `text`: each of `facts` to `over`.
+fn beneath(text: &'static str, over: &'static str, facts: &[&'static str]) -> Vec<Bind> {
+    facts
+        .iter()
+        .map(|fact| (instance(text), *fact, over))
+        .collect()
+}
+
+/// The deadline service bound through its translator over `timer.d`, with the translator's four bindings beneath.
+fn alarm() -> Vec<Bind> {
+    let mut binds = vec![(named("alarm"), "absolute-deadline", ALARM)];
+    binds.extend(beneath(ALARM, "timer.d", &BENEATH_DEADLINE));
+    binds
+}
+
+#[test]
+fn rule_15_a_deadline_service_bound_through_its_own_translator_holds() {
+    let d = adapted("(channels 1 tick)", "", "", ALARMED);
+    // Its supported horizon `timer.d`'s unambiguous one, `(2^32 − 1) / 1 MHz`; its delivery bound the obliged 100 us.
+    assert_eq!(d.bound(&alarm()), Ok(()));
+    // Bound to `timer.d` itself, which offers no absolute deadline, check (4) refuses it.
+    let direct = d.plan(None, &[(named("alarm"), "absolute-deadline", "timer.d")]);
+    let verdict = bindings(
+        &d.sources,
+        &d.program,
+        RECORD,
+        &direct.to_canonical(),
+        &direct,
+    )
+    .expect_err("`timer.d` offers no absolute deadline");
+    assert_eq!(verdict.status, Status::ToolFailure);
+    assert!(
+        verdict.findings.iter().all(|f| f.code == PLAN_UNSATISFIED),
+        "{verdict:#?}"
+    );
+}
+
+/// The epoch extender over the 16-bit counter.
+const EXTENDED: &str = "(adapter epoch-extender timer.short)";
+
+/// A monotonic time service needing a minute's horizon, beside the counter facts `more` requires.
+fn monotonic(more: &str) -> Description {
+    adapted(
+        "(channels 1 tick)",
+        "",
+        &format!(
+            "(defservice time.monotonic (requires (unambiguous-horizon (at-least 60 s)) {more}))"
+        ),
+        "(defsystem s (requires (uses time.monotonic)) (platform (uses soc)))",
+    )
+}
+
+#[test]
+fn rule_15_a_sixteen_bit_modular_counter_under_an_epoch_extender_meets_a_minute_s_horizon() {
+    let d = monotonic("");
+    let mut binds = vec![(named("time.monotonic"), "unambiguous-horizon", EXTENDED)];
+    binds.extend(beneath(EXTENDED, "timer.short", &BENEATH_EXTENDER));
+    // The horizon derived at the instance from its `(pow2 64)` modulus and the counter's rate.
+    assert_eq!(d.bound(&binds), Ok(()));
+    // Directly, the counter wraps after 65.535 ms: check (4) refuses it.
+    let direct = d.plan(
+        None,
+        &[(
+            named("time.monotonic"),
+            "unambiguous-horizon",
+            "timer.short",
+        )],
+    );
+    let verdict = bindings(
+        &d.sources,
+        &d.program,
+        RECORD,
+        &direct.to_canonical(),
+        &direct,
+    )
+    .expect_err("65.535 ms is no minute");
+    assert_eq!(verdict.findings.len(), 1, "{verdict:#?}");
+    assert_eq!(verdict.findings[0].code, PLAN_UNSATISFIED);
+    assert!(
+        verdict.findings[0].message.contains("lies outside it"),
+        "{verdict:#?}"
+    );
+}
+
+/// Two deadline services, each with its own translator over `timer.d`, whose channels `channels` writes.
+fn two_alarms(channels: &str) -> (Description, Vec<Bind>) {
+    const A: &str = "(adapter deadline-over-delay timer.d alarm.a)";
+    const B: &str = "(adapter deadline-over-delay timer.d alarm.b)";
+    let d = adapted(
+        channels,
+        "",
+        "(defservice alarm.a (requires (absolute-deadline (supported-horizon (at-least 10 s)))))
+         (defservice alarm.b (requires (absolute-deadline (supported-horizon (at-least 10 s)))))",
+        "(defsystem s (requires (uses alarm.a alarm.b)) (platform (uses soc)))",
+    );
+    let mut binds = vec![
+        (named("alarm.a"), "absolute-deadline", A),
+        (named("alarm.b"), "absolute-deadline", B),
+    ];
+    binds.extend(beneath(A, "timer.d", &BENEATH_DEADLINE));
+    binds.extend(beneath(B, "timer.d", &BENEATH_DEADLINE));
+    (d, binds)
+}
+
+#[test]
+fn rules_2_and_3_two_exclusive_instances_over_a_timer_of_one_channel_are_refused() {
+    // Each instance takes its own channel beneath, through `relative-delay`.
+    let (d, binds) = two_alarms("(channels 2 tick)");
+    assert_eq!(d.bound(&binds), Ok(()));
+    let (d, binds) = two_alarms("(channels 1 tick)");
+    let plan = d.plan(None, &binds);
+    let findings = refusal(d.joint(&plan), 3, true);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let message = &findings[0].message;
+    for named in [
+        "`timer.d` gives 2 requesters a channel",
+        "`(adapter deadline-over-delay timer.d alarm.a)` through `relative-delay`",
+        "`(adapter deadline-over-delay timer.d alarm.b)` through `relative-delay`",
+        "offers 1 `channels`",
+    ] {
+        assert!(message.contains(named), "{named}: {message}");
+    }
+    assert_eq!(findings[0].primary.source, RECORD);
+}
+
+#[test]
+fn rules_1_3_and_7_an_instance_binding_check_three_refuses_first_is_refused_by_check_five_s_own_reading_too(
+) {
+    let d = adapted("(channels 2 tick)", "", "", ALARMED);
+    const OTHER: &str = "(adapter deadline-over-delay timer.d alarm.other)";
+    const IDLE: &str = "(adapter epoch-extender timer.short)";
+    let cases: [(Vec<Bind>, u32, &str); 4] = [
+        // An exclusive instance bound for a requester it does not name: it offers one channel, its one requester's.
+        (
+            {
+                let mut binds = vec![(named("alarm"), "absolute-deadline", OTHER)];
+                binds.extend(beneath(OTHER, "timer.d", &BENEATH_DEADLINE));
+                binds
+            },
+            3,
+            "serves `alarm.other` alone",
+        ),
+        // An instance no requester the system serves is bound to.
+        (
+            {
+                let mut binds = alarm();
+                binds.extend(beneath(IDLE, "timer.short", &BENEATH_EXTENDER));
+                binds
+            },
+            7,
+            "no requester it serves is bound to it",
+        ),
+        // A fact its kind does not require beneath.
+        (
+            {
+                let mut binds = alarm();
+                binds.push((instance(ALARM), "wrap-behavior", "timer.d"));
+                binds
+            },
+            1,
+            "which its kind does not require beneath",
+        ),
+        // Its binding beneath to a provider other than the one it programs.
+        (
+            {
+                let mut binds = alarm();
+                binds.retain(|(r, f, _)| !(*r == instance(ALARM) && *f == "tick-rate"));
+                binds.push((instance(ALARM), "tick-rate", "timer.e"));
+                binds
+            },
+            1,
+            "to the device it programs, `timer.d`",
+        ),
+    ];
+    for (binds, rule, words) in cases {
+        let plan = d.plan(None, &binds);
+        let text = plan.to_canonical();
+        assert!(record(&d.program, &RT_STATIC_UP_V1, RECORD, &text).is_ok());
+        let verdict = bindings(&d.sources, &d.program, RECORD, &text, &plan)
+            .expect_err("check (3) refuses it first");
+        assert!(
+            verdict.findings.iter().all(|f| f.code == PLAN_BINDING),
+            "{verdict:#?}"
+        );
+        let findings = refusal(
+            joint(
+                &d.sources,
+                &d.program,
+                &RT_STATIC_UP_V1,
+                RECORD,
+                &text,
+                &plan,
+            ),
+            rule,
+            false,
+        );
+        assert!(
+            messages(&findings).contains(words),
+            "{words}: {findings:#?}"
+        );
+    }
+}
+
+#[test]
+fn rule_7_an_instance_s_device_is_of_the_system_s_hardware_and_the_instance_is_none() {
+    const FAR: &str = "(adapter deadline-over-delay timer.far alarm)";
+    let d = adapted("(channels 1 tick)", "", "", ALARMED);
+    assert_eq!(d.bound(&alarm()), Ok(()));
+    let mut binds = vec![(named("alarm"), "absolute-deadline", FAR)];
+    binds.extend(beneath(FAR, "timer.far", &BENEATH_DEADLINE));
+    let findings = refusal(d.bound(&binds), 7, true);
+    // The binding to the instance, and each of its own bindings beneath.
+    assert_eq!(findings.len(), 5, "{findings:#?}");
+    let message = messages(&findings);
+    assert!(
+        message.contains(
+            "`alarm` is bound for `absolute-deadline` to `timer.far`, the device \
+             `(adapter deadline-over-delay timer.far alarm)` programs, outside the hardware of `s`"
+        ) && message.contains(&format!(
+            "`{FAR}` is bound for `relative-delay` to `timer.far`, outside the hardware of `s`"
+        )),
+        "{message}"
+    );
+}
+
+#[test]
+fn rule_9_an_instance_is_a_caller_at_its_kind_s_level_and_states_it_for_its_callers() {
+    const LOW: &str = "(adapter deadline-over-delay timer.u alarm)";
+    let d = adapted("(channels 1 tick)", "", "", ALARMED);
+    let mut binds = vec![(named("alarm"), "absolute-deadline", LOW)];
+    binds.extend(beneath(LOW, "timer.u", &BENEATH_DEADLINE));
+    // Its device, reachable from `user` alone, is judged at the kind's level — whatever level the profile gives.
+    for profile in [RT_STATIC_UP_V1, at_level("")] {
+        let findings = refusal(d.joint_under(&profile, &d.plan(None, &binds)), 9, true);
+        assert_eq!(findings.len(), 1, "{findings:#?}");
+        let message = &findings[0].message;
+        assert!(
+            message.contains("`timer.u`, bound for")
+                && message.contains(&format!("`{LOW}` for `relative-delay`"))
+                && message.contains("is reachable from `user` alone")
+                && message.contains("its kind's level, `machine`"),
+            "{message}"
+        );
+    }
+    // A caller bound to an instance reads the instance's level: `machine`, never a profile's `supervisor`.
+    assert_eq!(d.bound(&alarm()), Ok(()));
+    let findings = refusal(
+        d.joint_under(&at_level("supervisor"), &d.plan(None, &alarm())),
+        9,
+        true,
+    );
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(
+        findings[0].message.contains(&format!(
+            "`{ALARM}`, bound for `alarm` for `absolute-deadline`"
+        )) && findings[0]
+            .message
+            .contains("is reachable from `machine` alone")
+            && findings[0]
+                .message
+                .contains("runs every caller at `supervisor`"),
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn rule_5_an_instance_owns_no_region_and_its_device_bound_beneath_owns_its_own() {
+    let time = "(defservice time.now (requires (tick-rate 1 MHz)))";
+    let system = "(defsystem s (requires (uses alarm time.now)) (platform (uses soc)))";
+    let mut binds = alarm();
+    binds.push((named("time.now"), "tick-rate", "timer.e"));
+    let d = adapted(
+        "(channels 1 tick) (region regs (base 0x1000_0000) (size 4 KiB))",
+        "(region regs (base 0x2000_0000) (size 4 KiB))",
+        time,
+        system,
+    );
+    assert_eq!(d.bound(&binds), Ok(()));
+    let d = adapted(
+        "(channels 1 tick) (region regs (base 0x1000_0000) (size 4 KiB))",
+        "(region regs (base 0x1000_0800) (size 4 KiB))",
+        time,
+        system,
+    );
+    let findings = refusal(d.bound(&binds), 5, true);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let message = &findings[0].message;
+    assert!(
+        message.contains("`timer.d` and `timer.e`, both bound in this assignment")
+            && !message.contains("(adapter"),
+        "{message}"
+    );
+}
+
+#[test]
+fn rule_13_an_instance_is_one_provider_of_its_function() {
+    let d = monotonic("(tick-rate 1 MHz)");
+    let mut whole = vec![
+        (named("time.monotonic"), "tick-rate", EXTENDED),
+        (named("time.monotonic"), "unambiguous-horizon", EXTENDED),
+    ];
+    whole.extend(beneath(EXTENDED, "timer.short", &BENEATH_EXTENDER));
+    // The rate passed through from the counter, the horizon derived at the instance: one provider meets both.
+    assert_eq!(d.bound(&whole), Ok(()));
+    let mut split = whole.clone();
+    split[0] = (named("time.monotonic"), "tick-rate", "timer.short");
+    let findings = refusal(d.bound(&split), 13, true);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let message = &findings[0].message;
+    assert!(
+        message.contains("`counter` function to 2 providers")
+            && message.contains(&format!("`{EXTENDED}` for `unambiguous-horizon`"))
+            && message.contains("`timer.short` for `tick-rate`")
+            && message.contains(&format!("`{EXTENDED}` meets every one")),
+        "{message}"
+    );
+}
+
+/// A deadline service reading time through `time.now`, and one reading its own rate, over a `timer.d` of `channels`.
+fn deadline_and_clock(channels: &str) -> Description {
+    adapted(
+        channels,
+        "",
+        "(defservice time.now (requires (tick-rate 1 MHz) (counter-modulus 4294967296)))
+         (defservice alarm.now (requires (absolute-deadline (supported-horizon (at-least 10 s))) (uses time.now)))
+         (defservice alarm.self (requires (absolute-deadline (supported-horizon (at-least 10 s))) (tick-rate 1 MHz)))",
+        "(defsystem s (requires (uses alarm.now alarm.self)) (platform (uses soc)))",
+    )
+}
+
+/// `alarm.now`'s deadline through its translator over `timer.d`.
+const NOW: &str = "(adapter deadline-over-delay timer.d alarm.now)";
+
+/// The deadline of `alarm.now`, bound to `deadline`, and the counter facts `time.now` reads, bound to `clock`; with
+/// `alarm.self`'s deadline and its own rate at the comparator `timer.abs`.
+fn time_base(deadline: &'static str, clock: &'static str) -> Vec<Bind> {
+    let mut binds = vec![
+        (named("alarm.now"), "absolute-deadline", deadline),
+        (named("time.now"), "counter-modulus", clock),
+        (named("time.now"), "tick-rate", clock),
+        (named("alarm.self"), "absolute-deadline", "timer.abs"),
+        (named("alarm.self"), "tick-rate", "timer.abs"),
+    ];
+    if deadline.starts_with('(') {
+        binds.extend(beneath(deadline, "timer.d", &BENEATH_DEADLINE));
+    }
+    binds
+}
+
+#[test]
+fn rule_14_a_deadline_and_the_counter_its_requester_reaches_are_bound_at_one_device() {
+    // Through a translator, its device the timer the clock reads.
+    let d = deadline_and_clock("(channels 1 tick)");
+    assert_eq!(d.bound(&time_base(NOW, "timer.d")), Ok(()));
+    let plan = d.plan(None, &time_base(NOW, "timer.e"));
+    let findings = refusal(d.joint(&plan), 14, true);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let message = &findings[0].message;
+    assert!(
+        message.contains(&format!(
+            "`alarm.now` is bound for `absolute-deadline` at the device `timer.d` through `{NOW}`, and `time.now`"
+        )) && message.contains("is bound for `counter-modulus`, `tick-rate` at the device `timer.e`")
+            && message.contains("in one counter's time and read in another's"),
+        "{message}"
+    );
+    assert_eq!(
+        findings[0].primary.line,
+        line_of(&plan, &named("alarm.now"), "absolute-deadline")
+    );
+    // The other requester's binding, and both devices.
+    assert_eq!(findings[0].secondary.len(), 3, "{findings:#?}");
+}
+
+#[test]
+fn rule_14_judges_direct_bindings_too() {
+    // A comparator programmed with absolute times itself, of two channels, and the clock reading it, or another.
+    let d = adapted(
+        "(channels 1 tick)",
+        "",
+        "(defservice time.now (requires (tick-rate 1 MHz) (counter-modulus 4294967296)))
+         (defservice alarm.now (requires (absolute-deadline (supported-horizon (at-least 10 s))) (uses time.now)))",
+        "(defsystem s (requires (uses alarm.now)) (platform (uses soc)))",
+    );
+    let direct = |clock: &'static str| -> Vec<Bind> {
+        vec![
+            (named("alarm.now"), "absolute-deadline", "timer.abs"),
+            (named("time.now"), "counter-modulus", clock),
+            (named("time.now"), "tick-rate", clock),
+        ]
+    };
+    assert_eq!(d.bound(&direct("timer.abs")), Ok(()));
+    let message = refused(d.bound(&direct("timer.e")), 14);
+    assert!(
+        message.contains("at the device `timer.abs`, and `time.now`")
+            && message.contains("at the device `timer.e`"),
+        "{message}"
+    );
+}
+
+#[test]
+fn rule_14_judges_every_other_requester_and_leaves_the_deadline_s_own_counter_to_rule_13() {
+    const OWN: &str = "(adapter deadline-over-delay timer.d alarm.self)";
+    let d = deadline_and_clock("(channels 2 tick)");
+    // `alarm.self` reads its own rate at a device other than its deadline's: rule 13's unknown — describing what each
+    // leaves undescribed makes one whole — never rule 14's conflict.
+    let mut binds = time_base(NOW, "timer.d");
+    binds.retain(|(r, _, _)| *r != named("alarm.self"));
+    binds.push((named("alarm.self"), "absolute-deadline", OWN));
+    binds.push((named("alarm.self"), "tick-rate", "timer.e"));
+    binds.extend(beneath(OWN, "timer.d", &BENEATH_DEADLINE));
+    let message = refused(d.bound(&binds), 13);
+    assert!(
+        message.contains("`alarm.self` binds the facts of its `counter` function to 2 providers")
+            && message.contains("missing-fact")
+            && !message.contains("(rule 14)"),
+        "{message}"
+    );
+}
+
+#[test]
+fn rule_15_a_plan_naming_a_kind_the_checker_s_table_does_not_hold_is_refused() {
+    let d = adapted("(channels 1 tick)", "", "", ALARMED);
+    let plan = d.plan(None, &alarm());
+    assert!(record(&d.program, &RT_STATIC_UP_V1, RECORD, &plan.to_canonical()).is_ok());
+    // As the record reads it: check (1), a corrupted plan.
+    let text = plan
+        .to_canonical()
+        .replace("deadline-over-delay", "deadline-multiplexer");
+    let verdict = record(&d.program, &RT_STATIC_UP_V1, RECORD, &text).expect_err("no such kind");
+    assert_eq!(verdict.status, Status::ToolFailure);
+    assert_eq!(verdict.findings.len(), 1);
+    assert_eq!(verdict.findings[0].code, PLAN_RECORD);
+    assert!(
+        verdict.findings[0]
+            .message
+            .contains("`deadline-multiplexer`")
+            && verdict.findings[0].message.contains("does not hold"),
+        "{verdict:#?}"
+    );
+    // Built past the reader, checks (3) and (5) refuse it by their own readings.
+    let rename = |instance: &Instance| Instance {
+        kind: "deadline-multiplexer".to_owned(),
+        ..instance.clone()
+    };
+    let unknown = Assignment {
+        bindings: plan
+            .bindings
+            .iter()
+            .map(|((requester, fact), provider)| {
+                let requester = match requester {
+                    Requester::Instance(i) => Requester::Instance(rename(i)),
+                    other => other.clone(),
+                };
+                let provider = match provider {
+                    Provider::Instance(i) => Provider::Instance(rename(i)),
+                    other => other.clone(),
+                };
+                ((requester, fact.clone()), provider)
+            })
+            .collect(),
+        ..plan
+    };
+    let text = unknown.to_canonical();
+    let verdict = bindings(&d.sources, &d.program, RECORD, &text, &unknown)
+        .expect_err("check (3) refuses a kind it does not hold");
+    assert!(
+        verdict
+            .findings
+            .iter()
+            .all(|f| f.code == PLAN_BINDING && f.message.contains("does not hold")),
+        "{verdict:#?}"
+    );
+    let findings = refusal(
+        joint(
+            &d.sources,
+            &d.program,
+            &RT_STATIC_UP_V1,
+            RECORD,
+            &text,
+            &unknown,
+        ),
+        1,
+        false,
+    );
+    assert!(
+        messages(&findings).contains("does not hold"),
+        "{findings:#?}"
+    );
 }

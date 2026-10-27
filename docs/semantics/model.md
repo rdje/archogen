@@ -263,8 +263,8 @@ the relation satisfies it at, and these rules judge the bindings together (`crat
 design is `M3.3`'s in `docs/tasks/M3.md`, and connectivity's and routes' `M3.3.3`'s, each reviewed once by a context that
 did not write it, as are privilege's, placement's, the initialization graph's and the functions', `M3.3.4`'s to
 `M3.3.7`'s. `archogen check` does not call them yet: `M3.4` searches for an assignment and wires both in. The
-configuration checker judges a plan's bindings again by those that refuse an assignment — rules 1 to 5, 7, 9, 10 and
-13 — as its check (5), written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.5.5`).
+configuration checker judges a plan's bindings again by those that refuse an assignment — rules 1 to 5, 7, 9, 10, 13
+and 14, an adapter's instance among them (rule 15) — as its check (5), written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.5.5`).
 
 1. **Requesters.** A requester is a task, for what the task itself writes; a service; or any other declaration, for
    what it writes at its own level outside its tasks. Two tasks of one system are two requesters, though §7 reads them
@@ -391,5 +391,6 @@ configuration checker judges a plan's bindings again by those that refuse an ass
    to it makes no route, its own binding beneath making its device's timer route, which carries the requesters bound
    to it (rule 8); a caller at its kind's level, stating that level for the callers bound to it (rule 9); one provider
    of its function (rule 13). An exclusive kind's instance serves one requester and takes its own channel beneath
-   (rules 2 and 3). Rules 1–13 are amended to that effect; the search binds one only where no assignment of the hardware alone
+   (rules 2 and 3). Rules 1–14 are amended to that effect, an instance's level judged whether or not a system level is
+   given; the search binds one only where no assignment of the hardware alone
    holds (`M3.2.3.2`).

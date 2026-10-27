@@ -1282,6 +1282,23 @@ impl<'v> Joint<'v> {
             self.time_base(system, assignment, &mut report);
             if let Some(level) = &system.level {
                 self.privilege(system, level, assignment, &mut report);
+            } else {
+                // An instance is a caller at its kind's level, whether or not the plan gives its system one (record §4,
+                // rule 9): its own bindings are judged at that level.
+                for (instance, (levels, _)) in self
+                    .stated
+                    .iter()
+                    .filter(|(name, _)| self.instances.contains_key(*name) && system.serves(name))
+                {
+                    let own: Vec<Binding> = assignment
+                        .iter()
+                        .filter(|b| &b.requester == instance)
+                        .cloned()
+                        .collect();
+                    for level in levels {
+                        self.privilege(system, level, &own, &mut report);
+                    }
+                }
             }
             if let Some(region) = &system.placement {
                 self.placed(system, region, &mut report);

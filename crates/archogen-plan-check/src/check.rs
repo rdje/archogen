@@ -18,7 +18,9 @@ use eadl_model::profile::Profile;
 
 use crate::assignment::{program_digest, Assignment};
 
-/// Check (1)'s code: the record does not read, or names another profile or a system the description does not declare.
+/// Check (1)'s code: the record does not read — another format, `archogen-assignment/1` among them, another adapter
+/// catalog, a kind the checker's table does not hold, an instance of another shape — or names another profile or a
+/// system the description does not declare.
 pub const PLAN_RECORD: &str = "plan-record";
 
 /// The stale plan's code: the record's digest is not the elaborated program's.
@@ -28,10 +30,13 @@ pub const PLAN_STALE: &str = "plan-stale";
 pub const PLAN_DESCRIPTION: &str = "plan-description";
 
 /// Check (3)'s code: a requirement that binds left unbound, a binding of no requirement or of a requester the system
-/// does not serve, or a provider that is none of the description's blocks or platforms.
+/// does not serve, or a provider that is none of the description's blocks or platforms — an engine adapter's instance
+/// among them where it programs none, or is not the requester's own, or binds beneath what its kind does not require,
+/// elsewhere than the provider it programs.
 pub const PLAN_BINDING: &str = "plan-binding";
 
-/// Check (4)'s code: a binding the model's judgement does not satisfy.
+/// Check (4)'s code: a binding the model's judgement does not satisfy — at an instance, at what it offers over the
+/// device it programs, and only for a requester the mediation gate admits.
 pub const PLAN_UNSATISFIED: &str = "plan-unsatisfied";
 
 /// Check (5)'s code: the bindings of one assignment do not hold together by `docs/semantics/model.md` §8's joint rules.
@@ -287,8 +292,9 @@ pub fn plan_file(
 }
 
 /// Checks (3) and (4) (`M3.5.4.4`; [`crate::bindings`]): each requirement that binds is bound once, each binding is
-/// one requirement's, of a requester the system serves, to one of the description's blocks or platforms; and each
-/// binding is satisfied, by the model's judgement. `assignment` is what check (1) read from `text`, the record `name`
+/// one requirement's, of a requester the system serves, to one of the description's blocks or platforms or an engine
+/// adapter's instance programming one, whose requirements beneath are bound to it; and each binding is satisfied, by the
+/// model's judgement. `assignment` is what check (1) read from `text`, the record `name`
 /// names; `sources` holds the description's files, as elaborated into `program`.
 ///
 /// # Errors

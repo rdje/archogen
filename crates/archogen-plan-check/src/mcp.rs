@@ -238,7 +238,7 @@ fn schema() -> Value {
                 (
                     "plan",
                     text(
-                        "the assignment record the search wrote for it, archogen-assignment/1; findings name it \
+                        "the assignment record the search wrote for it, archogen-assignment/2; findings name it \
                          `plan.json`",
                     ),
                 ),

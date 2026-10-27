@@ -41,7 +41,9 @@ search offers one, where no assignment of the description's own providers holds.
    - `(beneath …)` — what it requires of the one provider it programs, a side the relation reads as any requirer's
      (relation record §1, §3): its `needs` and its constraints;
    - `(offers …)` — what an instance offers, each fact once, each item one of: a value, `(f v)`; the provider's own
-     value of another fact of the same domain, `(f (from g))`, which may be one the vocabulary derives there; or a
+     value of another fact of the same domain, `(f (from g))`, which may be one the vocabulary derives there — the
+     instance stating what the provider states of `g`: its value, derived or offered, unknown as unknown, absent as
+     absent, nothing where the provider leaves `g` undescribed (*amended `2026-10-27`, `M3.2.5`*); or a
      bound the instance takes on, `(f (obliged))` (item 5);
    - `(level L)` — the level of `reachable-at-privilege`'s domain its code runs at, rule 9's (§4);
    - `(obligations …)` — what the realization owes, each `(obligation NAME (doc "…"))`;
@@ -157,7 +159,8 @@ Model §8, for the generator (`eadl_resolve::joint`) and the checker (its check 
   carries the requesters bound to the instance.
 - **Rule 9**, amended: an instance is a **caller** at its kind's level — beside the system's own level, its tasks, and
   its services and policies — so the provider it binds must be reachable at that level; and it states that level as a
-  block states `reachable-at-privilege`, for the callers bound to it.
+  block states `reachable-at-privilege`, for the callers bound to it. Its level is its kind's, so the provider it
+  binds is judged at that level whether or not the plan gives its system one (*amended `2026-10-27`, `M3.2.5`*).
 - **Rule 13**: it is one provider of its function, as the rule's note for `M3.2` says.
 - **Rule 14, new: one time base** (the `M3.3.6` note: "a deadline service's alarm in the time base of the counter
   `time.monotonic` reads, agreement across requesters, is this leaf's to keep"). Where a requester is bound for
@@ -180,11 +183,31 @@ The format register makes a provider or requester kind a new version. `/2` is `/
 `(adapters adapters/1)` after `(program …)`, naming the catalog the plan was resolved with, which the checker refuses
 when its table is another's; and, wherever `/1` writes a requester or a provider, an instance, `(adapter KIND PROVIDER)`
 or `(adapter KIND PROVIDER REQUESTER)` — a form, as `(task SYSTEM TASK)` is, so no description's name reads as one.
-Bindings sort as `/1`'s, named requesters, then tasks, then instances by kind, provider and requester. Every plan is
+Bindings sort by requester — names, then tasks, then instances, each by its canonical text — then by fact, as the
+canonical text below fixes. Every plan is
 written `/2` from the commit that builds it, one format at a time. The checker reads `/2` alone, refuses a kind its
 table does not hold, and judges each instance's `beneath` bindings, its offers and its joint rules by its table — its
 half written under `M3.5`'s fence by a reader of this record who has not read the generator's code. `/1`'s golden stays
 frozen; `/2` has its own. Obligations are not written: both sides derive them from the bindings and the catalog.
+
+*Canonical text, fixed `2026-10-27` by leaf `M3.2.5` so that both writers derive it from this record alone:*
+
+```text
+(format "archogen-assignment/2")
+(profile PROFILE)
+(system SYSTEM)
+(program "SHA256")
+(adapters adapters/1)
+(placement PROVIDER REGION)            ; only where the system has placement memory
+(bind REQUESTER FACT PROVIDER)         ; one per requester and fact
+```
+
+*A REQUESTER is a declaration's name, a task `(task SYSTEM TASK)`, or an instance; a PROVIDER is a block's or a
+platform's name, or an instance. An instance is `(adapter KIND OVER)` for a shared kind and `(adapter KIND OVER
+REQUESTER)` for an exclusive one, its REQUESTER a name or a task form — the one requester it serves. Each instance
+bound is also a requester: one `bind` for each fact its kind's `beneath` names — `needs` operands and constraint
+heads, each once — to OVER. Bindings sort by requester — every name, then every task, then every instance, each by its
+canonical text — and then by fact, by its text. One clause a line, items one space apart, a newline after each line.*
 
 ### 6. `SR-H8`: mediation
 

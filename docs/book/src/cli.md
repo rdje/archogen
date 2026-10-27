@@ -102,7 +102,7 @@ command becomes real and stops advertising itself as unbuilt in **one** change â
 that `check` no longer carries the marker, `replay` still does, and `resolve` and `explain`, built `2026-10-27`, say
 they are experimental.
 
-`archogen resolve` (leaf `M3.4.4`) chooses one system's providers and writes the plan, `archogen-assignment/1`
+`archogen resolve` (leaf `M3.4.4`) chooses one system's providers and writes the plan, `archogen-assignment/2`
 ([Matching](matching.md#the-search)), then runs the configuration checker over it, so the plan it reports was judged
 by a program that shares none of its code; with `--unchecked` it writes the plan alone and says so:
 
@@ -112,10 +112,11 @@ system.eadl: resolved system `heartbeat` against profile `rt-static-up-v1` into 
   experimental: one system of a description, over its own blocks and platforms; completed by M3.7
 archogen: unchecked: `--unchecked` â€” the plan was not checked by `archogen-plan-check`; nothing independent judged it
 $ cat plan.json
-(format "archogen-assignment/1")
+(format "archogen-assignment/2")
 (profile rt-static-up-v1)
 (system heartbeat)
 (program "69e3669f8a0565716da5d870bd4083f4a4de025c447c4697049e2ca2f2b1674b")
+(adapters adapters/1)
 (bind console.write observable-output console.uart)
 ```
 

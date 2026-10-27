@@ -16,7 +16,7 @@
 //! leaf `M3.1.2`, is tested against the model over the same bounded universe. [`joint`] judges the bindings of one complete
 //! assignment together — a provider's channels and the regions bound providers own (`M3.3.2`). [`search`] chooses one
 //! system's providers, one per requester and fact, the relation satisfying each and the joint rules all (`M3.4.2`),
-//! and [`plan`] writes what it chose as `archogen-assignment/1`, by the generator's own code (`M3.4.3`).
+//! and [`plan`] writes what it chose as `archogen-assignment/2`, by the generator's own code (`M3.4.3`, `M3.2.5`).
 //! `archogen check` does not call any of it yet.
 
 pub mod adapter;

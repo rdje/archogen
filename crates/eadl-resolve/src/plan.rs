@@ -1,4 +1,5 @@
-//! The plan the search writes (leaf `M3.4.3`): `archogen-assignment/1`, the assignment record the configuration
+//! The plan the search writes (leaf `M3.4.3`; `/2` since leaf `M3.2.5`): `archogen-assignment/2`, the assignment record
+//! the configuration
 //! checker judges against the description (`docs/book/src/versions.md`, `assignment-format`). One format with two
 //! writers in two crates that share none — this one and the checker's, `archogen_plan_check::assignment` — each with
 //! its own constant and its own derivation of the program's digest, both held to one golden and to each other by
@@ -8,25 +9,31 @@
 //! ⭐ **Its canonical form**, one clause per line, in this order:
 //!
 //! ```text
-//! (format "archogen-assignment/1")
+//! (format "archogen-assignment/2")
 //! (profile PROFILE)
 //! (system SYSTEM)
 //! (program "SHA256")
+//! (adapters adapters/1)
 //! (placement PROVIDER REGION)            ; only where the system has placement memory
 //! (bind REQUESTER FACT PROVIDER)         ; one per requester and fact, sorted
 //! ```
 //!
-//! — a task written `(task SYSTEM TASK)`, the bindings sorted by requester, every named one before every task, each
-//! kind by its text, then by fact.
+//! — a task written `(task SYSTEM TASK)`, an engine adapter's instance `(adapter KIND OVER)` or `(adapter KIND OVER
+//! REQUESTER)` (`docs/specs/adapters/decision_engine-adapters.md` §5), each instance bound also a requester of what its
+//! kind needs beneath; the bindings sorted by requester, every name, then every task, then every instance, each by its
+//! text, then by fact.
+
+use std::collections::BTreeMap;
 
 use archogen_digest::Digest;
 use eadl_front::module::{Instance, Program, Version};
 use eadl_front::Form;
 
-use crate::search::Resolution;
+use crate::adapter::{self, Instance as AdapterInstance};
+use crate::search::{Resolution, Who};
 
 /// The format's identifier: the search's own constant, held with the checker's to one golden.
-pub const FORMAT: &str = "archogen-assignment/1";
+pub const FORMAT: &str = "archogen-assignment/2";
 
 /// The module a plain description's one root instance names: no module name is `-` (`docs/semantics/reference.md` §6
 /// rule 8), so no module's instance writes the same line of the digest.
@@ -90,19 +97,71 @@ pub fn program_digest(program: &Program) -> String {
     Digest::of(program_text(program).as_bytes()).hex()
 }
 
-/// `resolution` as the record's canonical text, resolved under `profile` for the program whose digest is `program`.
+/// `resolution` as the record's canonical text, resolved under `profile` for the program whose digest is `program`
+/// (`docs/specs/adapters/decision_engine-adapters.md` §5): the catalog the plan was resolved with named after the
+/// program; every binding of a requester, and each instance bound as a requester of its own, binding each fact its
+/// kind names beneath to the provider it programs; sorted by requester — names, then tasks, then instances, each by
+/// its canonical text — then by fact.
 #[must_use]
 pub fn write(resolution: &Resolution, profile: &str, program: &str) -> String {
     let mut out = format!(
-        "(format \"{FORMAT}\")\n(profile {profile})\n(system {})\n(program \"{program}\")\n",
-        resolution.system
+        "(format \"{FORMAT}\")\n(profile {profile})\n(system {})\n(program \"{program}\")\n(adapters {})\n",
+        resolution.system,
+        adapter::VERSION
     );
     if let Some((provider, region)) = &resolution.placement {
         out.push_str(&format!("(placement {provider} {region})\n"));
     }
-    // The map's order is the record's: `Who` orders every named requester before every task, each by its text.
-    for ((who, fact), provider) in &resolution.bindings {
-        out.push_str(&format!("(bind {who} {fact} {provider})\n"));
+    let instances: BTreeMap<&str, &AdapterInstance> = resolution
+        .instances
+        .iter()
+        .map(|instance| (instance.provider.name.as_str(), instance))
+        .collect();
+    let written = |provider: &str| {
+        instances.get(provider).map_or_else(
+            || provider.to_string(),
+            |instance| instance_text(instance, &resolution.system),
+        )
+    };
+    // (class, requester, fact, provider): a name 0, a task 1, an instance 2.
+    let mut lines: Vec<(u8, String, &str, String)> = resolution
+        .bindings
+        .iter()
+        .map(|((who, fact), provider)| {
+            let class = match who {
+                Who::Named(_) => 0,
+                Who::Task { .. } => 1,
+            };
+            (class, who.to_string(), fact.as_str(), written(provider))
+        })
+        .collect();
+    for instance in &resolution.instances {
+        let requester = instance_text(instance, &resolution.system);
+        for fact in &instance.beneath {
+            lines.push((2, requester.clone(), fact.as_str(), instance.over.clone()));
+        }
+    }
+    lines.sort();
+    for (_, requester, fact, provider) in lines {
+        out.push_str(&format!("(bind {requester} {fact} {provider})\n"));
     }
     out
+}
+
+/// An instance as the record writes it: `(adapter KIND OVER)`, or `(adapter KIND OVER REQUESTER)` for an exclusive
+/// kind's, its requester a name or a task of `system`, `(task SYSTEM TASK)`.
+fn instance_text(instance: &AdapterInstance, system: &str) -> String {
+    match &instance.serves {
+        None => format!("(adapter {} {})", instance.kind, instance.over),
+        Some(requester) => {
+            let who = match requester
+                .strip_prefix(system)
+                .and_then(|rest| rest.strip_prefix('/'))
+            {
+                Some(task) => format!("(task {system} {task})"),
+                None => requester.clone(),
+            };
+            format!("(adapter {} {} {who})", instance.kind, instance.over)
+        }
+    }
 }

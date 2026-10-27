@@ -20,15 +20,17 @@ whether every seat is given to a real guest, and whether the vegetarian is sitti
 And if the guest list changed after the plan was drawn, the checker does not try to patch the plan: it asks for a new
 one.
 
-> **In one minute, for engineers.** The record is `archogen-assignment/1`, an eADL document with a canonical form:
-> the profile, the system, the sha256 digest of the elaborated program, the placement and one `bind` clause per
-> binding — requester, fact, provider. The checks run in order — (1) the record reads and its digest is the program's, else
+> **In one minute, for engineers.** The record is `archogen-assignment/2`, an eADL document with a canonical form:
+> the profile, the system, the sha256 digest of the elaborated program, the engine's adapter catalog, the placement
+> and one `bind` clause per binding — requester, fact, provider, an engine adapter's instance among them (leaf
+> `M3.2.5`). The checks run in order — (1) the record reads and its digest is the program's, else
 > `stale-input`; (2) the description is re-checked, by the language's passes and the provider-level rules; (3) each
 > requirement that binds is bound once, each binding is a requirement's, of a requester the system serves, to a
 > declared block or platform; (4) each binding is satisfied by the model's judgement — the reference model of
 > `docs/semantics/model.md` §7, never the generator's code; (5) the bindings hold together by §8's joint rules, today
 > rule 7's hardware, rules 2–4's channels, rule 5's ownership, rule 10's placement, rule 9's privilege at the
-> profile's level and rule 13's one provider per function and qualifiers. A corrupted plan is `tool-failure`. The
+> profile's level, rule 13's one provider per function and qualifiers, and rule 14's one time base — an engine
+> adapter's instance judged among the providers (rule 15). A corrupted plan is `tool-failure`. The
 > library is `crates/archogen-plan-check`; the executable `archogen-plan-check` runs it on files, and serves it to an
 > agent as the [MCP](ledger.md#mcp-specification) tool `plan-check`, which takes the texts.
 
@@ -40,16 +42,21 @@ The search writes its answer as a short eADL document, one clause per line, alwa
 heartbeat example, whose console service needs observable output and finds it at the serial port:
 
 ```text
-(format "archogen-assignment/1")
+(format "archogen-assignment/2")
 (profile rt-static-up-v1)
 (system heartbeat)
 (program "…64 hexadecimal digits…")
+(adapters adapters/1)
 (bind console.write observable-output console.uart)
 ```
 
 The `program` line is a fingerprint of the whole description as the engine read it — every module, its version and
 what it was given — so a plan can always be traced to exactly the description it was made for. A task binds under its
-system's name, `(task heartbeat beat)`, so no declaration can be mistaken for a task.
+system's name, `(task heartbeat beat)`, so no declaration can be mistaken for a task. The `adapters` line names the
+catalog of engine adapters the plan was resolved with, and an adapter's instance is written as a form too —
+`(adapter epoch-extender timer.short)`, or with the one requester it serves — both a provider for what it offers and
+a requester binding what its kind needs beneath to the device it programs
+(`docs/specs/adapters/decision_engine-adapters.md` §5).
 
 ### The checks, in order
 
@@ -66,12 +73,16 @@ system's name, `(task heartbeat beat)`, so no declaration can be mistaken for a 
 3. **Every need is bound, once, to a real provider.** The checker works out, from the description alone, who asks
    for something: the system, each of its tasks, and every service or part they use. It finds each need where the
    description writes it. Then every need on a function of a device must have exactly one binding, every binding
-   must be such a need, and every provider named must be a block or platform the description declares.
+   must be such a need, and every provider named must be a block or platform the description declares — or an engine
+   adapter's instance of a kind the checker's own table holds, whose own needs, what its kind requires of the device
+   it programs, are each bound to that device (leaf `M3.2.5`).
 4. **Every binding holds.** Each need is judged against the provider it is bound to, by the same reference model the
    rules were written from. A counter of 16 bits does not serve a need for at least 32, and a part that does not
-   describe a fact does not serve a need for it.
+   describe a fact does not serve a need for it. An adapter's instance is judged on what it offers: what its kind writes,
+   what its device states of the fact it passes through, and, for a bound its kind takes on, the tightest bound its
+   one requester writes.
 5. **The bindings hold together.** Some mistakes only show when the bindings are read side by side. Today the checker
-   asks six such questions. First, is every provider part of the system's own **hardware** — the platform its
+   asks these questions. First, is every provider part of the system's own **hardware** — the platform its
    `platform` clause names, the blocks and platforms the system and its tasks name, and everything those compose? A
    serial port on the board that the system's platform never composes serves nobody, however well it would match.
    Only blocks and platforms compose: a service that names a block does not bring it into the system, and a platform
@@ -94,7 +105,11 @@ system's name, `(task heartbeat beat)`, so no declaration can be mistaken for a 
    together. So one requester's needs on one function — a counter, a clock, a queue — are bound to one provider. And a
    need that qualifies everything its requester relies on, such as being available while the processor idles, is
    checked against every part the requester is bound to through its functions, and every part the services it uses are
-   bound to.
+   bound to. Seventh, is a deadline programmed in the time it is read in? Where a requester's
+   deadline is programmed at one timer, every other requester it reaches that reads a counter reads that same timer
+   (model §8 rule 14). An engine adapter's instance answers these questions as any provider does, with three
+   differences: it is no hardware itself, its device must be; it owns no address and is built from nothing; and it is
+   a caller at its kind's level, so its device must be reachable there (leaf `M3.2.5`; model §8 rule 15).
 
 The checker re-reads the needs every time. Changing a requirement and recomputing the fingerprint by hand does not get
 an old plan through: check 4 judges the new requirement and refuses.

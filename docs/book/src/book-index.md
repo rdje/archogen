@@ -95,12 +95,12 @@ a change that leaves it stale, so it is never edited by hand.
 - Cargo failure framing repair — [Annex C: Trust proof records](annex-trust-proofs.md#cargo-failure-framing-repair)
 - **catalog** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [Checking a description](checking.md), [What a report may claim](evidence.md), [Matching an offer to
-  a requirement](matching.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge
-  comes from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
-  decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md),
-  [The archogen command line](cli.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex A: The runtime's rules in
-  detail](annex-runtime.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+  a requirement](matching.md), [Checking a plan](plan-check.md), [What the scheduling checker establishes](analysis.md),
+  [Where the engine's knowledge comes from: the catalog](catalog.md), [Checks that must not share a mistake: the trust
+  gate](trust.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where
+  generated systems run](targets.md), [The archogen command line](cli.md), [Verifying the toolchain](verification.md),
+  [What this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md),
+  [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Catalog builder dependency-reader assessment — [Annex C: Trust proof
   records](annex-trust-proofs.md#catalog-builder-dependency-reader-assessment)
 - Catalog dependency-reader cleanup — [Annex C: Trust proof

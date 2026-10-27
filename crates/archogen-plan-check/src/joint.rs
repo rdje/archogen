@@ -1,6 +1,8 @@
 //! Check (5), the joint rules, as `M3.5.5.8`'s fenced context writes it from `docs/semantics/model.md` §8 alone: the
-//! rules that refuse an assignment — rules 1 to 5, 7, 9, 10 and 13 — judged over one system's assignment after checks
-//! (1) to (4) accepted each binding alone.
+//! rules that refuse an assignment — rules 1 to 5, 7, 9, 10, 13 and 14 — judged over one system's assignment after
+//! checks (1) to (4) accepted each binding alone; an engine adapter's instance judged by them as rule 15 and
+//! `docs/specs/adapters/decision_engine-adapters.md` §4 say, from the checker's own table ([`crate::adapters`]) under
+//! `M3.2.5`'s fence.
 //!
 //! ⭐ **Everything the rules need is read here, from the description**: who requires (rule 1), the declarations a
 //! system's closure reaches and its hardware (rule 7), which providers compose which (rule 5), every region a provider
@@ -56,6 +58,15 @@
 //! - Rule 13: a function's requirements are every requirement the requester writes on a fact of it, a group by its head.
 //! - Rule 13: a qualifier is judged for every requester the system serves that writes one; the requesters it reaches
 //!   through `uses` and `needs` are reached at any depth; a qualifier judged past the exact arithmetic is an unknown.
+//! - Rule 14: the requesters a deadline's requester reaches are the declarations it names through `needs` and `uses`,
+//!   at any depth, itself apart; a requester bound for counter facts at two devices besides the deadline's is a
+//!   conflict per device; a provider that is no block or platform is its own device.
+//! - Rule 15, rule 7: an instance is served when a requester the system serves is bound to it; its own bindings, of an
+//!   instance served by none, are rule 7's conflict, and a binding to an exclusive instance by a requester it does not
+//!   name, rule 3's — it offers one channel, its one requester's.
+//! - Rule 15, rule 9: an instance is a caller at its kind's level whatever the profile gives, so its device is judged
+//!   at that level even where no level is given the system's callers; a caller bound to an instance reads that level
+//!   as the instance's `reachable-at-privilege`.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
@@ -65,8 +76,9 @@ use eadl_front::{Form, Program, SourceMap, Span};
 use eadl_model::profile::Profile;
 use eadl_model::quantity::{Dimension, Quantity};
 
-use crate::assignment::{Assignment, Requester};
+use crate::assignment::{read_requester, Assignment, Instance, Provider as Bound, Requester};
 use crate::check::{self, Verdict, PLAN_DESCRIPTION, PLAN_JOINT};
+use crate::instances;
 use crate::model::judge::{judge, outcome, Outcome, Verdict as Judged};
 use crate::model::provider::{self, Provider};
 use crate::model::requirement::{read_side, NotJudged, Requirement};
@@ -78,6 +90,12 @@ const PRIVILEGE: &str = "reachable-at-privilege";
 
 /// The pool of a provider's consumed functions (rule 3).
 const CHANNELS: &str = "channels";
+
+/// The consumed fact whose requester rule 14 holds to one time base.
+const DEADLINE: &str = "absolute-deadline";
+
+/// The function rule 14 reads a time base from.
+const COUNTER: &str = "counter";
 
 /// Check (5) of `assignment`, which checks (1)–(4) accepted, over the elaborated `program`, `sources` its files, under
 /// `profile`; `name` and `text` the record's, for the spans of its clauses.
@@ -133,6 +151,7 @@ pub(crate) fn check(
     judgement.placement();
     judgement.functions();
     judgement.qualifiers();
+    judgement.time_base();
     judgement.verdict()
 }
 
@@ -383,6 +402,8 @@ impl<'p> World<'p> {
                 })?;
                 Some((clauses(form, |_| false), declaration.instance))
             }
+            // An instance writes nothing in the description: what it requires is its kind's.
+            Requester::Instance(_) => None,
         }
     }
 }
@@ -661,8 +682,10 @@ impl<'a> RecordText<'a> {
                     (sources.get(id), form.items())
                 {
                     let at = source.position(form.span().start);
+                    let requester = read_requester(requester)
+                        .map_or_else(|_| requester.to_canonical(), |r| r.canonical());
                     binds
-                        .entry((requester.to_canonical(), fact.clone()))
+                        .entry((requester, fact.clone()))
                         .or_insert((at.line, at.column));
                 }
             }
@@ -758,8 +781,38 @@ impl<'a, 'p> Judgement<'a, 'p> {
         Some(self.at(d.form.span(), &format!("`{name}`, a {}", d.kind.word())))
     }
 
-    /// Where `requester` requires `fact`, else where it is declared.
+    /// Where a bound provider is declared: a block or platform itself, an instance's device.
+    fn declared_bound(&self, provider: &Bound) -> Option<Label> {
+        match provider {
+            Bound::Named(name) => self.declared(name),
+            Bound::Instance(instance) => {
+                let d = self.world.get(&instance.over)?;
+                Some(self.at(
+                    d.form.span(),
+                    &format!(
+                        "`{}`, a {}, the device `{}` programs",
+                        instance.over,
+                        d.kind.word(),
+                        instance.canonical()
+                    ),
+                ))
+            }
+        }
+    }
+
+    /// Where `requester` requires `fact`, else where it is declared; an instance's requirement beneath, at its device.
     fn requires(&self, requester: &Requester, fact: &str) -> Option<Label> {
+        if let Requester::Instance(instance) = requester {
+            let d = self.world.get(&instance.over)?;
+            return Some(self.at(
+                d.form.span(),
+                &format!(
+                    "`{}` requires `{fact}` beneath of `{}`",
+                    instance.canonical(),
+                    instance.over
+                ),
+            ));
+        }
         let (form, _) = self.world.side(requester)?;
         let span = site(&form, fact).unwrap_or_else(|| form.span());
         Some(self.at(
@@ -778,12 +831,12 @@ impl<'a, 'p> Judgement<'a, 'p> {
     }
 
     /// The record's first binding to `provider`.
-    fn first_bound_to(&self, provider: &str) -> Label {
+    fn first_bound_to(&self, provider: &Bound) -> Label {
         match self
             .assignment
             .bindings
             .iter()
-            .find(|(_, p)| p.as_str() == provider)
+            .find(|(_, p)| *p == provider)
         {
             Some(((requester, fact), _)) => self.bound(requester, fact),
             None => self.record.clause("bind", "the record's bindings"),
@@ -810,8 +863,13 @@ impl<'a, 'p> Judgement<'a, 'p> {
     }
 
     /// What `requester` requires, read whole by the relation; nothing when the relation refuses it, which is the
-    /// description's verdict.
+    /// description's verdict. An instance requires what its kind does beneath, read as any side is (rule 1).
     fn requirements(&mut self, requester: &Requester) -> Vec<Requirement> {
+        if let Requester::Instance(instance) = requester {
+            return instances::kind(instance)
+                .and_then(|kind| instances::beneath(kind).ok())
+                .unwrap_or_default();
+        }
         if let Some(read) = self.requirements.get(requester) {
             return read.clone().unwrap_or_default();
         }
@@ -844,33 +902,51 @@ impl<'a, 'p> Judgement<'a, 'p> {
         read.unwrap_or_default()
     }
 
-    /// The block or platform `name`, read into one state per fact; `None` when it is none, or the relation refuses
-    /// it, which is the description's verdict.
-    fn provider(&mut self, name: &str) -> Option<Provider> {
-        if let Some(read) = self.providers.get(name) {
+    /// A bound provider read into one state per fact: a block or platform as the relation reads it, an instance as
+    /// its kind offers over its device (rule 15); `None` when it is neither, or the relation refuses the block, which is
+    /// the description's verdict.
+    fn provider(&mut self, provider: &Bound) -> Option<Provider> {
+        let key = provider.canonical();
+        if let Some(read) = self.providers.get(&key) {
             return read.clone();
         }
-        let read = match self.world.get(name).filter(|d| d.kind.provides()) {
-            None => None,
-            Some(declaration) => match provider::read(declaration.form) {
-                Ok(provider) => Some(provider),
-                Err(refused) => {
-                    let primary = self.at(declaration.form.span(), "the provider");
-                    self.refuse_description(
-                        Status::InvalidDescription,
-                        format!(
-                            "`{name}` offers what the relation does not read: `{}`, {}",
-                            refused.fact, refused.why
-                        ),
-                        primary,
-                        Vec::new(),
-                        "repair the description, then resolve again",
-                    );
-                    None
-                }
+        let read = match provider {
+            Bound::Named(name) => match self.world.get(name).filter(|d| d.kind.provides()) {
+                None => None,
+                Some(declaration) => match provider::read(declaration.form) {
+                    Ok(provider) => Some(provider),
+                    Err(refused) => {
+                        let primary = self.at(declaration.form.span(), "the provider");
+                        self.refuse_description(
+                            Status::InvalidDescription,
+                            format!(
+                                "`{name}` offers what the relation does not read: `{}`, {}",
+                                refused.fact, refused.why
+                            ),
+                            primary,
+                            Vec::new(),
+                            "repair the description, then resolve again",
+                        );
+                        None
+                    }
+                },
             },
+            Bound::Instance(instance) => {
+                let over = self.provider(&Bound::Named(instance.over.clone()));
+                match (over, instances::kind(instance)) {
+                    (Some(over), Some(kind)) => {
+                        let requester = instance
+                            .serves
+                            .as_deref()
+                            .map(|r| self.requirements(r))
+                            .unwrap_or_default();
+                        instances::offered(kind, &key, &over, &requester).ok()
+                    }
+                    _ => None,
+                }
+            }
         };
-        self.providers.insert(name.to_owned(), read.clone());
+        self.providers.insert(key, read.clone());
         read
     }
 
@@ -906,8 +982,8 @@ impl<'a, 'p> Judgement<'a, 'p> {
         regions
     }
 
-    /// Whether `requester` is a caller of the system (rule 9): its own level, one of its tasks, or a service or policy
-    /// its closure reaches.
+    /// Whether `requester` is a caller of the system at its level (rule 9): its own level, one of its tasks, or a service
+    /// or policy its closure reaches. An instance is a caller at its kind's level, judged on its own.
     fn calls(&self, requester: &Requester) -> bool {
         match requester {
             Requester::Task { system, .. } => *system == self.assignment.system,
@@ -919,6 +995,7 @@ impl<'a, 'p> Judgement<'a, 'p> {
                             .get(name)
                             .is_some_and(|d| matches!(d.kind, Kind::Service | Kind::Policy)))
             }
+            Requester::Instance(_) => false,
         }
     }
 
@@ -928,11 +1005,37 @@ impl<'a, 'p> Judgement<'a, 'p> {
         self.served.clone()
     }
 
+    /// The instances the system serves (rule 7, as rule 15 amends it): each one a requester it serves is bound to.
+    fn instances(&self) -> BTreeSet<Instance> {
+        self.assignment
+            .bindings
+            .iter()
+            .filter_map(|((requester, _), provider)| match provider {
+                Bound::Instance(instance) if self.served.contains(requester) => {
+                    Some(instance.clone())
+                }
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Every declaration `requester` reaches through `needs` and `uses`, at any depth.
+    fn reaches(&self, requester: &Requester) -> BTreeSet<String> {
+        self.world
+            .side(requester)
+            .map_or_else(BTreeSet::new, |(form, instance)| {
+                let named = self.world.names(instance, &form, &["needs", "uses"]);
+                self.world.closure(named, &["needs", "uses"], |_| true)
+            })
+    }
+
     /// Rules 1 and 7: each binding is a requester's the system serves, of a vocabulary fact, to a block or platform of
-    /// the system's hardware.
+    /// the system's hardware, or to an instance programming one; an instance's own binding is of what its kind requires
+    /// beneath, to the device it programs.
     fn requesters(&mut self) {
         let assignment = self.assignment;
         let system = self.assignment.system.clone();
+        let instances = self.instances();
         for ((requester, fact), provider) in &assignment.bindings {
             let here = self.bound(requester, fact);
             let who = requester.canonical();
@@ -953,6 +1056,7 @@ impl<'a, 'p> Judgement<'a, 'p> {
                     "`{name}` is no requester `{system}` serves: neither its own level, one of its tasks, nor a \
                      declaration its closure reaches through `uses` and `needs` (rule 7)"
                 )),
+                Requester::Instance(instance) => self.instance_requester(instance, fact, provider, &instances),
                 _ => None,
             };
             if let Some(message) = refusal {
@@ -974,19 +1078,37 @@ impl<'a, 'p> Judgement<'a, 'p> {
                     "resolve again: a binding is of a requirement on a vocabulary fact",
                 );
             }
-            if !self.world.provides(provider) {
+            let (device, via) = match provider {
+                Bound::Named(name) => (name, String::new()),
+                Bound::Instance(instance) => {
+                    if let Some(message) = through(instance, requester) {
+                        self.conflict(
+                            format!("`{who}` is bound for `{fact}` to `{}`, {message}", instance.canonical()),
+                            here.clone(),
+                            self.declared_bound(provider).into_iter().collect(),
+                            "resolve again: an exclusive instance is its one requester's own, and a shared one \
+                             serves every requester bound to it",
+                        );
+                    }
+                    (
+                        &instance.over,
+                        format!(", the device `{}` programs", instance.canonical()),
+                    )
+                }
+            };
+            if !self.world.provides(device) {
                 self.conflict(
                     format!(
-                        "`{who}` is bound for `{fact}` to `{provider}`, which is no block or platform of the \
+                        "`{who}` is bound for `{fact}` to `{device}`{via}, which is no block or platform of the \
                          description (rule 7)"
                     ),
                     here,
                     Vec::new(),
                     "resolve again: a provider is a block or platform of the system's hardware",
                 );
-            } else if !self.hardware.contains(provider) {
+            } else if !self.hardware.contains(device) {
                 let secondary = [
-                    self.declared(provider),
+                    self.declared(device),
                     self.requires(requester, fact),
                     Some(self.at(self.system.form.span(), &format!("the system `{system}`"))),
                 ]
@@ -995,8 +1117,8 @@ impl<'a, 'p> Judgement<'a, 'p> {
                 .collect();
                 self.conflict(
                     format!(
-                        "`{who}` is bound for `{fact}` to `{provider}`, outside the hardware of `{system}`: a provider on \
-                         a platform the system does not use never satisfies (rule 7)"
+                        "`{who}` is bound for `{fact}` to `{device}`{via}, outside the hardware of `{system}`: a \
+                         provider on a platform the system does not use never satisfies (rule 7)"
                     ),
                     here,
                     secondary,
@@ -1007,24 +1129,66 @@ impl<'a, 'p> Judgement<'a, 'p> {
         }
     }
 
-    /// Rules 2 to 4: the requesters taking channels at one provider number at most its `channels`.
+    /// Rules 1 and 7 for an instance's own binding of `fact` to `provider`: an instance the system serves, of a fact
+    /// its kind requires beneath, to the device it programs; else why not.
+    fn instance_requester(
+        &self,
+        instance: &Instance,
+        fact: &str,
+        provider: &Bound,
+        served: &BTreeSet<Instance>,
+    ) -> Option<String> {
+        let who = instance.canonical();
+        let system = &self.assignment.system;
+        let Some(kind) = instances::kind(instance) else {
+            return Some(format!(
+                "`{who}` names the adapter kind `{}`, which this checker's table does not hold (rule 1)",
+                instance.kind
+            ));
+        };
+        if !served.contains(instance) {
+            return Some(format!(
+                "`{who}` is no requester `{system}` serves: no requester it serves is bound to it, and an instance \
+                 takes the system of the requesters bound to it (rule 7)"
+            ));
+        }
+        if !kind.beneath_names().contains(&fact) {
+            return Some(format!(
+                "`{who}` is bound for `{fact}`, which its kind does not require beneath: an instance is a requester for \
+                 what its kind requires beneath (rule 1)"
+            ));
+        }
+        if *provider != Bound::Named(instance.over.clone()) {
+            return Some(format!(
+                "`{who}` is bound for `{fact}` to `{provider}`, and an instance binds what its kind requires beneath to \
+                 the device it programs, `{}` (rule 1)",
+                instance.over
+            ));
+        }
+        None
+    }
+
+    /// Rules 2 to 4: the requesters taking channels at one provider number at most its `channels` — an instance among
+    /// them, through its binding beneath, and an exclusive instance offering its one.
     fn channels(&mut self) {
         let assignment = self.assignment;
-        let mut taking: BTreeMap<String, BTreeMap<Requester, Vec<String>>> = BTreeMap::new();
+        let mut taking: BTreeMap<String, (Bound, BTreeMap<Requester, Vec<String>>)> =
+            BTreeMap::new();
         for ((requester, fact), provider) in &assignment.bindings {
             if !vocab::entry(fact).is_some_and(|e| e.consumed) {
                 continue;
             }
             if takes_channel(&self.requirements(requester), fact) {
                 taking
-                    .entry(provider.clone())
-                    .or_default()
+                    .entry(provider.canonical())
+                    .or_insert_with(|| (provider.clone(), BTreeMap::new()))
+                    .1
                     .entry(requester.clone())
                     .or_default()
                     .push(fact.clone());
             }
         }
-        for (provider, requesters) in taking {
+        for (name, (provider, requesters)) in taking {
             // One requester needs no count.
             if requesters.len() < 2 {
                 continue;
@@ -1061,11 +1225,11 @@ impl<'a, 'p> Judgement<'a, 'p> {
                 .iter()
                 .filter_map(|(r, facts)| self.requires(r, &facts[0]))
                 .collect();
-            secondary.extend(self.declared(&provider));
+            secondary.extend(self.declared_bound(&provider));
             if conflict {
                 self.conflict(
                     format!(
-                        "`{provider}` gives {count} requesters a channel — {} — and {why}: more requesters than \
+                        "`{name}` gives {count} requesters a channel — {} — and {why}: more requesters than \
                          channels (rule 3)",
                         named.join(", ")
                     ),
@@ -1077,7 +1241,7 @@ impl<'a, 'p> Judgement<'a, 'p> {
             } else {
                 self.conflict(
                     format!(
-                        "`{provider}` gives {count} requesters a channel — {} — and {why}, so whether they fit is \
+                        "`{name}` gives {count} requesters a channel — {} — and {why}, so whether they fit is \
                          unknown: `missing-fact`, which blocks the assignment (rule 3)",
                         named.join(", ")
                     ),
@@ -1092,14 +1256,17 @@ impl<'a, 'p> Judgement<'a, 'p> {
 
     /// Rule 5: two distinct bound providers, neither composing the other, own no byte in common — one composing another
     /// that it names through `uses`, at any depth through blocks and platforms, whose `uses` alone is composition; a
-    /// service's `uses` is a binding and composes nothing.
+    /// service's `uses` is a binding and composes nothing. An instance owns no region and composes nothing: its device,
+    /// bound by its binding beneath, owns its own.
     fn ownership(&mut self) {
         let bound: BTreeSet<String> = self
             .assignment
             .bindings
             .values()
-            .filter(|p| self.world.provides(p))
-            .cloned()
+            .filter_map(|p| match p {
+                Bound::Named(name) if self.world.provides(name) => Some(name.clone()),
+                _ => None,
+            })
             .collect();
         let mut owned: Vec<(String, Vec<Region>, BTreeSet<String>)> = Vec::new();
         for provider in &bound {
@@ -1125,11 +1292,11 @@ impl<'a, 'p> Judgement<'a, 'p> {
                         if found == Overlap::None {
                             continue;
                         }
-                        let primary = self.first_bound_to(p);
+                        let primary = self.first_bound_to(&Bound::Named(p.clone()));
                         let secondary = vec![
                             self.at(a.span, &format!("`{p}` owns {}", a.range())),
                             self.at(b.span, &format!("`{q}` owns {}", b.range())),
-                            self.first_bound_to(q),
+                            self.first_bound_to(&Bound::Named(q.clone())),
                         ];
                         if found == Overlap::Bytes {
                             self.conflict(
@@ -1167,66 +1334,82 @@ impl<'a, 'p> Judgement<'a, 'p> {
     }
 
     /// Rule 9: a caller states no level the profile does not run it at — the description's, judged first — and each
-    /// provider bound for a caller is reachable at the profile's level.
+    /// provider bound for a caller is reachable at the level it calls at: the profile's for the system's callers, its
+    /// kind's for an instance, which states that level for the callers bound to it.
     fn privilege(&mut self, profile: &str, level: &str) {
         let assignment = self.assignment;
-        // With no level given, these rules say nothing.
-        if level.is_empty() {
-            return;
-        }
-        let callers: Vec<Requester> = self
-            .served()
-            .into_iter()
-            .filter(|r| self.calls(r))
-            .collect();
-        for caller in callers {
-            for requirement in self.requirements(&caller) {
-                let Requirement::Constraint {
-                    fact,
-                    value: Value::Set(stated),
-                    ..
-                } = &requirement
-                else {
-                    continue;
-                };
-                if fact != PRIVILEGE || stated.contains(level) {
-                    continue;
+        // With no level given, these rules say nothing of the system's callers.
+        if !level.is_empty() {
+            let callers: Vec<Requester> = self
+                .served()
+                .into_iter()
+                .filter(|r| self.calls(r))
+                .collect();
+            for caller in callers {
+                for requirement in self.requirements(&caller) {
+                    let Requirement::Constraint {
+                        fact,
+                        value: Value::Set(stated),
+                        ..
+                    } = &requirement
+                    else {
+                        continue;
+                    };
+                    if fact != PRIVILEGE || stated.contains(level) {
+                        continue;
+                    }
+                    let primary = self
+                        .requires(&caller, PRIVILEGE)
+                        .unwrap_or_else(|| self.at(self.system.form.span(), "the system"));
+                    let stated: Vec<&str> = stated.iter().map(String::as_str).collect();
+                    self.refuse_description(
+                        Status::UnsupportedProfile,
+                        format!(
+                            "`{}` states it calls from `{}`, which does not hold `{level}`, the level `{profile}` runs \
+                             every caller at: no context at those levels exists under this profile (rule 9)",
+                            caller.canonical(),
+                            stated.join(" ")
+                        ),
+                        primary,
+                        Vec::new(),
+                        "state the level the profile runs its callers at among the caller's levels, or check under a \
+                         profile that runs callers at a level it states",
+                    );
                 }
-                let primary = self
-                    .requires(&caller, PRIVILEGE)
-                    .unwrap_or_else(|| self.at(self.system.form.span(), "the system"));
-                let stated: Vec<&str> = stated.iter().map(String::as_str).collect();
-                self.refuse_description(
-                    Status::UnsupportedProfile,
-                    format!(
-                        "`{}` states it calls from `{}`, which does not hold `{level}`, the level `{profile}` runs \
-                         every caller at: no context at those levels exists under this profile (rule 9)",
-                        caller.canonical(),
-                        stated.join(" ")
-                    ),
-                    primary,
-                    Vec::new(),
-                    "state the level the profile runs its callers at among the caller's levels, or check under a \
-                     profile that runs callers at a level it states",
-                );
             }
         }
-        let mut bound: BTreeMap<String, Vec<(Requester, String)>> = BTreeMap::new();
+        // Each provider by the level it is called at — `None` the profile's, else an instance's kind's — with its callers.
+        type Callers = (Bound, Vec<(Requester, String)>);
+        let mut bound: BTreeMap<(String, Option<&'static str>), Callers> = BTreeMap::new();
         for ((requester, fact), provider) in &assignment.bindings {
-            if self.calls(requester) && self.world.provides(provider) {
+            let kind_level = match requester {
+                Requester::Instance(instance) => match instances::kind(instance) {
+                    Some(kind) => Some(kind.level),
+                    None => continue,
+                },
+                _ if !level.is_empty() && self.calls(requester) => None,
+                _ => continue,
+            };
+            let judged = match provider {
+                Bound::Named(name) => self.world.provides(name),
+                Bound::Instance(_) => true,
+            };
+            if judged {
                 bound
-                    .entry(provider.clone())
-                    .or_default()
+                    .entry((provider.canonical(), kind_level))
+                    .or_insert_with(|| (provider.clone(), Vec::new()))
+                    .1
                     .push((requester.clone(), fact.clone()));
             }
         }
-        for (provider, callers) in bound {
+        for ((name, kind_level), (provider, callers)) in bound {
+            let at = kind_level.unwrap_or(level);
             let Some(read) = self.provider(&provider) else {
                 continue;
             };
             let (conflict, why) = match outcome(&read, PRIVILEGE) {
                 Ok(Outcome::Valued(values)) => match values.first() {
-                    Some(Value::Set(offered)) if offered.contains(level) => continue,
+                    Some(Value::Set(offered)) if offered.contains(at) => continue,
                     Some(Value::Set(offered)) => (
                         true,
                         format!(
@@ -1257,23 +1440,32 @@ impl<'a, 'p> Judgement<'a, 'p> {
                 .collect();
             let (first, fact) = &callers[0];
             let primary = self.bound(first, fact);
-            let secondary = self.declared(&provider).into_iter().collect();
+            let secondary = self.declared_bound(&provider).into_iter().collect();
+            let (runs, whose) = match kind_level {
+                None => (
+                    format!("`{profile}` runs every caller at `{at}`"),
+                    format!("the level `{profile}` runs every caller at"),
+                ),
+                Some(_) => (
+                    format!("an adapter's instance runs at its kind's level, `{at}`"),
+                    "the level its instance's kind runs at".to_owned(),
+                ),
+            };
             if conflict {
                 self.conflict(
                     format!(
-                        "`{provider}`, bound for {}, {why}, and `{profile}` runs every caller at `{level}` (rule 9)",
+                        "`{name}`, bound for {}, {why}, and {runs} (rule 9)",
                         named.join(", ")
                     ),
                     primary,
                     secondary,
-                    "resolve again: bind each caller to a provider reachable at the profile's level",
+                    "resolve again: bind each caller to a provider reachable at the level it calls at",
                 );
             } else {
                 self.conflict(
                     format!(
-                        "`{provider}`, bound for {}, {why}, so whether it is reachable at `{level}`, the level \
-                         `{profile}` runs every caller at, is unknown: `missing-fact`, which blocks the assignment \
-                         (rule 9)",
+                        "`{name}`, bound for {}, {why}, so whether it is reachable at `{at}`, {whose}, is unknown: \
+                         `missing-fact`, which blocks the assignment (rule 9)",
                         named.join(", ")
                     ),
                     primary,
@@ -1377,19 +1569,21 @@ impl<'a, 'p> Judgement<'a, 'p> {
         }
     }
 
-    /// Rule 13: one requester's bindings for the facts of one function are to one provider.
+    /// Rule 13: one requester's bindings for the facts of one function are to one provider — an instance one provider
+    /// of its function.
     fn functions(&mut self) {
         let assignment = self.assignment;
-        let mut by: BTreeMap<Requester, BTreeMap<&'static str, BTreeMap<String, Vec<String>>>> =
-            BTreeMap::new();
+        type ByProvider = BTreeMap<String, (Bound, Vec<String>)>;
+        let mut by: BTreeMap<Requester, BTreeMap<&'static str, ByProvider>> = BTreeMap::new();
         for ((requester, fact), provider) in &assignment.bindings {
             if let Some(Function::Of(function)) = function_of(fact) {
                 by.entry(requester.clone())
                     .or_default()
                     .entry(function)
                     .or_default()
-                    .entry(provider.clone())
-                    .or_default()
+                    .entry(provider.canonical())
+                    .or_insert_with(|| (provider.clone(), Vec::new()))
+                    .1
                     .push(fact.clone());
             }
         }
@@ -1408,12 +1602,12 @@ impl<'a, 'p> Judgement<'a, 'p> {
                     continue;
                 }
                 let mut judged: Vec<(&String, Vec<(&str, Judged)>)> = Vec::new();
-                for provider in providers.keys() {
+                for (name, (provider, _)) in &providers {
                     let Some(read) = self.provider(provider) else {
                         continue;
                     };
                     judged.push((
-                        provider,
+                        name,
                         of.iter().map(|r| (fact_of(r), judge(&read, r))).collect(),
                     ));
                 }
@@ -1422,17 +1616,19 @@ impl<'a, 'p> Judgement<'a, 'p> {
                 }
                 let split: Vec<String> = providers
                     .iter()
-                    .map(|(p, facts)| format!("`{p}` for `{}`", facts.join("`, `")))
+                    .map(|(p, (_, facts))| format!("`{p}` for `{}`", facts.join("`, `")))
                     .collect();
                 let who = requester.canonical();
                 let fact = providers
                     .values()
-                    .flatten()
+                    .flat_map(|(_, facts)| facts)
                     .next()
                     .expect("a function bound");
                 let primary = self.bound(&requester, fact);
-                let secondary: Vec<Label> =
-                    providers.keys().filter_map(|p| self.declared(p)).collect();
+                let secondary: Vec<Label> = providers
+                    .values()
+                    .filter_map(|(p, _)| self.declared_bound(p))
+                    .collect();
                 let meets = judged
                     .iter()
                     .find(|(_, verdicts)| verdicts.iter().all(|(_, v)| *v == Judged::Satisfied));
@@ -1500,7 +1696,8 @@ impl<'a, 'p> Judgement<'a, 'p> {
     }
 
     /// Rule 13's qualifiers: each requirement on a fact of `(function each)` — `reachable-at-privilege` apart, rule 9's —
-    /// is judged at every provider bound for the requester's functions and for those of each requester it reaches.
+    /// is judged at every provider bound for the requester's functions and for those of each requester it reaches, an
+    /// instance among them.
     fn qualifiers(&mut self) {
         let assignment = self.assignment;
         for requester in self.served() {
@@ -1516,25 +1713,19 @@ impl<'a, 'p> Judgement<'a, 'p> {
             if qualifiers.is_empty() {
                 continue;
             }
-            let reaches =
-                self.world
-                    .side(&requester)
-                    .map_or_else(BTreeSet::new, |(form, instance)| {
-                        let named = self.world.names(instance, &form, &["needs", "uses"]);
-                        self.world.closure(named, &["needs", "uses"], |_| true)
-                    });
-            let mut relied: BTreeMap<String, (Requester, String)> = BTreeMap::new();
+            let reaches = self.reaches(&requester);
+            let mut relied: BTreeMap<String, (Bound, Requester, String)> = BTreeMap::new();
             for ((r, fact), provider) in &assignment.bindings {
                 let mine =
                     *r == requester || matches!(r, Requester::Named(n) if reaches.contains(n));
                 if mine && matches!(function_of(fact), Some(Function::Of(_))) {
                     relied
-                        .entry(provider.clone())
-                        .or_insert_with(|| (r.clone(), fact.clone()));
+                        .entry(provider.canonical())
+                        .or_insert_with(|| (provider.clone(), r.clone(), fact.clone()));
                 }
             }
             // A requester relying on no function bound binds the qualifier as any requirement: checks (3) and (4).
-            for (provider, (r, fact)) in relied {
+            for (name, (provider, r, fact)) in relied {
                 let Some(read) = self.provider(&provider) else {
                     continue;
                 };
@@ -1547,12 +1738,12 @@ impl<'a, 'p> Judgement<'a, 'p> {
                     };
                     let q = fact_of(qualifier);
                     let primary = self.bound(&r, &fact);
-                    let secondary = [self.requires(&requester, q), self.declared(&provider)]
+                    let secondary = [self.requires(&requester, q), self.declared_bound(&provider)]
                         .into_iter()
                         .flatten()
                         .collect();
                     let message = format!(
-                        "`{}` relies on `{provider}` — bound for `{}`'s `{fact}` — and its qualifier `{q}`, which every \
+                        "`{}` relies on `{name}` — bound for `{}`'s `{fact}` — and its qualifier `{q}`, which every \
                          function it relies on must hold, is {} there{} (rule 13)",
                         requester.canonical(),
                         r.canonical(),
@@ -1570,6 +1761,71 @@ impl<'a, 'p> Judgement<'a, 'p> {
                         "resolve again with providers that hold the qualifier, or describe it at the provider",
                     );
                 }
+            }
+        }
+    }
+
+    /// Rule 14, one time base: where a requester is bound for `absolute-deadline`, every other requester it reaches
+    /// through `needs` and `uses` that is bound for a fact of the function `counter` that is not consumed is bound at
+    /// the same device — a block or platform its own, an instance the one it programs.
+    fn time_base(&mut self) {
+        let assignment = self.assignment;
+        for ((requester, fact), provider) in &assignment.bindings {
+            if fact != DEADLINE {
+                continue;
+            }
+            let device = instances::device(provider);
+            let reaches = self.reaches(requester);
+            // Each other requester it reaches, by the other device it is bound at: its facts bound there, and to what.
+            let mut elsewhere: BTreeMap<(&Requester, &str), Vec<(&str, &Bound)>> = BTreeMap::new();
+            for ((other, read), bound) in &assignment.bindings {
+                let Requester::Named(name) = other else {
+                    continue;
+                };
+                if other == requester || !reaches.contains(name) {
+                    continue;
+                }
+                let counter = vocab::entry(read)
+                    .is_some_and(|e| e.function == Some(Function::Of(COUNTER)) && !e.consumed);
+                let theirs = instances::device(bound);
+                if counter && theirs != device {
+                    elsewhere
+                        .entry((other, theirs))
+                        .or_default()
+                        .push((read, bound));
+                }
+            }
+            for ((other, theirs), bound) in elsewhere {
+                let read: Vec<&str> = bound.iter().map(|(read, _)| *read).collect();
+                let via = |b: &Bound| match b {
+                    Bound::Named(_) => String::new(),
+                    Bound::Instance(instance) => format!(" through `{}`", instance.canonical()),
+                };
+                let primary = self.bound(requester, fact);
+                let secondary = [
+                    Some(self.bound(other, read[0])),
+                    self.declared(device),
+                    self.declared(theirs),
+                ]
+                .into_iter()
+                .flatten()
+                .collect();
+                self.conflict(
+                    format!(
+                        "`{}` is bound for `{DEADLINE}` at the device `{device}`{}, and `{}`, which it reaches through \
+                         `needs` and `uses`, is bound for `{}` at the device `{theirs}`{}: a deadline programmed in one \
+                         counter's time and read in another's (rule 14)",
+                        requester.canonical(),
+                        via(provider),
+                        other.canonical(),
+                        read.join("`, `"),
+                        via(bound[0].1)
+                    ),
+                    primary,
+                    secondary,
+                    "resolve again: bind the counter the deadline's requester reads at the device its deadline is \
+                     programmed on, or write the second counter for a requester the deadline's does not reach",
+                );
             }
         }
     }
@@ -1598,6 +1854,31 @@ impl<'a, 'p> Judgement<'a, 'p> {
                 findings: self.plan,
             })
         }
+    }
+}
+
+/// Why a binding of `requester` to `instance` is not one its kind admits (record §1.4, §3.1): an exclusive instance is
+/// its one requester's own (rules 2 and 3), a shared one names none, and a kind is the checker's table's (rule 1).
+fn through(instance: &Instance, requester: &Requester) -> Option<String> {
+    let Some(kind) = instances::kind(instance) else {
+        return Some(format!(
+            "whose kind `{}` this checker's table does not hold (rule 1)",
+            instance.kind
+        ));
+    };
+    match (kind.exclusive(), instance.serves.as_deref()) {
+        (true, Some(serves)) if serves == requester => None,
+        (true, Some(serves)) => Some(format!(
+            "an exclusive instance, which serves `{}` alone: it offers one channel, its one requester's (rule 3)",
+            serves.canonical()
+        )),
+        (true, None) => Some(
+            "an exclusive instance naming no requester: it offers one channel, its one requester's (rule 3)".to_owned(),
+        ),
+        (false, Some(_)) => Some(
+            "a shared instance, which serves every requester bound to it and names none (rule 1)".to_owned(),
+        ),
+        (false, None) => None,
     }
 }
 

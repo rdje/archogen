@@ -165,7 +165,7 @@ fn a_resolved_plan_is_checked_and_the_checker_s_verdict_is_the_status() {
     assert_eq!(status, Status::Ok, "{err}");
     let text = std::fs::read_to_string(&plan).expect("the plan is written, its directory made");
     assert!(text.starts_with(
-        "(format \"archogen-assignment/1\")\n(profile rt-static-up-v1)\n(system heartbeat)\n"
+        "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system heartbeat)\n"
     ));
     assert!(
         text.ends_with("(bind console.write observable-output console.uart)\n"),

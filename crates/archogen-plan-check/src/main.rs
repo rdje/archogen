@@ -50,7 +50,7 @@ usage: archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN
        archogen-plan-check --mcp
 
   DESCRIPTION      the eADL description, a module or a plain description
-  PLAN             the assignment record the search wrote for it, archogen-assignment/1
+  PLAN             the assignment record the search wrote for it, archogen-assignment/2
   --result PATH    where the result record, archogen-result/1, is written; without it, on standard output
   --               every argument after it is a path, even one that begins with `-`
   --profile ID     the profile the plan was resolved under (default: rt-static-up-v1)

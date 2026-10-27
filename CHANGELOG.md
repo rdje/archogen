@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — plans through adapters are written and checked
+
+`ARCHOGEN-M3-1019` (leaf `M3.2.5`), `2026-10-27`.
+
+- A plan is now written as `archogen-assignment/2`, which names the engine's adapter catalog and each adapter the
+  search used, with what that adapter binds on the device it programs. The independent configuration checker reads
+  it and judges the adapter as it judges any provider, by rules written apart from the generator. A plan written in
+  the older format is refused; resolving again writes the new one.
+
 ## archogen — the language check knows an adapter may help
 
 `ARCHOGEN-M3-1018` (leaf `M3.2.4`), `2026-10-27`.

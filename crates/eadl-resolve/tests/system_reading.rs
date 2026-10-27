@@ -89,6 +89,12 @@ fn generator_name(requester: &Requester) -> String {
     match requester {
         Requester::Named(name) => name.clone(),
         Requester::Task { system, task } => format!("{system}/{task}"),
+        // An engine adapter's instance, as the joint rules name one (leaf `M3.2.5`); no description writes one.
+        Requester::Instance(instance) => eadl_resolve::adapter::instance_name(
+            &instance.kind,
+            &instance.over,
+            instance.serves.as_deref().map(generator_name).as_deref(),
+        ),
     }
 }
 

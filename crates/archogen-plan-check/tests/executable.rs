@@ -70,7 +70,7 @@ fn plan(description: &Path, requester: &str, provider: &str) -> String {
             Requester::Named(requester.to_owned()),
             "observable-output".to_owned(),
         ),
-        provider.to_owned(),
+        provider.into(),
     );
     Assignment {
         profile: RT_STATIC_UP_V1.id.to_owned(),
@@ -235,7 +235,7 @@ fn a_usage_error_writes_no_record() {
     let dir = scratch();
     let description = dir.join("system.eadl");
     std::fs::write(&description, PLAIN).unwrap();
-    std::fs::write(dir.join("plan.eadl"), "(format \"archogen-assignment/1\")").unwrap();
+    std::fs::write(dir.join("plan.eadl"), "(format \"archogen-assignment/2\")").unwrap();
     let result = dir.join("result.json");
     let (d, p, r) = (
         description.to_str().unwrap(),
@@ -314,6 +314,6 @@ fn help_and_version_answer_and_exit_zero() {
     assert_eq!(version.status.code(), Some(0));
     assert_eq!(
         String::from_utf8_lossy(&version.stdout),
-        "archogen-plan-check: reads archogen-assignment/1, writes archogen-result/1\n"
+        "archogen-plan-check: reads archogen-assignment/2, writes archogen-result/1\n"
     );
 }
