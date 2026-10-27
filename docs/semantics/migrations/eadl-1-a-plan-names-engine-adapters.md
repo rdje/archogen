@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-10-27
 - leaf: M3.2.5 (`docs/tasks/M3.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/reference.md#diagnostics
 - invalidates: no description — every tracked description's verdict unchanged; a plan record written as `archogen-assignment/1` is refused by the configuration checker as another format, `plan-record`, and is resolved again
 

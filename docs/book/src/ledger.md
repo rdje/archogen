@@ -395,3 +395,17 @@ Producer observations, normalization proofs, counterexamples and revalidation re
 | Known limitations | source code of another kernel: what it does, not what an adapter here must, and its update interval is computed by that kernel's own helper, whose margin this engine does not inherit |
 | Revalidation trigger | an obligation of `epoch-extender` resting on more of this file than these lines |
 | Named as | `sched_clock` |
+
+## `nygard-adr`
+
+| Field | Value |
+| --- | --- |
+| Source | Michael Nygard, "Documenting Architecture Decisions", Cognitect blog, November 15, 2011 |
+| Version | the page as published `2011-11-15` |
+| Pinned at | not pinned — read at `https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions`; no build or check reads it |
+| Retrieved | `2026-10-27` |
+| Hash | sha256 `01bdb22a561924b5eb072b501b530d14157d4a674561dac25cfff3197eb04faf` of the page read |
+| Scope | the practice `docs/decisions/decision_ceilings-bound-reads.md` follows for a superseded record: "If a decision is reversed, we will keep the old one around, but mark it as superseded. (It's still relevant to know that it was the decision, but is no longer the decision.)"; and that the records are kept one file each in the repository, "under doc/arch/adr-NNN.md", numbered, numbers never reused |
+| Known limitations | a practitioner's article, not a standard; it says nothing of how large a folder of records may grow, and this project's file names are by subject, not numbered |
+| Revalidation trigger | a lifecycle rule for records resting on more of the article than these sentences |
+| Named as | `Nygard` |

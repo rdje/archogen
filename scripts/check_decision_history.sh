@@ -3,9 +3,10 @@
 # `PROGRAM.41`, hardened by `PROGRAM.41.1`; docs/decisions/decision_decisions-folder-ceiling.md,
 # docs/reviews/decision-history-reviews.md, LIVE_DOCUMENT_SIZE_CONTAINMENT.md's `archive_terminal`).
 #
-# ⭐ WHY. `docs/decisions/` has a ceiling that only the director can raise, and it was raised once (`PROGRAM.38`).
-# Some records hold numbered sections that are settled and cited by number across the task trees: the findings
-# register's resolved and ruled items. Sealing such a section moves it, byte for byte, into
+# ⭐ WHY. A record stays one reading only within its per-file ceilings; the folder's total bounded it too until
+# docs/decisions/decision_ceilings-bound-reads.md (`PROGRAM.38` raised that total once). Some records hold numbered
+# sections that are settled and cited by number across the task trees: the findings register's resolved and ruled
+# items. Sealing such a section moves it, byte for byte, into
 # `docs/decision-history/<record>/<NN>.md`, and leaves its heading and a one-line stub where it stood, so every
 # citation by number still finds it. `docs/decision-history/INDEX.md` records each file's lines, bytes and sha256.
 # It is `TASK-HISTORY`'s pattern (`docs/decisions/decision_task-tree-sealing.md`), for sections instead of leaves.

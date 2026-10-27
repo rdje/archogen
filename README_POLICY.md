@@ -29,8 +29,14 @@ print when the page is over its caps (`overflow`), every path this policy's body
 followed until nothing new is reached. A path is governed by its own row, or by the row of the deepest registered
 directory above it. Ceilings are inclusive. For a file they bound its lines, bytes and longest line. For a directory
 they bound its tracked files — an archive stub, the three-line signpost `REVIEW-HISTORY` leaves at a closed history's
-path and proves on every commit, aside — its largest file's lines and bytes, its longest line and its total bytes. A doctrine's
-name defers that dimension to that doctrine. `debt: <leaf>` records a terminal nothing bounds yet, owned by an open
+path and proves on every commit, aside — its largest file's lines and bytes, its longest line and its total bytes. A
+directory's Files may read `fan-out N` instead: no directory the row governs lists more than N entries, tracked files
+(archive stubs aside) and sub-folders, so a subject's sub-folder takes the growth. Its Total bytes may read `guard N`,
+a runaway guard: a total over it is refused, a total at three quarters of it too unless the cell reads `guard N,
+ruling asked by <leaf>`, an open leaf, or `guard N, ruled by <record>`, a tracked decision record, and so is a commit growing the folder in
+the index over `HEAD` by more than a sixty-fourth of N unless `README_ROUTES_GROWTH_LEAF` names the leaf that owns
+it. Every number is whole, without a leading zero; `--report` shows each folder's growth
+(`docs/decisions/decision_ceilings-bound-reads.md`). A doctrine's name defers that dimension to that doctrine. `debt: <leaf>` records a terminal nothing bounds yet, owned by an open
 leaf. "Overflows to" is where that destination's own guard sends what does not fit.
 
 The book is the only user-facing surface. The director's `2026-10-18` ruling,
@@ -60,9 +66,9 @@ and archive-stub rules still govern other material. A bounded parent cannot impo
 | `docs/TASK_TREE.md` | navigation + overflow | `PROGRAM.17.2` | bounded_snapshot | — | LIVE-SNAPSHOTS | LIVE-SNAPSHOTS | LIVE-SNAPSHOTS | — | `CHANGELOG.md`, `docs/tasks/` |
 | `docs/book/` | navigation + overflow | `PROGRAM` | maintained_reference | unbounded | unbounded | unbounded | unbounded | unbounded | — |
 | `docs/history/` | overflow | `PROGRAM.31` | archive_terminal | HISTORY-LEDGERS | 1200 | 131072 | 256 | HISTORY-LEDGERS | — |
-| `docs/reviews/` | overflow | `PROGRAM.36` | partitioned_canonical | 16 | 1200 | 131072 | 1024 | 393216 | `docs/review-history/` |
-| `docs/decisions/` | navigation + overflow | `PROGRAM.39` | partitioned_canonical | 40 | 1200 | 98304 | 1536 | 393216 | `docs/reviews/`, `docs/specs/`, `docs/decision-history/` |
-| `docs/specs/` | overflow | `PROGRAM.43` | partitioned_canonical | 16 | 1200 | 98304 | 1536 | 655360 | — |
+| `docs/reviews/` | overflow | `PROGRAM.36` | partitioned_canonical | fan-out 64 | 1200 | 131072 | 1024 | guard 16777216 | `docs/review-history/` |
+| `docs/decisions/` | navigation + overflow | `PROGRAM.39` | partitioned_canonical | fan-out 64 | 1200 | 98304 | 1536 | guard 16777216 | `docs/reviews/`, `docs/specs/`, `docs/decision-history/` |
+| `docs/specs/` | overflow | `PROGRAM.43` | partitioned_canonical | fan-out 64 | 1200 | 98304 | 1536 | guard 16777216 | — |
 | `docs/decision-history/` | overflow | `PROGRAM.41` | archive_terminal | DECISION-HISTORY | 1200 | 98304 | 1536 | DECISION-HISTORY | — |
 | `docs/review-history/` | overflow | `PROGRAM.55` | archive_terminal | REVIEW-HISTORY | 1200 | 131072 | 1024 | REVIEW-HISTORY | — |
 | `docs/tasks/` | overflow | `PROGRAM.32` | partitioned_canonical | 20 | 3000 | 327680 | 3072 | 819200 | `docs/task-history/` |
@@ -70,15 +76,21 @@ and archive-stub rules still govern other material. A bounded parent cannot impo
 
 ### Ceilings a decision fixes
 
-A ceiling below is the most its decision allows. `README-ROUTES` refuses a row whose cell is above it, so raising one
-needs a new ruling, recorded as a new decision, and this table changed with it.
+A ceiling below is the most its decision allows, and of its kind: a number, a `fan-out N` or a `guard N`. A
+maximum for a directory also binds every row registered beneath it in that column, through the nearest ancestor
+this table fixes there, and in that column's kind; a file row is bound in the per-file columns, the only ones it
+has.
+`README-ROUTES` refuses a row whose cell is above it or of another kind, so raising one needs a new ruling, recorded
+as a new decision, and this table changed with it.
 
 | Destination | Column | Maximum | Decision |
 | --- | --- | --- | --- |
-| `docs/decisions/` | Files | 40 | `docs/decisions/decision_decisions-folder-ceiling.md` |
-| `docs/decisions/` | Total bytes | 393216 | `docs/decisions/decision_decisions-folder-ceiling.md` |
-| `docs/reviews/` | Total bytes | 393216 | `docs/decisions/decision_reviews-folder-ceiling.md` |
-| `docs/specs/` | Total bytes | 655360 | `docs/decisions/decision_specs-folder-ceiling.md` |
+| `docs/decisions/` | Files | fan-out 64 | `docs/decisions/decision_ceilings-bound-reads.md` |
+| `docs/decisions/` | Total bytes | guard 16777216 | `docs/decisions/decision_ceilings-bound-reads.md` |
+| `docs/reviews/` | Files | fan-out 64 | `docs/decisions/decision_ceilings-bound-reads.md` |
+| `docs/reviews/` | Total bytes | guard 16777216 | `docs/decisions/decision_ceilings-bound-reads.md` |
+| `docs/specs/` | Files | fan-out 64 | `docs/decisions/decision_ceilings-bound-reads.md` |
+| `docs/specs/` | Total bytes | guard 16777216 | `docs/decisions/decision_ceilings-bound-reads.md` |
 | `docs/task-history/` | Longest line | 3072 | `docs/decisions/decision_task-history-line-ceiling.md` |
 <!-- README-POLICY-LOCAL-ADOPTION:END -->
 

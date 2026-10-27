@@ -314,6 +314,7 @@ a change that leaves it stale, so it is never edited by hand.
 - F29: the fixture built so an omission cannot hide — [What the scheduling checker
   establishes](analysis.md#f29-the-fixture-built-so-an-omission-cannot-hide)
 - Failed mutation baseline evidence — [Verifying the toolchain](verification.md#failed-mutation-baseline-evidence)
+- **fan-out** — [definition](glossary.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - **fault** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Checking a
   plan](plan-check.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [Checks that must not share
   a mistake: the trust gate](trust.md), [The runtime: decisions, not actions](runtime.md), [Verifying the
@@ -491,6 +492,7 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md)
 - Numbers are exact — there is no float anywhere — [Reading a
   description](reading.md#numbers-are-exact--there-is-no-float-anywhere)
+- nygard-adr — [What this project relies on from outside](ledger.md#nygard-adr)
 
 ## O
 
@@ -667,6 +669,8 @@ a change that leaves it stale, so it is never edited by hand.
   outside](ledger.md)
 - rp2350 — [What this project relies on from outside](ledger.md#rp2350)
 - run_cargo locality preflight — [Annex C: Trust proof records](annex-trust-proofs.md#run_cargo-locality-preflight)
+- **runaway guard** — [definition](glossary.md), [Annex B: The checks that keep the repository
+  honest](annex-repository.md)
 - Running the checker — [Checking a plan](plan-check.md#running-the-checker)
 - **runtime** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [What a report may claim](evidence.md), [Matching an offer to a

@@ -910,6 +910,120 @@ mdBook that is the director's window into the project.
     - [x] LOCKSTEP — the gates, the list, the records, `DOCTRINE_ENFORCEMENT.md`, the book.
   Commit: `ARCHOGEN-PROGRAM-0989 (leaf PROGRAM.116)`
 
+- ID: `PROGRAM.117`
+  Status: `in_progress` — filed `2026-10-27` on the director's ruling of that day
+  Goal: the record folders' ceilings bound what is read, not the corpus, so their growth never stops work.
+  Ruling (`2026-10-27`, the director, reopening the one-time raise of `decision_decisions-folder-ceiling.md`): "I do
+    not understand why there are even ceilings on those directories ... What's the best solution, to you, to handle
+    nicely, elegantly those ceiling. I agree their size shall not blow up, shall somehow be contained but this shall
+    not hinder progress. Propose a sota, production-grade solution."
+  Reproduce / issue: `docs/specs/`' total was raised by `PROGRAM.56`, `.79`, `.102` and `.108`, four times in
+    eighteen days; at `220eb078`, `git ls-tree -r -l HEAD -- docs/decisions docs/specs`: 392564 of 393216 and 649155
+    of 655360. No reader's context loads a whole folder, so a total bounds no read; the per-file caps do.
+  Children: `.1` the ceilings, the check and the record; `.2` the move tool the lifecycle needs; `.3` the index that
+    still binds as one file.
+
+- ID: `PROGRAM.117.1`
+  Status: `done` — `2026-10-27`
+  Goal: `README-ROUTES` reads a directory row's Files cell `fan-out N` — no directory it governs lists more than N
+    entries, its tracked files (archive stubs aside) and sub-folders — and its Total bytes cell `guard N`, a runaway
+    guard, with a `--report` of each folder's totals and growth; `docs/decisions/`, `docs/specs/` and `docs/reviews/`
+    take both, under a new decision record that supersedes the three ceiling records; the policy, the inventory and
+    the book follow.
+  Built: the check's two cells (`fanned`, `guarded`) and its `--report` (`scripts/check_readme_routes.sh`); a guard
+    refuses a total over it, three quarters of it unless the cell names an open leaf asking for a ruling or a tracked
+    decision record that kept it, and a commit growing the folder in the index over `HEAD` past a sixty-fourth of it
+    unless `README_ROUTES_GROWTH_LEAF` names a leaf open at `HEAD` or new in the index; every ceiling a whole number,
+    compared fail-closed; `### Ceilings a decision fixes` compares a cell with its maximum by kind, a debt or a
+    doctrine refused, a directory's maximum binding the rows beneath it through the nearest fixed ancestor; `docs/decisions/decision_ceilings-bound-reads.md`, quoting the
+    ruling and the `nygard-adr` ledger entry; the three ceiling records marked superseded; the three rows at
+    `fan-out 64` and `guard 16777216`.
+  Review (`2026-10-27`, rounds by independent contexts): round 1 on the first draft, five defects and ten remarks;
+    round 2 on the answers, two defects and thirteen remarks; round 3, three defects and four remarks; round 4, two
+    defects and six remarks; round 5, no defect and three remarks, closing the review; all answered here.
+    - D1, a number past 64 bits or with a leading zero failing a comparison open: `whole()`, every comparison
+      `[ a -le b ] || note`; arms for each.
+    - D2, a decision-fixed cell turned into a debt or a doctrine escaping its maximum: refused; arms.
+    - D3, the notice at three quarters printed nowhere, `scripts/check_doctrines.sh` being held and silent on a pass:
+      a refusal unless an open leaf asks for a ruling.
+    - D4, the record's index split refused by `DECISION-INDEX`: the record states the single index binds; `.3` filed.
+    - D5, "only a mistake reaches the guard", false by the record's own numbers, and a 6.3 MB dump passing: reworded,
+      and the per-commit step added, sized against the largest honest growth since `6d61f65`, 38818 bytes
+      (`efedf6d6`).
+    - Remarks taken: the numbers (26 times, fifteen days, "no reader's context"); `docs/reviews/`' stubs and flat
+      layout stated; `docs/specs/` has no index of its own; `knowledge-map/subsystems.md` for a new sub-folder;
+      superseded records stay in place, `.2`'s goal narrowed; the inventory's widest-listing label; the two stale
+      script comments; the self-test gaps.
+    - Round 2, defect 1, the step measuring the disk while the commit holds the index — growth staged and deleted
+      from the disk passed: `index_bytes()`, the index's blob sizes against `HEAD`'s; an arm.
+    - Round 2, defect 2, a partition's row lifting a fan-out a decision fixes for its parent: a maximum fixed for a
+      directory bounds every registered row beneath it unless the table fixes that row's own; three arms.
+    - Round 2's remarks taken: `README_ROUTES_GROWTH_LEAF` open at `HEAD` or new; an empty ruling clause refused;
+      `guard N, ruled by <record>` for a ruling that keeps a guard; the report's date the three-quarter refusal; the
+      step's honest limits in the record and the book; the documented batch of 186617 bytes (`PROGRAM.43`); 131072
+      for a review history; the index figures from `220eb078`; one reason for a malformed number under a maximum;
+      the inventory and the failing-first figures re-measured on the final tree.
+    - Round 3, defect 1, a `ruled by` clause satisfied by any pathspec — `.`, `*`, `README.md`: a decision record
+      under `docs/decisions/` or `docs/specs/`, by its literal path; arms for each.
+    - Round 3, defect 2, a leaf "new in the commit" read from the disk: `leaf_status_in`, at `HEAD` or in the index;
+      an arm with a leaf on the disk alone.
+    - Round 3, defect 3, a directory's fixed maximum reaching file rows and doctrine cells beneath it that could never
+      comply: only directory rows, through the nearest fixed ancestor; arms for a file row and a nested partition
+      (narrowed by round 4: a file row is bound in the per-file columns, and a doctrine cell beneath is refused).
+    - Round 3's remarks taken: the book's and the report arm's dates the three-quarter refusal, pinned; `index_bytes`
+      refusing an object it cannot size; the header rewrapped, `control`'s unused locals gone; this text. Its
+      remark on path quoting in the on-disk measures predates this change, filed as `PROGRAM.118`.
+    - Round 4, defect 1, file rows freed in every column, so a file row lifted a decided per-file maximum (a row for
+      a file of `docs/task-history/` above `decision_task-history-line-ceiling.md`'s 3072): a file row is skipped in
+      Files and Total bytes alone; three arms.
+    - Round 4, defect 2, the header and `within_fixed`'s message stating round 2's rule: both rewritten.
+    - Round 4's remarks taken: a row beneath a fixed column takes its kind, stated and pinned by an arm; an index or
+      the template is no ruling; arms reaching the literal-path test (`docs/decisions/../../README.md`, a record on
+      the disk alone) and the `unreadable` refusal; the table's rows matched with or without backticks.
+    - Round 5's remarks taken: `within_fixed`'s messages read in order; an arm for a file row's doctrine cell under a
+      fixed per-file column; a ruling clause names a record whose type is `decision`, the template and a reference
+      note refused, and the header states what the check cannot tell.
+    - Fence: the round-1 reviewer ran `git log -G'655360|589824|524288|458752|393216' -- README_POLICY.md`, which searched that
+      file's diffs in commits older than `6d61f65` and printed commit subjects alone, and disclosed it. No path under
+      `docs/evaluation/` was searched and no case text was printed, so no case was read and nothing joins the
+      evaluation's *Exposures*; a brief's fence now names `log -G` and `log -S` with `-p`.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: `README_POLICY.md` bounded the record folders' totals, which no read loads, so the product's growth met a wall raised four times in eighteen days; WHERE, `git show 220eb078:README_POLICY.md`, the rows of `docs/decisions/`, `docs/specs/` and `docs/reviews/` and their maxima; at `220eb078`, `git ls-tree -r -l HEAD -- docs/specs`: 649155 of 655360.
+    - [x] FIX — the check's cells, step and report; the policy's rows, note and maxima; the record; the three records superseded; the inventory, the enforcement table, `TOOLBOX.md`, the book's repository annex and glossary, the ledger, `docs/figures.md`; the review's answers above.
+    - [x] ADDRESSED — `bash scripts/check_readme_routes.sh --self-test`: `readme-routes self-test: 113 pass / 0 fail (113 arms)`; `bash scripts/check_readme_routes.sh`: `readme-routes: OK (25 destination(s) governed)`. Failing first, this staged tree under `220eb078`'s policy: `docs/decisions/: 407037 bytes in total, over its ceiling of 393216`; under the new rows before the record existed: six breaches, `fixed by docs/decisions/decision_ceilings-bound-reads.md, which does not exist`.
+    - [x] NO REGRESSION — `bash -n scripts/check_readme_routes.sh` exit 0; `bash scripts/check_doctrines.sh` passes; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 300 s
+    - [x] LOCKSTEP — the check, the policy, the record, the inventory, the enforcement table, the toolbox, the book, the snapshots, two script headers; `eadl-1-a-plan-names-engine-adapters.md` flipped to `applied`, `M3.2.5`'s note.
+  Commit: `ARCHOGEN-PROGRAM-1020 (leaf PROGRAM.117.1)`
+
+- ID: `PROGRAM.117.2`
+  Status: `pending`
+  Goal: one scripted, verified step moves records — an accepted design from `docs/decisions/` to
+    `docs/specs/<subject>/`, or a subject's records into a sub-folder of their own — their relative links rewritten,
+    every path-form citation in a live file repointed, sealed history and scaffold-held files left and reported, the
+    index rows updated, a new sub-folder linked from `knowledge-map/subsystems.md`; a batch past a folder's step,
+    262144 bytes, names its leaf in `README_ROUTES_GROWTH_LEAF`; a superseded record stays in place
+    (`decision_ceilings-bound-reads.md`).
+  Commit: `pending`
+
+- ID: `PROGRAM.117.3`
+  Status: `pending` — filed `2026-10-27` by `PROGRAM.117.1`'s review (D4)
+  Goal: an index never binds the folder it lists: `DECISION-INDEX` accepts a record linked from its sub-folder's own
+    `INDEX.md` when the parent index links that index, and the specifications are indexed — two records of
+    `docs/specs/trust/` are in no index, a third only in the reviews' index.
+  Reproduce / issue: `scripts/check_decision_index.sh` requires every record under `docs/decisions/` to be linked from
+    `docs/decisions/INDEX.md` itself; at `220eb078`, 18185 of its 98304 bytes, about 140 a day since `d00c3dee`
+    (`2026-10-12`, 16118), so about a year and a half before it binds.
+  Commit: `pending`
+
+- ID: `PROGRAM.118`
+  Status: `pending` — P3, filed `2026-10-27` by `PROGRAM.117.1`'s third review round
+  Goal: `README-ROUTES`' on-disk measures read every tracked path whole: a NUL-separated `git ls-files -z`, never its
+    quoted output or a word-split list.
+  Reproduce / issue: `git ls-files` quotes a path holding a tab, a quote or a non-ASCII byte, so `wc` fails on it and
+    the file drops out of its row's measures; `longest $own` splits a path holding a space, so awk cannot open it and
+    the row's longest line reads 0. The guard's total inherits it; the step, measured from the index, does not.
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -975,11 +1089,12 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.72` | `pending` | next ordinary program-spine repair: a tree file in a sub-folder of `docs/tasks/` |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.117.2` | `pending` | the director's ask of `2026-10-27`: the record-move tool the lifecycle of `PROGRAM.117.1`'s record needs |
+| 2 | `PROGRAM.72` | `pending` | next ordinary program-spine repair: a tree file in a sub-folder of `docs/tasks/` |
+| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.73`, `.78` and `.115` — are filed and owned. Every closed
+`PROGRAM.73`, `.78`, `.115`, `.117.3` and `.118` — are filed and owned. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1126,6 +1241,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.113` | `ARCHOGEN-PROGRAM-0979 (leaf PROGRAM.113)` | **closed, CI green**: the arms' own check at fault, not the seal; the three runs on `34b6abeb` each `success` |
 | `PROGRAM.114` | `ARCHOGEN-PROGRAM-0980 (leaf PROGRAM.114)` | **`PIPE-READS`**: every pipe read under `pipefail` a here-string, the gate refusing the form, the scaffold's sites reported and their change written down; `PROGRAM.115` filed |
 | `PROGRAM.116` | `ARCHOGEN-PROGRAM-0989 (leaf PROGRAM.116)` | **what is held for the scaffold, from the ruling**: `.doctrine/scaffold_held.txt`, sixteen files, read by `SCRATCH-LOCALITY` and `PIPE-READS`; `check_task_acceptance.sh`'s eight sites fixed; `PROGRAM.115`'s premise corrected |
+| `PROGRAM.117.1` | `ARCHOGEN-PROGRAM-1020 (leaf PROGRAM.117.1)` | **record folders bound by reads, not totals** (the director's ruling of `2026-10-27`): `fan-out 64` and a 16 MiB `guard` with its three-quarter ruling and per-commit step for `docs/decisions/`, `docs/specs/`, `docs/reviews/`; `--report`; three ceiling records superseded; `.3` filed |
 
 ## Changelog
 

@@ -785,15 +785,39 @@ bounded as rolling ledgers (above). A design's review history, which grows by a 
 decisions folder to `docs/reviews/`, which has ceilings of its own, and a closed review's history overflows on to
 `docs/review-history/` (above). The task trees are bounded too, and their
 finished parts overflow to `docs/task-history/`, as settled sections of a decision record do to
-`docs/decision-history/` (above). A folder grown too large is split by subject into sub-folders, each with ceilings
-of its own, while the parent still counts their non-book material, so an ordinary split adds no room.
-Book files remain excluded from those ancestor measurements. No ceiling
-may rise above what a decision fixes, which the policy lists and the check enforces. The decisions folder was split
-this way on `2026-09-30`, and `DECISION-INDEX` keeps every record in a sub-folder listed in its index.
+`docs/decision-history/` (above).
+
+**The record folders bound what is read, not how much is kept.** The decisions, the specifications and the reviews
+may hold as many records as the project needs; the director ruled so on `2026-10-27`
+(`docs/decisions/decision_ceilings-bound-reads.md`), after the specifications folder's total had been raised four
+times in eighteen days. What remains bounds something someone reads, or catches something going wrong:
+
+- **One record.** Each file keeps its own limits on lines, bytes and line width, so any record fits in one reading.
+- **One listing.** No folder among them lists more than 64 entries, its files and its sub-folders together, archive
+  stubs aside: its [fan-out](glossary.md). A subject with several records gets a sub-folder of its own, whose listing
+  is bounded the same way.
+- **A mistake, when it is made.** One commit may grow such a folder by at most 256 KiB over the last commit. A
+  generated or copied tree of files is refused in the commit that adds it. An honest change that big is split, or
+  names the task-tree leaf that owns it. The commit hook judges this, not CI, so a commit made without the hooks, an
+  amendment's total or a tree split across commits is not seen.
+- **A slow drift, years ahead.** Each folder's total has a [runaway guard](glossary.md) of 16 MiB, about twenty-six
+  times the largest of them when it was set. At three quarters of it the check refuses until a leaf asks the
+  director for a ruling, or the ruling is written beside the guard. A total over it is a defect to find.
+
+In the policy, these are a `fan-out N` in a row's Files cell and a `guard N` in its Total bytes cell; the step is a
+sixty-fourth of the guard. Other folders,
+the task trees among them, keep a file count and a total that count a sub-folder's material into its parent, so
+there an ordinary split adds no room. Book files remain excluded from every ancestor measurement. No ceiling may rise
+above what a decision fixes, which the policy lists and the check enforces, and a maximum and its cell must be of one
+kind: a number, a fan-out or a guard. `--report` prints each folder's files, widest listing and total, its growth
+since the newest commit at least a fortnight old, and when at that pace the check would refuse it: at three
+quarters of a guard with no ruling beside it, at its bound otherwise. The decisions folder was split by subject on
+`2026-09-30`, and `DECISION-INDEX` keeps every record in a sub-folder listed in its index.
 
 ```console
 $ bash scripts/check_readme_routes.sh              # the gate
 $ bash scripts/check_readme_routes.sh --self-test  # its RED arms, on scratch repositories
+$ bash scripts/check_readme_routes.sh --report     # each folder's totals and growth: telemetry, not a verdict
 ```
 
 ## "Next" means what the task tree says

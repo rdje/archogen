@@ -175,6 +175,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
   catalog, application and plan parts. See [What the scheduling checker establishes](analysis.md).
 - **deadline** — how long after its release a task's work must be finished. See [Describing a workload](workload.md).
 - **description** — a text in eADL saying what a system must do, never how. See [Reading a description](reading.md).
+- **fan-out** — how many entries one folder of the repository's records may list, its files and its sub-folders
+  together; past it, a subject takes a sub-folder of its own. See [The repository annex](annex-repository.md#where-the-landing-page-sends-things).
 - **fault** — something gone wrong that the runtime must answer: an overrun, a stack overflow, an unexpected trap or
   a failed check. See [The runtime](runtime.md).
 - **generated source** — a file committed as a program's or a script's output, such as a table written from a data
@@ -200,6 +202,10 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
 - **provider** — a block or a platform of a description, whose offers a requirement may be met by. See [Matching an
   offer to a requirement](matching.md).
 - **release** — the moment a task's next round of work becomes due. See [Describing a workload](workload.md).
+- **runaway guard** — a limit on a folder's total size, far above its honest growth: it is not a budget to plan
+  against. Three quarters of it asks the director for a ruling, and one commit may grow the folder by only a
+  sixty-fourth of it, so a mistake is refused when it is made. See [The repository
+  annex](annex-repository.md#where-the-landing-page-sends-things).
 - **runtime** — the code inside every generated system that decides which task runs next and what to do when
   something goes wrong. See [The runtime](runtime.md).
 - **shared item** — anything two checked programs both use — a package, a file, a generated source's provenance —

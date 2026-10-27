@@ -3,7 +3,8 @@
 # linked from docs/decisions/INDEX.md by its own path, and every link the index holds resolves (leaf `PROGRAM.39`,
 # docs/decisions/decision_decisions-folder-ceiling.md).
 #
-# ⭐ WHY. `docs/decisions/` is partitioned by subject into sub-folders once it nears its ceiling. The template's own
+# ⭐ WHY. `docs/decisions/` may be partitioned by subject into sub-folders, a subject's records together, when a
+# listing nears its fan-out (docs/decisions/decision_ceilings-bound-reads.md). The template's own
 # index check, `MEMORY-ARCH`, reads `docs/decisions/*.md` alone and is held unchanged (findings §10), so a record in a
 # sub-folder would drop out of it silently. This check is the project's counterpart that sees the partitions: a
 # record is found by its path from the index, and a link the index holds that leads nowhere is refused.
