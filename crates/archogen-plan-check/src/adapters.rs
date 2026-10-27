@@ -10,6 +10,13 @@
 //! [`Offer`]; the level its code runs at; the obligations a plan binding it carries and the interrupts its code takes;
 //! and whether it mediates (record §1.3). Values are kept as the record writes them, each token separated by one space,
 //! for the relation to read as it reads any provider's offers.
+//!
+//! **A test catalog** (record §6; leaf `M3.2.6.3`): `/1` holds no mediating kind, and "a test catalog holds one, which
+//! owns no region, and holds the gate both ways". [`with_table`] judges against such a table in place of [`ADAPTERS`],
+//! on one thread, for one call; every check reads a kind through [`kind`], so the record's reader and checks (3) to
+//! (5) all read the table in force. A thread that never calls it reads [`ADAPTERS`] alone.
+
+use std::cell::Cell;
 
 /// The catalog's version, `adapters/1`.
 pub const VERSION: &str = "adapters/1";
@@ -211,15 +218,35 @@ pub const ADAPTERS: &[Kind] = &[
     },
 ];
 
-/// The kind named `name`, if `/1` holds one.
+thread_local! {
+    /// The table [`kind`] reads on this thread: [`ADAPTERS`], save while [`with_table`] runs.
+    static TABLE: Cell<&'static [Kind]> = const { Cell::new(ADAPTERS) };
+}
+
+/// Runs `judge` with `table` in place of [`ADAPTERS`] on this thread, and puts back the table it replaced when `judge`
+/// returns or panics: a test catalog's seam (record §6). The table changes, never [`VERSION`], which the record still
+/// names: a test catalog is no version of its own.
+pub fn with_table<R>(table: &'static [Kind], judge: impl FnOnce() -> R) -> R {
+    /// The table to put back, when dropped.
+    struct Restore(&'static [Kind]);
+    impl Drop for Restore {
+        fn drop(&mut self) {
+            TABLE.with(|t| t.set(self.0));
+        }
+    }
+    let _restore = Restore(TABLE.with(|t| t.replace(table)));
+    judge()
+}
+
+/// The kind named `name`, if the table in force holds one: `/1`'s, save within [`with_table`].
 #[must_use]
 pub fn kind(name: &str) -> Option<&'static Kind> {
-    ADAPTERS.iter().find(|k| k.name == name)
+    TABLE.with(Cell::get).iter().find(|k| k.name == name)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{kind, Offer, ADAPTERS, VERSION};
+    use super::{kind, with_table, Kind, Offer, ADAPTERS, VERSION};
     use crate::model::vocab::{entry, Direction, Domain, Function, Role};
 
     #[test]
@@ -273,6 +300,26 @@ mod tests {
         // §2's kinds not in `/1`.
         assert_eq!(kind("multiplexer"), None);
         assert_eq!(kind("rescaler"), None);
+    }
+
+    #[test]
+    fn a_test_table_is_in_force_for_one_call_and_then_1_s_again() {
+        static MEDIATING: [Kind; 1] = [Kind {
+            name: "test-mediator",
+            mediates: true,
+            ..ADAPTERS[1]
+        }];
+        let inside = with_table(&MEDIATING, || {
+            (kind("test-mediator").copied(), kind("epoch-extender"))
+        });
+        assert_eq!(inside, (Some(MEDIATING[0]), None));
+        assert_eq!(kind("test-mediator"), None);
+        assert_eq!(kind("epoch-extender"), Some(&ADAPTERS[1]));
+        // Put back when the judgement panics too.
+        let panicked = std::panic::catch_unwind(|| with_table(&MEDIATING, || panic!("judged")));
+        assert!(panicked.is_err());
+        assert_eq!(kind("test-mediator"), None);
+        assert_eq!(kind("deadline-over-delay"), Some(&ADAPTERS[0]));
     }
 
     #[test]
