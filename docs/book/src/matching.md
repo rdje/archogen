@@ -526,7 +526,13 @@ enumeration and keeping or migrating every verdict it moves. `M3.2` adds adapter
 `docs/specs/adapters/decision_engine-adapters.md`: providers the engine supplies, each programming one of the description's
 devices, bound only where no assignment of the description's own providers holds — `/1`'s are a deadline programmed
 through a relative delay and an epoch extender, each plan binding one conditional on the obligations it names, and a
-mediating kind, which `/1` has none of, offered only where a requirer allows mediation. Their catalog is read today,
+mediating kind, which `/1` has none of, offered only where a requirer allows mediation. A plan's obligations are on
+every face that shows it: `archogen resolve` and `archogen explain` print each, and the engine API's `Plan` and the
+[MCP](ledger.md#mcp-specification) tools list them (`M3.2.6.1`, [The engine API](engine-api.md)). The search and the configuration checker each hold the
+mediation gate both ways, each tested over a test catalog that holds a mediating kind (`M3.2.6.1`'s search half in
+`.3.2`, the checker's in `M3.2.6.3`). The integration tier's `resolve-installed` step runs `archogen resolve` from an
+install over a plan through each kind, the install's checker accepting it (`M3.2.6.2`,
+[Verification](verification.md)). Their catalog is read today,
 `docs/semantics/adapters/adapters.eadl` (`M3.2.2`), and held to the checker's own table; the search binds them
 (`M3.2.3.2`); `M3.3` judges what one provider cannot: its
 channels and owned regions (`M3.3.2`), connectivity and routes (`M3.3.3`) and privilege given a level (`M3.3.4.1`) are

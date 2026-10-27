@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-10-27
 - leaf: M3.4.7.1 (`docs/tasks/M3.md`)
-- status: pending
+- status: applied
 - constructs: suite/examples/alternative-timer/system.eadl
 - invalidates: none, measured — `archogen check` moves from `11 missing-fact`, the repair it named, to `0`, accepted, frozen in
   `crates/archogen-cli/tests/verdicts.txt`; `archogen resolve` then refuses `missing-fact` for its policy's three

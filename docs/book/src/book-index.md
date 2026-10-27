@@ -461,9 +461,9 @@ a change that leaves it stale, so it is never edited by hand.
 
 - Masking — [The runtime: decisions, not actions](runtime.md#masking)
 - **MB** — [definition](glossary.md), [The engine API](engine-api.md)
-- **MCP** — [definition](glossary.md), [Checking a plan](plan-check.md), [The archogen command line](cli.md), [The
-  engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
-  costs](versions.md)
+- **MCP** — [definition](glossary.md), [Matching an offer to a requirement](matching.md), [Checking a
+  plan](plan-check.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying the
+  toolchain](verification.md), [What is versioned, and what changing it costs](versions.md)
 - mcp-specification — [What this project relies on from outside](ledger.md#mcp-specification)
 - mdbook — [What this project relies on from outside](ledger.md#mdbook)
 - **MEI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
