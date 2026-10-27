@@ -444,6 +444,11 @@ placement region (rule 10) is chosen, and its callers bound at the profile's lev
 takes `SR-H18`'s code over the providers whose answer is not undescribed; when every assignment fails, the first free
 of conflicts gives its unknowns, else the first one's conflicts; the verdict is the highest by precedence.
 
+What it chose is written by `crates/eadl-resolve/src/plan.rs` (`M3.4.3`) as `archogen-assignment/1`, the record the
+configuration checker judges: the generator's own writer and its own digest of the elaborated program, sharing no code
+with the checker's reader, both held to one golden and to each other by `crates/eadl-resolve/tests/plan.rs`. A
+requester is a declaration or a task of a system, written `(task SYSTEM TASK)`, so a task never reads as a service.
+
 ### What is not claimed
 
 The relation is a predicate on one requirement and one provider. Per fact its direction induces a preorder and
@@ -457,7 +462,8 @@ Measured `2026-10-06`: 154 381 provider-and-requirement pairs judged alike, 72 2
 and the horizon agreeing with a simulation of the counter's reads on every case of the checker's grid. Each rule
 has a catalogued mutation that its test must kill (`xtask/mutations.txt`).
 
-The search chooses over it (`M3.4.2`); `archogen resolve`, which runs it, is `M3.4.4`'s. Over the tracked examples it
+The search chooses over it (`M3.4.2`) and writes the plan the checker reads (`M3.4.3`); `archogen resolve`, which runs
+it, is `M3.4.4`'s. Over the tracked examples it
 resolves every one of `s0-heartbeat`'s descriptions and refuses each other example: their timers offer a width and no modulus,
 from which the vocabulary derives no horizon, and their policies' constraints wait on the catalog — `missing-fact` —
 while `alternative-timer`'s absolute deadline, which its timer declares absent, is `infeasible-configuration` until

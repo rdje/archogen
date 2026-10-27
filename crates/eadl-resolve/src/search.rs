@@ -29,7 +29,7 @@ use std::collections::BTreeMap;
 
 use eadl_front::{Diagnostic, Form, Label, Verdict};
 
-use crate::joint::{requesters, Binding, Joint, Obligation, Report, Requester, System};
+use crate::joint::{requesters, Binding, Joint, Kind, Obligation, Report, Requester, System};
 use crate::offer::{self, Provider};
 use crate::relation::{judge, Verdict as Answer};
 use crate::requirement::Requirement;
@@ -78,6 +78,34 @@ impl Limits {
     pub const DEFAULT: Self = Self { steps: 100_000 };
 }
 
+/// Who requires, as the assignment record names a requester: a declaration by its name, or a task of a system — never
+/// `system/task`, which a service may be named.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Who {
+    /// A declaration — a service, a policy, a system at its own level — by its name.
+    Named(String),
+    /// A task of a system.
+    Task {
+        /// The system's name.
+        system: String,
+        /// The task's name within it.
+        task: String,
+    },
+}
+
+impl Who {
+    /// `requester`, a requester `system` serves, as the record names it.
+    fn of(requester: &Requester, system: &str) -> Self {
+        match (requester.kind, requester.name.strip_prefix(system)) {
+            (Kind::Task, Some(rest)) if rest.starts_with('/') => Self::Task {
+                system: system.to_owned(),
+                task: rest[1..].to_owned(),
+            },
+            _ => Self::Named(requester.name.clone()),
+        }
+    }
+}
+
 /// A plan: the system, the region its image is placed in, and one provider per requester and fact.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Resolution {
@@ -86,10 +114,8 @@ pub struct Resolution {
     /// The placement memory chosen, where the system has some: the provider offering the region, and the region's
     /// name within it (model §8 rule 10).
     pub placement: Option<(String, String)>,
-    /// Each binding, (requester, fact) to provider; a task's requester is `system/task`, as [`joint`] names it.
-    ///
-    /// [`joint`]: crate::joint
-    pub bindings: BTreeMap<(String, String), String>,
+    /// Each binding, (requester, fact) to provider: in the record's order, every named requester before every task.
+    pub bindings: BTreeMap<(Who, String), String>,
     /// What the assignment obliges a realization to do, as [`Joint::check`] reports it.
     pub obligations: Vec<Obligation>,
     /// The complete assignments judged to reach it.
@@ -407,7 +433,7 @@ fn walk(
                     .zip(&choice)
                     .map(|(pair, &at)| {
                         (
-                            (pair.requester.name.clone(), pair.fact.clone()),
+                            (Who::of(pair.requester, &system.name), pair.fact.clone()),
                             pair.candidates[at].clone(),
                         )
                     })

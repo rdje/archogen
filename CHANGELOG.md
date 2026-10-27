@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the search writes its plan
+
+`ARCHOGEN-M3-1004` (leaf `M3.4.3`), `2026-10-27`.
+
+- What the search chooses is written as the assignment record the configuration checker reads, by the generator's own
+  code. A plan written for `s0-heartbeat` is read back and accepted by the checker.
+
 ## archogen — the search chooses a system's providers
 
 `ARCHOGEN-M3-1003` (leaf `M3.4.2`), `2026-10-27`.

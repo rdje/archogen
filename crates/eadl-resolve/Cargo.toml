@@ -13,6 +13,7 @@ description = "The substitutability relation: when an offer satisfies a requirem
 workspace = true
 
 [dependencies]
+archogen-digest = { path = "../archogen-digest" }
 eadl-front = { path = "../eadl-front" }
 eadl-model = { path = "../eadl-model" }
 

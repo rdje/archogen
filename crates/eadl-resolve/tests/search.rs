@@ -6,7 +6,7 @@
 use eadl_front::{read, Form, SourceMap, Verdict};
 use eadl_model::check::shipped_registry;
 use eadl_model::profile::RT_STATIC_UP_V1;
-use eadl_resolve::search::{search, Limits, Policy, Resolution, Search};
+use eadl_resolve::search::{search, Limits, Policy, Resolution, Search, Who};
 use eadl_resolve::vocabulary::Vocabulary;
 
 fn root() -> std::path::PathBuf {
@@ -79,7 +79,13 @@ fn bound(resolution: &Resolution) -> Vec<String> {
     resolution
         .bindings
         .iter()
-        .map(|((requester, fact), provider)| format!("{requester} {fact} {provider}"))
+        .map(|((requester, fact), provider)| {
+            let who = match requester {
+                Who::Named(name) => name.clone(),
+                Who::Task { system, task } => format!("(task {system} {task})"),
+            };
+            format!("{who} {fact} {provider}")
+        })
         .collect()
 }
 

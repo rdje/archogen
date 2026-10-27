@@ -131,6 +131,7 @@ dependencies = [
 name = "eadl-resolve"
 version = "0.1.0"
 dependencies = [
+ "archogen-digest",
  "archogen-plan-check",
  "eadl-front",
  "eadl-model",
