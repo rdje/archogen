@@ -17,7 +17,7 @@
 - **Next action:** CI green on `34b6abeb` (2026-10-26); `M3.5.1.6.4` done (the checker's own MCP); `M3.5.7`
   (its browser module) done; `M3.4`: `.4.2`–`.4.6`, `.4.8`–`.4.10`, `.4.13` done; `.4.7` blocked on `M3.7`;
   `M3.2` (adapters): `.1`–`.5` done; `PROGRAM.117.1` and `.2` done: record folders bound by reads, not totals
-  (`decision_ceilings-bound-reads.md`), records moved by `scripts/move_record.sh`; next `M3.2.6`.
+  (`decision_ceilings-bound-reads.md`), records moved by `scripts/move_record.sh`. `M3.2.6.1` done (API `1.7`); next `M3.2.6.2`.
   After the push, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`.
   `PROGRAM.115` filed; full verification `M3.5.9` after `M3.5`'s features (doctrine 22).
   The mutation campaign is `M7.6`'s. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),

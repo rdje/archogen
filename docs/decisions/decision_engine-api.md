@@ -56,7 +56,8 @@ judge a description any other way.
    `M3.5.1.1`), the vocabulary growing, so a minor. `1.4` added the operation `resolve` (leaf `M3.4.4`), so a
    minor. `1.5` added the operation `explain` (leaf `M3.4.13.2`), so a minor.
    `1.6` added the definition `defadapter` (leaf `M3.2.2`), the definitions growing as `1.3`'s statuses did, so a
-   minor.*
+   minor. `1.7` added the plan's field `obligations` (leaf `M3.2.6.1`), what a plan binding an engine adapter owes,
+   so a minor.*
 6. **Parity, both ways, gated** (`ROADMAP.md` §10.4: "a capability that exists only behind the CLI does not
    exist programmatically, and the reverse"):
    - *structurally:* the CLI's source calls no judging entry point of the engine (`check`,

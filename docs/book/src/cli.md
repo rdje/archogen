@@ -120,7 +120,21 @@ $ cat plan.json
 (bind console.write observable-output console.uart)
 ```
 
-That is `examples/s0-heartbeat/system.eadl`. Without `--unchecked`, an install's `archogen-plan-check` judges the plan,
+That is `examples/s0-heartbeat/system.eadl`. A plan that binds an engine adapter holds only once the adapter's code
+keeps what its kind promises, and the command says so under its first line. Each line names the instance, what it owes
+— an `obligation` the realization must discharge, or an `interrupt` the scheduling analysis charges — its name, and what
+it means (leaf `M3.2.6.1`, [The engine API](engine-api.md#the-second-operation-resolve-the-search-alone)). Over
+`crates/eadl-resolve/tests/search/adapter-epoch-extender.eadl`, a short counter extended by the engine:
+
+```text
+  conditional: it binds engine adapters, and holds once each obligation below is discharged and each cost charged
+    (adapter epoch-extender timer.short) obligation `update`: the epoch is advanced by a wake programmed within the provider's unambiguous horizon
+    (adapter epoch-extender timer.short) obligation `coherent`: a read joins epoch and counter so that no update is torn
+    (adapter epoch-extender timer.short) interrupt `wake`: one interrupt at its provider per update period, the period the realization states and no longer than that horizon
+```
+
+`archogen explain` prints the same lines under the plan it explains. Without `--unchecked`, an install's
+`archogen-plan-check` judges the plan,
 its record written in `plan.json.check/`, and the command's status is the checker's verdict. A description the search
 cannot resolve writes no plan and exits with the search's verdict — `periodic-three` is `missing-fact` today, its
 timer offering a width and no modulus and its policy's constraints waiting on the catalog — and `--locked` is refused

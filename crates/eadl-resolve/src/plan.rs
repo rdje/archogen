@@ -149,8 +149,9 @@ pub fn write(resolution: &Resolution, profile: &str, program: &str) -> String {
 }
 
 /// An instance as the record writes it: `(adapter KIND OVER)`, or `(adapter KIND OVER REQUESTER)` for an exclusive
-/// kind's, its requester a name or a task of `system`, `(task SYSTEM TASK)`.
-fn instance_text(instance: &AdapterInstance, system: &str) -> String {
+/// kind's, its requester a name or a task of `system`, `(task SYSTEM TASK)` — the name every face gives it (record §9).
+#[must_use]
+pub fn instance_text(instance: &AdapterInstance, system: &str) -> String {
     match &instance.serves {
         None => format!("(adapter {} {})", instance.kind, instance.over),
         Some(requester) => {

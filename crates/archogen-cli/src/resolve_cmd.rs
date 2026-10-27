@@ -21,7 +21,7 @@
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use archogen_api::{Limits, Resolve};
+use archogen_api::{Limits, Plan, Resolve};
 use archogen_digest::Digest;
 
 use crate::check_cmd::{ask_with, report_not_judged};
@@ -114,6 +114,7 @@ pub fn run(
         plan_path.display(),
         plan.bindings
     );
+    print_owed(plan, out);
     // What it searches over today, as the command table states it, so `--help` and this line cannot differ.
     if let Maturity::Experimental {
         scope,
@@ -186,6 +187,30 @@ pub fn run(
             let _ = writeln!(err, "  hint: {}", refusal.repair);
             refusal.status
         }
+    }
+}
+
+/// What `plan` owes for the engine adapters it binds, if any: the plan is conditional until each is discharged, each
+/// line the instance, what it owes, its name and its meaning (`docs/specs/adapters/decision_engine-adapters.md` §9).
+/// `archogen explain` prints the same lines for the plan it explains.
+pub(crate) fn print_owed(plan: &Plan, out: &mut dyn Write) {
+    if plan.obligations.is_empty() {
+        return;
+    }
+    let _ = writeln!(
+        out,
+        "  conditional: it binds engine adapters, and holds once each obligation below is discharged and each cost \
+         charged"
+    );
+    for owed in &plan.obligations {
+        let _ = writeln!(
+            out,
+            "    {} {} `{}`: {}",
+            owed.instance,
+            owed.owes.as_str(),
+            owed.name,
+            owed.doc
+        );
     }
 }
 

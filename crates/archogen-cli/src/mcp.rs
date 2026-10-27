@@ -559,7 +559,9 @@ fn explain(arguments: &Value) -> Result<Value, Failure> {
     ]))
 }
 
-/// A plan as `resolve` and `explain` answer it: its system, text, program digest and bindings, or `null`.
+/// A plan as `resolve` and `explain` answer it: its system, text, program digest and bindings, and what it owes for
+/// each engine adapter it binds — each `{"instance", "owes", "name", "doc"}`, an empty list where it binds none
+/// (`docs/specs/adapters/decision_engine-adapters.md` §9) — or `null`.
 fn plan_value(plan: Option<&Plan>) -> Value {
     match plan {
         None => Value::Null,
@@ -570,6 +572,22 @@ fn plan_value(plan: Option<&Plan>) -> Value {
             (
                 "bindings",
                 integer(i64::try_from(plan.bindings).unwrap_or(i64::MAX)),
+            ),
+            (
+                "obligations",
+                Value::Array(
+                    plan.obligations
+                        .iter()
+                        .map(|owed| {
+                            object(vec![
+                                ("instance", string(&owed.instance)),
+                                ("owes", string(owed.owes.as_str())),
+                                ("name", string(&owed.name)),
+                                ("doc", string(&owed.doc)),
+                            ])
+                        })
+                        .collect(),
+                ),
             ),
         ]),
     }
@@ -757,6 +775,8 @@ mod tests {
         assert!(plan.get("text").and_then(Value::as_str).is_some_and(
             |text| text.ends_with("(bind console.write observable-output console.uart)\n")
         ));
+        // It binds no engine adapter, so it owes nothing: the list is there, and empty.
+        assert_eq!(plan.get("obligations"), Some(&Value::Array(Vec::new())));
         // Without `unchecked`, or with it false, the engine API refuses, and says how to have the plan checked.
         for arguments in [
             format!(r#"{{"description":{description}}}"#),
@@ -791,6 +811,58 @@ mod tests {
         )
         .expect("answered");
         assert!(json::write(&value).contains("`unchecked` is not a boolean"));
+    }
+
+    #[test]
+    fn resolve_gives_what_a_plan_binding_an_engine_adapter_owes() {
+        // Leaf `M3.2.6.1`, the record's §9: the epoch extender's two obligations and its one cost, as its kind writes
+        // them, beside the plan that binds it.
+        let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../eadl-resolve/tests/search/adapter-epoch-extender.eadl");
+        let text = std::fs::read_to_string(fixture).expect("the fixture");
+        let description = json::write(&Value::String(text));
+        let value = answer(
+            &mut Server::default(),
+            &resolve_call(&format!(
+                r#"{{"description":{description},"unchecked":true}}"#
+            )),
+        )
+        .expect("answered");
+        let plan = value
+            .get("result")
+            .and_then(|r| r.get("structuredContent"))
+            .and_then(|s| s.get("plan"))
+            .expect("a plan");
+        let Some(Value::Array(owed)) = plan.get("obligations") else {
+            panic!("a list of obligations: {}", json::write(plan));
+        };
+        let said: Vec<(&str, &str, &str)> = owed
+            .iter()
+            .map(|o| {
+                let field = |key| o.get(key).and_then(Value::as_str).unwrap_or_default();
+                (field("instance"), field("owes"), field("name"))
+            })
+            .collect();
+        assert_eq!(
+            said,
+            [
+                (
+                    "(adapter epoch-extender timer.short)",
+                    "obligation",
+                    "update"
+                ),
+                (
+                    "(adapter epoch-extender timer.short)",
+                    "obligation",
+                    "coherent"
+                ),
+                ("(adapter epoch-extender timer.short)", "interrupt", "wake"),
+            ]
+        );
+        assert!(owed[2]
+            .get("doc")
+            .and_then(Value::as_str)
+            .is_some_and(|doc| doc.starts_with("one interrupt at its provider")));
     }
 
     #[test]

@@ -3,7 +3,7 @@
 //! to the plan `archogen-assignment/2` writes; and every answer that is no plan — the check's, the request's, the search's —
 //! carrying its status and what to change.
 
-use archogen_api::{resolve_with, Limits, MemoryModules, Request, Resolve, Status};
+use archogen_api::{resolve_with, Limits, MemoryModules, Owes, Request, Resolve, Status};
 
 const PLAIN: &str = "(eadl-version eadl/1)
 (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
@@ -53,6 +53,10 @@ fn a_plain_description_and_a_module_of_one_instance_resolve_to_their_plans() {
     let plan = plain.plan.expect("a plan");
     assert_eq!(plan.system, "s");
     assert_eq!(plan.bindings, 1);
+    assert!(
+        plan.obligations.is_empty(),
+        "no adapter bound, nothing owed"
+    );
     assert_eq!(
         plan.text,
         format!(
@@ -250,5 +254,29 @@ fn a_plan_through_an_adapter_names_the_instance_and_what_it_binds_beneath() {
             "(bind (adapter epoch-extender timer.short) tick-rate timer.short)",
             "(bind (adapter epoch-extender timer.short) wrap-behavior timer.short)",
         ]
+    );
+    // Leaf `M3.2.6.1`, the record's §9: the plan is conditional on what the instance's kind owes — its obligations,
+    // then its costs, in the order and the words the catalog writes them.
+    let owed: Vec<(&str, Owes, &str)> = plan
+        .obligations
+        .iter()
+        .map(|o| (o.instance.as_str(), o.owes, o.name.as_str()))
+        .collect();
+    let instance = "(adapter epoch-extender timer.short)";
+    assert_eq!(
+        owed,
+        [
+            (instance, Owes::Obligation, "update"),
+            (instance, Owes::Obligation, "coherent"),
+            (instance, Owes::Interrupt, "wake"),
+        ]
+    );
+    assert_eq!(
+        plan.obligations[1].doc,
+        "a read joins epoch and counter so that no update is torn"
+    );
+    assert_eq!(
+        (Owes::Obligation.as_str(), Owes::Interrupt.as_str()),
+        ("obligation", "interrupt")
     );
 }

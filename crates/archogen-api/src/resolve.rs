@@ -45,6 +45,44 @@ pub struct Plan {
     pub program: String,
     /// How many bindings it holds.
     pub bindings: usize,
+    /// What it owes for each engine adapter it binds (API `1.7`): none where the hardware alone holds. A plan owing
+    /// any is conditional until each obligation is discharged and each cost charged
+    /// (`docs/specs/adapters/decision_engine-adapters.md` §9). In the plan's order of its instances, then each kind's
+    /// obligations before its costs, as the kind writes them.
+    pub obligations: Vec<Owed>,
+}
+
+/// One thing a plan owes for one engine adapter instance it binds, as the instance's kind writes it (record §9).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Owed {
+    /// The instance, as the plan writes it: `(adapter KIND OVER)`, or with the requester an exclusive kind's serves.
+    pub instance: String,
+    /// An obligation or a cost.
+    pub owes: Owes,
+    /// Its name in the kind.
+    pub name: String,
+    /// What it means, one line.
+    pub doc: String,
+}
+
+/// What an instance owes: its kind's `obligations` and `costs` (record §1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Owes {
+    /// A property its realization establishes; the property resting on it is `not-established` until then (`M4.8`).
+    Obligation,
+    /// An interrupt its realization takes: a cost the scheduling analysis charges as a source (`M4.1`).
+    Interrupt,
+}
+
+impl Owes {
+    /// The word the catalog writes it with: `obligation` or `interrupt`.
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Obligation => "obligation",
+            Self::Interrupt => "interrupt",
+        }
+    }
 }
 
 /// What `resolve` answers: the response — the check's, or why no plan was written — and the plan, when there is one.
@@ -242,6 +280,31 @@ pub(crate) fn name_of(form: &Form) -> String {
         .to_owned()
 }
 
+/// What `resolution` owes for each instance it binds: each kind's obligations, then its costs, as the kind writes them.
+fn owed(resolution: &eadl_resolve::search::Resolution, adapters: &Catalog) -> Vec<Owed> {
+    let mut owed = Vec::new();
+    for instance in &resolution.instances {
+        let named = plan::instance_text(instance, &resolution.system);
+        let kind = adapters
+            .kind(&instance.kind)
+            .expect("the search binds only the shipped catalog's kinds");
+        let entries = kind
+            .obligations
+            .iter()
+            .map(|entry| (Owes::Obligation, entry))
+            .chain(kind.costs.iter().map(|entry| (Owes::Interrupt, entry)));
+        for (owes, entry) in entries {
+            owed.push(Owed {
+                instance: named.clone(),
+                owes,
+                name: entry.name.clone(),
+                doc: entry.doc.clone(),
+            });
+        }
+    }
+    owed
+}
+
 /// What `resolve` answers for `found`, the search of `ready`'s system: the plan, or why none was written.
 pub(crate) fn concluded(request: &Request<'_>, ready: Ready<'_>, found: Search) -> Resolution {
     let unresolved = |sources: SourceMap, status: Status, diagnostics| Resolution {
@@ -262,12 +325,14 @@ pub(crate) fn concluded(request: &Request<'_>, ready: Ready<'_>, found: Search) 
         Search::Resolved(resolution) => {
             let digest = plan::program_digest(ready.program);
             let text = plan::write(&resolution, ready.active.id, &digest);
+            let obligations = owed(&resolution, &ready.policy.adapters);
             Resolution {
                 plan: Some(Plan {
                     system: resolution.system,
                     text,
                     program: digest,
                     bindings: resolution.bindings.len(),
+                    obligations,
                 }),
                 response: ready.response,
             }

@@ -236,6 +236,50 @@ fn unchecked_writes_the_plan_runs_nothing_and_says_so() {
 }
 
 #[test]
+fn a_plan_binding_an_engine_adapter_is_said_to_be_conditional_on_what_it_owes() {
+    // Leaf `M3.2.6.1`, `docs/specs/adapters/decision_engine-adapters.md` §9: the epoch extender's obligations and its
+    // cost, each named; the heartbeat's plan, binding no adapter, says nothing of the kind.
+    let dir = scratch();
+    let plan = dir.join("plan");
+    let fixture = root().join("crates/eadl-resolve/tests/search/adapter-epoch-extender.eadl");
+    let checker = Checker::answering(Answer::Unlaunched);
+    let (status, out, err) = resolve(
+        &[
+            fixture.to_str().unwrap(),
+            "--out",
+            plan.to_str().unwrap(),
+            "--unchecked",
+        ],
+        &checker,
+    );
+    assert_eq!(status, Status::Ok, "{err}");
+    assert!(
+        out.contains("  conditional: it binds engine adapters, and holds once each obligation below is discharged"),
+        "{out}"
+    );
+    let owed: Vec<&str> = out
+        .lines()
+        .filter_map(|line| line.strip_prefix("    (adapter epoch-extender timer.short) "))
+        .map(|rest| rest.split_once(':').map_or(rest, |(head, _)| head))
+        .collect();
+    assert_eq!(
+        owed,
+        [
+            "obligation `update`",
+            "obligation `coherent`",
+            "interrupt `wake`"
+        ],
+        "{out}"
+    );
+    let (status, out, err) = resolve(
+        &[&heartbeat(), "--out", plan.to_str().unwrap(), "--unchecked"],
+        &checker,
+    );
+    assert_eq!(status, Status::Ok, "{err}");
+    assert!(!out.contains("conditional"), "{out}");
+}
+
+#[test]
 fn every_refusal_before_a_plan_writes_none_and_runs_nothing() {
     let dir = scratch();
     let write = |name: &str, text: &str| {

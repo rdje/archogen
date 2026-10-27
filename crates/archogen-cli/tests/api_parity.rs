@@ -326,6 +326,29 @@ fn over_every_description_the_cli_says_what_the_api_says() {
 }
 
 /// What `archogen resolve --unchecked` said about `path`, in-process, and the plan it wrote at `plan`.
+/// What `archogen resolve` printed of a plan's obligations, one line each (leaf `M3.2.6.1`), and what the API's say.
+fn owed_lines(out: &str) -> Vec<String> {
+    out.lines()
+        .filter(|line| line.starts_with("    (adapter "))
+        .map(str::to_string)
+        .collect()
+}
+
+fn api_owed_lines(plan: &archogen_api::Plan) -> Vec<String> {
+    plan.obligations
+        .iter()
+        .map(|owed| {
+            format!(
+                "    {} {} `{}`: {}",
+                owed.instance,
+                owed.owes.as_str(),
+                owed.name,
+                owed.doc
+            )
+        })
+        .collect()
+}
+
 fn cli_resolves(path: &Path, plan: &Path) -> (Said, Option<String>) {
     let _ = fs::remove_file(plan);
     let mut out: Vec<u8> = Vec::new();
@@ -357,7 +380,11 @@ fn cli_resolves(path: &Path, plan: &Path) -> (Said, Option<String>) {
             .map(str::to_string)
             .collect(),
     };
-    (said, fs::read_to_string(plan).ok())
+    // The plan as written, and what the command printed it owes, one text to compare.
+    let written = fs::read_to_string(plan)
+        .ok()
+        .map(|text| text + &owed_lines(&String::from_utf8_lossy(&out)).join("\n"));
+    (said, written)
 }
 
 /// The engine API's `resolve` on `path`, unchecked, with the module path the CLI uses: what it said, and its plan.
@@ -389,7 +416,9 @@ fn api_resolves(path: &Path) -> (Said, Option<String>) {
                 .collect(),
             notes: response.notes,
         },
-        resolution.plan.map(|plan| plan.text),
+        resolution
+            .plan
+            .map(|plan| plan.text.clone() + &api_owed_lines(&plan).join("\n")),
     )
 }
 
@@ -402,12 +431,18 @@ fn over_every_description_resolve_says_what_the_api_says_and_writes_its_plan() {
         .join(format!("api-parity-plan-{}.json", std::process::id()));
     let mut statuses = std::collections::BTreeSet::new();
     let mut plans = 0;
+    let mut owing = 0;
     let mut wrong = Vec::new();
     for path in descriptions(&root) {
         let (cli, cli_plan) = cli_resolves(&path, &plan);
         let (api, api_plan) = api_resolves(&path);
         statuses.insert(cli.status.code());
         plans += usize::from(cli_plan.is_some());
+        owing += usize::from(
+            api_plan
+                .as_deref()
+                .is_some_and(|p| p.contains("    (adapter ")),
+        );
         if cli != api || cli_plan != api_plan {
             wrong.push(format!(
                 "{}:\n  cli {cli:?} {}\n  api {api:?} {}",
@@ -422,6 +457,8 @@ fn over_every_description_resolve_says_what_the_api_says_and_writes_its_plan() {
     // Plans written and refusals of several kinds, or the leg compares one outcome and calls it parity.
     assert!(plans > 0, "no description resolved");
     assert!(statuses.len() > 2, "{statuses:?}");
+    // And a plan that owes something for an engine adapter, or the obligations compared are empty lists alone.
+    assert!(owing > 0, "no plan bound an engine adapter");
 }
 
 /// The facts the `explain` leg asks, each description one in turn: one a console requires, one a comparator's, one a

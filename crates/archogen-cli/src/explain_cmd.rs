@@ -79,6 +79,7 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
          checker over the plan it writes",
         plan.system
     );
+    crate::resolve_cmd::print_owed(plan, out);
     if let Maturity::Experimental {
         scope,
         completed_by,

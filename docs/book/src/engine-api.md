@@ -65,7 +65,17 @@ runs no checker, so asked without it, it refuses with the repair — compose the
 tool (`ROADMAP.md` §10.4). Asked with it, it checks the description as `check` does and answers the check's response
 for one it does not accept; otherwise it searches one system ([Matching](matching.md#the-search)) — a module tree read
 as the language checks it, its names qualified by their instance's path (leaf `M3.4.10`) — and answers a `Resolution`: the response, and the `Plan` — the system, the
-plan's text, the program's digest and its bindings — present exactly when the response is `ok`. A search that finds
+plan's text, the program's digest, its bindings and its `obligations` — present exactly when the response is `ok`.
+
+A plan that binds an engine adapter ([Matching](matching.md)) is **conditional**: the adapter's code is written by the
+engine, and the plan holds only once that code does what the adapter's kind promises. So the `Plan` lists what it
+owes (API `1.7`, leaf `M3.2.6.1`, `docs/specs/adapters/decision_engine-adapters.md` §9). Each entry names the instance,
+as the plan writes it, then what it owes, its name, and one line saying what it means:
+- an `obligation`, a property the realization must establish, on which the build's report rests (`M4.8`);
+- an `interrupt`, a cost the scheduling analysis charges as a source (`M4.1`).
+
+Entries follow the plan's order of instances, each kind's obligations before its costs, in the words its kind writes.
+A plan binding no adapter owes nothing, and its list is empty. A search that finds
 none answers under its own status, its diagnostics saying why, with no plan; a spent budget is `analysis-inconclusive`.
 `archogen resolve` asks it so, writes the plan, and runs the checker over it as a process, which the command line
 alone may.
@@ -115,12 +125,12 @@ one judged and refused, and one the API does not judge.
 
 ```console
 $ cargo run -q -p archogen-api --example in_memory
-api 1.6 · engine 0.1.0 · status ok
+api 1.7 · engine 0.1.0 · status ok
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
-api 1.6 · engine 0.1.0 · status invalid-description
+api 1.7 · engine 0.1.0 · status invalid-description
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
   quantity-unknown-unit: `parsec` is not a known unit
-api 1.6 · engine 0.1.0 · status unsupported-profile
+api 1.7 · engine 0.1.0 · status unsupported-profile
   not judged: `rt-dynamic-mp` is not a supported profile
 ```
 
