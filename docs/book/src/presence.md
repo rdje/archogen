@@ -97,6 +97,18 @@ error[infeasible-configuration]: `low-power-timer` is required by this system bu
 Reporting this as `missing-fact` would send the author off to describe something the platform
 has already said it does not have.
 
+One exception, and it is not a weakening: a fact the **engine** can supply. Some facts an
+adapter the engine knows can realize over another device — an absolute deadline programmed
+through a relative delay timer (`docs/specs/adapters/decision_engine-adapters.md`, `SR-H9`).
+For such a fact, presence asks whether one block or platform of the description offers, by
+name, everything that adapter needs. If one does, the fact is left to the search, which binds
+the adapter or says why not; the platform's absence still stands for the platform, and the
+adapter is no declaration of the description. If one offers part of it and leaves the rest
+undescribed, the answer is `missing-fact`, naming the facts to describe — `uc3`'s refusal,
+whose timer leaves its modulus undescribed ([Checking a description](checking.md)). Presence
+reads names only, so a path that holds by name and fails by value is the search's to refuse
+(leaf `M3.2.4`).
+
 ### Contradictions are rejected, never resolved
 
 A contradiction is one declaration saying both of itself — F06's case, `docs/semantics/cases/invalid-contradictory-presence.eadl`:

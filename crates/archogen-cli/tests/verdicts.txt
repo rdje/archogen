@@ -3,7 +3,7 @@
 # Regenerated deliberately: ARCHOGEN_BLESS_VERDICTS=1 cargo test -p archogen-cli --test verdicts
 0 - crates/eadl-resolve/tests/joint/f08-two-exclusive-requests.eadl
 0 - crates/eadl-resolve/tests/joint/f09-conflicting-ownership.eadl
-11 missing-fact crates/eadl-resolve/tests/search/adapter-deadline-over-delay.eadl
+0 - crates/eadl-resolve/tests/search/adapter-deadline-over-delay.eadl
 0 - crates/eadl-resolve/tests/search/adapter-epoch-extender.eadl
 0 - crates/eadl-resolve/tests/search/f10-unsupported-implementation-path.eadl
 0 - crates/eadl-resolve/tests/search/f11-solver-resource-limit.eadl
@@ -20,6 +20,7 @@
 10 schema-unknown-kind docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/evidence/05-bare-symbol.eadl
 10 schema-unknown-kind docs/feedback/linkedspec/issues/LS-006-hex-underscore-withdrawn/evidence/02-hex-literal-underscore.eadl
 10 read-missing-delimiter docs/feedback/linkedspec/issues/LS-007-adjacent-fragment-join/evidence/11-adjacent-fragment-join.eadl
+20 - docs/semantics/adapters/adapters.eadl
 0 - docs/semantics/boundary/accept/absolute-deadline-service.eadl
 0 - docs/semantics/boundary/accept/access-authority.eadl
 0 - docs/semantics/boundary/accept/addressable-region.eadl
@@ -79,7 +80,6 @@
 12 unsupported-profile docs/semantics/cases/unsupported-multicore.eadl
 12 unsupported-profile docs/semantics/cases/unsupported-overrun-policy.eadl
 12 missing-fact,unsupported-profile docs/semantics/cases/unsupported-precedence-over-missing-fact.eadl
-20 - docs/semantics/adapters/adapters.eadl
 20 - docs/semantics/kinds/core.eadl
 20 - docs/semantics/kinds/defadapter.eadl
 20 - docs/semantics/kinds/deffact.eadl
@@ -126,7 +126,7 @@
 0 - docs/semantics/modules/hw.timer.eadl
 0 - docs/semantics/modules/os.time.eadl
 20 - docs/semantics/vocabulary/vocabulary.eadl
-13 infeasible-configuration examples/alternative-timer/system.eadl
+11 missing-fact examples/alternative-timer/system.eadl
 12 unsupported-profile examples/bounded-queue/system.eadl
 0 - examples/high-interference/system.eadl
 0 - examples/periodic-three/system.eadl

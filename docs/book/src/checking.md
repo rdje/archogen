@@ -153,7 +153,7 @@ total — so the number a script branches on and the word a human reads come fro
 
 ```console
 $ archogen check examples/alternative-timer/system.eadl ; echo $?
-error[infeasible-configuration]: `absolute-deadline` is required by this system but declared absent
+error[missing-fact]: `absolute-deadline` is required by this system and no declaration offers it; the engine's adapter `deadline-over-delay` offers it over a block or platform offering what it needs, and `timer.delay` offers part of that and leaves `counter-modulus` undescribed
   --> examples/alternative-timer/system.eadl:52:25
    |
 52 |   (needs time.monotonic absolute-deadline))
@@ -162,14 +162,17 @@ error[infeasible-configuration]: `absolute-deadline` is required by this system 
    |
 27 |   (absent absolute-deadline))
    |           ----------------- declared absent by `timer.delay`
-  = hint: either the requirement or the platform is wrong; an explicitly absent fact is a definite answer, not a gap to be filled in
-archogen: infeasible-configuration: 1 diagnostic(s) in examples/alternative-timer/system.eadl
-13
+  = hint: describe `counter-modulus` at `timer.delay`: then `deadline-over-delay`'s path exists by name, and the search judges it by value — or declare `absolute-deadline` offered where a provider has it
+archogen: missing-fact: 1 diagnostic(s) in examples/alternative-timer/system.eadl
+11
 ```
 
-That is `uc3`, behaving exactly as the use case says it should *today*: the platform offers only
-a relative delay timer, the workload requires absolute deadlines, and no indirect realization
-exists yet. When `M3.2` lands, the same description must build — without changing.
+That is `uc3`: the platform offers only a relative delay timer, the workload requires absolute
+deadlines, and the engine's adapter that would program one through the other needs the timer's
+modulus, which the description does not state — so the refusal names the one fact whose
+description would open the path (leaf `M3.2.4`). Describing it is a change to the description,
+brought to the director first, and its policy waits on the catalog's records (`M3.7`); then the
+same description builds.
 
 ### Refused by name
 

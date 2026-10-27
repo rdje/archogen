@@ -283,6 +283,12 @@
   (reason "crates/eadl-resolve/src/vocabulary.rs:41: embeds the shipped vocabulary `/1` as text, the table the relation reads; compiled into the `production` and `vocabulary` derivations (RP-H11)"))
 
 (defadmit
+  (file "crates/eadl-model/src/presence.rs")
+  (rule "include_str")
+  (sha256 "2a59247c015b9650411eebbbd244954f9d4994e86027382c28d2cd5dfaec8d39")
+  (reason "crates/eadl-model/src/presence.rs:62: embeds the engine's adapter catalog `adapters/1` as text, read for names alone — what each kind adds and what it requires beneath — so model §2 rules 2 and 3 yield where an adapter's path may exist (M3.2.4); compiled by both roles, the catalog one of the items they share"))
+
+(defadmit
   (file "crates/eadl-resolve/src/adapter.rs")
   (rule "include_str")
   (sha256 "317fb5e898a914abfe3759b0a29bab0be7540e09ad90425b11fb3c596925e699")

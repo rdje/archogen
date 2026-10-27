@@ -98,6 +98,15 @@ A platform declares what it **offers** and what it declares **absent**; a system
    here and refused by the search until `M3.4.7` makes the check adopt its verdict.
 3. **A required fact that nothing describes is missing.** It lies inside the dependency closure of what
    the system requests, so no decision that depends on it can be made: `missing-fact`.
+   **Rules 2 and 3 and the engine's adapters** (`SR-H9`; leaf `M3.2.4`, `docs/specs/adapters/decision_engine-adapters.md`
+   §7). For a required fact one of the engine's adapter kinds **adds** — offers, not passed through from itself, and
+   not named in what it requires beneath — both rules ask whether one block or platform of the description offers,
+   by name, every fact that kind requires beneath: where one does, a **path**, the fact is the search's to bind or
+   refuse and these rules refuse nothing, an adapter's offer satisfying past a declared absence; where one offers part
+   of it and leaves the rest undescribed there, declaring none of it absent, a **partial path**, the fact is
+   `missing-fact`, its repair the facts to describe; otherwise rule 2 or 3 reads as above, its repair naming what an
+   adapter would need. Presence reads names alone, so a path by name that fails by value, or one at a block or platform
+   outside the system's hardware, is accepted here and refused by the search until `M3.4.7`.
 4. **What lies outside the closure fails nothing, and stays visible** (§5.3). An undescribed fact that nothing
    the description requests depends on is not an error. It is reported as metadata: `archogen check` prints,
    after its verdict, the closure with what pulled each fact in and then every fact outside it

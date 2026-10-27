@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the language check knows an adapter may help
+
+`ARCHOGEN-M3-1018` (leaf `M3.2.4`), `2026-10-27`.
+
+- `archogen check` no longer refuses a required fact the engine could supply through an adapter over one of the
+  description's devices; it leaves it to the search. Where a device states only part of what that adapter needs, the
+  refusal says which facts to describe: `examples/alternative-timer` now answers `missing-fact`, naming its timer's
+  modulus, instead of `infeasible-configuration`.
+
 ## archogen — the search uses adapters
 
 `ARCHOGEN-M3-1017` (leaf `M3.2.3.2`), `2026-10-27`.

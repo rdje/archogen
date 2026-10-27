@@ -323,9 +323,10 @@ fn the_verdict_is_what_to_fix_first_not_what_was_found_first() {
 #[test]
 fn the_examples_directory_agrees_with_the_pipeline() {
     // The three shipped use cases run through the same pipeline as the corpus. uc1 and uc2 are
-    // accepted; uc3 is `infeasible-configuration` today, because its platform declares
-    // `absolute-deadline` absent and its service requires it — the gap M3.2's indirect
-    // realization must close, without the description changing.
+    // accepted; uc3 is `missing-fact` today: its platform declares `absolute-deadline` absent and
+    // its service requires it, and the engine's adapter that would offer it past that absence
+    // needs a modulus `timer.delay` leaves undescribed (leaf `M3.2.4`) — describing it is
+    // `M3.4.7`'s migration, the director's before the description changes.
     let mut sources = SourceMap::new();
     let registry = registry(&mut sources);
     let profile = default_profile();
@@ -335,7 +336,7 @@ fn the_examples_directory_agrees_with_the_pipeline() {
         ("examples/high-interference/system.eadl", Verdict::Ok),
         (
             "examples/alternative-timer/system.eadl",
-            Verdict::InfeasibleConfiguration,
+            Verdict::MissingFact,
         ),
         // ⭐ uc3 and uc4 are both refused, for reasons that must not be confused. uc3's refusal
         // is TEMPORARY — the same description must build once M3.2 supplies indirect

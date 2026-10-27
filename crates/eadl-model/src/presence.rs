@@ -29,7 +29,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use eadl_front::{Diagnostic, Form, Label, Span};
+use eadl_front::{read, Diagnostic, Form, Label, SourceMap, Span};
 
 /// What a description says about one fact.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -55,6 +55,102 @@ impl Presence {
             Self::Undescribed => "undescribed",
         }
     }
+}
+
+/// The engine's adapter catalog, embedded so that presence knows where an engine path may exist
+/// (`docs/specs/adapters/decision_engine-adapters.md` §7). Presence reads names alone; the engine reads the rest.
+const ADAPTERS_TEXT: &str = include_str!("../../../docs/semantics/adapters/adapters.eadl");
+
+/// One adapter kind as presence reads it: what it adds and what its `beneath` names (record §7.1, §7.2).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AdapterPath {
+    /// The kind's name.
+    pub kind: String,
+    /// Each fact its offers name that is not passed through from itself and that its `beneath` does not name.
+    pub adds: Vec<String>,
+    /// Every fact its `beneath` names — `needs` operands and constraint heads — in written order.
+    pub beneath: Vec<String>,
+}
+
+/// Every kind of the shipped catalog, read for names, in its order. A catalog that does not read gives none — the
+/// engine's reader refuses it, and `tests/adapters.rs` holds the shipped file to no refusal.
+#[must_use]
+pub fn adapter_paths() -> Vec<AdapterPath> {
+    let mut sources = SourceMap::new();
+    let Ok(id) = sources.add("docs/semantics/adapters/adapters.eadl", ADAPTERS_TEXT) else {
+        return Vec::new();
+    };
+    let (document, diagnostics) = read(&sources, id);
+    if diagnostics.has_errors() {
+        return Vec::new();
+    }
+    let rest = |form: &Form| form.items().get(1..).unwrap_or_default().to_vec();
+    document
+        .declarations()
+        .filter(|form| form.head() == Some("defadapter"))
+        .map(|form| {
+            let clause = |head: &str| {
+                form.items()
+                    .iter()
+                    .find(|item| item.head() == Some(head))
+                    .cloned()
+            };
+            let mut beneath = Vec::new();
+            for item in clause("beneath").map(|c| rest(&c)).unwrap_or_default() {
+                match item.head() {
+                    Some("needs") => beneath.extend(
+                        rest(&item)
+                            .iter()
+                            .filter_map(Form::as_symbol)
+                            .map(str::to_string),
+                    ),
+                    Some(fact) => beneath.push(fact.to_string()),
+                    None => {}
+                }
+            }
+            let adds = clause("offers")
+                .map(|c| rest(&c))
+                .unwrap_or_default()
+                .iter()
+                .filter_map(|item| {
+                    let fact = item.head()?;
+                    let passed_through = matches!(
+                        rest(item).as_slice(),
+                        [from] if from.head() == Some("from")
+                            && rest(from).first().and_then(Form::as_symbol) == Some(fact)
+                    );
+                    (!passed_through && !beneath.iter().any(|b| b == fact))
+                        .then(|| fact.to_string())
+                })
+                .collect();
+            AdapterPath {
+                kind: form
+                    .items()
+                    .get(1)
+                    .and_then(Form::as_symbol)
+                    .unwrap_or_default()
+                    .to_string(),
+                adds,
+                beneath,
+            }
+        })
+        .collect()
+}
+
+/// Where an engine path for one required fact stands, by name (record §7.2, §7.3).
+enum Path {
+    /// One block or platform offers everything a kind adding the fact needs beneath: the search's to judge.
+    Whole,
+    /// One offers part of it and leaves the rest undescribed there, declaring none of it absent.
+    Partial {
+        kind: String,
+        declaration: String,
+        undescribed: Vec<String>,
+    },
+    /// Kinds add it, and no block or platform offers even part of what one needs.
+    Nowhere(Vec<AdapterPath>),
+    /// No kind adds it.
+    NoKind,
 }
 
 /// Where a fact's presence was declared.
@@ -364,6 +460,45 @@ impl FactMap {
         }
 
         let closure = self.closure();
+        // The engine's adapters, by name: rules 2 and 3 yield where one may realize a fact (leaf `M3.2.4`).
+        let kinds = adapter_paths();
+        let partial = |fact: &str, kind: &str, declaration: &str, undescribed: &[String]| {
+            let names = undescribed
+                .iter()
+                .map(|f| format!("`{f}`"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            Diagnostic::error(
+                "missing-fact",
+                format!(
+                    "`{fact}` is required by this system and no declaration offers it; the engine's adapter `{kind}` \
+                     offers it over a block or platform offering what it needs, and `{declaration}` offers part of \
+                     that and leaves {names} undescribed"
+                ),
+                Label::new(self.request_span(fact), "required through this request"),
+                format!(
+                    "describe {names} at `{declaration}`: then `{kind}`'s path exists by name, and the search judges \
+                     it by value — or declare `{fact}` offered where a provider has it"
+                ),
+            )
+        };
+        let nowhere = |kinds: &[AdapterPath]| {
+            kinds
+                .iter()
+                .map(|k| {
+                    format!(
+                        "; the engine's adapter `{}` offers it over a block or platform offering {}, which none of \
+                         this description's does",
+                        k.kind,
+                        k.beneath
+                            .iter()
+                            .map(|f| format!("`{f}`"))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    )
+                })
+                .collect::<String>()
+        };
 
         // ── F04 / F05: relevance decides whether an unknown fact matters ─────────────────────
         let mut missing = Vec::new();
@@ -376,13 +511,34 @@ impl FactMap {
             // also declared.
             if self.presence(fact) == Presence::Absent {
                 let declaration = &self.absent[fact][0];
+                let adapters = match self.path(fact, &kinds) {
+                    // An adapter's offer satisfies past a declared absence (`SR-H9`): the search's to judge.
+                    Path::Whole => continue,
+                    Path::Partial {
+                        kind,
+                        declaration: at,
+                        undescribed,
+                    } => {
+                        diagnostics.push(partial(fact, &kind, &at, &undescribed).with_secondary(
+                            Label::new(
+                                declaration.span,
+                                format!("declared absent by `{}`", declaration.declared_by),
+                            ),
+                        ));
+                        continue;
+                    }
+                    Path::Nowhere(kinds) => nowhere(&kinds),
+                    Path::NoKind => String::new(),
+                };
                 diagnostics.push(
                     Diagnostic::error(
                         "infeasible-configuration",
                         format!("`{fact}` is required by this system but declared absent"),
                         Label::new(self.request_span(fact), "required through this request"),
-                        "either the requirement or the platform is wrong; an explicitly \
-                         absent fact is a definite answer, not a gap to be filled in",
+                        format!(
+                            "either the requirement or the platform is wrong; an explicitly absent fact is a \
+                             definite answer, not a gap to be filled in{adapters}"
+                        ),
                     )
                     .with_secondary(Label::new(
                         declaration.span,
@@ -402,6 +558,20 @@ impl FactMap {
                 Presence::Offered => {}
                 Presence::Absent => unreachable!("absence was handled above"),
                 Presence::Undescribed => {
+                    let adapters = match self.path(fact, &kinds) {
+                        Path::Whole => continue,
+                        Path::Partial {
+                            kind,
+                            declaration,
+                            undescribed,
+                        } => {
+                            missing.push(fact.clone());
+                            diagnostics.push(partial(fact, &kind, &declaration, &undescribed));
+                            continue;
+                        }
+                        Path::Nowhere(kinds) => nowhere(&kinds),
+                        Path::NoKind => String::new(),
+                    };
                     missing.push(fact.clone());
                     diagnostics.push(Diagnostic::error(
                         "missing-fact",
@@ -410,7 +580,7 @@ impl FactMap {
                         format!(
                             "declare `{fact}` as offered or absent on the platform — it is inside \
                              the dependency closure of what this system requests, so no decision \
-                             that depends on it can be made"
+                             that depends on it can be made{adapters}"
                         ),
                     ));
                 }
@@ -430,6 +600,51 @@ impl FactMap {
             pulled_in_by: self.closure_origins(),
             diagnostics,
         }
+    }
+
+    /// Where an engine path for `fact` stands among this description's blocks and platforms (record §7).
+    fn path(&self, fact: &str, kinds: &[AdapterPath]) -> Path {
+        let adding: Vec<&AdapterPath> = kinds
+            .iter()
+            .filter(|k| k.adds.iter().any(|a| a == fact))
+            .collect();
+        if adding.is_empty() {
+            return Path::NoKind;
+        }
+        let stated = |map: &BTreeMap<String, Vec<Declaration>>, declaration: &str, name: &str| {
+            map.get(name)
+                .is_some_and(|ds| ds.iter().any(|d| d.declared_by == declaration))
+        };
+        let mut partial = None;
+        for kind in &adding {
+            for declaration in self.composes.keys() {
+                let offered: Vec<&String> = kind
+                    .beneath
+                    .iter()
+                    .filter(|b| stated(&self.offered, declaration, b))
+                    .collect();
+                if offered.len() == kind.beneath.len() {
+                    return Path::Whole;
+                }
+                let undescribed: Vec<String> = kind
+                    .beneath
+                    .iter()
+                    .filter(|b| !stated(&self.offered, declaration, b))
+                    .cloned()
+                    .collect();
+                let none_absent = undescribed
+                    .iter()
+                    .all(|b| !stated(&self.absent, declaration, b));
+                if partial.is_none() && !offered.is_empty() && none_absent {
+                    partial = Some(Path::Partial {
+                        kind: kind.kind.clone(),
+                        declaration: declaration.clone(),
+                        undescribed,
+                    });
+                }
+            }
+        }
+        partial.unwrap_or_else(|| Path::Nowhere(adding.into_iter().cloned().collect()))
     }
 
     /// Every block and platform `name` composes, at any composition depth.

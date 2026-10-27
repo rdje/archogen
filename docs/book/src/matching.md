@@ -514,10 +514,10 @@ The search chooses over it (`M3.4.2`) and writes the plan the checker reads (`M3
 it, is `M3.4.4`'s. Over the tracked examples it
 resolves every one of `s0-heartbeat`'s descriptions and refuses each other example: their timers offer a width and no modulus,
 from which the vocabulary derives no horizon, and their policies' constraints wait on the catalog — `missing-fact` —
-while `alternative-timer`'s absolute deadline, which its timer declares absent, is `infeasible-configuration` until
-`M3.2`'s adapter offers it past that absence — once its timer states its modulus, a change to the description the
-director approves first, and `missing-fact` from `M3.2.4` until then, describing the modulus being the repair
-(`docs/specs/adapters/decision_engine-adapters.md` §7, §8).
+while `alternative-timer`'s absolute deadline, which its timer declares absent, is `missing-fact` (`M3.2.4`): the
+engine's adapter would offer it past that absence once its timer states its modulus, a change to the description the
+director approves first, and describing the modulus is the repair (`docs/specs/adapters/decision_engine-adapters.md`
+§7, §8).
 
 `archogen check` does not call it yet, so no verdict a description gets today comes from it. Leaf `M3.4` wires it in,
 over the providers of each system's hardware — a block no system uses decides nothing, as an unused device costs

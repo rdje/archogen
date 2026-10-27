@@ -332,3 +332,27 @@ fn every_refusal_holds_a_fault_and_accepts_its_arm() {
         assert!(found.contains(&cause), "{case}: {found:?}\n{text}");
     }
 }
+
+#[test]
+fn presence_reads_the_catalog_s_names_as_the_generator_does() {
+    // Record §1.2: presence's reading of the file, names alone (`eadl_model::presence::adapter_paths`), is a third,
+    // held to the generator's kind by kind — what each adds and what its `beneath` names.
+    let catalog = shipped();
+    let paths = eadl_model::presence::adapter_paths();
+    let ours: Vec<(String, Vec<String>, Vec<String>)> = catalog
+        .kinds
+        .iter()
+        .map(|kind| {
+            (
+                kind.name.clone(),
+                kind.adds().into_iter().map(str::to_string).collect(),
+                kind.beneath_names.clone(),
+            )
+        })
+        .collect();
+    let presence: Vec<(String, Vec<String>, Vec<String>)> = paths
+        .into_iter()
+        .map(|path| (path.kind, path.adds, path.beneath))
+        .collect();
+    assert_eq!(ours, presence);
+}

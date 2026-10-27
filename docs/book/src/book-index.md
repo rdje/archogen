@@ -94,13 +94,13 @@ a change that leaves it stale, so it is never edited by hand.
   description](checking.md), [Matching an offer to a requirement](matching.md), [The engine API](engine-api.md)
 - Cargo failure framing repair — [Annex C: Trust proof records](annex-trust-proofs.md#cargo-failure-framing-repair)
 - **catalog** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
-  board](tour.md), [What a report may claim](evidence.md), [Matching an offer to a requirement](matching.md), [What the
-  scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md),
-  [Checks that must not share a mistake: the trust gate](trust.md), [The runtime: decisions, not actions](runtime.md),
-  [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [The archogen command line](cli.md),
-  [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned,
-  and what changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex C: Trust
-  proof records](annex-trust-proofs.md)
+  board](tour.md), [Checking a description](checking.md), [What a report may claim](evidence.md), [Matching an offer to
+  a requirement](matching.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge
+  comes from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
+  decisions, not actions](runtime.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md),
+  [The archogen command line](cli.md), [Verifying the toolchain](verification.md), [What this project relies on from
+  outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Catalog builder dependency-reader assessment — [Annex C: Trust proof
   records](annex-trust-proofs.md#catalog-builder-dependency-reader-assessment)
 - Catalog dependency-reader cleanup — [Annex C: Trust proof
@@ -226,11 +226,12 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#daily-artifact-cleanup-on-2026-10-24)
 - **deadline** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [Reading a
-  description](reading.md), [Quantities and units](quantities.md), [Describing a workload](workload.md), [What a report
-  may claim](evidence.md), [Matching an offer to a requirement](matching.md), [Checking a plan](plan-check.md), [What
-  the scheduling checker establishes](analysis.md), [The runtime: decisions, not actions](runtime.md), [The engine
-  API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
-  costs](versions.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+  description](reading.md), [Quantities and units](quantities.md), [Presence, absence, and relevance](presence.md),
+  [Describing a workload](workload.md), [What a report may claim](evidence.md), [Matching an offer to a
+  requirement](matching.md), [Checking a plan](plan-check.md), [What the scheduling checker establishes](analysis.md),
+  [The runtime: decisions, not actions](runtime.md), [The engine API](engine-api.md), [Verifying the
+  toolchain](verification.md), [What is versioned, and what changing it costs](versions.md), [Annex C: Trust proof
+  records](annex-trust-proofs.md)
 - Dependency path assessment contracts — [Annex C: Trust proof
   records](annex-trust-proofs.md#dependency-path-assessment-contracts)
 - Dependency path-domain assessment — [Annex C: Trust proof

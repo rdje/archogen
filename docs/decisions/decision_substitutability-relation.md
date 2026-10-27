@@ -551,6 +551,8 @@ decided in this record.
 - `uc3`'s seal: `timer.delay` states no modulus, and its policy waits on a record, so its horizon comes from one
   provider — itself, an adapter or a record after `M3.7` — `M3.2`'s to choose, the director's before the description
   changes (`SR-H10`; R14 1; R15 4); its level it states itself (`M3.3.4.5`).
+  *Chosen `2026-10-27`: the adapter `deadline-over-delay`, once `timer.delay` states its modulus, the director's
+  (`M3.4.7`); `SR-H8` and `SR-H9` built by `M3.2.3.2` and `M3.2.4` (`docs/specs/adapters/decision_engine-adapters.md`).*
 - `/1` has no condition role: the context a plan binds a caller to is §5.4's privilege constraint, `M3.3`'s; a clock
   a block must be fed is another fact, added when a description needs one (R2 B2; R10 J1, J6).
 - Arithmetic in a description stays refused: `(pow2 N)` is a literal's spelling, and a new derivation is a new named

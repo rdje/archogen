@@ -12,7 +12,7 @@ tested against, and the systems the engine will eventually build.
 | --- | --- | --- |
 | [`periodic-three/`](periodic-three/) | `uc1` | builds |
 | [`high-interference/`](high-interference/) | `uc2` | builds; the timing property may return `not-established` |
-| [`alternative-timer/`](alternative-timer/) | `uc3` | refused before `M3.2`, builds after — `infeasible-configuration` today |
+| [`alternative-timer/`](alternative-timer/) | `uc3` | refused today, `missing-fact` — builds once its timer states its modulus and `M3.7`'s records offer its policy |
 | [`bounded-queue/`](bounded-queue/) | `uc4` | **must stay refused** — `unsupported-profile` |
 
 All numbers are **synthetic** — not measurements, not attributed to any published task set, not
@@ -57,13 +57,16 @@ Every example runs through `archogen check`, and a test asserts the verdict each
 
 ```console
 $ archogen check examples/periodic-three/system.eadl  ; echo $?   # 0  accepted
-$ archogen check examples/alternative-timer/system.eadl ; echo $? # 13 infeasible-configuration
+$ archogen check examples/alternative-timer/system.eadl ; echo $? # 11 missing-fact
 $ archogen check examples/bounded-queue/system.eadl   ; echo $?   # 12 unsupported-profile
 ```
 
 `uc3` and `uc4` are refused for different reasons, and the difference matters. `uc3`'s refusal is
-**temporary**: the same description must build once `M3.2` supplies indirect realization, without
-changing. It changed once before then, moving no requirement: its hardware states the level it is
+**temporary**: `M3.2` supplies the indirect realization, an engine adapter programming its relative
+timer, which needs the timer's modulus — so it builds once its timer states
+`(counter-modulus 4294967296)`, a change brought to the director before it is made (`SR-H10`, leaf
+`M3.4.7`), and `M3.7`'s records offer its policy's constraints. No requirement of it changes. It
+changed once before, moving no requirement either: its hardware states the level it is
 reachable from, `(reachable-at-privilege machine)`, as every example's does
 ([`eadl-1-uc3-states-its-level.md`](../docs/semantics/migrations/eadl-1-uc3-states-its-level.md)).
 From then on, any change to what it describes moves its digest in `docs/semantics/BASELINE.txt`,
