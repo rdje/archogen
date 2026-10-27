@@ -232,8 +232,11 @@ revision, `2026-07-28`, there is no handshake: every request names its version a
 `_meta`, and is answered on its own. Under the one before, `2025-11-25`, the client opens with `initialize`, and the
 server keeps that choice until its input ends.
 
-It offers the command table's tools, so an agent learns at once that `resolve` exists and is not served here yet: it
-runs on the command line and in the engine API (leaf `M3.4.4`), and its tool is `M3.4.6`'s. `check`
+It offers the command table's tools, so an agent learns at once what exists and what does not yet. `resolve` takes
+`check`'s arguments, `system` and `unchecked`, and answers `{"response": …, "plan": …}`: the API's response in the
+wasm binding's encoding, and the plan or `null` (leaf `M3.4.6`). It must be asked with `unchecked` set — this server,
+the generator's, runs no checker, so it refuses otherwise with the repair: compose the plan with
+`archogen-plan-check`'s own tool. Its description says it is experimental, and what it searches over today. `check`
 takes the API's request — the description's text, its profile and its modules' texts, never a path — and answers the
 API's response in the wasm binding's encoding above, the same bytes, both as structured content and as text. Its
 result is an error whenever the description is not accepted, so a client that reads one flag never mistakes a
@@ -244,8 +247,8 @@ with the versions it does:
 <!-- mcp-transcript: crates/archogen-cli/tests/mcp_stdio.rs sends each `→` line to `archogen mcp` and compares its
      answers with the `←` lines -->
 ```text
-→ {"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{}},"name":"resolve","arguments":{}}}
-← {"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"`resolve` is not built yet: task-tree leaf M3.4.6 owns it (docs/TASK_TREE.md)"}],"isError":true,"resultType":"complete","_meta":{"io.modelcontextprotocol/serverInfo":{"name":"archogen","version":"0.1.0"}}}}
+→ {"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{}},"name":"replay","arguments":{}}}
+← {"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"`replay` is not built yet: task-tree leaf M4.7 owns it (docs/TASK_TREE.md)"}],"isError":true,"resultType":"complete","_meta":{"io.modelcontextprotocol/serverInfo":{"name":"archogen","version":"0.1.0"}}}}
 → {"jsonrpc":"2.0","id":2,"method":"tools/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2024-11-05","io.modelcontextprotocol/clientCapabilities":{}}}}
 ← {"jsonrpc":"2.0","id":2,"error":{"code":-32022,"message":"protocol version `2024-11-05` is not served per request: `2026-07-28` is, and `2025-11-25` after `initialize`","data":{"supported":["2026-07-28","2025-11-25"],"requested":"2024-11-05"}}}
 ```
@@ -280,8 +283,9 @@ consumers reach the engine today, and all four reach the same operation:
 | a web page | the wasm binding (`crates/archogen-wasm`, `docs/decisions/decision_wasm-binding.md`) | check text, its imports framed into the request | the same response, encoded as JSON |
 | an agent | `archogen mcp` (`crates/archogen-cli/src/mcp.rs`, `docs/decisions/decision_mcp-server.md`) | call the `check` tool, and discover the others with their maturity and the leaf that owns each | the binding's JSON as the tool's structured result, marked an error unless the description was accepted |
 
-`resolve` reaches two of them today: the person, through `archogen resolve`, and the Rust program, through
-`archogen_api::resolve_with`; the agent's is `M3.4.6`'s. Every one of them receives §5.5's verdict whenever the
+`resolve` reaches the person, through `archogen resolve`; the Rust program, through
+`archogen_api::resolve_with`; and the agent, through the MCP tool `resolve` (leaf `M3.4.6`). A page has none: the
+generator's wasm module answers `check`. Every one of them receives §5.5's verdict whenever the
 description was judged, and a status that says why when it was not; none receives `ok` for a description nobody judged. None of them can generate a system or run the
 verification tiers, and only the person's own tool reads files: a program, a page and an agent hand over every
 module themselves.
@@ -334,8 +338,9 @@ the language and the MCP surface are not Rust items, and stay the book's alone.
 - **Today:** `check` through four doors — the command line, the library, the page and the MCP server — each held to
   the same answers by tests: the command line's parity legs, the integration tier's `wasm-binding` step, and the MCP
   server's stdio test over the conformance cases in both protocol eras; and `resolve`, the search alone, through the
-  command line and the library (`M3.4.4`), held to one answer by its parity leg.
-- **Ahead:** `resolve` joins the MCP server (`M3.4.6`); each other command the table lists as offered joins the API
+  command line, the library and the MCP server (`M3.4.4`, `M3.4.6`), the first two held to one answer by its parity
+  leg.
+- **Ahead:** each other command the table lists as offered joins the API
   when its own leaf builds it: `explain` (`M3.4.13`), `replay` (`M4.7`). The MCP server lists them already, each naming that leaf. `analyze` and
   `plan-check` are the checkers' own tools, served by their own servers (`M2.21.4`; `M3.5.1.6.4`, built); `verify` waits for
   a ruling of its own and its builder, `M4.11`; and `build` stays outside, by §10.4. `resolve` joined as the search

@@ -26,8 +26,8 @@
 
 use std::io::{self, BufRead, Write};
 
-use archogen_api::{check_with, Limits, MemoryModules, Request, Status};
-use archogen_transport::{object, string, text_block, tool_error, Failure, Tools};
+use archogen_api::{check_with, Limits, MemoryModules, Request, Resolve, Status};
+use archogen_transport::{integer, object, string, text_block, tool_error, Failure, Tools};
 
 use crate::json::{self, Value};
 use crate::spec::{self, CommandSpec, Maturity};
@@ -45,7 +45,9 @@ pub const LINE_LIMIT: usize = 6 * archogen_api::DEFAULT_BYTES + 64 * 1024;
 
 /// One sentence for a client to hand its model, in `server/discover` and `initialize`.
 const INSTRUCTIONS: &str = "archogen checks eADL system descriptions: call `check` with a description's text, and \
-read the verdict in the result's `status`; the other tools are listed with the task-tree leaf that will build them.";
+read the verdict in the result's `status`; `resolve`, with `unchecked` set, searches one system for a plan that \
+nothing has checked — compose it with archogen-plan-check's own tool; the other tools are listed with the task-tree \
+leaf that will build them.";
 
 /// The generator's tools: the command table's ([`crate::spec::tools`]).
 #[derive(Debug, Clone, Copy, Default)]
@@ -76,8 +78,10 @@ impl Tools for Engine {
         let Some(spec) = spec::tools().find(|spec| spec.name == name) else {
             return Err(Failure::Params(format!("no tool `{name}`")));
         };
+        // A tool with a handler runs whatever its maturity — `resolve` is experimental, and runs (leaf `M3.4.6`).
         match (&spec.maturity, spec.name) {
-            (Maturity::Built, "check") => check(arguments),
+            (_, "check") => check(arguments),
+            (_, "resolve") => resolve(arguments),
             (Maturity::Built, name) => Err(Failure::Internal(format!(
                 "`{name}` is marked built and this server has no handler for it"
             ))),
@@ -128,27 +132,34 @@ fn tool(spec: &CommandSpec) -> Value {
     if let Some(owner) = owner {
         meta.push((format!("{PREFIX}owner"), string(owner)));
     }
-    // A model reads a tool's description; few clients show it `_meta`. So a tool this server cannot run says so where it
-    // is read — an unimplemented one, and an experimental one, which runs on the command line alone until its owner
-    // offers it here (`resolve`, leaf `M3.4.4`): a call of either answers "not built yet", and the description agrees.
-    let description = match owner {
-        Some(owner) => {
+    // A model reads a tool's description; few clients show it `_meta`. So what a tool is says so where it is read: an
+    // unimplemented one that it is not built yet, which a call of it answers too, and an experimental one what it does
+    // today (`resolve`, leaf `M3.4.6`).
+    let description = match spec.maturity {
+        Maturity::Unimplemented { owner } => {
             format!(
                 "{} — not built yet: task-tree leaf {owner} owns it",
                 spec.summary
             )
         }
-        _ => spec.summary.to_owned(),
+        Maturity::Experimental {
+            scope,
+            completed_by,
+        } => format!(
+            "{} — experimental: {scope}; task-tree leaf {completed_by} completes it",
+            spec.summary
+        ),
+        Maturity::Built => spec.summary.to_owned(),
     };
     object(vec![
         ("name", string(spec.name)),
         ("description", Value::String(description)),
         (
             "inputSchema",
-            if spec.name == "check" {
-                check_schema()
-            } else {
-                object(vec![("type", string("object"))])
+            match spec.name {
+                "check" => check_schema(),
+                "resolve" => resolve_schema(),
+                _ => object(vec![("type", string("object"))]),
             },
         ),
         (
@@ -210,7 +221,7 @@ fn check_schema() -> Value {
 /// `check`: the arguments read as the engine API's request, judged, and answered in the wasm binding's encoding.
 /// An argument it cannot use is a tool error, with what to change.
 fn check(arguments: &Value) -> Result<Value, Failure> {
-    match check_request(arguments) {
+    match check_request(arguments, &[]) {
         Ok((name, text, profile, modules)) => judge(name, text, profile, &modules),
         Err(problem) => Ok(tool_error(&format!(
             "{problem}; `check` takes `description` (the text), and optionally `name`, `profile` and `modules`, \
@@ -219,13 +230,18 @@ fn check(arguments: &Value) -> Result<Value, Failure> {
     }
 }
 
-/// `check`'s arguments, read, or what is wrong with them.
-fn check_request(arguments: &Value) -> Result<(&str, &str, Option<&str>, MemoryModules), String> {
+/// `check`'s arguments — and `extra`, which a tool taking them adds — read, or what is wrong with them.
+fn check_request<'a>(
+    arguments: &'a Value,
+    extra: &[&str],
+) -> Result<(&'a str, &'a str, Option<&'a str>, MemoryModules), String> {
     let Value::Object(members) = arguments else {
         return Err("the arguments are not an object".to_owned());
     };
     for (key, _) in members {
-        if !matches!(key.as_str(), "description" | "name" | "profile" | "modules") {
+        if !matches!(key.as_str(), "description" | "name" | "profile" | "modules")
+            && !extra.contains(&key.as_str())
+        {
             return Err(format!("there is no argument `{key}`"));
         }
     }
@@ -253,6 +269,118 @@ fn check_request(arguments: &Value) -> Result<(&str, &str, Option<&str>, MemoryM
         Some(_) => return Err("`modules` is not an object".to_owned()),
     }
     Ok((name, text, profile, modules))
+}
+
+/// What `resolve` takes: `check`'s arguments, the system to resolve, and `unchecked`, which the engine API requires.
+fn resolve_schema() -> Value {
+    let mut schema = check_schema();
+    if let Value::Object(members) = &mut schema {
+        for (key, value) in members.iter_mut() {
+            match (key.as_str(), value) {
+                ("properties", Value::Object(properties)) => {
+                    properties.push((
+                        "system".to_owned(),
+                        object(vec![
+                            ("type", string("string")),
+                            (
+                                "description",
+                                string(
+                                    "the system to resolve, when the description declares several",
+                                ),
+                            ),
+                        ]),
+                    ));
+                    properties.push((
+                        "unchecked".to_owned(),
+                        object(vec![
+                            ("type", string("boolean")),
+                            (
+                                "description",
+                                string(
+                                    "must be true: this server runs no checker, so it answers the search alone, a \
+                                     plan nothing has checked — compose it with archogen-plan-check's own tool",
+                                ),
+                            ),
+                        ]),
+                    ));
+                }
+                ("required", required) => {
+                    *required = Value::Array(vec![string("description"), string("unchecked")]);
+                }
+                _ => {}
+            }
+        }
+    }
+    schema
+}
+
+/// `resolve` (leaf `M3.4.6`): the arguments read as the engine API's request and `Resolve`, asked of
+/// [`archogen_api::resolve_with`] under the default budget, and answered as `{"response": …, "plan": …}` — the response
+/// in the wasm binding's encoding, the plan its system, text, program digest and bindings, or `null` — that JSON the one
+/// text block, and `isError` unless the response is `ok`. Without `unchecked` the API refuses, with its reason and repair.
+fn resolve(arguments: &Value) -> Result<Value, Failure> {
+    let read = check_request(arguments, &["system", "unchecked"]).and_then(
+        |(name, text, profile, modules)| {
+            let system = match arguments.get("system") {
+                None => None,
+                Some(Value::String(system)) => Some(system.as_str()),
+                Some(_) => return Err("`system` is not a string".to_owned()),
+            };
+            let unchecked = match arguments.get("unchecked") {
+                None => false,
+                Some(Value::Bool(unchecked)) => *unchecked,
+                Some(_) => return Err("`unchecked` is not a boolean".to_owned()),
+            };
+            Ok((name, text, profile, modules, system, unchecked))
+        },
+    );
+    let (name, text, profile, modules, system, unchecked) = match read {
+        Ok(read) => read,
+        Err(problem) => {
+            return Ok(tool_error(&format!(
+                "{problem}; `resolve` takes `description` (the text) and `unchecked`, and optionally `name`, \
+                 `profile`, `system` and `modules`, each module's name mapped to its text"
+            )))
+        }
+    };
+    let resolution = archogen_api::resolve_with(
+        &Request {
+            name,
+            text,
+            profile,
+            modules: &modules,
+        },
+        &Resolve { system, unchecked },
+        Limits::DEFAULT,
+    );
+    let encoded = archogen_wasm::json::encode(&resolution.response);
+    let response = json::read(encoded.as_bytes(), usize::MAX).map_err(|refusal| {
+        Failure::Internal(format!(
+            "the response's encoding could not be read back: {refusal}"
+        ))
+    })?;
+    let plan = match &resolution.plan {
+        None => Value::Null,
+        Some(plan) => object(vec![
+            ("system", string(&plan.system)),
+            ("text", string(&plan.text)),
+            ("program", string(&plan.program)),
+            (
+                "bindings",
+                integer(i64::try_from(plan.bindings).unwrap_or(i64::MAX)),
+            ),
+        ]),
+    };
+    let structured = object(vec![("response", response), ("plan", plan)]);
+    let written = json::write(&structured);
+    Ok(object(vec![
+        ("content", Value::Array(vec![text_block(&written)])),
+        ("structuredContent", structured),
+        (
+            "isError",
+            Value::Bool(resolution.response.status != Status::Ok),
+        ),
+    ]))
 }
 
 /// The engine API's judgement of one request, in the wasm binding's encoding.
@@ -321,6 +449,92 @@ mod tests {
         )
     }
 
+    /// A plain description of one system, which the search resolves to one binding.
+    const ONE_SYSTEM: &str = "(eadl-version eadl/1)
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem s (task beat (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (requires (uses console.write)) (platform (uses soc)))
+";
+
+    fn resolve_call(arguments: &str) -> String {
+        modern(
+            "tools/call",
+            &format!(r#","name":"resolve","arguments":{arguments}"#),
+        )
+    }
+
+    #[test]
+    fn resolve_answers_the_plan_with_unchecked_set_and_the_api_s_refusal_without_it() {
+        let description = json::write(&Value::String(ONE_SYSTEM.to_owned()));
+        let value = answer(
+            &mut Server::default(),
+            &resolve_call(&format!(
+                r#"{{"description":{description},"unchecked":true}}"#
+            )),
+        )
+        .expect("answered");
+        let result = value.get("result").expect("a result");
+        assert_eq!(result.get("isError"), Some(&Value::Bool(false)));
+        let structured = result.get("structuredContent").expect("structured content");
+        let text = match result.get("content") {
+            Some(Value::Array(blocks)) => blocks[0].get("text").and_then(Value::as_str).unwrap(),
+            _ => panic!("one text block"),
+        };
+        assert_eq!(
+            json::write(structured),
+            text,
+            "the text block is the structured content"
+        );
+        assert_eq!(
+            structured
+                .get("response")
+                .and_then(|r| r.get("status"))
+                .and_then(Value::as_str),
+            Some("ok")
+        );
+        let plan = structured.get("plan").expect("a plan");
+        assert_eq!(plan.get("system").and_then(Value::as_str), Some("s"));
+        assert!(plan.get("text").and_then(Value::as_str).is_some_and(
+            |text| text.ends_with("(bind console.write observable-output console.uart)\n")
+        ));
+        // Without `unchecked`, or with it false, the engine API refuses, and says how to have the plan checked.
+        for arguments in [
+            format!(r#"{{"description":{description}}}"#),
+            format!(r#"{{"description":{description},"unchecked":false}}"#),
+        ] {
+            let value =
+                answer(&mut Server::default(), &resolve_call(&arguments)).expect("answered");
+            let result = value.get("result").expect("a result");
+            assert_eq!(
+                result.get("isError"),
+                Some(&Value::Bool(true)),
+                "{arguments}"
+            );
+            let structured = result.get("structuredContent").expect("structured content");
+            assert_eq!(structured.get("plan"), Some(&Value::Null), "{arguments}");
+            let response = structured.get("response").expect("the response");
+            assert_eq!(
+                response.get("status").and_then(Value::as_str),
+                Some("usage")
+            );
+            assert!(
+                json::write(response).contains("archogen-plan-check"),
+                "{arguments}"
+            );
+        }
+        // An argument it cannot use is a tool error saying what it takes.
+        let value = answer(
+            &mut Server::default(),
+            &resolve_call(&format!(
+                r#"{{"description":{description},"unchecked":"yes"}}"#
+            )),
+        )
+        .expect("answered");
+        assert!(json::write(&value).contains("`unchecked` is not a boolean"));
+    }
+
     #[test]
     fn server_discover_names_both_versions_and_the_tools_capability() {
         let value =
@@ -380,7 +594,7 @@ mod tests {
                 .get("_meta")
                 .and_then(|meta| meta.get("io.github.rdje.archogen/owner"))
                 .and_then(Value::as_str),
-            Some("M3.4.6")
+            Some("M3.7")
         );
         assert_eq!(
             tools[1]
@@ -388,7 +602,7 @@ mod tests {
                 .and_then(|meta| meta.get("io.github.rdje.archogen/maturity"))
                 .and_then(Value::as_str),
             Some("experimental"),
-            "`resolve` runs on the command line, and its programmatic face is `M3.4.6`'s"
+            "`resolve` runs over the description's own providers, and the catalog's are `M3.7`'s"
         );
     }
 
@@ -865,9 +1079,15 @@ mod review_tests {
                 .get("description")
                 .and_then(Value::as_str)
                 .unwrap_or_default();
+            // Not built yet exactly where a call answers so; an experimental tool says what it does today.
             assert_eq!(
                 description.contains("not built yet"),
-                name != "check",
+                !matches!(name, "check" | "resolve"),
+                "{name}: {description}"
+            );
+            assert_eq!(
+                description.contains("experimental:"),
+                name == "resolve",
                 "{name}: {description}"
             );
         }

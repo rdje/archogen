@@ -33,7 +33,7 @@ USAGE:
 
 COMMANDS:
     check       elaborate and type-check a description against a profile
-    resolve     resolve providers and resources into an independently checked build plan   [experimental — one system of a description of one instance, over its own blocks and platforms; catalog providers wait on M3.7; completed by leaf M3.4.6]
+    resolve     resolve providers and resources into an independently checked build plan   [experimental — one system of a description of one instance (several are M3.4.10's), over its own blocks and platforms; completed by leaf M3.7]
     plan-check  check a resolved plan against its description, by the independent configuration checker
     build       generate, assemble and build a complete system and its simulator   [experimental — the S0 path: one fixed realization, periodic releases, hosted playground; completed by leaf M4.2]
     analyze     run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.21.2]
@@ -50,7 +50,7 @@ COMMANDS:
 | Command | Does | Built by |
 | --- | --- | --- |
 | `archogen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | **built** — a description is one file or a module tree; see [Checking a description](checking.md) and [Modules and composition](modules.md) |
-| `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked] [--system <NAME>]` | resolve providers and resources into an independently checked build plan | **experimental** — one system of a description of one instance, over its own blocks and platforms, the plan checked by `archogen-plan-check`; `--locked` refused until `M4.1`; leaf `M3.4.6` completes it, `M3.7` adds the catalog's providers |
+| `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked] [--system <NAME>]` | resolve providers and resources into an independently checked build plan | **experimental** — one system of a description of one instance, over its own blocks and platforms, the plan checked by `archogen-plan-check`; `--locked` refused until `M4.1`; `M3.4.10` adds programs of several instances, and `M3.7` the catalog's providers, completing it |
 | `archogen plan-check <DESCRIPTION> <PLAN>` | check a resolved plan against its description, by the independent configuration checker | **built** — runs the configuration checker's own executable, `archogen-plan-check`, from an install, its arguments handed over unparsed; see [Checking a plan](plan-check.md) |
 | `archogen build <DESCRIPTION> [--profile <P>] --out <DIR>` | generate, assemble and build a complete system and its simulator | **experimental** — the S0 path only, see [The S0 early generation path](s0.md); leaf `M4.2` completes it |
 | `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.21.2` |
@@ -109,7 +109,7 @@ by a program that shares none of its code; with `--unchecked` it writes the plan
 ```console
 $ archogen resolve system.eadl --out plan.json --unchecked
 system.eadl: resolved system `heartbeat` against profile `rt-static-up-v1` into plan.json (1 binding(s))
-  experimental: one system of a description of one instance, over its own blocks and platforms; catalog providers wait on M3.7; completed by M3.4.6
+  experimental: one system of a description of one instance (several are M3.4.10's), over its own blocks and platforms; completed by M3.7
 archogen: unchecked: `--unchecked` — the plan was not checked by `archogen-plan-check`; nothing independent judged it
 $ cat plan.json
 (format "archogen-assignment/1")

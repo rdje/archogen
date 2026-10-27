@@ -39,6 +39,13 @@
    its one tool `plan-check` over the same framing, `crates/archogen-transport` — texts in, the result record answered
    inline, `isError` unless it accepts, under the checker's own byte budget, §3 to §5's choices made for its own
    request (the book's *Checking a plan*).*
+   *Since `2026-10-27` (leaf `M3.4.6`) `resolve` is served, experimental as the command is: it takes §3's request with
+   `system` and `unchecked`, asks the engine API's `resolve` (version `1.4`, leaf `M3.4.4`), and answers
+   `{"response": …, "plan": …}` — the response in §4's encoding, the plan or `null` — that JSON its one text block and
+   `isError` unless the response accepts. The API answers the search alone, so a call without `unchecked` set is its
+   refusal with the repair: compose the plan with `archogen-plan-check`'s own tool. A tool's description says what it
+   is where a model reads it: "not built yet" for an unimplemented one, which a call answers too, and what an
+   experimental one does today.*
 3. **A tool takes the engine API's request, not the command line's.** The command line names a file; the server
    has no filesystem authority (§10.4), so `check` takes the description's text, its profile and the texts of its
    modules — `archogen_api::Request` — under the API's byte budget, and answers `archogen_api::Response`.

@@ -5,6 +5,13 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — agents can ask for a plan
+
+`ARCHOGEN-M3-1007` (leaf `M3.4.6`), `2026-10-27`.
+
+- The MCP server's `resolve` tool answers: an agent hands it a description and gets the plan the search wrote, marked
+  as unchecked — the agent composes it with the configuration checker's own tool to have it checked.
+
 ## archogen — the search's limits said plainly
 
 `ARCHOGEN-M3-1006` (leaf `M3.4.5`), `2026-10-27`.

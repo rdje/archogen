@@ -173,7 +173,7 @@ fn a_resolved_plan_is_checked_and_the_checker_s_verdict_is_the_status() {
     );
     assert!(out.contains("resolved system `heartbeat`"), "{out}");
     assert!(
-        out.contains("experimental:") && out.contains("completed by M3.4.6"),
+        out.contains("experimental:") && out.contains("completed by M3.7"),
         "{out}"
     );
     assert!(

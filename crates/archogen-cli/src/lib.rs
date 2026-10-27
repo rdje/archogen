@@ -286,7 +286,7 @@ mod tests {
             .find(|line| line.trim_start().starts_with("resolve "))
             .expect("resolve is listed");
         assert!(
-            resolve_line.contains("experimental") && resolve_line.contains("M3.4.6"),
+            resolve_line.contains("experimental") && resolve_line.contains("M3.7"),
             "`resolve` is experimental and should say so: {resolve_line}"
         );
     }

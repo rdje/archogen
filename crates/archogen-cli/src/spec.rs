@@ -218,12 +218,13 @@ pub const COMMANDS: &[CommandSpec] = &[
             },
         ],
         sibling: None,
-        // The search over the description's own blocks and platforms (leaf `M3.4.4`); the engine API's and the MCP
-        // server's `resolve`, unchecked, are `M3.4.6`'s, which completes it.
+        // The search over the description's own blocks and platforms (leaf `M3.4.4`), offered by the engine API and the
+        // MCP server unchecked (`M3.4.6`); a program of several instances is `M3.4.10`'s, and the catalog's providers,
+        // `M3.7`'s, complete it.
         maturity: Maturity::Experimental {
-            scope: "one system of a description of one instance, over its own blocks and platforms; catalog \
-                    providers wait on M3.7",
-            completed_by: "M3.4.6",
+            scope: "one system of a description of one instance (several are M3.4.10's), over its own blocks and \
+                    platforms",
+            completed_by: "M3.7",
         },
         exposure: Exposure::Tool,
     },
