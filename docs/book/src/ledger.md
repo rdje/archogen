@@ -451,3 +451,17 @@ Producer observations, normalization proofs, counterexamples and revalidation re
 | Known limitations | terms GitHub may change; the arrangement rests on the director keeping a single personal account and a single machine account |
 | Revalidation trigger | a change to GitHub's account terms, or a second machine account wanted |
 | Named as | `GitHub's terms of service` |
+
+## `github-personal-access-tokens`
+
+| Field | Value |
+| --- | --- |
+| Source | GitHub Docs, "Managing your personal access tokens" |
+| Version | the page as served on `2026-10-28` |
+| Pinned at | not pinned — read at `https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens`; no build or check reads it |
+| Retrieved | `2026-10-28` |
+| Hash | sha256 `519aa3e0846f1ae2582e612ca78e01b3fb64efeca7d0f273ddfe6b1bcae98f4c` of the page read |
+| Scope | two passages, quoted in `docs/decisions/decision_main-protection.md` §2 for why the agents' token is a classic one: "Only personal access tokens (classic) have write access for public repositories that are not owned by you or an organization that you are not a member of", and fine-grained tokens' listed gap, "to contribute to repositories where the user is an outside or repository collaborator" |
+| Known limitations | a gap GitHub lists as current, which a later release may close; the token's single scope, `public_repo`, is the agents' choice, not the page's |
+| Revalidation trigger | fine-grained tokens gaining collaborator access, or the repository becoming private |
+| Named as | `Managing your personal access tokens` |

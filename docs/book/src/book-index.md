@@ -351,6 +351,7 @@ a change that leaves it stale, so it is never edited by hand.
 - github-actions-syntax — [What this project relies on from outside](ledger.md#github-actions-syntax)
 - github-machine-account — [What this project relies on from outside](ledger.md#github-machine-account)
 - github-merge-queue — [What this project relies on from outside](ledger.md#github-merge-queue)
+- github-personal-access-tokens — [What this project relies on from outside](ledger.md#github-personal-access-tokens)
 - **GNU** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Verifying the
   toolchain](verification.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - **GPG** — [definition](glossary.md), [What this project relies on from outside](ledger.md)

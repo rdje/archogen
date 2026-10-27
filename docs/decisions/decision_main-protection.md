@@ -87,15 +87,24 @@ GitHub's terms allow it: "You may maintain no more than one free machine account
 Account", and "A machine account is used exclusively for performing automated tasks" ([GitHub's terms of service,
 machine account](../book/src/ledger.md#github-machine-account)).
 
-1. Create a free GitHub account for the agents, with its own email address. Its name is the director's choice.
-2. From `rdje`, invite it to `rdje/archogen` with the **Write** role, and accept the invitation from it.
-3. Give the agents its credentials; none is ever written into the repository:
-   - for pushing, an SSH key the agents generate on this machine, its public half added to the machine account;
-   - for opening pull requests, a fine-grained token of the machine account, scoped to `rdje/archogen` alone, with
-     Contents read and write, Pull requests read and write, and Metadata read. The token is kept in the macOS
-     Keychain, under an item `M2.7.6.6.2` names.
-4. The agents then set this repository's git configuration: the machine account's name and email as commit author,
-   and a remote that pushes over its key (`M2.7.6.6.2`).
+Done `2026-10-28` (`M2.7.6.6.2`), each step read back:
+1. The account is **`rdje-bot`**, created by the director (GitHub user id `349045346`).
+2. It is a collaborator of `rdje/archogen` with the **Write** role (`GET /repos/rdje/archogen/collaborators`:
+   `"role_name":"write"`; its token reads `"admin":false,"push":true`).
+3. Its credentials, none written into the repository:
+   - **for pushing**, the key `~/.ssh/id_ed25519_rdje_bot`, generated on this machine without a passphrase, since the
+     agents push unattended; its public half is on `rdje-bot`. The alias `github.com-rdje-bot` in `~/.ssh/config`
+     alone uses it. `ssh -T git@github.com-rdje-bot` answers "Hi rdje-bot!";
+   - **for pull requests**, a classic token of `rdje-bot` with the one scope `public_repo`, stored by the director in
+     the macOS Keychain as `archogen-rdje-bot-token` without passing through the session. A classic token, because
+     "Only personal access tokens (classic) have write access for public repositories that are not owned by you", and
+     fine-grained ones still lack the right "to contribute to repositories where the user is an outside or repository
+     collaborator" ([Managing your personal access tokens](../book/src/ledger.md#github-personal-access-tokens)).
+4. This repository's local git configuration:
+   - the remote **`agent`**, `git@github.com-rdje-bot:rdje/archogen.git`;
+   - the commit author `rdje-bot <349045346+rdje-bot@users.noreply.github.com>`.
+
+   `origin` and the director's own key are unchanged.
 
 ### 3. The batch workflow
 
