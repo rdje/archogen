@@ -19,6 +19,7 @@
 //! and [`plan`] writes what it chose as `archogen-assignment/1`, by the generator's own code (`M3.4.3`).
 //! `archogen check` does not call any of it yet.
 
+pub mod adapter;
 pub mod joint;
 pub mod offer;
 pub mod plan;

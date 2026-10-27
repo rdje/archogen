@@ -180,11 +180,15 @@ fn the_population_is_the_size_the_census_pins() {
     // 110 → 112 at leaf `M3.1.2.1`: `docs/semantics/kinds/deffact.eadl`, the kind the capability vocabulary is
     // written with, and the new `docs/semantics/vocabulary` root's `vocabulary.eadl`, `/1` — the language's own
     // definitions, frozen with `eadl/1` (`decision_substitutability-relation.md` §1.1, `SR-H2`).
+    //
+    // 112 → 114 at leaf `M3.2.2`: `docs/semantics/kinds/defadapter.eadl`, the kind the engine's adapter catalog is
+    // written with, and the new `docs/semantics/adapters` root's `adapters.eadl`, `adapters/1` — the engine's own
+    // knowledge, frozen with `eadl/1` as the vocabulary is (`docs/specs/adapters/decision_engine-adapters.md` §1.1).
     let suite = suite();
     assert_eq!(
         suite.len(),
-        112,
-        "the conformance suite holds {} descriptions and this census pins 112 — if a case was added or \
+        114,
+        "the conformance suite holds {} descriptions and this census pins 114 — if a case was added or \
          removed deliberately, update the census in the same commit and say why in the leaf; if not, a \
          root stopped being walked",
         suite.len()

@@ -54,7 +54,9 @@ judge a description any other way.
    engine version (leaf `API.4.1`, [[api-instance]]), a field, so a minor. `1.2` added `check_with` and its
    `Limits` (leaf `API.4.2`), an operation's variant, so a minor. `1.3` added the status `stale-input` (leaf
    `M3.5.1.1`), the vocabulary growing, so a minor. `1.4` added the operation `resolve` (leaf `M3.4.4`), so a
-   minor. `1.5` added the operation `explain` (leaf `M3.4.13.2`), so a minor.*
+   minor. `1.5` added the operation `explain` (leaf `M3.4.13.2`), so a minor.
+   `1.6` added the definition `defadapter` (leaf `M3.2.2`), the definitions growing as `1.3`'s statuses did, so a
+   minor.*
 6. **Parity, both ways, gated** (`ROADMAP.md` §10.4: "a capability that exists only behind the CLI does not
    exist programmatically, and the reverse"):
    - *structurally:* the CLI's source calls no judging entry point of the engine (`check`,

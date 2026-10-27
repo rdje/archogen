@@ -77,7 +77,9 @@
 12 unsupported-profile docs/semantics/cases/unsupported-multicore.eadl
 12 unsupported-profile docs/semantics/cases/unsupported-overrun-policy.eadl
 12 missing-fact,unsupported-profile docs/semantics/cases/unsupported-precedence-over-missing-fact.eadl
+20 - docs/semantics/adapters/adapters.eadl
 20 - docs/semantics/kinds/core.eadl
+20 - docs/semantics/kinds/defadapter.eadl
 20 - docs/semantics/kinds/deffact.eadl
 20 - docs/semantics/kinds/os-rt.eadl
 0 - docs/semantics/modules/app.sibling.eadl

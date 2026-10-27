@@ -74,9 +74,10 @@ pub use status::verdict_status;
 /// change. `1.0` was fixed `2026-09-30`, when leaf `API.3` closed; `1.1` added [`Response::engine`] (leaf
 /// `API.4.1`); `1.2` added [`check_with`] and [`Limits`] (leaf `API.4.2`); `1.3` added the status `stale-input`, the
 /// vocabulary growing (leaf `M3.5.1.1`); `1.4` added the operation `resolve`, [`resolve_with`], the search alone (leaf
-/// `M3.4.4`); `1.5` added the operation `explain`, [`explain_with`], one requirement's account (leaf `M3.4.13.2`).
+/// `M3.4.4`); `1.5` added the operation `explain`, [`explain_with`], one requirement's account (leaf `M3.4.13.2`);
+/// `1.6` added [`Definition::Adapter`], the definitions growing as `1.3`'s statuses did (leaf `M3.2.2`).
 /// `docs/book/src/versions.md` registers it.
-pub const VERSION: Version = Version { major: 1, minor: 5 };
+pub const VERSION: Version = Version { major: 1, minor: 6 };
 
 /// The engine version: the one the workspace's members share, which `archogen --version` reports and
 /// `docs/book/src/versions.md` registers as `engine`. With [`VERSION`] it names the build a response came from
@@ -514,7 +515,8 @@ pub fn is_module_file(sources: &SourceMap, id: SourceId) -> bool {
             .any(|form| form.head() == Some("defmodule"))
 }
 
-/// What a file that defines part of the language declares: a kind, or a fact of the capability vocabulary.
+/// What a file that defines part of the language declares: a kind, a fact of the capability vocabulary, or an adapter
+/// of the engine's catalog.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Definition {
     /// `(defkind …)`: a kind module (leaf `M1.32`).
@@ -522,6 +524,9 @@ pub enum Definition {
     /// `(deffact …)`: an entry of the capability vocabulary,
     /// `docs/decisions/decision_substitutability-relation.md` §1.1 (leaf `M3.1.2.1`).
     Fact,
+    /// `(defadapter …)`: an adapter of the engine's catalog, `docs/specs/adapters/decision_engine-adapters.md` §1.1
+    /// (leaf `M3.2.2`, API `1.6`).
+    Adapter,
 }
 
 impl Definition {
@@ -530,6 +535,7 @@ impl Definition {
         match head {
             "defkind" => Some(Self::Kind),
             "deffact" => Some(Self::Fact),
+            "defadapter" => Some(Self::Adapter),
             _ => None,
         }
     }
@@ -540,15 +546,16 @@ impl Definition {
         match self {
             Self::Kind => "defkind",
             Self::Fact => "deffact",
+            Self::Adapter => "defadapter",
         }
     }
 }
 
-/// The first `(defkind …)` or `(deffact …)` of a file that declares one: which definition, the name it gives,
-/// and where.
+/// The first `(defkind …)`, `(deffact …)` or `(defadapter …)` of a file that declares one: which definition, the name
+/// it gives, and where.
 #[derive(Debug)]
 pub struct KindModule {
-    /// Whether it declares a kind or a fact.
+    /// Whether it declares a kind, a fact or an adapter.
     pub definition: Definition,
     /// The kind's or the fact's name, when the declaration gives one.
     pub name: Option<String>,
@@ -625,6 +632,16 @@ fn refuse_kind_module(name: &str, kind: &KindModule, sources: SourceMap) -> Resp
                  {KIND_MODULE_OWNER} (docs/TASK_TREE.md); until then, check a description that offers and \
                  requires the shipped facts"
             ),
+        ),
+        Definition::Adapter => (
+            format!(
+                "{name}:{line}:{column} declares an adapter of the engine's catalog, `{declared}`: the engine's own \
+                 knowledge, not a description"
+            ),
+            "an adapter is the engine's, never a description's: the search binds one of the adapters this toolchain \
+             ships (docs/semantics/adapters/adapters.eadl) where a description's own providers cannot meet a \
+             requirement. Check a description that offers and requires facts"
+                .to_owned(),
         ),
     };
     Response::not_judged(

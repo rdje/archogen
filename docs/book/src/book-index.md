@@ -40,6 +40,7 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#absolute-diagnostic-prefix-proofs)
 - **ACLINT** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - Acronyms and abbreviations — [Words this book uses](glossary.md#acronyms-and-abbreviations)
+- adapter-catalog — [What is versioned, and what changing it costs](versions.md#adapter-catalog)
 - Admitted nonterminal warning regression parent — [Annex C: Trust proof
   records](annex-trust-proofs.md#admitted-nonterminal-warning-regression-parent)
 - **AI** — [definition](glossary.md), [The engine API](engine-api.md)

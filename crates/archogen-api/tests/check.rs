@@ -240,14 +240,14 @@ fn a_description_that_does_not_read_gets_the_read_pass_verdict() {
 
 #[test]
 fn the_version_and_the_operations_are_declared() {
-    assert_eq!(VERSION.to_string(), "1.5");
+    assert_eq!(VERSION.to_string(), "1.6");
     assert_eq!(OPERATIONS, ["check", "resolve", "explain"]);
 }
 
 /// The version that last changed the response's shape below: `1.1` added `engine`. `1.2` added an operation, not a
 /// field, so it left the shape alone, `1.3` a status, a value of the field `status`, `1.4` the operation `resolve`,
-/// whose answer carries this response beside its plan, and `1.5` the operation `explain`, whose answer carries it beside
-/// its plan and its accounts.
+/// whose answer carries this response beside its plan, `1.5` the operation `explain`, whose answer carries it beside
+/// its plan and its accounts, and `1.6` a definition, a value of `Definition`, not a field.
 const SHAPE_OF: archogen_api::Version = archogen_api::Version { major: 1, minor: 1 };
 
 #[test]

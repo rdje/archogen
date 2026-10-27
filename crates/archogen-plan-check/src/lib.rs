@@ -16,6 +16,7 @@
 //! another crate holds (`M3.5.5.7.1`). [`judgement`] makes one judgement the result record, which the executable writes
 //! and [`mcp`]'s tool answers inline (`M3.5.1.6.4`).
 
+pub mod adapters;
 pub mod assignment;
 mod bindings;
 pub mod check;

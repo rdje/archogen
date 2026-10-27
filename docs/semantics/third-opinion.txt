@@ -17,6 +17,7 @@ agree docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/evidence/04-quot
 agree docs/feedback/linkedspec/issues/LS-003-token-kind-erasure/evidence/05-bare-symbol.eadl
 agree docs/feedback/linkedspec/issues/LS-006-hex-underscore-withdrawn/evidence/02-hex-literal-underscore.eadl
 agree docs/feedback/linkedspec/issues/LS-007-adjacent-fragment-join/evidence/11-adjacent-fragment-join.eadl
+agree docs/semantics/adapters/adapters.eadl
 agree docs/semantics/boundary/accept/absolute-deadline-service.eadl
 agree docs/semantics/boundary/accept/access-authority.eadl
 agree docs/semantics/boundary/accept/addressable-region.eadl
@@ -77,6 +78,7 @@ agree docs/semantics/cases/unsupported-multicore.eadl
 agree docs/semantics/cases/unsupported-overrun-policy.eadl
 agree docs/semantics/cases/unsupported-precedence-over-missing-fact.eadl
 agree docs/semantics/kinds/core.eadl
+agree docs/semantics/kinds/defadapter.eadl
 agree docs/semantics/kinds/deffact.eadl
 agree docs/semantics/kinds/os-rt.eadl
 agree docs/semantics/modules/app.sibling.eadl

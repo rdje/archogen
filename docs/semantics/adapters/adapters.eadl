@@ -1,0 +1,54 @@
+; docs/semantics/adapters/adapters.eadl — `adapters/1`, the adapters the engine knows.
+;
+; ROADMAP.md §5.2: "An adapter that rescales, extends epochs, or translates deadlines is a real provider with costs and
+; proof obligations"; §5.4: the engine "may realize an OS feature indirectly from lower-level hardware functionality".
+; This file is that knowledge, one `defadapter` entry per kind, written with the kind
+; `docs/semantics/kinds/defadapter.eadl`.
+;
+; ⭐ THE RECORD IS THE AUTHORITY. Every entry is one row of the table in
+; `docs/specs/adapters/decision_engine-adapters.md` §2, in its order, with the reasons for its offers, its obligations
+; and the kinds left out given there and not repeated here. `docs/semantics/BASELINE.txt` freezes this file's canonical
+; form, so a kind changes only with a note in `docs/semantics/migrations/`.
+;
+; ⛔ THIS IS NOT A DESCRIPTION. `archogen check` answers it as the language's own definition, exit `20`. No description
+; writes, imports or names a kind. `crates/eadl-resolve` reads this file into the catalog the search binds instances
+; from (`adapter.rs`), and the configuration checker judges a plan by its own table of the same kinds
+; (`crates/archogen-plan-check/src/adapters.rs`), the two held equal by `crates/eadl-resolve/tests/adapters.rs`.
+
+(eadl-version eadl/1)
+
+(defadapter deadline-over-delay
+  (doc "an absolute deadline programmed through a relative delay: the time read from the counter, the delay set to the difference, re-armed until the deadline is reached")
+  (beneath (needs relative-delay counter-modulus tick-rate observation-coherent))
+  (offers
+    (absolute-deadline true)
+    (supported-horizon (from unambiguous-horizon))
+    (delivery-bound (obliged))
+    (channels 1 tick)
+    (available-in-state (from available-in-state)))
+  (level machine)
+  (obligations
+    (obligation delivery (doc "an expiry is delivered within the bound the instance offers"))
+    (obligation chain (doc "a deadline farther than one delay reaches is reached by re-arming, each delay computed from a coherent read of the time base its requester reads")))
+  (costs
+    (interrupt expiry (doc "one interrupt at its provider per deadline delivered and per re-arm"))))
+
+(defadapter epoch-extender
+  (doc "a counter extended to 2^64 counts: an epoch advanced by a wake programmed before each wrap, read with the counter so that no update is torn")
+  (beneath
+    (needs relative-delay counter-modulus tick-rate observation-coherent)
+    (wrap-behavior modular))
+  (offers
+    (counter-modulus (pow2 64))
+    (counter-width 64 bit)
+    (tick-rate (from tick-rate))
+    (tick-unit (from tick-unit))
+    (wrap-behavior modular)
+    (observation-coherent true)
+    (available-in-state (from available-in-state)))
+  (level machine)
+  (obligations
+    (obligation update (doc "the epoch is advanced by a wake programmed within the provider's unambiguous horizon"))
+    (obligation coherent (doc "a read joins epoch and counter so that no update is torn")))
+  (costs
+    (interrupt wake (doc "one interrupt at its provider per update period, the period the realization states and no longer than that horizon"))))

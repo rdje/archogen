@@ -56,6 +56,12 @@
   (test vocabulary)
   (reason "holds the typed vocabulary table the generator reads from vocabulary.eadl equal, entry by entry, to the checker's hand-held table (decision_substitutability-relation.md §1.1)"))
 
+(defderivation adapters
+  (pair generator configuration-checker)
+  (package "crates/eadl-resolve")
+  (test adapters)
+  (reason "holds the adapter catalog the generator reads from adapters.eadl equal, kind by kind, to the checker's hand-held table (decision_engine-adapters.md §1.2)"))
+
 (defderivation system-reading
   (pair generator configuration-checker)
   (package "crates/eadl-resolve")
@@ -269,6 +275,18 @@
   (rule "include_str")
   (sha256 "93c094a0bcdbb8a84fec85b746d82f723ad1b06a936b90cf359b9337ea3c9d6b")
   (reason "crates/eadl-resolve/src/vocabulary.rs:41: embeds the shipped vocabulary `/1` as text, the table the relation reads; compiled into the `production` and `vocabulary` derivations (RP-H11)"))
+
+(defadmit
+  (file "crates/eadl-resolve/src/adapter.rs")
+  (rule "include_str")
+  (sha256 "317fb5e898a914abfe3759b0a29bab0be7540e09ad90425b11fb3c596925e699")
+  (reason "crates/eadl-resolve/src/adapter.rs:31: embeds the shipped kind `defadapter` as text, which the adapter catalog's reader registers before it reads the catalog (M3.2.2)"))
+
+(defadmit
+  (file "crates/eadl-resolve/src/adapter.rs")
+  (rule "include_str")
+  (sha256 "cd96ff0a7de161facfdbc6f725af023a45c85f855864123550e0e75457e9dd09")
+  (reason "crates/eadl-resolve/src/adapter.rs:35: embeds the engine's adapter catalog `adapters/1` as text, the kinds the search binds instances from (M3.2.2)"))
 
 (defadmit
   (file "crates/rt-analysis/tests/runtime_variant.rs")

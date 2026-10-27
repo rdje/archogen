@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the adapter catalog
+
+`ARCHOGEN-M3-1015` (leaf `M3.2.2`), `2026-10-27`.
+
+- The engine's adapters are written down as data, `docs/semantics/adapters/adapters.eadl`: a deadline programmed
+  through a relative delay, and a counter extended to 64 bits, each with what it needs, what it offers and what it
+  owes. The generator reads the file; the configuration checker holds its own table, written apart; a test holds them
+  equal. `archogen check` answers the file as the engine's own knowledge, exit 20.
+
 ## archogen — indirect realization designed
 
 `ARCHOGEN-M3-1014` (leaf `M3.2.1`), `2026-10-27`.

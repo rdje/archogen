@@ -85,7 +85,10 @@ is built from the commit before it, so it must know a form before any commit wri
   `include_str!` sites, the shipped kind `deffact` and vocabulary `/1`, are each admitted by a `defadmit`. The third,
   `system-reading` (leaf `M3.5.5.7.2`), compares two readings written apart rather than a transcription: the search's
   reading of a system against the one the configuration checker's joint check judges with, which a context that
-  never read the search's wrote;
+  never read the search's wrote. The fourth, `adapters` (leaf `M3.2.2`), holds the engine's adapter catalog as the
+  generator reads it from `adapters.eadl` — two more admitted `include_str!` sites, its kind `defadapter` and the
+  catalog `adapters/1` — equal, kind by kind, to the checker's own table, written from the design record by a context
+  that never read the generator's;
 - on the front's form alone — the one root of role `generator`, an executable — `(invokes <root> …)`, the other
   executable roots it runs, each once, and `(installed "archogen-install.json")`, together. The generator's form holds
   them since leaf `M3.5.1.4.4`: `(invokes configuration-checker)`, so the inventory records the front and the checker

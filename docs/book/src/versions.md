@@ -149,7 +149,7 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Field | Value |
 | --- | --- |
 | Surface | the engine API: the one contract every consumer judges a description through, the CLI today and the wasm and [MCP](ledger.md#mcp-specification) bindings to come ([The engine API](engine-api.md)) |
-| Version | `1.5` — `1.0` fixed `2026-09-30` when leaf `API.3` closed; `1.1` added the response's engine version (`API.4.1`); `1.2` added `check_with` and its `Limits` (`API.4.2`); `1.3` added the status `stale-input`, the vocabulary growing (`M3.5.1.1`); `1.4` added the operation `resolve`, the search alone (`M3.4.4`); `1.5` added the operation `explain`, one requirement's account (`M3.4.13.2`) |
+| Version | `1.6` — `1.0` fixed `2026-09-30` when leaf `API.3` closed; `1.1` added the response's engine version (`API.4.1`); `1.2` added `check_with` and its `Limits` (`API.4.2`); `1.3` added the status `stale-input`, the vocabulary growing (`M3.5.1.1`); `1.4` added the operation `resolve`, the search alone (`M3.4.4`); `1.5` added the operation `explain`, one requirement's account (`M3.4.13.2`); `1.6` added the definition `defadapter`, a file of the engine's adapter catalog answered as the language's own (`M3.2.2`) |
 | Declared at | `const:crates/archogen-api/src/lib.rs:VERSION` |
 | Changes when | an operation or a response field is added, which is a minor; an operation or a field removed, or a field given a new meaning, which is a new major |
 | Pinned by | the exhaustive reading of `Response` and `Judgement` in `crates/archogen-api/tests/check.rs`, which stops compiling when a field is added or removed and names the version its shape belongs to; the three parity legs of `crates/archogen-cli/tests/api_parity.rs`. The bump itself is the author's act: nothing can tell a new field from a renamed one |
@@ -187,6 +187,17 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Changes when | a clause is added, removed, renamed, re-typed, reordered or reinterpreted, a provider or requester kind is added, or the program's digest is computed otherwise. A reader that meets another identifier refuses the record rather than guess |
 | Pinned by | its canonical text — every clause, the bindings' order and the digest of a fixed program — frozen in `crates/archogen-plan-check/tests/goldens/archogen-assignment-1.golden` and compared by `crates/archogen-plan-check/tests/record.rs`, never rewritten; the same test reads every record back as itself and refuses another format, a provider kind `/1` does not name and a binding out of order or twice. A plain description — no `defmodule` — is one root instance, written `instance . - 0.0`, which `crates/archogen-plan-check/tests/executable.rs` holds (`M3.5.6.1`, completing `/1` before any plan of one could be checked). The search's writer, `crates/eadl-resolve/src/plan.rs` with its own `FORMAT` constant, is held to the same golden byte for byte, and its program text to the checker's over every tracked description, by `crates/eadl-resolve/tests/plan.rs` (`M3.4.3`) |
 | Keeps | a record labelled `archogen-assignment/1` has one text, and names the same program and bindings to every reader of `/1` |
+
+## `adapter-catalog`
+
+| Field | Value |
+| --- | --- |
+| Surface | the adapters the engine knows — what each requires of the provider it programs, what it offers over it, the level its code runs at and what it owes — which the search binds and the configuration checker judges (`docs/specs/adapters/decision_engine-adapters.md` §1, §2) |
+| Version | `adapters/1` |
+| Declared at | `const:crates/eadl-resolve/src/adapter.rs:VERSION`, the generator's; `const:crates/archogen-plan-check/src/adapters.rs:VERSION`, the checker's — two constants of one catalog, held equal |
+| Changes when | a kind is added, removed or renamed, or what one requires, offers, owes or runs at changes. The file's canonical form is frozen in `docs/semantics/BASELINE.txt`, so a change needs a migration note, and a plan naming another catalog is refused by the checker (record §5) |
+| Pinned by | `docs/semantics/adapters/adapters.eadl`, read by `crates/eadl-resolve/src/adapter.rs` and held kind by kind to the checker's own table by `crates/eadl-resolve/tests/adapters.rs` (`M3.2.2`) |
+| Keeps | a plan resolved with `adapters/1` binds instances whose requirements, offers and obligations mean the same to the generator and the checker |
 
 ## `install-format`
 
