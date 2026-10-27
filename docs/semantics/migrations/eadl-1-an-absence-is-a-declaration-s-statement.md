@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-10-27
 - leaf: M3.4.8 (`docs/tasks/M3.md`), deciding `SR-H16`
-- status: pending
+- status: applied
 - constructs: suite/docs/semantics/cases/invalid-contradictory-presence.eadl
 - invalidates: no frozen verdict moves, measured over every tracked description — `crates/archogen-cli/tests/verdicts.txt`
   unchanged; F06's case, whose two-block spelling the rule now accepts, rewritten to the contradiction it still refuses,
