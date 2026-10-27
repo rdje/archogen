@@ -21,6 +21,8 @@ a change that leaves it stale, so it is never edited by hand.
 - A lesson from the corpus — [Reading a description](reading.md#a-lesson-from-the-corpus)
 - A number added to this book says what keeps it true — [Annex B: The checks that keep the repository
   honest](annex-repository.md#a-number-added-to-this-book-says-what-keeps-it-true)
+- A plan resolved and checked as a user runs it — [Verifying the
+  toolchain](verification.md#a-plan-resolved-and-checked-as-a-user-runs-it)
 - A record, and its four parts — [Where the engine's knowledge comes from: the
   catalog](catalog.md#a-record-and-its-four-parts)
 - A requirement is an obligation, not a claim to trust — [The boundary: functionality versus

@@ -714,6 +714,27 @@ $ bash scripts/plan_check_wasm.sh --self-test  # its RED arms: an import, an unl
                                                # that differs, a record or an exit the executable does not share
 ```
 
+### A plan resolved and checked as a user runs it
+
+Each half of `archogen resolve` has its own tests: the front's against a stand-in checker, the checker's against plans
+the generator wrote in the same process. The `resolve-installed` step runs the two programs together, as a user does
+(leaf `M3.2.6.2`):
+- it builds an install with `cargo xtask install`, the trust build's executables with the manifest that vouches for
+  them ([The command line](cli.md));
+- it runs that install's `archogen resolve`, checked, over the heartbeat, `examples/s0-heartbeat/system.eadl`,
+  resolved through its own providers, and the two adapter fixtures of `crates/eadl-resolve/tests/search/`, each
+  resolved through one kind of the engine's adapter catalog.
+
+Each plan must be written, the install's `archogen-plan-check` must accept it, and its record must sit beside it in
+`<plan>.check/`. A plan through an adapter must bind the instance, and the command must say the plan is conditional
+on what the instance owes ([Matching](matching.md)).
+
+```console
+$ bash scripts/resolve_installed.sh                  # the step: an install built, then each resolved through it
+$ bash scripts/resolve_installed.sh --install <dir>  # the same through an install already built
+$ bash scripts/resolve_installed.sh --self-test      # its RED arms, against stub installs
+```
+
 Without Node the step is unavailable, which the tier reports and never counts as a pass.
 
 ### A third reader

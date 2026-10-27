@@ -412,6 +412,18 @@ const TIERS: &[Tier] = &[
                 },
             },
             Step {
+                name: "resolve-installed",
+                proves: "archogen resolve, run from an install the trust build placed, writes each positive \
+                         description's plan and the install's archogen-plan-check accepts it — the heartbeat's, and \
+                         one through each kind of the adapter catalog, said to be conditional on what it owes",
+                action: Action::Run {
+                    program: "scripts/resolve_installed.sh",
+                    args: &[],
+                    requires: None,
+                    matters: "",
+                },
+            },
+            Step {
                 name: "emulator",
                 proves: "the pinned riscv-virt-up configuration renders and its toolchain is present (§3.2)",
                 action: Action::Run {
