@@ -45,6 +45,7 @@
 
 #![deny(missing_docs)]
 
+mod explain;
 mod resolve;
 mod status;
 
@@ -58,8 +59,9 @@ use eadl_model::profile::{self, Profile};
 /// checker carries them without the API; re-exported, so `archogen_api::Status` and `archogen_api::Version` name what
 /// they named.
 pub use archogen_outcome::{Status, Version};
-pub use eadl_front::{Diagnostic, Form, MemoryModules, ModuleSource, SourceId, SourceMap};
+pub use eadl_front::{Diagnostic, Form, MemoryModules, ModuleSource, SourceId, SourceMap, Span};
 pub use eadl_model::check::Closure;
+pub use explain::{explain_with, Account, Answer, Explain, Explanation};
 pub use resolve::{resolve_with, Plan, Resolution, Resolve};
 pub use status::verdict_status;
 
@@ -72,8 +74,9 @@ pub use status::verdict_status;
 /// change. `1.0` was fixed `2026-09-30`, when leaf `API.3` closed; `1.1` added [`Response::engine`] (leaf
 /// `API.4.1`); `1.2` added [`check_with`] and [`Limits`] (leaf `API.4.2`); `1.3` added the status `stale-input`, the
 /// vocabulary growing (leaf `M3.5.1.1`); `1.4` added the operation `resolve`, [`resolve_with`], the search alone (leaf
-/// `M3.4.4`). `docs/book/src/versions.md` registers it.
-pub const VERSION: Version = Version { major: 1, minor: 4 };
+/// `M3.4.4`); `1.5` added the operation `explain`, [`explain_with`], one requirement's account (leaf `M3.4.13.2`).
+/// `docs/book/src/versions.md` registers it.
+pub const VERSION: Version = Version { major: 1, minor: 5 };
 
 /// The engine version: the one the workspace's members share, which `archogen --version` reports and
 /// `docs/book/src/versions.md` registers as `engine`. With [`VERSION`] it names the build a response came from
@@ -82,7 +85,7 @@ pub const ENGINE: &str = env!("CARGO_PKG_VERSION");
 
 /// The operations this API exposes, each by the name `crates/archogen-cli/src/spec.rs` gives its command.
 /// Parity with the CLI's built commands is gated on it (leaf `API.3.3`).
-pub const OPERATIONS: &[&str] = &["check", "resolve"];
+pub const OPERATIONS: &[&str] = &["check", "resolve", "explain"];
 
 /// The leaf that loads a kind module a user writes (`ROADMAP.md` §5.6 rule 1): extension experiment 1, a new
 /// kind built from the existing declaration constructs.

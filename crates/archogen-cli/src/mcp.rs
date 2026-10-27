@@ -26,7 +26,9 @@
 
 use std::io::{self, BufRead, Write};
 
-use archogen_api::{check_with, Limits, MemoryModules, Request, Resolve, Status};
+use archogen_api::{
+    check_with, Diagnostic, Explain, Limits, MemoryModules, Plan, Request, Resolve, Status,
+};
 use archogen_transport::{integer, object, string, text_block, tool_error, Failure, Tools};
 
 use crate::json::{self, Value};
@@ -46,8 +48,9 @@ pub const LINE_LIMIT: usize = 6 * archogen_api::DEFAULT_BYTES + 64 * 1024;
 /// One sentence for a client to hand its model, in `server/discover` and `initialize`.
 const INSTRUCTIONS: &str = "archogen checks eADL system descriptions: call `check` with a description's text, and \
 read the verdict in the result's `status`; `resolve`, with `unchecked` set, searches one system for a plan that \
-nothing has checked — compose it with archogen-plan-check's own tool; the other tools are listed with the task-tree \
-leaf that will build them.";
+nothing has checked — compose it with archogen-plan-check's own tool; `explain`, with a fact as `requirement`, says \
+what that search did with each requirement on it; the other tools are listed with the task-tree leaf that will build \
+them.";
 
 /// The generator's tools: the command table's ([`crate::spec::tools`]).
 #[derive(Debug, Clone, Copy, Default)]
@@ -82,6 +85,7 @@ impl Tools for Engine {
         match (&spec.maturity, spec.name) {
             (_, "check") => check(arguments),
             (_, "resolve") => resolve(arguments),
+            (_, "explain") => explain(arguments),
             (Maturity::Built, name) => Err(Failure::Internal(format!(
                 "`{name}` is marked built and this server has no handler for it"
             ))),
@@ -159,6 +163,7 @@ fn tool(spec: &CommandSpec) -> Value {
             match spec.name {
                 "check" => check_schema(),
                 "resolve" => resolve_schema(),
+                "explain" => explain_schema(),
                 _ => object(vec![("type", string("object"))]),
             },
         ),
@@ -359,7 +364,204 @@ fn resolve(arguments: &Value) -> Result<Value, Failure> {
             "the response's encoding could not be read back: {refusal}"
         ))
     })?;
-    let plan = match &resolution.plan {
+    let structured = object(vec![
+        ("response", response),
+        ("plan", plan_value(resolution.plan.as_ref())),
+    ]);
+    let written = json::write(&structured);
+    Ok(object(vec![
+        ("content", Value::Array(vec![text_block(&written)])),
+        ("structuredContent", structured),
+        (
+            "isError",
+            Value::Bool(resolution.response.status != Status::Ok),
+        ),
+    ]))
+}
+
+/// What `explain` takes: `check`'s arguments, the fact whose requirements to explain, whose, and the system.
+fn explain_schema() -> Value {
+    let text = |what: &str| {
+        object(vec![
+            ("type", string("string")),
+            ("description", string(what)),
+        ])
+    };
+    let mut schema = check_schema();
+    if let Value::Object(members) = &mut schema {
+        for (key, value) in members.iter_mut() {
+            match (key.as_str(), value) {
+                ("properties", Value::Object(properties)) => {
+                    for (name, what) in [
+                        ("requirement", "the fact whose requirements to explain, e.g. observable-output"),
+                        (
+                            "requester",
+                            "only this declaration's requirement on it: a service, a policy, the system's own",
+                        ),
+                        ("task", "only this task's requirement on it"),
+                        ("system", "the system to explain, when the description declares several"),
+                    ] {
+                        properties.push((name.to_owned(), text(what)));
+                    }
+                }
+                ("required", required) => {
+                    *required = Value::Array(vec![string("description"), string("requirement")]);
+                }
+                _ => {}
+            }
+        }
+    }
+    schema
+}
+
+/// `explain` (leaf `M3.4.13.2`): the arguments read as the engine API's request and `Explain`, asked of
+/// [`archogen_api::explain_with`] under the default budget, and answered as `{"response": …, "plan": …, "accounts":
+/// […]}` — the response in the wasm binding's encoding, the plan as `resolve` gives it, the search's and unchecked, and
+/// each account its requester, fact, clauses, each provider's answer, why none meets it, the provider bound and each
+/// other one's refusal in its place — that JSON the one text block, and `isError` unless the response is `ok`.
+fn explain(arguments: &Value) -> Result<Value, Failure> {
+    let read = check_request(arguments, &["requirement", "requester", "task", "system"]).and_then(
+        |(name, text, profile, modules)| {
+            let optional = |key: &str| match arguments.get(key) {
+                None => Ok(None),
+                Some(Value::String(value)) => Ok(Some(value.as_str())),
+                Some(_) => Err(format!("`{key}` is not a string")),
+            };
+            let Some(fact) = optional("requirement")? else {
+                return Err(
+                    "`requirement`, the fact whose requirements to explain, is missing".to_owned(),
+                );
+            };
+            Ok((
+                name,
+                text,
+                profile,
+                modules,
+                Explain {
+                    system: optional("system")?,
+                    fact,
+                    requester: optional("requester")?,
+                    task: optional("task")?,
+                },
+            ))
+        },
+    );
+    let (name, text, profile, modules, asked) = match read {
+        Ok(read) => read,
+        Err(problem) => {
+            return Ok(tool_error(&format!(
+                "{problem}; `explain` takes `description` (the text) and `requirement` (a fact), and optionally \
+                 `requester` or `task`, `system`, `name`, `profile` and `modules`, each module's name mapped to its text"
+            )))
+        }
+    };
+    let explanation = archogen_api::explain_with(
+        &Request {
+            name,
+            text,
+            profile,
+            modules: &modules,
+        },
+        &asked,
+        Limits::DEFAULT,
+    );
+    let encoded = archogen_wasm::json::encode(&explanation.response);
+    let response = json::read(encoded.as_bytes(), usize::MAX).map_err(|refusal| {
+        Failure::Internal(format!(
+            "the response's encoding could not be read back: {refusal}"
+        ))
+    })?;
+    let sources = &explanation.response.sources;
+    let finding = |diagnostic: Option<&Diagnostic>| {
+        diagnostic.map_or(Value::Null, |diagnostic| {
+            object(vec![
+                ("code", string(diagnostic.code)),
+                ("message", string(&diagnostic.message)),
+            ])
+        })
+    };
+    let accounts = explanation
+        .accounts
+        .iter()
+        .map(|account| {
+            object(vec![
+                ("requester", string(&account.requester)),
+                ("fact", string(&account.fact)),
+                (
+                    "clauses",
+                    Value::Array(
+                        account
+                            .clauses
+                            .iter()
+                            .filter_map(|span| {
+                                let source = sources.get(span.source)?;
+                                let at = source.position(span.start);
+                                Some(object(vec![
+                                    ("name", string(&source.name)),
+                                    ("line", integer(i64::from(at.line))),
+                                    ("column", integer(i64::from(at.column))),
+                                ]))
+                            })
+                            .collect(),
+                    ),
+                ),
+                (
+                    "answers",
+                    Value::Array(
+                        account
+                            .answers
+                            .iter()
+                            .map(|(provider, answer)| {
+                                object(vec![
+                                    ("provider", string(provider)),
+                                    ("answer", string(answer.slug())),
+                                ])
+                            })
+                            .collect(),
+                    ),
+                ),
+                ("unmet", finding(account.unmet.as_ref())),
+                (
+                    "bound",
+                    account.bound.as_deref().map_or(Value::Null, string),
+                ),
+                (
+                    "instead",
+                    Value::Array(
+                        account
+                            .instead
+                            .iter()
+                            .map(|(provider, refusal)| {
+                                object(vec![
+                                    ("provider", string(provider)),
+                                    ("refusal", finding(refusal.as_ref())),
+                                ])
+                            })
+                            .collect(),
+                    ),
+                ),
+            ])
+        })
+        .collect();
+    let structured = object(vec![
+        ("response", response),
+        ("plan", plan_value(explanation.plan.as_ref())),
+        ("accounts", Value::Array(accounts)),
+    ]);
+    let written = json::write(&structured);
+    Ok(object(vec![
+        ("content", Value::Array(vec![text_block(&written)])),
+        ("structuredContent", structured),
+        (
+            "isError",
+            Value::Bool(explanation.response.status != Status::Ok),
+        ),
+    ]))
+}
+
+/// A plan as `resolve` and `explain` answer it: its system, text, program digest and bindings, or `null`.
+fn plan_value(plan: Option<&Plan>) -> Value {
+    match plan {
         None => Value::Null,
         Some(plan) => object(vec![
             ("system", string(&plan.system)),
@@ -370,17 +572,7 @@ fn resolve(arguments: &Value) -> Result<Value, Failure> {
                 integer(i64::try_from(plan.bindings).unwrap_or(i64::MAX)),
             ),
         ]),
-    };
-    let structured = object(vec![("response", response), ("plan", plan)]);
-    let written = json::write(&structured);
-    Ok(object(vec![
-        ("content", Value::Array(vec![text_block(&written)])),
-        ("structuredContent", structured),
-        (
-            "isError",
-            Value::Bool(resolution.response.status != Status::Ok),
-        ),
-    ]))
+    }
 }
 
 /// The engine API's judgement of one request, in the wasm binding's encoding.
@@ -463,6 +655,72 @@ mod tests {
             "tools/call",
             &format!(r#","name":"resolve","arguments":{arguments}"#),
         )
+    }
+
+    fn explain_call(arguments: &str) -> String {
+        modern(
+            "tools/call",
+            &format!(r#","name":"explain","arguments":{arguments}"#),
+        )
+    }
+
+    #[test]
+    fn explain_answers_each_account_and_the_search_s_plan() {
+        let description = json::write(&Value::String(ONE_SYSTEM.to_owned()));
+        let value = answer(
+            &mut Server::default(),
+            &explain_call(&format!(
+                r#"{{"description":{description},"requirement":"observable-output"}}"#
+            )),
+        )
+        .expect("answered");
+        let result = value.get("result").expect("a result");
+        assert_eq!(result.get("isError"), Some(&Value::Bool(false)));
+        let structured = result.get("structuredContent").expect("structured content");
+        let text = match result.get("content") {
+            Some(Value::Array(blocks)) => blocks[0].get("text").and_then(Value::as_str).unwrap(),
+            _ => panic!("one text block"),
+        };
+        assert_eq!(
+            json::write(structured),
+            text,
+            "the text block is the structured content"
+        );
+        assert!(structured.get("plan").and_then(|p| p.get("text")).is_some());
+        let Some(Value::Array(accounts)) = structured.get("accounts") else {
+            panic!("accounts");
+        };
+        assert_eq!(
+            json::write(&accounts[0]),
+            r#"{"requester":"console.write","fact":"observable-output","clauses":[{"name":"description.eadl","line":4,"column":44}],"answers":[{"provider":"console.uart","answer":"satisfied"},{"provider":"soc","answer":"undescribed"}],"unmet":null,"bound":"console.uart","instead":[]}"#
+        );
+        // A fact nothing requires is the API's usage refusal, no account; a missing `requirement` a tool error.
+        let value = answer(
+            &mut Server::default(),
+            &explain_call(&format!(
+                r#"{{"description":{description},"requirement":"absolute-deadline"}}"#
+            )),
+        )
+        .expect("answered");
+        let result = value.get("result").expect("a result");
+        assert_eq!(result.get("isError"), Some(&Value::Bool(true)));
+        let structured = result.get("structuredContent").expect("structured content");
+        assert_eq!(
+            structured
+                .get("response")
+                .and_then(|r| r.get("status"))
+                .and_then(Value::as_str),
+            Some("usage")
+        );
+        assert_eq!(json::write(structured.get("accounts").unwrap()), "[]");
+        let value = answer(
+            &mut Server::default(),
+            &explain_call(&format!(r#"{{"description":{description}}}"#)),
+        )
+        .expect("answered");
+        let result = value.get("result").expect("a result");
+        assert_eq!(result.get("isError"), Some(&Value::Bool(true)));
+        assert!(json::write(result).contains("`requirement`"));
     }
 
     #[test]
@@ -1082,12 +1340,12 @@ mod review_tests {
             // Not built yet exactly where a call answers so; an experimental tool says what it does today.
             assert_eq!(
                 description.contains("not built yet"),
-                !matches!(name, "check" | "resolve"),
+                !matches!(name, "check" | "resolve" | "explain"),
                 "{name}: {description}"
             );
             assert_eq!(
                 description.contains("experimental:"),
-                name == "resolve",
+                matches!(name, "resolve" | "explain"),
                 "{name}: {description}"
             );
         }

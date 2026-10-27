@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — `archogen explain`
+
+`ARCHOGEN-M3-1013` (leaf `M3.4.13.2`), `2026-10-27`.
+
+- `archogen explain DESCRIPTION --requirement FACT` says what the search did with each requirement on that fact: where
+  it is written, every provider of the system's hardware and whether it meets it, the provider the plan binds and
+  what goes wrong with each other one in its place — or why no plan was written. `--requester` or `--task` narrows it
+  to one. The plan it explains is the search's, unchecked, and it says so. The engine API (version 1.5) and the MCP
+  server's `explain` tool give the same account to a program and to an agent.
+
 ## archogen — the search explains one requirement
 
 `ARCHOGEN-M3-1012` (leaf `M3.4.13.1`), `2026-10-27`.

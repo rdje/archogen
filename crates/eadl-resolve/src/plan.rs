@@ -23,7 +23,7 @@ use archogen_digest::Digest;
 use eadl_front::module::{Instance, Program, Version};
 use eadl_front::Form;
 
-use crate::search::{Resolution, Who};
+use crate::search::Resolution;
 
 /// The format's identifier: the search's own constant, held with the checker's to one golden.
 pub const FORMAT: &str = "archogen-assignment/1";
@@ -102,11 +102,7 @@ pub fn write(resolution: &Resolution, profile: &str, program: &str) -> String {
     }
     // The map's order is the record's: `Who` orders every named requester before every task, each by its text.
     for ((who, fact), provider) in &resolution.bindings {
-        let requester = match who {
-            Who::Named(name) => name.clone(),
-            Who::Task { system, task } => format!("(task {system} {task})"),
-        };
-        out.push_str(&format!("(bind {requester} {fact} {provider})\n"));
+        out.push_str(&format!("(bind {who} {fact} {provider})\n"));
     }
     out
 }

@@ -326,17 +326,45 @@ pub const COMMANDS: &[CommandSpec] = &[
         name: "explain",
         summary: "explain how one requirement was realized, or why it could not be",
         positionals: &[PositionalSpec {
-            name: "BUILD",
-            help: "path to a build produced by `archogen build`",
+            name: "DESCRIPTION",
+            help: "path to the eADL system description",
         }],
-        options: &[OptionSpec {
-            long: "requirement",
-            value: Some("REQUIREMENT"),
-            help: "the requirement ID to explain, e.g. timer.deadline",
-            required: true,
-        }],
+        options: &[
+            PROFILE,
+            // A requirement is a requester's requirements on one fact, as the plan binds one provider per requester
+            // and fact (leaf `M3.4.13`): the fact, narrowed by whose.
+            OptionSpec {
+                long: "requirement",
+                value: Some("FACT"),
+                help: "the fact whose requirements to explain, e.g. observable-output",
+                required: true,
+            },
+            OptionSpec {
+                long: "requester",
+                value: Some("NAME"),
+                help: "only this declaration's requirement on it: a service, a policy, the system's own",
+                required: false,
+            },
+            OptionSpec {
+                long: "task",
+                value: Some("NAME"),
+                help: "only this task's requirement on it",
+                required: false,
+            },
+            OptionSpec {
+                long: "system",
+                value: Some("NAME"),
+                help: "the system to explain, when the description declares several",
+                required: false,
+            },
+        ],
         sibling: None,
-        maturity: Maturity::Unimplemented { owner: "M3.4.13" },
+        // The search's own account over a description (leaf `M3.4.13.2`), offered by the engine API and the MCP server;
+        // §10.2's form reads a build, which `archogen build` writes and `M4.2` completes.
+        maturity: Maturity::Experimental {
+            scope: "one requirement of one system, read from a description over its own blocks and platforms, not yet from a build",
+            completed_by: "M4.2",
+        },
         exposure: Exposure::Tool,
     },
     CommandSpec {

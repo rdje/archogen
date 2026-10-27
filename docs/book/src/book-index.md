@@ -585,8 +585,8 @@ a change that leaves it stale, so it is never edited by hand.
 - provenance-format — [What is versioned, and what changing it costs](versions.md#provenance-format)
 - **provider** — [definition](glossary.md), [Introduction](introduction.md), [The boundary: functionality versus
   implementation](boundary.md), [Presence, absence, and relevance](presence.md), [Matching an offer to a
-  requirement](matching.md), [Checking a plan](plan-check.md), [The S0 early generation path](s0.md), [What is
-  versioned, and what changing it costs](versions.md)
+  requirement](matching.md), [Checking a plan](plan-check.md), [The S0 early generation path](s0.md), [The archogen
+  command line](cli.md), [The engine API](engine-api.md), [What is versioned, and what changing it costs](versions.md)
 - Publication guard for renderer control bytes — [Annex C: Trust proof
   records](annex-trust-proofs.md#publication-guard-for-renderer-control-bytes)
 
@@ -793,6 +793,8 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#the-status-pages-stay-short)
 - The target, described in eADL, and checked against the device tree — [Where generated systems
   run](targets.md#the-target-described-in-eadl-and-checked-against-the-device-tree)
+- The third operation: explain, one requirement's account — [The engine
+  API](engine-api.md#the-third-operation-explain-one-requirements-account)
 - The three tests — [The boundary: functionality versus implementation](boundary.md#the-three-tests)
 - The unit table is small on purpose — [Quantities and units](quantities.md#the-unit-table-is-small-on-purpose)
 - The unused device — [Refinement](refinement.md#the-unused-device)

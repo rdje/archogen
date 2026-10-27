@@ -424,6 +424,149 @@ fn over_every_description_resolve_says_what_the_api_says_and_writes_its_plan() {
     assert!(statuses.len() > 2, "{statuses:?}");
 }
 
+/// The facts the `explain` leg asks, each description one in turn: one a console requires, one a comparator's, one a
+/// counter's, and one only a realization meets — so accounts realized, unmet and met alone, and usage refusals, all
+/// occur, at the cost of one explanation per description.
+const EXPLAINED: &[&str] = &[
+    "observable-output",
+    "absolute-deadline",
+    "counter-width",
+    "release-accuracy",
+];
+
+/// One account as both surfaces state it: the requirement, each provider's answer, and the provider bound.
+fn account_lines(account: &archogen_api::Account) -> Vec<String> {
+    let mut lines = vec![format!(
+        "`{}` required by `{}`",
+        account.fact, account.requester
+    )];
+    lines.extend(
+        account
+            .answers
+            .iter()
+            .map(|(provider, answer)| format!("  `{provider}` {}", answer.says())),
+    );
+    lines.extend(
+        account
+            .bound
+            .iter()
+            .map(|bound| format!("  bound to `{bound}` by the search's plan")),
+    );
+    lines
+}
+
+/// What `archogen explain` said about `fact` in `path`, in-process, and its accounts' lines.
+fn cli_explains(path: &Path, fact: &str) -> (Said, Vec<String>) {
+    let mut out: Vec<u8> = Vec::new();
+    let mut err: Vec<u8> = Vec::new();
+    let status = run(
+        [
+            "explain".to_string(),
+            path.display().to_string(),
+            "--requirement".to_string(),
+            fact.to_string(),
+        ],
+        &mut out,
+        &mut err,
+    );
+    let out = String::from_utf8_lossy(&out);
+    let err = String::from_utf8_lossy(&err);
+    let prefix = format!("archogen: {}: ", status.slug());
+    let said = Said {
+        status,
+        codes: err
+            .lines()
+            .filter_map(|line| line.strip_prefix("error[")?.split_once(']'))
+            .map(|(code, _)| code.to_string())
+            .collect(),
+        notes: err
+            .lines()
+            .filter_map(|line| line.strip_prefix(prefix.as_str()))
+            .filter(|rest| !rest.contains(" diagnostic(s) in "))
+            .map(str::to_string)
+            .collect(),
+    };
+    let lines = out
+        .lines()
+        .filter(|line| {
+            line.contains("` required by `")
+                || line.starts_with("  bound to `")
+                || (line.starts_with("  `") && !line.contains("` in its place: "))
+        })
+        .map(str::to_string)
+        .collect();
+    (said, lines)
+}
+
+/// The engine API's `explain` of `fact` in `path`, with the module path the CLI uses: what it said, and its accounts'.
+fn api_explains(path: &Path, fact: &str) -> (Said, Vec<String>) {
+    let text = fs::read_to_string(path).expect("readable");
+    let name = path.display().to_string();
+    let modules = DirectoryModules::new(path.parent().expect("a file has a directory"));
+    let explanation = archogen_api::explain_with(
+        &Request {
+            name: &name,
+            text: &text,
+            profile: None,
+            modules: &modules,
+        },
+        &archogen_api::Explain {
+            fact,
+            ..archogen_api::Explain::default()
+        },
+        archogen_api::Limits::NONE,
+    );
+    let lines = explanation
+        .accounts
+        .iter()
+        .flat_map(account_lines)
+        .collect();
+    let response = explanation.response;
+    (
+        Said {
+            status: response.status,
+            codes: response
+                .diagnostics
+                .iter()
+                .map(|diagnostic| diagnostic.code.to_string())
+                .collect(),
+            notes: response.notes,
+        },
+        lines,
+    )
+}
+
+#[test]
+fn over_every_description_explain_says_what_the_api_says() {
+    // `explain`'s behaviour leg (leaf `M3.4.13.2`): over every description, asked a fact `EXPLAINED` names in turn, the
+    // status, codes and notes `archogen explain` prints, and each account's requirement, answers and binding, are the
+    // API's.
+    let root = repo_root();
+    let mut statuses = std::collections::BTreeSet::new();
+    let mut accounts = 0;
+    let mut wrong = Vec::new();
+    for (at, path) in descriptions(&root).iter().enumerate() {
+        let fact = EXPLAINED[at % EXPLAINED.len()];
+        let (cli, cli_lines) = cli_explains(path, fact);
+        let (api, api_lines) = api_explains(path, fact);
+        statuses.insert(cli.status.code());
+        accounts += cli_lines
+            .iter()
+            .filter(|l| l.contains("` required by `"))
+            .count();
+        if cli != api || cli_lines != api_lines {
+            wrong.push(format!(
+                "{} `{fact}`:\n  cli {cli:?} {cli_lines:?}\n  api {api:?} {api_lines:?}",
+                path.display()
+            ));
+        }
+    }
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+    // Accounts given and refusals of several kinds, or the leg compares one outcome and calls it parity.
+    assert!(accounts > 0, "no account given");
+    assert!(statuses.len() > 2, "{statuses:?}");
+}
+
 #[test]
 fn arm_3_a_surface_that_drops_a_diagnostic_or_a_note_is_reported() {
     let said = |status, codes: &[&str], notes: &[&str]| Said {

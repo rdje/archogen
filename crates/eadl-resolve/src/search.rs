@@ -104,6 +104,16 @@ pub enum Who {
     },
 }
 
+impl std::fmt::Display for Who {
+    /// As the assignment record writes a requester: a declaration by its name, a task `(task SYSTEM TASK)`.
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Named(name) => f.write_str(name),
+            Self::Task { system, task } => write!(f, "(task {system} {task})"),
+        }
+    }
+}
+
 impl Who {
     /// `requester`, a requester `system` serves, as the record names it.
     fn of(requester: &Requester, system: &str) -> Self {

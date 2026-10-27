@@ -8,12 +8,13 @@ The **engine API** is that way in. A program hands archogen a description as tex
 it can read without parsing sentences — and the answer always carries the same verdict a person would see, so a
 program can never mistake a refusal for a pass. The command line itself goes through the same door, so nothing can
 be possible for a person and impossible for a program, or the other way round. A program can also ask archogen to
-choose a system's providers — the plan — though not to check that plan: the checker is a program of its own.
+choose a system's providers — the plan — though not to check that plan: the checker is a program of its own; and it
+can ask what that choice did with one requirement, and why.
 
-> **In one minute, for engineers.** `crates/archogen-api` declares two versioned operations: `check`, description
-> text plus a profile in, a `Response` carrying §5.5's verdict, diagnostics and the engine's version out; and
-> `resolve`, the search alone, asked with `unchecked` set, which answers the same response and, for one system, the
-> plan `archogen-assignment/1`. It reads no
+> **In one minute, for engineers.** `crates/archogen-api` declares three versioned operations: `check`, description
+> text plus a profile in, a `Response` carrying §5.5's verdict, diagnostics and the engine's version out; `resolve`,
+> the search alone, asked with `unchecked` set, which answers the same response and, for one system, the plan
+> `archogen-assignment/1`; and `explain`, the same search's account of each requirement on one fact. It reads no
 > file, writes none, spawns nothing, and compiles for `wasm32-unknown-unknown`. An instance is one running copy of one
 > build, stateless between requests; a byte budget bounds each request. The CLI is held to it by parity tests; a wasm
 > binding serves a web page; `archogen mcp` serves agents over MCP, both of its protocol eras.
@@ -69,6 +70,19 @@ none answers under its own status, its diagnostics saying why, with no plan; a s
 `archogen resolve` asks it so, writes the plan, and runs the checker over it as a process, which the command line
 alone may.
 
+### The third operation: explain, one requirement's account
+
+`archogen_api::explain_with` (leaf `M3.4.13.2`, API `1.5`) takes `check`'s request and an `Explain`: the fact whose
+requirements to explain, narrowed to one `requester` — a declaration, by name — or one `task`, never both, and the
+system when the description declares several. It reads the description as `resolve` does and runs the same search,
+then answers an `Explanation`: the response `resolve` would give, the search's plan when there is one, and an
+`Account` per requirement selected — who requires it, where each clause is written, each provider of the system's
+hardware with its `Answer` (`satisfied`, `refused`, `absent`, `unsupported`, `unknown`, `undescribed`), the search's
+own diagnostic when none meets it, the provider bound, and the joint rules' first refusal of each other one in its
+place ([Matching](matching.md#the-search)). It needs no `unchecked`, because it hands over no plan to build on: it says
+what the search chose, and claims no check of it. A fact no requester selected requires is `usage`, its hint listing
+the requirements the system writes; a description the check refuses is answered by the check, with no account.
+
 ### One outcome vocabulary
 
 The status is the exit contract the command line already has ([The `archogen` command
@@ -101,12 +115,12 @@ one judged and refused, and one the API does not judge.
 
 ```console
 $ cargo run -q -p archogen-api --example in_memory
-api 1.4 · engine 0.1.0 · status ok
+api 1.5 · engine 0.1.0 · status ok
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
-api 1.4 · engine 0.1.0 · status invalid-description
+api 1.5 · engine 0.1.0 · status invalid-description
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
   quantity-unknown-unit: `parsec` is not a known unit
-api 1.4 · engine 0.1.0 · status unsupported-profile
+api 1.5 · engine 0.1.0 · status unsupported-profile
   not judged: `rt-dynamic-mp` is not a supported profile
 ```
 
@@ -167,13 +181,14 @@ to a small multiple of its request.
 `crates/archogen-cli/tests/api_parity.rs` checks three things:
 
 - **The command line judges nothing itself.** None of its production code names the engine's
-  checking entry points. `archogen check`, `archogen build` and `archogen resolve` read the file, ask the API, and
-  print its answer; `resolve` then writes the plan and runs the checker, which no API may.
+  checking entry points. `archogen check`, `archogen build`, `archogen resolve` and `archogen explain` read the file,
+  ask the API, and print its answer; `resolve` then writes the plan and runs the checker, which no API may.
 - **The API offers exactly the commands that run**, less the ones §10.4 keeps out. Each exclusion
   names its reason.
 - **They say the same thing.** Over every description in the repository, the command line's exit
   code, diagnostic codes and notes equal the API's status, diagnostic codes and notes — for `check`, and for
-  `archogen resolve --unchecked` against `resolve`, whose plan is the API's byte for byte.
+  `archogen resolve --unchecked` against `resolve`, whose plan is the API's byte for byte, and for `archogen explain`
+  against `explain`, each account's requirement, answers and binding.
 
 ### The binding a web page loads
 
@@ -236,7 +251,10 @@ It offers the command table's tools, so an agent learns at once what exists and 
 `check`'s arguments, `system` and `unchecked`, and answers `{"response": …, "plan": …}`: the API's response in the
 wasm binding's encoding, and the plan or `null` (leaf `M3.4.6`). It must be asked with `unchecked` set — this server,
 the generator's, runs no checker, so it refuses otherwise with the repair: compose the plan with
-`archogen-plan-check`'s own tool. Its description says it is experimental, and what it searches over today. `check`
+`archogen-plan-check`'s own tool. Its description says it is experimental, and what it searches over today. `explain`
+takes `check`'s arguments, `requirement` — a fact — and optionally `requester` or `task` and `system`, and answers
+`{"response": …, "plan": …, "accounts": […]}`, each account the API's, its clauses as file, line and column; it asks
+no `unchecked`, handing over no plan to build on (leaf `M3.4.13.2`). `check`
 takes the API's request — the description's text, its profile and its modules' texts, never a path — and answers the
 API's response in the wasm binding's encoding above, the same bytes, both as structured content and as text. Its
 result is an error whenever the description is not accepted, so a client that reads one flag never mistakes a
@@ -284,8 +302,10 @@ consumers reach the engine today, and all four reach the same operation:
 | an agent | `archogen mcp` (`crates/archogen-cli/src/mcp.rs`, `docs/decisions/decision_mcp-server.md`) | call the `check` tool, and discover the others with their maturity and the leaf that owns each | the binding's JSON as the tool's structured result, marked an error unless the description was accepted |
 
 `resolve` reaches the person, through `archogen resolve`; the Rust program, through
-`archogen_api::resolve_with`; and the agent, through the MCP tool `resolve` (leaf `M3.4.6`). A page has none: the
-generator's wasm module answers `check`. Every one of them receives §5.5's verdict whenever the
+`archogen_api::resolve_with`; and the agent, through the MCP tool `resolve` (leaf `M3.4.6`). `explain` reaches the same
+three: `archogen explain`, `archogen_api::explain_with` and the MCP tool `explain`, its accounts in the structured
+result beside the response and the plan (leaf `M3.4.13.2`). A page has neither: the generator's wasm module answers
+`check`. Every one of them receives §5.5's verdict whenever the
 description was judged, and a status that says why when it was not; none receives `ok` for a description nobody judged. None of them can generate a system or run the
 verification tiers, and only the person's own tool reads files: a program, a page and an agent hand over every
 module themselves.
@@ -339,9 +359,10 @@ the language and the MCP surface are not Rust items, and stay the book's alone.
   the same answers by tests: the command line's parity legs, the integration tier's `wasm-binding` step, and the MCP
   server's stdio test over the conformance cases in both protocol eras; and `resolve`, the search alone, through the
   command line, the library and the MCP server (`M3.4.4`, `M3.4.6`), the first two held to one answer by its parity
-  leg.
+  leg; and `explain`, one requirement's account, through the same three (`M3.4.13.2`), its parity leg comparing each
+  account the command prints with the library's.
 - **Ahead:** each other command the table lists as offered joins the API
-  when its own leaf builds it: `explain` (`M3.4.13`), `replay` (`M4.7`). The MCP server lists them already, each naming that leaf. `analyze` and
+  when its own leaf builds it: `replay` (`M4.7`). The MCP server lists it already, naming that leaf. `analyze` and
   `plan-check` are the checkers' own tools, served by their own servers (`M2.21.4`; `M3.5.1.6.4`, built); `verify` waits for
   a ruling of its own and its builder, `M4.11`; and `build` stays outside, by §10.4. `resolve` joined as the search
   alone, `unchecked` set: this API runs no checker, so it refuses a request that asks for one, with the repair —

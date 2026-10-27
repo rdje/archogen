@@ -54,7 +54,7 @@ judge a description any other way.
    engine version (leaf `API.4.1`, [[api-instance]]), a field, so a minor. `1.2` added `check_with` and its
    `Limits` (leaf `API.4.2`), an operation's variant, so a minor. `1.3` added the status `stale-input` (leaf
    `M3.5.1.1`), the vocabulary growing, so a minor. `1.4` added the operation `resolve` (leaf `M3.4.4`), so a
-   minor.*
+   minor. `1.5` added the operation `explain` (leaf `M3.4.13.2`), so a minor.*
 6. **Parity, both ways, gated** (`ROADMAP.md` §10.4: "a capability that exists only behind the CLI does not
    exist programmatically, and the reverse"):
    - *structurally:* the CLI's source calls no judging entry point of the engine (`check`,
@@ -75,6 +75,12 @@ judge a description any other way.
    (`Resolution`), the search's refusal or a spent budget answered under its own status with no plan. `archogen
    resolve` asks it with `unchecked` set and adds what the API cannot: the file, and the configuration checker run as
    a process. Its behaviour leg holds the two to one answer over every tracked description, the plan byte for byte.*
+   *Built `2026-10-27` (leaf `M3.4.13.2`): `explain_with` reads the description as `resolve_with` does and answers the
+   same response and plan beside an account of each requirement on one fact (`Explanation`); it asks no `unchecked`,
+   handing over no plan to build on and claiming no check. `archogen explain` prints it and the
+   [MCP](../book/src/ledger.md#mcp-specification) tool `explain`
+   serves it; its behaviour leg compares, over every tracked description, the status, codes, notes and each account's
+   requirement, answers and binding.*
 
 ## Why
 

@@ -17,7 +17,7 @@
 
 use eadl_front::{Form, Program, SourceMap};
 use eadl_model::check::{resolved_declarations, shipped_registry};
-use eadl_model::profile;
+use eadl_model::profile::{self, Profile};
 use eadl_resolve::plan;
 use eadl_resolve::search::{search, Limits as Budget, Policy, Search};
 use eadl_resolve::vocabulary::Vocabulary;
@@ -78,10 +78,52 @@ pub fn resolve_with(request: &Request<'_>, resolve: &Resolve<'_>, limits: Limits
             Vec::new(),
         ));
     }
+    let searched = prepare(request, resolve.system, limits, |ready| {
+        let found = search(
+            ready.declarations,
+            ready.system,
+            ready.active.caller_level,
+            ready.vocabulary,
+            &Policy::default(),
+            Budget::DEFAULT,
+        );
+        concluded(request, ready, found)
+    });
+    match searched {
+        Ok(resolution) => resolution,
+        Err(response) => refused(*response),
+    }
+}
+
+/// What [`resolve_with`] and `explain` search: the check's response, which accepted the description, and what it read.
+pub(crate) struct Ready<'a> {
+    /// The check's response, `ok`.
+    pub(crate) response: Response,
+    /// The program a plan's digest is taken of.
+    pub(crate) program: &'a Program,
+    /// One description's declarations, as the language checks it.
+    pub(crate) declarations: &'a [Form],
+    /// The system searched.
+    pub(crate) system: &'a Form,
+    /// The shipped vocabulary.
+    pub(crate) vocabulary: &'a Vocabulary,
+    /// The profile the description was judged under.
+    pub(crate) active: &'static Profile,
+}
+
+/// Check `request` within `limits` and choose its system — the only one, or the one `system` names — then answer
+/// `then` with what was read; a description the check does not accept, or a request naming no one system, is answered
+/// by its response alone, boxed as a `Result`'s error is.
+pub(crate) fn prepare<T>(
+    request: &Request<'_>,
+    system: Option<&str>,
+    limits: Limits,
+    then: impl FnOnce(Ready<'_>) -> T,
+) -> Result<T, Box<Response>> {
     let mut elaborated = None;
     let response = checked(request, limits, &mut elaborated);
     let Some(judged) = response.judged.as_ref().filter(|_| response.is_ok()) else {
-        return refused(response);
+        return Err(Box::new(response));
     };
     let active = profile::supported(judged.profile)
         .expect("the description was judged under a profile this build supports");
@@ -98,13 +140,6 @@ pub fn resolve_with(request: &Request<'_>, resolve: &Resolve<'_>, limits: Limits
         flattened = resolved_declarations(&program).0;
         &flattened
     };
-    let name_of = |f: &Form| {
-        f.items()
-            .get(1)
-            .and_then(Form::as_symbol)
-            .unwrap_or_default()
-            .to_owned()
-    };
     let systems: Vec<&Form> = declarations
         .iter()
         .filter(|f| f.head() == Some("defsystem"))
@@ -115,15 +150,15 @@ pub fn resolve_with(request: &Request<'_>, resolve: &Resolve<'_>, limits: Limits
         .collect::<Vec<_>>()
         .join(", ");
     let usage = |sources: SourceMap, note: String, hint: String| {
-        refused(Response::not_judged(
+        Err(Box::new(Response::not_judged(
             Status::Usage,
             sources,
             vec![note],
             Some(hint),
             Vec::new(),
-        ))
+        )))
     };
-    let system = match (resolve.system, systems.as_slice()) {
+    let system = match (system, systems.as_slice()) {
         (Some(wanted), _) => match systems.iter().find(|f| name_of(f) == wanted) {
             Some(system) => *system,
             None => {
@@ -161,38 +196,53 @@ pub fn resolve_with(request: &Request<'_>, resolve: &Resolve<'_>, limits: Limits
         .ok()
         .and_then(|registry| Vocabulary::shipped(&mut vocabulary_sources, &registry).ok());
     let Some(vocabulary) = vocabulary else {
-        return refused(Response::not_judged(
+        return Err(Box::new(Response::not_judged(
             Status::ToolFailure,
             response.sources,
             vec!["the shipped vocabulary could not be read".to_owned()],
             None,
             Vec::new(),
-        ));
+        )));
     };
-    let unresolved = |sources: SourceMap, status: Status, diagnostics| {
-        refused(Response::not_judged(
+    Ok(then(Ready {
+        response,
+        program: &program,
+        declarations,
+        system,
+        vocabulary: &vocabulary,
+        active,
+    }))
+}
+
+/// A declaration's name.
+pub(crate) fn name_of(form: &Form) -> String {
+    form.items()
+        .get(1)
+        .and_then(Form::as_symbol)
+        .unwrap_or_default()
+        .to_owned()
+}
+
+/// What `resolve` answers for `found`, the search of `ready`'s system: the plan, or why none was written.
+pub(crate) fn concluded(request: &Request<'_>, ready: Ready<'_>, found: Search) -> Resolution {
+    let unresolved = |sources: SourceMap, status: Status, diagnostics| Resolution {
+        response: Response::not_judged(
             status,
             sources,
             vec![format!(
                 "system `{}` of {} cannot be resolved — no plan was written",
-                name_of(system),
+                name_of(ready.system),
                 request.name
             )],
             None,
             diagnostics,
-        ))
+        ),
+        plan: None,
     };
-    match search(
-        declarations,
-        system,
-        active.caller_level,
-        &vocabulary,
-        &Policy::default(),
-        Budget::DEFAULT,
-    ) {
+    match found {
         Search::Resolved(resolution) => {
-            let digest = plan::program_digest(&program);
-            let text = plan::write(&resolution, active.id, &digest);
+            let digest = plan::program_digest(ready.program);
+            let text = plan::write(&resolution, ready.active.id, &digest);
             Resolution {
                 plan: Some(Plan {
                     system: resolution.system,
@@ -200,15 +250,15 @@ pub fn resolve_with(request: &Request<'_>, resolve: &Resolve<'_>, limits: Limits
                     program: digest,
                     bindings: resolution.bindings.len(),
                 }),
-                response,
+                response: ready.response,
             }
         }
         Search::Refused {
             verdict,
             diagnostics,
-        } => unresolved(response.sources, verdict_status(verdict), diagnostics),
+        } => unresolved(ready.response.sources, verdict_status(verdict), diagnostics),
         Search::Inconclusive { diagnostic, .. } => unresolved(
-            response.sources,
+            ready.response.sources,
             Status::AnalysisInconclusive,
             vec![diagnostic],
         ),

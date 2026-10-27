@@ -15,6 +15,7 @@ pub mod build_cmd;
 pub mod check_cmd;
 pub mod cli;
 pub mod consume;
+pub mod explain_cmd;
 pub mod launch;
 pub mod mcp;
 pub mod resolve_cmd;
@@ -149,6 +150,7 @@ fn dispatch(
         "check" => return check_cmd::run(parsed, out, err),
         "build" => return build_cmd::run(parsed, out, err),
         "resolve" => return resolve_cmd::run(parsed, launcher, out, err),
+        "explain" => return explain_cmd::run(parsed, out, err),
         "mcp" => {
             return match mcp::serve(input, out) {
                 Ok(()) => Status::Ok,

@@ -38,7 +38,7 @@ COMMANDS:
     build       generate, assemble and build a complete system and its simulator   [experimental — the S0 path: one fixed realization, periodic releases, hosted playground; completed by leaf M4.2]
     analyze     run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.21.2]
     verify      run a verification tier over a build   [unimplemented — tracked by leaf M4.11]
-    explain     explain how one requirement was realized, or why it could not be   [unimplemented — tracked by leaf M3.4.13]
+    explain     explain how one requirement was realized, or why it could not be   [experimental — one requirement of one system, read from a description over its own blocks and platforms, not yet from a build; completed by leaf M4.2]
     replay      replay a recorded failure manifest and check its identity   [unimplemented — tracked by leaf M4.7]
     mcp         serve the engine API to an agent over MCP, on standard input and output
 ```
@@ -55,7 +55,7 @@ COMMANDS:
 | `archogen build <DESCRIPTION> [--profile <P>] --out <DIR>` | generate, assemble and build a complete system and its simulator | **experimental** — the S0 path only, see [The S0 early generation path](s0.md); leaf `M4.2` completes it |
 | `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.21.2` |
 | `archogen verify <BUILD> --tier <TIER>` | run a verification tier | leaf `M4.11` |
-| `archogen explain <BUILD> --requirement <REQUIREMENT>` | explain how one requirement was realized, or why it could not be | leaf `M3.4.13` |
+| `archogen explain <DESCRIPTION> [--profile <P>] --requirement <FACT> [--requester <NAME>] [--task <NAME>] [--system <NAME>]` | explain how one requirement was realized, or why it could not be | **experimental** — one system of a description, over its own blocks and platforms, the search's own account, its plan unchecked (leaf `M3.4.13.2`); §10.2's form reads a build, which `M4.2` completes |
 | `archogen replay <MANIFEST>` | replay a recorded failure manifest and check its identity | leaf `M4.7` |
 | `archogen mcp` | serve the engine API to an agent over [MCP](ledger.md#mcp-specification), on standard input and output — §10.4's server, not one of §10.2's seven | **built** — leaf `API.6.4`; the tools it offers are this table's, `build` and `verify` excluded |
 
@@ -99,8 +99,8 @@ tracked work, not an unknown.
 
 The `[unimplemented]` marker comes from the same table the parser validates against, so a
 command becomes real and stops advertising itself as unbuilt in **one** change — a test asserts
-that `check` no longer carries the marker, `replay` still does, and `resolve`, built `2026-10-27`, says it is
-experimental.
+that `check` no longer carries the marker, `replay` still does, and `resolve` and `explain`, built `2026-10-27`, say
+they are experimental.
 
 `archogen resolve` (leaf `M3.4.4`) chooses one system's providers and writes the plan, `archogen-assignment/1`
 ([Matching](matching.md#the-search)), then runs the configuration checker over it, so the plan it reports was judged
@@ -124,6 +124,28 @@ its record written in `plan.json.check/`, and the command's status is the checke
 cannot resolve writes no plan and exits with the search's verdict — `periodic-three` is `missing-fact` today, its
 timer offering a width and no modulus and its policy's constraints waiting on the catalog — and `--locked` is refused
 until lock data exists (`M4.1`). `--system` names the system when a description declares several.
+
+`archogen explain` (leaf `M3.4.13.2`) says what the search did with one requirement: `--requirement` names the fact,
+and `--requester` or `--task` narrows it to one requester's; without either, each requester of the system requiring
+it is explained. For each it prints where the requirement is written, every provider of the system's hardware and
+its answer, and then the provider the plan binds, with what the joint rules say of each other one in its place:
+
+```console
+$ archogen explain system.eadl --requirement observable-output
+`observable-output` required by `console.write`
+  written at system.eadl:32:20
+  `console.uart` meets it
+  `host.playground` leaves it undescribed
+  bound to `console.uart` by the search's plan
+system.eadl: the plan of system `heartbeat` is the search's, unchecked: `archogen resolve` runs the configuration checker over the plan it writes
+  experimental: one requirement of one system, read from a description over its own blocks and platforms, not yet from a build; completed by M4.2
+```
+
+When no plan is written it says why — `no provider meets it`, with the search's own diagnostic, or `met alone`, with
+what stopped the search — on standard error as `archogen resolve` prints it, and exits with the same verdict. A fact
+no requester of the system requires is `usage`, its hint listing the requirements the system writes. It runs no
+checker and claims none: the plan it explains is the one `archogen resolve --unchecked` writes. §10.2's form reads a
+build, which `archogen build` writes; that form is `M4.2`'s.
 
 **The checkers are programs of their own** (ruled `2026-10-22`, findings §16 (a); built by `M3.5.1.4`, `M3.5.6` and
 `M2.21`). The configuration checker is `archogen-plan-check` and the scheduling checker `archogen-analyze`,

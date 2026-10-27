@@ -46,6 +46,12 @@
    refusal with the repair: compose the plan with `archogen-plan-check`'s own tool. A tool's description says what it
    is where a model reads it: "not built yet" for an unimplemented one, which a call answers too, and what an
    experimental one does today.*
+   *Since `2026-10-27` (leaf `M3.4.13.2`) `explain` is served, experimental as the command is: it takes §3's request
+   with `requirement` (a fact), `requester` or `task`, and `system`, asks the engine API's `explain` (version `1.5`),
+   and answers `{"response": …, "plan": …, "accounts": […]}` — each account its requester, fact, clauses, each
+   provider's answer, the search's own refusal when none meets it, the provider bound and each other one's refusal in
+   its place — that JSON its one text block and `isError` unless the response accepts. It asks no `unchecked`: it hands
+   over no plan to build on and claims no check.*
 3. **A tool takes the engine API's request, not the command line's.** The command line names a file; the server
    has no filesystem authority (§10.4), so `check` takes the description's text, its profile and the texts of its
    modules — `archogen_api::Request` — under the API's byte budget, and answers `archogen_api::Response`.
