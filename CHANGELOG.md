@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the search uses adapters
+
+`ARCHOGEN-M3-1017` (leaf `M3.2.3.2`), `2026-10-27`.
+
+- Where a system's own devices cannot meet its requirements, the search now tries again with the engine's adapters: a
+  deadline programmed through a relative timer, or a short counter extended to 64 bits. A device that states part of
+  what an adapter needs gets a message naming the fact to describe. `archogen explain` shows the adapter it bound. A
+  plan binding an adapter is not written yet: its format is the next step but one, and `archogen resolve` says so.
+
 ## archogen — an adapter judged with the rest of a system
 
 `ARCHOGEN-M3-1016` (leaf `M3.2.3.1`), `2026-10-27`.

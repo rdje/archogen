@@ -370,8 +370,8 @@ impl Refusal {
     }
 }
 
-/// The engine's adapters: every kind, in the catalog's order.
-#[derive(Debug, Clone, PartialEq)]
+/// The engine's adapters: every kind, in the catalog's order. The default holds none.
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Catalog {
     /// The kinds, in written order — the order the search tries them in (record §3.1).
     pub kinds: Vec<Kind>,

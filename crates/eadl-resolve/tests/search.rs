@@ -67,6 +67,16 @@ fn run(text: &str, name: &str, policy: &Policy, limits: Limits) -> Search {
     )
 }
 
+/// The default policy with the engine's shipped adapters, as the engine runs.
+fn shipped() -> Policy {
+    let adapters = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &vocabulary())
+        .expect("the shipped catalog reads");
+    Policy {
+        adapters,
+        ..Policy::default()
+    }
+}
+
 fn resolved(search: Search) -> Resolution {
     match search {
         Search::Resolved(resolution) => resolution,
@@ -167,6 +177,7 @@ fn the_search_backtracks_past_an_assignment_the_joint_rules_refuse() {
 fn the_policy_orders_the_candidates_and_the_order_is_stable() {
     let prefer_b = Policy {
         prefer: vec!["timer.b".to_owned()],
+        ..Policy::default()
     };
     let resolution = resolved(run(
         TWO_COMPARATORS,
@@ -375,10 +386,11 @@ fn f10_a_missing_realization_path_is_missing_engine_support_not_impossibility() 
     // ROADMAP.md §13.1 F10: the comparator offers every fact the service needs, its horizon short of what it asks; an
     // epoch-extending adapter (§5.2) is engine support not built yet, so the answer names it, never impossibility.
     let text = fixture("f10-unsupported-implementation-path.eadl");
+    // With the engine's own adapters: none programs a comparator, so none takes part (`M3.2.3.2`).
     let (verdict, codes, messages) = refusal(run(
         &text,
         "deadline-far-ahead",
-        &Policy::default(),
+        &shipped(),
         Limits::DEFAULT,
     ));
     assert_eq!(verdict, Verdict::InfeasibleConfiguration, "{messages:?}");
@@ -391,7 +403,11 @@ fn f10_a_missing_realization_path_is_missing_engine_support_not_impossibility() 
         messages[0].contains("missing engine support, not proof that no realization exists"),
         "{messages:?}"
     );
-    assert!(messages[0].contains("leaf M3.2's"), "{messages:?}");
+    assert!(
+        messages[0]
+            .contains("and at the engine's adapters — none of which offers it over this hardware"),
+        "{messages:?}"
+    );
 }
 
 #[test]
@@ -519,4 +535,201 @@ fn sr_h17_one_side_s_functions_may_be_met_apart_and_two_requesters_are_two() {
             "svc absolute-deadline timer.a"
         ]
     );
+}
+
+// ── Adapters (leaf `M3.2.3.2`, `docs/specs/adapters/decision_engine-adapters.md` §3) ──────────────────────────────
+
+#[test]
+fn an_adapter_realizes_what_no_device_offers_and_only_with_the_catalog() {
+    for (fixture_name, system, instance) in [
+        (
+            "adapter-deadline-over-delay.eadl",
+            "delay-only",
+            "(adapter deadline-over-delay timer.delay time.deadline)",
+        ),
+        (
+            "adapter-epoch-extender.eadl",
+            "short-counter",
+            "(adapter epoch-extender timer.short)",
+        ),
+    ] {
+        let text = fixture(fixture_name);
+        let resolution = resolved(run(&text, system, &shipped(), Limits::DEFAULT));
+        let names: Vec<&str> = resolution
+            .instances
+            .iter()
+            .map(|i| i.provider.name.as_str())
+            .collect();
+        assert_eq!(names, [instance], "{fixture_name}");
+        assert!(
+            resolution.bindings.values().any(|p| p == instance),
+            "{fixture_name}: {:?}",
+            bound(&resolution)
+        );
+        // Without the engine's adapters the hardware alone holds no assignment.
+        assert!(
+            matches!(
+                run(&text, system, &Policy::default(), Limits::DEFAULT),
+                Search::Refused { .. }
+            ),
+            "{fixture_name}"
+        );
+    }
+    // The deadline's time base and the time `time.monotonic` reads are the one timer (rule 14).
+    let resolution = resolved(run(
+        &fixture("adapter-deadline-over-delay.eadl"),
+        "delay-only",
+        &shipped(),
+        Limits::DEFAULT,
+    ));
+    assert!(
+        bound(&resolution).contains(&"time.monotonic tick-rate timer.delay".to_string()),
+        "{:?}",
+        bound(&resolution)
+    );
+}
+
+#[test]
+fn a_direct_assignment_that_holds_binds_no_adapter() {
+    // Phase one holds, so phase two never runs: a comparator meeting the deadline is bound, not an instance over the
+    // relative timer beside it (record §3.2).
+    let text = "(eadl-version eadl/1)
+(defblock timer.compare (offers (absolute-deadline true) (supported-horizon 100 s) (delivery-bound 10 us) (channels 1 tick) (reachable-at-privilege machine)))
+(defblock timer.delay (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.compare timer.delay)))
+(defservice alarm (requires (needs absolute-deadline)))
+(defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm)) (requires (uses alarm)) (platform (uses soc)))
+";
+    let resolution = resolved(run(text, "s", &shipped(), Limits::DEFAULT));
+    assert!(resolution.instances.is_empty());
+    assert_eq!(
+        bound(&resolution),
+        ["alarm absolute-deadline timer.compare"]
+    );
+}
+
+#[test]
+fn two_alarms_take_an_instance_each_and_a_channel_each_beneath() {
+    let text = |channels: u32| {
+        format!(
+            "(eadl-version eadl/1)
+(defblock timer.d (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true) (channels {channels} tick) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d)))
+(defservice alarm.a (requires (needs absolute-deadline)))
+(defservice alarm.b (requires (needs absolute-deadline)))
+(defsystem s
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm.a))
+  (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses alarm.b))
+  (requires (uses alarm.a alarm.b)) (platform (uses soc)))
+"
+        )
+    };
+    let (verdict, codes, messages) = refusal(run(&text(1), "s", &shipped(), Limits::DEFAULT));
+    assert_eq!(verdict, Verdict::InfeasibleConfiguration, "{messages:?}");
+    assert_eq!(codes, ["infeasible-configuration"]);
+    assert!(messages[0].contains("timer.d"), "{messages:?}");
+    let resolution = resolved(run(&text(2), "s", &shipped(), Limits::DEFAULT));
+    let names: Vec<&str> = resolution
+        .instances
+        .iter()
+        .map(|i| i.provider.name.as_str())
+        .collect();
+    assert_eq!(
+        names,
+        [
+            "(adapter deadline-over-delay timer.d alarm.a)",
+            "(adapter deadline-over-delay timer.d alarm.b)"
+        ]
+    );
+}
+
+#[test]
+fn a_device_stating_part_of_what_an_adapter_needs_makes_the_rest_a_missing_fact() {
+    // `SR-H18` with the instances tried (record §3.4): the timer states `relative-delay`, its rate and its coherent reads
+    // and no modulus, so describing the modulus would let `deadline-over-delay` meet the deadline — `missing-fact`, the
+    // repair naming the fact, the adapter and the timer; a UART stating none of it takes no part.
+    let text = "(eadl-version eadl/1)
+(defblock timer.delay (offers (relative-delay true) (counter-width 32 bit) (tick-rate 1 MHz) (observation-coherent true) (channels 1 tick) (reachable-at-privilege machine)))
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.delay console.uart)))
+(defservice alarm (requires (needs absolute-deadline)))
+(defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm)) (requires (uses alarm)) (platform (uses soc)))
+";
+    match run(text, "s", &shipped(), Limits::DEFAULT) {
+        Search::Refused {
+            verdict,
+            diagnostics,
+        } => {
+            assert_eq!(verdict, Verdict::MissingFact, "{diagnostics:?}");
+            let d = &diagnostics[0];
+            assert!(
+                d.message.contains("`deadline-over-delay` tried"),
+                "{}",
+                d.message
+            );
+            assert!(
+                d.repair
+                    .contains("`deadline-over-delay` meets `absolute-deadline` over `timer.delay`")
+                    && d.repair.contains("`counter-modulus`"),
+                "{}",
+                d.repair
+            );
+            assert!(
+                !d.secondary
+                    .iter()
+                    .any(|l| l.message.contains("console.uart")),
+                "{:?}",
+                d.secondary
+            );
+        }
+        other => panic!("not refused: {other:?}"),
+    }
+}
+
+#[test]
+fn a_mediating_adapter_is_offered_only_where_its_requirer_allows_mediation() {
+    // `SR-H8` on a test catalog (record §6): a kind writing `(mediates true)` is no candidate for a requirer that does
+    // not write `(or-through-mediation allowed)`, and is one for one that does.
+    let kind = std::fs::read_to_string(root().join("docs/semantics/kinds/defadapter.eadl"))
+        .expect("the kind");
+    let catalog = r#"(eadl-version eadl/1)
+(defadapter mediated-deadline
+  (doc "a deadline through a mediator, for this test")
+  (beneath (needs relative-delay counter-modulus tick-rate observation-coherent))
+  (offers (absolute-deadline true) (channels 1 tick))
+  (level machine)
+  (mediates true))
+"#;
+    let adapters = eadl_resolve::adapter::Catalog::read(
+        &mut SourceMap::new(),
+        ("defadapter.eadl", &kind),
+        ("test-catalog.eadl", catalog),
+        &vocabulary(),
+    )
+    .expect("the test catalog reads");
+    let policy = Policy {
+        adapters,
+        ..Policy::default()
+    };
+    let text = |statement: &str| {
+        format!(
+            "(eadl-version eadl/1)
+(defblock timer.d (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d)))
+(defservice alarm (requires {statement} (needs absolute-deadline)))
+(defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm)) (requires (uses alarm)) (platform (uses soc)))
+"
+        )
+    };
+    assert!(matches!(
+        run(&text(""), "s", &policy, Limits::DEFAULT),
+        Search::Refused { .. }
+    ));
+    let resolution = resolved(run(
+        &text("(or-through-mediation allowed)"),
+        "s",
+        &policy,
+        Limits::DEFAULT,
+    ));
+    assert_eq!(resolution.instances.len(), 1);
 }

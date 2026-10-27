@@ -18,6 +18,7 @@
 use eadl_front::{Form, Program, SourceMap};
 use eadl_model::check::{resolved_declarations, shipped_registry};
 use eadl_model::profile::{self, Profile};
+use eadl_resolve::adapter::Catalog;
 use eadl_resolve::plan;
 use eadl_resolve::search::{search, Limits as Budget, Policy, Search};
 use eadl_resolve::vocabulary::Vocabulary;
@@ -84,7 +85,7 @@ pub fn resolve_with(request: &Request<'_>, resolve: &Resolve<'_>, limits: Limits
             ready.system,
             ready.active.caller_level,
             ready.vocabulary,
-            &Policy::default(),
+            ready.policy,
             Budget::DEFAULT,
         );
         concluded(request, ready, found)
@@ -107,6 +108,8 @@ pub(crate) struct Ready<'a> {
     pub(crate) system: &'a Form,
     /// The shipped vocabulary.
     pub(crate) vocabulary: &'a Vocabulary,
+    /// The engine's policy: its preferred providers, none, and its shipped adapters.
+    pub(crate) policy: &'a Policy,
     /// The profile the description was judged under.
     pub(crate) active: &'static Profile,
 }
@@ -204,12 +207,28 @@ pub(crate) fn prepare<T>(
             Vec::new(),
         )));
     };
+    // The engine's adapters, which the search may bind where the description's own providers do not hold (leaf
+    // `M3.2.3.2`, `docs/specs/adapters/decision_engine-adapters.md` §3).
+    let Ok(adapters) = Catalog::shipped(&mut vocabulary_sources, &vocabulary) else {
+        return Err(Box::new(Response::not_judged(
+            Status::ToolFailure,
+            response.sources,
+            vec!["the shipped adapter catalog could not be read".to_owned()],
+            None,
+            Vec::new(),
+        )));
+    };
+    let policy = Policy {
+        adapters,
+        ..Policy::default()
+    };
     Ok(then(Ready {
         response,
         program: &program,
         declarations,
         system,
         vocabulary: &vocabulary,
+        policy: &policy,
         active,
     }))
 }
@@ -240,6 +259,28 @@ pub(crate) fn concluded(request: &Request<'_>, ready: Ready<'_>, found: Search) 
         plan: None,
     };
     match found {
+        // `archogen-assignment/1` names blocks and platforms alone: a plan binding an adapter's instance is written once
+        // `/2` exists (leaf `M3.2.5`), and none is written until then.
+        Search::Resolved(resolution) if !resolution.instances.is_empty() => Resolution {
+            response: Response::not_judged(
+                Status::Unimplemented,
+                ready.response.sources,
+                vec![format!(
+                    "system `{}` of {} resolves through an engine adapter, `{}`, which `archogen-assignment/1` cannot \
+                     name — no plan was written",
+                    name_of(ready.system),
+                    request.name,
+                    resolution.instances[0].provider.name
+                )],
+                Some(
+                    "the plan format that names an adapter's instance, `archogen-assignment/2`, is task-tree leaf \
+                     M3.2.5 (docs/TASK_TREE.md)"
+                        .to_owned(),
+                ),
+                Vec::new(),
+            ),
+            plan: None,
+        },
         Search::Resolved(resolution) => {
             let digest = plan::program_digest(ready.program);
             let text = plan::write(&resolution, ready.active.id, &digest);

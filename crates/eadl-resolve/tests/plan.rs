@@ -118,6 +118,7 @@ fn the_writer_writes_the_format_s_golden() {
         bindings,
         obligations: Vec::new(),
         steps: 1,
+        instances: Vec::new(),
     };
     let golden = std::fs::read_to_string(
         root().join("crates/archogen-plan-check/tests/goldens/archogen-assignment-1.golden"),

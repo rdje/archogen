@@ -214,3 +214,32 @@ fn f10_through_the_api_is_infeasible_and_says_the_engine_lacks_the_path() {
         .message
         .contains("missing engine support"));
 }
+
+#[test]
+fn a_plan_through_an_adapter_is_not_written_until_its_format_exists() {
+    // Leaf `M3.2.3.2`: the check accepts the description and the search binds the engine's epoch extender over the
+    // short counter, and `archogen-assignment/1` names blocks and platforms alone, so no plan is written; the note names
+    // the instance and the leaf that brings `/2`. (The deadline fixture is presence's `missing-fact` until `M3.2.4`.)
+    let text = std::fs::read_to_string(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../eadl-resolve/tests/search/adapter-epoch-extender.eadl"),
+    )
+    .expect("the fixture");
+    let resolution = ask(&text, &MemoryModules::new(), UNCHECKED);
+    assert_eq!(resolution.response.status, Status::Unimplemented);
+    assert!(resolution.plan.is_none());
+    let note = &resolution.response.notes[0];
+    assert!(
+        note.contains("(adapter epoch-extender timer.short)"),
+        "{note}"
+    );
+    assert!(
+        resolution
+            .response
+            .hint
+            .as_deref()
+            .is_some_and(|hint| hint.contains("M3.2.5")),
+        "{:?}",
+        resolution.response.hint
+    );
+}

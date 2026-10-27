@@ -3,6 +3,8 @@
 # Regenerated deliberately: ARCHOGEN_BLESS_VERDICTS=1 cargo test -p archogen-cli --test verdicts
 0 - crates/eadl-resolve/tests/joint/f08-two-exclusive-requests.eadl
 0 - crates/eadl-resolve/tests/joint/f09-conflicting-ownership.eadl
+11 missing-fact crates/eadl-resolve/tests/search/adapter-deadline-over-delay.eadl
+0 - crates/eadl-resolve/tests/search/adapter-epoch-extender.eadl
 0 - crates/eadl-resolve/tests/search/f10-unsupported-implementation-path.eadl
 0 - crates/eadl-resolve/tests/search/f11-solver-resource-limit.eadl
 0 - docs/feedback/linkedspec/issues/LS-002-multi-form-truncation/evidence/01-multiple-top-level-forms.eadl

@@ -382,4 +382,5 @@ configuration checker judges a plan's bindings again by those that refuse an ass
    to it makes no route, its own binding beneath making its device's timer route, which carries the requesters bound
    to it (rule 8); a caller at its kind's level, stating that level for the callers bound to it (rule 9); one provider
    of its function (rule 13). An exclusive kind's instance serves one requester and takes its own channel beneath
-   (rules 2 and 3). Rules 1–13 are amended to that effect; the search binds no instance until `M3.2.3.2`.
+   (rules 2 and 3). Rules 1–13 are amended to that effect; the search binds one only where no assignment of the hardware alone
+   holds (`M3.2.3.2`).

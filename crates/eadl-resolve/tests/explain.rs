@@ -340,3 +340,53 @@ fn a_search_stopped_before_its_requirements_judges_none() {
         other => panic!("not refused: {other:?}"),
     }
 }
+
+#[test]
+fn an_account_names_the_adapter_bound_and_each_instance_tried() {
+    // Leaf `M3.2.3.2`: the deadline no timer offers is met by the engine's adapter over the relative one, which the
+    // account lists beside the hardware's providers and names as bound.
+    let text = std::fs::read_to_string(
+        root().join("crates/eadl-resolve/tests/search/adapter-deadline-over-delay.eadl"),
+    )
+    .expect("the fixture");
+    let decls = forms(&text);
+    let system = decls
+        .iter()
+        .find(|f| f.head() == Some("defsystem"))
+        .expect("the system")
+        .clone();
+    let v = vocabulary();
+    let policy = Policy {
+        adapters: eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+            .expect("the shipped catalog reads"),
+        ..Policy::default()
+    };
+    let explanation = explain(
+        &decls,
+        &system,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &policy,
+        Limits::DEFAULT,
+        Asked {
+            fact: "absolute-deadline",
+            select: Select::Every,
+        },
+    );
+    assert!(matches!(explanation.search, Search::Resolved(_)));
+    let [account] = explanation.accounts.as_slice() else {
+        panic!("one account: {:?}", explanation.accounts);
+    };
+    let instance = "(adapter deadline-over-delay timer.delay time.deadline)";
+    assert_eq!(
+        answers(account),
+        [
+            ("timer.delay", Answer::Undescribed),
+            ("console.uart", Answer::Undescribed),
+            ("soc.delay-only", Answer::Undescribed),
+            (instance, Answer::Satisfied),
+        ]
+    );
+    assert_eq!(account.bound.as_deref(), Some(instance));
+    assert!(account.unmet.is_none());
+}

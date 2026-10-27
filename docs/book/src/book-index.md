@@ -46,10 +46,11 @@ a change that leaves it stale, so it is never edited by hand.
 - **AI** — [definition](glossary.md), [The engine API](engine-api.md)
 - An example that runs — [The engine API](engine-api.md#an-example-that-runs)
 - analysis-model — [What is versioned, and what changing it costs](versions.md#analysis-model)
-- **API** — [definition](glossary.md), [Generated-sources test adequacy](trust-adequacy.md), [The runtime: decisions,
-  not actions](runtime.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying the
-  toolchain](verification.md), [What is versioned, and what changing it costs](versions.md), [Annex B: The checks that
-  keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- **API** — [definition](glossary.md), [Matching an offer to a requirement](matching.md), [Generated-sources test
+  adequacy](trust-adequacy.md), [The runtime: decisions, not actions](runtime.md), [The archogen command line](cli.md),
+  [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
+  costs](versions.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
+  records](annex-trust-proofs.md)
 - Approved disposable fixture verification — [Annex C: Trust proof
   records](annex-trust-proofs.md#approved-disposable-fixture-verification)
 - Artifact hash checks under escaped paths — [Annex C: Trust proof

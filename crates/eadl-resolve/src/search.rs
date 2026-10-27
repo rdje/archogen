@@ -35,24 +35,38 @@
 //! the plan the first it accepts, so an other ordered before the bound one makes an assignment the walk judged and
 //! refused — its refusal is the walk's own — and one ordered after it an assignment the walk never reached, judged
 //! here by the same rules.
+//!
+//! **An adapter where nothing direct holds** (leaf `M3.2.3.2`, `docs/specs/adapters/decision_engine-adapters.md` §3).
+//! The search runs over the hardware alone first; only when that concludes with no plan and some adapter's instance
+//! meets some pair does it run again, each pair's candidates its hardware and then its instances, in the catalog's
+//! order and the policy's, under what is left of the budget. An instance meets a pair where its kind's `beneath` holds
+//! at a provider and the pair's fact has a value at the instance that meets every requirement of the pair; an
+//! assignment choosing one binds what its kind requires beneath to that provider. A pair no provider and no instance
+//! meets takes `SR-H18`'s code with the instances tried among those taking part: one whose `beneath` holds answers the
+//! pair, one whose `beneath` fails only where its provider states some fact that side names.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use eadl_front::{Diagnostic, Form, Label, Span, Verdict};
 
+use crate::adapter::{instance_name, Catalog, Instance};
 use crate::joint::{requesters, Binding, Joint, Kind, Obligation, Report, Requester, System};
 use crate::offer::{self, Provider};
 use crate::relation::{judge, Verdict as Answer};
 use crate::requirement::Requirement;
+use crate::value::Value;
 use crate::vocabulary::Vocabulary;
 
 /// The engine's selection policy (§5.4: "explicit preferred-provider order with stable tie-breaking, stored in engine
 /// configuration rather than eADL"): the providers it names first, in its order, then every other in the
-/// description's declaration order. The default names none.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+/// description's declaration order; and the adapters it may bind where none of them will do. The default names none
+/// and holds none.
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Policy {
     /// The providers preferred, by name, most preferred first.
     pub prefer: Vec<String>,
+    /// The engine's adapters the search may bind (record §3); the shipped catalog where the engine runs, none by default.
+    pub adapters: Catalog,
 }
 
 impl Policy {
@@ -141,6 +155,8 @@ pub struct Resolution {
     pub obligations: Vec<Obligation>,
     /// The complete assignments judged to reach it.
     pub steps: u64,
+    /// Each adapter instance the plan binds, by its name's order (record §3); none where the hardware alone holds.
+    pub instances: Vec<Instance>,
 }
 
 /// What a search concludes.
@@ -162,6 +178,25 @@ pub enum Search {
         /// What happened, and what to do.
         diagnostic: Diagnostic,
     },
+}
+
+/// One adapter kind tried over one provider for one pair (record §3.1, §3.4).
+#[derive(Debug, Clone)]
+struct Tried {
+    /// The instance's name, as it would be bound.
+    name: String,
+    /// The kind.
+    kind: String,
+    /// The provider it programs, and where it is declared.
+    over: (String, Span),
+    /// Whether the kind's `beneath` holds there.
+    beneath: bool,
+    /// The instance's answer to the pair where its `beneath` holds; otherwise that side's answer at the provider.
+    answer: Answer,
+    /// The facts its `beneath` names that the provider leaves undescribed.
+    undescribed: Vec<String>,
+    /// The instance, where its `beneath` holds.
+    instance: Option<Instance>,
 }
 
 /// One pair: a requester's requirements on one fact, and the providers meeting all of them.
@@ -380,7 +415,18 @@ fn run(
             .collect(),
         None => Vec::new(),
     };
-    let unmet_of = |pair: &Pair<'_>| unmet(pair, &read, &in_hardware, vocabulary);
+    // Every kind tried over every provider for every pair, once: the instances a second phase may bind, and the trials
+    // a failed pair's code and an account read.
+    let tried: Vec<Vec<Tried>> = pairs
+        .iter()
+        .map(|pair| trials(pair, &ordered, &policy.adapters, vocabulary))
+        .collect();
+    let meeting = |at: usize| -> Vec<&Tried> {
+        tried[at]
+            .iter()
+            .filter(|t| t.beneath && t.answer == Answer::Satisfied)
+            .collect()
+    };
     let mut accounts: Vec<Account> = asked
         .iter()
         .map(|&at| {
@@ -397,17 +443,13 @@ fn run(
                             answer(provider, &pair.requirements, vocabulary),
                         )
                     })
+                    .chain(tried[at].iter().map(|t| (t.name.clone(), t.answer)))
                     .collect(),
-                unmet: pair.candidates.is_empty().then(|| unmet_of(pair)),
+                unmet: None,
                 bound: None,
                 instead: Vec::new(),
             }
         })
-        .collect();
-    let unmet: Vec<Diagnostic> = pairs
-        .iter()
-        .filter(|pair| pair.candidates.is_empty())
-        .map(unmet_of)
         .collect();
     let explained = |search: Search, accounts: Vec<Account>| Explanation {
         search,
@@ -415,13 +457,103 @@ fn run(
         required: required.clone(),
         accounts,
     };
-    if !unmet.is_empty() {
-        return explained(refused(unmet), accounts);
-    }
+    // Phase one: the hardware alone, as `M3.4.2` built it.
     let joint = joint.for_system(read.clone());
-    let search = walk(&joint, &read, &pairs, placement, limits);
+    let no_instances = BTreeMap::new();
+    let (first, spent) = if pairs.iter().any(|pair| pair.candidates.is_empty()) {
+        (None, 0)
+    } else {
+        let (search, spent) = walk(
+            &joint,
+            &read,
+            &pairs,
+            placement.clone(),
+            limits,
+            &no_instances,
+        );
+        (Some(search), spent)
+    };
+    let direct_holds = matches!(
+        first,
+        Some(Search::Resolved(_) | Search::Inconclusive { .. })
+    );
+    let any_instance = (0..pairs.len()).any(|at| !meeting(at).is_empty());
+    // Phase two: each pair's hardware, then its instances, under what is left of the budget (record §3.2).
+    let (search, final_pairs, instances) = if direct_holds || !any_instance {
+        let unmet: Vec<Diagnostic> = (0..pairs.len())
+            .filter(|&at| pairs[at].candidates.is_empty())
+            .map(|at| unmet(&pairs[at], &tried[at], &read, &in_hardware, vocabulary))
+            .collect();
+        let search = match first {
+            Some(search) => search,
+            None => refused(unmet),
+        };
+        (search, pairs, BTreeMap::new())
+    } else {
+        let mut instances: BTreeMap<String, Instance> = BTreeMap::new();
+        let widened: Vec<Pair<'_>> = pairs
+            .iter()
+            .enumerate()
+            .map(|(at, pair)| {
+                let mut candidates = pair.candidates.clone();
+                for t in meeting(at) {
+                    if let Some(instance) = &t.instance {
+                        instances.insert(t.name.clone(), instance.clone());
+                        candidates.push(t.name.clone());
+                    }
+                }
+                Pair {
+                    requester: pair.requester,
+                    fact: pair.fact.clone(),
+                    requirements: pair.requirements.clone(),
+                    candidates,
+                }
+            })
+            .collect();
+        let unmet: Vec<Diagnostic> = (0..widened.len())
+            .filter(|&at| widened[at].candidates.is_empty())
+            .map(|at| unmet(&widened[at], &tried[at], &read, &in_hardware, vocabulary))
+            .collect();
+        let beneath = beneath_bindings(&instances, &policy.adapters);
+        let search = if unmet.is_empty() {
+            let all: Vec<Instance> = instances.values().cloned().collect();
+            let joint = joint.clone().with_instances(&all);
+            let left = Limits {
+                steps: limits.steps.saturating_sub(spent),
+            };
+            match walk(&joint, &read, &widened, placement, left, &beneath).0 {
+                Search::Resolved(mut resolution) => {
+                    let bound: BTreeSet<&String> = resolution.bindings.values().collect();
+                    resolution.instances = instances
+                        .iter()
+                        .filter(|(name, _)| bound.contains(name))
+                        .map(|(_, instance)| instance.clone())
+                        .collect();
+                    Search::Resolved(resolution)
+                }
+                other => other,
+            }
+        } else {
+            refused(unmet)
+        };
+        (search, widened, instances)
+    };
+    for (account, &at) in accounts.iter_mut().zip(&asked) {
+        if final_pairs[at].candidates.is_empty() {
+            account.unmet = Some(unmet(
+                &final_pairs[at],
+                &tried[at],
+                &read,
+                &in_hardware,
+                vocabulary,
+            ));
+        }
+    }
     if let Search::Resolved(resolution) = &search {
-        let chosen: Vec<&String> = pairs
+        let beneath = beneath_bindings(&instances, &policy.adapters);
+        let all: Vec<Instance> = instances.values().cloned().collect();
+        let joint = joint.clone().with_instances(&all);
+        let chosen: Vec<&String> = final_pairs
             .iter()
             .zip(&required)
             .map(|(_, key)| &resolution.bindings[key])
@@ -429,14 +561,14 @@ fn run(
         for (account, &at) in accounts.iter_mut().zip(&asked) {
             let bound = chosen[at];
             account.bound = Some(bound.clone());
-            account.instead = pairs[at]
+            account.instead = final_pairs[at]
                 .candidates
                 .iter()
                 .filter(|candidate| *candidate != bound)
                 .map(|candidate| {
                     let mut providers = chosen.clone();
                     providers[at] = candidate;
-                    let report = joint.check(&assignment(&pairs, &providers));
+                    let report = joint.check(&assignment(&final_pairs, &providers, &beneath));
                     let first = report.conflicts.iter().chain(&report.unknowns).next();
                     (candidate.clone(), first.map(|f| f.diagnostic()))
                 })
@@ -446,9 +578,113 @@ fn run(
     explained(search, accounts)
 }
 
-/// The bindings of `pairs`, each to the provider at its place in `providers`.
-fn assignment(pairs: &[Pair<'_>], providers: &[&String]) -> Vec<Binding> {
-    pairs
+/// Each kind of `catalog`, in its order, tried over each provider of `ordered` for `pair` (record §3.1, §3.4): a kind
+/// the mediation gate admits (`SR-H8`) that could offer the pair's fact — it offers it, or offers every fact it is
+/// derived from — where its `beneath` holds, an instance and its answer to the pair; where it fails, only where the
+/// provider states some fact that side names, with that side's answer there.
+fn trials(
+    pair: &Pair<'_>,
+    ordered: &[&Provider],
+    catalog: &Catalog,
+    vocabulary: &Vocabulary,
+) -> Vec<Tried> {
+    let mediation = pair.requester.requirements.iter().any(|r| {
+        matches!(r, Requirement::Statement { fact, value: Value::Enum(word), .. }
+            if fact == "or-through-mediation" && word == "allowed")
+    });
+    let derivable = |kind: &crate::adapter::Kind| {
+        kind.offer(&pair.fact).is_some()
+            || vocabulary.fact(&pair.fact).is_some_and(|entry| {
+                !entry.derived_from.is_empty()
+                    && entry.derived_from.iter().all(|g| kind.offer(g).is_some())
+            })
+    };
+    let mut out = Vec::new();
+    for kind in catalog
+        .kinds
+        .iter()
+        .filter(|kind| (!kind.mediates || mediation) && derivable(kind))
+    {
+        let beneath: Vec<&Requirement> = kind.beneath.iter().collect();
+        let serves = kind.exclusive().then_some(pair.requester.name.as_str());
+        for provider in ordered {
+            let name = instance_name(&kind.name, &provider.name, serves);
+            let side = answer(provider, &beneath, vocabulary);
+            let undescribed: Vec<String> = kind
+                .beneath_names
+                .iter()
+                .filter(|f| provider.state(f).is_none())
+                .cloned()
+                .collect();
+            if side == Answer::Satisfied {
+                let instance = kind.instance(
+                    provider,
+                    serves.map(|r| (r, pair.requester.requirements.as_slice())),
+                    vocabulary,
+                );
+                out.push(Tried {
+                    name,
+                    kind: kind.name.clone(),
+                    over: (provider.name.clone(), provider.span),
+                    beneath: true,
+                    answer: answer(&instance.provider, &pair.requirements, vocabulary),
+                    undescribed,
+                    instance: Some(instance),
+                });
+            } else if kind
+                .beneath_names
+                .iter()
+                .any(|f| provider.state(f).is_some())
+            {
+                out.push(Tried {
+                    name,
+                    kind: kind.name.clone(),
+                    over: (provider.name.clone(), provider.span),
+                    beneath: false,
+                    answer: side,
+                    undescribed,
+                    instance: None,
+                });
+            }
+        }
+    }
+    out
+}
+
+/// Each instance's own bindings: what its kind requires beneath, bound to the provider it programs (record §3.3).
+fn beneath_bindings(
+    instances: &BTreeMap<String, Instance>,
+    catalog: &Catalog,
+) -> BTreeMap<String, Vec<Binding>> {
+    instances
+        .iter()
+        .map(|(name, instance)| {
+            let bindings = catalog
+                .kind(&instance.kind)
+                .map(|kind| {
+                    kind.beneath
+                        .iter()
+                        .map(|requirement| Binding {
+                            requester: name.clone(),
+                            requirement: requirement.clone(),
+                            provider: instance.over.clone(),
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            (name.clone(), bindings)
+        })
+        .collect()
+}
+
+/// The bindings of `pairs`, each to the provider at its place in `providers`, and each instance chosen once, its own
+/// bindings beneath.
+fn assignment(
+    pairs: &[Pair<'_>],
+    providers: &[&String],
+    beneath: &BTreeMap<String, Vec<Binding>>,
+) -> Vec<Binding> {
+    let mut out: Vec<Binding> = pairs
         .iter()
         .zip(providers)
         .flat_map(|(pair, provider)| {
@@ -458,7 +694,14 @@ fn assignment(pairs: &[Pair<'_>], providers: &[&String]) -> Vec<Binding> {
                 provider: (*provider).clone(),
             })
         })
-        .collect()
+        .collect();
+    let chosen: BTreeSet<&String> = providers.iter().copied().collect();
+    for name in chosen {
+        if let Some(own) = beneath.get(name) {
+            out.extend(own.iter().cloned());
+        }
+    }
+    out
 }
 
 /// `provider`'s answer to `requirements`, one requester's on one fact: satisfied when it meets every one, otherwise the
@@ -524,6 +767,7 @@ fn pairs<'d>(
 /// Why no provider of the hardware meets `pair` (`SR-H18`): the code the providers taking part decide.
 fn unmet(
     pair: &Pair<'_>,
+    tried: &[Tried],
     system: &System,
     hardware: &[&Provider],
     vocabulary: &Vocabulary,
@@ -545,13 +789,43 @@ fn unmet(
             taking_part.push((provider, worst));
         }
     }
-    let has = |answer: Answer| taking_part.iter().any(|(_, a)| *a == answer);
+    // The instances tried take part on `SR-H18`'s own terms (record §3.4): `trials` keeps one whose `beneath` fails only
+    // where its provider states part of it.
+    let has = |answer: Answer| {
+        taking_part.iter().any(|(_, a)| *a == answer) || tried.iter().any(|t| t.answer == answer)
+    };
+    let short: Vec<&Tried> = tried
+        .iter()
+        .filter(|t| {
+            !t.beneath
+                && matches!(t.answer, Answer::Undescribed | Answer::Unknown)
+                && !t.undescribed.is_empty()
+        })
+        .collect();
     let (code, repair) = if has(Answer::Unsupported) {
         (
             "unsupported-profile",
             format!(
                 "a provider's `{}` lies past the exact arithmetic the engine decides: write it within range",
                 pair.fact
+            ),
+        )
+    } else if let Some(t) = short.first() {
+        (
+            "missing-fact",
+            format!(
+                "the engine's adapter `{}` meets `{}` over `{}` once `{}` describes {}: describe {}, so the adapter \
+                 can be judged",
+                t.kind,
+                pair.fact,
+                t.over.0,
+                t.over.0,
+                t.undescribed
+                    .iter()
+                    .map(|f| format!("`{f}`"))
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                if t.undescribed.len() == 1 { "it" } else { "them" }
             ),
         )
     } else if has(Answer::Unknown) || has(Answer::Undescribed) {
@@ -563,7 +837,7 @@ fn unmet(
                 pair.fact
             ),
         )
-    } else if taking_part.is_empty() {
+    } else if taking_part.is_empty() && tried.is_empty() {
         (
             "missing-fact",
             format!(
@@ -586,12 +860,27 @@ fn unmet(
     let first = pair.requirements[0];
     // F10 (`M3.4.5`): what was searched, so a refusal never reads as impossibility. The arithmetic's limit is the
     // engine's own and says so in its repair.
+    let kinds: BTreeSet<&str> = tried.iter().map(|t| t.kind.as_str()).collect();
     let scope = if code == "unsupported-profile" {
-        ""
+        String::new()
     } else {
-        "; the search looked at the description's own blocks and platforms, and the engine realizes a requirement no \
-         other way yet — adapters are leaf M3.2's, catalog records M3.7's — so this is missing engine support, not \
-         proof that no realization exists"
+        format!(
+            "; the search looked at the description's own blocks and platforms and at the engine's adapters — {} — \
+             and the engine realizes a requirement no other way yet, catalog records being M3.7's, so this is missing \
+             engine support, not proof that no realization exists",
+            if kinds.is_empty() {
+                "none of which offers it over this hardware".to_string()
+            } else {
+                format!(
+                    "{} tried",
+                    kinds
+                        .iter()
+                        .map(|k| format!("`{k}`"))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            }
+        )
     };
     let mut diagnostic = Diagnostic::error(
         code,
@@ -616,6 +905,31 @@ fn unmet(
         diagnostic = diagnostic.with_secondary(Label::new(
             provider.span,
             format!("`{}` {said}", provider.name),
+        ));
+    }
+    for t in tried {
+        let said = if t.beneath {
+            match t.answer {
+                Answer::Unsupported => "offers it past the exact arithmetic",
+                Answer::Unknown => "offers it without a value",
+                Answer::Undescribed => "leaves part of it undescribed",
+                Answer::Absent => "declares it absent",
+                _ => "offers a value the requirement refuses",
+            }
+            .to_string()
+        } else {
+            let needs = match t.answer {
+                Answer::Unsupported => "states what it needs past the exact arithmetic",
+                Answer::Unknown => "states what it needs without a value",
+                Answer::Undescribed => "leaves part of what it needs undescribed",
+                Answer::Absent => "declares absent what it needs",
+                _ => "offers a value it refuses",
+            };
+            format!("— `{}` {needs}", t.over.0)
+        };
+        diagnostic = diagnostic.with_secondary(Label::new(
+            t.over.1,
+            format!("the adapter `{}` over `{}` {said}", t.kind, t.over.0),
         ));
     }
     diagnostic
@@ -644,14 +958,15 @@ fn walk(
     pairs: &[Pair<'_>],
     placement: Option<(String, String)>,
     limits: Limits,
-) -> Search {
+    beneath: &BTreeMap<String, Vec<Binding>>,
+) -> (Search, u64) {
     let mut choice = vec![0usize; pairs.len()];
     let mut steps = 0u64;
     let mut first: Option<Report> = None;
     let mut free: Option<Report> = None;
     loop {
         if steps == limits.steps {
-            return Search::Inconclusive {
+            return (Search::Inconclusive {
                 steps,
                 diagnostic: Diagnostic::error(
                     "analysis-inconclusive",
@@ -663,7 +978,7 @@ fn walk(
                     Label::new(system.span, "the system searched"),
                     "raise the search's budget, or narrow the choices: fewer providers meeting each requirement",
                 ),
-            };
+            }, steps);
         }
         steps += 1;
         let providers: Vec<&String> = pairs
@@ -671,24 +986,29 @@ fn walk(
             .zip(&choice)
             .map(|(pair, &at)| &pair.candidates[at])
             .collect();
-        let report = joint.check(&assignment(pairs, &providers));
+        let report = joint.check(&assignment(pairs, &providers, beneath));
         if report.holds() {
-            return Search::Resolved(Resolution {
-                system: system.name.clone(),
-                placement,
-                bindings: pairs
-                    .iter()
-                    .zip(&choice)
-                    .map(|(pair, &at)| {
-                        (
-                            (Who::of(pair.requester, &system.name), pair.fact.clone()),
-                            pair.candidates[at].clone(),
-                        )
-                    })
-                    .collect(),
-                obligations: report.obligations,
+            return (
+                Search::Resolved(Resolution {
+                    system: system.name.clone(),
+                    placement,
+                    bindings: pairs
+                        .iter()
+                        .zip(&choice)
+                        .map(|(pair, &at)| {
+                            (
+                                (Who::of(pair.requester, &system.name), pair.fact.clone()),
+                                pair.candidates[at].clone(),
+                            )
+                        })
+                        .collect(),
+                    obligations: report.obligations,
+                    steps,
+                    // The instances bound are the caller's to name: it holds them, the walk their bindings beneath.
+                    instances: Vec::new(),
+                }),
                 steps,
-            });
+            );
         }
         if free.is_none() && report.conflicts.is_empty() {
             free = Some(report.clone());
@@ -712,7 +1032,10 @@ fn walk(
                 } else {
                     report.unknowns
                 };
-                return refused(findings.iter().map(|f| f.diagnostic()).collect());
+                return (
+                    refused(findings.iter().map(|f| f.diagnostic()).collect()),
+                    steps,
+                );
             }
             index -= 1;
             choice[index] += 1;

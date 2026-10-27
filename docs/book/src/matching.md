@@ -360,10 +360,12 @@ unknown, that is `missing-fact`. A requirement only the realization can meet —
 release's accuracy — finds no provider until the catalog's records become providers (`M3.7`), as the relation's record
 says (§9).
 
-The search looks only at the description's own blocks and platforms, and the engine realizes a requirement no other
-way yet: an adapter that would bridge a gap — an epoch extender for a comparator whose horizon is too short, a
-deadline service over a relative timer (`ROADMAP.md` §5.2, §5.4) — is leaf `M3.2`'s. So a refusal says so: **missing
-engine support, never a proof that no realization exists** — `ROADMAP.md`'s case F10,
+Where the description's own blocks and platforms hold no assignment, the search tries again with the engine's
+adapters (`M3.2.3.2`): a deadline programmed through a relative timer, a counter extended to 64 bits
+([below](#the-searchs-rules)). Only where neither finds one does it refuse, and the refusal says what it looked at — the
+description's providers and the engine's adapters — and that the engine knows no other path: **missing engine support,
+never a proof that no realization exists**. Where a device states part of what an adapter needs and leaves the rest
+undescribed, that is a missing fact, and the message says which. `ROADMAP.md`'s case F10,
 `crates/eadl-resolve/tests/search/f10-unsupported-implementation-path.eadl`. And a budget spent says it concluded
 nothing — case F11, `crates/eadl-resolve/tests/search/f11-solver-resource-limit.eadl`, where every assignment is
 refused and the budget runs out before the search could show it: `analysis-inconclusive`, and no plan. Every plan the
@@ -478,7 +480,13 @@ computed from the device it programs — a value its kind writes, a fact passed 
 device, derived there or offered, a bound it is obliged to at its requester's tightest — and itself a requester of that
 device, served when a requester it serves is, a caller at its kind's level, owning nothing and composing nothing, its
 device's route carrying its requesters. Rule 14 holds a deadline and every time its requester reaches to one device.
-The search proposes no instance yet (`M3.2.3.2`).
+The search proposes one in a second phase (`M3.2.3.2`): it runs over the hardware alone first, and only when that
+concludes with no plan and some instance meets some pair does it run again, each pair's candidates its hardware and then
+its instances, under what is left of the budget — so a plan that needs no adapter binds none. An instance tried for a
+pair no candidate meets takes part in its code where its kind's `beneath` holds, with its answer, or where its device
+states part of that side, with that side's answer there: a device stating none of it decides nothing, which keeps F10
+`infeasible-configuration`. Until `archogen-assignment/2` (`M3.2.5`), a plan binding an instance is not written: the
+engine API answers `unimplemented`, naming the instance.
 
 An account of a requirement (`explain`, `M3.4.13.1`) is the same run with its pairs selected by fact, then by requester
 or task: each provider of the hardware in the policy's order with its answer to the pair — satisfied when it meets
@@ -519,7 +527,8 @@ enumeration and keeping or migrating every verdict it moves. `M3.2` adds adapter
 devices, bound only where no assignment of the description's own providers holds — `/1`'s are a deadline programmed
 through a relative delay and an epoch extender, each plan binding one conditional on the obligations it names, and a
 mediating kind, which `/1` has none of, offered only where a requirer allows mediation. Their catalog is read today,
-`docs/semantics/adapters/adapters.eadl` (`M3.2.2`), and held to the checker's own table; the search binds none yet; `M3.3` judges what one provider cannot: its
+`docs/semantics/adapters/adapters.eadl` (`M3.2.2`), and held to the checker's own table; the search binds them
+(`M3.2.3.2`); `M3.3` judges what one provider cannot: its
 channels and owned regions (`M3.3.2`), connectivity and routes (`M3.3.3`) and privilege given a level (`M3.3.4.1`) are
 judged today, over an assignment a test proposes, and placement over a system's map (`M3.3.5.1`); ordering is
 unsupported under this profile (`M3.3.5.2`), the initialization graph derived (`M3.3.7`), and one function held at

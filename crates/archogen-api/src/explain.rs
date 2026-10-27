@@ -14,7 +14,7 @@
 //! `unchecked` set: `ok` with a plan, otherwise the check's verdict, the search's or the request's.
 
 use eadl_resolve::relation::Verdict;
-use eadl_resolve::search::{self, Asked, Limits as Budget, Policy, Select};
+use eadl_resolve::search::{self, Asked, Limits as Budget, Select};
 
 use crate::resolve::{concluded, name_of, prepare, Plan};
 use crate::{Diagnostic, Limits, Request, Response, SourceMap, Span, Status};
@@ -161,7 +161,7 @@ pub fn explain_with(request: &Request<'_>, explain: &Explain<'_>, limits: Limits
             ready.system,
             ready.active.caller_level,
             ready.vocabulary,
-            &Policy::default(),
+            ready.policy,
             Budget::DEFAULT,
             Asked {
                 fact: explain.fact,

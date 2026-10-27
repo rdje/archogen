@@ -1,0 +1,40 @@
+; An absolute deadline over a relative delay (`docs/specs/adapters/decision_engine-adapters.md` §2, leaf M3.2.3.2):
+; `uc3`'s shape with its timer's modulus stated and no scheduling policy, so it resolves today. No block offers
+; `absolute-deadline`; the timer offers `relative-delay` and a readable counter, which the engine's adapter
+; `deadline-over-delay` programs: its horizon the counter's, (2^32 − 1) / 1 MHz, 4294.967295 s, past 10 s; its
+; delivery bound obliged at 50 us. The search binds it only after the timer alone holds no assignment, and
+; `time.monotonic` reads its time from the same timer, one time base (model §8 rule 14). `archogen check` refuses it
+; `missing-fact` until presence's rules 2 and 3 yield to an adapter's path (M3.2.4).
+
+(eadl-version eadl/1)
+
+(defblock timer.delay
+  (offers
+    (relative-delay true)
+    (counter-modulus 4294967296)
+    (tick-rate 1 MHz)
+    (observation-coherent true)
+    (channels 1 tick)
+    (reachable-at-privilege machine)))
+
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+
+(defplatform soc.delay-only
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.delay console.uart)))
+
+(defservice time.monotonic
+  (requires
+    (unambiguous-horizon (at-least 60 s))
+    (needs tick-rate observation-coherent)))
+
+(defservice time.deadline
+  (requires
+    (absolute-deadline (supported-horizon (at-least 10 s)) (delivery-bound (at-most 50 us)))
+    (needs time.monotonic absolute-deadline)))
+
+(defsystem delay-only
+  (task sampler (period 25 ms) (deadline 25 ms) (deadline-from release) (priority 1) (uses time.deadline))
+  (requires (uses time.monotonic time.deadline))
+  (platform (uses soc.delay-only)))
