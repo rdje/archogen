@@ -536,6 +536,13 @@ decided in this record.
 - Which provider a service is bound to, and which constraints of one clause different providers may meet, are
   `M3.3`'s and `M3.4`'s; the relation judges each provider on its own, a group never split from its sub-constraints
   (§5; R3 C3; R6 F9; R11 K3; R12 L5).
+  *Decided `2026-10-27` by leaf `M3.4.9` (`SR-H17`): on one side, the facts of one function are met at one provider
+  — model §8 rule 13's, which holds a group with its sub-facts, whose function is their head's, flat or nested — and
+  the facts of different functions may be met at different providers. Two requesters are two, a system's own level
+  and the service its task uses among them (model §8 rule 1): a sub-fact one writes joins no head the other writes,
+  each bound on its own. A nested group is one requirement, and a provider stating any of its facts takes part in
+  `SR-H18`'s code — so a provider leaving the head undescribed beside a sub-fact it states gives `missing-fact`, as the
+  flat spelling's rule 13 does.*
 - What a refinement keeps of an abstract platform is model §3's: `M1.40`, closed `2026-10-03`, keeps a value only by
   the same value as written or, for a quantity, the same amount (R12 L17; R13 M1).
 - `region` and `ordering` fit no domain of §2 and stay undeclared in `/1`, placement and ordering being `M3.3`'s;

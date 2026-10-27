@@ -5,6 +5,14 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — a group of requirements is met by one provider
+
+`ARCHOGEN-M3-1009` (leaf `M3.4.9`), `2026-10-27`.
+
+- The search never splits a deadline and its programming horizon between two timers, however the description writes
+  them, and says which fact is missing when one provider could meet both if it described it. Requirements on
+  different functions may still be met by different providers.
+
 ## archogen — module trees resolve
 
 `ARCHOGEN-M3-1008` (leaf `M3.4.10`), `2026-10-27`.

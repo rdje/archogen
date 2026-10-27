@@ -420,3 +420,103 @@ fn f11_a_budget_spent_on_the_fixture_is_inconclusive_at_any_size_short_of_its_sp
         }
     }
 }
+
+/// One service on two timers and a serial port: `service` what the service requires, `system` what the system's own
+/// level requires beside it, `b` what `timer.b` offers of the deadline's head.
+fn groups(service: &str, system: &str, b: &str) -> String {
+    format!(
+        "(eadl-version eadl/1)
+(defblock timer.a (offers (absolute-deadline true) (supported-horizon 1 s) (channels 1 tick) (reachable-at-privilege machine)))
+(defblock timer.b (offers {b} (supported-horizon 100 s) (channels 1 tick) (reachable-at-privilege machine)))
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.a timer.b console.uart)))
+(defservice svc (requires {service}))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses svc))
+  (requires (uses svc) {system})
+  (platform (uses soc)))
+"
+    )
+}
+
+#[test]
+fn sr_h17_a_group_is_never_met_by_different_providers_nested_or_flat() {
+    // `timer.a` offers the head with a horizon short of the requirement, `timer.b` the horizon alone: the only way to
+    // meet both constraints splits the group, which the search never does. Flat, rule 13 refuses the split — a
+    // missing fact while `timer.b` leaves the head undescribed, a conflict once it refuses it; nested, the group is
+    // one requirement, and `timer.b`, stating a sub-fact and leaving the head undescribed, takes part (`SR-H18`).
+    let flat = "(absolute-deadline true) (supported-horizon (at-least 10 s))";
+    let nested = "(absolute-deadline (supported-horizon (at-least 10 s)))";
+    for (case, service, b, verdict) in [
+        (
+            "flat, the head undescribed at timer.b",
+            flat,
+            "",
+            Verdict::MissingFact,
+        ),
+        (
+            "flat, the head refused at timer.b",
+            flat,
+            "(absolute-deadline false)",
+            Verdict::InfeasibleConfiguration,
+        ),
+        (
+            "nested, the head undescribed at timer.b",
+            nested,
+            "",
+            Verdict::MissingFact,
+        ),
+        (
+            "nested, the head refused at timer.b",
+            nested,
+            "(absolute-deadline false)",
+            Verdict::InfeasibleConfiguration,
+        ),
+    ] {
+        let (got, _, messages) = refusal(run(
+            &groups(service, "", b),
+            "s",
+            &Policy::default(),
+            Limits::DEFAULT,
+        ));
+        assert_eq!(got, verdict, "{case}: {messages:?}");
+    }
+}
+
+#[test]
+fn sr_h17_one_side_s_functions_may_be_met_apart_and_two_requesters_are_two() {
+    // Decided by `M3.4.9`: on one side, the facts of one function are met at one provider (rule 13), a group's among
+    // them; the facts of two functions may be met at two. And a system's own level and the service its task uses
+    // are two requesters (model §8 rule 1), each bound on its own: a sub-fact written at the system's level joins no
+    // head written by the service.
+    let two_functions = resolved(run(
+        &groups("(absolute-deadline true) (observable-output true)", "", ""),
+        "s",
+        &Policy::default(),
+        Limits::DEFAULT,
+    ));
+    assert_eq!(
+        bound(&two_functions),
+        [
+            "svc absolute-deadline timer.a",
+            "svc observable-output console.uart"
+        ]
+    );
+    let two_requesters = resolved(run(
+        &groups(
+            "(absolute-deadline true)",
+            "(supported-horizon (at-least 10 s))",
+            "",
+        ),
+        "s",
+        &Policy::default(),
+        Limits::DEFAULT,
+    ));
+    assert_eq!(
+        bound(&two_requesters),
+        [
+            "s supported-horizon timer.b",
+            "svc absolute-deadline timer.a"
+        ]
+    );
+}

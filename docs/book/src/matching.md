@@ -453,8 +453,12 @@ them, in the policy's order. Complete assignments are judged in lexicographic or
 pair varying slowest, and none partially: rule 13 classes a function split as a conflict or an unknown by the
 requester's other requirements of the function, so a partial assignment's conflict is no proof. The system's first
 placement region (rule 10) is chosen, and its callers bound at the profile's level (rule 9). A pair with no candidate
-takes `SR-H18`'s code over the providers whose answer is not undescribed; when every assignment fails, the first free
-of conflicts gives its unknowns, else the first one's conflicts; the verdict is the highest by precedence.
+takes `SR-H18`'s code over the providers that take part — those stating a fact it constrains, a group's sub-facts and a
+derivation's inputs among them; when every assignment fails, the first free of conflicts gives its unknowns, else the
+first one's conflicts; the verdict is the highest by precedence. A group is never met by different providers, nested
+or flat: one side's facts of one function are met at one provider (rule 13), its facts of different functions may be
+met apart, and two requesters — a system's own level and the service its task uses — are bound each on its own
+(`SR-H17`, leaf `M3.4.9`).
 
 What it chose is written by `crates/eadl-resolve/src/plan.rs` (`M3.4.3`) as `archogen-assignment/1`, the record the
 configuration checker judges: the generator's own writer and its own digest of the elaborated program, sharing no code

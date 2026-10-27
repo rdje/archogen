@@ -18,8 +18,9 @@
 //! `missing-fact` is due. The rules judge complete assignments alone.
 //!
 //! **What a failed search says** (§5.5, `SR-H18`). A pair no provider of the hardware meets takes the code of the
-//! providers that take part — those whose answer to it is not undescribed: `unsupported-profile` if one is past the
-//! exact arithmetic, `missing-fact` if one states the fact without a value or none takes part, else
+//! providers that take part — those stating a fact it constrains, a group's sub-facts and a derivation's inputs among
+//! them, or answering it otherwise than undescribed: `unsupported-profile` if one is past the exact arithmetic,
+//! `missing-fact` if one leaves what it needs unknown or undescribed or none takes part, else
 //! `infeasible-configuration`, every one refusing it or declaring it absent — its message saying that the search looked
 //! at the description's providers alone, the engine realizing a requirement no other way yet, so that it reads as
 //! missing engine support, never as impossibility (F10, `M3.4.5`). When every complete assignment is
@@ -27,7 +28,7 @@
 //! otherwise the first one's conflicts are the conflict set. The description's verdict is the highest of its
 //! diagnostics' codes by [`Verdict::precedence`].
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use eadl_front::{Diagnostic, Form, Label, Verdict};
 
@@ -293,31 +294,38 @@ fn unmet(
     hardware: &[&Provider],
     vocabulary: &Vocabulary,
 ) -> Diagnostic {
+    // The providers that take part (`SR-H18`): those stating a fact the pair constrains — each requirement's, a group's
+    // head and every sub-fact, and the inputs of their derivations — or answering it otherwise than undescribed; each
+    // with its answer to the pair, the first of refused, absent, unsupported, unknown and undescribed, as rule 5 ranks
+    // a group's (leaf `M3.4.9`, where a nested group's provider stating only a sub-fact was found left out).
+    let mut facts = BTreeSet::new();
+    for requirement in &pair.requirements {
+        constrained(requirement, vocabulary, &mut facts);
+    }
+    let rank = |answer: &Answer| match answer {
+        Answer::Refused => 0,
+        Answer::Absent => 1,
+        Answer::Unsupported => 2,
+        Answer::Unknown => 3,
+        _ => 4,
+    };
     let mut taking_part: Vec<(&Provider, Answer)> = Vec::new();
     for provider in hardware {
         let answers: Vec<Answer> = pair
             .requirements
             .iter()
             .map(|r| judge(provider, r, vocabulary))
+            .filter(|a| !matches!(a, Answer::Satisfied | Answer::Statement))
             .collect();
-        let rank = |answer: &Answer| match answer {
-            Answer::Unsupported => 0,
-            Answer::Unknown => 1,
-            Answer::Refused => 2,
-            Answer::Absent => 3,
-            _ => 4,
-        };
-        if let Some(worst) = answers
-            .iter()
-            .filter(|a| {
-                !matches!(
-                    a,
-                    Answer::Satisfied | Answer::Undescribed | Answer::Statement
-                )
-            })
-            .min_by_key(|a| rank(a))
-        {
-            taking_part.push((provider, *worst));
+        let answered = answers.iter().any(|a| *a != Answer::Undescribed);
+        let states = facts.iter().any(|fact| provider.state(fact).is_some());
+        if answered || states {
+            let worst = answers
+                .iter()
+                .min_by_key(|a| rank(a))
+                .copied()
+                .unwrap_or(Answer::Undescribed);
+            taking_part.push((provider, worst));
         }
     }
     let has = |answer: Answer| taking_part.iter().any(|(_, a)| *a == answer);
@@ -329,11 +337,12 @@ fn unmet(
                 pair.fact
             ),
         )
-    } else if has(Answer::Unknown) {
+    } else if has(Answer::Unknown) || has(Answer::Undescribed) {
         (
             "missing-fact",
             format!(
-                "a provider states `{}` without a value: give its value, so the requirement can be judged",
+                "a provider states `{}`, or a fact it is read from, without what the requirement needs: describe it, \
+                 so the requirement can be judged",
                 pair.fact
             ),
         )
@@ -383,6 +392,7 @@ fn unmet(
         let said = match answer {
             Answer::Unsupported => "states it past the exact arithmetic",
             Answer::Unknown => "states it without a value",
+            Answer::Undescribed => "states part of it and leaves the rest undescribed",
             Answer::Absent => "declares it absent",
             _ => "offers a value the requirement refuses",
         };
@@ -392,6 +402,21 @@ fn unmet(
         ));
     }
     diagnostic
+}
+
+/// Every fact `requirement` constrains: its own, a group's sub-facts, and the facts each is derived from or reads.
+fn constrained(requirement: &Requirement, vocabulary: &Vocabulary, facts: &mut BTreeSet<String>) {
+    let fact = requirement.fact();
+    if facts.insert(fact.to_owned()) {
+        if let Some(entry) = vocabulary.fact(fact) {
+            facts.extend(entry.derived_from.iter().chain(&entry.reads).cloned());
+        }
+    }
+    if let Requirement::Group { parts, .. } = requirement {
+        for part in parts {
+            constrained(part, vocabulary, facts);
+        }
+    }
 }
 
 /// Judge the complete assignments in order — the first pair's candidate varying slowest — until one holds or the
