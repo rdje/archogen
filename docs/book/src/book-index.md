@@ -117,8 +117,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Claims cite what they read — [Where the engine's knowledge comes from: the
   catalog](catalog.md#claims-cite-what-they-read)
 - **CLI** — [definition](glossary.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
-  the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md), [Annex C: Trust proof
-  records](annex-trust-proofs.md)
+  the toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
+  changing it costs](versions.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **CLINT** — [definition](glossary.md), [Where generated systems run](targets.md)
 - Codegen matcher domain and temporary-path prerequisite — [Annex C: Trust proof
   records](annex-trust-proofs.md#codegen-matcher-domain-and-temporary-path-prerequisite)
@@ -370,8 +370,10 @@ a change that leaves it stale, so it is never edited by hand.
 - How to read this book — [Introduction](introduction.md#how-to-read-this-book)
 - How we know it is right — [The runtime: decisions, not actions](runtime.md#how-we-know-it-is-right)
 - **HTML** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
-- **HTTP** — [definition](glossary.md), [The engine API](engine-api.md)
-- **HTTPS** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
+- **HTTP** — [definition](glossary.md), [Checking a plan](plan-check.md), [The engine API](engine-api.md), [What this
+  project relies on from outside](ledger.md)
+- **HTTPS** — [definition](glossary.md), [Checking a plan](plan-check.md), [What this project relies on from
+  outside](ledger.md)
 
 ## I
 
@@ -689,9 +691,9 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#seven-diagnostic-helper-obligations-domain-assessment)
 - Several bindings at once: channels, owned regions, connectivity and routes — [Matching an offer to a
   requirement](matching.md#several-bindings-at-once-channels-owned-regions-connectivity-and-routes)
-- **SHA-256** — [definition](glossary.md), [What a report may claim](evidence.md), [Generated-sources test
-  adequacy](trust-adequacy.md), [Verifying the toolchain](verification.md), [Annex B: The checks that keep the
-  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- **SHA-256** — [definition](glossary.md), [What a report may claim](evidence.md), [Checking a plan](plan-check.md),
+  [Generated-sources test adequacy](trust-adequacy.md), [Verifying the toolchain](verification.md), [Annex B: The checks
+  that keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **shared item** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md)
 - Shell input storage and invocation environment — [Annex B: The checks that keep the repository
   honest](annex-repository.md#shell-input-storage-and-invocation-environment)
@@ -743,6 +745,8 @@ a change that leaves it stale, so it is never edited by hand.
 - The browser module answers as the command line does — [Verifying the
   toolchain](verification.md#the-browser-module-answers-as-the-command-line-does)
 - The case whose answer is allowed to change — [The use cases](usecases.md#the-case-whose-answer-is-allowed-to-change)
+- The checker's browser module answers as the checker does — [Verifying the
+  toolchain](verification.md#the-checkers-browser-module-answers-as-the-checker-does)
 - The checks, in order — [Checking a plan](plan-check.md#the-checks-in-order)
 - The codes — [Checks that must not share a mistake: the trust gate](trust.md#the-codes)
 - The commands — [The archogen command line](cli.md#the-commands)

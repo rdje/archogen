@@ -260,14 +260,14 @@ Producer observations, normalization proofs, counterexamples and revalidation re
 
 | Field | Value |
 | --- | --- |
-| Source | Node.js, the JavaScript runtime in which the `integration` tier's `wasm-binding` step runs the browser artifact |
+| Source | Node.js, the JavaScript runtime in which the `integration` tier's `wasm-binding` and `plan-check-wasm` steps run the browser artifacts |
 | Version | `v26.8.1` on the machine that wrote this entry |
-| Pinned at | not pinned — the step uses only `WebAssembly`, `TextEncoder`, `TextDecoder` and `node:fs`, which every maintained release provides; on CI it is the runner image's own Node |
-| Retrieved | `2026-09-30` |
-| Hash | not captured |
-| Scope | `scripts/wasm_binding.mjs` and the loader `crates/archogen-wasm/js/archogen.mjs`: reading the artifact's imports and exports with `WebAssembly.Module`, and running it as a page runs it (`API.5.3`) |
-| Known limitations | a browser's engine is not Node's. The loader uses only interfaces both provide, and the page (`API.5.4`) is where a browser runs it |
-| Revalidation trigger | the loader or the harness using an interface beyond those four; a runner image without Node |
+| Pinned at | not pinned — the steps use only `WebAssembly`, `TextEncoder`, `TextDecoder`, `crypto.subtle.digest` and `node:fs`, `node:path` and `node:url`, which every maintained release provides; on CI it is the runner image's own Node |
+| Retrieved | `2026-09-30`; revalidated `2026-10-27` (leaf `M3.5.7.2`), the configuration checker's loader digesting its module with Web Crypto: `nodejs.org/api/globals.html`, the global `crypto`, "Added in: v17.6.0, v16.15.0", "v19.0.0 No longer behind `--experimental-global-webcrypto` CLI flag", "v23.0.0 No longer experimental"; and `developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest`: "This feature is available only in secure contexts (HTTPS), in some or all supporting browsers", its `data` "An ArrayBuffer, a TypedArray or a DataView", `"SHA-256"` among its algorithms |
+| Hash | of Node itself, not captured; of the pages read `2026-10-27`, sha256 `e82363a1be5a4f66df0c7955136b64ca9ed5d43b079e00d7458b0f2d369814fd` (Node's globals) and `4ce4ce7096a93e55dc1ab3fc5eff4004ed774be10119970b790cd06597961de6` (Mozilla's `digest` page) |
+| Scope | `scripts/wasm_binding.mjs` and the loader `crates/archogen-wasm/js/archogen.mjs`: reading the artifact's imports and exports with `WebAssembly.Module`, and running it as a page runs it (`API.5.3`); `scripts/plan_check_wasm.mjs` and the loader `crates/archogen-plan-check-wasm/js/plan-check.mjs` likewise for the configuration checker's module, which digests the module's bytes with `crypto.subtle` (`M3.5.7.2`) |
+| Known limitations | a browser's engine is not Node's. The loaders use only interfaces both provide, and the page (`API.5.4`) is where a browser runs the generator's; a browser offers `crypto.subtle` only to a secure context, so a page loading the checker's module over plain HTTP cannot digest it, and its loader then fails rather than name another producer. Node before `v19.0.0` needs the flag for the global |
+| Revalidation trigger | a loader or a harness using an interface beyond those listed; a runner image without Node, or with one before `v19.0.0` |
 | Named as | `Node` |
 
 ## `miri`

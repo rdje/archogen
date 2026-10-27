@@ -691,6 +691,31 @@ day it was written, derived like the rest. It depends on `eadl-front`, which sti
 calls the directory loader: a caller hands it a `ModuleSource`, and an in-memory one is what a browser
 would pass.
 
+### The checker's browser module answers as the checker does
+
+The configuration checker has a browser module of its own ([Checking a plan](plan-check.md#in-a-browser)), and the
+`plan-check-wasm` step holds it as `wasm-binding` holds the generator's: it builds the module, runs it in
+[Node](ledger.md#node) through the loader a page uses (`crates/archogen-plan-check-wasm/js/plan-check.mjs`), and checks
+that
+
+- **the module imports nothing**, and exports its three functions and nothing a page could reach beyond them, read
+  from the compiled module by the runtime's own parser;
+- **every case gets the host build's answer, byte for byte.** No plan is tracked, so the cases are derived on every
+  run: each tracked description with an empty plan and a bare one — the right program, its first system, no binding
+  — and the accepted plans the checker's own tests write. The loader's fingerprint of the module, which every record
+  names, must be the one the host computes;
+- **and the executable's verdict.** Each case is written out as files and judged by `archogen-plan-check`: the same
+  record but for the program it names, with the same exit code. One text is set aside, and counted: where a module
+  is not found, the executable's repair names the file it looked for, and the module, given texts, has none to name.
+
+```console
+$ bash scripts/plan_check_wasm.sh              # the step
+$ bash scripts/plan_check_wasm.sh --self-test  # its RED arms: an import, an unlisted or a missing export, an answer
+                                               # that differs, a record or an exit the executable does not share
+```
+
+Without Node the step is unavailable, which the tier reports and never counts as a pass.
+
 ### A third reader
 
 `docs/semantics/grammar.md` defines what a well-formed description is, and until `2026-09-30` it had two

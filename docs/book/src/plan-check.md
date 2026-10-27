@@ -160,8 +160,20 @@ It answers the **result record**, the one the executable and the tool write for 
 request it cannot judge — framed wrongly, a fingerprint misspelt, another profile, texts past the 4 MiB budget — gets
 a short refusal of its own format, `archogen-plan-check-wasm-refusal/1`, saying what to change, and no record.
 
-The request's layout, field by field, is `docs/decisions/decision_wasm-binding.md` §11. The loader a page uses, and
-the checks that the compiled module answers as the host build does, are leaf `M3.5.7.2`'s.
+A page loads it through `crates/archogen-plan-check-wasm/js/plan-check.mjs`: `instantiate(bytes)` computes the
+fingerprint once, with the browser's own SHA-256, and gives back `check({ description, plan, name, profile, modules })`,
+which returns the record or the refusal, parsed — told apart by their `format`. A browser offers that SHA-256 only to
+a page served securely (HTTPS, or the machine's own), so over plain HTTP the loader cannot name the module and fails.
+
+```js
+import { instantiate } from "./plan-check.mjs";
+const checker = await instantiate(await (await fetch("archogen_plan_check_wasm.wasm")).arrayBuffer());
+const answer = checker.check({ description, plan });   // answer.format, answer.status, answer.findings
+```
+
+The request's layout, field by field, is `docs/decisions/decision_wasm-binding.md` §11. The `integration` tier holds
+the compiled module to the host build and to the executable over every tracked description ([The checker's browser
+module answers as the checker does](verification.md#the-checkers-browser-module-answers-as-the-checker-does)).
 
 ### What binds, and what does not
 
@@ -219,7 +231,8 @@ the record, or both — for check 4, also at what the provider states. The langu
   and the tool answers;
 - `crates/archogen-plan-check/src/mcp.rs` — the tool `plan-check`, over `crates/archogen-transport`;
 - `crates/archogen-plan-check-wasm/src/lib.rs` — the browser module: its answer and its three exports, over
-  `crates/archogen-plan-check-wasm/src/request.rs`, the request's framing;
+  `crates/archogen-plan-check-wasm/src/request.rs`, the request's framing; `crates/archogen-plan-check-wasm/js/plan-check.mjs`,
+  its loader;
 - `crates/archogen-plan-check/src/joint.rs` — check 5, the joint rules, written from `docs/semantics/model.md` §8
   alone, never from the search's own version of them. One reading of it is public, `joint::system`: a system's
   hardware, the declarations it reaches and the requesters it serves, computed by the code the rules judge with, so
@@ -232,7 +245,9 @@ the record, or both — for check 4, also at what the provider states. The langu
 - `crates/archogen-plan-check/tests/mcp.rs` — the tool: its listing, the arguments it refuses, its budget, and its
   record read back and held equal to the executable's for the same texts;
 - `crates/archogen-plan-check-wasm/tests/module.rs` — the browser module on the host: its record the tool's for the
-  same texts, its refusals, its exports, and no generator package in what it compiles.
+  same texts, its refusals, its exports, and no generator package in what it compiles;
+- `scripts/plan_check_wasm.sh` — the compiled module, through its loader, against the host build and the executable,
+  with `crates/archogen-plan-check-wasm/examples/answers.rs` deriving the cases.
 
 ## Today and ahead
 
@@ -245,5 +260,5 @@ derivation the two roles share (leaf `M3.5.5.7.2`). The program is the configura
 gate, and `archogen plan-check` runs it from the front (leaf `M3.5.1.4.1`). The front's half of a checked plan is
 built too — it runs the checker over a plan of its own and believes the result only when the record, the exit code
 and its own reckoning agree (`M3.5.1.4.3`); `archogen resolve`, which calls it after its search writes the plan, is
-`M3.4`'s. The checker serves its own MCP tool (leaf `M3.5.1.6.4`) and has a browser module of its own (`M3.5.7.1`), whose
-loader and artifact checks are `M3.5.7.2`'s.
+`M3.4`'s. The checker serves its own MCP tool (leaf `M3.5.1.6.4`) and has a browser module of its own, its loader and the
+`integration` tier's check of the compiled module with it (`M3.5.7`).

@@ -397,6 +397,21 @@ const TIERS: &[Tier] = &[
                 },
             },
             Step {
+                name: "plan-check-wasm",
+                proves: "the configuration checker's browser artifact imports nothing, exports what its record lists, \
+                         and answers every derived case byte for byte as the host build does, agreeing with \
+                         archogen-plan-check over the case's files",
+                action: Action::Run {
+                    program: "scripts/plan_check_wasm.sh",
+                    args: &[],
+                    requires: Some("node"),
+                    matters: "the configuration checker's own browser module (leaf `M3.5.7.2`) is checked on the \
+                              artifact a page loads, through the loader a page uses, and a JavaScript runtime is what \
+                              runs it. Without one, nothing shows that the compiled module agrees with the host build \
+                              or the executable",
+                },
+            },
+            Step {
                 name: "emulator",
                 proves: "the pinned riscv-virt-up configuration renders and its toolchain is present (§3.2)",
                 action: Action::Run {

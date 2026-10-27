@@ -183,10 +183,24 @@ the generator's module; this section is the checker's, which takes their shape a
   "exit":2,"note":"…"}`, the note naming the field and its byte offset where a frame broke, and no record, as the
   executable's usage error writes none. A verdict that makes no record is the same refusal under `tool-failure`, exit
   `70`. Both end with a newline, as a record does, and are written by `archogen-json`.
+- **The loader** (leaf `M3.5.7.2`), `crates/archogen-plan-check-wasm/js/plan-check.mjs`, as §9's: it exports
+  `instantiate(bytes)`, which digests the bytes once with `crypto.subtle` — the producer every request names — and
+  whose result has `answer` and `check({ description, plan, name, profile, modules })`, a record or a refusal told
+  apart by `format`. It uses only `WebAssembly`, `crypto.subtle`, `TextEncoder` and `TextDecoder`. A browser offers
+  `crypto.subtle` to a secure context alone ([Node](../book/src/ledger.md#node)'s entry quotes the source), so a page
+  serving the module over plain HTTP cannot digest it, and the loader fails rather than name another producer.
 - **What it is checked against.** On the host, `tests/module.rs`: its record is `judge`'s and the MCP tool's for the
   same texts and producer, over accepted, corrupted, stale, a module's and a refused description's plans; each
-  refusal names what to change; the exports carry a request in and the answer out. As an artifact, a loader and the
-  artifact's checks of §7 and §8's kind are leaf `M3.5.7.2`'s.
+  refusal names what to change; the exports carry a request in and the answer out. As an artifact, the `integration`
+  tier's `plan-check-wasm` step, `scripts/plan_check_wasm.sh`, as §7 and §8 check the generator's: the artifact
+  imports nothing and exports exactly the list above; and over a population derived on every run — no plan is
+  tracked, so every tracked description outside `docs/feedback/` and `docs/evaluation/` with its empty plan and its
+  bare one (the profile, its first system, the program's digest, no binding), and the accepted plans the checker's
+  tests write — its answer through the loader is the host build's byte for byte, the loader's digest the host's, and
+  agrees with `archogen-plan-check` run over the case's files: the same record but for its producer, with the
+  executable's exit code. One text is set aside and counted: a `module-not-found` finding's repair, which the
+  executable writes naming the file it looked for, and the module, given texts, cannot. Without Node the step is
+  unavailable, never passed.
 - **Versions.** Both formats are `pub const`s of the crate, in the register (§10).
 
 ## Why
