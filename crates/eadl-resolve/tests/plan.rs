@@ -204,3 +204,118 @@ fn a_resolved_example_s_plan_is_read_back_and_accepted_by_the_checker() {
     );
     assert_eq!(verdict, Ok(()), "{text}");
 }
+
+/// Whether the language's check accepts the description at `path`, as the engine API checks it: a module file
+/// elaborated and its program checked, a plain one checked as read.
+fn language_accepts(path: &Path, text: &str) -> bool {
+    let kinds: Vec<(String, String)> = [
+        "docs/semantics/kinds/core.eadl",
+        "docs/semantics/kinds/os-rt.eadl",
+    ]
+    .iter()
+    .map(|r| {
+        (
+            (*r).to_string(),
+            std::fs::read_to_string(root().join(r)).expect("a kind module"),
+        )
+    })
+    .collect();
+    let mut sources = SourceMap::new();
+    let registry = shipped_registry(&mut sources, &kinds).expect("the kinds load");
+    let id = sources
+        .add(path.display().to_string(), text.to_owned())
+        .expect("small");
+    let module = eadl_front::read(&sources, id)
+        .0
+        .forms
+        .iter()
+        .any(|form| form.head() == Some("defmodule"));
+    let outcome = if module {
+        let modules = DirectoryModules::new(path.parent().expect("a directory"));
+        let (program, diagnostics) = eadl_front::elaborate_source(&mut sources, &modules, id);
+        if diagnostics.has_errors() {
+            return false;
+        }
+        eadl_model::check::check_program(&program, &registry, &RT_STATIC_UP_V1)
+    } else {
+        eadl_model::check::check(&sources, id, &registry, &RT_STATIC_UP_V1)
+    };
+    outcome.verdict.is_ok()
+}
+
+#[test]
+fn the_positive_corpus_every_plan_the_search_writes_the_checker_accepts_and_twice_alike() {
+    // `M3.5`'s filing to `M3.4`: every plan of the positive corpus is accepted by `archogen-plan-check`. The corpus is
+    // derived: every tracked description the language's check accepts, as the engine API runs it before `resolve`
+    // searches — never the checker's answer to an empty plan, whose check (1) refuses it before it re-checks the
+    // description — and each system of a program of one instance the search resolves.
+    let v = vocabulary();
+    let (mut resolved, mut refused) = (0, 0);
+    for path in tracked() {
+        let text = std::fs::read_to_string(&path).expect("readable");
+        let judge = |plan: &str| {
+            let mut sources = SourceMap::new();
+            let id = sources
+                .add(path.display().to_string(), text.clone())
+                .expect("small");
+            let modules = DirectoryModules::new(path.parent().expect("a directory"));
+            plan_file(
+                &mut sources,
+                id,
+                &modules,
+                &RT_STATIC_UP_V1,
+                "plan.json",
+                plan,
+            )
+        };
+        if !language_accepts(&path, &text) {
+            continue;
+        }
+        let (program, _) = judge("");
+        if program.instances.len() != 1 {
+            continue;
+        }
+        let declarations = &program.root().declarations;
+        for system in declarations
+            .iter()
+            .filter(|f| f.head() == Some("defsystem"))
+        {
+            let once = search(
+                declarations,
+                system,
+                RT_STATIC_UP_V1.caller_level,
+                &v,
+                &Policy::default(),
+                Limits::DEFAULT,
+            );
+            let twice = search(
+                declarations,
+                system,
+                RT_STATIC_UP_V1.caller_level,
+                &v,
+                &Policy::default(),
+                Limits::DEFAULT,
+            );
+            let (Search::Resolved(once), Search::Resolved(twice)) = (once, twice) else {
+                refused += 1;
+                continue;
+            };
+            let digest = plan::program_digest(&program);
+            let text_once = plan::write(&once, RT_STATIC_UP_V1.id, &digest);
+            assert_eq!(
+                text_once,
+                plan::write(&twice, RT_STATIC_UP_V1.id, &digest),
+                "{}",
+                path.display()
+            );
+            let (_, verdict) = judge(&text_once);
+            assert_eq!(verdict, Ok(()), "{}: {text_once}", path.display());
+            resolved += 1;
+        }
+    }
+    // A corpus of one outcome compares nothing: plans written, and systems the search refuses beside them.
+    assert!(
+        resolved > 0 && refused > 0,
+        "{resolved} resolved, {refused} refused"
+    );
+}

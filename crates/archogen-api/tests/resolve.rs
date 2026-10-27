@@ -159,3 +159,47 @@ fn every_answer_that_is_no_plan_says_why() {
         }
     }
 }
+
+fn fixture(name: &str) -> String {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("two levels below the root");
+    std::fs::read_to_string(root.join("crates/eadl-resolve/tests/search").join(name))
+        .expect("a fixture")
+}
+
+#[test]
+fn f11_the_default_budget_spent_is_analysis_inconclusive_and_no_plan() {
+    // ROADMAP.md §13.1 F11, as `archogen resolve` meets it: the fixture's every assignment takes a channel twice, and
+    // the search's default budget is spent before it could show so — no plan, and no claim of infeasibility.
+    let resolution = ask(
+        &fixture("f11-solver-resource-limit.eadl"),
+        &MemoryModules::new(),
+        UNCHECKED,
+    );
+    assert_eq!(resolution.response.status, Status::AnalysisInconclusive);
+    assert!(resolution.plan.is_none());
+    assert_eq!(resolution.response.diagnostics.len(), 1);
+    assert_eq!(
+        resolution.response.diagnostics[0].code,
+        "analysis-inconclusive"
+    );
+    assert!(resolution.response.diagnostics[0]
+        .message
+        .contains("judged 100000 complete assignment(s)"));
+}
+
+#[test]
+fn f10_through_the_api_is_infeasible_and_says_the_engine_lacks_the_path() {
+    let resolution = ask(
+        &fixture("f10-unsupported-implementation-path.eadl"),
+        &MemoryModules::new(),
+        UNCHECKED,
+    );
+    assert_eq!(resolution.response.status, Status::InfeasibleConfiguration);
+    assert!(resolution.plan.is_none());
+    assert!(resolution.response.diagnostics[0]
+        .message
+        .contains("missing engine support"));
+}

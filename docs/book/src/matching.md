@@ -360,6 +360,16 @@ unknown, that is `missing-fact`. A requirement only the realization can meet —
 release's accuracy — finds no provider until the catalog's records become providers (`M3.7`), as the relation's record
 says (§9).
 
+The search looks only at the description's own blocks and platforms, and the engine realizes a requirement no other
+way yet: an adapter that would bridge a gap — an epoch extender for a comparator whose horizon is too short, a
+deadline service over a relative timer (`ROADMAP.md` §5.2, §5.4) — is leaf `M3.2`'s. So a refusal says so: **missing
+engine support, never a proof that no realization exists** — `ROADMAP.md`'s case F10,
+`crates/eadl-resolve/tests/search/f10-unsupported-implementation-path.eadl`. And a budget spent says it concluded
+nothing — case F11, `crates/eadl-resolve/tests/search/f11-solver-resource-limit.eadl`, where every assignment is
+refused and the budget runs out before the search could show it: `analysis-inconclusive`, and no plan. Every plan the
+search writes for a tracked description is one the configuration checker accepts, which a test holds over all of them
+(`crates/eadl-resolve/tests/plan.rs`).
+
 ## The precise rules
 
 The design is `docs/decisions/decision_substitutability-relation.md`; `docs/semantics/model.md` §7 is normative over

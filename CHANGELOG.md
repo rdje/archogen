@@ -5,6 +5,15 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the search's limits said plainly
+
+`ARCHOGEN-M3-1006` (leaf `M3.4.5`), `2026-10-27`.
+
+- When no provider meets a requirement, the search now says it looked only at the description's own hardware and that
+  the engine has no other way to realize it yet — missing engine support, never "impossible" (the roadmap's case F10).
+  A search that runs out of budget answers "inconclusive" with no plan (case F11). Every plan the search writes for a
+  description in the repository is one the independent checker accepts.
+
 ## archogen — `archogen resolve` writes a checked plan
 
 `ARCHOGEN-M3-1005` (leaf `M3.4.4`), `2026-10-27`.

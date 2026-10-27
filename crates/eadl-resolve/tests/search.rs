@@ -364,3 +364,59 @@ fn a_realization_constraint_waits_on_the_catalog_as_the_record_says() {
         other => panic!("not refused: {other:?}"),
     }
 }
+
+fn fixture(name: &str) -> String {
+    std::fs::read_to_string(root().join("crates/eadl-resolve/tests/search").join(name))
+        .expect("a fixture")
+}
+
+#[test]
+fn f10_a_missing_realization_path_is_missing_engine_support_not_impossibility() {
+    // ROADMAP.md §13.1 F10: the comparator offers every fact the service needs, its horizon short of what it asks; an
+    // epoch-extending adapter (§5.2) is engine support not built yet, so the answer names it, never impossibility.
+    let text = fixture("f10-unsupported-implementation-path.eadl");
+    let (verdict, codes, messages) = refusal(run(
+        &text,
+        "deadline-far-ahead",
+        &Policy::default(),
+        Limits::DEFAULT,
+    ));
+    assert_eq!(verdict, Verdict::InfeasibleConfiguration, "{messages:?}");
+    assert_eq!(codes, ["infeasible-configuration"]);
+    assert!(
+        messages[0].contains("`time.deadline` requires `supported-horizon`"),
+        "{messages:?}"
+    );
+    assert!(
+        messages[0].contains("missing engine support, not proof that no realization exists"),
+        "{messages:?}"
+    );
+    assert!(messages[0].contains("leaf M3.2's"), "{messages:?}");
+}
+
+#[test]
+fn f11_a_budget_spent_on_the_fixture_is_inconclusive_at_any_size_short_of_its_space() {
+    // ROADMAP.md §13.1 F11 at the library: the fixture's 2^18 assignments each take a channel twice; a budget short of
+    // them ends `analysis-inconclusive` with the count judged, never infeasibility. The default budget's run is the
+    // engine API's test (`crates/archogen-api/tests/resolve.rs`).
+    let text = fixture("f11-solver-resource-limit.eadl");
+    for budget in [1, 1000] {
+        match run(
+            &text,
+            "many-alarms",
+            &Policy::default(),
+            Limits { steps: budget },
+        ) {
+            Search::Inconclusive { steps, diagnostic } => {
+                assert_eq!(steps, budget);
+                assert_eq!(diagnostic.code, "analysis-inconclusive");
+                assert!(
+                    diagnostic.message.contains("nor showed that none exists"),
+                    "{}",
+                    diagnostic.message
+                );
+            }
+            other => panic!("not inconclusive under {budget}: {other:?}"),
+        }
+    }
+}

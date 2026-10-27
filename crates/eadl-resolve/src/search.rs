@@ -20,7 +20,9 @@
 //! **What a failed search says** (§5.5, `SR-H18`). A pair no provider of the hardware meets takes the code of the
 //! providers that take part — those whose answer to it is not undescribed: `unsupported-profile` if one is past the
 //! exact arithmetic, `missing-fact` if one states the fact without a value or none takes part, else
-//! `infeasible-configuration`, every one refusing it or declaring it absent. When every complete assignment is
+//! `infeasible-configuration`, every one refusing it or declaring it absent — its message saying that the search looked
+//! at the description's providers alone, the engine realizing a requirement no other way yet, so that it reads as
+//! missing engine support, never as impossibility (F10, `M3.4.5`). When every complete assignment is
 //! refused, the first one free of conflicts gives its unknowns — describing what they lack might make it whole — and
 //! otherwise the first one's conflicts are the conflict set. The description's verdict is the highest of its
 //! diagnostics' codes by [`Verdict::precedence`].
@@ -355,10 +357,19 @@ fn unmet(
         )
     };
     let first = pair.requirements[0];
+    // F10 (`M3.4.5`): what was searched, so a refusal never reads as impossibility. The arithmetic's limit is the
+    // engine's own and says so in its repair.
+    let scope = if code == "unsupported-profile" {
+        ""
+    } else {
+        "; the search looked at the description's own blocks and platforms, and the engine realizes a requirement no \
+         other way yet — adapters are leaf M3.2's, catalog records M3.7's — so this is missing engine support, not \
+         proof that no realization exists"
+    };
     let mut diagnostic = Diagnostic::error(
         code,
         format!(
-            "`{}` requires `{}`, and no provider of system `{}`'s hardware meets it",
+            "`{}` requires `{}`, and no provider of system `{}`'s hardware meets it{scope}",
             pair.requester.name, pair.fact, system.name
         ),
         Label::new(first.span(), "required here"),

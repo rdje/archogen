@@ -1,0 +1,39 @@
+; F11 — a solver resource limit (ROADMAP.md §13.1): `analysis-inconclusive`, and no accepted plan.
+; Eighteen services each program an absolute deadline, and the platform has two comparators of one channel each: every
+; one of the 2^18 assignments takes a channel twice, which the search can only learn by judging them, and its default
+; budget, 100 000 complete assignments, is spent first. A budget spent is no proof of infeasibility (§5.4), so the
+; answer is `analysis-inconclusive` and no plan (leaf M3.4.5).
+
+(eadl-version eadl/1)
+
+(defblock timer.a (offers (absolute-deadline true) (channels 1 tick) (reachable-at-privilege machine)))
+(defblock timer.b (offers (absolute-deadline true) (channels 1 tick) (reachable-at-privilege machine)))
+
+(defplatform soc.two-comparators
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.a timer.b)))
+
+(defservice alarm.s00 (requires (needs absolute-deadline)))
+(defservice alarm.s01 (requires (needs absolute-deadline)))
+(defservice alarm.s02 (requires (needs absolute-deadline)))
+(defservice alarm.s03 (requires (needs absolute-deadline)))
+(defservice alarm.s04 (requires (needs absolute-deadline)))
+(defservice alarm.s05 (requires (needs absolute-deadline)))
+(defservice alarm.s06 (requires (needs absolute-deadline)))
+(defservice alarm.s07 (requires (needs absolute-deadline)))
+(defservice alarm.s08 (requires (needs absolute-deadline)))
+(defservice alarm.s09 (requires (needs absolute-deadline)))
+(defservice alarm.s10 (requires (needs absolute-deadline)))
+(defservice alarm.s11 (requires (needs absolute-deadline)))
+(defservice alarm.s12 (requires (needs absolute-deadline)))
+(defservice alarm.s13 (requires (needs absolute-deadline)))
+(defservice alarm.s14 (requires (needs absolute-deadline)))
+(defservice alarm.s15 (requires (needs absolute-deadline)))
+(defservice alarm.s16 (requires (needs absolute-deadline)))
+(defservice alarm.s17 (requires (needs absolute-deadline)))
+
+(defsystem many-alarms
+  (task sweep (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1)
+    (uses alarm.s00 alarm.s01 alarm.s02 alarm.s03 alarm.s04 alarm.s05 alarm.s06 alarm.s07 alarm.s08 alarm.s09 alarm.s10 alarm.s11 alarm.s12 alarm.s13 alarm.s14 alarm.s15 alarm.s16 alarm.s17))
+  (requires (uses alarm.s00 alarm.s01 alarm.s02 alarm.s03 alarm.s04 alarm.s05 alarm.s06 alarm.s07 alarm.s08 alarm.s09 alarm.s10 alarm.s11 alarm.s12 alarm.s13 alarm.s14 alarm.s15 alarm.s16 alarm.s17))
+  (platform (uses soc.two-comparators)))

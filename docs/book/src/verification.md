@@ -792,7 +792,10 @@ publish the measured one under a leg comparing prose to walk.
 **What is outside the suite, and why.** Everything under `docs/feedback` — the reproductions of defects
 reported to another project. Their bytes *are* the reproduction, `FEEDBACK-SELF-CONTAINED` seals them,
 and several are deliberately malformed, so sweeping them in would turn one project's bug reports into
-conformance cases of a language version.
+conformance cases of a language version. So are the engine's own fixtures — the joint check's, F08 and F09
+(`crates/eadl-resolve/tests/joint`), and the search's, F10 and F11 (`crates/eadl-resolve/tests/search`) — which prove
+a rule over an assignment or a search, not what a language version means, and are checked where that is. Every
+exclusion, these among them, is a row of `docs/semantics/conformance.md` with its reason.
 
 **Four rules the manifest's legs enforce**, in `crates/eadl-front/tests/conformance_suite.rs`:
 
