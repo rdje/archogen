@@ -438,6 +438,48 @@ Producer observations, normalization proofs, counterexamples and revalidation re
 | Revalidation trigger | a merge queue becoming available to repositories owned by personal accounts, or the repository moving to an organization |
 | Named as | `merge queue is now generally available` |
 
+## `github-available-rules`
+
+| Field | Value |
+| --- | --- |
+| Source | GitHub Docs, "Available rules for rulesets" |
+| Version | the page as served on `2026-10-28` |
+| Pinned at | not pinned — read at `https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets`; no build or check reads it |
+| Retrieved | `2026-10-28` |
+| Hash | sha256 `123f74f6f83d8828089e9b0492fb502a978647245e96518a5b7d4d01c75426fa` of the page read |
+| Scope | two sentences, quoted in `docs/decisions/decision_main-protection.md` §1 for a key of `main`'s ruleset that GitHub filled and the agents did not send: the additional approval is "enabled by default, for both new and existing rulesets", and "When Copilot opens a pull request that isn't attributed to a person, the ruleset requires one more approval than the number you configured." |
+| Known limitations | the page marks the feature "in public preview and subject to change"; the key's API name, `require_extra_approval_for_unattributed_changes`, is the read-back's, not the page's |
+| Revalidation trigger | the key changing meaning or default, or a Copilot agent opening pull requests here |
+| Named as | `Available rules for rulesets` |
+
+## `github-approving-reviews`
+
+| Field | Value |
+| --- | --- |
+| Source | GitHub Docs, "Approving a pull request with required reviews" |
+| Version | the page as served on `2026-10-28` |
+| Pinned at | not pinned — read at `https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/approving-a-pull-request-with-required-reviews`; no build or check reads it |
+| Retrieved | `2026-10-28` |
+| Hash | sha256 `4049bd95a5e05385e5bbfaacacf26794b2b448f1f40107a744db024d494628d5` of the page read |
+| Scope | one sentence, quoted in `docs/decisions/decision_main-protection.md` §4 for why a pull request the director opens cannot merge when every path is the director's: "Pull request authors cannot approve their own pull requests." |
+| Known limitations | the page states the rule without naming the author an account or a commit's author; the record reads it as the account that opened the pull request |
+| Revalidation trigger | GitHub letting an author approve their own pull request, or the director wanting to merge their own |
+| Named as | `Approving a pull request with required reviews` |
+
+## `github-code-owners`
+
+| Field | Value |
+| --- | --- |
+| Source | GitHub Docs, "About code owners" |
+| Version | the page as served on `2026-10-28` |
+| Pinned at | not pinned — read at `https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners`; no build or check reads it |
+| Retrieved | `2026-10-28` |
+| Hash | sha256 `061a75d9570661cb4dd145f98764bc1df4ed0812fd8b964b0455fb895630aefa` of the page read |
+| Scope | one sentence, quoted in `docs/decisions/decision_main-protection.md` §4 for why the ownership file binds only once it is on `main`: "For code owners to receive review requests, the `CODEOWNERS` file must be on the base branch of the pull request." |
+| Known limitations | the sentence speaks of review requests; the record reads the code-owner review rule as reading the same file |
+| Revalidation trigger | the hosting reading the ownership file from anywhere but the pull request's base |
+| Named as | `About code owners` |
+
 ## `github-machine-account`
 
 | Field | Value |

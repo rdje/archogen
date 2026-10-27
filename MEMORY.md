@@ -31,10 +31,10 @@
   maintained external repositories and submodules stay read-only.
   Corrected renderer adoption stays owned in `.4.3.4.1`.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.
-  `M3.6.3.2.1.1` owns runner-baseline compatibility after key encoding; an authorized cadence run is needed. `M2`'s open leaves
-  wait on the director: `M2.7.4.5` and `M2.7.6`'s review and hosting half. No branches.
+  `M3.6.3.2.1.1` owns runner-baseline compatibility after key encoding; an authorized cadence run is needed.
+  `main` is protected (`M2.7.6.6.3`): batches go by pull request as `rdje-bot`, the director approving. No branches but batches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
-  `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
+  `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4.5` — the catalog records; `M2.7.6.4` — the director's review round;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,
   ruled `2026-09-30`); every other script is archogen's.
 - **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance

@@ -2,7 +2,8 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-27`
-- **Status:** `active` — written for the director's confirmation; nothing here is applied before it (`M2.7.6.6`, `.1`)
+- **Status:** `active` — confirmed by the director, "Apply now", and §1 applied on `2026-10-28` (`M2.7.6.6.3`): the
+  ruleset is id `25999805`, and each setting reads back equal to this record
 - **Owner / source:** findings §11 (`decision_findings-for-director-review.md`), ruled by the director on `2026-10-27`:
   - "Protect main + reviewer";
   - kept on the personal account `rdje`: "All of my project are on Personal Account";
@@ -48,6 +49,8 @@ account too:
         "require_code_owner_review": true,
         "require_last_push_approval": true,
         "required_review_thread_resolution": false,
+        "required_reviewers": [],
+        "require_extra_approval_for_unattributed_changes": true,
         "allowed_merge_methods": ["merge"] } },
     { "type": "required_status_checks", "parameters": {
         "strict_required_status_checks_policy": true,
@@ -70,6 +73,29 @@ account too:
   §11's alternative to a merge queue. A merge queue is "available on private and public repos on the GitHub Enterprise
   Cloud plan and all public repos owned by organizations" ([merge queue is now generally
   available](../book/src/ledger.md#github-merge-queue)), so not on this account.
+- Two keys of the `pull_request` rule were not sent. GitHub fills them on create, and the record writes them as read
+  back:
+  - `required_reviewers`, the teams a path's change needs, is empty: this account has no teams, and `CODEOWNERS`
+    names the owner;
+  - `require_extra_approval_for_unattributed_changes` is GitHub's default, "enabled by default, for both new and
+    existing rulesets". "When Copilot opens a pull request that isn't attributed to a person, the ruleset requires
+    one more approval than the number you configured" ([Available rules for
+    rulesets](../book/src/ledger.md#github-available-rules)). No Copilot opens pull requests here, so it binds
+    nothing; it is kept, since turning it off would only weaken a rule.
+
+**Applied `2026-10-28`** (`M2.7.6.6.3`), after the director's "Apply now", with `gh` as the director's account:
+- the settings by `PATCH /repos/rdje/archogen`;
+- the ruleset by `POST /repos/rdje/archogen/rulesets`, which answered id `25999805`.
+
+Read back the same day:
+- `GET /repos/rdje/archogen/rulesets/25999805` equals the JSON above, key for key;
+- the settings read `allow_merge_commit=true allow_squash_merge=false allow_rebase_merge=false
+  delete_branch_on_merge=true`;
+- `GET /repos/rdje/archogen/rules/branches/main`, the rules the hosting applies to `main`, lists
+  `deletion,non_fast_forward,pull_request,required_status_checks`.
+
+A direct push to `main` is not tried, since a push the rules failed to refuse would land on `main`. The hosting's own
+list of the rules it applies to `main` stands for that test. `M2.7.6`'s scratch-branch tests try the rest.
 
 **`.github/CODEOWNERS`**, the only ownership file (`M2.7.6.5`). Every path is owned by the director, so every pull
 request needs the director's approval:
@@ -141,6 +167,15 @@ The cadence keeps its meaning: the number of commits local `main` is ahead of `o
   director's approval rests on it and on the diff. The author is the agents and the approver the director, so the
   roles differ, as §11 asks: "Code-owner approval must come from an identity other than the author's".
 - **The owner keeps the owner's power.** `rdje` can edit the ruleset. That is recorded, not prevented.
+- **Until `CODEOWNERS` is on `main`.** "For code owners to receive review requests, the CODEOWNERS file must be on
+  the base branch of the pull request" ([About code owners](../book/src/ledger.md#github-code-owners)). Until the
+  first batch has merged it (`M2.7.6.5`), any approval by an account with write access counts:
+  - the agents' account could then approve a pull request another account opened, and the agents approve none;
+  - every pull request the agents open still needs the director, the one other account with write access.
+- **The director's own pull requests.** "Pull request authors cannot approve their own pull requests" ([Approving a
+  pull request with required reviews](../book/src/ledger.md#github-approving-reviews)). Every path is the
+  director's, so a pull request the director opens cannot merge under these rules. The director's changes reach
+  `main` through the agents' batches, or by the owner's power above.
 
 ### 5. The named commit
 
@@ -163,8 +198,8 @@ on personal accounts); an automated reviewer as approver (no human in the loop);
 
 ## How to apply
 
-- Nothing is applied before the director confirms this record (`M2.7.6.6.1`), and creates the machine account
-  (`.2`).
-- `.3` applies §1 with `gh`, and reads each setting back equal to it.
+- The director confirmed this record (`M2.7.6.6.1`) and created the machine account (`.2`); `.3` applied §1 with
+  `gh` and read each setting back equal to it.
+- A change to the hosting's settings is a change to this record first, applied the same way and read back.
 - Related: [[decision_findings-for-director-review]] §11, [[decision_push-cadence]],
   `docs/specs/catalog/decision_catalog-records.md` (premise 3).

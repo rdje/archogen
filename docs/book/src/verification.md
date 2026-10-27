@@ -627,7 +627,11 @@ runs; removing each protection turns an arm red. The checker is `xtask catalog-c
 `.github/workflows/catalog-check.yml` (`M2.7.6.3`) runs it on a pull request: the hosting's merge is checked out
 where nothing runs from it, and the base is cloned beside it. The checker judges the merge against its base; on an
 empty catalog the job passes. Whether a pull request's own copy of the file can satisfy the required check is for the hosting's rules,
-which only the director can set, as is the repository's default token. The design's first independent review found
+which only the director can set, as is the repository's default token. The director set them on `2026-10-28`
+(`docs/decisions/decision_main-protection.md`): the check is required from the `github-actions` app, and a pull
+request needs an approval from someone other than its author and its last pusher. Once `.github/CODEOWNERS` is on
+`main` (`M2.7.6.5`), that approval is the director's, so a copy changed by a pull request merges nothing without the
+director. The design's first independent review found
 two ways past `WORKFLOW-TOKENS`, an escaped YAML key and a setting on a neighbouring step; both are now refused,
 and so are a quoted key and a key written twice, or twice but for case, in one mapping
 (`docs/reviews/catalog-check-protection-reviews.md`). Its next two rounds, each by a new agent context, were stopped

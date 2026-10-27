@@ -50,9 +50,9 @@ a change that leaves it stale, so it is never edited by hand.
 - analysis-model — [What is versioned, and what changing it costs](versions.md#analysis-model)
 - **API** — [definition](glossary.md), [Matching an offer to a requirement](matching.md), [Generated-sources test
   adequacy](trust-adequacy.md), [The runtime: decisions, not actions](runtime.md), [The archogen command line](cli.md),
-  [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
-  costs](versions.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
-  records](annex-trust-proofs.md)
+  [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What this project relies on from
+  outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex B: The checks that keep the
+  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Approved disposable fixture verification — [Annex C: Trust proof
   records](annex-trust-proofs.md#approved-disposable-fixture-verification)
 - Artifact hash checks under escaped paths — [Annex C: Trust proof
@@ -349,6 +349,9 @@ a change that leaves it stale, so it is never edited by hand.
 - Generated sources — [Checks that must not share a mistake: the trust gate](trust.md#generated-sources)
 - github-actions — [What this project relies on from outside](ledger.md#github-actions)
 - github-actions-syntax — [What this project relies on from outside](ledger.md#github-actions-syntax)
+- github-approving-reviews — [What this project relies on from outside](ledger.md#github-approving-reviews)
+- github-available-rules — [What this project relies on from outside](ledger.md#github-available-rules)
+- github-code-owners — [What this project relies on from outside](ledger.md#github-code-owners)
 - github-machine-account — [What this project relies on from outside](ledger.md#github-machine-account)
 - github-merge-queue — [What this project relies on from outside](ledger.md#github-merge-queue)
 - github-personal-access-tokens — [What this project relies on from outside](ledger.md#github-personal-access-tokens)
