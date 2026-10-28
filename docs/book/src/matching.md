@@ -489,16 +489,17 @@ the same bytes and its rebuilt bindings give the joint rules the search's own ob
 
 The runtime plan is lowered from that record by `crates/archogen-plan/src/lib.rs` (`M4.1.4`), built ahead of its
 design's acceptance as the design's executable form (`docs/decisions/decision_executable-design-reviews.md`). Each rule
-cites its section of `docs/decisions/decision_runtime-plan.md`; the record's worked texts are held equal to what the code
-writes by `crates/archogen-plan/tests/worked.rs`; and every probe system of the design's review is a fixture beside the
-outcome the lowering gives it, in `crates/archogen-plan/tests/corpus/`, a description the language's check refuses held
-at that check's verdict; hand-written records hold the refusals of a record, in their order
+cites its section of `docs/decisions/decision_runtime-plan.md`; the record's worked texts are held equal to what the
+code writes by `crates/archogen-plan/tests/worked.rs`; and every probe system of the design's review is a fixture beside
+the outcome the lowering gives it, in `crates/archogen-plan/tests/corpus/`, a description the language's check refuses
+held at that check's verdict; hand-written records hold the refusals of a record, in their order
 (`crates/archogen-plan/tests/records.rs`). An outcome is what the code writes, so a reviewer judges each against the
 record; a finding is a defect when it carries a reproducer. The plan counts the users of a service or a policy that
 takes a channel more widely than the check above: the system's tasks that reach it, directly or through services,
-policies and bindings, and the interrupts that run it, as [OSEK](ledger.md#osek-os) counts a shared resource's users by
-the tasks and interrupt routines that access it (§8.6). The joint rules count the tasks and services naming a service by
-`uses` until `M4.1.2` amends rule 4 to match.
+policies and bindings, and the interrupts whose context holds it, but for its own timer route — at the provider whose
+channel it takes, or that the instance whose channel it takes programs — where nothing else that route runs reaches it,
+as [OSEK](ledger.md#osek-os) counts a shared resource's users by the tasks and interrupt routines that access it (§8.6).
+The joint rules count the tasks and services naming a service by `uses` until `M4.1.2` amends rule 4 to match.
 
 An adapter's instance is judged by the joint rules as one provider (model §8 rules 14 and 15, `M3.2.3.1`): its offers
 computed from the device it programs — a value its kind writes, a fact passed through as the relation reads it at the

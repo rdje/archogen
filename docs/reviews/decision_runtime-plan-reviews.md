@@ -314,6 +314,41 @@ accepting records the checker refuses.
 Round 7's answers: held in both, but R7-D2, partly (R8-D1, R8-D2); R7-R4 and R7-R5 are rules no fixture can reach under
 `adapters/1`.
 
+## Round 9 — `2026-10-28`: not acceptable, 15 findings
+
+The reviewer adapted round 8's probe and found the code transcribing §1–§3 faithfully on every section it probed,
+co-applying refusals in the record's order among them. 7 defects and 8 remarks: a P1 shared by the search, the record's
+writer, the reader and the lowering; three in §2.9's exception and its restatements; the owed application inputs after
+`M2.27`; the reader judging no binding by the relation; and a duty given `M4.9` outside the ledger.
+
+**Fence.** No breach. The sweep it ran listed the sealed set's paths before filtering them, printing nothing from it
+(remark 8, fixed in the listing by `M4.1.12`).
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R9-D1 | defect | P1: a task named `SYSTEM/TASK`, a symbol a declaration may share; a service `sl/a` collided with task `a` of `sl` in the search, the writer, the reader and the lowering | `M4.1.11`: a task named `(task SYSTEM TASK)`, as the record and the checker write it; three fixtures |
+| R9-D2 | defect | §2.9's own-route exception drops a user where another node that route runs calls the service | The exception holds only where nothing else that route runs reaches it (§2.9, `M4.1.4`) |
+| R9-D3 | defect | `.2`, `M4.1.2` and the book restate the users without the exception | The exception quoted word for word in each |
+| R9-D4 | defect | the code takes the route an instance programs as its requester's own, which §2.9 does not say | Said: "or that the instance whose channel it takes programs" (§2.9) |
+| R9-D5 | defect | the owed application inputs miss `M2.27`'s two declarations and a masked run's evidence category | Owed per task, in §2.2, §2.10, §3 and `RTP-H5`, with the code (`M4.1.4`) |
+| R9-D6 | defect | the reader rebuilds a binding the relation does not satisfy | `M4.1.12`: `rebuild` judges each binding by the relation |
+| R9-D7 | defect | §2.5 gives `M4.9` a duty no ledger row holds | `RTP-H11`, quoted in `M4.9` |
+| R9-R1 | remark | the "none stated" refusal is unreachable and cites no leaf | §1 says the language refuses it already, and `M1.42` and `M1.43` cover the other three; the code's message names no leaf (`M4.1.4`) |
+| R9-R2 | remark | `Joint::check` counts no instance among a service's users | "The tasks and services naming it" (§2.9) |
+| R9-R3 | remark | a zero deadline and a jitter longer than the period lower | Kept: the analysis judges them, not-established; no rule of `/1` refuses them |
+| R9-R4 | remark | §3's order of `binding` before `named` never applies | Kept: an order fixed for a case the joint rules may give |
+| R9-R5 | remark | no record holds two refusals applying at once | Added (`M4.1.4`) |
+| R9-R6 | remark | the corpus's header and `M4.1.4`'s status say "rounds 4 to 7" | Updated (`M4.1.4`) |
+| R9-R7 | remark | §3 does not say how many of each line appear | Each form's count stated (§3) |
+| R9-R8 | remark | the sweep's `tracked()` filtered the sealed set after listing it | Excluded in the listing (`M4.1.12`) |
+
+Better decision: a task's release source stated rather than inferred, as OSEK 2.2.3 §4.3 has it ("Task activation is
+performed using the operating system services ActivateTask or ChainTask"): `M1.44` filed for the language; until it
+lands, `RTP-H1`'s report of each inferred trigger stands.
+
+Round 8's answers: R8-D1 and R8-D2 partly held (R9-D2 to R9-D4), R8-D3 held for its two classes (R9-D6 the third),
+the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
