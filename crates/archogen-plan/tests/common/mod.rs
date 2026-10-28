@@ -44,15 +44,24 @@ fn kinds() -> Vec<(String, String)> {
     .collect()
 }
 
-/// The shipped vocabulary.
+/// The shipped vocabulary, read once per test binary: the bounded checker lowers tens of thousands of systems, and
+/// reading the kinds again for each was most of its time.
 pub fn vocabulary() -> Vocabulary {
-    let registry = shipped_registry(&mut SourceMap::new(), &kinds()).expect("the kinds load");
-    Vocabulary::shipped(&mut SourceMap::new(), &registry).expect("the shipped vocabulary reads")
+    static READ: std::sync::OnceLock<Vocabulary> = std::sync::OnceLock::new();
+    READ.get_or_init(|| {
+        let registry = shipped_registry(&mut SourceMap::new(), &kinds()).expect("the kinds load");
+        Vocabulary::shipped(&mut SourceMap::new(), &registry).expect("the shipped vocabulary reads")
+    })
+    .clone()
 }
 
-/// The shipped catalog.
+/// The shipped catalog, read once per test binary.
 pub fn catalog() -> Catalog {
-    Catalog::shipped(&mut SourceMap::new(), &vocabulary()).expect("the shipped catalog reads")
+    static READ: std::sync::OnceLock<Catalog> = std::sync::OnceLock::new();
+    READ.get_or_init(|| {
+        Catalog::shipped(&mut SourceMap::new(), &vocabulary()).expect("the shipped catalog reads")
+    })
+    .clone()
 }
 
 /// `text`, a plain description, as the language's check judges it under the profile (`archogen check`): the program

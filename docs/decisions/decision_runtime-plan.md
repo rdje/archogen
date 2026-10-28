@@ -864,6 +864,8 @@ identical canonical plans").
   built ahead, as this record's executable form, each rule citing its section, with every probe of the review a fixture;
   from round 7 a round reviews the record, the code and the corpus together (`decision_executable-design-reviews.md`).
   A corpus outcome is what the code writes, blessed: a review judges it against these rules, and it is never a rule.
+  Beside the corpus, a bounded exhaustive checker (`M4.1.13`) holds every plan of generated universes to a reading of
+  §2 written by a context that did not read the lowering's code, as `decision_executable-design-reviews.md` item 1 asks.
 - A consumer reads the plan with a reader held to the goldens, never by matching text.
 - Related: [[decision_s0-retirement]], [[decision_eadl-engine-boundary]], [[decision_priority-comparison-direction]],
   [[decision_zero-dependency-engine-core]], `docs/specs/adapters/decision_engine-adapters.md`,

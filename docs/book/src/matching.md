@@ -494,7 +494,9 @@ code writes by `crates/archogen-plan/tests/worked.rs`; and every probe system of
 the outcome the lowering gives it, in `crates/archogen-plan/tests/corpus/`, a description the language's check refuses
 held at that check's verdict; hand-written records hold the refusals of a record, in their order
 (`crates/archogen-plan/tests/records.rs`). An outcome is what the code writes, so a reviewer judges each against the
-record; a finding is a defect when it carries a reproducer. The plan counts the users of a service or a policy that
+record; a finding is a defect when it carries a reproducer. A bounded exhaustive checker,
+`crates/archogen-plan/tests/bounded.rs` (`M4.1.13`), generates four universes of small systems — tens of thousands —
+and holds every plan to a reading of the record written by a context that never read the lowering's code. The plan counts the users of a service or a policy that
 takes a channel more widely than the check above: the system's tasks that reach it, directly or through services,
 policies and bindings, and the interrupts whose context holds it, but for its own timer route — at the provider whose
 channel it takes, or that the instance whose channel it takes programs — where nothing else that route runs reaches it,
