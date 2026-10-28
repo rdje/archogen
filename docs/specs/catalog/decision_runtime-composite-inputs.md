@@ -73,7 +73,9 @@ A fact that cannot be read leaves undeclared the composites it gates, `analysis-
   and so does `one-claim-per-trap` when `external-before-timer` is `no`;
 - `pending-taken-after-unmask`, `releases-never-latched`, `primitives-out-of-line`, `starts-by-transition` and
   every `runtime-discipline.<id>` gate every composite;
-- `leaves-interrupt-hardware-alone` is a task fact, so its absence is the variant's own condition 9.
+- `leaves-interrupt-hardware-alone`, the application's fact, gates every composite, and the caller's declaration of
+  it for a service's application code gates every `J`; the variant takes neither as an input, so the composition
+  judges their absence.
 
 | Fact | Kind | Says | Why the composition needs it |
 | --- | --- | --- | --- |
@@ -503,6 +505,9 @@ under-charges against the variant's §1 definitions. The findings, and the answe
 window, the `one-claim-per-trap` row's reading column and the opening paragraph's model version — were reviewed with
 the variant's change, in
 [`decision_runtime-analysis-variant-reviews.md`](../../reviews/decision_runtime-analysis-variant-reviews.md).
+`M2.23`'s correction on `2026-10-28` — §2's list called `leaves-interrupt-hardware-alone` a task fact, against its
+row and `compose.rs`, and now says what both say — moves no rule; a reader who did not write it checked it against
+the row, the code and the variant's condition 9 (the leaf's evidence).
 
 | Round | Findings | Defects | Verdict |
 | --- | --- | --- | --- |
