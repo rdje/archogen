@@ -349,6 +349,35 @@ lands, `RTP-H1`'s report of each inferred trigger stands.
 Round 8's answers: R8-D1 and R8-D2 partly held (R9-D2 to R9-D4), R8-D3 held for its two classes (R9-D6 the third),
 the rest held.
 
+## Round 10 — `2026-10-28`: not acceptable, 11 findings
+
+The reviewer enumerated three bounded universes of small systems, 16,640 in all, lowered each through the real search,
+the checker and the lowering, and judged them against an independent reading of §2.2, §2.5, §2.6 and §2.9. Contexts
+agreed on 10,496 systems and triggers on 6,144; multiplexing disagreed on 1,408, every one the same defect, on a node
+lying on a `uses` cycle — which nine rounds of hand-made probes had not reached. 4 defects and 7 remarks.
+
+**Fence.** No breach.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R10-D1 | defect | the own-route exception read only the route's direct runners, so a node reached back through a `uses` cycle from its own route lost a user | The code reads everything the route runs, as §2.6 and §2.9 say; the cycles fixtures (`M4.1.4`) |
+| R10-D2 | defect | a duration past the engine's exact arithmetic read as no duration: "not a time", `unknown`, "not a duration" | §2.2 states the range; refused `unsupported-profile`, naming it (§1, `M4.1.4`); `M1.45` filed |
+| R10-D3 | defect | §1 gives `M4.1.6` how a job receives an alarm it programs itself, which `.6` and the leaf do not hold, nor the system's own level's requirement | `.6` and `M4.1.6` hold both, in §1's words; the code's message for the system's level reworded (`M4.1.4`) |
+| R10-D4 | defect | a source's `one-request-per-arrival` and `no-application-code` owed by no one | Owed by the realization, `external` the simulator's under `RTP-H9`, with the code and the sporadic worked text (`M4.1.4`) |
+| R10-R1 | remark | §1's order inside a bullet over tasks undetermined | Task by task in runtime order, each task's clauses in the bullet's order (§1) |
+| R10-R2 | remark | a source's zero separation lowered and said nowhere | Written as stated, the analysis refusing it (§2.5); `M1.45` has the language refuse it |
+| R10-R3 | remark | §2.7's "one line for each pair of nodes, the earlier first" means nothing inside a component | One line for each ordered pair an edge joins (§2.7, §3) |
+| R10-R4 | remark | nine round-9 probes are not fixtures, and §3's list stops at round 8 | Added (`M4.1.4`); §3 lists rounds 9 and 10 |
+| R10-R5 | remark | `rebuild` applies no mediation gate, unreachable under `adapters/1` | Kept unreachable: no kind of `adapters/1` mediates, and the gate comes with the first that does |
+| R10-R6 | remark | `M2.30` may add an application fact the plan must owe | Held for `M2.30`, which moves §2.2, §2.10 and `RTP-H5` with it |
+| R10-R7 | remark | the production half is not built | As declared; no finding |
+
+Better decision, taken: the bounded exhaustive checker `decision_executable-design-reviews.md` item 1 asks for, which
+this record never had — `M4.1.13`, built by a context fenced from the lowering's code, so that its reading of the record
+is independent of the transcription it checks.
+
+Round 9's answers: R9-D2 partly held (R10-D1); R9-D5 held for tasks, R10-D4 its sibling for sources; the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a

@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-27`
 - **Status:** `active` — the design for leaf `M4.1`, under independent review (`M4.1.1`) before any code relies on it;
-  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 9 answered; from round 7 it is
+  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 10 answered; from round 7 it is
   reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
 - **Owner / source:** leaf `M4.1.1` (`docs/tasks/M4.md`); `ROADMAP.md` §4.2's `archogen-plan`, §7.3, §7.5, §7.6, §10.1
   step 5 and §10.3; model §8 rules 4, 5, 7, 8, 10, 12 and 15; the obligations `M3.3.8`, `M3.5`, `M3.5.5.7.3` and
@@ -53,7 +53,8 @@ beneath ones included, and `Joint::map` over the system. The plan's routes, mult
 to derive and the build's to verify (`M4.10`), as `M3.5`'s design says of them.
 
 **Refusals, before anything is lowered**, each with the status vocabulary's code and a repair. They are taken in the
-order written, this list and then the next, then §2.4's while lowering, and the first that applies is the one given:
+order written, this list and then the next, then §2.4's while lowering, and the first that applies is the one given;
+a bullet over tasks is taken task by task in runtime order, each task's clauses in the order the bullet writes them:
 - the assignment record does not read, or names another format: `tool-failure`;
 - its program digest is not the program's, or the system it names is not one the program declares: `stale-input`,
   "resolve again";
@@ -83,6 +84,9 @@ order written, this list and then the next, then §2.4's while lowering, and the
 
 **Refusals of what `/1` cannot lower**, each `unsupported-profile`, naming what is missing and, where one does, the
 leaf that adds it:
+- a duration the plan would write past the engine's exact arithmetic (§2.2): a task's period, minimum separation,
+  deadline or jitter, a source's separation, or an obliged bound, naming it; `M1.45` has the language refuse such a
+  quantity where it is read;
 - the system has placement memory (model §8 rule 10): laying an image out in memory is `/2`'s (`M4.1.7`). The repair
   is to describe a hosted platform, or to wait for `/2`;
 - the system declares no task: the scheduler a build runs (`RTP-H1`) has no empty form,
@@ -91,10 +95,11 @@ leaf that adds it:
 - a task whose deadline is measured from an event other than its release: the analysis measures every relative
   deadline "from the nominal release" (`docs/specs/analysis/decision_runtime-analysis-variant.md`), and no other event
   has a meaning `/1` can state;
-- a task, or the system's own level, that would receive an interrupt's code: a timer route that names it, bound to
-  its provider itself, or an adapter instance with a cost running its requester's code (`expiry`) whose requester
-  it is, the one an exclusive instance serves or one bound to a shared instance. No context runs a job's code in an
-  interrupt, and how a job receives an alarm or an expiry is `M4.1.6`'s;
+- a task, or the system's own level, that would receive an interrupt's code: a timer route that names it, bound to its
+  provider itself, or an adapter instance with a cost running its requester's code (`expiry`) whose requester it is, the
+  one an exclusive instance serves or one bound to a shared instance. No context runs a job's code in an interrupt, and
+  how a job receives an alarm it programs itself or an expiry, and what the system's own level's requirement for either
+  means are `M4.1.6`'s;
 - an initialisation component whose members' records state that one's initialisation calls another's code (§2.7),
   once a record can be a provider (`M3.7`).
 
@@ -159,9 +164,11 @@ timer route and a source, and a block may be named `timer`:
        the description. The analysis refuses a release it cannot bound, and the build refuses the plan (`RTP-H1`).
 
    **Durations** are exact. Each is one reduced rational number of seconds, `N s` or `N/D s`, with `D > 1` and `N` and
-   `D` coprime, so that `1.5 ms`, `1.50 ms` and `1500 us` are one text. A task's period, minimum separation, deadline
-   and jitter are each a time, a quantity of another dimension refused (§1). The simulator's clock is exact, so no
-   duration is converted (`RTP-H9`). Converting to a target timer's ticks is `/2`'s.
+   `D` coprime, so that `1.5 ms`, `1.50 ms` and `1500 us` are one text. `N` and `D` lie within the engine's exact
+   arithmetic, signed 128-bit integers (`eadl_model::rational`): a duration whose seconds lie past it is refused
+   `unsupported-profile`, naming it, never read as no duration (§1). A task's period, minimum separation, deadline and
+   jitter are each a time, a quantity of another dimension refused (§1). The simulator's clock is exact, so no duration
+   is converted (`RTP-H9`). Converting to a target timer's ticks is `/2`'s.
 
    **Owed for each task** to the application, the rest of §7.3's task record and what the analysis reads of the
    task's own code (`docs/specs/catalog/decision_runtime-composite-inputs.md` §1 and §2), which the boundary forbids a
@@ -215,8 +222,9 @@ timer route and a source, and a block may be named `timer`:
        no interrupt of its own: `expiry` and `wake` are "one interrupt at its provider" (the adapters record's §2).
        The `/1` kinds program `relative-delay`, a consumed fact, so their provider's route is a timer route. Each cost
        is written on that route's line, with the instance that takes it. A shared instance's cost counts once;
-     - an **external source**, `Interrupt::Source`: its minimum separation, the duration the provider states, `absent`
-       where it declares the fact absent, or `unknown` where it states none, owed to the description. Its service
+     - an **external source**, `Interrupt::Source`: its minimum separation, the duration the provider states, zero
+       included, which the analysis refuses (its condition 3) and `M1.45` has the language refuse; `absent` where it
+       declares the fact absent; or `unknown` where it states none, owed to the description. Its service
        cost, its acknowledge point and the work it defers are the variant's other inputs for a source, owed by the
        realization that serves it.
 
@@ -306,7 +314,8 @@ timer route and a source, and a block may be named `timer`:
    - The graph is `Joint::initialization` over the system and the record's bindings (model §8 rule 12), which the
      lowering computes (`M4.1.4`).
    - Its edges are written with their reasons, as §10.1's "initialization dependencies" and `M4.1`'s Goal ask: one line
-     for each pair of nodes, the earlier first, naming each reason `Joint::initialization` gives, a binding's fact or
+     for each ordered pair of nodes an edge joins, the node the edge orders earlier first — so a component's mutual
+     edges are two lines — naming each reason `Joint::initialization` gives, a binding's fact or
      `named` for a `uses` or `needs`.
    - Its steps are its strongly connected components, in a topological order taken by repeatedly choosing, among the
      components whose predecessors have all been taken, the one whose least member's text is least.
@@ -447,7 +456,7 @@ sign and no leading zero.
 - `(instance …)`, one for each instance;
 - `(route …)`, one for each route;
 - `(context …)`, one for each task and each node;
-- `(depends …)`, one for each pair of nodes with an edge;
+- `(depends …)`, one for each ordered pair of nodes an edge joins (§2.7);
 - `(step …)`, one for each component of the initialisation graph;
 - `(obligation …)`, one for each obligation §2.9 lists;
 - `(owed …)`, one for each owed fact §2.10 lists.
@@ -687,8 +696,12 @@ instances' costs on one route; the system's own level served by a shared extende
 placement memory; an expiry to the system's own level; and each of §1's refusals of a record. Round 8 adds a source's
 handler and a task sharing a channel, two handlers sharing one, and a policy taking one; the tightest obliged bound; a
 sporadic task reaching only an alarm; a zero release separation; a module tree; and records that bind an instance no
-requester is bound to, or another requester's exclusive instance, which do not rebuild. A description the language's
-check refuses is no input (§1), and its probe is held at that check's verdict.
+requester is bound to, or another requester's exclusive instance, which do not rebuild. Round 9 adds services named with
+`/`; callers on a node's own route; a lone user; policies handling a source and taking an expiry; a platform raising a
+source; a zero deadline and a jitter past the period; co-applying refusals; a record the relation does not satisfy; and
+a plan with no node. Round 10 adds `uses` cycles through a node's own route, durations past the exact arithmetic, a zero
+source separation, and two ill-formed tasks. A description the language's check refuses is no input (§1), and its probe
+is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with
@@ -730,11 +743,12 @@ identical canonical plans").
   shares with another role classified by its commit (F30); the book's chapter; and every other place that names `M4.1`
   as owner, moved as below;
 - `.6`: **the release alarm**, a design of its own, reviewed. It decides which device's alarm releases timer tasks on a
-  target, and how an adapter's alarm shares a device with releases, each taking a channel (model §8 rule 3). It
-  decides how the analysis charges a timer route's interrupts, its service cost and arrival bound, such as a wake
-  taken as a timer event of the release timer under an amended condition 6; the term for a multiplexed node's
-  overhead and for a node's call cost in a job; and how a job receives an expiry. That design is the joint rules',
-  the analysis variant's and the composite-inputs record's;
+  target, and how an adapter's alarm shares a device with releases, each taking a channel (model §8 rule 3). It decides
+  how the analysis charges a timer route's interrupts, its service cost and arrival bound, such as a wake taken as a
+  timer event of the release timer under an amended condition 6; the term for a multiplexed node's overhead and for a
+  node's call cost in a job; and how a job receives an alarm it programs itself or an expiry, and what the system's own
+  level's requirement for either means. That design is the joint rules', the analysis variant's and the composite-inputs
+  record's;
 - `.7`: **format `/2`**, after `.6`, `M4.4.1`'s device correspondence (`RTP-H8`) and `M4.12`'s application inputs
   (`RTP-H5`), designed and reviewed as this record was. Its questions are kept in the review history, each with the
   fix its reviewer proposed:
