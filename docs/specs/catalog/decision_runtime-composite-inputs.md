@@ -375,8 +375,9 @@ The least fixed point is therefore an upper bound on how late the service can st
 - **§2's boundaries:** where delivery ends and a service begins, and where `switch` ends.
 - **What these costs' `holds-under-preemption yes` means:** the bound also holds from any state the code before it
   leaves.
-- **The application's task facts gain** the same entry-state statement for its own figures, and, for each masked
-  run, each way it can end.
+- **The application's task facts gain** the same entry-state statement for its own figures, and §12 gains **the
+  application's parts**: each task's own code, its calls to each primitive, and its masked runs with each way each can
+  end (§1).
 
 This record names what §12 gains; the catalog record's own review checks the wording it takes.
 
