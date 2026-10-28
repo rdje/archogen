@@ -529,8 +529,8 @@ a change that leaves it stale, so it is never edited by hand.
 - **OS** — [definition](glossary.md), [The boundary: functionality versus implementation](boundary.md), [What this
   project relies on from outside](ledger.md), [Annex B: The checks that keep the repository
   honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
-- **OSEK** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What this project relies on
-  from outside](ledger.md)
+- **OSEK** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Matching an offer to a
+  requirement](matching.md), [What this project relies on from outside](ledger.md)
 - osek-os — [What this project relies on from outside](ledger.md#osek-os)
 - Other repositories are read-only — [Annex B: The checks that keep the repository
   honest](annex-repository.md#other-repositories-are-read-only)

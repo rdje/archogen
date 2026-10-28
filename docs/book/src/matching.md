@@ -490,7 +490,10 @@ design's acceptance as the design's executable form (`docs/decisions/decision_ex
 cites its section of `docs/decisions/decision_runtime-plan.md`; the record's worked texts are held equal to what the code
 writes by `crates/archogen-plan/tests/worked.rs`; and every probe system of the design's review is a fixture beside the
 outcome the lowering gives it, in `crates/archogen-plan/tests/corpus/`. A reviewer runs them, and a finding is a defect
-when it carries a reproducer.
+when it carries a reproducer. The plan's design counts a multiplexed service's users more widely than the check above:
+the system's tasks that reach it, directly or through services, policies and bindings, as
+[OSEK](ledger.md#osek-os) counts a shared resource's users by the tasks that access it (§8.5). The joint rules count the
+requesters naming it by `uses` until `M4.1.2` amends rule 7 to match.
 
 An adapter's instance is judged by the joint rules as one provider (model §8 rules 14 and 15, `M3.2.3.1`): its offers
 computed from the device it programs — a value its kind writes, a fact passed through as the relation reads it at the

@@ -15,8 +15,10 @@
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M4` → frontier `M4.1`, at `M4.1.1`, the runtime plan's review: `/1` for the hosted playground, rounds answered
   in `docs/reviews/decision_runtime-plan-reviews.md`; `PROGRAM` → `PROGRAM.34`, the director's.
-- **Next action:** build `M4.1.3` and `M4.1.4`'s lowering as the record's executable form, with the probes of rounds
-  4–6 as fixtures; then round 7 reviews record, code and corpus. `M4.4.1`, the device correspondence, before `M4.1.7`. `M3.2.7` and `M3.5.9`, full verification, wait for the features (doctrine 22).
+- **Next action:** `M4.1.4` answers round 7 in the code (multiplexing by reaching tasks, typed durations, the
+  corpus checked by the language first, the uses list); then round 8 reviews record, code and corpus.
+  `M4.4.1`, the device correspondence, before `M4.1.7`. `M3.2.7` and `M3.5.9`, full verification, wait for the
+  features (doctrine 22).
   After the first batch, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`; `M3.4.7` waits on `M3.7`.
   `main` is protected: a push is a batch, `scripts/open_batch.sh` (`COMMIT.md` step 2), at the ruled cadence or to
   restore CI; the director merges, and the first merge is premise 3's named commit (`M2.7.6.6.5`). No other branches.

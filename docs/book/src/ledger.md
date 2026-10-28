@@ -332,10 +332,10 @@ Producer observations, normalization proofs, counterexamples and revalidation re
 | --- | --- |
 | Source | OSEK/VDX Operating System Specification |
 | Version | 2.2.3, read from the copy at `https://www.irisa.fr/alf/downloads/puaut/TPNXT/images/os223.pdf` |
-| Pinned at | not pinned — read on `2026-10-01`; no build or check reads it |
-| Retrieved | `2026-10-01` |
-| Hash | sha256 `a0bb10b0b1413b3d95a40de117d3bedd3bbb74e2cae23c074c5532a95fa715cf` of the PDF read |
-| Scope | two sentences, quoted as a precedent and a correction for findings §6 (b): `ActivateTask` (§13.2.3.1), "If E_OS_LIMIT is returned the activation is ignored", with the status "Too many task activations of `<TaskID>`, E_OS_LIMIT"; and "The error hook routine (ErrorHook) is called if a system service returns a StatusType value not equal to E_OK" |
+| Pinned at | not pinned — read on `2026-10-01` and again on `2026-10-28`, the same bytes; no build or check reads it |
+| Retrieved | `2026-10-01`; `2026-10-28` |
+| Hash | sha256 `a0bb10b0b1413b3d95a40de117d3bedd3bbb74e2cae23c074c5532a95fa715cf` of the PDF read, both times |
+| Scope | two sentences, quoted as a precedent and a correction for findings §6 (b): `ActivateTask` (§13.2.3.1), "If E_OS_LIMIT is returned the activation is ignored", with the status "Too many task activations of `<TaskID>`, E_OS_LIMIT"; and "The error hook routine (ErrorHook) is called if a system service returns a StatusType value not equal to E_OK"; and, for the runtime plan's multiplexing (`decision_runtime-plan.md` §2.9, round 7), §8.5's "The ceiling priority shall be set at least to the highest priority of all tasks that access a resource or any of the resources linked to this resource", a shared resource's users counted as the tasks that access it |
 | Known limitations | a precedent, not a requirement on this profile; the copy read is a mirror of the consortium's document, not the consortium's own site |
 | Revalidation trigger | a decision resting on more of OSEK's behaviour, or a copy from the standard's owner differing from the mirror |
 | Named as | `OSEK` |

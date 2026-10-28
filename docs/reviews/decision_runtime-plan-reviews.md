@@ -246,6 +246,48 @@ defect when it carries a reproducer.
 | R6-R9 | remark | the vocabulary in neither the identity nor what §2 reads | Named among what §2 reads (§3) |
 | R6-R10 | remark | ten more probes for the goldens | Named in §3 |
 
+## Round 7 — `2026-10-28`: not acceptable, 19 findings
+
+The first round with the executable form. The reviewer ran the crate's tests, the worked texts and the corpus green,
+then built a probe calling the language's check, the search, the `/2` writer, the configuration checker and the
+lowering, and ran 19 probe systems through it. 9 defects and 10 remarks, each with a reproducer under the reviewer's
+scratch folder; three serious: a frequency read as seconds, multiplexing lost through a service in between, and a
+binding the checker forbids. That last one was the search's, `M4.1.8`'s class, and `M4.1.9` fixed it at once.
+
+**Fence.** One search, `grep -rln "defadapter\|adapter-kind" --include=*.eadl .`, walked `docs/evaluation/` before its
+output was filtered; it printed three paths outside that folder, and nothing from it was printed or opened. The one
+history read was `git log --oneline 6d61f65..HEAD`. No case was read.
+
+**Method.** The executable form did what `decision_executable-design-reviews.md` asked of it: each defect came with a
+system and two texts, and none needed a ruling on what a sentence meant. The corpus, though, held what the code wrote,
+so a fixture contradicting the record stayed green (D4, D8): its harness now runs the language's check first, and its
+header says that an outcome is evidence, judged against the record, never a rule.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R7-D1 | defect | a task's period, separation, deadline or jitter of any dimension read as seconds: `(period 100 Hz)` lowered to `100 s`, `(deadline 10 kHz)` to a deadline longer than its period | Each must be a time; another dimension refused `tool-failure` (§1, §2.2), and `M1.42` filed to make the language refuse it |
+| R7-D2 | defect | `multiplex` lost where two tasks reach a channel through a service or a policy: §2.9 counted the declarations naming the service, §2.6 and §2.10 run what a policy uses | A service is multiplexed where it takes a channel and two or more of the system's tasks reach it, as [OSEK](../book/src/ledger.md#osek-os) §8.5 counts a resource's users by the tasks that access it; the lowering derives it so, `.2` amends rule 7 to match (§2.9, §4) |
+| R7-D3 | defect | the search and the rebuild bound `reachable-at-privilege`, which the checker forbids | The search's, not the record's: `M4.1.9` |
+| R7-D4 | defect | a task's `uses` list held facts and blocks, against §2.2 and §3 | The code filters to services and policies, four fixtures re-blessed (`M4.1.4`); §2.2 says a fact or a block named is no member |
+| R7-D5 | defect | the program's digest and declarations taken from the caller, so a plan could name one program and hold another's task | `lower` takes the `Program` and derives both (§1, `M4.1.4`) |
+| R7-D6 | defect | a system with no task lowered, and `RTP-H1`'s scheduler has no empty form | Refused `unsupported-profile` (§1) |
+| R7-D7 | defect | §2.6's node bullet ignored the route's kind, putting a source's handler in its provider's timer route | The interrupt fact where the route is a source, a consumed fact where it is a timer route (§2.6, `M4.1.4`) |
+| R7-D8 | defect | `dup-prio`, which the language's check refuses three times over, pinned as a plan | The corpus runs the language's check first and records its verdict; `dup-prio` off the open edges (`M4.1.4`) |
+| R7-D9 | defect | a refusal of the joint rules named neither verdict | Names the checker's acceptance and each of the generator's findings (§1, `M4.1.4`) |
+| R7-R1 | remark | the corpus pins the code, not the record | Its header says so; a review judges an outcome against the record (How to apply) |
+| R7-R2 | remark | cases where code and record agree but no fixture holds them | Added to the corpus, with a refusals test of §1's records (§3, `M4.1.4`) |
+| R7-R3 | remark | §1 lists no refusal for a record that reads but does not rebuild, and fixes no order among refusals | `tool-failure` for it; refusals taken in the order written, the profile ahead of the rules (§1) |
+| R7-R4 | remark | an obliged value that is not a duration is written bare without being owed | Refused `tool-failure` (§2.4) |
+| R7-R5 | remark | the expiry refusal reads only what an exclusive instance serves | Also a requester bound to a shared instance (§1) |
+| R7-R6 | remark | `RTP-H1` refuses every `unknown` trigger `missing-fact`, though `eadl/1` cannot write some of them | `missing-fact` where the description leaves it out, `unsupported-profile` otherwise (`RTP-H1`) |
+| R7-R7 | remark | `RTP-H9` lets a source arrive sooner than the plan's separation | It may not (`RTP-H9`) |
+| R7-R8 | remark | `M4.1.5`'s text out of step with §4 `.5` | Synced; the register entry `.4`'s, written with the executable form |
+| R7-R9 | remark | the composite-inputs record calls `leaves-interrupt-hardware-alone` "a task fact" against its own row | Not this record's: `M2.23` filed |
+| R7-R10 | remark | a golden's input is another suite's file | Each golden's inputs the crate's own fixtures (§3, §4 `.4`) |
+
+Round 6's answers: all met in the record; in the code `R6-R1` was not (R7-D4), and `R6-D5`, `R6-D7` and `R6-D8` partly
+(R7-D2, R7-D9, R7-D7), each now answered as above.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
