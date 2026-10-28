@@ -43,6 +43,7 @@
 (owed (task dod sampler) masked-runs (by application))
 (owed (task dod sampler) masks-only-through-api (by application))
 (owed (task dod sampler) os-calls (by application))
+(owed (task dod sampler) os-calls-category (by application))
 (owed (task dod sampler) stack-bound (by application))
 (owed (task dod sampler) stack-category (by application))
 (owed (task dod sampler) task-facts (by application))

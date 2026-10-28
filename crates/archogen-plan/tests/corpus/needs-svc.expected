@@ -31,6 +31,7 @@
 (owed (task nsvc s) masked-runs (by application))
 (owed (task nsvc s) masks-only-through-api (by application))
 (owed (task nsvc s) os-calls (by application))
+(owed (task nsvc s) os-calls-category (by application))
 (owed (task nsvc s) stack-bound (by application))
 (owed (task nsvc s) stack-category (by application))
 (owed (task nsvc s) task-facts (by application))

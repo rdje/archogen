@@ -32,6 +32,7 @@
 (owed (task sporadic s) masked-runs (by application))
 (owed (task sporadic s) masks-only-through-api (by application))
 (owed (task sporadic s) os-calls (by application))
+(owed (task sporadic s) os-calls-category (by application))
 (owed (task sporadic s) stack-bound (by application))
 (owed (task sporadic s) stack-category (by application))
 (owed (task sporadic s) task-facts (by application))

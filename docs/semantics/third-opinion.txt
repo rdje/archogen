@@ -37,6 +37,7 @@ agree crates/archogen-plan/tests/corpus/equal-separation.eadl
 agree crates/archogen-plan/tests/corpus/exact.eadl
 agree crates/archogen-plan/tests/corpus/fast-source.eadl
 agree crates/archogen-plan/tests/corpus/from-and-alarm.eadl
+agree crates/archogen-plan/tests/corpus/handler-calls-block-once-bound.eadl
 agree crates/archogen-plan/tests/corpus/handler-calls-unbound-block.eadl
 agree crates/archogen-plan/tests/corpus/hardware-naming-prefix.eadl
 agree crates/archogen-plan/tests/corpus/hz-everywhere.eadl
@@ -45,12 +46,18 @@ agree crates/archogen-plan/tests/corpus/isr-and-task.eadl
 agree crates/archogen-plan/tests/corpus/jitter-over-period.eadl
 agree crates/archogen-plan/tests/corpus/kind-blind.eadl
 agree crates/archogen-plan/tests/corpus/level-on-route-bound-otherwise.eadl
+agree crates/archogen-plan/tests/corpus/modules-named/app.main.eadl
+agree crates/archogen-plan/tests/corpus/modules-named/hw.dev.eadl
+agree crates/archogen-plan/tests/corpus/modules-named/os.log.eadl
 agree crates/archogen-plan/tests/corpus/modules/app.main.eadl
 agree crates/archogen-plan/tests/corpus/modules/hw.dev.eadl
 agree crates/archogen-plan/tests/corpus/modules/os.svc.eadl
 agree crates/archogen-plan/tests/corpus/multiplex-needs.eadl
 agree crates/archogen-plan/tests/corpus/multiplex-r5.eadl
 agree crates/archogen-plan/tests/corpus/multiplex.eadl
+agree crates/archogen-plan/tests/corpus/named-block-bound-by-another-system.eadl
+agree crates/archogen-plan/tests/corpus/named-channel-taker.eadl
+agree crates/archogen-plan/tests/corpus/named-in-expiry.eadl
 agree crates/archogen-plan/tests/corpus/named-timer-r5.eadl
 agree crates/archogen-plan/tests/corpus/named-timer.eadl
 agree crates/archogen-plan/tests/corpus/naming-namer-prefix.eadl

@@ -1,0 +1,19 @@
+(eadl-version eadl/1)
+; A named block taking a timer's channel, called by a handler and a task: two users, multiplexed (§2.9; round 19,
+; R9).
+(defblock dev.a
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defblock timer.d
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defblock ctl
+  (offers (transfer-engine true) (reachable-at-privilege machine))
+  (requires (needs relative-delay)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.a timer.d ctl)))
+(defservice evt
+  (requires (needs interrupt-source) (uses ctl)))
+(defsystem nc
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses ctl))
+  (requires (uses evt))
+  (platform (uses soc)))

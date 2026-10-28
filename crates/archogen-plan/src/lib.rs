@@ -891,6 +891,7 @@ pub fn lower(
             "masked-runs",
             "masks-only-through-api",
             "os-calls",
+            "os-calls-category",
             "stack-bound",
             "stack-category",
             "task-facts",

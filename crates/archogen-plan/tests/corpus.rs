@@ -111,14 +111,35 @@ fn recorded(lowered: Lowered) -> String {
 }
 
 #[test]
-fn a_module_tree_lowers_as_the_corpus_records() {
-    // Round 8: the lowering reads a tree of several instances through `resolved_declarations`, names qualified.
-    let dir = root().join("crates/archogen-plan/tests/corpus/modules");
-    let got = recorded(lowered_tree(&dir.join("app.main.eadl")));
-    let expected = dir.join("app.main.expected");
-    if std::env::var_os("ARCHOGEN_BLESS_PLANS").is_some() {
-        fs::write(&expected, &got).expect("writable");
-        return;
+fn every_module_tree_lowers_as_the_corpus_records() {
+    // Round 8: the lowering reads a tree of several instances through `resolved_declarations`, names qualified; round
+    // 19 (R19-R5) adds a tree with named hardware. Each `tests/corpus/modules*/` is a tree, lowered from `app.main.eadl`.
+    let corpus = root().join("crates/archogen-plan/tests/corpus");
+    let mut trees: Vec<_> = fs::read_dir(&corpus)
+        .expect("the corpus")
+        .map(|e| e.expect("an entry").path())
+        .filter(|p| {
+            p.is_dir()
+                && p.file_name()
+                    .and_then(|n| n.to_str())
+                    .is_some_and(|n| n.starts_with("modules"))
+        })
+        .collect();
+    trees.sort();
+    assert!(trees.len() >= 2, "{trees:?}");
+    let bless = std::env::var_os("ARCHOGEN_BLESS_PLANS").is_some();
+    for dir in trees {
+        let got = recorded(lowered_tree(&dir.join("app.main.eadl")));
+        let expected = dir.join("app.main.expected");
+        if bless {
+            fs::write(&expected, &got).expect("writable");
+            continue;
+        }
+        assert_eq!(
+            got,
+            fs::read_to_string(&expected).unwrap_or_default(),
+            "{}",
+            dir.display()
+        );
     }
-    assert_eq!(got, fs::read_to_string(&expected).unwrap_or_default());
 }

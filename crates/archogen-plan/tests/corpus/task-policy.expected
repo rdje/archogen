@@ -24,6 +24,7 @@
 (owed (task tp a) masked-runs (by application))
 (owed (task tp a) masks-only-through-api (by application))
 (owed (task tp a) os-calls (by application))
+(owed (task tp a) os-calls-category (by application))
 (owed (task tp a) stack-bound (by application))
 (owed (task tp a) stack-category (by application))
 (owed (task tp a) task-facts (by application))

@@ -50,7 +50,11 @@
 //! platform or by nothing, the services used by the task or by the system's own level alone, bound to by nothing or by
 //! an unrelated requester alone — so that hardware a served task, service or policy names is a node bound or not, with
 //! its contexts, step, edges and owed facts, which a binding elsewhere leaves as the name gives them, the system's own
-//! level's name and a platform's composition making none, and a node owes its bounds with no category of their own.
+//! level's name and a platform's composition making none, and a node owes its bounds with no category of their own;
+//! and, after round 19 (R19-D2), no universe of its own but every task of every universe owing the application its
+//! `os-calls-category` beside its `os-calls`, each of the application's bounds and counts owed with its evidence
+//! category a fact of its own, the reading's facts of a task, a source and a timer route held to §2.10's table and §3's
+//! `FACT` list as the record writes them.
 //!
 //! Each system is run as the engine runs it, as `common::lowered` does: the language's check, the search, the `/2`
 //! writer, and the lowering. **Every `archogen-assignment/2` record the search writes is judged by the configuration
@@ -69,8 +73,9 @@
 //! §2.3's `bind` lines, the record's copied; §2.4's instance lines, an obliged fact with its requester's bound or bare;
 //! the release timer's line, each route with its separation and rank, the enabled set and the interrupt model (§2.5);
 //! §2.6's `(context …)` lines; §2.7's `(depends …)` and `(step …)` lines, from model §8 rule 12's graph, a component of
-//! several members one step; §2.9's obligations, `multiplex` among them; §2.10's owed facts, every bound owed to the
-//! realization with no category beside it; and the last line, `(complete no)`. **Every line of the plan is compared, in
+//! several members one step; §2.9's obligations, `multiplex` among them; §2.10's owed facts, each task's bounds and
+//! counts owed to the application each with a category of its own, every bound owed to the realization with no category
+//! beside it; and the last line, `(complete no)`. **Every line of the plan is compared, in
 //! its place**: the plan's whole text is held to the reading's, the forms in §3's order across kinds as well as within
 //! one, and a line of a head §3 does not write is a disagreement of its own, never dropped. It derives which of §1's
 //! refusals is due, where these universes reach one, and holds the lowering's refusal to its code, to the subjects it
@@ -4238,8 +4243,12 @@ const KINDS: [AdapterKind; 2] = [
     },
 ];
 
-/// The facts owed for each task to the application (§2.10's first row).
-const TASK_FACTS: [&str; 11] = [
+/// The facts owed for each task to the application (§2.10's first row). §2.2: "Each bound and count among them is owed
+/// with `ROADMAP.md` §7.3's record of a bound ... its evidence category a fact of its own" — the execution bound's
+/// `execution-category`, the masked runs' `masked-category`, the stack bound's `stack-category`, and, after round 19
+/// (R19-D2), "each OS call it may make, with the most one job makes, `n_{i,p}`, and those counts' evidence category",
+/// `os-calls-category`.
+const TASK_FACTS: [&str; 12] = [
     "entry-point",
     "execution-bound",
     "execution-category",
@@ -4248,6 +4257,7 @@ const TASK_FACTS: [&str; 11] = [
     "masked-runs",
     "masks-only-through-api",
     "os-calls",
+    "os-calls-category",
     "stack-bound",
     "stack-category",
     "task-facts",
@@ -5933,6 +5943,8 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         owed.push(format!("(owed {subject} {fact} (by {owner}))"));
     };
     for task in &description.tasks {
+        // "each task | `entry-point`, ... `os-calls`, `os-calls-category`, ... | `application`" — every task, whatever
+        // it is released by or calls (§2.2, §2.10; round 19, R19-D2).
         for fact in TASK_FACTS {
             owe(&task_text(task), fact, "application");
         }
@@ -5951,7 +5963,8 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     // beside them: "Every bound owed to the realization — a call cost, masked runs, a cost's terms, an overhead, a
     // service cost, an arrival bound, an obliged fact — is owed with `ROADMAP.md` §7.3's record of a bound ... The
     // realization states the record with the bound", while "The application's categories are facts of their own"
-    // (§2.10; round 18, R18-D3) — so a task's `masked-category` stays, and a node owes none.
+    // (§2.10; round 18, R18-D3) — so a task's `masked-category` stays, beside its `os-calls-category` (round 19,
+    // R19-D2), and a node owes none.
     for node in &nodes {
         owe(node, "contexts", "realization");
         owe(node, "no-wait", "realization");
@@ -9396,9 +9409,7 @@ fn the_reading_transcribes_the_shipped_vocabulary_and_catalog() {
 
 /// The record's worked plans (§3), in its order, each with its digests elided.
 fn worked_plans() -> Vec<String> {
-    let record =
-        std::fs::read_to_string(common::root().join("docs/decisions/decision_runtime-plan.md"))
-            .expect("the record");
+    let record = the_record();
     let mut out = Vec::new();
     let mut open: Option<String> = None;
     for line in record.lines() {
@@ -9423,8 +9434,68 @@ fn worked_plans() -> Vec<String> {
     out
 }
 
+/// The record's text.
+fn the_record() -> String {
+    std::fs::read_to_string(common::root().join("docs/decisions/decision_runtime-plan.md"))
+        .expect("the record")
+}
+
+/// The words a text writes between backquotes, in its order.
+fn backquoted(text: &str) -> Vec<String> {
+    text.split('`')
+        .skip(1)
+        .step_by(2)
+        .map(str::to_string)
+        .collect()
+}
+
+/// The facts §2.10's table owes `subject`, as its row writes them: `| SUBJECT | FACTS | OWNER |`, with that owner.
+fn owed_row(record: &str, subject: &str) -> (Vec<String>, String) {
+    let rows: Vec<Vec<&str>> = record
+        .lines()
+        .map(str::trim)
+        .filter(|line| line.starts_with('|') && line.ends_with('|'))
+        .map(|line| line.split('|').map(str::trim).collect::<Vec<_>>())
+        .filter(|cells| cells.len() == 5 && cells[1] == subject)
+        .collect();
+    assert_eq!(rows.len(), 1, "§2.10's one row for {subject}");
+    let owner = backquoted(rows[0][3]);
+    assert_eq!(owner.len(), 1, "{subject}'s one owner");
+    (backquoted(rows[0][2]), owner[0].clone())
+}
+
+/// §3's `FACT` list: "`FACT` in `owed` is one of: ...", up to "or an obliged fact's name".
+fn fact_list(record: &str) -> BTreeSet<String> {
+    let opening = "- `FACT` in `owed` is one of:";
+    let from = record.find(opening).expect("§3's `FACT` list") + opening.len();
+    let to = from
+        + record[from..]
+            .find("or an obliged")
+            .expect("its last member, an obliged fact's name");
+    backquoted(&record[from..to]).into_iter().collect()
+}
+
 #[test]
 fn the_reading_gives_the_record_s_worked_texts() {
+    // The reading's facts of a task, a source and a timer route, held to §2.10's table and §3's `FACT` list as the
+    // record writes them (round 19, R19-D2: a task's `os-calls-category`).
+    let record = the_record();
+    let listed = fact_list(&record);
+    for (subject, facts, owner) in [
+        ("each task", &TASK_FACTS[..], "application"),
+        ("each source", &SOURCE_FACTS[..], "realization"),
+        ("each timer route", &TIMER_ROUTE_FACTS[..], "realization"),
+    ] {
+        assert_eq!(
+            owed_row(&record, subject),
+            (names(facts), owner.to_string()),
+            "§2.10's row for {subject}"
+        );
+        for fact in facts {
+            assert!(listed.contains(*fact), "§3's `FACT` list lacks `{fact}`");
+        }
+    }
+
     // The reading held to the plans the record writes in full (§3), from their inputs transcribed here and their own
     // `bind` lines, for every kind of line it derives: a fault of the reading shows on the record's own text, never on
     // the code's.

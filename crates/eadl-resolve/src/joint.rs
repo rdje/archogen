@@ -1564,8 +1564,9 @@ impl<'v> Joint<'v> {
 
     /// Model §8 rule 12: the initialization graph of `system`'s assignment. Its nodes are the providers bound for the
     /// requesters it serves — closed over bindings, so an adapter's or a block's own bindings count — the services and
-    /// policies it serves, and each block or platform it serves that is bound for requirements of its own, a requester
-    /// whose code an interrupt can run (`docs/decisions/decision_runtime-plan.md` §2, leaf `M4.1.15`); its edges run from
+    /// policies it serves, each block or platform it serves that is bound for requirements of its own, a requester whose
+    /// code an interrupt can run (`docs/decisions/decision_runtime-plan.md` §2, leaf `M4.1.15`), and each one a served
+    /// task, service or policy names by `uses` or `needs`, a call (leaf `M4.1.18`); its edges run from
     /// a provider to each requester bound to it, whatever composes what, but to itself, and from each node a service or
     /// a policy names by `uses` or `needs`, a block or a platform included, to that namer — hardware's own names giving
     /// none. Nothing is refused (composition alone gives no edge, leaf `M4.1.16`; a named block an edge, `M4.1.17`).

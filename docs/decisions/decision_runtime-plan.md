@@ -208,12 +208,15 @@ timer route and a source, and a block may be named `timer`:
    **Owed for each task** to the application, the rest of §7.3's task record and what the analysis reads of the
    task's own code (`docs/specs/catalog/decision_runtime-composite-inputs.md` §1 and §2), which the boundary forbids a
    description to state (`docs/semantics/boundary/reject/`'s `application-entry-point.eadl`, `execution-bound.eadl` and
-   `stack-allocation.eadl`):
+   `stack-allocation.eadl`). Each bound and count among them is owed with `ROADMAP.md` §7.3's record of a bound, "units,
+   origin, scope, target and binary identity, and evidence category", as the realization's are (§2.10), its evidence
+   category a fact of its own, as the application's inputs' format carries it apart (`RTP-H5`):
    - its entry point;
-   - its execution bound, `C_i^app`, and that bound's evidence category, as `execution-bound.eadl` asks;
-   - each OS call it may make, with the most one job makes, `n_{i,p}`;
-   - its masked runs, `CS_{i,r,e}^app` and `n_{r,e,p}`, and their bounds' evidence category, as the composition reads
-     one for each run's bound (`compose.rs`);
+   - its execution bound, `C_i^app`, and that bound's evidence category: `execution-bound.eadl` puts in the engine's
+     build manifest "the bound, its units, origin, scope, target and binary identity, and its evidence category";
+   - each OS call it may make, with the most one job makes, `n_{i,p}`, and those counts' evidence category;
+   - its masked runs, `CS_{i,r,e}^app` and `n_{r,e,p}`, and the evidence category of their bounds and counts, as the
+     composition reads one for each run's bound (`compose.rs`);
    - its task facts;
    - the application's two declarations for it that are no task fact (`decision_catalog-records-variant-inputs.md`'s
      task-facts row, `M2.27`): that it masks only through the runtime API, and that its own figures hold under any
@@ -425,7 +428,7 @@ timer route and a source, and a block may be named `timer`:
 
     | Subject | Facts | Owner |
     | --- | --- | --- |
-    | each task | `entry-point`, `execution-bound`, `execution-category`, `figures-under-preemption`, `masked-category`, `masked-runs`, `masks-only-through-api`, `os-calls`, `stack-bound`, `stack-category`, `task-facts` | `application` |
+    | each task | `entry-point`, `execution-bound`, `execution-category`, `figures-under-preemption`, `masked-category`, `masked-runs`, `masks-only-through-api`, `os-calls`, `os-calls-category`, `stack-bound`, `stack-category`, `task-facts` | `application` |
     | the system | `leaves-interrupt-hardware-alone` | `application` |
     | each task that writes no `deadline-from` | `deadline-from` | `description` |
     | each task whose trigger is `unknown` | `trigger` | `description` |
@@ -516,10 +519,11 @@ sign and no leading zero.
 - `KIND` is an adapter kind's obligation name, `multiplex` or `route`; `LEAF` a task-tree identifier.
 - `OWNER` is `application`, `description` or `realization`.
 - `FACT` in `owed` is one of: `entry-point`, `execution-bound`, `execution-category`, `figures-under-preemption`,
-  `masked-category`, `masked-runs`, `masks-only-through-api`, `os-calls`, `task-facts`, `stack-bound`, `stack-category`,
-  `leaves-interrupt-hardware-alone`, `deadline-from`, `trigger`, `separation`, `contexts`, `no-wait`,
-  `runtime-discipline`, `call-cost`, `cost-terms`, `overhead`, `service-cost`, `acknowledge-point`, `deferred-work`,
-  `no-application-code`, `one-request-per-arrival`, `arrival-bound`, or an obliged fact's name.
+  `masked-category`, `masked-runs`, `masks-only-through-api`, `os-calls`, `os-calls-category`, `task-facts`,
+  `stack-bound`, `stack-category`, `leaves-interrupt-hardware-alone`, `deadline-from`, `trigger`, `separation`,
+  `contexts`, `no-wait`, `runtime-discipline`, `call-cost`, `cost-terms`, `overhead`, `service-cost`,
+  `acknowledge-point`, `deferred-work`, `no-application-code`, `one-request-per-arrival`, `arrival-bound`, or an obliged
+  fact's name.
 
 **Forms written only where §2 calls for them**, none where there is none:
 - `(task …)`, one for each task, and at least one (§1);
@@ -581,6 +585,7 @@ sign and no leading zero.
 (owed (task heartbeat beat) masked-runs (by application))
 (owed (task heartbeat beat) masks-only-through-api (by application))
 (owed (task heartbeat beat) os-calls (by application))
+(owed (task heartbeat beat) os-calls-category (by application))
 (owed (task heartbeat beat) stack-bound (by application))
 (owed (task heartbeat beat) stack-category (by application))
 (owed (task heartbeat beat) task-facts (by application))
@@ -592,6 +597,7 @@ sign and no leading zero.
 (owed (task heartbeat chime) masked-runs (by application))
 (owed (task heartbeat chime) masks-only-through-api (by application))
 (owed (task heartbeat chime) os-calls (by application))
+(owed (task heartbeat chime) os-calls-category (by application))
 (owed (task heartbeat chime) stack-bound (by application))
 (owed (task heartbeat chime) stack-category (by application))
 (owed (task heartbeat chime) task-facts (by application))
@@ -664,6 +670,7 @@ to exactly this text, but for its two digests:
 (owed (task short-counter beat) masked-runs (by application))
 (owed (task short-counter beat) masks-only-through-api (by application))
 (owed (task short-counter beat) os-calls (by application))
+(owed (task short-counter beat) os-calls-category (by application))
 (owed (task short-counter beat) stack-bound (by application))
 (owed (task short-counter beat) stack-category (by application))
 (owed (task short-counter beat) task-facts (by application))
@@ -746,6 +753,7 @@ digests:
 (owed (task sporadic s) masked-runs (by application))
 (owed (task sporadic s) masks-only-through-api (by application))
 (owed (task sporadic s) os-calls (by application))
+(owed (task sporadic s) os-calls-category (by application))
 (owed (task sporadic s) stack-bound (by application))
 (owed (task sporadic s) stack-category (by application))
 (owed (task sporadic s) task-facts (by application))
@@ -801,8 +809,10 @@ device; and a cascade of two sources' routes. Round 16 adds durations past the a
 the system's own level; a service bound to a block offering `absolute-deadline` directly; a composite bound to its part,
 under two names; and a sporadic task bound to its own source beside another source's handler. Round 17 adds a service
 and a policy naming a block, under two names; a served block named by a renamed service; and a node shared between a job
-and a source's service. Round 18 adds a block a service, a source's handler and a task name while nothing binds it. A
-description the language's check refuses is no input (§1), and its probe is held at that check's verdict.
+and a source's service. Round 18 adds a block a service, a source's handler and a task name while nothing binds it.
+Round 19 adds such a block bound by another system's requester or once by an unrelated one; a named block taking a
+timer's channel; named hardware running in a timer route's interrupt through an expiry; and a module tree with named
+hardware. A description the language's check refuses is no input (§1), and its probe is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with
@@ -898,7 +908,7 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 | `RTP-H2` | `M4.2` | The generated code realizes the adapters' and the multiplexed nodes' obligations, initialises no component member by calling another's code, never waits on an interrupt in initialisation, and states each cost's terms, each multiplexed node's overhead, each bound an obliged fact offered bare leaves to it, the contexts each node's code supports, and each other value the runtime plan owes to the realization, each bound with `ROADMAP.md` §7.3's record of a bound, its evidence category among it. |
 | `RTP-H3` | `M4.2` | The emitter accepts a runtime plan only by lowering it again from the same inputs and comparing bytes, and marks a plan whose acceptance was taken as text experimental. |
 | `RTP-H4` | `M2.21.2` | After `M4.1.4` has written the runtime plan's goldens, the scheduling checker reads the plan with a reader of its own held to them and maps it onto the analysis's inputs: each enabled interrupt given an identifier of its own kind, so that no two share one, and no source declared for a timer route, so that its interrupt is refused as unmodeled load; where an input the analysis needs is unknown, absent, unstated or owed, the analysis reported inconclusive, naming it, never run on a default; each term `M4.1.6` designs, a timer route's charge and a multiplexed node's overhead among them, charged once it exists; a refusal under the plan's source order worded as one another order may admit, and an order searched with Audsley's algorithm over a bound counting each source ahead at its no-loss limit, one it finds confirmed with the composition and named as the repair. |
-| `RTP-H5` | `M4.12` | The application inputs have a format — each task's entry point, execution bound and its evidence category, OS calls with counts, masked runs and their bounds' evidence category, task facts, declarations that it masks only through the runtime API and that its own figures hold under any preemption and from any entry state, stack bound and its evidence category, and the application's `leaves-interrupt-hardware-alone` — that `archogen-runtime-plan/2` carries. |
+| `RTP-H5` | `M4.12` | The application inputs have a format — each task's entry point; its execution bound, its OS calls with their counts, its masked runs and its stack bound, each with `ROADMAP.md` §7.3's record of a bound and its evidence category a fact of its own; its task facts, declarations that it masks only through the runtime API and that its own figures hold under any preemption and from any entry state, and the application's `leaves-interrupt-hardware-alone` — that `archogen-runtime-plan/2` carries. |
 | `RTP-H6` | `M4.10` | The catalog records state what the runtime plan owes them — supported contexts, an initialisation entry that never waits on an interrupt and names any other component member's code it calls, and each source's service cost — amending the catalog record's §12 and §14.4, and the image is checked: no initialisation step waits on an interrupt, and no component member's initialisation calls another member's code. |
 | `RTP-H7` | `M4.7` | The build's metadata carries the runtime plan's sha256 and its provenance, the whole lock data of `ROADMAP.md` §10.3 is written, `--locked` is honoured, and S0's `no-lock-data` is discharged. |
 | `RTP-H8` | `M4.4.1` | A system's devices are put in correspondence with a target's — which target device each system device is, by a rule the lowering of `archogen-runtime-plan/2` reads — before `M4.1.7` designs that format. |

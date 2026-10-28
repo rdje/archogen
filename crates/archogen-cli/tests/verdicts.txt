@@ -38,6 +38,7 @@
 0 - crates/archogen-plan/tests/corpus/exact.eadl
 0 - crates/archogen-plan/tests/corpus/fast-source.eadl
 0 - crates/archogen-plan/tests/corpus/from-and-alarm.eadl
+0 - crates/archogen-plan/tests/corpus/handler-calls-block-once-bound.eadl
 0 - crates/archogen-plan/tests/corpus/handler-calls-unbound-block.eadl
 0 - crates/archogen-plan/tests/corpus/hardware-naming-prefix.eadl
 0 - crates/archogen-plan/tests/corpus/hz-everywhere.eadl
@@ -46,12 +47,18 @@
 0 - crates/archogen-plan/tests/corpus/jitter-over-period.eadl
 0 - crates/archogen-plan/tests/corpus/kind-blind.eadl
 0 - crates/archogen-plan/tests/corpus/level-on-route-bound-otherwise.eadl
+0 - crates/archogen-plan/tests/corpus/modules-named/app.main.eadl
+0 - crates/archogen-plan/tests/corpus/modules-named/hw.dev.eadl
+0 - crates/archogen-plan/tests/corpus/modules-named/os.log.eadl
 0 - crates/archogen-plan/tests/corpus/modules/app.main.eadl
 0 - crates/archogen-plan/tests/corpus/modules/hw.dev.eadl
 0 - crates/archogen-plan/tests/corpus/modules/os.svc.eadl
 0 - crates/archogen-plan/tests/corpus/multiplex-needs.eadl
 0 - crates/archogen-plan/tests/corpus/multiplex-r5.eadl
 0 - crates/archogen-plan/tests/corpus/multiplex.eadl
+0 - crates/archogen-plan/tests/corpus/named-block-bound-by-another-system.eadl
+0 - crates/archogen-plan/tests/corpus/named-channel-taker.eadl
+0 - crates/archogen-plan/tests/corpus/named-in-expiry.eadl
 0 - crates/archogen-plan/tests/corpus/named-timer-r5.eadl
 0 - crates/archogen-plan/tests/corpus/named-timer.eadl
 0 - crates/archogen-plan/tests/corpus/naming-namer-prefix.eadl
