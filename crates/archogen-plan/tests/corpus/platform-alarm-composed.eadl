@@ -1,6 +1,6 @@
 (eadl-version eadl/1)
-; A platform requiring a timer's channel, met by a block it composes: a node, no edge across composition (§2, §2.7;
-; round 12, D1).
+; A platform requiring a timer's channel, met by a block it composes: a node, its binding's edge kept across
+; composition, the timer first (§2, §2.7; round 12, D1; round 16, B2).
 (defblock timer.d (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine)))
 (defplatform soc
   (offers (core-count 1 tick) (reachable-at-privilege machine))

@@ -843,13 +843,26 @@ pub fn lower(
             releases.push(text.clone());
             "timer".to_string()
         } else {
+            // The source it is bound to itself for `interrupt-source` at `true`, where it is bound to one; otherwise the
+            // sources whose routes name it or a requester it reaches (§2.2, R16-B1).
+            let own = rebuilt
+                .bindings
+                .iter()
+                .find(|b| {
+                    b.requester == internal
+                        && b.requirement.fact() == INTERRUPT_SOURCE
+                        && met_by_true(&b.requirement)
+                })
+                .map(|b| b.provider.as_str());
             let reached = reach(&internal);
             let releasing: Vec<&&Route> = source_routes
                 .iter()
-                .filter(|r| {
-                    r.requesters
+                .filter(|r| match own {
+                    Some(x) => r.provider == x,
+                    None => r
+                        .requesters
                         .iter()
-                        .any(|q| *q == internal || reached.contains(q))
+                        .any(|q| *q == internal || reached.contains(q)),
                 })
                 .collect();
             match releasing.as_slice() {
@@ -1219,6 +1232,8 @@ pub fn lower(
         let text = names.text(n);
         owe(&mut owed, &text, "contexts", "realization");
         owe(&mut owed, &text, "no-wait", "realization");
+        // The discipline of the code the realization generates for it, which every composite reads (§2.10, R16-D3).
+        owe(&mut owed, &text, "runtime-discipline", "realization");
         if contexts.get(n).is_some_and(|c| c.contains("job")) {
             owe(&mut owed, &text, "call-cost", "realization");
         }

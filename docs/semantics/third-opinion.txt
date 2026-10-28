@@ -1,5 +1,6 @@
 # docs/semantics/third-opinion.txt — per document, whether archogen's reader and LinkedSpec's SExprDocumentV1
 # recognizer agree on its forms (leaf M1.22). Written by scripts/third_opinion.sh --bless; checked by it.
+agree crates/archogen-plan/tests/corpus/block-absolute-deadline.eadl
 agree crates/archogen-plan/tests/corpus/block-alarm-unbound.eadl
 agree crates/archogen-plan/tests/corpus/block-binds-itself.eadl
 agree crates/archogen-plan/tests/corpus/block-composes-its-requester.eadl
@@ -18,6 +19,8 @@ agree crates/archogen-plan/tests/corpus/both-kinds.eadl
 agree crates/archogen-plan/tests/corpus/both-release.eadl
 agree crates/archogen-plan/tests/corpus/both-routes.eadl
 agree crates/archogen-plan/tests/corpus/bound-past-arithmetic.eadl
+agree crates/archogen-plan/tests/corpus/composed-renamed.eadl
+agree crates/archogen-plan/tests/corpus/composed-soc.eadl
 agree crates/archogen-plan/tests/corpus/cycle-own-instance-route.eadl
 agree crates/archogen-plan/tests/corpus/cycle-own-route.eadl
 agree crates/archogen-plan/tests/corpus/cycle.eadl
@@ -60,6 +63,7 @@ agree crates/archogen-plan/tests/corpus/one-user-alarm.eadl
 agree crates/archogen-plan/tests/corpus/other-hardware-names-system.eadl
 agree crates/archogen-plan/tests/corpus/other-route-caller.eadl
 agree crates/archogen-plan/tests/corpus/other-system-names-system.eadl
+agree crates/archogen-plan/tests/corpus/own-level-bound-past.eadl
 agree crates/archogen-plan/tests/corpus/own-route-caller.eadl
 agree crates/archogen-plan/tests/corpus/own-route-instance-caller.eadl
 agree crates/archogen-plan/tests/corpus/past-order.eadl
@@ -70,8 +74,10 @@ agree crates/archogen-plan/tests/corpus/placement.eadl
 agree crates/archogen-plan/tests/corpus/platform-alarm-composed.eadl
 agree crates/archogen-plan/tests/corpus/platform-expiry.eadl
 agree crates/archogen-plan/tests/corpus/platform-source-composes.eadl
+agree crates/archogen-plan/tests/corpus/platform-source-past.eadl
 agree crates/archogen-plan/tests/corpus/platform-source.eadl
 agree crates/archogen-plan/tests/corpus/policy-alarm.eadl
+agree crates/archogen-plan/tests/corpus/policy-bound-past.eadl
 agree crates/archogen-plan/tests/corpus/policy-expiry.eadl
 agree crates/archogen-plan/tests/corpus/policy-handler.eadl
 agree crates/archogen-plan/tests/corpus/policy-user.eadl

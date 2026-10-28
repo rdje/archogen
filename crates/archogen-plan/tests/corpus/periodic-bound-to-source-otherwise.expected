@@ -27,5 +27,6 @@
 (owed dev.e call-cost (by realization))
 (owed dev.e contexts (by realization))
 (owed dev.e no-wait (by realization))
+(owed dev.e runtime-discipline (by realization))
 (owed pb leaves-interrupt-hardware-alone (by application))
 (complete no)

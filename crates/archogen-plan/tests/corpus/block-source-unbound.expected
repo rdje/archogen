@@ -37,6 +37,8 @@
 (owed bn leaves-interrupt-hardware-alone (by application))
 (owed dev.e contexts (by realization))
 (owed dev.e no-wait (by realization))
+(owed dev.e runtime-discipline (by realization))
 (owed nic contexts (by realization))
 (owed nic no-wait (by realization))
+(owed nic runtime-discipline (by realization))
 (complete no)

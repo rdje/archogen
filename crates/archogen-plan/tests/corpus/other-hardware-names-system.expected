@@ -30,9 +30,11 @@
 (owed console.uart call-cost (by realization))
 (owed console.uart contexts (by realization))
 (owed console.uart no-wait (by realization))
+(owed console.uart runtime-discipline (by realization))
 (owed console.write call-cost (by realization))
 (owed console.write contexts (by realization))
 (owed console.write no-wait (by realization))
+(owed console.write runtime-discipline (by realization))
 (owed s leaves-interrupt-hardware-alone (by application))
 (complete no)
 == system o

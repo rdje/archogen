@@ -309,13 +309,14 @@ A required **ordering** between two effects — `(ordering (before (write device
 memory.buffer)))` — is `unsupported-profile` under this profile: ordering matters where devices move data without the
 processor, which the profile's `dma` exclusion leaves to a later profile, and its vocabulary entry waits for that one.
 
-**What starts first.** A description never writes a boot sequence: it states what each part needs, and the check
-derives the **initialization graph** from the assignment for the plan. A provider comes before each requester bound to
-it — the counter before the clock service reading it — and a service before each service that `uses` or `needs` it;
-a block a platform composes is part of it, so no edge runs between them, and the system's own level and its tasks,
-which start after everything is initialised, are no nodes. Nothing is refused: a log that timestamps through a clock
-that logs its wrap forms one **component**, which the engine initialises as one unit, since initialisation runs with
-interrupts masked, before any task is released.
+**What starts first.** A description never writes a boot sequence: it states what each part needs, and the check derives
+the **initialization graph** from the assignment for the plan. A provider comes before each requester bound to it — the
+counter before the clock service reading it — and a service before each service that `uses` or `needs` it; a block a
+platform composes is part of it, so composition alone puts no edge between them, while a binding between them does, as
+any binding does — a board whose platform and timer each need the other's facts is one component — and the system's own
+level and its tasks, which start after everything is initialised, are no nodes. Nothing is refused: a log that
+timestamps through a clock that logs its wrap forms one **component**, which the engine initialises as one unit, since
+initialisation runs with interrupts masked, before any task is released.
 
 **One counter, read whole.** A requester's facts of one function are met by one provider. With the width offered by
 one timer and the rate by another, neither offering both, the assignment is refused:

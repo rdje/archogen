@@ -568,6 +568,10 @@ discharge, a code fact the composition reads and the plan never owes, and §2.6 
 
 Round 15's answers: R15-D2 partly (R16-D4); the rest held.
 
+**With the answers' code** (`ARCHOGEN-M4-1082`): the checker's sixth widening found no disagreement. Its builder ran
+`git diff HEAD --stat` over `docs/` without excluding `docs/evaluation`; it compared the working tree with `HEAD`, whose
+tree holds none of the sealed set's text, read no history and printed four other files: no case read.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a

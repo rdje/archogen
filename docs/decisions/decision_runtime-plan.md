@@ -181,17 +181,18 @@ timer route and a source, and a block may be named `timer`:
      them;
    - **what releases it**:
      - `timer` for a periodic task;
-     - for a task with a minimum separation, the external source whose route names the task or a requester it reaches
-       (model §8 rule 8). The plan writes `(source NAME every)` when the source's stated separation is at least the
-       task's. Every arrival then releases the task, and the releases are as far apart as the task states. The analysis
-       asks "whether every arrival releases the task" (`crates/rt-analysis/src/runtime.rs`). The trigger is an inference
-       from the routes, which the description cannot state until `M1.44` gives it a clause (`RTP-H19`), so the build
-       reports it (`RTP-H1`);
-     - `unknown` otherwise: where no source's route reaches the task, where several sources' routes do, where the
-       source states no separation or declares it absent, or where it states one shorter than the task's. A timer
-       route releases no task. In the last case the source can arrive
-       faster than the task says it is released, and nothing says which arrivals release it, so the trigger is owed to
-       the description. The analysis refuses a release it cannot bound, and the build refuses the plan (`RTP-H1`).
+     - for a task with a minimum separation, the source it is bound to itself for `interrupt-source` met by `true`,
+       where it is bound to one — "a source of interrupts a service can be released by" (the vocabulary) — and otherwise
+       the external source whose route names the task or a requester it reaches (model §8 rule 8). The plan writes
+       `(source NAME every)` when the source's stated separation is at least the task's. Every arrival then releases the
+       task, and the releases are as far apart as the task states. The analysis asks "whether every arrival releases the
+       task" (`crates/rt-analysis/src/runtime.rs`). Read from the routes, the trigger is an inference, which the
+       description cannot state until `M1.44` gives it a clause (`RTP-H19`), so the build reports it (`RTP-H1`);
+     - `unknown` otherwise: where the task binds no source itself and no source's route reaches it, or several do, where
+       the source states no separation or declares it absent, or where it states one shorter than the task's. A timer
+       route releases no task. In the last case the source can arrive faster than the task says it is released, and
+       nothing says which arrivals release it, so the trigger is owed to the description. The analysis refuses a release
+       it cannot bound, and the build refuses the plan (`RTP-H1`).
 
    **Durations** are exact. Each is one reduced rational number of seconds, `N s` or `N/D s`, with `D > 1` and `N` and
    `D` coprime, so that `1.5 ms`, `1.50 ms` and `1500 us` are one text. `N` and `D` lie within the engine's exact
@@ -257,13 +258,13 @@ timer route and a source, and a block may be named `timer`:
        is written on that route's line, with the instance that takes it. A shared instance's cost counts once;
      - an **external source**, `Interrupt::Source`: its minimum separation, the duration the provider states, zero
        included, which the analysis refuses (its condition 3) and `M1.45` has the language refuse; `absent` where it
-       declares the fact absent; or `unknown` where it states none, owed to the description. On the playground a
-       stated separation is held, not only assumed: the simulator injects no arrival sooner (`RTP-H9`), so its
-       evidence is the run's; a target's is `/2`'s to owe. Its service
-       cost, its acknowledge point and the work it defers are the variant's other inputs for a source, owed by the
-       realization that serves it, with the code facts the composition reads of that service: whether it runs
-       application code, and that each arrival makes one request (the composite-inputs record §1 and §2). Whether the
-       source reaches the processor through the controller, its `external`, is the simulator's (`RTP-H9`).
+       declares the fact absent; or `unknown` where it states none, owed to the description. On the playground a stated
+       separation is held, not only assumed: the simulator injects no arrival sooner (`RTP-H9`), so its evidence is the
+       run's; a target's is `/2`'s to owe. Its service cost, its acknowledge point and the work it defers are the
+       variant's other inputs for a source, owed by the realization that serves it, with the code facts the composition
+       reads of that service: whether it runs application code, and that each arrival makes one request (the
+       composite-inputs record §1 and §2), as it reads every node's `runtime-discipline` (§2.10). Whether the source
+       reaches the processor through the controller, its `external`, is the simulator's (`RTP-H9`).
 
      Each route has the level it is delivered at, the profile's caller level, and is declared **deliverable**, as the
      composite-inputs record asks of "every declared source" (`crates/rt-analysis/src/compose.rs` reads it).
@@ -356,8 +357,11 @@ timer route and a source, and a block may be named `timer`:
    - Its edges are written with their reasons, as §10.1's "initialization dependencies" and `M4.1`'s Goal ask: one line
      for each ordered pair of nodes an edge joins, the node the edge orders earlier first — so a component's mutual
      edges are two lines — naming each reason `Joint::initialization` gives, a binding's fact or `named` for a `uses` or
-     `needs` — a block's or a platform's `uses` or `needs` giving none, hardware's names never a call (§2); an edge
-     across composition, a `uses`, is none either, while one to a block a `needs` names stands (rule 12).
+     `needs` — a block's or a platform's `uses` or `needs` giving none, hardware's names never a call (§2); composition,
+     a `uses`, gives no edge either, while a binding keeps its edge whatever composes what, a composite and its part
+     each bound to the other being one component (`M4.1.16`, model §8 rule 12). `M3.3.7`'s review dropped that edge when
+     a cycle was refused; a cycle has been one component since, so the exemption ordered nothing and lost the order a
+     binding gives (round 16's B2).
    - Its steps are its strongly connected components, in a topological order taken by repeatedly choosing, among the
      components whose predecessors have all been taken, the one whose least member's text is least.
    - A step names its members by their text, in order.
@@ -420,7 +424,7 @@ timer route and a source, and a block may be named `timer`:
     | each task that writes no `deadline-from` | `deadline-from` | `description` |
     | each task whose trigger is `unknown` | `trigger` | `description` |
     | each source whose separation is `unknown` | `separation` | `description` |
-    | each node | `contexts`, `no-wait` | `realization` |
+    | each node | `contexts`, `no-wait`, `runtime-discipline` | `realization` |
     | each node whose context line holds `job` | `call-cost`, the time one call of its code takes in a job | `realization` |
     | each instance whose kind has costs | `cost-terms` | `realization` |
     | each instance's obliged fact | that fact | `realization` |
@@ -430,6 +434,9 @@ timer route and a source, and a block may be named `timer`:
 
     A task's `figures-under-preemption` is §2.2's declaration whole, condition 8's half: its figures hold under any
     preemption and from any entry state.
+    A node's `runtime-discipline` is the composite-inputs record's §2 fact for the code the realization generates for it
+    — "Generated code is in no record: from `M4` the plan's generator states the same of it" — and every composite reads
+    it; on the playground every node's code is generated (§2.6).
 
     The owners are the application's inputs (`RTP-H5`), the description, and the generated code (`RTP-H2`). No
     catalog record describes the playground, so `/1` owes the catalog nothing, and the platform's own figures are the
@@ -494,11 +501,10 @@ sign and no leading zero.
 - `KIND` is an adapter kind's obligation name, `multiplex` or `route`; `LEAF` a task-tree identifier.
 - `OWNER` is `application`, `description` or `realization`.
 - `FACT` in `owed` is one of: `entry-point`, `execution-bound`, `execution-category`, `figures-under-preemption`,
-  `masked-category`, `masked-runs`, `masks-only-through-api`, `os-calls`, `task-facts`, `stack-bound`,
-  `stack-category`, `leaves-interrupt-hardware-alone`, `deadline-from`, `trigger`, `separation`,
-  `contexts`, `no-wait`, `call-cost`, `cost-terms`, `overhead`, `service-cost`, `acknowledge-point`, `deferred-work`,
-  `no-application-code`, `one-request-per-arrival`,
-  `arrival-bound`, or an obliged fact's name.
+  `masked-category`, `masked-runs`, `masks-only-through-api`, `os-calls`, `task-facts`, `stack-bound`, `stack-category`,
+  `leaves-interrupt-hardware-alone`, `deadline-from`, `trigger`, `separation`, `contexts`, `no-wait`,
+  `runtime-discipline`, `call-cost`, `cost-terms`, `overhead`, `service-cost`, `acknowledge-point`, `deferred-work`,
+  `no-application-code`, `one-request-per-arrival`, `arrival-bound`, or an obliged fact's name.
 
 **Forms written only where §2 calls for them**, none where there is none:
 - `(task …)`, one for each task, and at least one (§1);
@@ -577,9 +583,11 @@ sign and no leading zero.
 (owed console.uart call-cost (by realization))
 (owed console.uart contexts (by realization))
 (owed console.uart no-wait (by realization))
+(owed console.uart runtime-discipline (by realization))
 (owed console.write call-cost (by realization))
 (owed console.write contexts (by realization))
 (owed console.write no-wait (by realization))
+(owed console.write runtime-discipline (by realization))
 (owed heartbeat leaves-interrupt-hardware-alone (by application))
 (complete no)
 ```
@@ -629,6 +637,7 @@ to exactly this text, but for its two digests:
 (owed (adapter epoch-extender timer.short) contexts (by realization))
 (owed (adapter epoch-extender timer.short) cost-terms (by realization))
 (owed (adapter epoch-extender timer.short) no-wait (by realization))
+(owed (adapter epoch-extender timer.short) runtime-discipline (by realization))
 (owed (task short-counter beat) entry-point (by application))
 (owed (task short-counter beat) execution-bound (by application))
 (owed (task short-counter beat) execution-category (by application))
@@ -646,9 +655,11 @@ to exactly this text, but for its two digests:
 (owed time.monotonic call-cost (by realization))
 (owed time.monotonic contexts (by realization))
 (owed time.monotonic no-wait (by realization))
+(owed time.monotonic runtime-discipline (by realization))
 (owed timer.short call-cost (by realization))
 (owed timer.short contexts (by realization))
 (owed timer.short no-wait (by realization))
+(owed timer.short runtime-discipline (by realization))
 (complete no)
 ```
 
@@ -721,9 +732,11 @@ digests:
 (owed dev.e call-cost (by realization))
 (owed dev.e contexts (by realization))
 (owed dev.e no-wait (by realization))
+(owed dev.e runtime-discipline (by realization))
 (owed evt call-cost (by realization))
 (owed evt contexts (by realization))
 (owed evt no-wait (by realization))
+(owed evt runtime-discipline (by realization))
 (owed sporadic leaves-interrupt-hardware-alone (by application))
 (complete no)
 ```
@@ -762,8 +775,10 @@ one requirement is its level's; a block only a service names, and a service only
 system; and a provider whose own requirement is bound to the node that takes its channel, calling it on that node's own
 route. Round 15 adds a task, the system's own level and a service that a timer route names, bound to its provider for a
 fact that takes no channel; a periodic task bound to a source for another fact; a cycle through an instance and its
-device; and a cascade of two sources' routes. A description the language's check refuses is no input (§1), and its probe
-is held at that check's verdict.
+device; and a cascade of two sources' routes. Round 16 adds durations past the arithmetic at a platform, a policy and
+the system's own level; a service bound to a block offering `absolute-deadline` directly; a composite bound to its part,
+under two names; and a sporadic task bound to its own source beside another source's handler. A description the
+language's check refuses is no input (§1), and its probe is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with

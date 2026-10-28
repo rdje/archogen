@@ -31,14 +31,22 @@
 //! source; hardware the lowered system does not serve, another system's or none's, naming a service the lowered system
 //! serves, a policy, a system or the lowered system itself, which neither naming refusal takes, each description
 //! lowered for each of its systems; a platform the lowered system serves naming a system by `uses` or by `needs`; and a
-//! node in a job naming by `needs` a node no job reaches.
+//! node in a job naming by `needs` a node no job reaches; and, after round 16 (R16-D3, R16-R1, R16-R2, R16-B1,
+//! R16-B2), sporadic tasks bound themselves for `interrupt-source`, beside the routes of another source and of their
+//! own source's handler they reach, and beside a task binding none, released by those routes; a platform and the
+//! blocks it composes, directly or through another block, each bound to the other, one to the other or neither, under
+//! names that order each composite before its part or after it; and the system's own level, a service, a policy, a
+//! platform and a block each served by an exclusive `deadline-over-delay` instance, writing its obliged bound bare,
+//! within the arithmetic or past it.
 //!
 //! Each system is run as the engine runs it, as `common::lowered` does: the language's check, the search, the `/2`
 //! writer, and the lowering. **Every `archogen-assignment/2` record the search writes is judged by the configuration
 //! checker**, `archogen_plan_check::check::plan_file`, as `crates/eadl-resolve/tests/plan.rs` judges one, and a record
 //! it refuses is a finding naming that record — but for one class the reading derives and holds by count, a system's
 //! side the search reads apart, the search's defect (`M3.4`; model §7 rule 4, §8 rule 1), on which the lowering is
-//! still held to the reading. Each plan is held to an **independent reading** of
+//! still held to the reading while it does not read the checker's result record, its third input; once it does, §1
+//! refuses each of those systems `tool-failure`, "naming both verdicts", before anything is lowered (R16-R2). Each plan
+//! is held to an **independent reading** of
 //! `docs/decisions/decision_runtime-plan.md`, written below as plain, unoptimised Rust from the record's text alone,
 //! each rule citing the section it transcribes.
 //!
@@ -973,7 +981,8 @@ const SEPARATIONS: [Separation; 6] = [
 
 /// **Releases and routes** (§2.2, §2.5): task `t`, periodic or sporadic at 20 ms; task `u` absent, periodic or
 /// sporadic at 40 ms; one or two sources, each of every separation class, reaching a task directly, through a service
-/// or through two, or reaching none; an alarm `t` uses, or none. The first source, `dev.z`, is declared first and the
+/// or through two, or reaching none — a task bound to one itself released by it alone, whatever other source it
+/// reaches (round 16, R16-B1); an alarm `t` uses, or none. The first source, `dev.z`, is declared first and the
 /// second, `dev.a`, is met only by a service requiring `(available-in-state run sleep)`, which it alone offers, so the
 /// two are distinct and their texts' order is not their declaration order. (Names written by `needs` are the adapters
 /// universe's; here every declaration is named by `uses`.)
@@ -1581,8 +1590,9 @@ enum Composer {
 /// uses, named by nothing, by `dma.x`'s `uses` or by `soc`'s; and task `u` periodic or sporadic. So hardware is a node
 /// bound to by something or by nothing, runs in its own alarm's, its expiry's and its source's interrupts, is
 /// multiplexed by two jobs, releases a sporadic task it handles a source for, and a task reaches the platform through a
-/// binding — while what a block or a platform composes is never reached through it, and no edge crosses composition.
-/// Since round 13 (R13-D3), a block's or a platform's `uses` naming `alarm` is refused before any plan (§1), naming it.
+/// binding — while what a block or a platform composes is never reached through it, composition giving no edge, and
+/// the platform's binding to a block it composes keeps its edge (§2.7; round 16, R16-B2). Since round 13 (R13-D3), a
+/// block's or a platform's `uses` naming `alarm` is refused before any plan (§1), naming it.
 fn requiring_hardware() -> Vec<Case> {
     let mut cases = Vec::new();
     for dma in Requires::ALL {
@@ -2310,8 +2320,9 @@ fn naming(mut side: Side, naming: Naming) -> Side {
 /// list before this one or of the second after it. So the refusal is taken in its place, names each block or
 /// platform and its operand by the namer's text and then the operand's, takes no hardware the lowered system does not
 /// serve (round 15, R15-R2: "This refusal and the one above take only what the system serves"), and a block naming a
-/// block is lowered: across a binding, its `uses` composition making no edge, its `needs` leaving the edge standing
-/// (§2.7, rule 12) — `dma.x`, in `u`'s job, naming by `needs` `blk.n`, which no job reaches (R15-R5).
+/// block is lowered: its `uses` composition and its `needs` each making no edge of their own, and a binding across
+/// either keeping its edge (§2.7, rule 12; round 16, R16-B2) — `dma.x`, in `u`'s job, naming by `needs` `blk.n`,
+/// which no job reaches (R15-R5).
 fn hardware_naming() -> Vec<Case> {
     let mut cases = Vec::new();
     for timer in TIMER_NAMING {
@@ -2832,7 +2843,8 @@ const TIMER_NEEDS: [&[&str]; 4] = [
 /// timer's code, which reaches it — "nothing else that route runs reaches it" fails, and the route is one of its users
 /// (§2.9: "that route's own code delivering to it is no caller, but another node's code there calling it is") — and
 /// where it is not, the route delivering to it is no caller; the timer and the block it is bound to make one
-/// initialisation step of two members, and across the platform's composition no edge stands (§2.7).
+/// initialisation step of two members, and so do the timer and the platform composing it where each is bound to the
+/// other, a binding keeping its edge across composition (§2.7; round 16, R16-B2).
 fn own_route_through_its_provider() -> Vec<Case> {
     const TAKES: [Requires; 3] = [Requires::Nothing, Requires::Alarm, Requires::Deadline];
     const T_USES: [&[&str]; 4] = [&[], &["xfer"], &["cpu"], &["xfer", "cpu"]];
@@ -3445,6 +3457,269 @@ fn unserved_hardware_naming() -> Vec<Case> {
             cases.push(lowering(&sys, &other, false));
             cases.push(lowering(&other, &sys, true));
         }
+    }
+    cases
+}
+
+/// What a task of the own-sources universe uses: nothing, the handler `evt.a` of the source `dev.a`, the handler
+/// `evt.z` of the source `dev.z`, or both.
+const HANDLERS_USED: [&[&str]; 4] = [&[], &["evt.a"], &["evt.z"], &["evt.a", "evt.z"]];
+
+/// **Sporadic tasks and their own sources** (§2.2; round 16, R16-B1: "a sporadic task bound itself for
+/// `interrupt-source` is released by that source; the routes it reaches decide only where it binds none"): the
+/// sporadic task `t`, at 20 ms, bound itself for `interrupt-source` or not, and the sporadic task `u`, at 40 ms, binding
+/// none; `t` using one choice of [`HANDLERS_USED`] and `u` one of the first three; the sources `dev.z` and `dev.a`, each
+/// stating every class of [`SEPARATIONS`], declared in either order. Each handler is held to its own source by the
+/// power states it requires, `(available-in-state …)`, which only that source offers — a qualifier judged at every
+/// provider bound for the handler (model §8 rule 13); a task writes no constraint clause, so which source `t`'s own
+/// binding takes is the search's, read from the record. So a task's own source decides alone: beside another source's
+/// route it reaches, whether that one alone would release it every or leave it unknown; beside its own source's
+/// handler, that route naming a requester it reaches too; and a task binding none, beside it, is released by the routes
+/// it reaches.
+fn own_sources() -> Vec<Case> {
+    let mut cases = Vec::new();
+    for a_first in [false, true] {
+        for t_bound in [false, true] {
+            for t_uses in HANDLERS_USED {
+                for u_uses in &HANDLERS_USED[..3] {
+                    for z in SEPARATIONS {
+                        for a in SEPARATIONS {
+                            cases.push(own_sources_case(
+                                a_first,
+                                (t_bound, t_uses),
+                                u_uses,
+                                (z, a),
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    cases
+}
+
+fn own_sources_case(
+    a_first: bool,
+    (t_bound, t_uses): (bool, &[&str]),
+    u_uses: &[&str],
+    (z, a): (Separation, Separation),
+) -> Case {
+    let mut blocks = vec![
+        source_block("dev.z", z, "run idle"),
+        source_block("dev.a", a, "run sleep"),
+    ];
+    if a_first {
+        blocks.reverse();
+    }
+    let handler = |name: &str, states: &str| {
+        let mut evt = service(name, Counter::None, true, Vec::new());
+        evt.side
+            .other
+            .push(format!("(available-in-state {states})"));
+        evt
+    };
+    let services = [("evt.a", "run sleep"), ("evt.z", "run idle")]
+        .iter()
+        .filter(|(name, _)| t_uses.contains(name) || u_uses.contains(name))
+        .map(|(name, states)| handler(name, states))
+        .collect();
+    let sporadic = |name: &str, ms: u64, priority: u32, bound: bool, uses: &[&str]| Task {
+        name: name.to_string(),
+        release: Release::MinSeparation(Dur::Ms(ms)),
+        priority,
+        side: Side {
+            needs: if bound {
+                names(&[INTERRUPT_FACT])
+            } else {
+                Vec::new()
+            },
+            uses: names(uses),
+            ..Side::default()
+        },
+        ..Task::default()
+    };
+    Case {
+        label: format!(
+            "{} first; t {}uses {t_uses:?}; u uses {u_uses:?}; dev.z:{z:?} dev.a:{a:?}",
+            if a_first { "dev.a" } else { "dev.z" },
+            if t_bound {
+                "bound itself for interrupt-source, "
+            } else {
+                ""
+            },
+        ),
+        description: Description {
+            blocks,
+            services,
+            tasks: vec![
+                sporadic("t", 20, 1, t_bound, t_uses),
+                sporadic("u", 40, 2, false, u_uses),
+            ],
+            ..Description::default()
+        },
+    }
+}
+
+/// The names of the composition universe's platform and its two blocks, `[platform, block, block]`: each composite's
+/// text below its part's, or above it.
+const COMPOSITION_NAMES: [[&str; 3]; 2] = [["n.a", "n.m", "n.z"], ["n.z", "n.m", "n.a"]];
+
+/// What one declaration of the composition universe requires of the other two: nothing, the first's offer, the
+/// second's, or both.
+const OF_THE_OTHERS: [[bool; 2]; 4] = [[false, false], [true, false], [false, true], [true, true]];
+
+/// **A binding across composition** (§2.7; model §8 rule 12; round 16, R16-B2: "a binding keeps its edge, composition
+/// alone giving none"): the platform `P`, the system's, offering `core-count`; the block `B`, offering
+/// `transfer-engine`; and the block `C`, offering `debug-port`. `P` composes `B` and `C`, or `B` and, through `B`, `C`;
+/// each of the three requires each choice of [`OF_THE_OTHERS`] of the other two's offers, its only provider; and the
+/// three are named by one choice of [`COMPOSITION_NAMES`], each composite's text below its part's or above it. So a
+/// composite is bound to its part, its part to it, or both, directly and at depth, a platform and a block each the
+/// composite, under names whose order differs from the binding's: the edge a binding gives orders two steps where
+/// their texts would order them the other way, and a composite and its part bound each to the other are one step.
+fn bound_across_composition() -> Vec<Case> {
+    const OFFERS: [(&str, &str); 3] = [
+        ("core-count", "(core-count 1 tick)"),
+        ("transfer-engine", "(transfer-engine true)"),
+        ("debug-port", "(debug-port true)"),
+    ];
+    let mut cases = Vec::new();
+    for names_of in COMPOSITION_NAMES {
+        for deep in [false, true] {
+            for choice in 0..OF_THE_OTHERS.len().pow(3) {
+                let requires = |who: usize| -> Vec<String> {
+                    let wanted = OF_THE_OTHERS
+                        [choice / OF_THE_OTHERS.len().pow(u32::try_from(who).expect("small")) % 4];
+                    let others: Vec<usize> = (0..3).filter(|i| *i != who).collect();
+                    others
+                        .iter()
+                        .zip(wanted)
+                        .filter(|(_, wanted)| *wanted)
+                        .map(|(other, _)| OFFERS[*other].0.to_string())
+                        .collect()
+                };
+                let declared = |who: usize, uses: &[&str]| Block {
+                    name: names_of[who].to_string(),
+                    offers: names(&[OFFERS[who].1, "(reachable-at-privilege machine)"]),
+                    side: Side {
+                        needs: requires(who),
+                        uses: names(uses),
+                        ..Side::default()
+                    },
+                    ..Block::default()
+                };
+                let [p, b, c] = names_of;
+                let (p_uses, b_uses): (Vec<&str>, Vec<&str>) = if deep {
+                    (vec![b], vec![c])
+                } else {
+                    (vec![b, c], vec![])
+                };
+                cases.push(Case {
+                    label: format!(
+                        "{p} composes {p_uses:?}, {b} composes {b_uses:?}; {p} needs {:?}, {b} needs {:?}, {c} needs \
+                         {:?}",
+                        requires(0),
+                        requires(1),
+                        requires(2)
+                    ),
+                    description: Description {
+                        blocks: vec![declared(1, &b_uses), declared(2, &[])],
+                        platforms: vec![declared(0, &p_uses)],
+                        tasks: vec![Task::default()],
+                        platform: p.to_string(),
+                        ..Description::default()
+                    },
+                });
+            }
+        }
+    }
+    cases
+}
+
+/// What one requester of the obliged-bounds universe writes: no requirement, `(needs absolute-deadline)` with its
+/// instance's obliged `delivery-bound` bare, with a bound of 5 ms, or with one past the arithmetic.
+const DEADLINE_STATES: [Option<BoundState>; 4] = [
+    None,
+    Some(BoundState::Bare),
+    Some(BoundState::Within),
+    Some(BoundState::Past),
+];
+
+/// **The obliged bounds of every requester an instance serves** (§1, §2.4; round 16, R16-R1: the reading took "an
+/// obliged bound's requester among services, tasks and hardware, never the own level"): the system's own level, the
+/// service `dl` and the policy `pol` its task `t` uses, its platform `soc` and the block `blk` it composes, each
+/// writing one choice of [`DEADLINE_STATES`], each met by an exclusive `deadline-over-delay` instance over the one timer.
+/// So §1 names each bound past the arithmetic by its instance's text, the system's own level's among them, ahead of
+/// that level's expiry, which a bound within the arithmetic leaves the refusal of its receiver (§1); and a plan writes
+/// a platform's, a block's, a policy's and a service's bound on its instance's line.
+fn obliged_bounds_of_every_requester() -> Vec<Case> {
+    let options = DEADLINE_STATES.len();
+    let mut cases = Vec::new();
+    for choice in 0..options.pow(5) {
+        let pick = |who: u32| DEADLINE_STATES[choice / options.pow(who) % options];
+        let side = |state: Option<BoundState>| -> Side {
+            let mut side = Side::default();
+            if let Some(state) = state {
+                side.needs.push("absolute-deadline".to_string());
+                match state {
+                    BoundState::Bare => {}
+                    BoundState::Within => side
+                        .at_most
+                        .push(("delivery-bound".to_string(), Dur::Ms(DELIVERY_BOUND_MS))),
+                    BoundState::Past => side
+                        .at_most
+                        .push(("delivery-bound".to_string(), Dur::Spelled(PAST))),
+                }
+            }
+            side
+        };
+        let (own, dl, pol, soc, blk) = (pick(0), pick(1), pick(2), pick(3), pick(4));
+        let mut platform = Block {
+            name: "soc".to_string(),
+            offers: names(&["(core-count 1 tick)", "(reachable-at-privilege machine)"]),
+            side: side(soc),
+            ..Block::default()
+        };
+        platform.side.uses = names(&["timer.d", "blk"]);
+        cases.push(Case {
+            label: format!("own:{own:?} dl:{dl:?} pol:{pol:?} soc:{soc:?} blk:{blk:?}"),
+            description: Description {
+                blocks: vec![
+                    timer_block("timer.d", 5, true),
+                    Block {
+                        name: "blk".to_string(),
+                        offers: names(&[
+                            "(transfer-engine true)",
+                            "(reachable-at-privilege machine)",
+                        ]),
+                        side: side(blk),
+                        ..Block::default()
+                    },
+                ],
+                platforms: vec![platform],
+                services: vec![
+                    Service {
+                        name: "dl".to_string(),
+                        policy: false,
+                        side: side(dl),
+                    },
+                    Service {
+                        name: "pol".to_string(),
+                        policy: true,
+                        side: side(pol),
+                    },
+                ],
+                tasks: vec![Task {
+                    side: Side {
+                        uses: names(&["dl", "pol"]),
+                        ..Side::default()
+                    },
+                    ..Task::default()
+                }],
+                own: side(own),
+                ..Description::default()
+            },
+        });
     }
     cases
 }
@@ -4150,6 +4425,18 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             match bound {
                 Some(time) => {
                     classes.insert("instance: an obliged fact with its bound");
+                    let requester = requester.as_deref().expect("a bound's requester");
+                    if platforms.contains(requester) {
+                        classes.insert("instance: a platform's obliged bound");
+                    } else if hardware.contains_key(requester) {
+                        classes.insert("instance: a block's obliged bound");
+                    } else if description
+                        .services
+                        .iter()
+                        .any(|s| s.name == requester && s.policy)
+                    {
+                        classes.insert("instance: a policy's obliged bound");
+                    }
                     if time.d > u128::from(u64::MAX) {
                         classes.insert("exact: an obliged bound at the arithmetic's edge");
                     }
@@ -4277,10 +4564,13 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         }
     }
 
-    // §2.2, what releases each task: `timer` for a periodic task; for a task with a minimum separation, the external
-    // source whose route names the task or a requester it reaches, `(source NAME every)` "when the source's stated
-    // separation is at least the task's"; `unknown` otherwise — no source's route reaching it, several, a source
-    // stating no separation or declaring it absent, or one shorter than the task's. "A timer route releases no task."
+    // §2.2, what releases each task: `timer` for a periodic task; for a task with a minimum separation, "the source it
+    // is bound to itself for `interrupt-source` met by `true`, where it is bound to one ... and otherwise the external
+    // source whose route names the task or a requester it reaches" (round 16, R16-B1), `(source NAME every)` "when the
+    // source's stated separation is at least the task's"; `unknown` otherwise — "where the task binds no source itself
+    // and no source's route reaches it, or several do", a source stating no separation or declaring it absent, or one
+    // shorter than the task's. "A timer route releases no task." So the routes a task reaches decide only where it binds
+    // no source itself: its own source decides alone, whatever else reaches it.
     let mut released_by = BTreeMap::new();
     for task in &description.tasks {
         let trigger = match task.release {
@@ -4289,55 +4579,133 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                 let own = own
                     .seconds()
                     .expect("a separation past the arithmetic is refused before any plan (§1)");
+                // What the source `route` gives the task: its trigger, and the class of §2.2's rule it meets.
+                let decide = |route: &Route| -> (String, &'static str) {
+                    match separation_of(&route.provider) {
+                        Sep::Stated(time) if time >= own => (
+                            format!("(source {} every)", route.provider),
+                            if time == own {
+                                "trigger: every, equal separations"
+                            } else {
+                                "trigger: every, a longer separation"
+                            },
+                        ),
+                        Sep::Stated(_) => (
+                            "unknown".to_string(),
+                            "trigger: unknown, a shorter separation",
+                        ),
+                        Sep::Unstated => (
+                            "unknown".to_string(),
+                            "trigger: unknown, no separation stated",
+                        ),
+                        Sep::Absent => (
+                            "unknown".to_string(),
+                            "trigger: unknown, the separation absent",
+                        ),
+                        Sep::Past => panic!("refused before any plan (§1)"),
+                    }
+                };
                 let mut reached = reach(&edges, &task_text(task));
                 reached.insert(task_text(task));
                 let sources: Vec<&Route> = routes
                     .values()
                     .filter(|r| r.source && r.requesters.iter().any(|q| reached.contains(q)))
                     .collect();
-                let (trigger, class) = match sources.as_slice() {
-                    [one] => {
-                        if one.requesters.iter().any(|q| hardware.contains_key(q)) {
-                            classes.insert("trigger: a source a block or a platform handles");
-                        }
-                        match separation_of(&one.provider) {
-                            Sep::Stated(time) => {
-                                if past_128_bits(time, own) {
-                                    classes.insert("exact: a source's and a task's separations compared past 128 bits");
-                                }
-                                if time >= own {
-                                    (
-                                        format!("(source {} every)", one.provider),
-                                        if time == own {
-                                            "trigger: every, equal separations"
-                                        } else {
-                                            "trigger: every, a longer separation"
-                                        },
-                                    )
-                                } else {
-                                    (
-                                        "unknown".to_string(),
-                                        "trigger: unknown, a shorter separation",
-                                    )
-                                }
-                            }
-                            Sep::Unstated => (
-                                "unknown".to_string(),
-                                "trigger: unknown, no separation stated",
-                            ),
-                            Sep::Absent => (
-                                "unknown".to_string(),
-                                "trigger: unknown, the separation absent",
-                            ),
-                            Sep::Past => panic!("refused before any plan (§1)"),
+                // The source the task is bound to itself, for `interrupt-source` met by `true` (model §8 rule 2): one
+                // requirement, so one binding, at most.
+                let bound_itself: Vec<&Bind> = binds
+                    .iter()
+                    .filter(|b| {
+                        b.requester == task_text(task)
+                            && !is_instance(&b.provider)
+                            && relies_on_source(description, b)
+                    })
+                    .collect();
+                assert!(
+                    bound_itself.len() <= 1,
+                    "one requirement on `interrupt-source`, one binding"
+                );
+                let mut deciding: Option<&Route> = None;
+                let (trigger, class) = if let Some(own_source) = bound_itself.first() {
+                    let route = &routes[&format!("(source {})", own_source.provider)];
+                    classes.insert("trigger: its own source");
+                    let others: Vec<&&Route> = sources
+                        .iter()
+                        .filter(|r| r.provider != route.provider)
+                        .collect();
+                    let decided = decide(route);
+                    if others.is_empty() {
+                        classes.insert("trigger: its own source, no other reaching it");
+                    } else {
+                        classes.insert("trigger: its own source, beside another reaching it");
+                    }
+                    // Another alone would decide otherwise: the record's own source, never the routes.
+                    if let [other] = others.as_slice() {
+                        if decide(other).0 != decided.0 {
+                            classes.insert(if decided.0 == "unknown" {
+                                "trigger: its own source leaving it unknown, beside one that alone would release \
+                                 it every"
+                            } else {
+                                "trigger: its own source releasing it every, beside one that alone would leave it \
+                                 unknown"
+                            });
                         }
                     }
-                    [] => (
-                        "unknown".to_string(),
-                        "trigger: unknown, no source reaching it",
-                    ),
-                    _ => ("unknown".to_string(), "trigger: unknown, several sources"),
+                    if route
+                        .requesters
+                        .iter()
+                        .any(|q| *q != task_text(task) && reached.contains(q))
+                    {
+                        classes.insert(
+                            "trigger: its own source, reached through a requester its route names too",
+                        );
+                    }
+                    deciding = Some(route);
+                    decided
+                } else {
+                    // Beside another task bound to a source itself: this one, binding none, is released by the routes
+                    // it reaches, one of them that task's own source where it reaches its handler.
+                    let others_own: BTreeSet<&String> = binds
+                        .iter()
+                        .filter(|b| {
+                            b.requester.starts_with("(task ")
+                                && b.requester != task_text(task)
+                                && !is_instance(&b.provider)
+                                && relies_on_source(description, b)
+                        })
+                        .map(|b| &b.provider)
+                        .collect();
+                    if !others_own.is_empty() {
+                        classes
+                            .insert("trigger: binding none, beside a task bound to its own source");
+                        if sources.iter().any(|r| others_own.contains(&r.provider)) {
+                            classes.insert(
+                                "trigger: binding none, reaching the handler of another task's own source",
+                            );
+                        }
+                    }
+                    match sources.as_slice() {
+                        [one] => {
+                            if one.requesters.iter().any(|q| hardware.contains_key(q)) {
+                                classes.insert("trigger: a source a block or a platform handles");
+                            }
+                            deciding = Some(*one);
+                            decide(one)
+                        }
+                        [] => (
+                            "unknown".to_string(),
+                            "trigger: unknown, no source reaching it",
+                        ),
+                        _ => ("unknown".to_string(), "trigger: unknown, several sources"),
+                    }
                 };
+                if let Some(Sep::Stated(time)) = deciding.map(|r| separation_of(&r.provider)) {
+                    if past_128_bits(time, own) {
+                        classes.insert(
+                            "exact: a source's and a task's separations compared past 128 bits",
+                        );
+                    }
+                }
                 classes.insert(class);
                 trigger
             }
@@ -4505,14 +4873,15 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     lines.extend(contexts.into_iter().map(|(_, line)| line));
 
     // §2.7: the graph is `Joint::initialization`, model §8 rule 12: "An edge runs from a provider to each requester
-    // bound to it, except across composition, at any depth, or to itself, and from a service or policy to each that
-    // names it by `uses` or `needs`; each carries its reason", between nodes — "the system's own level ... and its
-    // tasks ... are none". Composition is a block's or a platform's `uses` alone (rule 1; rule 5: "names it through
-    // `uses`, at any depth through blocks and platforms, whose `uses` alone is composition"): a binding whose provider
-    // composes its requester, or whose requester composes its provider, makes no edge. §2.7: "an edge across
-    // composition, a `uses`, is none either, while one to a block a `needs` names stands (rule 12)". An instance
-    // composes nothing, and "the initialization graph keeps its edges, its device before it and it before its
-    // requesters" (rule 15). §2.7: "a block's or a platform's `uses` or `needs` giving none", no named edge; one naming
+    // bound to it, whatever composes what, but to itself — composition alone giving none (`M4.1.16`) — and from a
+    // service or policy to each that names it by `uses` or `needs`; each carries its reason", between nodes — "the
+    // system's own level ... and its tasks ... are none". §2.7: "a block's or a platform's `uses` or `needs` giving
+    // none, hardware's names never a call (§2); composition, a `uses`, gives no edge either, while a binding keeps its
+    // edge whatever composes what, a composite and its part each bound to the other being one component" (round 16,
+    // R16-B2). Composition is a block's or a platform's `uses` alone (rule 1; rule 5: "names it through `uses`, at any
+    // depth through blocks and platforms, whose `uses` alone is composition"): it gives no edge of its own, and takes
+    // none a binding gives. An instance composes nothing, and "the initialization graph keeps its edges, its device
+    // before it and it before its requesters" (rule 15). A block's or a platform's names make no named edge; one naming
     // anything but hardware is refused (§1).
     let composes = |from: &str| -> BTreeSet<String> {
         let mut reached = BTreeSet::new();
@@ -4539,16 +4908,34 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         named: bool,
     }
     let mut graph: BTreeMap<(String, String), Reasons> = BTreeMap::new();
+    // The edges a binding gives across composition, `(earlier, later)`: the provider before its requester.
+    let mut across: BTreeSet<(String, String)> = BTreeSet::new();
     for bind in binds {
         if nodes.contains(&bind.requester)
             && nodes.contains(&bind.provider)
             && bind.requester != bind.provider
         {
-            if composes(&bind.provider).contains(&bind.requester)
-                || composes(&bind.requester).contains(&bind.provider)
-            {
-                classes.insert("initialisation: no edge across composition");
-                continue;
+            let composite_bound = composes(&bind.requester).contains(&bind.provider);
+            let part_bound = composes(&bind.provider).contains(&bind.requester);
+            if composite_bound || part_bound {
+                across.insert((bind.provider.clone(), bind.requester.clone()));
+                let (composite, part) = if composite_bound {
+                    classes.insert("initialisation: a composite bound to its part, its edge kept");
+                    (&bind.requester, &bind.provider)
+                } else {
+                    classes.insert("initialisation: a part bound to its composite, its edge kept");
+                    (&bind.provider, &bind.requester)
+                };
+                if !hardware[composite].side.uses.contains(part) {
+                    classes.insert(
+                        "initialisation: an edge across composition at depth, through another part, kept",
+                    );
+                }
+                if !platforms.contains(composite) {
+                    classes.insert(
+                        "initialisation: a block composing a block, an edge across it kept",
+                    );
+                }
             }
             let by_needs = |a: &str, b: &str| {
                 hardware
@@ -4653,6 +5040,22 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         step += 1;
         lines.push(format!("(step {step} {})", ready.join(" ")));
         taken.extend(ready.iter().cloned());
+    }
+    // Round 16 (R16-B2): "a composite and its part each bound to the other being one component"; and an edge across
+    // composition between two components, its earlier node's text the greater, so that the texts alone would order the
+    // two the other way.
+    for (earlier, later) in &across {
+        if reached[earlier].contains(later) && reached[later].contains(earlier) {
+            if across.contains(&(later.clone(), earlier.clone())) {
+                classes.insert(
+                    "initialisation: a composite and its part bound each to the other, one component",
+                );
+            }
+        } else if earlier > later {
+            classes.insert(
+                "initialisation: an edge across composition ordering two steps unlike their texts",
+            );
+        }
     }
 
     // §2.9: "A node that takes a channel — a service, a policy, or a block or platform with requirements of its own;
@@ -4793,9 +5196,12 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         }
     }
     owe(system, "leaves-interrupt-hardware-alone", "application");
+    // "each node | `contexts`, `no-wait`, `runtime-discipline` | `realization`" — the last the composite-inputs record's
+    // §2 fact for the code the realization generates for it (round 16, R16-D3).
     for node in &nodes {
         owe(node, "contexts", "realization");
         owe(node, "no-wait", "realization");
+        owe(node, "runtime-discipline", "realization");
         if in_a_job.contains(node) {
             owe(node, "call-cost", "realization");
         }
@@ -5410,7 +5816,8 @@ fn name_order_classes(
     }) {
         classes.insert(pick(
             "naming: tasks' texts ordered unlike their names",
-            "operand: tasks' texts ordered unlike their names",
+            // §1's hardware-naming bullet names "a block or a platform the system serves", never a task.
+            "unreachable: a task among the namers of hardware naming what is not hardware, blocks and platforms alone",
         ));
     }
     if worded_otherwise(pairs, |(namer, named)| format!("`{namer}` names `{named}`")) {
@@ -5780,6 +6187,11 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
         .into_iter()
         .map(|b| (b.name.clone(), b))
         .collect();
+    let platforms: BTreeSet<String> = description
+        .platforms()
+        .into_iter()
+        .map(|p| p.name)
+        .collect();
     let mut past = Vec::new();
     for task in &by_index {
         if task.release.duration().seconds().is_none() {
@@ -5812,26 +6224,18 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
     });
     past.extend(sources);
     // "then the bounds by their instance's text and then the fact's": a set of pairs iterates by the first, then the
-    // second.
+    // second. An exclusive instance's requester is any requester it can serve (§2.4: "the requirement's value at that
+    // exclusive instance"; model §8 rule 1): a task, a service or a policy, a block or a platform, or the system's own
+    // level, "for what it writes at its own level outside its tasks" (round 16, R16-R1: the reading had looked among
+    // services, tasks and hardware alone).
     let mut bounds: BTreeSet<(String, String)> = BTreeSet::new();
+    let mut bounded_requesters: BTreeSet<&'static str> = BTreeSet::new();
     for instance in binds.iter().map(|b| &b.provider).filter(|p| is_instance(p)) {
         let instance_form = form(instance);
         let Some(requester) = items(&instance_form).get(3).map(text_of) else {
             continue;
         };
-        let side = description
-            .services
-            .iter()
-            .find(|s| s.name == requester)
-            .map(|s| s.side.clone())
-            .or_else(|| {
-                description
-                    .tasks
-                    .iter()
-                    .find(|t| task_text(t) == requester)
-                    .map(|t| t.side.clone())
-            })
-            .or_else(|| hardware.get(&requester).map(|b| b.side.clone()));
+        let side = side_of(description, &requester);
         for fact in kind_of(instance).obliged {
             if side.as_ref().is_some_and(|side| {
                 side.at_most
@@ -5839,6 +6243,21 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
                     .any(|(f, bound)| f == fact && bound.seconds().is_none())
             }) {
                 bounds.insert((instance.clone(), (*fact).to_string()));
+                bounded_requesters.insert(if requester == system {
+                    "past: an obliged bound of the system's own level"
+                } else if platforms.contains(&requester) {
+                    "past: an obliged bound of a platform"
+                } else if hardware.contains_key(&requester) {
+                    "past: an obliged bound of a block"
+                } else if description
+                    .services
+                    .iter()
+                    .any(|s| s.name == requester && s.policy)
+                {
+                    "past: an obliged bound of a policy"
+                } else {
+                    "past: an obliged bound of a service"
+                });
             }
         }
     }
@@ -5874,6 +6293,7 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
         if bounds_past > 0 {
             classes.insert("past: an obliged bound");
         }
+        classes.extend(bounded_requesters);
         if [tasks_past, sources_past, bounds_past]
             .iter()
             .filter(|n| **n > 0)
@@ -6540,7 +6960,19 @@ fn refusal_disagrees(due: &Due, refusal: &Refusal, description: &Description) ->
 /// false)` while a task of it needs `f`, and the checker (`archogen-plan-check`) refuses it. When `M3.4` reads the
 /// system's side whole, the search refuses these systems itself, this class empties, and the universes holding it move
 /// from judged to unresolved.
-const CHECKER_REFUSES: &str = "checker refuses: a system's side the search reads apart (M3.4)";
+///
+/// ⚠️ **Until then, these systems' outcomes are the lowering's without its third input** (round 16, R16-R2). The
+/// lowering takes "the configuration checker's result record, `archogen-result/1`, for that assignment and that
+/// program" (§1, its third input), whose intake is unbuilt (R16-R6: `M4.1.4`'s production half), so the harness lowers
+/// the record alone and the lowering is held to the reading on these systems, plan or refusal. Once the lowering reads
+/// the result record, the checker's refusal reaches it, and §1 refuses each of these systems before anything is
+/// lowered — "its status is not `ok`: `tool-failure`, naming both verdicts, the generator having accepted what the
+/// checker refused" — ahead of every refusal of the record's tasks and of every plan: the class's systems then move,
+/// in each universe holding it, from lowered or refused as the reading says to refused `tool-failure`, and this
+/// checker reads the result record with them.
+const CHECKER_REFUSES: &str =
+    "checker refuses: a system's side the search reads apart (M3.4); `tool-failure` once \
+                               the lowering reads the checker's result (§1)";
 
 /// The fact on which the lowered system's side, read whole — its own level's clauses and its tasks' (model §8 rule 1;
 /// §7 rule 4) — requires both `true` and `false`, a requirement `(needs f)` or `(f true)` beside `(f false)`.
@@ -6979,6 +7411,11 @@ fn releases_and_routes_of_every_separation_class() {
             "trigger: unknown, the separation absent",
             "trigger: unknown, no source reaching it",
             "trigger: unknown, several sources",
+            "trigger: its own source",
+            "trigger: its own source, no other reaching it",
+            "trigger: its own source, beside another reaching it",
+            "trigger: its own source leaving it unknown, beside one that alone would release it every",
+            "trigger: its own source releasing it every, beside one that alone would leave it unknown",
             "rank: two stated separations tied",
             "rank: every class in one system",
         ],
@@ -7093,7 +7530,8 @@ fn requiring_hardware_its_nodes_contexts_and_multiplexing() {
             "hardware: an expiry running its code",
             "hardware: a source's handler",
             "hardware: in an interrupt through a binding to it",
-            "initialisation: no edge across composition",
+            "initialisation: a composite bound to its part, its edge kept",
+            "initialisation: an edge across composition ordering two steps unlike their texts",
             "initialisation: an edge to a block or a platform bound for its own requirements",
             "multiplex: a block or a platform multiplexed",
             "multiplex: multiplexed by two jobs",
@@ -7242,7 +7680,8 @@ fn hardware_naming_what_is_not_hardware_refused_in_its_place() {
             "naming: a block or a platform naming a system",
             "hardware: a block's or a platform's `needs` naming a block",
             "hardware: what a node in a job names by `needs` is in none",
-            "initialisation: no edge across composition",
+            "initialisation: a composite bound to its part, its edge kept",
+            "initialisation: a block composing a block, an edge across it kept",
             "initialisation: an edge across a block's `needs` naming a block stands",
         ],
     );
@@ -7456,7 +7895,9 @@ fn a_provider_bound_to_the_node_taking_its_channel() {
             "hardware: an alarm it programs itself",
             "hardware: an expiry running its code",
             "initialisation: a component of several members",
-            "initialisation: no edge across composition",
+            "initialisation: a composite bound to its part, its edge kept",
+            "initialisation: a part bound to its composite, its edge kept",
+            "initialisation: a composite and its part bound each to the other, one component",
             "composition: a platform a task reaches through a binding",
         ],
     );
@@ -7488,7 +7929,8 @@ fn bound_to_a_timer_route_s_provider_by_a_binding_taking_no_channel() {
     // Held, not findings: the 64 whose own level writes `(relative-delay false)` beside a task needing `relative-delay`
     // (8 of the 18 choices of `t` and `u` the language accepts, 4 of `s`, 2 orders), whose record the configuration
     // checker refuses `invalid-description` — the search's defect, `M3.4`'s ([`CHECKER_REFUSES`]; model §7 rule 4, §8
-    // rule 1). Every other record it accepts; the lowering is held to the reading on these too.
+    // rule 1). Every other record it accepts; the lowering, which does not read the checker's result yet, is held to
+    // the reading on these too, and once it reads it they move to `tool-failure` (§1; R16-R2).
     assert_eq!(
         tally.classes.get(CHECKER_REFUSES),
         Some(&64),
@@ -7543,7 +7985,8 @@ fn a_periodic_task_bound_to_a_source_s_block_for_another_fact() {
     // Held, not findings: the 72 whose own level writes `(interrupt-source false)` beside `t` or `p` needing
     // `interrupt-source` (12 of the 16 choices of `t` and `p` the language accepts, 3 of `e`, 2 orders), whose record
     // the configuration checker refuses `invalid-description` — the search's defect, `M3.4`'s ([`CHECKER_REFUSES`];
-    // model §7 rule 4, §8 rule 1). Every other record it accepts; the lowering is held to the reading on these too.
+    // model §7 rule 4, §8 rule 1). Every other record it accepts; the lowering, which does not read the checker's
+    // result yet, is held to the reading on these too, and once it reads it they move to `tool-failure` (§1; R16-R2).
     assert_eq!(
         tally.classes.get(CHECKER_REFUSES),
         Some(&72),
@@ -7650,6 +8093,99 @@ fn hardware_the_lowered_system_does_not_serve_naming_what_is_not_hardware() {
             "naming: a block's `uses` naming a system",
             "naming: a block's `needs` naming a system",
             "naming: the lowered system itself named",
+        ],
+    );
+}
+
+#[test]
+fn sporadic_tasks_released_by_their_own_sources() {
+    let cases = own_sources();
+    // Which source is declared first; `t` bound itself or not; what `t` uses, of 4, and `u`, of 3; each of 2 sources'
+    // separations, of 6.
+    assert_eq!(cases.len(), 2 * 2 * 4 * 3 * 6 * 6);
+    let tally = run("own sources", &cases);
+    hold(
+        "own sources",
+        &tally,
+        (1_728, 1_728, 0, 0, 0),
+        &[
+            "trigger: its own source",
+            "trigger: its own source, no other reaching it",
+            "trigger: its own source, beside another reaching it",
+            "trigger: its own source leaving it unknown, beside one that alone would release it every",
+            "trigger: its own source releasing it every, beside one that alone would leave it unknown",
+            "trigger: its own source, reached through a requester its route names too",
+            "trigger: binding none, beside a task bound to its own source",
+            "trigger: binding none, reaching the handler of another task's own source",
+            "trigger: every, equal separations",
+            "trigger: every, a longer separation",
+            "trigger: unknown, a shorter separation",
+            "trigger: unknown, no separation stated",
+            "trigger: unknown, the separation absent",
+            "trigger: unknown, no source reaching it",
+            "trigger: unknown, several sources",
+            "rank: two stated separations tied",
+        ],
+    );
+}
+
+#[test]
+fn a_binding_keeps_its_edge_across_composition() {
+    let cases = bound_across_composition();
+    // 2 namings; `P` composing `C` itself or through `B`; what each of 3 declarations requires of the other two, of 4.
+    assert_eq!(cases.len(), 2 * 2 * 4usize.pow(3));
+    let tally = run("across composition", &cases);
+    hold(
+        "across composition",
+        &tally,
+        (256, 256, 0, 0, 0),
+        &[
+            "initialisation: a composite bound to its part, its edge kept",
+            "initialisation: a part bound to its composite, its edge kept",
+            "initialisation: a composite and its part bound each to the other, one component",
+            "initialisation: an edge across composition ordering two steps unlike their texts",
+            "initialisation: an edge across composition at depth, through another part, kept",
+            "initialisation: a block composing a block, an edge across it kept",
+            "initialisation: a component of several members",
+            "hardware: a block bound for requirements of its own",
+            "hardware: a platform bound for requirements of its own",
+            "hardware: requiring, and bound to by a requester",
+            "hardware: requiring, and bound to by nothing",
+        ],
+    );
+}
+
+#[test]
+fn every_requester_s_obliged_bound_named_past_the_arithmetic() {
+    let cases = obliged_bounds_of_every_requester();
+    // What each of 5 requesters writes, of 4.
+    assert_eq!(cases.len(), 4usize.pow(5));
+    let tally = run("obliged bounds", &cases);
+    // Lowered: the 81 where the system's own level requires no deadline and no bound lies past the arithmetic (3 choices
+    // of each of the 4 others). Every other refused: naming each bound past the arithmetic, where one is; else the
+    // system's own level, receiving its instance's expiry (§1).
+    hold(
+        "obliged bounds",
+        &tally,
+        (1_024, 81, 0, 0, 943),
+        &[
+            "refusal: a duration past the arithmetic",
+            "past: an obliged bound",
+            "past: an obliged bound of the system's own level",
+            "past: an obliged bound of a service",
+            "past: an obliged bound of a policy",
+            "past: an obliged bound of a platform",
+            "past: an obliged bound of a block",
+            "past: several, named in order",
+            "receivers: an expiry",
+            "receivers: the system's own level alone",
+            "instance: an obliged fact with its bound",
+            "instance: an obliged fact bare",
+            "instance: a platform's obliged bound",
+            "instance: a block's obliged bound",
+            "instance: a policy's obliged bound",
+            "hardware: an expiry running its code",
+            "context: an expiry running its requester",
         ],
     );
 }

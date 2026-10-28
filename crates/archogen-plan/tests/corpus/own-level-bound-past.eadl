@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+; The system's own level's obliged bound past the exact arithmetic: the bound named, before the receivers (§1;
+; round 16, D2, R1).
+(defblock timer.d
+  (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+    (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc.d (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d)))
+(defsystem op
+  (task x (period 25 ms) (deadline 25 ms) (deadline-from release) (priority 1))
+  (requires (absolute-deadline (delivery-bound (at-most 0.00000000000000000000000000000000000001 ns))))
+  (platform (uses soc.d)))

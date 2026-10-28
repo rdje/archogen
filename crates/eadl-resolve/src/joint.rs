@@ -1566,8 +1566,8 @@ impl<'v> Joint<'v> {
     /// requesters it serves — closed over bindings, so an adapter's or a block's own bindings count — the services and
     /// policies it serves, and each block or platform it serves that is bound for requirements of its own, a requester
     /// whose code an interrupt can run (`docs/decisions/decision_runtime-plan.md` §2, leaf `M4.1.15`); its edges run from
-    /// a provider to each requester bound to it, except across composition or to itself, and from a used service or
-    /// policy to each that names it. Nothing is refused.
+    /// a provider to each requester bound to it, whatever composes what, but to itself, and from a used service or
+    /// policy to each that names it. Nothing is refused (composition alone gives no edge, leaf `M4.1.16`).
     #[must_use]
     pub fn initialization(&self, system: &System, assignment: &[Binding]) -> Initialization {
         let system = &self.serving(system, assignment);
@@ -1625,11 +1625,7 @@ impl<'v> Joint<'v> {
             .filter(|b| active.contains(b.requester.as_str()))
         {
             let (from, to) = (b.provider.as_str(), b.requester.as_str());
-            if nodes.contains_key(to)
-                && from != to
-                && !self.composes(from, to)
-                && !self.composes(to, from)
-            {
+            if nodes.contains_key(to) && from != to {
                 edges.insert((
                     from.to_string(),
                     to.to_string(),

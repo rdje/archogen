@@ -31,9 +31,11 @@
 (owed console.uart call-cost (by realization))
 (owed console.uart contexts (by realization))
 (owed console.uart no-wait (by realization))
+(owed console.uart runtime-discipline (by realization))
 (owed console.write call-cost (by realization))
 (owed console.write contexts (by realization))
 (owed console.write no-wait (by realization))
+(owed console.write runtime-discipline (by realization))
 (complete no)
 == system c
 refused tool-failure: `(task c u)` names the system `a`: a system is no thing to use, and the description check accepted it, which `M1.46` makes it refuse

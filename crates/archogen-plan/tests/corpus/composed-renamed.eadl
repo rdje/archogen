@@ -1,0 +1,9 @@
+(eadl-version eadl/1)
+; `composed-soc` with the timer renamed `a.timer`: the order holds, whatever the names (§2.7; round 16, B2).
+(defblock a.timer (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses a.timer) (needs relative-delay)))
+(defsystem pc
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (platform (uses soc)))

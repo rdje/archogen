@@ -361,3 +361,34 @@ fn a_cascade_reaches_two_sources_routes_and_its_release_is_unknown() {
         assert!(plan.contains(line), "{line}{plan}");
     }
 }
+
+#[test]
+fn a_sporadic_task_bound_to_its_own_source_is_released_by_it() {
+    // Round 16 (R16-B1): task `s` is bound itself for `interrupt-source` to `dev.a` and uses `evt`, the handler of
+    // `dev.b`. Its own binding names its source; the routes it reaches decide only where it binds none (§2.2).
+    let description = "(eadl-version eadl/1)
+(defblock dev.a
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defblock dev.b
+  (offers (interrupt-source true) (min-arrival-separation 30 ms) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.a dev.b)))
+(defservice evt
+  (requires (needs interrupt-source)))
+(defsystem os
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs interrupt-source) (uses evt))
+  (platform (uses soc)))
+";
+    let plan = lowered_record(
+        description,
+        "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system os)\n(program \"PROGRAM\")\n\
+         (adapters adapters/1)\n(bind evt interrupt-source dev.b)\n(bind (task os s) interrupt-source dev.a)\n",
+    )
+    .expect("lowered");
+    assert!(
+        plan.contains("(released-by (source dev.a every))"),
+        "{plan}"
+    );
+    assert!(!plan.contains("(owed (task os s) trigger"), "{plan}");
+}

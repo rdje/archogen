@@ -1,0 +1,10 @@
+(eadl-version eadl/1)
+; A platform raising a source whose separation lies past the exact arithmetic: refused, naming it (§1; round 16, D2).
+(defplatform soc.s
+  (offers (core-count 1 tick) (interrupt-source true)
+    (min-arrival-separation 0.00000000000000000000000000000000000001 ns) (reachable-at-privilege machine)))
+(defservice evt
+  (requires (needs interrupt-source)))
+(defsystem ps
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt))
+  (platform (uses soc.s)))

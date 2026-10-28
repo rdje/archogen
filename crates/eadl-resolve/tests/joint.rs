@@ -1614,8 +1614,10 @@ fn a_system_s_initialization_graph_runs_from_providers_and_used_services_to_thei
 }
 
 #[test]
-fn a_composite_and_its_part_binding_each_other_make_no_edge() {
-    // Review D1: a well-formed board whose platform needs its timer's counter and whose timer needs the bus.
+fn a_composite_and_its_part_binding_each_other_are_one_component() {
+    // `M3.3.7`'s review D1: a well-formed board whose platform needs its timer's counter and whose timer needs the bus.
+    // Its answer dropped both edges while a cycle was refused; a cycle is one component since its D3, so the bindings
+    // keep their edges and the board is one unit (leaf `M4.1.16`).
     let v = vocabulary();
     let text = "(defblock timer (offers (counter-width 32 bit)) (requires (needs bus-width)))
 (defplatform soc (offers (bus-width 32 bit) (core-count 1 tick))
@@ -1631,7 +1633,28 @@ fn a_composite_and_its_part_binding_each_other_make_no_edge() {
             ("timer".to_string(), Node::Provider)
         ]
     );
-    assert!(g.edges.is_empty(), "{:?}", g.edges);
+    assert_eq!(
+        g.edges,
+        [
+            edge("soc", "timer", bound("bus-width")),
+            edge("timer", "soc", bound("counter-width")),
+        ]
+    );
+    assert_eq!(g.components, [vec!["soc".to_string(), "timer".to_string()]]);
+}
+
+#[test]
+fn a_composite_bound_to_its_part_comes_after_it() {
+    // Leaf `M4.1.16`: a platform bound to the timer it composes is initialised after it, whatever their names — a
+    // binding's edge holds across composition, and composition alone gives none.
+    let v = vocabulary();
+    let text = "(defblock timer (offers (counter-width 32 bit)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses timer) (needs counter-width)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (platform (uses soc)))";
+    let g = graph(text, &["timer", "soc"], &v);
+    assert_eq!(g.edges, [edge("timer", "soc", bound("counter-width"))]);
     assert!(g.components.is_empty());
 }
 
