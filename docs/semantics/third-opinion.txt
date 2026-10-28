@@ -1,7 +1,12 @@
 # docs/semantics/third-opinion.txt — per document, whether archogen's reader and LinkedSpec's SExprDocumentV1
 # recognizer agree on its forms (leaf M1.22). Written by scripts/third_opinion.sh --bless; checked by it.
+agree crates/archogen-plan/tests/corpus/block-alarm-unbound.eadl
+agree crates/archogen-plan/tests/corpus/block-expiry-bound.eadl
+agree crates/archogen-plan/tests/corpus/block-expiry-unbound.eadl
 agree crates/archogen-plan/tests/corpus/block-requires-alarm.eadl
 agree crates/archogen-plan/tests/corpus/block-requires-output.eadl
+agree crates/archogen-plan/tests/corpus/block-source-unbound.eadl
+agree crates/archogen-plan/tests/corpus/block-uses-service.eadl
 agree crates/archogen-plan/tests/corpus/both-kinds-adapter.eadl
 agree crates/archogen-plan/tests/corpus/both-kinds.eadl
 agree crates/archogen-plan/tests/corpus/both-release.eadl
@@ -41,11 +46,16 @@ agree crates/archogen-plan/tests/corpus/no-task.eadl
 agree crates/archogen-plan/tests/corpus/nosep-source.eadl
 agree crates/archogen-plan/tests/corpus/one-user-alarm.eadl
 agree crates/archogen-plan/tests/corpus/other-route-caller.eadl
+agree crates/archogen-plan/tests/corpus/other-system-names-system.eadl
 agree crates/archogen-plan/tests/corpus/own-route-caller.eadl
 agree crates/archogen-plan/tests/corpus/own-route-instance-caller.eadl
+agree crates/archogen-plan/tests/corpus/past-order.eadl
 agree crates/archogen-plan/tests/corpus/period-hz.eadl
 agree crates/archogen-plan/tests/corpus/periodic-source.eadl
 agree crates/archogen-plan/tests/corpus/placement.eadl
+agree crates/archogen-plan/tests/corpus/platform-alarm-composed.eadl
+agree crates/archogen-plan/tests/corpus/platform-expiry.eadl
+agree crates/archogen-plan/tests/corpus/platform-source-composes.eadl
 agree crates/archogen-plan/tests/corpus/platform-source.eadl
 agree crates/archogen-plan/tests/corpus/policy-alarm.eadl
 agree crates/archogen-plan/tests/corpus/policy-expiry.eadl
@@ -59,6 +69,7 @@ agree crates/archogen-plan/tests/corpus/receivers-system-and-task.eadl
 agree crates/archogen-plan/tests/corpus/receivers-two-alarms.eadl
 agree crates/archogen-plan/tests/corpus/receivers-two-timers.eadl
 agree crates/archogen-plan/tests/corpus/region-hosted.eadl
+agree crates/archogen-plan/tests/corpus/service-alarm-two-tasks.eadl
 agree crates/archogen-plan/tests/corpus/shapes.eadl
 agree crates/archogen-plan/tests/corpus/shared-ext.eadl
 agree crates/archogen-plan/tests/corpus/slash-alarm.eadl
@@ -70,10 +81,13 @@ agree crates/archogen-plan/tests/corpus/slash-source.eadl
 agree crates/archogen-plan/tests/corpus/slash-unreached.eadl
 agree crates/archogen-plan/tests/corpus/small-durations.eadl
 agree crates/archogen-plan/tests/corpus/source-hz.eadl
+agree crates/archogen-plan/tests/corpus/source-separation-bare.eadl
+agree crates/archogen-plan/tests/corpus/source-separation-overflow.eadl
 agree crates/archogen-plan/tests/corpus/source-separation-past-arithmetic.eadl
 agree crates/archogen-plan/tests/corpus/sporadic-alarm-only.eadl
 agree crates/archogen-plan/tests/corpus/sporadic-and-alarm.eadl
 agree crates/archogen-plan/tests/corpus/sporadic-only.eadl
+agree crates/archogen-plan/tests/corpus/sporadic-through-block.eadl
 agree crates/archogen-plan/tests/corpus/sporadic.eadl
 agree crates/archogen-plan/tests/corpus/sys-alarm.eadl
 agree crates/archogen-plan/tests/corpus/sys-deadline.eadl
@@ -85,6 +99,7 @@ agree crates/archogen-plan/tests/corpus/task-alarm.eadl
 agree crates/archogen-plan/tests/corpus/task-direct.eadl
 agree crates/archogen-plan/tests/corpus/task-extender.eadl
 agree crates/archogen-plan/tests/corpus/task-policy.eadl
+agree crates/archogen-plan/tests/corpus/task-reaches-platform.eadl
 agree crates/archogen-plan/tests/corpus/task-source.eadl
 agree crates/archogen-plan/tests/corpus/task-uses-block.eadl
 agree crates/archogen-plan/tests/corpus/tightest-bound.eadl

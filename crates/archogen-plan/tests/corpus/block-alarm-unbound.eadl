@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+; A block requiring a timer's channel that nothing binds to: a node, its own alarm's interrupt running its code (§2,
+; §2.6; `M4.1.15`, round 12, D1).
+(defblock timer.d (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine)))
+(defblock dma.x
+  (offers (reachable-at-privilege machine))
+  (requires (needs relative-delay)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d dma.x)))
+(defsystem bu
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (platform (uses soc)))

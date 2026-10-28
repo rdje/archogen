@@ -448,6 +448,7 @@ pub fn lower(
     let mut naming_systems: Vec<String> = rebuilt
         .requesters
         .iter()
+        .filter(|r| rebuilt.system.serves(&r.name))
         .flat_map(|r| {
             r.uses
                 .iter()
@@ -485,6 +486,15 @@ pub fn lower(
         {
             Some(format!("`(source {provider})` states a separation"))
         }
+        // Spellings whose comparison overflows: the fact is past the arithmetic at its provider (relation record §5).
+        Obligation::Route {
+            provider,
+            interrupt:
+                Interrupt::Source {
+                    separation: Some(State::Overflow),
+                },
+            ..
+        } => Some(format!("`(source {provider})` states a separation")),
         _ => None,
     });
     let mut past_sources: Vec<String> = past_sources.collect();
@@ -509,6 +519,11 @@ pub fn lower(
                         offer.fact
                     ))
                 }
+                Some(State::Overflow) => Some(format!(
+                    "`{}` is obliged to a `{}`",
+                    assignment::instance_text(instance, system_text),
+                    offer.fact
+                )),
                 _ => None,
             })
     });
@@ -587,8 +602,14 @@ pub fn lower(
     };
 
     // §2: reaching — what a requester names by `uses` or `needs`, and what it is bound to as its provider, at any depth.
+    let hardware = |name: &str| {
+        declarations.iter().any(|d| {
+            matches!(d.head(), Some("defblock" | "defplatform"))
+                && d.items().get(1).and_then(Form::as_symbol) == Some(name)
+        })
+    };
     let mut direct: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    for r in &rebuilt.requesters {
+    for r in rebuilt.requesters.iter().filter(|r| !hardware(&r.name)) {
         direct
             .entry(r.name.clone())
             .or_default()
@@ -1082,7 +1103,11 @@ pub fn lower(
     let channels: Vec<&Binding> = rebuilt
         .bindings
         .iter()
-        .filter(|b| service_or_policy(&b.requester) && takes_a_channel(&b.requirement, vocabulary))
+        .filter(|b| {
+            nodes.contains(&b.requester)
+                && !names.instances.contains_key(b.requester.as_str())
+                && takes_a_channel(&b.requirement, vocabulary)
+        })
         .collect();
     let users = |node: &str| {
         // Its own channels' timer routes: at the provider it binds, or the one its instance programs.

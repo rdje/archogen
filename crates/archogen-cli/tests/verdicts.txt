@@ -1,8 +1,13 @@
 # The frozen verdict of every description in this repository (leaf `PROGRAM.6.2`).
 # <exit code of `archogen check`> <its diagnostic codes, sorted, or -> <path>
 # Regenerated deliberately: ARCHOGEN_BLESS_VERDICTS=1 cargo test -p archogen-cli --test verdicts
+0 - crates/archogen-plan/tests/corpus/block-alarm-unbound.eadl
+0 - crates/archogen-plan/tests/corpus/block-expiry-bound.eadl
+0 - crates/archogen-plan/tests/corpus/block-expiry-unbound.eadl
 0 - crates/archogen-plan/tests/corpus/block-requires-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/block-requires-output.eadl
+0 - crates/archogen-plan/tests/corpus/block-source-unbound.eadl
+0 - crates/archogen-plan/tests/corpus/block-uses-service.eadl
 0 - crates/archogen-plan/tests/corpus/both-kinds-adapter.eadl
 0 - crates/archogen-plan/tests/corpus/both-kinds.eadl
 0 - crates/archogen-plan/tests/corpus/both-release.eadl
@@ -42,11 +47,16 @@
 0 - crates/archogen-plan/tests/corpus/nosep-source.eadl
 0 - crates/archogen-plan/tests/corpus/one-user-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/other-route-caller.eadl
+0 - crates/archogen-plan/tests/corpus/other-system-names-system.eadl
 0 - crates/archogen-plan/tests/corpus/own-route-caller.eadl
 0 - crates/archogen-plan/tests/corpus/own-route-instance-caller.eadl
+0 - crates/archogen-plan/tests/corpus/past-order.eadl
 0 - crates/archogen-plan/tests/corpus/period-hz.eadl
 0 - crates/archogen-plan/tests/corpus/periodic-source.eadl
 0 - crates/archogen-plan/tests/corpus/placement.eadl
+0 - crates/archogen-plan/tests/corpus/platform-alarm-composed.eadl
+0 - crates/archogen-plan/tests/corpus/platform-expiry.eadl
+0 - crates/archogen-plan/tests/corpus/platform-source-composes.eadl
 0 - crates/archogen-plan/tests/corpus/platform-source.eadl
 0 - crates/archogen-plan/tests/corpus/policy-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/policy-expiry.eadl
@@ -60,6 +70,7 @@
 0 - crates/archogen-plan/tests/corpus/receivers-two-alarms.eadl
 0 - crates/archogen-plan/tests/corpus/receivers-two-timers.eadl
 0 - crates/archogen-plan/tests/corpus/region-hosted.eadl
+0 - crates/archogen-plan/tests/corpus/service-alarm-two-tasks.eadl
 0 - crates/archogen-plan/tests/corpus/shapes.eadl
 0 - crates/archogen-plan/tests/corpus/shared-ext.eadl
 0 - crates/archogen-plan/tests/corpus/slash-alarm.eadl
@@ -71,10 +82,13 @@
 0 - crates/archogen-plan/tests/corpus/slash-unreached.eadl
 0 - crates/archogen-plan/tests/corpus/small-durations.eadl
 0 - crates/archogen-plan/tests/corpus/source-hz.eadl
+0 - crates/archogen-plan/tests/corpus/source-separation-bare.eadl
+0 - crates/archogen-plan/tests/corpus/source-separation-overflow.eadl
 0 - crates/archogen-plan/tests/corpus/source-separation-past-arithmetic.eadl
 0 - crates/archogen-plan/tests/corpus/sporadic-alarm-only.eadl
 0 - crates/archogen-plan/tests/corpus/sporadic-and-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/sporadic-only.eadl
+0 - crates/archogen-plan/tests/corpus/sporadic-through-block.eadl
 0 - crates/archogen-plan/tests/corpus/sporadic.eadl
 0 - crates/archogen-plan/tests/corpus/sys-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/sys-deadline.eadl
@@ -86,6 +100,7 @@
 0 - crates/archogen-plan/tests/corpus/task-direct.eadl
 0 - crates/archogen-plan/tests/corpus/task-extender.eadl
 0 - crates/archogen-plan/tests/corpus/task-policy.eadl
+0 - crates/archogen-plan/tests/corpus/task-reaches-platform.eadl
 0 - crates/archogen-plan/tests/corpus/task-source.eadl
 0 - crates/archogen-plan/tests/corpus/task-uses-block.eadl
 0 - crates/archogen-plan/tests/corpus/tightest-bound.eadl

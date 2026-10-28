@@ -1,4 +1,4 @@
 == system inner
-refused tool-failure: `(task outer o)` names the system `inner`; `(task outer p)` names the system `inner`: a system is no thing to use, and the description check accepted it, which `M1.46` makes it refuse
+refused unsupported-profile: `inner` programs an alarm at `timer.d` itself: no context runs a job's code in an interrupt, and how a job receives an alarm it programs itself or an expiry, and what the system's own level's requirement for either means, are `M4.1.6`'s
 == system outer
 refused tool-failure: `(task outer o)` names the system `inner`; `(task outer p)` names the system `inner`: a system is no thing to use, and the description check accepted it, which `M1.46` makes it refuse

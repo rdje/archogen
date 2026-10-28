@@ -211,13 +211,28 @@ impl System {
     pub fn read(decl: &Form, declarations: &[Form]) -> Self {
         let declared: BTreeMap<&str, &Form> =
             declarations.iter().map(|d| (name_of(d), d)).collect();
+        // Another system named is reached for its own level alone, never its tasks, which are that system's requesters
+        // (model §8 rule 7's "a declaration its closure reaches"; `M1.46` refuses the name).
+        let own_level = |system: &Form| Form::List {
+            items: system
+                .items()
+                .iter()
+                .filter(|item| item.head() != Some("task"))
+                .cloned()
+                .collect(),
+            span: system.span(),
+        };
         let mut reached = BTreeSet::new();
-        let mut todo = vec![decl];
+        let mut todo: Vec<Form> = vec![decl.clone()];
         while let Some(at) = todo.pop() {
-            for name in named_by(at) {
+            for name in named_by(&at) {
                 if let Some(next) = declared.get(name) {
                     if reached.insert(name.to_string()) {
-                        todo.push(next);
+                        todo.push(if next.head() == Some("defsystem") {
+                            own_level(next)
+                        } else {
+                            (*next).clone()
+                        });
                     }
                 }
             }

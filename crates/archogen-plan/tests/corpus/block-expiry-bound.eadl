@@ -1,0 +1,15 @@
+(eadl-version eadl/1)
+; The same block bound to by a service two tasks use: a node, multiplexed, taking a channel through its instance
+; (§2.9; round 12, D3).
+(defblock timer.d
+  (offers (relative-delay true) (counter-modulus 65536) (tick-rate 10 MHz) (observation-coherent true)
+    (channels 2 tick) (reachable-at-privilege machine)))
+(defblock dma.x
+  (offers (observable-output true) (reachable-at-privilege machine))
+  (requires (needs absolute-deadline)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d dma.x)))
+(defservice out (requires (needs observable-output)))
+(defsystem bb
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses out))
+  (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses out))
+  (platform (uses soc)))
