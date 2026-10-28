@@ -508,6 +508,40 @@ within a receiver is reached by no resolved system; it holds as stated. The chec
 and its reading apart once, and the record sided with the code: a system named serves what it writes at its own level,
 its `platform` clause included (model §8 rules 1 and 7), which §1 now says.
 
+## Round 15 — `2026-10-28`: not acceptable, 13 findings
+
+The first round to find the code faithful everywhere: every defect is in the record's text. Every test green, the
+bounded checker's totals true — 110,144 systems, 109,678 records the configuration checker accepted, no disagreement —
+and every hand-off quoted word for word. 4 defects and 9 remarks: a sentence of round 14's answer, two refusals stated
+apart from the binding §2.6 reads, and two hand-offs written in prose, which no check sees.
+
+**Fence.** No breach.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R15-D1 | defect | §2's "nor is a block or a platform … bound for nothing" makes the heartbeat's `console.uart`, a provider, no node | Such hardware is a node only as a provider a binding names |
+| R15-D2 | defect | the receivers' "bound to its provider itself" and the periodic task's "bound to an interrupt source itself" name no fact, where the code, §2.6 and model §8 rule 2 read one | A binding that takes a channel, as §2.6 reads it; a binding for `interrupt-source` met by `true`; the probes fixtures (`M4.1.4`) |
+| R15-D3 | defect | §1 credits `M4.10` with verifying routes, multiplexing and initialisation, `M3.5` says `M4.4`, and neither holds it | `RTP-H13` to `M4.10`; `M3.5`'s owner line corrected |
+| R15-D4 | defect | §1 says `M1.47` writes the reading into the model, and its goal does not | `M1.47`'s goal writes model §8 rules 1 and 7, carried as `RTP-H18` |
+| R15-R1 | remark | the joint rules' findings have no stated order | Conflicts, unknowns, the map's refusals and unknowns, each in the joint rules' order (§1) |
+| R15-R2 | remark | the naming-system refusal takes what the system serves, the hardware refusal everything | Both take what the system serves, as the bullet over tasks does (§1, `M4.1.4`); `M4.1.13` reopened |
+| R15-R3 | remark | the users rule's outer comment still reads "a service or a policy" | Corrected (`M4.1.4`) |
+| R15-R4 | remark | §2.5 credits rule 8 with "and kind" | Attributed to `joint.rs`; `M4.1.2` writes it into the rule |
+| R15-R5 | remark | four reading branches no universe reaches: a platform naming a system by `uses` or `needs`, a job-context node naming another by `needs` | `M4.1.13` reopened |
+| R15-R6 | remark | three agreeing cases unfixtured | Added (`M4.1.4`) |
+| R15-R7 | remark | §2.7's one-step components were justified for services, not re-derived for hardware and instances | Re-derived: an alarm is run-time work, initialisation waits on no interrupt (§2.7) |
+| R15-R8 | remark | How to apply names `.2` to `.7` alone | The leaves from `.8` on named |
+| R15-R9 | remark | `rebuild` keeps a placement's region, not its provider | Kept for `M4.1.7` (below) |
+
+Better decisions, taken: every hand-off to a leaf beyond `M4.1` in the ledger — `RTP-H13` to `RTP-H18`, the language
+leaves `M1.42`, `M1.43`, `M1.45`, `M1.46` and `M1.47` among them — so that `HANDOFF-LEDGER` holds each
+(`decision_executable-design-reviews.md` item 4); §1's two refusals stated by the binding §2.6 and model §8 rule 2
+read, never restated (its item 5). The scope taken for R15-R2 is the narrower of the two the reviewer offered: §1's
+bullet over tasks already takes only the system's own, and a plan refuses only what reaches it.
+
+Round 14's answers: R14-D2 not held (R15-D1); R14-D3 partly, `M1.47`'s goal (R15-D4); R14-R4 partly (R15-R3); the
+rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
@@ -529,6 +563,7 @@ transcript:
   the cursor; tables carry `(guard 0)`; an owed unit makes every later unit owed; the cursor only descends.
 - **The interrupt stack** (R3-11): the largest service's stack use plus the fault path's use and one more trap frame,
   the fault path owed to the switch record.
+- **The placement's provider** (R15-R9): `eadl_resolve::plan::rebuild` keeps a placement's region and not its provider; `/2`, which writes placement, needs both.
 - **The memory section** (R3-18): written where a target is given, or the system has placement memory.
 - **The catalog's numbers** (R3-R6): their records in the identity, and each number's origin and evidence category, as
   §7.3 asks of every bound.
