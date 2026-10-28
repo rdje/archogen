@@ -20,6 +20,8 @@
 (obligation route (source dev.f) (discharged-by M4.2 M4.3))
 (owed (source dev.f) acknowledge-point (by realization))
 (owed (source dev.f) deferred-work (by realization))
+(owed (source dev.f) no-application-code (by realization))
+(owed (source dev.f) one-request-per-arrival (by realization))
 (owed (source dev.f) service-cost (by realization))
 (owed (task fs s) entry-point (by application))
 (owed (task fs s) execution-bound (by application))

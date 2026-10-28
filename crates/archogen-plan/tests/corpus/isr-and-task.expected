@@ -30,6 +30,8 @@
 (obligation route (timer-route timer.d) (discharged-by M4.2 M4.3))
 (owed (source dev.e) acknowledge-point (by realization))
 (owed (source dev.e) deferred-work (by realization))
+(owed (source dev.e) no-application-code (by realization))
+(owed (source dev.e) one-request-per-arrival (by realization))
 (owed (source dev.e) service-cost (by realization))
 (owed (task it p) entry-point (by application))
 (owed (task it p) execution-bound (by application))

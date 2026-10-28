@@ -1,2 +1,2 @@
 == system sd
-refused unsupported-profile: `(adapter deadline-over-delay timer.delay sd)` delivers an expiry to `sd`, and how a job receives an expiry is `M4.1.6`'s
+refused unsupported-profile: `(adapter deadline-over-delay timer.delay sd)` delivers an expiry to `sd`, and what the system's own level's requirement for an expiry means is `M4.1.6`'s

@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; `alarm` programs its alarm at `timer.d` and uses `helper`, which uses `alarm` back: its own route runs `helper`,
+; which calls it, so with task `t` it has two users (§2.9; round 10, D1).
+(defblock timer.d
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d)))
+(defservice alarm (requires (needs relative-delay) (uses helper)))
+(defservice helper (requires (uses alarm)))
+(defsystem cy
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (platform (uses soc)))

@@ -42,6 +42,8 @@
 (owed (adapter epoch-extender dev.x) no-wait (by realization))
 (owed (source dev.x) acknowledge-point (by realization))
 (owed (source dev.x) deferred-work (by realization))
+(owed (source dev.x) no-application-code (by realization))
+(owed (source dev.x) one-request-per-arrival (by realization))
 (owed (source dev.x) service-cost (by realization))
 (owed (task kb s) entry-point (by application))
 (owed (task kb s) execution-bound (by application))

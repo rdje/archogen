@@ -29,6 +29,8 @@
 (obligation route (timer-route hw.timer.d) (discharged-by M4.2 M4.3))
 (owed (source hw.dev.e) acknowledge-point (by realization))
 (owed (source hw.dev.e) deferred-work (by realization))
+(owed (source hw.dev.e) no-application-code (by realization))
+(owed (source hw.dev.e) one-request-per-arrival (by realization))
 (owed (source hw.dev.e) service-cost (by realization))
 (owed (task app p) entry-point (by application))
 (owed (task app p) execution-bound (by application))

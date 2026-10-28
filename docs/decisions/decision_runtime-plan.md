@@ -226,7 +226,9 @@ timer route and a source, and a block may be named `timer`:
        included, which the analysis refuses (its condition 3) and `M1.45` has the language refuse; `absent` where it
        declares the fact absent; or `unknown` where it states none, owed to the description. Its service
        cost, its acknowledge point and the work it defers are the variant's other inputs for a source, owed by the
-       realization that serves it.
+       realization that serves it, with the code facts the composition reads of that service: whether it runs
+       application code, and that each arrival makes one request (the composite-inputs record §1 and §2). Whether the
+       source reaches the processor through the controller, its `external`, is the simulator's (`RTP-H9`).
 
      Each route has the level it is delivered at, the profile's caller level, and is declared **deliverable**, as the
      composite-inputs record asks of "every declared source" (`crates/rt-analysis/src/compose.rs` reads it).
@@ -379,7 +381,7 @@ timer route and a source, and a block may be named `timer`:
     | each instance whose kind has costs | `cost-terms` | `realization` |
     | each instance's obliged fact offered bare | that fact | `realization` |
     | each service or policy a `multiplex` obligation names | `overhead` | `realization` |
-    | each source | `service-cost`, `acknowledge-point`, `deferred-work` | `realization` |
+    | each source | `service-cost`, `acknowledge-point`, `deferred-work`, `no-application-code`, `one-request-per-arrival` | `realization` |
     | each timer route | `service-cost`, `arrival-bound` | `realization` |
 
     The owners are the application's inputs (`RTP-H5`), the description, and the generated code (`RTP-H2`). No
@@ -448,6 +450,7 @@ sign and no leading zero.
   `masked-category`, `masked-runs`, `masks-only-through-api`, `os-calls`, `task-facts`, `stack-bound`,
   `stack-category`, `leaves-interrupt-hardware-alone`, `deadline-from`, `trigger`, `separation`,
   `contexts`, `no-wait`, `call-cost`, `cost-terms`, `overhead`, `service-cost`, `acknowledge-point`, `deferred-work`,
+  `no-application-code`, `one-request-per-arrival`,
   `arrival-bound`, or an obliged fact's name.
 
 **Forms written only where §2 calls for them**, none where there is none:
@@ -653,6 +656,8 @@ digests:
 (obligation route (source dev.e) (discharged-by M4.2 M4.3))
 (owed (source dev.e) acknowledge-point (by realization))
 (owed (source dev.e) deferred-work (by realization))
+(owed (source dev.e) no-application-code (by realization))
+(owed (source dev.e) one-request-per-arrival (by realization))
 (owed (source dev.e) service-cost (by realization))
 (owed (task sporadic s) deadline-from (by description))
 (owed (task sporadic s) entry-point (by application))
@@ -797,7 +802,7 @@ identical canonical plans").
 | `RTP-H6` | `M4.10` | The catalog records state what the runtime plan owes them — supported contexts, an initialisation entry that never waits on an interrupt and names any other component member's code it calls, and each source's service cost — amending the catalog record's §12 and §14.4, and the image is checked: no initialisation step waits on an interrupt, and no component member's initialisation calls another member's code. |
 | `RTP-H7` | `M4.7` | The build's metadata carries the runtime plan's sha256 and its provenance, the whole lock data of `ROADMAP.md` §10.3 is written, `--locked` is honoured, and S0's `no-lock-data` is discharged. |
 | `RTP-H8` | `M4.4.1` | A system's devices are put in correspondence with a target's — which target device each system device is, by a rule the lowering of `archogen-runtime-plan/2` reads — before `M4.1.7` designs that format. |
-| `RTP-H9` | `M4.3` | The hosted simulator runs initialisation to its last step with interrupts masked and enables them at time zero, then releases each timer-released task from its own exact clock at its nominal releases from time zero and each task released by `(source X every)` at each arrival of X and at no other time; takes its timer only when a release is due; takes every route before the release timer when both are pending, its `external-before-timer`, and the routes in the plan's rank order; nests no interrupt and masks every interrupt in a masked section; raises no interrupt the plan does not enable; models each device the plan names, a timer route's alarm included; lets no source arrive before the first enabling, nor sooner after its last arrival than the separation the plan states for it; and states every platform input and fact the analysis variant and the composition read, `external-before-timer` and `releases-after-initialisation` among them, in the form the scheduling checker reads. |
+| `RTP-H9` | `M4.3` | The hosted simulator runs initialisation to its last step with interrupts masked and enables them at time zero, then releases each timer-released task from its own exact clock at its nominal releases from time zero and each task released by `(source X every)` at each arrival of X and at no other time; takes its timer only when a release is due; takes every route before the release timer when both are pending, its `external-before-timer`, and the routes in the plan's rank order; nests no interrupt and masks every interrupt in a masked section; raises no interrupt the plan does not enable; models each device the plan names, a timer route's alarm included; lets no source arrive before the first enabling, nor sooner after its last arrival than the separation the plan states for it; and states every platform input and fact the analysis variant and the composition read, `external-before-timer`, `releases-after-initialisation` and each source's `external` among them, in the form the scheduling checker reads. |
 | `RTP-H11` | `M4.9` | A comparison of a hosted run and an emulated one reads each run against its own platform's `external-before-timer`, the simulator's `yes` and the emulator's `no`, never one run's order against the other's. |
 | `RTP-H10` | `M4.10` | Once a catalog record can be a provider (`M3.7`), the runtime plan's lowering judges the record's supported contexts against the context line of each node it serves, by inclusion, and refuses `unsupported-profile` a context the record does not include. |
 

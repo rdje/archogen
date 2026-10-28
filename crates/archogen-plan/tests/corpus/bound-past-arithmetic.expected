@@ -1,0 +1,2 @@
+== system tb
+refused unsupported-profile: `(adapter deadline-over-delay timer.delay dl)` is obliged to a `delivery-bound` whose seconds lie past the engine's exact arithmetic, signed 128-bit integers (§2.2): state it within that range; `M1.45` has the language refuse it

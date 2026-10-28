@@ -20,6 +20,8 @@
 (obligation route (source soc.e) (discharged-by M4.2 M4.3))
 (owed (source soc.e) acknowledge-point (by realization))
 (owed (source soc.e) deferred-work (by realization))
+(owed (source soc.e) no-application-code (by realization))
+(owed (source soc.e) one-request-per-arrival (by realization))
 (owed (source soc.e) service-cost (by realization))
 (owed (task ps s) entry-point (by application))
 (owed (task ps s) execution-bound (by application))

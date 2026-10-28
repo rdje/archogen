@@ -98,21 +98,35 @@ fn duration(seconds: Rational) -> String {
     }
 }
 
-/// A clause's quantity, `(head N UNIT)`, in seconds, where it is a time (§2.2).
-fn seconds(clause: &Form) -> Option<Rational> {
-    let quantity =
-        Quantity::read(clause.items().get(1), clause.items().get(2), clause.span()).ok()?;
-    if quantity.unit.dimension != Dimension::Time {
-        return None;
-    }
-    quantity.in_base().ok()
+/// A quantity in seconds (§2.2): its value, or why it has none.
+enum Seconds {
+    Of(Rational),
+    /// A quantity of another dimension, or none.
+    NotTime,
+    /// A time whose seconds lie past the engine's exact arithmetic.
+    PastArithmetic,
 }
 
-/// A value, in seconds, where it is a time.
-fn value_seconds(value: &Value) -> Option<Rational> {
+fn quantity_seconds(quantity: Quantity) -> Seconds {
+    if quantity.unit.dimension != Dimension::Time {
+        return Seconds::NotTime;
+    }
+    quantity
+        .in_base()
+        .map_or(Seconds::PastArithmetic, Seconds::Of)
+}
+
+/// A clause's quantity, `(head N UNIT)`, in seconds.
+fn seconds(clause: &Form) -> Seconds {
+    Quantity::read(clause.items().get(1), clause.items().get(2), clause.span())
+        .map_or(Seconds::NotTime, quantity_seconds)
+}
+
+/// A value, in seconds.
+fn value_seconds(value: &Value) -> Seconds {
     match value {
-        Value::Quantity(q) if q.unit.dimension == Dimension::Time => q.in_base().ok(),
-        _ => None,
+        Value::Quantity(q) => quantity_seconds(*q),
+        _ => Seconds::NotTime,
     }
 }
 
@@ -349,6 +363,8 @@ pub fn lower(
         )
     };
     let mut timings: Vec<Timing> = Vec::new();
+    // The first duration past the exact arithmetic, refused first among `/1`'s limits (§1, §2.2).
+    let mut past: Option<String> = None;
     for task in &tasks {
         let period = clause(task.form, "period");
         let (Some(release), Some(deadline)) = (
@@ -366,26 +382,38 @@ pub fn lower(
             ));
         };
         let jitter = clause(task.form, "jitter");
-        let time = |c: &Form| {
-            seconds(c).ok_or_else(|| {
-                ill_formed(
-                    task,
-                    format!("writes `{}`, which is not a time", c.to_canonical()),
-                    "M1.42",
-                )
-            })
+        let mut time = |c: &Form| match seconds(c) {
+            Seconds::Of(s) => Ok(Some(s)),
+            Seconds::NotTime => Err(ill_formed(
+                task,
+                format!("writes `{}`, which is not a time", c.to_canonical()),
+                "M1.42",
+            )),
+            Seconds::PastArithmetic => {
+                past.get_or_insert_with(|| {
+                    format!(
+                        "`(task {system} {})` writes `{}`",
+                        task.name,
+                        c.to_canonical()
+                    )
+                });
+                Ok(None)
+            }
         };
+        let release_seconds = time(&release)?;
+        let deadline_seconds = time(&deadline)?;
+        let jitter_seconds = match &jitter {
+            Some(c) => time(c)?,
+            None => Some(Rational::ZERO),
+        };
+        // A duration past the arithmetic is refused below; its place holds zero until then.
         let timing = Timing {
             periodic: period.is_some(),
-            release: time(&release)?,
-            deadline: time(&deadline)?,
-            jitter: jitter
-                .as_ref()
-                .map(time)
-                .transpose()?
-                .unwrap_or(Rational::ZERO),
+            release: release_seconds.unwrap_or(Rational::ZERO),
+            deadline: deadline_seconds.unwrap_or(Rational::ZERO),
+            jitter: jitter_seconds.unwrap_or(Rational::ZERO),
         };
-        if timing.release == Rational::ZERO {
+        if release_seconds == Some(Rational::ZERO) {
             return Err(ill_formed(
                 task,
                 format!(
@@ -413,7 +441,61 @@ pub fn lower(
         timings.push(timing);
     }
 
-    // §1: what `/1` cannot lower.
+    // §1: what `/1` cannot lower — first, a duration the plan would write past the exact arithmetic: a task's, a
+    // source's separation, an obliged bound (§2.2).
+    let past_sources = report.obligations.iter().filter_map(|o| match o {
+        Obligation::Route {
+            provider,
+            interrupt:
+                Interrupt::Source {
+                    separation: Some(State::Valued(values)),
+                },
+            ..
+        } if matches!(
+            values.first().map(value_seconds),
+            Some(Seconds::PastArithmetic)
+        ) =>
+        {
+            Some(format!("`(source {provider})` states a separation"))
+        }
+        _ => None,
+    });
+    let system_text = system.as_str();
+    let past_obliged = rebuilt.instances.iter().flat_map(|instance| {
+        catalog
+            .kind(&instance.kind)
+            .into_iter()
+            .flat_map(|k| k.offers.iter())
+            .filter(|o| o.offered == Offered::Obliged)
+            .filter_map(move |offer| match instance.provider.state(&offer.fact) {
+                Some(State::Valued(values))
+                    if matches!(
+                        values.first().map(value_seconds),
+                        Some(Seconds::PastArithmetic)
+                    ) =>
+                {
+                    Some(format!(
+                        "`{}` is obliged to a `{}`",
+                        assignment::instance_text(instance, system_text),
+                        offer.fact
+                    ))
+                }
+                _ => None,
+            })
+    });
+    if let Some(what) = past
+        .into_iter()
+        .chain(past_sources)
+        .chain(past_obliged)
+        .next()
+    {
+        return Err(refuse(
+            "unsupported-profile",
+            format!(
+                "{what} whose seconds lie past the engine's exact arithmetic, signed 128-bit integers (§2.2): state it within that range; `M1.45` has the language refuse it"
+            ),
+        ));
+    }
     if record.placement.is_some()
         || rebuilt
             .map
@@ -515,9 +597,11 @@ pub fn lower(
                 separation: match interrupt {
                     Interrupt::Timer => Err("programmed"),
                     Interrupt::Source { separation } => match separation {
-                        Some(State::Valued(values)) => {
-                            values.first().and_then(value_seconds).ok_or("unknown")
-                        }
+                        // Past the arithmetic is refused above.
+                        Some(State::Valued(values)) => match values.first().map(value_seconds) {
+                            Some(Seconds::Of(s)) => Ok(s),
+                            _ => Err("unknown"),
+                        },
                         Some(State::Absent) => Err("absent"),
                         _ => Err("unknown"),
                     },
@@ -545,9 +629,14 @@ pub fn lower(
                 return Err(refuse(
                     "unsupported-profile",
                     format!(
-                        "`{}` programs an alarm at `{}` itself, and how a job receives an alarm is `M4.1.6`'s",
+                        "`{}` programs an alarm at `{}` itself, and {} is `M4.1.6`'s",
                         names.text(r),
-                        route.provider
+                        route.provider,
+                        if *r == system {
+                            "what the system's own level's requirement for an alarm means"
+                        } else {
+                            "how a job receives an alarm it programs itself"
+                        }
                     ),
                 ));
             }
@@ -573,9 +662,14 @@ pub fn lower(
                 return Err(refuse(
                     "unsupported-profile",
                     format!(
-                        "`{}` delivers an expiry to `{}`, and how a job receives an expiry is `M4.1.6`'s",
+                        "`{}` delivers an expiry to `{}`, and {} is `M4.1.6`'s",
                         names.text(&instance.provider.name),
-                        names.text(served)
+                        names.text(served),
+                        if *served == system {
+                            "what the system's own level's requirement for an expiry means"
+                        } else {
+                            "how a job receives an expiry"
+                        }
                     ),
                 ));
             }
@@ -698,7 +792,7 @@ pub fn lower(
         for offer in kind.offers.iter().filter(|o| o.offered == Offered::Obliged) {
             match instance.provider.state(&offer.fact) {
                 Some(State::Valued(values)) => {
-                    let Some(s) = values.first().and_then(value_seconds) else {
+                    let Some(Seconds::Of(s)) = values.first().map(value_seconds) else {
                         return Err(refuse(
                             "tool-failure",
                             format!(
@@ -792,7 +886,13 @@ pub fn lower(
             owe(&mut owed, &item, "arrival-bound", "realization");
             owe(&mut owed, &item, "service-cost", "realization");
         } else {
-            for fact in ["acknowledge-point", "deferred-work", "service-cost"] {
+            for fact in [
+                "acknowledge-point",
+                "deferred-work",
+                "no-application-code",
+                "one-request-per-arrival",
+                "service-cost",
+            ] {
                 owe(&mut owed, &item, fact, "realization");
             }
             if route.separation == Err("unknown") {
@@ -860,10 +960,10 @@ pub fn lower(
         for n in &runs {
             all.extend(reach(n).into_iter().filter(|m| nodes.contains(m)));
         }
-        for n in all {
-            contexts.entry(n).or_default().insert(item.clone());
+        for n in &all {
+            contexts.entry(n.clone()).or_default().insert(item.clone());
         }
-        runs_of.insert(item, runs);
+        runs_of.insert(item, all);
     }
     for n in &nodes {
         contexts
@@ -957,16 +1057,9 @@ pub fn lower(
         // Its own route counts only where something else that route runs, neither it nor what it is bound to,
         // reaches it: that route's own code delivering to it is no caller (§2.9).
         let called_there = |item: &str| {
-            runs_of.get(item).is_some_and(|runs| {
-                runs.iter().any(|m| {
-                    m != node
-                        && !rebuilt
-                            .bindings
-                            .iter()
-                            .any(|b| b.requester == node && b.provider == *m)
-                        && reach(m).contains(node)
-                })
-            })
+            runs_of
+                .get(item)
+                .is_some_and(|runs| runs.iter().any(|m| m != node && reach(m).contains(node)))
         };
         let jobs = reached.iter().filter(|r| r.contains(node)).count();
         let interrupts = contexts.get(node).map_or(0, |c| {

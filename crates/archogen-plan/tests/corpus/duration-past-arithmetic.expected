@@ -1,0 +1,2 @@
+== system du
+refused unsupported-profile: `(task du a)` writes `(jitter 0.00000000000000000000000000000000000001 ns)` whose seconds lie past the engine's exact arithmetic, signed 128-bit integers (§2.2): state it within that range; `M1.45` has the language refuse it
