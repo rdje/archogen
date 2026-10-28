@@ -336,7 +336,8 @@ is judged at the counter that service reads — *`time.wakeup` requires `availab
 on, and `timer.t` does not meet it* — and the privilege level stays rule 9's. There it binds nothing of its own: the
 search writes no binding for it, so a provider failing it is passed over for one meeting it, and the configuration
 checker refuses a plan that binds it (`M4.1.8`). A requester relying on no function binds its qualifier as any
-requirement. A census over the suite finds no
+requirement. `reachable-at-privilege` binds nothing at all: rule 9 judges it against the level the profile gives the
+system (`M4.1.9`). A census over the suite finds no
 requester whose function its hardware offers only across providers, and lists the five counters whose horizon or wrap
 behaviour no block states yet, with their only routes (`crates/eadl-resolve/tests/function_census.rs`).
 

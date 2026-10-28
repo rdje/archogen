@@ -595,6 +595,7 @@ pub fn rebuild<'v>(
                             .filter(|r| {
                                 r.fact() == bind.fact
                                     && !(matches!(r, Requirement::Statement { .. })
+                                        || joint::is_level(r)
                                         || (relies && joint::is_qualifier(r, vocabulary)))
                             })
                             .cloned()
@@ -625,6 +626,7 @@ pub fn rebuild<'v>(
                 .iter()
                 .filter(move |r| {
                     !(matches!(r, Requirement::Statement { .. })
+                        || joint::is_level(r)
                         || (relies && joint::is_qualifier(r, vocabulary)))
                 })
                 .map(move |r| (q.name.clone(), r.fact().to_string()))

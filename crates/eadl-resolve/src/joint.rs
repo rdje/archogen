@@ -914,6 +914,13 @@ fn function_of<'v>(vocabulary: &'v Vocabulary, fact: &str) -> Option<&'v Functio
     vocabulary.fact(fact).and_then(|f| f.function.as_ref())
 }
 
+/// Whether `requirement` binds no provider at all: `reachable-at-privilege`, which rule 9 judges against the level the
+/// system is given, never at a provider of its own (model §8 rules 9 and 13, leaf `M4.1.9`).
+#[must_use]
+pub fn is_level(requirement: &Requirement) -> bool {
+    requirement.fact() == REACHABLE_AT_PRIVILEGE
+}
+
 /// Whether `requirement` is one of rule 13's qualifiers: a requirement on an `each` fact, `reachable-at-privilege` apart,
 /// which is rule 9's.
 #[must_use]

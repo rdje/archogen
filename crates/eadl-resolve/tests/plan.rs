@@ -577,3 +577,26 @@ fn a_qualifier_binds_nothing_where_its_requester_relies_on_a_function() {
     assert!(accepted, "{record}");
     assert!(rebuilt, "{record}");
 }
+
+#[test]
+fn a_level_a_requester_states_binds_no_provider() {
+    // Leaf `M4.1.9`: `reachable-at-privilege` is judged against the level the profile gives the system (model §8 rule
+    // 9), never at a provider of its own, as `docs/semantics/boundary/accept/access-authority.eadl` writes it. The
+    // search once wrote its binding, which the checker refuses.
+    let text = "(eadl-version eadl/1)
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.p (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+(defservice console.write (requires (needs observable-output) (reachable-at-privilege machine)))
+(defsystem sh
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (platform (uses host.p)))
+";
+    let (record, accepted, rebuilt) = resolved_and_judged(text);
+    assert!(!record.contains("reachable-at-privilege"), "{record}");
+    assert!(
+        record.contains("(bind console.write observable-output console.uart)\n"),
+        "{record}"
+    );
+    assert!(accepted, "{record}");
+    assert!(rebuilt, "{record}");
+}
