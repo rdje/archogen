@@ -649,9 +649,9 @@ any harness to adopt, is `docs/TASK_TREE_SEALING.md`.
   the largest finished part, whole. A placeholder's commit, a row's date and the rule against a line at column 0 are
   the tool's alone, which the check does not read, and so are where a placeholder stands in its tree, any text after
   the name on its first line, a seal of only some finished parts, and prose in the index outside its tables;
-- that no live leaf sits inside a part that is sealed, in any tree directly under `docs/tasks/` (one in a sub-folder is
-  `PROGRAM.72`'s), and that each tree holds only its own leaves, each named once; that every sealed file holds a leaf;
-  and that the index keeps one table per tree, its rows under it.
+- that no live leaf sits inside a part that is sealed, in any tree under `docs/tasks/`; that no tree file sits in a
+  sub-folder of it, where nothing would judge it (`PROGRAM.72`); and that each tree holds only its own leaves, each
+  named once; that every sealed file holds a leaf; and that the index keeps one table per tree, its rows under it.
 - that every file of moved log rows is the form the tool writes and matches its index row; that its rows were the
   tree's own just before the commit that moved them, in that order and under that log's header; that every row
   that log then held for a sealed leaf is still in the tree or in those files, none invented; and that each row

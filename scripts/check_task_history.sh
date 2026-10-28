@@ -58,10 +58,11 @@
 #      stays the seal's; nor where a stub stands among its tree's lines, nor text after the name on its ID line (R9-5);
 #      nor a seal of only some of a tree's closed units, each the tool's, the rest sealing later as units of their own,
 #      nor prose in the index outside its tables (R10 P1);
-#   6. no live leaf sits in a subtree that is sealed, at any depth and in any tree file of docs/tasks/ (one in a sub-
-#      folder is PROGRAM.72's): new work opens a new subtree
-#      outside it (P6); and a tree file holds only leaves under its own name, each named once, so no leaf is judged in a
-#      tree not its own; the index keeps one table per tree, its header first and its rows under it, one row a file.
+#   6. no live leaf sits in a subtree that is sealed, at any depth and in any tree file of docs/tasks/: new work opens a
+#      new subtree outside it (P6); a tree file is docs/tasks/<TREE>.md, so a Markdown file in a sub-folder, which no
+#      leg would judge and `TASK-ACCEPTANCE` would still take an owning leaf from, is refused (PROGRAM.72); and a tree
+#      file holds only leaves under its own name, each named once, so no leaf is judged in a tree not its own; the index
+#      keeps one table per tree, its header first and its rows under it, one row a file.
 #   7. LOG ROWS (PROGRAM.95): each log-row file's rows, lines, bytes and sha256 are its row's, it is exactly the form the
 #      seal writes, and a tree's files are numbered 1 to n; its table rows are append-only and its files as their
 #      commit wrote them, as legs 3 and 1; and PROVENANCE: the files one commit added to a tree, taken together, hold
@@ -600,6 +601,15 @@ def gate():
         c = added.get(fpath)
         if c and at(c, fpath) != read(fpath):
             note("%s is not what %s wrote when it sealed it — a sealed file changed" % (fpath, c[:12]))
+    # Leg 6, whole: a tree file is docs/tasks/<TREE>.md. One in a sub-folder would be judged by no leg here, while
+    # `TASK-ACCEPTANCE` takes an owning leaf from any staged docs/tasks/**/*.md, so it is refused (PROGRAM.72).
+    for dirpath, dirs, names in os.walk(TASKS):
+        dirs.sort()
+        if dirpath == TASKS:
+            continue
+        for name in sorted(n for n in names if n.endswith(".md")):
+            note("%s is a tree file in a sub-folder of %s/, which no leg judges — a tree is %s/<TREE>.md"
+                 % (os.path.join(dirpath, name), TASKS, TASKS))
     # Legs 4 and 6: stubs against bodies and trees; no live leaf in a sealed subtree.
     stubs = {}
     sealed_keys = {(t, k) for (t, k) in files.values()}
@@ -2411,6 +2421,13 @@ PY
     { arms=$((arms + 1)); echo "SELF-TEST: a row parted from its table was sealed" >&2; }
   arm "and the files pass" 0 "5 log-row file(s)"
   commit
+  # A tree file in a sub-folder of docs/tasks/, with a live leaf, is refused, and the tree passes once it is gone
+  # (PROGRAM.72).
+  mkdir -p "$work/docs/tasks/m1"
+  printf -- '# L\n\n## Task Tree\n\n- ID: `L.9`\n  Status: `pending`\n  Goal: a live leaf filed in a sub-folder\n' > "$work/docs/tasks/m1/L.md"
+  arm "a tree file in a sub-folder of docs/tasks/ is refused" 1 "docs/tasks/m1/L.md is a tree file in a sub-folder"
+  rm -rf "$work/docs/tasks/m1"
+  arm "and without it the tree passes" 0 "5 log-row file(s)"
   rm -rf "$work"
   arms=$((arms + 1))
   if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the real task history passes"

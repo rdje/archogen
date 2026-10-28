@@ -552,7 +552,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0971 (leaf PROGRAM.71)`
 
 - ID: `PROGRAM.72`
-  Status: `pending` — filed `2026-10-10` by `PROGRAM.69`'s review round 8, its P1
+  Status: `done` — filed `2026-10-10` by `PROGRAM.69`'s review round 8, its P1; done `2026-10-28`
   Goal: a tree file in a sub-folder of `docs/tasks/` is judged as any tree file is, or is no tree file.
   Reproduce / issue: `scripts/check_task_history.sh`'s leg 6, its foreign-name and named-twice checks read
   `docs/tasks/*.md` alone, while `TASK-ACCEPTANCE` takes an owning leaf from any staged `docs/tasks/**/*.md`
@@ -560,6 +560,23 @@ mdBook that is the director's window into the project.
   `M1.12.1.9` in `docs/tasks/m1/M1.md` passes the gate, at `docs/tasks/M1x.md` refused. Present at `fea69ad`.
   Direction: the gate walks `docs/tasks/` whole, `TEMPLATE.md` excepted — or `TASK-ACCEPTANCE` takes owners from
   `docs/tasks/*.md` alone; an arm either way.
+  Built: the second way, the gate's: a tree file is `docs/tasks/<TREE>.md`, so `TASK-HISTORY`'s leg 6 refuses a
+    Markdown file in any sub-folder of `docs/tasks/`, which none of its legs would judge. `TASK-ACCEPTANCE` is held for
+    the scaffold (`.doctrine/scaffold_held.txt`) and stays as it is; the only sub-folder today, `artifacts/`, holds
+    scripts.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `HEAD`'s gate with a live `M1.12.1.9` planted in `docs/tasks/m1/M1.md`: `old rc=0`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — leg 6 read the folder's own entries alone:
+    `git show HEAD:scripts/check_task_history.sh | grep -c 'for name in sorted(os.listdir(TASKS))'` → `1`.
+  - [x] **FIX** — a walk of `docs/tasks/`'s sub-folders in leg 6, its header and two arms; the book's Annex B.
+  - [x] **ADDRESSED (verified)** — the patched gate on the same plant: `TASK-HISTORY: docs/tasks/m1/M1.md is a tree
+    file in a sub-folder of docs/tasks/`, `1 breach(es)`; `bash scripts/check_task_history.sh` → `exit 0` on the real
+    tree; `bash scripts/check_task_history.sh --self-test` → `174 pass / 0 fail (174 arms)`.
+  - [x] **NO REGRESSION** — no Rust source changed; `bash scripts/run_self_tests.sh` →
+    `exit 0`, `self-tests: OK — 58 self-test(s) passed`; `bash scripts/check_doctrines.sh` → `exit 0`.
+  - [x] **LOCKSTEP** — the gate's header, the book's `annex-repository.md`, this leaf and the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1040 (leaf PROGRAM.72)`
 
 - ID: `PROGRAM.73`
   Status: `done` — filed `2026-10-10` by `PROGRAM.69`'s review round 9, its P1; done `2026-10-28`
@@ -602,7 +619,8 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.77.md`](../task-history/PROGRAM/PROGRAM.77.md); commit `ARCHOGEN-PROGRAM-0569`
 
 - ID: `PROGRAM.78`
-  Status: `pending` — filed `2026-10-10` by `PROGRAM.69`'s review round 26, its R3
+  Status: `blocked` — filed `2026-10-10` by `PROGRAM.69`'s review round 26, its R3; blocked `2026-10-28` until the
+    features are complete, its purpose a parallel mutation sweep (`decision_mutation-testing-after-completion.md`)
   Goal: the sealing self-test's arm "an interrupt mid-proof waits for the seal" holds whatever the machine's load, so a
   mutation sweep run in parallel reads its failure as a kill only when the mutant made it.
   Reproduce / issue: in a three-way parallel sweep of `scripts/check_task_history.sh`, the arm failed for 8 of 50
@@ -1174,11 +1192,10 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.72` | `pending` | next ordinary program-spine repair: a tree file in a sub-folder of `docs/tasks/` |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.73`, `.78`, `.115` and `.117.3` — are filed and owned. Every closed
+The PROGRAM.34 row waits on the director's yes. The one other open leaf, `PROGRAM.78`, is blocked until the
+features are complete, by the ruling against mutation testing. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -1332,6 +1349,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.115` | `ARCHOGEN-PROGRAM-1036 (leaf PROGRAM.115)` | **the enforcement table holds `PIPE-READS`**: `BOOK-ANCHORS`' row shortened to its rule, its rationale kept in its script's header; thirteen bytes free |
 | `PROGRAM.117.3` | `ARCHOGEN-PROGRAM-1037 (leaf PROGRAM.117.3)` | **an index never binds the folders it lists**: `DECISION-INDEX` reads a sub-folder's own index and holds `docs/specs/` too; the three unindexed specifications indexed |
 | `PROGRAM.73` | `ARCHOGEN-PROGRAM-1039 (leaf PROGRAM.73)` | **the history gate names every failure**: any other exception a breach, `the gate stopped on TYPE`, never a traceback; the seal's arm and a plain-run arm require it |
+| `PROGRAM.72` | `ARCHOGEN-PROGRAM-1040 (leaf PROGRAM.72)` | **no tree file in a sub-folder**: `TASK-HISTORY`'s leg 6 refuses a Markdown file under a sub-folder of `docs/tasks/`, which no leg would judge |
 
 ## Changelog
 
