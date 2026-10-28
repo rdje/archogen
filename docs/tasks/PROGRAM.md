@@ -916,7 +916,8 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0989 (leaf PROGRAM.116)`
 
 - ID: `PROGRAM.117`
-  Status: `in_progress` — filed `2026-10-27` on the director's ruling of that day
+  Status: `done` — filed `2026-10-27` on the director's ruling of that day; closed `2026-10-28` with `.3`, its three
+    children done
   Goal: the record folders' ceilings bound what is read, not the corpus, so their growth never stops work.
   Ruling (`2026-10-27`, the director, reopening the one-time raise of `decision_decisions-folder-ceiling.md`): "I do
     not understand why there are even ceilings on those directories ... What's the best solution, to you, to handle
@@ -1025,14 +1026,37 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1022 (leaf PROGRAM.117.2)`
 
 - ID: `PROGRAM.117.3`
-  Status: `pending` — filed `2026-10-27` by `PROGRAM.117.1`'s review (D4)
+  Status: `done` — filed `2026-10-27` by `PROGRAM.117.1`'s review (D4); done `2026-10-28`
   Goal: an index never binds the folder it lists: `DECISION-INDEX` accepts a record linked from its sub-folder's own
     `INDEX.md` when the parent index links that index, and the specifications are indexed — two records of
     `docs/specs/trust/` are in no index, a third only in the reviews' index.
   Reproduce / issue: `scripts/check_decision_index.sh` requires every record under `docs/decisions/` to be linked from
     `docs/decisions/INDEX.md` itself; at `220eb078`, 18185 of its 98304 bytes, about 140 a day since `d00c3dee`
     (`2026-10-12`, 16118), so about a year and a half before it binds.
-  Commit: `pending`
+  Built: `DECISION-INDEX` walks the root index and every `INDEX.md` under `docs/decisions/` or `docs/specs/` that an
+    index it already reached links, each link resolved against its own index's folder; a record is found by that path,
+    and an index nothing reaches is refused, since what it lists would be listed nowhere. An index outside the two
+    folders, the reviews', is never read as one. Its population is both folders, so the specifications are held too;
+    the three it then found are indexed in `docs/decisions/INDEX.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the widened gate on the tree before the rows: `bash scripts/check_decision_index.sh` →
+    `exit 1`, `3 breach(es)`, naming `docs/specs/trust/compiler-provenance-contract.md`,
+    `docs/specs/trust/decision_trust-role-programs.md` and `docs/specs/trust/flag-normalization-domain.md`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — the gate read one folder and one index, every record's path taken relative to it
+    and compared with the root index's links alone:
+    `git show HEAD:scripts/check_decision_index.sh | grep -c 'DIR = "docs/decisions"'` → `1`.
+  - [x] **FIX** — the walk over sub-indexes and the two folders in `scripts/check_decision_index.sh`, its header,
+    seven new arms; the three rows; the registry's text, `DOCTRINE_ENFORCEMENT.md`'s row, the ceilings record's owed
+    clause marked discharged, and the book's Annex B.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_decision_index.sh` → `exit 0`, `decision-index: OK (40
+    record(s), 0 in partitions none, and 16 specification(s), each linked by its path from 1 index(es); every link
+    resolves)`; `bash scripts/check_decision_index.sh --self-test` → `12 pass / 0 fail (12 arms)`.
+  - [x] **NO REGRESSION** — no Rust source changed; `bash scripts/run_self_tests.sh` →
+    `exit 0`, `self-tests: OK — 58 self-test(s) passed`; `bash scripts/check_doctrines.sh` → `exit 0`.
+  - [x] **LOCKSTEP** — the registry, the enforcement table, `docs/decisions/decision_ceilings-bound-reads.md`, the
+    book's `annex-repository.md`, this leaf and the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1037 (leaf PROGRAM.117.3)`
 
 - ID: `PROGRAM.118`
   Status: `done` — P3, filed `2026-10-27` by `PROGRAM.117.1`'s third review round, fixed the same day
@@ -1288,6 +1312,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.117.2` | `ARCHOGEN-PROGRAM-1022 (leaf PROGRAM.117.2)` | **the record mover**: `scripts/move_record.sh`, a dry run and a verified, staged move; live citations repointed, the past left and listed |
 | `PROGRAM.118` | `ARCHOGEN-PROGRAM-1028 (leaf PROGRAM.118)` | **`README-ROUTES` reads every path whole**: NUL-separated listings, the row's files quoted, a newline in a name refused |
 | `PROGRAM.115` | `ARCHOGEN-PROGRAM-1036 (leaf PROGRAM.115)` | **the enforcement table holds `PIPE-READS`**: `BOOK-ANCHORS`' row shortened to its rule, its rationale kept in its script's header; thirteen bytes free |
+| `PROGRAM.117.3` | `ARCHOGEN-PROGRAM-1037 (leaf PROGRAM.117.3)` | **an index never binds the folders it lists**: `DECISION-INDEX` reads a sub-folder's own index and holds `docs/specs/` too; the three unindexed specifications indexed |
 
 ## Changelog
 

@@ -75,14 +75,14 @@ but mark it as superseded."
 - The book stays unbounded ([[decision_book-unbounded]]).
 
 **Where the bound is still one file, and what is owed.**
-- `docs/decisions/INDEX.md` lists every record of `docs/decisions/`, its sub-folders included. `DECISION-INDEX`
-  requires it to, and it lists most of `docs/specs/` as well. It is one file under the folder's per-file ceilings.
-  At `220eb078` it held 18185 of 98304 bytes, 16118 at `d00c3dee` fifteen days before: about 140 bytes a day, so
-  it fills in about a year and a half.
-- Two records of `docs/specs/trust/` are in no index, and a third only in `docs/reviews/INDEX.md`.
-- `PROGRAM.117.3` owes both:
-  - `DECISION-INDEX` learns a sub-folder's own index, linked from the parent's;
-  - the specifications are indexed.
+- `docs/decisions/INDEX.md` lists every record of `docs/decisions/` and of `docs/specs/`, their sub-folders
+  included. It is one file under the folder's per-file ceilings. At `220eb078` it held 18185 of 98304 bytes, 16118 at
+  `d00c3dee` fifteen days before: about 140 bytes a day, so it fills in about a year and a half.
+- Discharged by `PROGRAM.117.3` (`2026-10-28`), so that the index never binds the folders it lists:
+  - `DECISION-INDEX` reads a sub-folder's own `INDEX.md` once an index it already reached links it, and refuses an
+    index nothing reaches; a partition's rows can move there before the root fills;
+  - it holds `docs/specs/` to the same rule. The three specifications that were in no decision index, two of
+    `docs/specs/trust/` in none at all, are indexed.
 - `docs/reviews/` is flat. `REVIEW-HISTORY` refuses a stub in a sub-folder and archives a history only from the
   folder itself, and an archive stub stays where sealed history cites it. So that folder's own listing grows by a
   stub for each closed review. The fan-out

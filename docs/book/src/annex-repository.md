@@ -816,7 +816,9 @@ specifications by one scripted step, `scripts/move_record.sh`. It rewrites the r
 citation of its path, and leaves what records the past: a path written at a revision, the archives, the rolling
 ledgers, the verbatim proofs and the files held for the scaffold. A dry run lists each, and the step stages the
 move only after no live file names the old path. The decisions folder was split by subject on
-`2026-09-30`, and `DECISION-INDEX` keeps every record in a sub-folder listed in its index.
+`2026-09-30`, and `DECISION-INDEX` keeps every record in a sub-folder listed in its index. It holds the specifications
+to the same rule, and it reads a sub-folder's own `INDEX.md` once an index it already reached links it, so no single
+index has to list every record (`PROGRAM.117.3`).
 
 ```console
 $ bash scripts/check_readme_routes.sh              # the gate
