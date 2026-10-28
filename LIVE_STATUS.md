@@ -16,7 +16,7 @@ one of those changes, and only then. What each closed leaf did lives in its tree
 | `M1` — eADL description foundation | Mostly Done | §12 M1's exit gate met; `M1.29.4` waits on the director (findings §7) |
 | `M2` — one engine realization + controls | In Progress | **F17 (analysis half), F18 and F29 green**; `riscv-virt-up` verified (`M2.8`); frontier `M2.7.4`: the gate done, its records the director's; `main` protected (`M2.7.6.6.3`); the catalog crate built |
 | `M3` — joint resolver + checked plan | In Progress | frontier `M3.5`, the independent checker; `M3.3`'s joint constraints closed `2026-10-22`, F08 and F09 refused; F30's gate runs; `M3.6.9` postponed by the director `2026-10-21` until the functionality is locked |
-| `M4` — generated system + simulator | In Progress | frontier `M4.1`, the runtime plan: `/1` narrowed to the hosted playground, its design under review |
+| `M4` — generated system + simulator | In Progress | frontier `M4.1`, the runtime plan: `/1` for the hosted playground, three worked texts, its design under review |
 | `M5` — physical execution evidence | Not Started | **blocked: no board procured** (2026-09-13) — director decision |
 | `M6` — reuse and extension | Not Started | gated on `M4` |
 | `M7` — first supported release | Not Started | gated on `M5`, `M6` |

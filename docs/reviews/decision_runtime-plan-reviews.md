@@ -114,7 +114,7 @@ The findings moved to `/2` are kept here as `M4.1.7`'s questions.
 | R3-14 | defect | `M4.1.2`'s leaf contradicts the record; `M4.1`'s copy of `M3.2.1`'s obligation not annotated | `M4.1.2` restated as §4's `.2`; the copy annotated |
 | R3-15 | defect | `obligation` lines not derivable: `initialisation` produced by nothing, `discharged-by` prose | A table of kind, subject and leaves; `initialisation` dropped (§2.9) |
 | R3-16 | defect | §7.5's plan hash handed to no leaf | `RTP-H7` carries the plan's sha256 (§1, §4) |
-| R3-17 | defect | duties placed on `M4.3` and `M4.4` in no ledger row | `RTP-H9` to `M4.3`; `RTP-H8` to `M4.4`. `M4.4`'s layout checks come with `/2` (§4) |
+| R3-17 | defect | duties placed on `M4.3` and `M4.4` in no ledger row | `RTP-H9` to `M4.3`; `RTP-H8` to `M4.4`, since round 4 to its child `M4.4.1`, the correspondence before `M4.1.7`; `M4.4`'s layout checks after `M4.1.7` (R4-D14) |
 | R3-18 | defect | the memory-section rules contradict each other | `/1` has no memory section; placement memory refused `unsupported-profile` (§1, §2.8) |
 | R3-R1 | remark | the Davis claims overreach; Audsley's algorithm called optimal; the ledger's page count | No optimality claimed. Audsley's algorithm needs Davis and Burns's Condition 1, and the composition's bound depends on the order ahead (§2.5; ledgered as `davis-burns-priority-assignment`). The ledger read eighteen pages already; its URL now redirects, recorded |
 | R3-R2 | remark | "ordinary value" misattributed to rule 15 | Attributed to the adapters record's §1, item 5 (§2.4) |
@@ -130,3 +130,77 @@ The findings moved to `/2` are kept here as `M4.1.7`'s questions.
 | R3-R12 | remark | a missing refusal in §1 | Listed (§1) |
 | R3-R13 | remark | `M2.21.2` not ordered after `M4.1.4` | `RTP-H4` says so; the leaf too |
 | R3-R14 | remark | "charged as a source" is not in the adapters record's §9 | The two places that hold it named, and the record's own wording amended by `.2` (§4) |
+
+## Round 4 — `2026-10-28`: not acceptable, 27 findings
+
+The reviewer re-derived both worked texts byte for byte from their inputs, the joint rules' real output confirming
+them, and lowered `adapter-deadline-over-delay.eadl` by the rules as well. The defects lay at the edges the two texts
+did not reach, found with five probe systems: a provider raising both kinds of route, a system with only a sporadic
+task, a multiplexed alarm, a `deadline-over-delay` instance with no bound, and a block named `timer`. 16 defects, 11
+remarks.
+
+**Fence.** The reviewer disclosed one recursive search of `*.md` under `docs/` that walked `docs/evaluation/`, its
+output filtered so that nothing from that folder was printed or opened, and two commands that listed every tracked path
+before filtering, printing none of that folder's. Every history read stayed within `6d61f65..HEAD`. No case was read.
+
+**Method.** The answer pins the edges as it pinned the middle: a third worked text, a system released by a source, and
+the five probe systems made goldens of `M4.1.4`.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R4-D1 | defect | interrupts named by provider alone collide, a provider with both route kinds or a block named `timer`, and the timer route then escapes condition 5 | Each interrupt named by its kind: `timer`, `(timer-route NAME)`, `(source NAME)`, in `enabled`, contexts, obligations and owed lines; `RTP-H4` gives each its own identifier (§2, §3) |
+| R4-D2 | defect | a system with no timer-released task is refused by condition 5, the analysis declaring `timer` always | The release timer always written and enabled, never taken when nothing is due (§2.5) |
+| R4-D3 | defect | an obliged fact offered bare has no spelling | `(obliged FACT)`, its bound owed by the realization (§2.4, §2.10) |
+| R4-D4 | defect | how the lowering runs the joint rules unstated, so a source's level undetermined | As the search runs them, at the profile's caller level, instances rebuilt from the catalog (§1); `M4.1.3`'s scope widened |
+| R4-D5 | defect | the timer's place among sources on the playground cited to a row that does not hold it | `RTP-H9` states the simulator's `external-before-timer` (§2.5) |
+| R4-D6 | defect | the first enabling of interrupts on the playground unfixed | `RTP-H9`: initialisation masked, interrupts enabled at time zero (§2.7) |
+| R4-D7 | defect | no one realises a source-released task's trigger, nor handles an unknown one | `RTP-H9` releases on each arrival and no other time; `RTP-H1` refuses an `unknown` trigger `missing-fact` |
+| R4-D8 | defect | two-phase initialisation sent to `M3.7` with no hand-off; rule 12 still leaves it to `M4.1` | `.2` writes this engine's answer, one phase, into rule 12; the `M3.7` sentence dropped (§2.7, §4) |
+| R4-D9 | defect | the multiplex obligation's analysis half dropped | Discharged by `M4.2 M2.21.2`; the overhead owed by the realization, charged by `RTP-H4` (§2.9, §2.10) |
+| R4-D10 | defect | the route row cites `RTP-H1` for a clause it lacks | `RTP-H1` configures the enabled set as the plan writes it |
+| R4-D11 | defect | `leaves-interrupt-hardware-alone` filed under each task | Owed once, for the system (§2.2, §2.10) |
+| R4-D12 | defect | `Obligation::Placement` attributed to `Joint::check` | To `Joint::map` (§2.9) |
+| R4-D13 | defect | an unknown separation never owed; a separation declared absent unhandled | `separation` owed by the description; `(separation absent)` written, its tasks' triggers `unknown` (§2.2, §2.5) |
+| R4-D14 | defect | R3-17's answer cites a sentence §4 lacks; `M4.4` and `M4.1.7` order each other | `M4.4.1`, the correspondence, before `M4.1.7`; `M4.4`'s layout checks after it, listed in `.7`; R3-17's answer corrected |
+| R4-D15 | defect | the moved questions not all listed, and round 3's fixes kept nowhere | `.7`'s list completed; round 3's fixes and round 4's items kept below; rule 8's amendment names the target's non-maskable interrupts and traps |
+| R4-D16 | defect | nothing defines what a hosted `/1` build runs as a task's code | Each job an engine-owned empty body that the release trace alone observes, as S0's does, the build saying so (`RTP-H1`, §2.2) |
+| R4-R1 | remark | "optimal only for" overstates Davis and Burns | Theorem 1's sufficiency and §4.1's open problem quoted; the ledger's scope widened |
+| R4-R2 | remark | the multiplex gloss wider than the code's users | "used directly, tasks or services, as `Joint::check` counts its users" (§2.9) |
+| R4-R3 | remark | `RTP-H10` does not say which line is judged against which record | A record's supported contexts judged against each node it serves; reaching passes through bindings, so a provider runs in its requesters' contexts (§2.6) |
+| R4-R4 | remark | the format number does not freeze the joint rules | A change to what §2 reads that moves a plan is a new format (§3) |
+| R4-R5 | remark | catalog owners are target-shaped on the playground | Owners `realization` and `playground`; `/1` owes the catalog nothing (§2.10) |
+| R4-R6 | remark | `s0.md`'s lock-data passages missing from the move | Listed with `no-lock-data` (§4) |
+| R4-R7 | remark | `M4.1.3`'s scope too narrow | The record's bindings read back with instances and beneath bindings, the joint rules run over them (§4) |
+| R4-R8 | remark | the interrupt model has no realiser | `RTP-H9` nests no interrupt and masks all in a masked section |
+| R4-R9 | remark | no owed line for the stack | Each task's stack bound and its category owed again; the allocation `/2`'s (§2.2) |
+| R4-R10 | remark | `RTP-H4` silent on unknowns | Each mapped to an input the analysis lacks, never a default |
+| R4-R11 | remark | refusals for a foreign system and an unsupported profile missing | Both listed (§1) |
+
+## Kept for `M4.1.7`
+
+The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
+transcript:
+- **The target's timer** (R3-1): with a target, take the release timer from the target's tick-rate block when the
+  system binds none; where the system binds its own device, refuse until a stated correspondence between system device
+  and target device exists (`M4.4.1`).
+- **`Joint::map` over a target** (R3-2): a target file has no `defsystem`, so `System::read` cannot read it. Define
+  the target's hardware as every block and platform its file declares, run `Joint::new` and `Joint::map` over it, list
+  its findings (`MapContradiction`, `PlacementUnsized`, `MemoryAllHoles`) as target refusals, and pick a placement
+  region by rule, such as the lowest base.
+- **The epoch** (R3-8): read the counter and write the first compare as the last act before the transition into idle
+  (`starts-by-transition`), so that the bound from the read to the first enabling is the switch record's.
+- **The image and the stacks** (R3-9): the image ends at or below the lowest allocation's base in its range, which
+  `M4.4` checks.
+- **The allocation's formula** (R3-10): a unit is `[base, base + guard + bytes)`; the stack's top is aligned down from
+  the cursor; tables carry `(guard 0)`; an owed unit makes every later unit owed; the cursor only descends.
+- **The interrupt stack** (R3-11): the largest service's stack use plus the fault path's use and one more trap frame,
+  the fault path owed to the switch record.
+- **The memory section** (R3-18): written where a target is given, or the system has placement memory.
+- **The catalog's numbers** (R3-R6): their records in the identity, and each number's origin and evidence category, as
+  §7.3 asks of every bound.
+- **The boot stack** (R3-R9): the port record calls the stack set-up the image's, and the boot stack holds the
+  application's initialisation too, so its size has two owners.
+- **What the narrowing dropped** (R4-D15): the platform's non-maskable interrupts and firmware traps in a target's
+  enabled set; the source ranks mapped onto the controller's levels, or a refusal naming the level count; the guard,
+  frame, alignment and table sizes owed to the catalog; a generated service's stack use; the "no room" refusal; `M4.4`
+  naming an unsized hole that truncates an image; how the command line names a target.

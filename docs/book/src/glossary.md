@@ -59,6 +59,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
   function may sit in a section of its own; macOS uses Mach-O instead. See [Verifying the toolchain](verification.md).
 - **EOF** — End Of File: the point past a file's or a stream's last byte; a record cut off there is malformed.
   See [Trust proofs](annex-trust-proofs.md#dependency-path-domain-repair-commit-note-routing).
+- **FP** — Fixed Priority: each task, or interrupt, keeps one priority, and the most urgent ready one is served first.
+  See [What this project relies on from outside](ledger.md#davis-burns-priority-assignment).
 - **FP-NP** — Fixed Priority, Non-Pre-emptive: fixed priorities, each job running to its end once started; how this
   profile serves interrupts, which do not nest. See [What this project relies on from
   outside](ledger.md#davis-speedup-factors).
