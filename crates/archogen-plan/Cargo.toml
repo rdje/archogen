@@ -1,0 +1,20 @@
+# The runtime plan (ROADMAP.md §4.2 `archogen-plan`, §10.1 step 5): a checked assignment lowered into
+# `archogen-runtime-plan/1`, the generator's, as docs/decisions/decision_runtime-plan.md writes it (leaf M4.1.4). Built
+# ahead of that record's acceptance as its executable form (docs/decisions/decision_executable-design-reviews.md): each
+# rule cites its section, and every probe of its review is a fixture. No I/O, and no external dependency
+# (docs/decisions/decision_zero-dependency-engine-core.md names "the planner").
+[package]
+name = "archogen-plan"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "The runtime plan: a checked assignment lowered into archogen-runtime-plan/1"
+
+[lints]
+workspace = true
+
+[dependencies]
+archogen-digest = { path = "../archogen-digest" }
+eadl-front = { path = "../eadl-front" }
+eadl-model = { path = "../eadl-model" }
+eadl-resolve = { path = "../eadl-resolve" }

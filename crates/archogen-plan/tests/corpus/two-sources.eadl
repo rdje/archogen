@@ -1,0 +1,18 @@
+(eadl-version eadl/1)
+; One sporadic task reaching two sources; one source releasing two sporadic tasks.
+(defblock dev.b
+  (offers (interrupt-source true) (min-arrival-separation 50 ms) (available-in-state run) (reachable-at-privilege machine)))
+(defblock dev.a
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (available-in-state run sleep) (reachable-at-privilege machine)))
+(defplatform soc.t
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.a dev.b)))
+(defservice evt.a
+  (requires (needs interrupt-source) (available-in-state run sleep)))
+(defservice evt.b
+  (requires (needs interrupt-source)))
+(defsystem two
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt.a evt.b))
+  (task u (min-separation 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses evt.b))
+  (task w (min-separation 40 ms) (deadline 40 ms) (deadline-from release) (priority 3) (uses evt.b))
+  (platform (uses soc.t)))

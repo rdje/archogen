@@ -1,0 +1,15 @@
+(eadl-version eadl/1)
+; The system's own level programming a relative delay.
+(defblock timer.d
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc.m
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d console.uart)))
+(defservice console.write
+  (requires (needs observable-output)))
+(defsystem sya
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (requires (needs relative-delay))
+  (platform (uses soc.m)))

@@ -1,0 +1,20 @@
+(eadl-version eadl/1)
+(defblock timer.delay
+  (offers
+    (relative-delay true)
+    (counter-modulus 4294967296)
+    (tick-rate 1 MHz)
+    (observation-coherent true)
+    (channels 2 tick)
+    (reachable-at-privilege machine)))
+(defplatform soc.d
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.delay)))
+(defservice dl.a
+  (requires (absolute-deadline (delivery-bound (at-most 50 us)))))
+(defservice dl.b
+  (requires (needs absolute-deadline)))
+(defsystem twod
+  (task x (period 25 ms) (deadline 25 ms) (deadline-from release) (priority 1) (uses dl.a))
+  (task y (period 50 ms) (deadline 50 ms) (deadline-from release) (priority 2) (uses dl.b dl.a))
+  (platform (uses soc.d)))

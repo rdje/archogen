@@ -484,6 +484,13 @@ writes, and `plan::rebuild` gives the joint rules the record's bindings over the
 (`docs/decisions/decision_runtime-plan.md` §1). Over every description the search resolves, the record reads back to
 the same bytes and its rebuilt bindings give the joint rules the search's own obligations.
 
+The runtime plan is lowered from that record by `crates/archogen-plan/src/lib.rs` (`M4.1.4`), built ahead of its
+design's acceptance as the design's executable form (`docs/decisions/decision_executable-design-reviews.md`). Each rule
+cites its section of `docs/decisions/decision_runtime-plan.md`; the record's worked texts are held equal to what the code
+writes by `crates/archogen-plan/tests/worked.rs`; and every probe system of the design's review is a fixture beside the
+outcome the lowering gives it, in `crates/archogen-plan/tests/corpus/`. A reviewer runs them, and a finding is a defect
+when it carries a reproducer.
+
 An adapter's instance is judged by the joint rules as one provider (model §8 rules 14 and 15, `M3.2.3.1`): its offers
 computed from the device it programs — a value its kind writes, a fact passed through as the relation reads it at the
 device, derived there or offered, a bound it is obliged to at its requester's tightest — and itself a requester of that

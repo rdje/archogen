@@ -1,0 +1,12 @@
+(eadl-version eadl/1)
+; A task naming a policy by `uses`: the policy is a node the task reaches, and no service.
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defpolicy trace
+  (requires (needs observable-output)))
+(defsystem tp
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses trace))
+  (platform (uses host.p)))

@@ -1,0 +1,26 @@
+(eadl-version eadl/1)
+; A sporadic task reaching one external source and, through an epoch extender, a timer route.
+(defblock dev.e
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defblock timer.short
+  (offers
+    (relative-delay true)
+    (counter-width 16 bit)
+    (counter-modulus 65536)
+    (tick-rate 10 MHz)
+    (wrap-behavior modular)
+    (observation-coherent true)
+    (channels 1 tick)
+    (reachable-at-privilege machine)))
+(defplatform soc.s
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.e timer.short)))
+(defservice evt
+  (requires (needs interrupt-source)))
+(defservice time.monotonic
+  (requires
+    (unambiguous-horizon (at-least 60 s))
+    (needs counter-width tick-rate observation-coherent)))
+(defsystem sa
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt time.monotonic))
+  (platform (uses soc.s)))

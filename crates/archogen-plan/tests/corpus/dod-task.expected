@@ -1,0 +1,2 @@
+== system dodt
+refused unsupported-profile: `(adapter deadline-over-delay timer.delay (task dodt sampler))` delivers an expiry to `(task dodt sampler)`, and how a job receives an expiry is `M4.1.6`'s

@@ -186,7 +186,18 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Declared at | `const:crates/archogen-plan-check/src/assignment.rs:FORMAT`, the checker's; `const:crates/eadl-resolve/src/plan.rs:FORMAT`, the search's — two constants of one format, one golden |
 | Changes when | a clause is added, removed, renamed, re-typed, reordered or reinterpreted, a provider or requester kind is added, or the program's digest is computed otherwise. A reader that meets another identifier refuses the record rather than guess |
 | Pinned by | its canonical text — every clause, the bindings' order and the digest of a fixed program — frozen in `crates/archogen-plan-check/tests/goldens/archogen-assignment-2.golden` and compared by `crates/archogen-plan-check/tests/record.rs`, never rewritten, beside `/1`'s golden, kept unchanged and refused as another format; the same test reads every record back as itself and refuses another format, a kind the checker's table does not hold and a binding out of order or twice. A plain description — no `defmodule` — is one root instance, written `instance . - 0.0`, which `crates/archogen-plan-check/tests/executable.rs` holds (`M3.5.6.1`, completing `/1` before any plan of one could be checked). The search's writer, `crates/eadl-resolve/src/plan.rs` with its own `FORMAT` constant, is held to the same golden byte for byte, and its program text to the checker's over every tracked description, by `crates/eadl-resolve/tests/plan.rs` (`M3.4.3`) |
-| Keeps | a record labelled `archogen-assignment/2` has one text, and names the same program, adapter catalog and bindings to every reader of `/2` |
+| Keeps | a record labelled `archogen-assignment/2` has one text, and names the same program, adapter catalog and bindings to every reader of `/2`; the generator's own reader, `plan::read`, accepts only what its writer writes, every record the search writes reading back as itself (`M4.1.3`) |
+
+## `runtime-plan-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | the runtime plan a checked assignment is lowered into, for a system run on the hosted playground: its tasks and what releases each, its bindings and adapter instances, its interrupts ranked, each part's execution contexts, its initialisation graph and steps, and what it owes (`docs/decisions/decision_runtime-plan.md`, `M4.1`) |
+| Version | `archogen-runtime-plan/1`, under review (`M4.1.1`): built ahead of the record's acceptance as its executable form |
+| Declared at | `const:crates/archogen-plan/src/lib.rs:FORMAT` |
+| Changes when | any rule of the record's §2 changes — an order, the topological choice — or what §2 reads, the joint rules, the vocabulary or the adapter catalog, moves a plan for the same inputs |
+| Pinned by | the record's three worked texts, compared with what the code writes by `crates/archogen-plan/tests/worked.rs`, and the review's probe systems with their outcomes, `crates/archogen-plan/tests/corpus.rs`; the frozen goldens come with `M4.1.4`'s production half |
+| Keeps | a plan labelled `archogen-runtime-plan/1` has one text for one record and one description |
 
 ## `adapter-catalog`
 

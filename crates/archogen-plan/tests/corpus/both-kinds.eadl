@@ -1,0 +1,16 @@
+(eadl-version eadl/1)
+(defblock dev.both
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (relative-delay true) (channels 1 tick)
+    (reachable-at-privilege machine)))
+(defplatform soc.b
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.both)))
+(defservice evt
+  (requires (needs interrupt-source)))
+(defservice alarm
+  (requires (needs relative-delay)))
+(defsystem both
+  (task s (min-separation 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (uses evt))
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 2) (uses alarm))
+  (requires (uses evt alarm))
+  (platform (uses soc.b)))

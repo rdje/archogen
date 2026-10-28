@@ -1,0 +1,23 @@
+(eadl-version eadl/1)
+
+(defblock timer
+  (offers
+    (relative-delay true)
+    (counter-modulus 65536)
+    (tick-rate 10 MHz)
+    (wrap-behavior modular)
+    (observation-coherent true)
+    (channels 1 tick)
+    (reachable-at-privilege machine)))
+
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer)))
+
+(defservice alarm
+  (requires (needs relative-delay)))
+
+(defsystem named
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (requires (uses alarm))
+  (platform (uses soc)))

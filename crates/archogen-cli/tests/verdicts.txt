@@ -1,6 +1,40 @@
 # The frozen verdict of every description in this repository (leaf `PROGRAM.6.2`).
 # <exit code of `archogen check`> <its diagnostic codes, sorted, or -> <path>
 # Regenerated deliberately: ARCHOGEN_BLESS_VERDICTS=1 cargo test -p archogen-cli --test verdicts
+0 - crates/archogen-plan/tests/corpus/both-kinds-adapter.eadl
+0 - crates/archogen-plan/tests/corpus/both-kinds.eadl
+0 - crates/archogen-plan/tests/corpus/both-release.eadl
+0 - crates/archogen-plan/tests/corpus/both-routes.eadl
+0 - crates/archogen-plan/tests/corpus/cycle.eadl
+0 - crates/archogen-plan/tests/corpus/dod-bare.eadl
+0 - crates/archogen-plan/tests/corpus/dod-task.eadl
+0 - crates/archogen-plan/tests/corpus/dod-unbound.eadl
+12 unsupported-profile crates/archogen-plan/tests/corpus/dup-prio.eadl
+0 - crates/archogen-plan/tests/corpus/fast-source.eadl
+0 - crates/archogen-plan/tests/corpus/multiplex-needs.eadl
+0 - crates/archogen-plan/tests/corpus/multiplex-r5.eadl
+0 - crates/archogen-plan/tests/corpus/multiplex.eadl
+0 - crates/archogen-plan/tests/corpus/named-timer-r5.eadl
+0 - crates/archogen-plan/tests/corpus/named-timer.eadl
+0 - crates/archogen-plan/tests/corpus/needs-svc.eadl
+0 - crates/archogen-plan/tests/corpus/nosep-source.eadl
+0 - crates/archogen-plan/tests/corpus/periodic-source.eadl
+0 - crates/archogen-plan/tests/corpus/rank-tie.eadl
+0 - crates/archogen-plan/tests/corpus/region-hosted.eadl
+0 - crates/archogen-plan/tests/corpus/shared-ext.eadl
+0 - crates/archogen-plan/tests/corpus/sporadic-and-alarm.eadl
+0 - crates/archogen-plan/tests/corpus/sporadic-only.eadl
+0 - crates/archogen-plan/tests/corpus/sporadic.eadl
+0 - crates/archogen-plan/tests/corpus/sys-alarm.eadl
+0 - crates/archogen-plan/tests/corpus/sys-source.eadl
+0 - crates/archogen-plan/tests/corpus/task-alarm.eadl
+0 - crates/archogen-plan/tests/corpus/task-direct.eadl
+0 - crates/archogen-plan/tests/corpus/task-extender.eadl
+0 - crates/archogen-plan/tests/corpus/task-policy.eadl
+0 - crates/archogen-plan/tests/corpus/task-source.eadl
+0 - crates/archogen-plan/tests/corpus/two-dod.eadl
+0 - crates/archogen-plan/tests/corpus/two-sources.eadl
+0 - crates/archogen-plan/tests/corpus/two-systems.eadl
 0 - crates/eadl-resolve/tests/joint/f08-two-exclusive-requests.eadl
 0 - crates/eadl-resolve/tests/joint/f09-conflicting-ownership.eadl
 0 - crates/eadl-resolve/tests/search/adapter-deadline-over-delay.eadl

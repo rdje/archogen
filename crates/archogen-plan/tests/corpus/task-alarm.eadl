@@ -1,0 +1,10 @@
+(eadl-version eadl/1)
+; A periodic task programming a relative delay itself: the timer route names the task.
+(defblock timer.d
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc.m
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d)))
+(defsystem ta
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs relative-delay))
+  (platform (uses soc.m)))

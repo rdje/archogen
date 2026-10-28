@@ -1,0 +1,28 @@
+(eadl-version eadl/1)
+
+(defblock dev.x
+  (offers
+    (interrupt-source true)
+    (min-arrival-separation 20 ms)
+    (relative-delay true)
+    (counter-modulus 4294967296)
+    (tick-rate 1 MHz)
+    (observation-coherent true)
+    (channels 1 tick)
+    (reachable-at-privilege machine)))
+
+(defplatform soc.x
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.x)))
+
+(defservice evt
+  (requires (needs interrupt-source)))
+
+(defservice alarm
+  (requires (needs relative-delay)))
+
+(defsystem both
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 2) (uses evt))
+  (requires (uses alarm evt))
+  (platform (uses soc.x)))
