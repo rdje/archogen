@@ -10,6 +10,7 @@
 use std::path::{Path, PathBuf};
 
 use archogen_plan::{lower, Refusal};
+use archogen_plan_check::check::plan_file;
 use eadl_front::module::DirectoryModules;
 use eadl_front::{Form, Program, SourceMap};
 use eadl_model::check::{check, check_program, resolved_declarations, shipped_registry};
@@ -83,6 +84,38 @@ pub fn checked(text: &str) -> Result<Program, &'static str> {
 pub fn lowered_record(text: &str, record: &str) -> Result<String, Refusal> {
     let program = checked(text).expect("the language's check accepts the description");
     let record = record.replace("PROGRAM", &plan::program_digest(&program));
+    lower(&program, &record, &vocabulary(), &catalog()).map(|plan| plan.text())
+}
+
+/// A hand-written record judged by the configuration checker, as the lowering takes only a record it accepted (the
+/// record's §1), then lowered: its refusal, or the plan's text. A record the checker refuses fails the test.
+pub fn judged_record(text: &str, record: &str) -> Result<String, Refusal> {
+    let program = checked(text).expect("the language's check accepts the description");
+    let record = record.replace("PROGRAM", &plan::program_digest(&program));
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add("description.eadl", text.to_owned())
+        .expect("small");
+    let (_, verdict) = plan_file(
+        &mut sources,
+        id,
+        &DirectoryModules::new(root()),
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        &record,
+    );
+    if let Err(refused) = verdict {
+        let findings: Vec<String> = refused
+            .findings
+            .iter()
+            .map(|f| format!("{}: {}", f.code, f.message))
+            .collect();
+        panic!(
+            "the configuration checker refuses the record, {}: {}\n{record}",
+            refused.status.slug(),
+            findings.join("; ")
+        );
+    }
     lower(&program, &record, &vocabulary(), &catalog()).map(|plan| plan.text())
 }
 

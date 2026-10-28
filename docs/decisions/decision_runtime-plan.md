@@ -142,17 +142,19 @@ built only marked experimental.
 A runtime plan is an engine structure (`decision_eadl-engine-boundary.md`). Each section names its input. A **node**
 below is a node of the joint rules' initialization graph (§2.7): a provider an active binding names (a block, a platform
 or an adapter's instance), a block or a platform the system serves that is bound for requirements of its own — a
-requester like any other (model §8 rule 1, `M4.1.14`), whose code an interrupt can run (§2.6) — a service, or a policy:
-the three kinds of node `crates/eadl-resolve/src/joint.rs` gives, `Provider` (hardware and instances), `Service` and
-`Other`, the last a policy's, a description naming a system being refused (§1). Its tasks and its own level, requesters
-too, are never nodes; a block or a platform the system serves that is bound for nothing is a node only as a provider an
-active binding names, since as a requester it runs no code the plan places; the plan derives the context of each task
-and each node (§2.6), the requesters whose code it places, as `M3.3.8` asks. A node's **text** is its name as the plan
-writes it, an instance's being its `(adapter …)` text, and texts are compared byte by byte. A requester **reaches** what
-it names by `uses` or `needs`, and what it is bound to as its provider, at any depth, as the joint rules take a
-requester's names (model §8 rule 7) — but for a block's or a platform's `uses` or `needs`, which names only hardware
-(§1) and is never a call — its `uses` composition (rule 1; rule 5's "`uses` alone is composition"), its `needs` a block
-it brings into the system's hardware (rule 7): hardware reaches only what its own requirements are bound to.
+requester like any other (model §8 rule 1, `M4.1.14`), whose code an interrupt can run (§2.6) — a block or a platform
+the system serves that a served task, service or policy names by `uses` or `needs`, whose code that name calls
+(`M4.1.18`), a service, or a policy: the three kinds of node `crates/eadl-resolve/src/joint.rs` gives, `Provider`
+(hardware and instances), `Service` and `Other`, the last a policy's, a description naming a system being refused (§1).
+Its tasks and its own level, requesters too, are never nodes; a block or a platform the system serves that is bound for
+nothing and that nothing calls is a node only as a provider an active binding names, since as a requester it runs no
+code the plan places; the plan derives the context of each task and each node (§2.6), the requesters whose code it
+places, as `M3.3.8` asks. A node's **text** is its name as the plan writes it, an instance's being its `(adapter …)`
+text, and texts are compared byte by byte. A requester **reaches** what it names by `uses` or `needs`, and what it is
+bound to as its provider, at any depth, as the joint rules take a requester's names (model §8 rule 7) — but for a
+block's or a platform's `uses` or `needs`, which names only hardware (§1) and is never a call — its `uses` composition
+(rule 1; rule 5's "`uses` alone is composition"), its `needs` a block it brings into the system's hardware (rule 7):
+hardware reaches only what its own requirements are bound to.
 
 An **interrupt** is named by its kind and its provider, never by the provider alone, since one provider can raise a
 timer route and a source, and a block may be named `timer`:
@@ -427,7 +429,7 @@ timer route and a source, and a block may be named `timer`:
     | each task whose trigger is `unknown` | `trigger` | `description` |
     | each source whose separation is `unknown` | `separation` | `description` |
     | each node | `contexts`, `no-wait`, `runtime-discipline` | `realization` |
-    | each node whose context line holds `job` | `call-cost`, the time one call of its code takes in a job; `masked-runs` and `masked-category`, its code's masked runs there and their bounds' evidence category | `realization` |
+    | each node whose context line holds `job` | `call-cost`, the time one call of its code takes in a job; `masked-runs`, its code's masked runs there | `realization` |
     | each instance whose kind has costs | `cost-terms` | `realization` |
     | each instance's obliged fact | that fact | `realization` |
     | each node a `multiplex` obligation names | `overhead` | `realization` |
@@ -442,6 +444,12 @@ timer route and a source, and a block may be named `timer`:
     A node in a job owes its masked runs as a task does: of code a job calls, the composite-inputs record's §7 says "no
     part covers that code's execution or its masked runs", and the variant's condition 4 reads data shared only inside
     declared masked sections; `M4.1.6` designs their term beside the call cost's.
+
+    Every bound owed to the realization — a call cost, masked runs, a cost's terms, an overhead, a service cost, an
+    arrival bound, an obliged fact — is owed with `ROADMAP.md` §7.3's record of a bound: "Every numerical bound records
+    units, origin, scope, target and binary identity, and evidence category". The realization states the record with the
+    bound (`RTP-H2`), so the composite-inputs record's §6 can take "the weakest of its parts' categories". The
+    application's categories are facts of their own, as its inputs' format carries them apart (`RTP-H5`).
 
     The owners are the application's inputs (`RTP-H5`), the description, and the generated code (`RTP-H2`). No
     catalog record describes the playground, so `/1` owes the catalog nothing, and the platform's own figures are the
@@ -587,13 +595,11 @@ sign and no leading zero.
 (owed (task heartbeat chime) task-facts (by application))
 (owed console.uart call-cost (by realization))
 (owed console.uart contexts (by realization))
-(owed console.uart masked-category (by realization))
 (owed console.uart masked-runs (by realization))
 (owed console.uart no-wait (by realization))
 (owed console.uart runtime-discipline (by realization))
 (owed console.write call-cost (by realization))
 (owed console.write contexts (by realization))
-(owed console.write masked-category (by realization))
 (owed console.write masked-runs (by realization))
 (owed console.write no-wait (by realization))
 (owed console.write runtime-discipline (by realization))
@@ -645,7 +651,6 @@ to exactly this text, but for its two digests:
 (owed (adapter epoch-extender timer.short) call-cost (by realization))
 (owed (adapter epoch-extender timer.short) contexts (by realization))
 (owed (adapter epoch-extender timer.short) cost-terms (by realization))
-(owed (adapter epoch-extender timer.short) masked-category (by realization))
 (owed (adapter epoch-extender timer.short) masked-runs (by realization))
 (owed (adapter epoch-extender timer.short) no-wait (by realization))
 (owed (adapter epoch-extender timer.short) runtime-discipline (by realization))
@@ -665,13 +670,11 @@ to exactly this text, but for its two digests:
 (owed short-counter leaves-interrupt-hardware-alone (by application))
 (owed time.monotonic call-cost (by realization))
 (owed time.monotonic contexts (by realization))
-(owed time.monotonic masked-category (by realization))
 (owed time.monotonic masked-runs (by realization))
 (owed time.monotonic no-wait (by realization))
 (owed time.monotonic runtime-discipline (by realization))
 (owed timer.short call-cost (by realization))
 (owed timer.short contexts (by realization))
-(owed timer.short masked-category (by realization))
 (owed timer.short masked-runs (by realization))
 (owed timer.short no-wait (by realization))
 (owed timer.short runtime-discipline (by realization))
@@ -746,13 +749,11 @@ digests:
 (owed (task sporadic s) task-facts (by application))
 (owed dev.e call-cost (by realization))
 (owed dev.e contexts (by realization))
-(owed dev.e masked-category (by realization))
 (owed dev.e masked-runs (by realization))
 (owed dev.e no-wait (by realization))
 (owed dev.e runtime-discipline (by realization))
 (owed evt call-cost (by realization))
 (owed evt contexts (by realization))
-(owed evt masked-category (by realization))
 (owed evt masked-runs (by realization))
 (owed evt no-wait (by realization))
 (owed evt runtime-discipline (by realization))
@@ -798,8 +799,8 @@ device; and a cascade of two sources' routes. Round 16 adds durations past the a
 the system's own level; a service bound to a block offering `absolute-deadline` directly; a composite bound to its part,
 under two names; and a sporadic task bound to its own source beside another source's handler. Round 17 adds a service
 and a policy naming a block, under two names; a served block named by a renamed service; and a node shared between a job
-and a source's service. A description the language's check refuses is no input (§1), and its probe is held at that
-check's verdict.
+and a source's service. Round 18 adds a block a service, a source's handler and a task name while nothing binds it. A
+description the language's check refuses is no input (§1), and its probe is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with
@@ -891,7 +892,7 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 | Id | Leaf | Obligation |
 | --- | --- | --- |
 | `RTP-H1` | `M4.2` | The emitter moves `archogen build` onto the runtime plan for the hosted playground, its faces in step on the command line, the engine API and the [MCP](../book/src/ledger.md#mcp-specification) tool, the enabled set configured as the plan writes it and the routes' ranks realized as the order the simulated controller takes them in, each source trigger the plan infers reported, a plan holding a task released by `unknown` refused naming the task (`missing-fact` where no source's route reaches it or its one source states no separation; otherwise `unsupported-profile`, since `eadl/1` cannot say which arrivals release it), each job an engine-owned empty body that the release trace alone observes until `M4.12`'s inputs give it code, the build saying it runs no application code, the scheduler built with `from_eadl_ranks` and its slot held to the plan's index, and S0's `whole-millisecond-periods` and the profile's "one execution context runs at a time" discharged. |
-| `RTP-H2` | `M4.2` | The generated code realizes the adapters' and the multiplexed nodes' obligations, initialises no component member by calling another's code, never waits on an interrupt in initialisation, and states each cost's terms, each multiplexed node's overhead, each bound an obliged fact offered bare leaves to it, the contexts each node's code supports, and each other value the runtime plan owes to the realization. |
+| `RTP-H2` | `M4.2` | The generated code realizes the adapters' and the multiplexed nodes' obligations, initialises no component member by calling another's code, never waits on an interrupt in initialisation, and states each cost's terms, each multiplexed node's overhead, each bound an obliged fact offered bare leaves to it, the contexts each node's code supports, and each other value the runtime plan owes to the realization, each bound with `ROADMAP.md` §7.3's record of a bound, its evidence category among it. |
 | `RTP-H3` | `M4.2` | The emitter accepts a runtime plan only by lowering it again from the same inputs and comparing bytes, and marks a plan whose acceptance was taken as text experimental. |
 | `RTP-H4` | `M2.21.2` | After `M4.1.4` has written the runtime plan's goldens, the scheduling checker reads the plan with a reader of its own held to them and maps it onto the analysis's inputs: each enabled interrupt given an identifier of its own kind, so that no two share one, and no source declared for a timer route, so that its interrupt is refused as unmodeled load; where an input the analysis needs is unknown, absent, unstated or owed, the analysis reported inconclusive, naming it, never run on a default; each term `M4.1.6` designs, a timer route's charge and a multiplexed node's overhead among them, charged once it exists; a refusal under the plan's source order worded as one another order may admit, and an order searched with Audsley's algorithm over a bound counting each source ahead at its no-loss limit, one it finds confirmed with the composition and named as the repair. |
 | `RTP-H5` | `M4.12` | The application inputs have a format — each task's entry point, execution bound and its evidence category, OS calls with counts, masked runs and their bounds' evidence category, task facts, declarations that it masks only through the runtime API and that its own figures hold under any preemption and from any entry state, stack bound and its evidence category, and the application's `leaves-interrupt-hardware-alone` — that `archogen-runtime-plan/2` carries. |

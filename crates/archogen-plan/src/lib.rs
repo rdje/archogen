@@ -1237,9 +1237,8 @@ pub fn lower(
         owe(&mut owed, &text, "runtime-discipline", "realization");
         if contexts.get(n).is_some_and(|c| c.contains("job")) {
             owe(&mut owed, &text, "call-cost", "realization");
-            // Its code's masked runs in a job and their bounds' evidence category, as a task's (§2.10, R17-R2).
+            // Its code's masked runs in a job, as a task's, their evidence category in their record (§2.10, R17-R2, R18-D3).
             owe(&mut owed, &text, "masked-runs", "realization");
-            owe(&mut owed, &text, "masked-category", "realization");
         }
     }
     owed.sort();

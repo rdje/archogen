@@ -37,6 +37,7 @@ agree crates/archogen-plan/tests/corpus/equal-separation.eadl
 agree crates/archogen-plan/tests/corpus/exact.eadl
 agree crates/archogen-plan/tests/corpus/fast-source.eadl
 agree crates/archogen-plan/tests/corpus/from-and-alarm.eadl
+agree crates/archogen-plan/tests/corpus/handler-calls-unbound-block.eadl
 agree crates/archogen-plan/tests/corpus/hardware-naming-prefix.eadl
 agree crates/archogen-plan/tests/corpus/hz-everywhere.eadl
 agree crates/archogen-plan/tests/corpus/instance-in-a-cycle.eadl
@@ -95,6 +96,7 @@ agree crates/archogen-plan/tests/corpus/region-hosted.eadl
 agree crates/archogen-plan/tests/corpus/served-block-not-hardware.eadl
 agree crates/archogen-plan/tests/corpus/served-block-renamed.eadl
 agree crates/archogen-plan/tests/corpus/service-alarm-two-tasks.eadl
+agree crates/archogen-plan/tests/corpus/service-calls-unbound-block.eadl
 agree crates/archogen-plan/tests/corpus/service-on-route-bound-otherwise.eadl
 agree crates/archogen-plan/tests/corpus/service-only-composed.eadl
 agree crates/archogen-plan/tests/corpus/service-uses-block-only.eadl
@@ -127,6 +129,7 @@ agree crates/archogen-plan/tests/corpus/system-uses-system.eadl
 agree crates/archogen-plan/tests/corpus/task-alarm.eadl
 agree crates/archogen-plan/tests/corpus/task-direct.eadl
 agree crates/archogen-plan/tests/corpus/task-extender.eadl
+agree crates/archogen-plan/tests/corpus/task-names-unbound-block.eadl
 agree crates/archogen-plan/tests/corpus/task-on-route-bound-otherwise.eadl
 agree crates/archogen-plan/tests/corpus/task-policy.eadl
 agree crates/archogen-plan/tests/corpus/task-reaches-platform.eadl

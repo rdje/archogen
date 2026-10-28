@@ -1,11 +1,12 @@
-//! Hand-written `archogen-assignment/2` records, as no search writes them (`docs/decisions/decision_runtime-plan.md`):
+//! Hand-written `archogen-assignment/2` records, as no search writes them (`docs/decisions/decision_runtime-plan.md`),
+//! each the lowering accepts judged by the configuration checker first, as §1 lowers only what it accepted:
 //! §1's refusals of a record, before anything is lowered, each with its code and taken in the order §1 writes them;
 //! and a record holding every class of §2.5's order. `"PROGRAM"` in a record stands for the digest of the description's
 //! program.
 
 mod common;
 
-use common::{lowered_record, root};
+use common::{judged_record, lowered_record, root};
 
 /// One task logging through a console: the system `dg`.
 const DESCRIPTION: &str = "(eadl-version eadl/1)
@@ -37,7 +38,7 @@ fn refused(description: &str, record: &str) -> (&'static str, String) {
 
 #[test]
 fn the_record_as_written_lowers() {
-    let plan = lowered_record(
+    let plan = judged_record(
         DESCRIPTION,
         &record("dg", "PROGRAM", "rt-static-up-v1", "adapters/1", ""),
     )
@@ -138,7 +139,7 @@ fn every_class_of_the_route_order_in_one_system() {
     let description =
         std::fs::read_to_string(root().join("crates/archogen-plan/tests/corpus/rank-classes.eadl"))
             .expect("the fixture");
-    let plan = lowered_record(
+    let plan = judged_record(
         &description,
         "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system rc)\n(program \"PROGRAM\")\n\
          (adapters adapters/1)\n(bind alarm relative-delay timer.a)\n(bind ea interrupt-source dev.a)\n\
@@ -235,7 +236,7 @@ fn a_record_binding_another_requester_s_exclusive_instance_does_not_rebuild() {
     assert_eq!(code, "tool-failure");
     assert!(message.contains("which serves `ghost` alone"), "{message}");
     // Named for `dl`, the instance's bound is `dl`'s, which writes none: the fact offered bare, and owed.
-    let plan = lowered_record(description, &record.replace(" ghost)", " dl)")).expect("lowered");
+    let plan = judged_record(description, &record.replace(" ghost)", " dl)")).expect("lowered");
     assert!(plan.contains("(obliged delivery-bound) "), "{plan}");
 }
 
@@ -258,7 +259,7 @@ fn two_handlers_sharing_a_channel_multiplex_it() {
   (requires (uses evt.a evt.b))
   (platform (uses soc)))
 ";
-    let plan = lowered_record(
+    let plan = judged_record(
         description,
         "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system ti)\n(program \"PROGRAM\")\n\
          (adapters adapters/1)\n(bind alarm relative-delay timer.d)\n(bind evt.a interrupt-source dev.a)\n\
@@ -344,7 +345,7 @@ fn a_cascade_reaches_two_sources_routes_and_its_release_is_unknown() {
   (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt))
   (platform (uses soc.c)))
 ";
-    let plan = lowered_record(
+    let plan = judged_record(
         description,
         "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system cs)\n(program \"PROGRAM\")\n\
          (adapters adapters/1)\n(bind ctl interrupt-source dev.e)\n(bind evt interrupt-source ctl)\n",
@@ -380,7 +381,7 @@ fn a_sporadic_task_bound_to_its_own_source_is_released_by_it() {
   (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs interrupt-source) (uses evt))
   (platform (uses soc)))
 ";
-    let plan = lowered_record(
+    let plan = judged_record(
         description,
         "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system os)\n(program \"PROGRAM\")\n\
          (adapters adapters/1)\n(bind evt interrupt-source dev.b)\n(bind (task os s) interrupt-source dev.a)\n",

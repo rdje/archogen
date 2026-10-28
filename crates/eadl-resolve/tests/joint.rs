@@ -1680,6 +1680,30 @@ fn a_service_naming_a_block_comes_after_it() {
 }
 
 #[test]
+fn a_block_a_service_names_and_nothing_binds_is_a_node() {
+    // Leaf `M4.1.18`: the service's name is a call, so the block is a node, initialised before it, though no binding
+    // names it.
+    let v = vocabulary();
+    let text = "(defblock z.uart (offers (observable-output true)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses z.uart)))
+(defservice a.log (requires (uses z.uart)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses a.log))
+  (platform (uses soc)))";
+    let g = graph(text, &[], &v);
+    assert!(
+        g.nodes.contains(&("z.uart".to_string(), Node::Provider)),
+        "{:?}",
+        g.nodes
+    );
+    assert!(
+        g.edges.contains(&edge("z.uart", "a.log", Because::Named)),
+        "{:?}",
+        g.edges
+    );
+}
+
+#[test]
 fn two_services_using_each_other_are_one_component_not_a_refusal() {
     // Review D3: a log that timestamps and a clock that logs its wrap each initialise without calling the other.
     let v = vocabulary();

@@ -1620,6 +1620,18 @@ impl<'v> Joint<'v> {
                 );
             }
         }
+        // A block or a platform a served task, service or policy names by `uses` or `needs` is a node: the name is a call
+        // (`docs/decisions/decision_runtime-plan.md` §2, leaf `M4.1.18`).
+        for (user, named) in &self.names {
+            if *user == system.name || self.is_hardware(user) || !system.serves(user) {
+                continue;
+            }
+            for n in named {
+                if self.is_hardware(n) && system.serves(n) && !nodes.contains_key(n) {
+                    nodes.insert(n.clone(), Node::Provider);
+                }
+            }
+        }
         let mut edges: BTreeSet<(String, String, Because)> = BTreeSet::new();
         for b in assignment
             .iter()

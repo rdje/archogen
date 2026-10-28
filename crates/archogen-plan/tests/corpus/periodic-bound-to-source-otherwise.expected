@@ -26,7 +26,6 @@
 (owed (task pb p) task-facts (by application))
 (owed dev.e call-cost (by realization))
 (owed dev.e contexts (by realization))
-(owed dev.e masked-category (by realization))
 (owed dev.e masked-runs (by realization))
 (owed dev.e no-wait (by realization))
 (owed dev.e runtime-discipline (by realization))
