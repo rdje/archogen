@@ -409,6 +409,33 @@ playground (§2.5).
 
 Round 10's answers: R10-R1 partly held (R11-D1, R11-D2), R10-R6 not (R11-D5); the rest held.
 
+## Round 12 — `2026-10-28`: not acceptable, 12 findings
+
+The reviewer found every test green, the bounded checker's reading faithful to what it reads, and every hand-off held.
+4 defects and 8 remarks, three of the defects from one cause: `M4.1.14` made a block's and a platform's own
+requirements requesters in the search and the reader, and nothing in this record followed — what such a requester is in
+the plan was never derived, and the bounded checker asserted no block requires anything.
+
+**Fence.** No breach.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R12-D1 | defect | a block or platform with requirements nothing binds to got no context, step or owed fact, though an interrupt runs its code, against §2.6's "each node" and `M3.3.8`'s "the context of each requester" | Such hardware is a node (§2, §2.6, §2.10); rule 12 counts it (`.2`; `M4.1.15` in the joint rules) |
+| R12-D2 | defect | a source separation whose spellings overflow the arithmetic read as none | Refused past the arithmetic, as §1 says (`M4.1.4`) |
+| R12-D3 | defect | a block or platform taking a channel with several users owed no `multiplex`, narrower than OSEK §8.6 | Any node taking a channel, an instance aside (§2.9, `.2`, `M4.1.4`) |
+| R12-D4 | defect | since `M4.1.14`, reaching followed a block's or a platform's composition `uses` | Reaching excludes it: hardware reaches only what its requirements are bound to (§2, `M4.1.4`); `M1.47` filed for the language |
+| R12-R1 | remark | the naming-system refusal reached systems the lowered one does not serve | Scoped to the requesters the system serves (§1, `M4.1.4`) |
+| R12-R2 | remark | §3's probe list stopped at round 10 | Rounds 11 and 12 listed (§3) |
+| R12-R3 | remark | several durations past the arithmetic, a sporadic task released through hardware, a bare separation: no fixture | Added (`M4.1.4`) |
+| R12-R4 | remark | the bounded checker reaches no requiring hardware, no composition, no past-arithmetic value and no second system, and hard-codes jitter, overrun and the deadline's reference | `M4.1.13` reopened for them |
+| R12-R5 | remark | §2.5 claimed Audsley's optimality from Davis's Condition 1 alone | Claimed no further: Condition 1 shown, the other two not; soundness rests on `RTP-H4`'s confirmation (§2.5) |
+| R12-R6 | remark | `M4.1.14` changed the lowering's inputs without this record | A change to what the lowering reads is re-derived here in the same change (How to apply) |
+| R12-R7 | remark | every hand-off quoted word for word | No finding |
+| R12-R8 | remark | the code and source claims checked true | No finding |
+
+Round 11's answers: R11-D4 partly held (R12-D1, D3, D4), R11-R2 partly (R12-R4); R10-D2 partly (R12-D2); the rest
+held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a

@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-27`
 - **Status:** `active` — the design for leaf `M4.1`, under independent review (`M4.1.1`) before any code relies on it;
-  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 11 answered; from round 7 it is
+  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 12 answered; from round 7 it is
   reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
 - **Owner / source:** leaf `M4.1.1` (`docs/tasks/M4.md`); `ROADMAP.md` §4.2's `archogen-plan`, §7.3, §7.5, §7.6, §10.1
   step 5 and §10.3; model §8 rules 4, 5, 7, 8, 10, 12 and 15; the obligations `M3.3.8`, `M3.5`, `M3.5.5.7.3` and
@@ -81,9 +81,10 @@ a bullet over tasks is taken task by task in runtime order, each task's clauses 
   interrupts a service can be released by" (the vocabulary): `tool-failure`, naming the task and the clause, the check
   having accepted an ill-formed description. `M1.42` and `M1.43` make the language refuse the last three,
   `invalid-description`;
-- a declaration or a task naming a system by `uses` or `needs`: a system is no thing to use — its own `uses` says what
-  it includes (model §8 rule 1) — and its own level would become a node §2 does not give: `tool-failure`, naming each
-  such name, the check having accepted it; `M1.46` makes the language refuse it, `invalid-description`.
+- a declaration or a task the system serves naming a system by `uses` or `needs`: a system is no thing to use — its own
+  `uses` says what it includes (model §8 rule 1) — and its own level would become a node §2 does not give:
+  `tool-failure`, naming each such name, the check having accepted it; `M1.46` makes the language refuse it,
+  `invalid-description`.
 
 **Refusals of what `/1` cannot lower**, each `unsupported-profile`, naming what is missing and, where one does, the
 leaf that adds it:
@@ -125,12 +126,16 @@ built only marked experimental.
 
 A runtime plan is an engine structure (`decision_eadl-engine-boundary.md`). Each section names its input. A **node**
 below is a node of the joint rules' initialization graph (§2.7): a provider an active binding names (a block, a platform
-or an adapter's instance), a service, or a policy: the three kinds of node `crates/eadl-resolve/src/joint.rs` gives,
-`Provider`, `Service` and `Other`, the last a policy's, a description naming a system being refused (§1). A task and the
-system's own level are requesters but never nodes. A node's **text** is its name as the plan writes it, an instance's
-being its `(adapter …)` text, and texts are compared byte by byte. A requester **reaches** what it names by `uses` or
-`needs`, and what it is bound to as its provider, at any depth, as the joint rules take a requester's names (model §8
-rule 7).
+or an adapter's instance), a block or a platform the system serves that writes requirements of its own — a requester
+like any other (model §8 rule 1, `M4.1.14`), whose code an interrupt can run (§2.6) — a service, or a policy: the three
+kinds of node `crates/eadl-resolve/src/joint.rs` gives, `Provider` (hardware and instances), `Service` and `Other`, the
+last a policy's, a description naming a system being refused (§1). Every requester the system serves is a node but its
+tasks and its own level, which are requesters and never nodes, so that the plan derives the context of each requester,
+as `M3.3.8` asks. A node's **text** is its name as the plan writes it, an instance's being its `(adapter …)` text, and
+texts are compared byte by byte. A requester **reaches** what it names by `uses` or `needs`, and what it is bound to as
+its provider, at any depth, as the joint rules take a requester's names (model §8 rule 7) — but for a block's or a
+platform's `uses`, which is composition, never a call (rule 1): hardware reaches only what its own requirements are
+bound to.
 
 An **interrupt** is named by its kind and its provider, never by the provider alone, since one provider can raise a
 timer route and a source, and a block may be named `timer`:
@@ -268,9 +273,10 @@ timer route and a source, and a block may be named `timer`:
      Burns](../book/src/ledger.md#davis-burns-priority-assignment), §4.1). The
      composition's bound for a source, `Δ_x`, reads the jitter `J_q = Δ_q` of each source `q` ahead of it, and `Δ_q`
      depends on the order of the sources ahead of `q` (the composite-inputs record §3): the test fails Condition 1.
-     A bound that counts each source ahead at its no-loss limit instead depends on no order, so Audsley's algorithm is
-     optimal for it, and the scheduling checker may search with it and confirm an order it finds with the composition
-     (`RTP-H4`).
+     A bound that counts each source ahead at its no-loss limit instead depends on no order, so it meets Condition 1;
+     Audsley's algorithm is optimal for it only if it meets the other two conditions of §V as well, which this record
+     does not show. The scheduling checker may search with it all the same, and confirms any order it finds with the
+     composition before naming it (`RTP-H4`), so soundness never rests on the search's optimality.
 
      Soundness does not rest on the order. `compose.rs` refuses an order that is not strict, a source with no rank and
      a source not deliverable, and otherwise takes the order given. It does rest on the run realising the ranks: the
@@ -359,16 +365,17 @@ timer route and a source, and a block may be named `timer`:
    | Kind | Subject | Discharged by | From |
    | --- | --- | --- | --- |
    | an adapter kind's obligation, such as `update` | the instance's text | `M4.2 M4.8`: the generated code realizes it (`RTP-H2`), and the report lists it until it is discharged | the instance's kind (the adapters record's §9) |
-   | `multiplex` | the service or the policy | `M4.2 M2.21.2`: its realization serves every user through its one channel and states its overhead (`RTP-H2`), and the scheduling checker charges it with the term `M4.1.6` designs (`RTP-H4`), as model §8 rule 4 asks of both | the rule below, over the system's tasks and interrupts |
+   | `multiplex` | the node, an instance aside | `M4.2 M2.21.2`: its realization serves every user through its one channel and states its overhead (`RTP-H2`), and the scheduling checker charges it with the term `M4.1.6` designs (`RTP-H4`), as model §8 rule 4 asks of both | the rule below, over the system's tasks and interrupts |
    | `route` | the interrupt, `(timer-route NAME)` or `(source NAME)` | `M4.2 M4.3`: the emitter configures the enabled set (`RTP-H1`), and the simulator delivers it (`RTP-H9`) | `Obligation::Route`, one for each provider and kind |
 
-   `Obligation::Placement` is `Joint::map`'s, and comes only with placement memory, which `/1` refuses. A service or a
-   policy that takes a channel is **multiplexed** where it has two or more **users**: each of the system's tasks that
-   reaches it (§2), directly or through services, policies and bindings; and each interrupt whose context line (§2.6)
-   holds it, but for its own timer route — at the provider whose channel it takes, or that the instance whose channel it
-   takes programs — where nothing else that route runs reaches it: that route's own code delivering to it is no caller,
-   but another node's code there calling it is. Its users are the jobs and the interrupt routines that can call it,
-   whatever declaration names it; the system's own level is none (model §8 rule 4). So
+   `Obligation::Placement` is `Joint::map`'s, and comes only with placement memory, which `/1` refuses. A node that
+   takes a channel — a service, a policy, or a block or platform with requirements of its own; an instance aside, whose
+   kind's obligations say how it shares — is **multiplexed** where it has two or more **users**: each of the system's
+   tasks that reaches it (§2), directly or through services, policies and bindings; and each interrupt whose context
+   line (§2.6) holds it, but for its own timer route — at the provider whose channel it takes, or that the instance
+   whose channel it takes programs — where nothing else that route runs reaches it: that route's own code delivering to
+   it is no caller, but another node's code there calling it is. Its users are the jobs and the interrupt routines that
+   can call it, whatever declaration names it; the system's own level is none (model §8 rule 4). So
    [OSEK](../book/src/ledger.md#osek-os) counts a shared resource's users once resources are used at interrupt level:
    "The ceiling priority shall be set at least to the highest priority of all tasks and interrupt routines that access a
    resource or any of the resources linked to this resource" (§8.6, "OSEK Priority Ceiling Protocol with extensions for
@@ -391,7 +398,7 @@ timer route and a source, and a block may be named `timer`:
     | each node whose context line holds `job` | `call-cost`, the time one call of its code takes in a job | `realization` |
     | each instance whose kind has costs | `cost-terms` | `realization` |
     | each instance's obliged fact | that fact | `realization` |
-    | each service or policy a `multiplex` obligation names | `overhead` | `realization` |
+    | each node a `multiplex` obligation names | `overhead` | `realization` |
     | each source | `service-cost`, `acknowledge-point`, `deferred-work`, `no-application-code`, `one-request-per-arrival` | `realization` |
     | each timer route | `service-cost`, `arrival-bound` | `realization` |
 
@@ -716,8 +723,11 @@ requester is bound to, or another requester's exclusive instance, which do not r
 `/`; callers on a node's own route; a lone user; policies handling a source and taking an expiry; a platform raising a
 source; a zero deadline and a jitter past the period; co-applying refusals; a record the relation does not satisfy; and
 a plan with no node. Round 10 adds `uses` cycles through a node's own route, durations past the exact arithmetic, a zero
-source separation, and two ill-formed tasks. A description the language's check refuses is no input (§1), and its probe
-is held at that check's verdict.
+source separation, and two ill-formed tasks. Round 11 adds blocks requiring an alarm and an output, several receivers of
+interrupt code, and systems named by `uses`. Round 12 adds blocks and platforms with requirements nothing binds to, an
+alarm, an expiry and a source handled by hardware, composition that is no call, a separation whose spellings overflow,
+several durations past the arithmetic at once, and a bare separation. A description the language's check refuses is no
+input (§1), and its probe is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with
@@ -734,11 +744,13 @@ identical canonical plans").
 
 **Built by `M4.1`'s children:**
 - `.2`: model §8 rules 4, 8, 10 and 12 amended, in the model, the generator's joint rules and the checker's, the
-  checker's by a fenced context. Rule 4's users are §2.9's: of a service or a policy that takes a channel, the system's
-  tasks that reach it, through `uses`, `needs` and bindings at any depth, and the interrupts whose context holds it, but
-  for its own timer route — at the provider whose channel it takes, or that the instance whose channel it takes programs
-  — where nothing else that route runs reaches it, never another system's; rule 7 still resolves system by system.
-  Rule 8's enabled set is §2.5's. Rule 12 records this engine's answer, one phase. Rule 10's are below. The adapters
+  checker's by a fenced context. Rule 4's users are §2.9's: of a node that takes a channel, an instance aside, the
+  system's tasks that reach it, through `uses`, `needs` and bindings at any depth, and the interrupts whose context
+  holds it, but for its own timer route — at the provider whose channel it takes, or that the instance whose channel it
+  takes programs — where nothing else that route runs reaches it, never another system's; rule 7 still resolves system
+  by system.
+  Rule 8's enabled set is §2.5's. Rule 12 records this engine's answer, one phase, and counts among its nodes a block or
+  a platform the system serves that writes requirements of its own (§2). Rule 10's are below. The adapters
   record's §9 reads "each cost a cost on the route of the provider it programs", and it states, for each cost, whether
   the interrupt runs the requester's code (§2.6). The engine API's `crates/archogen-api/src/resolve.rs` and
   `docs/book/src/engine-api.md`, which read "a cost the scheduling analysis charges as a source", read so too. The
@@ -878,6 +890,9 @@ identical canonical plans").
   A corpus outcome is what the code writes, blessed: a review judges it against these rules, and it is never a rule.
   Beside the corpus, a bounded exhaustive checker (`M4.1.13`) holds every plan of generated universes to a reading of
   §2 written by a context that did not read the lowering's code, as `decision_executable-design-reviews.md` item 1 asks.
+- A change to what the lowering reads — the search, the record's reader, the joint rules — is re-derived against this
+  record in the same change, its rules restated where they move: round 12 found three defects where `M4.1.14` made
+  hardware a requester and nothing here followed.
 - A consumer reads the plan with a reader held to the goldens, never by matching text.
 - Related: [[decision_s0-retirement]], [[decision_eadl-engine-boundary]], [[decision_priority-comparison-direction]],
   [[decision_zero-dependency-engine-core]], `docs/specs/adapters/decision_engine-adapters.md`,
