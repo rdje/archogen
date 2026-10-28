@@ -1,0 +1,12 @@
+(eadl-version eadl/1)
+; Two tasks of `outer` naming the system `inner`, whose own level needs an alarm: refused alike (§1; round 11, D3).
+(defblock timer.d (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform host.p (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d)))
+(defsystem inner
+  (task i (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (requires (needs relative-delay))
+  (platform (uses host.p)))
+(defsystem outer
+  (task o (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (uses inner))
+  (task p (period 40 ms) (deadline 40 ms) (deadline-from release) (priority 2) (uses inner))
+  (platform (uses host.p)))

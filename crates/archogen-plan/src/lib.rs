@@ -363,8 +363,8 @@ pub fn lower(
         )
     };
     let mut timings: Vec<Timing> = Vec::new();
-    // The first duration past the exact arithmetic, refused first among `/1`'s limits (§1, §2.2).
-    let mut past: Option<String> = None;
+    // Each task's duration past the exact arithmetic, in runtime order, refused first among `/1`'s limits (§1, §2.2).
+    let mut past: Vec<String> = Vec::new();
     for task in &tasks {
         let period = clause(task.form, "period");
         let (Some(release), Some(deadline)) = (
@@ -390,13 +390,11 @@ pub fn lower(
                 "M1.42",
             )),
             Seconds::PastArithmetic => {
-                past.get_or_insert_with(|| {
-                    format!(
-                        "`(task {system} {})` writes `{}`",
-                        task.name,
-                        c.to_canonical()
-                    )
-                });
+                past.push(format!(
+                    "`(task {system} {})` writes `{}`",
+                    task.name,
+                    c.to_canonical()
+                ));
                 Ok(None)
             }
         };
@@ -440,6 +438,35 @@ pub fn lower(
         }
         timings.push(timing);
     }
+    // §1: a `uses` or `needs` naming a system, each named (R11-D3); its own level would become a node §2 does not give.
+    let is_system = |name: &str| {
+        declarations.iter().any(|d| {
+            d.head() == Some("defsystem")
+                && d.items().get(1).and_then(Form::as_symbol) == Some(name)
+        })
+    };
+    let mut naming_systems: Vec<String> = rebuilt
+        .requesters
+        .iter()
+        .flat_map(|r| {
+            r.uses
+                .iter()
+                .chain(&r.needs)
+                .filter(|n| is_system(n))
+                .map(move |n| format!("`{}` names the system `{n}`", r.name))
+        })
+        .collect();
+    naming_systems.sort();
+    naming_systems.dedup();
+    if !naming_systems.is_empty() {
+        return Err(refuse(
+            "tool-failure",
+            format!(
+                "{}: a system is no thing to use, and the description check accepted it, which `M1.46` makes it refuse",
+                naming_systems.join("; ")
+            ),
+        ));
+    }
 
     // §1: what `/1` cannot lower — first, a duration the plan would write past the exact arithmetic: a task's, a
     // source's separation, an obliged bound (§2.2).
@@ -460,6 +487,8 @@ pub fn lower(
         }
         _ => None,
     });
+    let mut past_sources: Vec<String> = past_sources.collect();
+    past_sources.sort();
     let system_text = system.as_str();
     let past_obliged = rebuilt.instances.iter().flat_map(|instance| {
         catalog
@@ -483,16 +512,19 @@ pub fn lower(
                 _ => None,
             })
     });
-    if let Some(what) = past
+    let mut past_obliged: Vec<String> = past_obliged.collect();
+    past_obliged.sort();
+    let past: Vec<String> = past
         .into_iter()
         .chain(past_sources)
         .chain(past_obliged)
-        .next()
-    {
+        .collect();
+    if !past.is_empty() {
         return Err(refuse(
             "unsupported-profile",
             format!(
-                "{what} whose seconds lie past the engine's exact arithmetic, signed 128-bit integers (§2.2): state it within that range; `M1.45` has the language refuse it"
+                "each of these is a duration whose seconds lie past the engine's exact arithmetic, signed 128-bit integers (§2.2) — {}: state each within that range; `M1.45` has the language refuse them",
+                past.join("; ")
             ),
         ));
     }
@@ -621,22 +653,25 @@ pub fn lower(
             .iter()
             .any(|b: &Binding| b.requester == r && b.provider == x && fact_ok(&b.requirement))
     };
+    // Each receiver's place: a task's runtime index, the system's own level after every task (§1).
+    let place = |name: &str| {
+        tasks
+            .iter()
+            .position(|t| joint::task_name(&system, &t.name) == name)
+            .unwrap_or(tasks.len())
+    };
+    let mut receivers: Vec<(usize, String)> = Vec::new();
     for route in routes.iter().filter(|r| r.timer) {
         for r in &route.requesters {
             if own_level_or_task(r)
                 && bound_directly(r, &route.provider, &|q| takes_a_channel(q, vocabulary))
             {
-                return Err(refuse(
-                    "unsupported-profile",
+                receivers.push((
+                    place(r),
                     format!(
-                        "`{}` programs an alarm at `{}` itself, and {} is `M4.1.6`'s",
+                        "`{}` programs an alarm at `{}` itself",
                         names.text(r),
-                        route.provider,
-                        if *r == system {
-                            "what the system's own level's requirement for an alarm means"
-                        } else {
-                            "how a job receives an alarm it programs itself"
-                        }
+                        route.provider
                     ),
                 ));
             }
@@ -659,21 +694,28 @@ pub fn lower(
         );
         for served in served {
             if own_level_or_task(served) {
-                return Err(refuse(
-                    "unsupported-profile",
+                receivers.push((
+                    place(served),
                     format!(
-                        "`{}` delivers an expiry to `{}`, and {} is `M4.1.6`'s",
+                        "`{}` delivers an expiry to `{}`",
                         names.text(&instance.provider.name),
-                        names.text(served),
-                        if *served == system {
-                            "what the system's own level's requirement for an expiry means"
-                        } else {
-                            "how a job receives an expiry"
-                        }
+                        names.text(served)
                     ),
                 ));
             }
         }
+    }
+    receivers.sort();
+    receivers.dedup();
+    if !receivers.is_empty() {
+        let named: Vec<String> = receivers.into_iter().map(|(_, what)| what).collect();
+        return Err(refuse(
+            "unsupported-profile",
+            format!(
+                "{}: no context runs a job's code in an interrupt, and how a job receives an alarm it programs itself or an expiry, and what the system's own level's requirement for either means, are `M4.1.6`'s",
+                named.join("; ")
+            ),
+        ));
     }
 
     // §2.2's lines, and what each task owes.
@@ -802,6 +844,7 @@ pub fn lower(
                         ));
                     };
                     items.push(format!("(obliged {} {})", offer.fact, duration(s)));
+                    owe(&mut owed, &text, &offer.fact, "realization");
                 }
                 _ => {
                     items.push(format!("(obliged {})", offer.fact));

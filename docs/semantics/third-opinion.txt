@@ -54,6 +54,10 @@ agree crates/archogen-plan/tests/corpus/policy-user.eadl
 agree crates/archogen-plan/tests/corpus/rank-classes.eadl
 agree crates/archogen-plan/tests/corpus/rank-gaps.eadl
 agree crates/archogen-plan/tests/corpus/rank-tie.eadl
+agree crates/archogen-plan/tests/corpus/receivers-expiry-and-alarm.eadl
+agree crates/archogen-plan/tests/corpus/receivers-system-and-task.eadl
+agree crates/archogen-plan/tests/corpus/receivers-two-alarms.eadl
+agree crates/archogen-plan/tests/corpus/receivers-two-timers.eadl
 agree crates/archogen-plan/tests/corpus/region-hosted.eadl
 agree crates/archogen-plan/tests/corpus/shapes.eadl
 agree crates/archogen-plan/tests/corpus/shared-ext.eadl
@@ -75,6 +79,8 @@ agree crates/archogen-plan/tests/corpus/sys-alarm.eadl
 agree crates/archogen-plan/tests/corpus/sys-deadline.eadl
 agree crates/archogen-plan/tests/corpus/sys-extender.eadl
 agree crates/archogen-plan/tests/corpus/sys-source.eadl
+agree crates/archogen-plan/tests/corpus/system-uses-system-alarm.eadl
+agree crates/archogen-plan/tests/corpus/system-uses-system.eadl
 agree crates/archogen-plan/tests/corpus/task-alarm.eadl
 agree crates/archogen-plan/tests/corpus/task-direct.eadl
 agree crates/archogen-plan/tests/corpus/task-extender.eadl

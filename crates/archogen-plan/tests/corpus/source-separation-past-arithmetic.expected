@@ -1,2 +1,2 @@
 == system ts
-refused unsupported-profile: `(source dev.e)` states a separation whose seconds lie past the engine's exact arithmetic, signed 128-bit integers (§2.2): state it within that range; `M1.45` has the language refuse it
+refused unsupported-profile: each of these is a duration whose seconds lie past the engine's exact arithmetic, signed 128-bit integers (§2.2) — `(source dev.e)` states a separation: state each within that range; `M1.45` has the language refuse them

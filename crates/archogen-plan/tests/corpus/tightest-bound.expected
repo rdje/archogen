@@ -32,6 +32,7 @@
 (owed (adapter deadline-over-delay timer.delay dl) call-cost (by realization))
 (owed (adapter deadline-over-delay timer.delay dl) contexts (by realization))
 (owed (adapter deadline-over-delay timer.delay dl) cost-terms (by realization))
+(owed (adapter deadline-over-delay timer.delay dl) delivery-bound (by realization))
 (owed (adapter deadline-over-delay timer.delay dl) no-wait (by realization))
 (owed (task tb x) entry-point (by application))
 (owed (task tb x) execution-bound (by application))

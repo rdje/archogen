@@ -55,6 +55,10 @@
 0 - crates/archogen-plan/tests/corpus/rank-classes.eadl
 0 - crates/archogen-plan/tests/corpus/rank-gaps.eadl
 0 - crates/archogen-plan/tests/corpus/rank-tie.eadl
+0 - crates/archogen-plan/tests/corpus/receivers-expiry-and-alarm.eadl
+0 - crates/archogen-plan/tests/corpus/receivers-system-and-task.eadl
+0 - crates/archogen-plan/tests/corpus/receivers-two-alarms.eadl
+0 - crates/archogen-plan/tests/corpus/receivers-two-timers.eadl
 0 - crates/archogen-plan/tests/corpus/region-hosted.eadl
 0 - crates/archogen-plan/tests/corpus/shapes.eadl
 0 - crates/archogen-plan/tests/corpus/shared-ext.eadl
@@ -76,6 +80,8 @@
 0 - crates/archogen-plan/tests/corpus/sys-deadline.eadl
 0 - crates/archogen-plan/tests/corpus/sys-extender.eadl
 0 - crates/archogen-plan/tests/corpus/sys-source.eadl
+0 - crates/archogen-plan/tests/corpus/system-uses-system-alarm.eadl
+0 - crates/archogen-plan/tests/corpus/system-uses-system.eadl
 0 - crates/archogen-plan/tests/corpus/task-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/task-direct.eadl
 0 - crates/archogen-plan/tests/corpus/task-extender.eadl

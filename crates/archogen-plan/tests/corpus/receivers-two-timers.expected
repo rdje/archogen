@@ -1,0 +1,2 @@
+== system ord3
+refused unsupported-profile: `(task ord3 b)` programs an alarm at `timer.z` itself; `(task ord3 a)` programs an alarm at `timer.a` itself: no context runs a job's code in an interrupt, and how a job receives an alarm it programs itself or an expiry, and what the system's own level's requirement for either means, are `M4.1.6`'s

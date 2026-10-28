@@ -1,0 +1,4 @@
+== system inner
+refused tool-failure: `(task outer o)` names the system `inner`; `(task outer p)` names the system `inner`: a system is no thing to use, and the description check accepted it, which `M1.46` makes it refuse
+== system outer
+refused tool-failure: `(task outer o)` names the system `inner`; `(task outer p)` names the system `inner`: a system is no thing to use, and the description check accepted it, which `M1.46` makes it refuse
