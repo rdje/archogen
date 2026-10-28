@@ -164,3 +164,77 @@ fn every_class_of_the_route_order_in_one_system() {
         "(enabled timer (source dev.c) (source dev.z) (source dev.a) (source dev.b) (timer-route timer.a))\n"
     ));
 }
+
+#[test]
+fn a_record_binding_an_instance_no_served_requester_is_bound_to_does_not_rebuild() {
+    // Leaf `M4.1.10`: the checker refuses it, and the lowering once wrote the instance's obligations, owed by no one.
+    let description = "(eadl-version eadl/1)
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock timer.short
+  (offers (relative-delay true) (counter-modulus 65536) (tick-rate 10 MHz) (wrap-behavior modular)
+    (observation-coherent true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart timer.short)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem orph
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (platform (uses host.p)))
+";
+    let mut record = "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system orph)\n(program \"PROGRAM\")\n\
+                      (adapters adapters/1)\n(bind console.write observable-output console.uart)\n"
+        .to_string();
+    for fact in [
+        "counter-modulus",
+        "observation-coherent",
+        "relative-delay",
+        "tick-rate",
+        "wrap-behavior",
+    ] {
+        record.push_str(&format!(
+            "(bind (adapter epoch-extender timer.short) {fact} timer.short)\n"
+        ));
+    }
+    let (code, message) = refused(description, &record);
+    assert_eq!(code, "tool-failure");
+    assert!(message.contains("does not rebuild"), "{message}");
+    assert!(
+        message.contains("which no requester `orph` serves is bound to"),
+        "{message}"
+    );
+}
+
+#[test]
+fn a_record_binding_another_requester_s_exclusive_instance_does_not_rebuild() {
+    // Leaf `M4.1.10`: the lowering once wrote `ghost`'s bound as `dl`'s.
+    let description = "(eadl-version eadl/1)
+(defblock timer.delay
+  (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+    (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc.d (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.delay)))
+(defservice dl (requires (needs absolute-deadline)))
+(defservice ghost (requires (absolute-deadline (delivery-bound (at-most 7 us)))))
+(defsystem mi
+  (task x (period 25 ms) (deadline 25 ms) (deadline-from release) (priority 1) (uses dl))
+  (platform (uses soc.d)))
+";
+    let ghost = "(adapter deadline-over-delay timer.delay ghost)";
+    let mut record = format!(
+        "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system mi)\n(program \"PROGRAM\")\n\
+         (adapters adapters/1)\n(bind dl absolute-deadline {ghost})\n"
+    );
+    for fact in [
+        "counter-modulus",
+        "observation-coherent",
+        "relative-delay",
+        "tick-rate",
+    ] {
+        record.push_str(&format!("(bind {ghost} {fact} timer.delay)\n"));
+    }
+    let (code, message) = refused(description, &record);
+    assert_eq!(code, "tool-failure");
+    assert!(message.contains("which serves `ghost` alone"), "{message}");
+    // Named for `dl`, the instance's bound is `dl`'s, which writes none: the fact offered bare, and owed.
+    let plan = lowered_record(description, &record.replace(" ghost)", " dl)")).expect("lowered");
+    assert!(plan.contains("(obliged delivery-bound) "), "{plan}");
+}

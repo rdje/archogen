@@ -28,7 +28,7 @@
 //! them, so the runtime plan is lowered from the record the checker accepted (`docs/decisions/decision_runtime-plan.md`
 //! §1).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use archogen_digest::Digest;
 use eadl_front::module::{Instance, Program, Version};
@@ -423,12 +423,15 @@ fn instance_parts(text: &str) -> Option<(&str, &str, Option<&str>)> {
 /// instance the record names rebuilt from `catalog`, an exclusive kind's with every requirement its requester writes;
 /// each binding matched to every requirement its requester writes on its fact but a statement, an instance's to its
 /// kind's `beneath`. A record that binds what the description does not require, or leaves a requirement of the system's
-/// unbound, does not rebuild.
+/// unbound, does not rebuild; nor does one that binds a requester to an exclusive instance serving another, or names an
+/// instance no requester the system serves is bound to (`docs/specs/adapters/decision_engine-adapters.md` §4 and §5,
+/// leaf `M4.1.10`).
 ///
 /// # Errors
 ///
 /// A system, requester, provider, kind or requirement the record names and the description or the catalog does not
-/// hold; a requirement bound twice or left unbound; a declaration the joint rules do not read.
+/// hold; a requirement bound twice or left unbound; an exclusive instance bound by a requester it does not serve, or an
+/// instance nothing the system serves is bound to; a declaration the joint rules do not read.
 pub fn rebuild<'v>(
     record: &Record,
     declarations: &[Form],
@@ -558,6 +561,15 @@ pub fn rebuild<'v>(
                 bind.provider
             )));
         }
+        // An exclusive instance serves the one requester bound to it (the adapters record §4).
+        if let Some(served) = instance_of(&provider).and_then(|i| i.serves.as_deref()) {
+            if served != requester {
+                return Err(Unread(format!(
+                    "the record binds `{}`'s `{}` to `{}`, an exclusive instance, which serves `{served}` alone",
+                    bind.requester, bind.fact, bind.provider
+                )));
+            }
+        }
         let written: Vec<Requirement> = match instance_of(&requester) {
             Some(instance) => {
                 if provider != instance.over {
@@ -615,6 +627,32 @@ pub fn rebuild<'v>(
             requirement,
             provider: provider.clone(),
         }));
+    }
+    // Each instance is bound to by a requester the system serves, or by an instance that is: an instance is a requester
+    // because it is bound (the adapters record §5, "Each instance bound is also a requester").
+    let mut reached: BTreeSet<&str> = BTreeSet::new();
+    loop {
+        let before = reached.len();
+        for b in &bindings {
+            if instance_of(&b.provider).is_some()
+                && (system.serves(&b.requester) || reached.contains(b.requester.as_str()))
+            {
+                reached.insert(b.provider.as_str());
+            }
+        }
+        if reached.len() == before {
+            break;
+        }
+    }
+    if let Some(orphan) = instances
+        .iter()
+        .find(|i| !reached.contains(i.provider.name.as_str()))
+    {
+        return Err(Unread(format!(
+            "the record binds `{}`, which no requester `{}` serves is bound to",
+            instance_text(orphan, &record.system),
+            record.system
+        )));
     }
     // Every requirement the system's requesters, and the instances' kinds, write is bound.
     let required = requesters

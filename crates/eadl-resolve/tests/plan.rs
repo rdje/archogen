@@ -600,3 +600,126 @@ fn a_level_a_requester_states_binds_no_provider() {
     assert!(accepted, "{record}");
     assert!(rebuilt, "{record}");
 }
+
+/// `text`, a plain description, and `record`, a hand-written record whose `"PROGRAM"` stands for its program's digest:
+/// whether the configuration checker accepts the record, and the generator's rebuild of it.
+fn judged_record(text: &str, record: &str) -> (bool, Result<(), String>) {
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add("description.eadl", text.to_owned())
+        .expect("small");
+    let modules = DirectoryModules::new(root());
+    let (program, _) = plan_file(
+        &mut sources,
+        id,
+        &modules,
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        "",
+    );
+    let record = record.replace("PROGRAM", &plan::program_digest(&program));
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add("description.eadl", text.to_owned())
+        .expect("small");
+    let (_, verdict) = plan_file(
+        &mut sources,
+        id,
+        &modules,
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        &record,
+    );
+    let v = vocabulary();
+    let catalog = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+        .expect("the shipped catalog reads");
+    let rebuilt = plan::rebuild(
+        &plan::read(&record).expect("it reads"),
+        &program.root().declarations,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &catalog,
+    )
+    .map(|_| ())
+    .map_err(|e| e.0);
+    (verdict.is_ok(), rebuilt)
+}
+
+#[test]
+fn a_record_rebuilds_only_the_instances_its_system_s_requesters_are_bound_to() {
+    // Leaf `M4.1.10`: an instance is a requester because it is bound, and an exclusive one serves the one requester bound
+    // to it (`docs/specs/adapters/decision_engine-adapters.md` §4 and §5). The checker refused both records below, and
+    // the rebuild once accepted them, the lowering then writing obligations no requester owed.
+    let orphan = "(eadl-version eadl/1)
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock timer.short
+  (offers (relative-delay true) (counter-modulus 65536) (tick-rate 10 MHz) (wrap-behavior modular)
+    (observation-coherent true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart timer.short)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem orph
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (platform (uses host.p)))
+";
+    let header = |system: &str| {
+        format!(
+            "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system {system})\n(program \"PROGRAM\")\n(adapters adapters/1)\n"
+        )
+    };
+    let extender = "(adapter epoch-extender timer.short)";
+    let mut record = header("orph") + "(bind console.write observable-output console.uart)\n";
+    for fact in [
+        "counter-modulus",
+        "observation-coherent",
+        "relative-delay",
+        "tick-rate",
+        "wrap-behavior",
+    ] {
+        record.push_str(&format!("(bind {extender} {fact} timer.short)\n"));
+    }
+    let (accepted, rebuilt) = judged_record(orphan, &record);
+    assert!(!accepted, "{record}");
+    let why = rebuilt.expect_err(&record);
+    assert!(
+        why.contains(
+            "`(adapter epoch-extender timer.short)`, which no requester `orph` serves is bound to"
+        ),
+        "{why}"
+    );
+
+    let misnamed = "(eadl-version eadl/1)
+(defblock timer.delay
+  (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+    (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc.d (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.delay)))
+(defservice dl (requires (needs absolute-deadline)))
+(defservice ghost (requires (absolute-deadline (delivery-bound (at-most 7 us)))))
+(defsystem mi
+  (task x (period 25 ms) (deadline 25 ms) (deadline-from release) (priority 1) (uses dl))
+  (platform (uses soc.d)))
+";
+    let ghost = "(adapter deadline-over-delay timer.delay ghost)";
+    let mut record = header("mi") + &format!("(bind dl absolute-deadline {ghost})\n");
+    for fact in [
+        "counter-modulus",
+        "observation-coherent",
+        "relative-delay",
+        "tick-rate",
+    ] {
+        record.push_str(&format!("(bind {ghost} {fact} timer.delay)\n"));
+    }
+    let (accepted, rebuilt) = judged_record(misnamed, &record);
+    assert!(!accepted, "{record}");
+    let why = rebuilt.expect_err(&record);
+    assert!(
+        why.contains("an exclusive instance, which serves `ghost` alone"),
+        "{why}"
+    );
+    // Named for the requester it serves, the same record rebuilds, and the checker accepts it.
+    let own = record.replace(" ghost)", " dl)");
+    let (accepted, rebuilt) = judged_record(misnamed, &own);
+    assert!(accepted, "{own}");
+    assert_eq!(rebuilt, Ok(()), "{own}");
+}
