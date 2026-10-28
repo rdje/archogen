@@ -475,6 +475,12 @@ configuration checker judges: the generator's own writer and its own digest of t
 with the checker's reader, both held to one golden and to each other by `crates/eadl-resolve/tests/plan.rs`. A
 requester is a declaration or a task of a system, written `(task SYSTEM TASK)`, so a task never reads as a service.
 
+The generator reads the record back with a reader of its own, `plan::read`, which accepts only the text its writer
+writes, and `plan::rebuild` gives the joint rules the record's bindings over the description as the search held them
+(`M4.1.3`). So the runtime plan is lowered from the record the checker accepted, never from the search's memory
+(`docs/decisions/decision_runtime-plan.md` §1). Over every description the search resolves, the record reads back to
+the same bytes and its rebuilt bindings give the joint rules the search's own obligations.
+
 An adapter's instance is judged by the joint rules as one provider (model §8 rules 14 and 15, `M3.2.3.1`): its offers
 computed from the device it programs — a value its kind writes, a fact passed through as the relation reads it at the
 device, derived there or offered, a bound it is obliged to at its requester's tightest — and itself a requester of that

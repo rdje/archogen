@@ -1,6 +1,7 @@
 //! The plan the search writes (leaf `M3.4.3`): `archogen-assignment/1` by the generator's own code, held to the
 //! format's golden byte for byte, its program text and plain program held to the configuration checker's over every
-//! tracked description, and a resolved example's plan read back by the checker's reader and accepted by its checks.
+//! tracked description, and a resolved example's plan read back by the checker's reader and accepted by its checks;
+//! the generator's own reader of the record, and the bindings it rebuilds (leaf `M4.1.3`).
 //! The checker is a development dependency here alone: the generator compiles none of it.
 
 use std::path::{Path, PathBuf};
@@ -336,6 +337,22 @@ fn the_positive_corpus_every_plan_the_search_writes_the_checker_accepts_and_twic
             );
             let (_, verdict) = judge(&text_once);
             assert_eq!(verdict, Ok(()), "{}: {text_once}", path.display());
+            // Leaf `M4.1.3`: the generator's own reader reads the record back to the same bytes, and the bindings it
+            // rebuilds over the description give the joint rules the search's own obligations.
+            let record =
+                plan::read(&text_once).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+            assert_eq!(record.text(), text_once, "{}", path.display());
+            let rebuilt = plan::rebuild(
+                &record,
+                declarations,
+                RT_STATIC_UP_V1.caller_level,
+                &v,
+                &policy.adapters,
+            )
+            .unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+            let report = rebuilt.joint.check(&rebuilt.bindings);
+            assert!(report.holds(), "{}: {report:?}", path.display());
+            assert_eq!(report.obligations, once.obligations, "{}", path.display());
             resolved += 1;
         }
     }
@@ -343,5 +360,111 @@ fn the_positive_corpus_every_plan_the_search_writes_the_checker_accepts_and_twic
     assert!(
         resolved > 0 && refused > 0,
         "{resolved} resolved, {refused} refused"
+    );
+}
+
+/// The heartbeat's record, as the search writes it, with its description's declarations.
+fn heartbeat_record() -> (String, Vec<Form>) {
+    let path = root().join("examples/s0-heartbeat/system.eadl");
+    let program = program_of(&path);
+    let declarations = program.root().declarations.clone();
+    let system = declarations
+        .iter()
+        .find(|f| f.head() == Some("defsystem"))
+        .expect("a system")
+        .clone();
+    let policy = Policy {
+        adapters: eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &vocabulary())
+            .expect("the shipped catalog reads"),
+        ..Policy::default()
+    };
+    let Search::Resolved(resolution) = search(
+        &declarations,
+        &system,
+        RT_STATIC_UP_V1.caller_level,
+        &vocabulary(),
+        &policy,
+        Limits::DEFAULT,
+    ) else {
+        panic!("the heartbeat resolves");
+    };
+    (
+        plan::write(
+            &resolution,
+            RT_STATIC_UP_V1.id,
+            &plan::program_digest(&program),
+        ),
+        declarations,
+    )
+}
+
+#[test]
+fn the_reader_accepts_only_what_its_writer_writes() {
+    // Leaf `M4.1.3`: a record read back writes back the same bytes, so any other spelling of it is refused.
+    let (text, _) = heartbeat_record();
+    assert_eq!(plan::read(&text).expect("it reads").text(), text);
+    let refused = |changed: String, about: &str| {
+        let why = plan::read(&changed).expect_err(&changed);
+        assert!(why.0.contains(about), "{changed}: {why}");
+    };
+    refused(
+        text.replace(FORMAT, "archogen-assignment/1"),
+        "names the format",
+    );
+    refused(text.replace("(bind ", "(bind  "), "canonical form");
+    refused(format!("; a comment\n{text}"), "no comment");
+    refused(
+        text.replace("(adapters adapters/1)\n", ""),
+        "`(adapters …)`",
+    );
+    refused(
+        format!("{text}(bind console.write observable-output console.uart)\n"),
+        "sorted",
+    );
+    refused(text.replace("(program \"", "(program \"A"), "hexadecimal");
+    refused(
+        format!("{text}(placement host.playground ram)\n"),
+        "where only",
+    );
+}
+
+#[test]
+fn a_record_rebuilds_only_over_what_its_description_requires() {
+    // Leaf `M4.1.3`: every binding is matched to a requirement its requester writes, and none is left unbound.
+    let (text, declarations) = heartbeat_record();
+    let v = vocabulary();
+    let catalog = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+        .expect("the shipped catalog reads");
+    let rebuilt = |record: &str| {
+        plan::rebuild(
+            &plan::read(record).expect("it reads"),
+            &declarations,
+            RT_STATIC_UP_V1.caller_level,
+            &v,
+            &catalog,
+        )
+    };
+    let whole = rebuilt(&text).expect("the search's record rebuilds");
+    assert_eq!(whole.bindings.len(), 1);
+    assert!(whole.joint.check(&whole.bindings).holds());
+    let refused = |changed: String, about: &str| {
+        let why = rebuilt(&changed).expect_err(&changed);
+        assert!(why.0.contains(about), "{changed}: {why}");
+    };
+    refused(
+        text.replace("(bind console.write observable-output console.uart)\n", ""),
+        "unbound",
+    );
+    refused(
+        text.replace("console.write observable-output", "console.write tick-rate"),
+        "does not require",
+    );
+    refused(
+        text.replace("console.uart)", "no.such.device)"),
+        "is no provider",
+    );
+    refused(
+        text.replace("(system heartbeat)", "(system nowhere)"),
+        "no system",
     );
 }
