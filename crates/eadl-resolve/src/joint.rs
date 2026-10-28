@@ -1548,18 +1548,22 @@ impl<'v> Joint<'v> {
     }
 
     /// Model §8 rule 12: the initialization graph of `system`'s assignment. Its nodes are the providers bound for the
-    /// requesters it serves — closed over bindings, so an adapter's or a block's own bindings count — and the services and
-    /// policies it serves; its edges run from a provider to each requester bound to it, except across composition or to
-    /// itself, and from a used service or policy to each that names it. Nothing is refused.
+    /// requesters it serves — closed over bindings, so an adapter's or a block's own bindings count — the services and
+    /// policies it serves, and each block or platform it serves that is bound for requirements of its own, a requester
+    /// whose code an interrupt can run (`docs/decisions/decision_runtime-plan.md` §2, leaf `M4.1.15`); its edges run from
+    /// a provider to each requester bound to it, except across composition or to itself, and from a used service or
+    /// policy to each that names it. Nothing is refused.
     #[must_use]
     pub fn initialization(&self, system: &System, assignment: &[Binding]) -> Initialization {
         let system = &self.serving(system, assignment);
         let kind = |name: &str| self.requesters.get(name).copied();
+        // Hardware is a node as a requester only where it is bound for requirements of its own (leaf `M4.1.15`).
+        let bound_for_its_own = |name: &str| assignment.iter().any(|b| b.requester == name);
         let is_node_requester = |name: &str| {
             name != system.name
                 && !matches!(kind(name), Some(Kind::Task))
                 && system.serves(name)
-                && !self.is_hardware(name)
+                && (!self.is_hardware(name) || bound_for_its_own(name))
         };
         // Requesters whose bindings count: those the system serves, then each provider bound for one, at any depth.
         let mut active: BTreeSet<&str> = assignment
@@ -1590,7 +1594,9 @@ impl<'v> Joint<'v> {
             if is_node_requester(name) && !nodes.contains_key(name) {
                 nodes.insert(
                     name.clone(),
-                    if *k == Kind::Service {
+                    if self.is_hardware(name) {
+                        Node::Provider
+                    } else if *k == Kind::Service {
                         Node::Service
                     } else {
                         Node::Other

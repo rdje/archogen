@@ -126,16 +126,16 @@ built only marked experimental.
 
 A runtime plan is an engine structure (`decision_eadl-engine-boundary.md`). Each section names its input. A **node**
 below is a node of the joint rules' initialization graph (§2.7): a provider an active binding names (a block, a platform
-or an adapter's instance), a block or a platform the system serves that writes requirements of its own — a requester
-like any other (model §8 rule 1, `M4.1.14`), whose code an interrupt can run (§2.6) — a service, or a policy: the three
-kinds of node `crates/eadl-resolve/src/joint.rs` gives, `Provider` (hardware and instances), `Service` and `Other`, the
-last a policy's, a description naming a system being refused (§1). Every requester the system serves is a node but its
-tasks and its own level, which are requesters and never nodes, so that the plan derives the context of each requester,
-as `M3.3.8` asks. A node's **text** is its name as the plan writes it, an instance's being its `(adapter …)` text, and
-texts are compared byte by byte. A requester **reaches** what it names by `uses` or `needs`, and what it is bound to as
-its provider, at any depth, as the joint rules take a requester's names (model §8 rule 7) — but for a block's or a
-platform's `uses`, which is composition, never a call (rule 1): hardware reaches only what its own requirements are
-bound to.
+or an adapter's instance), a block or a platform the system serves that is bound for requirements of its own — a
+requester like any other (model §8 rule 1, `M4.1.14`), whose code an interrupt can run (§2.6) — a service, or a policy:
+the three kinds of node `crates/eadl-resolve/src/joint.rs` gives, `Provider` (hardware and instances), `Service` and
+`Other`, the last a policy's, a description naming a system being refused (§1). Every requester the system serves is a
+node but its tasks and its own level, which are requesters and never nodes, so that the plan derives the context of each
+requester, as `M3.3.8` asks. A node's **text** is its name as the plan writes it, an instance's being its `(adapter …)`
+text, and texts are compared byte by byte. A requester **reaches** what it names by `uses` or `needs`, and what it is
+bound to as its provider, at any depth, as the joint rules take a requester's names (model §8 rule 7) — but for a
+block's or a platform's `uses`, which is composition, never a call (rule 1): hardware reaches only what its own
+requirements are bound to.
 
 An **interrupt** is named by its kind and its provider, never by the provider alone, since one provider can raise a
 timer route and a source, and a block may be named `timer`:
@@ -750,12 +750,12 @@ identical canonical plans").
   takes programs — where nothing else that route runs reaches it, never another system's; rule 7 still resolves system
   by system.
   Rule 8's enabled set is §2.5's. Rule 12 records this engine's answer, one phase, and counts among its nodes a block or
-  a platform the system serves that writes requirements of its own (§2). Rule 10's are below. The adapters
+  a platform the system serves that is bound for requirements of its own (§2). Rule 10's are below. The adapters
   record's §9 reads "each cost a cost on the route of the provider it programs", and it states, for each cost, whether
   the interrupt runs the requester's code (§2.6). The engine API's `crates/archogen-api/src/resolve.rs` and
-  `docs/book/src/engine-api.md`, which read "a cost the scheduling analysis charges as a source", read so too. The
-  book follows, with a migration note for any verdict that moves. Rule 10's amendments keep the search, the checker and
-  any later layout agreed over a description:
+  `docs/book/src/engine-api.md`, which read "a cost the scheduling analysis charges as a source", read so too. The book
+  follows, with a migration note for any verdict that moves. Rule 10's amendments keep the search, the checker and any
+  later layout agreed over a description:
   - **placement memory with no size** is `missing-fact`, naming it, since nothing can be laid out in it;
   - **a hole of no size** whose base lies inside placement memory (`M3.5.5.7.3`'s obligation) is taken to reach the
     region's end. That is the conservative extent, the largest the region allows. If it leaves no free byte, the system

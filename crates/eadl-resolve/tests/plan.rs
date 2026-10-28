@@ -793,3 +793,62 @@ fn a_block_s_own_requirements_are_bound_and_rebuilt() {
     let why = rebuilt.expect_err("unbound");
     assert!(why.contains("`dma.x`'s `relative-delay` unbound"), "{why}");
 }
+
+#[test]
+fn a_block_bound_for_requirements_of_its_own_is_a_node_of_rule_12_s_graph() {
+    // Leaf `M4.1.15`: a block the system serves that is bound for requirements of its own is a requester whose code an
+    // interrupt can run — here its deadline instance's expiry — so it is a node, a provider's, with the edge from the
+    // instance bound for it, though nothing binds to the block itself.
+    let text = "(eadl-version eadl/1)
+(defblock timer.d
+  (offers (relative-delay true) (counter-modulus 65536) (tick-rate 10 MHz) (observation-coherent true)
+    (channels 2 tick) (reachable-at-privilege machine)))
+(defblock dma.x (offers (reachable-at-privilege machine)) (requires (needs absolute-deadline)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d dma.x)))
+(defsystem be
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (platform (uses soc)))
+";
+    let (record, accepted, rebuilt) = resolved_and_judged(text);
+    assert!(accepted && rebuilt, "{record}");
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add("description.eadl", text.to_owned())
+        .expect("small");
+    let (program, _) = plan_file(
+        &mut sources,
+        id,
+        &DirectoryModules::new(root()),
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        "",
+    );
+    let v = vocabulary();
+    let catalog = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+        .expect("the shipped catalog reads");
+    let r = plan::rebuild(
+        &plan::read(&record).expect("it reads"),
+        &program.root().declarations,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &catalog,
+    )
+    .expect("it rebuilds");
+    let graph = r.joint.initialization(&r.system, &r.bindings);
+    assert!(
+        graph
+            .nodes
+            .iter()
+            .any(|(n, k)| n == "dma.x" && *k == eadl_resolve::joint::Node::Provider),
+        "{:?}",
+        graph.nodes
+    );
+    assert!(
+        graph
+            .edges
+            .iter()
+            .any(|(from, to, _)| from.starts_with("(adapter deadline-over-delay") && to == "dma.x"),
+        "{:?}",
+        graph.edges
+    );
+}
