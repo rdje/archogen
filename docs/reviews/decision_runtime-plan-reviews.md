@@ -378,6 +378,37 @@ is independent of the transcription it checks.
 
 Round 9's answers: R9-D2 partly held (R10-D1); R9-D5 held for tasks, R10-D4 its sibling for sources; the rest held.
 
+## Round 11 — `2026-10-28`: not acceptable, 11 findings
+
+The first round with the bounded checker. The reviewer found every test green, extended the checker in a copy of its
+own — the configuration checker called on all 57,277 generated records, §2.7's lines, each task's `uses` item and a
+two-task universe, 66,484 plans agreeing — and found 5 defects and 6 remarks: two on the order inside §1's
+interrupt-code refusal, a system named by `uses` making a node §2 does not give, a P1 in the search, and a hand-off held
+by no leaf.
+
+**Fence.** No breach.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R11-D1 | defect | §1's interrupt-code refusal was taken clause by clause, not task by task | The refusal names every receiver, each task in runtime order and then the system's own level, so no order decides it (§1, `M4.1.4`) |
+| R11-D2 | defect | §1 gave the system's own level no place in that bullet's order | As R11-D1: named last, with every receiver (§1) |
+| R11-D3 | defect | a `uses` naming another system makes its own level a node, against §2's "three kinds of node" | Refused `tool-failure` (§1) until `M1.46` has the language refuse it; §2 says `Other` is a policy's (`M4.1.4`) |
+| R11-D4 | defect | P1: the search drops a block's own requirements and the reader accepts the record, which the checker refuses | `M4.1.14` |
+| R11-D5 | defect | R10-R6's answer gives `M2.30` a duty its text does not hold | `RTP-H12`, quoted in `M2.30` |
+| R11-R1 | remark | `M4.1.13`'s goal has each record checked by the configuration checker, which `bounded.rs` never calls | `M4.1.13` reopened for it |
+| R11-R2 | remark | the checker's universes are narrower than claimed: one task, no obliged bound, `deadline-from` always written, no two receivers, §2.7 unchecked | `M4.1.13` reopened for them |
+| R11-R3 | remark | `bounded.rs` tells the system's own level from a task by substring | `M4.1.13` reopened for it |
+| R11-R4 | remark | the corpus's header and `M4.1.4`'s status say "rounds 4 to 9" | Updated (`M4.1.4`) |
+| R11-R5 | remark | the order among several durations past the arithmetic is unstated | The refusal names each, in a stated order (§1) |
+| R11-R6 | remark | the language's edges are well guarded | No finding |
+
+Better decisions, taken: §1's interrupt-code refusal names every receiver, as its joint-rules refusal names each
+finding; and, after `ROADMAP.md` §7.3's "every numerical bound records … evidence category", each obliged bound is owed
+by the realization with its evidence (§2.4, §2.10), and a source's stated separation is held by the run on the
+playground (§2.5).
+
+Round 10's answers: R10-R1 partly held (R11-D1, R11-D2), R10-R6 not (R11-D5); the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a

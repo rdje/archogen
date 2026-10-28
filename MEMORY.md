@@ -15,8 +15,8 @@
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M4` → frontier `M4.1`, at `M4.1.1`, the runtime plan's review: `/1` for the hosted playground, rounds answered
   in `docs/reviews/decision_runtime-plan-reviews.md`; `PROGRAM` → `PROGRAM.34`, the director's.
-- **Next action:** `M4.1.1`'s round 11, a fresh fenced review of record, code, corpus and the bounded checker
-  (`M4.1.13`); then `M2.30`, which may add an owed application fact; `PROGRAM.119`'s cleanup after 10:30Z.
+- **Next action:** round 11 in the code: `M4.1.14` (P1, a block's own requirements), `M4.1.4`'s sixth slice, `M4.1.13`
+  widened by a fenced context; then round 12. `PROGRAM.119`'s cleanup after 10:30Z.
   `M4.4.1`, the device correspondence, before `M4.1.7`. `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).
   After the first batch, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`; `M3.4.7` waits on `M3.7`.
