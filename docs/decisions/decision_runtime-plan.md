@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-27`
 - **Status:** `active` — the design for leaf `M4.1`, under independent review (`M4.1.1`) before any code relies on it;
-  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 12 answered; from round 7 it is
+  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 13 answered; from round 7 it is
   reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
 - **Owner / source:** leaf `M4.1.1` (`docs/tasks/M4.md`); `ROADMAP.md` §4.2's `archogen-plan`, §7.3, §7.5, §7.6, §10.1
   step 5 and §10.3; model §8 rules 4, 5, 7, 8, 10, 12 and 15; the obligations `M3.3.8`, `M3.5`, `M3.5.5.7.3` and
@@ -83,8 +83,13 @@ a bullet over tasks is taken task by task in runtime order, each task's clauses 
   `invalid-description`;
 - a declaration or a task the system serves naming a system by `uses` or `needs`: a system is no thing to use — its own
   `uses` says what it includes (model §8 rule 1) — and its own level would become a node §2 does not give:
-  `tool-failure`, naming each such name in its text's order, the check having accepted it; `M1.46` makes the language
-  refuse it, `invalid-description`.
+  `tool-failure`, naming each such name, by the namer's text and then the system's, the check having accepted it;
+  `M1.46` makes the language refuse it, `invalid-description`.
+- a block's or a platform's `uses` or `needs` naming a declaration that is neither a block nor a platform: hardware
+  names only the hardware it composes (model §8 rule 1, rule 7's path ending at a declaration of another kind), and
+  such an operand would be read by some rules and not others — serving what it names, dropping an edge across
+  "composition" to a service: `tool-failure`, naming each, by the block's or platform's text and then the operand's,
+  the check having accepted it; `M1.47` makes the language refuse it, `invalid-description`.
 
 **Refusals of what `/1` cannot lower**, each `unsupported-profile`, naming what is missing and, where one does, the
 leaf that adds it:
@@ -134,8 +139,8 @@ node but its tasks and its own level, which are requesters and never nodes, so t
 requester, as `M3.3.8` asks. A node's **text** is its name as the plan writes it, an instance's being its `(adapter …)`
 text, and texts are compared byte by byte. A requester **reaches** what it names by `uses` or `needs`, and what it is
 bound to as its provider, at any depth, as the joint rules take a requester's names (model §8 rule 7) — but for a
-block's or a platform's `uses`, which is composition, never a call (rule 1): hardware reaches only what its own
-requirements are bound to.
+block's or a platform's `uses` or `needs`, which names only hardware (§1) and is composition, never a call (rule 1):
+hardware reaches only what its own requirements are bound to.
 
 An **interrupt** is named by its kind and its provider, never by the provider alone, since one provider can raise a
 timer route and a source, and a block may be named `timer`:
@@ -256,10 +261,11 @@ timer route and a source, and a block may be named `timer`:
 
      The timer routes come last because `/1` has no key for them: the analysis refuses them until `M4.1.6` gives them a
      charge, and that design gives their place too, such as deadline-monotonic over an expiry's delivery bound. The
-     release timer's place against the routes is the hardware's fact `external-before-timer`; the simulator states it as
-     `yes`, every route before the release timer (`RTP-H9`). The emulator target, on [QEMU](../book/src/ledger.md#qemu),
-     states `no` (the composite-inputs record §2), so a comparison of hosted and emulated runs (`M4.9`) reads each
-     against its own order (`RTP-H11`).
+     release timer's place against the sources is the hardware's fact `external-before-timer`, which speaks of external
+     interrupts; the simulator states it as `yes`, every source before the release timer, and takes a timer route before
+     it too until `.6` places one (`RTP-H9`). The emulator target, on [QEMU](../book/src/ledger.md#qemu), states `no`
+     (the composite-inputs record §2), so a comparison of hosted and emulated runs (`M4.9`) reads each against its own
+     order (`RTP-H11`).
 
      Among the sources this is rate-monotonic over their separations. It is a **heuristic**, and no optimality is
      claimed for it. Service is non-preemptive among sources, interrupts not nesting (the variant's condition 5), and
@@ -335,7 +341,7 @@ timer route and a source, and a block may be named `timer`:
    - Its edges are written with their reasons, as §10.1's "initialization dependencies" and `M4.1`'s Goal ask: one line
      for each ordered pair of nodes an edge joins, the node the edge orders earlier first — so a component's mutual
      edges are two lines — naming each reason `Joint::initialization` gives, a binding's fact or `named` for a `uses` or
-     `needs` — a block's or a platform's `uses` giving none, composition never a call (§2).
+     `needs` — a block's or a platform's `uses` or `needs` giving none, composition never a call (§2).
    - Its steps are its strongly connected components, in a topological order taken by repeatedly choosing, among the
      components whose predecessors have all been taken, the one whose least member's text is least.
    - A step names its members by their text, in order.
@@ -774,9 +780,9 @@ identical canonical plans").
   target, and how an adapter's alarm shares a device with releases, each taking a channel (model §8 rule 3). It decides
   how the analysis charges a timer route's interrupts, its service cost and arrival bound, such as a wake taken as a
   timer event of the release timer under an amended condition 6; the term for a multiplexed node's overhead and for a
-  node's call cost in a job; and how a job receives an alarm it programs itself or an expiry, and what the system's own
-  level's requirement for either means. That design is the joint rules', the analysis variant's and the composite-inputs
-  record's;
+  node's call cost in a job; how a job receives an alarm it programs itself or an expiry, and what the system's own
+  level's requirement for either means; and the timer routes' place among the routes and against the release timer.
+  That design is the joint rules', the analysis variant's and the composite-inputs record's;
 - `.7`: **format `/2`**, after `.6`, `M4.4.1`'s device correspondence (`RTP-H8`) and `M4.12`'s application inputs
   (`RTP-H5`), designed and reviewed as this record was. Its questions are kept in the review history, each with the
   fix its reviewer proposed:
@@ -825,7 +831,7 @@ identical canonical plans").
 | `RTP-H6` | `M4.10` | The catalog records state what the runtime plan owes them — supported contexts, an initialisation entry that never waits on an interrupt and names any other component member's code it calls, and each source's service cost — amending the catalog record's §12 and §14.4, and the image is checked: no initialisation step waits on an interrupt, and no component member's initialisation calls another member's code. |
 | `RTP-H7` | `M4.7` | The build's metadata carries the runtime plan's sha256 and its provenance, the whole lock data of `ROADMAP.md` §10.3 is written, `--locked` is honoured, and S0's `no-lock-data` is discharged. |
 | `RTP-H8` | `M4.4.1` | A system's devices are put in correspondence with a target's — which target device each system device is, by a rule the lowering of `archogen-runtime-plan/2` reads — before `M4.1.7` designs that format. |
-| `RTP-H9` | `M4.3` | The hosted simulator runs initialisation to its last step with interrupts masked and enables them at time zero, then releases each timer-released task from its own exact clock at its nominal releases from time zero and each task released by `(source X every)` at each arrival of X and at no other time; takes its timer only when a release is due; takes every route before the release timer when both are pending, its `external-before-timer`, and the routes in the plan's rank order; nests no interrupt and masks every interrupt in a masked section; raises no interrupt the plan does not enable; models each device the plan names, a timer route's alarm included; lets no source arrive before the first enabling, nor sooner after its last arrival than the separation the plan states for it; and states every platform input and fact the analysis variant and the composition read, `external-before-timer`, `releases-after-initialisation` and each source's `external` among them, in the form the scheduling checker reads. |
+| `RTP-H9` | `M4.3` | The hosted simulator runs initialisation to its last step with interrupts masked and enables them at time zero, then releases each timer-released task from its own exact clock at its nominal releases from time zero and each task released by `(source X every)` at each arrival of X and at no other time; takes its timer only when a release is due; takes every route before the release timer when both are pending — its `external-before-timer` for a source's, and for a timer route its own order until `M4.1.6` places one — and the routes in the plan's rank order; nests no interrupt and masks every interrupt in a masked section; raises no interrupt the plan does not enable; models each device the plan names, a timer route's alarm included; lets no source arrive before the first enabling, nor sooner after its last arrival than the separation the plan states for it; and states every platform input and fact the analysis variant and the composition read, `external-before-timer`, `releases-after-initialisation` and each source's `external` among them, in the form the scheduling checker reads. |
 | `RTP-H11` | `M4.9` | A comparison of a hosted run and an emulated one reads each run against its own platform's `external-before-timer`, the simulator's `yes` and the emulator's `no`, never one run's order against the other's. |
 | `RTP-H12` | `M2.30` | If the composition's soundness needs a fact of the application's beyond `leaves-interrupt-hardware-alone`, the runtime plan owes it with the others, its §2.2, §2.10 and `RTP-H5` moving in the same change. |
 | `RTP-H10` | `M4.10` | Once a catalog record can be a provider (`M3.7`), the runtime plan's lowering judges the record's supported contexts against the context line of each node it serves, by inclusion, and refuses `unsupported-profile` a context the record does not include. |

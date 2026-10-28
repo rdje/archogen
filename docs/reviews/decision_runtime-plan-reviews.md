@@ -436,6 +436,35 @@ the plan was never derived, and the bounded checker asserted no block requires a
 Round 11's answers: R11-D4 partly held (R12-D1, D3, D4), R11-R2 partly (R12-R4); R10-D2 partly (R12-D2); the rest
 held.
 
+## Round 13 — `2026-10-28`: not acceptable, 11 findings
+
+The reviewer found the transcription faithful almost everywhere, every test green, the bounded checker's totals true,
+and every hand-off held. 4 defects and 7 remarks, the defects again from round 12's answer: a block's or a platform's
+names, called composition, are still read by the engine in places the record did not account for — a `needs` it names
+a service by, a service it names that is served only through it, an edge rule 12 drops across that "composition".
+
+**Fence.** No breach.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R13-D1 | defect | §2 excluded a block's or a platform's `uses` from reaching but not its `needs`, while the code excludes both | Both are composition, naming only hardware; a name of anything else refused (§1, §2, §2.7) |
+| R13-D2 | defect | `.2` and `M4.1.2` gave rule 12's hardware nodes two criteria | `M4.1.2` reads "is bound for requirements of its own" |
+| R13-D3 | defect | hardware naming a service by `uses` serves it and drops the edge to the timer it is bound to, inverting the initialisation order | Fail closed, as for `M1.46`: refused `tool-failure` until `M1.47`, widened to `needs` and corrected, has the language refuse it (§1, `M4.1.4`) |
+| R13-D4 | defect | the timer routes' place in the order is handed to `.6`, which does not hold it | `.6` and `M4.1.6` hold it, against the release timer too |
+| R13-R1 | remark | the naming-system refusal's order ambiguous, and the checker holding none | By the namer's text, then the system's (§1); `M4.1.13` reopened to hold it |
+| R13-R2 | remark | the checker's reading departs from the record where its universes never reach | `M4.1.13` reopened |
+| R13-R3 | remark | the checker compares lines kind by kind, dropping unknown heads and the order across kinds | `M4.1.13` reopened |
+| R13-R4 | remark | four agreeing cases unfixtured | Added (`M4.1.4`) |
+| R13-R5 | remark | the corpus's header and `M4.1.4`'s status carry a round range gone stale a third time | The range dropped: every round's probes, whatever the round (`M4.1.4`) |
+| R13-R6 | remark | an obliged `State::Overflow` branch is unreachable | Kept, a refusal for a kind whose offers could overflow |
+| R13-R7 | remark | `external-before-timer` applied to timer routes, though it speaks of external interrupts | The sources' alone; a timer route's place is `.6`'s, the simulator taking it first until then (§2.5, `RTP-H9`) |
+
+Better decision, taken: refuse an operand that means something to some rules and nothing to others, rather than give
+it a meaning rule by rule.
+
+Round 12's answers: R12-D1 held but for `M4.1.2`'s wording (R13-D2); R12-D4 partly (R13-D1, R13-D3); R12-R4 partly
+(R13-R1 to R13-R3); the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
