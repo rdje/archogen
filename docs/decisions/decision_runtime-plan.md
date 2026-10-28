@@ -104,7 +104,8 @@ leaf that adds it:
   one an exclusive instance serves or one bound to a shared instance. No context runs a job's code in an interrupt, and
   how a job receives an alarm it programs itself or an expiry, and what the system's own level's requirement for either
   means are `M4.1.6`'s. It names every such receiver — each task in runtime order, then the system's own level — with
-  what it would receive, so no order among them decides the message;
+  what it would receive: an alarm it programs, naming the provider; an expiry, naming the instance that delivers it.
+  So no order among them decides the message;
 - an initialisation component whose members' records state that one's initialisation calls another's code (§2.7),
   once a record can be a provider (`M3.7`).
 

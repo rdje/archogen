@@ -496,13 +496,15 @@ the outcome the lowering gives it, in `crates/archogen-plan/tests/corpus/`, a de
 held at that check's verdict; hand-written records hold the refusals of a record, in their order
 (`crates/archogen-plan/tests/records.rs`). An outcome is what the code writes, so a reviewer judges each against the
 record; a finding is a defect when it carries a reproducer. A bounded exhaustive checker,
-`crates/archogen-plan/tests/bounded.rs` (`M4.1.13`), generates four universes of small systems — tens of thousands —
-and holds every plan to a reading of the record written by a context that never read the lowering's code. The plan counts the users of a service or a policy that
-takes a channel more widely than the check above: the system's tasks that reach it, directly or through services,
-policies and bindings, and the interrupts whose context holds it, but for its own timer route — at the provider whose
-channel it takes, or that the instance whose channel it takes programs — where nothing else that route runs reaches it,
-as [OSEK](ledger.md#osek-os) counts a shared resource's users by the tasks and interrupt routines that access it (§8.6).
-The joint rules count the tasks and services naming a service by `uses` until `M4.1.2` amends rule 4 to match.
+`crates/archogen-plan/tests/bounded.rs` (`M4.1.13`), generates six universes of small systems — some seventy-six
+thousand — has the configuration checker judge every record the search writes for them, and holds every plan and every
+refusal to a reading of the record written by a context that never read the lowering's code. The plan counts the users
+of a service or a policy that takes a channel more widely than the check above: the system's tasks that reach it,
+directly or through services, policies and bindings, and the interrupts whose context holds it, but for its own timer
+route — at the provider whose channel it takes, or that the instance whose channel it takes programs — where nothing
+else that route runs reaches it, as [OSEK](ledger.md#osek-os) counts a shared resource's users by the tasks and
+interrupt routines that access it (§8.6). The joint rules count the tasks and services naming a service by `uses` until
+`M4.1.2` amends rule 4 to match.
 
 An adapter's instance is judged by the joint rules as one provider (model §8 rules 14 and 15, `M3.2.3.1`): its offers
 computed from the device it programs — a value its kind writes, a fact passed through as the relation reads it at the

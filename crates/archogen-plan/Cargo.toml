@@ -18,3 +18,8 @@ archogen-digest = { path = "../archogen-digest" }
 eadl-front = { path = "../eadl-front" }
 eadl-model = { path = "../eadl-model" }
 eadl-resolve = { path = "../eadl-resolve" }
+
+[dev-dependencies]
+# The configuration checker judges every record the bounded checker generates (leaf M4.1.13), as
+# crates/eadl-resolve/tests/plan.rs does its corpus.
+archogen-plan-check = { path = "../archogen-plan-check" }

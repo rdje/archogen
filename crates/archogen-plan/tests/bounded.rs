@@ -1,33 +1,53 @@
 //! The runtime plan's bounded exhaustive checker (leaf `M4.1.13`), which
 //! `docs/decisions/decision_executable-design-reviews.md` item 1 asks of a design whose subject is a decision
-//! procedure: it "enumerates a finite universe of inputs" and holds each outcome to the record. Four universes of
-//! small descriptions are generated in memory, every combination of a few independent choices, so that each is
-//! exhaustive over its bounds. Each system is lowered as the engine lowers it (`common::lowered`: the language's
-//! check, the search, the `/2` writer and the lowering), and each plan is held to an **independent reading** of
+//! procedure: it "enumerates a finite universe of inputs" and holds each outcome to the record. Six universes of small
+//! descriptions are generated in memory, every combination of a few independent choices, so that each is exhaustive
+//! over its bounds: three services and their `uses` edges; two services with adapter instances; releases and routes of
+//! every separation class; requesters of every kind; two tasks, periodic and sporadic, sharing services that take a
+//! channel, with an obliged `delivery-bound` bound and bare and each task writing `(deadline-from release)` or not; and
+//! receivers of interrupt code, two tasks and the system's own level each programming an alarm itself, receiving an
+//! expiry or neither, in both runtime orders.
+//!
+//! Each system is run as the engine runs it, as `common::lowered` does: the language's check, the search, the `/2`
+//! writer, and the lowering. **Every `archogen-assignment/2` record the search writes is judged by the configuration
+//! checker**, `archogen_plan_check::check::plan_file`, as `crates/eadl-resolve/tests/plan.rs` judges one, and a record
+//! it refuses is a finding naming that record. Each plan is held to an **independent reading** of
 //! `docs/decisions/decision_runtime-plan.md`, written below as plain, unoptimised Rust from the record's text alone,
 //! each rule citing the section it transcribes.
 //!
-//! ⭐ **The assignment is input.** The reading takes the description and the plan's own `bind` lines — what the
-//! search chose, never something predicted — and derives from them §2.6's `(context …)` lines, §2.9's obligations and
-//! §2.10's owed facts (the `multiplex` obligation and the `overhead` it owes among them), each task's `(released-by …)`
-//! (§2.2), each route with its separation and rank (§2.5), the enabled set, the release timer's line, and §2.4's
-//! instance lines; and which of §1's refusals is due, where these universes reach one. The reading is itself held to
-//! the record's three worked texts (§3).
+//! ⭐ **The assignment is input.** The reading takes the description and the record's own `bind` lines — what the
+//! search chose, never something predicted — and derives from them every line of the plan: §2.1's identity, the
+//! record's own and its sha256; §2.2's task lines, their index, rank, durations, deadline reference, trigger and
+//! `(uses …)` item; §2.3's `bind` lines, the record's copied; §2.4's instance lines, an obliged fact with its
+//! requester's bound or bare; the release timer's line, each route with its separation and rank, the enabled set and
+//! the interrupt model (§2.5); §2.6's `(context …)` lines; §2.7's `(depends …)` and `(step …)` lines, from model §8
+//! rule 12's graph, a component of several members one step; §2.9's obligations, `multiplex` among them; §2.10's owed
+//! facts; and the last line, `(complete no)`. It derives which of §1's refusals is due, where these universes reach
+//! one, and holds the lowering's refusal to its code, to the subjects it names — each told by its exact text, a task's
+//! `(task SYSTEM NAME)` form or the system's own level's name as a word of its own, never by a substring — in §1's
+//! order, and to what each would receive. The reading is itself held to the record's three worked texts (§3).
 //!
-//! ⛔ **Independence.** The reading was written by a context that never read `crates/archogen-plan/src/lib.rs` nor the
+//! ⛔ **Independence.** The reading was written by contexts that never read `crates/archogen-plan/src/lib.rs` nor the
 //! corpus's outcomes. A disagreement is a finding, never something to make disappear: decide from the record's text
 //! which side is right, and keep a reading the record supports failing on its system.
 //!
-//! Each universe's size is asserted — the systems generated and how each fared, lowered or not — and each class of the
-//! record's rules it is built to reach, so that a generator cannot shrink unnoticed; a system the language or the
-//! search refuses is counted, never dropped.
+//! Each universe's size is asserted — the systems generated and how each fared, lowered or not — with every system the
+//! search resolves judged by the configuration checker, and each class of the record's rules it is built to reach, so
+//! that a generator cannot shrink unnoticed; a system the language or the search refuses is counted, never dropped.
 
 mod common;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use common::{lowered, Lowered};
+use archogen_digest::Digest;
+use archogen_plan::{lower, Refusal};
+use archogen_plan_check::check::plan_file;
+use eadl_front::module::DirectoryModules;
+use eadl_front::{Form, SourceMap};
+use eadl_model::profile::RT_STATIC_UP_V1;
 use eadl_resolve::adapter::Offered;
+use eadl_resolve::plan;
+use eadl_resolve::search::{search, Limits, Policy, Search};
 use eadl_resolve::vocabulary::Usage;
 
 // =====================================================================================================================
@@ -55,12 +75,14 @@ struct Block {
     separation: Option<Separation>,
 }
 
-/// What one requester writes: the vocabulary facts its `needs` lists, the declarations its `uses` lists, and any other
-/// requirement clause, as written.
+/// What one requester writes: the vocabulary facts its `needs` lists, the declarations its `uses` lists, each
+/// `(FACT (at-most N ms))` bound it writes, and any other requirement clause, as written.
 #[derive(Debug, Clone, Default)]
 struct Side {
     needs: Vec<String>,
     uses: Vec<String>,
+    /// Each `(FACT (at-most N ms))` the requester writes, as `(FACT, N)`.
+    at_most: Vec<(String, u64)>,
     other: Vec<String>,
 }
 
@@ -71,6 +93,9 @@ impl Side {
         for clause in &self.other {
             out.push(' ');
             out.push_str(clause);
+        }
+        for (fact, ms) in &self.at_most {
+            out.push_str(&format!(" ({fact} (at-most {ms} ms))"));
         }
         if !self.needs.is_empty() {
             out.push_str(&format!(" (needs {})", self.needs.join(" ")));
@@ -297,11 +322,17 @@ enum Counter {
     None,
     /// A channel of a timer: `(needs relative-delay)`.
     Timer,
-    /// An absolute deadline, which only a `deadline-over-delay` instance offers: `(needs absolute-deadline)`.
+    /// An absolute deadline, which only a `deadline-over-delay` instance offers: `(needs absolute-deadline)`, its
+    /// obliged `delivery-bound` left bare.
     Deadline,
+    /// The same, writing `(delivery-bound (at-most 5 ms))`, the bound the instance then takes on (§2.4).
+    DeadlineBound,
     /// A counter with a horizon no block offers, which only an `epoch-extender` instance meets.
     Extender,
 }
+
+/// The bound a [`Counter::DeadlineBound`] requester writes on `delivery-bound`, in milliseconds.
+const DELIVERY_BOUND_MS: u64 = 5;
 
 impl Counter {
     fn word(self) -> &'static str {
@@ -309,6 +340,7 @@ impl Counter {
             Self::None => "-",
             Self::Timer => "timer",
             Self::Deadline => "deadline",
+            Self::DeadlineBound => "deadline<=5ms",
             Self::Extender => "extender",
         }
     }
@@ -323,6 +355,11 @@ fn service(name: &str, counter: Counter, source: bool, uses: Vec<String>) -> Ser
         Counter::None => {}
         Counter::Timer => side.needs.push("relative-delay".to_string()),
         Counter::Deadline => side.needs.push("absolute-deadline".to_string()),
+        Counter::DeadlineBound => {
+            side.needs.push("absolute-deadline".to_string());
+            side.at_most
+                .push(("delivery-bound".to_string(), DELIVERY_BOUND_MS));
+        }
         Counter::Extender => {
             side.other
                 .push("(unambiguous-horizon (at-least 60 s))".to_string());
@@ -813,6 +850,202 @@ fn requesters_of_every_kind() -> Vec<Case> {
     cases
 }
 
+/// **Two tasks sharing services that take a channel** (§2.2, §2.4, §2.6, §2.7, §2.9, §2.10): a periodic task `t` and
+/// a sporadic task `u`, each writing `(deadline-from release)` or not; two services `a` and `b`, each taking a channel
+/// of the one timer, an absolute deadline from a `deadline-over-delay` instance with its obliged `delivery-bound` bare
+/// or bounded, or nothing, and handling the one source or not; every set of `uses` edges between them; each task using
+/// every subset of them; the system's own level using each service no task reaches. Two jobs calling one channel, an
+/// expiry running a node both jobs reach, a cycle making one initialisation step of two members.
+fn two_tasks_sharing_services() -> Vec<Case> {
+    const SERVICES: [&str; 2] = ["a", "b"];
+    const COUNTERS: [Counter; 4] = [
+        Counter::None,
+        Counter::Timer,
+        Counter::Deadline,
+        Counter::DeadlineBound,
+    ];
+    let edges = pairs(2);
+    let subset = |set: usize| -> Vec<String> {
+        SERVICES
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| set >> i & 1 == 1)
+            .map(|(_, s)| (*s).to_string())
+            .collect()
+    };
+    let mut cases = Vec::new();
+    for capabilities in 0..8usize.pow(2) {
+        for edge_set in 0..1usize << edges.len() {
+            for t_set in 0..1usize << SERVICES.len() {
+                for u_set in 0..1usize << SERVICES.len() {
+                    for from_set in 0..4usize {
+                        let mut services = Vec::new();
+                        let mut label = String::from("caps=");
+                        for (i, name) in SERVICES.iter().enumerate() {
+                            let cap =
+                                capabilities / 8usize.pow(u32::try_from(i).expect("small")) % 8;
+                            let counter = COUNTERS[cap % 4];
+                            let source = cap / 4 == 1;
+                            let uses = edges
+                                .iter()
+                                .enumerate()
+                                .filter(|(k, (from, _))| *from == i && edge_set >> k & 1 == 1)
+                                .map(|(_, (_, to))| SERVICES[*to].to_string())
+                                .collect();
+                            label.push_str(&format!(
+                                "{name}:{}{} ",
+                                counter.word(),
+                                if source { "+source" } else { "" }
+                            ));
+                            services.push(service(name, counter, source, uses));
+                        }
+                        let (t_from, u_from) = (from_set & 1 == 1, from_set & 2 == 2);
+                        let tasks = vec![
+                            Task {
+                                name: "t".to_string(),
+                                release: Release::Period(10),
+                                priority: 1,
+                                deadline_from: t_from,
+                                side: named(Side::default(), subset(t_set), false),
+                            },
+                            Task {
+                                name: "u".to_string(),
+                                release: Release::MinSeparation(20),
+                                priority: 2,
+                                deadline_from: u_from,
+                                side: named(Side::default(), subset(u_set), false),
+                            },
+                        ];
+                        let edge_words: Vec<String> = edges
+                            .iter()
+                            .enumerate()
+                            .filter(|(k, _)| edge_set >> k & 1 == 1)
+                            .map(|(_, (from, to))| format!("{}>{}", SERVICES[*from], SERVICES[*to]))
+                            .collect();
+                        label.push_str(&format!(
+                            "uses=[{}] t=[{}]{} u=[{}]{}",
+                            edge_words.join(","),
+                            subset(t_set).join(","),
+                            if t_from { "+from" } else { "" },
+                            subset(u_set).join(","),
+                            if u_from { "+from" } else { "" },
+                        ));
+                        let own = own_level(&services, &tasks, false);
+                        cases.push(Case {
+                            label,
+                            description: Description {
+                                system: "sys".to_string(),
+                                blocks: vec![
+                                    timer_block("timer.d", 3, true),
+                                    source_block("dev.s", Separation::Stated(20), ""),
+                                ],
+                                services,
+                                tasks,
+                                own,
+                            },
+                        });
+                    }
+                }
+            }
+        }
+    }
+    cases
+}
+
+/// What one requester of the receivers universe programs itself.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Programs {
+    Nothing,
+    /// An alarm: `(needs relative-delay)`, bound to the timer itself.
+    Alarm,
+    /// An absolute deadline: `(needs absolute-deadline)`, met by its own `deadline-over-delay` instance, whose
+    /// `expiry` runs its requester's code.
+    Deadline,
+}
+
+impl Programs {
+    /// Both an alarm and a deadline for one requester is no choice here: the two facts are of one function, which
+    /// model §8 rule 13 has one provider meet, and neither the timer nor the instance offers both, so the search
+    /// concludes `missing-fact` on every such system.
+    const ALL: [Self; 3] = [Self::Nothing, Self::Alarm, Self::Deadline];
+
+    fn needs(self) -> Vec<String> {
+        match self {
+            Self::Nothing => Vec::new(),
+            Self::Alarm => names(&["relative-delay"]),
+            Self::Deadline => names(&["absolute-deadline"]),
+        }
+    }
+}
+
+/// **Receivers of interrupt code** (§1): tasks `t` and `u`, each periodic or sporadic, each writing `(deadline-from
+/// release)` or not, `t` first in runtime order or `u`; each of them and the system's own level programming nothing, an
+/// alarm itself, or an absolute deadline whose expiry it receives; over one timer with channels for every requester.
+/// So §1's refusal naming every receiver, each task in runtime order and then the system's own level, meets every set
+/// of receivers in both runtime orders.
+fn receivers_of_interrupt_code() -> Vec<Case> {
+    let mut cases = Vec::new();
+    for t_programs in Programs::ALL {
+        for u_programs in Programs::ALL {
+            for own_programs in Programs::ALL {
+                for u_first in [false, true] {
+                    for kinds in 0..4usize {
+                        for from_set in 0..4usize {
+                            let task = |name: &str,
+                                        sporadic: bool,
+                                        priority: u32,
+                                        from: bool,
+                                        programs: Programs| {
+                                Task {
+                                    name: name.to_string(),
+                                    release: if sporadic {
+                                        Release::MinSeparation(20)
+                                    } else {
+                                        Release::Period(20)
+                                    },
+                                    priority,
+                                    deadline_from: from,
+                                    side: Side {
+                                        needs: programs.needs(),
+                                        ..Side::default()
+                                    },
+                                }
+                            };
+                            let (t_sporadic, u_sporadic) = (kinds & 1 == 1, kinds & 2 == 2);
+                            let (t_from, u_from) = (from_set & 1 == 1, from_set & 2 == 2);
+                            let (t_priority, u_priority) = if u_first { (2, 1) } else { (1, 2) };
+                            cases.push(Case {
+                                label: format!(
+                                    "t:{}{}:{t_programs:?} u:{}{}:{u_programs:?} own:{own_programs:?} first={}",
+                                    if t_sporadic { "sporadic" } else { "periodic" },
+                                    if t_from { "+from" } else { "" },
+                                    if u_sporadic { "sporadic" } else { "periodic" },
+                                    if u_from { "+from" } else { "" },
+                                    if u_first { "u" } else { "t" },
+                                ),
+                                description: Description {
+                                    system: "sys".to_string(),
+                                    blocks: vec![timer_block("timer.d", 6, true)],
+                                    services: Vec::new(),
+                                    tasks: vec![
+                                        task("t", t_sporadic, t_priority, t_from, t_programs),
+                                        task("u", u_sporadic, u_priority, u_from, u_programs),
+                                    ],
+                                    own: Side {
+                                        needs: own_programs.needs(),
+                                        ..Side::default()
+                                    },
+                                },
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    cases
+}
+
 // =====================================================================================================================
 // The reading: docs/decisions/decision_runtime-plan.md, §2 and §3, transcribed rule by rule
 // =====================================================================================================================
@@ -969,10 +1202,9 @@ fn reach(edges: &BTreeMap<String, BTreeSet<String>>, from: &str) -> BTreeSet<Str
     reached
 }
 
-/// The record's reading of one system: every line of the kinds it derives, and each task's trigger.
+/// The record's reading of one system: every line of the kinds it derives.
 struct Reading {
     lines: Vec<String>,
-    released_by: BTreeMap<String, String>,
     /// The classes of the record's rules this system exercises, so that a universe's reach is counted.
     classes: BTreeSet<&'static str>,
 }
@@ -1125,19 +1357,56 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     let mut lines = Vec::new();
 
     // §2.4 and §3: `(instance INSTANCE OBLIGED … (obligations NAME …) (costs NAME …))`, by text; each fact the kind
-    // offers `obliged` written bare, `(obliged FACT)`, where the requirement writes no bound — none of these
-    // descriptions writes one.
+    // offers `obliged` written with "its value, the requirement's value at that exclusive instance", `(obliged FACT
+    // DUR)`, or, "where the requirement writes no bound, the fact alone", `(obliged FACT)`. The value is "the tightest
+    // bound its requester writes on that fact" (the adapters record §1, item 5): here the least `at-most` written by
+    // the instance's one requester, the last item of its `(adapter KIND OVER REQUESTER)` text.
     let instances: BTreeSet<String> = binds
         .iter()
         .flat_map(|b| [&b.requester, &b.provider])
         .filter(|n| is_instance(n))
         .cloned()
         .collect();
+    let side_of = |requester: &str| -> Option<&Side> {
+        if requester == system {
+            return Some(&description.own);
+        }
+        description
+            .tasks
+            .iter()
+            .find(|t| task_text(t) == requester)
+            .map(|t| &t.side)
+            .or_else(|| {
+                description
+                    .services
+                    .iter()
+                    .find(|s| s.name == requester)
+                    .map(|s| &s.side)
+            })
+    };
     for instance in &instances {
         let kind = kind_of(instance);
         let mut line = format!("(instance {instance}");
+        let instance_form = form(instance);
+        let requester = items(&instance_form).get(3).map(text_of);
         for fact in kind.obliged {
-            line.push_str(&format!(" (obliged {fact})"));
+            let bound = requester.as_deref().and_then(side_of).and_then(|side| {
+                side.at_most
+                    .iter()
+                    .filter(|(f, _)| f == fact)
+                    .map(|(_, ms)| *ms)
+                    .min()
+            });
+            match bound {
+                Some(ms) => {
+                    classes.insert("instance: an obliged fact with its bound");
+                    line.push_str(&format!(" (obliged {fact} {})", duration(ms)));
+                }
+                None => {
+                    classes.insert("instance: an obliged fact bare");
+                    line.push_str(&format!(" (obliged {fact})"));
+                }
+            }
         }
         line.push_str(&format!(
             " {} {})",
@@ -1254,6 +1523,64 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         released_by.insert(task_text(task), trigger);
     }
 
+    // §2.2 and §3: `(task INDEX (task SYSTEM NAME) (rank INT) RELEASE (deadline DUR) REFERENCE (jitter DUR) (overrun
+    // POLICY) (released-by TRIGGER) (uses NAME …))`, by index. The index is "the number of tasks of smaller rank", the
+    // rank the task's `priority` (`decision_priority-comparison-direction.md`: "`N` is a rank"); the reference
+    // `(deadline-from release)` where the description writes it, else `(deadline-from)`; "its release jitter, written
+    // as zero where none is stated", and "its overrun policy, `fault` where none is stated" — these descriptions state
+    // neither; and "what it names by `uses` or `needs` that is a service or a policy, each once: a fact or a block it
+    // names is no member", by name.
+    let declared_services: BTreeSet<&str> = description
+        .services
+        .iter()
+        .map(|s| s.name.as_str())
+        .collect();
+    let mut task_lines: Vec<(usize, String)> = Vec::new();
+    for task in &description.tasks {
+        let index = description
+            .tasks
+            .iter()
+            .filter(|other| other.priority < task.priority)
+            .count();
+        let (release, ms) = match task.release {
+            Release::Period(ms) => ("period", ms),
+            Release::MinSeparation(ms) => ("min-separation", ms),
+        };
+        let members: BTreeSet<&str> = task
+            .side
+            .uses
+            .iter()
+            .chain(&task.side.needs)
+            .map(String::as_str)
+            .filter(|n| declared_services.contains(n))
+            .collect();
+        if task.deadline_from {
+            classes.insert("task: deadline-from written");
+        } else {
+            classes.insert("task: deadline-from owed");
+        }
+        task_lines.push((
+            index,
+            format!(
+                "(task {index} {} (rank {}) ({release} {}) (deadline {}) {} (jitter 0 s) (overrun fault) \
+                 (released-by {}) {})",
+                task_text(task),
+                task.priority,
+                duration(ms),
+                duration(ms),
+                if task.deadline_from {
+                    "(deadline-from release)"
+                } else {
+                    "(deadline-from)"
+                },
+                released_by[&task_text(task)],
+                list("uses", members)
+            ),
+        ));
+    }
+    task_lines.sort();
+    lines.extend(task_lines.into_iter().map(|(_, line)| line));
+
     // §2.5, the release timer "releases every task whose trigger is `timer`", `releases` items by index (§3); a task's
     // index is "the number of tasks of smaller rank" (§2.2), its rank its priority's place.
     let mut by_index: Vec<&Task> = description.tasks.iter().collect();
@@ -1292,6 +1619,10 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         "enabled",
         std::iter::once("timer").chain(ranked.iter().map(|r| r.item.as_str())),
     ));
+    // §2.5, the interrupt model: "interrupts do not nest, and every masked section masks every interrupt"; and §2.10,
+    // "The plan's last line says whether it is complete, and `/1`'s never is".
+    lines.push("(interrupt-model (nesting no) (masking all))".to_string());
+    lines.push("(complete no)".to_string());
 
     // §2.6 and §3: one `(context SUBJECT CONTEXT …)` line for each task and each node, by subject's text; within a line
     // `job`, then each `(interrupt …)` by its text, then `initialisation` — "for every node".
@@ -1325,6 +1656,117 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     }
     contexts.sort();
     lines.extend(contexts.into_iter().map(|(_, line)| line));
+
+    // §2.7: the graph is `Joint::initialization`, model §8 rule 12: "An edge runs from a provider to each requester
+    // bound to it, except across composition, at any depth, or to itself, and from a service or policy to each that
+    // names it by `uses` or `needs`; each carries its reason", between nodes — "the system's own level ... and its
+    // tasks ... are none". Composition is a block's or a platform's `uses` (rule 1); no block or platform here requires
+    // anything, so no binding crosses it, which the reading asserts rather than transcribes.
+    #[derive(Default)]
+    struct Reasons {
+        facts: BTreeSet<String>,
+        named: bool,
+    }
+    let mut graph: BTreeMap<(String, String), Reasons> = BTreeMap::new();
+    for bind in binds {
+        assert!(
+            !description.blocks.iter().any(|b| b.name == bind.requester) && bind.requester != "soc",
+            "the reading transcribes no composition, and `{}` is a block or a platform requiring",
+            bind.requester
+        );
+        if nodes.contains(&bind.requester)
+            && nodes.contains(&bind.provider)
+            && bind.requester != bind.provider
+        {
+            graph
+                .entry((bind.provider.clone(), bind.requester.clone()))
+                .or_default()
+                .facts
+                .insert(bind.fact.clone());
+        }
+    }
+    for namer in description
+        .services
+        .iter()
+        .filter(|s| nodes.contains(&s.name))
+    {
+        for named in namer.side.uses.iter().chain(&namer.side.needs) {
+            if declared_services.contains(named.as_str())
+                && nodes.contains(named)
+                && *named != namer.name
+            {
+                graph
+                    .entry((named.clone(), namer.name.clone()))
+                    .or_default()
+                    .named = true;
+                classes.insert("initialisation: a named edge");
+            }
+        }
+    }
+    // "one line for each ordered pair of nodes an edge joins, the node the edge orders earlier first ... naming each
+    // reason", by "the earlier node's text, then the later's; within a line, `(binding …)` reasons by fact, then
+    // `named`" (§3).
+    for ((earlier, later), reasons) in &graph {
+        let mut because: Vec<String> = reasons
+            .facts
+            .iter()
+            .map(|f| format!("(binding {f})"))
+            .collect();
+        if reasons.named {
+            because.push("named".to_string());
+        }
+        lines.push(format!(
+            "(depends {earlier} {later} {})",
+            list("because", because)
+        ));
+    }
+    // "Its steps are its strongly connected components, in a topological order taken by repeatedly choosing, among the
+    // components whose predecessors have all been taken, the one whose least member's text is least. A step names its
+    // members by their text, in order."
+    let after = |node: &str| -> BTreeSet<String> {
+        let mut reached = BTreeSet::new();
+        let mut todo = vec![node.to_string()];
+        while let Some(at) = todo.pop() {
+            for (earlier, later) in graph.keys() {
+                if *earlier == at && reached.insert(later.clone()) {
+                    todo.push(later.clone());
+                }
+            }
+        }
+        reached
+    };
+    let reached: BTreeMap<&String, BTreeSet<String>> =
+        nodes.iter().map(|n| (n, after(n))).collect();
+    let components: BTreeSet<Vec<String>> = nodes
+        .iter()
+        .map(|n| {
+            nodes
+                .iter()
+                .filter(|m| *m == n || (reached[n].contains(*m) && reached[*m].contains(n)))
+                .cloned()
+                .collect()
+        })
+        .collect();
+    let mut taken: BTreeSet<String> = BTreeSet::new();
+    let mut step = 0;
+    while taken.len() < nodes.len() {
+        let ready = components
+            .iter()
+            .filter(|c| !taken.contains(&c[0]))
+            .filter(|c| {
+                graph.keys().all(|(earlier, later)| {
+                    !c.contains(later) || c.contains(earlier) || taken.contains(earlier)
+                })
+            })
+            .min_by(|a, b| a[0].cmp(&b[0]))
+            .expect("a component whose predecessors are all taken");
+        if ready.len() >= 2 {
+            classes.insert("initialisation: a component of several members");
+        }
+        step += 1;
+        lines.push(format!("(step {step} {})", ready.join(" ")));
+        taken.extend(ready.iter().cloned());
+    }
 
     // §2.9: "A service or a policy that takes a channel is **multiplexed** where it has two or more **users**: each of
     // the system's tasks that reaches it (§2), directly or through services, policies and bindings; and each interrupt
@@ -1387,8 +1829,15 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         if users.len() >= 2 {
             multiplexed.insert(service.clone());
             classes.insert("multiplex: multiplexed");
-            if users.iter().all(|u| !u.starts_with("(task ")) {
+            let jobs = description
+                .tasks
+                .iter()
+                .filter(|t| users.contains(&task_text(t)))
+                .count();
+            if jobs == 0 {
                 classes.insert("multiplex: multiplexed by interrupts alone");
+            } else if jobs >= 2 {
+                classes.insert("multiplex: multiplexed by two jobs");
             }
             if description
                 .services
@@ -1478,11 +1927,7 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     owed.sort();
     lines.extend(owed);
 
-    Reading {
-        lines,
-        released_by,
-        classes,
-    }
+    Reading { lines, classes }
 }
 
 // =====================================================================================================================
@@ -1559,30 +2004,14 @@ fn binds_of(plan: &str) -> Vec<Bind> {
         .collect()
 }
 
-/// Each task's `(released-by TRIGGER)`, by the task's `(task SYSTEM NAME)`.
-fn released_by_of(plan: &str) -> BTreeMap<String, String> {
-    plan.lines()
-        .filter(|line| line.starts_with("(task "))
-        .map(|line| {
-            let form = form(line);
-            let items = items(&form);
-            let trigger = items
-                .iter()
-                .find_map(|item| match item {
-                    Sx::List(parts) if parts.first() == Some(&Sx::Atom("released-by".into())) => {
-                        Some(text_of(&parts[1]))
-                    }
-                    _ => None,
-                })
-                .unwrap_or_else(|| "(none written)".to_string());
-            (text_of(&items[2]), trigger)
-        })
-        .collect()
-}
-
-/// The kinds of line the reading derives, as the checker reports them.
-const KINDS_OF_LINE: [&str; 8] = [
+/// The kinds of line the reading derives, as the checker reports them: every line of a plan.
+const KINDS_OF_LINE: [&str; 15] = [
+    "identity",
+    "task",
+    "bind",
     "context",
+    "depends",
+    "step",
     "multiplex",
     "route",
     "enabled",
@@ -1590,6 +2019,8 @@ const KINDS_OF_LINE: [&str; 8] = [
     "instance",
     "obligation",
     "owed",
+    "interrupt-model",
+    "complete",
 ];
 
 /// Which of the kinds `line` is: `multiplex` is the `(obligation multiplex …)` lines and the `overhead` they owe
@@ -1597,6 +2028,15 @@ const KINDS_OF_LINE: [&str; 8] = [
 fn kind_of_line(line: &str) -> Option<&'static str> {
     let head = line.split(' ').next().unwrap_or_default();
     match head {
+        "(format" | "(profile" | "(system" | "(program" | "(assignment" | "(adapters" => {
+            Some("identity")
+        }
+        "(interrupt-model" => Some("interrupt-model"),
+        "(complete" => Some("complete"),
+        "(task" => Some("task"),
+        "(bind" => Some("bind"),
+        "(depends" => Some("depends"),
+        "(step" => Some("step"),
         "(context" => Some("context"),
         "(route" => Some("route"),
         "(enabled" => Some("enabled"),
@@ -1646,10 +2086,59 @@ struct Judged {
     classes: BTreeSet<&'static str>,
 }
 
-/// One system's plan judged against the reading.
-fn judge(description: &Description, plan: &str) -> Judged {
-    let reading = read_the_record(description, &binds_of(plan));
-    let expected = by_kind(reading.lines.iter().map(String::as_str));
+/// The plan's identity (§2.1, §3): "the format, the profile, the system, the program's digest, the assignment's sha256
+/// and the adapter catalog's version" — the profile, the system, the program's digest and the catalog's version as the
+/// record writes them, its digest being the program's (the configuration checker's check (1) holds it), and the
+/// sha256 of the record's text. Where `elided`, the two digests are written `…`, as the record's worked texts write
+/// them.
+fn identity(record: &str, elided: bool) -> Vec<String> {
+    let line = |head: &str| -> String {
+        record
+            .lines()
+            .find(|l| l.starts_with(&format!("({head} ")))
+            .unwrap_or_else(|| panic!("the record's `{head}` line"))
+            .to_string()
+    };
+    let (program, assignment) = if elided {
+        (
+            "(program \"…\")".to_string(),
+            "(assignment \"…\")".to_string(),
+        )
+    } else {
+        (
+            line("program"),
+            format!("(assignment \"{}\")", Digest::of(record.as_bytes()).hex()),
+        )
+    };
+    vec![
+        "(format \"archogen-runtime-plan/1\")".to_string(),
+        line("profile"),
+        line("system"),
+        program,
+        assignment,
+        line("adapters"),
+    ]
+}
+
+/// One system's plan judged against the reading, which takes the assignment from `record`, the `/2` record lowered:
+/// §2.3's `bind` lines are that record's, "copied as written".
+fn judge(description: &Description, record: &str, plan: &str) -> Judged {
+    judge_elided(description, record, plan, false)
+}
+
+/// [`judge`], the identity's two digests written `…` where `elided`.
+fn judge_elided(description: &Description, record: &str, plan: &str, elided: bool) -> Judged {
+    let reading = read_the_record(description, &binds_of(record));
+    let mut expected = by_kind(reading.lines.iter().map(String::as_str));
+    expected.insert("identity", identity(record, elided));
+    expected.insert(
+        "bind",
+        record
+            .lines()
+            .filter(|line| line.starts_with("(bind "))
+            .map(str::to_string)
+            .collect(),
+    );
     let written = by_kind(plan.lines());
     let mut agreed = Vec::new();
     let mut disagreements = Vec::new();
@@ -1664,21 +2153,6 @@ fn judge(description: &Description, plan: &str) -> Judged {
             });
         }
     }
-    let triggers = released_by_of(plan);
-    if triggers == reading.released_by {
-        agreed.push("released-by");
-    } else {
-        let show = |m: &BTreeMap<String, String>| -> Vec<String> {
-            m.iter()
-                .map(|(task, trigger)| format!("{task} (released-by {trigger})"))
-                .collect()
-        };
-        disagreements.push(Disagreement {
-            kind: "released-by",
-            expected: show(&reading.released_by),
-            written: show(&triggers),
-        });
-    }
     Judged {
         agreed,
         disagreements,
@@ -1686,38 +2160,369 @@ fn judge(description: &Description, plan: &str) -> Judged {
     }
 }
 
-/// §1, the refusals these universes can reach, as `(code, subject named)`, the first that applies: "They are taken in
-/// the order written, this list and then the next", "a bullet over tasks is taken task by task in runtime order".
+/// What the engine did with one system, run as `common::lowered` runs it — the language's check, the search, the
+/// `/2` writer and the lowering — with the `archogen-assignment/2` record kept and judged by the configuration checker,
+/// `archogen_plan_check::check::plan_file`, as `crates/eadl-resolve/tests/plan.rs`'s `resolved_and_judged` judges one.
+enum Flow {
+    /// The language's check refused the description: its verdict. Such a description is no input (§1).
+    Rejected(String),
+    /// The search resolved no plan: its verdict.
+    Unresolved(String),
+    /// The search resolved one.
+    Resolved {
+        /// The record the search's writer wrote.
+        record: String,
+        /// The configuration checker's verdict on it, where it refuses.
+        checker: Option<String>,
+        /// The plan's text, or the lowering's refusal.
+        lowered: Result<String, Refusal>,
+    },
+}
+
+fn flow(text: &str, system: &str) -> Flow {
+    let program = match common::checked(text) {
+        Ok(program) => program,
+        Err(verdict) => return Flow::Rejected(verdict.to_string()),
+    };
+    let vocabulary = common::vocabulary();
+    let catalog = common::catalog();
+    let declarations = &program.root().declarations;
+    let decl = declarations
+        .iter()
+        .find(|f| {
+            f.head() == Some("defsystem")
+                && f.items().get(1).and_then(Form::as_symbol) == Some(system)
+        })
+        .expect("the system")
+        .clone();
+    let policy = Policy {
+        adapters: catalog.clone(),
+        ..Policy::default()
+    };
+    let resolution = match search(
+        declarations,
+        &decl,
+        RT_STATIC_UP_V1.caller_level,
+        &vocabulary,
+        &policy,
+        Limits::DEFAULT,
+    ) {
+        Search::Resolved(resolution) => resolution,
+        Search::Refused { verdict, .. } => return Flow::Unresolved(format!("{verdict:?}")),
+        Search::Inconclusive { .. } => return Flow::Unresolved("inconclusive".to_string()),
+    };
+    let record = plan::write(
+        &resolution,
+        RT_STATIC_UP_V1.id,
+        &plan::program_digest(&program),
+    );
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add("description.eadl", text.to_owned())
+        .expect("small");
+    let (_, verdict) = plan_file(
+        &mut sources,
+        id,
+        &DirectoryModules::new(common::root()),
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        &record,
+    );
+    let checker = verdict.err().map(|refused| {
+        let findings: Vec<String> = refused
+            .findings
+            .iter()
+            .map(|f| format!("{}: {}", f.code, f.message))
+            .collect();
+        format!("{}; {}", refused.status.slug(), findings.join("; "))
+    });
+    let lowered = lower(&program, &record, &vocabulary, &catalog).map(|plan| plan.text());
+    Flow::Resolved {
+        record,
+        checker,
+        lowered,
+    }
+}
+
+/// A refusal §1 gives one system.
+struct Due {
+    code: &'static str,
+    /// The subjects it names, in §1's order: a task's `(task SYSTEM NAME)`, or the system's name for its own level.
+    subjects: Vec<String>,
+    /// The instances whose `expiry` a receiver would receive, by their `(adapter …)` text.
+    expiries: Vec<String>,
+    /// The providers at which a receiver would receive the alarm it programs itself, its timer route.
+    alarms: Vec<String>,
+    /// The classes of §1's rules it exercises.
+    classes: BTreeSet<&'static str>,
+}
+
+/// §1, the refusals these universes can reach, the first that applies, from the description and the record's own
+/// `bind` lines: "They are taken in the order written, this list and then the next, ... and the first that applies is
+/// the one given; a bullet over tasks is taken task by task in runtime order".
 /// - Of the first list: "a periodic task bound to an interrupt source itself, which states a second release model":
-///   `tool-failure`, "naming the task and the clause" (`M1.43` makes the language refuse it, and "a description the
-///   language's check refuses is no input").
-/// - Of the second, each `unsupported-profile`: "a task, or the system's own level, that would receive an interrupt's
-///   code: a timer route that names it, bound to its provider itself, or an adapter instance with a cost running its
-///   requester's code (`expiry`) whose requester it is". In these universes a requester needing `relative-delay` is
-///   bound for it to a block, the only providers offering it, and one needing `absolute-deadline` to its own
-///   `deadline-over-delay` instance, the only provider offering that: each assignment the search can choose has it.
-fn refusal_the_record_gives(description: &Description) -> Option<(&'static str, String)> {
+///   `tool-failure`, "naming the task and the clause". (`M1.43` has the language refuse it, and "a description the
+///   language's check refuses is no input".)
+/// - Of the second, `unsupported-profile`: "a task, or the system's own level, that would receive an interrupt's code:
+///   a timer route that names it, bound to its provider itself, or an adapter instance with a cost running its
+///   requester's code (`expiry`) whose requester it is, the one an exclusive instance serves or one bound to a shared
+///   instance. ... It names every such receiver — each task in runtime order, then the system's own level — with what
+///   it would receive, so no order among them decides the message".
+///
+/// No other bullet applies here: no description names a system, every duration is a few milliseconds, no system has
+/// placement memory, each declares a task, and every deadline is measured from its release or from nothing written.
+fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option<Due> {
+    let system = description.system.as_str();
+    let task_text = |task: &Task| format!("(task {system} {})", task.name);
     let mut by_index: Vec<&Task> = description.tasks.iter().collect();
     by_index.sort_by_key(|t| t.priority);
-    let needs = |side: &Side, fact: &str| side.needs.iter().any(|n| n == fact);
     for task in &by_index {
-        if matches!(task.release, Release::Period(_)) && needs(&task.side, INTERRUPT_FACT) {
-            return Some((
-                "tool-failure",
-                format!("(task {} {})", description.system, task.name),
-            ));
+        if matches!(task.release, Release::Period(_))
+            && binds
+                .iter()
+                .any(|b| b.requester == task_text(task) && b.fact == INTERRUPT_FACT)
+        {
+            return Some(Due {
+                code: "tool-failure",
+                subjects: vec![task_text(task)],
+                expiries: Vec::new(),
+                alarms: Vec::new(),
+                classes: BTreeSet::from(["refusal: a periodic task bound to a source itself"]),
+            });
         }
     }
-    let receives = |side: &Side| CONSUMED.iter().any(|fact| needs(side, fact));
-    for task in &by_index {
-        if receives(&task.side) {
-            return Some((
-                "unsupported-profile",
-                format!("(task {} {})", description.system, task.name),
-            ));
+    let mut due = Due {
+        code: "unsupported-profile",
+        subjects: Vec::new(),
+        expiries: Vec::new(),
+        alarms: Vec::new(),
+        classes: BTreeSet::new(),
+    };
+    let requesters = by_index
+        .iter()
+        .map(|t| task_text(t))
+        .chain(std::iter::once(system.to_string()));
+    for requester in requesters {
+        let mut receives = false;
+        for bind in binds.iter().filter(|b| b.requester == requester) {
+            if is_instance(&bind.provider) {
+                if kind_of(&bind.provider).runs_requester {
+                    receives = true;
+                    due.expiries.push(bind.provider.clone());
+                    due.classes.insert("receivers: an expiry");
+                }
+            } else if CONSUMED.contains(&bind.fact.as_str()) {
+                receives = true;
+                due.alarms.push(bind.provider.clone());
+                due.classes.insert("receivers: an alarm programmed itself");
+            }
+        }
+        if receives {
+            due.subjects.push(requester);
         }
     }
-    receives(&description.own).then(|| ("unsupported-profile", description.system.clone()))
+    if due.subjects.is_empty() {
+        return None;
+    }
+    due.classes.insert(match due.subjects.len() {
+        1 => "receivers: one",
+        2 => "receivers: two",
+        _ => "receivers: three",
+    });
+    let tasks: Vec<&String> = due.subjects.iter().filter(|s| *s != system).collect();
+    if tasks.len() < due.subjects.len() {
+        due.classes.insert(if tasks.is_empty() {
+            "receivers: the system's own level alone"
+        } else {
+            "receivers: tasks and the system's own level"
+        });
+    }
+    if tasks.windows(2).any(|w| w[0] > w[1]) {
+        due.classes
+            .insert("receivers: runtime order unlike the tasks' text order");
+    }
+    Some(due)
+}
+
+/// A refusal's message read as forms: its parenthesised forms as trees, every other word an atom; backquotes, quotes,
+/// commas and semicolons separate words. Prose is no canonical text, so an unbalanced parenthesis is closed rather
+/// than refused.
+fn prose(message: &str) -> Vec<Sx> {
+    fn flush(atom: &mut String, stack: &mut [Vec<Sx>]) {
+        if !atom.is_empty() {
+            stack
+                .last_mut()
+                .expect("open")
+                .push(Sx::Atom(std::mem::take(atom)));
+        }
+    }
+    let mut stack: Vec<Vec<Sx>> = vec![Vec::new()];
+    let mut atom = String::new();
+    for ch in message.chars() {
+        match ch {
+            '(' => {
+                flush(&mut atom, &mut stack);
+                stack.push(Vec::new());
+            }
+            ')' => {
+                flush(&mut atom, &mut stack);
+                if stack.len() > 1 {
+                    let done = stack.pop().expect("open");
+                    stack.last_mut().expect("open").push(Sx::List(done));
+                }
+            }
+            c if c.is_whitespace() || matches!(c, '`' | '"' | ',' | ';') => {
+                flush(&mut atom, &mut stack);
+            }
+            c => atom.push(c),
+        }
+    }
+    flush(&mut atom, &mut stack);
+    while stack.len() > 1 {
+        let done = stack.pop().expect("open");
+        stack.last_mut().expect("open").push(Sx::List(done));
+    }
+    stack.pop().expect("one")
+}
+
+/// A form's canonical text, `()` included.
+fn prose_text(sx: &Sx) -> String {
+    match sx {
+        Sx::List(items) if items.is_empty() => "()".to_string(),
+        other => text_of(other),
+    }
+}
+
+/// Every parenthesised form of a refusal's message, at any depth, by its canonical text.
+fn forms_in(message: &str) -> BTreeSet<String> {
+    fn walk(sx: &Sx, out: &mut BTreeSet<String>) {
+        if let Sx::List(items) = sx {
+            out.insert(prose_text(sx));
+            for item in items {
+                walk(item, out);
+            }
+        }
+    }
+    let mut out = BTreeSet::new();
+    for sx in prose(message) {
+        walk(&sx, &mut out);
+    }
+    out
+}
+
+/// Every word of a refusal's message outside an instance's `(adapter …)` text, inside other forms included.
+fn words_outside_instances(message: &str) -> BTreeSet<String> {
+    fn walk(sx: &Sx, out: &mut BTreeSet<String>) {
+        match sx {
+            Sx::Atom(atom) => {
+                out.insert(atom.clone());
+            }
+            Sx::List(items) => {
+                if items.first() != Some(&Sx::Atom("adapter".to_string())) {
+                    for item in items {
+                        walk(item, out);
+                    }
+                }
+            }
+        }
+    }
+    let mut out = BTreeSet::new();
+    for sx in prose(message) {
+        walk(&sx, &mut out);
+    }
+    out
+}
+
+/// The subjects a refusal's message names, each once, in the order it first names them: each `(task SYSTEM NAME)` form,
+/// and the system's own level by the system's name as a word of its own — compared whole, never as a substring of
+/// another text (round 11, R11-R3), so the `sys` inside `(task sys t)` names no system. An instance's `(adapter …)`
+/// text is a name of its own: the requester written inside it is the instance's, no subject of the message.
+fn subjects_named(message: &str, system: &str) -> Vec<String> {
+    fn word(atom: &str) -> &str {
+        let atom = atom
+            .strip_suffix("'s")
+            .or_else(|| atom.strip_suffix("’s"))
+            .unwrap_or(atom);
+        atom.trim_end_matches(['.', ':', '!', '?'])
+            .trim_matches(['\'', '‘', '’'])
+    }
+    fn walk(sx: &Sx, system: &str, out: &mut Vec<String>) {
+        let mut name = |subject: String| {
+            if !out.contains(&subject) {
+                out.push(subject);
+            }
+        };
+        match sx {
+            Sx::Atom(atom) => {
+                if word(atom) == system {
+                    name(system.to_string());
+                }
+            }
+            Sx::List(items) => {
+                let head = match items.first() {
+                    Some(Sx::Atom(head)) => head.as_str(),
+                    _ => "",
+                };
+                if head == "adapter" {
+                    return;
+                }
+                if head == "task"
+                    && items.len() == 3
+                    && items.iter().all(|i| matches!(i, Sx::Atom(_)))
+                {
+                    name(prose_text(sx));
+                    return;
+                }
+                for item in items {
+                    walk(item, system, out);
+                }
+            }
+        }
+    }
+    let mut out = Vec::new();
+    for sx in prose(message) {
+        walk(&sx, system, &mut out);
+    }
+    out
+}
+
+/// Where the lowering's `refusal` is not the one `due`: its code, the subjects it names in their order, and what it
+/// says they would receive. §1 fixes the receivers and their order, not the message's wording of what each receives;
+/// so an expiry is held to its instance's text, written whole, and an alarm a receiver programs itself to its
+/// provider's name, written outside any instance's text — an interrupt being "named by its kind and its provider" (§2).
+fn refusal_disagrees(due: &Due, refusal: &Refusal, system: &str) -> Option<String> {
+    let mut wrong = Vec::new();
+    if refusal.code != due.code {
+        wrong.push(format!(
+            "its code is `{}`, the record's `{}`",
+            refusal.code, due.code
+        ));
+    }
+    let named = subjects_named(&refusal.message, system);
+    if named != due.subjects {
+        wrong.push(format!(
+            "it names {named:?}, the record {:?}, in that order",
+            due.subjects
+        ));
+    }
+    let forms = forms_in(&refusal.message);
+    let words = words_outside_instances(&refusal.message);
+    let unsaid: Vec<&String> = due
+        .expiries
+        .iter()
+        .filter(|instance| !forms.contains(*instance))
+        .chain(
+            due.alarms
+                .iter()
+                .filter(|provider| !words.contains(*provider)),
+        )
+        .collect();
+    if !unsaid.is_empty() {
+        wrong.push(format!(
+            "it does not name what would be received: {unsaid:?}"
+        ));
+    }
+    (!wrong.is_empty()).then(|| wrong.join("; "))
 }
 
 /// How one system fared.
@@ -1726,40 +2531,73 @@ struct Outcome {
     class: &'static str,
     /// The verdict of a system not lowered.
     verdict: String,
+    /// Whether the configuration checker judged its record: every system the search resolves.
+    judged: bool,
     /// The kinds of line a plan agrees with the reading on.
     agreed: Vec<&'static str>,
-    /// The classes of the record's rules a plan exercises.
+    /// The classes of the record's rules the system exercises.
     classes: BTreeSet<&'static str>,
-    /// Where the code and the record's reading disagree: the reproducer.
-    finding: Option<String>,
+    /// Where the code and the record's reading disagree, or the checker refuses the record: each a reproducer.
+    findings: Vec<String>,
 }
 
 fn outcome(universe: &str, case: &Case) -> Outcome {
     let text = case.description.text();
-    let due = refusal_the_record_gives(&case.description);
     let mut out = Outcome {
         class: "lowered",
         verdict: String::new(),
+        judged: false,
         agreed: Vec::new(),
         classes: BTreeSet::new(),
-        finding: None,
+        findings: Vec::new(),
     };
+    let (record, checker, lowered) = match flow(&text, &case.description.system) {
+        Flow::Rejected(verdict) => {
+            out.class = "rejected";
+            out.verdict = verdict;
+            return out;
+        }
+        Flow::Unresolved(verdict) => {
+            out.class = "unresolved";
+            out.verdict = verdict;
+            return out;
+        }
+        Flow::Resolved {
+            record,
+            checker,
+            lowered,
+        } => (record, checker, lowered),
+    };
+    out.judged = true;
     let reproducer = |written: &str, what: &str| {
         format!(
-            "== {universe}: {}\n-- the description\n{text}-- the code writes\n{written}{what}",
+            "== {universe}: {}\n-- the description\n{text}-- the record\n{record}{written}{what}",
             case.label
         )
     };
-    match lowered(&text, Some(&case.description.system)) {
-        Lowered::Plan(plan) => {
-            if let Some((code, subject)) = &due {
-                out.finding = Some(reproducer(
-                    &plan,
-                    &format!("-- the record refuses it: `{code}`, naming {subject} (§1)\n"),
+    if let Some(refused) = &checker {
+        out.findings.push(reproducer(
+            "",
+            &format!(
+                "-- the configuration checker refuses the record the search wrote: {refused}\n"
+            ),
+        ));
+    }
+    let due = refusal_the_record_gives(&case.description, &binds_of(&record));
+    match lowered {
+        Ok(plan) => {
+            if let Some(due) = &due {
+                out.findings.push(reproducer(
+                    &format!("-- the code writes\n{plan}"),
+                    &format!(
+                        "-- the record refuses it: `{}`, naming {} (§1)\n",
+                        due.code,
+                        due.subjects.join(", ")
+                    ),
                 ));
                 return out;
             }
-            let judged = judge(&case.description, &plan);
+            let judged = judge(&case.description, &record, &plan);
             out.agreed = judged.agreed;
             out.classes = judged.classes;
             if !judged.disagreements.is_empty() {
@@ -1773,34 +2611,31 @@ fn outcome(universe: &str, case: &Case) -> Outcome {
                         d.written.join("\n")
                     ));
                 }
-                out.finding = Some(reproducer(&plan, &what));
+                out.findings
+                    .push(reproducer(&format!("-- the code writes\n{plan}"), &what));
             }
         }
-        Lowered::Rejected(verdict) => {
-            out.class = "rejected";
-            out.verdict = verdict;
-        }
-        Lowered::Unresolved(verdict) => {
-            out.class = "unresolved";
-            out.verdict = verdict;
-        }
-        Lowered::Refused(refusal) => {
+        Err(refusal) => {
             out.class = "refused";
             out.verdict = refusal.to_string();
-            let named = due.as_ref().is_some_and(|(code, subject)| {
-                out.verdict.starts_with(&format!("{code}:"))
-                    && out.verdict.contains(subject.as_str())
-            });
-            if !named {
-                out.finding = Some(reproducer(
-                    &format!("refused {}\n", out.verdict),
-                    &match &due {
-                        Some((code, subject)) => {
-                            format!("-- the record refuses it `{code}`, naming {subject} (§1)\n")
-                        }
-                        None => "-- the record refuses it for none of §1's reasons\n".to_string(),
-                    },
-                ));
+            let wrong = match &due {
+                Some(due) => refusal_disagrees(due, &refusal, &case.description.system),
+                None => Some("the record refuses it for none of §1's reasons".to_string()),
+            };
+            match (wrong, due) {
+                (None, Some(due)) => out.classes = due.classes,
+                (Some(wrong), due) => out.findings.push(reproducer(
+                    &format!("-- the code writes\nrefused {refusal}\n"),
+                    &format!(
+                        "-- {wrong}{}\n",
+                        due.map_or(String::new(), |due| format!(
+                            " (§1: `{}`, naming {})",
+                            due.code,
+                            due.subjects.join(", ")
+                        ))
+                    ),
+                )),
+                (None, None) => unreachable!("a refusal with none due disagrees"),
             }
         }
     }
@@ -1815,9 +2650,11 @@ struct Tally {
     rejected: usize,
     unresolved: usize,
     refused: usize,
+    /// The systems whose record the configuration checker judged.
+    judged: usize,
     /// For each kind of line, the lowered systems whose plan agrees with the reading on it.
     agreed: BTreeMap<&'static str, usize>,
-    /// For each class of the record's rules, the lowered systems exercising it.
+    /// For each class of the record's rules, the systems exercising it.
     classes: BTreeMap<&'static str, usize>,
     /// Each verdict of a system not lowered, with how many gave it and the first that did.
     verdicts: BTreeMap<String, (usize, String)>,
@@ -1861,6 +2698,9 @@ fn run(universe: &str, cases: &[Case]) -> Tally {
             "unresolved" => tally.unresolved += 1,
             _ => tally.refused += 1,
         }
+        if outcome.judged {
+            tally.judged += 1;
+        }
         if outcome.class != "lowered" {
             tally
                 .verdicts
@@ -1874,14 +2714,14 @@ fn run(universe: &str, cases: &[Case]) -> Tally {
         for class in outcome.classes {
             *tally.classes.entry(class).or_default() += 1;
         }
-        tally.findings.extend(outcome.finding);
+        tally.findings.extend(outcome.findings);
     }
     tally
 }
 
 /// The universe's sizes held to `sizes` — generated, lowered, rejected by the language, unresolved by the search,
-/// refused by the lowering — each class of `exercised` reached by some lowered system, and every finding, in one
-/// failure naming each.
+/// refused by the lowering — every system the search resolved judged by the configuration checker, each class of
+/// `exercised` reached by some system, and every finding, in one failure naming each.
 fn hold(
     universe: &str,
     tally: &Tally,
@@ -1896,9 +2736,18 @@ fn hold(
         tally.refused,
     );
     eprintln!(
-        "{universe}, in {:.1?}: {} generated, {} lowered, {} rejected, {} unresolved, {} refused\n  agreed: {:?}\n  \
-         classes: {:?}\n  not lowered: {:?}",
-        tally.elapsed, got.0, got.1, got.2, got.3, got.4, tally.agreed, tally.classes, tally.verdicts
+        "{universe}, in {:.1?}: {} generated, {} lowered, {} rejected, {} unresolved, {} refused; {} records judged by \
+         the configuration checker\n  agreed: {:?}\n  classes: {:?}\n  not lowered: {:?}",
+        tally.elapsed,
+        got.0,
+        got.1,
+        got.2,
+        got.3,
+        got.4,
+        tally.judged,
+        tally.agreed,
+        tally.classes,
+        tally.verdicts
     );
     let mut problems = String::new();
     if got != sizes {
@@ -1906,6 +2755,13 @@ fn hold(
             "{universe}'s sizes (generated, lowered, rejected, unresolved, refused) moved: {got:?}, held {sizes:?}; \
              not lowered: {:?}\n",
             tally.verdicts
+        ));
+    }
+    if tally.judged != tally.lowered + tally.refused {
+        problems.push_str(&format!(
+            "{universe}: {} records judged by the configuration checker, of {} the search resolved\n",
+            tally.judged,
+            tally.lowered + tally.refused
         ));
     }
     let missed: Vec<&&str> = exercised
@@ -1917,7 +2773,8 @@ fn hold(
     }
     if !tally.findings.is_empty() {
         problems.push_str(&format!(
-            "{universe}: {} systems whose plan the record's reading does not give:\n{}",
+            "{universe}: {} findings, a record the configuration checker refuses or a plan the record's reading does \
+             not give:\n{}",
             tally.findings.len(),
             tally.findings.join("\n")
         ));
@@ -1937,6 +2794,8 @@ fn three_services_their_channels_sources_and_callers() {
         &tally,
         (32_768, 32_768, 0, 0, 0),
         &[
+            "initialisation: a named edge",
+            "initialisation: a component of several members",
             "context: a node in two interrupts",
             "multiplex: multiplexed",
             "multiplex: multiplexed by interrupts alone",
@@ -1960,6 +2819,9 @@ fn two_services_with_adapter_instances() {
         &tally,
         (12_288, 12_032, 0, 256, 0),
         &[
+            "instance: an obliged fact bare",
+            "initialisation: a named edge",
+            "initialisation: a component of several members",
             "context: an expiry running its requester",
             "context: a wake running the instance alone",
             "context: a node in two interrupts",
@@ -1987,6 +2849,8 @@ fn releases_and_routes_of_every_separation_class() {
         &tally,
         (14_184, 12_468, 0, 0, 1_716),
         &[
+            "refusal: a periodic task bound to a source itself",
+            "initialisation: a named edge",
             "trigger: every, equal separations",
             "trigger: every, a longer separation",
             "trigger: unknown, a shorter separation",
@@ -2011,10 +2875,76 @@ fn requesters_of_every_kind_refused_or_lowered() {
         &tally,
         (16, 9, 0, 0, 7),
         &[
+            "refusal: a periodic task bound to a source itself",
+            "receivers: an alarm programmed itself",
+            "receivers: an expiry",
+            "receivers: the system's own level alone",
+            "instance: an obliged fact bare",
             "context: a wake running the instance alone",
             "context: an expiry running its requester",
             "trigger: every, equal separations",
             "trigger: unknown, no source reaching it",
+        ],
+    );
+}
+
+#[test]
+fn two_tasks_sharing_services_that_take_a_channel() {
+    let cases = two_tasks_sharing_services();
+    // 8 capabilities for each of 2 services, each of 2 `uses` edges, each of 2 services used by `t` or not and by `u`
+    // or not, and each task writing `(deadline-from release)` or not.
+    assert_eq!(
+        cases.len(),
+        8usize.pow(2) * (1 << 2) * (1 << 2) * (1 << 2) * 4
+    );
+    let tally = run("two tasks sharing services", &cases);
+    hold(
+        "two tasks sharing services",
+        &tally,
+        (16_384, 16_384, 0, 0, 0),
+        &[
+            "task: deadline-from written",
+            "task: deadline-from owed",
+            "trigger: every, equal separations",
+            "trigger: unknown, no source reaching it",
+            "instance: an obliged fact with its bound",
+            "instance: an obliged fact bare",
+            "context: an expiry running its requester",
+            "context: a node in two interrupts",
+            "initialisation: a named edge",
+            "initialisation: a component of several members",
+            "multiplex: multiplexed",
+            "multiplex: multiplexed by two jobs",
+            "multiplex: a channel with one user",
+            "multiplex: its own route no user",
+            "multiplex: its own route a user, another node there reaching it",
+            "multiplex: another route a user",
+        ],
+    );
+}
+
+#[test]
+fn receivers_of_interrupt_code_each_named_in_order() {
+    let cases = receivers_of_interrupt_code();
+    // What `t`, `u` and the system's own level each program, of 3; which task is first; each task of 2 kinds; each
+    // writing `(deadline-from release)` or not.
+    assert_eq!(cases.len(), 3usize.pow(3) * 2 * 4 * 4);
+    let tally = run("receivers of interrupt code", &cases);
+    hold(
+        "receivers of interrupt code",
+        &tally,
+        (864, 32, 0, 0, 832),
+        &[
+            "task: deadline-from written",
+            "task: deadline-from owed",
+            "receivers: one",
+            "receivers: two",
+            "receivers: three",
+            "receivers: an alarm programmed itself",
+            "receivers: an expiry",
+            "receivers: the system's own level alone",
+            "receivers: tasks and the system's own level",
+            "receivers: runtime order unlike the tasks' text order",
         ],
     );
 }
@@ -2161,7 +3091,9 @@ fn the_reading_gives_the_record_s_worked_texts() {
     let worked = worked_plans();
     assert_eq!(worked.len(), 3);
     for (description, plan) in [heartbeat, extender, sporadic].iter().zip(&worked) {
-        let judged = judge(description, plan);
+        // The record is the plan's own lines: its `bind` lines are the assignment the record names, and its identity's
+        // digests are elided.
+        let judged = judge_elided(description, plan, plan, true);
         let shown: Vec<String> = judged
             .disagreements
             .iter()
