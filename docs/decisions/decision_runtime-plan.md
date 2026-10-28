@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-27`
 - **Status:** `active` — the design for leaf `M4.1`, under independent review (`M4.1.1`) before any code relies on it;
-  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 18 answered; from round 7 it is
+  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 19 answered; from round 7 it is
   reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
 - **Owner / source:** leaf `M4.1.1` (`docs/tasks/M4.md`); `ROADMAP.md` §4.2's `archogen-plan`, §7.3, §7.5, §7.6, §10.1
   step 5 and §10.3; model §8 rules 4, 5, 7, 8, 10, 12 and 15; the obligations `M3.3.8`, `M3.5`, `M3.5.5.7.3` and
@@ -46,10 +46,11 @@ no external dependency (`decision_zero-dependency-engine-core.md` names "the pla
 3. the configuration checker's result record, `archogen-result/1`, for that assignment and that program, as text.
 
 It lowers **the record the checker accepted**, read back by the generator's own reader of `/2` (`M4.1.3`), and never the
-search's memory. So the bindings built are the bindings checked. It runs the joint rules as the search runs them: the
+search's memory. So the bindings built are the bindings checked. It runs the joint rules as the search runs them — the
 system read at the profile's caller level (`System::at`, `machine` for `rt-static-up-v1`), each instance rebuilt from
-the adapter catalog the record names, `Joint::check` and `Joint::initialization` over the record's bindings, the beneath
-ones included, and `Joint::map` over the system. The plan's routes, multiplexing and initialisation are its own to
+the adapter catalog the record names, `Joint::check` over the record's bindings, the beneath ones included, and
+`Joint::map` over the system — and `Joint::initialization` over the same bindings, which the search never runs: the
+initialization graph is the lowering's alone (§2.7). The plan's routes, multiplexing and initialisation are its own to
 derive and the build's to verify (`M4.10`, `RTP-H13`), as `M3.5`'s design says of them.
 
 **Refusals, before anything is lowered**, each with the status vocabulary's code and a repair. They are taken in the
@@ -140,21 +141,22 @@ built only marked experimental.
 ### 2. What the plan holds, and from whom
 
 A runtime plan is an engine structure (`decision_eadl-engine-boundary.md`). Each section names its input. A **node**
-below is a node of the joint rules' initialization graph (§2.7): a provider an active binding names (a block, a platform
-or an adapter's instance), a block or a platform the system serves that is bound for requirements of its own — a
-requester like any other (model §8 rule 1, `M4.1.14`), whose code an interrupt can run (§2.6) — a block or a platform
-the system serves that a served task, service or policy names by `uses` or `needs`, whose code that name calls
-(`M4.1.18`), a service, or a policy: the three kinds of node `crates/eadl-resolve/src/joint.rs` gives, `Provider`
-(hardware and instances), `Service` and `Other`, the last a policy's, a description naming a system being refused (§1).
-Its tasks and its own level, requesters too, are never nodes; a block or a platform the system serves that is bound for
-nothing and that nothing calls is a node only as a provider an active binding names, since as a requester it runs no
-code the plan places; the plan derives the context of each task and each node (§2.6), the requesters whose code it
-places, as `M3.3.8` asks. A node's **text** is its name as the plan writes it, an instance's being its `(adapter …)`
-text, and texts are compared byte by byte. A requester **reaches** what it names by `uses` or `needs`, and what it is
-bound to as its provider, at any depth, as the joint rules take a requester's names (model §8 rule 7) — but for a
-block's or a platform's `uses` or `needs`, which names only hardware (§1) and is never a call — its `uses` composition
-(rule 1; rule 5's "`uses` alone is composition"), its `needs` a block it brings into the system's hardware (rule 7):
-hardware reaches only what its own requirements are bound to.
+below is a node of the joint rules' initialization graph (§2.7): a provider an active binding — one of a requester the
+system serves, or of a provider such a binding names, at any depth (rule 12's "closed over bindings"; in a record that
+rebuilds, every binding) — names (a block, a platform or an adapter's instance), a block or a platform the system serves
+that is bound for requirements of its own — a requester like any other (model §8 rule 1, `M4.1.14`), whose code an
+interrupt can run (§2.6) — a block or a platform the system serves that a served task, service or policy names by `uses`
+or `needs`, whose code that name calls (`M4.1.18`), a service, or a policy: the three kinds of node
+`crates/eadl-resolve/src/joint.rs` gives, `Provider` (hardware and instances), `Service` and `Other`, the last a
+policy's, a description naming a system being refused (§1). Its tasks and its own level, requesters too, are never
+nodes; a block or a platform the system serves that is bound for nothing and that nothing calls is a node only as a
+provider an active binding names, since as a requester it runs no code the plan places; the plan derives the context of
+each task and each node (§2.6), the requesters whose code it places, as `M3.3.8` asks. A node's **text** is its name as
+the plan writes it, an instance's being its `(adapter …)` text, and texts are compared byte by byte. A requester
+**reaches** what it names by `uses` or `needs`, and what it is bound to as its provider, at any depth, as the joint
+rules take a requester's names (model §8 rule 7) — but for a block's or a platform's `uses` or `needs`, which names only
+hardware (§1) and is never a call — its `uses` composition (rule 1; rule 5's "`uses` alone is composition"), its `needs`
+a block it brings into the system's hardware (rule 7): hardware reaches only what its own requirements are bound to.
 
 An **interrupt** is named by its kind and its provider, never by the provider alone, since one provider can raise a
 timer route and a source, and a block may be named `timer`:
@@ -823,21 +825,22 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
   takes programs — where nothing else that route runs reaches it, never another system's; rule 7 still resolves system
   by system.
   Rule 8's enabled set is §2.5's. Rule 12 records this engine's answer, one phase, counts among its nodes a block or a
-  platform the system serves that is bound for requirements of its own (§2), keeps a binding's edge across composition
-  (done by `M4.1.16`), and gives an edge from a block or a platform a service or a policy names to that namer
-  (`M4.1.17`). Rule 10's are below. The adapters record's §9 reads "each cost a cost on the route of the provider it
-  programs", and it states, for each cost, whether the interrupt runs the requester's code (§2.6). The engine API's
-  `crates/archogen-api/src/resolve.rs` and `docs/book/src/engine-api.md`, which read "a cost the scheduling analysis
-  charges as a source", read so too. The book follows, with a migration note for any verdict that moves. Rule 10's
-  amendments keep the search, the checker and any later layout agreed over a description:
+  platform the system serves that is bound for requirements of its own or that a served task, service or policy names
+  (§2; done by `M4.1.18`), keeps a binding's edge across composition (done by `M4.1.16`), and gives an edge from a block
+  or a platform a service or a policy names to that namer (done by `M4.1.17`). Rule 10's are below. The adapters
+  record's §9 reads "each cost a cost on the route of the provider it programs", and it states, for each cost, whether
+  the interrupt runs the requester's code (§2.6). The engine API's `crates/archogen-api/src/resolve.rs` and
+  `docs/book/src/engine-api.md`, which read "a cost the scheduling analysis charges as a source", read so too. The book
+  follows, with a migration note for any verdict that moves. Rule 10's amendments keep the search, the checker and any
+  later layout agreed over a description:
   - **placement memory with no size** is `missing-fact`, naming it, since nothing can be laid out in it;
   - **a hole of no size** whose base lies inside placement memory (`M3.5.5.7.3`'s obligation) is taken to reach the
     region's end. That is the conservative extent, the largest the region allows. If it leaves no free byte, the system
     is `missing-fact`, naming the hole and asking for its size;
 - `.3`: the generator's reader of `/2`, its round trip held against its writer, and the typed record it returns. The
   record's bindings are read back with each instance rebuilt from the catalog and each beneath binding, which the
-  search's `Resolution.bindings` omits. `Joint::check` and `Joint::initialization` run over them, and `Joint::map` over
-  the system, at the profile's caller level, as the search runs them;
+  search's `Resolution.bindings` omits. `Joint::check` runs over them, and `Joint::map` over the system, at the
+  profile's caller level, as the search runs them, and `Joint::initialization` over them for the lowering alone;
 - `.4`: the crate, the typed plan, its writer and reader, the lowering, its refusals and its provenance; the format's
   register entry; the goldens of §3, the three worked texts and the systems named there, their inputs frozen as the
   crate's own fixtures;
@@ -899,7 +902,7 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 | `RTP-H6` | `M4.10` | The catalog records state what the runtime plan owes them — supported contexts, an initialisation entry that never waits on an interrupt and names any other component member's code it calls, and each source's service cost — amending the catalog record's §12 and §14.4, and the image is checked: no initialisation step waits on an interrupt, and no component member's initialisation calls another member's code. |
 | `RTP-H7` | `M4.7` | The build's metadata carries the runtime plan's sha256 and its provenance, the whole lock data of `ROADMAP.md` §10.3 is written, `--locked` is honoured, and S0's `no-lock-data` is discharged. |
 | `RTP-H8` | `M4.4.1` | A system's devices are put in correspondence with a target's — which target device each system device is, by a rule the lowering of `archogen-runtime-plan/2` reads — before `M4.1.7` designs that format. |
-| `RTP-H9` | `M4.3` | The hosted simulator runs initialisation to its last step with interrupts masked and enables them at time zero, then releases each timer-released task from its own exact clock at its nominal releases from time zero and each task released by `(source X every)` at each arrival of X and at no other time; takes its timer only when a release is due; takes every route before the release timer when both are pending — its `external-before-timer` for a source's, and for a timer route its own order until `M4.1.6` places one — and the routes in the plan's rank order; nests no interrupt and masks every interrupt in a masked section; raises no interrupt the plan does not enable; models each device the plan names, a timer route's alarm included; lets no source arrive before the first enabling, nor sooner after its last arrival than the separation the plan states for it, a source whose separation it states as zero, `unknown` or `absent` arriving only as the run's scenario states, which the run names beside its result; and states every platform input and fact the analysis variant and the composition read, `external-before-timer`, `releases-after-initialisation` and each source's `external` among them, in the form the scheduling checker reads. |
+| `RTP-H9` | `M4.3` | The hosted simulator runs initialisation to its last step with interrupts masked and enables them at time zero, then releases each timer-released task from its own exact clock at its nominal releases from time zero and each task released by `(source X every)` at each arrival of X and at no other time; takes its timer only when a release is due; takes every route before the release timer when both are pending — its `external-before-timer` for a source's, and for a timer route its own order until `M4.1.6` places one — and the routes in the plan's rank order; nests no interrupt and masks every interrupt in a masked section; raises no interrupt the plan does not enable; models each device the plan names, a timer route's alarm included; lets no source arrive before the first enabling, nor sooner after its last arrival than the separation the plan states for it, a source whose separation it states as zero, `unknown` or `absent` arriving only as the run's scenario states, which the run names beside its result; and states every platform input and fact the analysis variant and the composition read, `external-before-timer` and each source's `external` among them, in the form the scheduling checker reads, and realizes `releases-after-initialisation` for the caller to declare, as the composite-inputs record's §2 has it. |
 | `RTP-H11` | `M4.9` | A comparison of a hosted run and an emulated one reads each run against its own platform's `external-before-timer`, the simulator's `yes` and the emulator's `no`, never one run's order against the other's. |
 | `RTP-H12` | `M2.30` | If the composition's soundness needs a fact of the application's beyond `leaves-interrupt-hardware-alone`, the runtime plan owes it with the others, its §2.2, §2.10 and `RTP-H5` moving in the same change. |
 | `RTP-H10` | `M4.10` | Once a catalog record can be a provider (`M3.7`), the runtime plan's lowering judges the record's supported contexts against the context line of each node it serves, by inclusion, and refuses `unsupported-profile` a context the record does not include, and an initialisation component whose members' records state that one's initialisation calls another's code. |
@@ -911,6 +914,7 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 | `RTP-H18` | `M1.47` | Model §8 rules 1 and 7 state that a block's or a platform's `uses` and `needs` name only hardware, and the description check refuses `invalid-description` an operand that is neither a block nor a platform, naming both. |
 | `RTP-H19` | `M1.44` | A description states a sporadic task's release source and whether every arrival releases the task, and the runtime plan reads that statement in place of its inference from the routes the task reaches. |
 | `RTP-H20` | `M3.4` | The search reads a system's side whole, its own level's constraints with its tasks', as model §7 rule 4 and §8 rule 1 read it, and refuses `invalid-description` constraints on one fact that no value satisfies together across them, so that the configuration checker refuses no record the search writes for that reason and the runtime plan's bounded checker's class of such records empties. |
+| `RTP-H21` | `M3.4` | The search refuses a module tree's declaration whose name is a vocabulary fact, as it refuses a plain description's and as the configuration checker does (`SR-H4`), so that the configuration checker refuses no record the search writes for such a tree. |
 
 `M4.12` is filed with this record, for the application inputs, and `M4.4.1` for the correspondence.
 

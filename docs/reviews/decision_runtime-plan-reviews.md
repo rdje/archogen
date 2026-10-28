@@ -625,6 +625,32 @@ relationships … suppliers first, then consumers".
 
 Round 17's answers: R17-D1 partly (R18-D1); R17-R2 partly (R18-D2, R18-D3); the rest held.
 
+## Round 19 — `2026-10-28`: not acceptable, 11 findings
+
+The code faithful on every fixture and probe, both defects the record's text. Every test green, the bounded totals true
+— 122,046 systems, 119,852 records judged, the 136 held to `M3.4` — and all twenty hand-offs quoted word for word.
+2 defects and 9 remarks: §4 `.2` behind §2 once more, and round 18's principle — §7.3's record with every bound —
+applied to the realization's bounds and not the application's.
+
+**Fence.** No breach.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R19-D1 | defect | §4 `.2`'s rule 12 leaves out `M4.1.18`'s node | Said, each leaf "done by" |
+| R19-D2 | defect | the application's bounds owed with a category, not §7.3's record; its OS-call counts with none; `execution-bound.eadl`'s other-side misquoted | §7.3's record with every bound, the application's too, its categories facts of their own and the counts' a new one, `os-calls-category` (§2.2, §2.10, §3, `RTP-H5`), landing with the code; the composition's counts carry none either: `M2.31` filed |
+| R19-R1 | remark | §1, §4 `.3` and `M4.1.3` say the search runs `Joint::initialization`, which it never does | The initialization graph the lowering's alone |
+| R19-R2 | remark | `Joint::initialization`'s doc comment lists the nodes without `M4.1.18`'s | Corrected with the code (`M4.1.4`) |
+| R19-R3 | remark | round 18's P02 and P07 decided by the lowering and no fixtures | Added (`M4.1.4`) |
+| R19-R4 | remark | not this record's: a module tree's block named like a fact passes the module check and the search, and the configuration checker refuses the record the lowering then lowers; `program_declarations_named_like_facts` (`SR-H4`) is called from tests alone | `RTP-H21` to `M3.4` |
+| R19-R5 | remark | no fixture for named hardware across modules | Added, the corpus lowering every module tree it holds (`M4.1.4`) |
+| R19-R6 | remark | `releases-after-initialisation` owned by the simulator in `RTP-H9` and by the caller in the composite-inputs record | The simulator realizes it for the caller to declare (`RTP-H9`, requoted in `M4.3`) |
+| R19-R7 | remark | "active binding" undefined | Defined in §2, rule 12's "closed over bindings" |
+| R19-R8 | remark | round 18's `fw_devlink` quote elided and unledgered | The record does not rest on it; ledgered whole if it ever does |
+| R19-R9 | remark | two probes agree by hand derivation | Fixtures (`M4.1.4`) |
+
+Round 18's answers: R18-D1 partly (R19-D1, R19-R2); R18-D3 held as answered, its principle not carried to the
+application (R19-D2); the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
