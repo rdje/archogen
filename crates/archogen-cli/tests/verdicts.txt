@@ -37,9 +37,11 @@
 0 - crates/archogen-plan/tests/corpus/from-and-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/hardware-naming-prefix.eadl
 0 - crates/archogen-plan/tests/corpus/hz-everywhere.eadl
+0 - crates/archogen-plan/tests/corpus/instance-in-a-cycle.eadl
 0 - crates/archogen-plan/tests/corpus/isr-and-task.eadl
 0 - crates/archogen-plan/tests/corpus/jitter-over-period.eadl
 0 - crates/archogen-plan/tests/corpus/kind-blind.eadl
+0 - crates/archogen-plan/tests/corpus/level-on-route-bound-otherwise.eadl
 0 - crates/archogen-plan/tests/corpus/modules/app.main.eadl
 0 - crates/archogen-plan/tests/corpus/modules/hw.dev.eadl
 0 - crates/archogen-plan/tests/corpus/modules/os.svc.eadl
@@ -63,6 +65,7 @@
 0 - crates/archogen-plan/tests/corpus/own-route-instance-caller.eadl
 0 - crates/archogen-plan/tests/corpus/past-order.eadl
 0 - crates/archogen-plan/tests/corpus/period-hz.eadl
+0 - crates/archogen-plan/tests/corpus/periodic-bound-to-source-otherwise.eadl
 0 - crates/archogen-plan/tests/corpus/periodic-source.eadl
 0 - crates/archogen-plan/tests/corpus/placement.eadl
 0 - crates/archogen-plan/tests/corpus/platform-alarm-composed.eadl
@@ -84,6 +87,7 @@
 0 - crates/archogen-plan/tests/corpus/region-hosted.eadl
 0 - crates/archogen-plan/tests/corpus/served-block-not-hardware.eadl
 0 - crates/archogen-plan/tests/corpus/service-alarm-two-tasks.eadl
+0 - crates/archogen-plan/tests/corpus/service-on-route-bound-otherwise.eadl
 0 - crates/archogen-plan/tests/corpus/service-only-composed.eadl
 0 - crates/archogen-plan/tests/corpus/shapes.eadl
 0 - crates/archogen-plan/tests/corpus/shared-ext.eadl
@@ -113,6 +117,7 @@
 0 - crates/archogen-plan/tests/corpus/task-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/task-direct.eadl
 0 - crates/archogen-plan/tests/corpus/task-extender.eadl
+0 - crates/archogen-plan/tests/corpus/task-on-route-bound-otherwise.eadl
 0 - crates/archogen-plan/tests/corpus/task-policy.eadl
 0 - crates/archogen-plan/tests/corpus/task-reaches-platform.eadl
 0 - crates/archogen-plan/tests/corpus/task-source.eadl

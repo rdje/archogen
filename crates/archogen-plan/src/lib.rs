@@ -476,7 +476,8 @@ pub fn lower(
             ),
         ));
     }
-    // §1: a block's or a platform's `uses` or `needs` naming what is not hardware, each named (R13-D1, R13-D3).
+    // §1: a block or a platform the system serves naming what is not hardware, each named (R13-D1, R13-D3); only what
+    // the system serves, as the refusal above (R15-R2).
     let is_hardware_decl = |d: &Form| matches!(d.head(), Some("defblock" | "defplatform"));
     let declared = |name: &str| {
         declarations
@@ -487,7 +488,9 @@ pub fn lower(
     let mut composing_other: Vec<(&str, &str)> = rebuilt
         .requesters
         .iter()
-        .filter(|r| declared(&r.name).is_some_and(is_hardware_decl))
+        .filter(|r| {
+            rebuilt.system.serves(&r.name) && declared(&r.name).is_some_and(is_hardware_decl)
+        })
         .flat_map(|r| {
             r.uses
                 .iter()
@@ -1144,9 +1147,10 @@ pub fn lower(
             }
         }
     }
-    // A service or a policy that takes a channel is multiplexed where it has two or more users: each of the system's
-    // tasks that reaches it, and each interrupt whose context line holds it, but the timer route at a provider whose
-    // channel it takes (§2.9).
+    // A node that takes a channel — a service, a policy, or hardware with requirements of its own; an instance aside —
+    // is multiplexed where it has two or more users: each of the system's tasks that reaches it, and each interrupt
+    // whose context line holds it, but for its own timer route — at the provider whose channel it takes, or that the
+    // instance whose channel it takes programs — where nothing else that route runs reaches it (§2.9).
     let reached: Vec<BTreeSet<String>> = tasks
         .iter()
         .map(|task| reach(&joint::task_name(&system, &task.name)))

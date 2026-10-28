@@ -23,12 +23,22 @@
 //! prefixes the other's, each requester programming an alarm, a deadline or both, which the search refuses
 //! (`missing-fact`) unless one provider offers both, so that no system it resolves gives one receiver two things; and a
 //! provider whose own requirement is bound to the node that takes its channel, whose own route then counts among the
-//! node's users.
+//! node's users; and, after round 15 (R15-D2, R15-R2, R15-R5), tasks, the system's own level and a service bound to a
+//! timer route's provider by a binding that takes no channel (model §8 rule 2) — a shared fact, the route naming them
+//! through an instance or not at all, or a consumed fact met by `false` — beside one programming an alarm or receiving
+//! an expiry there, in both runtime orders; periodic tasks bound to a source's block for another fact than
+//! `interrupt-source`, beside one bound for it, in both runtime orders, and `interrupt-source` met by `false`, which is no
+//! source; hardware the lowered system does not serve, another system's or none's, naming a service the lowered system
+//! serves, a policy, a system or the lowered system itself, which neither naming refusal takes, each description
+//! lowered for each of its systems; a platform the lowered system serves naming a system by `uses` or by `needs`; and a
+//! node in a job naming by `needs` a node no job reaches.
 //!
 //! Each system is run as the engine runs it, as `common::lowered` does: the language's check, the search, the `/2`
 //! writer, and the lowering. **Every `archogen-assignment/2` record the search writes is judged by the configuration
 //! checker**, `archogen_plan_check::check::plan_file`, as `crates/eadl-resolve/tests/plan.rs` judges one, and a record
-//! it refuses is a finding naming that record. Each plan is held to an **independent reading** of
+//! it refuses is a finding naming that record — but for one class the reading derives and holds by count, a system's
+//! side the search reads apart, the search's defect (`M3.4`; model §7 rule 4, §8 rule 1), on which the lowering is
+//! still held to the reading. Each plan is held to an **independent reading** of
 //! `docs/decisions/decision_runtime-plan.md`, written below as plain, unoptimised Rust from the record's text alone,
 //! each rule citing the section it transcribes.
 //!
@@ -55,7 +65,9 @@
 //!
 //! Each universe's size is asserted — the systems generated and how each fared, lowered or not — with every system the
 //! search resolves judged by the configuration checker, and each class of the record's rules it is built to reach, so
-//! that a generator cannot shrink unnoticed; a system the language or the search refuses is counted, never dropped.
+//! that a generator cannot shrink unnoticed; a system the language or the search refuses is counted, never dropped. A
+//! branch of the reading that no system can reach is stated so, its reason in its class's name, `unreachable: …`, and a
+//! universe reaching one fails.
 
 mod common;
 
@@ -2226,9 +2238,10 @@ type Naming = &'static [(bool, &'static str)];
 const TIMER_NAMING: [Naming; 3] = [&[], &[(false, "alarm")], &[(true, "alarm")]];
 /// What `dma.x` names: nothing; the policy `pol.p` by each clause; the service `only.s`, which nothing else names, by
 /// `needs`; the block `uart.c` it is bound to, by each clause, and the timer by `needs` — hardware, no refusal, its
-/// `uses` composition and its `needs` not (model §8 rule 5's "`uses` alone is composition"); the system `other`; and two
-/// operands at once, written against their texts' order.
-const DMA_NAMING: [Naming; 9] = [
+/// `uses` composition and its `needs` not (model §8 rule 5's "`uses` alone is composition"); the block `blk.n` by
+/// `needs`, a node no job reaches, `dma.x` running in `u`'s (round 15, R15-R5); the system `other`; and two operands at
+/// once, written against their texts' order.
+const DMA_NAMING: [Naming; 10] = [
     &[],
     &[(false, "pol.p")],
     &[(true, "pol.p")],
@@ -2236,6 +2249,7 @@ const DMA_NAMING: [Naming; 9] = [
     &[(false, "uart.c")],
     &[(true, "uart.c")],
     &[(true, "timer.d")],
+    &[(true, "blk.n")],
     &[(false, "other")],
     &[(false, "pol.p"), (false, "only.s")],
 ];
@@ -2294,9 +2308,10 @@ fn naming(mut side: Side, naming: Naming) -> Side {
 /// the service a task uses, a policy, or another block; `blk.q`, on the platform only the system `other` uses, naming
 /// a service; each by `uses` or `needs`; and task `t` meeting each other refusal of §1 that can co-apply, of the first
 /// list before this one or of the second after it. So the refusal is taken in its place, names each block or
-/// platform and its operand by the namer's text and then the operand's, reads hardware the lowered system does not
-/// serve, and a block naming a block is lowered: across a binding, its `uses` composition making no edge, its `needs`
-/// leaving the edge standing (§2.7, rule 12).
+/// platform and its operand by the namer's text and then the operand's, takes no hardware the lowered system does not
+/// serve (round 15, R15-R2: "This refusal and the one above take only what the system serves"), and a block naming a
+/// block is lowered: across a binding, its `uses` composition making no edge, its `needs` leaving the edge standing
+/// (§2.7, rule 12) — `dma.x`, in `u`'s job, naming by `needs` `blk.n`, which no job reaches (R15-R5).
 fn hardware_naming() -> Vec<Case> {
     let mut cases = Vec::new();
     for timer in TIMER_NAMING {
@@ -2356,6 +2371,16 @@ fn hardware_naming_case(
             side: naming(Side::default(), blk_q),
             ..Block::default()
         },
+        // A node only as hardware bound for a requirement of its own, which nothing reaches.
+        Block {
+            name: "blk.n".to_string(),
+            offers: names(&["(debug-port true)", "(reachable-at-privilege machine)"]),
+            side: Side {
+                needs: names(&["observable-output"]),
+                ..Side::default()
+            },
+            ..Block::default()
+        },
     ];
     let platform = |name: &str, composes: &[&str], extra: Naming| Block {
         name: name.to_string(),
@@ -2370,7 +2395,11 @@ fn hardware_naming_case(
         ..Block::default()
     };
     let platforms = vec![
-        platform("soc", &["timer.d", "dev.s", "uart.c", "dma.x"], soc),
+        platform(
+            "soc",
+            &["timer.d", "dev.s", "uart.c", "dma.x", "blk.n"],
+            soc,
+        ),
         platform("host.q", &["blk.q"], &[]),
     ];
     let simple = |name: &str, policy: bool, needs: &[&str]| Service {
@@ -2474,7 +2503,7 @@ const Q_NAMING: [Naming; 4] = [
 /// [`PREFIXED_SOC_NAMING`] and `q` one of [`Q_NAMING`]. So the namers' texts, `d`, `d!`, `d.x`, `q`, `soc`, and the
 /// operands', `m`, `m!`, `m.s`, `sys`, `y`, are ordered unlike the words of their messages, one a prefix of another;
 /// a platform's `needs` names a service and its `uses` a policy; a system is named — the lowered one among them — on
-/// hardware the lowered system does not serve, which the naming-system refusal does not reach and this one does; and
+/// hardware the lowered system does not serve, which neither naming refusal takes since round 15 (R15-R2); and
 /// served blocks naming a system meet the naming-system refusal first, their texts ordered alike — and with them `q`,
 /// once `y` is reached, which serves what it writes at its own level, its `platform` clause among it (model §8 rules 1
 /// and 7).
@@ -2998,6 +3027,428 @@ fn named_in(side: Side, declarations: &[&str], by_needs: bool) -> Side {
     named(side, names(declarations), by_needs)
 }
 
+/// What one requester of the bound-otherwise universe requires, of the timer `d`, which offers `observable-output`
+/// too, or of `nd`, which offers `relative-delay` as `false` (round 15, R15-D2: the receivers' "bound to its provider
+/// itself" named no fact, "where the code, §2.6 and model §8 rule 2 read one").
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum OnRoute {
+    Nothing,
+    /// `(needs observable-output)`: bound to `d` for a shared fact, which never takes a channel (model §8 rule 2).
+    Shared,
+    /// `(needs counter-width tick-rate observation-coherent)`: an extended counter only the shared `epoch-extender`
+    /// instance over `d` offers, whose own binding beneath makes `d`'s timer route, "which carries the requesters bound
+    /// to it" (rule 15); its `wake` runs the instance's code alone (§2.6).
+    Wake,
+    /// Both: named by `d`'s timer route, and bound to `d` itself for a fact that takes no channel.
+    WakeShared,
+    /// `(needs relative-delay)`: an alarm it programs at `d` itself.
+    Alarm,
+    /// `(needs relative-delay observable-output)`: an alarm it programs at `d` itself, and `d`'s output beside.
+    AlarmShared,
+    /// `(needs absolute-deadline observable-output)`: an expiry its own `deadline-over-delay` instance over `d`
+    /// delivers, and `d`'s output beside.
+    ExpiryShared,
+    /// `(relative-delay false)`, met by `nd`: a consumed fact at `false`, which "takes none" (rule 2) and makes no route
+    /// (rule 8: "bound through a consumed fact at `true`"). A task writes no constraint clause, so the language refuses
+    /// one writing it.
+    False,
+}
+
+impl OnRoute {
+    fn side(self) -> Side {
+        let needs: &[&str] = match self {
+            Self::Nothing | Self::False => &[],
+            Self::Shared => &["observable-output"],
+            Self::Wake => &["counter-width", "tick-rate", "observation-coherent"],
+            Self::WakeShared => &[
+                "counter-width",
+                "tick-rate",
+                "observation-coherent",
+                "observable-output",
+            ],
+            Self::Alarm => &["relative-delay"],
+            Self::AlarmShared => &["relative-delay", "observable-output"],
+            Self::ExpiryShared => &["absolute-deadline", "observable-output"],
+        };
+        Side {
+            needs: names(needs),
+            other: if self == Self::False {
+                names(&["(relative-delay false)"])
+            } else {
+                Vec::new()
+            },
+            ..Side::default()
+        }
+    }
+}
+
+/// **Bound to a timer route's provider otherwise** (§1, §2.6, §2.9; round 15, R15-D2): tasks `t` and `u`, either first
+/// in runtime order, and the system's own level, over the timer `d`, which offers `observable-output` too, and `nd`,
+/// which offers `relative-delay` as `false`; each programming an alarm at `d` beside `d`'s output, an expiry beside it,
+/// counting an extended counter whose instance's channel is `d`'s, with `d`'s output beside or not, or requiring `d`'s
+/// output alone, or nothing; `t` and the system's own level also `(relative-delay false)`; and a service `s` both tasks
+/// use, declared or not, counting the extended counter beside `d`'s output, programming an alarm at `d`, or requiring
+/// `(relative-delay false)`. So §1's receivers are each "bound to its provider itself by a binding that takes a channel
+/// (model §8 rule 2)", never by a binding that takes none — one a timer route names through an instance, or one the route
+/// does not name, beside one programming an alarm there — §2.6's code a timer route runs is a node bound for "a consumed
+/// fact", and §2.9's multiplexed node is one "that takes a channel", a consumed fact at `false` taking none.
+fn bound_otherwise_on_a_route() -> Vec<Case> {
+    const T: [OnRoute; 7] = [
+        OnRoute::Nothing,
+        OnRoute::Shared,
+        OnRoute::Wake,
+        OnRoute::WakeShared,
+        OnRoute::AlarmShared,
+        OnRoute::ExpiryShared,
+        OnRoute::False,
+    ];
+    const U: [OnRoute; 3] = [OnRoute::Nothing, OnRoute::WakeShared, OnRoute::AlarmShared];
+    const S: [Option<OnRoute>; 4] = [
+        None,
+        Some(OnRoute::WakeShared),
+        Some(OnRoute::Alarm),
+        Some(OnRoute::False),
+    ];
+    let mut cases = Vec::new();
+    for t_requires in T {
+        for u_requires in U {
+            for own_requires in T {
+                for s_requires in S {
+                    for u_first in [false, true] {
+                        let mut d = timer_block("d", 6, true);
+                        let at = d.offers.len() - 2;
+                        d.offers.insert(at, "(observable-output true)".to_string());
+                        let nd = Block {
+                            name: "nd".to_string(),
+                            offers: names(&[
+                                "(relative-delay false)",
+                                "(reachable-at-privilege machine)",
+                            ]),
+                            ..Block::default()
+                        };
+                        let uses: &[&str] = if s_requires.is_some() { &["s"] } else { &[] };
+                        let task = |name: &str, priority: u32, requires: OnRoute| Task {
+                            name: name.to_string(),
+                            release: Release::Period(Dur::Ms(20)),
+                            priority,
+                            side: Side {
+                                uses: names(uses),
+                                ..requires.side()
+                            },
+                            ..Task::default()
+                        };
+                        let (t_priority, u_priority) = if u_first { (2, 1) } else { (1, 2) };
+                        cases.push(Case {
+                            label: format!(
+                                "t:{t_requires:?} u:{u_requires:?} own:{own_requires:?} s:{s_requires:?} first={}",
+                                if u_first { "u" } else { "t" }
+                            ),
+                            description: Description {
+                                blocks: vec![d, nd],
+                                services: s_requires
+                                    .map(|requires| Service {
+                                        name: "s".to_string(),
+                                        policy: false,
+                                        side: requires.side(),
+                                    })
+                                    .into_iter()
+                                    .collect(),
+                                tasks: vec![
+                                    task("t", t_priority, t_requires),
+                                    task("u", u_priority, u_requires),
+                                ],
+                                own: own_requires.side(),
+                                ..Description::default()
+                            },
+                        });
+                    }
+                }
+            }
+        }
+    }
+    cases
+}
+
+/// What one requester of the periodic universe requires, of the source `dev`, which offers `debug-port` too, or of
+/// `ns`, which offers `interrupt-source` as `false` (round 15, R15-D2: the periodic task's "bound to an interrupt source
+/// itself" named no fact).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum OfSource {
+    Nothing,
+    /// `(needs debug-port)`: bound to `dev`, a block offering `interrupt-source`, for another fact.
+    Other,
+    /// `(needs interrupt-source)`: bound to `dev` for its interrupt.
+    Source,
+    /// `(needs interrupt-source debug-port)`: both.
+    Both,
+    /// `(interrupt-source false)`, met by `ns`: bound for `interrupt-source`, its requirement met by `false`, which is no
+    /// source (model §8 rule 8: "bound through `interrupt-source` at `true`"). A task writes no constraint clause, so
+    /// the language refuses one writing it.
+    False,
+}
+
+impl OfSource {
+    fn side(self) -> Side {
+        let needs: &[&str] = match self {
+            Self::Nothing | Self::False => &[],
+            Self::Other => &["debug-port"],
+            Self::Source => &["interrupt-source"],
+            Self::Both => &["interrupt-source", "debug-port"],
+        };
+        Side {
+            needs: names(needs),
+            other: if self == Self::False {
+                names(&["(interrupt-source false)"])
+            } else {
+                Vec::new()
+            },
+            ..Side::default()
+        }
+    }
+}
+
+/// **A periodic task bound to a source's block otherwise** (§1, §2.2, §2.5; round 15, R15-D2): periodic tasks `t` and
+/// `p`, either first in runtime order, a sporadic task `u`, and the system's own level, over the source `dev`, which
+/// offers `debug-port` too, and `ns`, which offers `interrupt-source` as `false`; `t` and `p` each requiring `dev`'s
+/// interrupt, its `debug-port`, both or nothing, `t` also `(interrupt-source false)`; the system's own level each of
+/// those but both; and a service `e` that `u` uses, declared or not, requiring `dev`'s interrupt or `(interrupt-source
+/// false)`. So §1's periodic refusal takes a task "bound itself for `interrupt-source`, its requirement met by `true`",
+/// in runtime order past one bound to the same block for another fact, and a binding at `false` is no route and
+/// releases no task.
+fn periodic_bound_otherwise() -> Vec<Case> {
+    const T: [OfSource; 5] = [
+        OfSource::Nothing,
+        OfSource::Other,
+        OfSource::Source,
+        OfSource::Both,
+        OfSource::False,
+    ];
+    const P: [OfSource; 4] = [
+        OfSource::Nothing,
+        OfSource::Other,
+        OfSource::Source,
+        OfSource::Both,
+    ];
+    const OWN: [OfSource; 4] = [
+        OfSource::Nothing,
+        OfSource::Other,
+        OfSource::Source,
+        OfSource::False,
+    ];
+    const E: [Option<OfSource>; 3] = [None, Some(OfSource::Source), Some(OfSource::False)];
+    let mut cases = Vec::new();
+    for t_requires in T {
+        for p_requires in P {
+            for own_requires in OWN {
+                for e_requires in E {
+                    for p_first in [false, true] {
+                        let mut dev = source_block("dev", Separation::Stated(20), "");
+                        let at = dev.offers.len() - 1;
+                        dev.offers.insert(at, "(debug-port true)".to_string());
+                        let ns = Block {
+                            name: "ns".to_string(),
+                            offers: names(&[
+                                "(interrupt-source false)",
+                                "(reachable-at-privilege machine)",
+                            ]),
+                            ..Block::default()
+                        };
+                        let periodic = |name: &str, priority: u32, requires: OfSource| Task {
+                            name: name.to_string(),
+                            release: Release::Period(Dur::Ms(20)),
+                            priority,
+                            side: requires.side(),
+                            ..Task::default()
+                        };
+                        let (t_priority, p_priority) = if p_first { (2, 1) } else { (1, 2) };
+                        cases.push(Case {
+                            label: format!(
+                                "t:{t_requires:?} p:{p_requires:?} own:{own_requires:?} e:{e_requires:?} first={}",
+                                if p_first { "p" } else { "t" }
+                            ),
+                            description: Description {
+                                blocks: vec![dev, ns],
+                                services: e_requires
+                                    .map(|requires| Service {
+                                        name: "e".to_string(),
+                                        policy: false,
+                                        side: requires.side(),
+                                    })
+                                    .into_iter()
+                                    .collect(),
+                                tasks: vec![
+                                    periodic("t", t_priority, t_requires),
+                                    periodic("p", p_priority, p_requires),
+                                    Task {
+                                        name: "u".to_string(),
+                                        release: Release::MinSeparation(Dur::Ms(20)),
+                                        priority: 3,
+                                        side: Side {
+                                            uses: if e_requires.is_some() {
+                                                names(&["e"])
+                                            } else {
+                                                Vec::new()
+                                            },
+                                            ..Side::default()
+                                        },
+                                        ..Task::default()
+                                    },
+                                ],
+                                own: own_requires.side(),
+                                ..Description::default()
+                            },
+                        });
+                    }
+                }
+            }
+        }
+    }
+    cases
+}
+
+/// What a block or a platform the lowered system does not serve names (round 15, R15-R2): nothing; the service
+/// `alarm`, which the lowered system's task uses, by `uses`; the policy `pol.p` by `needs`; the system `sys` by `uses`;
+/// or the system `other` by `needs`.
+const UNSERVED_NAMING: [Naming; 5] = [
+    &[],
+    &[(false, "alarm")],
+    &[(true, "pol.p")],
+    &[(false, "sys")],
+    &[(true, "other")],
+];
+/// What `soc`, the platform of `sys`, names beside the blocks it composes (round 15, R15-R5): nothing; the policy
+/// `pol.p` by `uses`; the system `other`, by `uses` or by `needs`; or the service `via.s`, which names `lone` by `uses`,
+/// so that `lone` is served through what hardware the system serves names (§1: "serving what it names").
+const SOC_NAMES: [Naming; 5] = [
+    &[],
+    &[(false, "pol.p")],
+    &[(false, "other")],
+    &[(true, "other")],
+    &[(false, "via.s")],
+];
+
+/// **Hardware the lowered system does not serve** (§1; round 15, R15-R2 and R15-R5): the system `sys`, its task `t`
+/// using `alarm` bound to `timer.d` and its task `u` using `xfer` bound to `dma.x`, on the platform `soc` composing both;
+/// the system `other` on `host.q`, which composes `blk.q`; and the block `lone`, which no platform composes and only the
+/// service `via.s` names. Each of `blk.q`, `host.q` and `lone` names one choice of [`UNSERVED_NAMING`], and `soc` one of
+/// [`SOC_NAMES`]; each description is lowered for `sys` and for `other`. So hardware a system does not serve
+/// names what is not hardware — a service it serves, a policy, a system, the lowered system itself — and is refused by
+/// neither naming bullet, "nothing else reach[ing] its plan"; the same hardware, served when its own system is lowered,
+/// is refused, a platform naming a system by `uses` or `needs` meeting the naming-system refusal first; a system
+/// reached by a platform serves its own `platform` clause, whose platform names the lowered one; and `lone`, served
+/// once `soc` names `via.s`, is refused for what it names beside `soc`.
+fn unserved_hardware_naming() -> Vec<Case> {
+    let options = UNSERVED_NAMING.len();
+    let mut cases = Vec::new();
+    for choice in 0..options.pow(3) {
+        let pick = |namer: u32| UNSERVED_NAMING[choice / options.pow(namer) % options];
+        let (blk_q, host_q, lone) = (pick(0), pick(1), pick(2));
+        for soc in SOC_NAMES {
+            let words = |naming: Naming| -> String {
+                let named: Vec<String> = naming
+                    .iter()
+                    .map(|(by_needs, name)| {
+                        format!("{}:{name}", if *by_needs { "needs" } else { "uses" })
+                    })
+                    .collect();
+                format!("[{}]", named.join(","))
+            };
+            let plain = |name: &str, offer: &str, named: Naming| Block {
+                name: name.to_string(),
+                offers: names(&[offer, "(reachable-at-privilege machine)"]),
+                side: naming(Side::default(), named),
+                ..Block::default()
+            };
+            let platform = |name: &str, composes: &[&str], extra: Naming| Block {
+                name: name.to_string(),
+                offers: names(&["(core-count 1 tick)", "(reachable-at-privilege machine)"]),
+                side: naming(
+                    Side {
+                        uses: names(composes),
+                        ..Side::default()
+                    },
+                    extra,
+                ),
+                ..Block::default()
+            };
+            let simple = |name: &str, policy: bool, needs: &[&str]| Service {
+                name: name.to_string(),
+                policy,
+                side: Side {
+                    needs: names(needs),
+                    ..Side::default()
+                },
+            };
+            let task = |name: &str, period: u64, priority: u32, uses: &[&str]| Task {
+                name: name.to_string(),
+                release: Release::Period(Dur::Ms(period)),
+                priority,
+                side: Side {
+                    uses: names(uses),
+                    ..Side::default()
+                },
+                ..Task::default()
+            };
+            let sys = System {
+                name: "sys".to_string(),
+                tasks: vec![task("t", 10, 1, &["alarm"]), task("u", 20, 2, &["xfer"])],
+                own: Side::default(),
+                platform: "soc".to_string(),
+            };
+            let other = System {
+                name: "other".to_string(),
+                tasks: vec![task("o", 20, 1, &[])],
+                own: Side::default(),
+                platform: "host.q".to_string(),
+            };
+            let label = format!(
+                "blk.q names {} host.q names {} lone names {} soc names {}",
+                words(blk_q),
+                words(host_q),
+                words(lone),
+                words(soc)
+            );
+            let lowering = |lowered: &System, beside: &System, others_first: bool| Case {
+                label: format!("{label}: lowering {}", lowered.name),
+                description: Description {
+                    system: lowered.name.clone(),
+                    blocks: vec![
+                        timer_block("timer.d", 2, false),
+                        plain("dma.x", "(transfer-engine true)", &[]),
+                        plain("blk.q", "(debug-port true)", blk_q),
+                        plain("lone", "(debug-port true)", lone),
+                    ],
+                    platforms: vec![
+                        platform("soc", &["timer.d", "dma.x"], soc),
+                        platform("host.q", &["blk.q"], host_q),
+                    ],
+                    services: vec![
+                        simple("alarm", false, &["relative-delay"]),
+                        simple("xfer", false, &["transfer-engine"]),
+                        simple("pol.p", true, &[]),
+                        Service {
+                            name: "via.s".to_string(),
+                            policy: false,
+                            side: Side {
+                                uses: names(&["lone"]),
+                                ..Side::default()
+                            },
+                        },
+                    ],
+                    tasks: lowered.tasks.clone(),
+                    own: lowered.own.clone(),
+                    platform: lowered.platform.clone(),
+                    others: vec![beside.clone()],
+                    others_first,
+                },
+            };
+            cases.push(lowering(&sys, &other, false));
+            cases.push(lowering(&other, &sys, true));
+        }
+    }
+    cases
+}
+
 // =====================================================================================================================
 // The reading: docs/decisions/decision_runtime-plan.md, §2 and §3, transcribed rule by rule
 // =====================================================================================================================
@@ -3084,6 +3535,72 @@ fn kind_of(instance: &str) -> &'static AdapterKind {
         .iter()
         .find(|k| k.name == kind)
         .unwrap_or_else(|| panic!("the reading knows no adapter kind `{kind}`"))
+}
+
+/// What `requester` writes at its own level: a task's `(task SYSTEM NAME)` side, the system's own level's by the system's
+/// name, a service's, a policy's, a block's or a platform's.
+fn side_of(description: &Description, requester: &str) -> Option<Side> {
+    if requester == description.system {
+        return Some(description.own.clone());
+    }
+    description
+        .tasks
+        .iter()
+        .find(|t| format!("(task {} {})", description.system, t.name) == requester)
+        .map(|t| t.side.clone())
+        .or_else(|| {
+            description
+                .services
+                .iter()
+                .find(|s| s.name == requester)
+                .map(|s| s.side.clone())
+        })
+        .or_else(|| {
+            description
+                .hardware()
+                .into_iter()
+                .find(|b| b.name == requester)
+                .map(|b| b.side)
+        })
+}
+
+/// Whether the requirement `bind` meets is met by the value `true` (model §8 rule 2: "`(needs f)`, `(f true)` or the
+/// group whose head it is. `(f false)` takes none"). An instance requires what its kind writes `beneath`, each a
+/// `(needs …)` (`docs/semantics/adapters/adapters.eadl`).
+fn met_by_true(description: &Description, bind: &Bind) -> bool {
+    if is_instance(&bind.requester) {
+        return true;
+    }
+    let side = side_of(description, &bind.requester)
+        .unwrap_or_else(|| panic!("the reading knows no requester `{}`", bind.requester));
+    if side.needs.contains(&bind.fact) {
+        return true;
+    }
+    for clause in &side.other {
+        let clause = form(clause);
+        let clause = items(&clause);
+        if clause.first().map(text_of).as_deref() == Some(bind.fact.as_str()) {
+            return !matches!(clause.get(1), Some(Sx::Atom(value)) if value == "false");
+        }
+    }
+    panic!(
+        "the reading finds no requirement of `{}` on `{}`",
+        bind.requester, bind.fact
+    )
+}
+
+/// Model §8 rule 2: "A binding takes a channel when its requirement is on a consumed fact and is met by the value
+/// `true` ... `(f false)` takes none, and a shared fact never does" — and so makes its provider's timer route (rule 8:
+/// "a *timer*, bound through a consumed fact at `true`"; §2.9: "A channel taken on a consumed fact makes a timer
+/// route").
+fn takes_channel(description: &Description, bind: &Bind) -> bool {
+    CONSUMED.contains(&bind.fact.as_str()) && met_by_true(description, bind)
+}
+
+/// Model §8 rule 8: "a *source*, bound through `interrupt-source` at `true`" — and §1's "bound itself for
+/// `interrupt-source`, its requirement met by `true` as model §8 rule 2 reads one".
+fn relies_on_source(description: &Description, bind: &Bind) -> bool {
+    bind.fact == INTERRUPT_FACT && met_by_true(description, bind)
 }
 
 /// §3: "A list with no members is written with its head alone".
@@ -3184,38 +3701,88 @@ fn system_hardware(description: &Description) -> BTreeSet<String> {
 }
 
 /// The blocks and platforms the system **serves** (§2: "a block or a platform the system serves that is bound for
-/// requirements of its own"): its hardware (rule 7), and each block or platform among "a declaration its closure
-/// reaches through `uses` and `needs`" from "its own level, one of its tasks" (model §8 rule 7) — so a block only a
-/// service names is served, though it is no hardware (round 13, R13-R2: the reading had taken rule 7's "hardware"
-/// where §2 says "serves"). A system named is refused before any plan (§1), so the closure stops at one.
+/// requirements of its own"; §1: "This refusal and the one above take only what the system serves"): each block or
+/// platform among "a declaration its closure reaches through `uses` and `needs`" from "its own level, one of its tasks"
+/// (model §8 rule 7) — its own level writing its `platform` clause too (model §8 rule 1: "what it writes at its own level
+/// outside its tasks"), so its hardware (rule 7) is among them — the closure passing through every service, policy,
+/// block and platform it reaches, as the joint rules do, "serving what it names" of hardware too (§1). So a block only a
+/// service names is served, though it is no hardware (round 13, R13-R2: the reading had taken rule 7's "hardware" where
+/// §2 says "serves"). A system named is refused before any plan (§1), so the closure goes no further into one.
 fn served_hardware(description: &Description) -> BTreeSet<String> {
+    served_hardware_by(description, true)
+}
+
+/// [`served_hardware`], the closure passing through what a block or a platform names that is not hardware where
+/// `through_operands`, and stopping there otherwise.
+fn served_hardware_by(description: &Description, through_operands: bool) -> BTreeSet<String> {
     let hardware: BTreeMap<String, Block> = description
         .hardware()
         .into_iter()
         .map(|b| (b.name.clone(), b))
         .collect();
-    let mut out = system_hardware(description);
+    let mut out = BTreeSet::new();
     let mut seen = BTreeSet::new();
-    let mut todo: Vec<Side> = description
-        .tasks
-        .iter()
-        .map(|t| t.side.clone())
-        .chain(std::iter::once(description.own.clone()))
+    let mut todo: Vec<String> = std::iter::once(description.platform.clone())
+        .chain(description.own.uses.iter().cloned())
+        .chain(description.own.needs.iter().cloned())
+        .chain(
+            description
+                .tasks
+                .iter()
+                .flat_map(|t| t.side.uses.iter().chain(&t.side.needs).cloned()),
+        )
         .collect();
-    while let Some(side) = todo.pop() {
-        for named in side.uses.iter().chain(&side.needs) {
-            if !seen.insert(named.clone()) {
-                continue;
-            }
-            if let Some(service) = description.services.iter().find(|s| &s.name == named) {
-                todo.push(service.side.clone());
-            } else if let Some(block) = hardware.get(named) {
-                out.insert(named.clone());
-                todo.push(block.side.clone());
+    while let Some(named) = todo.pop() {
+        if !seen.insert(named.clone()) {
+            continue;
+        }
+        if let Some(service) = description.services.iter().find(|s| s.name == named) {
+            todo.extend(service.side.uses.iter().chain(&service.side.needs).cloned());
+        } else if let Some(block) = hardware.get(&named) {
+            out.insert(named.clone());
+            todo.extend(
+                block
+                    .side
+                    .uses
+                    .iter()
+                    .chain(&block.side.needs)
+                    .filter(|n| through_operands || hardware.contains_key(n.as_str()))
+                    .cloned(),
+            );
+        }
+    }
+    assert!(
+        system_hardware(description).is_subset(&out),
+        "the system's hardware is among what it serves"
+    );
+    out
+}
+
+/// Each block or platform `description` declares and the lowered system does not serve, with each declaration it names
+/// by `uses` or `needs` that is neither a block nor a platform: hardware §1's refusal does not take (round 15, R15-R2:
+/// "This refusal and the one above take only what the system serves ...: nothing else reaches its plan").
+fn unserved_naming_other_kinds(description: &Description) -> Vec<(String, String)> {
+    let served = served_hardware(description);
+    let hardware: BTreeSet<String> = description.hardware().into_iter().map(|b| b.name).collect();
+    let others: BTreeSet<String> = description
+        .services
+        .iter()
+        .map(|s| s.name.clone())
+        .chain(description.systems().into_iter().map(|s| s.name))
+        .filter(|name| !hardware.contains(name))
+        .collect();
+    let mut out = BTreeSet::new();
+    for block in description.hardware() {
+        if served.contains(&block.name) {
+            continue;
+        }
+        for named in block.side.uses.iter().chain(&block.side.needs) {
+            if others.contains(named) {
+                out.insert((block.name.clone(), named.clone()));
             }
         }
     }
-    out
+    out.into_iter().collect()
 }
 
 /// The record's reading of one system: every line of the kinds it derives.
@@ -3274,16 +3841,19 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         name(task_text(task), &task.side);
     }
     name(system.to_string(), &description.own);
+    let served_hardware = served_hardware(description);
     for block in hardware.values() {
-        // §1: a block's or a platform's `uses` or `needs` "naming a declaration that is neither a block nor a
-        // platform" is refused before any plan.
+        // §1: "a block or a platform the system serves naming, by `uses` or `needs`, a declaration that is neither a
+        // block nor a platform" is refused before any plan; one the system does not serve may, "nothing else" reaching
+        // its plan (round 15, R15-R2).
         assert!(
-            block
-                .side
-                .uses
-                .iter()
-                .chain(&block.side.needs)
-                .all(|n| !declared(n) || hardware.contains_key(n.as_str())),
+            !served_hardware.contains(&block.name)
+                || block
+                    .side
+                    .uses
+                    .iter()
+                    .chain(&block.side.needs)
+                    .all(|n| !declared(n) || hardware.contains_key(n.as_str())),
             "`{}` names what is not hardware, which §1 refuses before any plan",
             block.name
         );
@@ -3303,9 +3873,57 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             .insert(bind.provider.clone());
     }
 
-    // Model §8 rule 7's hardware, and §2's hardware the system serves: its hardware and what its closure reaches.
+    // Model §8 rule 7's hardware; §2's hardware the system serves, its hardware and what its closure reaches, is above.
     let system_hardware = system_hardware(description);
-    let served_hardware = served_hardware(description);
+    // Round 15 (R15-R2): hardware the system does not serve, naming what is not hardware, and the system lowered.
+    let served_services: BTreeSet<String> = {
+        let mut reached = reach(&edges, system);
+        for task in &description.tasks {
+            reached.extend(reach(&edges, &task_text(task)));
+        }
+        reached
+    };
+    for (namer, operand) in unserved_naming_other_kinds(description) {
+        let block = &hardware[&namer];
+        let platform = platforms.contains(&namer);
+        let by_needs = block.side.needs.contains(&operand);
+        classes.insert(if systems.contains(&operand) {
+            match (platform, by_needs) {
+                (true, false) => "unserved: a platform's `uses` naming a system",
+                (true, true) => "unserved: a platform's `needs` naming a system",
+                (false, false) => "unserved: a block's `uses` naming a system",
+                (false, true) => "unserved: a block's `needs` naming a system",
+            }
+        } else if description
+            .services
+            .iter()
+            .any(|s| s.name == operand && s.policy)
+        {
+            if platform {
+                "unserved: a platform naming a policy"
+            } else {
+                "unserved: a block naming a policy"
+            }
+        } else if platform {
+            "unserved: a platform naming a service"
+        } else {
+            "unserved: a block naming a service"
+        });
+        if operand == system {
+            classes.insert("unserved: hardware naming the lowered system");
+        }
+        if served_services.contains(&operand) {
+            classes.insert("unserved: hardware naming a service the lowered system serves");
+        }
+        if !description.systems().iter().any(|s| {
+            s.platform == namer
+                || hardware
+                    .get(&s.platform)
+                    .is_some_and(|p| p.side.uses.contains(&namer))
+        }) {
+            classes.insert("unserved: hardware no system's platform composes");
+        }
+    }
 
     // §2: "A **node** below is a node of the joint rules' initialization graph (§2.7): a provider an active binding
     // names (a block, a platform or an adapter's instance), a block or a platform the system serves that is bound for
@@ -3392,9 +4010,11 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
 
     // §2.5: "each route `Joint::check` reports, one for each provider and kind (model §8 rule 8; `Obligation::Route`),
     // its interrupt a timer route or a source, with the requesters the route names". A requester bound to a provider
-    // for `interrupt-source` relies on its source; one bound for a consumed fact, on its alarm. An instance is no route
-    // of its own: the route is its provider's, and names the requesters bound to the instance (the worked epoch
-    // extender: "the route names the requester bound to the instance, `time.monotonic`").
+    // for `interrupt-source` at `true` relies on its source; one bound for a consumed fact at `true`, taking a channel,
+    // on its alarm (model §8 rules 2 and 8) — a fact at `false`, or a shared fact, makes no route. An instance is no
+    // route of its own: the route is its provider's, and names the requesters bound to the instance (the worked epoch
+    // extender: "the route names the requester bound to the instance, `time.monotonic`"; rule 15: "its own binding
+    // beneath making its device's timer route, which carries the requesters bound to it").
     let relying = |requester: &str| -> BTreeSet<String> {
         if is_instance(requester) {
             binds
@@ -3408,8 +4028,18 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     };
     let mut routes: BTreeMap<String, Route> = BTreeMap::new();
     for bind in binds.iter().filter(|b| !is_instance(&b.provider)) {
-        let source = bind.fact == INTERRUPT_FACT;
-        let timer = CONSUMED.contains(&bind.fact.as_str());
+        let source = relies_on_source(description, bind);
+        let timer = takes_channel(description, bind);
+        if bind.fact == INTERRUPT_FACT && !source {
+            classes.insert(
+                "bound otherwise: a requester bound for `interrupt-source` at `false`, no route",
+            );
+        }
+        if CONSUMED.contains(&bind.fact.as_str()) && !timer {
+            classes.insert(
+                "bound otherwise: a requester bound for a consumed fact at `false`, no channel",
+            );
+        }
         if !source && !timer {
             continue;
         }
@@ -3497,41 +4127,26 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         .filter(|n| is_instance(n))
         .cloned()
         .collect();
-    let side_of = |requester: &str| -> Option<Side> {
-        if requester == system {
-            return Some(description.own.clone());
-        }
-        description
-            .tasks
-            .iter()
-            .find(|t| task_text(t) == requester)
-            .map(|t| t.side.clone())
-            .or_else(|| {
-                description
-                    .services
-                    .iter()
-                    .find(|s| s.name == requester)
-                    .map(|s| s.side.clone())
-            })
-            .or_else(|| hardware.get(requester).map(|b| b.side.clone()))
-    };
     for instance in &instances {
         let kind = kind_of(instance);
         let mut line = format!("(instance {instance}");
         let instance_form = form(instance);
         let requester = items(&instance_form).get(3).map(text_of);
         for fact in kind.obliged {
-            let bound = requester.as_deref().and_then(side_of).and_then(|side| {
-                side.at_most
-                    .iter()
-                    .filter(|(f, _)| f == fact)
-                    .map(|(_, bound)| {
-                        bound
-                            .seconds()
-                            .expect("a bound past the arithmetic is refused before any plan (§1)")
-                    })
-                    .min()
-            });
+            let bound = requester
+                .as_deref()
+                .and_then(|r| side_of(description, r))
+                .and_then(|side| {
+                    side.at_most
+                        .iter()
+                        .filter(|(f, _)| f == fact)
+                        .map(|(_, bound)| {
+                            bound.seconds().expect(
+                                "a bound past the arithmetic is refused before any plan (§1)",
+                            )
+                        })
+                        .min()
+                });
             match bound {
                 Some(time) => {
                     classes.insert("instance: an obliged fact with its bound");
@@ -3563,10 +4178,12 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     for route in routes.values() {
         let mut base = BTreeSet::from([route.provider.clone()]);
         for bind in binds.iter().filter(|b| b.provider == route.provider) {
+            // "for the interrupt fact where the route is a source, or for a consumed fact where it is a timer route":
+            // the binding the route names it for (model §8 rules 2 and 8).
             let for_this_kind = if route.source {
-                bind.fact == INTERRUPT_FACT
+                relies_on_source(description, bind)
             } else {
-                CONSUMED.contains(&bind.fact.as_str())
+                takes_channel(description, bind)
             };
             if !for_this_kind {
                 continue;
@@ -4048,17 +4665,18 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     for node in nodes.iter().filter(|n| !is_instance(n)) {
         let channels: Vec<&Bind> = binds
             .iter()
-            .filter(|b| &b.requester == node && CONSUMED.contains(&b.fact.as_str()))
+            .filter(|b| &b.requester == node && takes_channel(description, b))
             .collect();
         if channels.is_empty() {
-            continue; // it takes no channel
+            continue; // it takes no channel (model §8 rule 2)
         }
         let mut own_routes = BTreeSet::new();
         for channel in channels {
             if is_instance(&channel.provider) {
-                for programmed in binds.iter().filter(|b| {
-                    b.requester == channel.provider && CONSUMED.contains(&b.fact.as_str())
-                }) {
+                for programmed in binds
+                    .iter()
+                    .filter(|b| b.requester == channel.provider && takes_channel(description, b))
+                {
                     own_routes.insert(format!("(timer-route {})", programmed.provider));
                 }
             } else {
@@ -4645,9 +5263,9 @@ enum Names {
     /// "naming each such name, by the namer's text and then the system's" (round 13, R13-R1), texts compared byte by
     /// byte (§2).
     Systems(Vec<(String, String)>),
-    /// The refusal of hardware naming what is not hardware: each block or platform whose `uses` or `needs` names a
-    /// declaration that is neither, with that operand — "naming each, by the block's or platform's text and then the
-    /// operand's".
+    /// The refusal of hardware naming what is not hardware: each block or platform the system serves whose `uses` or
+    /// `needs` names a declaration that is neither, with that operand — "naming each, by the block's or platform's text
+    /// and then the operand's".
     Operands(Vec<(String, String)>),
     /// The durations past the arithmetic, "naming each — the tasks' in runtime order, then the sources' by their
     /// interrupt's text, then the bounds by their instance's text and then the fact's", each task's clauses "in the
@@ -4864,11 +5482,12 @@ fn systems_named(description: &Description) -> Vec<(String, String)> {
     out.into_iter().collect()
 }
 
-/// §1: "a block's or a platform's `uses` or `needs` naming a declaration that is neither a block nor a platform",
-/// "naming each, by the block's or platform's text and then the operand's". Unlike the bullet before it, scoped to "a
-/// declaration or a task the system serves", this one names no scope: every block and platform the description
-/// declares is read, another system's hardware among them.
+/// §1: "a block or a platform the system serves naming, by `uses` or `needs`, a declaration that is neither a block nor
+/// a platform", "naming each, by the block's or platform's text and then the operand's". Since round 15 (R15-R2) it
+/// takes "only what the system serves, as the bullet over tasks takes its tasks: nothing else reaches its plan", as the
+/// naming-system bullet before it does: a block or a platform of another system, or of none, is read by neither.
 fn hardware_naming_other_kinds(description: &Description) -> Vec<(String, String)> {
+    let served = served_hardware(description);
     let hardware: BTreeSet<String> = description.hardware().into_iter().map(|b| b.name).collect();
     let others: BTreeSet<String> = description
         .services
@@ -4879,6 +5498,9 @@ fn hardware_naming_other_kinds(description: &Description) -> Vec<(String, String
         .collect();
     let mut out = BTreeSet::new();
     for block in description.hardware() {
+        if !served.contains(&block.name) {
+            continue;
+        }
         for named in block.side.uses.iter().chain(&block.side.needs) {
             if others.contains(named) {
                 out.insert((block.name.clone(), named.clone()));
@@ -4892,22 +5514,23 @@ fn hardware_naming_other_kinds(description: &Description) -> Vec<(String, String
 /// `bind` lines: "They are taken in the order written, this list and then the next, ... and the first that applies is
 /// the one given; a bullet over tasks is taken task by task in runtime order, each task's clauses in the order the
 /// bullet writes them".
-/// - Of the first list, in its order: "a periodic task bound to an interrupt source itself, which states a second
-///   release model": `tool-failure`, "naming the task and the clause"; then "a declaration or a task the system
-///   serves naming a system by `uses` or `needs`": `tool-failure`, "naming each such name, by the namer's text and
-///   then the system's"; then "a block's or a platform's `uses` or `needs` naming a declaration that is neither a block
-///   nor a platform": `tool-failure`, "naming each, by the block's or platform's text and then the operand's".
-///   (`M1.43`, `M1.46` and `M1.47` have the language refuse them, and "a description the language's check refuses is
-///   no input".)
+/// - Of the first list, in its order: "a periodic task bound itself for `interrupt-source`, its requirement met by
+///   `true` as model §8 rule 2 reads one, which states a second release model": `tool-failure`, "naming the task and
+///   the clause"; then "a declaration or a task the system serves naming a system by `uses` or `needs`":
+///   `tool-failure`, "naming each such name, by the namer's text and then the system's"; then "a block or a platform the
+///   system serves naming, by `uses` or `needs`, a declaration that is neither a block nor a platform": `tool-failure`,
+///   "naming each, by the block's or platform's text and then the operand's" — "This refusal and the one above take
+///   only what the system serves". (`M1.43`, `M1.46` and `M1.47` have the language refuse them, and "a description the
+///   language's check refuses is no input".)
 /// - Of the second, `unsupported-profile`, in its order: "a duration the plan would write past the engine's exact
 ///   arithmetic (§2.2): a task's period, minimum separation, deadline or jitter, a source's separation, or an obliged
 ///   bound, naming each — the tasks' in runtime order, then the sources' by their interrupt's text, then the bounds by
 ///   their instance's text"; "a task whose deadline is measured from an event other than its release"; and "a task, or
 ///   the system's own level, that would receive an interrupt's code: a timer route that names it, bound to its
-///   provider itself, or an adapter instance with a cost running its requester's code (`expiry`) whose requester it
-///   is, the one an exclusive instance serves or one bound to a shared instance. ... It names every such receiver —
-///   each task in runtime order, then the system's own level — with what it would receive, so no order among them
-///   decides the message".
+///   provider itself by a binding that takes a channel (model §8 rule 2) — an alarm it programs, as §2.6 reads that
+///   binding — or an adapter instance with a cost running its requester's code (`expiry`) whose requester it is, the one
+///   an exclusive instance serves or one bound to a shared instance. ... It names every such receiver — each task in
+///   runtime order, then the system's own level — with what it would receive".
 ///
 /// No other bullet applies here: no system has placement memory and each declares a task.
 fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option<Due> {
@@ -4915,15 +5538,41 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
     let task_text = |task: &Task| format!("(task {system} {})", task.name);
     let mut by_index: Vec<&Task> = description.tasks.iter().collect();
     by_index.sort_by_key(|t| t.priority);
-    for task in &by_index {
+    // A periodic task bound to a source's block, `interrupt-source` true among its offers, for another fact: "bound
+    // itself for `interrupt-source`" fails, and it is no second release model (round 15, R15-D2).
+    let bound_otherwise = |task: &Task| {
+        binds.iter().any(|b| {
+            b.requester == task_text(task)
+                && !relies_on_source(description, b)
+                && description
+                    .hardware()
+                    .iter()
+                    .any(|h| h.name == b.provider && h.separation.is_some())
+        })
+    };
+    for (index, task) in by_index.iter().enumerate() {
         if matches!(task.release, Release::Period(_))
             && binds
                 .iter()
-                .any(|b| b.requester == task_text(task) && b.fact == INTERRUPT_FACT)
+                .any(|b| b.requester == task_text(task) && relies_on_source(description, b))
         {
             let mut classes = BTreeSet::from(["refusal: a periodic task bound to a source itself"]);
             if !hardware_naming_other_kinds(description).is_empty() {
                 classes.insert("periodic: before hardware naming what is not hardware");
+            }
+            if by_index[..index]
+                .iter()
+                .any(|t| matches!(t.release, Release::Period(_)) && bound_otherwise(t))
+            {
+                classes.insert(
+                    "periodic: one bound to the source's block otherwise first in runtime order, the one bound for \
+                     `interrupt-source` named",
+                );
+            }
+            if bound_otherwise(task) {
+                classes.insert(
+                    "periodic: the one named bound to the source's block for another fact too",
+                );
             }
             return Some(Due {
                 code: "tool-failure",
@@ -4941,7 +5590,12 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
         let mut classes = BTreeSet::from(["refusal: a requester naming a system"]);
         let hardware_names: BTreeSet<String> =
             description.hardware().into_iter().map(|b| b.name).collect();
-        for (namer, _) in &named {
+        let platform_names: BTreeSet<String> = description
+            .platforms()
+            .into_iter()
+            .map(|p| p.name)
+            .collect();
+        for (namer, named_system) in &named {
             classes.insert(if namer.starts_with("(task ") {
                 "naming: a task naming a system"
             } else if namer == system {
@@ -4953,6 +5607,20 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
             } else {
                 "naming: a named system's own level naming a system"
             });
+            // Round 15 (R15-R5): which clause of which kind of hardware names the system.
+            if hardware_names.contains(namer) {
+                let by_needs = side_of(description, namer)
+                    .is_some_and(|side| side.needs.contains(named_system));
+                classes.insert(match (platform_names.contains(namer), by_needs) {
+                    (true, false) => "naming: a platform's `uses` naming a system",
+                    (true, true) => "naming: a platform's `needs` naming a system",
+                    (false, false) => "naming: a block's `uses` naming a system",
+                    (false, true) => "naming: a block's `needs` naming a system",
+                });
+            }
+            if named_system == system {
+                classes.insert("naming: the lowered system itself named");
+            }
         }
         if named.len() >= 2 {
             classes.insert("naming: several names");
@@ -4989,7 +5657,6 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
             .into_iter()
             .map(|p| p.name)
             .collect();
-        let served = served_hardware(description);
         let named_by = |namer: &str, operand: &str, needs: bool| {
             description.hardware().iter().any(|b| {
                 b.name == namer
@@ -5025,29 +5692,16 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
             classes.insert(match (who, by, kind) {
                 ("a block", "uses", "service") => "operand: a block's `uses` naming a service",
                 ("a block", "uses", "policy") => "operand: a block's `uses` naming a policy",
-                ("a block", "uses", _) => "operand: a block's `uses` naming a system",
                 ("a block", _, "service") => "operand: a block's `needs` naming a service",
                 ("a block", _, "policy") => "operand: a block's `needs` naming a policy",
-                ("a block", _, _) => "operand: a block's `needs` naming a system",
                 (_, "uses", "service") => "operand: a platform's `uses` naming a service",
                 (_, "uses", "policy") => "operand: a platform's `uses` naming a policy",
-                (_, "uses", _) => "operand: a platform's `uses` naming a system",
                 (_, _, "service") => "operand: a platform's `needs` naming a service",
                 (_, _, "policy") => "operand: a platform's `needs` naming a policy",
-                _ => "operand: a platform's `needs` naming a system",
+                // Both bullets take what the system serves, the naming-system one first: hardware the system serves
+                // naming a system is that bullet's, and hardware it does not serve is neither's (R15-R2).
+                _ => "unreachable: a system the operand of hardware the system serves, the naming-system refusal first",
             });
-            if !served.contains(namer) {
-                classes.insert("operand: hardware the lowered system does not serve");
-                if kind == "system" {
-                    classes
-                        .insert("operand: a system, on hardware the lowered system does not serve");
-                    if operand == system {
-                        classes.insert(
-                            "operand: the lowered system itself, on hardware it does not serve",
-                        );
-                    }
-                }
-            }
             if binds
                 .iter()
                 .any(|b| &b.requester == operand && &b.provider == namer)
@@ -5064,6 +5718,18 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
             if kind == "service" && !named_elsewhere {
                 classes.insert("operand: a service only hardware names");
             }
+        }
+        if !unserved_naming_other_kinds(description).is_empty() {
+            classes.insert(
+                "operand: hardware the system does not serve naming what is not hardware too, not named",
+            );
+        }
+        let served_otherwise = served_hardware_by(description, false);
+        if operands
+            .iter()
+            .any(|(namer, _)| !served_otherwise.contains(namer))
+        {
+            classes.insert("operand: hardware served only through what served hardware names");
         }
         if operands.len() >= 2 {
             classes.insert("operand: several, named in order");
@@ -5095,7 +5761,7 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
                 && if is_instance(&b.provider) {
                     kind_of(&b.provider).runs_requester
                 } else {
-                    CONSUMED.contains(&b.fact.as_str())
+                    takes_channel(description, b)
                 }
         }) {
             classes.insert("operand: before a receiver of interrupt code");
@@ -5130,7 +5796,7 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
     // A set of texts iterates by each, compared byte by byte: "the sources' by their interrupt's text".
     let sources: BTreeSet<String> = binds
         .iter()
-        .filter(|b| b.fact == INTERRUPT_FACT && !is_instance(&b.provider))
+        .filter(|b| relies_on_source(description, b) && !is_instance(&b.provider))
         .filter(|b| {
             hardware
                 .get(&b.provider)
@@ -5268,10 +5934,30 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
                     receiver.expiries.insert(bind.provider.clone());
                     classes.insert("receivers: an expiry");
                 }
-            } else if CONSUMED.contains(&bind.fact.as_str()) {
+            } else if takes_channel(description, bind) {
+                // "a timer route that names it, bound to its provider itself by a binding that takes a channel (model
+                // §8 rule 2)": the route at that provider names it (rule 8), and the binding is the alarm it programs.
                 receiver.alarms.insert(bind.provider.clone());
                 *consumed_at.entry(bind.provider.clone()).or_default() += 1;
                 classes.insert("receivers: an alarm programmed itself");
+            }
+        }
+        // What else it is bound to at a provider it receives from, for a fact that takes no channel there.
+        for bind in binds.iter().filter(|b| b.requester == requester) {
+            if is_instance(&bind.provider) || takes_channel(description, bind) {
+                continue;
+            }
+            if receiver.alarms.contains(&bind.provider) {
+                classes.insert("receivers: an alarm, its receiver bound to its provider for a fact taking no channel too");
+            }
+            if receiver
+                .expiries
+                .iter()
+                .any(|instance| text_of(&items(&form(instance))[2]) == bind.provider)
+            {
+                classes.insert(
+                    "receivers: an expiry, its receiver bound to the instance's provider for a fact taking no channel too",
+                );
             }
         }
         if consumed_at.values().any(|facts| *facts >= 2) {
@@ -5327,6 +6013,105 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
         names: Names::Receivers(receivers),
         classes,
     })
+}
+
+/// Round 15's classes (R15-D2), which §1's two refusals keyed by their bindings meet whatever the system's outcome: a
+/// task or the system's own level that a timer route names — bound for a consumed fact at `true` to the route's
+/// provider, or to an instance whose own binding beneath is there (model §8 rules 2, 8 and 15) — and is bound to that
+/// provider itself only for a fact that takes no channel, so receives no alarm there ("bound to its provider itself by a
+/// binding that takes a channel"); one bound to a timer route's provider for such a fact, which the route does not name;
+/// either beside one programming an alarm at that provider; and a periodic task bound to a source's block for another
+/// fact than `interrupt-source`, so no second release model ("bound itself for `interrupt-source`").
+fn keyed_classes(description: &Description, binds: &[Bind]) -> BTreeSet<&'static str> {
+    let system = description.system.as_str();
+    let task_text = |task: &Task| format!("(task {system} {})", task.name);
+    let requesters: Vec<(String, bool)> = description
+        .tasks
+        .iter()
+        .map(|t| (task_text(t), true))
+        .chain(std::iter::once((system.to_string(), false)))
+        .collect();
+    // Each timer route's provider, with the requesters it names.
+    let mut routes: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for bind in binds
+        .iter()
+        .filter(|b| !is_instance(&b.provider) && takes_channel(description, b))
+    {
+        let named = routes.entry(bind.provider.clone()).or_default();
+        if is_instance(&bind.requester) {
+            named.extend(
+                binds
+                    .iter()
+                    .filter(|b| b.provider == bind.requester)
+                    .map(|b| b.requester.clone()),
+            );
+        } else {
+            named.insert(bind.requester.clone());
+        }
+    }
+    let programs_at = |requester: &str, provider: &str| {
+        binds.iter().any(|b| {
+            b.requester == requester && b.provider == provider && takes_channel(description, b)
+        })
+    };
+    let mut classes = BTreeSet::new();
+    for (requester, is_task) in &requesters {
+        for bind in binds.iter().filter(|b| {
+            &b.requester == requester && !is_instance(&b.provider) && !takes_channel(description, b)
+        }) {
+            let Some(named) = routes.get(&bind.provider) else {
+                continue;
+            };
+            if programs_at(requester, &bind.provider) {
+                continue; // a receiver of that alarm, the receivers' class
+            }
+            classes.insert(match (is_task, named.contains(requester)) {
+                (true, true) => {
+                    "bound otherwise: a task a timer route names, bound to its provider for a fact taking no channel"
+                }
+                (true, false) => {
+                    "bound otherwise: a task bound to a timer route's provider for a fact taking no channel, the \
+                     route not naming it"
+                }
+                (false, true) => {
+                    "bound otherwise: the system's own level a timer route names, bound to its provider for a fact \
+                     taking no channel"
+                }
+                (false, false) => {
+                    "bound otherwise: the system's own level bound to a timer route's provider for a fact taking no \
+                     channel, the route not naming it"
+                }
+            });
+            if requesters
+                .iter()
+                .any(|(other, _)| other != requester && programs_at(other, &bind.provider))
+            {
+                classes.insert(
+                    "bound otherwise: beside a task or the system's own level programming an alarm at that provider",
+                );
+            }
+        }
+    }
+    let sources: BTreeSet<String> = description
+        .hardware()
+        .into_iter()
+        .filter(|b| b.separation.is_some())
+        .map(|b| b.name)
+        .collect();
+    for task in description
+        .tasks
+        .iter()
+        .filter(|t| matches!(t.release, Release::Period(_)))
+    {
+        if binds.iter().any(|b| {
+            b.requester == task_text(task)
+                && sources.contains(&b.provider)
+                && !relies_on_source(description, b)
+        }) {
+            classes.insert("periodic: a periodic task bound to a source's block for another fact");
+        }
+    }
+    classes
 }
 
 /// A refusal's message read as forms: its parenthesised forms as trees, every other word an atom; backquotes, quotes,
@@ -5745,6 +6530,45 @@ fn refusal_disagrees(due: &Due, refusal: &Refusal, description: &Description) ->
     (!wrong.is_empty()).then(|| wrong.join("; "))
 }
 
+/// The class of the systems whose record the configuration checker refuses because the search reads one system's side
+/// apart, held by name and count rather than as a finding: the defect is the search's, leaf `M3.4`'s, neither the
+/// runtime plan record's nor the lowering's. Model §8 rule 1: "Two tasks of one system are two requesters, though §7
+/// reads them as one side"; §7 rule 4: "Every `requires`, `needs` and `uses` a declaration writes ... is read as one
+/// side, so a contradiction split across two clauses is one: constraints on one fact that no value satisfies together
+/// are `invalid-description`". The search refuses such a contradiction inside one requester's clauses, but reads the
+/// system's own level and each task as sides apart, so it writes a record for a system whose own level writes `(f
+/// false)` while a task of it needs `f`, and the checker (`archogen-plan-check`) refuses it. When `M3.4` reads the
+/// system's side whole, the search refuses these systems itself, this class empties, and the universes holding it move
+/// from judged to unresolved.
+const CHECKER_REFUSES: &str = "checker refuses: a system's side the search reads apart (M3.4)";
+
+/// The fact on which the lowered system's side, read whole — its own level's clauses and its tasks' (model §8 rule 1;
+/// §7 rule 4) — requires both `true` and `false`, a requirement `(needs f)` or `(f true)` beside `(f false)`.
+fn side_read_apart(description: &Description) -> Option<String> {
+    let mut values: BTreeMap<String, BTreeSet<bool>> = BTreeMap::new();
+    for side in std::iter::once(&description.own).chain(description.tasks.iter().map(|t| &t.side)) {
+        for fact in &side.needs {
+            values.entry(fact.clone()).or_default().insert(true);
+        }
+        for clause in &side.other {
+            let clause = form(clause);
+            let clause = items(&clause);
+            if let (Some(Sx::Atom(fact)), Some(Sx::Atom(value))) = (clause.first(), clause.get(1)) {
+                if value == "true" || value == "false" {
+                    values
+                        .entry(fact.clone())
+                        .or_default()
+                        .insert(value == "true");
+                }
+            }
+        }
+    }
+    values
+        .into_iter()
+        .find(|(_, values)| values.len() == 2)
+        .map(|(fact, _)| fact)
+}
+
 /// How one system fared.
 struct Outcome {
     /// `lowered`, `rejected` by the language, `unresolved` by the search, or `refused` by the lowering.
@@ -5753,6 +6577,8 @@ struct Outcome {
     verdict: String,
     /// Whether the configuration checker judged its record: every system the search resolves.
     judged: bool,
+    /// Whether the configuration checker refused its record.
+    checker_refused: bool,
     /// The kinds of line a plan agrees with the reading on.
     agreed: Vec<&'static str>,
     /// The classes of the record's rules the system exercises.
@@ -5767,6 +6593,7 @@ fn outcome(universe: &str, case: &Case) -> Outcome {
         class: "lowered",
         verdict: String::new(),
         judged: false,
+        checker_refused: false,
         agreed: Vec::new(),
         classes: BTreeSet::new(),
         findings: Vec::new(),
@@ -5795,14 +6622,39 @@ fn outcome(universe: &str, case: &Case) -> Outcome {
             case.label
         )
     };
-    if let Some(refused) = &checker {
-        out.findings.push(reproducer(
-            "",
-            &format!(
-                "-- the configuration checker refuses the record the search wrote: {refused}\n"
-            ),
-        ));
-    }
+    // The checker's verdict, against what the reading derives of it: every record accepted, but where the system's side
+    // read whole contradicts itself, which the checker refuses `invalid-description` naming the fact ([`CHECKER_REFUSES`]).
+    out.checker_refused = checker.is_some();
+    let apart = side_read_apart(&case.description);
+    let held = match (&checker, &apart) {
+        (Some(refused), Some(fact))
+            if refused.starts_with("invalid-description;")
+                && refused.contains(&format!("`{fact}`")) =>
+        {
+            true
+        }
+        (Some(refused), _) => {
+            out.findings.push(reproducer(
+                "",
+                &format!(
+                    "-- the configuration checker refuses the record the search wrote: {refused}\n"
+                ),
+            ));
+            false
+        }
+        (None, Some(fact)) => {
+            out.findings.push(reproducer(
+                "",
+                &format!(
+                    "-- the configuration checker accepts the record, and `{}`'s side, read whole, requires `{fact}` \
+                     both `true` and `false` (model §7 rule 4; §8 rule 1)\n",
+                    case.description.system
+                ),
+            ));
+            false
+        }
+        (None, None) => false,
+    };
     let due = refusal_the_record_gives(&case.description, &binds_of(&record));
     match lowered {
         Ok(plan) => {
@@ -5815,11 +6667,16 @@ fn outcome(universe: &str, case: &Case) -> Outcome {
                         due.summary()
                     ),
                 ));
+                if held {
+                    out.classes.insert(CHECKER_REFUSES);
+                }
                 return out;
             }
             let judged = judge(&case.description, &record, &plan);
             out.agreed = judged.agreed;
             out.classes = judged.classes;
+            out.classes
+                .extend(keyed_classes(&case.description, &binds_of(&record)));
             if !judged.disagreements.is_empty() {
                 let mut what = String::new();
                 for d in &judged.disagreements {
@@ -5843,7 +6700,11 @@ fn outcome(universe: &str, case: &Case) -> Outcome {
                 None => Some("the record refuses it for none of §1's reasons".to_string()),
             };
             match (wrong, due) {
-                (None, Some(due)) => out.classes = due.classes,
+                (None, Some(due)) => {
+                    out.classes = due.classes;
+                    out.classes
+                        .extend(keyed_classes(&case.description, &binds_of(&record)));
+                }
                 (Some(wrong), due) => out.findings.push(reproducer(
                     &format!("-- the code writes\nrefused {refusal}\n"),
                     &format!(
@@ -5859,6 +6720,9 @@ fn outcome(universe: &str, case: &Case) -> Outcome {
             }
         }
     }
+    if held {
+        out.classes.insert(CHECKER_REFUSES);
+    }
     out
 }
 
@@ -5872,6 +6736,8 @@ struct Tally {
     refused: usize,
     /// The systems whose record the configuration checker judged.
     judged: usize,
+    /// The systems whose record the configuration checker refused.
+    checker_refused: usize,
     /// For each kind of line, the lowered systems whose plan agrees with the reading on it.
     agreed: BTreeMap<&'static str, usize>,
     /// For each class of the record's rules, the systems exercising it.
@@ -5922,6 +6788,9 @@ fn run(universe: &str, cases: &[Case]) -> Tally {
         }
         if outcome.judged {
             tally.judged += 1;
+        }
+        if outcome.checker_refused {
+            tally.checker_refused += 1;
         }
         if outcome.class == "unresolved" {
             tally
@@ -5991,10 +6860,35 @@ fn hold(
             tally.lowered + tally.refused
         ));
     }
+    // Every record the checker refuses is one of [`CHECKER_REFUSES`], held only where a universe names that class.
+    let held = tally.classes.get(CHECKER_REFUSES).copied().unwrap_or(0);
+    if tally.checker_refused != held {
+        problems.push_str(&format!(
+            "{universe}: the configuration checker refuses {} records, {held} of them held as `{CHECKER_REFUSES}`\n",
+            tally.checker_refused
+        ));
+    }
+    if held > 0 && !exercised.contains(&CHECKER_REFUSES) {
+        problems.push_str(&format!(
+            "{universe}: {held} records the configuration checker refuses, `{CHECKER_REFUSES}`, which this universe \
+             does not hold\n"
+        ));
+    }
     let missed: Vec<&&str> = exercised
         .iter()
         .filter(|class| !tally.classes.contains_key(**class))
         .collect();
+    // A branch the reading states unreachable, its reason in its name, reached by no system of any universe.
+    let unreachable: Vec<(&&str, &usize)> = tally
+        .classes
+        .iter()
+        .filter(|(class, _)| class.starts_with("unreachable: "))
+        .collect();
+    if !unreachable.is_empty() {
+        problems.push_str(&format!(
+            "{universe} reaches a branch the reading states unreachable: {unreachable:?}\n"
+        ));
+    }
     if !missed.is_empty() {
         problems.push_str(&format!("{universe} no longer exercises {missed:?}\n"));
     }
@@ -6315,15 +7209,16 @@ fn a_second_system_named_or_not() {
 #[test]
 fn hardware_naming_what_is_not_hardware_refused_in_its_place() {
     let cases = hardware_naming();
-    // What `timer.d` names, of 3; `dma.x`, of 9; `soc`, of 5; `blk.q`, of 2; the other refusal `t` meets, of 6.
-    assert_eq!(cases.len(), 3 * 9 * 5 * 2 * 6);
+    // What `timer.d` names, of 3; `dma.x`, of 10; `soc`, of 5; `blk.q`, of 2; the other refusal `t` meets, of 6.
+    assert_eq!(cases.len(), 3 * 10 * 5 * 2 * 6);
     let tally = run("hardware naming", &cases);
-    // Lowered: the 8 whose hardware names hardware alone — `timer.d` and `blk.q` nothing, `dma.x` nothing or a block (4),
-    // `soc` nothing or a block (2) — and whose task `t` meets no other refusal; every other refused.
+    // Lowered: the 20 whose hardware `sys` serves names hardware alone — `timer.d` nothing, `dma.x` nothing or a block
+    // (5), `soc` nothing or a block (2) — whatever `blk.q`, which `sys` does not serve, names (2; round 15, R15-R2), and
+    // whose task `t` meets no other refusal; every other refused.
     hold(
         "hardware naming",
         &tally,
-        (1_620, 8, 0, 0, 1_612),
+        (1_800, 20, 0, 0, 1_780),
         &[
             "refusal: hardware naming what is not hardware",
             "operand: a block's `uses` naming a service",
@@ -6334,7 +7229,8 @@ fn hardware_naming_what_is_not_hardware_refused_in_its_place() {
             "operand: a platform's `needs` naming a policy",
             "operand: a block naming the service bound to it",
             "operand: a service only hardware names",
-            "operand: hardware the lowered system does not serve",
+            "operand: hardware the system does not serve naming what is not hardware too, not named",
+            "unserved: a block naming a service",
             "operand: several, named in order",
             "operand: one namer naming two",
             "operand: the namers' order unlike the operands'",
@@ -6345,6 +7241,7 @@ fn hardware_naming_what_is_not_hardware_refused_in_its_place() {
             "naming: before hardware naming what is not hardware",
             "naming: a block or a platform naming a system",
             "hardware: a block's or a platform's `needs` naming a block",
+            "hardware: what a node in a job names by `needs` is in none",
             "initialisation: no edge across composition",
             "initialisation: an edge across a block's `needs` naming a block stands",
         ],
@@ -6409,12 +7306,13 @@ fn several_blocks_and_platforms_naming_prefixed_names_in_their_texts_order() {
     // What each of `d`, `d.x`, `d!`, `soc` and `q` names, of 4.
     assert_eq!(cases.len(), 4usize.pow(5));
     let tally = run("prefixed hardware naming", &cases);
-    // Lowered: the one where no block or platform names anything but hardware; every other refused, by the
-    // naming-system refusal where a block `sys` serves names `y`, else by hardware naming what is not hardware.
+    // Lowered: the 4 where no block or platform `sys` serves names anything but hardware, whatever `q`, which it serves
+    // only once `y` is reached, names (round 15, R15-R2); every other refused, by the naming-system refusal where a
+    // block `sys` serves names `y`, else by hardware naming what is not hardware.
     hold(
         "prefixed hardware naming",
         &tally,
-        (1_024, 1, 0, 0, 1_023),
+        (1_024, 4, 0, 0, 1_020),
         &[
             "refusal: hardware naming what is not hardware",
             "refusal: a requester naming a system",
@@ -6425,15 +7323,15 @@ fn several_blocks_and_platforms_naming_prefixed_names_in_their_texts_order() {
             "naming: an order the message's words would give otherwise",
             "operand: a block's `uses` naming a service",
             "operand: a block's `needs` naming a policy",
-            "operand: a block's `uses` naming a system",
-            "operand: a block's `needs` naming a system",
             "operand: a platform's `needs` naming a service",
             "operand: a platform's `uses` naming a policy",
             "operand: a block naming the service bound to it",
             "operand: a service only hardware names",
-            "operand: hardware the lowered system does not serve",
-            "operand: a system, on hardware the lowered system does not serve",
-            "operand: the lowered system itself, on hardware it does not serve",
+            "operand: hardware the system does not serve naming what is not hardware too, not named",
+            "unserved: a block naming a service",
+            "unserved: a block's `uses` naming a system",
+            "unserved: a block's `needs` naming a system",
+            "unserved: hardware naming the lowered system",
             "operand: several, named in order",
             "operand: one namer naming two",
             "operand: one namer's text a prefix of another's",
@@ -6560,6 +7458,198 @@ fn a_provider_bound_to_the_node_taking_its_channel() {
             "initialisation: a component of several members",
             "initialisation: no edge across composition",
             "composition: a platform a task reaches through a binding",
+        ],
+    );
+}
+
+#[test]
+fn bound_to_a_timer_route_s_provider_by_a_binding_taking_no_channel() {
+    let cases = bound_otherwise_on_a_route();
+    // What `t` and the system's own level each require, of 7; `u`, of 3; `s`, of 4; which task is first.
+    assert_eq!(cases.len(), 7 * 3 * 7 * 4 * 2);
+    let tally = run("bound otherwise on a route", &cases);
+    // Rejected: the 168 where `t` writes `(relative-delay false)` (3 choices of `u`, 7 of the system's own level, 4 of
+    // `s`, 2 orders), `invalid-description`: a task writes no constraint clause.
+    let writes_false: BTreeSet<String> = cases
+        .iter()
+        .filter(|c| c.label.starts_with("t:False "))
+        .map(|c| c.label.clone())
+        .collect();
+    assert_eq!(writes_false.len(), 168);
+    assert_eq!(
+        tally
+            .verdicts
+            .get("rejected invalid-description")
+            .map(|v| v.0),
+        Some(168),
+        "the language refuses a task's constraint clause: {:?}",
+        tally.verdicts
+    );
+    // Held, not findings: the 64 whose own level writes `(relative-delay false)` beside a task needing `relative-delay`
+    // (8 of the 18 choices of `t` and `u` the language accepts, 4 of `s`, 2 orders), whose record the configuration
+    // checker refuses `invalid-description` — the search's defect, `M3.4`'s ([`CHECKER_REFUSES`]; model §7 rule 4, §8
+    // rule 1). Every other record it accepts; the lowering is held to the reading on these too.
+    assert_eq!(
+        tally.classes.get(CHECKER_REFUSES),
+        Some(&64),
+        "{CHECKER_REFUSES}"
+    );
+    assert_eq!(tally.checker_refused, 64);
+    hold(
+        "bound otherwise on a route",
+        &tally,
+        (1_176, 320, 168, 0, 688),
+        &[
+            CHECKER_REFUSES,
+            "bound otherwise: a task a timer route names, bound to its provider for a fact taking no channel",
+            "bound otherwise: the system's own level a timer route names, bound to its provider for a fact taking no \
+             channel",
+            "bound otherwise: a task bound to a timer route's provider for a fact taking no channel, the route not \
+             naming it",
+            "bound otherwise: the system's own level bound to a timer route's provider for a fact taking no channel, \
+             the route not naming it",
+            "bound otherwise: beside a task or the system's own level programming an alarm at that provider",
+            "bound otherwise: a requester bound for a consumed fact at `false`, no channel",
+            "receivers: an alarm, its receiver bound to its provider for a fact taking no channel too",
+            "receivers: an expiry, its receiver bound to the instance's provider for a fact taking no channel too",
+            "receivers: one",
+            "receivers: two",
+            "receivers: three",
+            "receivers: tasks and the system's own level",
+            "receivers: runtime order unlike the tasks' text order",
+            "context: a wake running the instance alone",
+            "multiplex: multiplexed by two jobs",
+        ],
+    );
+}
+
+#[test]
+fn a_periodic_task_bound_to_a_source_s_block_for_another_fact() {
+    let cases = periodic_bound_otherwise();
+    // What `t` requires, of 5; `p`, of 4; the system's own level, of 4; `e`, of 3; which periodic task is first.
+    assert_eq!(cases.len(), 5 * 4 * 4 * 3 * 2);
+    let tally = run("periodic bound otherwise", &cases);
+    // Rejected: the 96 where `t` writes `(interrupt-source false)` (4 choices of `p`, 4 of the system's own level, 3 of
+    // `e`, 2 orders), `invalid-description`: a task writes no constraint clause.
+    assert_eq!(
+        tally
+            .verdicts
+            .get("rejected invalid-description")
+            .map(|v| v.0),
+        Some(96),
+        "the language refuses a task's constraint clause: {:?}",
+        tally.verdicts
+    );
+    // Held, not findings: the 72 whose own level writes `(interrupt-source false)` beside `t` or `p` needing
+    // `interrupt-source` (12 of the 16 choices of `t` and `p` the language accepts, 3 of `e`, 2 orders), whose record
+    // the configuration checker refuses `invalid-description` — the search's defect, `M3.4`'s ([`CHECKER_REFUSES`];
+    // model §7 rule 4, §8 rule 1). Every other record it accepts; the lowering is held to the reading on these too.
+    assert_eq!(
+        tally.classes.get(CHECKER_REFUSES),
+        Some(&72),
+        "{CHECKER_REFUSES}"
+    );
+    assert_eq!(tally.checker_refused, 72);
+    hold(
+        "periodic bound otherwise",
+        &tally,
+        (480, 96, 96, 0, 288),
+        &[
+            CHECKER_REFUSES,
+            "refusal: a periodic task bound to a source itself",
+            "periodic: a periodic task bound to a source's block for another fact",
+            "periodic: one bound to the source's block otherwise first in runtime order, the one bound for \
+             `interrupt-source` named",
+            "periodic: the one named bound to the source's block for another fact too",
+            "bound otherwise: a requester bound for `interrupt-source` at `false`, no route",
+            "trigger: every, equal separations",
+            "trigger: unknown, no source reaching it",
+        ],
+    );
+}
+
+#[test]
+fn hardware_the_lowered_system_does_not_serve_naming_what_is_not_hardware() {
+    let cases = unserved_hardware_naming();
+    // What each of `blk.q`, `host.q` and `lone` names, of 5; `soc`, of 5; each description lowered for each system.
+    assert_eq!(cases.len(), 5usize.pow(3) * 5 * 2);
+    for pair in cases.chunks(2) {
+        assert_eq!(
+            pair[0].description.text(),
+            pair[1].description.text(),
+            "one description, lowered for each of its systems"
+        );
+    }
+    let tally = run("unserved hardware naming", &cases);
+    // Unresolved: the 232 lowering `other` that serve `alarm`: the 225 where `blk.q` or `host.q`, which `other` serves,
+    // names it (9 of the 25 choices of the two, 5 of `lone`, 5 of `soc`); and the 7 where neither does, one names `sys`
+    // by `uses`, so that `sys`'s `platform` clause is served and with it `soc`, which names `via.s`, which names `lone`,
+    // which names `alarm` (7 of the 16 choices of the two). The joint rules serve what hardware names (§1: "serving what
+    // it names") and what a system named writes at its own level, "its `platform` clause included", and `alarm`'s
+    // `relative-delay` has no provider among `other`'s hardware, so the search concludes `missing-fact` (model §8 rule
+    // 7).
+    let serves_alarm: BTreeSet<String> = cases
+        .iter()
+        .filter(|c| {
+            let names =
+                |namer: &str, naming: &str| c.label.contains(&format!("{namer} names [{naming}]"));
+            c.label.ends_with("lowering other")
+                && (names("blk.q", "uses:alarm")
+                    || names("host.q", "uses:alarm")
+                    || ((names("blk.q", "uses:sys") || names("host.q", "uses:sys"))
+                        && names("soc", "uses:via.s")
+                        && names("lone", "uses:alarm")))
+        })
+        .map(|c| c.label.clone())
+        .collect();
+    assert_eq!(serves_alarm.len(), 232);
+    assert_eq!(
+        tally
+            .unresolved_systems
+            .keys()
+            .cloned()
+            .collect::<BTreeSet<_>>(),
+        serves_alarm,
+        "the systems the search resolves no plan for are those `other` lowered serving `alarm`"
+    );
+    assert!(
+        tally
+            .unresolved_systems
+            .values()
+            .all(|verdict| verdict == "MissingFact"),
+        "the search's answer: {:?}",
+        tally.unresolved_systems
+    );
+    // Lowered: lowering `sys`, the 125 where `soc` names nothing, whatever `blk.q`, `host.q` and `lone`, which `sys`
+    // does not serve, name; lowering `other`, the 25 where `blk.q` and `host.q` name nothing, whatever `soc` and `lone`
+    // name. Every other refused or unresolved.
+    hold(
+        "unserved hardware naming",
+        &tally,
+        (1_250, 150, 0, 232, 868),
+        &[
+            "unserved: a block naming a service",
+            "unserved: a block naming a policy",
+            "unserved: a block's `uses` naming a system",
+            "unserved: a block's `needs` naming a system",
+            "unserved: a platform naming a service",
+            "unserved: a platform naming a policy",
+            "unserved: a platform's `uses` naming a system",
+            "unserved: a platform's `needs` naming a system",
+            "unserved: hardware naming the lowered system",
+            "unserved: hardware naming a service the lowered system serves",
+            "unserved: hardware no system's platform composes",
+            "refusal: hardware naming what is not hardware",
+            "operand: a platform's `uses` naming a policy",
+            "operand: a platform's `uses` naming a service",
+            "operand: hardware the system does not serve naming what is not hardware too, not named",
+            "operand: hardware served only through what served hardware names",
+            "refusal: a requester naming a system",
+            "naming: a platform's `uses` naming a system",
+            "naming: a platform's `needs` naming a system",
+            "naming: a block's `uses` naming a system",
+            "naming: a block's `needs` naming a system",
+            "naming: the lowered system itself named",
         ],
     );
 }

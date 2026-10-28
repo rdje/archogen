@@ -323,3 +323,41 @@ fn of_two_refusals_the_one_section_1_writes_first_is_given() {
     assert_eq!(code, "unsupported-profile");
     assert!(message.contains("`rt-other-v9`"), "{message}");
 }
+
+#[test]
+fn a_cascade_reaches_two_sources_routes_and_its_release_is_unknown() {
+    // Round 15 (R15-R6): `ctl`, a block raising a source of its own, is bound for its own `interrupt-source` to
+    // `dev.e`, and `evt` handles `ctl`'s. The task reaches both sources' routes, so its trigger is `unknown` (§2.2,
+    // "where several sources' routes do"), and `dev.e` runs in `ctl`'s interrupt too, `ctl` reaching it (§2.6).
+    let description = "(eadl-version eadl/1)
+(defblock dev.e
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defblock ctl
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine))
+  (requires (needs interrupt-source)))
+(defplatform soc.c
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.e ctl)))
+(defservice evt
+  (requires (needs interrupt-source)))
+(defsystem cs
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt))
+  (platform (uses soc.c)))
+";
+    let plan = lowered_record(
+        description,
+        "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system cs)\n(program \"PROGRAM\")\n\
+         (adapters adapters/1)\n(bind ctl interrupt-source dev.e)\n(bind evt interrupt-source ctl)\n",
+    )
+    .expect("lowered");
+    for line in [
+        "(task 0 (task cs s) (rank 1) (min-separation 1/100 s) (deadline 1/100 s) (deadline-from release) (jitter 0 s) (overrun fault) (released-by unknown) (uses evt))\n",
+        "(route 1 (source ctl) (separation 1/50 s) (level machine) (deliverable yes) (requesters evt) (costs))\n",
+        "(route 2 (source dev.e) (separation 1/50 s) (level machine) (deliverable yes) (requesters ctl) (costs))\n",
+        "(context dev.e job (interrupt (source ctl)) (interrupt (source dev.e)) initialisation)\n",
+        "(context evt job (interrupt (source ctl)) initialisation)\n",
+        "(step 1 dev.e)\n(step 2 ctl)\n(step 3 evt)\n",
+    ] {
+        assert!(plan.contains(line), "{line}{plan}");
+    }
+}

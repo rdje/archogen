@@ -755,7 +755,10 @@ or `needs`, and a block by `needs`; a block bound to itself, and a deadline adap
 one requirement is its level's; a block only a service names, and a service only composed; and the naming order. Round
 14 adds names one of which prefixes another, in both naming refusals; hardware on another system's platform naming a
 system; and a provider whose own requirement is bound to the node that takes its channel, calling it on that node's own
-route. A description the language's check refuses is no input (§1), and its probe is held at that check's verdict.
+route. Round 15 adds a task, the system's own level and a service that a timer route names, bound to its provider for a
+fact that takes no channel; a periodic task bound to a source for another fact; a cycle through an instance and its
+device; and a cascade of two sources' routes. A description the language's check refuses is no input (§1), and its probe
+is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with

@@ -36,9 +36,11 @@ agree crates/archogen-plan/tests/corpus/fast-source.eadl
 agree crates/archogen-plan/tests/corpus/from-and-alarm.eadl
 agree crates/archogen-plan/tests/corpus/hardware-naming-prefix.eadl
 agree crates/archogen-plan/tests/corpus/hz-everywhere.eadl
+agree crates/archogen-plan/tests/corpus/instance-in-a-cycle.eadl
 agree crates/archogen-plan/tests/corpus/isr-and-task.eadl
 agree crates/archogen-plan/tests/corpus/jitter-over-period.eadl
 agree crates/archogen-plan/tests/corpus/kind-blind.eadl
+agree crates/archogen-plan/tests/corpus/level-on-route-bound-otherwise.eadl
 agree crates/archogen-plan/tests/corpus/modules/app.main.eadl
 agree crates/archogen-plan/tests/corpus/modules/hw.dev.eadl
 agree crates/archogen-plan/tests/corpus/modules/os.svc.eadl
@@ -62,6 +64,7 @@ agree crates/archogen-plan/tests/corpus/own-route-caller.eadl
 agree crates/archogen-plan/tests/corpus/own-route-instance-caller.eadl
 agree crates/archogen-plan/tests/corpus/past-order.eadl
 agree crates/archogen-plan/tests/corpus/period-hz.eadl
+agree crates/archogen-plan/tests/corpus/periodic-bound-to-source-otherwise.eadl
 agree crates/archogen-plan/tests/corpus/periodic-source.eadl
 agree crates/archogen-plan/tests/corpus/placement.eadl
 agree crates/archogen-plan/tests/corpus/platform-alarm-composed.eadl
@@ -83,6 +86,7 @@ agree crates/archogen-plan/tests/corpus/receivers-two-timers.eadl
 agree crates/archogen-plan/tests/corpus/region-hosted.eadl
 agree crates/archogen-plan/tests/corpus/served-block-not-hardware.eadl
 agree crates/archogen-plan/tests/corpus/service-alarm-two-tasks.eadl
+agree crates/archogen-plan/tests/corpus/service-on-route-bound-otherwise.eadl
 agree crates/archogen-plan/tests/corpus/service-only-composed.eadl
 agree crates/archogen-plan/tests/corpus/shapes.eadl
 agree crates/archogen-plan/tests/corpus/shared-ext.eadl
@@ -112,6 +116,7 @@ agree crates/archogen-plan/tests/corpus/system-uses-system.eadl
 agree crates/archogen-plan/tests/corpus/task-alarm.eadl
 agree crates/archogen-plan/tests/corpus/task-direct.eadl
 agree crates/archogen-plan/tests/corpus/task-extender.eadl
+agree crates/archogen-plan/tests/corpus/task-on-route-bound-otherwise.eadl
 agree crates/archogen-plan/tests/corpus/task-policy.eadl
 agree crates/archogen-plan/tests/corpus/task-reaches-platform.eadl
 agree crates/archogen-plan/tests/corpus/task-source.eadl

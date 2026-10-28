@@ -1,0 +1,18 @@
+(eadl-version eadl/1)
+; A cycle through an instance and its device: `dma.x` programs a deadline through `deadline-over-delay` over `tmr`,
+; and `tmr` is bound for its own `observable-output` to `dma.x`. §2.7 makes the three one step, the instance's text
+; first: "the members are initialised in their texts' order".
+(defblock tmr
+  (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+    (channels 1 tick) (reachable-at-privilege machine))
+  (requires (needs observable-output)))
+(defblock dma.x
+  (offers (observable-output true) (reachable-at-privilege machine))
+  (requires (needs absolute-deadline)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses tmr dma.x)))
+(defservice out (requires (needs observable-output)))
+(defsystem ic
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses out))
+  (platform (uses soc)))
