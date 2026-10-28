@@ -1,0 +1,9 @@
+(eadl-version eadl/1)
+; A source raised by a platform itself (round 9).
+(defplatform soc.e
+  (offers (core-count 1 tick) (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defservice evt
+  (requires (needs interrupt-source)))
+(defsystem ps
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt))
+  (platform (uses soc.e)))

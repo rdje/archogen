@@ -1,0 +1,14 @@
+(eadl-version eadl/1)
+; `b` reached by task `t`'s job and by `a`'s alarm handler, `a`'s alarm and `b`'s sharing `timer.d`: the route is
+; `b`'s own, but `a`'s code there calls it, so `b` has two users and is multiplexed (§2.9; round 9, D2).
+(defblock timer.d
+  (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d)))
+(defservice b (requires (needs relative-delay)))
+(defservice a (requires (needs relative-delay) (uses b)))
+(defsystem sh
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses b))
+  (requires (uses a))
+  (platform (uses soc)))

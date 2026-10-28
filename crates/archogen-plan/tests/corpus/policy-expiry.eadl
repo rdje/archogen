@@ -1,0 +1,14 @@
+(eadl-version eadl/1)
+; An expiry delivered to a policy two tasks use (round 9).
+(defblock timer.delay
+  (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+    (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc.d
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.delay)))
+(defpolicy dlp
+  (requires (needs absolute-deadline)))
+(defsystem pe
+  (task a (period 25 ms) (deadline 25 ms) (deadline-from release) (priority 1) (uses dlp))
+  (task b (period 50 ms) (deadline 50 ms) (deadline-from release) (priority 2) (uses dlp))
+  (platform (uses soc.d)))

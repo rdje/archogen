@@ -357,10 +357,12 @@ pub fn lower(
                 .or_else(|| clause(task.form, "min-separation")),
             clause(task.form, "deadline"),
         ) else {
-            return Err(ill_formed(
-                task,
-                "states no release or no deadline".to_string(),
-                "M1",
+            return Err(refuse(
+                "tool-failure",
+                format!(
+                    "`(task {system} {})` states no release or no deadline, which the description check refuses: it accepted what it refuses",
+                    task.name
+                ),
             ));
         };
         let jitter = clause(task.form, "jitter");
@@ -659,7 +661,10 @@ pub fn lower(
             "entry-point",
             "execution-bound",
             "execution-category",
+            "figures-under-preemption",
+            "masked-category",
             "masked-runs",
+            "masks-only-through-api",
             "os-calls",
             "stack-bound",
             "stack-category",
@@ -799,8 +804,9 @@ pub fn lower(
         .chain(ranked.iter().map(|r| r.item()))
         .collect();
 
-    // §2.6: the execution contexts.
+    // §2.6: the execution contexts, and what each interrupt runs of its own (§2.9 reads it).
     let mut contexts: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    let mut runs_of: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     for task in &tasks {
         let internal = joint::task_name(&system, &task.name);
         contexts
@@ -857,6 +863,7 @@ pub fn lower(
         for n in all {
             contexts.entry(n).or_default().insert(item.clone());
         }
+        runs_of.insert(item, runs);
     }
     for n in &nodes {
         contexts
@@ -947,10 +954,24 @@ pub fn lower(
                 format!("(interrupt (timer-route {x}))")
             })
             .collect();
+        // Its own route counts only where something else that route runs, neither it nor what it is bound to,
+        // reaches it: that route's own code delivering to it is no caller (§2.9).
+        let called_there = |item: &str| {
+            runs_of.get(item).is_some_and(|runs| {
+                runs.iter().any(|m| {
+                    m != node
+                        && !rebuilt
+                            .bindings
+                            .iter()
+                            .any(|b| b.requester == node && b.provider == *m)
+                        && reach(m).contains(node)
+                })
+            })
+        };
         let jobs = reached.iter().filter(|r| r.contains(node)).count();
         let interrupts = contexts.get(node).map_or(0, |c| {
             c.iter()
-                .filter(|i| i.starts_with("(interrupt ") && !own.contains(*i))
+                .filter(|i| i.starts_with("(interrupt ") && (!own.contains(*i) || called_there(i)))
                 .count()
         });
         jobs + interrupts

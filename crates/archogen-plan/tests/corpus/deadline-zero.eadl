@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; A deadline of zero, lowered: the analysis judges it, not-established; no rule of `/1` refuses it (round 9, remark
+; 3).
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defservice console.write
+  (requires (needs observable-output)))
+(defsystem a09
+  (task a (period 10 ms) (deadline 0 ms) (deadline-from release) (priority 1) (uses console.write))
+  (platform (uses host.p)))

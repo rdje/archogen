@@ -305,3 +305,21 @@ fn a_record_binding_a_provider_that_does_not_meet_the_requirement_does_not_rebui
     assert!(message.contains("does not rebuild"), "{message}");
     assert!(message.contains("which does not meet it"), "{message}");
 }
+
+#[test]
+fn of_two_refusals_the_one_section_1_writes_first_is_given() {
+    // Round 9 (R9-R5): a record under another profile that would not rebuild either is refused for its profile, which
+    // §1 writes before the rebuild, since the rules run at the profile's caller level.
+    let (code, message) = refused(
+        DESCRIPTION,
+        &record(
+            "dg",
+            "PROGRAM",
+            "rt-other-v9",
+            "adapters/1",
+            "(bind (task dg a) observable-output console.uart)\n",
+        ),
+    );
+    assert_eq!(code, "unsupported-profile");
+    assert!(message.contains("`rt-other-v9`"), "{message}");
+}

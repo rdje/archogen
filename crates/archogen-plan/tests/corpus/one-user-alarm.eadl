@@ -1,0 +1,12 @@
+(eadl-version eadl/1)
+; One task calling an alarm that takes a channel: its own route delivers to it and nothing else there calls it, so it
+; has one user and owes no `multiplex` (§2.9; round 9, D3).
+(defblock timer.d
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d)))
+(defservice alarm (requires (needs relative-delay)))
+(defsystem one
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (platform (uses soc)))

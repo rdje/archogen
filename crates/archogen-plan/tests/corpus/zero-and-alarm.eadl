@@ -1,0 +1,12 @@
+(eadl-version eadl/1)
+; A zero period on one task, a deadline from another event and an alarm programmed by another: §1's first list refuses
+; before its second (round 9, remark 5).
+(defblock timer.d
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d)))
+(defsystem za
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from activation) (priority 1) (needs relative-delay))
+  (task b (period 0 ms) (deadline 0 ms) (deadline-from release) (priority 2))
+  (platform (uses soc)))
