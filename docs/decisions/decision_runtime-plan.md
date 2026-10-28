@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-27`
 - **Status:** `active` — the design for leaf `M4.1`, under independent review (`M4.1.1`) before any code relies on it;
-  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 17 answered; from round 7 it is
+  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 18 answered; from round 7 it is
   reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
 - **Owner / source:** leaf `M4.1.1` (`docs/tasks/M4.md`); `ROADMAP.md` §4.2's `archogen-plan`, §7.3, §7.5, §7.6, §10.1
   step 5 and §10.3; model §8 rules 4, 5, 7, 8, 10, 12 and 15; the obligations `M3.3.8`, `M3.5`, `M3.5.5.7.3` and
@@ -412,9 +412,10 @@ timer route and a source, and a block may be named `timer`:
    resource or any of the resources linked to this resource" (§8.6, "OSEK Priority Ceiling Protocol with extensions for
    interrupt levels"). A channel taken on a consumed fact makes a timer route, so a multiplexed node's system is one the
    analysis refuses until `M4.1.6`. The heartbeat's `console.write`, used by both tasks, takes no channel and owes no
-   `multiplex`. The lowering derives the obligation by this rule. `Joint::check` reports its own today: a service whose
-   users, the tasks and services naming it by `uses` over every system of the description, number two or more; `M4.1.2`
-   makes rule 4's users, and so `Joint::check`, count as this rule does, system by system as rule 7 resolves.
+   `multiplex`. The lowering derives the obligation by this rule. `Joint::check` reports its own today: a service taking
+   a channel whose users, the tasks and services naming it by `uses` over every system of the description, number two or
+   more; `M4.1.2` makes rule 4's users, and so `Joint::check`, count as this rule does, system by system as rule 7
+   resolves.
 
 10. **Owed facts**, in one list, each a subject, a fact and its owner. Exactly these are written:
 
@@ -846,9 +847,9 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
   target, and how an adapter's alarm shares a device with releases, each taking a channel (model §8 rule 3). It decides
   how the analysis charges a timer route's interrupts, its service cost and arrival bound, such as a wake taken as a
   timer event of the release timer under an amended condition 6; the term for a multiplexed node's overhead and for a
-  node's call cost in a job; how a job receives an alarm it programs itself or an expiry, and what the system's own
-  level's requirement for either means; and the timer routes' place among the routes and against the release timer.
-  That design is the joint rules', the analysis variant's and the composite-inputs record's;
+  node's call cost and masked runs in a job; how a job receives an alarm it programs itself or an expiry, and what the
+  system's own level's requirement for either means; and the timer routes' place among the routes and against the
+  release timer. That design is the joint rules', the analysis variant's and the composite-inputs record's;
 - `.7`: **format `/2`**, after `.6`, `M4.4.1`'s device correspondence (`RTP-H8`) and `M4.12`'s application inputs
   (`RTP-H5`), designed and reviewed as this record was. Its questions are kept in the review history, each with the
   fix its reviewer proposed:

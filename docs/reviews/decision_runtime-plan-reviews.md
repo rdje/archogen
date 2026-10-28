@@ -599,6 +599,32 @@ The better decisions are D1's and R2's fixes, taken, and R5's, `M1.44`'s.
 
 Round 16's answers: R16-R4 partly (R17-R1); R16-B2's reasoning not carried to named edges (R17-D1); the rest held.
 
+## Round 18 — `2026-10-28`: not acceptable, 9 findings
+
+The code faithful on every fixture and probe again, every defect the record's rules or text. Every test green, the
+bounded totals true — 121,278 systems, 119,116 records judged, the 136 held to `M3.4` — and all twenty hand-offs quoted
+word for word. 3 defects and 6 remarks: round 17's call carried only to hardware already a node, §4 short of §2.10, and
+evidence categories owed for some realization bounds and not others.
+
+**Fence.** No breach.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R18-D1 | defect | hardware a service, a policy or a task names, a call, and nothing binds places no code: no context, no step, nothing owed — and placed when an unrelated binding makes it a node | A node: the block or the platform the system serves that a served task, service or policy names (`M4.1.18`), landing with the code |
+| R18-D2 | defect | §4 `.6` lists a node's call cost and not the masked runs §2.10 hands it | Added |
+| R18-D3 | defect | `masked-runs` owed with `masked-category` beside `call-cost`, `service-cost`, `arrival-bound`, `overhead` and `cost-terms` with none, against `ROADMAP.md` §7.3's "evidence category" of every bound | Every bound owed to the realization is owed with §7.3's record, its category among it, which the realization states (`RTP-H2`); the application's categories stay facts of their own, as its format carries them (`RTP-H5`); a node's `masked-category` goes, landing with the code |
+| R18-R1 | remark | §2.9 says `Joint::check` reports a service with two users, leaving out the channel | "a service taking a channel" |
+| R18-R2 | remark | `tests/records.rs` lowers hand-written records no configuration checker judged | Each positive record judged (`M4.1.4`) |
+| R18-R3 | remark | the ledger holds §8.6's sentence elided while §2.9 quotes it whole | Read whole from the PDF's text, the ledger's hash the same, and held whole |
+| R18-R4 | remark | the `M3.4` routing sound | — |
+| R18-R5 | remark | the checker reads the record faithfully, and D1's rule with it | `M4.1.13` reopened for D1 |
+| R18-R6 | remark | rank ties broken by name, unreachable; a source device in the job of the task it releases, stated | — |
+
+Better decision, taken: a name as a dependency, as the Linux kernel's `fw_devlink` infers "the consumer/supplier
+relationships … suppliers first, then consumers".
+
+Round 17's answers: R17-D1 partly (R18-D1); R17-R2 partly (R18-D2, R18-D3); the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
