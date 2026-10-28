@@ -1566,8 +1566,9 @@ impl<'v> Joint<'v> {
     /// requesters it serves — closed over bindings, so an adapter's or a block's own bindings count — the services and
     /// policies it serves, and each block or platform it serves that is bound for requirements of its own, a requester
     /// whose code an interrupt can run (`docs/decisions/decision_runtime-plan.md` §2, leaf `M4.1.15`); its edges run from
-    /// a provider to each requester bound to it, whatever composes what, but to itself, and from a used service or
-    /// policy to each that names it. Nothing is refused (composition alone gives no edge, leaf `M4.1.16`).
+    /// a provider to each requester bound to it, whatever composes what, but to itself, and from each node a service or
+    /// a policy names by `uses` or `needs`, a block or a platform included, to that namer — hardware's own names giving
+    /// none. Nothing is refused (composition alone gives no edge, leaf `M4.1.16`; a named block an edge, `M4.1.17`).
     #[must_use]
     pub fn initialization(&self, system: &System, assignment: &[Binding]) -> Initialization {
         let system = &self.serving(system, assignment);
@@ -1639,7 +1640,7 @@ impl<'v> Joint<'v> {
             }
             for used in named
                 .iter()
-                .filter(|n| *n != user && nodes.contains_key(*n) && !self.is_hardware(n))
+                .filter(|n| *n != user && nodes.contains_key(*n))
             {
                 edges.insert((used.clone(), user.clone(), Because::Named));
             }

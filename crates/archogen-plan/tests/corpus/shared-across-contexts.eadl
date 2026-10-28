@@ -1,0 +1,17 @@
+(eadl-version eadl/1)
+; A node in a job and in a source's service: its call cost and its masked runs owed (§2.10; round 17, R2).
+(defblock dev.e
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.e console.uart)))
+(defservice console.write
+  (requires (needs observable-output)))
+(defservice evt
+  (requires (needs interrupt-source) (uses console.write)))
+(defsystem sac
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (requires (uses evt))
+  (platform (uses soc)))

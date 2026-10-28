@@ -37,7 +37,15 @@
 //! blocks it composes, directly or through another block, each bound to the other, one to the other or neither, under
 //! names that order each composite before its part or after it; and the system's own level, a service, a policy, a
 //! platform and a block each served by an exclusive `deadline-over-delay` instance, writing its obliged bound bare,
-//! within the arithmetic or past it.
+//! within the arithmetic or past it, a platform's, a block's, a policy's and a service's bound within it each counted
+//! on its instance's line; and, after round 17 (R17-D1, R17-R2, R17-R6), a block and a platform that a service and a
+//! policy name, by `uses` or by `needs`, under names that order each namer before what it names or after it, the named
+//! block or platform a provider, bound for requirements of its own, both or neither, composed by the platform or served
+//! through its namer alone, the namers used by a task, by the system's own level alone, or the policy by nothing; and a
+//! timer and a source a service or a policy names, bound to its namer for an alarm, for its interrupt, through the
+//! instance it programs or not at all, whose own interrupt runs that namer — so that rule 12's named edge from hardware
+//! to its namer is held, alone or beside a binding's reason, and each node in a job owes its call cost and its masked
+//! runs.
 //!
 //! Each system is run as the engine runs it, as `common::lowered` does: the language's check, the search, the `/2`
 //! writer, and the lowering. **Every `archogen-assignment/2` record the search writes is judged by the configuration
@@ -3724,6 +3732,278 @@ fn obliged_bounds_of_every_requester() -> Vec<Case> {
     cases
 }
 
+/// What a namer of the named-hardware universe names, and by which clause.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum HardwareNamed {
+    Nothing,
+    BlockByUses,
+    BlockByNeeds,
+    PlatformByUses,
+    PlatformByNeeds,
+}
+
+impl HardwareNamed {
+    const ALL: [Self; 5] = [
+        Self::Nothing,
+        Self::BlockByUses,
+        Self::BlockByNeeds,
+        Self::PlatformByUses,
+        Self::PlatformByNeeds,
+    ];
+
+    /// `side` naming what this names, of `block` and `platform`.
+    fn name(self, side: &mut Side, block: &str, platform: &str) {
+        match self {
+            Self::Nothing => {}
+            Self::BlockByUses => side.uses.push(block.to_string()),
+            Self::BlockByNeeds => side.needs.push(block.to_string()),
+            Self::PlatformByUses => side.uses.push(platform.to_string()),
+            Self::PlatformByNeeds => side.needs.push(platform.to_string()),
+        }
+    }
+}
+
+/// The names of the named-hardware universe's service and policy, `[service, policy]`: each text below every
+/// hardware text, `m.…`, so that a named edge orders its two nodes against their texts, or above them.
+const NAMER_NAMES: [[&str; 2]; 2] = [["a.s", "a.p"], ["z.s", "z.p"]];
+
+/// Who uses the named-hardware universe's service and policy.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum NamersUsed {
+    /// Task `t` uses both.
+    ByTask,
+    /// The system's own level uses both: neither is in a job.
+    ByOwnLevel,
+    /// Task `t` uses the service, and nothing the policy: the system does not serve it, so it is no node, and what it
+    /// names it serves none of (model §8 rule 7).
+    PolicyByNothing,
+}
+
+const NAMERS_USED: [NamersUsed; 3] = [
+    NamersUsed::ByTask,
+    NamersUsed::ByOwnLevel,
+    NamersUsed::PolicyByNothing,
+];
+
+/// **Hardware a service or a policy names** (§2.7; model §8 rule 12; round 17, R17-D1: "a service or a policy naming a
+/// block or a platform gets no initialisation edge, though §2 makes that name a call"; R17-R2): the block `m.blk`,
+/// offering `transfer-engine`, composed by the platform `m.soc` or by nothing; `m.soc`, the system's, offering
+/// `core-count` and composing `m.out`, which offers `observable-output`; each of `m.blk` and `m.soc` requiring
+/// `observable-output` or nothing; a service and a policy named by one choice of [`NAMER_NAMES`], each naming one choice
+/// of [`HardwareNamed`], the service bound to `m.blk` for `transfer-engine` or not and the policy to `m.soc` for
+/// `core-count` or not; and one choice of [`NAMERS_USED`]. So a block or a platform a service or a policy names is a
+/// node as a provider, as bound for requirements of its own, as both, or is none, which gives no edge, and a policy the
+/// system does not serve is no namer; the edge's line holds a binding's reason beside `named`, or `named` alone,
+/// ordering two steps unlike their texts or like them; a block no platform composes is served through its namer alone,
+/// a requester bound to it being the search's conflict (model §8 rule 7); and each node is in a job or in none, owing
+/// its call cost and its masked runs where it is in one.
+fn named_hardware() -> Vec<Case> {
+    const BLOCK: &str = "m.blk";
+    const PLATFORM: &str = "m.soc";
+    let mut cases = Vec::new();
+    for [s, p] in NAMER_NAMES {
+        for s_names in HardwareNamed::ALL {
+            for p_names in HardwareNamed::ALL {
+                for (choice, users) in (0..1u32 << 5).flat_map(|c| NAMERS_USED.map(|u| (c, u))) {
+                    let bit = |i: u32| choice >> i & 1 == 1;
+                    let (blk_requires, s_binds, composed, soc_requires, p_binds) =
+                        (bit(0), bit(1), bit(2), bit(3), bit(4));
+                    let output = |requires: bool| {
+                        if requires {
+                            names(&["observable-output"])
+                        } else {
+                            Vec::new()
+                        }
+                    };
+                    let block = Block {
+                        name: BLOCK.to_string(),
+                        offers: names(&[
+                            "(transfer-engine true)",
+                            "(reachable-at-privilege machine)",
+                        ]),
+                        side: Side {
+                            needs: output(blk_requires),
+                            ..Side::default()
+                        },
+                        ..Block::default()
+                    };
+                    let mut composes = names(&["m.out"]);
+                    if composed {
+                        composes.push(BLOCK.to_string());
+                    }
+                    let platform = Block {
+                        name: PLATFORM.to_string(),
+                        offers: names(&["(core-count 1 tick)", "(reachable-at-privilege machine)"]),
+                        side: Side {
+                            needs: output(soc_requires),
+                            uses: composes,
+                            ..Side::default()
+                        },
+                        ..Block::default()
+                    };
+                    let mut service = Service {
+                        name: s.to_string(),
+                        policy: false,
+                        side: Side::default(),
+                    };
+                    if s_binds {
+                        service.side.needs.push("transfer-engine".to_string());
+                    }
+                    s_names.name(&mut service.side, BLOCK, PLATFORM);
+                    let mut policy = Service {
+                        name: p.to_string(),
+                        policy: true,
+                        side: Side::default(),
+                    };
+                    if p_binds {
+                        policy.side.needs.push("core-count".to_string());
+                    }
+                    p_names.name(&mut policy.side, BLOCK, PLATFORM);
+                    let using = |used: &[&str]| Side {
+                        uses: names(used),
+                        ..Side::default()
+                    };
+                    let (task_side, own) = match users {
+                        NamersUsed::ByTask => (using(&[s, p]), Side::default()),
+                        NamersUsed::ByOwnLevel => (Side::default(), using(&[s, p])),
+                        NamersUsed::PolicyByNothing => (using(&[s]), Side::default()),
+                    };
+                    cases.push(Case {
+                        label: format!(
+                            "{s} names {s_names:?}{}; {p} names {p_names:?}{}; {BLOCK} requires {}, composed {}; \
+                             {PLATFORM} requires {}; used {users:?}",
+                            if s_binds { ", bound to m.blk" } else { "" },
+                            if p_binds { ", bound to m.soc" } else { "" },
+                            if blk_requires { "output" } else { "nothing" },
+                            if composed { "by m.soc" } else { "by nothing" },
+                            if soc_requires { "output" } else { "nothing" },
+                        ),
+                        description: Description {
+                            blocks: vec![
+                                Block {
+                                    name: "m.out".to_string(),
+                                    offers: names(&[
+                                        "(observable-output true)",
+                                        "(reachable-at-privilege machine)",
+                                    ]),
+                                    ..Block::default()
+                                },
+                                block,
+                            ],
+                            platforms: vec![platform],
+                            services: vec![service, policy],
+                            tasks: vec![Task {
+                                side: task_side,
+                                ..Task::default()
+                            }],
+                            own,
+                            platform: PLATFORM.to_string(),
+                            ..Description::default()
+                        },
+                    });
+                }
+            }
+        }
+    }
+    cases
+}
+
+/// What the namer of the interrupts' named-hardware universe requires: nothing, an alarm it programs itself, an
+/// absolute deadline through an exclusive `deadline-over-delay` instance, the source, or the source beside either.
+const NAMER_REQUIRES: [&[&str]; 6] = [
+    &[],
+    &["relative-delay"],
+    &["absolute-deadline"],
+    &["interrupt-source"],
+    &["relative-delay", "interrupt-source"],
+    &["absolute-deadline", "interrupt-source"],
+];
+
+/// **Hardware a service or a policy names, in an interrupt** (§2.6, §2.7; round 17, R17-D1): the timer `m.tmr` and the
+/// source `m.src`, both composed by the platform `m.soc`; one namer, `a.x` or `z.x`, its text below the hardware's or
+/// above it, a service or a policy, requiring one choice of [`NAMER_REQUIRES`] and naming one choice of
+/// [`HardwareNamed`] — `m.tmr` for the block, `m.src` for the platform's place, so that it names the timer or the source
+/// by `uses` or by `needs`; and used by the task `t` or by the system's own level alone. So the named block is a
+/// provider bound to its namer directly, for a channel or for its interrupt, or through the instance it programs, or a
+/// provider of nothing and no node; and the edge from it, beside a binding's reason or not, joins a namer running in
+/// the named block's own interrupt.
+fn named_hardware_in_interrupts() -> Vec<Case> {
+    let mut cases = Vec::new();
+    for namer in ["a.x", "z.x"] {
+        for requires in NAMER_REQUIRES {
+            for named in HardwareNamed::ALL {
+                for policy in [false, true] {
+                    for by_task in [false, true] {
+                        let mut side = Side {
+                            needs: names(requires),
+                            ..Side::default()
+                        };
+                        named.name(&mut side, "m.tmr", "m.src");
+                        let users = Side {
+                            uses: names(&[namer]),
+                            ..Side::default()
+                        };
+                        let (task_side, own) = if by_task {
+                            (users, Side::default())
+                        } else {
+                            (Side::default(), users)
+                        };
+                        cases.push(Case {
+                            label: format!(
+                                "{} {namer} needs {requires:?}, names {}; used by {}",
+                                if policy { "policy" } else { "service" },
+                                match named {
+                                    HardwareNamed::Nothing => "nothing",
+                                    HardwareNamed::BlockByUses => "m.tmr by uses",
+                                    HardwareNamed::BlockByNeeds => "m.tmr by needs",
+                                    HardwareNamed::PlatformByUses => "m.src by uses",
+                                    HardwareNamed::PlatformByNeeds => "m.src by needs",
+                                },
+                                if by_task {
+                                    "t"
+                                } else {
+                                    "the system's own level"
+                                }
+                            ),
+                            description: Description {
+                                blocks: vec![
+                                    timer_block("m.tmr", 4, true),
+                                    source_block("m.src", Separation::Stated(20), ""),
+                                ],
+                                platforms: vec![Block {
+                                    name: "m.soc".to_string(),
+                                    offers: names(&[
+                                        "(core-count 1 tick)",
+                                        "(reachable-at-privilege machine)",
+                                    ]),
+                                    side: Side {
+                                        uses: names(&["m.tmr", "m.src"]),
+                                        ..Side::default()
+                                    },
+                                    ..Block::default()
+                                }],
+                                services: vec![Service {
+                                    name: namer.to_string(),
+                                    policy,
+                                    side,
+                                }],
+                                tasks: vec![Task {
+                                    side: task_side,
+                                    ..Task::default()
+                                }],
+                                own,
+                                platform: "m.soc".to_string(),
+                                ..Description::default()
+                            },
+                        });
+                    }
+                }
+            }
+        }
+    }
+    cases
+}
+
 // =====================================================================================================================
 // The reading: docs/decisions/decision_runtime-plan.md, §2 and §3, transcribed rule by rule
 // =====================================================================================================================
@@ -4426,17 +4706,27 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                 Some(time) => {
                     classes.insert("instance: an obliged fact with its bound");
                     let requester = requester.as_deref().expect("a bound's requester");
-                    if platforms.contains(requester) {
-                        classes.insert("instance: a platform's obliged bound");
+                    // The bound's requester, of every kind (round 17, R17-R6: "a service's bound within the arithmetic
+                    // generated and counted by no class").
+                    classes.insert(if platforms.contains(requester) {
+                        "instance: a platform's obliged bound"
                     } else if hardware.contains_key(requester) {
-                        classes.insert("instance: a block's obliged bound");
-                    } else if description
-                        .services
-                        .iter()
-                        .any(|s| s.name == requester && s.policy)
+                        "instance: a block's obliged bound"
+                    } else if let Some(service) =
+                        description.services.iter().find(|s| s.name == requester)
                     {
-                        classes.insert("instance: a policy's obliged bound");
-                    }
+                        if service.policy {
+                            "instance: a policy's obliged bound"
+                        } else {
+                            "instance: a service's obliged bound"
+                        }
+                    } else {
+                        // A task or the system's own level: the instance's expiry runs its code, which §1 refuses
+                        // before any plan ("an adapter instance with a cost running its requester's code (`expiry`)
+                        // whose requester it is").
+                        "unreachable: a task's or the system's own level's obliged bound in a plan, §1 refusing the \
+                         expiry it would receive"
+                    });
                     if time.d > u128::from(u64::MAX) {
                         classes.insert("exact: an obliged bound at the arithmetic's edge");
                     }
@@ -4873,16 +5163,20 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     lines.extend(contexts.into_iter().map(|(_, line)| line));
 
     // §2.7: the graph is `Joint::initialization`, model §8 rule 12: "An edge runs from a provider to each requester
-    // bound to it, whatever composes what, but to itself — composition alone giving none (`M4.1.16`) — and from a
-    // service or policy to each that names it by `uses` or `needs`; each carries its reason", between nodes — "the
-    // system's own level ... and its tasks ... are none". §2.7: "a block's or a platform's `uses` or `needs` giving
-    // none, hardware's names never a call (§2); composition, a `uses`, gives no edge either, while a binding keeps its
-    // edge whatever composes what, a composite and its part each bound to the other being one component" (round 16,
-    // R16-B2). Composition is a block's or a platform's `uses` alone (rule 1; rule 5: "names it through `uses`, at any
-    // depth through blocks and platforms, whose `uses` alone is composition"): it gives no edge of its own, and takes
-    // none a binding gives. An instance composes nothing, and "the initialization graph keeps its edges, its device
-    // before it and it before its requesters" (rule 15). A block's or a platform's names make no named edge; one naming
-    // anything but hardware is refused (§1).
+    // bound to it, whatever composes what, but to itself — composition alone giving none (`M4.1.16`) — and from each
+    // node a service or a policy names by `uses` or `needs`, a block or a platform included (`M4.1.17`), to that namer
+    // — a block's or a platform's own names giving none; each carries its reason", between nodes — "the system's own
+    // level ... and its tasks ... are none". §2.7: "naming each reason `Joint::initialization` gives, a binding's fact or
+    // `named` for a `uses` or `needs` — a block's or a platform's `uses` or `needs` giving none, hardware's names never a
+    // call (§2), while a service's or a policy's naming a block or a platform, a call, gives one (`M4.1.17`);
+    // composition, a `uses`, gives no edge either, while a binding keeps its edge whatever composes what, a composite
+    // and its part each bound to the other being one component" (round 16, R16-B2; round 17, R17-D1). Composition is a
+    // block's or a platform's `uses` alone (rule 1; rule 5: "names it through `uses`, at any depth through blocks and
+    // platforms, whose `uses` alone is composition"): it gives no edge of its own, and takes none a binding gives. An
+    // instance composes nothing, and "the initialization graph keeps its edges, its device before it and it before its
+    // requesters" (rule 15). A block's or a platform's names make no named edge; one naming anything but hardware is
+    // refused (§1). A block or a platform a service or a policy names is "each node" only where it is one (§2): a
+    // provider an active binding names, or one the system serves bound for requirements of its own.
     let composes = |from: &str| -> BTreeSet<String> {
         let mut reached = BTreeSet::new();
         let mut todo = vec![from.to_string()];
@@ -4959,23 +5253,122 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                 .insert(bind.fact.clone());
         }
     }
+    // The named edges from hardware, `(earlier, later)`: the block or the platform before the service or the policy
+    // naming it.
+    let mut named_hardware: BTreeSet<(String, String)> = BTreeSet::new();
     for namer in description
         .services
         .iter()
         .filter(|s| nodes.contains(&s.name))
     {
-        for named in namer.side.uses.iter().chain(&namer.side.needs) {
-            if declared_services.contains(named.as_str())
-                && nodes.contains(named)
-                && *named != namer.name
+        for (named, by_needs) in namer
+            .side
+            .uses
+            .iter()
+            .map(|n| (n, false))
+            .chain(namer.side.needs.iter().map(|n| (n, true)))
+        {
+            if !declared(named) || *named == namer.name {
+                continue;
+            }
+            if !hardware.contains_key(named) {
+                if nodes.contains(named) {
+                    graph
+                        .entry((named.clone(), namer.name.clone()))
+                        .or_default()
+                        .named = true;
+                    classes.insert("initialisation: a named edge");
+                }
+                continue;
+            }
+            if !nodes.contains(named) {
+                // Bound for nothing, and bound to by nothing: "a node only as a provider an active binding names" (§2).
+                classes.insert(
+                    "initialisation: hardware a service or a policy names, no node, no edge",
+                );
+                continue;
+            }
+            graph
+                .entry((named.clone(), namer.name.clone()))
+                .or_default()
+                .named = true;
+            named_hardware.insert((named.clone(), namer.name.clone()));
+            classes.insert(match (namer.policy, platforms.contains(named), by_needs) {
+                (false, false, false) => {
+                    "initialisation: a named edge from a block a service names by `uses`"
+                }
+                (false, false, true) => {
+                    "initialisation: a named edge from a block a service names by `needs`"
+                }
+                (false, true, false) => {
+                    "initialisation: a named edge from a platform a service names by `uses`"
+                }
+                (false, true, true) => {
+                    "initialisation: a named edge from a platform a service names by `needs`"
+                }
+                (true, false, false) => {
+                    "initialisation: a named edge from a block a policy names by `uses`"
+                }
+                (true, false, true) => {
+                    "initialisation: a named edge from a block a policy names by `needs`"
+                }
+                (true, true, false) => {
+                    "initialisation: a named edge from a platform a policy names by `uses`"
+                }
+                (true, true, true) => {
+                    "initialisation: a named edge from a platform a policy names by `needs`"
+                }
+            });
+            let provider = binds.iter().any(|b| &b.provider == named);
+            let requiring = binds.iter().any(|b| &b.requester == named);
+            classes.insert(match (provider, requiring) {
+                (true, false) => "initialisation: a named edge from hardware a provider alone",
+                (false, true) => {
+                    "initialisation: a named edge from hardware bound for its own requirements alone"
+                }
+                _ => {
+                    "initialisation: a named edge from hardware a provider and bound for its own requirements"
+                }
+            });
+            if !system_hardware.contains(named) {
+                classes.insert(
+                    "initialisation: a named edge from a block no hardware, served through its namer",
+                );
+            }
+            // Beside the path a binding gives through an instance: the device, then the instance, then the namer.
+            if binds.iter().any(|beneath| {
+                &beneath.provider == named
+                    && is_instance(&beneath.requester)
+                    && binds
+                        .iter()
+                        .any(|b| b.requester == namer.name && b.provider == beneath.requester)
+            }) {
+                classes.insert(
+                    "initialisation: a named edge from hardware an instance programs, beside the instance's path",
+                );
+            }
+            if routes
+                .values()
+                .any(|r| &r.provider == named && runs[&r.item].contains(&namer.name))
             {
-                graph
-                    .entry((named.clone(), namer.name.clone()))
-                    .or_default()
-                    .named = true;
-                classes.insert("initialisation: a named edge");
+                classes.insert(
+                    "initialisation: a named edge from hardware whose own interrupt runs its namer",
+                );
             }
         }
+    }
+    // A service or a policy the system does not serve is no node, so no edge reaches it, whatever it names.
+    if description.services.iter().any(|s| {
+        !nodes.contains(&s.name)
+            && s.side
+                .uses
+                .iter()
+                .chain(&s.side.needs)
+                .any(|n| hardware.contains_key(n.as_str()) && nodes.contains(n))
+    }) {
+        classes.insert(
+            "initialisation: hardware a node, named by a service or a policy the system does not serve, no edge",
+        );
     }
     // "one line for each ordered pair of nodes an edge joins, the node the edge orders earlier first ... naming each
     // reason", by "the earlier node's text, then the later's; within a line, `(binding …)` reasons by fact, then
@@ -5054,6 +5447,31 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         } else if earlier > later {
             classes.insert(
                 "initialisation: an edge across composition ordering two steps unlike their texts",
+            );
+        }
+    }
+    // Round 17 (R17-D1): a named edge from hardware on the line a binding's reason holds too, `(binding …)` reasons
+    // first, then `named` (§3); and one, `named` its one reason and the graph's one path between its two nodes, that
+    // orders the earlier, whose text is the greater, before the later.
+    for (earlier, later) in &named_hardware {
+        if !graph[&(earlier.clone(), later.clone())].facts.is_empty() {
+            classes
+                .insert("initialisation: a named edge from hardware beside a binding's, one line");
+            continue;
+        }
+        let mut reached = BTreeSet::new();
+        let mut todo = vec![earlier.clone()];
+        while let Some(at) = todo.pop() {
+            for (from, to) in graph.keys() {
+                if *from == at && !(from == earlier && to == later) && reached.insert(to.clone()) {
+                    todo.push(to.clone());
+                }
+            }
+        }
+        if !reached.contains(later) && earlier > later {
+            classes.insert(
+                "initialisation: a named edge from hardware, the one path between two steps, ordering them unlike \
+                 their texts",
             );
         }
     }
@@ -5197,13 +5615,27 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     }
     owe(system, "leaves-interrupt-hardware-alone", "application");
     // "each node | `contexts`, `no-wait`, `runtime-discipline` | `realization`" — the last the composite-inputs record's
-    // §2 fact for the code the realization generates for it (round 16, R16-D3).
+    // §2 fact for the code the realization generates for it (round 16, R16-D3); and "each node whose context line holds
+    // `job` | `call-cost`, the time one call of its code takes in a job; `masked-runs` and `masked-category`, its code's
+    // masked runs there and their bounds' evidence category | `realization`" — "A node in a job owes its masked runs as
+    // a task does" (round 17, R17-R2).
     for node in &nodes {
         owe(node, "contexts", "realization");
         owe(node, "no-wait", "realization");
         owe(node, "runtime-discipline", "realization");
         if in_a_job.contains(node) {
             owe(node, "call-cost", "realization");
+            owe(node, "masked-runs", "realization");
+            owe(node, "masked-category", "realization");
+            classes.insert(if is_instance(node) {
+                "owed: an instance in a job, its call cost and masked runs"
+            } else if hardware.contains_key(node) {
+                "owed: a block or a platform in a job, its call cost and masked runs"
+            } else {
+                "owed: a service or a policy in a job, its call cost and masked runs"
+            });
+        } else {
+            classes.insert("owed: a node in no job, neither its call cost nor masked runs");
         }
     }
     for instance in &instances {
@@ -7373,6 +7805,10 @@ fn two_services_with_adapter_instances() {
         (12_288, 12_032, 0, 256, 0),
         &[
             "instance: an obliged fact bare",
+            "owed: an instance in a job, its call cost and masked runs",
+            "owed: a service or a policy in a job, its call cost and masked runs",
+            "owed: a block or a platform in a job, its call cost and masked runs",
+            "owed: a node in no job, neither its call cost nor masked runs",
             "initialisation: a named edge",
             "initialisation: a component of several members",
             "context: an expiry running its requester",
@@ -7702,6 +8138,10 @@ fn a_block_a_service_names_served_though_no_hardware() {
         (140, 80, 0, 60, 0),
         &[
             "served: a block a service names, no hardware, bound for requirements of its own",
+            "initialisation: a named edge from a block a service names by `uses`",
+            "initialisation: a named edge from a block a service names by `needs`",
+            "initialisation: a named edge from a block no hardware, served through its namer",
+            "initialisation: hardware a service or a policy names, no node, no edge",
             "hardware: a block bound for requirements of its own",
             "hardware: an alarm it programs itself",
             "hardware: an expiry running its code",
@@ -8184,8 +8624,108 @@ fn every_requester_s_obliged_bound_named_past_the_arithmetic() {
             "instance: a platform's obliged bound",
             "instance: a block's obliged bound",
             "instance: a policy's obliged bound",
+            "instance: a service's obliged bound",
             "hardware: an expiry running its code",
             "context: an expiry running its requester",
+        ],
+    );
+}
+
+#[test]
+fn a_named_edge_from_hardware_a_service_or_a_policy_names() {
+    let cases = named_hardware();
+    // 2 namings; what the service and the policy each name, of 5; `m.blk` and `m.soc` each requiring an output or not;
+    // the service bound to `m.blk` or not, the policy to `m.soc` or not; `m.blk` composed or not; who uses the two, of
+    // 3.
+    assert_eq!(cases.len(), 2 * 5 * 5 * (1 << 5) * 3);
+    let tally = run("named hardware", &cases);
+    // Unresolved: the 1,200 where the service needs `m.blk`'s offer and no platform composes `m.blk` (2 namings, 25
+    // choices of what the two name, 8 of the other three, 3 of who uses them), each `missing-fact`: a block only a
+    // service or a policy names is no hardware, a requester bound to it is a conflict (model §8 rule 7), and nothing
+    // else offers `transfer-engine`. Every other lowered.
+    let bound_outside: BTreeSet<String> = cases
+        .iter()
+        .filter(|c| {
+            c.label.contains(", bound to m.blk;") && c.label.contains("composed by nothing")
+        })
+        .map(|c| c.label.clone())
+        .collect();
+    assert_eq!(bound_outside.len(), 1_200);
+    assert_eq!(
+        tally
+            .unresolved_systems
+            .keys()
+            .cloned()
+            .collect::<BTreeSet<_>>(),
+        bound_outside,
+        "the systems the search resolves no plan for are those bound to `m.blk` outside the hardware"
+    );
+    assert!(
+        tally
+            .unresolved_systems
+            .values()
+            .all(|verdict| verdict == "MissingFact"),
+        "the search's answer: {:?}",
+        tally.unresolved_systems
+    );
+    hold(
+        "named hardware",
+        &tally,
+        (4_800, 3_600, 0, 1_200, 0),
+        &[
+            "initialisation: a named edge from a block a service names by `uses`",
+            "initialisation: a named edge from a block a service names by `needs`",
+            "initialisation: a named edge from a platform a service names by `uses`",
+            "initialisation: a named edge from a platform a service names by `needs`",
+            "initialisation: a named edge from a block a policy names by `uses`",
+            "initialisation: a named edge from a block a policy names by `needs`",
+            "initialisation: a named edge from a platform a policy names by `uses`",
+            "initialisation: a named edge from a platform a policy names by `needs`",
+            "initialisation: a named edge from hardware a provider alone",
+            "initialisation: a named edge from hardware bound for its own requirements alone",
+            "initialisation: a named edge from hardware a provider and bound for its own requirements",
+            "initialisation: a named edge from a block no hardware, served through its namer",
+            "initialisation: a named edge from hardware beside a binding's, one line",
+            "initialisation: a named edge from hardware, the one path between two steps, ordering them unlike their \
+             texts",
+            "initialisation: hardware a service or a policy names, no node, no edge",
+            "initialisation: hardware a node, named by a service or a policy the system does not serve, no edge",
+            "initialisation: a composite bound to its part, its edge kept",
+            "owed: a service or a policy in a job, its call cost and masked runs",
+            "owed: a block or a platform in a job, its call cost and masked runs",
+            "owed: a node in no job, neither its call cost nor masked runs",
+            "served: a block a service names, no hardware, bound for requirements of its own",
+        ],
+    );
+}
+
+#[test]
+fn a_named_edge_from_hardware_whose_interrupt_runs_its_namer() {
+    let cases = named_hardware_in_interrupts();
+    // 2 namings; what the namer requires, of 6, and names, of 5; a service or a policy; used by `t` or the system's own
+    // level.
+    assert_eq!(cases.len(), 2 * 6 * 5 * 2 * 2);
+    let tally = run("named hardware in interrupts", &cases);
+    hold(
+        "named hardware in interrupts",
+        &tally,
+        (240, 240, 0, 0, 0),
+        &[
+            "initialisation: a named edge from a block a service names by `uses`",
+            "initialisation: a named edge from a block a service names by `needs`",
+            "initialisation: a named edge from a block a policy names by `uses`",
+            "initialisation: a named edge from a block a policy names by `needs`",
+            "initialisation: a named edge from hardware a provider alone",
+            "initialisation: a named edge from hardware beside a binding's, one line",
+            "initialisation: a named edge from hardware an instance programs, beside the instance's path",
+            "initialisation: a named edge from hardware whose own interrupt runs its namer",
+            "initialisation: hardware a service or a policy names, no node, no edge",
+            "context: an expiry running its requester",
+            "multiplex: multiplexed by a job and an interrupt",
+            "owed: a service or a policy in a job, its call cost and masked runs",
+            "owed: a block or a platform in a job, its call cost and masked runs",
+            "owed: an instance in a job, its call cost and masked runs",
+            "owed: a node in no job, neither its call cost nor masked runs",
         ],
     );
 }

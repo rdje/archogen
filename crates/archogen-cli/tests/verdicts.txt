@@ -81,6 +81,8 @@
 0 - crates/archogen-plan/tests/corpus/policy-bound-past.eadl
 0 - crates/archogen-plan/tests/corpus/policy-expiry.eadl
 0 - crates/archogen-plan/tests/corpus/policy-handler.eadl
+0 - crates/archogen-plan/tests/corpus/policy-needs-block-only.eadl
+0 - crates/archogen-plan/tests/corpus/policy-needs-block-renamed.eadl
 0 - crates/archogen-plan/tests/corpus/policy-user.eadl
 0 - crates/archogen-plan/tests/corpus/provider-calls-back-on-own-route.eadl
 0 - crates/archogen-plan/tests/corpus/rank-classes.eadl
@@ -92,10 +94,13 @@
 0 - crates/archogen-plan/tests/corpus/receivers-two-timers.eadl
 0 - crates/archogen-plan/tests/corpus/region-hosted.eadl
 0 - crates/archogen-plan/tests/corpus/served-block-not-hardware.eadl
+0 - crates/archogen-plan/tests/corpus/served-block-renamed.eadl
 0 - crates/archogen-plan/tests/corpus/service-alarm-two-tasks.eadl
 0 - crates/archogen-plan/tests/corpus/service-on-route-bound-otherwise.eadl
 0 - crates/archogen-plan/tests/corpus/service-only-composed.eadl
+0 - crates/archogen-plan/tests/corpus/service-uses-block-only.eadl
 0 - crates/archogen-plan/tests/corpus/shapes.eadl
+0 - crates/archogen-plan/tests/corpus/shared-across-contexts.eadl
 0 - crates/archogen-plan/tests/corpus/shared-ext.eadl
 0 - crates/archogen-plan/tests/corpus/slash-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/slash-control.eadl

@@ -5,7 +5,8 @@
 //! ⭐ **Built ahead of the record's acceptance, as its executable form** (`docs/decisions/decision_executable-design-reviews.md`):
 //! a direct transcription, rule by rule, each rule citing its section of the record, optimised for nothing. A review
 //! round reads the record beside this code and runs the corpus `tests/corpus/`, in which every probe system of the
-//! record's review is a fixture with the text or the refusal the record gives it, and the record's own worked texts
+//! record's review that the lowering decides is a fixture with the outcome it gives, judged against the record, and the
+//! record's own worked texts
 //! (§3) are held equal to what this code writes (`tests/worked.rs`). A question a machine can settle — whether a rule
 //! applies, what text it writes — is then settled by one.
 //!
@@ -1236,6 +1237,9 @@ pub fn lower(
         owe(&mut owed, &text, "runtime-discipline", "realization");
         if contexts.get(n).is_some_and(|c| c.contains("job")) {
             owe(&mut owed, &text, "call-cost", "realization");
+            // Its code's masked runs in a job and their bounds' evidence category, as a task's (§2.10, R17-R2).
+            owe(&mut owed, &text, "masked-runs", "realization");
+            owe(&mut owed, &text, "masked-category", "realization");
         }
     }
     owed.sort();

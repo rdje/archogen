@@ -80,6 +80,8 @@ agree crates/archogen-plan/tests/corpus/policy-alarm.eadl
 agree crates/archogen-plan/tests/corpus/policy-bound-past.eadl
 agree crates/archogen-plan/tests/corpus/policy-expiry.eadl
 agree crates/archogen-plan/tests/corpus/policy-handler.eadl
+agree crates/archogen-plan/tests/corpus/policy-needs-block-only.eadl
+agree crates/archogen-plan/tests/corpus/policy-needs-block-renamed.eadl
 agree crates/archogen-plan/tests/corpus/policy-user.eadl
 agree crates/archogen-plan/tests/corpus/provider-calls-back-on-own-route.eadl
 agree crates/archogen-plan/tests/corpus/rank-classes.eadl
@@ -91,10 +93,13 @@ agree crates/archogen-plan/tests/corpus/receivers-two-alarms.eadl
 agree crates/archogen-plan/tests/corpus/receivers-two-timers.eadl
 agree crates/archogen-plan/tests/corpus/region-hosted.eadl
 agree crates/archogen-plan/tests/corpus/served-block-not-hardware.eadl
+agree crates/archogen-plan/tests/corpus/served-block-renamed.eadl
 agree crates/archogen-plan/tests/corpus/service-alarm-two-tasks.eadl
 agree crates/archogen-plan/tests/corpus/service-on-route-bound-otherwise.eadl
 agree crates/archogen-plan/tests/corpus/service-only-composed.eadl
+agree crates/archogen-plan/tests/corpus/service-uses-block-only.eadl
 agree crates/archogen-plan/tests/corpus/shapes.eadl
+agree crates/archogen-plan/tests/corpus/shared-across-contexts.eadl
 agree crates/archogen-plan/tests/corpus/shared-ext.eadl
 agree crates/archogen-plan/tests/corpus/slash-alarm.eadl
 agree crates/archogen-plan/tests/corpus/slash-control.eadl

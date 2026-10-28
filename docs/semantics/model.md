@@ -356,10 +356,11 @@ and 14, an adapter's instance among them (rule 15) — as its check (5), written
    the system serves — closed over bindings, so an adapter's or a block's own bindings count — and the services and
    policies it serves; the system's own level, which initialises nothing, and its tasks, which start after all
    initialisation, are none. An edge runs from a provider to each requester bound to it, whatever composes what, but to
-   itself — composition alone giving none (`M4.1.16`) — and from a service or policy to each that names it by `uses` or
-   `needs`; each carries its reason. Nothing is refused: initialisation runs masked, before every release, so a cycle
-   establishes no infeasibility, and each strongly connected component is reported as one unit the engine initialises
-   together, in two phases where it can — whether this profile's engine can is `M4.1`'s.
+   itself — composition alone giving none (`M4.1.16`) — and from each node a service or a policy names by `uses` or
+   `needs`, a block or a platform included (`M4.1.17`), to that namer — a block's or a platform's own names giving none;
+   each carries its reason. Nothing is refused: initialisation runs masked, before every release, so a cycle establishes
+   no infeasibility, and each strongly connected component is reported as one unit the engine initialises together, in
+   two phases where it can — whether this profile's engine can is `M4.1`'s.
 13. **One function, one provider** (`M3.3.6`; `SR-H14`). The vocabulary names the function each fact describes, the
    operations of one device that are only valid together (§7 rule 1). One requester's bindings for the facts of one
    function are to one provider: a service reading time reads one counter. Where an assignment binds them to several,

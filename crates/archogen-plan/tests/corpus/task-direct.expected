@@ -26,6 +26,8 @@
 (owed (task td a) task-facts (by application))
 (owed console.uart call-cost (by realization))
 (owed console.uart contexts (by realization))
+(owed console.uart masked-category (by realization))
+(owed console.uart masked-runs (by realization))
 (owed console.uart no-wait (by realization))
 (owed console.uart runtime-discipline (by realization))
 (owed td leaves-interrupt-hardware-alone (by application))

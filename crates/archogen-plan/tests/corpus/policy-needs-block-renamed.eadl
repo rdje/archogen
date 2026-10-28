@@ -1,0 +1,18 @@
+(eadl-version eadl/1)
+; `policy-needs-block-only` with the block renamed: the order holds, whatever the names (§2.7; round 17, D1).
+(defblock z.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock dbg
+  (offers (debug-port true) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses z.uart dbg)))
+(defservice console.write
+  (requires (needs observable-output)))
+(defpolicy a.log
+  (needs z.uart)
+  (requires (needs debug-port)))
+(defsystem pnb
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses a.log))
+  (requires (uses console.write))
+  (platform (uses host.p)))
