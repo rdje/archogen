@@ -1009,6 +1009,9 @@ if mode == "census":
         census(tree)
     except (Unreadable, OSError) as e:
         sys.exit("task-history: %s" % e)
+    except Exception as e:
+        # Any other failure of the census's own run is named, never a traceback (PROGRAM.73).
+        sys.exit("task-history: the census stopped on %s: %s" % (type(e).__name__, e))
     sys.exit(0)
 try:
     if mode == "seal":
@@ -1032,6 +1035,11 @@ try:
     checked, nrows, nstubs = gate()
 except (Unreadable, OSError) as e:
     note(str(e))
+    checked, nrows, nstubs = 0, 0, 0
+except Exception as e:
+    # Any other failure of the gate's own run — git printing bytes that are not UTF-8 among them — is a breach the gate
+    # names, never a traceback; a seal stopped so has already rolled back and said so (PROGRAM.73).
+    note("the gate stopped on %s: %s" % (type(e).__name__, e))
     checked, nrows, nstubs = 0, 0, 0
 for msg in fails:
     print("TASK-HISTORY: " + msg, file=sys.stderr)
@@ -1740,8 +1748,8 @@ PY
   restore
   # A stop during the seal is held by the signal mask until the seal is done — proven and kept, or refused and rolled
   # back — and then takes effect with its own exit code, the seal whole either way (review R13). Mid-proof, a fake git
-  # sends the interrupt; git output that is not UTF-8 is an exception instead, rolled back and ending in its traceback
-  # (review R9-2).
+  # sends the interrupt; git output that is not UTF-8 is an exception instead, rolled back and named as a breach, never
+  # a traceback (review R9-2, PROGRAM.73).
   proven() { [ -f "$work/docs/task-history/Q/Q.1.md" ] && (cd "$work" && bash "$SELF" >/dev/null 2>&1); }
   fake="$SCRATCH/fakebin"; rm -rf "$fake"; mkdir -p "$fake"
   for how in interrupt undecodable; do
@@ -1757,15 +1765,28 @@ PY
         echo "SELF-TEST: an interrupt mid-proof — rc $rc, or the seal not finished and proven:" >&2
         printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2
       fi
-    elif [ "$rc" -ne 0 ] && grep -qF UnicodeDecodeError <<< "$out" && ! grep -qE '^task-history: [^ ]+ — sealed ' <<< "$out" && clean &&
+    elif [ "$rc" -eq 1 ] && grep -qF "TASK-HISTORY: the gate stopped on UnicodeDecodeError" <<< "$out" &&
+         ! grep -q '^Traceback' <<< "$out" && ! grep -qE '^task-history: [^ ]+ — sealed ' <<< "$out" && clean &&
          [ ! -d "$work/docs/task-history/Q" ]; then
-      ok=$((ok + 1)); echo "  ✅ git output that is not UTF-8, mid-proof, rolls the seal back"
+      ok=$((ok + 1)); echo "  ✅ git output that is not UTF-8, mid-proof, rolls the seal back and is a named breach"
     else
       echo "SELF-TEST: git output that is not UTF-8 mid-proof — rc $rc, or its writes left behind:" >&2
       printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
     fi
     restore
   done
+  # The same output in a plain run of the gate: a breach it names, exit 1, never a traceback (PROGRAM.73).
+  act='printf "\\377\\n"; exit 0'
+  printf '#!/bin/sh\nfor a in "$@"; do [ "$a" = "--is-shallow-repository" ] && { %s; }; done\nexec "%s" "$@"\n' "$act" "$(command -v git)" > "$fake/git"
+  chmod +x "$fake/git"
+  arms=$((arms + 1))
+  out="$(cd "$work" && PATH="$fake:$PATH" bash "$SELF" 2>&1)"; rc=$?
+  if [ "$rc" -eq 1 ] && grep -qF "TASK-HISTORY: the gate stopped on UnicodeDecodeError" <<< "$out" && ! grep -q '^Traceback' <<< "$out"; then
+    ok=$((ok + 1)); echo "  ✅ git output that is not UTF-8, in a plain run, is a breach the gate names"
+  else
+    echo "SELF-TEST: git output that is not UTF-8 in a plain run — rc $rc, or no named breach:" >&2
+    printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
+  fi
   rm -rf "$fake"
   # A stop just after or before a write, from a hook on the interpreter's path: held until the seal is done.
   hook="$SCRATCH/hook"; rm -rf "$hook"; mkdir -p "$hook"
