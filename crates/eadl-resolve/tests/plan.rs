@@ -65,8 +65,16 @@ fn program_of(path: &Path) -> Program {
 
 /// Every tracked description, the vendors' reproduction inputs and the sealed set's place apart.
 fn tracked() -> Vec<PathBuf> {
+    // The sealed set is excluded by the listing itself, never by a filter after it (`docs/evaluation/README.md`).
     let output = Command::new("git")
-        .args(["ls-files", "-z", "*.eadl"])
+        .args([
+            "ls-files",
+            "-z",
+            "--",
+            "*.eadl",
+            ":!docs/evaluation",
+            ":!docs/feedback",
+        ])
         .current_dir(root())
         .output()
         .expect("git runs");
@@ -74,11 +82,7 @@ fn tracked() -> Vec<PathBuf> {
     String::from_utf8(output.stdout)
         .expect("UTF-8 paths")
         .split('\0')
-        .filter(|path| {
-            !path.is_empty()
-                && !path.starts_with("docs/feedback/")
-                && !path.starts_with("docs/evaluation/")
-        })
+        .filter(|path| !path.is_empty())
         .map(|path| root().join(path))
         .collect()
 }
@@ -722,4 +726,37 @@ fn a_record_rebuilds_only_the_instances_its_system_s_requesters_are_bound_to() {
     let (accepted, rebuilt) = judged_record(misnamed, &own);
     assert!(accepted, "{own}");
     assert_eq!(rebuilt, Ok(()), "{own}");
+}
+
+#[test]
+fn a_record_rebuilds_only_where_each_provider_meets_its_requirements() {
+    // Leaf `M4.1.12`: the search binds a provider only where the relation finds it meeting the pair, and the checker
+    // refuses one that does not (`plan-unsatisfied`). The rebuild once accepted the swapped record below, and the
+    // lowering wrote a source at the console.
+    let description = "(eadl-version eadl/1)
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock dev.e (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart dev.e)))
+(defservice console.write (requires (needs observable-output)))
+(defservice evt (requires (needs interrupt-source)))
+(defsystem rel
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt console.write))
+  (platform (uses host.p)))
+";
+    let header = "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system rel)\n(program \"PROGRAM\")\n(adapters adapters/1)\n";
+    let swapped = format!(
+        "{header}(bind console.write observable-output dev.e)\n(bind evt interrupt-source console.uart)\n"
+    );
+    let (accepted, rebuilt) = judged_record(description, &swapped);
+    assert!(!accepted, "{swapped}");
+    let why = rebuilt.expect_err(&swapped);
+    assert!(why.contains("to `dev.e`, which does not meet it"), "{why}");
+    let right = format!(
+        "{header}(bind console.write observable-output console.uart)\n(bind evt interrupt-source dev.e)\n"
+    );
+    let (accepted, rebuilt) = judged_record(description, &right);
+    assert!(accepted, "{right}");
+    assert_eq!(rebuilt, Ok(()), "{right}");
 }

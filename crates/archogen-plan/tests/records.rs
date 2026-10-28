@@ -280,3 +280,28 @@ fn two_handlers_sharing_a_channel_multiplex_it() {
         "{plan}"
     );
 }
+
+#[test]
+fn a_record_binding_a_provider_that_does_not_meet_the_requirement_does_not_rebuild() {
+    // Leaf `M4.1.12`: the lowering once wrote a source at the console for the swapped record.
+    let description = "(eadl-version eadl/1)
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock dev.e (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart dev.e)))
+(defservice console.write (requires (needs observable-output)))
+(defservice evt (requires (needs interrupt-source)))
+(defsystem rel
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt console.write))
+  (platform (uses host.p)))
+";
+    let (code, message) = refused(
+        description,
+        "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system rel)\n(program \"PROGRAM\")\n\
+         (adapters adapters/1)\n(bind console.write observable-output dev.e)\n(bind evt interrupt-source console.uart)\n",
+    );
+    assert_eq!(code, "tool-failure");
+    assert!(message.contains("does not rebuild"), "{message}");
+    assert!(message.contains("which does not meet it"), "{message}");
+}

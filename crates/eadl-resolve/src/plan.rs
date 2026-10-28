@@ -37,6 +37,7 @@ use eadl_front::{Form, SourceMap};
 use crate::adapter::{self, Catalog, Instance as AdapterInstance};
 use crate::joint::{self, Binding, Joint, Map, Requester, System};
 use crate::offer::{self, Provider};
+use crate::relation::{self, Verdict};
 use crate::requirement::Requirement;
 use crate::search::{Resolution, Who};
 use crate::vocabulary::Vocabulary;
@@ -412,13 +413,15 @@ fn instance_parts(text: &str) -> Option<(&str, &str, Option<&str>)> {
 /// kind's `beneath`. A record that binds what the description does not require, or leaves a requirement of the system's
 /// unbound, does not rebuild; nor does one that binds a requester to an exclusive instance serving another, or names an
 /// instance no requester the system serves is bound to (`docs/specs/adapters/decision_engine-adapters.md` §4 and §5,
-/// leaf `M4.1.10`).
+/// leaf `M4.1.10`); nor one binding a requirement to a provider the relation does not find meeting it, as the search
+/// never does (relation record §3, leaf `M4.1.12`).
 ///
 /// # Errors
 ///
 /// A system, requester, provider, kind or requirement the record names and the description or the catalog does not
 /// hold; a requirement bound twice or left unbound; an exclusive instance bound by a requester it does not serve, or an
-/// instance nothing the system serves is bound to; a declaration the joint rules do not read.
+/// instance nothing the system serves is bound to; a requirement its provider does not meet; a declaration the joint
+/// rules do not read.
 pub fn rebuild<'v>(
     record: &Record,
     declarations: &[Form],
@@ -608,6 +611,25 @@ pub fn rebuild<'v>(
                 "the record binds `{}`'s `{}`, which it does not require",
                 bind.requester, bind.fact
             )));
+        }
+        // The relation meets every requirement at its provider, as the search binds only a provider whose answer is
+        // satisfied (relation record §3, leaf `M4.1.12`).
+        let at = instance_of(&provider).map(|i| &i.provider).or_else(|| {
+            providers
+                .iter()
+                .map(|(p, _)| p)
+                .find(|p| p.name == provider)
+        });
+        if let Some(at) = at {
+            for requirement in &written {
+                let verdict = relation::judge(at, requirement, vocabulary);
+                if !matches!(verdict, Verdict::Satisfied | Verdict::Statement) {
+                    return Err(Unread(format!(
+                        "the record binds `{}`'s `{}` to `{}`, which does not meet it: {verdict:?}",
+                        bind.requester, bind.fact, bind.provider
+                    )));
+                }
+            }
         }
         bindings.extend(written.into_iter().map(|requirement| Binding {
             requester: requester.clone(),
