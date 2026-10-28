@@ -71,8 +71,9 @@ kernel or platform figure. `C_s` stays the caller's for a service whose record s
 (that record's §6). The enabled set and interrupt
 priorities are the plan's. Condition 8 is each catalog cost's `holds-under-preemption`, plus the application's
 declaration for its own figures. The platform fact that sections mask every interrupt is the conjunction of the catalog's
-fact for the kernel's sections and a fourth task fact, that no task masks other than through the runtime API
-(`decision_catalog-records.md` §12); `M2.7.5` composes them. What each input **means** is unchanged, and so was the model, then `/1`. A conclusion
+fact for the kernel's sections and the application's declaration, for each task, that it masks only through the
+runtime API (`decision_catalog-records.md` §12). That declaration is a conjunct of the platform fact, not a fourth
+of the three task facts §1 lists and condition 4 names (`M2.27`, `2026-10-28`). `M2.7.5` composes the two. What each input **means** is unchanged, and so was the model, then `/1`. A conclusion
 names every input the caller supplied, whatever its category, and none of them can back a production claim
 (`decision_catalog-records.md` §7). `M2.7.5` implements that naming.
 
