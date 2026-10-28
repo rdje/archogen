@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-27`
 - **Status:** `active` — the design for leaf `M4.1`, under independent review (`M4.1.1`) before any code relies on it;
-  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 16 answered; from round 7 it is
+  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 17 answered; from round 7 it is
   reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
 - **Owner / source:** leaf `M4.1.1` (`docs/tasks/M4.md`); `ROADMAP.md` §4.2's `archogen-plan`, §7.3, §7.5, §7.6, §10.1
   step 5 and §10.3; model §8 rules 4, 5, 7, 8, 10, 12 and 15; the obligations `M3.3.8`, `M3.5`, `M3.5.5.7.3` and
@@ -783,13 +783,13 @@ language's check refuses is no input (§1), and its probe is held at that check'
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with
 a reader of its own, held to the same goldens, as `/2` has two readers: the generator's reader is generator code, which
-the scheduling checker must not share (`RTP-H4`). Each golden is lowered from frozen inputs, the crate's own
-fixtures and never another suite's file, its result record a fixed text, and it is never rewritten. **The rules of §2
-are part of the format**: a change to any of them, an order or the topological choice among them, is a new format
-number. So is a change to what §2 reads, the joint rules of model §8 (rules 4, 7, 8, 12 and 15 among them), the
-vocabulary or the adapter catalog, that moves a plan for the same inputs. `docs/book/src/versions.md` registers the
-format (`VERSION-REGISTER`). Lowering the same inputs twice writes the same bytes (M4's "Repeated generation produces
-identical canonical plans").
+the scheduling checker must not share (`RTP-H4`). Each golden is lowered from frozen inputs, the crate's own fixtures
+and never another suite's file, its result record a fixed text, and it is never rewritten. **The rules of §2 are part of
+the format**: a change to any of them, an order or the topological choice among them, is a new format number, and so is
+a change to what §2 reads, the joint rules of model §8 (rules 4, 7, 8, 12 and 15 among them), the vocabulary or the
+adapter catalog, that moves a plan for the same inputs — from this record's acceptance (`M4.1.1`); until then `/1` moves
+with its review, each move in its round's answer. `docs/book/src/versions.md` registers the format (`VERSION-REGISTER`).
+Lowering the same inputs twice writes the same bytes (M4's "Repeated generation produces identical canonical plans").
 
 ### 4. What `M4.1` builds, and what it hands on
 
@@ -800,13 +800,14 @@ identical canonical plans").
   holds it, but for its own timer route — at the provider whose channel it takes, or that the instance whose channel it
   takes programs — where nothing else that route runs reaches it, never another system's; rule 7 still resolves system
   by system.
-  Rule 8's enabled set is §2.5's. Rule 12 records this engine's answer, one phase, and counts among its nodes a block or
-  a platform the system serves that is bound for requirements of its own (§2). Rule 10's are below. The adapters
-  record's §9 reads "each cost a cost on the route of the provider it programs", and it states, for each cost, whether
-  the interrupt runs the requester's code (§2.6). The engine API's `crates/archogen-api/src/resolve.rs` and
-  `docs/book/src/engine-api.md`, which read "a cost the scheduling analysis charges as a source", read so too. The book
-  follows, with a migration note for any verdict that moves. Rule 10's amendments keep the search, the checker and any
-  later layout agreed over a description:
+  Rule 8's enabled set is §2.5's. Rule 12 records this engine's answer, one phase, counts among its nodes a block or a
+  platform the system serves that is bound for requirements of its own (§2), keeps a binding's edge across composition
+  (done by `M4.1.16`), and gives an edge from a block or a platform a service or a policy names to that namer
+  (`M4.1.17`). Rule 10's are below. The adapters record's §9 reads "each cost a cost on the route of the provider it
+  programs", and it states, for each cost, whether the interrupt runs the requester's code (§2.6). The engine API's
+  `crates/archogen-api/src/resolve.rs` and `docs/book/src/engine-api.md`, which read "a cost the scheduling analysis
+  charges as a source", read so too. The book follows, with a migration note for any verdict that moves. Rule 10's
+  amendments keep the search, the checker and any later layout agreed over a description:
   - **placement memory with no size** is `missing-fact`, naming it, since nothing can be laid out in it;
   - **a hole of no size** whose base lies inside placement memory (`M3.5.5.7.3`'s obligation) is taken to reach the
     region's end. That is the conservative extent, the largest the region allows. If it leaves no free byte, the system
@@ -887,6 +888,7 @@ identical canonical plans").
 | `RTP-H17` | `M1.46` | The description check refuses `invalid-description` a `uses` or `needs` naming a system, naming both. |
 | `RTP-H18` | `M1.47` | Model §8 rules 1 and 7 state that a block's or a platform's `uses` and `needs` name only hardware, and the description check refuses `invalid-description` an operand that is neither a block nor a platform, naming both. |
 | `RTP-H19` | `M1.44` | A description states a sporadic task's release source and whether every arrival releases the task, and the runtime plan reads that statement in place of its inference from the routes the task reaches. |
+| `RTP-H20` | `M3.4` | The search reads a system's side whole, its own level's constraints with its tasks', as model §7 rule 4 and §8 rule 1 read it, and refuses `invalid-description` constraints on one fact that no value satisfies together across them, so that the configuration checker refuses no record the search writes for that reason and the runtime plan's bounded checker's class of such records empties. |
 
 `M4.12` is filed with this record, for the application inputs, and `M4.4.1` for the correspondence.
 

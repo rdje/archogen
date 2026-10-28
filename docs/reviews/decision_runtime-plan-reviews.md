@@ -572,6 +572,33 @@ Round 15's answers: R15-D2 partly (R16-D4); the rest held.
 `git diff HEAD --stat` over `docs/` without excluding `docs/evaluation`; it compared the working tree with `HEAD`, whose
 tree holds none of the sealed set's text, read no history and printed four other files: no case read.
 
+## Round 17 — `2026-10-28`: not acceptable, 9 findings
+
+One defect, the fewest yet, and the code faithful but where it transcribes rule 12 against §2's reaching. Every test
+green, the bounded totals true — 116,238 systems, 115,276 records judged, the 136 the checker refuses held to `M3.4` —
+and all nineteen hand-offs quoted word for word. 1 defect, 8 remarks and 3 better decisions: `M4.1.16`'s reasoning
+carried no further than bindings, generated code's masked runs owed nowhere, and an obligation that lives in prose.
+
+**Fence.** No breach. The reviewer prefixed every cargo run with the repository's scratch, and not several reads, the
+heredocs that wrote its probes and its `git show`; those may have written temporary files to the session's default
+temporary directory, off the repository's volume (`docs/decisions/decision_scratch-on-the-repository-volume.md`).
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R17-D1 | defect | a service or a policy naming a block or a platform gets no initialisation edge, though §2 makes that name a call: the order follows the names | An edge from the named hardware to its namer, `M3.3.7`'s reading of a call (`M4.1.17`), landing with the code; `M4.1.2` in the rule |
+| R17-R1 | remark | `lib.rs`'s header, `Cargo.toml` and `M4.1.4` still say every probe is a fixture "with the text the record gives it" | Every probe the lowering decides, with the outcome it gives (`M4.1.4`) |
+| R17-R2 | remark | generated node code in a job owes its call cost and not its masked runs, which the variant's condition 4 and the composite-inputs record §7 read | Owed by each such node, by the realization, landing with the code; `M4.1.6` designs their term |
+| R17-R3 | remark | §3's new-format-number rule against round 16's 94 moved outcomes | It binds from acceptance; until then `/1` moves with its review |
+| R17-R4 | remark | the 136 records' obligation lives in prose | `RTP-H20` to `M3.4` |
+| R17-R5 | remark | the inferred trigger reaches through a provider's own requirements | `M1.44`'s, its issue naming the case |
+| R17-R6 | remark | a service's bound within the arithmetic generated and counted by no class | `M4.1.13` reopened |
+| R17-R7 | remark | §4 `.2`'s rule 12 silent on the edge across composition | Said, with `M4.1.17`'s |
+| R17-R8 | remark | the result record's intake, the provenance and the plan's reader unbuilt | As declared |
+
+The better decisions are D1's and R2's fixes, taken, and R5's, `M1.44`'s.
+
+Round 16's answers: R16-R4 partly (R17-R1); R16-B2's reasoning not carried to named edges (R17-D1); the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
