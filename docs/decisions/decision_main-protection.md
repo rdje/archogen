@@ -15,8 +15,8 @@
 
 In plain words: on GitHub, `main` changes only when a pull request is merged, after the required checks pass and the
 director approves it. The agents keep committing on their local `main` as before. When a batch is due, they push it to
-a branch of its own, open one pull request with an independent agent's review of it, and GitHub merges it once the
-director has approved. Nobody pushes to `main` directly, the director included.
+a branch of its own and open one pull request with an independent agent's review of it. The director approves it
+and merges it in GitHub's web interface. Nobody pushes to `main` directly, the director included.
 
 ### 1. What is applied, exactly
 
@@ -137,19 +137,39 @@ Done `2026-10-28` (`M2.7.6.6.2`), each step read back:
 ### 3. The batch workflow
 
 1. The agents commit on local `main`, under `COMMIT.md`'s workflow and every hook, as before.
-2. A batch is due at the push cadence (`bash scripts/push_cadence.sh` at its ruled threshold), or to restore failing
-   CI, as the cadence ruling already says, and the director is told first.
-3. A fresh agent context reviews the batch's diff and writes a summary of what changed and what it found.
-4. `bash scripts/open_batch.sh` (`M2.7.6.6.4`):
-   - pushes local `main` to `batch/<YYYY-MM-DD>-<n>` as the machine account;
-   - opens one pull request into `main`, its body the summary and the commit list;
-   - turns on auto-merge with a merge commit.
-5. CI runs the required checks on the merge result. The director reads the summary and the diff, and approves.
-6. GitHub makes the merge commit, signed with its own key, and deletes the branch.
-7. The agents fast-forward local `main` to `origin/main` (`git merge --ff-only origin/main`). A merge commit has
-   their batch as its second parent, so local `main` never diverges.
+2. A batch is due at the push cadence (`bash scripts/push_cadence.sh` exits `3`), or to restore failing CI, as the
+   cadence ruling already says, and the director is told first.
+3. A fresh agent context reviews the batch, `origin/main..main`, and writes a summary of what changed and what it
+   found. The summary names the batch's tip by its full hash, so it is bound to the tree it read.
+4. `bash scripts/open_batch.sh open --summary <file>` (`M2.7.6.6.4`):
+   - refuses unless local `main` is clean, holds `origin/main` and is ahead of it, the batch is due, and the summary
+     names the tip. Below the cadence it opens only with `--restore-ci <url>`, naming the failing run;
+   - one batch is open at a time, so it refuses when a `batch/` branch is already on `agent`;
+   - pushes the tip to `batch/<YYYY-MM-DD>-<the tip's first 8 hex digits>` on the remote `agent`, as the machine
+     account. GitHub deletes a branch once it merges, so a number counted from the branches would repeat;
+   - opens one pull request into `main` with the machine account's token, its body the summary, the commit list and
+     the director's step.
+
+   When the batch's checks fail, the fix is committed on local `main` and `bash scripts/open_batch.sh update
+   --summary <file>` adds it to the open batch: a fast-forward push to its branch, never a force, and a comment
+   listing the commits added. The push dismisses an approval already given, and the director approves again.
+5. CI runs the required checks on the merge result. The director reads the summary and the diff, approves, and
+   merges with **Create a merge commit** in the web interface. "GitHub will automatically use GPG to sign commits you
+   make using the web interface" ([About commit signature
+   verification](../book/src/ledger.md#github-commit-signing)), so the merge commit is the hosting's, signed with
+   its key. GitHub then deletes the branch.
+6. `bash scripts/open_batch.sh sync` brings local `main` back in step:
+   - it fast-forwards to `origin/main` when local `main` has not moved since the batch was opened;
+   - otherwise it merges `origin/main` into local `main`. It does so only if GitHub's merge changed no file of the
+     batch, and the result leaves local `main`'s files as they are. The merge changes no file, so its subject names
+     no work unit: it begins `BATCH-LANDED`. The next batch then holds `origin/main`, as "branches up to date"
+     requires.
 
 The cadence keeps its meaning: the number of commits local `main` is ahead of `origin/main`.
+
+**Auto-merge stays off** (`allow_auto_merge` reads `false`). The page above documents GitHub signing what is made in
+the web interface, and says nothing of a merge auto-merge makes. Turning auto-merge on would change a setting to
+save the director one click, and leave the named commit's signature resting on an undocumented case.
 
 ### 4. What it guarantees, and what it does not
 

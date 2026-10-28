@@ -32,7 +32,7 @@
   Corrected renderer adoption stays owned in `.4.3.4.1`.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.
   `M3.6.3.2.1.1` owns runner-baseline compatibility after key encoding; an authorized cadence run is needed.
-  `main` is protected (`M2.7.6.6.3`): batches go by pull request as `rdje-bot`, the director approving. No branches but batches.
+  `main` is protected: a push is a batch, `scripts/open_batch.sh` (`COMMIT.md` step 2); the director merges. No branches but batches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4.5` — the catalog records; `M2.7.6.4` — the director's review round;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,

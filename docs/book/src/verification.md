@@ -798,6 +798,19 @@ when a push is due and `2` when it cannot tell, for example with no `origin/main
 two answers. It is a report and never a gate. A push needs the director's authorization, so a check that
 refused commits at the threshold would strand the work it is meant to protect.
 
+Since `main` is protected, a push is a **batch** (`docs/decisions/decision_main-protection.md` §3):
+1. A fresh agent context reviews the commits local `main` holds beyond `origin/main`, and writes a summary that
+   names the batch's tip by its full hash.
+2. `bash scripts/open_batch.sh open --summary <file>` checks that local `main` is clean, holds `origin/main` and
+   is due. It then pushes the tip to a `batch/` branch as the agents' machine account, and opens one pull request
+   with the summary and the commit list.
+3. The director approves it and merges it in GitHub's web interface, where GitHub signs the merge commit it makes.
+   If its checks fail first, the fix is committed on local `main` and `update` adds it to the same pull request.
+4. `bash scripts/open_batch.sh sync` brings local `main` back in step: a fast-forward, or a merge that changes no
+   file when the agents committed in the meantime.
+
+The script never approves, never merges on GitHub and never pushes to `main` (leaf `M2.7.6.6.4`).
+
 ### What the `tests` step is a suite *of*
 
 The row above says "every contract test passes", and for the language that means a declared population.

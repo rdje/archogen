@@ -352,6 +352,7 @@ a change that leaves it stale, so it is never edited by hand.
 - github-approving-reviews — [What this project relies on from outside](ledger.md#github-approving-reviews)
 - github-available-rules — [What this project relies on from outside](ledger.md#github-available-rules)
 - github-code-owners — [What this project relies on from outside](ledger.md#github-code-owners)
+- github-commit-signing — [What this project relies on from outside](ledger.md#github-commit-signing)
 - github-machine-account — [What this project relies on from outside](ledger.md#github-machine-account)
 - github-merge-queue — [What this project relies on from outside](ledger.md#github-merge-queue)
 - github-personal-access-tokens — [What this project relies on from outside](ledger.md#github-personal-access-tokens)

@@ -480,6 +480,20 @@ Producer observations, normalization proofs, counterexamples and revalidation re
 | Revalidation trigger | the hosting reading the ownership file from anywhere but the pull request's base |
 | Named as | `About code owners` |
 
+## `github-commit-signing`
+
+| Field | Value |
+| --- | --- |
+| Source | GitHub Docs, "About commit signature verification" |
+| Version | the page as served on `2026-10-28` |
+| Pinned at | not pinned — read at `https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification`; no build or check reads it |
+| Retrieved | `2026-10-28` |
+| Hash | sha256 `ceb91d84ea8747f8a7dfb159817eee3cf8abdf808546d6f2f201cd00881d0ab0` of the page read |
+| Scope | one sentence, quoted in `docs/decisions/decision_main-protection.md` §3 for why the director merges a batch in the web interface rather than by auto-merge: "GitHub will automatically use GPG to sign commits you make using the web interface." |
+| Known limitations | the page says nothing of a merge made by auto-merge or through the API; the record takes no position on those, and uses the route the page names |
+| Revalidation trigger | the page documenting signatures on merges made otherwise, or the named commit's check finding a merge unsigned |
+| Named as | `About commit signature verification` |
+
 ## `github-machine-account`
 
 | Field | Value |

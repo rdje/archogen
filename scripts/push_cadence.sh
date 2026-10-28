@@ -46,6 +46,7 @@ report() {
   fi
   say "PUSH DUE — $ahead commit(s) ahead of origin/main, at or past the ruled threshold of $threshold"
   say "  the decision sets when a push is due, not a permission to push: ask the director, and read \`make integration\` first"
+  say "  a push is a batch: \`bash scripts/open_batch.sh open --summary <file>\` (docs/decisions/decision_main-protection.md §3)"
   return 3
 }
 

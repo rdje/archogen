@@ -7,11 +7,12 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 
 ## archogen — `main` is protected
 
-`ARCHOGEN-M2-1032` (leaf `M2.7.6.6`) and `ARCHOGEN-M2-1033` (leaf `M2.7.6.5`), `2026-10-28`.
+`ARCHOGEN-M2-1032` and `ARCHOGEN-M2-1034` (leaf `M2.7.6.6`), `ARCHOGEN-M2-1033` (leaf `M2.7.6.5`), `2026-10-28`.
 
 - On GitHub, `main` now changes only by a merged pull request: the required checks must pass on the merge, and the
   director must approve it. Nobody pushes to `main` directly, the director included. The agents commit as their own
-  account, `rdje-bot`, and are to send their work in batches, one pull request each (`M2.7.6.6.4`).
+  account, `rdje-bot`, and send their work in batches, one pull request each: `bash scripts/open_batch.sh open`
+  pushes a `batch/` branch and opens it, and the director approves and merges it in GitHub's web interface.
 - `.github/CODEOWNERS` makes every path the director's, and a new doctrine, `CODE-OWNERS`, holds the file to its
   record. The hosting's rules are written in `docs/decisions/decision_main-protection.md`, each read back.
 
