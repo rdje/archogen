@@ -1,0 +1,14 @@
+(eadl-version eadl/1)
+; A policy taking an alarm's channel itself, named by two tasks: multiplexed, as a service would be (§2.9; round 8,
+; D1).
+(defblock timer.d
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d)))
+(defpolicy watchdog
+  (requires (needs relative-delay)))
+(defsystem pa
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses watchdog))
+  (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses watchdog))
+  (platform (uses soc)))

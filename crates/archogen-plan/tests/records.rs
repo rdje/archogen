@@ -238,3 +238,45 @@ fn a_record_binding_another_requester_s_exclusive_instance_does_not_rebuild() {
     let plan = lowered_record(description, &record.replace(" ghost)", " dl)")).expect("lowered");
     assert!(plan.contains("(obliged delivery-bound) "), "{plan}");
 }
+
+#[test]
+fn two_handlers_sharing_a_channel_multiplex_it() {
+    // Round 8 (R8-D1): an alarm two sources' handlers call, which no task reaches, has two users, each an interrupt
+    // routine (the record's §2.9). The search binds both handlers to one source, so the record binds each to its own.
+    let description = "(eadl-version eadl/1)
+(defblock dev.a (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defblock dev.b (offers (interrupt-source true) (min-arrival-separation 30 ms) (reachable-at-privilege machine)))
+(defblock timer.d (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.a dev.b timer.d)))
+(defservice alarm (requires (needs relative-delay)))
+(defservice evt.a (requires (needs interrupt-source) (uses alarm)))
+(defservice evt.b (requires (needs interrupt-source) (uses alarm)))
+(defsystem ti
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (requires (uses evt.a evt.b))
+  (platform (uses soc)))
+";
+    let plan = lowered_record(
+        description,
+        "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system ti)\n(program \"PROGRAM\")\n\
+         (adapters adapters/1)\n(bind alarm relative-delay timer.d)\n(bind evt.a interrupt-source dev.a)\n\
+         (bind evt.b interrupt-source dev.b)\n",
+    )
+    .expect("lowered");
+    assert!(
+        plan.contains(
+            "(context alarm (interrupt (source dev.a)) (interrupt (source dev.b)) (interrupt (timer-route timer.d)) initialisation)\n"
+        ),
+        "{plan}"
+    );
+    assert!(
+        plan.contains("(obligation multiplex alarm (discharged-by M4.2 M2.21.2))\n"),
+        "{plan}"
+    );
+    assert!(
+        plan.contains("(owed alarm overhead (by realization))\n"),
+        "{plan}"
+    );
+}

@@ -10,8 +10,9 @@
 use std::path::{Path, PathBuf};
 
 use archogen_plan::{lower, Refusal};
+use eadl_front::module::DirectoryModules;
 use eadl_front::{Form, Program, SourceMap};
-use eadl_model::check::{check, shipped_registry};
+use eadl_model::check::{check, check_program, resolved_declarations, shipped_registry};
 use eadl_model::profile::RT_STATIC_UP_V1;
 use eadl_resolve::adapter::Catalog;
 use eadl_resolve::plan;
@@ -91,13 +92,45 @@ pub enum Lowered {
 
 /// `text`, a plain description, its `system` (the first when `None`) searched, its record written, and lowered.
 pub fn lowered(text: &str, system: Option<&str>) -> Lowered {
+    match checked(text) {
+        Ok(program) => lowered_program(&program, system),
+        Err(verdict) => Lowered::Rejected(verdict.to_string()),
+    }
+}
+
+/// The module tree whose root module is the file at `path`, elaborated over its directory and checked as the engine
+/// checks one (`check_program`), its first system searched, its record written, and that record lowered.
+pub fn lowered_tree(path: &Path) -> Lowered {
+    let text = std::fs::read_to_string(path).expect("the root module");
+    let mut sources = SourceMap::new();
+    let registry = shipped_registry(&mut sources, &kinds()).expect("the kinds load");
+    let id = sources
+        .add(path.display().to_string(), text)
+        .expect("small");
+    let modules = DirectoryModules::new(path.parent().expect("a directory"));
+    let (program, diagnostics) = eadl_front::elaborate_source(&mut sources, &modules, id);
+    if diagnostics.has_errors() {
+        return Lowered::Rejected("invalid-description".to_string());
+    }
+    let outcome = check_program(&program, &registry, &RT_STATIC_UP_V1);
+    if !outcome.is_ok() {
+        return Lowered::Rejected(outcome.verdict.slug().to_string());
+    }
+    lowered_program(&program, None)
+}
+
+/// `program`'s `system` (the first when `None`) searched, its record written, and lowered.
+fn lowered_program(program: &Program, system: Option<&str>) -> Lowered {
     let vocabulary = vocabulary();
     let catalog = catalog();
-    let program = match checked(text) {
-        Ok(program) => program,
-        Err(verdict) => return Lowered::Rejected(verdict.to_string()),
+    // A module tree is read as the language checks it, its names qualified.
+    let flattened;
+    let declarations: &[Form] = if program.instances.len() == 1 {
+        &program.root().declarations
+    } else {
+        flattened = resolved_declarations(program).0;
+        &flattened
     };
-    let declarations: &[Form] = &program.root().declarations;
     let decl = declarations
         .iter()
         .find(|f| {
@@ -125,9 +158,9 @@ pub fn lowered(text: &str, system: Option<&str>) -> Lowered {
     let record = plan::write(
         &resolution,
         RT_STATIC_UP_V1.id,
-        &plan::program_digest(&program),
+        &plan::program_digest(program),
     );
-    match lower(&program, &record, &vocabulary, &catalog) {
+    match lower(program, &record, &vocabulary, &catalog) {
         Ok(plan) => Lowered::Plan(plan.text()),
         Err(refusal) => Lowered::Refused(refusal),
     }

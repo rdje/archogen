@@ -73,11 +73,15 @@ fn the_epoch_extender_lowers_to_its_worked_text() {
 
 #[test]
 fn the_record_s_sporadic_system_lowers_to_its_worked_text() {
-    // The description is the record's own block, so the fixture and its text cannot drift apart.
-    let description = blocks()
+    // The input is the corpus's frozen fixture, held equal to the record's own block, so the two cannot drift apart.
+    let description =
+        std::fs::read_to_string(root().join("crates/archogen-plan/tests/corpus/sporadic.eadl"))
+            .expect("the sporadic system");
+    let block = blocks()
         .into_iter()
         .find(|b| b.starts_with("(defblock dev.e"))
         .expect("the record writes the sporadic system");
+    assert_eq!(description, block);
     assert_eq!(
         plan_of(&format!("(eadl-version eadl/1)\n{description}")),
         worked_plans()[2]

@@ -2,7 +2,8 @@
 //! runtime plan's review (`docs/reviews/decision_runtime-plan-reviews.md`, rounds 4 to 7), and the inputs of the
 //! record's worked texts (`worked-*.eadl`, frozen here), each with what the lowering gives each of its systems — the
 //! plan, with its two digests written `…`, or the refusal — in `tests/corpus/NAME.expected`. A description the
-//! language's check refuses is no input (the record's §1): its outcome is that check's verdict, `rejected …`.
+//! language's check refuses is no input (the record's §1): its outcome is that check's verdict, `rejected …`. A module
+//! tree, `tests/corpus/modules/`, is lowered from its root module, `app.main.eadl`, its names qualified.
 //!
 //! ⭐ **An outcome here is what the code writes, blessed — evidence, never a rule.** A review judges each against the
 //! record's rules, so a fixture the code gets wrong stays green until a reader compares the two. A later finding is a
@@ -17,7 +18,7 @@ mod common;
 
 use std::fs;
 
-use common::{lowered, root, without_digests, Lowered};
+use common::{lowered, lowered_tree, root, without_digests, Lowered};
 
 /// Every system of `text`, by its name, in written order.
 fn systems(text: &str) -> Vec<String> {
@@ -96,4 +97,27 @@ fn every_expected_outcome_has_its_fixture() {
             );
         }
     }
+}
+
+/// What the corpus records of a lowering: the plan with its digests written `…`, or why there is none.
+fn recorded(lowered: Lowered) -> String {
+    match lowered {
+        Lowered::Plan(plan) => without_digests(&plan),
+        Lowered::Refused(refusal) => format!("refused {refusal}\n"),
+        Lowered::Unresolved(verdict) => format!("unresolved {verdict}\n"),
+        Lowered::Rejected(verdict) => format!("rejected {verdict}\n"),
+    }
+}
+
+#[test]
+fn a_module_tree_lowers_as_the_corpus_records() {
+    // Round 8: the lowering reads a tree of several instances through `resolved_declarations`, names qualified.
+    let dir = root().join("crates/archogen-plan/tests/corpus/modules");
+    let got = recorded(lowered_tree(&dir.join("app.main.eadl")));
+    let expected = dir.join("app.main.expected");
+    if std::env::var_os("ARCHOGEN_BLESS_PLANS").is_some() {
+        fs::write(&expected, &got).expect("writable");
+        return;
+    }
+    assert_eq!(got, fs::read_to_string(&expected).unwrap_or_default());
 }

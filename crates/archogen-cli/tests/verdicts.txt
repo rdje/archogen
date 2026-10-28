@@ -15,7 +15,11 @@
 0 - crates/archogen-plan/tests/corpus/exact.eadl
 0 - crates/archogen-plan/tests/corpus/fast-source.eadl
 0 - crates/archogen-plan/tests/corpus/hz-everywhere.eadl
+0 - crates/archogen-plan/tests/corpus/isr-and-task.eadl
 0 - crates/archogen-plan/tests/corpus/kind-blind.eadl
+0 - crates/archogen-plan/tests/corpus/modules/app.main.eadl
+0 - crates/archogen-plan/tests/corpus/modules/hw.dev.eadl
+0 - crates/archogen-plan/tests/corpus/modules/os.svc.eadl
 0 - crates/archogen-plan/tests/corpus/multiplex-needs.eadl
 0 - crates/archogen-plan/tests/corpus/multiplex-r5.eadl
 0 - crates/archogen-plan/tests/corpus/multiplex.eadl
@@ -27,6 +31,7 @@
 0 - crates/archogen-plan/tests/corpus/period-hz.eadl
 0 - crates/archogen-plan/tests/corpus/periodic-source.eadl
 0 - crates/archogen-plan/tests/corpus/placement.eadl
+0 - crates/archogen-plan/tests/corpus/policy-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/policy-user.eadl
 0 - crates/archogen-plan/tests/corpus/rank-classes.eadl
 0 - crates/archogen-plan/tests/corpus/rank-tie.eadl
@@ -34,6 +39,7 @@
 0 - crates/archogen-plan/tests/corpus/shapes.eadl
 0 - crates/archogen-plan/tests/corpus/shared-ext.eadl
 0 - crates/archogen-plan/tests/corpus/source-hz.eadl
+0 - crates/archogen-plan/tests/corpus/sporadic-alarm-only.eadl
 0 - crates/archogen-plan/tests/corpus/sporadic-and-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/sporadic-only.eadl
 0 - crates/archogen-plan/tests/corpus/sporadic.eadl
@@ -47,6 +53,7 @@
 0 - crates/archogen-plan/tests/corpus/task-policy.eadl
 0 - crates/archogen-plan/tests/corpus/task-source.eadl
 0 - crates/archogen-plan/tests/corpus/task-uses-block.eadl
+0 - crates/archogen-plan/tests/corpus/tightest-bound.eadl
 0 - crates/archogen-plan/tests/corpus/transitive-users.eadl
 0 - crates/archogen-plan/tests/corpus/two-dod.eadl
 0 - crates/archogen-plan/tests/corpus/two-instances.eadl
@@ -54,6 +61,8 @@
 0 - crates/archogen-plan/tests/corpus/two-systems.eadl
 0 - crates/archogen-plan/tests/corpus/worked-epoch-extender.eadl
 0 - crates/archogen-plan/tests/corpus/worked-heartbeat.eadl
+0 - crates/archogen-plan/tests/corpus/zero-period.eadl
+0 - crates/archogen-plan/tests/corpus/zero-separation.eadl
 0 - crates/eadl-resolve/tests/joint/f08-two-exclusive-requests.eadl
 0 - crates/eadl-resolve/tests/joint/f09-conflicting-ownership.eadl
 0 - crates/eadl-resolve/tests/search/adapter-deadline-over-delay.eadl

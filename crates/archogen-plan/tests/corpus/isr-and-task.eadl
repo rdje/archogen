@@ -1,0 +1,18 @@
+(eadl-version eadl/1)
+; One alarm called by a task's job and by a source's handler: two users of one channel, one of them an interrupt
+; routine, so the alarm is multiplexed (§2.9; round 8, D1).
+(defblock dev.e
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defblock timer.d
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.e timer.d)))
+(defservice alarm
+  (requires (needs relative-delay)))
+(defservice evt
+  (requires (needs interrupt-source) (uses alarm)))
+(defsystem it
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (requires (uses evt))
+  (platform (uses soc)))

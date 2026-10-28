@@ -192,6 +192,15 @@ struct Task<'f> {
     rank: i64,
 }
 
+/// A task's release and deadline, in seconds, once §1 has refused what the description check should have (§2.2).
+struct Timing {
+    /// Whether its release is a period, not a minimum separation.
+    periodic: bool,
+    release: Rational,
+    deadline: Rational,
+    jitter: Rational,
+}
+
 /// `record`, an `archogen-assignment/2` record the configuration checker accepted, lowered into
 /// `archogen-runtime-plan/1` over `program`, the elaborated program the language's check accepted, whose declarations
 /// and digest the lowering takes from it (§1, §2, §3).
@@ -199,9 +208,11 @@ struct Task<'f> {
 /// # Errors
 ///
 /// §1's refusals, in its order: a record that does not read; that names another program, system, catalog or profile;
-/// that does not rebuild, or that the generator's own joint rules refuse; a task's duration that is not a time; and
-/// what `/1` cannot lower — placement memory, a system with no task, a deadline measured from an event other than the
-/// release, an alarm or an expiry a task or the system's own level would receive.
+/// that does not rebuild, or that the generator's own joint rules refuse; a task's release or deadline the language's
+/// check should have refused — none stated, not a time, a zero release separation, a periodic task bound to an interrupt
+/// source itself; and what `/1` cannot lower — placement memory, a system with no task, a deadline measured from an
+/// event other than the release, an alarm or an expiry a task or the system's own level would receive. Then §2.4's: an
+/// obliged value that is not a duration.
 #[allow(clippy::too_many_lines)]
 pub fn lower(
     program: &Program,
@@ -331,22 +342,78 @@ pub fn lower(
         })
         .collect();
     tasks.sort_by(|a, b| a.rank.cmp(&b.rank).then(a.name.cmp(&b.name)));
-    // §1, §2.2: a task's period, minimum separation, deadline and jitter are each a time.
+    // §1: a task's release or deadline the description check should have refused — none stated, not a time, a release
+    // separation of zero, or a periodic task bound to an interrupt source itself, a second release model.
+    let ill_formed = |task: &Task<'_>, what: String, leaf: &str| {
+        refuse(
+            "tool-failure",
+            format!(
+                "`(task {system} {})` {what}: the description check accepted an ill-formed description, which `{leaf}` makes it refuse",
+                task.name
+            ),
+        )
+    };
+    let mut timings: Vec<Timing> = Vec::new();
     for task in &tasks {
-        for head in ["period", "min-separation", "deadline", "jitter"] {
-            if let Some(c) = clause(task.form, head) {
-                if seconds(&c).is_none() {
-                    return Err(refuse(
-                        "tool-failure",
-                        format!(
-                            "`(task {system} {})`'s `{}` is not a time: the description check accepted an ill-typed description, which `M1.42` makes it refuse",
-                            task.name,
-                            c.to_canonical()
-                        ),
-                    ));
-                }
-            }
+        let period = clause(task.form, "period");
+        let (Some(release), Some(deadline)) = (
+            period
+                .clone()
+                .or_else(|| clause(task.form, "min-separation")),
+            clause(task.form, "deadline"),
+        ) else {
+            return Err(ill_formed(
+                task,
+                "states no release or no deadline".to_string(),
+                "M1",
+            ));
+        };
+        let jitter = clause(task.form, "jitter");
+        let time = |c: &Form| {
+            seconds(c).ok_or_else(|| {
+                ill_formed(
+                    task,
+                    format!("writes `{}`, which is not a time", c.to_canonical()),
+                    "M1.42",
+                )
+            })
+        };
+        let timing = Timing {
+            periodic: period.is_some(),
+            release: time(&release)?,
+            deadline: time(&deadline)?,
+            jitter: jitter
+                .as_ref()
+                .map(time)
+                .transpose()?
+                .unwrap_or(Rational::ZERO),
+        };
+        if timing.release == Rational::ZERO {
+            return Err(ill_formed(
+                task,
+                format!(
+                    "writes `{}`, a release separation of zero, which no run can release",
+                    release.to_canonical()
+                ),
+                "M1.42",
+            ));
         }
+        let internal = format!("{system}/{}", task.name);
+        if timing.periodic
+            && rebuilt.bindings.iter().any(|b| {
+                b.requester == internal
+                    && b.requirement.fact() == INTERRUPT_SOURCE
+                    && met_by_true(&b.requirement)
+            })
+        {
+            return Err(ill_formed(
+                task,
+                "is periodic and bound to an interrupt source itself, a second release model"
+                    .to_string(),
+                "M1.43",
+            ));
+        }
+        timings.push(timing);
     }
 
     // §1: what `/1` cannot lower.
@@ -401,7 +468,6 @@ pub fn lower(
     let nodes: BTreeSet<String> = init.nodes.iter().map(|(n, _)| n.clone()).collect();
     let requester = |name: &str| rebuilt.requesters.iter().find(|r| r.name == name);
     let is_task = |name: &str| requester(name).is_some_and(|r| r.kind == Kind::Task);
-    let is_service = |name: &str| requester(name).is_some_and(|r| r.kind == Kind::Service);
     let service_or_policy = |name: &str| {
         declarations.iter().any(|d| {
             matches!(d.head(), Some("defservice" | "defpolicy"))
@@ -526,28 +592,17 @@ pub fn lower(
     };
     let mut task_lines = Vec::new();
     let mut releases = Vec::new();
-    for task in &tasks {
+    for (task, timing) in tasks.iter().zip(&timings) {
         let internal = format!("{system}/{}", task.name);
         let text = names.text(&internal);
         // Its runtime index, `|hp(i)|`, the number of tasks of smaller rank (§2.2).
         let index = tasks.iter().filter(|t| t.rank < task.rank).count();
-        let release = if let Some(c) = clause(task.form, "period") {
-            format!(
-                "(period {})",
-                duration(seconds(&c).unwrap_or(Rational::ZERO))
-            )
-        } else if let Some(c) = clause(task.form, "min-separation") {
-            format!(
-                "(min-separation {})",
-                duration(seconds(&c).unwrap_or(Rational::ZERO))
-            )
+        let release = if timing.periodic {
+            format!("(period {})", duration(timing.release))
         } else {
-            return Err(refuse("tool-failure", format!("{text} states no release")));
+            format!("(min-separation {})", duration(timing.release))
         };
-        let deadline = clause(task.form, "deadline")
-            .and_then(|c| seconds(&c))
-            .map(duration)
-            .ok_or_else(|| refuse("tool-failure", format!("{text} states no deadline")))?;
+        let deadline = duration(timing.deadline);
         // Any event but the release is refused above (§1).
         let reference = if clause(task.form, "deadline-from").is_some() {
             "(deadline-from release)"
@@ -555,9 +610,7 @@ pub fn lower(
             owe(&mut owed, &text, "deadline-from", "description");
             "(deadline-from)"
         };
-        let jitter = clause(task.form, "jitter")
-            .and_then(|c| seconds(&c))
-            .unwrap_or(Rational::ZERO);
+        let jitter = timing.jitter;
         let overrun = clause(task.form, "on-overrun")
             .and_then(|c| {
                 c.items()
@@ -578,7 +631,7 @@ pub fn lower(
             })
             .unwrap_or_default();
         // What releases it (§2.2).
-        let trigger = if clause(task.form, "period").is_some() {
+        let trigger = if timing.periodic {
             releases.push(text.clone());
             "timer".to_string()
         } else {
@@ -591,9 +644,8 @@ pub fn lower(
                         .any(|q| *q == internal || reached.contains(q))
                 })
                 .collect();
-            let own = clause(task.form, "min-separation").and_then(|c| seconds(&c));
-            match (releasing.as_slice(), own) {
-                ([route], Some(own)) if route.separation.is_ok_and(|s| s >= own) => {
+            match releasing.as_slice() {
+                [route] if route.separation.is_ok_and(|s| s >= timing.release) => {
                     format!("(source {} every)", route.provider)
                 }
                 _ => {
@@ -875,17 +927,43 @@ pub fn lower(
             }
         }
     }
-    // A service is multiplexed where it takes a channel and two or more of the system's tasks reach it (§2.9).
+    // A service or a policy that takes a channel is multiplexed where it has two or more users: each of the system's
+    // tasks that reaches it, and each interrupt whose context line holds it, but the timer route at a provider whose
+    // channel it takes (§2.9).
     let reached: Vec<BTreeSet<String>> = tasks
         .iter()
         .map(|task| reach(&format!("{system}/{}", task.name)))
         .collect();
-    let multiplexed: BTreeSet<&str> = rebuilt
+    let channels: Vec<&Binding> = rebuilt
         .bindings
         .iter()
-        .filter(|b| is_service(&b.requester) && takes_a_channel(&b.requirement, vocabulary))
+        .filter(|b| service_or_policy(&b.requester) && takes_a_channel(&b.requirement, vocabulary))
+        .collect();
+    let users = |node: &str| {
+        // Its own channels' timer routes: at the provider it binds, or the one its instance programs.
+        let own: BTreeSet<String> = channels
+            .iter()
+            .filter(|b| b.requester == node)
+            .map(|b| {
+                let x = names
+                    .instances
+                    .get(b.provider.as_str())
+                    .map_or(b.provider.as_str(), |i| i.over.as_str());
+                format!("(interrupt (timer-route {x}))")
+            })
+            .collect();
+        let jobs = reached.iter().filter(|r| r.contains(node)).count();
+        let interrupts = contexts.get(node).map_or(0, |c| {
+            c.iter()
+                .filter(|i| i.starts_with("(interrupt ") && !own.contains(*i))
+                .count()
+        });
+        jobs + interrupts
+    };
+    let multiplexed: BTreeSet<&str> = channels
+        .iter()
         .map(|b| b.requester.as_str())
-        .filter(|service| reached.iter().filter(|r| r.contains(*service)).count() >= 2)
+        .filter(|node| users(node) >= 2)
         .collect();
     for service in multiplexed {
         let text = names.text(service);

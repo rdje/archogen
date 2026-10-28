@@ -14,7 +14,11 @@ agree crates/archogen-plan/tests/corpus/dup-prio.eadl
 agree crates/archogen-plan/tests/corpus/exact.eadl
 agree crates/archogen-plan/tests/corpus/fast-source.eadl
 agree crates/archogen-plan/tests/corpus/hz-everywhere.eadl
+agree crates/archogen-plan/tests/corpus/isr-and-task.eadl
 agree crates/archogen-plan/tests/corpus/kind-blind.eadl
+agree crates/archogen-plan/tests/corpus/modules/app.main.eadl
+agree crates/archogen-plan/tests/corpus/modules/hw.dev.eadl
+agree crates/archogen-plan/tests/corpus/modules/os.svc.eadl
 agree crates/archogen-plan/tests/corpus/multiplex-needs.eadl
 agree crates/archogen-plan/tests/corpus/multiplex-r5.eadl
 agree crates/archogen-plan/tests/corpus/multiplex.eadl
@@ -26,6 +30,7 @@ agree crates/archogen-plan/tests/corpus/nosep-source.eadl
 agree crates/archogen-plan/tests/corpus/period-hz.eadl
 agree crates/archogen-plan/tests/corpus/periodic-source.eadl
 agree crates/archogen-plan/tests/corpus/placement.eadl
+agree crates/archogen-plan/tests/corpus/policy-alarm.eadl
 agree crates/archogen-plan/tests/corpus/policy-user.eadl
 agree crates/archogen-plan/tests/corpus/rank-classes.eadl
 agree crates/archogen-plan/tests/corpus/rank-tie.eadl
@@ -33,6 +38,7 @@ agree crates/archogen-plan/tests/corpus/region-hosted.eadl
 agree crates/archogen-plan/tests/corpus/shapes.eadl
 agree crates/archogen-plan/tests/corpus/shared-ext.eadl
 agree crates/archogen-plan/tests/corpus/source-hz.eadl
+agree crates/archogen-plan/tests/corpus/sporadic-alarm-only.eadl
 agree crates/archogen-plan/tests/corpus/sporadic-and-alarm.eadl
 agree crates/archogen-plan/tests/corpus/sporadic-only.eadl
 agree crates/archogen-plan/tests/corpus/sporadic.eadl
@@ -46,6 +52,7 @@ agree crates/archogen-plan/tests/corpus/task-extender.eadl
 agree crates/archogen-plan/tests/corpus/task-policy.eadl
 agree crates/archogen-plan/tests/corpus/task-source.eadl
 agree crates/archogen-plan/tests/corpus/task-uses-block.eadl
+agree crates/archogen-plan/tests/corpus/tightest-bound.eadl
 agree crates/archogen-plan/tests/corpus/transitive-users.eadl
 agree crates/archogen-plan/tests/corpus/two-dod.eadl
 agree crates/archogen-plan/tests/corpus/two-instances.eadl
@@ -53,6 +60,8 @@ agree crates/archogen-plan/tests/corpus/two-sources.eadl
 agree crates/archogen-plan/tests/corpus/two-systems.eadl
 agree crates/archogen-plan/tests/corpus/worked-epoch-extender.eadl
 agree crates/archogen-plan/tests/corpus/worked-heartbeat.eadl
+agree crates/archogen-plan/tests/corpus/zero-period.eadl
+agree crates/archogen-plan/tests/corpus/zero-separation.eadl
 agree crates/eadl-resolve/tests/joint/f08-two-exclusive-requests.eadl
 agree crates/eadl-resolve/tests/joint/f09-conflicting-ownership.eadl
 agree crates/eadl-resolve/tests/search/adapter-deadline-over-delay.eadl
