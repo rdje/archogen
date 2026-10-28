@@ -1,12 +1,16 @@
 //! The runtime plan's bounded exhaustive checker (leaf `M4.1.13`), which
 //! `docs/decisions/decision_executable-design-reviews.md` item 1 asks of a design whose subject is a decision
-//! procedure: it "enumerates a finite universe of inputs" and holds each outcome to the record. Six universes of small
+//! procedure: it "enumerates a finite universe of inputs" and holds each outcome to the record. Ten universes of small
 //! descriptions are generated in memory, every combination of a few independent choices, so that each is exhaustive
 //! over its bounds: three services and their `uses` edges; two services with adapter instances; releases and routes of
 //! every separation class; requesters of every kind; two tasks, periodic and sporadic, sharing services that take a
-//! channel, with an obliged `delivery-bound` bound and bare and each task writing `(deadline-from release)` or not; and
+//! channel, with an obliged `delivery-bound` bound and bare and each task writing `(deadline-from release)` or not;
 //! receivers of interrupt code, two tasks and the system's own level each programming an alarm itself, receiving an
-//! expiry or neither, in both runtime orders.
+//! expiry or neither, in both runtime orders; and, after round 12 (R12-R4), blocks and platforms with requirements of
+//! their own, bound to by something or by nothing, composing what services and tasks reach; every jitter, overrun
+//! policy and deadline reference a task line states; durations past the exact arithmetic, each kind named in §1's
+//! order, and durations at its edge, written exactly however they are spelled; and a second system, named by `uses` or
+//! `needs` or not, each lowered.
 //!
 //! Each system is run as the engine runs it, as `common::lowered` does: the language's check, the search, the `/2`
 //! writer, and the lowering. **Every `archogen-assignment/2` record the search writes is judged by the configuration
@@ -54,6 +58,125 @@ use eadl_resolve::vocabulary::Usage;
 // The descriptions, generated in memory
 // =====================================================================================================================
 
+/// A duration as a description spells it: a whole number of milliseconds, or a spelling written as given.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Dur {
+    Ms(u64),
+    Spelled(&'static str),
+}
+
+/// A time of `1e-47 s`, whose denominator lies past signed 128-bit integers (§2.2), which the language still reads:
+/// it reads a decimal of at most 38 fraction digits whose digits make at most `i64::MAX`.
+const PAST: &str = "0.00000000000000000000000000000000000001 ns";
+/// `9223372036854775807/10^38 s`: within the arithmetic, its digits the most the language reads, and compared with
+/// [`WIDE_LONGER`] by cross-multiplication past 128 bits.
+const WIDE: &str = "0.00000000000000000009223372036854775807 s";
+/// [`WIDE`] in milliseconds: the same time, spelled otherwise.
+const WIDE_IN_MS: &str = "0.00000000000000009223372036854775807 ms";
+/// `922337203685477581/10^37 s`, a little longer than [`WIDE`].
+const WIDE_LONGER: &str = "0.0000000000000000000922337203685477581 s";
+/// `1/10^38 s`, spelled with a denominator of `10^47` that only its reduction brings within the arithmetic.
+const REDUCED: &str = "0.00000000000000000000000000001000000000 ns";
+/// `5^13/10^47 s = 1/(8192·10^34) s`: its reduced denominator, `8.192e37`, the nearest below `i128::MAX` a spelling
+/// of the language reaches.
+const TIGHT_WITHIN: &str = "0.00000000000000000000000000001220703125 ns";
+/// `5^12/10^47 s = 1/(4096·10^35) s`: its reduced denominator, `4.096e38`, the nearest above `i128::MAX`.
+const TIGHT_PAST: &str = "0.00000000000000000000000000000244140625 ns";
+
+impl Dur {
+    fn spelling(self) -> String {
+        match self {
+            Self::Ms(ms) => format!("{ms} ms"),
+            Self::Spelled(text) => text.to_string(),
+        }
+    }
+
+    /// Its seconds (§2.2), or `None` where they lie past the engine's exact arithmetic.
+    fn seconds(self) -> Option<Ratio> {
+        Ratio::of(&self.spelling())
+    }
+}
+
+/// A reduced non-negative rational number of seconds, its numerator and denominator within signed 128-bit integers
+/// (§2.2: "`N` and `D` lie within the engine's exact arithmetic, signed 128-bit integers").
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Ratio {
+    n: u128,
+    d: u128,
+}
+
+/// `a * b`, exactly, as its high and low 128 bits.
+fn wide_product(a: u128, b: u128) -> (u128, u128) {
+    const LOW: u128 = u64::MAX as u128;
+    let (a1, a0) = (a >> 64, a & LOW);
+    let (b1, b0) = (b >> 64, b & LOW);
+    let (p00, p01, p10, p11) = (a0 * b0, a0 * b1, a1 * b0, a1 * b1);
+    let middle = (p00 >> 64) + (p01 & LOW) + (p10 & LOW);
+    let low = (p00 & LOW) | (middle << 64);
+    let high = p11 + (p01 >> 64) + (p10 >> 64) + (middle >> 64);
+    (high, low)
+}
+
+impl Ord for Ratio {
+    /// Exact: `n1/d1` against `n2/d2` by `n1·d2` against `n2·d1`, each product in 256 bits.
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        wide_product(self.n, other.d).cmp(&wide_product(other.n, self.d))
+    }
+}
+
+impl PartialOrd for Ratio {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ratio {
+    const ZERO: Self = Self { n: 0, d: 1 };
+
+    /// The seconds `NUMBER UNIT` spells, reduced, or `None` where the reduced numerator or denominator lies past
+    /// `i128::MAX`.
+    fn of(spelling: &str) -> Option<Self> {
+        let (number, unit) = spelling.split_once(' ').expect("NUMBER UNIT");
+        let exponent: u32 = match unit {
+            "s" => 0,
+            "ms" => 3,
+            "us" => 6,
+            "ns" => 9,
+            other => panic!("the reading knows no unit of time `{other}`"),
+        };
+        let (whole, fraction) = number.split_once('.').unwrap_or((number, ""));
+        let mut n: u128 = format!("{whole}{fraction}").parse().expect("digits");
+        if n == 0 {
+            return Some(Self::ZERO);
+        }
+        // The denominator is `10^k = 2^k 5^k`: reduce by every 2 and 5 the numerator shares.
+        let k = u32::try_from(fraction.len()).expect("short") + exponent;
+        let (mut twos, mut fives) = (k, k);
+        while twos > 0 && n.is_multiple_of(2) {
+            n /= 2;
+            twos -= 1;
+        }
+        while fives > 0 && n.is_multiple_of(5) {
+            n /= 5;
+            fives -= 1;
+        }
+        let d = 2u128
+            .checked_pow(twos)?
+            .checked_mul(5u128.checked_pow(fives)?)?;
+        let max = u128::try_from(i128::MAX).expect("positive");
+        (n <= max && d <= max).then_some(Self { n, d })
+    }
+
+    /// §2.2: "Each is one reduced rational number of seconds, `N s` or `N/D s`, with `D > 1`".
+    fn text(self) -> String {
+        if self.d == 1 {
+            format!("{} s", self.n)
+        } else {
+            format!("{}/{} s", self.n, self.d)
+        }
+    }
+}
+
 /// What a source's block states of its own `min-arrival-separation`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Separation {
@@ -63,26 +186,82 @@ enum Separation {
     Unstated,
     /// Declared absent.
     Absent,
+    /// Stated once in each of these spellings.
+    Spelled(&'static [&'static str]),
 }
 
-/// A block: its offers, as written, and what the reading needs of it.
-#[derive(Debug, Clone)]
+/// What the reading takes of a source's separation (§2.5, §1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Sep {
+    Stated(Ratio),
+    Unstated,
+    Absent,
+    /// A spelling lies past the exact arithmetic: one alone, or one of two spellings, whose comparison then overflows
+    /// it (round 12, R12-D2: "a source separation whose spellings overflow the arithmetic" is "Refused past the
+    /// arithmetic, as §1 says").
+    Past,
+}
+
+impl Separation {
+    fn read(self) -> Sep {
+        match self {
+            Self::Stated(ms) => Sep::Stated(Dur::Ms(ms).seconds().expect("a few milliseconds")),
+            Self::Unstated => Sep::Unstated,
+            Self::Absent => Sep::Absent,
+            Self::Spelled(spellings) => {
+                let read: Option<Vec<Ratio>> = spellings.iter().map(|s| Ratio::of(s)).collect();
+                match read {
+                    None => Sep::Past,
+                    Some(times) => {
+                        assert!(
+                            times.windows(2).all(|w| w[0] == w[1]),
+                            "the universes spell one separation, never two"
+                        );
+                        Sep::Stated(times[0])
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// A block, or a platform: its offers, as written, what it requires at its own level, and what the reading needs of
+/// it. Its `uses` is composition, never a binding (model §8 rule 1).
+#[derive(Debug, Clone, Default)]
 struct Block {
     name: String,
     offers: Vec<String>,
     absent: Vec<String>,
     /// For a block offering `interrupt-source`: what it states of its separation.
     separation: Option<Separation>,
+    /// Its `requires` clause: what it needs, and what it composes by `uses`.
+    side: Side,
+}
+
+impl Block {
+    /// Its form, `defblock` or `defplatform`.
+    fn text(&self, head: &str) -> String {
+        let mut out = format!("({head} {} (offers {})", self.name, self.offers.join(" "));
+        if !self.absent.is_empty() {
+            out.push_str(&format!(" (absent {})", self.absent.join(" ")));
+        }
+        let requires = self.side.clauses();
+        if !requires.is_empty() {
+            out.push_str(&format!(" (requires{requires})"));
+        }
+        out.push_str(")\n");
+        out
+    }
 }
 
 /// What one requester writes: the vocabulary facts its `needs` lists, the declarations its `uses` lists, each
-/// `(FACT (at-most N ms))` bound it writes, and any other requirement clause, as written.
+/// `(FACT (at-most DURATION))` bound it writes, and any other requirement clause, as written.
 #[derive(Debug, Clone, Default)]
 struct Side {
     needs: Vec<String>,
     uses: Vec<String>,
-    /// Each `(FACT (at-most N ms))` the requester writes, as `(FACT, N)`.
-    at_most: Vec<(String, u64)>,
+    /// Each `(FACT (at-most DURATION))` the requester writes.
+    at_most: Vec<(String, Dur)>,
     other: Vec<String>,
 }
 
@@ -94,8 +273,8 @@ impl Side {
             out.push(' ');
             out.push_str(clause);
         }
-        for (fact, ms) in &self.at_most {
-            out.push_str(&format!(" ({fact} (at-most {ms} ms))"));
+        for (fact, bound) in &self.at_most {
+            out.push_str(&format!(" ({fact} (at-most {}))", bound.spelling()));
         }
         if !self.needs.is_empty() {
             out.push_str(&format!(" (needs {})", self.needs.join(" ")));
@@ -115,54 +294,194 @@ struct Service {
     side: Side,
 }
 
-/// A task's release model, in milliseconds.
+/// A task's release model.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Release {
-    Period(u64),
-    MinSeparation(u64),
+    Period(Dur),
+    MinSeparation(Dur),
+}
+
+impl Release {
+    fn duration(self) -> Dur {
+        match self {
+            Self::Period(d) | Self::MinSeparation(d) => d,
+        }
+    }
+
+    /// Its clause's name, which §1 names a duration past the arithmetic by.
+    fn clause(self) -> &'static str {
+        match self {
+            Self::Period(_) => "period",
+            Self::MinSeparation(_) => "min-separation",
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
 struct Task {
     name: String,
     release: Release,
+    /// Its deadline, where it is not its release's duration.
+    deadline: Option<Dur>,
+    /// Its `jitter` clause, where it writes one.
+    jitter: Option<Dur>,
+    /// Its `on-overrun` clause, where it writes one.
+    overrun: Option<&'static str>,
     priority: u32,
-    /// Whether it writes `(deadline-from release)`.
-    deadline_from: bool,
+    /// The event its `deadline-from` clause names, where it writes one.
+    deadline_from: Option<&'static str>,
     side: Side,
 }
 
-/// One description of one system, on one platform `soc` that uses every block.
+impl Default for Task {
+    fn default() -> Self {
+        Self {
+            name: "t".to_string(),
+            release: Release::Period(Dur::Ms(10)),
+            deadline: None,
+            jitter: None,
+            overrun: None,
+            priority: 1,
+            deadline_from: Some("release"),
+            side: Side::default(),
+        }
+    }
+}
+
+impl Task {
+    fn deadline(&self) -> Dur {
+        self.deadline.unwrap_or(self.release.duration())
+    }
+
+    fn text(&self) -> String {
+        format!(
+            "  (task {} ({} {}) (deadline {}){}{}{} (priority {}){})\n",
+            self.name,
+            self.release.clause(),
+            self.release.duration().spelling(),
+            self.deadline().spelling(),
+            self.jitter
+                .map_or(String::new(), |j| format!(" (jitter {})", j.spelling())),
+            self.deadline_from
+                .map_or(String::new(), |e| format!(" (deadline-from {e})")),
+            self.overrun
+                .map_or(String::new(), |p| format!(" (on-overrun {p})")),
+            self.priority,
+            self.side.clauses()
+        )
+    }
+}
+
+/// A system of a description: its tasks, its own level and the platform it uses.
+#[derive(Debug, Clone)]
+struct System {
+    name: String,
+    tasks: Vec<Task>,
+    own: Side,
+    platform: String,
+}
+
+impl System {
+    fn text(&self) -> String {
+        let mut out = format!("(defsystem {}\n", self.name);
+        for task in &self.tasks {
+            out.push_str(&task.text());
+        }
+        let own = self.own.clauses();
+        if !own.is_empty() {
+            out.push_str(&format!("  (requires{own})\n"));
+        }
+        out.push_str(&format!("  (platform (uses {})))\n", self.platform));
+        out
+    }
+}
+
+/// One description and the system of it lowered: by default on one platform `soc` that uses every block.
 #[derive(Debug, Clone)]
 struct Description {
     system: String,
     blocks: Vec<Block>,
+    /// Its platforms; none writes the one `soc` composing every block.
+    platforms: Vec<Block>,
     services: Vec<Service>,
     tasks: Vec<Task>,
     /// The system's own level.
     own: Side,
+    /// The platform the system's `platform` clause uses.
+    platform: String,
+    /// The description's other systems, written after the one lowered, or before it where `others_first`.
+    others: Vec<System>,
+    others_first: bool,
+}
+
+impl Default for Description {
+    fn default() -> Self {
+        Self {
+            system: "sys".to_string(),
+            blocks: Vec::new(),
+            platforms: Vec::new(),
+            services: Vec::new(),
+            tasks: Vec::new(),
+            own: Side::default(),
+            platform: "soc".to_string(),
+            others: Vec::new(),
+            others_first: false,
+        }
+    }
 }
 
 impl Description {
+    /// Its platforms: those written, or the one `soc` composing every block.
+    fn platforms(&self) -> Vec<Block> {
+        if !self.platforms.is_empty() {
+            return self.platforms.clone();
+        }
+        vec![Block {
+            name: "soc".to_string(),
+            offers: names(&["(core-count 1 tick)", "(reachable-at-privilege machine)"]),
+            side: Side {
+                uses: self.blocks.iter().map(|b| b.name.clone()).collect(),
+                ..Side::default()
+            },
+            ..Block::default()
+        }]
+    }
+
+    /// Every block and platform it declares.
+    fn hardware(&self) -> Vec<Block> {
+        self.blocks
+            .iter()
+            .cloned()
+            .chain(self.platforms())
+            .collect()
+    }
+
+    /// Every system it declares, the one lowered first.
+    fn systems(&self) -> Vec<System> {
+        std::iter::once(self.lowered())
+            .chain(self.others.iter().cloned())
+            .collect()
+    }
+
+    /// The system lowered, as a [`System`].
+    fn lowered(&self) -> System {
+        System {
+            name: self.system.clone(),
+            tasks: self.tasks.clone(),
+            own: self.own.clone(),
+            platform: self.platform.clone(),
+        }
+    }
+
     /// The description's text, as the language reads it.
     fn text(&self) -> String {
         let mut out = String::from("(eadl-version eadl/1)\n");
         for block in &self.blocks {
-            out.push_str(&format!(
-                "(defblock {} (offers {})",
-                block.name,
-                block.offers.join(" ")
-            ));
-            if !block.absent.is_empty() {
-                out.push_str(&format!(" (absent {})", block.absent.join(" ")));
-            }
-            out.push_str(")\n");
+            out.push_str(&block.text("defblock"));
         }
-        let blocks: Vec<&str> = self.blocks.iter().map(|b| b.name.as_str()).collect();
-        out.push_str(&format!(
-            "(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses {})))\n",
-            blocks.join(" ")
-        ));
+        for platform in self.platforms() {
+            out.push_str(&platform.text("defplatform"));
+        }
         for service in &self.services {
             // A service writes its `requires` clause, empty where it requires nothing: the language asks for one.
             out.push_str(&format!(
@@ -176,29 +495,17 @@ impl Description {
                 service.side.clauses()
             ));
         }
-        out.push_str(&format!("(defsystem {}\n", self.system));
-        for task in &self.tasks {
-            let (release, ms) = match task.release {
-                Release::Period(ms) => ("period", ms),
-                Release::MinSeparation(ms) => ("min-separation", ms),
-            };
-            out.push_str(&format!(
-                "  (task {} ({release} {ms} ms) (deadline {ms} ms){} (priority {}){})\n",
-                task.name,
-                if task.deadline_from {
-                    " (deadline-from release)"
-                } else {
-                    ""
-                },
-                task.priority,
-                task.side.clauses()
-            ));
+        if self.others_first {
+            for other in &self.others {
+                out.push_str(&other.text());
+            }
         }
-        let own = self.own.clauses();
-        if !own.is_empty() {
-            out.push_str(&format!("  (requires{own})\n"));
+        out.push_str(&self.lowered().text());
+        if !self.others_first {
+            for other in &self.others {
+                out.push_str(&other.text());
+            }
         }
-        out.push_str("  (platform (uses soc)))\n");
         out
     }
 }
@@ -217,8 +524,14 @@ fn names(items: &[&str]) -> Vec<String> {
 /// A source's block: `interrupt-source`, its separation as `separation` says, and the `available-in-state` it offers.
 fn source_block(name: &str, separation: Separation, states: &str) -> Block {
     let mut offers = names(&["(interrupt-source true)"]);
-    if let Separation::Stated(ms) = separation {
-        offers.push(format!("(min-arrival-separation {ms} ms)"));
+    match separation {
+        Separation::Stated(ms) => offers.push(format!("(min-arrival-separation {ms} ms)")),
+        Separation::Spelled(spellings) => {
+            for spelling in spellings {
+                offers.push(format!("(min-arrival-separation {spelling})"));
+            }
+        }
+        Separation::Unstated | Separation::Absent => {}
     }
     if !states.is_empty() {
         offers.push(format!("(available-in-state {states})"));
@@ -233,6 +546,7 @@ fn source_block(name: &str, separation: Separation, states: &str) -> Block {
             Vec::new()
         },
         separation: Some(separation),
+        side: Side::default(),
     }
 }
 
@@ -269,8 +583,7 @@ fn timer_block(name: &str, channels: u32, adapters: bool) -> Block {
     Block {
         name: name.to_string(),
         offers,
-        absent: Vec::new(),
-        separation: None,
+        ..Block::default()
     }
 }
 
@@ -358,7 +671,7 @@ fn service(name: &str, counter: Counter, source: bool, uses: Vec<String>) -> Ser
         Counter::DeadlineBound => {
             side.needs.push("absolute-deadline".to_string());
             side.at_most
-                .push(("delivery-bound".to_string(), DELIVERY_BOUND_MS));
+                .push(("delivery-bound".to_string(), Dur::Ms(DELIVERY_BOUND_MS)));
         }
         Counter::Extender => {
             side.other
@@ -434,13 +747,14 @@ fn three_services() -> Vec<Case> {
                     .collect();
                 let tasks = vec![Task {
                     name: "t".to_string(),
-                    release: Release::Period(10),
+                    release: Release::Period(Dur::Ms(10)),
                     priority: 1,
-                    deadline_from: true,
+                    deadline_from: Some("release"),
                     side: Side {
                         uses: task_uses.clone(),
                         ..Side::default()
                     },
+                    ..Task::default()
                 }];
                 let edge_words: Vec<String> = edges
                     .iter()
@@ -465,6 +779,7 @@ fn three_services() -> Vec<Case> {
                         services,
                         tasks,
                         own,
+                        ..Description::default()
                     },
                 });
             }
@@ -542,10 +857,11 @@ fn two_services_with_adapters() -> Vec<Case> {
                             }
                             let tasks = vec![Task {
                                 name: "t".to_string(),
-                                release: Release::Period(10),
+                                release: Release::Period(Dur::Ms(10)),
                                 priority: 1,
-                                deadline_from: true,
+                                deadline_from: Some("release"),
                                 side: named(Side::default(), subset(t_set), by_needs),
+                                ..Task::default()
                             }];
                             let edge_words: Vec<String> = edges
                                 .iter()
@@ -581,6 +897,7 @@ fn two_services_with_adapters() -> Vec<Case> {
                                     services,
                                     tasks,
                                     own,
+                                    ..Description::default()
                                 },
                             });
                         }
@@ -737,25 +1054,27 @@ fn release_case(
     let mut tasks = vec![Task {
         name: "t".to_string(),
         release: if t_sporadic {
-            Release::MinSeparation(20)
+            Release::MinSeparation(Dur::Ms(20))
         } else {
-            Release::Period(20)
+            Release::Period(Dur::Ms(20))
         },
         priority: 1,
-        deadline_from: true,
+        deadline_from: Some("release"),
         side: t,
+        ..Task::default()
     }];
     if let Some(sporadic) = u_kind {
         tasks.push(Task {
             name: "u".to_string(),
             release: if sporadic {
-                Release::MinSeparation(40)
+                Release::MinSeparation(Dur::Ms(40))
             } else {
-                Release::Period(40)
+                Release::Period(Dur::Ms(40))
             },
             priority: 2,
-            deadline_from: true,
+            deadline_from: Some("release"),
             side: u,
+            ..Task::default()
         });
     }
     Case {
@@ -766,6 +1085,7 @@ fn release_case(
             services,
             tasks,
             own,
+            ..Description::default()
         },
     }
 }
@@ -834,15 +1154,17 @@ fn requesters_of_every_kind() -> Vec<Case> {
                     tasks: vec![Task {
                         name: "t".to_string(),
                         release: if requester == Requester::SporadicTask {
-                            Release::MinSeparation(20)
+                            Release::MinSeparation(Dur::Ms(20))
                         } else {
-                            Release::Period(20)
+                            Release::Period(Dur::Ms(20))
                         },
                         priority: 1,
-                        deadline_from: true,
+                        deadline_from: Some("release"),
                         side: t,
+                        ..Task::default()
                     }],
                     own,
+                    ..Description::default()
                 },
             });
         }
@@ -903,17 +1225,19 @@ fn two_tasks_sharing_services() -> Vec<Case> {
                         let tasks = vec![
                             Task {
                                 name: "t".to_string(),
-                                release: Release::Period(10),
+                                release: Release::Period(Dur::Ms(10)),
                                 priority: 1,
-                                deadline_from: t_from,
+                                deadline_from: t_from.then_some("release"),
                                 side: named(Side::default(), subset(t_set), false),
+                                ..Task::default()
                             },
                             Task {
                                 name: "u".to_string(),
-                                release: Release::MinSeparation(20),
+                                release: Release::MinSeparation(Dur::Ms(20)),
                                 priority: 2,
-                                deadline_from: u_from,
+                                deadline_from: u_from.then_some("release"),
                                 side: named(Side::default(), subset(u_set), false),
+                                ..Task::default()
                             },
                         ];
                         let edge_words: Vec<String> = edges
@@ -942,6 +1266,7 @@ fn two_tasks_sharing_services() -> Vec<Case> {
                                 services,
                                 tasks,
                                 own,
+                                ..Description::default()
                             },
                         });
                     }
@@ -999,16 +1324,17 @@ fn receivers_of_interrupt_code() -> Vec<Case> {
                                 Task {
                                     name: name.to_string(),
                                     release: if sporadic {
-                                        Release::MinSeparation(20)
+                                        Release::MinSeparation(Dur::Ms(20))
                                     } else {
-                                        Release::Period(20)
+                                        Release::Period(Dur::Ms(20))
                                     },
                                     priority,
-                                    deadline_from: from,
+                                    deadline_from: from.then_some("release"),
                                     side: Side {
                                         needs: programs.needs(),
                                         ..Side::default()
                                     },
+                                    ..Task::default()
                                 }
                             };
                             let (t_sporadic, u_sporadic) = (kinds & 1 == 1, kinds & 2 == 2);
@@ -1035,6 +1361,7 @@ fn receivers_of_interrupt_code() -> Vec<Case> {
                                         needs: own_programs.needs(),
                                         ..Side::default()
                                     },
+                                    ..Description::default()
                                 },
                             });
                         }
@@ -1044,6 +1371,745 @@ fn receivers_of_interrupt_code() -> Vec<Case> {
         }
     }
     cases
+}
+
+/// What a block or a platform of the hardware universe requires at its own level (model §8 rule 1: "any other
+/// declaration, for what it writes at its own level").
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Requires {
+    Nothing,
+    /// A timer's channel: `(needs relative-delay)`, the alarm it programs itself.
+    Alarm,
+    /// An absolute deadline: `(needs absolute-deadline)`, met by its own `deadline-over-delay` instance, whose expiry
+    /// runs its code.
+    Deadline,
+    /// An interrupt source: `(needs interrupt-source)`, its handler run in the source's interrupt.
+    Source,
+    /// Another block's output: `(needs observable-output)`.
+    Output,
+}
+
+impl Requires {
+    const ALL: [Self; 5] = [
+        Self::Nothing,
+        Self::Alarm,
+        Self::Deadline,
+        Self::Source,
+        Self::Output,
+    ];
+
+    fn needs(self) -> Vec<String> {
+        match self {
+            Self::Nothing => Vec::new(),
+            Self::Alarm => names(&["relative-delay"]),
+            Self::Deadline => names(&["absolute-deadline"]),
+            Self::Source => names(&["interrupt-source"]),
+            Self::Output => names(&["observable-output"]),
+        }
+    }
+}
+
+/// Who binds to what a block or a platform of the hardware universe offers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Binder {
+    Nothing,
+    /// A service the system's own level uses.
+    OwnService,
+    /// A service task `t` uses.
+    TService,
+    /// A service task `u` uses.
+    UService,
+    /// A service both tasks use.
+    BothService,
+    /// Task `t` itself.
+    TDirect,
+    /// The system's own level itself.
+    OwnDirect,
+    /// A service task `u` uses that also handles the source, so that the source's interrupt reaches the block or the
+    /// platform through the binding, beside `u`'s job.
+    UHandler,
+}
+
+impl Binder {
+    const ALL: [Self; 8] = [
+        Self::Nothing,
+        Self::OwnService,
+        Self::TService,
+        Self::UService,
+        Self::BothService,
+        Self::TDirect,
+        Self::OwnDirect,
+        Self::UHandler,
+    ];
+}
+
+/// What composes the service `alarm`, which task `t` uses, by a `uses` of its own: composition, never a call (§2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Composer {
+    Nothing,
+    Block,
+    Platform,
+}
+
+/// **Hardware with requirements of its own** (§2, §2.6, §2.7, §2.9, §2.10; round 12, R12-R4): a block `dma.x`
+/// offering `transfer-engine` and the platform `soc` offering `core-count`, each requiring nothing, a timer's channel,
+/// an absolute deadline, the source or another block's output; each bound to by nothing, by a service the system's own
+/// level, task `t`, task `u` or both use, by `t` or the system's own level itself, or by a service `u` uses that
+/// handles the source; the service `alarm`, which `t`
+/// uses, composed by nothing, by `dma.x` or by `soc`; and task `u` periodic or sporadic. So hardware is a node bound
+/// to by something or by nothing, runs in its own alarm's, its expiry's and its source's interrupts, is multiplexed by
+/// two jobs, releases a sporadic task it handles a source for, and a task reaches the platform through a binding —
+/// while what a block or a platform composes is never reached through it, and no edge crosses composition.
+fn requiring_hardware() -> Vec<Case> {
+    let mut cases = Vec::new();
+    for dma in Requires::ALL {
+        for soc in Requires::ALL {
+            for dma_binder in Binder::ALL {
+                for soc_binder in Binder::ALL {
+                    for composer in [Composer::Nothing, Composer::Block, Composer::Platform] {
+                        for u_sporadic in [false, true] {
+                            cases.push(hardware_case(
+                                (dma, dma_binder),
+                                (soc, soc_binder),
+                                composer,
+                                u_sporadic,
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    cases
+}
+
+fn hardware_case(
+    (dma, dma_binder): (Requires, Binder),
+    (soc, soc_binder): (Requires, Binder),
+    composer: Composer,
+    u_sporadic: bool,
+) -> Case {
+    let mut t = Side {
+        uses: names(&["alarm"]),
+        ..Side::default()
+    };
+    let mut u = Side::default();
+    let mut own = Side::default();
+    let mut services = vec![service("alarm", Counter::Timer, false, Vec::new())];
+    for (binder, via, fact) in [
+        (dma_binder, "xfer", "transfer-engine"),
+        (soc_binder, "cpu", "core-count"),
+    ] {
+        let mut through = Service {
+            name: via.to_string(),
+            policy: false,
+            side: Side {
+                needs: names(&[fact]),
+                ..Side::default()
+            },
+        };
+        match binder {
+            Binder::Nothing => {}
+            Binder::OwnService => own.uses.push(via.to_string()),
+            Binder::UHandler => {
+                through.side.needs.push(INTERRUPT_FACT.to_string());
+                u.uses.push(via.to_string());
+            }
+            Binder::TService => t.uses.push(via.to_string()),
+            Binder::UService => u.uses.push(via.to_string()),
+            Binder::BothService => {
+                t.uses.push(via.to_string());
+                u.uses.push(via.to_string());
+            }
+            Binder::TDirect => t.needs.push(fact.to_string()),
+            Binder::OwnDirect => own.needs.push(fact.to_string()),
+        }
+        if matches!(
+            binder,
+            Binder::OwnService
+                | Binder::TService
+                | Binder::UService
+                | Binder::BothService
+                | Binder::UHandler
+        ) {
+            services.push(through);
+        }
+    }
+    let mut dma_block = Block {
+        name: "dma.x".to_string(),
+        offers: names(&["(transfer-engine true)", "(reachable-at-privilege machine)"]),
+        side: Side {
+            needs: dma.needs(),
+            ..Side::default()
+        },
+        ..Block::default()
+    };
+    if composer == Composer::Block {
+        dma_block.side.uses.push("alarm".to_string());
+    }
+    let blocks = vec![
+        timer_block("timer.d", 4, true),
+        source_block("dev.s", Separation::Stated(20), ""),
+        Block {
+            name: "uart.c".to_string(),
+            offers: names(&[
+                "(observable-output true)",
+                "(reachable-at-privilege machine)",
+            ]),
+            ..Block::default()
+        },
+        dma_block,
+    ];
+    let mut composed: Vec<String> = blocks.iter().map(|b| b.name.clone()).collect();
+    if composer == Composer::Platform {
+        composed.push("alarm".to_string());
+    }
+    let platform = Block {
+        name: "soc".to_string(),
+        offers: names(&["(core-count 1 tick)", "(reachable-at-privilege machine)"]),
+        side: Side {
+            needs: soc.needs(),
+            uses: composed,
+            ..Side::default()
+        },
+        ..Block::default()
+    };
+    let tasks = vec![
+        Task {
+            name: "t".to_string(),
+            release: Release::Period(Dur::Ms(10)),
+            priority: 1,
+            side: t,
+            ..Task::default()
+        },
+        Task {
+            name: "u".to_string(),
+            release: if u_sporadic {
+                Release::MinSeparation(Dur::Ms(20))
+            } else {
+                Release::Period(Dur::Ms(20))
+            },
+            priority: 2,
+            side: u,
+            ..Task::default()
+        },
+    ];
+    Case {
+        label: format!(
+            "dma.x:{dma:?} by {dma_binder:?}; soc:{soc:?} by {soc_binder:?}; alarm composed by {composer:?}; u {}",
+            if u_sporadic { "sporadic" } else { "periodic" }
+        ),
+        description: Description {
+            blocks,
+            platforms: vec![platform],
+            services,
+            tasks,
+            own,
+            ..Description::default()
+        },
+    }
+}
+
+/// The jitters a task of the task-clauses universe writes: none, zero, 1500 us, one longer than its period or
+/// separation, and one past the arithmetic.
+const JITTERS: [Option<Dur>; 5] = [
+    None,
+    Some(Dur::Ms(0)),
+    Some(Dur::Spelled("1500 us")),
+    Some(Dur::Ms(50)),
+    Some(Dur::Spelled(PAST)),
+];
+
+/// The overrun policies a task writes: none, `fault` and `skip-late-job`, the two the profile performs.
+const OVERRUNS: [Option<&str>; 3] = [None, Some("fault"), Some("skip-late-job")];
+
+/// The deadline's reference: `release`, none written, and another event.
+const REFERENCES: [Option<&str>; 3] = [Some("release"), None, Some("activation")];
+
+/// **What a task line states** (§2.2, §1; round 12, R12-R4): a periodic task `t` and a sporadic task `u`, either
+/// first in runtime order, each writing every jitter of [`JITTERS`], every overrun policy of [`OVERRUNS`] and every
+/// deadline reference of [`REFERENCES`]. So "its release jitter, written as zero where none is stated" and "its overrun
+/// policy, `fault` where none is stated" are read, and a deadline from another event is refused task by task in
+/// runtime order, after a jitter past the arithmetic, the second list's first bullet.
+fn task_clauses() -> Vec<Case> {
+    let mut cases = Vec::new();
+    for u_first in [false, true] {
+        for t_jitter in JITTERS {
+            for t_overrun in OVERRUNS {
+                for t_from in REFERENCES {
+                    for u_jitter in JITTERS {
+                        for u_overrun in OVERRUNS {
+                            for u_from in REFERENCES {
+                                let (t_priority, u_priority) =
+                                    if u_first { (2, 1) } else { (1, 2) };
+                                let task =
+                                    |name: &str,
+                                     release: Release,
+                                     priority: u32,
+                                     jitter: Option<Dur>,
+                                     overrun: Option<&'static str>,
+                                     from: Option<&'static str>,
+                                     uses: &str| Task {
+                                        name: name.to_string(),
+                                        release,
+                                        jitter,
+                                        overrun,
+                                        priority,
+                                        deadline_from: from,
+                                        side: Side {
+                                            uses: names(&[uses]),
+                                            ..Side::default()
+                                        },
+                                        ..Task::default()
+                                    };
+                                cases.push(Case {
+                                    label: format!(
+                                        "t:{t_jitter:?},{t_overrun:?},{t_from:?} u:{u_jitter:?},{u_overrun:?},{u_from:?} \
+                                         first={}",
+                                        if u_first { "u" } else { "t" }
+                                    ),
+                                    description: Description {
+                                        blocks: vec![
+                                            Block {
+                                                name: "uart.c".to_string(),
+                                                offers: names(&[
+                                                    "(observable-output true)",
+                                                    "(reachable-at-privilege machine)",
+                                                ]),
+                                                ..Block::default()
+                                            },
+                                            source_block("dev.s", Separation::Stated(40), ""),
+                                        ],
+                                        services: vec![
+                                            Service {
+                                                name: "log".to_string(),
+                                                policy: false,
+                                                side: Side {
+                                                    needs: names(&["observable-output"]),
+                                                    ..Side::default()
+                                                },
+                                            },
+                                            service("evt", Counter::None, true, Vec::new()),
+                                        ],
+                                        tasks: vec![
+                                            task(
+                                                "t",
+                                                Release::Period(Dur::Ms(20)),
+                                                t_priority,
+                                                t_jitter,
+                                                t_overrun,
+                                                t_from,
+                                                "log",
+                                            ),
+                                            task(
+                                                "u",
+                                                Release::MinSeparation(Dur::Ms(40)),
+                                                u_priority,
+                                                u_jitter,
+                                                u_overrun,
+                                                u_from,
+                                                "evt",
+                                            ),
+                                        ],
+                                        ..Description::default()
+                                    },
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    cases
+}
+
+/// What one source of the arithmetic universe states of its separation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum SourceState {
+    /// A separation within the arithmetic.
+    Within,
+    /// One spelling past it.
+    Past,
+    /// Two spellings, one within and one past, whose comparison overflows it.
+    Overflowing,
+    /// One spelling past it, the source bound by nothing, so that the plan writes no separation of it.
+    PastUnbound,
+}
+
+/// What a `deadline-over-delay` requester of the arithmetic universe writes on `delivery-bound`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum BoundState {
+    Bare,
+    Within,
+    Past,
+}
+
+/// The separations of the arithmetic universe's sources, `dev.z` of 20 ms and `dev.a` of 40 ms, and at the
+/// arithmetic's edge `dev.z` of [`WIDE`] in two agreeing spellings and `dev.a` of [`WIDE_LONGER`]; each also with a
+/// spelling past the arithmetic beside it, [`PAST`] or, at the edge, [`TIGHT_PAST`].
+const Z_WITHIN: [&[&str]; 2] = [&["20 ms"], &[WIDE, WIDE_IN_MS]];
+const Z_OVERFLOWING: [&[&str]; 2] = [&["20 ms", PAST], &[WIDE, TIGHT_PAST]];
+const A_WITHIN: [&[&str]; 2] = [&["40 ms"], &[WIDE_LONGER]];
+const A_OVERFLOWING: [&[&str]; 2] = [&["40 ms", PAST], &[WIDE_LONGER, TIGHT_PAST]];
+const ONLY_PAST: [&[&str]; 2] = [&[PAST], &[TIGHT_PAST]];
+
+/// **Durations past the arithmetic, and at its edge** (§1, §2.2, §2.4, §2.5; round 12, R12-R4): a periodic task `t`
+/// using a source `dev.z` and two `deadline-over-delay` requesters `dl.a` and `dl.b`, and a sporadic task `u` using a
+/// source `dev.a`, either first in runtime order; each of `t`'s period, deadline and jitter past the arithmetic or not,
+/// and `u`'s three past or none; each source within, past in one spelling, overflowing in two, or past and bound by
+/// nothing; each requester's bound bare, within or past; and every value within the arithmetic a few milliseconds, or
+/// at its edge — denominators of `10^37`, `10^38` and `8.192e37`, past it by the least a spelling reaches, spellings
+/// only their reduction brings within, and comparisons whose cross-products pass 128 bits. So §1 names each duration past the arithmetic in its order, and a duration
+/// within it is written exactly however it is spelled.
+fn past_the_arithmetic() -> Vec<Case> {
+    const SOURCES: [SourceState; 4] = [
+        SourceState::Within,
+        SourceState::Past,
+        SourceState::Overflowing,
+        SourceState::PastUnbound,
+    ];
+    const BOUNDS: [BoundState; 3] = [BoundState::Bare, BoundState::Within, BoundState::Past];
+    let mut cases = Vec::new();
+    for edge in [false, true] {
+        for u_first in [false, true] {
+            for t_past in 0..8usize {
+                for u_past in [false, true] {
+                    for z in SOURCES {
+                        for a in SOURCES {
+                            for dl_a in BOUNDS {
+                                for dl_b in BOUNDS {
+                                    cases.push(arithmetic_case(
+                                        edge,
+                                        u_first,
+                                        (t_past, u_past),
+                                        (z, a),
+                                        (dl_a, dl_b),
+                                    ));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    cases
+}
+
+fn arithmetic_case(
+    edge: bool,
+    u_first: bool,
+    (t_past, u_past): (usize, bool),
+    (z, a): (SourceState, SourceState),
+    (dl_a, dl_b): (BoundState, BoundState),
+) -> Case {
+    let at = usize::from(edge);
+    let within = |plain: Dur, wide: &'static str| if edge { Dur::Spelled(wide) } else { plain };
+    let past = Dur::Spelled(if edge { TIGHT_PAST } else { PAST });
+    let mut blocks = vec![timer_block("timer.d", 2, true)];
+    let mut services = Vec::new();
+    let mut t = Side {
+        uses: names(&["dl.a", "dl.b"]),
+        ..Side::default()
+    };
+    let mut u = Side::default();
+    for (block, state, within_spellings, overflowing, states, handler, side) in [
+        (
+            "dev.z",
+            z,
+            Z_WITHIN[at],
+            Z_OVERFLOWING[at],
+            "",
+            "evt.z",
+            &mut t,
+        ),
+        (
+            "dev.a",
+            a,
+            A_WITHIN[at],
+            A_OVERFLOWING[at],
+            "run sleep",
+            "evt.a",
+            &mut u,
+        ),
+    ] {
+        let spellings = match state {
+            SourceState::Within => within_spellings,
+            SourceState::Past | SourceState::PastUnbound => ONLY_PAST[at],
+            SourceState::Overflowing => overflowing,
+        };
+        blocks.push(source_block(block, Separation::Spelled(spellings), states));
+        if state != SourceState::PastUnbound {
+            let mut evt = service(handler, Counter::None, true, Vec::new());
+            if !states.is_empty() {
+                evt.side
+                    .other
+                    .push(format!("(available-in-state {states})"));
+            }
+            services.push(evt);
+            side.uses.push(handler.to_string());
+        }
+    }
+    for (name, state, wide) in [("dl.a", dl_a, WIDE), ("dl.b", dl_b, TIGHT_WITHIN)] {
+        let mut deadline = service(name, Counter::Deadline, false, Vec::new());
+        match state {
+            BoundState::Bare => {}
+            BoundState::Within => deadline.side.at_most.push((
+                "delivery-bound".to_string(),
+                within(Dur::Ms(DELIVERY_BOUND_MS), wide),
+            )),
+            BoundState::Past => deadline
+                .side
+                .at_most
+                .push(("delivery-bound".to_string(), past)),
+        }
+        services.push(deadline);
+    }
+    let (t_priority, u_priority) = if u_first { (2, 1) } else { (1, 2) };
+    let pick = |is_past: bool, within: Dur| if is_past { past } else { within };
+    let tasks = vec![
+        Task {
+            name: "t".to_string(),
+            release: Release::Period(pick(t_past & 1 == 1, within(Dur::Ms(20), WIDE_LONGER))),
+            deadline: Some(pick(t_past & 2 == 2, within(Dur::Ms(20), WIDE))),
+            jitter: if t_past & 4 == 4 {
+                Some(past)
+            } else if edge {
+                Some(Dur::Spelled(REDUCED))
+            } else {
+                None
+            },
+            priority: t_priority,
+            side: t,
+            ..Task::default()
+        },
+        Task {
+            name: "u".to_string(),
+            release: Release::MinSeparation(pick(u_past, within(Dur::Ms(40), WIDE))),
+            deadline: Some(pick(u_past, within(Dur::Ms(40), WIDE_IN_MS))),
+            jitter: u_past.then_some(past),
+            priority: u_priority,
+            side: u,
+            ..Task::default()
+        },
+    ];
+    Case {
+        label: format!(
+            "{} first={} t-past={}{}{} u-past={u_past} dev.z:{z:?} dev.a:{a:?} dl.a:{dl_a:?} dl.b:{dl_b:?}",
+            if edge { "edge" } else { "plain" },
+            if u_first { "u" } else { "t" },
+            if t_past & 1 == 1 { "period," } else { "" },
+            if t_past & 2 == 2 { "deadline," } else { "" },
+            if t_past & 4 == 4 { "jitter" } else { "" },
+        ),
+        description: Description {
+            blocks,
+            services,
+            tasks,
+            ..Description::default()
+        },
+    }
+}
+
+/// **A second system** (§1, §2; round 12, R12-R4 and R12-R1): systems `sys` and `other` in one description, each
+/// lowered. A system is named by `uses`, or every one by `needs`, at each set of five sites — `sys`'s task, `sys`'s own
+/// level and a service `sys`'s task uses naming `other`, and `other`'s task and a service only `other`'s task uses
+/// naming `sys`; the service `alarm`, taking a channel, used by `sys`'s task alone or by both systems' tasks; `other`
+/// on `sys`'s platform or on its own, which composes a block requiring a timer's channel; each system's own level using
+/// nothing or a service. So §1's naming-system refusal reads the requesters the lowered system serves and no other —
+/// a system reached served for its own level alone — the generator's closure is held to the configuration checker on
+/// each, and a service two systems use, and hardware another system serves, are read system by system.
+fn two_systems() -> Vec<Case> {
+    let mut cases = Vec::new();
+    for sites in 0..32usize {
+        for by_needs in [false, true] {
+            for shared_alarm in [false, true] {
+                for own_platform in [false, true] {
+                    for sys_own in 0..2usize {
+                        for other_own in 0..3usize {
+                            let [first, second] = two_systems_case(
+                                sites,
+                                by_needs,
+                                shared_alarm,
+                                own_platform,
+                                (sys_own, other_own),
+                            );
+                            cases.push(first);
+                            cases.push(second);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    cases
+}
+
+fn two_systems_case(
+    sites: usize,
+    by_needs: bool,
+    shared_alarm: bool,
+    own_platform: bool,
+    (sys_own, other_own): (usize, usize),
+) -> [Case; 2] {
+    let site = |bit: usize| sites >> bit & 1 == 1;
+    let name_in = |side: &mut Side, name: &str| {
+        if by_needs {
+            side.needs.push(name.to_string());
+        } else {
+            side.uses.push(name.to_string());
+        }
+    };
+    let simple = |name: &str, needs: &str| Service {
+        name: name.to_string(),
+        policy: false,
+        side: Side {
+            needs: names(&[needs]),
+            ..Side::default()
+        },
+    };
+    let mut services = vec![
+        simple("log", "observable-output"),
+        simple("alarm", "relative-delay"),
+    ];
+    let mut t = Side {
+        uses: names(&["log", "alarm"]),
+        ..Side::default()
+    };
+    let mut o = Side {
+        uses: names(&["log"]),
+        ..Side::default()
+    };
+    if shared_alarm {
+        o.uses.push("alarm".to_string());
+    }
+    let mut sys_level = Side::default();
+    if sys_own == 1 {
+        sys_level.uses.push("log".to_string());
+    }
+    let mut other_level = Side::default();
+    match other_own {
+        1 => other_level.uses.push("log".to_string()),
+        2 => other_level.uses.push("alarm".to_string()),
+        _ => {}
+    }
+    if site(0) {
+        name_in(&mut t, "other");
+    }
+    if site(1) {
+        name_in(&mut sys_level, "other");
+    }
+    if site(2) {
+        let mut bridge = Service {
+            name: "bridge.s".to_string(),
+            policy: false,
+            side: Side::default(),
+        };
+        name_in(&mut bridge.side, "other");
+        services.push(bridge);
+        t.uses.push("bridge.s".to_string());
+    }
+    if site(3) {
+        name_in(&mut o, "sys");
+    }
+    if site(4) {
+        let mut bridge = Service {
+            name: "bridge.o".to_string(),
+            policy: false,
+            side: Side::default(),
+        };
+        name_in(&mut bridge.side, "sys");
+        services.push(bridge);
+        o.uses.push("bridge.o".to_string());
+    }
+    let uart = Block {
+        name: "uart.c".to_string(),
+        offers: names(&[
+            "(observable-output true)",
+            "(reachable-at-privilege machine)",
+        ]),
+        ..Block::default()
+    };
+    let mut blocks = vec![timer_block("timer.d", 4, false), uart];
+    let platform = |name: &str, composes: &[&str]| Block {
+        name: name.to_string(),
+        offers: names(&["(core-count 1 tick)", "(reachable-at-privilege machine)"]),
+        side: Side {
+            uses: names(composes),
+            ..Side::default()
+        },
+        ..Block::default()
+    };
+    let mut platforms = vec![platform("host.p", &["timer.d", "uart.c"])];
+    if own_platform {
+        blocks.push(timer_block("timer.q", 2, false));
+        blocks.push(Block {
+            name: "dma.q".to_string(),
+            offers: names(&["(transfer-engine true)", "(reachable-at-privilege machine)"]),
+            side: Side {
+                needs: names(&["relative-delay"]),
+                ..Side::default()
+            },
+            ..Block::default()
+        });
+        platforms.push(platform("host.q", &["uart.c", "timer.q", "dma.q"]));
+    }
+    let sys = System {
+        name: "sys".to_string(),
+        tasks: vec![Task {
+            name: "t".to_string(),
+            side: t,
+            ..Task::default()
+        }],
+        own: sys_level,
+        platform: "host.p".to_string(),
+    };
+    let other = System {
+        name: "other".to_string(),
+        tasks: vec![Task {
+            name: "o".to_string(),
+            release: Release::Period(Dur::Ms(20)),
+            side: o,
+            ..Task::default()
+        }],
+        own: other_level,
+        platform: if own_platform { "host.q" } else { "host.p" }.to_string(),
+    };
+    let label = format!(
+        "naming={} by {} alarm={} other on {} sys-own={sys_own} other-own={other_own}",
+        [
+            "t>other",
+            "sys>other",
+            "bridge.s>other",
+            "o>sys",
+            "bridge.o>sys",
+        ]
+        .iter()
+        .enumerate()
+        .filter(|(bit, _)| site(*bit))
+        .map(|(_, s)| *s)
+        .collect::<Vec<_>>()
+        .join(","),
+        if by_needs { "needs" } else { "uses" },
+        if shared_alarm { "both" } else { "sys" },
+        if own_platform { "host.q" } else { "host.p" },
+    );
+    let lowering = |lowered: &System, other: &System, others_first: bool| Case {
+        label: format!("{label}: lowering {}", lowered.name),
+        description: Description {
+            system: lowered.name.clone(),
+            blocks: blocks.clone(),
+            platforms: platforms.clone(),
+            services: services.clone(),
+            tasks: lowered.tasks.clone(),
+            own: lowered.own.clone(),
+            platform: lowered.platform.clone(),
+            others: vec![other.clone()],
+            others_first,
+        },
+    };
+    [lowering(&sys, &other, false), lowering(&other, &sys, true)]
 }
 
 // =====================================================================================================================
@@ -1134,25 +2200,6 @@ fn kind_of(instance: &str) -> &'static AdapterKind {
         .unwrap_or_else(|| panic!("the reading knows no adapter kind `{kind}`"))
 }
 
-fn gcd(a: u64, b: u64) -> u64 {
-    if b == 0 {
-        a
-    } else {
-        gcd(b, a % b)
-    }
-}
-
-/// §2.2: "Each is one reduced rational number of seconds, `N s` or `N/D s`, with `D > 1` and `N` and `D` coprime".
-fn duration(ms: u64) -> String {
-    let g = gcd(ms, 1000);
-    let (n, d) = (ms / g, 1000 / g);
-    if d == 1 {
-        format!("{n} s")
-    } else {
-        format!("{n}/{d} s")
-    }
-}
-
 /// §3: "A list with no members is written with its head alone".
 fn list<I, S>(head: &str, items: I) -> String
 where
@@ -1202,11 +2249,22 @@ fn reach(edges: &BTreeMap<String, BTreeSet<String>>, from: &str) -> BTreeSet<Str
     reached
 }
 
+/// Whether comparing `a` with `b` by cross-multiplication in signed 128 bits would overflow: the reading compares
+/// exactly, and counts the systems that need it.
+fn past_128_bits(a: Ratio, b: Ratio) -> bool {
+    let max = u128::try_from(i128::MAX).expect("positive");
+    [(a.n, b.d), (b.n, a.d)]
+        .iter()
+        .any(|(x, y)| x.checked_mul(*y).is_none_or(|p| p > max))
+}
+
 /// The record's reading of one system: every line of the kinds it derives.
 struct Reading {
     lines: Vec<String>,
     /// The classes of the record's rules this system exercises, so that a universe's reach is counted.
     classes: BTreeSet<&'static str>,
+    /// Where the record's bindings contradict what the reading derives from the description itself.
+    findings: Vec<String>,
 }
 
 /// The plan `docs/decisions/decision_runtime-plan.md` gives `description` with the assignment `binds`, for the lines
@@ -1214,19 +2272,35 @@ struct Reading {
 fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     let system = description.system.as_str();
     let task_text = |task: &Task| format!("(task {system} {})", task.name);
-    let declared: BTreeSet<&str> = description
+    let hardware: BTreeMap<String, Block> = description
+        .hardware()
+        .into_iter()
+        .map(|b| (b.name.clone(), b))
+        .collect();
+    let platforms: BTreeSet<String> = description
+        .platforms()
+        .into_iter()
+        .map(|p| p.name)
+        .collect();
+    let declared_services: BTreeSet<&str> = description
         .services
         .iter()
         .map(|s| s.name.as_str())
-        .chain(description.blocks.iter().map(|b| b.name.as_str()))
         .collect();
+    let systems: BTreeSet<String> = description.systems().into_iter().map(|s| s.name).collect();
+    let declared = |name: &str| {
+        declared_services.contains(name) || hardware.contains_key(name) || systems.contains(name)
+    };
+    let mut classes = BTreeSet::new();
+    let mut findings = Vec::new();
 
     // §2: a requester reaches what it names by `uses` or `needs` — a declaration, never a vocabulary fact — and what
-    // it is bound to as its provider, at any depth.
+    // it is bound to as its provider, at any depth, "but for a block's or a platform's `uses`, which is composition,
+    // never a call (rule 1): hardware reaches only what its own requirements are bound to".
     let mut edges: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     let mut name = |who: String, side: &Side| {
         for named in side.uses.iter().chain(&side.needs) {
-            if declared.contains(named.as_str()) {
+            if declared(named) {
                 edges.entry(who.clone()).or_default().insert(named.clone());
             }
         }
@@ -1238,6 +2312,21 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         name(task_text(task), &task.side);
     }
     name(system.to_string(), &description.own);
+    for block in hardware.values() {
+        assert!(
+            !block.side.needs.iter().any(|n| declared(n)),
+            "the universes name no declaration by a block's or a platform's `needs`: `{}`",
+            block.name
+        );
+        if block
+            .side
+            .uses
+            .iter()
+            .any(|n| declared_services.contains(n.as_str()))
+        {
+            classes.insert("composition: a block's or a platform's `uses` naming a service");
+        }
+    }
     for bind in binds {
         edges
             .entry(bind.requester.clone())
@@ -1245,17 +2334,111 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             .insert(bind.provider.clone());
     }
 
+    // Model §8 rule 7: "A system's **hardware** is the blocks and platforms its `platform` clause, its own `uses` and
+    // `needs` or its tasks' name, and every block or platform those blocks and platforms name in turn through `uses`
+    // or `needs` ... at any depth" — the hardware the system serves.
+    let mut todo: Vec<String> = std::iter::once(description.platform.clone())
+        .chain(description.own.uses.iter().cloned())
+        .chain(description.own.needs.iter().cloned())
+        .chain(
+            description
+                .tasks
+                .iter()
+                .flat_map(|t| t.side.uses.iter().chain(&t.side.needs).cloned()),
+        )
+        .collect();
+    let mut system_hardware = BTreeSet::new();
+    while let Some(at) = todo.pop() {
+        if let Some(block) = hardware.get(&at) {
+            if system_hardware.insert(at.clone()) {
+                todo.extend(
+                    block
+                        .side
+                        .uses
+                        .iter()
+                        .chain(&block.side.needs)
+                        .filter(|n| hardware.contains_key(n.as_str()))
+                        .cloned(),
+                );
+            }
+        }
+    }
+
     // §2: "A **node** below is a node of the joint rules' initialization graph (§2.7): a provider an active binding
-    // names (a block, a platform or an adapter's instance), a service, or a policy". A task and the system's own level
-    // are requesters but never nodes. A service is the system's where the system or a task of it reaches it.
+    // names (a block, a platform or an adapter's instance), a block or a platform the system serves that is bound for
+    // requirements of its own — a requester like any other ... — a service, or a policy". A task and the system's own
+    // level are requesters but never nodes. A service is the system's where the system or a task of it reaches it.
     let mut served = reach(&edges, system);
     for task in &description.tasks {
         served.extend(reach(&edges, &task_text(task)));
     }
     let mut nodes: BTreeSet<String> = binds.iter().map(|b| b.provider.clone()).collect();
+    for bind in binds {
+        if hardware.contains_key(&bind.requester) {
+            if system_hardware.contains(&bind.requester) {
+                nodes.insert(bind.requester.clone());
+            } else {
+                findings.push(format!(
+                    "`{}` is bound for requirements of its own, and is no hardware `{system}` serves (model §8 \
+                     rule 7)",
+                    bind.requester
+                ));
+            }
+        }
+    }
     for service in &description.services {
         if served.contains(&service.name) {
             nodes.insert(service.name.clone());
+        }
+    }
+    // Another system's requesters are none of this one's (model §8 rule 7; §1's refusal scoped to "the requesters the
+    // system serves", round 12's R12-R1).
+    let names_a_system = |side: &Side| {
+        side.uses
+            .iter()
+            .chain(&side.needs)
+            .any(|n| systems.contains(n))
+    };
+    if description
+        .others
+        .iter()
+        .any(|o| names_a_system(&o.own) || o.tasks.iter().any(|t| names_a_system(&t.side)))
+        || description
+            .services
+            .iter()
+            .any(|s| !served.contains(&s.name) && names_a_system(&s.side))
+    {
+        classes.insert("naming: a system another system's requester names, outside this one's");
+    }
+    if description.others.iter().any(|o| {
+        o.tasks.iter().any(|t| {
+            t.side
+                .uses
+                .iter()
+                .chain(&t.side.needs)
+                .any(|n| declared_services.contains(n.as_str()) && nodes.contains(n))
+        })
+    }) {
+        classes.insert("second system: a service another system's task also uses");
+    }
+    if hardware
+        .iter()
+        .any(|(name, block)| !block.side.needs.is_empty() && !system_hardware.contains(name))
+    {
+        classes.insert("second system: requiring hardware only another system serves");
+    }
+    for node in nodes.iter().filter(|n| hardware.contains_key(n.as_str())) {
+        if binds.iter().any(|b| &b.requester == node) {
+            classes.insert(if platforms.contains(node) {
+                "hardware: a platform bound for requirements of its own"
+            } else {
+                "hardware: a block bound for requirements of its own"
+            });
+            classes.insert(if binds.iter().any(|b| &b.provider == node) {
+                "hardware: requiring, and bound to by a requester"
+            } else {
+                "hardware: requiring, and bound to by nothing"
+            });
         }
     }
 
@@ -1303,53 +2486,52 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             }
         }
     }
-    let separation_of = |provider: &str| -> Separation {
-        description
-            .blocks
-            .iter()
-            .find(|b| b.name == provider)
+    let separation_of = |provider: &str| -> Sep {
+        hardware
+            .get(provider)
             .and_then(|b| b.separation)
             .unwrap_or_else(|| panic!("`{provider}` is a source block of the description"))
+            .read()
+    };
+    let stated_of = |route: &Route| -> Option<Ratio> {
+        match separation_of(&route.provider) {
+            Sep::Stated(time) => Some(time),
+            Sep::Unstated | Sep::Absent => None,
+            Sep::Past => panic!("a separation past the arithmetic is refused before any plan (§1)"),
+        }
     };
 
     // §2.5, the order among routes: "Each route gets a distinct **rank**, rank `1` taken first": the sources with a
     // stated separation, ascending by it, ties broken on their interrupt's text; then the sources whose separation is
     // `unknown` or `absent`, by their interrupt's text; then the timer routes, by their interrupt's text.
-    let mut ranked: Vec<&Route> = routes.values().collect();
-    ranked.sort_by_key(|route| {
-        let (class, by) = if route.source {
-            match separation_of(&route.provider) {
-                Separation::Stated(ms) => (0, ms),
-                Separation::Unstated | Separation::Absent => (1, 0),
+    let rank_key = |route: &Route| -> (u8, Ratio, String) {
+        if route.source {
+            match stated_of(route) {
+                Some(time) => (0, time, route.item.clone()),
+                None => (1, Ratio::ZERO, route.item.clone()),
             }
         } else {
-            (2, 0)
-        };
-        (class, by, route.item.clone())
-    });
-    let mut classes = BTreeSet::new();
-    let stated: Vec<u64> = routes
+            (2, Ratio::ZERO, route.item.clone())
+        }
+    };
+    let mut ranked: Vec<&Route> = routes.values().collect();
+    ranked.sort_by_key(|route| rank_key(route));
+    let stated: Vec<Ratio> = routes
         .values()
         .filter(|r| r.source)
-        .filter_map(|r| match separation_of(&r.provider) {
-            Separation::Stated(ms) => Some(ms),
-            _ => None,
-        })
+        .filter_map(stated_of)
         .collect();
-    if stated
-        .iter()
-        .enumerate()
-        .any(|(i, a)| stated[i + 1..].contains(a))
-    {
-        classes.insert("rank: two stated separations tied");
+    for (i, a) in stated.iter().enumerate() {
+        for b in &stated[i + 1..] {
+            if a == b {
+                classes.insert("rank: two stated separations tied");
+            }
+            if past_128_bits(*a, *b) {
+                classes.insert("exact: two separations compared past 128 bits");
+            }
+        }
     }
-    let unstated = routes.values().any(|r| {
-        r.source
-            && matches!(
-                separation_of(&r.provider),
-                Separation::Unstated | Separation::Absent
-            )
-    });
+    let unstated = routes.values().any(|r| r.source && stated_of(r).is_none());
     if !stated.is_empty() && unstated && routes.values().any(|r| !r.source) {
         classes.insert("rank: every class in one system");
     }
@@ -1367,22 +2549,23 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         .filter(|n| is_instance(n))
         .cloned()
         .collect();
-    let side_of = |requester: &str| -> Option<&Side> {
+    let side_of = |requester: &str| -> Option<Side> {
         if requester == system {
-            return Some(&description.own);
+            return Some(description.own.clone());
         }
         description
             .tasks
             .iter()
             .find(|t| task_text(t) == requester)
-            .map(|t| &t.side)
+            .map(|t| t.side.clone())
             .or_else(|| {
                 description
                     .services
                     .iter()
                     .find(|s| s.name == requester)
-                    .map(|s| &s.side)
+                    .map(|s| s.side.clone())
             })
+            .or_else(|| hardware.get(requester).map(|b| b.side.clone()))
     };
     for instance in &instances {
         let kind = kind_of(instance);
@@ -1394,13 +2577,20 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                 side.at_most
                     .iter()
                     .filter(|(f, _)| f == fact)
-                    .map(|(_, ms)| *ms)
+                    .map(|(_, bound)| {
+                        bound
+                            .seconds()
+                            .expect("a bound past the arithmetic is refused before any plan (§1)")
+                    })
                     .min()
             });
             match bound {
-                Some(ms) => {
+                Some(time) => {
                     classes.insert("instance: an obliged fact with its bound");
-                    line.push_str(&format!(" (obliged {fact} {})", duration(ms)));
+                    if time.d > u128::from(u64::MAX) {
+                        classes.insert("exact: an obliged bound at the arithmetic's edge");
+                    }
+                    line.push_str(&format!(" (obliged {fact} {})", time.text()));
                 }
                 None => {
                     classes.insert("instance: an obliged fact bare");
@@ -1442,6 +2632,9 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                             && route.requesters.contains(&through.requester)
                         {
                             base.insert(through.requester.clone());
+                            if hardware.contains_key(&through.requester) {
+                                classes.insert("hardware: an expiry running its code");
+                            }
                         }
                     }
                 } else {
@@ -1450,6 +2643,13 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             } else if nodes.contains(&bind.requester) && route.requesters.contains(&bind.requester)
             {
                 base.insert(bind.requester.clone());
+                if hardware.contains_key(&bind.requester) {
+                    classes.insert(if route.source {
+                        "hardware: a source's handler"
+                    } else {
+                        "hardware: an alarm it programs itself"
+                    });
+                }
             }
         }
         let mut all = base.clone();
@@ -1459,6 +2659,16 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                     .into_iter()
                     .filter(|n| nodes.contains(n)),
             );
+        }
+        if all.iter().any(|n| {
+            hardware.contains_key(n)
+                && !base.contains(n)
+                && binds.iter().any(|b| &b.requester == n)
+                && binds
+                    .iter()
+                    .any(|b| &b.provider == n && base.contains(&b.requester))
+        }) {
+            classes.insert("hardware: in an interrupt through a binding to it");
         }
         runs.insert(route.item.clone(), all);
     }
@@ -1471,6 +2681,28 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                 .filter(|n| nodes.contains(n)),
         );
     }
+    // Composition is no call (§2): what a block or a platform composes is run by none of the contexts it runs in, but
+    // where something else puts it there.
+    for (name, block) in &hardware {
+        if !nodes.contains(name) {
+            continue;
+        }
+        let composed = || block.side.uses.iter().filter(|n| nodes.contains(*n));
+        if in_a_job.contains(name) {
+            if platforms.contains(name) {
+                classes.insert("composition: a platform a task reaches through a binding");
+            }
+            if composed().any(|n| !in_a_job.contains(n)) {
+                classes.insert("composition: what a node in a job composes is in none");
+            }
+        }
+        for run in runs.values().filter(|run| run.contains(name)) {
+            if composed().any(|n| !run.contains(n)) {
+                classes
+                    .insert("composition: what a node in an interrupt composes is not run there");
+            }
+        }
+    }
 
     // §2.2, what releases each task: `timer` for a periodic task; for a task with a minimum separation, the external
     // source whose route names the task or a requester it reaches, `(source NAME every)` "when the source's stated
@@ -1481,6 +2713,9 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         let trigger = match task.release {
             Release::Period(_) => "timer".to_string(),
             Release::MinSeparation(own) => {
+                let own = own
+                    .seconds()
+                    .expect("a separation past the arithmetic is refused before any plan (§1)");
                 let mut reached = reach(&edges, &task_text(task));
                 reached.insert(task_text(task));
                 let sources: Vec<&Route> = routes
@@ -1488,28 +2723,42 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                     .filter(|r| r.source && r.requesters.iter().any(|q| reached.contains(q)))
                     .collect();
                 let (trigger, class) = match sources.as_slice() {
-                    [one] => match separation_of(&one.provider) {
-                        Separation::Stated(ms) if ms >= own => (
-                            format!("(source {} every)", one.provider),
-                            if ms == own {
-                                "trigger: every, equal separations"
-                            } else {
-                                "trigger: every, a longer separation"
-                            },
-                        ),
-                        Separation::Stated(_) => (
-                            "unknown".to_string(),
-                            "trigger: unknown, a shorter separation",
-                        ),
-                        Separation::Unstated => (
-                            "unknown".to_string(),
-                            "trigger: unknown, no separation stated",
-                        ),
-                        Separation::Absent => (
-                            "unknown".to_string(),
-                            "trigger: unknown, the separation absent",
-                        ),
-                    },
+                    [one] => {
+                        if one.requesters.iter().any(|q| hardware.contains_key(q)) {
+                            classes.insert("trigger: a source a block or a platform handles");
+                        }
+                        match separation_of(&one.provider) {
+                            Sep::Stated(time) => {
+                                if past_128_bits(time, own) {
+                                    classes.insert("exact: a source's and a task's separations compared past 128 bits");
+                                }
+                                if time >= own {
+                                    (
+                                        format!("(source {} every)", one.provider),
+                                        if time == own {
+                                            "trigger: every, equal separations"
+                                        } else {
+                                            "trigger: every, a longer separation"
+                                        },
+                                    )
+                                } else {
+                                    (
+                                        "unknown".to_string(),
+                                        "trigger: unknown, a shorter separation",
+                                    )
+                                }
+                            }
+                            Sep::Unstated => (
+                                "unknown".to_string(),
+                                "trigger: unknown, no separation stated",
+                            ),
+                            Sep::Absent => (
+                                "unknown".to_string(),
+                                "trigger: unknown, the separation absent",
+                            ),
+                            Sep::Past => panic!("refused before any plan (§1)"),
+                        }
+                    }
                     [] => (
                         "unknown".to_string(),
                         "trigger: unknown, no source reaching it",
@@ -1527,14 +2776,9 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     // POLICY) (released-by TRIGGER) (uses NAME …))`, by index. The index is "the number of tasks of smaller rank", the
     // rank the task's `priority` (`decision_priority-comparison-direction.md`: "`N` is a rank"); the reference
     // `(deadline-from release)` where the description writes it, else `(deadline-from)`; "its release jitter, written
-    // as zero where none is stated", and "its overrun policy, `fault` where none is stated" — these descriptions state
-    // neither; and "what it names by `uses` or `needs` that is a service or a policy, each once: a fact or a block it
-    // names is no member", by name.
-    let declared_services: BTreeSet<&str> = description
-        .services
-        .iter()
-        .map(|s| s.name.as_str())
-        .collect();
+    // as zero where none is stated", and "its overrun policy, `fault` where none is stated", a `POLICY` "written as the
+    // description writes it" (§3); and "what it names by `uses` or `needs` that is a service or a policy, each once: a
+    // fact or a block it names is no member", by name.
     let mut task_lines: Vec<(usize, String)> = Vec::new();
     for task in &description.tasks {
         let index = description
@@ -1542,10 +2786,13 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             .iter()
             .filter(|other| other.priority < task.priority)
             .count();
-        let (release, ms) = match task.release {
-            Release::Period(ms) => ("period", ms),
-            Release::MinSeparation(ms) => ("min-separation", ms),
+        let within = |d: Dur| {
+            d.seconds()
+                .expect("a duration past the arithmetic is refused before any plan (§1)")
         };
+        let release = within(task.release.duration());
+        let deadline = within(task.deadline());
+        let jitter = task.jitter.map_or(Ratio::ZERO, within);
         let members: BTreeSet<&str> = task
             .side
             .uses
@@ -1554,25 +2801,46 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             .map(String::as_str)
             .filter(|n| declared_services.contains(n))
             .collect();
-        if task.deadline_from {
-            classes.insert("task: deadline-from written");
-        } else {
-            classes.insert("task: deadline-from owed");
+        let reference = match task.deadline_from {
+            Some("release") => {
+                classes.insert("task: deadline-from written");
+                "(deadline-from release)"
+            }
+            None => {
+                classes.insert("task: deadline-from owed");
+                "(deadline-from)"
+            }
+            Some(other) => panic!("a deadline from `{other}` is refused before any plan (§1)"),
+        };
+        classes.insert(match task.jitter {
+            None => "task: jitter zero where none is stated",
+            Some(_) if jitter == Ratio::ZERO => "task: jitter written zero",
+            Some(_) if jitter > release => "task: jitter longer than its release's duration",
+            Some(_) => "task: jitter written",
+        });
+        classes.insert(match task.overrun {
+            None => "task: overrun fault where none is stated",
+            Some("fault") => "task: overrun fault as written",
+            Some(_) => "task: overrun another policy as written",
+        });
+        if [release, deadline, jitter]
+            .iter()
+            .any(|t| t.d > u128::from(u64::MAX))
+        {
+            classes.insert("exact: a task's duration at the arithmetic's edge");
         }
         task_lines.push((
             index,
             format!(
-                "(task {index} {} (rank {}) ({release} {}) (deadline {}) {} (jitter 0 s) (overrun fault) \
+                "(task {index} {} (rank {}) ({} {}) (deadline {}) {reference} (jitter {}) (overrun {}) \
                  (released-by {}) {})",
                 task_text(task),
                 task.priority,
-                duration(ms),
-                duration(ms),
-                if task.deadline_from {
-                    "(deadline-from release)"
-                } else {
-                    "(deadline-from)"
-                },
+                task.release.clause(),
+                release.text(),
+                deadline.text(),
+                jitter.text(),
+                task.overrun.unwrap_or("fault"),
                 released_by[&task_text(task)],
                 list("uses", members)
             ),
@@ -1599,9 +2867,15 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     for (index, route) in ranked.iter().enumerate() {
         let separation = if route.source {
             match separation_of(&route.provider) {
-                Separation::Stated(ms) => duration(ms),
-                Separation::Unstated => "unknown".to_string(),
-                Separation::Absent => "absent".to_string(),
+                Sep::Stated(time) => {
+                    if time.d > u128::from(u64::MAX) {
+                        classes.insert("exact: a separation at the arithmetic's edge");
+                    }
+                    time.text()
+                }
+                Sep::Unstated => "unknown".to_string(),
+                Sep::Absent => "absent".to_string(),
+                Sep::Past => panic!("refused before any plan (§1)"),
             }
         } else {
             "programmed".to_string()
@@ -1660,8 +2934,25 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     // §2.7: the graph is `Joint::initialization`, model §8 rule 12: "An edge runs from a provider to each requester
     // bound to it, except across composition, at any depth, or to itself, and from a service or policy to each that
     // names it by `uses` or `needs`; each carries its reason", between nodes — "the system's own level ... and its
-    // tasks ... are none". Composition is a block's or a platform's `uses` (rule 1); no block or platform here requires
-    // anything, so no binding crosses it, which the reading asserts rather than transcribes.
+    // tasks ... are none". Composition is a block's or a platform's `uses` (rule 1), followed "at any depth through
+    // blocks and platforms" (rule 5): a binding whose provider composes its requester, or whose requester composes its
+    // provider, makes no edge. An instance composes nothing, and "the initialization graph keeps its edges, its device
+    // before it and it before its requesters" (rule 15). A block's or a platform's `uses` naming a service is
+    // composition too, never a call, so no named edge.
+    let composes = |from: &str| -> BTreeSet<String> {
+        let mut reached = BTreeSet::new();
+        let mut todo = vec![from.to_string()];
+        while let Some(at) = todo.pop() {
+            if let Some(block) = hardware.get(&at) {
+                for named in &block.side.uses {
+                    if reached.insert(named.clone()) {
+                        todo.push(named.clone());
+                    }
+                }
+            }
+        }
+        reached
+    };
     #[derive(Default)]
     struct Reasons {
         facts: BTreeSet<String>,
@@ -1669,15 +2960,19 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     }
     let mut graph: BTreeMap<(String, String), Reasons> = BTreeMap::new();
     for bind in binds {
-        assert!(
-            !description.blocks.iter().any(|b| b.name == bind.requester) && bind.requester != "soc",
-            "the reading transcribes no composition, and `{}` is a block or a platform requiring",
-            bind.requester
-        );
         if nodes.contains(&bind.requester)
             && nodes.contains(&bind.provider)
             && bind.requester != bind.provider
         {
+            if composes(&bind.provider).contains(&bind.requester)
+                || composes(&bind.requester).contains(&bind.provider)
+            {
+                classes.insert("initialisation: no edge across composition");
+                continue;
+            }
+            if hardware.contains_key(&bind.requester) {
+                classes.insert("initialisation: an edge to a block or a platform bound for its own requirements");
+            }
             graph
                 .entry((bind.provider.clone(), bind.requester.clone()))
                 .or_default()
@@ -1768,21 +3063,17 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         taken.extend(ready.iter().cloned());
     }
 
-    // §2.9: "A service or a policy that takes a channel is **multiplexed** where it has two or more **users**: each of
-    // the system's tasks that reaches it (§2), directly or through services, policies and bindings; and each interrupt
-    // whose context line (§2.6) holds it, but for its own timer route — at the provider whose channel it takes, or that
-    // the instance whose channel it takes programs — where nothing else that route runs reaches it". "the system's own
-    // level is none".
+    // §2.9: "A node that takes a channel — a service, a policy, or a block or platform with requirements of its own;
+    // an instance aside, whose kind's obligations say how it shares — is **multiplexed** where it has two or more
+    // **users**: each of the system's tasks that reaches it (§2), directly or through services, policies and bindings;
+    // and each interrupt whose context line (§2.6) holds it, but for its own timer route — at the provider whose
+    // channel it takes, or that the instance whose channel it takes programs — where nothing else that route runs
+    // reaches it". "the system's own level is none".
     let mut multiplexed = BTreeSet::new();
-    for service in description
-        .services
-        .iter()
-        .map(|s| &s.name)
-        .filter(|s| nodes.contains(*s))
-    {
+    for node in nodes.iter().filter(|n| !is_instance(n)) {
         let channels: Vec<&Bind> = binds
             .iter()
-            .filter(|b| &b.requester == service && CONSUMED.contains(&b.fact.as_str()))
+            .filter(|b| &b.requester == node && CONSUMED.contains(&b.fact.as_str()))
             .collect();
         if channels.is_empty() {
             continue; // it takes no channel
@@ -1801,19 +3092,19 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         }
         let mut users = BTreeSet::new();
         for task in &description.tasks {
-            if reach(&edges, &task_text(task)).contains(service) {
+            if reach(&edges, &task_text(task)).contains(node) {
                 users.insert(task_text(task));
             }
         }
         for (item, run) in &runs {
-            if !run.contains(service) {
+            if !run.contains(node) {
                 continue;
             }
             if own_routes.contains(item) {
                 // "that route's own code delivering to it is no caller, but another node's code there calling it is"
                 if run
                     .iter()
-                    .any(|n| n != service && reach(&edges, n).contains(service))
+                    .any(|n| n != node && reach(&edges, n).contains(node))
                 {
                     users.insert(item.clone());
                     classes
@@ -1827,8 +3118,11 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             }
         }
         if users.len() >= 2 {
-            multiplexed.insert(service.clone());
+            multiplexed.insert(node.clone());
             classes.insert("multiplex: multiplexed");
+            if hardware.contains_key(node) {
+                classes.insert("multiplex: a block or a platform multiplexed");
+            }
             let jobs = description
                 .tasks
                 .iter()
@@ -1838,16 +3132,21 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                 classes.insert("multiplex: multiplexed by interrupts alone");
             } else if jobs >= 2 {
                 classes.insert("multiplex: multiplexed by two jobs");
+            } else {
+                classes.insert("multiplex: multiplexed by a job and an interrupt");
             }
             if description
                 .services
                 .iter()
-                .any(|s| &s.name == service && s.policy)
+                .any(|s| &s.name == node && s.policy)
             {
                 classes.insert("multiplex: a policy multiplexed");
             }
         } else if users.len() == 1 {
             classes.insert("multiplex: a channel with one user");
+            if hardware.contains_key(node) {
+                classes.insert("multiplex: a block or a platform's channel with one user");
+            }
         }
     }
 
@@ -1860,9 +3159,9 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             ));
         }
     }
-    for service in &multiplexed {
+    for node in &multiplexed {
         obligations.push(format!(
-            "(obligation multiplex {service} (discharged-by M4.2 M2.21.2))"
+            "(obligation multiplex {node} (discharged-by M4.2 M2.21.2))"
         ));
     }
     for route in routes.values() {
@@ -1883,7 +3182,7 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         for fact in TASK_FACTS {
             owe(&task_text(task), fact, "application");
         }
-        if !task.deadline_from {
+        if task.deadline_from.is_none() {
             owe(&task_text(task), "deadline-from", "description");
         }
         if released_by[&task_text(task)] == "unknown" {
@@ -1907,12 +3206,12 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             owe(instance, fact, "realization");
         }
     }
-    for service in &multiplexed {
-        owe(service, "overhead", "realization");
+    for node in &multiplexed {
+        owe(node, "overhead", "realization");
     }
     for route in routes.values() {
         if route.source {
-            if separation_of(&route.provider) == Separation::Unstated {
+            if separation_of(&route.provider) == Sep::Unstated {
                 owe(&route.item, "separation", "description");
             }
             for fact in SOURCE_FACTS {
@@ -1927,7 +3226,11 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     owed.sort();
     lines.extend(owed);
 
-    Reading { lines, classes }
+    Reading {
+        lines,
+        classes,
+        findings,
+    }
 }
 
 // =====================================================================================================================
@@ -2142,6 +3445,13 @@ fn judge_elided(description: &Description, record: &str, plan: &str, elided: boo
     let written = by_kind(plan.lines());
     let mut agreed = Vec::new();
     let mut disagreements = Vec::new();
+    if !reading.findings.is_empty() {
+        disagreements.push(Disagreement {
+            kind: "nodes",
+            expected: reading.findings.clone(),
+            written: Vec::new(),
+        });
+    }
     for kind in KINDS_OF_LINE {
         if expected[kind] == written[kind] {
             agreed.push(kind);
@@ -2244,33 +3554,113 @@ fn flow(text: &str, system: &str) -> Flow {
     }
 }
 
+/// What a refusal §1 gives names.
+enum Names {
+    /// One task, `(task SYSTEM NAME)`: "a bullet over tasks is taken task by task in runtime order", and the first
+    /// task it applies to is the one given.
+    Task(String),
+    /// The naming-system refusal: each requester the system serves that names a system, with the system it names —
+    /// "naming each such name". The record states no order among them, so none is held.
+    Systems(BTreeSet<(String, String)>),
+    /// The durations past the arithmetic, "naming each — the tasks' in runtime order, then the sources' by their
+    /// interrupt's text, then the bounds by their instance's text", each task's clauses "in the order the bullet
+    /// writes them": a task's as `(task SYSTEM NAME) CLAUSE`, a source's as `(source NAME)`, a bound's as `INSTANCE
+    /// FACT`.
+    Durations(Vec<String>),
+    /// The interrupt-code refusal: every receiver, in §1's order — a task's `(task SYSTEM NAME)`, or the system's name
+    /// for its own level — with the instances whose `expiry` and the providers whose alarm a receiver would receive.
+    Receivers {
+        subjects: Vec<String>,
+        expiries: Vec<String>,
+        alarms: Vec<String>,
+    },
+}
+
 /// A refusal §1 gives one system.
 struct Due {
     code: &'static str,
-    /// The subjects it names, in §1's order: a task's `(task SYSTEM NAME)`, or the system's name for its own level.
-    subjects: Vec<String>,
-    /// The instances whose `expiry` a receiver would receive, by their `(adapter …)` text.
-    expiries: Vec<String>,
-    /// The providers at which a receiver would receive the alarm it programs itself, its timer route.
-    alarms: Vec<String>,
+    names: Names,
     /// The classes of §1's rules it exercises.
     classes: BTreeSet<&'static str>,
 }
 
+impl Due {
+    /// What it names, for a reproducer.
+    fn summary(&self) -> String {
+        match &self.names {
+            Names::Task(task) => task.clone(),
+            Names::Systems(pairs) => pairs
+                .iter()
+                .map(|(namer, named)| format!("{namer} naming {named}"))
+                .collect::<Vec<_>>()
+                .join(", "),
+            Names::Durations(items) => items.join(", "),
+            Names::Receivers { subjects, .. } => subjects.join(", "),
+        }
+    }
+}
+
+/// §1: "a declaration or a task the system serves naming a system by `uses` or `needs`", each with the system it
+/// names. The requesters a system serves are "its own level, one of its tasks, or a declaration its closure reaches
+/// through `uses` and `needs`" (model §8 rule 7) — round 12's R12-R1 scoped the refusal to them — and a system so
+/// reached is served for its own level, its tasks being that system's.
+fn systems_named(description: &Description) -> BTreeSet<(String, String)> {
+    let systems: BTreeMap<String, System> = description
+        .systems()
+        .into_iter()
+        .map(|s| (s.name.clone(), s))
+        .collect();
+    let mut todo: Vec<(String, Side)> = description
+        .tasks
+        .iter()
+        .map(|t| {
+            (
+                format!("(task {} {})", description.system, t.name),
+                t.side.clone(),
+            )
+        })
+        .chain(std::iter::once((
+            description.system.clone(),
+            description.own.clone(),
+        )))
+        .collect();
+    let mut seen = BTreeSet::new();
+    let mut out = BTreeSet::new();
+    while let Some((namer, side)) = todo.pop() {
+        if !seen.insert(namer.clone()) {
+            continue;
+        }
+        for named in side.uses.iter().chain(&side.needs) {
+            if let Some(other) = systems.get(named) {
+                out.insert((namer.clone(), named.clone()));
+                todo.push((named.clone(), other.own.clone()));
+            } else if let Some(service) = description.services.iter().find(|s| &s.name == named) {
+                todo.push((named.clone(), service.side.clone()));
+            }
+        }
+    }
+    out
+}
+
 /// §1, the refusals these universes can reach, the first that applies, from the description and the record's own
 /// `bind` lines: "They are taken in the order written, this list and then the next, ... and the first that applies is
-/// the one given; a bullet over tasks is taken task by task in runtime order".
-/// - Of the first list: "a periodic task bound to an interrupt source itself, which states a second release model":
-///   `tool-failure`, "naming the task and the clause". (`M1.43` has the language refuse it, and "a description the
-///   language's check refuses is no input".)
-/// - Of the second, `unsupported-profile`: "a task, or the system's own level, that would receive an interrupt's code:
-///   a timer route that names it, bound to its provider itself, or an adapter instance with a cost running its
-///   requester's code (`expiry`) whose requester it is, the one an exclusive instance serves or one bound to a shared
-///   instance. ... It names every such receiver — each task in runtime order, then the system's own level — with what
-///   it would receive, so no order among them decides the message".
+/// the one given; a bullet over tasks is taken task by task in runtime order, each task's clauses in the order the
+/// bullet writes them".
+/// - Of the first list, in its order: "a periodic task bound to an interrupt source itself, which states a second
+///   release model": `tool-failure`, "naming the task and the clause"; then "a declaration or a task the system
+///   serves naming a system by `uses` or `needs`": `tool-failure`, "naming each such name". (`M1.43` and `M1.46` have
+///   the language refuse them, and "a description the language's check refuses is no input".)
+/// - Of the second, `unsupported-profile`, in its order: "a duration the plan would write past the engine's exact
+///   arithmetic (§2.2): a task's period, minimum separation, deadline or jitter, a source's separation, or an obliged
+///   bound, naming each — the tasks' in runtime order, then the sources' by their interrupt's text, then the bounds by
+///   their instance's text"; "a task whose deadline is measured from an event other than its release"; and "a task, or
+///   the system's own level, that would receive an interrupt's code: a timer route that names it, bound to its
+///   provider itself, or an adapter instance with a cost running its requester's code (`expiry`) whose requester it
+///   is, the one an exclusive instance serves or one bound to a shared instance. ... It names every such receiver —
+///   each task in runtime order, then the system's own level — with what it would receive, so no order among them
+///   decides the message".
 ///
-/// No other bullet applies here: no description names a system, every duration is a few milliseconds, no system has
-/// placement memory, each declares a task, and every deadline is measured from its release or from nothing written.
+/// No other bullet applies here: no system has placement memory and each declares a task.
 fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option<Due> {
     let system = description.system.as_str();
     let task_text = |task: &Task| format!("(task {system} {})", task.name);
@@ -2284,20 +3674,150 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
         {
             return Some(Due {
                 code: "tool-failure",
-                subjects: vec![task_text(task)],
-                expiries: Vec::new(),
-                alarms: Vec::new(),
+                names: Names::Task(task_text(task)),
                 classes: BTreeSet::from(["refusal: a periodic task bound to a source itself"]),
             });
         }
     }
-    let mut due = Due {
-        code: "unsupported-profile",
-        subjects: Vec::new(),
-        expiries: Vec::new(),
-        alarms: Vec::new(),
-        classes: BTreeSet::new(),
-    };
+
+    let named = systems_named(description);
+    if !named.is_empty() {
+        let mut classes = BTreeSet::from(["refusal: a requester naming a system"]);
+        for (namer, _) in &named {
+            classes.insert(if namer.starts_with("(task ") {
+                "naming: a task naming a system"
+            } else if namer == system {
+                "naming: the system's own level naming a system"
+            } else if description.services.iter().any(|s| &s.name == namer) {
+                "naming: a service naming a system"
+            } else {
+                "naming: a named system's own level naming a system"
+            });
+        }
+        if named.len() >= 2 {
+            classes.insert("naming: several names");
+        }
+        return Some(Due {
+            code: "tool-failure",
+            names: Names::Systems(named),
+            classes,
+        });
+    }
+
+    // Durations past the arithmetic: each task's, in runtime order; each source's whose route the plan would write;
+    // each obliged bound an instance would take on.
+    let hardware: BTreeMap<String, Block> = description
+        .hardware()
+        .into_iter()
+        .map(|b| (b.name.clone(), b))
+        .collect();
+    let mut past = Vec::new();
+    for task in &by_index {
+        if task.release.duration().seconds().is_none() {
+            past.push(format!("{} {}", task_text(task), task.release.clause()));
+        }
+        if task.deadline().seconds().is_none() {
+            past.push(format!("{} deadline", task_text(task)));
+        }
+        if task.jitter.is_some_and(|j| j.seconds().is_none()) {
+            past.push(format!("{} jitter", task_text(task)));
+        }
+    }
+    let tasks_past = past.len();
+    let sources: BTreeSet<String> = binds
+        .iter()
+        .filter(|b| b.fact == INTERRUPT_FACT && !is_instance(&b.provider))
+        .filter(|b| {
+            hardware
+                .get(&b.provider)
+                .and_then(|block| block.separation)
+                .is_some_and(|s| s.read() == Sep::Past)
+        })
+        .map(|b| format!("(source {})", b.provider))
+        .collect();
+    let sources_past = sources.len();
+    past.extend(sources);
+    let mut bounds = BTreeSet::new();
+    for instance in binds.iter().map(|b| &b.provider).filter(|p| is_instance(p)) {
+        let instance_form = form(instance);
+        let Some(requester) = items(&instance_form).get(3).map(text_of) else {
+            continue;
+        };
+        let side = description
+            .services
+            .iter()
+            .find(|s| s.name == requester)
+            .map(|s| s.side.clone())
+            .or_else(|| {
+                description
+                    .tasks
+                    .iter()
+                    .find(|t| task_text(t) == requester)
+                    .map(|t| t.side.clone())
+            })
+            .or_else(|| hardware.get(&requester).map(|b| b.side.clone()));
+        for fact in kind_of(instance).obliged {
+            if side.as_ref().is_some_and(|side| {
+                side.at_most
+                    .iter()
+                    .any(|(f, bound)| f == fact && bound.seconds().is_none())
+            }) {
+                bounds.insert(format!("{instance} {fact}"));
+            }
+        }
+    }
+    let bounds_past = bounds.len();
+    past.extend(bounds);
+    if !past.is_empty() {
+        let mut classes = BTreeSet::from(["refusal: a duration past the arithmetic"]);
+        if tasks_past > 0 {
+            classes.insert("past: a task's clause");
+        }
+        if sources_past > 0 {
+            classes.insert("past: a source's separation");
+        }
+        if bounds_past > 0 {
+            classes.insert("past: an obliged bound");
+        }
+        if [tasks_past, sources_past, bounds_past]
+            .iter()
+            .filter(|n| **n > 0)
+            .count()
+            == 3
+        {
+            classes.insert("past: a task's, a source's and a bound at once");
+        }
+        if past.len() >= 2 {
+            classes.insert("past: several, named in order");
+        }
+        if description
+            .tasks
+            .iter()
+            .any(|t| t.deadline_from.is_some_and(|e| e != "release"))
+        {
+            classes.insert("past: before a deadline from another event");
+        }
+        return Some(Due {
+            code: "unsupported-profile",
+            names: Names::Durations(past),
+            classes,
+        });
+    }
+
+    for task in &by_index {
+        if task.deadline_from.is_some_and(|e| e != "release") {
+            return Some(Due {
+                code: "unsupported-profile",
+                names: Names::Task(task_text(task)),
+                classes: BTreeSet::from(["refusal: a deadline measured from another event"]),
+            });
+        }
+    }
+
+    let mut subjects = Vec::new();
+    let mut expiries = Vec::new();
+    let mut alarms = Vec::new();
+    let mut classes = BTreeSet::new();
     let requesters = by_index
         .iter()
         .map(|t| task_text(t))
@@ -2308,40 +3828,47 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
             if is_instance(&bind.provider) {
                 if kind_of(&bind.provider).runs_requester {
                     receives = true;
-                    due.expiries.push(bind.provider.clone());
-                    due.classes.insert("receivers: an expiry");
+                    expiries.push(bind.provider.clone());
+                    classes.insert("receivers: an expiry");
                 }
             } else if CONSUMED.contains(&bind.fact.as_str()) {
                 receives = true;
-                due.alarms.push(bind.provider.clone());
-                due.classes.insert("receivers: an alarm programmed itself");
+                alarms.push(bind.provider.clone());
+                classes.insert("receivers: an alarm programmed itself");
             }
         }
         if receives {
-            due.subjects.push(requester);
+            subjects.push(requester);
         }
     }
-    if due.subjects.is_empty() {
+    if subjects.is_empty() {
         return None;
     }
-    due.classes.insert(match due.subjects.len() {
+    classes.insert(match subjects.len() {
         1 => "receivers: one",
         2 => "receivers: two",
         _ => "receivers: three",
     });
-    let tasks: Vec<&String> = due.subjects.iter().filter(|s| *s != system).collect();
-    if tasks.len() < due.subjects.len() {
-        due.classes.insert(if tasks.is_empty() {
+    let tasks: Vec<&String> = subjects.iter().filter(|s| *s != system).collect();
+    if tasks.len() < subjects.len() {
+        classes.insert(if tasks.is_empty() {
             "receivers: the system's own level alone"
         } else {
             "receivers: tasks and the system's own level"
         });
     }
     if tasks.windows(2).any(|w| w[0] > w[1]) {
-        due.classes
-            .insert("receivers: runtime order unlike the tasks' text order");
+        classes.insert("receivers: runtime order unlike the tasks' text order");
     }
-    Some(due)
+    Some(Due {
+        code: "unsupported-profile",
+        names: Names::Receivers {
+            subjects,
+            expiries,
+            alarms,
+        },
+        classes,
+    })
 }
 
 /// A refusal's message read as forms: its parenthesised forms as trees, every other word an atom; backquotes, quotes,
@@ -2486,10 +4013,80 @@ fn subjects_named(message: &str, system: &str) -> Vec<String> {
     out
 }
 
-/// Where the lowering's `refusal` is not the one `due`: its code, the subjects it names in their order, and what it
-/// says they would receive. §1 fixes the receivers and their order, not the message's wording of what each receives;
-/// so an expiry is held to its instance's text, written whole, and an alarm a receiver programs itself to its
-/// provider's name, written outside any instance's text — an interrupt being "named by its kind and its provider" (§2).
+/// The durations a refusal's message names past the arithmetic, in the order it names them: a task's clause as
+/// `(task SYSTEM NAME) CLAUSE`, the task the last `(task …)` form named and the clause a form headed by `period`,
+/// `min-separation`, `deadline` or `jitter`; a source as its `(source NAME)` form; and a bound as its instance's
+/// `(adapter …)` text, with the obliged fact the message names after it.
+fn durations_named(message: &str) -> Vec<String> {
+    const CLAUSES: [&str; 4] = ["period", "min-separation", "deadline", "jitter"];
+    let obliged: BTreeSet<&str> = KINDS
+        .iter()
+        .flat_map(|k| k.obliged.iter().copied())
+        .collect();
+    let mut out: Vec<String> = Vec::new();
+    let mut task: Option<String> = None;
+    let mut instance: Option<usize> = None;
+    for sx in prose(message) {
+        match &sx {
+            Sx::List(items) => {
+                let head = match items.first() {
+                    Some(Sx::Atom(head)) => head.as_str(),
+                    _ => "",
+                };
+                if head == "task"
+                    && items.len() == 3
+                    && items.iter().all(|i| matches!(i, Sx::Atom(_)))
+                {
+                    task = Some(prose_text(&sx));
+                    instance = None;
+                } else if CLAUSES.contains(&head) {
+                    if let Some(task) = &task {
+                        out.push(format!("{task} {head}"));
+                    }
+                } else if head == "source" {
+                    task = None;
+                    instance = None;
+                    out.push(prose_text(&sx));
+                } else if head == "adapter" {
+                    task = None;
+                    out.push(prose_text(&sx));
+                    instance = Some(out.len() - 1);
+                }
+            }
+            Sx::Atom(atom) => {
+                if let Some(at) = instance {
+                    if obliged.contains(atom.as_str()) {
+                        out[at].push_str(&format!(" {atom}"));
+                        instance = None;
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+/// The pairs a refusal's message names as `NAMER names the system NAME`: the namer a `(task …)` form or a name.
+fn systems_named_in(message: &str) -> BTreeSet<(String, String)> {
+    let words = prose(message);
+    let atom = |at: usize, word: &str| matches!(words.get(at), Some(Sx::Atom(a)) if a == word);
+    let mut out = BTreeSet::new();
+    for at in 1..words.len() {
+        if atom(at, "names") && atom(at + 1, "the") && atom(at + 2, "system") {
+            if let Some(Sx::Atom(named)) = words.get(at + 3) {
+                out.insert((prose_text(&words[at - 1]), named.clone()));
+            }
+        }
+    }
+    out
+}
+
+/// Where the lowering's `refusal` is not the one `due`: its code, and what it names. Of the interrupt-code refusal,
+/// the subjects it names in their order, and what it says they would receive: §1 fixes the receivers and their order,
+/// not the message's wording of what each receives; so an expiry is held to its instance's text, written whole, and
+/// an alarm a receiver programs itself to its provider's name, written outside any instance's text — an interrupt
+/// being "named by its kind and its provider" (§2). Of the durations past the arithmetic, each, in §1's order. Of the
+/// naming-system refusal, each requester and the system it names, in any order.
 fn refusal_disagrees(due: &Due, refusal: &Refusal, system: &str) -> Option<String> {
     let mut wrong = Vec::new();
     if refusal.code != due.code {
@@ -2498,29 +4095,53 @@ fn refusal_disagrees(due: &Due, refusal: &Refusal, system: &str) -> Option<Strin
             refusal.code, due.code
         ));
     }
-    let named = subjects_named(&refusal.message, system);
-    if named != due.subjects {
-        wrong.push(format!(
-            "it names {named:?}, the record {:?}, in that order",
-            due.subjects
-        ));
-    }
-    let forms = forms_in(&refusal.message);
-    let words = words_outside_instances(&refusal.message);
-    let unsaid: Vec<&String> = due
-        .expiries
-        .iter()
-        .filter(|instance| !forms.contains(*instance))
-        .chain(
-            due.alarms
+    match &due.names {
+        Names::Task(task) => {
+            let named = subjects_named(&refusal.message, system);
+            if named != [task.clone()] {
+                wrong.push(format!("it names {named:?}, the record [{task:?}]"));
+            }
+        }
+        Names::Systems(pairs) => {
+            let named = systems_named_in(&refusal.message);
+            if named != *pairs {
+                wrong.push(format!(
+                    "it names {named:?} as naming a system, the record {pairs:?}"
+                ));
+            }
+        }
+        Names::Durations(items) => {
+            let named = durations_named(&refusal.message);
+            if named != *items {
+                wrong.push(format!(
+                    "it names {named:?} past the arithmetic, the record {items:?}, in that order"
+                ));
+            }
+        }
+        Names::Receivers {
+            subjects,
+            expiries,
+            alarms,
+        } => {
+            let named = subjects_named(&refusal.message, system);
+            if named != *subjects {
+                wrong.push(format!(
+                    "it names {named:?}, the record {subjects:?}, in that order"
+                ));
+            }
+            let forms = forms_in(&refusal.message);
+            let words = words_outside_instances(&refusal.message);
+            let unsaid: Vec<&String> = expiries
                 .iter()
-                .filter(|provider| !words.contains(*provider)),
-        )
-        .collect();
-    if !unsaid.is_empty() {
-        wrong.push(format!(
-            "it does not name what would be received: {unsaid:?}"
-        ));
+                .filter(|instance| !forms.contains(*instance))
+                .chain(alarms.iter().filter(|provider| !words.contains(*provider)))
+                .collect();
+            if !unsaid.is_empty() {
+                wrong.push(format!(
+                    "it does not name what would be received: {unsaid:?}"
+                ));
+            }
+        }
     }
     (!wrong.is_empty()).then(|| wrong.join("; "))
 }
@@ -2592,7 +4213,7 @@ fn outcome(universe: &str, case: &Case) -> Outcome {
                     &format!(
                         "-- the record refuses it: `{}`, naming {} (§1)\n",
                         due.code,
-                        due.subjects.join(", ")
+                        due.summary()
                     ),
                 ));
                 return out;
@@ -2631,7 +4252,7 @@ fn outcome(universe: &str, case: &Case) -> Outcome {
                         due.map_or(String::new(), |due| format!(
                             " (§1: `{}`, naming {})",
                             due.code,
-                            due.subjects.join(", ")
+                            due.summary()
                         ))
                     ),
                 )),
@@ -2950,6 +4571,175 @@ fn receivers_of_interrupt_code_each_named_in_order() {
 }
 
 #[test]
+fn requiring_hardware_its_nodes_contexts_and_multiplexing() {
+    let cases = requiring_hardware();
+    // What `dma.x` and `soc` each require, of 5; who binds to each, of 8; what composes `alarm`, of 3; `u` of 2 kinds.
+    assert_eq!(cases.len(), 5 * 5 * 8 * 8 * 3 * 2);
+    let tally = run("requiring hardware", &cases);
+    hold(
+        "requiring hardware",
+        &tally,
+        (9_600, 9_600, 0, 0, 0),
+        &[
+            "hardware: a block bound for requirements of its own",
+            "hardware: a platform bound for requirements of its own",
+            "hardware: requiring, and bound to by nothing",
+            "hardware: requiring, and bound to by a requester",
+            "hardware: an alarm it programs itself",
+            "hardware: an expiry running its code",
+            "hardware: a source's handler",
+            "hardware: in an interrupt through a binding to it",
+            "initialisation: no edge across composition",
+            "initialisation: an edge to a block or a platform bound for its own requirements",
+            "multiplex: a block or a platform multiplexed",
+            "multiplex: multiplexed by two jobs",
+            "multiplex: multiplexed by a job and an interrupt",
+            "multiplex: a block or a platform's channel with one user",
+            "multiplex: its own route no user",
+            "multiplex: another route a user",
+            "composition: a block's or a platform's `uses` naming a service",
+            "composition: a platform a task reaches through a binding",
+            "composition: what a node in a job composes is in none",
+            "composition: what a node in an interrupt composes is not run there",
+            "trigger: a source a block or a platform handles",
+            "trigger: every, equal separations",
+            "trigger: unknown, no source reaching it",
+        ],
+    );
+}
+
+#[test]
+fn task_clauses_jitter_overrun_and_reference() {
+    let cases = task_clauses();
+    // Which task is first; for each of 2 tasks, 5 jitters, 3 overrun policies and 3 references.
+    assert_eq!(cases.len(), 2 * (5 * 3 * 3) * (5 * 3 * 3));
+    let tally = run("task clauses", &cases);
+    hold(
+        "task clauses",
+        &tally,
+        (4_050, 1_152, 0, 0, 2_898),
+        &[
+            "task: jitter zero where none is stated",
+            "task: jitter written zero",
+            "task: jitter written",
+            "task: jitter longer than its release's duration",
+            "task: overrun fault where none is stated",
+            "task: overrun fault as written",
+            "task: overrun another policy as written",
+            "task: deadline-from written",
+            "task: deadline-from owed",
+            "refusal: a deadline measured from another event",
+            "refusal: a duration past the arithmetic",
+            "past: a task's clause",
+            "past: several, named in order",
+            "past: before a deadline from another event",
+            "trigger: every, equal separations",
+        ],
+    );
+}
+
+#[test]
+fn durations_past_the_arithmetic_and_at_its_edge() {
+    let cases = past_the_arithmetic();
+    // Values plain or at the edge; which task is first; `t`'s three clauses each past or not, `u`'s all or none; each
+    // of 2 sources of 4 states; each of 2 bounds of 3.
+    assert_eq!(cases.len(), 2 * 2 * 8 * 2 * 4 * 4 * 3 * 3);
+    let tally = run("past the arithmetic", &cases);
+    hold(
+        "past the arithmetic",
+        &tally,
+        (9_216, 64, 0, 0, 9_152),
+        &[
+            "refusal: a duration past the arithmetic",
+            "past: a task's clause",
+            "past: a source's separation",
+            "past: an obliged bound",
+            "past: a task's, a source's and a bound at once",
+            "past: several, named in order",
+            "exact: a task's duration at the arithmetic's edge",
+            "exact: a separation at the arithmetic's edge",
+            "exact: an obliged bound at the arithmetic's edge",
+            "exact: two separations compared past 128 bits",
+            "exact: a source's and a task's separations compared past 128 bits",
+            "trigger: every, a longer separation",
+            "trigger: every, equal separations",
+            "trigger: unknown, no source reaching it",
+            "instance: an obliged fact with its bound",
+            "instance: an obliged fact bare",
+        ],
+    );
+}
+
+#[test]
+fn a_second_system_named_or_not() {
+    let cases = two_systems();
+    // 5 naming sites, each present or not; by `uses` or `needs`; `alarm` used by one system or both; `other` on `sys`'s
+    // platform or its own; `sys`'s own level of 2 and `other`'s of 3; each description lowered for each system.
+    assert_eq!(cases.len(), (1 << 5) * 2 * 2 * 2 * 2 * 3 * 2);
+    for pair in cases.chunks(2) {
+        assert_eq!(
+            pair[0].description.text(),
+            pair[1].description.text(),
+            "one description, lowered for each of its systems"
+        );
+    }
+    let tally = run("a second system", &cases);
+    hold(
+        "a second system",
+        &tally,
+        (3_072, 576, 0, 0, 2_496),
+        &[
+            "refusal: a requester naming a system",
+            "naming: a task naming a system",
+            "naming: the system's own level naming a system",
+            "naming: a service naming a system",
+            "naming: several names",
+            "naming: a system another system's requester names, outside this one's",
+            "second system: a service another system's task also uses",
+            "second system: requiring hardware only another system serves",
+        ],
+    );
+}
+
+#[test]
+fn the_reading_s_arithmetic_is_exact() {
+    // The reading's seconds, held to values derived by hand from §2.2's rule — "one reduced rational number of
+    // seconds ... `N` and `D` lie within ... signed 128-bit integers" — so that a fault of the reading's arithmetic shows
+    // here, never as a verdict on the code.
+    let seconds = |spelling: &str| Ratio::of(spelling).map(Ratio::text);
+    assert_eq!(seconds("20 ms").as_deref(), Some("1/50 s"));
+    assert_eq!(seconds("1500 us").as_deref(), Some("3/2000 s"));
+    assert_eq!(seconds("0 ms").as_deref(), Some("0 s"));
+    assert_eq!(
+        seconds(WIDE).as_deref(),
+        Some("9223372036854775807/100000000000000000000000000000000000000 s")
+    );
+    assert_eq!(seconds(WIDE_IN_MS), seconds(WIDE));
+    assert_eq!(
+        seconds(WIDE_LONGER).as_deref(),
+        Some("922337203685477581/10000000000000000000000000000000000000 s")
+    );
+    assert_eq!(
+        seconds(REDUCED).as_deref(),
+        Some("1/100000000000000000000000000000000000000 s")
+    );
+    // 5^13/10^47 = 1/(2^13·10^34); 5^12/10^47 = 1/(2^12·10^35), past `i128::MAX` = 170141183460469231731687303715884105727.
+    assert_eq!(
+        seconds(TIGHT_WITHIN).as_deref(),
+        Some("1/81920000000000000000000000000000000000 s")
+    );
+    assert_eq!(seconds(TIGHT_PAST), None);
+    assert_eq!(seconds(PAST), None);
+    // Exact comparison, where cross-multiplication in 128 bits overflows.
+    let of = |spelling: &str| Ratio::of(spelling).expect("within");
+    assert!(of(WIDE) < of(WIDE_LONGER));
+    assert!(past_128_bits(of(WIDE), of(WIDE_LONGER)));
+    // 1/10^38 < 1/(8.192·10^37) < 9223372036854775807/10^38.
+    assert!(of(REDUCED) < of(TIGHT_WITHIN) && of(TIGHT_WITHIN) < of(WIDE));
+    assert!(of(WIDE_LONGER) < of("20 ms"));
+}
+
+#[test]
 fn the_reading_transcribes_the_shipped_vocabulary_and_catalog() {
     // The reading's constants are its transcription of `vocabulary.eadl` and `adapters.eadl`, held here to the shipped
     // vocabulary and catalog, so that a change to either fails here rather than in the reading's verdicts.
@@ -3030,17 +4820,17 @@ fn the_reading_gives_the_record_s_worked_texts() {
             name: name.to_string(),
             release,
             priority,
-            deadline_from,
+            deadline_from: deadline_from.then_some("release"),
             side: Side {
                 uses: names(uses),
                 ..Side::default()
             },
+            ..Task::default()
         };
     let plain = |name: &str, offers: &[&str]| Block {
         name: name.to_string(),
         offers: names(offers),
-        absent: Vec::new(),
-        separation: None,
+        ..Block::default()
     };
     let uses = |declarations: &[&str]| Side {
         uses: names(declarations),
@@ -3058,10 +4848,23 @@ fn the_reading_gives_the_record_s_worked_texts() {
             },
         }],
         tasks: vec![
-            task("beat", Release::Period(10), 1, true, &["console.write"]),
-            task("chime", Release::Period(30), 2, true, &["console.write"]),
+            task(
+                "beat",
+                Release::Period(Dur::Ms(10)),
+                1,
+                true,
+                &["console.write"],
+            ),
+            task(
+                "chime",
+                Release::Period(Dur::Ms(30)),
+                2,
+                true,
+                &["console.write"],
+            ),
         ],
         own: uses(&["console.write"]),
+        ..Description::default()
     };
     let extender = Description {
         system: "short-counter".to_string(),
@@ -3074,19 +4877,27 @@ fn the_reading_gives_the_record_s_worked_texts() {
         )],
         tasks: vec![task(
             "beat",
-            Release::Period(10),
+            Release::Period(Dur::Ms(10)),
             1,
             true,
             &["time.monotonic"],
         )],
         own: uses(&["time.monotonic"]),
+        ..Description::default()
     };
     let sporadic = Description {
         system: "sporadic".to_string(),
         blocks: vec![source_block("dev.e", Separation::Stated(20), "")],
         services: vec![service("evt", Counter::None, true, Vec::new())],
-        tasks: vec![task("s", Release::MinSeparation(10), 1, false, &["evt"])],
+        tasks: vec![task(
+            "s",
+            Release::MinSeparation(Dur::Ms(10)),
+            1,
+            false,
+            &["evt"],
+        )],
         own: uses(&["evt"]),
+        ..Description::default()
     };
     let worked = worked_plans();
     assert_eq!(worked.len(), 3);

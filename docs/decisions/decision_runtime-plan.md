@@ -83,8 +83,8 @@ a bullet over tasks is taken task by task in runtime order, each task's clauses 
   `invalid-description`;
 - a declaration or a task the system serves naming a system by `uses` or `needs`: a system is no thing to use — its own
   `uses` says what it includes (model §8 rule 1) — and its own level would become a node §2 does not give:
-  `tool-failure`, naming each such name, the check having accepted it; `M1.46` makes the language refuse it,
-  `invalid-description`.
+  `tool-failure`, naming each such name in its text's order, the check having accepted it; `M1.46` makes the language
+  refuse it, `invalid-description`.
 
 **Refusals of what `/1` cannot lower**, each `unsupported-profile`, naming what is missing and, where one does, the
 leaf that adds it:
@@ -334,8 +334,8 @@ timer route and a source, and a block may be named `timer`:
      lowering computes (`M4.1.4`).
    - Its edges are written with their reasons, as §10.1's "initialization dependencies" and `M4.1`'s Goal ask: one line
      for each ordered pair of nodes an edge joins, the node the edge orders earlier first — so a component's mutual
-     edges are two lines — naming each reason `Joint::initialization` gives, a binding's fact or
-     `named` for a `uses` or `needs`.
+     edges are two lines — naming each reason `Joint::initialization` gives, a binding's fact or `named` for a `uses` or
+     `needs` — a block's or a platform's `uses` giving none, composition never a call (§2).
    - Its steps are its strongly connected components, in a topological order taken by repeatedly choosing, among the
      components whose predecessors have all been taken, the one whose least member's text is least.
    - A step names its members by their text, in order.
