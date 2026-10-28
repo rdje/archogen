@@ -651,6 +651,31 @@ applied to the realization's bounds and not the application's.
 Round 18's answers: R18-D1 partly (R19-D1, R19-R2); R18-D3 held as answered, its principle not carried to the
 application (R19-D2); the rest held.
 
+## Round 20 — `2026-10-29`: not acceptable, 11 findings
+
+The code faithful again, every defect the record's: two `.2` hand-off sentences behind §2, a rule against model §8
+rule 7, and a false citation. Every test green, the bounded totals true, all twenty-one hand-offs quoted byte for byte.
+4 defects and 7 remarks.
+
+**Fence.** No breach. The reviewer did not run `HANDOFF-LEDGER`'s script, which reads every tracked page outside the
+task trees and so would cross the sealed set's fence.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R20-D1 | defect | §4 `.2` says rule 12 holds the node bound for requirements of its own, which the model does not write | Written into rule 12 (`M4.1.15`'s, the model with it); `.2` names each "done by" its leaf |
+| R20-D2 | defect | `.2`'s rule-4 users reach through every `uses` and `needs`, against §2's hardware exception | "as §2 reads reaching", in `.2` and `M4.1.2` |
+| R20-D3 | defect | the node rule places code, and the simulator a device, for a block the system serves outside its hardware, which rule 7 makes no hardware: `modules-named` among them | Fail closed, round 13's decision: refused `unsupported-profile` until `M1.49` (`RTP-H22`) decides whether rule 7 counts such a name, landing with the code |
+| R20-D4 | defect | §1 credits rule 1 with "its own `uses` says what it includes", which is rule 4's | Rule 4, here and in `M1.46` |
+| R20-R1 | remark | the `modules-named` fixture is D3's case, not the system's hardware across modules | Its comment and §3 say so, with the code |
+| R20-R2 | remark | OSEK's §8.6 makes no exception for a node's own timer route | The exception this record's reading, said |
+| R20-R3 | remark | the context refusal `RTP-H10` brings has no place in §1's order | Placed, before the component-call refusal |
+| R20-R4 | remark | `RTP-H1`'s code for a source declaring its separation `absent` | `unsupported-profile`, no stated fact repairing it; `RTP-H1` requoted in `M4.2` |
+| R20-R5 | remark | §2.10's quote from composite-inputs §7, §2.5's "refuses … a source with no rank", the Davis ledger's one condition, item 1's independence, `.2`'s present-tense §9, bare paths, §4.2's crates, the ledger's order | Each corrected; the three conditions' sentence read again from the PDF, its hash the ledger's |
+| R20-R6 | remark | `Joint::initialization`'s doc comment reads "a requester whose code an interrupt can run" as a further node class | Corrected with the code |
+| R20-R7 | remark | the checker reads §1's task bullet for one clause, matches the 136 loosely, copies identity lines, reads messages by the lowering's words, holds classes by presence, ranks only to 3, and asserts no class for four shapes it reaches | `M4.1.13` reopened |
+
+Round 19's answers: R19-D1 partly (R20-D1); R19-R5 partly (R20-R1, R20-D3); the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
