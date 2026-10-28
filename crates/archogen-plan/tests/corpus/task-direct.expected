@@ -5,7 +5,7 @@
 (program "…")
 (assignment "…")
 (adapters adapters/1)
-(task 0 (task td a) (rank 1) (period 1/100 s) (deadline 1/100 s) (deadline-from release) (jitter 0 s) (overrun fault) (released-by timer) (uses observable-output))
+(task 0 (task td a) (rank 1) (period 1/100 s) (deadline 1/100 s) (deadline-from release) (jitter 0 s) (overrun fault) (released-by timer) (uses))
 (bind (task td a) observable-output console.uart)
 (timer simulator (releases (task td a)))
 (enabled timer)

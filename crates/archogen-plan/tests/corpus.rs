@@ -1,15 +1,14 @@
 //! The falsification corpus (`docs/decisions/decision_executable-design-reviews.md` §3): every probe system of the
-//! runtime plan's review (`docs/reviews/decision_runtime-plan-reviews.md`, rounds 4 to 6), each with what the lowering
-//! gives each of its systems — the plan, with its two digests written `…`, or the refusal — in `tests/corpus/NAME.expected`.
+//! runtime plan's review (`docs/reviews/decision_runtime-plan-reviews.md`, rounds 4 to 7), and the inputs of the
+//! record's worked texts (`worked-*.eadl`, frozen here), each with what the lowering gives each of its systems — the
+//! plan, with its two digests written `…`, or the refusal — in `tests/corpus/NAME.expected`. A description the
+//! language's check refuses is no input (the record's §1): its outcome is that check's verdict, `rejected …`.
 //!
-//! ⭐ **A later finding is a defect when it carries a reproducer**: a fixture here the code gets wrong against the
-//! record, or two quoted sentences of the record that contradict each other. A fixed defect stays fixed, its fixture
-//! keeping the text the record gives it.
-//!
-//! Two fixtures record the joint rules as they stand, which `M4.1.2` amends (the record's §4, `.2`): `two-systems.eadl`,
-//! whose service's users are counted over both systems today, and `multiplex-needs.eadl`, whose users name it by
-//! `needs`, which the count does not read today. Their outcomes move in the change that lands `.2`. `dup-prio.eadl`
-//! holds two tasks of one rank, which share an index under §2.2's rule.
+//! ⭐ **An outcome here is what the code writes, blessed — evidence, never a rule.** A review judges each against the
+//! record's rules, so a fixture the code gets wrong stays green until a reader compares the two. A later finding is a
+//! defect when it carries a reproducer: a fixture here the code gets wrong against the record, or two quoted sentences
+//! of the record that contradict each other. A fixed defect stays fixed, its fixture keeping the text the record gives
+//! it.
 //!
 //! Regenerate deliberately, so every moved outcome is in the change's diff for review:
 //! `ARCHOGEN_BLESS_PLANS=1 cargo test -p archogen-plan --test corpus`.
@@ -43,6 +42,10 @@ fn outcome(text: &str) -> String {
             Lowered::Plan(plan) => out.push_str(&without_digests(&plan)),
             Lowered::Refused(refusal) => out.push_str(&format!("refused {refusal}\n")),
             Lowered::Unresolved(verdict) => out.push_str(&format!("unresolved {verdict}\n")),
+            Lowered::Rejected(verdict) => {
+                out.push_str(&format!("rejected {verdict}\n"));
+                break;
+            }
         }
     }
     out

@@ -53,15 +53,19 @@ fn the_record_holds_three_worked_texts() {
 
 #[test]
 fn the_heartbeat_lowers_to_its_worked_text() {
-    let text = std::fs::read_to_string(root().join("examples/s0-heartbeat/system.eadl"))
-        .expect("the heartbeat");
+    // `examples/s0-heartbeat/system.eadl`, frozen as the corpus's fixture (§3).
+    let text = std::fs::read_to_string(
+        root().join("crates/archogen-plan/tests/corpus/worked-heartbeat.eadl"),
+    )
+    .expect("the heartbeat");
     assert_eq!(plan_of(&text), worked_plans()[0]);
 }
 
 #[test]
 fn the_epoch_extender_lowers_to_its_worked_text() {
+    // `crates/eadl-resolve/tests/search/adapter-epoch-extender.eadl`, frozen as the corpus's fixture (§3).
     let text = std::fs::read_to_string(
-        root().join("crates/eadl-resolve/tests/search/adapter-epoch-extender.eadl"),
+        root().join("crates/archogen-plan/tests/corpus/worked-epoch-extender.eadl"),
     )
     .expect("the epoch extender");
     assert_eq!(plan_of(&text), worked_plans()[1]);

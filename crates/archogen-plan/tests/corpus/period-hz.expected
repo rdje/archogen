@@ -1,0 +1,2 @@
+== system hz
+refused tool-failure: `(task hz a)`'s `(period 100 Hz)` is not a time: the description check accepted an ill-typed description, which `M1.42` makes it refuse

@@ -13,15 +13,17 @@
 //! (`eadl_resolve::plan::read`, `rebuild`; leaf `M4.1.3`), never the search's memory. It does no I/O.
 //!
 //! Not built here yet, `M4.1.4`'s production half: the result record's intake and its refusals (§1's checks of
-//! `archogen-result/1`), the provenance, the plan's own reader and its round trip, and the frozen goldens.
+//! `archogen-result/1`), the provenance, the plan's own reader and its round trip, and the goldens with their fixed
+//! result records.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use archogen_digest::Digest;
 
-use eadl_front::Form;
+use eadl_front::{Form, Program};
+use eadl_model::check::resolved_declarations;
 use eadl_model::profile::RT_STATIC_UP_V1;
-use eadl_model::quantity::Quantity;
+use eadl_model::quantity::{Dimension, Quantity};
 use eadl_model::rational::Rational;
 use eadl_resolve::adapter::{self, Catalog, Instance, Offered};
 use eadl_resolve::joint::{Because, Binding, Interrupt, Kind, Node, Obligation};
@@ -96,18 +98,20 @@ fn duration(seconds: Rational) -> String {
     }
 }
 
-/// A clause's quantity, `(head N UNIT)`, in seconds.
+/// A clause's quantity, `(head N UNIT)`, in seconds, where it is a time (§2.2).
 fn seconds(clause: &Form) -> Option<Rational> {
-    Quantity::read(clause.items().get(1), clause.items().get(2), clause.span())
-        .ok()?
-        .in_base()
-        .ok()
+    let quantity =
+        Quantity::read(clause.items().get(1), clause.items().get(2), clause.span()).ok()?;
+    if quantity.unit.dimension != Dimension::Time {
+        return None;
+    }
+    quantity.in_base().ok()
 }
 
-/// A value of a time fact, in seconds.
+/// A value, in seconds, where it is a time.
 fn value_seconds(value: &Value) -> Option<Rational> {
     match value {
-        Value::Quantity(q) => q.in_base().ok(),
+        Value::Quantity(q) if q.unit.dimension == Dimension::Time => q.in_base().ok(),
         _ => None,
     }
 }
@@ -189,23 +193,35 @@ struct Task<'f> {
 }
 
 /// `record`, an `archogen-assignment/2` record the configuration checker accepted, lowered into
-/// `archogen-runtime-plan/1` over `declarations`, the description it was resolved from as the language's check read
-/// it, whose elaborated program's digest is `program` (§1, §2, §3).
+/// `archogen-runtime-plan/1` over `program`, the elaborated program the language's check accepted, whose declarations
+/// and digest the lowering takes from it (§1, §2, §3).
 ///
 /// # Errors
 ///
-/// §1's refusals: a record that does not read, names another program, catalog or profile, or that the generator's own
-/// joint rules refuse; and what `/1` cannot lower — placement memory, a deadline measured from an event other than the
+/// §1's refusals, in its order: a record that does not read; that names another program, system, catalog or profile;
+/// that does not rebuild, or that the generator's own joint rules refuse; a task's duration that is not a time; and
+/// what `/1` cannot lower — placement memory, a system with no task, a deadline measured from an event other than the
 /// release, an alarm or an expiry a task or the system's own level would receive.
 #[allow(clippy::too_many_lines)]
 pub fn lower(
-    declarations: &[Form],
-    program: &str,
+    program: &Program,
     record: &str,
     vocabulary: &Vocabulary,
     catalog: &Catalog,
 ) -> Result<Plan, Refusal> {
-    // §1: the record read back by the generator's own reader, and refused before anything is lowered.
+    // §1, input 1: the declarations and the digest are the program's own, never its caller's; a module tree is read as
+    // the language checks it, its names qualified.
+    let flattened;
+    let declarations: &[Form] = if program.instances.len() == 1 {
+        &program.root().declarations
+    } else {
+        flattened = resolved_declarations(program).0;
+        &flattened
+    };
+    let digest = assignment::program_digest(program);
+
+    // §1: the record read back by the generator's own reader, and refused before anything is lowered, in the order
+    // §1 writes its refusals, the first that applies given.
     let record_text = record;
     let record = assignment::read(record_text).map_err(|e| {
         refuse(
@@ -213,12 +229,27 @@ pub fn lower(
             format!("the assignment record does not read: {e}"),
         )
     })?;
-    if record.program != program {
+    if record.program != digest {
         return Err(refuse(
             "stale-input",
             "the assignment record names another program's digest: resolve again",
         ));
     }
+    let system = record.system.clone();
+    let decl = declarations
+        .iter()
+        .find(|d| {
+            d.head() == Some("defsystem")
+                && d.items().get(1).and_then(Form::as_symbol) == Some(system.as_str())
+        })
+        .ok_or_else(|| {
+            refuse(
+                "stale-input",
+                format!(
+                    "the assignment record names the system `{system}`, which the program does not declare: resolve again"
+                ),
+            )
+        })?;
     if record.adapters != adapter::VERSION {
         return Err(refuse(
             "stale-input",
@@ -246,85 +277,33 @@ pub fn lower(
         catalog,
     )
     .map_err(|e| {
-        if e.0.starts_with("the description declares no system") {
-            refuse("stale-input", format!("{e}: resolve again"))
-        } else {
-            refuse(
-                "tool-failure",
-                format!("the assignment record does not rebuild over the description: {e}"),
-            )
-        }
+        refuse(
+            "tool-failure",
+            format!(
+                "the configuration checker accepted the assignment record, and it does not rebuild over the program: {e}"
+            ),
+        )
     })?;
     let report = rebuilt.joint.check(&rebuilt.bindings);
-    if !report.holds() || !rebuilt.map.refused.is_empty() || !rebuilt.map.unknowns.is_empty() {
+    let findings: Vec<String> = report
+        .conflicts
+        .iter()
+        .chain(&report.unknowns)
+        .chain(&rebuilt.map.refused)
+        .chain(&rebuilt.map.unknowns)
+        .map(|f| format!("{}: {}", f.code(), f.diagnostic().message))
+        .collect();
+    if !findings.is_empty() {
         return Err(refuse(
             "tool-failure",
-            "the generator's joint rules refuse the record the configuration checker accepted: the two roles disagree",
+            format!(
+                "the configuration checker accepted the record, and the generator's joint rules refuse it ({}): the two roles disagree",
+                findings.join("; ")
+            ),
         ));
     }
-    if record.placement.is_some()
-        || rebuilt
-            .map
-            .obligations
-            .iter()
-            .any(|o| matches!(o, Obligation::Placement { .. }))
-    {
-        return Err(refuse(
-            "unsupported-profile",
-            "the system has placement memory, and laying an image out in memory is `/2`'s (`M4.1.7`): describe a hosted platform, or wait for `/2`",
-        ));
-    }
-    let init = rebuilt
-        .joint
-        .initialization(&rebuilt.system, &rebuilt.bindings);
-    let system = record.system.clone();
-    let names = Names {
-        system: system.clone(),
-        instances: rebuilt
-            .instances
-            .iter()
-            .map(|i| (i.provider.name.clone(), i))
-            .collect(),
-    };
-    let nodes: BTreeSet<String> = init.nodes.iter().map(|(n, _)| n.clone()).collect();
-    let requester = |name: &str| rebuilt.requesters.iter().find(|r| r.name == name);
-    let is_task = |name: &str| requester(name).is_some_and(|r| r.kind == Kind::Task);
 
-    // §2: reaching — what a requester names by `uses` or `needs`, and what it is bound to as its provider, at any depth.
-    let mut direct: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    for r in &rebuilt.requesters {
-        direct
-            .entry(r.name.clone())
-            .or_default()
-            .extend(r.uses.iter().chain(&r.needs).cloned());
-    }
-    for b in &rebuilt.bindings {
-        direct
-            .entry(b.requester.clone())
-            .or_default()
-            .insert(b.provider.clone());
-    }
-    let reach = |from: &str| -> BTreeSet<String> {
-        let mut seen = BTreeSet::new();
-        let mut todo = vec![from.to_string()];
-        while let Some(at) = todo.pop() {
-            for next in direct.get(&at).into_iter().flatten() {
-                if seen.insert(next.clone()) {
-                    todo.push(next.clone());
-                }
-            }
-        }
-        seen
-    };
-
-    // §2.2: the tasks, in runtime order.
-    let decl = declarations
-        .iter()
-        .find(|d| {
-            d.head() == Some("defsystem")
-                && d.items().get(1).and_then(Form::as_symbol) == Some(system.as_str())
-        })
-        .ok_or_else(|| refuse("stale-input", "the record's system is gone: resolve again"))?;
+    // §2.2: the system's tasks, in runtime order.
     let clause = |task: &Form, head: &str| -> Option<Form> {
         task.items()
             .iter()
@@ -352,6 +331,110 @@ pub fn lower(
         })
         .collect();
     tasks.sort_by(|a, b| a.rank.cmp(&b.rank).then(a.name.cmp(&b.name)));
+    // §1, §2.2: a task's period, minimum separation, deadline and jitter are each a time.
+    for task in &tasks {
+        for head in ["period", "min-separation", "deadline", "jitter"] {
+            if let Some(c) = clause(task.form, head) {
+                if seconds(&c).is_none() {
+                    return Err(refuse(
+                        "tool-failure",
+                        format!(
+                            "`(task {system} {})`'s `{}` is not a time: the description check accepted an ill-typed description, which `M1.42` makes it refuse",
+                            task.name,
+                            c.to_canonical()
+                        ),
+                    ));
+                }
+            }
+        }
+    }
+
+    // §1: what `/1` cannot lower.
+    if record.placement.is_some()
+        || rebuilt
+            .map
+            .obligations
+            .iter()
+            .any(|o| matches!(o, Obligation::Placement { .. }))
+    {
+        return Err(refuse(
+            "unsupported-profile",
+            "the system has placement memory, and laying an image out in memory is `/2`'s (`M4.1.7`): describe a hosted platform, or wait for `/2`",
+        ));
+    }
+    if tasks.is_empty() {
+        return Err(refuse(
+            "unsupported-profile",
+            format!(
+                "the system `{system}` declares no task, and the scheduler a build runs has no empty form (`rt_core::Scheduler::from_eadl_ranks`, `BootError::NoTasks`): describe a task"
+            ),
+        ));
+    }
+    for task in &tasks {
+        let event = clause(task.form, "deadline-from").and_then(|c| {
+            c.items()
+                .get(1)
+                .and_then(Form::as_symbol)
+                .map(str::to_string)
+        });
+        if let Some(event) = event.filter(|e| e != "release") {
+            return Err(refuse(
+                "unsupported-profile",
+                format!(
+                    "`(task {system} {})`'s deadline is measured from `{event}`, and the analysis measures every relative deadline from the nominal release",
+                    task.name
+                ),
+            ));
+        }
+    }
+    let init = rebuilt
+        .joint
+        .initialization(&rebuilt.system, &rebuilt.bindings);
+    let names = Names {
+        system: system.clone(),
+        instances: rebuilt
+            .instances
+            .iter()
+            .map(|i| (i.provider.name.clone(), i))
+            .collect(),
+    };
+    let nodes: BTreeSet<String> = init.nodes.iter().map(|(n, _)| n.clone()).collect();
+    let requester = |name: &str| rebuilt.requesters.iter().find(|r| r.name == name);
+    let is_task = |name: &str| requester(name).is_some_and(|r| r.kind == Kind::Task);
+    let is_service = |name: &str| requester(name).is_some_and(|r| r.kind == Kind::Service);
+    let service_or_policy = |name: &str| {
+        declarations.iter().any(|d| {
+            matches!(d.head(), Some("defservice" | "defpolicy"))
+                && d.items().get(1).and_then(Form::as_symbol) == Some(name)
+        })
+    };
+
+    // §2: reaching — what a requester names by `uses` or `needs`, and what it is bound to as its provider, at any depth.
+    let mut direct: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for r in &rebuilt.requesters {
+        direct
+            .entry(r.name.clone())
+            .or_default()
+            .extend(r.uses.iter().chain(&r.needs).cloned());
+    }
+    for b in &rebuilt.bindings {
+        direct
+            .entry(b.requester.clone())
+            .or_default()
+            .insert(b.provider.clone());
+    }
+    let reach = |from: &str| -> BTreeSet<String> {
+        let mut seen = BTreeSet::new();
+        let mut todo = vec![from.to_string()];
+        while let Some(at) = todo.pop() {
+            for next in direct.get(&at).into_iter().flatten() {
+                if seen.insert(next.clone()) {
+                    todo.push(next.clone());
+                }
+            }
+        }
+        seen
+    };
 
     // §2.5: the routes, as `Joint::check` reports them, one for each provider and kind.
     let routes: Vec<Route> = report
@@ -411,8 +494,19 @@ pub fn lower(
         let runs = catalog
             .kind(&instance.kind)
             .is_some_and(|k| k.costs.iter().any(|c| runs_requester_code(&c.name)));
-        if let Some(served) = &instance.serves {
-            if runs && own_level_or_task(served) {
+        if !runs {
+            continue;
+        }
+        // Its requesters: the one an exclusive instance serves, and each bound to it, a shared instance's included.
+        let served = instance.serves.iter().chain(
+            rebuilt
+                .bindings
+                .iter()
+                .filter(|b| b.provider == instance.provider.name)
+                .map(|b| &b.requester),
+        );
+        for served in served {
+            if own_level_or_task(served) {
                 return Err(refuse(
                     "unsupported-profile",
                     format!(
@@ -454,22 +548,12 @@ pub fn lower(
             .and_then(|c| seconds(&c))
             .map(duration)
             .ok_or_else(|| refuse("tool-failure", format!("{text} states no deadline")))?;
-        let reference = match clause(task.form, "deadline-from")
-            .and_then(|c| c.items().get(1).and_then(Form::as_symbol).map(str::to_string))
-        {
-            Some(event) if event == "release" => "(deadline-from release)".to_string(),
-            Some(event) => {
-                return Err(refuse(
-                    "unsupported-profile",
-                    format!(
-                        "{text}'s deadline is measured from `{event}`, and the analysis measures every relative deadline from the nominal release"
-                    ),
-                ))
-            }
-            None => {
-                owe(&mut owed, &text, "deadline-from", "description");
-                "(deadline-from)".to_string()
-            }
+        // Any event but the release is refused above (§1).
+        let reference = if clause(task.form, "deadline-from").is_some() {
+            "(deadline-from release)"
+        } else {
+            owe(&mut owed, &text, "deadline-from", "description");
+            "(deadline-from)"
         };
         let jitter = clause(task.form, "jitter")
             .and_then(|c| seconds(&c))
@@ -482,8 +566,16 @@ pub fn lower(
                     .map(str::to_string)
             })
             .unwrap_or_else(|| "fault".to_string());
+        // What it names by `uses` or `needs` that is a service or a policy, each once (§2.2).
         let uses: BTreeSet<String> = requester(&internal)
-            .map(|r| r.uses.iter().chain(&r.needs).cloned().collect())
+            .map(|r| {
+                r.uses
+                    .iter()
+                    .chain(&r.needs)
+                    .filter(|n| service_or_policy(n))
+                    .cloned()
+                    .collect()
+            })
             .unwrap_or_default();
         // What releases it (§2.2).
         let trigger = if clause(task.form, "period").is_some() {
@@ -553,10 +645,18 @@ pub fn lower(
         let mut items = Vec::new();
         for offer in kind.offers.iter().filter(|o| o.offered == Offered::Obliged) {
             match instance.provider.state(&offer.fact) {
-                Some(State::Valued(values)) => match values.first().and_then(value_seconds) {
-                    Some(s) => items.push(format!("(obliged {} {})", offer.fact, duration(s))),
-                    None => items.push(format!("(obliged {})", offer.fact)),
-                },
+                Some(State::Valued(values)) => {
+                    let Some(s) = values.first().and_then(value_seconds) else {
+                        return Err(refuse(
+                            "tool-failure",
+                            format!(
+                                "`{text}` is obliged to `{}` at a value that is not a duration (§2.4)",
+                                offer.fact
+                            ),
+                        ));
+                    };
+                    items.push(format!("(obliged {} {})", offer.fact, duration(s)));
+                }
                 _ => {
                     items.push(format!("(obliged {})", offer.fact));
                     owe(&mut owed, &text, &offer.fact, "realization");
@@ -672,8 +772,13 @@ pub fn lower(
             runs.insert(x.to_string());
         }
         for r in &route.requesters {
+            // The interrupt fact where the route is a source, a consumed fact where it is a timer route (§2.6).
             let fact_ok = |q: &Requirement| {
-                (q.fact() == INTERRUPT_SOURCE && met_by_true(q)) || takes_a_channel(q, vocabulary)
+                if route.timer {
+                    takes_a_channel(q, vocabulary)
+                } else {
+                    q.fact() == INTERRUPT_SOURCE && met_by_true(q)
+                }
             };
             if nodes.contains(r) && bound_directly(r, x, &fact_ok) {
                 runs.insert(r.clone());
@@ -770,13 +875,24 @@ pub fn lower(
             }
         }
     }
-    for o in &report.obligations {
-        if let Obligation::Multiplex { service, .. } = o {
-            obligation_lines.push(format!(
-                "(obligation multiplex {service} (discharged-by M4.2 M2.21.2))"
-            ));
-            owe(&mut owed, service, "overhead", "realization");
-        }
+    // A service is multiplexed where it takes a channel and two or more of the system's tasks reach it (§2.9).
+    let reached: Vec<BTreeSet<String>> = tasks
+        .iter()
+        .map(|task| reach(&format!("{system}/{}", task.name)))
+        .collect();
+    let multiplexed: BTreeSet<&str> = rebuilt
+        .bindings
+        .iter()
+        .filter(|b| is_service(&b.requester) && takes_a_channel(&b.requirement, vocabulary))
+        .map(|b| b.requester.as_str())
+        .filter(|service| reached.iter().filter(|r| r.contains(*service)).count() >= 2)
+        .collect();
+    for service in multiplexed {
+        let text = names.text(service);
+        obligation_lines.push(format!(
+            "(obligation multiplex {text} (discharged-by M4.2 M2.21.2))"
+        ));
+        owe(&mut owed, &text, "overhead", "realization");
     }
     for route in &routes {
         obligation_lines.push(format!(
@@ -804,7 +920,7 @@ pub fn lower(
         format!("(format \"{FORMAT}\")"),
         format!("(profile {})", record.profile),
         format!("(system {system})"),
-        format!("(program \"{program}\")"),
+        format!("(program \"{digest}\")"),
         format!("(assignment \"{}\")", sha256(record_text)),
         format!("(adapters {})", record.adapters),
     ];

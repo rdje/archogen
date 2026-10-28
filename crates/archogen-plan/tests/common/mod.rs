@@ -1,11 +1,17 @@
 //! What the tests share: the shipped vocabulary and catalog, and a description resolved and lowered as the engine runs
-//! it — searched, its `archogen-assignment/2` record written, and that record lowered.
+//! it — checked by the language's check, searched, its `archogen-assignment/2` record written, and that record lowered.
+//!
+//! ⚠️ `#![allow(dead_code)]` is deliberate, as in `crates/eadl-resolve/tests/common/mod.rs`: Cargo compiles every
+//! integration test as its own crate with its own copy of this module, so an item `refusals.rs` uses and `corpus.rs`
+//! does not is dead code in the second, and this workspace runs clippy at `-D warnings`.
+
+#![allow(dead_code)]
 
 use std::path::{Path, PathBuf};
 
 use archogen_plan::{lower, Refusal};
-use eadl_front::{Form, SourceMap};
-use eadl_model::check::shipped_registry;
+use eadl_front::{Form, Program, SourceMap};
+use eadl_model::check::{check, shipped_registry};
 use eadl_model::profile::RT_STATIC_UP_V1;
 use eadl_resolve::adapter::Catalog;
 use eadl_resolve::plan;
@@ -21,9 +27,9 @@ pub fn root() -> PathBuf {
         .to_path_buf()
 }
 
-/// The shipped vocabulary.
-pub fn vocabulary() -> Vocabulary {
-    let kinds: Vec<(String, String)> = [
+/// The shipped kind modules, by path.
+fn kinds() -> Vec<(String, String)> {
+    [
         "docs/semantics/kinds/core.eadl",
         "docs/semantics/kinds/os-rt.eadl",
     ]
@@ -34,9 +40,40 @@ pub fn vocabulary() -> Vocabulary {
             std::fs::read_to_string(root().join(r)).expect("a kind module"),
         )
     })
-    .collect();
-    let registry = shipped_registry(&mut SourceMap::new(), &kinds).expect("the kinds load");
+    .collect()
+}
+
+/// The shipped vocabulary.
+pub fn vocabulary() -> Vocabulary {
+    let registry = shipped_registry(&mut SourceMap::new(), &kinds()).expect("the kinds load");
     Vocabulary::shipped(&mut SourceMap::new(), &registry).expect("the shipped vocabulary reads")
+}
+
+/// The shipped catalog.
+pub fn catalog() -> Catalog {
+    Catalog::shipped(&mut SourceMap::new(), &vocabulary()).expect("the shipped catalog reads")
+}
+
+/// `text`, a plain description, as the language's check judges it under the profile (`archogen check`): the program
+/// it accepts, or its verdict. The lowering's input is a program that check accepted (the record's §1).
+pub fn checked(text: &str) -> Result<Program, &'static str> {
+    let mut sources = SourceMap::new();
+    let registry = shipped_registry(&mut sources, &kinds()).expect("the kinds load");
+    let id = sources.add("description", text.to_owned()).expect("small");
+    let outcome = check(&sources, id, &registry, &RT_STATIC_UP_V1);
+    if outcome.is_ok() {
+        Ok(plan::plain(outcome.declarations))
+    } else {
+        Err(outcome.verdict.slug())
+    }
+}
+
+/// `record`, a hand-written `archogen-assignment/2` record whose `"PROGRAM"` stands for the digest of `text`'s program,
+/// lowered over that program.
+pub fn lowered_record(text: &str, record: &str) -> Result<String, Refusal> {
+    let program = checked(text).expect("the language's check accepts the description");
+    let record = record.replace("PROGRAM", &plan::program_digest(&program));
+    lower(&program, &record, &vocabulary(), &catalog()).map(|plan| plan.text())
 }
 
 /// What lowering one system of a description gave: the plan's text, or the search's or the lowering's refusal.
@@ -48,22 +85,19 @@ pub enum Lowered {
     Refused(Refusal),
     /// The search resolved no plan: its verdict.
     Unresolved(String),
+    /// The language's check refused the description: its verdict. Such a description is no input (the record's §1).
+    Rejected(String),
 }
 
 /// `text`, a plain description, its `system` (the first when `None`) searched, its record written, and lowered.
 pub fn lowered(text: &str, system: Option<&str>) -> Lowered {
     let vocabulary = vocabulary();
-    let catalog =
-        Catalog::shipped(&mut SourceMap::new(), &vocabulary).expect("the shipped catalog reads");
-    let mut sources = SourceMap::new();
-    let id = sources.add("description", text.to_owned()).expect("small");
-    let (document, diagnostics) = eadl_front::read(&sources, id);
-    assert!(!diagnostics.has_errors(), "the description reads");
-    let declarations: Vec<Form> = document
-        .forms
-        .into_iter()
-        .filter(|f| f.head() != Some("eadl-version"))
-        .collect();
+    let catalog = catalog();
+    let program = match checked(text) {
+        Ok(program) => program,
+        Err(verdict) => return Lowered::Rejected(verdict.to_string()),
+    };
+    let declarations: &[Form] = &program.root().declarations;
     let decl = declarations
         .iter()
         .find(|f| {
@@ -77,7 +111,7 @@ pub fn lowered(text: &str, system: Option<&str>) -> Lowered {
         ..Policy::default()
     };
     let resolution = match search(
-        &declarations,
+        declarations,
         &decl,
         RT_STATIC_UP_V1.caller_level,
         &vocabulary,
@@ -88,9 +122,12 @@ pub fn lowered(text: &str, system: Option<&str>) -> Lowered {
         Search::Refused { verdict, .. } => return Lowered::Unresolved(format!("{verdict:?}")),
         Search::Inconclusive { .. } => return Lowered::Unresolved("inconclusive".to_string()),
     };
-    let program = plan::program_digest(&plan::plain(declarations.clone()));
-    let record = plan::write(&resolution, RT_STATIC_UP_V1.id, &program);
-    match lower(&declarations, &program, &record, &vocabulary, &catalog) {
+    let record = plan::write(
+        &resolution,
+        RT_STATIC_UP_V1.id,
+        &plan::program_digest(&program),
+    );
+    match lower(&program, &record, &vocabulary, &catalog) {
         Ok(plan) => Lowered::Plan(plan.text()),
         Err(refusal) => Lowered::Refused(refusal),
     }

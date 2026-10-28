@@ -1,0 +1,19 @@
+(eadl-version eadl/1)
+; The system's own level served by a shared epoch extender: a wake runs the instance's code alone, so nothing is
+; refused (round 7).
+(defblock timer.short
+  (offers
+    (relative-delay true)
+    (counter-modulus 65536)
+    (tick-rate 10 MHz)
+    (wrap-behavior modular)
+    (observation-coherent true)
+    (channels 1 tick)
+    (reachable-at-privilege machine)))
+(defplatform soc.short
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.short)))
+(defsystem se
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (requires (unambiguous-horizon (at-least 60 s)) (needs counter-width tick-rate observation-coherent))
+  (platform (uses soc.short)))

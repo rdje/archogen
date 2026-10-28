@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; A period written as a frequency: not a time, refused (§1, §2.2; round 7, D1) until `M1.42` makes the check refuse
+; it.
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defservice console.write
+  (requires (needs observable-output)))
+(defsystem hz
+  (task a (period 100 Hz) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (platform (uses host.p)))

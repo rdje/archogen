@@ -1,0 +1,24 @@
+(eadl-version eadl/1)
+; Two instances over one provider, each taking a channel: both costs on its one timer route (round 7).
+(defblock timer.x
+  (offers
+    (relative-delay true)
+    (counter-width 16 bit)
+    (counter-modulus 65536)
+    (tick-rate 10 MHz)
+    (wrap-behavior modular)
+    (observation-coherent true)
+    (channels 2 tick)
+    (reachable-at-privilege machine)))
+(defplatform soc.x
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.x)))
+(defservice time.monotonic
+  (requires
+    (unambiguous-horizon (at-least 60 s))
+    (needs counter-width tick-rate observation-coherent)))
+(defservice dl
+  (requires (needs absolute-deadline)))
+(defsystem ti
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses time.monotonic dl))
+  (platform (uses soc.x)))

@@ -1,0 +1,2 @@
+== system hz2
+refused tool-failure: `(task hz2 s)`'s `(min-separation 50 Hz)` is not a time: the description check accepted an ill-typed description, which `M1.42` makes it refuse

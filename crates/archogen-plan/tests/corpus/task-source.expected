@@ -5,7 +5,7 @@
 (program "…")
 (assignment "…")
 (adapters adapters/1)
-(task 0 (task ts s) (rank 1) (min-separation 1/100 s) (deadline 1/100 s) (deadline-from release) (jitter 0 s) (overrun fault) (released-by (source dev.e every)) (uses interrupt-source log))
+(task 0 (task ts s) (rank 1) (min-separation 1/100 s) (deadline 1/100 s) (deadline-from release) (jitter 0 s) (overrun fault) (released-by (source dev.e every)) (uses log))
 (bind log observable-output console.uart)
 (bind (task ts s) interrupt-source dev.e)
 (timer simulator (releases))

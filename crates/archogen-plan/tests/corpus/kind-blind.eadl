@@ -1,0 +1,24 @@
+(eadl-version eadl/1)
+; A service bound to one provider for its source and, through an extender, for its counter: it runs in the source's
+; interrupt and not the timer route's, a wake running the instance's code alone (§2.6; round 7, D7).
+(defblock dev.x
+  (offers
+    (interrupt-source true)
+    (min-arrival-separation 20 ms)
+    (relative-delay true)
+    (counter-modulus 65536)
+    (tick-rate 10 MHz)
+    (wrap-behavior modular)
+    (observation-coherent true)
+    (channels 1 tick)
+    (reachable-at-privilege machine)))
+(defplatform soc.x
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.x)))
+(defservice stamp
+  (requires
+    (unambiguous-horizon (at-least 60 s))
+    (needs interrupt-source counter-width tick-rate observation-coherent)))
+(defsystem kb
+  (task s (min-separation 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (uses stamp))
+  (platform (uses soc.x)))

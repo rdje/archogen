@@ -1,0 +1,26 @@
+(eadl-version eadl/1)
+; Four sources and an alarm (round 7): the search binds every source's service to one device, any assignment serving;
+; `tests/records.rs` lowers a record binding each to its own, every class of §2.5's order in one system.
+(defblock dev.z
+  (offers (interrupt-source true) (available-in-state run) (min-arrival-separation 50 ms) (reachable-at-privilege machine)))
+(defblock dev.a
+  (offers (interrupt-source true) (available-in-state run) (reachable-at-privilege machine)))
+(defblock dev.b
+  (offers (interrupt-source true) (available-in-state run) (reachable-at-privilege machine))
+  (absent min-arrival-separation))
+(defblock dev.c
+  (offers (interrupt-source true) (available-in-state run) (min-arrival-separation 5 ms) (reachable-at-privilege machine)))
+(defblock timer.a
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.z dev.a dev.b dev.c timer.a)))
+(defservice ez (requires (needs interrupt-source)))
+(defservice ea (requires (needs interrupt-source)))
+(defservice eb (requires (needs interrupt-source)))
+(defservice ec (requires (needs interrupt-source)))
+(defservice alarm (requires (needs relative-delay)))
+(defsystem rc
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (requires (uses ez ea eb ec))
+  (platform (uses soc)))

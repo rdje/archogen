@@ -5,7 +5,7 @@
 (program "…")
 (assignment "…")
 (adapters adapters/1)
-(task 0 (task te s) (rank 1) (min-separation 1/100 s) (deadline 1/100 s) (deadline-from release) (jitter 0 s) (overrun fault) (released-by (source dev.e every)) (uses counter-width interrupt-source observation-coherent tick-rate))
+(task 0 (task te s) (rank 1) (min-separation 1/100 s) (deadline 1/100 s) (deadline-from release) (jitter 0 s) (overrun fault) (released-by (source dev.e every)) (uses))
 (bind (task te s) counter-width (adapter epoch-extender timer.short))
 (bind (task te s) interrupt-source dev.e)
 (bind (task te s) observation-coherent (adapter epoch-extender timer.short))

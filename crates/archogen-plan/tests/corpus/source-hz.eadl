@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; A source whose separation is written as a frequency: the vocabulary types that fact, so the search refuses it (round
+; 7).
+(defblock dev.e
+  (offers (interrupt-source true) (min-arrival-separation 50 Hz) (reachable-at-privilege machine)))
+(defplatform soc.e
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.e)))
+(defservice evt
+  (requires (needs interrupt-source)))
+(defsystem sh
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt))
+  (platform (uses soc.e)))

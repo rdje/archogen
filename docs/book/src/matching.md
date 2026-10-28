@@ -489,9 +489,11 @@ The runtime plan is lowered from that record by `crates/archogen-plan/src/lib.rs
 design's acceptance as the design's executable form (`docs/decisions/decision_executable-design-reviews.md`). Each rule
 cites its section of `docs/decisions/decision_runtime-plan.md`; the record's worked texts are held equal to what the code
 writes by `crates/archogen-plan/tests/worked.rs`; and every probe system of the design's review is a fixture beside the
-outcome the lowering gives it, in `crates/archogen-plan/tests/corpus/`. A reviewer runs them, and a finding is a defect
-when it carries a reproducer. The plan's design counts a multiplexed service's users more widely than the check above:
-the system's tasks that reach it, directly or through services, policies and bindings, as
+outcome the lowering gives it, in `crates/archogen-plan/tests/corpus/`, a description the language's check refuses held
+at that check's verdict; hand-written records hold the refusals of a record, in their order
+(`crates/archogen-plan/tests/records.rs`). An outcome is what the code writes, so a reviewer judges each against the
+record; a finding is a defect when it carries a reproducer. The plan counts a multiplexed service's users more widely
+than the check above: the system's tasks that reach it, directly or through services, policies and bindings, as
 [OSEK](ledger.md#osek-os) counts a shared resource's users by the tasks that access it (§8.5). The joint rules count the
 requesters naming it by `uses` until `M4.1.2` amends rule 7 to match.
 
