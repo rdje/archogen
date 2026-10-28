@@ -496,7 +496,7 @@ the outcome the lowering gives it, in `crates/archogen-plan/tests/corpus/`, a de
 held at that check's verdict; hand-written records hold the refusals of a record, in their order
 (`crates/archogen-plan/tests/records.rs`). An outcome is what the code writes, so a reviewer judges each against the
 record; a finding is a defect when it carries a reproducer. A bounded exhaustive checker,
-`crates/archogen-plan/tests/bounded.rs` (`M4.1.13`), generates ten universes of small systems — some hundred thousand —
+`crates/archogen-plan/tests/bounded.rs` (`M4.1.13`), generates universes of small systems — some hundred thousand —
 has the configuration checker judge every record the search writes for them, and holds every plan and every refusal to a
 reading of the record written by a context that never read the lowering's code. The plan counts the users of a node that
 takes a channel — a service, a policy, or hardware with requirements of its own; an instance aside — more widely than

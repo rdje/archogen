@@ -470,13 +470,47 @@ platform's `needs` brings a block into the system's hardware (rule 7) without co
 Round 12's answers: R12-D1 held but for `M4.1.2`'s wording (R13-D2); R12-D4 partly (R13-D1, R13-D3); R12-R4 partly
 (R13-R1 to R13-R3); the rest held.
 
+## Round 14 — `2026-10-28`: not acceptable, 12 findings
+
+The reviewer found the transcription faithful but in §1's messages, every test green, the bounded checker's totals
+true — 105,226 systems, every record the search wrote for them accepted by the configuration checker — and every
+hand-off held but `M1.47`'s text. 3 defects and 9 remarks: an order no fixture and no universe reached, names one of
+which prefixes another; a sentence left of round 13's D2; and round 13's correction short of two places.
+
+**Fence.** No breach.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R14-D1 | defect | §1's two naming refusals sort their messages, not their texts: a closing backquote sorts after `.`, so `y.b` is named before `y` | Sorted by the texts, then worded (`M4.1.4`); §1 states it of every refusal naming several things, and the receivers' and the obliged bounds', sorted by their words too, get their orders (R14-R6); `M4.1.13` reopened |
+| R14-D2 | defect | §2 gives nodes two criteria: "every requester the system serves is a node but its tasks and its own level" beside "bound for requirements of its own" | The first goes: a block or a platform bound for nothing runs no code the plan places, and is no node |
+| R14-D3 | defect | round 13's correction missed `M1.47`'s text and the refusal's message, which call `needs` composition, and §1, which credits rule 1 with a restriction it does not state | `M1.47` and §1 state rule 1's `uses` and rule 7's `needs`, the restriction this record's reading; the message "name only hardware" (`M4.1.4`) |
+| R14-R1 | remark | the checker's universes reach no prefixed name, no system named on hardware the system does not serve, no platform's `needs` naming a service or `uses` naming a policy | `M4.1.13` reopened; the agreeing probe a fixture (`M4.1.4`) |
+| R14-R2 | remark | §3's list of probe systems stops at round 12 | Round 13's added; round 14's with its code |
+| R14-R3 | remark | the book says the checker generates ten universes, and it has thirteen | The book names no count, which each widening would stale |
+| R14-R4 | remark | the users rule's comment contradicts its code, which the record supports | The comment corrected, the case a fixture (`M4.1.4`) |
+| R14-R5 | remark | the periodic-source refusal names no clause | It names the task's `period` (§1, `M4.1.4`) |
+| R14-R6 | remark | within one receiver the order of what it receives is unstated, the code sorting its words | Its alarms, then its expiries, each by its text (§1); one instance's obliged bounds by the fact's text, found beside it |
+| R14-R7 | remark | "Kept for `M4.1.7`" keeps a fix for the target's timer the record rejects | The item says so, the question `.6`'s; `M4.1.6` points to it |
+| R14-R8 | remark | `RTP-H9` does not say how a source with no separation the plan states arrives | Only as the run's scenario states, named beside its result (`RTP-H9`, requoted in `M4.3`) |
+| R14-R9 | remark | not this record's: a separation in `Hz` passes the check, and the search refuses it | `M1.48` filed |
+
+Kept, not taken: the reviewer's better decision, that the bound counting each source ahead at its no-loss limit meets
+the other two conditions of Davis et al.'s §V as well, so that the Audsley search `RTP-H4` asks for is optimal for it
+where the tasks a source releases read that limit too — sources below one reaching its bound only through `L`, and a
+source moved up losing a term. A claim of optimality is derived and tested before it is made: `M2.21.2` keeps it.
+
+Round 13's answers: R13-D1 held but for `M1.47` and the message (R14-D3); R13-D2 partly (R14-D2); R13-D3 held, its
+order wrong (R14-D1); R13-R1 partly (R14-D1, R14-R1); R13-R5 held but for §3 (R14-R2); the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
 transcript:
-- **The target's timer** (R3-1): with a target, take the release timer from the target's tick-rate block when the
-  system binds none; where the system binds its own device, refuse until a stated correspondence between system device
-  and target device exists (`M4.4.1`).
+- **The target's timer** (R3-1): which device's alarm releases timer tasks on a target is `.6`'s (`M4.1.6`), and the
+  reviewer's fix, the target's tick-rate block where the system binds none, is rejected (the record's Alternatives
+  weighed: `tick-rate` belongs to a counter, which may raise no interrupt; R14-R7). `.7` keeps the rest: where the
+  system binds its own device, refuse until a stated correspondence between system device and target device exists
+  (`M4.4.1`).
 - **`Joint::map` over a target** (R3-2): a target file has no `defsystem`, so `System::read` cannot read it. Define
   the target's hardware as every block and platform its file declares, run `Joint::new` and `Joint::map` over it, list
   its findings (`MapContradiction`, `PlacementUnsized`, `MemoryAllHoles`) as target refusals, and pick a placement

@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-27`
 - **Status:** `active` — the design for leaf `M4.1`, under independent review (`M4.1.1`) before any code relies on it;
-  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 13 answered; from round 7 it is
+  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 14 answered; from round 7 it is
   reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
 - **Owner / source:** leaf `M4.1.1` (`docs/tasks/M4.md`); `ROADMAP.md` §4.2's `archogen-plan`, §7.3, §7.5, §7.6, §10.1
   step 5 and §10.3; model §8 rules 4, 5, 7, 8, 10, 12 and 15; the obligations `M3.3.8`, `M3.5`, `M3.5.5.7.3` and
@@ -53,8 +53,10 @@ beneath ones included, and `Joint::map` over the system. The plan's routes, mult
 to derive and the build's to verify (`M4.10`), as `M3.5`'s design says of them.
 
 **Refusals, before anything is lowered**, each with the status vocabulary's code and a repair. They are taken in the
-order written, this list and then the next, then §2.4's while lowering, and the first that applies is the one given;
-a bullet over tasks is taken task by task in runtime order, each task's clauses in the order the bullet writes them:
+order written, this list and then the next, then §2.4's while lowering, and the first that applies is the one given; a
+bullet over tasks is taken task by task in runtime order, each task's clauses in the order the bullet writes them; and a
+refusal naming several things orders them as it states, each by its text compared byte by byte (§2), never by its
+message's words:
 - the assignment record does not read, or names another format: `tool-failure`;
 - its program digest is not the program's, or the system it names is not one the program declares: `stale-input`,
   "resolve again";
@@ -75,28 +77,30 @@ a bullet over tasks is taken task by task in runtime order, each task's clauses 
   finding: `tool-failure`, naming both verdicts, the checker's acceptance and each of the generator's findings, the two
   roles disagreeing;
 - a task's release or deadline the description check should have refused: none stated, which it refuses already
-  (`missing-fact` for no release model, a deadline's cardinality one); a period, minimum separation, deadline or
-  jitter that is not a time; a period or minimum separation of zero, which no run can release (`RTP-H9`); or a
-  periodic task bound to an interrupt source itself, which states a second release model, the source "a source of
-  interrupts a service can be released by" (the vocabulary): `tool-failure`, naming the task and the clause, the check
-  having accepted an ill-formed description. `M1.42` and `M1.43` make the language refuse the last three,
+  (`missing-fact` for no release model, a deadline's cardinality one); a period, minimum separation, deadline or jitter
+  that is not a time; a period or minimum separation of zero, which no run can release (`RTP-H9`); or a periodic task
+  bound to an interrupt source itself, which states a second release model, the source "a source of interrupts a service
+  can be released by" (the vocabulary): `tool-failure`, naming the task and the clause — for the last, its `period` —
+  the check having accepted an ill-formed description. `M1.42` and `M1.43` make the language refuse the last three,
   `invalid-description`;
 - a declaration or a task the system serves naming a system by `uses` or `needs`: a system is no thing to use — its own
   `uses` says what it includes (model §8 rule 1) — and its own level would become a node §2 does not give:
   `tool-failure`, naming each such name, by the namer's text and then the system's, the check having accepted it;
   `M1.46` makes the language refuse it, `invalid-description`.
-- a block's or a platform's `uses` or `needs` naming a declaration that is neither a block nor a platform: hardware
-  names only hardware (model §8 rule 1, and rule 7's path ending at a declaration of another kind), and such an operand
-  would be read by some rules and not others — serving what it names, dropping an edge across "composition" to a
-  service: `tool-failure`, naming each, by the block's or platform's text and then the operand's, the check having
-  accepted it; `M1.47` makes the language refuse it, `invalid-description`.
+- a block's or a platform's `uses` or `needs` naming a declaration that is neither a block nor a platform: this record's
+  reading, which `M1.47` writes into the model, is that hardware names only hardware — model §8 rule 1 makes a block's
+  or a platform's `uses` composition and rule 7 reads its `needs` as bringing a block into the system's hardware,
+  neither giving an operand of another kind a meaning — and such an operand would be read by some rules and not others,
+  serving what it names and dropping an edge across "composition" to a service: `tool-failure`, naming each, by the
+  block's or platform's text and then the operand's, the check having accepted it; `M1.47` makes the language refuse it,
+  `invalid-description`.
 
 **Refusals of what `/1` cannot lower**, each `unsupported-profile`, naming what is missing and, where one does, the
 leaf that adds it:
 - a duration the plan would write past the engine's exact arithmetic (§2.2): a task's period, minimum separation,
   deadline or jitter, a source's separation, or an obliged bound, naming each — the tasks' in runtime order, then the
-  sources' by their interrupt's text, then the bounds by their instance's text; `M1.45` has the language refuse such a
-  quantity where it is read;
+  sources' by their interrupt's text, then the bounds by their instance's text and then the fact's; `M1.45` has the
+  language refuse such a quantity where it is read;
 - the system has placement memory (model §8 rule 10): laying an image out in memory is `/2`'s (`M4.1.7`). The repair
   is to describe a hosted platform, or to wait for `/2`;
 - the system declares no task: the scheduler a build runs (`RTP-H1`) has no empty form,
@@ -110,8 +114,8 @@ leaf that adds it:
   one an exclusive instance serves or one bound to a shared instance. No context runs a job's code in an interrupt, and
   how a job receives an alarm it programs itself or an expiry, and what the system's own level's requirement for either
   means are `M4.1.6`'s. It names every such receiver — each task in runtime order, then the system's own level — with
-  what it would receive: an alarm it programs, naming the provider; an expiry, naming the instance that delivers it.
-  So no order among them decides the message;
+  what it would receive: first the alarms it programs, each naming the provider, then its expiries, each naming the
+  instance that delivers it, each kind by those texts. So no order among them decides the message;
 - an initialisation component whose members' records state that one's initialisation calls another's code (§2.7),
   once a record can be a provider (`M3.7`).
 
@@ -134,14 +138,15 @@ below is a node of the joint rules' initialization graph (§2.7): a provider an 
 or an adapter's instance), a block or a platform the system serves that is bound for requirements of its own — a
 requester like any other (model §8 rule 1, `M4.1.14`), whose code an interrupt can run (§2.6) — a service, or a policy:
 the three kinds of node `crates/eadl-resolve/src/joint.rs` gives, `Provider` (hardware and instances), `Service` and
-`Other`, the last a policy's, a description naming a system being refused (§1). Every requester the system serves is a
-node but its tasks and its own level, which are requesters and never nodes, so that the plan derives the context of each
-requester, as `M3.3.8` asks. A node's **text** is its name as the plan writes it, an instance's being its `(adapter …)`
-text, and texts are compared byte by byte. A requester **reaches** what it names by `uses` or `needs`, and what it is
-bound to as its provider, at any depth, as the joint rules take a requester's names (model §8 rule 7) — but for a
-block's or a platform's `uses` or `needs`, which names only hardware (§1) and is never a call — its `uses` composition
-(rule 1; rule 5's "`uses` alone is composition"), its `needs` a block it brings into the system's hardware (rule 7):
-hardware reaches only what its own requirements are bound to.
+`Other`, the last a policy's, a description naming a system being refused (§1). Its tasks and its own level, requesters
+too, are never nodes, nor is a block or a platform the system serves that is bound for nothing, which runs no code the
+plan places; the plan derives the context of each task and each node (§2.6), the requesters whose code it places, as
+`M3.3.8` asks. A node's **text** is its name as the plan writes it, an instance's being its `(adapter …)` text, and
+texts are compared byte by byte. A requester **reaches** what it names by `uses` or `needs`, and what it is bound to as
+its provider, at any depth, as the joint rules take a requester's names (model §8 rule 7) — but for a block's or a
+platform's `uses` or `needs`, which names only hardware (§1) and is never a call — its `uses` composition (rule 1; rule
+5's "`uses` alone is composition"), its `needs` a block it brings into the system's hardware (rule 7): hardware reaches
+only what its own requirements are bound to.
 
 An **interrupt** is named by its kind and its provider, never by the provider alone, since one provider can raise a
 timer route and a source, and a block may be named `timer`:
@@ -734,8 +739,10 @@ a plan with no node. Round 10 adds `uses` cycles through a node's own route, dur
 source separation, and two ill-formed tasks. Round 11 adds blocks requiring an alarm and an output, several receivers of
 interrupt code, and systems named by `uses`. Round 12 adds blocks and platforms with requirements nothing binds to, an
 alarm, an expiry and a source handled by hardware, composition that is no call, a separation whose spellings overflow,
-several durations past the arithmetic at once, and a bare separation. A description the language's check refuses is no
-input (§1), and its probe is held at that check's verdict.
+several durations past the arithmetic at once, and a bare separation. Round 13 adds hardware naming a service by `uses`
+or `needs`, and a block by `needs`; a block bound to itself, and a deadline adapter over its own block; a block whose
+one requirement is its level's; a block only a service names, and a service only composed; and the naming order. A
+description the language's check refuses is no input (§1), and its probe is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with
@@ -833,7 +840,7 @@ identical canonical plans").
 | `RTP-H6` | `M4.10` | The catalog records state what the runtime plan owes them — supported contexts, an initialisation entry that never waits on an interrupt and names any other component member's code it calls, and each source's service cost — amending the catalog record's §12 and §14.4, and the image is checked: no initialisation step waits on an interrupt, and no component member's initialisation calls another member's code. |
 | `RTP-H7` | `M4.7` | The build's metadata carries the runtime plan's sha256 and its provenance, the whole lock data of `ROADMAP.md` §10.3 is written, `--locked` is honoured, and S0's `no-lock-data` is discharged. |
 | `RTP-H8` | `M4.4.1` | A system's devices are put in correspondence with a target's — which target device each system device is, by a rule the lowering of `archogen-runtime-plan/2` reads — before `M4.1.7` designs that format. |
-| `RTP-H9` | `M4.3` | The hosted simulator runs initialisation to its last step with interrupts masked and enables them at time zero, then releases each timer-released task from its own exact clock at its nominal releases from time zero and each task released by `(source X every)` at each arrival of X and at no other time; takes its timer only when a release is due; takes every route before the release timer when both are pending — its `external-before-timer` for a source's, and for a timer route its own order until `M4.1.6` places one — and the routes in the plan's rank order; nests no interrupt and masks every interrupt in a masked section; raises no interrupt the plan does not enable; models each device the plan names, a timer route's alarm included; lets no source arrive before the first enabling, nor sooner after its last arrival than the separation the plan states for it; and states every platform input and fact the analysis variant and the composition read, `external-before-timer`, `releases-after-initialisation` and each source's `external` among them, in the form the scheduling checker reads. |
+| `RTP-H9` | `M4.3` | The hosted simulator runs initialisation to its last step with interrupts masked and enables them at time zero, then releases each timer-released task from its own exact clock at its nominal releases from time zero and each task released by `(source X every)` at each arrival of X and at no other time; takes its timer only when a release is due; takes every route before the release timer when both are pending — its `external-before-timer` for a source's, and for a timer route its own order until `M4.1.6` places one — and the routes in the plan's rank order; nests no interrupt and masks every interrupt in a masked section; raises no interrupt the plan does not enable; models each device the plan names, a timer route's alarm included; lets no source arrive before the first enabling, nor sooner after its last arrival than the separation the plan states for it, a source whose separation it states as zero, `unknown` or `absent` arriving only as the run's scenario states, which the run names beside its result; and states every platform input and fact the analysis variant and the composition read, `external-before-timer`, `releases-after-initialisation` and each source's `external` among them, in the form the scheduling checker reads. |
 | `RTP-H11` | `M4.9` | A comparison of a hosted run and an emulated one reads each run against its own platform's `external-before-timer`, the simulator's `yes` and the emulator's `no`, never one run's order against the other's. |
 | `RTP-H12` | `M2.30` | If the composition's soundness needs a fact of the application's beyond `leaves-interrupt-hardware-alone`, the runtime plan owes it with the others, its §2.2, §2.10 and `RTP-H5` moving in the same change. |
 | `RTP-H10` | `M4.10` | Once a catalog record can be a provider (`M3.7`), the runtime plan's lowering judges the record's supported contexts against the context line of each node it serves, by inclusion, and refuses `unsupported-profile` a context the record does not include. |
