@@ -73,9 +73,9 @@ A fact that cannot be read leaves undeclared the composites it gates, `analysis-
   and so does `one-claim-per-trap` when `external-before-timer` is `no`;
 - `pending-taken-after-unmask`, `releases-never-latched`, `primitives-out-of-line`, `starts-by-transition` and
   every `runtime-discipline.<id>` gate every composite;
-- `leaves-interrupt-hardware-alone`, the application's fact, gates every composite, and the caller's declaration of
-  it for a service's application code gates every `J`; the variant takes neither as an input, so the composition
-  judges their absence.
+- `leaves-interrupt-hardware-alone`, the application's fact, and the caller's declaration of it for a service's
+  application code each gate every composite, the whole-image facts above holding only with all application code kept
+  to it (its row); the variant takes neither as an input, so the composition judges their absence.
 
 | Fact | Kind | Says | Why the composition needs it |
 | --- | --- | --- | --- |
@@ -512,6 +512,9 @@ row and `compose.rs`, and now says what both say — moves no rule; a reader who
 the row, the code and the variant's condition 9 (the leaf's evidence). So do `M2.26`'s, §5 filing a masked run's
 endings among the application's parts, and `M2.27`'s, the application's declaration that each task masks only through
 the runtime API named so, not as one of the variant's task facts, each checked by a reader who did not write it.
+`M2.25`'s on the same day widens the caller's declaration for a service's application code from every `J` to every
+composite, as its row's reasoning has it; no verdict moves, and `compose.rs` stops naming a task's `C` and `CS` as
+values when the declaration cannot be read.
 
 | Round | Findings | Defects | Verdict |
 | --- | --- | --- | --- |

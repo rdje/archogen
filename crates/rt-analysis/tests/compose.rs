@@ -1096,6 +1096,17 @@ fn a_sources_service_comes_from_its_record_or_from_the_caller_and_needs_a_record
     };
     let composition = compose(&kernel, &platform, &application, &sources);
     assert!(composition.stops.unresolved[0].starts_with("`leaves-interrupt-hardware-alone, the caller's declaration for the application code of source `uart`'s service` cannot be read"), "{:?}", composition.stops);
+    // It gates every composite, as the application's own does (record §2, `M2.25`): no task's C has a value.
+    assert!(
+        composition.stops.unresolved[0].contains("which leaves every composite undeclared"),
+        "{:?}",
+        composition.stops
+    );
+    assert!(
+        composition.tasks.iter().all(|t| t.computation.is_none()),
+        "{:?}",
+        composition.tasks
+    );
     sources[0].service = Service::Caller {
         cost: None,
         leaves_interrupt_hardware_alone: Some(true),

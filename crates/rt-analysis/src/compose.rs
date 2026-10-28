@@ -1009,6 +1009,25 @@ pub fn compose_within(
         "leaves-interrupt-hardware-alone",
         "every composite",
     );
+    // The caller's declaration of it for a service's application code gates as much: the whole-image facts each
+    // composite rests on hold only with that code kept to them too (record §2, `M2.25`).
+    for source in sources {
+        if let Service::Caller {
+            leaves_interrupt_hardware_alone,
+            ..
+        } = &source.service
+        {
+            every_composite &= c.fact(
+                *leaves_interrupt_hardware_alone,
+                &format!(
+                    "leaves-interrupt-hardware-alone, the caller's declaration for the application code of \
+                     source `{}`'s service",
+                    source.id
+                ),
+                "every composite",
+            );
+        }
+    }
 
     // The description's tasks, highest priority first, with `C_i` and `CS_i` (§3).
     let mut ordered: Vec<&TaskParts> = application.tasks.iter().collect();
@@ -1062,24 +1081,13 @@ pub fn compose_within(
             Service::Catalog(cost) => c
                 .part(*cost, &format!("C_s of {name}"), every_j)
                 .map(|cost| (cost, Owner::Catalog)),
-            Service::Caller {
-                cost,
-                leaves_interrupt_hardware_alone,
-            } => {
+            Service::Caller { cost, .. } => {
                 let cost = c.part(
                     *cost,
                     &format!(
                         "C_s of {name}, the caller's figure for a service whose record states \
                          `no-application-code.{}` `no`",
                         source.id
-                    ),
-                    every_j,
-                );
-                every_j_ok &= c.fact(
-                    *leaves_interrupt_hardware_alone,
-                    &format!(
-                        "leaves-interrupt-hardware-alone, the caller's declaration for the application code of \
-                         {name}'s service"
                     ),
                     every_j,
                 );
