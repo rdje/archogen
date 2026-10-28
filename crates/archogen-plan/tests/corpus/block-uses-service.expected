@@ -1,2 +1,2 @@
 == system bus
-refused tool-failure: `dev.e` names `alarm`: a block's or a platform's `uses` and `needs` name only the hardware it composes, and the description check accepted these, which `M1.47` makes it refuse
+refused tool-failure: `dev.e` names `alarm`: a block's or a platform's `uses` and `needs` name only hardware, and the description check accepted these, which `M1.47` makes it refuse

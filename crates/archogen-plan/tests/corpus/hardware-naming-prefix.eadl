@@ -1,0 +1,10 @@
+(eadl-version eadl/1)
+; The blocks `d` and `d.x` each naming the service `q`: by the block's text, `d` first (§1; round 14, D1).
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock d (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses q)))
+(defblock d.x (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses q)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart d d.x)))
+(defservice q (requires (needs observable-output)))
+(defsystem s
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses q))
+  (platform (uses soc)))

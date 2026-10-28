@@ -502,6 +502,12 @@ source moved up losing a term. A claim of optimality is derived and tested befor
 Round 13's answers: R13-D1 held but for `M1.47` and the message (R14-D3); R13-D2 partly (R14-D2); R13-D3 held, its
 order wrong (R14-D1); R13-R1 partly (R14-D1, R14-R1); R13-R5 held but for §3 (R14-R2); the rest held.
 
+**With the answers' code** (`ARCHOGEN-M4-1078`): one receiver receives at most one alarm or one expiry, the search
+binding a requester's `counter` facts to one provider whole and refusing `missing-fact` otherwise, so R14-R6's order
+within a receiver is reached by no resolved system; it holds as stated. The checker's fourth widening found the code
+and its reading apart once, and the record sided with the code: a system named serves what it writes at its own level,
+its `platform` clause included (model §8 rules 1 and 7), which §1 now says.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a

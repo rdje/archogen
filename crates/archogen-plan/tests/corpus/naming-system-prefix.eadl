@@ -1,0 +1,14 @@
+(eadl-version eadl/1)
+; One task naming the systems `y` and `y.b`: §1 names each "by the namer's text and then the system's", so `y` first
+; (§1; round 14, D1).
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+(defsystem y
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (platform (uses soc)))
+(defsystem y.b
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (platform (uses soc)))
+(defsystem s
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses y y.b))
+  (platform (uses soc)))

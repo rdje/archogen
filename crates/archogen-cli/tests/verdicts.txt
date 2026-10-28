@@ -35,6 +35,7 @@
 0 - crates/archogen-plan/tests/corpus/exact.eadl
 0 - crates/archogen-plan/tests/corpus/fast-source.eadl
 0 - crates/archogen-plan/tests/corpus/from-and-alarm.eadl
+0 - crates/archogen-plan/tests/corpus/hardware-naming-prefix.eadl
 0 - crates/archogen-plan/tests/corpus/hz-everywhere.eadl
 0 - crates/archogen-plan/tests/corpus/isr-and-task.eadl
 0 - crates/archogen-plan/tests/corpus/jitter-over-period.eadl
@@ -47,12 +48,15 @@
 0 - crates/archogen-plan/tests/corpus/multiplex.eadl
 0 - crates/archogen-plan/tests/corpus/named-timer-r5.eadl
 0 - crates/archogen-plan/tests/corpus/named-timer.eadl
+0 - crates/archogen-plan/tests/corpus/naming-namer-prefix.eadl
 0 - crates/archogen-plan/tests/corpus/naming-order.eadl
+0 - crates/archogen-plan/tests/corpus/naming-system-prefix.eadl
 0 - crates/archogen-plan/tests/corpus/needs-svc.eadl
 0 - crates/archogen-plan/tests/corpus/no-node.eadl
 0 - crates/archogen-plan/tests/corpus/no-task.eadl
 0 - crates/archogen-plan/tests/corpus/nosep-source.eadl
 0 - crates/archogen-plan/tests/corpus/one-user-alarm.eadl
+0 - crates/archogen-plan/tests/corpus/other-hardware-names-system.eadl
 0 - crates/archogen-plan/tests/corpus/other-route-caller.eadl
 0 - crates/archogen-plan/tests/corpus/other-system-names-system.eadl
 0 - crates/archogen-plan/tests/corpus/own-route-caller.eadl
@@ -69,6 +73,7 @@
 0 - crates/archogen-plan/tests/corpus/policy-expiry.eadl
 0 - crates/archogen-plan/tests/corpus/policy-handler.eadl
 0 - crates/archogen-plan/tests/corpus/policy-user.eadl
+0 - crates/archogen-plan/tests/corpus/provider-calls-back-on-own-route.eadl
 0 - crates/archogen-plan/tests/corpus/rank-classes.eadl
 0 - crates/archogen-plan/tests/corpus/rank-gaps.eadl
 0 - crates/archogen-plan/tests/corpus/rank-tie.eadl

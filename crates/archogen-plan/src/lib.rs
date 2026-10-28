@@ -429,10 +429,13 @@ pub fn lower(
                     && met_by_true(&b.requirement)
             })
         {
+            let period = period.as_ref().expect("a periodic task writes its period");
             return Err(ill_formed(
                 task,
-                "is periodic and bound to an interrupt source itself, a second release model"
-                    .to_string(),
+                format!(
+                    "writes `{}` and is bound to an interrupt source itself, a second release model",
+                    period.to_canonical()
+                ),
                 "M1.43",
             ));
         }
@@ -445,7 +448,8 @@ pub fn lower(
                 && d.items().get(1).and_then(Form::as_symbol) == Some(name)
         })
     };
-    let mut naming_systems: Vec<String> = rebuilt
+    // Each pair by the namer's text, then the system's, compared byte by byte, never by the message's words (§1).
+    let mut naming_systems: Vec<(&str, &str)> = rebuilt
         .requesters
         .iter()
         .filter(|r| rebuilt.system.serves(&r.name))
@@ -454,17 +458,21 @@ pub fn lower(
                 .iter()
                 .chain(&r.needs)
                 .filter(|n| is_system(n))
-                .map(move |n| format!("`{}` names the system `{n}`", r.name))
+                .map(move |n| (r.name.as_str(), n.as_str()))
         })
         .collect();
     naming_systems.sort();
     naming_systems.dedup();
     if !naming_systems.is_empty() {
+        let named: Vec<String> = naming_systems
+            .iter()
+            .map(|(namer, n)| format!("`{namer}` names the system `{n}`"))
+            .collect();
         return Err(refuse(
             "tool-failure",
             format!(
                 "{}: a system is no thing to use, and the description check accepted it, which `M1.46` makes it refuse",
-                naming_systems.join("; ")
+                named.join("; ")
             ),
         ));
     }
@@ -475,7 +483,8 @@ pub fn lower(
             .iter()
             .find(|d| d.items().get(1).and_then(Form::as_symbol) == Some(name))
     };
-    let mut composing_other: Vec<String> = rebuilt
+    // Each pair by the block's or platform's text, then the operand's, byte by byte (§1).
+    let mut composing_other: Vec<(&str, &str)> = rebuilt
         .requesters
         .iter()
         .filter(|r| declared(&r.name).is_some_and(is_hardware_decl))
@@ -484,17 +493,21 @@ pub fn lower(
                 .iter()
                 .chain(&r.needs)
                 .filter(|n| declared(n).is_some_and(|d| !is_hardware_decl(d)))
-                .map(move |n| format!("`{}` names `{n}`", r.name))
+                .map(move |n| (r.name.as_str(), n.as_str()))
         })
         .collect();
     composing_other.sort();
     composing_other.dedup();
     if !composing_other.is_empty() {
+        let named: Vec<String> = composing_other
+            .iter()
+            .map(|(namer, n)| format!("`{namer}` names `{n}`"))
+            .collect();
         return Err(refuse(
             "tool-failure",
             format!(
-                "{}: a block's or a platform's `uses` and `needs` name only the hardware it composes, and the description check accepted these, which `M1.47` makes it refuse",
-                composing_other.join("; ")
+                "{}: a block's or a platform's `uses` and `needs` name only hardware, and the description check accepted these, which `M1.47` makes it refuse",
+                named.join("; ")
             ),
         ));
     }
@@ -543,22 +556,24 @@ pub fn lower(
                         Some(Seconds::PastArithmetic)
                     ) =>
                 {
-                    Some(format!(
-                        "`{}` is obliged to a `{}`",
+                    Some((
                         assignment::instance_text(instance, system_text),
-                        offer.fact
+                        offer.fact.to_string(),
                     ))
                 }
-                Some(State::Overflow) => Some(format!(
-                    "`{}` is obliged to a `{}`",
+                Some(State::Overflow) => Some((
                     assignment::instance_text(instance, system_text),
-                    offer.fact
+                    offer.fact.to_string(),
                 )),
                 _ => None,
             })
     });
-    let mut past_obliged: Vec<String> = past_obliged.collect();
+    // By the instance's text, then the fact's, byte by byte (§1).
+    let mut past_obliged: Vec<(String, String)> = past_obliged.collect();
     past_obliged.sort();
+    let past_obliged = past_obliged
+        .into_iter()
+        .map(|(instance, fact)| format!("`{instance}` is obliged to a `{fact}`"));
     let past: Vec<String> = past
         .into_iter()
         .chain(past_sources)
@@ -711,7 +726,9 @@ pub fn lower(
             .position(|t| joint::task_name(&system, &t.name) == name)
             .unwrap_or(tasks.len())
     };
-    let mut receivers: Vec<(usize, String)> = Vec::new();
+    // Each receiver in its place; within it, its alarms (0) and then its expiries (1), each by the text the message
+    // names — the provider's, the delivering instance's — byte by byte (§1).
+    let mut receivers: Vec<(usize, u8, String, String)> = Vec::new();
     for route in routes.iter().filter(|r| r.timer) {
         for r in &route.requesters {
             if own_level_or_task(r)
@@ -719,6 +736,8 @@ pub fn lower(
             {
                 receivers.push((
                     place(r),
+                    0,
+                    route.provider.clone(),
                     format!(
                         "`{}` programs an alarm at `{}` itself",
                         names.text(r),
@@ -747,6 +766,8 @@ pub fn lower(
             if own_level_or_task(served) {
                 receivers.push((
                     place(served),
+                    1,
+                    names.text(&instance.provider.name),
                     format!(
                         "`{}` delivers an expiry to `{}`",
                         names.text(&instance.provider.name),
@@ -759,7 +780,7 @@ pub fn lower(
     receivers.sort();
     receivers.dedup();
     if !receivers.is_empty() {
-        let named: Vec<String> = receivers.into_iter().map(|(_, what)| what).collect();
+        let named: Vec<String> = receivers.into_iter().map(|(.., what)| what).collect();
         return Err(refuse(
             "unsupported-profile",
             format!(
@@ -1152,8 +1173,9 @@ pub fn lower(
                 format!("(interrupt (timer-route {x}))")
             })
             .collect();
-        // Its own route counts only where something else that route runs, neither it nor what it is bound to,
-        // reaches it: that route's own code delivering to it is no caller (§2.9).
+        // Its own route counts only where something else that route runs reaches it — the provider serving that route
+        // among them, where its own requirements reach the node: that route's own code delivering to the node is no
+        // caller, but another node's code there calling it is (§2.9).
         let called_there = |item: &str| {
             runs_of
                 .get(item)

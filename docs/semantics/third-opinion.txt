@@ -34,6 +34,7 @@ agree crates/archogen-plan/tests/corpus/equal-separation.eadl
 agree crates/archogen-plan/tests/corpus/exact.eadl
 agree crates/archogen-plan/tests/corpus/fast-source.eadl
 agree crates/archogen-plan/tests/corpus/from-and-alarm.eadl
+agree crates/archogen-plan/tests/corpus/hardware-naming-prefix.eadl
 agree crates/archogen-plan/tests/corpus/hz-everywhere.eadl
 agree crates/archogen-plan/tests/corpus/isr-and-task.eadl
 agree crates/archogen-plan/tests/corpus/jitter-over-period.eadl
@@ -46,12 +47,15 @@ agree crates/archogen-plan/tests/corpus/multiplex-r5.eadl
 agree crates/archogen-plan/tests/corpus/multiplex.eadl
 agree crates/archogen-plan/tests/corpus/named-timer-r5.eadl
 agree crates/archogen-plan/tests/corpus/named-timer.eadl
+agree crates/archogen-plan/tests/corpus/naming-namer-prefix.eadl
 agree crates/archogen-plan/tests/corpus/naming-order.eadl
+agree crates/archogen-plan/tests/corpus/naming-system-prefix.eadl
 agree crates/archogen-plan/tests/corpus/needs-svc.eadl
 agree crates/archogen-plan/tests/corpus/no-node.eadl
 agree crates/archogen-plan/tests/corpus/no-task.eadl
 agree crates/archogen-plan/tests/corpus/nosep-source.eadl
 agree crates/archogen-plan/tests/corpus/one-user-alarm.eadl
+agree crates/archogen-plan/tests/corpus/other-hardware-names-system.eadl
 agree crates/archogen-plan/tests/corpus/other-route-caller.eadl
 agree crates/archogen-plan/tests/corpus/other-system-names-system.eadl
 agree crates/archogen-plan/tests/corpus/own-route-caller.eadl
@@ -68,6 +72,7 @@ agree crates/archogen-plan/tests/corpus/policy-alarm.eadl
 agree crates/archogen-plan/tests/corpus/policy-expiry.eadl
 agree crates/archogen-plan/tests/corpus/policy-handler.eadl
 agree crates/archogen-plan/tests/corpus/policy-user.eadl
+agree crates/archogen-plan/tests/corpus/provider-calls-back-on-own-route.eadl
 agree crates/archogen-plan/tests/corpus/rank-classes.eadl
 agree crates/archogen-plan/tests/corpus/rank-gaps.eadl
 agree crates/archogen-plan/tests/corpus/rank-tie.eadl

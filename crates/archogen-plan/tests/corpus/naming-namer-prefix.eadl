@@ -1,0 +1,12 @@
+(eadl-version eadl/1)
+; The services `m` and `m.s` each naming the system `y`: by the namer's text, `m` first (§1; round 14, D1).
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+(defsystem y
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (platform (uses soc)))
+(defservice m (requires (uses y)))
+(defservice m.s (requires (uses y)))
+(defsystem s
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses m m.s))
+  (platform (uses soc)))

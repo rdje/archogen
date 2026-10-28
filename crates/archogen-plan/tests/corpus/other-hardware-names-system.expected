@@ -1,0 +1,4 @@
+== system s
+refused tool-failure: `odd` names `s`: a block's or a platform's `uses` and `needs` name only hardware, and the description check accepted these, which `M1.47` makes it refuse
+== system o
+refused tool-failure: `odd` names the system `s`: a system is no thing to use, and the description check accepted it, which `M1.46` makes it refuse

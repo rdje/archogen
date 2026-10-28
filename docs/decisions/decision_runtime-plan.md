@@ -83,8 +83,9 @@ message's words:
   can be released by" (the vocabulary): `tool-failure`, naming the task and the clause — for the last, its `period` —
   the check having accepted an ill-formed description. `M1.42` and `M1.43` make the language refuse the last three,
   `invalid-description`;
-- a declaration or a task the system serves naming a system by `uses` or `needs`: a system is no thing to use — its own
-  `uses` says what it includes (model §8 rule 1) — and its own level would become a node §2 does not give:
+- a declaration or a task the system serves naming a system by `uses` or `needs`, what a system it names writes at its
+  own level — its `platform` clause included — being served too (model §8 rules 1 and 7): a system is no thing to use —
+  its own `uses` says what it includes (model §8 rule 1) — and its own level would become a node §2 does not give:
   `tool-failure`, naming each such name, by the namer's text and then the system's, the check having accepted it;
   `M1.46` makes the language refuse it, `invalid-description`.
 - a block's or a platform's `uses` or `needs` naming a declaration that is neither a block nor a platform: this record's
@@ -115,7 +116,8 @@ leaf that adds it:
   how a job receives an alarm it programs itself or an expiry, and what the system's own level's requirement for either
   means are `M4.1.6`'s. It names every such receiver — each task in runtime order, then the system's own level — with
   what it would receive: first the alarms it programs, each naming the provider, then its expiries, each naming the
-  instance that delivers it, each kind by those texts. So no order among them decides the message;
+  instance that delivers it, each kind by those texts. So no order among them decides the message, though one receiver
+  receives at most one today, the search binding a requester's `counter` facts to one provider whole;
 - an initialisation component whose members' records state that one's initialisation calls another's code (§2.7),
   once a record can be a provider (`M3.7`).
 
@@ -741,8 +743,10 @@ interrupt code, and systems named by `uses`. Round 12 adds blocks and platforms 
 alarm, an expiry and a source handled by hardware, composition that is no call, a separation whose spellings overflow,
 several durations past the arithmetic at once, and a bare separation. Round 13 adds hardware naming a service by `uses`
 or `needs`, and a block by `needs`; a block bound to itself, and a deadline adapter over its own block; a block whose
-one requirement is its level's; a block only a service names, and a service only composed; and the naming order. A
-description the language's check refuses is no input (§1), and its probe is held at that check's verdict.
+one requirement is its level's; a block only a service names, and a service only composed; and the naming order. Round
+14 adds names one of which prefixes another, in both naming refusals; hardware on another system's platform naming a
+system; and a provider whose own requirement is bound to the node that takes its channel, calling it on that node's own
+route. A description the language's check refuses is no input (§1), and its probe is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with
