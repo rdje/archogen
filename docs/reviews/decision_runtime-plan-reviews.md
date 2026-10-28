@@ -288,6 +288,32 @@ header says that an outcome is evidence, judged against the record, never a rule
 Round 6's answers: all met in the record; in the code `R6-R1` was not (R7-D4), and `R6-D5`, `R6-D7` and `R6-D8` partly
 (R7-D2, R7-D9, R7-D7), each now answered as above.
 
+## Round 8 — `2026-10-28`: not acceptable, 10 findings
+
+The reviewer ran the crate's tests and the checker's sweep green, adapted round 7's probe program, and found the code
+transcribing §2–§3 faithfully on every fixture and on probes of its own. 4 defects and 6 remarks: a rule wrong against
+its own source, a hand-off naming the wrong model rule, a zero release separation lowered, and the record's reader
+accepting records the checker refuses.
+
+**Fence.** No breach. Every search was scoped away from `docs/evaluation/`; the history reads stayed within
+`6d61f65..HEAD`.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R8-D1 | defect | §2.9 dropped a channel's callers that run in an interrupt, and policies: a source's handler and a task sharing an alarm, two handlers sharing one, a policy taking one, each owed no `multiplex`, while OSEK's §8.6 counts "all tasks and interrupt routines" | A service or a policy taking a channel is multiplexed where it has two users: each task that reaches it, and each interrupt whose context line holds it, but its own channel's timer route; [OSEK](../book/src/ledger.md#osek-os) §8.6 quoted (§2.9, `M4.1.4`) |
+| R8-D2 | defect | `.2` amended rule 7 for the users, which rule 4 defines | `.2` amends rule 4's users; rule 7 still resolves system by system (§4, `M4.1.2`) |
+| R8-D3 | defect | `rebuild` accepted an instance no requester is bound to, and a binding to another requester's exclusive instance, both of which the checker refuses | `M4.1.10`: `rebuild` refuses both, the records held in `tests/records.rs` |
+| R8-D4 | defect | a zero period or minimum separation lowered, which no run can release | Refused `tool-failure` (§1); `M1.42` widened to make the language refuse it |
+| R8-R1 | remark | a periodic task bound to a source itself lowered with the binding meaning nothing | A second release model: refused `tool-failure` (§1), `M1.43` filed for the language |
+| R8-R2 | remark | refusals the code applies that §1 does not list, or that no fixture can reach | A release or deadline none stated folded into §1's bullet; §2.4's refusal placed in §1's order; R7-R5's shared-instance branch kept as the rule, unreachable under `adapters/1` |
+| R8-R3 | remark | `INDEX`, `PROFILE`, `VERSION`, `SYSTEM` and the `bind` line's tokens undefined | Defined (§3) |
+| R8-R4 | remark | three wording slips | Fixed (§2.7, §2.9, §3) |
+| R8-R5 | remark | the sporadic golden read from the record's block, not a crate fixture | The corpus's `sporadic.eadl` held equal to the block (`M4.1.4`) |
+| R8-R6 | remark | cases the corpus misses, code and record agreeing | Added, and a module tree (§3, `M4.1.4`) |
+
+Round 7's answers: held in both, but R7-D2, partly (R8-D1, R8-D2); R7-R4 and R7-R5 are rules no fixture can reach under
+`adapters/1`.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a

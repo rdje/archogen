@@ -55,7 +55,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | --- | --- | --- | --- |
 | [`S0`](tasks/S0.md) | `done` | — every leaf closed; F28 green, and the chapter's counts are measured (`S0.8`) | repo-local |
 | [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.34` next, awaiting the director; `PROGRAM.78` blocked until the features are complete | repo-local |
-| [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7); `M1.42` — a task's durations held to time | repo-local |
+| [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7); `M1.42` — a task's durations held to time; `M1.43` — a periodic task's second release model | repo-local |
 | [`API`](tasks/API.md) | `done` | closed `2026-10-02`: one engine API, the wasm binding and its page, `archogen mcp`, and the book's chapter; findings §9 with the director | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`M2`](tasks/M2.md) | `active` | `M2.7.4` — the catalog's gate, `.1`–`.4` done; `.5`, the records and the lock, and `M2.7.6`'s review and hosting half, wait on the director; `M2.21`, `archogen analyze`'s shape, ruled (findings §16) and taken from `M3.5.1` | repo-local |

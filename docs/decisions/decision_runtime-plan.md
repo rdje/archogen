@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-27`
 - **Status:** `active` — the design for leaf `M4.1`, under independent review (`M4.1.1`) before any code relies on it;
-  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 7 answered; from round 7 it is
+  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 8 answered; from round 7 it is
   reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
 - **Owner / source:** leaf `M4.1.1` (`docs/tasks/M4.md`); `ROADMAP.md` §4.2's `archogen-plan`, §7.3, §7.5, §7.6, §10.1
   step 5 and §10.3; model §8 rules 4, 5, 7, 8, 10, 12 and 15; the obligations `M3.3.8`, `M3.5`, `M3.5.5.7.3` and
@@ -53,7 +53,7 @@ beneath ones included, and `Joint::map` over the system. The plan's routes, mult
 to derive and the build's to verify (`M4.10`), as `M3.5`'s design says of them.
 
 **Refusals, before anything is lowered**, each with the status vocabulary's code and a repair. They are taken in the
-order written, this list and then the next, and the first that applies is the one given:
+order written, this list and then the next, then §2.4's while lowering, and the first that applies is the one given:
 - the assignment record does not read, or names another format: `tool-failure`;
 - its program digest is not the program's, or the system it names is not one the program declares: `stale-input`,
   "resolve again";
@@ -73,8 +73,11 @@ order written, this list and then the next, and the first that applies is the on
 - the generator's own joint rules, run over the record the checker accepted, find a conflict, an unknown or a map
   finding: `tool-failure`, naming both verdicts, the checker's acceptance and each of the generator's findings, the two
   roles disagreeing;
-- a task's period, minimum separation, deadline or jitter is not a time: `tool-failure`, naming the task and the
-  clause, the description check having accepted an ill-typed description. `M1.42` makes the language refuse it,
+- a task's release or deadline the description check should have refused: none stated; a period, minimum
+  separation, deadline or jitter that is not a time; a period or minimum separation of zero, which no run can release
+  (`RTP-H9`); or a periodic task bound to an interrupt source itself, which states a second release model, the source
+  "a source of interrupts a service can be released by" (the vocabulary): `tool-failure`, naming the task and the
+  clause, the check having accepted an ill-formed description. `M1.42` and `M1.43` make the language refuse them,
   `invalid-description`.
 
 **Refusals of what `/1` cannot lower**, each `unsupported-profile`, naming what is missing and, where one does, the
@@ -295,8 +298,8 @@ timer route and a source, and a block may be named `timer`:
    record, an obligation on its initialisation entry (`RTP-H6`). `M4.10` checks the image (`RTP-H6`).
 
 7. **Initialisation.**
-   - The graph is `Joint::initialization` over the system and the record's bindings (model §8 rule 12). `M4.1.3` adds
-     its production computation: only the tests call it today.
+   - The graph is `Joint::initialization` over the system and the record's bindings (model §8 rule 12), which the
+     lowering computes (`M4.1.4`).
    - Its edges are written with their reasons, as §10.1's "initialization dependencies" and `M4.1`'s Goal ask: one line
      for each pair of nodes, the earlier first, naming each reason `Joint::initialization` gives, a binding's fact or
      `named` for a `uses` or `needs`.
@@ -329,19 +332,23 @@ timer route and a source, and a block may be named `timer`:
    | Kind | Subject | Discharged by | From |
    | --- | --- | --- | --- |
    | an adapter kind's obligation, such as `update` | the instance's text | `M4.2 M4.8`: the generated code realizes it (`RTP-H2`), and the report lists it until it is discharged | the instance's kind (the adapters record's §9) |
-   | `multiplex` | the service | `M4.2 M2.21.2`: the service's realization serves every user through its one channel and states its overhead (`RTP-H2`), and the scheduling checker charges it with the term `M4.1.6` designs (`RTP-H4`), as model §8 rule 4 asks of both | the rule below, over the system's tasks |
+   | `multiplex` | the service or the policy | `M4.2 M2.21.2`: its realization serves every user through its one channel and states its overhead (`RTP-H2`), and the scheduling checker charges it with the term `M4.1.6` designs (`RTP-H4`), as model §8 rule 4 asks of both | the rule below, over the system's tasks and interrupts |
    | `route` | the interrupt, `(timer-route NAME)` or `(source NAME)` | `M4.2 M4.3`: the emitter configures the enabled set (`RTP-H1`), and the simulator delivers it (`RTP-H9`) | `Obligation::Route`, one for each provider and kind |
 
-   `Obligation::Placement` is `Joint::map`'s, and comes only with placement memory, which `/1` refuses. A service is
-   **multiplexed** where it takes a channel and two or more of the system's tasks reach it (§2), directly or through
-   services, policies and bindings: its users are the jobs that can call it, whatever declaration names it. So
-   [OSEK](../book/src/ledger.md#osek-os) counts a shared resource's users, by the tasks that access it: "The ceiling
-   priority shall be set at least to the highest priority of all tasks that access a resource or any of the resources
-   linked to this resource" (§8.5). A channel taken on a consumed fact makes a timer route, so a multiplexed service's
-   system is one the analysis refuses until `M4.1.6`. The heartbeat's `console.write`, used by both tasks, takes no
-   channel and owes no `multiplex`. The lowering derives the obligation by this rule. `Joint::check` reports its own
-   today, counting the requesters that name a service by `uses`, over every system of the description; `M4.1.2` makes
-   rule 7 and `Joint::check` count as this rule does, as model §8 rule 7 resolves "system by system".
+   `Obligation::Placement` is `Joint::map`'s, and comes only with placement memory, which `/1` refuses. A service or a
+   policy that takes a channel is **multiplexed** where it has two or more **users**: each of the system's tasks that
+   reaches it (§2), directly or through services, policies and bindings; and each interrupt whose context line (§2.6)
+   holds it, but for the timer route at a provider whose channel it takes, whose code is its own. Its users are the
+   jobs and the interrupt routines that can call it, whatever declaration names it; the system's own level is none
+   (model §8 rule 4). So [OSEK](../book/src/ledger.md#osek-os) counts a shared resource's users once resources are
+   used at interrupt level: "The ceiling priority shall be set at least to the highest priority of all tasks and
+   interrupt routines that access a resource or any of the resources linked to this resource" (§8.6, "OSEK Priority
+   Ceiling Protocol with extensions for interrupt levels"). A channel taken on a consumed fact makes a timer route, so
+   a multiplexed node's system is one the analysis refuses until `M4.1.6`. The heartbeat's `console.write`, used by
+   both tasks, takes no channel and owes no `multiplex`. The lowering derives the obligation by this rule.
+   `Joint::check` reports its own today: a service whose users, the tasks, services and instances naming it by `uses`
+   over every system of the description, number two or more; `M4.1.2` makes rule 4's users, and so `Joint::check`,
+   count as this rule does, system by system as rule 7 resolves.
 
 10. **Owed facts**, in one list, each a subject, a fact and its owner. Exactly these are written:
 
@@ -356,7 +363,7 @@ timer route and a source, and a block may be named `timer`:
     | each node whose context line holds `job` | `call-cost`, the time one call of its code takes in a job | `realization` |
     | each instance whose kind has costs | `cost-terms` | `realization` |
     | each instance's obliged fact offered bare | that fact | `realization` |
-    | each service a `multiplex` obligation names | `overhead` | `realization` |
+    | each service or policy a `multiplex` obligation names | `overhead` | `realization` |
     | each source | `service-cost`, `acknowledge-point`, `deferred-work` | `realization` |
     | each timer route | `service-cost`, `arrival-bound` | `realization` |
 
@@ -401,7 +408,10 @@ sign and no leading zero.
 ```
 
 **Values:**
-- `RELEASE` is `(period DUR)` or `(min-separation DUR)`.
+- `INDEX` is the task's runtime index (§2.2), an `INT`; `SYSTEM` is a system's name.
+- `PROFILE` is the profile's identifier and `VERSION` the adapter catalog's version, each as `/2` writes it.
+- On a `bind` line, `REQ`, `FACT` and `PROVIDER` are `/2`'s, copied as written (§2.3).
+- `RELEASE` is `(period DUR)` or `(min-separation DUR)`, its duration never zero (§1).
 - `REFERENCE` is `(deadline-from release)`, or `(deadline-from)` where the description writes none, a form no
   description can write.
 - `POLICY` is written as the description writes it.
@@ -643,15 +653,18 @@ The three texts are `/1`'s goldens, held by `M4.1.4` with the systems that pin t
 timer route and a source; a block named `timer`; a `deadline-over-delay` instance with and without a bound; a
 multiplexed service, and one its users name by `needs`; a task binding `interrupt-source` itself; a task naming its
 service by `needs`; a task naming a policy; a task bound to a device directly; the system's own level binding a source;
-a periodic task a source's route names; a sporadic task that also reaches an alarm; two sources of one separation; an
-extender over a provider raising both kinds; a service two systems use; and the refused: a task serving
-`deadline-over-delay` directly, a task and the system's level each programming an alarm themselves, and a deadline
-measured from another event. Round 7 adds a task naming a block; a task reaching a channel through a service, and one
-through a policy; a frequency where a duration is due; a system with no task; a task bound to one provider for a
-source and, through an extender, for its alarm; a release jitter and `skip-late-job`; every rank class in one system;
-two instances' costs on one route; the system's own level served by a shared extender; contexts spreading two services
-deep; placement memory; an expiry to the system's own level; and each of §1's refusals of a record. A description the
-language's check refuses is no input (§1), and its probe is held at that check's verdict.
+a sporadic task that also reaches an alarm; two sources of one separation; an extender over a provider raising both
+kinds; a service two systems use; and the refused: a task serving `deadline-over-delay` directly, a task and the
+system's level each programming an alarm themselves, a deadline measured from another event, and a periodic task bound
+to a source itself. Round 7 adds a task naming a block; a task reaching a channel through a service, and one through a
+policy; a frequency where a duration is due; a system with no task; a service bound to one provider for a source and,
+through an extender, for its counter; a release jitter and `skip-late-job`; every rank class in one system; two
+instances' costs on one route; the system's own level served by a shared extender; contexts spreading two services deep;
+placement memory; an expiry to the system's own level; and each of §1's refusals of a record. Round 8 adds a source's
+handler and a task sharing a channel, two handlers sharing one, and a policy taking one; the tightest obliged bound; a
+sporadic task reaching only an alarm; a zero release separation; a module tree; and records that bind an instance no
+requester is bound to, or another requester's exclusive instance, which do not rebuild. A description the language's
+check refuses is no input (§1), and its probe is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with
@@ -667,9 +680,10 @@ identical canonical plans").
 ### 4. What `M4.1` builds, and what it hands on
 
 **Built by `M4.1`'s children:**
-- `.2`: model §8 rules 7, 8, 10 and 12 amended, in the model, the generator's joint rules and the checker's, the
-  checker's by a fenced context. Rule 7's multiplexing counts the system's tasks that reach the service, through
-  `uses`, `needs` and bindings at any depth, never another system's (§2.9).
+- `.2`: model §8 rules 4, 8, 10 and 12 amended, in the model, the generator's joint rules and the checker's, the
+  checker's by a fenced context. Rule 4's users are §2.9's: of a service or a policy that takes a channel, the
+  system's tasks that reach it, through `uses`, `needs` and bindings at any depth, and the interrupts whose context
+  holds it, never another system's; rule 7 still resolves system by system.
   Rule 8's enabled set is §2.5's. Rule 12 records this engine's answer, one phase. Rule 10's are below. The adapters
   record's §9 reads "each cost a cost on the route of the provider it programs", and it states, for each cost, whether
   the interrupt runs the requester's code (§2.6). The engine API's `crates/archogen-api/src/resolve.rs` and
@@ -693,7 +707,7 @@ identical canonical plans").
 - `.6`: **the release alarm**, a design of its own, reviewed. It decides which device's alarm releases timer tasks on a
   target, and how an adapter's alarm shares a device with releases, each taking a channel (model §8 rule 3). It
   decides how the analysis charges a timer route's interrupts, its service cost and arrival bound, such as a wake
-  taken as a timer event of the release timer under an amended condition 6; the term for a multiplexed service's
+  taken as a timer event of the release timer under an amended condition 6; the term for a multiplexed node's
   overhead and for a node's call cost in a job; and how a job receives an expiry. That design is the joint rules',
   the analysis variant's and the composite-inputs record's;
 - `.7`: **format `/2`**, after `.6`, `M4.4.1`'s device correspondence (`RTP-H8`) and `M4.12`'s application inputs
@@ -737,9 +751,9 @@ identical canonical plans").
 | Id | Leaf | Obligation |
 | --- | --- | --- |
 | `RTP-H1` | `M4.2` | The emitter moves `archogen build` onto the runtime plan for the hosted playground, its faces in step on the command line, the engine API and the [MCP](../book/src/ledger.md#mcp-specification) tool, the enabled set configured as the plan writes it and the routes' ranks realized as the order the simulated controller takes them in, each source trigger the plan infers reported, a plan holding a task released by `unknown` refused naming the task (`missing-fact` where no source's route reaches it or its one source states no separation; otherwise `unsupported-profile`, since `eadl/1` cannot say which arrivals release it), each job an engine-owned empty body that the release trace alone observes until `M4.12`'s inputs give it code, the build saying it runs no application code, the scheduler built with `from_eadl_ranks` and its slot held to the plan's index, and S0's `whole-millisecond-periods` and the profile's "one execution context runs at a time" discharged. |
-| `RTP-H2` | `M4.2` | The generated code realizes the adapters' and the multiplexed services' obligations, initialises no component member by calling another's code, never waits on an interrupt in initialisation, and states each cost's terms, each multiplexed service's overhead, each bound an obliged fact offered bare leaves to it, the contexts each node's code supports, and each other value the runtime plan owes to the realization. |
+| `RTP-H2` | `M4.2` | The generated code realizes the adapters' and the multiplexed nodes' obligations, initialises no component member by calling another's code, never waits on an interrupt in initialisation, and states each cost's terms, each multiplexed node's overhead, each bound an obliged fact offered bare leaves to it, the contexts each node's code supports, and each other value the runtime plan owes to the realization. |
 | `RTP-H3` | `M4.2` | The emitter accepts a runtime plan only by lowering it again from the same inputs and comparing bytes, and marks a plan whose acceptance was taken as text experimental. |
-| `RTP-H4` | `M2.21.2` | After `M4.1.4` has written the runtime plan's goldens, the scheduling checker reads the plan with a reader of its own held to them and maps it onto the analysis's inputs: each enabled interrupt given an identifier of its own kind, so that no two share one, and no source declared for a timer route, so that its interrupt is refused as unmodeled load; where an input the analysis needs is unknown, absent, unstated or owed, the analysis reported inconclusive, naming it, never run on a default; each term `M4.1.6` designs, a timer route's charge and a multiplexed service's overhead among them, charged once it exists; a refusal under the plan's source order worded as one another order may admit, and an order searched with Audsley's algorithm over a bound counting each source ahead at its no-loss limit, one it finds confirmed with the composition and named as the repair. |
+| `RTP-H4` | `M2.21.2` | After `M4.1.4` has written the runtime plan's goldens, the scheduling checker reads the plan with a reader of its own held to them and maps it onto the analysis's inputs: each enabled interrupt given an identifier of its own kind, so that no two share one, and no source declared for a timer route, so that its interrupt is refused as unmodeled load; where an input the analysis needs is unknown, absent, unstated or owed, the analysis reported inconclusive, naming it, never run on a default; each term `M4.1.6` designs, a timer route's charge and a multiplexed node's overhead among them, charged once it exists; a refusal under the plan's source order worded as one another order may admit, and an order searched with Audsley's algorithm over a bound counting each source ahead at its no-loss limit, one it finds confirmed with the composition and named as the repair. |
 | `RTP-H5` | `M4.12` | The application inputs have a format — each task's entry point, execution bound and its evidence category, OS calls with counts, masked runs, task facts, stack bound and its evidence category, and the application's `leaves-interrupt-hardware-alone` — that `archogen-runtime-plan/2` carries. |
 | `RTP-H6` | `M4.10` | The catalog records state what the runtime plan owes them — supported contexts, an initialisation entry that never waits on an interrupt and names any other component member's code it calls, and each source's service cost — amending the catalog record's §12 and §14.4, and the image is checked: no initialisation step waits on an interrupt, and no component member's initialisation calls another member's code. |
 | `RTP-H7` | `M4.7` | The build's metadata carries the runtime plan's sha256 and its provenance, the whole lock data of `ROADMAP.md` §10.3 is written, `--locked` is honoured, and S0's `no-lock-data` is discharged. |
