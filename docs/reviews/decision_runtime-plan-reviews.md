@@ -176,6 +176,35 @@ the five probe systems made goldens of `M4.1.4`.
 | R4-R10 | remark | `RTP-H4` silent on unknowns | Each mapped to an input the analysis lacks, never a default |
 | R4-R11 | remark | refusals for a foreign system and an unsupported profile missing | Both listed (§1) |
 
+## Round 5 — `2026-10-28`: not acceptable, 18 findings
+
+The reviewer re-derived all three worked texts with a scratch program calling the real search and joint rules, each
+byte for byte, and lowered eighteen probe systems. 8 defects and 10 remarks, all at edges the goldens did not reach: a
+requester that is no node, a task's `needs`, a timer route's place, the analysis's inputs on the playground, a deadline
+reference other than the release, and multiplexing across systems. No fence was broken: every search excluded
+`docs/evaluation`, and the one history read stayed within `6d61f65..HEAD`.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R5-D1 | defect | a route naming a task or the system's level: the context rules conflict, and an expiry to a task is undefined | The interrupt's provider runs in it itself; a task or the system's level adds no code; an instance serving either with `expiry` refused, how a job receives one `M4.1.6`'s (§1, §2.6) |
+| R5-D2 | defect | a task's `needs` left out of reaching and of its `uses` items | A requester reaches what it names by `uses` or `needs`, as the joint rules take its names (§2, §2.2) |
+| R5-D3 | defect | the analysis's platform inputs owed by no one on the playground; the opening contradicted §2.10 | The opening narrowed and a `/1` analysis said inconclusive by itself; the simulator states its model's platform figures (`RTP-H9`); each source's acknowledge point and deferred work owed; `route-latency` dropped, the variant having one `δ` |
+| R5-D4 | defect | a timer route has no place in the playground's order | One ranked `(route …)` line for every route, a timer route ranked with the sources as a device alarm is in the hardware's order (§2.5, §3) |
+| R5-D5 | defect | a timer route's service cost and arrival bound owed by no one | Both owed by the realization; their charge `M4.1.6`'s (§2.10) |
+| R5-D6 | defect | a multiplexed service's users counted across systems | `.2` amends rule 7's counting, in the generator's joint rules and the checker's, to the system's own users; the probe a golden (§2.9, §4) |
+| R5-D7 | defect | the multiplex overhead has no term to charge and cannot be reached in `/1`; a node's call cost owed by no one | The overhead's term `M4.1.6`'s; `call-cost` owed for each service, policy and instance node; `RTP-H4` reports such inputs inconclusive |
+| R5-D8 | defect | a `deadline-from` other than `release` undetermined; `unstated` a symbol a description can write | Another event refused; none written is `(deadline-from)`, which no description can write (§1, §2.2, §3) |
+| R5-R1 | remark | "computes nothing" for the release timer overstated | Only `Δ_timer` is skipped; `C_rel` still enters (§2.5) |
+| R5-R2 | remark | `Joint::map` said to run over bindings | Over the system (§1, `.3`) |
+| R5-R3 | remark | `Joint::map` exposes no regions; the form dropped executable and reserved | Regions moved to `/2`, with both flags (§2.8, `.7`) |
+| R5-R4 | remark | three items lost from `/2`'s list | The target in the identity, compares at their ceiling, each source's controller line and identifier added to `.7` |
+| R5-R5 | remark | `RTP-H5` omits `leaves-interrupt-hardware-alone` | Added |
+| R5-R6 | remark | "inputs the analysis lacks" has no representation | The analysis reported inconclusive, the input named, never run (`RTP-H4`) |
+| R5-R7 | remark | `periodic-three` cited though it does not resolve | The citation left with the regions |
+| R5-R8 | remark | a provider takes every requester's contexts, an over-approximation | Said: it can refuse, never accept wrongly (§2.6) |
+| R5-R9 | remark | a sporadic trigger is an inference | Said, and the build reports it (`RTP-H1`) |
+| R5-R10 | remark | more goldens wanted | The six probes named in §3 beside the three texts |
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
@@ -204,3 +233,7 @@ transcript:
   enabled set; the source ranks mapped onto the controller's levels, or a refusal naming the level count; the guard,
   frame, alignment and table sizes owed to the catalog; a generated service's stack use; the "no room" refusal; `M4.4`
   naming an unsized hole that truncates an image; how the command line names a target.
+- **What round 5 found unkept** (R5-R4): the target in the plan's identity (round 2's answer); each compare written
+  at the ceiling of its release (round 1's, condition 6's "rounds up"); each source's controller line and identifier,
+  for the priority writes. And with them the memory map's regions, moved from `/1` in round 5, each with whether it is
+  executable or reserved.
