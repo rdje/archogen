@@ -491,13 +491,13 @@ the same bytes and its rebuilt bindings give the joint rules the search's own ob
 The runtime plan is lowered from that record by `crates/archogen-plan/src/lib.rs` (`M4.1.4`), built ahead of its
 design's acceptance as the design's executable form (`docs/decisions/decision_executable-design-reviews.md`). Each rule
 cites its section of `docs/decisions/decision_runtime-plan.md`; the record's worked texts are held equal to what the
-code writes by `crates/archogen-plan/tests/worked.rs`; and every probe system of the design's review is a fixture beside
-the outcome the lowering gives it, in `crates/archogen-plan/tests/corpus/`, a description the language's check refuses
-held at that check's verdict; hand-written records hold the refusals of a record, in their order
-(`crates/archogen-plan/tests/records.rs`). An outcome is what the code writes, so a reviewer judges each against the
-record; a finding is a defect when it carries a reproducer. A bounded exhaustive checker,
-`crates/archogen-plan/tests/bounded.rs` (`M4.1.13`), generates universes of small systems — some hundred thousand —
-has the configuration checker judge every record the search writes for them, and holds every plan and every refusal to a
+code writes by `crates/archogen-plan/tests/worked.rs`; and every probe system of the design's review that the lowering
+decides is a fixture beside the outcome the lowering gives it, in `crates/archogen-plan/tests/corpus/`, a description
+the language's check refuses held at that check's verdict; hand-written records hold the refusals of a record, in their
+order (`crates/archogen-plan/tests/records.rs`). An outcome is what the code writes, so a reviewer judges each against
+the record; a finding is a defect when it carries a reproducer. A bounded exhaustive checker,
+`crates/archogen-plan/tests/bounded.rs` (`M4.1.13`), generates universes of small systems — some hundred thousand — has
+the configuration checker judge every record the search writes for them, and holds every plan and every refusal to a
 reading of the record written by a context that never read the lowering's code. The plan counts the users of a node that
 takes a channel — a service, a policy, or hardware with requirements of its own; an instance aside — more widely than
 the check above: the system's tasks that reach it, directly or through services, policies and bindings, and the

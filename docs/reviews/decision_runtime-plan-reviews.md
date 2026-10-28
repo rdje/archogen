@@ -542,6 +542,32 @@ bullet over tasks already takes only the system's own, and a plan refuses only w
 Round 14's answers: R14-D2 not held (R15-D1); R14-D3 partly, `M1.47`'s goal (R15-D4); R14-R4 partly (R15-R3); the
 rest held.
 
+## Round 16 — `2026-10-28`: not acceptable, 12 findings
+
+The second round to find the code faithful everywhere, every defect the record's text. Every test green, the bounded
+totals true — 113,230 systems, 112,268 records judged, the 136 the checker refuses rightly routed to `M3.4` — and every
+hand-off quoted word for word. 4 defects, 6 remarks and 2 better decisions: hand-offs weaker than the sentences they
+discharge, a code fact the composition reads and the plan never owes, and §2.6 left behind round 15's §1.
+
+**Fence.** No breach.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R16-D1 | defect | `RTP-H5` carries "hold under any preemption" without §2.2's "and from any entry state", and `figures-under-preemption` names only the first half | `RTP-H5` whole, requoted in `M4.12`; §2.10 says the fact is §2.2's declaration whole |
+| R16-D2 | defect | `RTP-H16` names task, block and service quantities, while §1 refuses a platform's, a policy's and the own level's too | Any declaration's quantity, requoted in `M1.45`, its goal with it |
+| R16-D3 | defect | the composition reads every `runtime-discipline.<id>`, and the plan owes none of the generated code's | Owed by each node, by the realization (§2.5, §2.10, §3), landing with the code and the worked texts (`M4.1.4`) |
+| R16-D4 | defect | §1 credits §2.6 with reading a binding that takes a channel, and §2.6 says "for a consumed fact" | §2.6 reads model §8 rule 2's binding, and `interrupt-source` met by `true` |
+| R16-R1 | remark | the checker reads an obliged bound's requester among services, tasks and hardware, never the own level | `M4.1.13` reopened |
+| R16-R2 | remark | the 136 records move to `tool-failure` once the result record's intake lands, which the class does not say | `M4.1.13` reopened |
+| R16-R3 | remark | `M1.44`, filed for a stated release source, is named nowhere | §2.2 names it, `RTP-H19` |
+| R16-R4 | remark | "every probe a fixture" overstates: probes the language or the search refuses are not held | Every probe the lowering decides (How to apply, the book, `M4.1.4`, the corpus's header) |
+| R16-R5 | remark | §1's component-call refusal has no hand-off | `RTP-H10` carries it, requoted in `M4.10` |
+| R16-R6 | remark | the result record's intake, the provenance and the plan's reader are unbuilt | As declared: `M4.1.4`'s production half |
+| R16-B1 | better decision | a sporadic task bound itself for `interrupt-source` is released by that source; the routes it reaches decide only where it binds none (the vocabulary; OSEK 2.2.3 §4.3) | Taken, landing with the code (§2.2, `M4.1.4`) |
+| R16-B2 | better decision | rule 12 drops a binding's edge across composition, leaving a composite and its part ordered by their texts; Linux's device links hold a consumer until its supplier is bound | Taken: a binding keeps its edge, composition alone giving none — `M3.3.7`'s own reading, "the requester may call it while it initialises" — `M4.1.16` in the generator's joint rules, `M4.1.2` in the rule |
+
+Round 15's answers: R15-D2 partly (R16-D4); the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a

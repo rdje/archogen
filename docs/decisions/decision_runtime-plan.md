@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-27`
 - **Status:** `active` — the design for leaf `M4.1`, under independent review (`M4.1.1`) before any code relies on it;
-  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 15 answered; from round 7 it is
+  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 16 answered; from round 7 it is
   reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
 - **Owner / source:** leaf `M4.1.1` (`docs/tasks/M4.md`); `ROADMAP.md` §4.2's `archogen-plan`, §7.3, §7.5, §7.6, §10.1
   step 5 and §10.3; model §8 rules 4, 5, 7, 8, 10, 12 and 15; the obligations `M3.3.8`, `M3.5`, `M3.5.5.7.3` and
@@ -123,7 +123,7 @@ leaf that adds it:
   that delivers it, each kind by those texts. So no order among them decides the message, though one receiver receives
   at most one today, the search binding a requester's `counter` facts to one provider whole;
 - an initialisation component whose members' records state that one's initialisation calls another's code (§2.7),
-  once a record can be a provider (`M3.7`).
+  once a record can be a provider (`M3.7`, `RTP-H10`).
 
 **Provenance.** The lowering cannot see whether the result was produced by an installed, verified checker, nor its exit
 code: those are the command line's to check (`M3.5.1`'s contract). So beside the plan it returns its **provenance**:
@@ -181,11 +181,12 @@ timer route and a source, and a block may be named `timer`:
      them;
    - **what releases it**:
      - `timer` for a periodic task;
-     - for a task with a minimum separation, the external source whose route names the task or a requester it
-       reaches (model §8 rule 8). The plan writes `(source NAME every)` when the source's stated separation is at
-       least the task's. Every arrival then releases the task, and the releases are as far apart as the task states.
-       The analysis asks "whether every arrival releases the task" (`crates/rt-analysis/src/runtime.rs`). The trigger
-       is an inference from the routes, which the description does not state, so the build reports it (`RTP-H1`);
+     - for a task with a minimum separation, the external source whose route names the task or a requester it reaches
+       (model §8 rule 8). The plan writes `(source NAME every)` when the source's stated separation is at least the
+       task's. Every arrival then releases the task, and the releases are as far apart as the task states. The analysis
+       asks "whether every arrival releases the task" (`crates/rt-analysis/src/runtime.rs`). The trigger is an inference
+       from the routes, which the description cannot state until `M1.44` gives it a clause (`RTP-H19`), so the build
+       reports it (`RTP-H1`);
      - `unknown` otherwise: where no source's route reaches the task, where several sources' routes do, where the
        source states no separation or declares it absent, or where it states one shorter than the task's. A timer
        route releases no task. In the last case the source can arrive
@@ -324,9 +325,10 @@ timer route and a source, and a block may be named `timer`:
      a task's line is `job` alone;
    - `(interrupt I)`, for interrupt `I` at provider `X`, a timer route or a source, for the code its interrupt runs:
      - `X` itself, whose code serves its interrupt;
-     - a node the route names that is bound to `X` itself, for the interrupt fact where the route is a source, or for
-       a consumed fact where it is a timer route: its handler, or the alarm it programs, is its own code;
-     - for a timer route at `X`, an instance bound to `X` for a consumed fact, which takes its cost there;
+     - a node the route names that is bound to `X` itself, for `interrupt-source` met by `true` where the route is a
+       source, or by a binding that takes a channel (model §8 rule 2) where it is a timer route: its handler, or the
+       alarm it programs, is its own code;
+     - for a timer route at `X`, an instance bound to `X` by a binding that takes a channel, which takes its cost there;
      - a node the route names through such an instance, when the instance's kind runs its requester's code in that
        interrupt. The adapters record states no kind's either way, so the plan reads `expiry`, a delivery to its
        requester, as running it, and `wake`, an epoch advance no requester observes but by reading, as running the
@@ -425,6 +427,9 @@ timer route and a source, and a block may be named `timer`:
     | each node a `multiplex` obligation names | `overhead` | `realization` |
     | each source | `service-cost`, `acknowledge-point`, `deferred-work`, `no-application-code`, `one-request-per-arrival` | `realization` |
     | each timer route | `service-cost`, `arrival-bound` | `realization` |
+
+    A task's `figures-under-preemption` is §2.2's declaration whole, condition 8's half: its figures hold under any
+    preemption and from any entry state.
 
     The owners are the application's inputs (`RTP-H5`), the description, and the generated code (`RTP-H2`). No
     catalog record describes the playground, so `/1` owes the catalog nothing, and the platform's own figures are the
@@ -852,20 +857,21 @@ identical canonical plans").
 | `RTP-H2` | `M4.2` | The generated code realizes the adapters' and the multiplexed nodes' obligations, initialises no component member by calling another's code, never waits on an interrupt in initialisation, and states each cost's terms, each multiplexed node's overhead, each bound an obliged fact offered bare leaves to it, the contexts each node's code supports, and each other value the runtime plan owes to the realization. |
 | `RTP-H3` | `M4.2` | The emitter accepts a runtime plan only by lowering it again from the same inputs and comparing bytes, and marks a plan whose acceptance was taken as text experimental. |
 | `RTP-H4` | `M2.21.2` | After `M4.1.4` has written the runtime plan's goldens, the scheduling checker reads the plan with a reader of its own held to them and maps it onto the analysis's inputs: each enabled interrupt given an identifier of its own kind, so that no two share one, and no source declared for a timer route, so that its interrupt is refused as unmodeled load; where an input the analysis needs is unknown, absent, unstated or owed, the analysis reported inconclusive, naming it, never run on a default; each term `M4.1.6` designs, a timer route's charge and a multiplexed node's overhead among them, charged once it exists; a refusal under the plan's source order worded as one another order may admit, and an order searched with Audsley's algorithm over a bound counting each source ahead at its no-loss limit, one it finds confirmed with the composition and named as the repair. |
-| `RTP-H5` | `M4.12` | The application inputs have a format — each task's entry point, execution bound and its evidence category, OS calls with counts, masked runs and their bounds' evidence category, task facts, declarations that it masks only through the runtime API and that its own figures hold under any preemption, stack bound and its evidence category, and the application's `leaves-interrupt-hardware-alone` — that `archogen-runtime-plan/2` carries. |
+| `RTP-H5` | `M4.12` | The application inputs have a format — each task's entry point, execution bound and its evidence category, OS calls with counts, masked runs and their bounds' evidence category, task facts, declarations that it masks only through the runtime API and that its own figures hold under any preemption and from any entry state, stack bound and its evidence category, and the application's `leaves-interrupt-hardware-alone` — that `archogen-runtime-plan/2` carries. |
 | `RTP-H6` | `M4.10` | The catalog records state what the runtime plan owes them — supported contexts, an initialisation entry that never waits on an interrupt and names any other component member's code it calls, and each source's service cost — amending the catalog record's §12 and §14.4, and the image is checked: no initialisation step waits on an interrupt, and no component member's initialisation calls another member's code. |
 | `RTP-H7` | `M4.7` | The build's metadata carries the runtime plan's sha256 and its provenance, the whole lock data of `ROADMAP.md` §10.3 is written, `--locked` is honoured, and S0's `no-lock-data` is discharged. |
 | `RTP-H8` | `M4.4.1` | A system's devices are put in correspondence with a target's — which target device each system device is, by a rule the lowering of `archogen-runtime-plan/2` reads — before `M4.1.7` designs that format. |
 | `RTP-H9` | `M4.3` | The hosted simulator runs initialisation to its last step with interrupts masked and enables them at time zero, then releases each timer-released task from its own exact clock at its nominal releases from time zero and each task released by `(source X every)` at each arrival of X and at no other time; takes its timer only when a release is due; takes every route before the release timer when both are pending — its `external-before-timer` for a source's, and for a timer route its own order until `M4.1.6` places one — and the routes in the plan's rank order; nests no interrupt and masks every interrupt in a masked section; raises no interrupt the plan does not enable; models each device the plan names, a timer route's alarm included; lets no source arrive before the first enabling, nor sooner after its last arrival than the separation the plan states for it, a source whose separation it states as zero, `unknown` or `absent` arriving only as the run's scenario states, which the run names beside its result; and states every platform input and fact the analysis variant and the composition read, `external-before-timer`, `releases-after-initialisation` and each source's `external` among them, in the form the scheduling checker reads. |
 | `RTP-H11` | `M4.9` | A comparison of a hosted run and an emulated one reads each run against its own platform's `external-before-timer`, the simulator's `yes` and the emulator's `no`, never one run's order against the other's. |
 | `RTP-H12` | `M2.30` | If the composition's soundness needs a fact of the application's beyond `leaves-interrupt-hardware-alone`, the runtime plan owes it with the others, its §2.2, §2.10 and `RTP-H5` moving in the same change. |
-| `RTP-H10` | `M4.10` | Once a catalog record can be a provider (`M3.7`), the runtime plan's lowering judges the record's supported contexts against the context line of each node it serves, by inclusion, and refuses `unsupported-profile` a context the record does not include. |
+| `RTP-H10` | `M4.10` | Once a catalog record can be a provider (`M3.7`), the runtime plan's lowering judges the record's supported contexts against the context line of each node it serves, by inclusion, and refuses `unsupported-profile` a context the record does not include, and an initialisation component whose members' records state that one's initialisation calls another's code. |
 | `RTP-H13` | `M4.10` | The build verifies the image against the runtime plan: the interrupts it enables and the controller's priorities as the plan's enabled set and route ranks give them, each multiplexed node realized through its one channel, and initialisation run in the plan's steps, a component's members in their texts' order and every step before its successors. |
 | `RTP-H14` | `M1.42` | The description check refuses `invalid-description`, naming the clause, a task's `period`, `min-separation`, `deadline` or `jitter` that is not a time, and a `period` or `min-separation` of zero. |
 | `RTP-H15` | `M1.43` | The description check refuses `invalid-description` a periodic task that needs `interrupt-source`, a second release model, naming both. |
-| `RTP-H16` | `M1.45` | The description check refuses, where the description states it, a quantity whose value in its dimension's base unit lies past the engine's exact arithmetic, `unsupported-profile`, a task clause's and a block's or a service's fact's alike, and a source's `min-arrival-separation` of zero, `invalid-description`. |
+| `RTP-H16` | `M1.45` | The description check refuses, where the description states it, a quantity whose value in its dimension's base unit lies past the engine's exact arithmetic, `unsupported-profile`, any declaration's alike — a task clause's, a block's, a platform's, a service's, a policy's or a system's own level's — and a source's `min-arrival-separation` of zero, `invalid-description`. |
 | `RTP-H17` | `M1.46` | The description check refuses `invalid-description` a `uses` or `needs` naming a system, naming both. |
 | `RTP-H18` | `M1.47` | Model §8 rules 1 and 7 state that a block's or a platform's `uses` and `needs` name only hardware, and the description check refuses `invalid-description` an operand that is neither a block nor a platform, naming both. |
+| `RTP-H19` | `M1.44` | A description states a sporadic task's release source and whether every arrival releases the task, and the runtime plan reads that statement in place of its inference from the routes the task reaches. |
 
 `M4.12` is filed with this record, for the application inputs, and `M4.4.1` for the correspondence.
 
@@ -923,11 +929,12 @@ identical canonical plans").
 
 - `M4.1`'s children are `.1` this record, reviewed, then `.2` to `.7` as §4 names them, and from `.8` on the leaves its
   rounds file for what they find, each named in its round's answer. `.3` and `.4`'s lowering are built ahead, as this
-  record's executable form, each rule citing its section, with every probe of the review a fixture; from round 7 a round
-  reviews the record, the code and the corpus together (`decision_executable-design-reviews.md`). A corpus outcome is
-  what the code writes, blessed: a review judges it against these rules, and it is never a rule. Beside the corpus, a
-  bounded exhaustive checker (`M4.1.13`) holds every plan of generated universes to a reading of §2 written by a context
-  that did not read the lowering's code, as `decision_executable-design-reviews.md` item 1 asks.
+  record's executable form, each rule citing its section, with every probe of the review that the lowering decides a
+  fixture; from round 7 a round reviews the record, the code and the corpus together
+  (`decision_executable-design-reviews.md`). A corpus outcome is what the code writes, blessed: a review judges it
+  against these rules, and it is never a rule. Beside the corpus, a bounded exhaustive checker (`M4.1.13`) holds every
+  plan of generated universes to a reading of §2 written by a context that did not read the lowering's code, as
+  `decision_executable-design-reviews.md` item 1 asks.
 - A change to what the lowering reads — the search, the record's reader, the joint rules — is re-derived against this
   record in the same change, its rules restated where they move: round 12 found three defects where `M4.1.14` made
   hardware a requester and nothing here followed.
