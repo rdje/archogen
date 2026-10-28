@@ -238,9 +238,9 @@ cannot serve it:
 ```
 
 `s`'s hardware is `bus.fast` and `bus.clock`, which `bus.fast` names through `needs`. Binding the task's `clock-rate`
-to `bus.clock` holds; binding it to `stray.clock` is refused, `infeasible-configuration`: *`s/t` is bound to
+to `bus.clock` holds; binding it to `stray.clock` is refused, `infeasible-configuration`: *`(task s t)` is bound to
 `stray.clock`, which is not part of `s`'s hardware*, with the repair *compose `stray.clock` into `s`'s platform, or
-bind `s/t` to a provider its platform composes*. `bus.timer` is not `s`'s either: `bus.fast` *refines* `bus.main`, and a
+bind `(task s t)` to a provider its platform composes*. `bus.timer` is not `s`'s either: `bus.fast` *refines* `bus.main`, and a
 refinement keeps the abstract platform's obligations, not its blocks. A system with no platform has no hardware, so
 every binding of its requesters to a block is refused. Two systems in one description are judged apart, each against
 its own board, so two boards that each put a timer at the same address never meet. A requester no system reaches is
@@ -270,7 +270,7 @@ privilege level, and every provider a caller is bound to must be reachable from 
 (defblock timer.s (offers (counter-width 32 bit) (reachable-at-privilege supervisor)))
 ```
 
-a task needing a counter is served by `timer.m`; bound to `timer.s` it is refused, `infeasible-configuration`: *`s/t`
+a task needing a counter is served by `timer.m`; bound to `timer.s` it is refused, `infeasible-configuration`: *`(task s t)`
 runs at `machine`, and `timer.s` is reachable from `supervisor` alone*. A provider that does not say which levels it is
 reachable from is `missing-fact`, and one declared reachable from none `infeasible-configuration`. A service that states
 it calls from `supervisor` — `(requires (reachable-at-privilege supervisor))` — is `unsupported-profile` first, whatever

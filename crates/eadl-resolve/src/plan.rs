@@ -158,22 +158,11 @@ pub fn write(resolution: &Resolution, profile: &str, program: &str) -> String {
 }
 
 /// An instance as the record writes it: `(adapter KIND OVER)`, or `(adapter KIND OVER REQUESTER)` for an exclusive
-/// kind's, its requester a name or a task of `system`, `(task SYSTEM TASK)` — the name every face gives it (record §9).
+/// kind's, its requester a name or a task, `(task SYSTEM TASK)` — the name every face gives it (record §9), and the one
+/// the joint rules hold (`joint::task_name`).
 #[must_use]
-pub fn instance_text(instance: &AdapterInstance, system: &str) -> String {
-    match &instance.serves {
-        None => format!("(adapter {} {})", instance.kind, instance.over),
-        Some(requester) => {
-            let who = match requester
-                .strip_prefix(system)
-                .and_then(|rest| rest.strip_prefix('/'))
-            {
-                Some(task) => format!("(task {system} {task})"),
-                None => requester.clone(),
-            };
-            format!("(adapter {} {} {who})", instance.kind, instance.over)
-        }
-    }
+pub fn instance_text(instance: &AdapterInstance, _system: &str) -> String {
+    adapter::instance_name(&instance.kind, &instance.over, instance.serves.as_deref())
 }
 
 // ⭐ The record read back (leaf `M4.1.3`, `docs/decisions/decision_runtime-plan.md` §1): the lowering lowers the record
@@ -390,14 +379,12 @@ pub struct Rebuilt<'v> {
 }
 
 /// `text`, a task or an instance as the record writes it, read as the joint rules name it: a task `(task SYSTEM TASK)`
-/// as `SYSTEM/TASK`, an instance by [`adapter::instance_name`], its requester read so too; a name as itself.
+/// of `system` as itself (`joint::task_name`), an instance by [`adapter::instance_name`], its requester read so too; a
+/// name as itself.
 fn internal(text: &str, system: &str) -> Result<String, Unread> {
-    if let Some(inner) = text
-        .strip_prefix("(task ")
-        .and_then(|t| t.strip_suffix(')'))
-    {
-        return match inner.split(' ').collect::<Vec<_>>()[..] {
-            [of, task] if of == system => Ok(format!("{of}/{task}")),
+    if text.starts_with("(task ") {
+        return match joint::task_of(text) {
+            Some((of, task)) if of == system => Ok(joint::task_name(of, task)),
             _ => Err(Unread(format!("`{text}` is no task of `{system}`"))),
         };
     }

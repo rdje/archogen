@@ -84,11 +84,11 @@ fn name_of(form: &Form) -> Option<&str> {
     form.items().get(1).and_then(Form::as_symbol)
 }
 
-/// A requester as the generator names it: a task `SYSTEM/TASK`.
+/// A requester as the generator names it: a task `(task SYSTEM TASK)` (`joint::task_name`).
 fn generator_name(requester: &Requester) -> String {
     match requester {
         Requester::Named(name) => name.clone(),
-        Requester::Task { system, task } => format!("{system}/{task}"),
+        Requester::Task { system, task } => eadl_resolve::joint::task_name(system, task),
         // An engine adapter's instance, as the joint rules name one (leaf `M3.2.5`); no description writes one.
         Requester::Instance(instance) => eadl_resolve::adapter::instance_name(
             &instance.kind,

@@ -38,6 +38,9 @@
 0 - crates/archogen-plan/tests/corpus/region-hosted.eadl
 0 - crates/archogen-plan/tests/corpus/shapes.eadl
 0 - crates/archogen-plan/tests/corpus/shared-ext.eadl
+0 - crates/archogen-plan/tests/corpus/slash-instance.eadl
+0 - crates/archogen-plan/tests/corpus/slash-source.eadl
+0 - crates/archogen-plan/tests/corpus/slash-unreached.eadl
 0 - crates/archogen-plan/tests/corpus/source-hz.eadl
 0 - crates/archogen-plan/tests/corpus/sporadic-alarm-only.eadl
 0 - crates/archogen-plan/tests/corpus/sporadic-and-alarm.eadl

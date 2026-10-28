@@ -134,10 +134,10 @@ impl std::fmt::Display for Who {
 impl Who {
     /// `requester`, a requester `system` serves, as the record names it.
     fn of(requester: &Requester, system: &str) -> Self {
-        match (requester.kind, requester.name.strip_prefix(system)) {
-            (Kind::Task, Some(rest)) if rest.starts_with('/') => Self::Task {
+        match (requester.kind, crate::joint::task_of(&requester.name)) {
+            (Kind::Task, Some((of, task))) if of == system => Self::Task {
                 system: system.to_owned(),
-                task: rest[1..].to_owned(),
+                task: task.to_owned(),
             },
             _ => Self::Named(requester.name.clone()),
         }

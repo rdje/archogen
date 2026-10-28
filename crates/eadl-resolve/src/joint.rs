@@ -64,7 +64,7 @@ pub enum Kind {
 /// One requester, its requirements and the declarations its `uses` names.
 #[derive(Debug, Clone)]
 pub struct Requester {
-    /// Its name; a task's is `system/task`.
+    /// Its name; a task's is `(task SYSTEM TASK)` ([`task_name`]).
     pub name: String,
     /// Who it is.
     pub kind: Kind,
@@ -106,10 +106,32 @@ pub fn requesters(
     };
     let mut out = vec![requester(&own, name.clone(), Kind::Other, vocabulary)?];
     for task in tasks {
-        let task_name = format!("{name}/{}", name_of(task));
-        out.push(requester(task, task_name, Kind::Task, vocabulary)?);
+        out.push(requester(
+            task,
+            task_name(&name, name_of(task)),
+            Kind::Task,
+            vocabulary,
+        )?);
     }
     Ok(out)
+}
+
+/// A task's name as the joint rules hold it: `(task SYSTEM TASK)`, the form the assignment record writes, which no
+/// declaration's name can be — a symbol holds no space or parenthesis — as an instance's `(adapter …)` cannot (leaf
+/// `M4.1.11`: `SYSTEM/TASK` was a symbol a declaration could also be named).
+#[must_use]
+pub fn task_name(system: &str, task: &str) -> String {
+    format!("(task {system} {task})")
+}
+
+/// A task's system and name, where `name` is one ([`task_name`]).
+#[must_use]
+pub fn task_of(name: &str) -> Option<(&str, &str)> {
+    let inner = name.strip_prefix("(task ")?.strip_suffix(')')?;
+    match inner.split(' ').collect::<Vec<_>>()[..] {
+        [system, task] => Some((system, task)),
+        _ => None,
+    }
 }
 
 fn requester(
@@ -256,9 +278,7 @@ impl System {
     #[must_use]
     pub fn serves(&self, requester: &str) -> bool {
         requester == self.name
-            || requester
-                .strip_prefix(self.name.as_str())
-                .is_some_and(|task| task.starts_with('/'))
+            || task_of(requester).is_some_and(|(system, _)| system == self.name)
             || self.reached.contains(requester)
     }
 }

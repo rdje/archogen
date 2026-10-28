@@ -37,6 +37,9 @@ agree crates/archogen-plan/tests/corpus/rank-tie.eadl
 agree crates/archogen-plan/tests/corpus/region-hosted.eadl
 agree crates/archogen-plan/tests/corpus/shapes.eadl
 agree crates/archogen-plan/tests/corpus/shared-ext.eadl
+agree crates/archogen-plan/tests/corpus/slash-instance.eadl
+agree crates/archogen-plan/tests/corpus/slash-source.eadl
+agree crates/archogen-plan/tests/corpus/slash-unreached.eadl
 agree crates/archogen-plan/tests/corpus/source-hz.eadl
 agree crates/archogen-plan/tests/corpus/sporadic-alarm-only.eadl
 agree crates/archogen-plan/tests/corpus/sporadic-and-alarm.eadl

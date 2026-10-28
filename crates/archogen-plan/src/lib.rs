@@ -26,7 +26,7 @@ use eadl_model::profile::RT_STATIC_UP_V1;
 use eadl_model::quantity::{Dimension, Quantity};
 use eadl_model::rational::Rational;
 use eadl_resolve::adapter::{self, Catalog, Instance, Offered};
-use eadl_resolve::joint::{Because, Binding, Interrupt, Kind, Node, Obligation};
+use eadl_resolve::joint::{self, Because, Binding, Interrupt, Kind, Node, Obligation};
 use eadl_resolve::offer::State;
 use eadl_resolve::plan as assignment;
 use eadl_resolve::requirement::Requirement;
@@ -149,13 +149,8 @@ impl Names<'_> {
         if let Some(instance) = self.instances.get(name) {
             return assignment::instance_text(instance, &self.system);
         }
-        match name
-            .strip_prefix(self.system.as_str())
-            .and_then(|r| r.strip_prefix('/'))
-        {
-            Some(task) => format!("(task {} {task})", self.system),
-            None => name.to_string(),
-        }
+        // A task's name is already `(task SYSTEM TASK)` (`joint::task_name`), and any other is a declaration's.
+        name.to_string()
     }
 }
 
@@ -398,7 +393,7 @@ pub fn lower(
                 "M1.42",
             ));
         }
-        let internal = format!("{system}/{}", task.name);
+        let internal = joint::task_name(&system, &task.name);
         if timing.periodic
             && rebuilt.bindings.iter().any(|b| {
                 b.requester == internal
@@ -593,7 +588,7 @@ pub fn lower(
     let mut task_lines = Vec::new();
     let mut releases = Vec::new();
     for (task, timing) in tasks.iter().zip(&timings) {
-        let internal = format!("{system}/{}", task.name);
+        let internal = joint::task_name(&system, &task.name);
         let text = names.text(&internal);
         // Its runtime index, `|hp(i)|`, the number of tasks of smaller rank (§2.2).
         let index = tasks.iter().filter(|t| t.rank < task.rank).count();
@@ -807,7 +802,7 @@ pub fn lower(
     // §2.6: the execution contexts.
     let mut contexts: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     for task in &tasks {
-        let internal = format!("{system}/{}", task.name);
+        let internal = joint::task_name(&system, &task.name);
         contexts
             .entry(internal.clone())
             .or_default()
@@ -932,7 +927,7 @@ pub fn lower(
     // channel it takes (§2.9).
     let reached: Vec<BTreeSet<String>> = tasks
         .iter()
-        .map(|task| reach(&format!("{system}/{}", task.name)))
+        .map(|task| reach(&joint::task_name(&system, &task.name)))
         .collect();
     let channels: Vec<&Binding> = rebuilt
         .bindings

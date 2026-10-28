@@ -113,7 +113,7 @@ fn the_writer_writes_the_format_s_golden() {
     };
     let extender = instance("epoch-extender", None);
     let for_name = instance("deadline-over-delay", Some("clock.time.monotonic"));
-    let for_task = instance("deadline-over-delay", Some("app.rt/sensor"));
+    let for_task = instance("deadline-over-delay", Some("(task app.rt sensor)"));
     let named = || Who::Named("clock.time.monotonic".to_owned());
     let task = || Who::Task {
         system: "app.rt".to_owned(),

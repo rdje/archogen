@@ -495,12 +495,16 @@ fn two_tasks_of_one_system_are_two_requesters() {
         .collect();
     assert_eq!(
         kinds,
-        [("s", Kind::Other), ("s/a", Kind::Task), ("s/b", Kind::Task)]
+        [
+            ("s", Kind::Other),
+            ("(task s a)", Kind::Task),
+            ("(task s b)", Kind::Task)
+        ]
     );
     for r in every(text, &v) {
         assert_eq!(
             report_of(&r).0,
-            ["infeasible-configuration over timer.compare (1): s/a s/b"]
+            ["infeasible-configuration over timer.compare (1): (task s a) (task s b)"]
         );
     }
 }
@@ -524,7 +528,7 @@ fn a_service_two_tasks_use_is_one_requester_and_owes_the_multiplexing() {
         [
             Obligation::Multiplex {
                 service: "time.deadline".to_string(),
-                users: vec!["s/a".to_string(), "s/b".to_string()],
+                users: vec!["(task s a)".to_string(), "(task s b)".to_string()],
                 provider: "timer.compare".to_string(),
             },
             timer_route("s", "timer.compare", &["time.deadline"]),
@@ -818,7 +822,8 @@ fn a_block_outside_the_system_s_hardware_is_refused_beside_one_inside() {
             (vec![], vec![]),
             (
                 vec![
-                    "infeasible-configuration unconnected s/t -> stray.clock outside s".to_string()
+                    "infeasible-configuration unconnected (task s t) -> stray.clock outside s"
+                        .to_string()
                 ],
                 vec![]
             ),
@@ -834,12 +839,16 @@ fn a_system_with_no_hardware_binds_no_block() {
         every_named(&text, &v),
         [
             (
-                vec!["infeasible-configuration unconnected s/t -> bus.clock outside s".to_string()],
+                vec![
+                    "infeasible-configuration unconnected (task s t) -> bus.clock outside s"
+                        .to_string()
+                ],
                 vec![]
             ),
             (
                 vec![
-                    "infeasible-configuration unconnected s/t -> stray.clock outside s".to_string()
+                    "infeasible-configuration unconnected (task s t) -> stray.clock outside s"
+                        .to_string()
                 ],
                 vec![]
             ),
@@ -872,7 +881,7 @@ fn two_systems_are_judged_apart_each_against_its_own_board() {
             .collect();
         seen.sort();
         let refused = format!(
-            "infeasible-configuration unconnected {0}/t -> {other} outside {0}",
+            "infeasible-configuration unconnected (task {0} t) -> {other} outside {0}",
             system.name
         );
         assert_eq!(seen, [(vec![], vec![]), (vec![refused], vec![])]);
@@ -888,13 +897,13 @@ fn two_systems_are_judged_apart_each_against_its_own_board() {
     };
     let both = [
         Binding {
-            requester: "sa/t".to_string(),
-            requirement: need("sa/t"),
+            requester: "(task sa t)".to_string(),
+            requirement: need("(task sa t)"),
             provider: "timer.a".to_string(),
         },
         Binding {
-            requester: "sb/t".to_string(),
-            requirement: need("sb/t"),
+            requester: "(task sb t)".to_string(),
+            requirement: need("(task sb t)"),
             provider: "timer.b".to_string(),
         },
     ];
@@ -1083,7 +1092,7 @@ fn a_caller_is_bound_only_to_a_provider_reachable_at_its_system_s_level() {
             (vec![], vec![]),
             (
                 vec![
-                    "infeasible-configuration out of level s/t -> timer.s at machine: supervisor"
+                    "infeasible-configuration out of level (task s t) -> timer.s at machine: supervisor"
                         .to_string()
                 ],
                 vec![]
@@ -1120,20 +1129,20 @@ fn a_provider_that_states_no_level_is_refused_for_a_caller() {
         one("(offers (counter-width 32 bit))"),
         (
             vec![],
-            vec!["missing-fact level unstated s/t -> timer".to_string()]
+            vec!["missing-fact level unstated (task s t) -> timer".to_string()]
         )
     );
     assert_eq!(
         one("(offers (counter-width 32 bit) reachable-at-privilege)"),
         (
             vec![],
-            vec!["missing-fact level unstated s/t -> timer".to_string()]
+            vec!["missing-fact level unstated (task s t) -> timer".to_string()]
         )
     );
     assert_eq!(
         one("(offers (counter-width 32 bit)) (absent reachable-at-privilege)"),
         (
-            vec!["infeasible-configuration level absent s/t -> timer".to_string()],
+            vec!["infeasible-configuration level absent (task s t) -> timer".to_string()],
             vec![]
         )
     );
