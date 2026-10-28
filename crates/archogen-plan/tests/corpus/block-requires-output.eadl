@@ -1,0 +1,12 @@
+(eadl-version eadl/1)
+; A block that requires another block's output: bound, and its provider a node of the initialisation graph (`M4.1.14`,
+; round 11).
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock logger.x
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine))
+  (requires (needs observable-output)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart logger.x)))
+(defservice evt (requires (needs interrupt-source)))
+(defsystem bo
+  (task a (min-separation 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (uses evt))
+  (platform (uses soc)))

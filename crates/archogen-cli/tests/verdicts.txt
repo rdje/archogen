@@ -1,6 +1,8 @@
 # The frozen verdict of every description in this repository (leaf `PROGRAM.6.2`).
 # <exit code of `archogen check`> <its diagnostic codes, sorted, or -> <path>
 # Regenerated deliberately: ARCHOGEN_BLESS_VERDICTS=1 cargo test -p archogen-cli --test verdicts
+0 - crates/archogen-plan/tests/corpus/block-requires-alarm.eadl
+0 - crates/archogen-plan/tests/corpus/block-requires-output.eadl
 0 - crates/archogen-plan/tests/corpus/both-kinds-adapter.eadl
 0 - crates/archogen-plan/tests/corpus/both-kinds.eadl
 0 - crates/archogen-plan/tests/corpus/both-release.eadl

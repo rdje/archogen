@@ -1,5 +1,7 @@
 # docs/semantics/third-opinion.txt — per document, whether archogen's reader and LinkedSpec's SExprDocumentV1
 # recognizer agree on its forms (leaf M1.22). Written by scripts/third_opinion.sh --bless; checked by it.
+agree crates/archogen-plan/tests/corpus/block-requires-alarm.eadl
+agree crates/archogen-plan/tests/corpus/block-requires-output.eadl
 agree crates/archogen-plan/tests/corpus/both-kinds-adapter.eadl
 agree crates/archogen-plan/tests/corpus/both-kinds.eadl
 agree crates/archogen-plan/tests/corpus/both-release.eadl

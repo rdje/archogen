@@ -193,7 +193,8 @@ Each service alone is satisfied by `timer.compare`. Bound together, they need tw
 refused, `infeasible-configuration`, naming both: *`timer.compare` serves 1 requester(s) at once through its consumed
 facts, and 2 take one*. With `(channels 2 tick)` it holds; with one service it holds, since offering the function at
 all serves one; with no `channels` written it is `missing-fact`, never a quiet yes. A requester is a task, a service,
-or another declaration's own level, so two tasks that each write `(needs absolute-deadline)` are two requesters. A
+or another declaration's own level — a block's or a platform's included, whose `requires` is bound like any other while
+its `uses` stays composition (`M4.1.14`) — so two tasks that each write `(needs absolute-deadline)` are two requesters. A
 service two tasks *use* is one requester: its realization serves both through one channel, so it is the multiplexer,
 and the check reports that it owes them the shared semantics and a bounded overhead.
 

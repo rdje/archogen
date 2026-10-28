@@ -760,3 +760,36 @@ fn a_record_rebuilds_only_where_each_provider_meets_its_requirements() {
     assert!(accepted, "{right}");
     assert_eq!(rebuilt, Ok(()), "{right}");
 }
+
+#[test]
+fn a_block_s_own_requirements_are_bound_and_rebuilt() {
+    // Leaf `M4.1.14`: a block is a requester for what it writes at its own level (model §8 rule 1), its `uses` being
+    // composition. The search once took no requirement of a block's, and the checker refused its record.
+    let text = "(eadl-version eadl/1)
+(defblock timer.d (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine)))
+(defblock dma.x
+  (offers (observable-output true) (reachable-at-privilege machine))
+  (requires (needs relative-delay)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d dma.x)))
+(defservice out (requires (needs observable-output)))
+(defsystem bl
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses out))
+  (platform (uses soc)))
+";
+    let (record, accepted, rebuilt) = resolved_and_judged(text);
+    assert!(
+        record.contains("(bind dma.x relative-delay timer.d)\n"),
+        "{record}"
+    );
+    assert!(accepted, "{record}");
+    assert!(rebuilt, "{record}");
+    // A record leaving it unbound no longer rebuilds.
+    let header = "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system bl)\n(program \"PROGRAM\")\n(adapters adapters/1)\n";
+    let (accepted, rebuilt) = judged_record(
+        text,
+        &format!("{header}(bind out observable-output dma.x)\n"),
+    );
+    assert!(!accepted);
+    let why = rebuilt.expect_err("unbound");
+    assert!(why.contains("`dma.x`'s `relative-delay` unbound"), "{why}");
+}

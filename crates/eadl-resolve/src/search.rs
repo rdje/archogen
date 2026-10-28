@@ -362,10 +362,12 @@ fn run(
             Err(refusals) => diagnostics.extend(refusals.iter().map(|r| r.diagnostic())),
         }
     }
+    // Every declaration is a requester for what it writes at its own level, a block's and a platform's included — their
+    // `uses` is composition, never a binding (model §8 rule 1; leaf `M4.1.14`).
     let mut all: Vec<Requester> = Vec::new();
     for decl in declarations
         .iter()
-        .filter(|decl| !hardware(decl) && decl.head().is_some_and(|head| head.starts_with("def")))
+        .filter(|decl| decl.head().is_some_and(|head| head.starts_with("def")))
     {
         match requesters(decl, vocabulary) {
             Ok(written) => all.extend(written),

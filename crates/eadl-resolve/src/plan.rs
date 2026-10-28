@@ -456,9 +456,10 @@ pub fn rebuild<'v>(
         providers.push((provider, d));
     }
     let mut requesters: Vec<Requester> = Vec::new();
+    // A block's and a platform's own requirements too, as the search reads them (model §8 rule 1, leaf `M4.1.14`).
     for d in declarations
         .iter()
-        .filter(|d| !hardware(d) && d.head().is_some_and(|h| h.starts_with("def")))
+        .filter(|d| d.head().is_some_and(|h| h.starts_with("def")))
     {
         requesters.extend(
             joint::requesters(d, vocabulary)
