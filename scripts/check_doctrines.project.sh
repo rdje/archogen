@@ -47,6 +47,7 @@ PROJECT_DOCTRINES=(
   "BOOK-INDEX|the book's index is the one scripts/check_book_index.sh writes from the chapters and the glossary — never stale, never hand-edited|scripts/check_book_index.sh"
   "BOOK-GLOSSARY|the book's glossary is live — every acronym a chapter uses is defined there, every entry is still used, each section in order|scripts/check_book_glossary.sh"
   "WORKFLOW-TOKENS|every workflow holds a read-only token and keeps no credentials — top-level permissions granting no write scope, none granted by a job, every checkout with persist-credentials false, no trigger that runs with the base repository's token, and YAML it cannot read refused|scripts/check_workflow_tokens.sh"
+  "CODE-OWNERS|the repository's one ownership file is .github/CODEOWNERS, byte for byte the text its protection record gives, in the syntax GitHub reads, its first rule * and every rule with an owner|scripts/check_code_owners.sh"
   "COMMIT-LOG-ROWS|every work-unit commit has working/indexed records beyond a shrinking backlog; live records occupy their real contiguous Commit Log table|scripts/check_commit_log_rows.sh"
   "RUST-FORMAT|every Rust source a commit stages is in canonical format — its staged bytes through rustfmt, byte for byte; with nothing staged, every tracked file|scripts/check_rust_format.sh"
   "HANDOFF-LEDGER|every hand-off a design record makes is quoted word for word by the leaf it names — one sentence in a machine-read ledger, checked in both places|scripts/check_handoff_ledger.sh"

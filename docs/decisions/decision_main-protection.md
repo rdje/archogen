@@ -98,9 +98,11 @@ A direct push to `main` is not tried, since a push the rules failed to refuse wo
 list of the rules it applies to `main` stands for that test. `M2.7.6`'s scratch-branch tests try the rest.
 
 **`.github/CODEOWNERS`**, the only ownership file (`M2.7.6.5`). Every path is owned by the director, so every pull
-request needs the director's approval:
+request needs the director's approval. The doctrine `CODE-OWNERS` (`scripts/check_code_owners.sh`) holds the file to
+this block byte for byte, and to the syntax GitHub reads:
 
 ```text
+# Every path is the director's: docs/decisions/decision_main-protection.md §1.
 * @rdje
 ```
 
