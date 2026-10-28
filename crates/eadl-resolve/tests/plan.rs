@@ -468,3 +468,112 @@ fn a_record_rebuilds_only_over_what_its_description_requires() {
         "no system",
     );
 }
+
+/// `text`, a plain description, its one system searched: the record written, the checker's verdict on it, and whether the
+/// generator's own reader rebuilds it and its joint rules hold.
+fn resolved_and_judged(text: &str) -> (String, bool, bool) {
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add("description.eadl", text.to_owned())
+        .expect("small");
+    let modules = DirectoryModules::new(root());
+    let (program, _) = plan_file(
+        &mut sources,
+        id,
+        &modules,
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        "",
+    );
+    let declarations = program.root().declarations.clone();
+    let system = declarations
+        .iter()
+        .find(|f| f.head() == Some("defsystem"))
+        .expect("a system")
+        .clone();
+    let v = vocabulary();
+    let catalog = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+        .expect("the shipped catalog reads");
+    let policy = Policy {
+        adapters: catalog.clone(),
+        ..Policy::default()
+    };
+    let Search::Resolved(resolution) = search(
+        &declarations,
+        &system,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &policy,
+        Limits::DEFAULT,
+    ) else {
+        panic!("it resolves");
+    };
+    let record = plan::write(
+        &resolution,
+        RT_STATIC_UP_V1.id,
+        &plan::program_digest(&program),
+    );
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add("description.eadl", text.to_owned())
+        .expect("small");
+    let (_, verdict) = plan_file(
+        &mut sources,
+        id,
+        &modules,
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        &record,
+    );
+    let rebuilt = plan::rebuild(
+        &plan::read(&record).expect("it reads"),
+        &declarations,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &catalog,
+    )
+    .is_ok_and(|r| r.joint.check(&r.bindings).holds());
+    (record, verdict.is_ok(), rebuilt)
+}
+
+#[test]
+fn a_qualifier_binds_nothing_where_its_requester_relies_on_a_function() {
+    // Leaf `M4.1.8`: model §8 rule 13's qualifier "makes no binding of its own" where its requester relies on a
+    // function, `evt`'s `interrupt` here; the joint rules judge it at the provider bound for one, so `dev.b`, which
+    // meets no `sleep`, is passed over. The search once wrote the qualifier's own binding, which the checker refuses.
+    let header = "(eadl-version eadl/1)
+(defblock dev.b (offers (interrupt-source true) (available-in-state run) (reachable-at-privilege machine)))
+(defblock dev.a (offers (interrupt-source true) (available-in-state run sleep) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.a dev.b)))
+";
+    let relied = format!(
+        "{header}(defservice evt (requires (needs interrupt-source) (available-in-state run sleep)))
+(defsystem s
+  (task t (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt))
+  (platform (uses soc)))
+"
+    );
+    let (record, accepted, rebuilt) = resolved_and_judged(&relied);
+    assert!(!record.contains("available-in-state"), "{record}");
+    assert!(
+        record.contains("(bind evt interrupt-source dev.a)\n"),
+        "{record}"
+    );
+    assert!(accepted, "{record}");
+    assert!(rebuilt, "{record}");
+    // A requester relying on no function binds its qualifier as any requirement.
+    let alone = format!(
+        "{header}(defservice power (requires (available-in-state run sleep)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses power))
+  (platform (uses soc)))
+"
+    );
+    let (record, accepted, rebuilt) = resolved_and_judged(&alone);
+    assert!(
+        record.contains("(bind power available-in-state dev.a)\n"),
+        "{record}"
+    );
+    assert!(accepted, "{record}");
+    assert!(rebuilt, "{record}");
+}

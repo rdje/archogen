@@ -914,6 +914,47 @@ fn function_of<'v>(vocabulary: &'v Vocabulary, fact: &str) -> Option<&'v Functio
     vocabulary.fact(fact).and_then(|f| f.function.as_ref())
 }
 
+/// Whether `requirement` is one of rule 13's qualifiers: a requirement on an `each` fact, `reachable-at-privilege` apart,
+/// which is rule 9's.
+#[must_use]
+pub fn is_qualifier(requirement: &Requirement, vocabulary: &Vocabulary) -> bool {
+    requirement.fact() != REACHABLE_AT_PRIVILEGE
+        && function_of(vocabulary, requirement.fact()) == Some(&Function::Each)
+}
+
+/// Whether `requester` relies on a function: it, or a requester it reaches through `uses` and `needs` at any depth,
+/// requires a fact of a function. Every requirement of a complete assignment is bound, so such a fact is bound, and a
+/// qualifier of `requester` then "makes no binding of its own" (model §8 rule 13); a requester relying on no function
+/// binds its qualifier as any requirement. The search's pairs and a record read back both read it (leaf `M4.1.8`).
+#[must_use]
+pub fn relies_on_a_function(
+    requester: &str,
+    requesters: &[Requester],
+    vocabulary: &Vocabulary,
+) -> bool {
+    let by_name: BTreeMap<&str, &Requester> =
+        requesters.iter().map(|r| (r.name.as_str(), r)).collect();
+    let mut seen: BTreeSet<&str> = BTreeSet::from([requester]);
+    let mut todo = vec![requester];
+    while let Some(at) = todo.pop() {
+        let Some(r) = by_name.get(at) else {
+            continue;
+        };
+        if r.requirements.iter().any(|q| {
+            !matches!(q, Requirement::Statement { .. })
+                && matches!(function_of(vocabulary, q.fact()), Some(Function::Of(_)))
+        }) {
+            return true;
+        }
+        for named in r.uses.iter().chain(&r.needs) {
+            if seen.insert(named.as_str()) {
+                todo.push(named.as_str());
+            }
+        }
+    }
+    false
+}
+
 fn quoted(levels: &[String]) -> String {
     levels
         .iter()

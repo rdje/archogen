@@ -584,6 +584,8 @@ pub fn rebuild<'v>(
                         bind.requester, record.system
                     )));
                 }
+                // A qualifier binds nothing where its requester relies on a function (model §8 rule 13, `M4.1.8`).
+                let relies = joint::relies_on_a_function(&requester, &requesters, vocabulary);
                 requesters
                     .iter()
                     .find(|q| q.name == requester)
@@ -591,7 +593,9 @@ pub fn rebuild<'v>(
                         q.requirements
                             .iter()
                             .filter(|r| {
-                                r.fact() == bind.fact && !matches!(r, Requirement::Statement { .. })
+                                r.fact() == bind.fact
+                                    && !(matches!(r, Requirement::Statement { .. })
+                                        || (relies && joint::is_qualifier(r, vocabulary)))
                             })
                             .cloned()
                             .collect()
@@ -616,9 +620,13 @@ pub fn rebuild<'v>(
         .iter()
         .filter(|q| system.serves(&q.name))
         .flat_map(|q| {
+            let relies = joint::relies_on_a_function(&q.name, &requesters, vocabulary);
             q.requirements
                 .iter()
-                .filter(|r| !matches!(r, Requirement::Statement { .. }))
+                .filter(move |r| {
+                    !(matches!(r, Requirement::Statement { .. })
+                        || (relies && joint::is_qualifier(r, vocabulary)))
+                })
                 .map(move |r| (q.name.clone(), r.fact().to_string()))
         })
         .chain(instances.iter().flat_map(|i| {

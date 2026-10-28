@@ -50,7 +50,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use eadl_front::{Diagnostic, Form, Label, Span, Verdict};
 
 use crate::adapter::{instance_name, Catalog, Instance};
-use crate::joint::{requesters, Binding, Joint, Kind, Obligation, Report, Requester, System};
+use crate::joint::{
+    is_qualifier, relies_on_a_function, requesters, Binding, Joint, Kind, Obligation, Report,
+    Requester, System,
+};
 use crate::offer::{self, Provider};
 use crate::relation::{judge, Verdict as Answer};
 use crate::requirement::Requirement;
@@ -735,8 +738,13 @@ fn pairs<'d>(
     let mut out = Vec::new();
     for requester in all.iter().filter(|r| system.serves(&r.name)) {
         let mut facts: Vec<(String, Vec<&Requirement>)> = Vec::new();
+        // A qualifier binds nothing where its requester relies on a function: the joint rules judge it at every
+        // provider bound for one (model §8 rule 13, leaf `M4.1.8`).
+        let relies = relies_on_a_function(&requester.name, all, vocabulary);
         for requirement in &requester.requirements {
-            if matches!(requirement, Requirement::Statement { .. }) {
+            if matches!(requirement, Requirement::Statement { .. })
+                || (relies && is_qualifier(requirement, vocabulary))
+            {
                 continue;
             }
             match facts
