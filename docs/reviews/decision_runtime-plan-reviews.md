@@ -205,6 +205,47 @@ reference other than the release, and multiplexing across systems. No fence was 
 | R5-R9 | remark | a sporadic trigger is an inference | Said, and the build reports it (`RTP-H1`) |
 | R5-R10 | remark | more goldens wanted | The six probes named in §3 beside the three texts |
 
+## Round 6 — `2026-10-28`: not acceptable, 20 findings
+
+The reviewer re-derived all three worked texts with a program calling the real search and joint rules, the installed
+command's records identical to the program's, and lowered 37 probe systems. 10 defects and 10 remarks, each with a narrow
+fix, all at edges the goldens did not reach: a tie in rank, the timer routes' place, the trigger's reading beside a
+timer route, an alarm a task programs itself, multiplexing by `needs`, a provider's call cost, and the two roles
+disagreeing.
+
+**Fence.** One search, `grep -rln … --include=*.md docs`, walked `docs/evaluation/` before its output was filtered;
+nothing from that folder was printed or opened. Every history read stayed within `6d61f65..HEAD`. No case was read.
+
+**Method.** Six rounds have found 18, 17, 18, 16, 8 and 10 defects, each reviewer rebuilding the lowering by hand in a
+scratch program to re-derive the texts. That is the pattern `decision_executable-design-reviews.md` answers: a design
+whose subject is a decision procedure is reviewed with its executable form. So, before round 7, `M4.1.3` and `M4.1.4`'s
+lowering are built as the record's transcription, rule by rule, and every probe of rounds 4 to 6 becomes a fixture with
+the text the record gives it. Round 7 reviews the record, the code and the corpus together, and a later finding is a
+defect when it carries a reproducer.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R6-D1 | defect | route ranks undetermined for two sources of one separation, round 5's answer having dropped the tie-break | Ties broken on the interrupt's text (§2.5) |
+| R6-D2 | defect | the timer-route rule is the alternative the record rejects: a `programmed` separation ranks after every source | Said so: the timer routes ranked last in `/1`, their key `M4.1.6`'s; the alternative and the hardware quote reworded (§2.5) |
+| R6-D3 | defect | the trigger reads two ways when a timer route also reaches a sporadic task | "Several sources' routes"; a timer route releases no task (§2.2) |
+| R6-D4 | defect | a task or the system's level programming an alarm itself is not refused; "the interrupt releases the task" false | Refused beside the expiry case, how a job receives either `M4.1.6`'s; the sentence reworded to release only where the trigger names `X` (§1, §2.6) |
+| R6-D5 | defect | multiplexing ignores users naming the service by `needs` | `.2` counts users by `uses` or `needs`; the probe a golden (§2.9, §4) |
+| R6-D6 | defect | `call-cost` not owed for a provider node running in a job | Owed for every node whose context line holds `job` (§2.10) |
+| R6-D7 | defect | no refusal when the generator's joint rules reject the accepted record | `tool-failure`, naming both verdicts (§1) |
+| R6-D8 | defect | the instance bullet also puts an instance in a source's interrupt at the same provider | "For a timer route at `X`" (§2.6) |
+| R6-D9 | defect | `RTP-H6` keeps the route latency round 5 dropped; `RTP-H9` names one platform fact of many | The latency dropped from `RTP-H6`; `RTP-H9` states every platform input and fact the variant and the composition read, `releases-after-initialisation` among them |
+| R6-D10 | defect | `M4.1.5`'s text holds less than §4 gives it; `.7` cites `RTP-H6` for sizes it does not hold | `M4.1.5`'s text widened; the sizes owed by a hand-off `.7` writes |
+| R6-R1 | remark | a task's `uses` items hold services only, and a name in both lists twice | Services and policies, each once (§2.2) |
+| R6-R2 | remark | "the joint rules as they stand" contradicts §2.9 until `.2` | "As `.2` amends them" |
+| R6-R3 | remark | "both writers" against "one writer" | "Its writer" (§3) |
+| R6-R4 | remark | the Theorem 1 quote elides its multiprocessor scope | Condition 1 quoted from its general statement in the 2016 review, ledgered; Davis and Burns kept for the open problem alone |
+| R6-R5 | remark | `multiplex` discharged by a design leaf | By `M4.2 M2.21.2`, `RTP-H4` charging the term `M4.1.6` designs |
+| R6-R6 | remark | the execution bound's evidence category not owed | `execution-category` owed and in `RTP-H5` |
+| R6-R7 | remark | `M4.1.1`'s status stale | Updated |
+| R6-R8 | remark | `RTP-H9`'s register mapping has no input; no source before the first enabling | The mapping dropped; arrivals only after the first enabling |
+| R6-R9 | remark | the vocabulary in neither the identity nor what §2 reads | Named among what §2 reads (§3) |
+| R6-R10 | remark | ten more probes for the goldens | Named in §3 |
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a

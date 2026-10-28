@@ -226,6 +226,7 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#daily-artifact-cleanup-on-2026-10-22)
 - Daily artifact cleanup on 2026-10-24 — [Annex B: The checks that keep the repository
   honest](annex-repository.md#daily-artifact-cleanup-on-2026-10-24)
+- davis-2016-priority-assignment — [What this project relies on from outside](ledger.md#davis-2016-priority-assignment)
 - davis-burns-priority-assignment — [What this project relies on from
   outside](ledger.md#davis-burns-priority-assignment)
 - davis-speedup-factors — [What this project relies on from outside](ledger.md#davis-speedup-factors)
@@ -339,7 +340,6 @@ a change that leaves it stale, so it is never edited by hand.
 - Finite Cargo path iterator proofs — [Annex C: Trust proof
   records](annex-trust-proofs.md#finite-cargo-path-iterator-proofs)
 - First reported output failure — [Annex C: Trust proof records](annex-trust-proofs.md#first-reported-output-failure)
-- **FP** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **FP-NP** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - freertos-kernel — [What this project relies on from outside](ledger.md#freertos-kernel)
 - fsmgen — [What this project relies on from outside](ledger.md#fsmgen)

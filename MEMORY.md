@@ -13,26 +13,21 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M3` → frontier `M3.5`; `PROGRAM` resumes at `PROGRAM.72`.
-- **Next action:** CI green on `34b6abeb` (2026-10-26); `M3.5.1.6.4` done (the checker's own MCP); `M3.5.7`
-  (its browser module) done; `M3.4`: `.4.2`–`.4.6`, `.4.8`–`.4.10`, `.4.13` done; `.4.7` blocked on `M3.7`;
-  `M3.2` (adapters): `.1`–`.5` done; `PROGRAM.117.1` and `.2` done: record folders bound by reads, not totals
-  (`decision_ceilings-bound-reads.md`), records moved by `scripts/move_record.sh`. `M3.2` `.1`–`.6` done (API `1.7`; `uc3` accepted, `M3.4.7.1`);
-  its verification `M3.2.7` deferred (doctrine 22); next: `M3`'s frontier.
-  After the push, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`.
-  `PROGRAM.115` filed; full verification `M3.5.9` after `M3.5`'s features (doctrine 22).
-  The mutation campaign is `M7.6`'s. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
-  focused green at `eaf71286`; `archogen check` wiring is `M3.4`'s. The next artifact cleanup is due after
-  `2026-10-28T10:30` UTC (`PROGRAM.119` ran `2026-10-27T10:30:55Z`). A test's deadline is one only a hang reaches (`PROGRAM.99`).
+- **Active tree:** `M4` → frontier `M4.1`, at `M4.1.1`, the runtime plan's review: `/1` for the hosted playground, rounds answered
+  in `docs/reviews/decision_runtime-plan-reviews.md`; `PROGRAM` → `PROGRAM.34`, the director's.
+- **Next action:** build `M4.1.3` and `M4.1.4`'s lowering as the record's executable form, with the probes of rounds
+  4–6 as fixtures; then round 7 reviews record, code and corpus. `M4.4.1`, the device correspondence, before `M4.1.7`. `M3.2.7` and `M3.5.9`, full verification, wait for the features (doctrine 22).
+  After the first batch, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`; `M3.4.7` waits on `M3.7`.
+  `main` is protected: a push is a batch, `scripts/open_batch.sh` (`COMMIT.md` step 2), at the ruled cadence or to
+  restore CI; the director merges, and the first merge is premise 3's named commit (`M2.7.6.6.5`). No other branches.
+  The next artifact cleanup is due after `2026-10-28T10:30` UTC (`PROGRAM.119`).
   **Mutation testing is stopped** until the functionality is locked
-  (`decision_mutation-testing-after-completion.md`, `2026-10-21`): every pending `M3.6.9` leaf is `blocked`;
-  every decision advances the project first. `M3.6.9.6.3.2.2.15.2.1.8.2` stays owned, a suspected defect, P2.
+  (`decision_mutation-testing-after-completion.md`, `2026-10-21`): every pending `M3.6.9` leaf and `PROGRAM.78` are
+  `blocked`; every decision advances the project first. `M3.6.9.6.3.2.2.15.2.1.8.2` stays owned, a suspected defect.
   Disposable project-owned Git fixtures under ignored `target/` are approved;
   maintained external repositories and submodules stay read-only.
-  Corrected renderer adoption stays owned in `.4.3.4.1`.
   The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.
   `M3.6.3.2.1.1` owns runner-baseline compatibility after key encoding; an authorized cadence run is needed.
-  `main` is protected: a push is a batch, `scripts/open_batch.sh` (`COMMIT.md` step 2); the director merges. No branches but batches.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4.5` — the catalog records; `M2.7.6.4` — the director's review round;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,
