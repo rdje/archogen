@@ -416,12 +416,12 @@ Producer observations, normalization proofs, counterexamples and revalidation re
 | --- | --- |
 | Source | Robert I. Davis, Alan Burns, Sanjoy Baruah, Thomas Rothvoß, Laurent George, Oliver Gettings, "Exact Comparison of Fixed Priority and EDF Scheduling based on Speedup Factors for both Pre-emptive and Non-pre-emptive Paradigms", *Real-Time Systems*, 2015 |
 | Version | the authors' copy, eighteen pages, as served from the University of York |
-| Pinned at | not pinned — read at `https://www-users.cs.york.ac.uk/rd17/papers/RTS2015Speedup.pdf`; no build or check reads it |
+| Pinned at | not pinned — read at `https://www-users.cs.york.ac.uk/rd17/papers/RTS2015Speedup.pdf`, which since answers `301` to `https://www-users.york.ac.uk/~rd17/papers/RTS2015Speedup.pdf`, the same bytes read again on `2026-10-28`; no build or check reads it |
 | Retrieved | `2026-10-27` |
 | Hash | sha256 `3f7f38344030aa5a3deb141e8b339ef4381512342835764604628f30029dd952` of the PDF read |
-| Scope | its §1.3's account of fixed-priority non-pre-emptive scheduling, quoted in `docs/decisions/decision_runtime-plan.md` §2.5 for the runtime plan's order among interrupt sources: "George et al. (1996) showed that unlike in the pre-emptive case, DMPO is not optimal for constrained-deadline task sets scheduled by FP-NP. Further, they showed that the Optimal Priority Assignment algorithm given by Audsley (1991) is applicable" |
+| Scope | its §1.3's account of fixed-priority non-pre-emptive scheduling: "George et al. (1996) showed that unlike in the pre-emptive case, DMPO is not optimal for constrained-deadline task sets scheduled by FP-NP. Further, they showed that the Optimal Priority Assignment algorithm given by Audsley (1991) is applicable". `docs/decisions/decision_runtime-plan.md` §2.5 quotes its first sentence's claim, for why no optimality is claimed for the plan's order among interrupt sources; the glossary's DMPO, EDF and FP-NP cite it |
 | Known limitations | a secondary account of George et al. (1996), whose report was not read; it concerns tasks, and the plan applies it to interrupt sources served without nesting, which the variant's condition 5 makes non-pre-emptive among themselves |
-| Revalidation trigger | the plan's source order resting on more than the non-optimality of deadline-monotonic ordering and the applicability of Audsley's algorithm |
+| Revalidation trigger | the plan's source order resting on more than the non-optimality of deadline-monotonic ordering for tasks |
 | Named as | `Davis` |
 
 ## `github-merge-queue`
@@ -437,6 +437,34 @@ Producer observations, normalization proofs, counterexamples and revalidation re
 | Known limitations | a 2023 announcement; GitHub's current documentation pages read the same day state no availability either way |
 | Revalidation trigger | a merge queue becoming available to repositories owned by personal accounts, or the repository moving to an organization |
 | Named as | `merge queue is now generally available` |
+
+## `github-machine-account`
+
+| Field | Value |
+| --- | --- |
+| Source | GitHub's Terms of Service, section B, "Account Terms" |
+| Version | the page as served on `2026-10-27` |
+| Pinned at | not pinned — read at `https://docs.github.com/en/site-policy/github-terms/github-terms-of-service`; no build or check reads it |
+| Retrieved | `2026-10-27` |
+| Hash | sha256 `f8f54975ce02aecbaf5001a0f9ba869229734eb83652c3a37dfe8bf6d338aaa6` of the page read |
+| Scope | two sentences, quoted in `docs/decisions/decision_main-protection.md` §2 for the agents' push identity: "A machine account is used exclusively for performing automated tasks." and "You may maintain no more than one free machine account in addition to your free Personal Account." |
+| Known limitations | terms GitHub may change; the arrangement rests on the director keeping a single personal account and a single machine account |
+| Revalidation trigger | a change to GitHub's account terms, or a second machine account wanted |
+| Named as | `GitHub's terms of service` |
+
+## `github-personal-access-tokens`
+
+| Field | Value |
+| --- | --- |
+| Source | GitHub Docs, "Managing your personal access tokens" |
+| Version | the page as served on `2026-10-28` |
+| Pinned at | not pinned — read at `https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens`; no build or check reads it |
+| Retrieved | `2026-10-28` |
+| Hash | sha256 `519aa3e0846f1ae2582e612ca78e01b3fb64efeca7d0f273ddfe6b1bcae98f4c` of the page read |
+| Scope | two passages, quoted in `docs/decisions/decision_main-protection.md` §2 for why the agents' token is a classic one: "Only personal access tokens (classic) have write access for public repositories that are not owned by you or an organization that you are not a member of", and fine-grained tokens' listed gap, "to contribute to repositories where the user is an outside or repository collaborator" |
+| Known limitations | a gap GitHub lists as current, which a later release may close; the token's single scope, `public_repo`, is the agents' choice, not the page's |
+| Revalidation trigger | fine-grained tokens gaining collaborator access, or the repository becoming private |
+| Named as | `Managing your personal access tokens` |
 
 ## `github-available-rules`
 
@@ -494,30 +522,16 @@ Producer observations, normalization proofs, counterexamples and revalidation re
 | Revalidation trigger | the page documenting signatures on merges made otherwise, or the named commit's check finding a merge unsigned |
 | Named as | `About commit signature verification` |
 
-## `github-machine-account`
+## `davis-burns-priority-assignment`
 
 | Field | Value |
 | --- | --- |
-| Source | GitHub's Terms of Service, section B, "Account Terms" |
-| Version | the page as served on `2026-10-27` |
-| Pinned at | not pinned — read at `https://docs.github.com/en/site-policy/github-terms/github-terms-of-service`; no build or check reads it |
-| Retrieved | `2026-10-27` |
-| Hash | sha256 `f8f54975ce02aecbaf5001a0f9ba869229734eb83652c3a37dfe8bf6d338aaa6` of the page read |
-| Scope | two sentences, quoted in `docs/decisions/decision_main-protection.md` §2 for the agents' push identity: "A machine account is used exclusively for performing automated tasks." and "You may maintain no more than one free machine account in addition to your free Personal Account." |
-| Known limitations | terms GitHub may change; the arrangement rests on the director keeping a single personal account and a single machine account |
-| Revalidation trigger | a change to GitHub's account terms, or a second machine account wanted |
-| Named as | `GitHub's terms of service` |
-
-## `github-personal-access-tokens`
-
-| Field | Value |
-| --- | --- |
-| Source | GitHub Docs, "Managing your personal access tokens" |
-| Version | the page as served on `2026-10-28` |
-| Pinned at | not pinned — read at `https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens`; no build or check reads it |
+| Source | Robert I. Davis, Alan Burns, "Priority Assignment for Global Fixed Priority Pre-emptive Scheduling in Multiprocessor Real-Time Systems", University of York, 2009 |
+| Version | the authors' report, fifteen pages, as served from the University of York |
+| Pinned at | not pinned — read at `https://cs.york.ac.uk/rts/static/papers/R:Davis:2009a.pdf`, which answers `301` to `https://www.cs.york.ac.uk/rts/static/papers/R:Davis:2009a.pdf`; no build or check reads it |
 | Retrieved | `2026-10-28` |
-| Hash | sha256 `519aa3e0846f1ae2582e612ca78e01b3fb64efeca7d0f273ddfe6b1bcae98f4c` of the page read |
-| Scope | two passages, quoted in `docs/decisions/decision_main-protection.md` §2 for why the agents' token is a classic one: "Only personal access tokens (classic) have write access for public repositories that are not owned by you or an organization that you are not a member of", and fine-grained tokens' listed gap, "to contribute to repositories where the user is an outside or repository collaborator" |
-| Known limitations | a gap GitHub lists as current, which a later release may close; the token's single scope, `public_repo`, is the agents' choice, not the page's |
-| Revalidation trigger | fine-grained tokens gaining collaborator access, or the repository becoming private |
-| Named as | `Managing your personal access tokens` |
+| Hash | sha256 `b3c6f0c54340284f0cb38c73287557153a5d0afbe34f1cd660b08a346e29d4a2` of the PDF read |
+| Scope | its Condition 1, quoted in `docs/decisions/decision_runtime-plan.md` §2.5 for why Audsley's algorithm promises no optimal order among the plan's interrupt sources: "The schedulability of a task τk may, according to test S, be dependent on the set of higher priority tasks, but not on the relative priority ordering of those tasks." |
+| Known limitations | stated for global fixed-priority tests on several processors; the record applies the condition as the general requirement of Audsley's algorithm that the report proves it is, to the composition's bound over interrupt sources served without nesting |
+| Revalidation trigger | the composition's bound changing so that a source's bound no longer depends on the order of the sources ahead of it |
+| Named as | `Davis and Burns` |

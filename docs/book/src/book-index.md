@@ -226,6 +226,8 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md#daily-artifact-cleanup-on-2026-10-22)
 - Daily artifact cleanup on 2026-10-24 — [Annex B: The checks that keep the repository
   honest](annex-repository.md#daily-artifact-cleanup-on-2026-10-24)
+- davis-burns-priority-assignment — [What this project relies on from
+  outside](ledger.md#davis-burns-priority-assignment)
 - davis-speedup-factors — [What this project relies on from outside](ledger.md#davis-speedup-factors)
 - **deadline** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The boundary: functionality versus implementation](boundary.md), [Reading a

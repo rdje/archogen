@@ -75,49 +75,58 @@ absent cases or lexical rules.
 | R2-24 | remark | provenance lacked the generator's sha256; a claim held only for one way of acceptance | Added; the claim narrowed to each way (§1) |
 | R2-25 | remark | `/1` can never be complete; `M4.1`'s goal and `M4.2`'s did not hold what moved to them | Said: `RTP-H5`'s format brings `/2`; the goals widened by the ledger's quotes (§2.2, §4) |
 
-## Round 3 — `2026-10-27`: not acceptable, 32 findings, answers pending
+## Round 3 — `2026-10-27`: not acceptable, 32 findings
 
 The reviewer lowered the heartbeat and `adapter-epoch-extender.eadl` on `targets/riscv-virt-up.eadl` by the record's
 rules alone. The heartbeat matched the worked text, under two readings the rules do not force. The second system needed
 choices in six places. 18 defects, 14 remarks.
 
-- **The defects:**
-  - the target's timer ignored by the release-timer rule;
-  - `Joint::map` undefined over a target;
-  - a counter, not an alarm, chosen as release timer, its channel used twice;
-  - contexts inherited by callers rather than callees, and an instance's missed;
-  - no `ITEM` for a timer route;
-  - the condition-6 refusal without a mechanism;
-  - `every` and `some` unsound;
-  - the epoch's bound held by no record;
-  - the image able to overlap the stacks;
-  - the allocation's arithmetic unfixed;
-  - the fault path missing from the interrupt stack;
-  - the owed table incomplete;
-  - three obligations handed to no one;
-  - `M4.1.2`'s leaf contradicting the record;
-  - `obligation` lines underivable;
-  - §7.5's plan hash unhanded;
-  - `M4.3`'s and `M4.4`'s duties in no ledger row;
-  - the memory-section rules contradicting each other.
-- **The remarks:**
-  - the Davis claims overreaching and the ledger's page count wrong;
-  - a misattributed rule;
-  - order and naming ambiguities;
-  - deliverability without a token;
-  - identity and evidence of catalog numbers;
-  - the graph's edges dropped;
-  - `M4.12` without a goal;
-  - the boot stack's owner;
-  - the owed list's gaps;
-  - multiplex's source;
-  - a missing refusal;
-  - `RTP-H4`'s order;
-  - a phrase said to be in the adapters record that is not.
+**Fence.** One of the reviewer's searches, `grep -rln "executable true" --include=*.eadl .`, walked `docs/evaluation/`.
+The sealed text is not in the working tree (that folder's README), the search matched nothing there, and no command read
+history. No case was read.
 
-**Method, after three rounds that did not converge** (18, 17 and 18 defects): the record designed questions other leaves
-own — how timer-released tasks and an adapter share an alarm (the joint rules'), how a system's devices correspond to a
-target's (`M4.4`'s), and sizes only catalog records state. The answer narrows format `/1` to what is determinate today,
-moves the target, the memory layout, the epoch and stack allocation to `/2` (a later child of `M4.1`, after `M4.4`'s
-correspondence), gives the release alarm a design of its own (`M4.1.2`), and pins `/1` by two complete worked texts that
-become its goldens. Paused `2026-10-27` for the director's ruling on findings §11.
+**Method, after three rounds that did not converge** (18, 17 and 18 defects): the record designed questions other
+leaves own. Those are how timer-released tasks and an adapter share an alarm (the joint rules'), how a system's devices
+correspond to a target's (`M4.4`'s), and sizes only catalog records state. The answer, `2026-10-28`:
+- narrows format `/1` to the hosted playground, where every rule is determined today;
+- moves the target, the memory layout, the epoch on a target and stack allocation to `/2`, a later child of `M4.1`
+  (`M4.1.7`), after `M4.4`'s correspondence (`RTP-H8`);
+- gives the release alarm a design of its own (`M4.1.6`);
+- pins `/1` by two complete worked texts that become its goldens, the heartbeat and the epoch extender, hosted.
+
+The findings moved to `/2` are kept here as `M4.1.7`'s questions.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R3-1 | defect | the target names a timer, and the timer rule ignores it; nothing relates a system's devices to a target's | No target in `/1`. The correspondence is `M4.4`'s (`RTP-H8`), the target timer `M4.1.6`'s and `M4.1.7`'s (§4) |
+| R3-2 | defect | `Joint::map` cannot be run over a target, which has no `defsystem`; its refusals and region choice missing | Moved to `M4.1.7`, with the reviewer's fix as its question (§4) |
+| R3-3 | defect | the release-timer rule picks a counter, not an alarm, and ignores channels, so one channel is used twice | In `/1` the release timer is the simulator's clock (§2.5, `RTP-H9`). A device's alarm, shared with an adapter's as channel takers, is `M4.1.6`'s design |
+| R3-4 | defect | the context rule gives callers the interrupt rather than callees, and misses instances | Rewritten: a task `job` alone; `(interrupt X)` for the code a route's interrupt runs, an instance's, a requester's through `expiry`, and what they reach (§2.6) |
+| R3-5 | defect | no `ITEM` for a timer route, so a second timer folds into `timer` | Each timer route's provider an `ITEM` of its own (§2.5, §3) |
+| R3-6 | defect | the condition-6 refusal had no mechanism | No cost can be at the simulator's clock. A timer route is refused by condition 5, "unmodeled-interrupt-load", the checker declaring no source for it (`RTP-H4`, §2.5) |
+| R3-7 | defect | `some` is unsound when the source is faster than the task, and wrong when it is slower | `every` when the source's separation is at least the task's; otherwise `unknown`, the trigger owed to the description (§2.2) |
+| R3-8 | defect | no catalog record can state the epoch's bound | `/1`'s epoch is the simulator's time zero after initialisation (`RTP-H9`). A target's, read at the transition into idle, is `M4.1.7`'s question |
+| R3-9 | defect | the image can overlap the stacks | No memory section in `/1`; the fix is `M4.1.7`'s question |
+| R3-10 | defect | the allocation's arithmetic not fixed | `M4.1.7`'s question, with the reviewer's formula |
+| R3-11 | defect | the interrupt stack's size leaves out the fault path | `M4.1.7`'s question |
+| R3-12 | defect | the owed table missed stack use and route latency | `route-latency` for every route's provider (§2.10). Stack use comes with `/2`'s stacks |
+| R3-13 | defect | three obligations handed to no one: a member's calls, waiting in initialisation, judging contexts | `RTP-H6` extended with both image checks and a record's stated calls; `RTP-H10` to `M4.10` for judging contexts once `M3.7` lets a record be a provider (§4) |
+| R3-14 | defect | `M4.1.2`'s leaf contradicts the record; `M4.1`'s copy of `M3.2.1`'s obligation not annotated | `M4.1.2` restated as §4's `.2`; the copy annotated |
+| R3-15 | defect | `obligation` lines not derivable: `initialisation` produced by nothing, `discharged-by` prose | A table of kind, subject and leaves; `initialisation` dropped (§2.9) |
+| R3-16 | defect | §7.5's plan hash handed to no leaf | `RTP-H7` carries the plan's sha256 (§1, §4) |
+| R3-17 | defect | duties placed on `M4.3` and `M4.4` in no ledger row | `RTP-H9` to `M4.3`; `RTP-H8` to `M4.4`. `M4.4`'s layout checks come with `/2` (§4) |
+| R3-18 | defect | the memory-section rules contradict each other | `/1` has no memory section; placement memory refused `unsupported-profile` (§1, §2.8) |
+| R3-R1 | remark | the Davis claims overreach; Audsley's algorithm called optimal; the ledger's page count | No optimality claimed. Audsley's algorithm needs Davis and Burns's Condition 1, and the composition's bound depends on the order ahead (§2.5; ledgered as `davis-burns-priority-assignment`). The ledger read eighteen pages already; its URL now redirects, recorded |
+| R3-R2 | remark | "ordinary value" misattributed to rule 15 | Attributed to the adapters record's §1, item 5 (§2.4) |
+| R3-R3 | remark | `costs` orders contradict; "canonical name" undefined | A node's text defined (§2); each list's order stated apart (§3) |
+| R3-R4 | remark | deliverability has no token; `nmi-and-traps` a placeholder | `(deliverable yes)` on each source line; no `nmi-and-traps` on the playground (§2.5, §3) |
+| R3-R5 | remark | "no requester, a bound block or platform" contradicts `Kind::Other` | Nodes defined as `Joint::initialization`'s three kinds (§2) |
+| R3-R6 | remark | the catalog's numbers lack identity and evidence category | No catalog number in `/1`; `M4.1.7`'s question |
+| R3-R7 | remark | the plan keeps steps and drops the graph's edges | `depends` lines with their reasons (§2.7, §3) |
+| R3-R8 | remark | `M4.12` has no goal; `M4`'s children line stale | Both written |
+| R3-R9 | remark | the boot stack's owners | `M4.1.7`'s question |
+| R3-R10 | remark | one phase unsaid; `unknown` with no owed line; services' contexts a provider's | One phase said; `trigger` owed; a service's contexts its realizing record's (§2.7, §2.10) |
+| R3-R11 | remark | multiplex read from rule 4 alone | "As `Joint::check` reports it"; the heartbeat owes none (§2.9) |
+| R3-R12 | remark | a missing refusal in §1 | Listed (§1) |
+| R3-R13 | remark | `M2.21.2` not ordered after `M4.1.4` | `RTP-H4` says so; the leaf too |
+| R3-R14 | remark | "charged as a source" is not in the adapters record's §9 | The two places that hold it named, and the record's own wording amended by `.2` (§4) |
