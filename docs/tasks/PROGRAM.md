@@ -872,7 +872,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-0980 (leaf PROGRAM.114)`
 
 - ID: `PROGRAM.115`
-  Status: `pending` — filed `2026-10-26` by `PROGRAM.114`
+  Status: `done` — filed `2026-10-26` by `PROGRAM.114`
   Goal: `DOCTRINE_ENFORCEMENT.md` compacted under its ceiling with room for `PIPE-READS`'s row, or its ceiling raised
     by a decision record.
   Reproduce / issue: `bash scripts/check_readme_routes.sh` with the row added: `DOCTRINE_ENFORCEMENT.md: 37469 bytes,
@@ -881,8 +881,13 @@ mdBook that is the director's window into the project.
   Corrected by `PROGRAM.116` (`2026-10-26`): the table is archogen's — on the updater's NEUTRAL list, but changed here,
     and the director's ruling of `2026-09-30` (findings §10) holds only what archogen never changed — so a compaction is
     this repository's alone, nothing owed upstream; `PROGRAM.116`'s row edit left it at 36836 bytes.
-  Verification: `pending`
-  Commit: `pending`
+  Done `2026-10-28`. `M2.7.6.5` (`ARCHOGEN-M2-1033`) took five clauses of history out of other rows to fit
+    `CODE-OWNERS`'s; this leaf shortens `BOOK-ANCHORS`' row to its rule, the rationale it repeated kept in
+    `scripts/check_book_anchors.sh`'s header, and adds `PIPE-READS`'s row after `NO-SUBPROCESS`'s, the registry's place.
+  Verification: `bash scripts/check_readme_routes.sh` → `exit 0`, nothing on `DOCTRINE_ENFORCEMENT.md`, at 36851 of
+    its 36864 bytes; `bash scripts/check_table_arity.sh` → `exit 0`. Thirteen bytes stay free, so the next row comes
+    with its own compaction or a ceiling the director rules.
+  Commit: `ARCHOGEN-PROGRAM-1036 (leaf PROGRAM.115)`
 
 - ID: `PROGRAM.116`
   Status: `done` — P2, filed and fixed `2026-10-26`: what is held for the scaffold read from the director's ruling, not
@@ -1282,6 +1287,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.119` | `ARCHOGEN-PROGRAM-1021 (leaf PROGRAM.119)` | **seventeenth daily artifact cleanup**: the main and wasm debug incremental caches, 52855 files / 5496697254 bytes, removed after `handoff: OK` |
 | `PROGRAM.117.2` | `ARCHOGEN-PROGRAM-1022 (leaf PROGRAM.117.2)` | **the record mover**: `scripts/move_record.sh`, a dry run and a verified, staged move; live citations repointed, the past left and listed |
 | `PROGRAM.118` | `ARCHOGEN-PROGRAM-1028 (leaf PROGRAM.118)` | **`README-ROUTES` reads every path whole**: NUL-separated listings, the row's files quoted, a newline in a name refused |
+| `PROGRAM.115` | `ARCHOGEN-PROGRAM-1036 (leaf PROGRAM.115)` | **the enforcement table holds `PIPE-READS`**: `BOOK-ANCHORS`' row shortened to its rule, its rationale kept in its script's header; thirteen bytes free |
 
 ## Changelog
 
