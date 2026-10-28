@@ -1,0 +1,10 @@
+(eadl-version eadl/1)
+; A block bound for its own requirement to itself: its own channel's user (§2.9; round 13, remark 4).
+(defblock timer.d
+  (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine))
+  (requires (needs relative-delay)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d)))
+(defservice alarm (requires (needs relative-delay)))
+(defsystem bi
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (platform (uses soc)))

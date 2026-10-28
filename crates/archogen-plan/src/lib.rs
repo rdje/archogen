@@ -468,6 +468,36 @@ pub fn lower(
             ),
         ));
     }
+    // §1: a block's or a platform's `uses` or `needs` naming what is not hardware, each named (R13-D1, R13-D3).
+    let is_hardware_decl = |d: &Form| matches!(d.head(), Some("defblock" | "defplatform"));
+    let declared = |name: &str| {
+        declarations
+            .iter()
+            .find(|d| d.items().get(1).and_then(Form::as_symbol) == Some(name))
+    };
+    let mut composing_other: Vec<String> = rebuilt
+        .requesters
+        .iter()
+        .filter(|r| declared(&r.name).is_some_and(is_hardware_decl))
+        .flat_map(|r| {
+            r.uses
+                .iter()
+                .chain(&r.needs)
+                .filter(|n| declared(n).is_some_and(|d| !is_hardware_decl(d)))
+                .map(move |n| format!("`{}` names `{n}`", r.name))
+        })
+        .collect();
+    composing_other.sort();
+    composing_other.dedup();
+    if !composing_other.is_empty() {
+        return Err(refuse(
+            "tool-failure",
+            format!(
+                "{}: a block's or a platform's `uses` and `needs` name only the hardware it composes, and the description check accepted these, which `M1.47` makes it refuse",
+                composing_other.join("; ")
+            ),
+        ));
+    }
 
     // §1: what `/1` cannot lower — first, a duration the plan would write past the exact arithmetic: a task's, a
     // source's separation, an obliged bound (§2.2).

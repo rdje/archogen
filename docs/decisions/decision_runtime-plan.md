@@ -86,10 +86,10 @@ a bullet over tasks is taken task by task in runtime order, each task's clauses 
   `tool-failure`, naming each such name, by the namer's text and then the system's, the check having accepted it;
   `M1.46` makes the language refuse it, `invalid-description`.
 - a block's or a platform's `uses` or `needs` naming a declaration that is neither a block nor a platform: hardware
-  names only the hardware it composes (model §8 rule 1, rule 7's path ending at a declaration of another kind), and
-  such an operand would be read by some rules and not others — serving what it names, dropping an edge across
-  "composition" to a service: `tool-failure`, naming each, by the block's or platform's text and then the operand's,
-  the check having accepted it; `M1.47` makes the language refuse it, `invalid-description`.
+  names only hardware (model §8 rule 1, and rule 7's path ending at a declaration of another kind), and such an operand
+  would be read by some rules and not others — serving what it names, dropping an edge across "composition" to a
+  service: `tool-failure`, naming each, by the block's or platform's text and then the operand's, the check having
+  accepted it; `M1.47` makes the language refuse it, `invalid-description`.
 
 **Refusals of what `/1` cannot lower**, each `unsupported-profile`, naming what is missing and, where one does, the
 leaf that adds it:
@@ -139,7 +139,8 @@ node but its tasks and its own level, which are requesters and never nodes, so t
 requester, as `M3.3.8` asks. A node's **text** is its name as the plan writes it, an instance's being its `(adapter …)`
 text, and texts are compared byte by byte. A requester **reaches** what it names by `uses` or `needs`, and what it is
 bound to as its provider, at any depth, as the joint rules take a requester's names (model §8 rule 7) — but for a
-block's or a platform's `uses` or `needs`, which names only hardware (§1) and is composition, never a call (rule 1):
+block's or a platform's `uses` or `needs`, which names only hardware (§1) and is never a call — its `uses` composition
+(rule 1; rule 5's "`uses` alone is composition"), its `needs` a block it brings into the system's hardware (rule 7):
 hardware reaches only what its own requirements are bound to.
 
 An **interrupt** is named by its kind and its provider, never by the provider alone, since one provider can raise a
@@ -341,7 +342,8 @@ timer route and a source, and a block may be named `timer`:
    - Its edges are written with their reasons, as §10.1's "initialization dependencies" and `M4.1`'s Goal ask: one line
      for each ordered pair of nodes an edge joins, the node the edge orders earlier first — so a component's mutual
      edges are two lines — naming each reason `Joint::initialization` gives, a binding's fact or `named` for a `uses` or
-     `needs` — a block's or a platform's `uses` or `needs` giving none, composition never a call (§2).
+     `needs` — a block's or a platform's `uses` or `needs` giving none, hardware's names never a call (§2); an edge
+     across composition, a `uses`, is none either, while one to a block a `needs` names stands (rule 12).
    - Its steps are its strongly connected components, in a topological order taken by repeatedly choosing, among the
      components whose predecessors have all been taken, the one whose least member's text is least.
    - A step names its members by their text, in order.

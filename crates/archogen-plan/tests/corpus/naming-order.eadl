@@ -1,0 +1,15 @@
+(eadl-version eadl/1)
+; Two tasks naming two systems: the refusal names each by the namer's text, then the system's (§1; round 13, remark
+; 1).
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+(defsystem yy
+  (task y (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (platform (uses soc)))
+(defsystem zz
+  (task z (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (platform (uses soc)))
+(defsystem s
+  (task b (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 2) (uses yy))
+  (task a (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (uses zz))
+  (platform (uses soc)))

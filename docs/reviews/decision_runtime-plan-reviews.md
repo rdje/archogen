@@ -462,6 +462,11 @@ a service by, a service it names that is served only through it, an edge rule 12
 Better decision, taken: refuse an operand that means something to some rules and nothing to others, rather than give
 it a meaning rule by rule.
 
+**Corrected with the answers' code** (`ARCHOGEN-M4-1076`): R13-D1's answer called both of hardware's lists
+composition. The bounded checker's third widening found the code keeping an initialisation edge to a block a `needs`
+names, and model §8 rule 5 sides with it — "`uses` alone is composition". The record now says so: a block's or a
+platform's `needs` brings a block into the system's hardware (rule 7) without composing it, and neither list is a call.
+
 Round 12's answers: R12-D1 held but for `M4.1.2`'s wording (R13-D2); R12-D4 partly (R13-D1, R13-D3); R12-R4 partly
 (R13-R1 to R13-R3); the rest held.
 

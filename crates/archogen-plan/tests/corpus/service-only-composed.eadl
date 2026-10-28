@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+; A service named only by a platform's `uses`: refused, hardware naming what is not hardware (§1; round 13, D3).
+(defblock timer.d (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine)))
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d console.uart alarm)))
+(defservice alarm (requires (needs relative-delay)))
+(defservice log (requires (needs observable-output)))
+(defsystem sc
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses log))
+  (platform (uses soc)))

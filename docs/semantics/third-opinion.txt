@@ -1,8 +1,14 @@
 # docs/semantics/third-opinion.txt — per document, whether archogen's reader and LinkedSpec's SExprDocumentV1
 # recognizer agree on its forms (leaf M1.22). Written by scripts/third_opinion.sh --bless; checked by it.
 agree crates/archogen-plan/tests/corpus/block-alarm-unbound.eadl
+agree crates/archogen-plan/tests/corpus/block-binds-itself.eadl
+agree crates/archogen-plan/tests/corpus/block-composes-its-requester.eadl
+agree crates/archogen-plan/tests/corpus/block-deadline-over-itself.eadl
 agree crates/archogen-plan/tests/corpus/block-expiry-bound.eadl
 agree crates/archogen-plan/tests/corpus/block-expiry-unbound.eadl
+agree crates/archogen-plan/tests/corpus/block-level-requirement-only.eadl
+agree crates/archogen-plan/tests/corpus/block-needs-block.eadl
+agree crates/archogen-plan/tests/corpus/block-needs-service.eadl
 agree crates/archogen-plan/tests/corpus/block-requires-alarm.eadl
 agree crates/archogen-plan/tests/corpus/block-requires-output.eadl
 agree crates/archogen-plan/tests/corpus/block-source-unbound.eadl
@@ -40,6 +46,7 @@ agree crates/archogen-plan/tests/corpus/multiplex-r5.eadl
 agree crates/archogen-plan/tests/corpus/multiplex.eadl
 agree crates/archogen-plan/tests/corpus/named-timer-r5.eadl
 agree crates/archogen-plan/tests/corpus/named-timer.eadl
+agree crates/archogen-plan/tests/corpus/naming-order.eadl
 agree crates/archogen-plan/tests/corpus/needs-svc.eadl
 agree crates/archogen-plan/tests/corpus/no-node.eadl
 agree crates/archogen-plan/tests/corpus/no-task.eadl
@@ -69,7 +76,9 @@ agree crates/archogen-plan/tests/corpus/receivers-system-and-task.eadl
 agree crates/archogen-plan/tests/corpus/receivers-two-alarms.eadl
 agree crates/archogen-plan/tests/corpus/receivers-two-timers.eadl
 agree crates/archogen-plan/tests/corpus/region-hosted.eadl
+agree crates/archogen-plan/tests/corpus/served-block-not-hardware.eadl
 agree crates/archogen-plan/tests/corpus/service-alarm-two-tasks.eadl
+agree crates/archogen-plan/tests/corpus/service-only-composed.eadl
 agree crates/archogen-plan/tests/corpus/shapes.eadl
 agree crates/archogen-plan/tests/corpus/shared-ext.eadl
 agree crates/archogen-plan/tests/corpus/slash-alarm.eadl

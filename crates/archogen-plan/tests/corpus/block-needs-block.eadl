@@ -1,0 +1,15 @@
+(eadl-version eadl/1)
+; A block whose `needs` names another block: composition, no call, so the named block runs in no job of the first's
+; (§2; round 13, D1).
+(defblock dev.e
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defblock nic
+  (offers (observable-output true) (reachable-at-privilege machine))
+  (requires (needs dev.e)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses nic dev.e)))
+(defservice out (requires (needs observable-output)))
+(defservice evt (requires (needs interrupt-source)))
+(defsystem bk
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses out))
+  (requires (uses evt))
+  (platform (uses soc)))

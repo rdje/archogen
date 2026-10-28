@@ -1,5 +1,5 @@
 //! The falsification corpus (`docs/decisions/decision_executable-design-reviews.md` §3): every probe system of the
-//! runtime plan's review (`docs/reviews/decision_runtime-plan-reviews.md`, rounds 4 to 11), and the inputs of the
+//! runtime plan's review (`docs/reviews/decision_runtime-plan-reviews.md`, every round from the fourth), and the inputs of the
 //! record's worked texts (`worked-*.eadl`, frozen here), each with what the lowering gives each of its systems — the
 //! plan, with its two digests written `…`, or the refusal — in `tests/corpus/NAME.expected`. A description the
 //! language's check refuses is no input (the record's §1): its outcome is that check's verdict, `rejected …`. A module

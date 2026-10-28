@@ -2,8 +2,14 @@
 # <exit code of `archogen check`> <its diagnostic codes, sorted, or -> <path>
 # Regenerated deliberately: ARCHOGEN_BLESS_VERDICTS=1 cargo test -p archogen-cli --test verdicts
 0 - crates/archogen-plan/tests/corpus/block-alarm-unbound.eadl
+0 - crates/archogen-plan/tests/corpus/block-binds-itself.eadl
+0 - crates/archogen-plan/tests/corpus/block-composes-its-requester.eadl
+0 - crates/archogen-plan/tests/corpus/block-deadline-over-itself.eadl
 0 - crates/archogen-plan/tests/corpus/block-expiry-bound.eadl
 0 - crates/archogen-plan/tests/corpus/block-expiry-unbound.eadl
+0 - crates/archogen-plan/tests/corpus/block-level-requirement-only.eadl
+0 - crates/archogen-plan/tests/corpus/block-needs-block.eadl
+0 - crates/archogen-plan/tests/corpus/block-needs-service.eadl
 0 - crates/archogen-plan/tests/corpus/block-requires-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/block-requires-output.eadl
 0 - crates/archogen-plan/tests/corpus/block-source-unbound.eadl
@@ -41,6 +47,7 @@
 0 - crates/archogen-plan/tests/corpus/multiplex.eadl
 0 - crates/archogen-plan/tests/corpus/named-timer-r5.eadl
 0 - crates/archogen-plan/tests/corpus/named-timer.eadl
+0 - crates/archogen-plan/tests/corpus/naming-order.eadl
 0 - crates/archogen-plan/tests/corpus/needs-svc.eadl
 0 - crates/archogen-plan/tests/corpus/no-node.eadl
 0 - crates/archogen-plan/tests/corpus/no-task.eadl
@@ -70,7 +77,9 @@
 0 - crates/archogen-plan/tests/corpus/receivers-two-alarms.eadl
 0 - crates/archogen-plan/tests/corpus/receivers-two-timers.eadl
 0 - crates/archogen-plan/tests/corpus/region-hosted.eadl
+0 - crates/archogen-plan/tests/corpus/served-block-not-hardware.eadl
 0 - crates/archogen-plan/tests/corpus/service-alarm-two-tasks.eadl
+0 - crates/archogen-plan/tests/corpus/service-only-composed.eadl
 0 - crates/archogen-plan/tests/corpus/shapes.eadl
 0 - crates/archogen-plan/tests/corpus/shared-ext.eadl
 0 - crates/archogen-plan/tests/corpus/slash-alarm.eadl
