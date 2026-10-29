@@ -15,8 +15,8 @@
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M4` → frontier `M4.1`, at `M4.1.1`, the runtime plan's review: `/1` for the hosted playground, rounds answered
   in `docs/reviews/decision_runtime-plan-reviews.md`; `PROGRAM` → `PROGRAM.34`, the director's.
-- **Next action:** `M4.1.1`'s round 29 (brief `target/tmp/rtp/round29-brief.md`); then `M4.1.2`'s `RTP-H24`, `M2.30`,
-  `M2.31`, `M3.4`'s `RTP-H20`/`RTP-H21`, `M1.49`, `M1.50`.
+- **Next action:** round 29's fixtures (`M4.1.4`); round 30, confirming round 29's answers, then `M4.1.1` closes; then
+  `M4.1.2`'s `RTP-H24`, `M2.30`, `M2.31`, `M3.4`'s `RTP-H20`/`RTP-H21`, `M1.49`, `M1.50`.
   `M4.4.1`, the device correspondence, before `M4.1.7`. `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).
   After the first batch, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`; `M3.4.7` waits on `M3.7`.

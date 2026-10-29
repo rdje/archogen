@@ -887,6 +887,35 @@ inter-arrival time; `RTP-H24` kept a joint rule the checker re-judges, never a s
 
 Round 27's answers: R27-D1 partly (R28-D1, R28-D2); R27-R1 held, its wording loose (R28-R3); the rest held.
 
+## Round 29 — `2026-10-29`: acceptable, 7 remarks
+
+No defect of either kind: no description the code lowers otherwise than the record's rules give, no two sentences of
+the record that contradict each other. The code faithful section by section, the corpus and the bounded checker's
+35 universes as claimed, a sweep of every tracked description, 204 records the checker accepted. The answers below
+change the record's wording, so a round of their own confirms them before `M4.1.1` closes.
+
+**Fence.** No breach. The reviewer ran its own hand-off check rather than `HANDOFF-LEDGER`'s script, which reads every
+tracked `.md` file, the sealed folder's among them.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R29-R1 | remark | §3's "each one's comment naming its round" false of five round-15 fixtures | Their comments name it (`M4.1.4`) |
+| R29-R2 | remark | the three own causes reach no plan once `RTP-H24` lands, and nothing says whether their leaving is a new format | §2.2: `/1` is defined over the amended rules, so the forms stay in the grammar and their leaving is no new format, each accepted record's lowering unchanged; `M4.1.2` states the bounded checker's own causes unreachable then |
+| R29-R3 | remark | `RTP-H1`'s repairs by a stated separation omit that it be at least the task's | Said; requoted in `M4.2` |
+| R29-R4 | remark | R28-R6's "no other" too strong: six more defaults on paths the check, `rebuild` or the catalog make unreachable | Corrected here; none a transcription error |
+| R29-R5 | remark | the checker reads §3 at test time, so a record answer moving §3's lists needs its widening in the same commit | Taken: commits land only after `make focused` exits `0` on their own tree |
+| R29-R6 | remark | no module tree orders sources by qualified text against their local names | Added (`M4.1.4`) |
+| R29-R7 | remark | `RTP-H24` cites model §7 rule 4 where rule 2 is closer | Rule 2, which gives the code; requoted in `M4.1.2` |
+
+Better decisions. Counting a multiplexed node's users by access, not by reaching through a binding, as OSEK's §8.6
+counts "tasks and interrupt routines that access a resource": declined for `/1`, the over-approximation sound (R18-R6),
+kept for `M4.1.7`, `RTP-H5`'s calls into nodes its input. `RTP-H24`'s codes against rule 9's conflict: kept
+`unsupported-profile`, since `ROADMAP.md` §5.5's `infeasible-configuration` is supported constraints with no
+satisfying assignment, and a release on every arrival of a faster source is no supported constraint; a level declared
+absent is one, which rule 9 judges. R29-R3: taken.
+
+Round 28's answers: all held; R28-R6's "no other" corrected (R29-R4).
+
 ## The corpus, round by round
 
 Moved whole from the record's §3 on `2026-10-29` (round 28's answer), under the decisions ceiling: the probe systems
@@ -977,3 +1006,7 @@ transcript:
   at the ceiling of its release (round 1's, condition 6's "rounds up"); each source's controller line and identifier,
   for the priority writes. And with them the memory map's regions, moved from `/1` in round 5, each with whether it is
   executable or reserved.
+- **A multiplexed node's users by access** (round 29's better decision): OSEK §8.6 counts "tasks and interrupt routines
+  that access a resource"; `/1` counts the tasks that reach the node, a task bound to a source device's release among
+  them (`own-source-takes-channel`), a sound over-approximation (R18-R6). A job's declared calls into nodes (`RTP-H5`)
+  are the input that would count by access.
