@@ -117,6 +117,9 @@ fn a_record_that_does_not_rebuild_is_a_tool_failure() {
 
 #[test]
 fn the_joint_rules_refusing_the_accepted_record_name_their_findings() {
+    // Round 23 (R23-R4): the configuration checker refuses this record too (`plan-joint`, rule 3), so the two roles agree
+    // and no record they both accept reaches this branch; lowering one the checker refused, unjudged, is the one way to
+    // hold §1's message, which names the checker's acceptance as the production half's intake will have it.
     let description =
         std::fs::read_to_string(root().join("crates/archogen-plan/tests/corpus/disagree.eadl"))
             .expect("the fixture");

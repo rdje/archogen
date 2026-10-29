@@ -78,6 +78,10 @@ several things orders them as it states, each by its text compared byte by byte 
   (`M3.5.1`'s contract);
 - its profile is not `rt-static-up-v1`, the one whose rules `/1` lowers: `unsupported-profile`, naming the profile.
   It comes before the rules run, since they run at its caller level;
+- the system declares two tasks of one name: every rule keyed by a requester's name, the joint rules and §2's reaching
+  among them, would read the two as one, against the reference's §7 rule 6, a name declared once, "never merged and
+  never resolved by order": `tool-failure`, naming the system and each such name by its text, the check having accepted
+  it; `M1.50` makes the language refuse it, `invalid-description` (`RTP-H23`);
 - the record does not rebuild over the program and the catalog (`eadl_resolve::plan::rebuild`): `tool-failure`,
   naming the rebuild's verdict, the checker having accepted bindings the generator cannot rebuild;
 - the generator's own joint rules, run over the record the checker accepted, find a conflict, an unknown or a map
@@ -188,7 +192,7 @@ timer route and a source, and a block may be named `timer`:
    - its **runtime index**, `|hp(i)|`, the number of tasks of smaller rank, and its **rank**. The emitter still
      builds the scheduler with `rt_core::Scheduler::from_eadl_ranks`, "the only supported way to lower a description
      onto a scheduler", and a test holds the plan's index equal to the scheduler's slot (`RTP-H1`);
-   - its stable logical identity, `(task SYSTEM TASK)`;
+   - its stable logical identity, `(task SYSTEM TASK)`, `TASK` unique in its system (§1);
    - its period, or its minimum separation;
    - its relative deadline, measured from its release. A task whose description writes `(deadline-from release)` has
      that written; one that writes none has the reference owed to the description, since §7.3 makes it part of the
@@ -835,8 +839,9 @@ block of a second instance, which round 20 found outside the system's hardware a
 naming a composite whose part takes a channel; a service naming a block on no platform, refused; a module tree whose
 root's handler names the system's own block across modules; and a sporadic task calling its source's device through a
 policy's name. Round 21 adds one service two systems name, inside one's hardware and outside the other's; and a source
-declaring its separation absent that releases no task. A description the language's check refuses is no input (§1), and
-its probe is held at that check's verdict.
+declaring its separation absent that releases no task. Round 23 adds two tasks of one name, refused; a service naming
+itself; and a module tree with two instances on one route, a source and a service two jobs share. A description the
+language's check refuses is no input (§1), and its probe is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with
@@ -954,6 +959,7 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 | `RTP-H20` | `M3.4` | The search reads a system's side whole, its own level's constraints with its tasks', as model §7 rule 4 and §8 rule 1 read it, and refuses `invalid-description` constraints on one fact that no value satisfies together across them, so that the configuration checker refuses no record the search writes for that reason and the runtime plan's bounded checker's class of such records empties. |
 | `RTP-H21` | `M3.4` | The search refuses a module tree's declaration whose name is a vocabulary fact, as it refuses a plain description's and as the configuration checker does (`SR-H4`), so that the configuration checker refuses no record the search writes for such a tree. |
 | `RTP-H22` | `M1.49` | Model §8 rule 7 decides whether a service's or a policy's `uses` or `needs` naming a block or a platform no `platform` clause, the system's own names or its tasks' bring in is a path into the system's hardware or, as rule 7 treats a binding to hardware outside a system, a conflict of each system that serves it, `infeasible-configuration` as that binding is, its repair to compose the hardware into the system's platform or to name hardware the platform composes, naming the namer, the hardware and the system; until then the runtime plan's lowering refuses a system serving a block or a platform outside its hardware `unsupported-profile`. |
+| `RTP-H23` | `M1.50` | The description check refuses `invalid-description` two tasks of one system carrying one name, naming both, as the reference's §7 rule 6 refuses two declarations of one name. |
 
 `M4.12` is filed with this record, for the application inputs, and `M4.4.1` for the correspondence.
 

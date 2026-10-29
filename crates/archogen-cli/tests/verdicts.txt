@@ -35,6 +35,7 @@
 0 - crates/archogen-plan/tests/corpus/dod-task.eadl
 0 - crates/archogen-plan/tests/corpus/dod-unbound.eadl
 12 unsupported-profile crates/archogen-plan/tests/corpus/dup-prio.eadl
+0 - crates/archogen-plan/tests/corpus/dup-task-name.eadl
 10 read-number-overflow crates/archogen-plan/tests/corpus/duration-past-arithmetic-large.eadl
 0 - crates/archogen-plan/tests/corpus/duration-past-arithmetic.eadl
 0 - crates/archogen-plan/tests/corpus/equal-separation.eadl
@@ -50,6 +51,9 @@
 0 - crates/archogen-plan/tests/corpus/jitter-over-period.eadl
 0 - crates/archogen-plan/tests/corpus/kind-blind.eadl
 0 - crates/archogen-plan/tests/corpus/level-on-route-bound-otherwise.eadl
+0 - crates/archogen-plan/tests/corpus/modules-instances/app.main.eadl
+0 - crates/archogen-plan/tests/corpus/modules-instances/hw.dev.eadl
+0 - crates/archogen-plan/tests/corpus/modules-instances/os.svc.eadl
 0 - crates/archogen-plan/tests/corpus/modules-named/app.main.eadl
 0 - crates/archogen-plan/tests/corpus/modules-named/hw.dev.eadl
 0 - crates/archogen-plan/tests/corpus/modules-named/os.log.eadl
@@ -110,6 +114,7 @@
 0 - crates/archogen-plan/tests/corpus/served-block-renamed.eadl
 0 - crates/archogen-plan/tests/corpus/service-alarm-two-tasks.eadl
 0 - crates/archogen-plan/tests/corpus/service-calls-unbound-block.eadl
+0 - crates/archogen-plan/tests/corpus/service-names-itself.eadl
 0 - crates/archogen-plan/tests/corpus/service-on-route-bound-otherwise.eadl
 0 - crates/archogen-plan/tests/corpus/service-only-composed.eadl
 0 - crates/archogen-plan/tests/corpus/service-uses-block-only.eadl

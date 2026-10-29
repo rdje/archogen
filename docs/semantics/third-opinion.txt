@@ -34,6 +34,7 @@ agree crates/archogen-plan/tests/corpus/dod-bare.eadl
 agree crates/archogen-plan/tests/corpus/dod-task.eadl
 agree crates/archogen-plan/tests/corpus/dod-unbound.eadl
 agree crates/archogen-plan/tests/corpus/dup-prio.eadl
+agree crates/archogen-plan/tests/corpus/dup-task-name.eadl
 archogen-stricter crates/archogen-plan/tests/corpus/duration-past-arithmetic-large.eadl
 agree crates/archogen-plan/tests/corpus/duration-past-arithmetic.eadl
 agree crates/archogen-plan/tests/corpus/equal-separation.eadl
@@ -49,6 +50,9 @@ agree crates/archogen-plan/tests/corpus/isr-and-task.eadl
 agree crates/archogen-plan/tests/corpus/jitter-over-period.eadl
 agree crates/archogen-plan/tests/corpus/kind-blind.eadl
 agree crates/archogen-plan/tests/corpus/level-on-route-bound-otherwise.eadl
+agree crates/archogen-plan/tests/corpus/modules-instances/app.main.eadl
+agree crates/archogen-plan/tests/corpus/modules-instances/hw.dev.eadl
+agree crates/archogen-plan/tests/corpus/modules-instances/os.svc.eadl
 agree crates/archogen-plan/tests/corpus/modules-named/app.main.eadl
 agree crates/archogen-plan/tests/corpus/modules-named/hw.dev.eadl
 agree crates/archogen-plan/tests/corpus/modules-named/os.log.eadl
@@ -109,6 +113,7 @@ agree crates/archogen-plan/tests/corpus/served-block-not-hardware.eadl
 agree crates/archogen-plan/tests/corpus/served-block-renamed.eadl
 agree crates/archogen-plan/tests/corpus/service-alarm-two-tasks.eadl
 agree crates/archogen-plan/tests/corpus/service-calls-unbound-block.eadl
+agree crates/archogen-plan/tests/corpus/service-names-itself.eadl
 agree crates/archogen-plan/tests/corpus/service-on-route-bound-otherwise.eadl
 agree crates/archogen-plan/tests/corpus/service-only-composed.eadl
 agree crates/archogen-plan/tests/corpus/service-uses-block-only.eadl

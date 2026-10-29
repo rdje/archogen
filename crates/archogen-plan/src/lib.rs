@@ -14,8 +14,9 @@
 //! (`eadl_resolve::plan::read`, `rebuild`; leaf `M4.1.3`), never the search's memory. It does no I/O.
 //!
 //! Not built here yet, `M4.1.4`'s production half: the result record's intake and its refusals (§1's checks of
-//! `archogen-result/1`), the provenance, the plan's own reader and its round trip, and the goldens with their fixed
-//! result records.
+//! `archogen-result/1`), the provenance, the plan's own reader and its round trip, the goldens with their fixed result
+//! records, and an entry that takes or checks the vocabulary and the adapter catalog as this engine's itself (§1's
+//! fourth input).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -289,6 +290,27 @@ pub fn lower(
             format!(
                 "`/1` lowers `{}`'s rules alone, and the record was resolved under `{}`",
                 RT_STATIC_UP_V1.id, record.profile
+            ),
+        ));
+    }
+    // §1: two tasks of one name, which every rule keyed by a requester's name reads as one, refused before the rebuild,
+    // each such name by its text (R23-D1).
+    let mut seen: BTreeSet<&str> = BTreeSet::new();
+    let mut twice: BTreeSet<&str> = BTreeSet::new();
+    for task in decl.items().iter().filter(|i| i.head() == Some("task")) {
+        if let Some(name) = task.items().get(1).and_then(Form::as_symbol) {
+            if !seen.insert(name) {
+                twice.insert(name);
+            }
+        }
+    }
+    if !twice.is_empty() {
+        let named: Vec<String> = twice.iter().map(|n| format!("`{n}`")).collect();
+        return Err(refuse(
+            "tool-failure",
+            format!(
+                "the system `{system}` declares two tasks named {}: a name is declared once, never merged and never resolved by order, and the description check accepted it, which `M1.50` makes it refuse",
+                named.join(", ")
             ),
         ));
     }
@@ -825,7 +847,7 @@ pub fn lower(
         return Err(refuse(
             "unsupported-profile",
             format!(
-                "{}: a block or a platform outside the system's hardware, which model §8 rule 7 makes no hardware, and `/1` places no code for a device the system does not have; `M1.49` decides whether such a name is a path into the hardware",
+                "{}: a block or a platform outside the system's hardware, which model §8 rule 7 makes no hardware, and `/1` places no code for a device the system does not have; `M1.49` decides whether such a name is a path into the hardware or a conflict of each system serving it",
                 named.join("; ")
             ),
         ));

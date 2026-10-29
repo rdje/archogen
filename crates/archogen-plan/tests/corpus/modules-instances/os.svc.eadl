@@ -1,0 +1,8 @@
+(eadl-version eadl/1)
+(defmodule os.svc
+  (version 1 0)
+  (export evt dl time)
+  (defservice evt (requires (needs interrupt-source)))
+  (defservice time
+    (requires (unambiguous-horizon (at-least 60 s)) (needs counter-width tick-rate observation-coherent)))
+  (defservice dl (requires (absolute-deadline (delivery-bound (at-most 50 us))))))

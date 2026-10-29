@@ -751,6 +751,15 @@ bounded totals reproduced, a sweep of every tracked description â€” 129 plans â€
 Round 22's answers: R22-D1 held but for the message (R23-R3); R22-R1 held, unbuilt as declared (R23-R5); R22-R5 still
 true (R23-R1); the rest held.
 
+**With the answers' code** (`ARCHOGEN-M4-1096`): the checker's eleventh widening found no disagreement with the
+lowering, and one finding beyond it: the configuration checker, too, reads a duplicated task name as the first task
+declared with it, refusing a record that binds a later one (`plan-binding`, "requires nothing of it") and accepting
+one that binds the first. The checker holds those 16 systems by count; `M1.50`'s language refusal leaves them no
+input, so its issue names the case; round 23's probe of a later task alone binding is no fixture, since
+`crates/eadl-resolve/tests/plan.rs` holds every tracked description's record to the checker's acceptance. Its builder
+ran two searches over `lib.rs` whose output it discarded whole (`head
+-0`, `grep -v`): no line of the lowering's code was read.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
