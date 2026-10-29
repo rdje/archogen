@@ -377,9 +377,8 @@ timer route and a source, and a block may be named `timer`:
        alarm it programs, is its own code;
      - for a timer route at `X`, an instance bound to `X` by a binding that takes a channel, which takes its cost there;
      - a node the route names through such an instance, when the instance's kind runs its requester's code in that
-       interrupt. The adapters record states no kind's either way, so the plan reads `expiry`, a delivery to its
-       requester, as running it, and `wake`, an epoch advance no requester observes but by reading, as running the
-       instance's alone (`M4.1.2` has the record state it);
+       interrupt. The adapters record's §9 states each kind's: `expiry`, a delivery to its requester, runs it, and
+       `wake`, an epoch advance no requester observes but by reading, runs the instance's alone;
      - every node one of these reaches.
 
      A task or the system's own level that a route names adds no code: the interrupt runs `X`'s code and what these

@@ -70,7 +70,7 @@ pub struct Owed {
 pub enum Owes {
     /// A property its realization establishes; the property resting on it is `not-established` until then (`M4.8`).
     Obligation,
-    /// An interrupt its realization takes: a cost the scheduling analysis charges as a source (`M4.1`).
+    /// An interrupt its realization takes: a cost on the route of the provider it programs (`M4.1`).
     Interrupt,
 }
 

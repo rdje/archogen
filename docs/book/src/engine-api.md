@@ -72,7 +72,8 @@ engine, and the plan holds only once that code does what the adapter's kind prom
 owes (API `1.7`, leaf `M3.2.6.1`, `docs/specs/adapters/decision_engine-adapters.md` §9). Each entry names the instance,
 as the plan writes it, then what it owes, its name, and one line saying what it means:
 - an `obligation`, a property the realization must establish, on which the build's report rests (`M4.8`);
-- an `interrupt`, a cost the scheduling analysis charges as a source (`M4.1`).
+- an `interrupt`, a cost on the route of the provider the instance programs, which the runtime plan carries
+  (`M4.1`).
 
 Entries follow the plan's order of instances, each kind's obligations before its costs, in the words its kind writes.
 A plan binding no adapter owes nothing, and its list is empty. A search that finds

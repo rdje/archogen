@@ -312,13 +312,15 @@ and 14, an adapter's instance among them (rule 15) — as its check (5), written
    the description's code then is, is `SR-H18`'s, `M3.4`'s to decide. An adapter or a catalog record is composed by no
    platform, and takes the system of the requesters bound to it (`M3.2`, `M3.7`).
 8. **Routes** (`M3.3.3`). Under one active core, an assignment reports a **route obligation** for each provider its
-   system's requesters rely on for an interrupt: a *source*, bound through `interrupt-source` at `true`, with what it
-   states of its own `min-arrival-separation`; and a *timer*, bound through a consumed fact at `true`. The description's
-   half of a route is rule 7; the controller between source and core, its line and context, and the latency are the
-   catalog's, and the plan enables each such interrupt and no other, as the analysis requires
-   (`docs/specs/analysis/decision_runtime-analysis-variant.md`, *enabled sources*). A route is an obligation, never a finding:
-   a second timer, which the analysis does not model, is the analysis's to refuse. Given the system's level (rule 9), a
-   route carries it: the level the interrupt is delivered at.
+   system's requesters rely on for an interrupt, one for each provider and kind: a *source*, bound through
+   `interrupt-source` at `true`, with what it states of its own `min-arrival-separation`; and a *timer*, bound through a
+   consumed fact at `true`. The description's half of a route is rule 7; the controller between source and core, its
+   line and context, and the latency are the catalog's, and the plan enables the release timer and every route's
+   interrupt, timer routes included, and on a target the platform's non-maskable interrupts and traps, and no other
+   (`docs/decisions/decision_runtime-plan.md` §2.5; `M4.1.2.2`), as the analysis requires
+   (`docs/specs/analysis/decision_runtime-analysis-variant.md`, *enabled sources*). A route is an obligation, never a
+   finding: a second timer, which the analysis does not model, is the analysis's to refuse. Given the system's level
+   (rule 9), a route carries it: the level the interrupt is delivered at.
 9. **Privilege** (`M3.3.4.1`; `SR-H11`, `SR-H12`). Given the level a plan binds one system's callers to — a level of
    `reachable-at-privilege`'s domain, the profile's — `rt-static-up-v1`'s Privilege row states `machine`
    (`crates/eadl-model/src/profile.rs`), which `M3.4` gives every system it resolves; a level outside the domain is the engine's
