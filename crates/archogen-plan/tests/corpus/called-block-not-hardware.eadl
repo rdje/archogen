@@ -1,0 +1,9 @@
+(eadl-version eadl/1)
+; A service naming a block on no platform, outside the system's hardware: refused (§1; round 20, D3).
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock blk (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+(defservice drv (requires (needs observable-output) (uses blk)))
+(defsystem sb
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses drv))
+  (platform (uses soc)))

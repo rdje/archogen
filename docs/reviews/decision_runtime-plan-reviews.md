@@ -676,6 +676,12 @@ task trees and so would cross the sealed set's fence.
 
 Round 19's answers: R19-D1 partly (R20-D1); R19-R5 partly (R20-R1, R20-D3); the rest held.
 
+**With the answers' code** (`ARCHOGEN-M4-1090`): the checker's tenth widening found no disagreement and one ambiguity,
+the order of §1's task bullet — by its conditions, or by each clause's — which §1 now states as the code and the
+reading take it, by its conditions. Its builder ran some forty shell calls without the repository's scratch line,
+heredocs that edited its test and reads of its own output among them; they may have written temporary files off the
+repository's volume (`docs/decisions/decision_scratch-on-the-repository-volume.md`). No sealed text was involved.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a

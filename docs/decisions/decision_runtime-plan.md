@@ -55,9 +55,10 @@ derive and the build's to verify (`M4.10`, `RTP-H13`), as `M3.5`'s design says o
 
 **Refusals, before anything is lowered**, each with the status vocabulary's code and a repair. They are taken in the
 order written, this list and then the next, then §2.4's while lowering, and the first that applies is the one given; a
-bullet over tasks is taken task by task in runtime order, each task's clauses in the order the bullet writes them; and a
-refusal naming several things orders them as it states, each by its text compared byte by byte (§2), never by its
-message's words:
+bullet over tasks is taken task by task in runtime order, each task's conditions in the order the bullet writes them — a
+clause that is not a time, the period's, the minimum separation's, the deadline's and then the jitter's, before a
+release of zero, before a second release model (round 20's checker read it so, and the code does); and a refusal naming
+several things orders them as it states, each by its text compared byte by byte (§2), never by its message's words:
 - the assignment record does not read, or names another format: `tool-failure`;
 - its program digest is not the program's, or the system it names is not one the program declares: `stale-input`,
   "resolve again";
@@ -123,6 +124,12 @@ leaf that adds it:
   would receive: first the alarms it programs, each naming the provider, then its expiries, each naming the instance
   that delivers it, each kind by those texts. So no order among them decides the message, though one receiver receives
   at most one today, the search binding a requester's `counter` facts to one provider whole;
+- a block or a platform the system serves outside its hardware — one a served service or policy names that no `platform`
+  clause, the system's own names or its tasks' bring in, so that model §8 rule 7 makes it no hardware: "a block that
+  only a service names is not hardware" — whose code the node rule would place and whose device the simulator would
+  model, though the system has none: each named, by the namer's text and then the block's or the platform's. Round 13's
+  decision holds: an operand that means something to some rules and nothing to others is refused. `M1.49` decides
+  whether rule 7 counts such a name as a path into the hardware or the language refuses it (`RTP-H22`);
 - a node whose record's supported contexts do not include a context its line holds (§2.6), once a record can be a
   provider (`M3.7`, `RTP-H10`);
 - an initialisation component whose members' records state that one's initialisation calls another's code (§2.7),
@@ -147,18 +154,19 @@ below is a node of the joint rules' initialization graph (§2.7): a provider an 
 system serves, or of a provider such a binding names, at any depth (rule 12's "closed over bindings"; in a record that
 rebuilds, every binding) — names (a block, a platform or an adapter's instance), a block or a platform the system serves
 that is bound for requirements of its own — a requester like any other (model §8 rule 1, `M4.1.14`), whose code an
-interrupt can run (§2.6) — a block or a platform the system serves that a served task, service or policy names by `uses`
-or `needs`, whose code that name calls (`M4.1.18`), a service, or a policy: the three kinds of node
-`crates/eadl-resolve/src/joint.rs` gives, `Provider` (hardware and instances), `Service` and `Other`, the last a
-policy's, a description naming a system being refused (§1). Its tasks and its own level, requesters too, are never
-nodes; a block or a platform the system serves that is bound for nothing and that nothing calls is a node only as a
-provider an active binding names, since as a requester it runs no code the plan places; the plan derives the context of
-each task and each node (§2.6), the requesters whose code it places, as `M3.3.8` asks. A node's **text** is its name as
-the plan writes it, an instance's being its `(adapter …)` text, and texts are compared byte by byte. A requester
-**reaches** what it names by `uses` or `needs`, and what it is bound to as its provider, at any depth, as the joint
-rules take a requester's names (model §8 rule 7) — but for a block's or a platform's `uses` or `needs`, which names only
-hardware (§1) and is never a call — its `uses` composition (rule 1; rule 5's "`uses` alone is composition"), its `needs`
-a block it brings into the system's hardware (rule 7): hardware reaches only what its own requirements are bound to.
+interrupt can run (§2.6) — a block or a platform of the system's hardware that a served task, service or policy names by
+`uses` or `needs`, whose code that name calls (`M4.1.18`) — one the system serves outside its hardware refused (§1) —, a
+service, or a policy: the three kinds of node `crates/eadl-resolve/src/joint.rs` gives, `Provider` (hardware and
+instances), `Service` and `Other`, the last a policy's, a description naming a system being refused (§1). Its tasks and
+its own level, requesters too, are never nodes; a block or a platform the system serves that is bound for nothing and
+that nothing calls is a node only as a provider an active binding names, since as a requester it runs no code the plan
+places; the plan derives the context of each task and each node (§2.6), the requesters whose code it places, as `M3.3.8`
+asks. A node's **text** is its name as the plan writes it, an instance's being its `(adapter …)` text, and texts are
+compared byte by byte. A requester **reaches** what it names by `uses` or `needs`, and what it is bound to as its
+provider, at any depth, as the joint rules take a requester's names (model §8 rule 7) — but for a block's or a
+platform's `uses` or `needs`, which names only hardware (§1) and is never a call — its `uses` composition (rule 1; rule
+5's "`uses` alone is composition"), its `needs` a block it brings into the system's hardware (rule 7): hardware reaches
+only what its own requirements are bound to.
 
 An **interrupt** is named by its kind and its provider, never by the provider alone, since one provider can raise a
 timer route and a source, and a block may be named `timer`:
@@ -815,8 +823,12 @@ under two names; and a sporadic task bound to its own source beside another sour
 and a policy naming a block, under two names; a served block named by a renamed service; and a node shared between a job
 and a source's service. Round 18 adds a block a service, a source's handler and a task name while nothing binds it.
 Round 19 adds such a block bound by another system's requester or once by an unrelated one; a named block taking a
-timer's channel; named hardware running in a timer route's interrupt through an expiry; and a module tree with named
-hardware. A description the language's check refuses is no input (§1), and its probe is held at that check's verdict.
+timer's channel; named hardware running in a timer route's interrupt through an expiry; and a module tree whose handler
+names a block of a second instance, which round 20 found outside the system's hardware and refused. Round 20 adds two
+tasks naming a composite whose part takes a channel; a service naming a block on no platform, refused; a module tree
+whose root's handler names the system's own block across modules; and a sporadic task calling its source's device
+through a policy's name. A description the language's check refuses is no input (§1), and its probe is held at that
+check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with
@@ -931,6 +943,7 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 | `RTP-H19` | `M1.44` | A description states a sporadic task's release source and whether every arrival releases the task, and the runtime plan reads that statement in place of its inference from the routes the task reaches. |
 | `RTP-H20` | `M3.4` | The search reads a system's side whole, its own level's constraints with its tasks', as model §7 rule 4 and §8 rule 1 read it, and refuses `invalid-description` constraints on one fact that no value satisfies together across them, so that the configuration checker refuses no record the search writes for that reason and the runtime plan's bounded checker's class of such records empties. |
 | `RTP-H21` | `M3.4` | The search refuses a module tree's declaration whose name is a vocabulary fact, as it refuses a plain description's and as the configuration checker does (`SR-H4`), so that the configuration checker refuses no record the search writes for such a tree. |
+| `RTP-H22` | `M1.49` | Model §8 rule 7 decides whether a service's or a policy's `uses` or `needs` naming a block or a platform no `platform` clause, the system's own names or its tasks' bring in is a path into the system's hardware, or the language refuses such a name `invalid-description`, naming both; until then the runtime plan's lowering refuses a system serving a block or a platform outside its hardware `unsupported-profile`. |
 
 `M4.12` is filed with this record, for the application inputs, and `M4.4.1` for the correspondence.
 

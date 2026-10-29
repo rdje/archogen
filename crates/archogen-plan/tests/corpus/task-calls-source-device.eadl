@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+; A sporadic task calling its source's device through a policy's name, not the route's handler (§2.2; round 20,
+; Q2).
+(defblock dev.e (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.e)))
+(defservice evt (requires (needs interrupt-source)))
+(defpolicy pol (requires (uses dev.e)))
+(defsystem sp
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses pol))
+  (requires (uses evt))
+  (platform (uses soc)))

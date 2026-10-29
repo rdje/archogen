@@ -794,6 +794,41 @@ pub fn lower(
         ));
     }
 
+    // §1: a block or a platform the system serves outside its hardware (model §8 rule 7), each by the namer's text and
+    // then the hardware's, byte by byte (R20-D3).
+    let mut outside: Vec<(&str, &str)> = rebuilt
+        .requesters
+        .iter()
+        .filter(|r| {
+            rebuilt.system.serves(&r.name) && !declared(&r.name).is_some_and(is_hardware_decl)
+        })
+        .flat_map(|r| {
+            r.uses
+                .iter()
+                .chain(&r.needs)
+                .filter(|n| {
+                    declared(n).is_some_and(is_hardware_decl)
+                        && !rebuilt.system.hardware.contains(n.as_str())
+                })
+                .map(move |n| (r.name.as_str(), n.as_str()))
+        })
+        .collect();
+    outside.sort();
+    outside.dedup();
+    if !outside.is_empty() {
+        let named: Vec<String> = outside
+            .iter()
+            .map(|(namer, n)| format!("`{namer}` names `{n}`"))
+            .collect();
+        return Err(refuse(
+            "unsupported-profile",
+            format!(
+                "{}: a block or a platform outside the system's hardware, which model §8 rule 7 makes no hardware, and `/1` places no code for a device the system does not have; `M1.49` decides whether such a name is a path into the hardware",
+                named.join("; ")
+            ),
+        ));
+    }
+
     // §2.2's lines, and what each task owes.
     let mut owed: Vec<String> = Vec::new();
     let owe = |owed: &mut Vec<String>, subject: &str, fact: &str, owner: &str| {

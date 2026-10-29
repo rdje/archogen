@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; Round 20 (R20-R1): a root module's handler names, by its qualified name, a block of the module the root imports for
+; its platform, nothing binding the block: the system's own hardware across modules, a node before its namer (§2,
+; §2.7; `M4.1.18`).
+(defmodule app.main
+  (version 1 0)
+  (import hw.dev (as hw) (version (at-least 1 0)))
+  (export app)
+  (defservice evt
+    (requires (needs interrupt-source) (uses hw.serial)))
+  (defsystem app
+    (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt))
+    (platform (uses hw.soc))))

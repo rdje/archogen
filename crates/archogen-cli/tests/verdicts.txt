@@ -20,6 +20,8 @@
 0 - crates/archogen-plan/tests/corpus/both-release.eadl
 0 - crates/archogen-plan/tests/corpus/both-routes.eadl
 0 - crates/archogen-plan/tests/corpus/bound-past-arithmetic.eadl
+0 - crates/archogen-plan/tests/corpus/called-block-not-hardware.eadl
+0 - crates/archogen-plan/tests/corpus/composed-channel-taker.eadl
 0 - crates/archogen-plan/tests/corpus/composed-renamed.eadl
 0 - crates/archogen-plan/tests/corpus/composed-soc.eadl
 0 - crates/archogen-plan/tests/corpus/cycle-own-instance-route.eadl
@@ -50,6 +52,8 @@
 0 - crates/archogen-plan/tests/corpus/modules-named/app.main.eadl
 0 - crates/archogen-plan/tests/corpus/modules-named/hw.dev.eadl
 0 - crates/archogen-plan/tests/corpus/modules-named/os.log.eadl
+0 - crates/archogen-plan/tests/corpus/modules-root-names/app.main.eadl
+0 - crates/archogen-plan/tests/corpus/modules-root-names/hw.dev.eadl
 0 - crates/archogen-plan/tests/corpus/modules/app.main.eadl
 0 - crates/archogen-plan/tests/corpus/modules/hw.dev.eadl
 0 - crates/archogen-plan/tests/corpus/modules/os.svc.eadl
@@ -135,6 +139,7 @@
 0 - crates/archogen-plan/tests/corpus/system-uses-system-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/system-uses-system.eadl
 0 - crates/archogen-plan/tests/corpus/task-alarm.eadl
+0 - crates/archogen-plan/tests/corpus/task-calls-source-device.eadl
 0 - crates/archogen-plan/tests/corpus/task-direct.eadl
 0 - crates/archogen-plan/tests/corpus/task-extender.eadl
 0 - crates/archogen-plan/tests/corpus/task-names-unbound-block.eadl

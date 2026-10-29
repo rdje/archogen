@@ -1,6 +1,6 @@
 (eadl-version eadl/1)
 ; Round 19: a module tree whose handler, in another module, names a block of a third by its qualified name, nothing
-; binding the block (`M4.1.18` across modules).
+; binding the block — a second instance's block, outside the system's hardware, so refused (§1; round 20, D3, R1).
 (defmodule app.main
   (version 1 0)
   (import hw.dev (as hw) (version (at-least 1 0)))

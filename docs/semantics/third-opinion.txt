@@ -19,6 +19,8 @@ agree crates/archogen-plan/tests/corpus/both-kinds.eadl
 agree crates/archogen-plan/tests/corpus/both-release.eadl
 agree crates/archogen-plan/tests/corpus/both-routes.eadl
 agree crates/archogen-plan/tests/corpus/bound-past-arithmetic.eadl
+agree crates/archogen-plan/tests/corpus/called-block-not-hardware.eadl
+agree crates/archogen-plan/tests/corpus/composed-channel-taker.eadl
 agree crates/archogen-plan/tests/corpus/composed-renamed.eadl
 agree crates/archogen-plan/tests/corpus/composed-soc.eadl
 agree crates/archogen-plan/tests/corpus/cycle-own-instance-route.eadl
@@ -49,6 +51,8 @@ agree crates/archogen-plan/tests/corpus/level-on-route-bound-otherwise.eadl
 agree crates/archogen-plan/tests/corpus/modules-named/app.main.eadl
 agree crates/archogen-plan/tests/corpus/modules-named/hw.dev.eadl
 agree crates/archogen-plan/tests/corpus/modules-named/os.log.eadl
+agree crates/archogen-plan/tests/corpus/modules-root-names/app.main.eadl
+agree crates/archogen-plan/tests/corpus/modules-root-names/hw.dev.eadl
 agree crates/archogen-plan/tests/corpus/modules/app.main.eadl
 agree crates/archogen-plan/tests/corpus/modules/hw.dev.eadl
 agree crates/archogen-plan/tests/corpus/modules/os.svc.eadl
@@ -134,6 +138,7 @@ agree crates/archogen-plan/tests/corpus/sys-source.eadl
 agree crates/archogen-plan/tests/corpus/system-uses-system-alarm.eadl
 agree crates/archogen-plan/tests/corpus/system-uses-system.eadl
 agree crates/archogen-plan/tests/corpus/task-alarm.eadl
+agree crates/archogen-plan/tests/corpus/task-calls-source-device.eadl
 agree crates/archogen-plan/tests/corpus/task-direct.eadl
 agree crates/archogen-plan/tests/corpus/task-extender.eadl
 agree crates/archogen-plan/tests/corpus/task-names-unbound-block.eadl

@@ -1,0 +1,15 @@
+(eadl-version eadl/1)
+; Two tasks naming a block that composes one taking a timer's channel: reaching stops at composition, so no
+; multiplex (§2, §2.9; round 20, D2).
+(defblock timer.d (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine)))
+(defblock dma.c
+  (offers (observable-output true) (reachable-at-privilege machine))
+  (requires (needs relative-delay)))
+(defblock dma.b
+  (offers (observable-output true) (reachable-at-privilege machine))
+  (requires (uses dma.c)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d dma.b)))
+(defsystem cm
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses dma.b))
+  (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses dma.b))
+  (platform (uses soc)))

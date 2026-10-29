@@ -13,7 +13,7 @@
 //! (R13-R1 to R13-R3), blocks and platforms whose `uses` or `needs` name a service, a policy, a system or another
 //! block, alone, several at once or beside each other refusal of §1 that can co-apply, on the lowered system's hardware
 //! or on another's; a block a service names, served though not the system's hardware, bound for requirements of its
-//! own; and requesters naming several systems, held to the naming-system refusal's order; and, after round 14 (R14-D1,
+//! own or not, refused since round 20; and requesters naming several systems, held to the naming-system refusal's order; and, after round 14 (R14-D1,
 //! R14-R1, R14-R6), names one of which prefixes another — `m` and `m.s`, `y` and `y.b`, `d` and `d.x` — and names
 //! continuing with `!`, a byte below `)`, so that each order §1 holds by text is held where a message's words would
 //! give another: the naming-system refusal's namers and systems, tasks among them; the hardware-naming refusal's
@@ -54,13 +54,24 @@
 //! and, after round 19 (R19-D2), no universe of its own but every task of every universe owing the application its
 //! `os-calls-category` beside its `os-calls`, each of the application's bounds and counts owed with its evidence
 //! category a fact of its own, the reading's facts of a task, a source and a timer route held to §2.10's table and §3's
-//! `FACT` list as the record writes them.
+//! `FACT` list as the record writes them; and, after round 20 (R20-D3, R20-R7), a block or a platform the system serves
+//! outside its hardware — one a served service or policy names that model §8 rule 7 makes no hardware — refused in its
+//! place after the receivers of interrupt code, each named by its namer's text and then its own, over names one of
+//! which prefixes another, beside a task's, the system's own and a platform's `needs` making such a block hardware, a
+//! namer the system does not serve, every refusal before it that can co-apply, and a system that declares no task;
+//! §1's bullet over tasks whole — a period, a minimum separation, a deadline and a jitter that is not a time, in every
+//! unit the language accepts that is no time, a period or a minimum separation of zero, a periodic task bound to its
+//! source, and two at once — taken task by task in runtime order, each task's clauses in the order the bullet writes
+//! them, and a task stating no release or no deadline left to the language; ranks that start past 1 and skip, spelled
+//! in every way the language reads an integer; and two timer routes, an expiry's and a wake's costs on one route, a
+//! source and a timer route at one provider, and a component holding an instance, each a class of its own.
 //!
 //! Each system is run as the engine runs it, as `common::lowered` does: the language's check, the search, the `/2`
 //! writer, and the lowering. **Every `archogen-assignment/2` record the search writes is judged by the configuration
 //! checker**, `archogen_plan_check::check::plan_file`, as `crates/eadl-resolve/tests/plan.rs` judges one, and a record
-//! it refuses is a finding naming that record — but for one class the reading derives and holds by count, a system's
-//! side the search reads apart, the search's defect (`M3.4`; model §7 rule 4, §8 rule 1), on which the lowering is
+//! it refuses is a finding naming that record — but for one class the reading derives and holds by count, each record
+//! of it refused with the one finding of the one shape it carries, a system's side the search reads apart, the search's
+//! defect (`M3.4`; model §7 rule 4, §8 rule 1), on which the lowering is
 //! still held to the reading while it does not read the checker's result record, its third input; once it does, §1
 //! refuses each of those systems `tool-failure`, "naming both verdicts", before anything is lowered (R16-R2). Each plan
 //! is held to an **independent reading** of
@@ -68,9 +79,11 @@
 //! each rule citing the section it transcribes.
 //!
 //! ⭐ **The assignment is input.** The reading takes the description and the record's own `bind` lines — what the search
-//! chose, never something predicted — and derives from them every line of the plan: §2.1's identity, the record's own
-//! and its sha256; §2.2's task lines, their index, rank, durations, deadline reference, trigger and `(uses …)` item;
-//! §2.3's `bind` lines, the record's copied; §2.4's instance lines, an obliged fact with its requester's bound or bare;
+//! chose, never something predicted — and derives from them every line of the plan: §2.1's identity — the format, the
+//! profile `/1` lowers, the system, the digest of the program the language's check accepted, the record's sha256 and
+//! this engine's catalog — none copied from the record; §2.2's task lines, their index, rank, durations, deadline
+//! reference, trigger and `(uses …)` item; §2.3's `bind` lines, the record's copied, the one part of a plan copied, the
+//! assignment being the lowering's input; §2.4's instance lines, an obliged fact with its requester's bound or bare;
 //! the release timer's line, each route with its separation and rank, the enabled set and the interrupt model (§2.5);
 //! §2.6's `(context …)` lines; §2.7's `(depends …)` and `(step …)` lines, from model §8 rule 12's graph, a component of
 //! several members one step; §2.9's obligations, `multiplex` among them; §2.10's owed facts, each task's bounds and
@@ -81,17 +94,21 @@
 //! refusals is due, where these universes reach one, and holds the lowering's refusal to its code, to the subjects it
 //! names — each told by its exact text, a task's `(task SYSTEM NAME)` form or the system's own level's name as a word
 //! of its own, never by a substring — in §1's order, each kind by its texts compared byte by byte, "never by its
-//! message's words"; to the clause it names, where §1 names one; and to what each receiver would receive, in §1's order
-//! — its alarms, then its expiries. The reading is itself held to the record's three worked texts (§3), whole, and its
-//! readers of a refusal's prose to messages written in words of their own.
+//! message's words"; the pairs of the refusals naming pairs read from the names a message writes as code, in their
+//! order, whatever words join them; to the clause it names, and no other, where §1 names one; and to what each
+//! receiver would receive, in §1's order — its alarms, then its expiries. The reading is itself held to the record's
+//! three worked texts (§3), whole, lowered from the `/2` records the record states for them, and its readers of a
+//! refusal's prose to messages written in words of their own, reworded and misordered.
 //!
 //! ⛔ **Independence.** The reading was written by contexts that never read `crates/archogen-plan/src/lib.rs` nor the
 //! corpus's outcomes. A disagreement is a finding, never something to make disappear: decide from the record's text
 //! which side is right, and keep a reading the record supports failing on its system.
 //!
 //! Each universe's size is asserted — the systems generated and how each fared, lowered or not — with every system the
-//! search resolves judged by the configuration checker, and each class of the record's rules it is built to reach, so
-//! that a generator cannot shrink unnoticed; a system the language or the search refuses is counted, never dropped. A
+//! search resolves judged by the configuration checker, and each class of the record's rules it is built to reach held
+//! to the number of systems its construction fixes, counted from each case's parameters or derived by hand, or, where
+//! the search's choice or the record's rules over the description decide it, to some, so that a generator cannot shrink
+//! unnoticed; a system the language or the search refuses is counted, never dropped. A
 //! branch of the reading that no system can reach is stated so, its reason in its class's name, `unreachable: …`, and a
 //! universe reaching one fails. Where the record says what a binding elsewhere leaves unchanged, each system's plan is
 //! also held line by line to its twin's.
@@ -148,9 +165,77 @@ impl Dur {
         }
     }
 
-    /// Its seconds (§2.2), or `None` where they lie past the engine's exact arithmetic.
+    /// What it is as a duration: a time, a time past the arithmetic, or a quantity of another dimension.
+    fn time(self) -> Time {
+        Time::of(&self.spelling())
+    }
+
+    /// Its seconds (§2.2), or `None` where they lie past the engine's exact arithmetic. A quantity that is not a time
+    /// is refused before any plan (§1's bullet over tasks), so it is read nowhere this is.
     fn seconds(self) -> Option<Ratio> {
-        Ratio::of(&self.spelling())
+        match self.time() {
+            Time::Seconds(time) => Some(time),
+            Time::Past => None,
+            Time::Other(unit) => {
+                panic!(
+                    "`{}` is in `{unit}`, not a time, which §1 refuses before any plan",
+                    self.spelling()
+                )
+            }
+        }
+    }
+}
+
+/// The language's units of time (model §1 rule 2: "Time is `s`, `ms`, `us` and `ns`"), each with the power of ten it
+/// lies below a second.
+const TIME_UNITS: [(&str, u32); 4] = [("s", 0), ("ms", 3), ("us", 6), ("ns", 9)];
+
+/// Every other unit the language accepts, none of them a time: model §1 rule 2's frequencies, `Hz`, `kHz`, `MHz` and
+/// `GHz`, and information, `bit` and `byte`, and the language's table's `KiB`, `MiB` and `tick` beside them
+/// (`eadl_model::quantity::UNITS`, held to these by `the_reading_transcribes_the_shipped_vocabulary_and_catalog`). §1
+/// refuses a task's "period, minimum separation, deadline or jitter that is not a time", so the reading refuses each of
+/// these and panics on none of them (round 20, R20-R7).
+const OTHER_UNITS: [&str; 9] = [
+    "Hz", "kHz", "MHz", "GHz", "bit", "byte", "KiB", "MiB", "tick",
+];
+
+/// The class of reading each of [`OTHER_UNITS`] as not a time, in its order.
+const NOT_A_TIME_IN: [&str; 9] = [
+    "task bullet: not a time, in `Hz`",
+    "task bullet: not a time, in `kHz`",
+    "task bullet: not a time, in `MHz`",
+    "task bullet: not a time, in `GHz`",
+    "task bullet: not a time, in `bit`",
+    "task bullet: not a time, in `byte`",
+    "task bullet: not a time, in `KiB`",
+    "task bullet: not a time, in `MiB`",
+    "task bullet: not a time, in `tick`",
+];
+
+/// A quantity read as a duration (§2.2, §1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Time {
+    /// A time, its reduced seconds within the arithmetic.
+    Seconds(Ratio),
+    /// A time whose seconds lie past the arithmetic.
+    Past,
+    /// A quantity of another dimension, in this unit: "not a time" (§1).
+    Other(&'static str),
+}
+
+impl Time {
+    /// What `NUMBER UNIT` spells, the unit one the language accepts.
+    fn of(spelling: &str) -> Self {
+        let (_, unit) = spelling.split_once(' ').expect("NUMBER UNIT");
+        if TIME_UNITS.iter().any(|(time, _)| *time == unit) {
+            return Ratio::of(spelling).map_or(Self::Past, Self::Seconds);
+        }
+        Self::Other(
+            OTHER_UNITS
+                .iter()
+                .find(|other| **other == unit)
+                .unwrap_or_else(|| panic!("the language accepts no unit `{unit}`")),
+        )
     }
 }
 
@@ -194,13 +279,11 @@ impl Ratio {
     /// `i128::MAX`.
     fn of(spelling: &str) -> Option<Self> {
         let (number, unit) = spelling.split_once(' ').expect("NUMBER UNIT");
-        let exponent: u32 = match unit {
-            "s" => 0,
-            "ms" => 3,
-            "us" => 6,
-            "ns" => 9,
-            other => panic!("the reading knows no unit of time `{other}`"),
-        };
+        let exponent: u32 = TIME_UNITS
+            .iter()
+            .find(|(time, _)| *time == unit)
+            .map(|(_, exponent)| *exponent)
+            .unwrap_or_else(|| panic!("`{unit}` is no unit of time; read it with `Time::of`"));
         let (whole, fraction) = number.split_once('.').unwrap_or((number, ""));
         let mut n: u128 = format!("{whole}{fraction}").parse().expect("digits");
         if n == 0 {
@@ -385,8 +468,14 @@ struct Task {
     /// Its `on-overrun` clause, where it writes one.
     overrun: Option<&'static str>,
     priority: u32,
+    /// Its `priority` as spelled, where it is not [`Task::priority`] written in decimal: any `integer` or `hexadecimal`
+    /// `docs/semantics/grammar.md` reads — a sign, leading zeros, `_` between digits, `0x` — beyond 32 bits too.
+    spelled_priority: Option<&'static str>,
     /// The event its `deadline-from` clause names, where it writes one.
     deadline_from: Option<&'static str>,
+    /// A clause it does not write, `period` (its release, of either kind) or `deadline`: §1's "none stated, which it
+    /// refuses already", the language's answer.
+    omitted: Option<&'static str>,
     side: Side,
 }
 
@@ -399,9 +488,26 @@ impl Default for Task {
             jitter: None,
             overrun: None,
             priority: 1,
+            spelled_priority: None,
             deadline_from: Some("release"),
+            omitted: None,
             side: Side::default(),
         }
+    }
+}
+
+/// The value of a number `docs/semantics/grammar.md` reads as an `integer` or a `hexadecimal`: `[ sign ]`, then
+/// `digit { digit | "_" }`, or `("0x" | "0X") hex_digit { hex_digit | "_" }`.
+fn integer_value(spelling: &str) -> u128 {
+    let unsigned = spelling.strip_prefix('+').unwrap_or(spelling);
+    assert!(!unsigned.starts_with('-'), "a rank is never negative");
+    let digits: String = unsigned.chars().filter(|c| *c != '_').collect();
+    match digits
+        .strip_prefix("0x")
+        .or_else(|| digits.strip_prefix("0X"))
+    {
+        Some(hex) => u128::from_str_radix(hex, 16).expect("hexadecimal digits"),
+        None => digits.parse().expect("decimal digits"),
     }
 }
 
@@ -410,20 +516,39 @@ impl Task {
         self.deadline.unwrap_or(self.release.duration())
     }
 
+    /// Its rank, the value of its `priority` (`decision_priority-comparison-direction.md`: "`N` is a rank"; model §4
+    /// rule 5: "an integer from 1, and 1 is the highest", "the ranks of a system need not be contiguous").
+    fn rank(&self) -> u128 {
+        self.spelled_priority
+            .map_or(u128::from(self.priority), integer_value)
+    }
+
     fn text(&self) -> String {
         format!(
-            "  (task {} ({} {}) (deadline {}){}{}{} (priority {}){})\n",
+            "  (task {}{}{}{}{}{} (priority {}){})\n",
             self.name,
-            self.release.clause(),
-            self.release.duration().spelling(),
-            self.deadline().spelling(),
+            if self.omitted == Some("period") {
+                String::new()
+            } else {
+                format!(
+                    " ({} {})",
+                    self.release.clause(),
+                    self.release.duration().spelling()
+                )
+            },
+            if self.omitted == Some("deadline") {
+                String::new()
+            } else {
+                format!(" (deadline {})", self.deadline().spelling())
+            },
             self.jitter
                 .map_or(String::new(), |j| format!(" (jitter {})", j.spelling())),
             self.deadline_from
                 .map_or(String::new(), |e| format!(" (deadline-from {e})")),
             self.overrun
                 .map_or(String::new(), |p| format!(" (on-overrun {p})")),
-            self.priority,
+            self.spelled_priority
+                .map_or_else(|| self.priority.to_string(), str::to_string),
             self.side.clauses()
         )
     }
@@ -657,6 +782,15 @@ fn uses_closure(services: &[Service], from: &[String]) -> BTreeSet<String> {
         }
     }
     reached
+}
+
+/// Whether the services, as a universe writes them, name one another round a cycle by `uses` or `needs`: a property of
+/// the construction, which the counts of its components read.
+fn names_a_cycle(services: &[Service]) -> bool {
+    services.iter().any(|s| {
+        let from: Vec<String> = s.side.uses.iter().chain(&s.side.needs).cloned().collect();
+        uses_closure(services, &from).contains(&s.name)
+    })
 }
 
 /// The system's own level reaches, by `uses` or by `needs`, each service no task reaches, so that every service is
@@ -2654,10 +2788,17 @@ enum ServedBy {
     NoDrv,
     /// Task `t` names `blk` itself: hardware (model §8 rule 7).
     TDirect,
+    /// `drv`, used by `t`, which names `blk` itself too: hardware a served service names (round 20, R20-D3: "beside
+    /// hardware a task names, which rule 7 makes hardware").
+    TDrvAndT,
+    /// `drv` and `blk`, each used by `u`.
+    UDrvAndU,
+    /// `drv` and `blk`, each used by the system's own level, `t` naming neither: hardware by the system's own name.
+    OwnDrvAndOwn,
 }
 
 impl ServedBy {
-    const ALL: [Self; 7] = [
+    const ALL: [Self; 10] = [
         Self::TDrvUses,
         Self::TDrvNeeds,
         Self::UDrv,
@@ -2665,18 +2806,22 @@ impl ServedBy {
         Self::OwnDrv,
         Self::NoDrv,
         Self::TDirect,
+        Self::TDrvAndT,
+        Self::UDrvAndU,
+        Self::OwnDrvAndOwn,
     ];
 }
 
-/// **A block a service names** (§2; model §8 rule 7; round 13, R13-R2: "the reading took rule 7's 'hardware' where §2
-/// says 'serves'"): a block `blk` no platform composes, requiring nothing, a timer's channel, an absolute deadline, the
-/// source or an output; named by a service `drv` that task `t`, task `u`, both, the system's own level or nothing uses,
-/// by `uses` or `needs`, or by task `t` itself; its own offer bound to by a service `t` uses or by nothing; and task
-/// `u` periodic or sporadic. So a block "the system serves that is bound for requirements of its own" is a node though
-/// it is no hardware — "A declaration of another kind ends the path: a block that only a service names is not
-/// hardware" — and runs where what reaches it runs, while a requester bound to it, outside the hardware, is the
-/// search's conflict (model §8 rule 7); and, since round 18 (R18-D1), one a served service or task names is a node
-/// bound for nothing, one only a service the system does not serve names none.
+/// **A block a service names** (§1, §2; model §8 rule 7; round 13, R13-R2; round 20, R20-D3): a block `blk` no
+/// platform composes, requiring nothing, a timer's channel, an absolute deadline, the source or an output; named by a
+/// service `drv` that task `t`, task `u`, both, the system's own level or nothing uses, by `uses` or `needs`, or by task
+/// `t` itself, or by `drv` beside `t`, `u` or the system's own level naming it too; its own offer bound to by a service
+/// `t` uses or by nothing; and task `u` periodic or sporadic. "A declaration of another kind ends the path: a block that
+/// only a service names is not hardware", so a requester bound to it is the search's conflict (model §8 rule 7), and
+/// since round 20 §1 refuses a system serving it — "a block or a platform the system serves outside its hardware" —
+/// before any plan, `unsupported-profile`; beside a task's or the system's own name, which makes it hardware, it is a
+/// node, bound or not, its namer's named edge from it, running where what reaches it runs; and one only a service the
+/// system does not serve names is neither refused nor a node.
 fn served_blocks() -> Vec<Case> {
     let mut cases = Vec::new();
     for by in ServedBy::ALL {
@@ -2716,6 +2861,9 @@ fn served_block_case(by: ServedBy, requires: Requires, bound_to: bool, u_sporadi
         ServedBy::OwnDrv => own.uses.push("drv".to_string()),
         ServedBy::NoDrv => {}
         ServedBy::TDirect => t.uses.push("blk".to_string()),
+        ServedBy::TDrvAndT => t.uses.extend(names(&["drv", "blk"])),
+        ServedBy::UDrvAndU => u.uses.extend(names(&["drv", "blk"])),
+        ServedBy::OwnDrvAndOwn => own.uses.extend(names(&["drv", "blk"])),
     }
     if by != ServedBy::TDirect {
         services.push(drv);
@@ -4198,6 +4346,518 @@ fn unbound_named_hardware() -> Vec<Case> {
     cases
 }
 
+/// One task's clauses in the task-bullet universe: its release, deadline and jitter as written, whether it binds
+/// `interrupt-source` itself, and a clause it does not write.
+#[derive(Debug, Clone, Copy)]
+struct Clauses {
+    word: &'static str,
+    release: Release,
+    deadline: Dur,
+    jitter: Option<Dur>,
+    source: bool,
+    omitted: Option<&'static str>,
+}
+
+/// The clauses a task of the task-bullet universe writes: well-formed; each clause of §1's bullet over tasks alone — a
+/// period, a minimum separation, a deadline and a jitter that is not a time, a period and a minimum separation of
+/// zero, a periodic task bound itself to a source; two at once, where the bullet's order and the clauses' order part
+/// and where they agree; a zero deadline, which no bullet refuses; and neither release nor deadline stated, which the
+/// language refuses ("none stated, which it refuses already"). Every unit the language accepts that is no time is
+/// written in some clause: `Hz`, `kHz`, `MHz`, `GHz`, `bit`, `byte`, `KiB`, `MiB` and `tick`.
+const BULLET_CLAUSES: [Clauses; 16] = {
+    const WELL: Clauses = Clauses {
+        word: "well-formed",
+        release: Release::Period(Dur::Ms(20)),
+        deadline: Dur::Ms(20),
+        jitter: None,
+        source: false,
+        omitted: None,
+    };
+    [
+        WELL,
+        Clauses {
+            word: "period in Hz",
+            release: Release::Period(Dur::Spelled("50 Hz")),
+            ..WELL
+        },
+        Clauses {
+            word: "min-separation in KiB",
+            release: Release::MinSeparation(Dur::Spelled("1 KiB")),
+            ..WELL
+        },
+        Clauses {
+            word: "deadline in bit",
+            deadline: Dur::Spelled("8 bit"),
+            ..WELL
+        },
+        Clauses {
+            word: "jitter in tick",
+            jitter: Some(Dur::Spelled("3 tick")),
+            ..WELL
+        },
+        Clauses {
+            word: "zero period",
+            release: Release::Period(Dur::Spelled("0 ms")),
+            deadline: Dur::Spelled("0 ms"),
+            ..WELL
+        },
+        Clauses {
+            word: "zero min-separation",
+            release: Release::MinSeparation(Dur::Spelled("0 s")),
+            deadline: Dur::Spelled("0 s"),
+            ..WELL
+        },
+        Clauses {
+            word: "periodic bound to its source",
+            source: true,
+            ..WELL
+        },
+        Clauses {
+            word: "zero period, deadline in GHz",
+            release: Release::Period(Dur::Spelled("0 ms")),
+            deadline: Dur::Spelled("1 GHz"),
+            ..WELL
+        },
+        Clauses {
+            word: "periodic bound to its source, jitter in MiB",
+            jitter: Some(Dur::Spelled("5 MiB")),
+            source: true,
+            ..WELL
+        },
+        Clauses {
+            word: "period in kHz, bound to its source",
+            release: Release::Period(Dur::Spelled("2 kHz")),
+            source: true,
+            ..WELL
+        },
+        Clauses {
+            word: "zero min-separation, jitter in MHz",
+            release: Release::MinSeparation(Dur::Spelled("0 ms")),
+            deadline: Dur::Spelled("0 ms"),
+            jitter: Some(Dur::Spelled("1 MHz")),
+            ..WELL
+        },
+        Clauses {
+            word: "zero deadline",
+            deadline: Dur::Spelled("0 ms"),
+            ..WELL
+        },
+        Clauses {
+            word: "deadline in Hz, jitter in byte",
+            deadline: Dur::Spelled("4 Hz"),
+            jitter: Some(Dur::Spelled("2 byte")),
+            ..WELL
+        },
+        Clauses {
+            word: "no release",
+            omitted: Some("period"),
+            ..WELL
+        },
+        Clauses {
+            word: "no deadline",
+            omitted: Some("deadline"),
+            ..WELL
+        },
+    ]
+};
+
+/// What else the task-bullet universe's system meets, of §1's refusals after the bullet over tasks: nothing; the
+/// naming-system refusal, its own level naming the system `other`; the hardware-naming refusal, its platform `soc`
+/// naming the service `s`; or a duration past the arithmetic, the obliged bound of the service `dl` its own level uses.
+const BULLET_ALSO: [&str; 4] = [
+    "nothing",
+    "names a system",
+    "hardware names a service",
+    "a bound past",
+];
+
+/// **§1's bullet over tasks, whole** (§1; round 20, R20-R7: "§1's bullet over tasks is read only for its
+/// periodic-source clause, and a unit past `s`, `ms`, `us` and `ns` panics"): tasks `t` and `u`, either first in
+/// runtime order, each writing one choice of [`BULLET_CLAUSES`], over the source `dev.s`, which a task bound to a
+/// source binds; and one choice of [`BULLET_ALSO`]. So the bullet is taken "task by task in runtime order, each task's
+/// clauses in the order the bullet writes them", named "the task and the clause", before the first list's later bullets
+/// and the second list; a unit the language accepts is read as no time and never panics; and a task stating no release
+/// or no deadline is the language's to refuse.
+fn task_bullet() -> Vec<Case> {
+    let mut cases = Vec::new();
+    for t_clauses in BULLET_CLAUSES {
+        for u_clauses in BULLET_CLAUSES {
+            for u_first in [false, true] {
+                for also in BULLET_ALSO {
+                    let (t_priority, u_priority) = if u_first { (2, 1) } else { (1, 2) };
+                    let task = |name: &str, priority: u32, clauses: Clauses| Task {
+                        name: name.to_string(),
+                        release: clauses.release,
+                        deadline: Some(clauses.deadline),
+                        jitter: clauses.jitter,
+                        priority,
+                        omitted: clauses.omitted,
+                        side: Side {
+                            needs: if clauses.source {
+                                names(&[INTERRUPT_FACT])
+                            } else {
+                                Vec::new()
+                            },
+                            ..Side::default()
+                        },
+                        ..Task::default()
+                    };
+                    let mut composes = names(&["dev.s", "timer.d"]);
+                    let mut own = Side::default();
+                    match also {
+                        "names a system" => own.uses.push("other".to_string()),
+                        "hardware names a service" => composes.push("s".to_string()),
+                        "a bound past" => own.uses.push("dl".to_string()),
+                        _ => {}
+                    }
+                    let mut dl = service("dl", Counter::Deadline, false, Vec::new());
+                    dl.side
+                        .at_most
+                        .push(("delivery-bound".to_string(), Dur::Spelled(PAST)));
+                    cases.push(Case {
+                        label: format!(
+                            "t:{} u:{} first={} also:{also}",
+                            t_clauses.word,
+                            u_clauses.word,
+                            if u_first { "u" } else { "t" }
+                        ),
+                        description: Description {
+                            blocks: vec![
+                                source_block("dev.s", Separation::Stated(20), ""),
+                                timer_block("timer.d", 2, true),
+                            ],
+                            platforms: vec![Block {
+                                name: "soc".to_string(),
+                                offers: names(&[
+                                    "(core-count 1 tick)",
+                                    "(reachable-at-privilege machine)",
+                                ]),
+                                side: Side {
+                                    uses: composes,
+                                    ..Side::default()
+                                },
+                                ..Block::default()
+                            }],
+                            services: vec![
+                                Service {
+                                    name: "s".to_string(),
+                                    policy: false,
+                                    side: Side::default(),
+                                },
+                                dl,
+                            ],
+                            tasks: vec![
+                                task("t", t_priority, t_clauses),
+                                task("u", u_priority, u_clauses),
+                            ],
+                            own,
+                            others: vec![System {
+                                name: "other".to_string(),
+                                tasks: vec![Task {
+                                    name: "o".to_string(),
+                                    ..Task::default()
+                                }],
+                                own: Side::default(),
+                                platform: "soc".to_string(),
+                            }],
+                            ..Description::default()
+                        },
+                    });
+                }
+            }
+        }
+    }
+    cases
+}
+
+/// What a served namer of the outside-hardware universe names: nothing; `x` by `uses`; `x.y` by `needs`; `x!` by `uses`
+/// and `x` by `needs`, written against their texts' order; or `p`, the platform of the system `other`, by `uses`.
+const N_NAMING: [Naming; 5] = [
+    &[],
+    &[(false, "x")],
+    &[(true, "x.y")],
+    &[(false, "x!"), (true, "x")],
+    &[(false, "p")],
+];
+/// What `n.s` names: nothing; `x.y` by `uses`; or `q`, the block `p` composes, by `needs`.
+const NS_NAMING: [Naming; 3] = [&[], &[(false, "x.y")], &[(true, "q")]];
+/// What the policy `n!` names: nothing; `x!` by `uses`; or `p2`, a platform no system uses, by `needs`.
+const NBANG_NAMING: [Naming; 3] = [&[], &[(false, "x!")], &[(true, "p2")]];
+
+/// Who serves the namers of the outside-hardware universe.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum OutsideServed {
+    /// Task `t` uses `n` and `n.s`; the system's own level uses `n!`.
+    TaskAndOwn,
+    /// The system's own level uses `n`; `t` uses the service `m`, which uses `n.s`; nothing uses `n!`.
+    OwnAndThrough,
+    /// `t` uses `n!`; nothing uses `n` nor `n.s`.
+    PolicyAlone,
+}
+
+/// **A block or a platform the system serves outside its hardware** (§1; model §8 rule 7; round 20, R20-D3): the
+/// system `sys`, on the platform `soc` composing the timer `d`; the blocks `x`, `x.y`, `x!` and `q`, which no platform
+/// of `sys` composes, `q` composed by `p`, the platform of the system `other`, and the platform `p2`, which no system
+/// uses; the services `n` and `n.s` and the policy `n!`, naming one choice of [`N_NAMING`], [`NS_NAMING`] and
+/// [`NBANG_NAMING`], served as one choice of [`OutsideServed`]; `x`, `x.y` or `x!` made hardware by another name —
+/// none, `t`'s, the system's own level's `needs`, or `soc`'s `needs` — "beside hardware a task names, which rule 7 makes
+/// hardware"; and `t` meeting another refusal of §1 or not: none, a zero period, `t` naming the system `other`, an alarm
+/// it programs itself, a deadline from another event, a jitter past the arithmetic, or `x` naming the service `m`. Beside them, a system declaring no task whose own
+/// level uses `n` naming `x` or nothing, programming an alarm or not. So each pair, "by the namer's text and then the
+/// block's or the platform's", over names one of which prefixes another and names continuing with `!`, is named after
+/// every bullet before it and the receivers', and a block a task names, the system's own names or its hardware's `needs`
+/// bring in is lowered, a node, as `M4.1.18` makes it.
+fn outside_hardware_universe() -> Vec<Case> {
+    const HARDWARE_BY: [&str; 4] = ["nothing", "t names x", "sys needs x.y", "soc needs x!"];
+    const ALSO: [&str; 7] = [
+        "nothing",
+        "t's zero period",
+        "t names other",
+        "t programs an alarm",
+        "t's deadline from another event",
+        "t's jitter past the arithmetic",
+        "x names m",
+    ];
+    let words = |naming: Naming| -> String {
+        let named: Vec<String> = naming
+            .iter()
+            .map(|(by_needs, name)| format!("{}:{name}", if *by_needs { "needs" } else { "uses" }))
+            .collect();
+        format!("[{}]", named.join(","))
+    };
+    let plain = |name: &str, offer: &str| Block {
+        name: name.to_string(),
+        offers: names(&[offer, "(reachable-at-privilege machine)"]),
+        ..Block::default()
+    };
+    let platform = |name: &str, composes: &[&str]| Block {
+        name: name.to_string(),
+        offers: names(&["(core-count 1 tick)", "(reachable-at-privilege machine)"]),
+        side: Side {
+            uses: names(composes),
+            ..Side::default()
+        },
+        ..Block::default()
+    };
+    let namer = |name: &str, policy: bool, named: Naming| Service {
+        name: name.to_string(),
+        policy,
+        side: naming(Side::default(), named),
+    };
+    let description = |n: Naming,
+                       n_s: Naming,
+                       n_bang: Naming,
+                       tasks: Vec<Task>,
+                       own: Side,
+                       (soc_needs, x_names_m): (bool, bool)| {
+        let mut x = plain("x", "(debug-port true)");
+        if x_names_m {
+            x.side.uses.push("m".to_string());
+        }
+        let mut soc = platform("soc", &["d"]);
+        if soc_needs {
+            soc.side.needs.push("x!".to_string());
+        }
+        Description {
+            blocks: vec![
+                timer_block("d", 4, false),
+                x,
+                plain("x.y", "(debug-port true)"),
+                plain("x!", "(transfer-engine true)"),
+                plain("q", "(debug-port true)"),
+            ],
+            platforms: vec![soc, platform("p", &["q"]), platform("p2", &[])],
+            services: vec![
+                namer("n", false, n),
+                namer("n.s", false, n_s),
+                namer("n!", true, n_bang),
+                Service {
+                    name: "m".to_string(),
+                    policy: false,
+                    side: Side::default(),
+                },
+            ],
+            tasks,
+            own,
+            others: vec![System {
+                name: "other".to_string(),
+                tasks: vec![Task {
+                    name: "o".to_string(),
+                    ..Task::default()
+                }],
+                own: Side::default(),
+                platform: "p".to_string(),
+            }],
+            ..Description::default()
+        }
+    };
+    let mut cases = Vec::new();
+    for n in N_NAMING {
+        for n_s in NS_NAMING {
+            for n_bang in NBANG_NAMING {
+                for served in [
+                    OutsideServed::TaskAndOwn,
+                    OutsideServed::OwnAndThrough,
+                    OutsideServed::PolicyAlone,
+                ] {
+                    for hardware_by in HARDWARE_BY {
+                        for also in ALSO {
+                            let mut t = Task::default();
+                            let mut own = Side::default();
+                            let mut services_m = Vec::new();
+                            match served {
+                                OutsideServed::TaskAndOwn => {
+                                    t.side.uses.extend(names(&["n", "n.s"]));
+                                    own.uses.push("n!".to_string());
+                                }
+                                OutsideServed::OwnAndThrough => {
+                                    own.uses.push("n".to_string());
+                                    t.side.uses.push("m".to_string());
+                                    services_m.push("n.s".to_string());
+                                }
+                                OutsideServed::PolicyAlone => t.side.uses.push("n!".to_string()),
+                            }
+                            match hardware_by {
+                                "t names x" => t.side.uses.push("x".to_string()),
+                                "sys needs x.y" => own.needs.push("x.y".to_string()),
+                                _ => {}
+                            }
+                            match also {
+                                "t's zero period" => {
+                                    t.release = Release::Period(Dur::Spelled("0 ms"));
+                                    t.deadline = Some(Dur::Spelled("0 ms"));
+                                }
+                                "t names other" => t.side.uses.push("other".to_string()),
+                                "t programs an alarm" => {
+                                    t.side.needs.push("relative-delay".to_string())
+                                }
+                                "t's deadline from another event" => {
+                                    t.deadline_from = Some("activation")
+                                }
+                                "t's jitter past the arithmetic" => {
+                                    t.jitter = Some(Dur::Spelled(PAST))
+                                }
+                                _ => {}
+                            }
+                            let mut d = description(
+                                n,
+                                n_s,
+                                n_bang,
+                                vec![t],
+                                own,
+                                (hardware_by == "soc needs x!", also == "x names m"),
+                            );
+                            d.services[3].side.uses = services_m;
+                            cases.push(Case {
+                                label: format!(
+                                    "n names {} n.s names {} n! names {} served {served:?}; hardware by {hardware_by}; \
+                                     also {also}",
+                                    words(n),
+                                    words(n_s),
+                                    words(n_bang)
+                                ),
+                                description: d,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for n in [N_NAMING[0], N_NAMING[1]] {
+        for alarm in [false, true] {
+            let mut own = Side {
+                uses: names(&["n"]),
+                ..Side::default()
+            };
+            if alarm {
+                own.needs.push("relative-delay".to_string());
+            }
+            cases.push(Case {
+                label: format!(
+                    "no task; the system's own level uses n, naming {}{}",
+                    words(n),
+                    if alarm { ", and programs an alarm" } else { "" }
+                ),
+                description: description(n, &[], &[], Vec::new(), own, (false, false)),
+            });
+        }
+    }
+    cases
+}
+
+/// The spellings of a rank in the ranks universe, each a value the language reads as an `integer` or a `hexadecimal`
+/// (`docs/semantics/grammar.md`): `1`, `2`, `+4`, `007`, `0x0A`, `1_000` and `9223372036854775807`, the largest it reads.
+const RANK_SPELLINGS: [&str; 7] = [
+    "1",
+    "2",
+    "+4",
+    "007",
+    "0x0A",
+    "1_000",
+    "9223372036854775807",
+];
+
+/// **Ranks that do not start at 1 or are not consecutive** (§2.2, §2.5, §1; model §4 rule 5: "the ranks of a system need
+/// not be contiguous, because only their order is used"; round 20, R20-R7: "ranks are only ever 1 to 3, so a lowering
+/// writing index = rank − 1 passes every universe"): tasks `a`, `b` and `c`, of periods 10, 20 and 30 ms, ranked by
+/// every three distinct spellings of [`RANK_SPELLINGS`] in every order; all periodic, `a` sporadic and bound to the
+/// source `dev.s` itself, each writing `(deadline-from activation)`, or each programming an alarm at `d`. So each
+/// task's runtime index is "the number of tasks of smaller rank", its rank written as a decimal `INT` "with no sign and
+/// no leading zero", the release timer's tasks by index, and the bullets over tasks taken in runtime order — the
+/// receivers named in it — whatever the ranks' values, their spellings and their texts' order.
+fn ranks() -> Vec<Case> {
+    const KINDS: [&str; 4] = [
+        "periodic",
+        "a sporadic",
+        "deadline from activation",
+        "alarms",
+    ];
+    let mut cases = Vec::new();
+    for (i, a) in RANK_SPELLINGS.iter().enumerate() {
+        for (j, b) in RANK_SPELLINGS.iter().enumerate() {
+            for (k, c) in RANK_SPELLINGS.iter().enumerate() {
+                if i == j || j == k || i == k {
+                    continue;
+                }
+                for kind in KINDS {
+                    let task = |name: &str, ms: u64, rank: &'static str| {
+                        let mut task = Task {
+                            name: name.to_string(),
+                            release: Release::Period(Dur::Ms(ms)),
+                            spelled_priority: Some(rank),
+                            ..Task::default()
+                        };
+                        match kind {
+                            "deadline from activation" => task.deadline_from = Some("activation"),
+                            "alarms" => task.side.needs.push("relative-delay".to_string()),
+                            _ => {}
+                        }
+                        task
+                    };
+                    let mut tasks = vec![task("a", 10, a), task("b", 20, b), task("c", 30, c)];
+                    if kind == "a sporadic" {
+                        tasks[0].release = Release::MinSeparation(Dur::Ms(10));
+                        tasks[0].side.needs.push(INTERRUPT_FACT.to_string());
+                    }
+                    cases.push(Case {
+                        label: format!("a:{a} b:{b} c:{c} {kind}"),
+                        description: Description {
+                            blocks: vec![
+                                timer_block("d", 3, false),
+                                source_block("dev.s", Separation::Stated(20), ""),
+                            ],
+                            tasks,
+                            ..Description::default()
+                        },
+                    });
+                }
+            }
+        }
+    }
+    cases
+}
+
 // =====================================================================================================================
 // The reading: docs/decisions/decision_runtime-plan.md, §2 and §3, transcribed rule by rule
 // =====================================================================================================================
@@ -4214,6 +4874,8 @@ const INTERRUPT_FACT: &str = "interrupt-source";
 /// shipped catalog by `the_reading_transcribes_the_shipped_vocabulary_and_catalog`.
 struct AdapterKind {
     name: &'static str,
+    /// The facts it requires `beneath` of the provider it programs, in written order.
+    beneath: &'static [&'static str],
     /// The facts it offers `(obliged)`, in offer order (§2.4).
     obliged: &'static [&'static str],
     /// Its obligations, in written order (§2.4).
@@ -4229,6 +4891,12 @@ struct AdapterKind {
 const KINDS: [AdapterKind; 2] = [
     AdapterKind {
         name: "deadline-over-delay",
+        beneath: &[
+            "relative-delay",
+            "counter-modulus",
+            "tick-rate",
+            "observation-coherent",
+        ],
         obliged: &["delivery-bound"],
         obligations: &["delivery", "chain"],
         costs: &["expiry"],
@@ -4236,6 +4904,13 @@ const KINDS: [AdapterKind; 2] = [
     },
     AdapterKind {
         name: "epoch-extender",
+        beneath: &[
+            "relative-delay",
+            "counter-modulus",
+            "tick-rate",
+            "observation-coherent",
+            "wrap-behavior",
+        ],
         obliged: &[],
         obligations: &["update", "coherent"],
         costs: &["wake"],
@@ -4681,10 +5356,10 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
 
     // §2: "A **node** below is a node of the joint rules' initialization graph (§2.7): a provider an active binding
     // names (a block, a platform or an adapter's instance), a block or a platform the system serves that is bound for
-    // requirements of its own — a requester like any other ... — a block or a platform the system serves that a served
-    // task, service or policy names by `uses` or `needs`, whose code that name calls (`M4.1.18`), a service, or a
-    // policy". A task and the system's own level are requesters but never nodes. A service is the system's where the
-    // system or a task of it reaches it.
+    // requirements of its own — a requester like any other ... — a block or a platform of the system's hardware that a
+    // served task, service or policy names by `uses` or `needs`, whose code that name calls (`M4.1.18`) — one the
+    // system serves outside its hardware refused (§1) —, a service, or a policy". A task and the system's own level are
+    // requesters but never nodes. A service is the system's where the system or a task of it reaches it.
     let mut served = reach(&edges, system);
     for task in &description.tasks {
         served.extend(reach(&edges, &task_text(task)));
@@ -4695,8 +5370,11 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             if served_hardware.contains(&bind.requester) {
                 nodes.insert(bind.requester.clone());
                 if !system_hardware.contains(&bind.requester) {
+                    // Served outside the hardware only through a service or a policy naming it, or a block so served
+                    // composing it: §1 refuses the system before any plan (round 20, R20-D3).
                     classes.insert(
-                        "served: a block a service names, no hardware, bound for requirements of its own",
+                        "unreachable: a block outside the hardware bound for requirements of its own in a plan, §1 \
+                         refusing the service or policy that serves it",
                     );
                 }
             } else {
@@ -4715,7 +5393,8 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     }
     // Round 18 (R18-D1; `M4.1.18`): hardware a served task, service or policy names by `uses` or `needs` is a node,
     // bound or not — model §8 rule 12's "each block or platform a served task, service or policy names by `uses` or
-    // `needs`, a call". Every task of the system is served (rule 7: "its own level, one of its tasks"). The system's own
+    // `needs`, a call" — of the system's hardware since round 20 (R20-D3), a block or a platform outside it refused
+    // before any plan (§1). Every task of the system is served (rule 7: "its own level, one of its tasks"). The system's own
     // level is no such namer: rule 12 lists it among what is "none" — it "initialises nothing" — and its `uses` "says what
     // the system includes" (rule 4); nor is a block or a platform, whose names are "never a call" (§2). Each called
     // block or platform, with who names it: the namer's text, its kind and whether by `needs`.
@@ -4802,10 +5481,52 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             });
         }
         if !system_hardware.contains(block) {
+            // §2's node is "a block or a platform of the system's hardware that a served task, service or policy names"
+            // — "one the system serves outside its hardware refused (§1)" (round 20, R20-D3).
             classes.insert(
-                "named: a block no hardware, which a service or a policy names, bound for nothing, a node",
+                "unreachable: a block outside the hardware a served service or policy names in a plan, §1 refusing it",
             );
         }
+    }
+    // Hardware a served service or policy names, which model §8 rule 7 makes hardware by another path than the
+    // platform's composition: a task's name, the system's own level's, or a block's or a platform's `needs`.
+    for (block, namers) in &called {
+        if !namers.iter().any(|(_, kind, _)| *kind != "task") {
+            continue;
+        }
+        let names_it = |side: &Side| side.uses.iter().chain(&side.needs).any(|n| n == block);
+        if description.tasks.iter().any(|t| names_it(&t.side)) {
+            classes.insert("hardware: a block a served service or policy names, which a task's name makes hardware");
+        }
+        if names_it(&description.own) {
+            classes.insert(
+                "hardware: a block a served service or policy names, which the system's own level's name makes \
+                 hardware",
+            );
+        }
+        if system_hardware
+            .iter()
+            .any(|h| hardware[h].side.needs.contains(block))
+        {
+            classes.insert(
+                "hardware: a block a served service or policy names, which a block's or a platform's `needs` brings \
+                 in",
+            );
+        }
+    }
+    // A block outside the hardware a service or a policy the system does not serve names: neither served nor refused.
+    if description.services.iter().any(|s| {
+        !served.contains(&s.name)
+            && s.side
+                .uses
+                .iter()
+                .chain(&s.side.needs)
+                .any(|n| hardware.contains_key(n.as_str()) && !system_hardware.contains(n))
+    }) {
+        classes.insert(
+            "outside: a block outside the hardware named by a service or a policy the system does not serve, no \
+             refusal",
+        );
     }
     // What names hardware and makes it no node: the system's own level, a service or a policy the system does not
     // serve, or a block or a platform composing it, whose names are "never a call" (§2) — where nothing else makes it
@@ -4985,6 +5706,22 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     let unstated = routes.values().any(|r| r.source && stated_of(r).is_none());
     if !stated.is_empty() && unstated && routes.values().any(|r| !r.source) {
         classes.insert("rank: every class in one system");
+    }
+    // Round 20 (R20-R7): shapes the universes reached and no class held.
+    if routes.values().filter(|r| !r.source).count() >= 2 {
+        classes.insert("route: two timer routes, by their interrupts' texts");
+    }
+    if routes
+        .values()
+        .any(|r| r.source && routes.contains_key(&format!("(timer-route {})", r.provider)))
+    {
+        classes.insert("route: a source and a timer route at one provider, two routes");
+    }
+    if routes.values().any(|r| {
+        r.costs.iter().any(|c| c.ends_with(" expiry)"))
+            && r.costs.iter().any(|c| c.ends_with(" wake)"))
+    }) {
+        classes.insert("route: an expiry's and a wake's costs on one route, by their texts");
     }
 
     let mut lines = Vec::new();
@@ -5266,17 +6003,29 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                     } else {
                         classes.insert("trigger: its own source, beside another reaching it");
                     }
-                    // Another alone would decide otherwise: the record's own source, never the routes.
+                    // Another alone would decide otherwise: the record's own source, never the routes. (Round 20's
+                    // counts: the class had taken another source releasing it every too, its trigger's text naming
+                    // that source, for one that would leave it unknown.)
                     if let [other] = others.as_slice() {
-                        if decide(other).0 != decided.0 {
-                            classes.insert(if decided.0 == "unknown" {
-                                "trigger: its own source leaving it unknown, beside one that alone would release \
-                                 it every"
-                            } else {
+                        let alone = decide(other).0;
+                        classes.insert(match (decided.0 == "unknown", alone == "unknown") {
+                            (true, false) => {
+                                "trigger: its own source leaving it unknown, beside one that alone would release it \
+                                 every"
+                            }
+                            (false, true) => {
                                 "trigger: its own source releasing it every, beside one that alone would leave it \
                                  unknown"
-                            });
-                        }
+                            }
+                            (false, false) => {
+                                "trigger: its own source releasing it every, beside another that alone would release \
+                                 it every from itself"
+                            }
+                            (true, true) => {
+                                "trigger: its own source leaving it unknown, beside one that alone would leave it \
+                                 unknown too"
+                            }
+                        });
                     }
                     if route
                         .requesters
@@ -5352,7 +6101,7 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         let index = description
             .tasks
             .iter()
-            .filter(|other| other.priority < task.priority)
+            .filter(|other| other.rank() < task.rank())
             .count();
         let within = |d: Dur| {
             d.seconds()
@@ -5397,13 +6146,27 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         {
             classes.insert("exact: a task's duration at the arithmetic's edge");
         }
+        if deadline == Ratio::ZERO {
+            // §1 refuses "a period or minimum separation of zero", no deadline of zero.
+            classes.insert("task: a zero deadline");
+        }
+        // §3: "`INT` is a decimal integer with no sign and no leading zero", whatever the description's spelling.
+        if task
+            .spelled_priority
+            .is_some_and(|spelled| spelled != task.rank().to_string())
+        {
+            classes.insert("rank: a rank spelled otherwise than its decimal `INT`");
+        }
+        if task.rank() > u128::from(u32::MAX) {
+            classes.insert("rank: a rank past 32 bits");
+        }
         task_lines.push((
             index,
             format!(
                 "(task {index} {} (rank {}) ({} {}) (deadline {}) {reference} (jitter {}) (overrun {}) \
                  (released-by {}) {})",
                 task_text(task),
-                task.priority,
+                task.rank(),
                 task.release.clause(),
                 release.text(),
                 deadline.text(),
@@ -5416,11 +6179,36 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     }
     task_lines.sort();
     lines.extend(task_lines.into_iter().map(|(_, line)| line));
+    // Round 20 (R20-R7): ranks whose index is not the rank less one, "the ranks of a system need not be contiguous"
+    // (model §4 rule 5), and an order by value that no order by spelling gives.
+    let mut ranks: Vec<u128> = description.tasks.iter().map(Task::rank).collect();
+    ranks.sort_unstable();
+    if ranks.first().is_some_and(|first| *first > 1) {
+        classes.insert("rank: a rank past 1 first");
+    }
+    if ranks.windows(2).any(|w| w[1] > w[0] + 1) {
+        classes.insert("rank: ranks not consecutive");
+    }
+    let spelled = |t: &Task| {
+        t.spelled_priority
+            .map_or_else(|| t.priority.to_string(), str::to_string)
+    };
+    let mut by_rank: Vec<&Task> = description.tasks.iter().collect();
+    by_rank.sort_by_key(|t| t.rank());
+    let mut by_spelling = by_rank.clone();
+    by_spelling.sort_by_key(|t| spelled(t));
+    if by_rank
+        .iter()
+        .zip(&by_spelling)
+        .any(|(a, b)| !std::ptr::eq(*a, *b))
+    {
+        classes.insert("rank: runtime order unlike the ranks' spellings' order");
+    }
 
     // §2.5, the release timer "releases every task whose trigger is `timer`", `releases` items by index (§3); a task's
     // index is "the number of tasks of smaller rank" (§2.2), its rank its priority's place.
     let mut by_index: Vec<&Task> = description.tasks.iter().collect();
-    by_index.sort_by_key(|t| t.priority);
+    by_index.sort_by_key(|t| t.rank());
     let released: Vec<String> = by_index
         .iter()
         .map(|t| task_text(t))
@@ -5672,7 +6460,7 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             });
             if !system_hardware.contains(named) {
                 classes.insert(
-                    "initialisation: a named edge from a block no hardware, served through its namer",
+                    "unreachable: a named edge from a block outside the hardware, §1 refusing the name",
                 );
             }
             // Beside the path a binding gives through an instance: the device, then the instance, then the namer.
@@ -5769,6 +6557,9 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             .expect("a component whose predecessors are all taken");
         if ready.len() >= 2 {
             classes.insert("initialisation: a component of several members");
+            if ready.iter().any(|member| is_instance(member)) {
+                classes.insert("initialisation: a component holding an instance");
+            }
         }
         step += 1;
         lines.push(format!("(step {step} {})", ready.join(" ")));
@@ -6227,18 +7018,16 @@ struct Judged {
 }
 
 /// The plan's identity (§2.1, §3): "the format, the profile, the system, the program's digest, the assignment's sha256
-/// and the adapter catalog's version" — the profile, the system, the program's digest and the catalog's version as the
-/// record writes them, its digest being the program's (the configuration checker's check (1) holds it), and the
-/// sha256 of the record's text. Where `elided`, the two digests are written `…`, as the record's worked texts write
+/// and the adapter catalog's version", each derived, none copied from the record lowered (round 20, R20-R7): the format
+/// `/1`; the profile `rt-static-up-v1`, "the one whose rules `/1` lowers" (§1), its identifier as `/2` writes it (§3);
+/// the system lowered; the digest of the program the language's check accepted, which the lowering "computes
+/// (`eadl_resolve::plan::program_digest`), never taking either from its caller" (§1) — `program`, computed by that
+/// function, the one value taken from outside the record's text, whose algorithm is the assignment format's (§1's "its
+/// program digest is not the program's"); the sha256 of the record's text, "the assignment's sha256"; and this engine's
+/// catalog's version (§1: "its `(adapters …)` names a catalog other than this engine's: `stale-input`"),
+/// `eadl_resolve::adapter::VERSION`. Where `elided`, the two digests are written `…`, as the record's worked texts write
 /// them.
-fn identity(record: &str, elided: bool) -> Vec<String> {
-    let line = |head: &str| -> String {
-        record
-            .lines()
-            .find(|l| l.starts_with(&format!("({head} ")))
-            .unwrap_or_else(|| panic!("the record's `{head}` line"))
-            .to_string()
-    };
+fn identity(system: &str, program: &str, record: &str, elided: bool) -> Vec<String> {
     let (program, assignment) = if elided {
         (
             "(program \"…\")".to_string(),
@@ -6246,31 +7035,41 @@ fn identity(record: &str, elided: bool) -> Vec<String> {
         )
     } else {
         (
-            line("program"),
+            format!("(program \"{program}\")"),
             format!("(assignment \"{}\")", Digest::of(record.as_bytes()).hex()),
         )
     };
     vec![
         "(format \"archogen-runtime-plan/1\")".to_string(),
-        line("profile"),
-        line("system"),
+        "(profile rt-static-up-v1)".to_string(),
+        format!("(system {system})"),
         program,
         assignment,
-        line("adapters"),
+        format!("(adapters {})", eadl_resolve::adapter::VERSION),
     ]
 }
 
 /// One system's plan judged against the reading, which takes the assignment from `record`, the `/2` record lowered:
-/// §2.3's `bind` lines are that record's, "copied as written".
-fn judge(description: &Description, record: &str, plan: &str) -> Judged {
-    judge_elided(description, record, plan, false)
+/// §2.3's `bind` lines are that record's, "copied as written" — the one part of a plan the reading copies, the
+/// assignment being the lowering's input (§1) — and `program` is the digest of the program the language accepted.
+fn judge(description: &Description, program: &str, record: &str, plan: &str) -> Judged {
+    judge_elided(description, program, record, plan, false)
 }
 
 /// [`judge`], the identity's two digests written `…` where `elided`.
-fn judge_elided(description: &Description, record: &str, plan: &str, elided: bool) -> Judged {
+fn judge_elided(
+    description: &Description,
+    program: &str,
+    record: &str,
+    plan: &str,
+    elided: bool,
+) -> Judged {
     let reading = read_the_record(description, &binds_of(record));
     let mut expected = by_kind(reading.lines.iter().map(String::as_str));
-    expected.insert("identity", identity(record, elided));
+    expected.insert(
+        "identity",
+        identity(&description.system, program, record, elided),
+    );
     expected.insert(
         "bind",
         record
@@ -6361,11 +7160,31 @@ enum Flow {
     Resolved {
         /// The record the search's writer wrote.
         record: String,
+        /// The digest of the program the language's check accepted (§1: the lowering "computes its digest
+        /// (`eadl_resolve::plan::program_digest`), never taking either from its caller").
+        program: String,
         /// The configuration checker's verdict on it, where it refuses.
-        checker: Option<String>,
+        checker: Option<Checked>,
         /// The plan's text, or the lowering's refusal.
         lowered: Result<String, Refusal>,
     },
+}
+
+/// The configuration checker's refusal of a record: its status and each finding, its code and its message.
+#[derive(Debug)]
+struct Checked {
+    status: String,
+    findings: Vec<(String, String)>,
+}
+
+impl std::fmt::Display for Checked {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.status)?;
+        for (code, message) in &self.findings {
+            write!(f, "; {code}: {message}")?;
+        }
+        Ok(())
+    }
 }
 
 fn flow(text: &str, system: &str) -> Flow {
@@ -6417,17 +7236,18 @@ fn flow(text: &str, system: &str) -> Flow {
         "plan.json",
         &record,
     );
-    let checker = verdict.err().map(|refused| {
-        let findings: Vec<String> = refused
+    let checker = verdict.err().map(|refused| Checked {
+        status: refused.status.slug().to_string(),
+        findings: refused
             .findings
             .iter()
-            .map(|f| format!("{}: {}", f.code, f.message))
-            .collect();
-        format!("{}; {}", refused.status.slug(), findings.join("; "))
+            .map(|f| (f.code.to_string(), f.message.to_string()))
+            .collect(),
     });
     let lowered = lower(&program, &record, &vocabulary, &catalog).map(|plan| plan.text());
     Flow::Resolved {
         record,
+        program: plan::program_digest(&program),
         checker,
         lowered,
     }
@@ -6458,6 +7278,12 @@ enum Names {
     /// The interrupt-code refusal: every receiver, in §1's order — "each task in runtime order, then the system's own
     /// level" — each with what it would receive.
     Receivers(Vec<Receiver>),
+    /// "the system declares no task".
+    NoTask,
+    /// The refusal of a block or a platform the system serves outside its hardware: each served service or policy
+    /// naming one, with what it names — "each named, by the namer's text and then the block's or the platform's"
+    /// (round 20, R20-D3).
+    Outside(Vec<(String, String)>),
 }
 
 /// One receiver of interrupt code (§1): a task's `(task SYSTEM NAME)`, or the system's name for its own level, with
@@ -6493,11 +7319,12 @@ impl Due {
             Names::Task { task, clause } => {
                 clause.map_or_else(|| task.clone(), |clause| format!("{task} {clause}"))
             }
-            Names::Systems(pairs) | Names::Operands(pairs) => pairs
+            Names::Systems(pairs) | Names::Operands(pairs) | Names::Outside(pairs) => pairs
                 .iter()
                 .map(|(namer, named)| format!("{namer} naming {named}"))
                 .collect::<Vec<_>>()
                 .join(", "),
+            Names::NoTask => "the system's lack of a task".to_string(),
             Names::Durations(items) => items.join(", "),
             Names::Receivers(receivers) => receivers
                 .iter()
@@ -6552,32 +7379,33 @@ fn name_order_classes(
     refusal: &str,
     classes: &mut BTreeSet<&'static str>,
 ) {
-    let pick = |naming: &'static str, operand: &'static str| {
-        if refusal == "naming" {
-            naming
-        } else {
-            operand
-        }
+    let pick = |[naming, operand, outside]: [&'static str; 3]| match refusal {
+        "naming" => naming,
+        "operand" => operand,
+        _ => outside,
     };
     let namers: BTreeSet<&String> = pairs.iter().map(|(namer, _)| namer).collect();
     let named: BTreeSet<&String> = pairs.iter().map(|(_, named)| named).collect();
     if prefixed(namers.iter().copied()) {
-        classes.insert(pick(
+        classes.insert(pick([
             "naming: one namer's text a prefix of another's",
             "operand: one namer's text a prefix of another's",
-        ));
+            "outside: one namer's text a prefix of another's",
+        ]));
     }
     if prefixed(named.iter().copied()) {
-        classes.insert(pick(
+        classes.insert(pick([
             "naming: one system's text a prefix of another's",
             "operand: one operand's text a prefix of another's",
-        ));
+            "outside: one named block's or platform's text a prefix of another's",
+        ]));
     }
     if namers.iter().chain(&named).any(|text| below_paren(text)) {
-        classes.insert(pick(
+        classes.insert(pick([
             "naming: a name continuing with a byte below `)`",
             "operand: a name continuing with a byte below `)`",
-        ));
+            "outside: a name continuing with a byte below `)`",
+        ]));
     }
     let tasks: Vec<&String> = namers
         .iter()
@@ -6591,17 +7419,20 @@ fn name_order_classes(
             .expect("a name")
             .to_string()
     }) {
-        classes.insert(pick(
+        classes.insert(pick([
             "naming: tasks' texts ordered unlike their names",
             // §1's hardware-naming bullet names "a block or a platform the system serves", never a task.
             "unreachable: a task among the namers of hardware naming what is not hardware, blocks and platforms alone",
-        ));
+            // Its namers are "a served service or policy", never a task, whose name makes hardware (model §8 rule 7).
+            "unreachable: a task among the namers of a block outside the hardware, services and policies alone",
+        ]));
     }
     if worded_otherwise(pairs, |(namer, named)| format!("`{namer}` names `{named}`")) {
-        classes.insert(pick(
+        classes.insert(pick([
             "naming: an order the message's words would give otherwise",
             "operand: an order the message's words would give otherwise",
-        ));
+            "outside: an order the message's words would give otherwise",
+        ]));
     }
 }
 
@@ -6694,13 +7525,69 @@ fn hardware_naming_other_kinds(description: &Description) -> Vec<(String, String
     out.into_iter().collect()
 }
 
+/// The services and policies the system serves: those "its closure reaches through `uses` and `needs`" from "its own
+/// level, one of its tasks" (model §8 rule 7), the closure passing through each service and policy it reaches. (A
+/// system named, and served hardware naming a service, would serve more: §1 refuses each before the bullet that reads
+/// this.)
+fn served_services(description: &Description) -> BTreeSet<String> {
+    let mut todo: Vec<String> = description
+        .own
+        .uses
+        .iter()
+        .chain(&description.own.needs)
+        .chain(
+            description
+                .tasks
+                .iter()
+                .flat_map(|t| t.side.uses.iter().chain(&t.side.needs)),
+        )
+        .cloned()
+        .collect();
+    let mut out = BTreeSet::new();
+    while let Some(named) = todo.pop() {
+        if let Some(service) = description.services.iter().find(|s| s.name == named) {
+            if out.insert(named) {
+                todo.extend(service.side.uses.iter().chain(&service.side.needs).cloned());
+            }
+        }
+    }
+    out
+}
+
+/// §1 (round 20, R20-D3): "a block or a platform the system serves outside its hardware — one a served service or
+/// policy names that no `platform` clause, the system's own names or its tasks' bring in, so that model §8 rule 7
+/// makes it no hardware: "a block that only a service names is not hardware" — ...: each named, by the namer's text
+/// and then the block's or the platform's". So each served service or policy, with each block or platform it names by
+/// `uses` or `needs` that is not of the system's hardware (rule 7, [`system_hardware`]), the pairs by the namer's text
+/// and then the named one's. A block such a block composes is served too, and named by no service or policy: the
+/// bullet's "one a served service or policy names" takes it not.
+fn outside_hardware(description: &Description) -> Vec<(String, String)> {
+    let declared: BTreeSet<String> = description.hardware().into_iter().map(|b| b.name).collect();
+    let hardware = system_hardware(description);
+    let served = served_services(description);
+    let mut out = BTreeSet::new();
+    for service in description
+        .services
+        .iter()
+        .filter(|s| served.contains(&s.name))
+    {
+        for named in service.side.uses.iter().chain(&service.side.needs) {
+            if declared.contains(named) && !hardware.contains(named) {
+                out.insert((service.name.clone(), named.clone()));
+            }
+        }
+    }
+    out.into_iter().collect()
+}
+
 /// §1, the refusals these universes can reach, the first that applies, from the description and the record's own
 /// `bind` lines: "They are taken in the order written, this list and then the next, ... and the first that applies is
 /// the one given; a bullet over tasks is taken task by task in runtime order, each task's clauses in the order the
 /// bullet writes them".
-/// - Of the first list, in its order: "a periodic task bound itself for `interrupt-source`, its requirement met by
-///   `true` as model §8 rule 2 reads one, which states a second release model": `tool-failure`, "naming the task and
-///   the clause"; then "a declaration or a task the system serves naming a system by `uses` or `needs`":
+/// - Of the first list, in its order: its bullet over tasks, "a period, minimum separation, deadline or jitter that is
+///   not a time; a period or minimum separation of zero ...; or a periodic task bound itself for `interrupt-source`,
+///   its requirement met by `true` as model §8 rule 2 reads one, which states a second release model": `tool-failure`,
+///   "naming the task and the clause"; then "a declaration or a task the system serves naming a system by `uses` or `needs`":
 ///   `tool-failure`, "naming each such name, by the namer's text and then the system's"; then "a block or a platform the
 ///   system serves naming, by `uses` or `needs`, a declaration that is neither a block nor a platform": `tool-failure`,
 ///   "naming each, by the block's or platform's text and then the operand's" — "This refusal and the one above take
@@ -6714,14 +7601,24 @@ fn hardware_naming_other_kinds(description: &Description) -> Vec<(String, String
 ///   provider itself by a binding that takes a channel (model §8 rule 2) — an alarm it programs, as §2.6 reads that
 ///   binding — or an adapter instance with a cost running its requester's code (`expiry`) whose requester it is, the one
 ///   an exclusive instance serves or one bound to a shared instance. ... It names every such receiver — each task in
-///   runtime order, then the system's own level — with what it would receive".
+///   runtime order, then the system's own level — with what it would receive"; and, between the durations and the
+///   deadline, "the system declares no task", and after the receivers, "a block or a platform the system serves outside
+///   its hardware ...: each named, by the namer's text and then the block's or the platform's" (round 20, R20-D3).
 ///
-/// No other bullet applies here: no system has placement memory and each declares a task.
+/// No other bullet applies here: no system has placement memory, and the two refusals after the last, of a record's
+/// supported contexts and its initialisation's calls, wait for a record that can be a provider (`M3.7`, `RTP-H10`).
 fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option<Due> {
     let system = description.system.as_str();
+    let outside = outside_hardware(description);
+    // The class of a refusal given before the outside-hardware bullet that would apply too, keyed by the one given.
+    let before_outside = |classes: &mut BTreeSet<&'static str>, class: &'static str| {
+        if !outside.is_empty() {
+            classes.insert(class);
+        }
+    };
     let task_text = |task: &Task| format!("(task {system} {})", task.name);
     let mut by_index: Vec<&Task> = description.tasks.iter().collect();
-    by_index.sort_by_key(|t| t.priority);
+    by_index.sort_by_key(|t| t.rank());
     // A periodic task bound to a source's block, `interrupt-source` true among its offers, for another fact: "bound
     // itself for `interrupt-source`" fails, and it is no second release model (round 15, R15-D2).
     let bound_otherwise = |task: &Task| {
@@ -6734,16 +7631,108 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
                     .any(|h| h.name == b.provider && h.separation.is_some())
         })
     };
-    for (index, task) in by_index.iter().enumerate() {
+    // §1's bullet over tasks, the first list's: "a period, minimum separation, deadline or jitter that is not a time; a
+    // period or minimum separation of zero, which no run can release (`RTP-H9`); or a periodic task bound itself for
+    // `interrupt-source`, its requirement met by `true` as model §8 rule 2 reads one, which states a second release
+    // model ...: `tool-failure`, naming the task and the clause — for the last, its `period`", "taken task by task in
+    // runtime order, each task's clauses in the order the bullet writes them". The bullet writes them so: `period`,
+    // `min-separation`, `deadline` and `jitter` not a time; then `period` and `min-separation` of zero; then `period`,
+    // the second release model. So a task's defects are read in that order, the first named (round 20, R20-R7: the
+    // reading had read this bullet for its last clause alone). Its first clause, "none stated, which it refuses already
+    // (`missing-fact` for no release model, a deadline's cardinality one)", is the language's: a task stating neither is
+    // rejected, as the task-bullet universe holds.
+    let defects = |task: &Task| -> Vec<(&'static str, &'static str)> {
+        let mut out = Vec::new();
+        for (clause, duration) in [
+            (task.release.clause(), Some(task.release.duration())),
+            ("deadline", Some(task.deadline())),
+            ("jitter", task.jitter),
+        ] {
+            if matches!(duration.map(Dur::time), Some(Time::Other(_))) {
+                out.push((clause, "not a time"));
+            }
+        }
+        if task.release.duration().time() == Time::Seconds(Ratio::ZERO) {
+            out.push((task.release.clause(), "zero"));
+        }
         if matches!(task.release, Release::Period(_))
             && binds
                 .iter()
                 .any(|b| b.requester == task_text(task) && relies_on_source(description, b))
         {
-            let mut classes = BTreeSet::from(["refusal: a periodic task bound to a source itself"]);
-            if !hardware_naming_other_kinds(description).is_empty() {
-                classes.insert("periodic: before hardware naming what is not hardware");
+            out.push(("period", "a second release model"));
+        }
+        out
+    };
+    for (index, task) in by_index.iter().enumerate() {
+        let found = defects(task);
+        let Some(&(clause, defect)) = found.first() else {
+            continue;
+        };
+        let mut classes = BTreeSet::from([match (clause, defect) {
+            (_, "a second release model") => "refusal: a periodic task bound to a source itself",
+            ("period", "not a time") => "task bullet: a period that is not a time",
+            ("min-separation", "not a time") => {
+                "task bullet: a minimum separation that is not a time"
             }
+            ("deadline", _) => "task bullet: a deadline that is not a time",
+            ("jitter", _) => "task bullet: a jitter that is not a time",
+            ("period", _) => "task bullet: a period of zero",
+            _ => "task bullet: a minimum separation of zero",
+        }]);
+        // Every unit the language accepts that is no time, read as not a time wherever a task writes it.
+        for duration in description.tasks.iter().flat_map(|t| {
+            [Some(t.release.duration()), Some(t.deadline()), t.jitter]
+                .into_iter()
+                .flatten()
+        }) {
+            if let Time::Other(unit) = duration.time() {
+                classes.insert(
+                    NOT_A_TIME_IN[OTHER_UNITS.iter().position(|u| *u == unit).expect("a unit")],
+                );
+            }
+        }
+        if found.len() >= 2 {
+            classes.insert(
+                "task bullet: a task's first defect named, another of its clauses ill-formed too",
+            );
+            // Where the bullet's order and its clauses' order part: a deadline or a jitter not a time, written first,
+            // named before the release's zero or the second release model, which the task's `period` or
+            // `min-separation` clause states.
+            if matches!(clause, "deadline" | "jitter")
+                && found[1..]
+                    .iter()
+                    .any(|(c, d)| matches!(*c, "period" | "min-separation") && *d != "not a time")
+            {
+                classes.insert(
+                    "task bullet: a deadline or a jitter not a time named before its release's zero or second release \
+                     model",
+                );
+            }
+        }
+        if by_index[index + 1..].iter().any(|t| !defects(t).is_empty()) {
+            classes.insert("task bullet: the first ill-formed task in runtime order named, a later one ill-formed too");
+        }
+        let declared_at = |t: &Task| description.tasks.iter().position(|d| std::ptr::eq(d, t));
+        if by_index[index + 1..]
+            .iter()
+            .any(|t| declared_at(t) < declared_at(task) && !defects(t).is_empty())
+        {
+            classes.insert(
+                "task bullet: a task declared earlier ill-formed too, after the one named in runtime order",
+            );
+        }
+        if !systems_named(description).is_empty() {
+            classes.insert("task bullet: before a requester naming a system");
+        }
+        if !hardware_naming_other_kinds(description).is_empty() {
+            classes.insert(if defect == "a second release model" {
+                "periodic: before hardware naming what is not hardware"
+            } else {
+                "task bullet: before hardware naming what is not hardware"
+            });
+        }
+        if defect == "a second release model" {
             if by_index[..index]
                 .iter()
                 .any(|t| matches!(t.release, Release::Period(_)) && bound_otherwise(t))
@@ -6758,15 +7747,19 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
                     "periodic: the one named bound to the source's block for another fact too",
                 );
             }
-            return Some(Due {
-                code: "tool-failure",
-                names: Names::Task {
-                    task: task_text(task),
-                    clause: Some("period"),
-                },
-                classes,
-            });
         }
+        before_outside(
+            &mut classes,
+            "task bullet: before a block or a platform outside the hardware",
+        );
+        return Some(Due {
+            code: "tool-failure",
+            names: Names::Task {
+                task: task_text(task),
+                clause: Some(clause),
+            },
+            classes,
+        });
     }
 
     let named = systems_named(description);
@@ -6825,6 +7818,10 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
             );
         }
         name_order_classes(&named, "naming", &mut classes);
+        before_outside(
+            &mut classes,
+            "naming: before a block or a platform outside the hardware",
+        );
         return Some(Due {
             code: "tool-failure",
             names: Names::Systems(named),
@@ -6950,6 +7947,10 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
         }) {
             classes.insert("operand: before a receiver of interrupt code");
         }
+        before_outside(
+            &mut classes,
+            "operand: before a block or a platform outside the hardware",
+        );
         return Some(Due {
             code: "tool-failure",
             names: Names::Operands(operands),
@@ -7089,6 +8090,10 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
         {
             classes.insert("past: before a deadline from another event");
         }
+        before_outside(
+            &mut classes,
+            "past: before a block or a platform outside the hardware",
+        );
         return Some(Due {
             code: "unsupported-profile",
             names: Names::Durations(past),
@@ -7096,15 +8101,53 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
         });
     }
 
+    // "the system declares no task: the scheduler a build runs (`RTP-H1`) has no empty form".
+    if description.tasks.is_empty() {
+        let mut classes = BTreeSet::from(["refusal: a system with no task"]);
+        if binds.iter().any(|b| {
+            b.requester == system
+                && if is_instance(&b.provider) {
+                    kind_of(&b.provider).runs_requester
+                } else {
+                    takes_channel(description, b)
+                }
+        }) {
+            classes.insert("no task: before the system's own level receiving interrupt code");
+        }
+        before_outside(
+            &mut classes,
+            "no task: before a block or a platform outside the hardware",
+        );
+        return Some(Due {
+            code: "unsupported-profile",
+            names: Names::NoTask,
+            classes,
+        });
+    }
+
     for task in &by_index {
         if task.deadline_from.is_some_and(|e| e != "release") {
+            let mut classes = BTreeSet::from(["refusal: a deadline measured from another event"]);
+            if !std::ptr::eq(*task, &description.tasks[0])
+                && description.tasks[0]
+                    .deadline_from
+                    .is_some_and(|e| e != "release")
+            {
+                classes.insert(
+                    "deadline: the first in runtime order named, an earlier declared one measured from another event too",
+                );
+            }
+            before_outside(
+                &mut classes,
+                "deadline: before a block or a platform outside the hardware",
+            );
             return Some(Due {
                 code: "unsupported-profile",
                 names: Names::Task {
                     task: task_text(task),
                     clause: None,
                 },
-                classes: BTreeSet::from(["refusal: a deadline measured from another event"]),
+                classes,
             });
         }
     }
@@ -7167,47 +8210,167 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
             receivers.push(receiver);
         }
     }
-    if receivers.is_empty() {
-        return None;
-    }
-    classes.insert(match receivers.len() {
-        1 => "receivers: one",
-        2 => "receivers: two",
-        _ => "receivers: three",
-    });
-    let tasks: Vec<&String> = receivers
-        .iter()
-        .map(|r| &r.subject)
-        .filter(|s| *s != system)
-        .collect();
-    if tasks.len() < receivers.len() {
-        classes.insert(if tasks.is_empty() {
-            "receivers: the system's own level alone"
-        } else {
-            "receivers: tasks and the system's own level"
+    if !receivers.is_empty() {
+        classes.insert(match receivers.len() {
+            1 => "receivers: one",
+            2 => "receivers: two",
+            _ => "receivers: three",
+        });
+        let tasks: Vec<&String> = receivers
+            .iter()
+            .map(|r| &r.subject)
+            .filter(|s| *s != system)
+            .collect();
+        if tasks.len() < receivers.len() {
+            classes.insert(if tasks.is_empty() {
+                "receivers: the system's own level alone"
+            } else {
+                "receivers: tasks and the system's own level"
+            });
+        }
+        if tasks.windows(2).any(|w| w[0] > w[1]) {
+            classes.insert("receivers: runtime order unlike the tasks' text order");
+        }
+        // The providers programmed, an alarm's or an instance's `OVER`, one's name a prefix of another's.
+        let programmed: BTreeSet<String> = receivers
+            .iter()
+            .flat_map(|r| r.received())
+            .map(|item| {
+                if is_instance(item) {
+                    text_of(&items(&form(item))[2])
+                } else {
+                    item.clone()
+                }
+            })
+            .collect();
+        if prefixed(&programmed) {
+            classes.insert("receivers: providers one of whose names prefixes another's");
+        }
+        before_outside(
+            &mut classes,
+            "receivers: before a block or a platform outside the hardware",
+        );
+        return Some(Due {
+            code: "unsupported-profile",
+            names: Names::Receivers(receivers),
+            classes,
         });
     }
-    if tasks.windows(2).any(|w| w[0] > w[1]) {
-        classes.insert("receivers: runtime order unlike the tasks' text order");
+
+    // "a block or a platform the system serves outside its hardware ... each named, by the namer's text and then the
+    // block's or the platform's" (round 20, R20-D3), after the receivers.
+    if outside.is_empty() {
+        return None;
     }
-    // The providers programmed, an alarm's or an instance's `OVER`, one's name a prefix of another's.
-    let programmed: BTreeSet<String> = receivers
-        .iter()
-        .flat_map(|r| r.received())
-        .map(|item| {
-            if is_instance(item) {
-                text_of(&items(&form(item))[2])
-            } else {
-                item.clone()
-            }
-        })
+    let mut classes =
+        BTreeSet::from(["refusal: a block or a platform the system serves outside its hardware"]);
+    let platforms: BTreeSet<String> = description
+        .platforms()
+        .into_iter()
+        .map(|p| p.name)
         .collect();
-    if prefixed(&programmed) {
-        classes.insert("receivers: providers one of whose names prefixes another's");
+    let hardware = system_hardware(description);
+    let from_tasks: BTreeSet<String> = {
+        let mut only_tasks = description.clone();
+        only_tasks.own = Side::default();
+        served_services(&only_tasks)
+    };
+    let directly: BTreeSet<&String> = description
+        .own
+        .uses
+        .iter()
+        .chain(&description.own.needs)
+        .chain(
+            description
+                .tasks
+                .iter()
+                .flat_map(|t| t.side.uses.iter().chain(&t.side.needs)),
+        )
+        .collect();
+    for (namer, named) in &outside {
+        let service = description
+            .services
+            .iter()
+            .find(|s| &s.name == namer)
+            .expect("a service or a policy");
+        classes.insert(if service.policy {
+            "outside: named by a policy"
+        } else {
+            "outside: named by a service"
+        });
+        classes.insert(if service.side.needs.contains(named) {
+            "outside: named by `needs`"
+        } else {
+            "outside: named by `uses`"
+        });
+        classes.insert(if from_tasks.contains(namer) {
+            "outside: its namer served by a task"
+        } else {
+            "outside: its namer served by the system's own level alone"
+        });
+        if !directly.contains(namer) {
+            classes.insert("outside: its namer served through another service or policy");
+        }
+        let composed_by: Vec<String> = description
+            .platforms()
+            .into_iter()
+            .chain(description.blocks.iter().cloned())
+            .filter(|p| p.side.uses.contains(named))
+            .map(|p| p.name)
+            .collect();
+        classes.insert(if platforms.contains(named) {
+            if description.systems().iter().any(|s| &s.platform == named) {
+                "outside: a platform another system uses"
+            } else {
+                "outside: a platform no system uses"
+            }
+        } else if composed_by.is_empty() {
+            "outside: a block no platform composes"
+        } else {
+            "outside: a block a platform outside the hardware composes"
+        });
+        if binds.iter().any(|b| &b.requester == named) {
+            classes.insert("outside: bound for requirements of its own");
+        }
     }
+    let namers: BTreeSet<&String> = outside.iter().map(|(n, _)| n).collect();
+    let named: BTreeSet<&String> = outside.iter().map(|(_, n)| n).collect();
+    if outside.len() >= 2 {
+        classes.insert("outside: several, named in order");
+    }
+    if namers.len() < outside.len() {
+        classes.insert("outside: one namer naming two");
+    }
+    if named.len() < outside.len() {
+        classes.insert("outside: one block or platform named by two");
+    }
+    if outside.windows(2).any(|w| w[0].1 > w[1].1) {
+        classes.insert("outside: the namers' order unlike the named ones'");
+    }
+    // Served outside the hardware and named by no service or policy — a block an outside block composes — and so not
+    // named (`outside_hardware`).
+    if served_hardware(description)
+        .iter()
+        .any(|b| !hardware.contains(b) && !named.contains(b))
+    {
+        classes.insert("outside: a block served outside the hardware that no service or policy names, not named");
+    }
+    // Beside hardware a served service or policy names, which rule 7 makes hardware by another name.
+    let served = served_services(description);
+    if description.services.iter().any(|s| {
+        served.contains(&s.name)
+            && s.side
+                .uses
+                .iter()
+                .chain(&s.side.needs)
+                .any(|n| hardware.contains(n))
+    }) {
+        classes.insert("outside: beside hardware a served service or policy names, not named");
+    }
+    name_order_classes(&outside, "outside", &mut classes);
     Some(Due {
         code: "unsupported-profile",
-        names: Names::Receivers(receivers),
+        names: Names::Outside(outside),
         classes,
     })
 }
@@ -7506,46 +8669,39 @@ fn durations_named(message: &str) -> Vec<String> {
     out
 }
 
-/// The pairs a refusal's message names as `NAMER names OPERAND` — or `NAMER names the system OPERAND`, or several
-/// operands joined by `and` — each once, in the order it first names them: the namer a `(task …)` form or a name, and
-/// each operand one of `declared`, the description's declarations. §1 fixes the pairs and their order, not the
-/// message's other words.
-fn pairs_named_in(message: &str, declared: &BTreeSet<String>) -> Vec<(String, String)> {
-    // A comma stays a word of its own here, so that a list of operands is read to its end and no further; a semicolon
-    // or a colon ends one.
-    const COMMA: &str = "\u{2063}comma\u{2063}";
-    let words = prose(&message.replace(',', &format!(" {COMMA} ")));
-    let atom = |at: usize, word: &str| matches!(words.get(at), Some(Sx::Atom(a)) if a == word);
-    let mut out: Vec<(String, String)> = Vec::new();
-    for at in 1..words.len() {
-        if !atom(at, "names") {
-            continue;
-        }
-        let namer = prose_text(&words[at - 1]);
-        let mut next = at + 1;
-        if atom(next, "the") && atom(next + 1, "system") {
-            next += 2;
-        }
-        while let Some(Sx::Atom(word)) = words.get(next) {
-            let word = word.trim_end_matches([':', '.']);
-            if declared.contains(word) && !atom(next + 1, "names") {
-                let pair = (namer.clone(), word.to_string());
-                if !out.contains(&pair) {
-                    out.push(pair);
-                }
-                if words
-                    .get(next)
-                    .is_some_and(|w| matches!(w, Sx::Atom(a) if a.ends_with([':', '.'])))
-                {
-                    break;
-                }
-            } else if word != "and" && word != COMMA {
-                break;
-            }
-            next += 1;
-        }
+/// What a refusal's message names, in the order it names them, each time it names one: each name it writes as code,
+/// between backquotes, as the record writes a name, that is one of `declared` — a declaration's name, or a task's
+/// `(task SYSTEM NAME)` form — compared whole. §1 says what a refusal names and in which order, never in what words,
+/// so no other word is read, its verbs among them (round 20, R20-R7: the reader had keyed on the lowering's "names" and
+/// "names the system").
+fn names_mentioned(message: &str, declared: &BTreeSet<String>) -> Vec<String> {
+    message
+        .split('`')
+        .skip(1)
+        .step_by(2)
+        .map(str::trim)
+        .filter(|span| declared.contains(*span))
+        .map(str::to_string)
+        .collect()
+}
+
+/// Whether `mentioned`, a message's names in its order ([`names_mentioned`]), names `pairs` in their order and nothing
+/// else: each pair "by the namer's text and then" the other's (§1), the namer written before what it names — before
+/// each, or once before the several a namer names in a row.
+fn names_pairs(mentioned: &[String], pairs: &[(String, String)]) -> bool {
+    fn from(mentioned: &[String], pairs: &[(String, String)], previous: Option<&String>) -> bool {
+        let Some(((namer, named), rest)) = pairs.split_first() else {
+            return mentioned.is_empty();
+        };
+        let after_namer = mentioned.first() == Some(namer)
+            && mentioned.get(1) == Some(named)
+            && from(&mentioned[2..], rest, Some(namer));
+        let namer_once = previous == Some(namer)
+            && mentioned.first() == Some(named)
+            && from(&mentioned[1..], rest, Some(namer));
+        after_namer || namer_once
     }
-    out
+    from(mentioned, pairs, None)
 }
 
 /// Whether a refusal's message names `clause`, outside an instance's text: a form it heads, such as `(period 20 ms)`, or
@@ -7637,6 +8793,12 @@ fn refusal_disagrees(due: &Due, refusal: &Refusal, description: &Description) ->
         .map(|s| s.name.clone())
         .chain(description.hardware().into_iter().map(|b| b.name))
         .chain(description.systems().into_iter().map(|s| s.name))
+        .chain(
+            description
+                .tasks
+                .iter()
+                .map(|t| format!("(task {system} {})", t.name)),
+        )
         .collect();
     let mut wrong = Vec::new();
     if refusal.code != due.code {
@@ -7651,27 +8813,33 @@ fn refusal_disagrees(due: &Due, refusal: &Refusal, description: &Description) ->
             if named != [task.clone()] {
                 wrong.push(format!("it names {named:?}, the record [{task:?}]"));
             }
+            // "naming the task and the clause": that clause, and no other of the task's.
             if let Some(clause) = clause {
-                if !clause_named(&refusal.message, clause) {
-                    wrong.push(format!("it does not name the clause `{clause}`"));
+                let clauses: Vec<&str> = ["period", "min-separation", "deadline", "jitter"]
+                    .into_iter()
+                    .filter(|c| clause_named(&refusal.message, c))
+                    .collect();
+                if clauses != [*clause] {
+                    wrong.push(format!(
+                        "it names the clauses {clauses:?}, the record `{clause}` alone"
+                    ));
                 }
             }
         }
-        Names::Systems(pairs) => {
-            let named = pairs_named_in(&refusal.message, &declared);
-            if named != *pairs {
+        Names::Systems(pairs) | Names::Operands(pairs) | Names::Outside(pairs) => {
+            let named = names_mentioned(&refusal.message, &declared);
+            if !names_pairs(&named, pairs) {
                 wrong.push(format!(
-                    "it names {named:?} as naming a system, the record {pairs:?}, in that order"
+                    "it names {named:?}, in that order, where the record names {pairs:?}, each namer and then what \
+                     it names, in that order"
                 ));
             }
         }
-        Names::Operands(pairs) => {
-            let named = pairs_named_in(&refusal.message, &declared);
-            if named != *pairs {
-                wrong.push(format!(
-                    "it names {named:?} as hardware naming what is not hardware, the record {pairs:?}, in that \
-                     order"
-                ));
+        Names::NoTask => {
+            // "the system declares no task": what is missing named, and no task, there being none.
+            let named = subjects_named(&refusal.message, system);
+            if named.iter().any(|subject| subject != system) {
+                wrong.push(format!("it names {named:?}, of a system with no task"));
             }
         }
         Names::Durations(items) => {
@@ -7751,6 +8919,26 @@ const CHECKER_REFUSES: &str =
     "checker refuses: a system's side the search reads apart (M3.4); `tool-failure` once \
                                the lowering reads the checker's result (§1)";
 
+/// Whether the configuration checker's refusal is the one [`CHECKER_REFUSES`] holds, and nothing beside it: the status
+/// `invalid-description`, one finding, of its check (2), `plan-description` — "the checker's own rules refuse a
+/// description the language's passes accept" (`docs/book/src/plan-check.md`) — naming the system whose side it is and
+/// saying "two constraints on `FACT` that no value satisfies together", as `M4.1.13`'s routing evidence to `M3.4` quotes
+/// it, for the fact the reading derives (round 20, R20-R7: the class had taken any `invalid-description` refusal
+/// naming the fact).
+fn the_one_contradiction(refused: &Checked, system: &str, fact: &str) -> bool {
+    match refused.findings.as_slice() {
+        [(code, message)] => {
+            refused.status == "invalid-description"
+                && code == "plan-description"
+                && message.contains(&format!("`{system}`"))
+                && message.contains(&format!(
+                    "two constraints on `{fact}` that no value satisfies together"
+                ))
+        }
+        _ => false,
+    }
+}
+
 /// The fact on which the lowered system's side, read whole — its own level's clauses and its tasks' (model §8 rule 1;
 /// §7 rule 4) — requires both `true` and `false`, a requirement `(needs f)` or `(f true)` beside `(f false)`.
 fn side_read_apart(description: &Description) -> Option<String> {
@@ -7810,7 +8998,7 @@ fn outcome(universe: &str, case: &Case, keep: bool) -> Outcome {
         findings: Vec::new(),
         plan: None,
     };
-    let (record, checker, lowered) = match flow(&text, &case.description.system) {
+    let (record, program, checker, lowered) = match flow(&text, &case.description.system) {
         Flow::Rejected(verdict) => {
             out.class = "rejected";
             out.verdict = verdict;
@@ -7823,9 +9011,10 @@ fn outcome(universe: &str, case: &Case, keep: bool) -> Outcome {
         }
         Flow::Resolved {
             record,
+            program,
             checker,
             lowered,
-        } => (record, checker, lowered),
+        } => (record, program, checker, lowered),
     };
     out.judged = true;
     let reproducer = |written: &str, what: &str| {
@@ -7835,13 +9024,13 @@ fn outcome(universe: &str, case: &Case, keep: bool) -> Outcome {
         )
     };
     // The checker's verdict, against what the reading derives of it: every record accepted, but where the system's side
-    // read whole contradicts itself, which the checker refuses `invalid-description` naming the fact ([`CHECKER_REFUSES`]).
+    // read whole contradicts itself, which the checker refuses with the one finding of that one shape
+    // ([`CHECKER_REFUSES`], [`the_one_contradiction`]).
     out.checker_refused = checker.is_some();
     let apart = side_read_apart(&case.description);
     let held = match (&checker, &apart) {
         (Some(refused), Some(fact))
-            if refused.starts_with("invalid-description;")
-                && refused.contains(&format!("`{fact}`")) =>
+            if the_one_contradiction(refused, &case.description.system, fact) =>
         {
             true
         }
@@ -7887,7 +9076,7 @@ fn outcome(universe: &str, case: &Case, keep: bool) -> Outcome {
                 }
                 return out;
             }
-            let judged = judge(&case.description, &record, &plan);
+            let judged = judge(&case.description, &program, &record, &plan);
             out.agreed = judged.agreed;
             out.classes = judged.classes;
             out.classes
@@ -8038,14 +9227,46 @@ fn run_keeping(universe: &str, cases: &[Case], keep: bool) -> (Tally, Vec<Option
     (tally, plans)
 }
 
+/// How many systems of a universe a class of the record's rules is held to reach (round 20, R20-R7: "classes are held by
+/// presence, not by count").
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Reach {
+    /// As many as the universe's construction fixes: counted from its cases' parameters beside the call, or derived
+    /// there by hand.
+    Count(usize),
+    /// At least one, where the count is the search's choice or follows from the record's rules over the description
+    /// rather than from the construction alone.
+    Some,
+}
+
+/// A class held to be reached by some system.
+fn some(class: &'static str) -> (&'static str, Reach) {
+    (class, Reach::Some)
+}
+
+/// A class held to be reached by exactly `count` systems, as the universe's construction fixes.
+fn exactly(class: &'static str, count: usize) -> (&'static str, Reach) {
+    (class, Reach::Count(count))
+}
+
+/// A class held to be reached by exactly the systems of `cases` that `reaches`, a predicate over each case's
+/// construction — its parameters, as its description writes them — says reach it.
+fn counted(
+    class: &'static str,
+    cases: &[Case],
+    reaches: impl Fn(&Case) -> bool,
+) -> (&'static str, Reach) {
+    exactly(class, cases.iter().filter(|case| reaches(case)).count())
+}
+
 /// The universe's sizes held to `sizes` — generated, lowered, rejected by the language, unresolved by the search,
 /// refused by the lowering — every system the search resolved judged by the configuration checker, each class of
-/// `exercised` reached by some system, and every finding, in one failure naming each.
+/// `exercised` reached by as many systems as it is held to, and every finding, in one failure naming each.
 fn hold(
     universe: &str,
     tally: &Tally,
     sizes: (usize, usize, usize, usize, usize),
-    exercised: &[&str],
+    exercised: &[(&str, Reach)],
 ) {
     let got = (
         tally.generated,
@@ -8091,15 +9312,26 @@ fn hold(
             tally.checker_refused
         ));
     }
-    if held > 0 && !exercised.contains(&CHECKER_REFUSES) {
+    if held > 0 && !exercised.iter().any(|(class, _)| *class == CHECKER_REFUSES) {
         problems.push_str(&format!(
             "{universe}: {held} records the configuration checker refuses, `{CHECKER_REFUSES}`, which this universe \
              does not hold\n"
         ));
     }
-    let missed: Vec<&&str> = exercised
+    let missed: Vec<String> = exercised
         .iter()
-        .filter(|class| !tally.classes.contains_key(**class))
+        .filter_map(|(class, reach)| {
+            let reached = tally.classes.get(class).copied().unwrap_or(0);
+            match reach {
+                Reach::Some if reached == 0 => Some(format!("{class:?}")),
+                // A class held to be reached by no system is a branch to state unreachable, its reason in its name.
+                Reach::Count(0) => Some(format!("{class:?}, held to be reached by no system")),
+                Reach::Count(count) if *count != reached => {
+                    Some(format!("{class:?}, reached {reached} times, held {count}"))
+                }
+                _ => None,
+            }
+        })
         .collect();
     // A branch the reading states unreachable, its reason in its name, reached by no system of any universe.
     let unreachable: Vec<(&&str, &usize)> = tally
@@ -8113,7 +9345,10 @@ fn hold(
         ));
     }
     if !missed.is_empty() {
-        problems.push_str(&format!("{universe} no longer exercises {missed:?}\n"));
+        problems.push_str(&format!(
+            "{universe} no longer exercises as held: {}\n",
+            missed.join("; ")
+        ));
     }
     if !tally.findings.is_empty() {
         problems.push_str(&format!(
@@ -8133,20 +9368,45 @@ fn three_services_their_channels_sources_and_callers() {
     // task or not.
     assert_eq!(cases.len(), 4usize.pow(3) * (1 << 6) * (1 << 3));
     let tally = run("three services", &cases);
+    // Every system lowered, its one task writing `(deadline-from release)` and no jitter or overrun policy. Every
+    // service served, by the task or the system's own level: a named edge for each `uses` edge written, and a component
+    // of several members for each cycle among them — 39 of the 64 sets of edges, all but the 25 acyclic ones. The task
+    // in a job wherever it uses a service, every service being a node.
     hold(
         "three services",
         &tally,
         (32_768, 32_768, 0, 0, 0),
         &[
-            "initialisation: a named edge",
-            "initialisation: a component of several members",
-            "context: a node in two interrupts",
-            "multiplex: multiplexed",
-            "multiplex: multiplexed by interrupts alone",
-            "multiplex: a channel with one user",
-            "multiplex: its own route no user",
-            "multiplex: its own route a user, another node there reaching it",
-            "multiplex: another route a user",
+            exactly("task: deadline-from written", 32_768),
+            exactly("task: jitter zero where none is stated", 32_768),
+            exactly("task: overrun fault where none is stated", 32_768),
+            counted("initialisation: a named edge", &cases, |c| {
+                c.description
+                    .services
+                    .iter()
+                    .any(|s| !s.side.uses.is_empty())
+            }),
+            counted(
+                "initialisation: a component of several members",
+                &cases,
+                |c| names_a_cycle(&c.description.services),
+            ),
+            exactly(
+                "initialisation: a component of several members",
+                64 * 39 * 8,
+            ),
+            counted(
+                "owed: a service or a policy in a job, its call cost and masked runs",
+                &cases,
+                |c| !c.description.tasks[0].side.uses.is_empty(),
+            ),
+            some("context: a node in two interrupts"),
+            some("multiplex: multiplexed"),
+            some("multiplex: multiplexed by interrupts alone"),
+            some("multiplex: a channel with one user"),
+            some("multiplex: its own route no user"),
+            some("multiplex: its own route a user, another node there reaching it"),
+            some("multiplex: another route a user"),
         ],
     );
 }
@@ -8158,28 +9418,101 @@ fn two_services_with_adapter_instances() {
     // 2 edges; each of 2 services named by the task or not.
     assert_eq!(cases.len(), 3 * 2 * 2 * 8usize.pow(2) * (1 << 2) * (1 << 2));
     let tally = run("two services with adapters", &cases);
+    // Unresolved: the 256 over two timers of one channel each where one service takes a deadline and the other an
+    // extended counter, the first naming the second (2 orders, 4 choices of their sources, 2 sets of edges holding
+    // that one, 4 of the task's, 2 kinds of `b`, 2 clauses): the deadline's instance and the extender's take a channel
+    // each, so at two devices, against model §8 rule 14's one time base. Every other lowered.
+    let counter = |s: &Service, fact: &str| s.side.needs.iter().any(|n| n == fact);
+    let deadline = |s: &Service| counter(s, "absolute-deadline");
+    let extender = |s: &Service| counter(s, "counter-width");
+    let channel = |s: &Service| counter(s, "relative-delay") || deadline(s) || extender(s);
+    let source = |s: &Service| counter(s, INTERRUPT_FACT);
+    let two_timers = |c: &Case| c.description.blocks.iter().any(|b| b.name == "timer.e");
+    let one_provider_both = |c: &Case| c.description.blocks.len() == 1;
+    let lowered = |c: &Case| {
+        let [a, b] = [&c.description.services[0], &c.description.services[1]];
+        let names = |x: &Service, y: &Service| {
+            x.side
+                .uses
+                .iter()
+                .chain(&x.side.needs)
+                .any(|n| *n == y.name)
+        };
+        !(two_timers(c)
+            && ((deadline(a) && extender(b) && names(a, b))
+                || (extender(a) && deadline(b) && names(b, a))))
+    };
+    let any = |c: &Case, f: &dyn Fn(&Service) -> bool| c.description.services.iter().any(f);
     hold(
         "two services with adapters",
         &tally,
         (12_288, 12_032, 0, 256, 0),
         &[
-            "instance: an obliged fact bare",
-            "owed: an instance in a job, its call cost and masked runs",
-            "owed: a service or a policy in a job, its call cost and masked runs",
-            "owed: a block or a platform in a job, its call cost and masked runs",
-            "owed: a node in no job, neither its call cost nor masked runs",
-            "initialisation: a named edge",
-            "initialisation: a component of several members",
-            "context: an expiry running its requester",
-            "context: a wake running the instance alone",
-            "context: a node in two interrupts",
-            "multiplex: multiplexed",
-            "multiplex: multiplexed by interrupts alone",
-            "multiplex: a policy multiplexed",
-            "multiplex: a channel with one user",
-            "multiplex: its own route no user",
-            "multiplex: its own route a user, another node there reaching it",
-            "multiplex: another route a user",
+            exactly("task: deadline-from written", 12_032),
+            exactly("task: jitter zero where none is stated", 12_032),
+            exactly("task: overrun fault where none is stated", 12_032),
+            counted("instance: an obliged fact bare", &cases, |c| {
+                lowered(c) && any(c, &deadline)
+            }),
+            counted("context: an expiry running its requester", &cases, |c| {
+                lowered(c) && any(c, &deadline)
+            }),
+            counted("context: a wake running the instance alone", &cases, |c| {
+                lowered(c) && any(c, &extender)
+            }),
+            counted("initialisation: a named edge", &cases, |c| {
+                lowered(c)
+                    && c.description.services.iter().any(|s| {
+                        s.side
+                            .uses
+                            .iter()
+                            .chain(&s.side.needs)
+                            .any(|n| n == "a" || n == "b")
+                    })
+            }),
+            counted(
+                "initialisation: a component of several members",
+                &cases,
+                |c| lowered(c) && names_a_cycle(&c.description.services),
+            ),
+            // Round 20 (R20-R7): over two timers of one channel each, two services each taking a channel take one
+            // at each, two timer routes — but two extended counters, which one shared instance over one timer serves;
+            // one block raising both kinds, a service taking its channel beside one handling its source; one timer, a
+            // deadline's instance and an extender's both programming it.
+            counted(
+                "route: two timer routes, by their interrupts' texts",
+                &cases,
+                |c| {
+                    let [a, b] = [&c.description.services[0], &c.description.services[1]];
+                    lowered(c)
+                        && two_timers(c)
+                        && channel(a)
+                        && channel(b)
+                        && !(extender(a) && extender(b))
+                },
+            ),
+            counted(
+                "route: a source and a timer route at one provider, two routes",
+                &cases,
+                |c| one_provider_both(c) && any(c, &channel) && any(c, &source),
+            ),
+            counted(
+                "route: an expiry's and a wake's costs on one route, by their texts",
+                &cases,
+                |c| !two_timers(c) && any(c, &deadline) && any(c, &extender),
+            ),
+            some("owed: an instance in a job, its call cost and masked runs"),
+            some("owed: a service or a policy in a job, its call cost and masked runs"),
+            some("owed: a block or a platform in a job, its call cost and masked runs"),
+            some("owed: a node in no job, neither its call cost nor masked runs"),
+            some("context: a node in two interrupts"),
+            some("multiplex: multiplexed"),
+            some("multiplex: multiplexed by interrupts alone"),
+            some("multiplex: a policy multiplexed"),
+            some("multiplex: a channel with one user"),
+            some("multiplex: its own route no user"),
+            some("multiplex: its own route a user, another node there reaching it"),
+            some("multiplex: another route a user"),
         ],
     );
 }
@@ -8192,29 +9525,163 @@ fn releases_and_routes_of_every_separation_class() {
     let per = |first: usize, second: usize| 6 * first + 6 * first * 6 * second;
     assert_eq!(cases.len(), 2 * 2 * (per(5, 3) + 2 * per(8, 5)));
     let tally = run("releases and routes", &cases);
+    // The classes each system's construction fixes, read from its label: each source's separation and path, each
+    // task's kind ([`release_classes`]).
+    let fixed: Vec<BTreeSet<&str>> = cases.iter().map(|c| release_classes(&c.label)).collect();
+    let fixed_count =
+        |class: &'static str| exactly(class, fixed.iter().filter(|f| f.contains(class)).count());
     hold(
         "releases and routes",
         &tally,
         (14_184, 12_468, 0, 0, 1_716),
         &[
-            "refusal: a periodic task bound to a source itself",
-            "initialisation: a named edge",
-            "trigger: every, equal separations",
-            "trigger: every, a longer separation",
-            "trigger: unknown, a shorter separation",
-            "trigger: unknown, no separation stated",
-            "trigger: unknown, the separation absent",
-            "trigger: unknown, no source reaching it",
-            "trigger: unknown, several sources",
-            "trigger: its own source",
-            "trigger: its own source, no other reaching it",
-            "trigger: its own source, beside another reaching it",
-            "trigger: its own source leaving it unknown, beside one that alone would release it every",
-            "trigger: its own source releasing it every, beside one that alone would leave it unknown",
-            "rank: two stated separations tied",
-            "rank: every class in one system",
+            fixed_count("refusal: a periodic task bound to a source itself"),
+            exactly("refusal: a periodic task bound to a source itself", 1_716),
+            exactly("task: deadline-from written", 12_468),
+            exactly("task: jitter zero where none is stated", 12_468),
+            exactly("task: overrun fault where none is stated", 12_468),
+            fixed_count("initialisation: a named edge"),
+            fixed_count("trigger: every, equal separations"),
+            fixed_count("trigger: every, a longer separation"),
+            fixed_count("trigger: unknown, a shorter separation"),
+            fixed_count("trigger: unknown, no separation stated"),
+            fixed_count("trigger: unknown, the separation absent"),
+            fixed_count("trigger: unknown, no source reaching it"),
+            fixed_count("trigger: unknown, several sources"),
+            fixed_count("trigger: its own source"),
+            fixed_count("trigger: its own source, no other reaching it"),
+            fixed_count("trigger: its own source, beside another reaching it"),
+            fixed_count(
+                "trigger: its own source leaving it unknown, beside one that alone would release it every",
+            ),
+            fixed_count(
+                "trigger: its own source releasing it every, beside one that alone would leave it unknown",
+            ),
+            fixed_count(
+                "trigger: its own source releasing it every, beside another that alone would release it every from \
+                 itself",
+            ),
+            fixed_count(
+                "trigger: its own source leaving it unknown, beside one that alone would leave it unknown too",
+            ),
+            fixed_count("trigger: binding none, beside a task bound to its own source"),
+            fixed_count("rank: two stated separations tied"),
+            fixed_count("rank: every class in one system"),
         ],
     );
+}
+
+/// The classes of the releases universe a system's construction fixes, from its label — `t=KIND u=KIND alarm=yes|no
+/// sources=dev.X:SEPARATION:PATH …` — as the universe builds it: a periodic task bound to a source itself refused
+/// (§1); otherwise each sporadic task's trigger by the source it binds itself, else by the one source whose path
+/// reaches it — its own path, a service it uses, or a service a service it uses names — each separation against its
+/// own, `t`'s 20 ms and `u`'s 40 ms (§2.2); two sources stating one separation tied, and every rank class with the
+/// alarm (§2.5); and a named edge for each service naming another, `h.X` naming `evt.X`.
+fn release_classes(label: &str) -> BTreeSet<&'static str> {
+    let word = |key: &str| {
+        label
+            .split(' ')
+            .find_map(|w| w.strip_prefix(key))
+            .expect("a parameter")
+    };
+    let (t, u, alarm) = (word("t="), word("u="), word("alarm=") == "yes");
+    let sources: Vec<(&str, &str)> = label
+        .split(' ')
+        .filter(|w| w.starts_with("dev.") || w.starts_with("sources=dev."))
+        .map(|w| {
+            let mut parts = w.trim_start_matches("sources=").split(':');
+            let _block = parts.next();
+            (
+                parts.next().expect("a separation"),
+                parts.next().expect("a path"),
+            )
+        })
+        .collect();
+    let mut out = BTreeSet::new();
+    let own = |task: &str| if task == "t" { "DirectT" } else { "DirectU" };
+    if (t == "periodic" && sources.iter().any(|(_, p)| *p == own("t")))
+        || (u == "periodic" && sources.iter().any(|(_, p)| *p == own("u")))
+    {
+        out.insert("refusal: a periodic task bound to a source itself");
+        return out;
+    }
+    let reaches = |task: &str, path: &str| match task {
+        "t" => matches!(path, "DirectT" | "ServiceT" | "ChainT" | "ServiceTU"),
+        _ => matches!(path, "DirectU" | "ServiceU" | "ServiceTU"),
+    };
+    let decide = |separation: &str, own_ms: u64| -> (&'static str, &'static str) {
+        match separation
+            .strip_prefix("Stated(")
+            .map(|ms| ms.trim_end_matches(')').parse::<u64>().expect("ms"))
+        {
+            Some(ms) if ms == own_ms => ("every", "trigger: every, equal separations"),
+            Some(ms) if ms > own_ms => ("every", "trigger: every, a longer separation"),
+            Some(_) => ("unknown", "trigger: unknown, a shorter separation"),
+            None if separation == "Unstated" => {
+                ("unknown", "trigger: unknown, no separation stated")
+            }
+            None => ("unknown", "trigger: unknown, the separation absent"),
+        }
+    };
+    for (task, kind, ms) in [("t", t, 20), ("u", u, 40)] {
+        if kind != "sporadic" {
+            continue;
+        }
+        let reaching: Vec<&(&str, &str)> =
+            sources.iter().filter(|(_, p)| reaches(task, p)).collect();
+        if let Some((separation, _)) = sources.iter().find(|(_, p)| *p == own(task)) {
+            let decided = decide(separation, ms);
+            out.insert("trigger: its own source");
+            out.insert(decided.1);
+            let others: Vec<&&(&str, &str)> =
+                reaching.iter().filter(|(_, p)| *p != own(task)).collect();
+            out.insert(if others.is_empty() {
+                "trigger: its own source, no other reaching it"
+            } else {
+                "trigger: its own source, beside another reaching it"
+            });
+            if let [(other, _)] = others.as_slice() {
+                out.insert(match (decided.0, decide(other, ms).0) {
+                    ("unknown", "every") => {
+                        "trigger: its own source leaving it unknown, beside one that alone would release it every"
+                    }
+                    ("every", "unknown") => {
+                        "trigger: its own source releasing it every, beside one that alone would leave it unknown"
+                    }
+                    ("every", _) => {
+                        "trigger: its own source releasing it every, beside another that alone would release it every \
+                         from itself"
+                    }
+                    _ => "trigger: its own source leaving it unknown, beside one that alone would leave it unknown too",
+                });
+            }
+        } else {
+            let other = if task == "t" { "u" } else { "t" };
+            if sources.iter().any(|(_, p)| *p == own(other)) {
+                out.insert("trigger: binding none, beside a task bound to its own source");
+            }
+            out.insert(match reaching.as_slice() {
+                [] => "trigger: unknown, no source reaching it",
+                [(separation, _)] => decide(separation, ms).1,
+                _ => "trigger: unknown, several sources",
+            });
+        }
+    }
+    let stated: Vec<&str> = sources
+        .iter()
+        .map(|(separation, _)| *separation)
+        .filter(|separation| separation.starts_with("Stated("))
+        .collect();
+    if stated.len() == 2 && stated[0] == stated[1] {
+        out.insert("rank: two stated separations tied");
+    }
+    if alarm && !stated.is_empty() && stated.len() < sources.len() {
+        out.insert("rank: every class in one system");
+    }
+    if sources.iter().any(|(_, p)| *p == "ChainT") {
+        out.insert("initialisation: a named edge");
+    }
+    out
 }
 
 #[test]
@@ -8223,20 +9690,31 @@ fn requesters_of_every_kind_refused_or_lowered() {
     // 4 requesters, each requiring one of 4 things.
     assert_eq!(cases.len(), 4 * 4);
     let tally = run("requesters of every kind", &cases);
+    // Of each requester, periodic task, sporadic task, the system's own level and a service, requiring an alarm, a
+    // deadline, an extended counter or the source: the three that program an alarm or take an expiry themselves refused,
+    // naming one receiver each (§1), and the periodic task bound to the source; the 9 others lowered — every extended
+    // counter, its wake running the instance alone; the sporadic task's own source, 20 ms against its 20 ms; the system's
+    // own level's source; and the service's four.
     hold(
         "requesters of every kind",
         &tally,
         (16, 9, 0, 0, 7),
         &[
-            "refusal: a periodic task bound to a source itself",
-            "receivers: an alarm programmed itself",
-            "receivers: an expiry",
-            "receivers: the system's own level alone",
-            "instance: an obliged fact bare",
-            "context: a wake running the instance alone",
-            "context: an expiry running its requester",
-            "trigger: every, equal separations",
-            "trigger: unknown, no source reaching it",
+            exactly("refusal: a periodic task bound to a source itself", 1),
+            exactly("receivers: an alarm programmed itself", 3),
+            exactly("receivers: an expiry", 3),
+            exactly("receivers: one", 6),
+            exactly("receivers: the system's own level alone", 2),
+            exactly("instance: an obliged fact bare", 1),
+            exactly("context: a wake running the instance alone", 4),
+            exactly("context: an expiry running its requester", 1),
+            exactly("trigger: every, equal separations", 1),
+            exactly("trigger: its own source", 1),
+            exactly("trigger: its own source, no other reaching it", 1),
+            exactly("trigger: unknown, no source reaching it", 1),
+            exactly("task: deadline-from written", 9),
+            exactly("task: jitter zero where none is stated", 9),
+            exactly("task: overrun fault where none is stated", 9),
         ],
     );
 }
@@ -8251,27 +9729,57 @@ fn two_tasks_sharing_services_that_take_a_channel() {
         8usize.pow(2) * (1 << 2) * (1 << 2) * (1 << 2) * 4
     );
     let tally = run("two tasks sharing services", &cases);
+    // Every system lowered. A task writing `(deadline-from release)` in 3 of 4 choices, one owing it in 3 of 4; a
+    // deadline's instance, bounded or bare, in 28 of the 64 capabilities for each kind, and one or the other in 48; a
+    // named edge in 3 of the 4 sets of edges, a cycle in 1. The sporadic `u` released by `dev.s`'s 20 ms, its own 20 ms,
+    // wherever the services it uses reach one handling the source, and otherwise by none.
+    let needs = |s: &Service, fact: &str| s.side.needs.iter().any(|n| n == fact);
+    let bound = |s: &Service| !s.side.at_most.is_empty();
+    let reaches_source = |c: &Case| {
+        uses_closure(&c.description.services, &c.description.tasks[1].side.uses)
+            .iter()
+            .any(|n| {
+                c.description
+                    .services
+                    .iter()
+                    .any(|s| &s.name == n && needs(s, INTERRUPT_FACT))
+            })
+    };
     hold(
         "two tasks sharing services",
         &tally,
         (16_384, 16_384, 0, 0, 0),
         &[
-            "task: deadline-from written",
-            "task: deadline-from owed",
-            "trigger: every, equal separations",
-            "trigger: unknown, no source reaching it",
-            "instance: an obliged fact with its bound",
-            "instance: an obliged fact bare",
-            "context: an expiry running its requester",
-            "context: a node in two interrupts",
-            "initialisation: a named edge",
-            "initialisation: a component of several members",
-            "multiplex: multiplexed",
-            "multiplex: multiplexed by two jobs",
-            "multiplex: a channel with one user",
-            "multiplex: its own route no user",
-            "multiplex: its own route a user, another node there reaching it",
-            "multiplex: another route a user",
+            exactly("task: deadline-from written", 12_288),
+            exactly("task: deadline-from owed", 12_288),
+            exactly("task: jitter zero where none is stated", 16_384),
+            exactly("task: overrun fault where none is stated", 16_384),
+            counted("trigger: every, equal separations", &cases, reaches_source),
+            counted("trigger: unknown, no source reaching it", &cases, |c| {
+                !reaches_source(c)
+            }),
+            counted("instance: an obliged fact with its bound", &cases, |c| {
+                c.description
+                    .services
+                    .iter()
+                    .any(|s| needs(s, "absolute-deadline") && bound(s))
+            }),
+            counted("instance: an obliged fact bare", &cases, |c| {
+                c.description
+                    .services
+                    .iter()
+                    .any(|s| needs(s, "absolute-deadline") && !bound(s))
+            }),
+            exactly("context: an expiry running its requester", 48 * 16_384 / 64),
+            exactly("initialisation: a named edge", 12_288),
+            exactly("initialisation: a component of several members", 4_096),
+            some("context: a node in two interrupts"),
+            some("multiplex: multiplexed"),
+            some("multiplex: multiplexed by two jobs"),
+            some("multiplex: a channel with one user"),
+            some("multiplex: its own route no user"),
+            some("multiplex: its own route a user, another node there reaching it"),
+            some("multiplex: another route a user"),
         ],
     );
 }
@@ -8283,21 +9791,32 @@ fn receivers_of_interrupt_code_each_named_in_order() {
     // writing `(deadline-from release)` or not.
     assert_eq!(cases.len(), 3usize.pow(3) * 2 * 4 * 4);
     let tally = run("receivers of interrupt code", &cases);
+    // Of the 27 choices of what `t`, `u` and the system's own level program, each over 32 of the other choices: the one
+    // programming nothing lowered; 6 with one receiver, 12 with two, 8 with three; 19 with an alarm and 19 with an
+    // expiry; 2 with the system's own level alone receiving, 16 with it and a task; and 4 with both tasks receiving,
+    // over 3 of the system's own level's, `u` first in half of their 32. Of the 32 lowered, a task writes
+    // `(deadline-from release)` in 24, one owes it in 24, and a task is sporadic, bound to no source, in 24.
     hold(
         "receivers of interrupt code",
         &tally,
         (864, 32, 0, 0, 832),
         &[
-            "task: deadline-from written",
-            "task: deadline-from owed",
-            "receivers: one",
-            "receivers: two",
-            "receivers: three",
-            "receivers: an alarm programmed itself",
-            "receivers: an expiry",
-            "receivers: the system's own level alone",
-            "receivers: tasks and the system's own level",
-            "receivers: runtime order unlike the tasks' text order",
+            exactly("task: deadline-from written", 24),
+            exactly("task: deadline-from owed", 24),
+            exactly("task: jitter zero where none is stated", 32),
+            exactly("task: overrun fault where none is stated", 32),
+            exactly("trigger: unknown, no source reaching it", 24),
+            exactly("receivers: one", 6 * 32),
+            exactly("receivers: two", 12 * 32),
+            exactly("receivers: three", 8 * 32),
+            exactly("receivers: an alarm programmed itself", 19 * 32),
+            exactly("receivers: an expiry", 19 * 32),
+            exactly("receivers: the system's own level alone", 2 * 32),
+            exactly("receivers: tasks and the system's own level", 16 * 32),
+            exactly(
+                "receivers: runtime order unlike the tasks' text order",
+                4 * 3 * 16,
+            ),
         ],
     );
 }
@@ -8308,38 +9827,116 @@ fn requiring_hardware_its_nodes_contexts_and_multiplexing() {
     // What `dma.x` and `soc` each require, of 5; who binds to each, of 8; what composes `alarm`, of 3; `u` of 2 kinds.
     assert_eq!(cases.len(), 5 * 5 * 8 * 8 * 3 * 2);
     let tally = run("requiring hardware", &cases);
-    // A third of it lowered: `alarm` named by `dma.x` or `soc` is refused (§1, round 13).
+    // A third of it lowered: `alarm` named by `dma.x` or `soc` is refused (§1, round 13). Of the lowered, each count
+    // read from what `dma.x` and `soc` require and who binds to them, as the label writes it: requiring hardware bound to
+    // by its binder or by nothing (neither binds the other's offer); an alarm, an expiry or a handler of the source
+    // where either requires one; an edge to whichever requires anything; `soc` bound to a block it composes for an
+    // alarm, the source or an output, `timer.d` and `uart.c` texts above `soc`'s, `dev.s`'s below.
+    let part = |c: &Case, who: &str| -> (String, String) {
+        let at = c.label.find(&format!("{who}:")).expect("a part") + who.len() + 1;
+        let rest = &c.label[at..];
+        let requires = rest.split(' ').next().expect("requires").to_string();
+        let binder = rest
+            .split(" by ")
+            .nth(1)
+            .and_then(|b| b.split(';').next())
+            .expect("a binder")
+            .to_string();
+        (requires, binder)
+    };
+    let lowered = |c: &Case| c.label.contains("alarm composed by Nothing");
+    let requires = |c: &Case, what: &str| ["dma.x", "soc"].iter().any(|w| part(c, w).0 == what);
+    let requiring = |c: &Case, bound: bool| {
+        ["dma.x", "soc"].iter().any(|w| {
+            let (requires, binder) = part(c, w);
+            requires != "Nothing" && (binder != "Nothing") == bound
+        })
+    };
     hold(
         "requiring hardware",
         &tally,
         (9_600, 3_200, 0, 0, 6_400),
         &[
-            "refusal: hardware naming what is not hardware",
-            "operand: a block's `uses` naming a service",
-            "operand: a platform's `uses` naming a service",
-            "hardware: a block bound for requirements of its own",
-            "hardware: a platform bound for requirements of its own",
-            "hardware: requiring, and bound to by nothing",
-            "hardware: requiring, and bound to by a requester",
-            "hardware: an alarm it programs itself",
-            "hardware: an expiry running its code",
-            "hardware: a source's handler",
-            "hardware: in an interrupt through a binding to it",
-            "initialisation: a composite bound to its part, its edge kept",
-            "initialisation: an edge across composition ordering two steps unlike their texts",
-            "initialisation: an edge to a block or a platform bound for its own requirements",
-            "multiplex: a block or a platform multiplexed",
-            "multiplex: multiplexed by two jobs",
-            "multiplex: multiplexed by a job and an interrupt",
-            "multiplex: a block or a platform's channel with one user",
-            "multiplex: its own route no user",
-            "multiplex: another route a user",
-            "composition: a platform a task reaches through a binding",
-            "composition: what a node in a job composes is in none",
-            "composition: what a node in an interrupt composes is not run there",
-            "trigger: a source a block or a platform handles",
-            "trigger: every, equal separations",
-            "trigger: unknown, no source reaching it",
+            exactly("refusal: hardware naming what is not hardware", 6_400),
+            exactly("operand: a block's `uses` naming a service", 3_200),
+            exactly("operand: a platform's `uses` naming a service", 3_200),
+            counted(
+                "hardware: a block bound for requirements of its own",
+                &cases,
+                |c| lowered(c) && part(c, "dma.x").0 != "Nothing",
+            ),
+            counted(
+                "hardware: a platform bound for requirements of its own",
+                &cases,
+                |c| lowered(c) && part(c, "soc").0 != "Nothing",
+            ),
+            counted(
+                "hardware: requiring, and bound to by nothing",
+                &cases,
+                |c| lowered(c) && requiring(c, false),
+            ),
+            counted(
+                "hardware: requiring, and bound to by a requester",
+                &cases,
+                |c| lowered(c) && requiring(c, true),
+            ),
+            counted("hardware: an alarm it programs itself", &cases, |c| {
+                lowered(c) && requires(c, "Alarm")
+            }),
+            counted("hardware: an expiry running its code", &cases, |c| {
+                lowered(c) && requires(c, "Deadline")
+            }),
+            counted("context: an expiry running its requester", &cases, |c| {
+                lowered(c) && requires(c, "Deadline")
+            }),
+            counted("instance: an obliged fact bare", &cases, |c| {
+                lowered(c) && requires(c, "Deadline")
+            }),
+            counted("hardware: a source's handler", &cases, |c| {
+                lowered(c) && requires(c, "Source")
+            }),
+            counted(
+                "initialisation: an edge to a block or a platform bound for its own requirements",
+                &cases,
+                |c| {
+                    lowered(c) && (part(c, "dma.x").0 != "Nothing" || part(c, "soc").0 != "Nothing")
+                },
+            ),
+            counted(
+                "initialisation: a composite bound to its part, its edge kept",
+                &cases,
+                |c| {
+                    lowered(c) && ["Alarm", "Source", "Output"].contains(&part(c, "soc").0.as_str())
+                },
+            ),
+            counted(
+                "initialisation: an edge across composition ordering two steps unlike their texts",
+                &cases,
+                |c| lowered(c) && ["Alarm", "Output"].contains(&part(c, "soc").0.as_str()),
+            ),
+            exactly("multiplex: a channel with one user", 3_200),
+            exactly("multiplex: its own route no user", 3_200),
+            exactly(
+                "owed: a service or a policy in a job, its call cost and masked runs",
+                3_200,
+            ),
+            exactly(
+                "owed: a block or a platform in a job, its call cost and masked runs",
+                3_200,
+            ),
+            exactly("task: deadline-from written", 3_200),
+            some("hardware: in an interrupt through a binding to it"),
+            some("multiplex: a block or a platform multiplexed"),
+            some("multiplex: multiplexed by two jobs"),
+            some("multiplex: multiplexed by a job and an interrupt"),
+            some("multiplex: a block or a platform's channel with one user"),
+            some("multiplex: another route a user"),
+            some("composition: a platform a task reaches through a binding"),
+            some("composition: what a node in a job composes is in none"),
+            some("composition: what a node in an interrupt composes is not run there"),
+            some("trigger: a source a block or a platform handles"),
+            some("trigger: every, equal separations"),
+            some("trigger: unknown, no source reaching it"),
         ],
     );
 }
@@ -8350,26 +9947,69 @@ fn task_clauses_jitter_overrun_and_reference() {
     // Which task is first; for each of 2 tasks, 5 jitters, 3 overrun policies and 3 references.
     assert_eq!(cases.len(), 2 * (5 * 3 * 3) * (5 * 3 * 3));
     let tally = run("task clauses", &cases);
+    // Each count read from the tasks' clauses as the universe writes them: refused, a jitter past the arithmetic first,
+    // then a deadline from another event, task by task in runtime order (§1); every other lowered, its task lines
+    // reading each clause.
+    let tasks = |c: &Case| c.description.tasks.clone();
+    let past = |t: &Task| t.jitter.is_some_and(|j| j.seconds().is_none());
+    let other_event = |t: &Task| t.deadline_from == Some("activation");
+    let lowered = |c: &Case| tasks(c).iter().all(|t| !past(t) && !other_event(t));
+    let any = |c: &Case, f: &dyn Fn(&Task) -> bool| lowered(c) && tasks(c).iter().any(f);
+    let first_runtime_named = |c: &Case| {
+        let mut by_rank = tasks(c);
+        by_rank.sort_by_key(Task::rank);
+        !tasks(c).iter().any(past)
+            && by_rank
+                .iter()
+                .find(|t| other_event(t))
+                .map(|t| t.name.clone())
+                != Some(tasks(c)[0].name.clone())
+            && other_event(&tasks(c)[0])
+    };
     hold(
         "task clauses",
         &tally,
         (4_050, 1_152, 0, 0, 2_898),
         &[
-            "task: jitter zero where none is stated",
-            "task: jitter written zero",
-            "task: jitter written",
-            "task: jitter longer than its release's duration",
-            "task: overrun fault where none is stated",
-            "task: overrun fault as written",
-            "task: overrun another policy as written",
-            "task: deadline-from written",
-            "task: deadline-from owed",
-            "refusal: a deadline measured from another event",
-            "refusal: a duration past the arithmetic",
-            "past: a task's clause",
-            "past: several, named in order",
-            "past: before a deadline from another event",
-            "trigger: every, equal separations",
+            counted("task: jitter zero where none is stated", &cases, |c| any(c, &|t| t.jitter.is_none())),
+            counted("task: jitter written zero", &cases, |c| any(c, &|t| t.jitter == Some(Dur::Ms(0)))),
+            counted("task: jitter written", &cases, |c| {
+                any(c, &|t| t.jitter == Some(Dur::Spelled("1500 us")))
+            }),
+            counted("task: jitter longer than its release's duration", &cases, |c| {
+                any(c, &|t| t.jitter == Some(Dur::Ms(50)))
+            }),
+            counted("task: overrun fault where none is stated", &cases, |c| {
+                any(c, &|t| t.overrun.is_none())
+            }),
+            counted("task: overrun fault as written", &cases, |c| {
+                any(c, &|t| t.overrun == Some("fault"))
+            }),
+            counted("task: overrun another policy as written", &cases, |c| {
+                any(c, &|t| t.overrun == Some("skip-late-job"))
+            }),
+            counted("task: deadline-from written", &cases, |c| {
+                any(c, &|t| t.deadline_from == Some("release"))
+            }),
+            counted("task: deadline-from owed", &cases, |c| any(c, &|t| t.deadline_from.is_none())),
+            counted("refusal: a deadline measured from another event", &cases, |c| {
+                !tasks(c).iter().any(past) && tasks(c).iter().any(other_event)
+            }),
+            counted(
+                "deadline: the first in runtime order named, an earlier declared one measured from another event \
+                 too",
+                &cases,
+                first_runtime_named,
+            ),
+            counted("refusal: a duration past the arithmetic", &cases, |c| tasks(c).iter().any(past)),
+            counted("past: a task's clause", &cases, |c| tasks(c).iter().any(past)),
+            counted("past: several, named in order", &cases, |c| tasks(c).iter().all(past)),
+            counted("past: before a deadline from another event", &cases, |c| {
+                tasks(c).iter().any(past) && tasks(c).iter().any(other_event)
+            }),
+            exactly("trigger: every, equal separations", 1_152),
+            exactly("owed: a block or a platform in a job, its call cost and masked runs", 1_152),
+            exactly("owed: a service or a policy in a job, its call cost and masked runs", 1_152),
         ],
     );
 }
@@ -8381,29 +10021,116 @@ fn durations_past_the_arithmetic_and_at_its_edge() {
     // of 2 sources of 4 states; each of 2 bounds of 3.
     assert_eq!(cases.len(), 2 * 2 * 8 * 2 * 4 * 4 * 3 * 3);
     let tally = run("past the arithmetic", &cases);
+    // Each count read from the label's parameters: a duration past the arithmetic is named where the plan would write
+    // it — every task clause, each source a handler binds, `PastUnbound`'s none, each bound — and the 64 with none
+    // lowered (2 values, 2 orders, each source within or past and bound by nothing, each bound bare or within); at the
+    // edge, each value its denominator past 64 bits, and `u`'s trigger decided by `dev!`'s separation against its own,
+    // longer at the edge, equal plain, unknown where `dev!` is bound by nothing.
+    let has = |c: &Case, word: &str| c.label.contains(word);
+    let edge = |c: &Case| c.label.starts_with("edge ");
+    let task_items = |c: &Case| {
+        ["period,", "deadline,", "jitter"]
+            .iter()
+            .filter(|w| {
+                c.label
+                    .split(" u-past=")
+                    .next()
+                    .is_some_and(|t| t.contains(**w))
+            })
+            .count()
+            + if has(c, "u-past=true") { 3 } else { 0 }
+    };
+    let source_past = |c: &Case, which: &str| {
+        has(c, &format!("{which}:Past ")) || has(c, &format!("{which}:Overflowing "))
+    };
+    let sources =
+        |c: &Case| usize::from(source_past(c, "dev")) + usize::from(source_past(c, "dev!"));
+    let bounds =
+        |c: &Case| usize::from(has(c, "dl:Past ")) + usize::from(c.label.ends_with("dl!:Past"));
+    let lowered = |c: &Case| task_items(c) + sources(c) + bounds(c) == 0;
+    let within = |c: &Case, which: &str| has(c, &format!("{which}:Within "));
     hold(
         "past the arithmetic",
         &tally,
         (9_216, 64, 0, 0, 9_152),
         &[
-            "refusal: a duration past the arithmetic",
-            "past: a task's clause",
-            "past: a source's separation",
-            "past: an obliged bound",
-            "past: a task's, a source's and a bound at once",
-            "past: several, named in order",
-            "past: the sources' texts ordered unlike their providers' names",
-            "past: the bounds' instances ordered unlike their requesters' names",
-            "exact: a task's duration at the arithmetic's edge",
-            "exact: a separation at the arithmetic's edge",
-            "exact: an obliged bound at the arithmetic's edge",
-            "exact: two separations compared past 128 bits",
-            "exact: a source's and a task's separations compared past 128 bits",
-            "trigger: every, a longer separation",
-            "trigger: every, equal separations",
-            "trigger: unknown, no source reaching it",
-            "instance: an obliged fact with its bound",
-            "instance: an obliged fact bare",
+            counted("refusal: a duration past the arithmetic", &cases, |c| {
+                !lowered(c)
+            }),
+            counted("past: a task's clause", &cases, |c| task_items(c) > 0),
+            counted("past: a source's separation", &cases, |c| sources(c) > 0),
+            counted("past: an obliged bound", &cases, |c| bounds(c) > 0),
+            counted("past: an obliged bound of a service", &cases, |c| {
+                bounds(c) > 0
+            }),
+            counted(
+                "past: a task's, a source's and a bound at once",
+                &cases,
+                |c| task_items(c) > 0 && sources(c) > 0 && bounds(c) > 0,
+            ),
+            counted("past: several, named in order", &cases, |c| {
+                task_items(c) + sources(c) + bounds(c) >= 2
+            }),
+            counted(
+                "past: the sources' texts ordered unlike their providers' names",
+                &cases,
+                |c| sources(c) == 2,
+            ),
+            counted(
+                "past: the bounds' instances ordered unlike their requesters' names",
+                &cases,
+                |c| bounds(c) == 2,
+            ),
+            counted(
+                "exact: a task's duration at the arithmetic's edge",
+                &cases,
+                |c| lowered(c) && edge(c),
+            ),
+            counted(
+                "exact: a separation at the arithmetic's edge",
+                &cases,
+                |c| lowered(c) && edge(c) && (within(c, "dev") || within(c, "dev!")),
+            ),
+            counted(
+                "exact: an obliged bound at the arithmetic's edge",
+                &cases,
+                |c| {
+                    lowered(c)
+                        && edge(c)
+                        && (has(c, "dl:Within ") || c.label.ends_with("dl!:Within"))
+                },
+            ),
+            counted(
+                "exact: two separations compared past 128 bits",
+                &cases,
+                |c| lowered(c) && edge(c) && within(c, "dev") && within(c, "dev!"),
+            ),
+            counted(
+                "exact: a source's and a task's separations compared past 128 bits",
+                &cases,
+                |c| lowered(c) && edge(c) && within(c, "dev!"),
+            ),
+            counted("trigger: every, a longer separation", &cases, |c| {
+                lowered(c) && edge(c) && within(c, "dev!")
+            }),
+            counted("trigger: every, equal separations", &cases, |c| {
+                lowered(c) && !edge(c) && within(c, "dev!")
+            }),
+            counted("trigger: unknown, no source reaching it", &cases, |c| {
+                lowered(c) && !within(c, "dev!")
+            }),
+            counted("instance: an obliged fact with its bound", &cases, |c| {
+                lowered(c) && (has(c, "dl:Within ") || c.label.ends_with("dl!:Within"))
+            }),
+            counted("instance: a service's obliged bound", &cases, |c| {
+                lowered(c) && (has(c, "dl:Within ") || c.label.ends_with("dl!:Within"))
+            }),
+            counted("instance: an obliged fact bare", &cases, |c| {
+                lowered(c) && (has(c, "dl:Bare ") || c.label.ends_with("dl!:Bare"))
+            }),
+            counted("task: jitter written", &cases, |c| lowered(c) && edge(c)),
+            exactly("task: deadline-from written", 64),
+            exactly("context: an expiry running its requester", 64),
         ],
     );
 }
@@ -8422,19 +10149,109 @@ fn a_second_system_named_or_not() {
         );
     }
     let tally = run("a second system", &cases);
+    // Each count read from the label: the sites a lowered system serves — `sys` its task's, its own level's and
+    // `bridge.s`'s, `other` its task's and `bridge.o`'s, and, once it names `sys`, `sys`'s own level's — each a pair of
+    // the naming-system refusal (§1); a system with none lowered, the other system's sites then naming outside it. Over
+    // 48 choices of the rest for each set of sites.
+    let site = |c: &Case, name: &str| {
+        c.label
+            .split(' ')
+            .next()
+            .and_then(|w| w.strip_prefix("naming="))
+            .is_some_and(|sites| sites.split(',').any(|s| s == name))
+    };
+    let lowering_sys = |c: &Case| c.label.ends_with("lowering sys");
+    let pairs = |c: &Case| -> usize {
+        if lowering_sys(c) {
+            ["t>other", "sys>other", "bridge.s>other"]
+                .iter()
+                .filter(|s| site(c, s))
+                .count()
+        } else {
+            let own = ["o>sys", "bridge.o>sys"]
+                .iter()
+                .filter(|s| site(c, s))
+                .count();
+            own + usize::from(own > 0 && site(c, "sys>other"))
+        }
+    };
+    let lowered = |c: &Case| pairs(c) == 0;
+    let other_names = |c: &Case| {
+        if lowering_sys(c) {
+            site(c, "o>sys") || site(c, "bridge.o>sys")
+        } else {
+            site(c, "t>other") || site(c, "sys>other") || site(c, "bridge.s>other")
+        }
+    };
+    let own_platform = |c: &Case| c.label.contains("other on host.q");
+    let shared = |c: &Case| c.label.contains("alarm=both");
     hold(
         "a second system",
         &tally,
         (3_072, 576, 0, 0, 2_496),
         &[
-            "refusal: a requester naming a system",
-            "naming: a task naming a system",
-            "naming: the system's own level naming a system",
-            "naming: a service naming a system",
-            "naming: several names",
-            "naming: a system another system's requester names, outside this one's",
-            "second system: a service another system's task also uses",
-            "second system: requiring hardware the lowered system does not serve",
+            exactly("refusal: a requester naming a system", 2_496),
+            counted("naming: a task naming a system", &cases, |c| {
+                if lowering_sys(c) {
+                    site(c, "t>other")
+                } else {
+                    site(c, "o>sys")
+                }
+            }),
+            counted(
+                "naming: the system's own level naming a system",
+                &cases,
+                |c| lowering_sys(c) && site(c, "sys>other"),
+            ),
+            counted("naming: a service naming a system", &cases, |c| {
+                if lowering_sys(c) {
+                    site(c, "bridge.s>other")
+                } else {
+                    site(c, "bridge.o>sys")
+                }
+            }),
+            counted(
+                "naming: a named system's own level naming a system",
+                &cases,
+                |c| !lowering_sys(c) && pairs(c) > 1 && site(c, "sys>other"),
+            ),
+            counted("naming: the lowered system itself named", &cases, |c| {
+                !lowering_sys(c) && pairs(c) > 1 && site(c, "sys>other")
+            }),
+            counted("naming: several names", &cases, |c| pairs(c) >= 2),
+            counted(
+                "naming: a system another system's requester names, outside this one's",
+                &cases,
+                |c| lowered(c) && other_names(c),
+            ),
+            exactly(
+                "second system: a service another system's task also uses",
+                576,
+            ),
+            counted(
+                "second system: requiring hardware the lowered system does not serve",
+                &cases,
+                |c| lowered(c) && lowering_sys(c) && own_platform(c),
+            ),
+            counted(
+                "hardware: a block bound for requirements of its own",
+                &cases,
+                |c| lowered(c) && !lowering_sys(c) && own_platform(c),
+            ),
+            counted("hardware: an alarm it programs itself", &cases, |c| {
+                lowered(c) && !lowering_sys(c) && own_platform(c)
+            }),
+            counted("multiplex: a channel with one user", &cases, |c| {
+                lowered(c) && (lowering_sys(c) || shared(c))
+            }),
+            counted("multiplex: its own route no user", &cases, |c| {
+                lowered(c)
+                    && (lowering_sys(c)
+                        || shared(c)
+                        || c.label.ends_with("other-own=2: lowering other")
+                        || own_platform(c))
+            }),
+            exactly("task: deadline-from written", 576),
         ],
     );
 }
@@ -8447,71 +10264,284 @@ fn hardware_naming_what_is_not_hardware_refused_in_its_place() {
     let tally = run("hardware naming", &cases);
     // Lowered: the 20 whose hardware `sys` serves names hardware alone — `timer.d` nothing, `dma.x` nothing or a block
     // (5), `soc` nothing or a block (2) — whatever `blk.q`, which `sys` does not serve, names (2; round 15, R15-R2), and
-    // whose task `t` meets no other refusal; every other refused.
+    // whose task `t` meets no other refusal; every other refused. Each count read from the label's namings and `t`'s
+    // other refusal, §1's bullets taken in their order: the periodic task first, then a system named — by `t` or by
+    // `dma.x` — then the hardware's operands, then the second list.
+    let named = |c: &Case, namer: &str| -> Vec<String> {
+        let at = c.label.find(&format!("{namer} names [")).expect("a namer") + namer.len() + 8;
+        let inside = &c.label[at..at + c.label[at..].find(']').expect("closed")];
+        inside
+            .split(',')
+            .filter(|w| !w.is_empty())
+            .map(str::to_string)
+            .collect()
+    };
+    let also = |c: &Case| c.label.rsplit(' ').next().expect("also").to_string();
+    let other_kind = |item: &String| {
+        let name = item.split(':').nth(1).expect("a name");
+        ["alarm", "only.s", "pol.p", "other"].contains(&name)
+    };
+    let served = ["timer.d", "dma.x", "soc"];
+    let operands = |c: &Case| -> Vec<(String, String)> {
+        served
+            .iter()
+            .flat_map(|namer| {
+                named(c, namer)
+                    .into_iter()
+                    .filter(other_kind)
+                    .map(|item| ((*namer).to_string(), item))
+            })
+            .collect()
+    };
+    let names_system = |c: &Case| {
+        also(c) == "NamesSystem" || named(c, "dma.x").contains(&"uses:other".to_string())
+    };
+    let given = |c: &Case| -> &'static str {
+        if also(c) == "PeriodicSource" {
+            "periodic"
+        } else if names_system(c) {
+            "naming"
+        } else if !operands(c).is_empty() {
+            "operand"
+        } else {
+            match also(c).as_str() {
+                "JitterPast" => "past",
+                "DeadlineFromOther" => "deadline",
+                "Receiver" => "receivers",
+                _ => "lowered",
+            }
+        }
+    };
+    let operand = |c: &Case, who: &str, item: &str| {
+        given(c) == "operand" && named(c, who).contains(&item.to_string())
+    };
+    let lowered = |c: &Case| given(c) == "lowered";
+    let dma = |c: &Case, item: &str| named(c, "dma.x").contains(&item.to_string());
     hold(
         "hardware naming",
         &tally,
         (1_800, 20, 0, 0, 1_780),
         &[
-            "refusal: hardware naming what is not hardware",
-            "operand: a block's `uses` naming a service",
-            "operand: a block's `needs` naming a service",
-            "operand: a block's `uses` naming a policy",
-            "operand: a block's `needs` naming a policy",
-            "operand: a platform's `uses` naming a service",
-            "operand: a platform's `needs` naming a policy",
-            "operand: a block naming the service bound to it",
-            "operand: a service only hardware names",
-            "operand: hardware the system does not serve naming what is not hardware too, not named",
-            "unserved: a block naming a service",
-            "operand: several, named in order",
-            "operand: one namer naming two",
-            "operand: the namers' order unlike the operands'",
-            "operand: before a duration past the arithmetic",
-            "operand: before a deadline from another event",
-            "operand: before a receiver of interrupt code",
-            "periodic: before hardware naming what is not hardware",
-            "naming: before hardware naming what is not hardware",
-            "naming: a block or a platform naming a system",
-            "hardware: a block's or a platform's `needs` naming a block",
-            "hardware: what a node in a job names by `needs` is in none",
-            "initialisation: a composite bound to its part, its edge kept",
-            "initialisation: a block composing a block, an edge across it kept",
-            "initialisation: an edge across a block's `needs` naming a block stands",
+            counted("refusal: a periodic task bound to a source itself", &cases, |c| given(c) == "periodic"),
+            counted("refusal: a requester naming a system", &cases, |c| given(c) == "naming"),
+            counted("refusal: hardware naming what is not hardware", &cases, |c| given(c) == "operand"),
+            counted("refusal: a duration past the arithmetic", &cases, |c| given(c) == "past"),
+            counted("refusal: a deadline measured from another event", &cases, |c| given(c) == "deadline"),
+            counted("receivers: one", &cases, |c| given(c) == "receivers"),
+            counted("periodic: before hardware naming what is not hardware", &cases, |c| {
+                given(c) == "periodic" && !operands(c).is_empty()
+            }),
+            counted("task bullet: before a requester naming a system", &cases, |c| {
+                given(c) == "periodic" && dma(c, "uses:other")
+            }),
+            counted("naming: a task naming a system", &cases, |c| {
+                given(c) == "naming" && also(c) == "NamesSystem"
+            }),
+            counted("naming: a block or a platform naming a system", &cases, |c| {
+                given(c) == "naming" && dma(c, "uses:other")
+            }),
+            counted("naming: several names", &cases, |c| {
+                given(c) == "naming" && also(c) == "NamesSystem" && dma(c, "uses:other")
+            }),
+            counted("naming: before hardware naming what is not hardware", &cases, |c| {
+                given(c) == "naming" && !operands(c).is_empty()
+            }),
+            counted("operand: a block's `uses` naming a service", &cases, |c| {
+                operand(c, "timer.d", "uses:alarm") || operand(c, "dma.x", "uses:only.s")
+            }),
+            counted("operand: a block's `needs` naming a service", &cases, |c| {
+                operand(c, "timer.d", "needs:alarm") || operand(c, "dma.x", "needs:only.s")
+            }),
+            counted("operand: a block's `uses` naming a policy", &cases, |c| operand(c, "dma.x", "uses:pol.p")),
+            counted("operand: a block's `needs` naming a policy", &cases, |c| {
+                operand(c, "dma.x", "needs:pol.p")
+            }),
+            counted("operand: a platform's `uses` naming a service", &cases, |c| {
+                operand(c, "soc", "uses:only.s") || operand(c, "soc", "uses:alarm")
+            }),
+            counted("operand: a platform's `needs` naming a policy", &cases, |c| operand(c, "soc", "needs:pol.p")),
+            counted("operand: a block naming the service bound to it", &cases, |c| {
+                given(c) == "operand" && !named(c, "timer.d").is_empty()
+            }),
+            counted("operand: a service only hardware names", &cases, |c| {
+                operand(c, "dma.x", "uses:only.s")
+                    || operand(c, "dma.x", "needs:only.s")
+                    || operand(c, "soc", "uses:only.s")
+            }),
+            counted(
+                "operand: hardware the system does not serve naming what is not hardware too, not named",
+                &cases,
+                |c| given(c) == "operand" && !named(c, "blk.q").is_empty(),
+            ),
+            counted("operand: several, named in order", &cases, |c| {
+                given(c) == "operand" && operands(c).len() >= 2
+            }),
+            counted("operand: one namer naming two", &cases, |c| {
+                given(c) == "operand" && served.iter().any(|n| named(c, n).iter().filter(|i| other_kind(i)).count() >= 2)
+            }),
+            counted("operand: before a duration past the arithmetic", &cases, |c| {
+                given(c) == "operand" && also(c) == "JitterPast"
+            }),
+            counted("operand: before a deadline from another event", &cases, |c| {
+                given(c) == "operand" && also(c) == "DeadlineFromOther"
+            }),
+            counted("operand: before a receiver of interrupt code", &cases, |c| {
+                given(c) == "operand" && also(c) == "Receiver"
+            }),
+            counted("unserved: a block naming a service", &cases, |c| lowered(c) && !named(c, "blk.q").is_empty()),
+            exactly("hardware: a block bound for requirements of its own", 20),
+            counted("hardware: a block's or a platform's `needs` naming a block", &cases, |c| {
+                lowered(c)
+                    && (["needs:uart.c", "needs:timer.d", "needs:blk.n"].iter().any(|i| dma(c, i))
+                        || named(c, "soc").contains(&"needs:dev.s".to_string()))
+            }),
+            counted("hardware: what a node in a job names by `needs` is in none", &cases, |c| {
+                lowered(c) && dma(c, "needs:blk.n")
+            }),
+            counted("initialisation: a composite bound to its part, its edge kept", &cases, |c| {
+                lowered(c) && dma(c, "uses:uart.c")
+            }),
+            counted("initialisation: a block composing a block, an edge across it kept", &cases, |c| {
+                lowered(c) && dma(c, "uses:uart.c")
+            }),
+            counted(
+                "initialisation: an edge across composition ordering two steps unlike their texts",
+                &cases,
+                |c| lowered(c) && dma(c, "uses:uart.c"),
+            ),
+            counted("initialisation: an edge across a block's `needs` naming a block stands", &cases, |c| {
+                lowered(c) && dma(c, "needs:uart.c")
+            }),
+            some("operand: the namers' order unlike the operands'"),
         ],
     );
 }
 
 #[test]
-fn a_block_a_service_names_served_though_no_hardware() {
+fn a_block_a_service_names_refused_outside_the_hardware() {
     let cases = served_blocks();
-    // How `blk` is named, of 7; what it requires, of 5; its offer bound to or not; `u` of 2 kinds.
-    assert_eq!(cases.len(), 7 * 5 * 2 * 2);
+    // How `blk` is named, of 10; what it requires, of 5; its offer bound to or not; `u` of 2 kinds.
+    assert_eq!(cases.len(), 10 * 5 * 2 * 2);
     let tally = run("served blocks", &cases);
-    // Unresolved: the 60 where `xfer` needs `blk`'s offer and `blk` is no hardware (6 namings of 7, 5 requirements, 2
+    // Unresolved: the 60 where `xfer` needs `blk`'s offer and `blk` is no hardware (6 namings of 10, 5 requirements, 2
     // kinds of `u`): a requester bound outside the hardware is a conflict (model §8 rule 7), and nothing else offers
-    // `transfer-engine`, so the search concludes `missing-fact`.
+    // `transfer-engine`, so the search concludes `missing-fact`. Refused: the 50 where a served `drv` names `blk`, no
+    // hardware, and nothing is bound to it (5 namings, 5 requirements, 2 kinds of `u`; §1, round 20). Every other
+    // lowered. Each count read from the label: `blk` hardware where a task or the system's own level names it; its
+    // namers; what it requires; whether `xfer` binds it.
+    let by = |c: &Case| {
+        c.label
+            .split(" named ")
+            .nth(1)
+            .and_then(|r| r.split(';').next())
+            .expect("a naming")
+            .to_string()
+    };
+    let requires = |c: &Case| {
+        c.label["blk:".len()..]
+            .split(' ')
+            .next()
+            .expect("requires")
+            .to_string()
+    };
+    let bound = |c: &Case| c.label.contains("bound to by xfer");
+    let hardware =
+        |c: &Case| ["TDirect", "TDrvAndT", "UDrvAndU", "OwnDrvAndOwn"].contains(&by(c).as_str());
+    let named_also = |c: &Case| ["TDrvAndT", "UDrvAndU", "OwnDrvAndOwn"].contains(&by(c).as_str());
+    let refused = |c: &Case| !hardware(c) && by(c) != "NoDrv" && !bound(c);
+    let lowered = |c: &Case| hardware(c) || (by(c) == "NoDrv" && !bound(c));
+    let bare = |c: &Case| requires(c) == "Nothing" && !bound(c);
     hold(
         "served blocks",
         &tally,
-        (140, 80, 0, 60, 0),
+        (200, 90, 0, 60, 50),
         &[
-            "served: a block a service names, no hardware, bound for requirements of its own",
-            "initialisation: a named edge from a block a service names by `uses`",
-            "initialisation: a named edge from a block a service names by `needs`",
-            "initialisation: a named edge from a block no hardware, served through its namer",
-            "initialisation: a named edge from hardware bound for nothing and bound to by nothing",
-            "named: a block a service names, bound for nothing, a node",
-            "named: a block a task names, bound for nothing, a node",
-            "named: a block no hardware, which a service or a policy names, bound for nothing, a node",
-            "named: hardware named and bound for nothing, in a job",
-            "named: hardware named and bound for nothing, in no job",
-            "named: hardware a service or a policy the system does not serve names, no node",
-            "hardware: a block bound for requirements of its own",
-            "hardware: an alarm it programs itself",
-            "hardware: an expiry running its code",
-            "hardware: a source's handler",
-            "trigger: a source a block or a platform handles",
+            counted("refusal: a block or a platform the system serves outside its hardware", &cases, refused),
+            counted("outside: named by a service", &cases, refused),
+            counted("outside: a block no platform composes", &cases, refused),
+            counted("outside: named by `uses`", &cases, |c| refused(c) && by(c) != "TDrvNeeds"),
+            counted("outside: named by `needs`", &cases, |c| refused(c) && by(c) == "TDrvNeeds"),
+            counted("outside: its namer served by a task", &cases, |c| refused(c) && by(c) != "OwnDrv"),
+            counted("outside: its namer served by the system's own level alone", &cases, |c| {
+                refused(c) && by(c) == "OwnDrv"
+            }),
+            counted("outside: bound for requirements of its own", &cases, |c| {
+                refused(c) && requires(c) != "Nothing"
+            }),
+            counted(
+                "outside: a block outside the hardware named by a service or a policy the system does not serve, no \
+                 refusal",
+                &cases,
+                |c| lowered(c) && by(c) == "NoDrv",
+            ),
+            counted("named: hardware a service or a policy the system does not serve names, no node", &cases, |c| {
+                lowered(c) && by(c) == "NoDrv"
+            }),
+            counted("initialisation: a named edge from a block a service names by `uses`", &cases, named_also),
+            counted(
+                "initialisation: a named edge from hardware bound for nothing and bound to by nothing",
+                &cases,
+                |c| named_also(c) && bare(c),
+            ),
+            counted("initialisation: a named edge from hardware a provider alone", &cases, |c| {
+                named_also(c) && requires(c) == "Nothing" && bound(c)
+            }),
+            counted(
+                "initialisation: a named edge from hardware bound for its own requirements alone",
+                &cases,
+                |c| named_also(c) && requires(c) != "Nothing" && !bound(c),
+            ),
+            counted(
+                "initialisation: a named edge from hardware a provider and bound for its own requirements",
+                &cases,
+                |c| named_also(c) && requires(c) != "Nothing" && bound(c),
+            ),
+            counted("named: a block a service names, bound for nothing, a node", &cases, |c| {
+                named_also(c) && bare(c)
+            }),
+            counted("named: a block a task names, bound for nothing, a node", &cases, |c| {
+                ["TDirect", "TDrvAndT", "UDrvAndU"].contains(&by(c).as_str()) && bare(c)
+            }),
+            counted("named: hardware named by `uses`, bound for nothing, a node", &cases, |c| {
+                hardware(c) && bare(c)
+            }),
+            counted("named: hardware named and bound for nothing, in a job", &cases, |c| {
+                hardware(c) && bare(c) && by(c) != "OwnDrvAndOwn"
+            }),
+            counted("named: hardware named and bound for nothing, in no job", &cases, |c| {
+                by(c) == "OwnDrvAndOwn" && bare(c)
+            }),
+            counted(
+                "named: hardware named and bound for nothing, a provider only of requesters that do not name it",
+                &cases,
+                |c| hardware(c) && requires(c) == "Nothing" && bound(c),
+            ),
+            counted(
+                "hardware: a block a served service or policy names, which a task's name makes hardware",
+                &cases,
+                |c| ["TDrvAndT", "UDrvAndU"].contains(&by(c).as_str()),
+            ),
+            counted(
+                "hardware: a block a served service or policy names, which the system's own level's name makes \
+                 hardware",
+                &cases,
+                |c| by(c) == "OwnDrvAndOwn",
+            ),
+            counted("hardware: a block bound for requirements of its own", &cases, |c| {
+                hardware(c) && requires(c) != "Nothing"
+            }),
+            counted("hardware: an alarm it programs itself", &cases, |c| hardware(c) && requires(c) == "Alarm"),
+            counted("hardware: an expiry running its code", &cases, |c| hardware(c) && requires(c) == "Deadline"),
+            counted("hardware: a source's handler", &cases, |c| hardware(c) && requires(c) == "Source"),
+            counted("trigger: a source a block or a platform handles", &cases, |c| {
+                by(c) == "UDrvAndU" && requires(c) == "Source" && c.label.ends_with("u sporadic")
+            }),
+            counted(
+                "second system: requiring hardware the lowered system does not serve",
+                &cases,
+                |c| lowered(c) && by(c) == "NoDrv" && requires(c) != "Nothing",
+            ),
+            exactly("task: deadline-from written", 90),
         ],
     );
 }
@@ -8523,23 +10553,96 @@ fn several_systems_named_in_the_namers_order() {
     assert_eq!(cases.len(), 4usize.pow(5) * 2 * 2);
     let tally = run("naming order", &cases);
     // Lowered: the 4 where no namer names a system (by either clause, `y.b` naming `y` or not, `y.b` never reached).
+    // Every other refused, its pairs read from what each namer writes: `t`, `t!`, `m.s`, `m` and the system's own level,
+    // and `y.b`'s own level once a namer names `y.b`.
+    let systems = |side: &Side| -> Vec<String> {
+        side.uses
+            .iter()
+            .chain(&side.needs)
+            .filter(|n| ["y", "y.b", "y!"].contains(&n.as_str()))
+            .cloned()
+            .collect()
+    };
+    let namers = |c: &Case| -> Vec<(&'static str, Vec<String>)> {
+        let d = &c.description;
+        let mut out = vec![
+            ("(task sys t)", systems(&d.tasks[0].side)),
+            ("(task sys t!)", systems(&d.tasks[1].side)),
+            ("m.s", systems(&d.services[0].side)),
+            ("m", systems(&d.services[1].side)),
+            ("sys", systems(&d.own)),
+        ];
+        if out
+            .iter()
+            .any(|(_, named)| named.contains(&"y.b".to_string()))
+        {
+            out.push(("y.b", systems(&d.others[0].own)));
+        }
+        out.retain(|(_, named)| !named.is_empty());
+        out
+    };
+    let named = |c: &Case| -> Vec<String> { namers(c).into_iter().flat_map(|(_, n)| n).collect() };
+    let by = |c: &Case, namer: &str| namers(c).iter().any(|(n, _)| *n == namer);
     hold(
         "naming order",
         &tally,
         (4_096, 4, 0, 0, 4_092),
         &[
-            "refusal: a requester naming a system",
-            "naming: a task naming a system",
-            "naming: the system's own level naming a system",
-            "naming: a service naming a system",
-            "naming: a named system's own level naming a system",
-            "naming: several names",
-            "naming: one namer naming two systems",
-            "naming: one namer's text a prefix of another's",
-            "naming: one system's text a prefix of another's",
-            "naming: a name continuing with a byte below `)`",
-            "naming: tasks' texts ordered unlike their names",
-            "naming: an order the message's words would give otherwise",
+            exactly("refusal: a requester naming a system", 4_092),
+            counted("naming: a task naming a system", &cases, |c| {
+                by(c, "(task sys t)") || by(c, "(task sys t!)")
+            }),
+            counted(
+                "naming: the system's own level naming a system",
+                &cases,
+                |c| by(c, "sys"),
+            ),
+            counted("naming: a service naming a system", &cases, |c| {
+                by(c, "m.s") || by(c, "m")
+            }),
+            counted(
+                "naming: a named system's own level naming a system",
+                &cases,
+                |c| by(c, "y.b"),
+            ),
+            counted("naming: several names", &cases, |c| named(c).len() >= 2),
+            counted("naming: one namer naming two systems", &cases, |c| {
+                namers(c).iter().any(|(_, n)| n.len() >= 2)
+            }),
+            counted(
+                "naming: one namer's text a prefix of another's",
+                &cases,
+                |c| by(c, "m") && by(c, "m.s"),
+            ),
+            counted(
+                "naming: one system's text a prefix of another's",
+                &cases,
+                |c| {
+                    let n = named(c);
+                    n.contains(&"y".to_string())
+                        && (n.contains(&"y.b".to_string()) || n.contains(&"y!".to_string()))
+                },
+            ),
+            counted(
+                "naming: a name continuing with a byte below `)`",
+                &cases,
+                |c| by(c, "(task sys t!)") || named(c).contains(&"y!".to_string()),
+            ),
+            counted(
+                "naming: tasks' texts ordered unlike their names",
+                &cases,
+                |c| by(c, "(task sys t)") && by(c, "(task sys t!)"),
+            ),
+            counted(
+                "naming: a system another system's requester names, outside this one's",
+                &cases,
+                |c| {
+                    let yb = &c.description.others[0].own;
+                    named(c).is_empty() && !(yb.uses.is_empty() && yb.needs.is_empty())
+                },
+            ),
+            some("naming: an order the message's words would give otherwise"),
+            exactly("task: deadline-from written", 4),
         ],
     );
 }
@@ -8552,36 +10655,145 @@ fn several_blocks_and_platforms_naming_prefixed_names_in_their_texts_order() {
     let tally = run("prefixed hardware naming", &cases);
     // Lowered: the 4 where no block or platform `sys` serves names anything but hardware, whatever `q`, which it serves
     // only once `y` is reached, names (round 15, R15-R2); every other refused, by the naming-system refusal where a
-    // block `sys` serves names `y`, else by hardware naming what is not hardware.
+    // block `sys` serves names `y`, else by hardware naming what is not hardware. Each count read from what each block
+    // and `soc` names, `q` served where a block names `y`, as §1 orders the pairs.
+    let named = |side: &Side, platform: bool| -> Vec<(String, bool)> {
+        side.uses
+            .iter()
+            .filter(|n| !platform || !["d", "d.x", "d!"].contains(&n.as_str()))
+            .map(|n| (n.clone(), false))
+            .chain(side.needs.iter().map(|n| (n.clone(), true)))
+            .collect()
+    };
+    let namings = |c: &Case| -> Vec<(&'static str, Vec<(String, bool)>)> {
+        let d = &c.description;
+        vec![
+            ("d", named(&d.blocks[0].side, false)),
+            ("d.x", named(&d.blocks[1].side, false)),
+            ("d!", named(&d.blocks[2].side, false)),
+            ("q", named(&d.blocks[3].side, false)),
+            ("soc", named(&d.platforms[0].side, true)),
+        ]
+    };
+    let is_system = |n: &str| ["y", "sys"].contains(&n);
+    let y_reached = |c: &Case| {
+        namings(c)
+            .iter()
+            .any(|(who, n)| *who != "q" && n.iter().any(|(m, _)| m == "y"))
+    };
+    let served = |c: &Case, who: &str| who != "q" || y_reached(c);
+    let pairs = |c: &Case, systems: bool| -> Vec<(String, String)> {
+        let mut out: Vec<(String, String)> = namings(c)
+            .into_iter()
+            .filter(|(who, _)| served(c, who))
+            .flat_map(|(who, n)| {
+                n.into_iter()
+                    .filter(|(m, _)| is_system(m) == systems)
+                    .map(move |(m, _)| (who.to_string(), m))
+            })
+            .collect();
+        out.sort();
+        out
+    };
+    let naming = |c: &Case| !pairs(c, true).is_empty();
+    let operand = |c: &Case| !naming(c) && !pairs(c, false).is_empty();
+    let lowered = |c: &Case| !naming(c) && !operand(c);
+    let has = |c: &Case, who: &str, what: &str, by_needs: bool| {
+        namings(c)
+            .iter()
+            .any(|(w, n)| *w == who && n.iter().any(|(m, b)| m == what && *b == by_needs))
+    };
+    let blocks_name = |c: &Case, what: &str, by_needs: bool| {
+        ["d", "d.x", "d!"].iter().any(|w| has(c, w, what, by_needs))
+    };
+    let q_unserved = |c: &Case| !y_reached(c);
+    let operands_of =
+        |c: &Case| -> Vec<String> { pairs(c, false).into_iter().map(|(_, o)| o).collect() };
     hold(
         "prefixed hardware naming",
         &tally,
         (1_024, 4, 0, 0, 1_020),
         &[
-            "refusal: hardware naming what is not hardware",
-            "refusal: a requester naming a system",
-            "naming: a block or a platform naming a system",
-            "naming: hardware served through a reached system's platform naming a system",
-            "naming: one namer's text a prefix of another's",
-            "naming: a name continuing with a byte below `)`",
-            "naming: an order the message's words would give otherwise",
-            "operand: a block's `uses` naming a service",
-            "operand: a block's `needs` naming a policy",
-            "operand: a platform's `needs` naming a service",
-            "operand: a platform's `uses` naming a policy",
-            "operand: a block naming the service bound to it",
-            "operand: a service only hardware names",
-            "operand: hardware the system does not serve naming what is not hardware too, not named",
-            "unserved: a block naming a service",
-            "unserved: a block's `uses` naming a system",
-            "unserved: a block's `needs` naming a system",
-            "unserved: hardware naming the lowered system",
-            "operand: several, named in order",
-            "operand: one namer naming two",
-            "operand: one namer's text a prefix of another's",
-            "operand: one operand's text a prefix of another's",
-            "operand: a name continuing with a byte below `)`",
-            "operand: an order the message's words would give otherwise",
+            counted("refusal: a requester naming a system", &cases, naming),
+            counted("refusal: hardware naming what is not hardware", &cases, operand),
+            counted("naming: a block or a platform naming a system", &cases, naming),
+            counted("naming: a block's `needs` naming a system", &cases, |c| {
+                naming(c) && pairs(c, true).iter().any(|(w, m)| has(c, w, m, true))
+            }),
+            counted("naming: a block's `uses` naming a system", &cases, |c| naming(c) && has(c, "q", "sys", false)),
+            counted("naming: hardware served through a reached system's platform naming a system", &cases, |c| {
+                naming(c) && pairs(c, true).iter().any(|(w, _)| w == "q")
+            }),
+            counted("naming: the lowered system itself named", &cases, |c| {
+                naming(c) && pairs(c, true).iter().any(|(_, m)| m == "sys")
+            }),
+            counted("naming: several names", &cases, |c| pairs(c, true).len() >= 2),
+            counted("naming: one namer's text a prefix of another's", &cases, |c| {
+                let namers: BTreeSet<String> = pairs(c, true).into_iter().map(|(w, _)| w).collect();
+                namers.contains("d") && (namers.contains("d.x") || namers.contains("d!"))
+            }),
+            counted("naming: a name continuing with a byte below `)`", &cases, |c| {
+                pairs(c, true).iter().any(|(w, _)| w == "d!")
+            }),
+            exactly("naming: before hardware naming what is not hardware", 592),
+            counted("operand: a block's `uses` naming a service", &cases, |c| {
+                operand(c) && blocks_name(c, "m.s", false)
+            }),
+            counted("operand: a block's `needs` naming a policy", &cases, |c| operand(c) && blocks_name(c, "m!", true)),
+            counted("operand: a platform's `needs` naming a service", &cases, |c| {
+                operand(c) && (has(c, "soc", "m.s", true) || has(c, "soc", "m", true))
+            }),
+            counted("operand: a platform's `uses` naming a policy", &cases, |c| {
+                operand(c) && has(c, "soc", "m!", false)
+            }),
+            counted("operand: a block naming the service bound to it", &cases, |c| {
+                operand(c) && has(c, "d", "m", false)
+            }),
+            counted("operand: a service only hardware names", &cases, |c| {
+                operand(c) && operands_of(c).contains(&"m.s".to_string())
+            }),
+            counted(
+                "operand: hardware the system does not serve naming what is not hardware too, not named",
+                &cases,
+                |c| {
+                    let q = &c.description.blocks[3].side;
+                    operand(c) && q_unserved(c) && !(q.uses.is_empty() && q.needs.is_empty())
+                },
+            ),
+            counted("operand: several, named in order", &cases, |c| operand(c) && operands_of(c).len() >= 2),
+            counted("operand: one namer naming two", &cases, |c| {
+                let p = pairs(c, false);
+                operand(c) && p.windows(2).any(|w| w[0].0 == w[1].0)
+            }),
+            counted("operand: one namer's text a prefix of another's", &cases, |c| {
+                let namers: BTreeSet<String> = pairs(c, false).into_iter().map(|(w, _)| w).collect();
+                operand(c) && namers.contains("d") && (namers.contains("d.x") || namers.contains("d!"))
+            }),
+            counted("operand: one operand's text a prefix of another's", &cases, |c| {
+                let o = operands_of(c);
+                operand(c) && o.contains(&"m".to_string()) && (o.contains(&"m.s".to_string()) || o.contains(&"m!".to_string()))
+            }),
+            counted("operand: a name continuing with a byte below `)`", &cases, |c| {
+                operand(c) && pairs(c, false).iter().any(|(w, o)| w == "d!" || o == "m!")
+            }),
+            counted("operand: the namers' order unlike the operands'", &cases, |c| {
+                operand(c) && pairs(c, false).windows(2).any(|w| w[0].1 > w[1].1)
+            }),
+            counted("unserved: a block naming a service", &cases, |c| lowered(c) && has(c, "q", "m.s", false)),
+            counted("unserved: a block's `needs` naming a system", &cases, |c| {
+                lowered(c) && (has(c, "q", "y", true) || has(c, "q", "sys", true))
+            }),
+            counted("unserved: a block's `uses` naming a system", &cases, |c| lowered(c) && has(c, "q", "sys", false)),
+            counted("unserved: hardware naming the lowered system", &cases, |c| {
+                lowered(c) && (has(c, "q", "sys", false) || has(c, "q", "sys", true))
+            }),
+            counted("second system: requiring hardware the lowered system does not serve", &cases, |c| {
+                lowered(c) && !c.description.blocks[3].side.needs.is_empty()
+            }),
+            some("naming: an order the message's words would give otherwise"),
+            some("operand: an order the message's words would give otherwise"),
+            exactly("multiplex: a channel with one user", 4),
+            exactly("task: deadline-from written", 4),
         ],
     );
 }
@@ -8592,6 +10804,9 @@ fn one_receiver_s_alarms_and_expiries() {
     // 3 shapes of counters; what `t`, `t!` and the system's own level each program, of 4; which task is first.
     assert_eq!(cases.len(), 3 * 4usize.pow(3) * 2);
     let tally = run("one receiver", &cases);
+    let programs = |c: &Case, who: &str| !c.label.contains(&format!(" {who}:Nothing"));
+    let receivers = |c: &Case| ["t", "t!", "own"].iter().filter(|w| programs(c, w)).count();
+    let resolved = |c: &Case| c.label.starts_with("OneOffersBoth ") || !c.label.contains(":Both");
     // Unresolved: the 148 where some requester programs both and no one provider offers both (37 choices of the 64
     // with a `Both`, 2 shapes, 2 orders), each `missing-fact`: one receiver may receive one thing, never two. Lowered:
     // the 6 where nothing is programmed. Every other refused, naming its receivers.
@@ -8619,13 +10834,45 @@ fn one_receiver_s_alarms_and_expiries() {
         &tally,
         (384, 6, 0, 148, 230),
         &[
-            "receivers: an alarm programmed itself",
-            "receivers: an expiry",
-            "receivers: one alarm for two consumed facts at one provider",
-            "receivers: three",
-            "receivers: tasks and the system's own level",
-            "receivers: runtime order unlike the tasks' text order",
-            "receivers: providers one of whose names prefixes another's",
+            // Fixed by what each requester programs: the receivers, one for each requester programming anything, in
+            // §1's order — `t!` first in runtime order or `t`, `(task sys t!)` the lesser text — and, where `d` offers
+            // both facts, one requester programming both at `d` alone (model §8 rule 13: one provider for its
+            // function). Whether a deadline is taken at a block offering it or through an instance, and over which
+            // timer, is the search's choice: so are the alarms', the expiries' and the providers' classes.
+            counted("receivers: one", &cases, |c| {
+                resolved(c) && receivers(c) == 1
+            }),
+            counted("receivers: two", &cases, |c| {
+                resolved(c) && receivers(c) == 2
+            }),
+            counted("receivers: three", &cases, |c| {
+                resolved(c) && receivers(c) == 3
+            }),
+            counted("receivers: tasks and the system's own level", &cases, |c| {
+                resolved(c) && programs(c, "own") && (programs(c, "t") || programs(c, "t!"))
+            }),
+            counted("receivers: the system's own level alone", &cases, |c| {
+                resolved(c) && programs(c, "own") && !programs(c, "t") && !programs(c, "t!")
+            }),
+            counted(
+                "receivers: runtime order unlike the tasks' text order",
+                &cases,
+                |c| {
+                    resolved(c)
+                        && programs(c, "t")
+                        && programs(c, "t!")
+                        && c.label.ends_with("first=t")
+                },
+            ),
+            counted(
+                "receivers: one alarm for two consumed facts at one provider",
+                &cases,
+                |c| c.label.starts_with("OneOffersBoth ") && c.label.contains(":Both"),
+            ),
+            exactly("task: deadline-from written", 6),
+            some("receivers: an alarm programmed itself"),
+            some("receivers: an expiry"),
+            some("receivers: providers one of whose names prefixes another's"),
         ],
     );
     assert!(
@@ -8671,9 +10918,13 @@ fn one_instance_owes_one_bound_at_most() {
         &tally,
         (6, 2, 0, 2, 2),
         &[
-            "instance: an obliged fact with its bound",
-            "refusal: a duration past the arithmetic",
-            "past: an obliged bound",
+            exactly("instance: an obliged fact with its bound", 2),
+            exactly("instance: a service's obliged bound", 2),
+            exactly("context: an expiry running its requester", 2),
+            exactly("refusal: a duration past the arithmetic", 2),
+            exactly("past: an obliged bound", 2),
+            exactly("past: an obliged bound of a service", 2),
+            exactly("task: deadline-from written", 2),
         ],
     );
 }
@@ -8684,26 +10935,139 @@ fn a_provider_bound_to_the_node_taking_its_channel() {
     // What the timer requires, of 4; what `dma.x` and `soc` each take, of 3; what `t` uses, of 4, and `u`, of 3.
     assert_eq!(cases.len(), 4 * 3 * 3 * 4 * 3);
     let tally = run("own route", &cases);
+    // Every system lowered. Each count read from what the timer, `dma.x` and `soc` require and what the tasks use, as
+    // the universe writes them: requiring hardware bound to by a requester — the timer by whichever takes its channel,
+    // itself or through an instance; `dma.x` by `xfer` or the timer; `soc` by `cpu` or the timer — or by nothing; a
+    // component where the timer is bound to what takes its channel, an instance among it where that one takes a
+    // deadline; `soc` bound to the timer it composes for an alarm, the timer bound to `soc` for `core-count`, one
+    // component where both are, else two steps the binding orders unlike their texts, `timer.d` above `soc`.
+    let timer = |c: &Case, fact: &str| c.description.blocks[0].side.needs.iter().any(|n| n == fact);
+    fn takes(c: &Case, who: usize) -> Option<&str> {
+        let side = if who == 0 {
+            &c.description.blocks[1].side
+        } else {
+            &c.description.platforms[0].side
+        };
+        side.needs.first().map(String::as_str)
+    }
+    fn dma(c: &Case) -> Option<&str> {
+        takes(c, 0)
+    }
+    fn soc(c: &Case) -> Option<&str> {
+        takes(c, 1)
+    }
+    let used = |c: &Case, service: &str| {
+        c.description
+            .tasks
+            .iter()
+            .any(|t| t.side.uses.iter().any(|u| u == service))
+    };
+    type Bound<'a> = dyn Fn(&Case) -> Option<bool> + 'a;
+    let requiring_bound: [&Bound<'_>; 3] = [
+        &|c| {
+            (!c.description.blocks[0].side.needs.is_empty())
+                .then(|| dma(c).is_some() || soc(c).is_some())
+        },
+        &|c| dma(c).map(|_| used(c, "xfer") || timer(c, "transfer-engine")),
+        &|c| soc(c).map(|_| used(c, "cpu") || timer(c, "core-count")),
+    ];
+    let cycle = |c: &Case| {
+        (timer(c, "transfer-engine") && dma(c).is_some())
+            || (timer(c, "core-count") && soc(c).is_some())
+    };
+    let deadline = Some("absolute-deadline");
     hold(
         "own route",
         &tally,
         (432, 432, 0, 0, 0),
         &[
-            "multiplex: its own route a user, the route's provider bound to it",
-            "multiplex: its own route a user, another node there reaching it",
-            "multiplex: its own route no user",
-            "multiplex: a block or a platform multiplexed",
-            "multiplex: multiplexed by a job and an interrupt",
-            "multiplex: a block or a platform's channel with one user",
-            "hardware: a block bound for requirements of its own",
-            "hardware: a platform bound for requirements of its own",
-            "hardware: an alarm it programs itself",
-            "hardware: an expiry running its code",
-            "initialisation: a component of several members",
-            "initialisation: a composite bound to its part, its edge kept",
-            "initialisation: a part bound to its composite, its edge kept",
-            "initialisation: a composite and its part bound each to the other, one component",
-            "composition: a platform a task reaches through a binding",
+            counted(
+                "hardware: a block bound for requirements of its own",
+                &cases,
+                |c| !c.description.blocks[0].side.needs.is_empty() || dma(c).is_some(),
+            ),
+            counted(
+                "hardware: a platform bound for requirements of its own",
+                &cases,
+                |c| soc(c).is_some(),
+            ),
+            counted(
+                "hardware: requiring, and bound to by a requester",
+                &cases,
+                |c| requiring_bound.iter().any(|f| f(c) == Some(true)),
+            ),
+            counted(
+                "hardware: requiring, and bound to by nothing",
+                &cases,
+                |c| requiring_bound.iter().any(|f| f(c) == Some(false)),
+            ),
+            counted("hardware: an alarm it programs itself", &cases, |c| {
+                dma(c) == Some("relative-delay") || soc(c) == Some("relative-delay")
+            }),
+            counted("hardware: an expiry running its code", &cases, |c| {
+                dma(c) == deadline || soc(c) == deadline
+            }),
+            counted("context: an expiry running its requester", &cases, |c| {
+                dma(c) == deadline || soc(c) == deadline
+            }),
+            counted("instance: an obliged fact bare", &cases, |c| {
+                dma(c) == deadline || soc(c) == deadline
+            }),
+            counted(
+                "initialisation: a component of several members",
+                &cases,
+                cycle,
+            ),
+            counted(
+                "initialisation: a component holding an instance",
+                &cases,
+                |c| {
+                    (timer(c, "transfer-engine") && dma(c) == deadline)
+                        || (timer(c, "core-count") && soc(c) == deadline)
+                },
+            ),
+            counted(
+                "initialisation: a composite bound to its part, its edge kept",
+                &cases,
+                |c| soc(c) == Some("relative-delay"),
+            ),
+            counted(
+                "initialisation: a part bound to its composite, its edge kept",
+                &cases,
+                |c| timer(c, "core-count"),
+            ),
+            counted(
+                "initialisation: a composite and its part bound each to the other, one component",
+                &cases,
+                |c| soc(c) == Some("relative-delay") && timer(c, "core-count"),
+            ),
+            counted(
+                "initialisation: an edge across composition ordering two steps unlike their texts",
+                &cases,
+                |c| soc(c) == Some("relative-delay") && !timer(c, "core-count"),
+            ),
+            counted(
+                "initialisation: an edge to a block or a platform bound for its own requirements",
+                &cases,
+                |c| {
+                    !c.description.blocks[0].side.needs.is_empty()
+                        || dma(c).is_some()
+                        || soc(c).is_some()
+                },
+            ),
+            counted(
+                "owed: a service or a policy in a job, its call cost and masked runs",
+                &cases,
+                |c| !c.description.services.is_empty(),
+            ),
+            exactly("task: deadline-from written", 432),
+            some("multiplex: its own route a user, the route's provider bound to it"),
+            some("multiplex: its own route a user, another node there reaching it"),
+            some("multiplex: its own route no user"),
+            some("multiplex: a block or a platform multiplexed"),
+            some("multiplex: multiplexed by a job and an interrupt"),
+            some("multiplex: a block or a platform's channel with one user"),
+            some("composition: a platform a task reaches through a binding"),
         ],
     );
 }
@@ -8736,36 +11100,129 @@ fn bound_to_a_timer_route_s_provider_by_a_binding_taking_no_channel() {
     // checker refuses `invalid-description` — the search's defect, `M3.4`'s ([`CHECKER_REFUSES`]; model §7 rule 4, §8
     // rule 1). Every other record it accepts; the lowering, which does not read the checker's result yet, is held to
     // the reading on these too, and once it reads it they move to `tool-failure` (§1; R16-R2).
-    assert_eq!(
-        tally.classes.get(CHECKER_REFUSES),
-        Some(&64),
-        "{CHECKER_REFUSES}"
-    );
     assert_eq!(tally.checker_refused, 64);
+    // Each count read from what each requester requires, as the label writes it: a timer route at `d` wherever a task,
+    // the system's own level or `s` takes a channel there, itself or through an instance over `d`, naming those bound
+    // for an alarm and the requesters of each instance; a task or the system's own level bound to `d` for its output
+    // alone, named by the route or not, beside one programming an alarm there or not ([`keyed_classes`]); its receivers,
+    // an alarm or an expiry beside `d`'s output each (§1).
+    let of = |c: &Case, who: &str| -> String {
+        let word = c
+            .label
+            .split(' ')
+            .find_map(|w| w.strip_prefix(&format!("{who}:")))
+            .expect("a requirement");
+        word.trim_start_matches("Some(")
+            .trim_end_matches(')')
+            .to_string()
+    };
+    let channel =
+        |v: &str| ["Wake", "WakeShared", "AlarmShared", "ExpiryShared", "Alarm"].contains(&v);
+    let alarm = |v: &str| ["AlarmShared", "Alarm"].contains(&v);
+    let receives = |v: &str| ["AlarmShared", "ExpiryShared"].contains(&v);
+    let output = |v: &str| ["Shared", "WakeShared", "AlarmShared", "ExpiryShared"].contains(&v);
+    let rejected = |c: &Case| of(c, "t") == "False";
+    let receivers = |c: &Case| {
+        ["t", "u", "own"]
+            .iter()
+            .filter(|w| receives(&of(c, w)))
+            .count()
+    };
+    let lowered = |c: &Case| !rejected(c) && receivers(c) == 0;
+    let refused = |c: &Case| !rejected(c) && receivers(c) > 0;
+    let route = |c: &Case| ["t", "u", "own", "s"].iter().any(|w| channel(&of(c, w)));
+    let keyed = |c: &Case, task: bool, named: bool| {
+        !rejected(c)
+            && route(c)
+            && ["t", "u", "own"].iter().any(|w| {
+                let v = of(c, w);
+                (*w != "own") == task && output(&v) && !alarm(&v) && channel(&v) == named
+            })
+    };
+    let beside = |c: &Case| {
+        !rejected(c)
+            && route(c)
+            && ["t", "u", "own"].iter().any(|w| {
+                let v = of(c, w);
+                output(&v)
+                    && !alarm(&v)
+                    && ["t", "u", "own"].iter().any(|x| x != w && alarm(&of(c, x)))
+            })
+    };
+    let any = |c: &Case, values: &[&str]| {
+        ["t", "u", "own", "s"]
+            .iter()
+            .any(|w| values.contains(&of(c, w).as_str()))
+    };
     hold(
         "bound otherwise on a route",
         &tally,
         (1_176, 320, 168, 0, 688),
         &[
-            CHECKER_REFUSES,
-            "bound otherwise: a task a timer route names, bound to its provider for a fact taking no channel",
-            "bound otherwise: the system's own level a timer route names, bound to its provider for a fact taking no \
-             channel",
-            "bound otherwise: a task bound to a timer route's provider for a fact taking no channel, the route not \
-             naming it",
-            "bound otherwise: the system's own level bound to a timer route's provider for a fact taking no channel, \
-             the route not naming it",
-            "bound otherwise: beside a task or the system's own level programming an alarm at that provider",
-            "bound otherwise: a requester bound for a consumed fact at `false`, no channel",
-            "receivers: an alarm, its receiver bound to its provider for a fact taking no channel too",
-            "receivers: an expiry, its receiver bound to the instance's provider for a fact taking no channel too",
-            "receivers: one",
-            "receivers: two",
-            "receivers: three",
-            "receivers: tasks and the system's own level",
-            "receivers: runtime order unlike the tasks' text order",
-            "context: a wake running the instance alone",
-            "multiplex: multiplexed by two jobs",
+            exactly(CHECKER_REFUSES, 64),
+            counted(CHECKER_REFUSES, &cases, |c| {
+                !rejected(c) && of(c, "own") == "False" && (of(c, "t") == "AlarmShared" || of(c, "u") == "AlarmShared")
+            }),
+            counted(
+                "bound otherwise: a task a timer route names, bound to its provider for a fact taking no channel",
+                &cases,
+                |c| keyed(c, true, true),
+            ),
+            counted(
+                "bound otherwise: the system's own level a timer route names, bound to its provider for a fact taking \
+                 no channel",
+                &cases,
+                |c| keyed(c, false, true),
+            ),
+            counted(
+                "bound otherwise: a task bound to a timer route's provider for a fact taking no channel, the route not \
+                 naming it",
+                &cases,
+                |c| keyed(c, true, false),
+            ),
+            counted(
+                "bound otherwise: the system's own level bound to a timer route's provider for a fact taking no \
+                 channel, the route not naming it",
+                &cases,
+                |c| keyed(c, false, false),
+            ),
+            counted(
+                "bound otherwise: beside a task or the system's own level programming an alarm at that provider",
+                &cases,
+                beside,
+            ),
+            counted(
+                "bound otherwise: a requester bound for a consumed fact at `false`, no channel",
+                &cases,
+                |c| lowered(c) && (of(c, "own") == "False" || of(c, "s") == "False"),
+            ),
+            counted(
+                "receivers: an alarm, its receiver bound to its provider for a fact taking no channel too",
+                &cases,
+                |c| refused(c) && ["t", "u", "own"].iter().any(|w| of(c, w) == "AlarmShared"),
+            ),
+            counted(
+                "receivers: an expiry, its receiver bound to the instance's provider for a fact taking no channel too",
+                &cases,
+                |c| refused(c) && ["t", "own"].iter().any(|w| of(c, w) == "ExpiryShared"),
+            ),
+            counted("receivers: one", &cases, |c| !rejected(c) && receivers(c) == 1),
+            counted("receivers: two", &cases, |c| !rejected(c) && receivers(c) == 2),
+            counted("receivers: three", &cases, |c| !rejected(c) && receivers(c) == 3),
+            counted("receivers: tasks and the system's own level", &cases, |c| {
+                refused(c) && receives(&of(c, "own")) && (receives(&of(c, "t")) || receives(&of(c, "u")))
+            }),
+            counted("receivers: the system's own level alone", &cases, |c| {
+                refused(c) && receives(&of(c, "own")) && !receives(&of(c, "t")) && !receives(&of(c, "u"))
+            }),
+            counted("receivers: runtime order unlike the tasks' text order", &cases, |c| {
+                refused(c) && receives(&of(c, "t")) && receives(&of(c, "u")) && c.label.ends_with("first=u")
+            }),
+            counted("context: a wake running the instance alone", &cases, |c| {
+                lowered(c) && any(c, &["Wake", "WakeShared"])
+            }),
+            counted("multiplex: multiplexed by two jobs", &cases, |c| lowered(c) && of(c, "s") == "Alarm"),
+            exactly("task: deadline-from written", 320),
         ],
     );
 }
@@ -8792,26 +11249,69 @@ fn a_periodic_task_bound_to_a_source_s_block_for_another_fact() {
     // the configuration checker refuses `invalid-description` — the search's defect, `M3.4`'s ([`CHECKER_REFUSES`];
     // model §7 rule 4, §8 rule 1). Every other record it accepts; the lowering, which does not read the checker's
     // result yet, is held to the reading on these too, and once it reads it they move to `tool-failure` (§1; R16-R2).
-    assert_eq!(
-        tally.classes.get(CHECKER_REFUSES),
-        Some(&72),
-        "{CHECKER_REFUSES}"
-    );
     assert_eq!(tally.checker_refused, 72);
+    // Each count read from what each requester requires, as the label writes it: §1's bullet over tasks named on the
+    // first periodic task in runtime order bound for `interrupt-source` itself, `p` first or `t`, beside the other bound
+    // to `dev` for `debug-port` or for both; and, lowered, `u` released by `dev`'s 20 ms where `e` handles it.
+    let of = |c: &Case, who: &str| -> String {
+        let word = c
+            .label
+            .split(' ')
+            .find_map(|w| w.strip_prefix(&format!("{who}:")))
+            .expect("a requirement");
+        word.trim_start_matches("Some(")
+            .trim_end_matches(')')
+            .to_string()
+    };
+    let source = |v: &str| ["Source", "Both"].contains(&v);
+    let other = |v: &str| ["Other", "Both"].contains(&v);
+    let rejected = |c: &Case| of(c, "t") == "False";
+    let order = |c: &Case| {
+        if c.label.ends_with("first=p") {
+            ["p", "t"]
+        } else {
+            ["t", "p"]
+        }
+    };
+    let named = |c: &Case| order(c).into_iter().find(|w| source(&of(c, w)));
+    let refused = |c: &Case| !rejected(c) && named(c).is_some();
+    let lowered = |c: &Case| !rejected(c) && named(c).is_none();
     hold(
         "periodic bound otherwise",
         &tally,
         (480, 96, 96, 0, 288),
         &[
-            CHECKER_REFUSES,
-            "refusal: a periodic task bound to a source itself",
-            "periodic: a periodic task bound to a source's block for another fact",
-            "periodic: one bound to the source's block otherwise first in runtime order, the one bound for \
-             `interrupt-source` named",
-            "periodic: the one named bound to the source's block for another fact too",
-            "bound otherwise: a requester bound for `interrupt-source` at `false`, no route",
-            "trigger: every, equal separations",
-            "trigger: unknown, no source reaching it",
+            counted(CHECKER_REFUSES, &cases, |c| refused(c) && of(c, "own") == "False"),
+            exactly(CHECKER_REFUSES, 72),
+            counted("refusal: a periodic task bound to a source itself", &cases, refused),
+            counted("periodic: a periodic task bound to a source's block for another fact", &cases, |c| {
+                !rejected(c) && (other(&of(c, "t")) || other(&of(c, "p")))
+            }),
+            counted(
+                "periodic: one bound to the source's block otherwise first in runtime order, the one bound for \
+                 `interrupt-source` named",
+                &cases,
+                |c| refused(c) && named(c) == Some(order(c)[1]) && other(&of(c, order(c)[0])),
+            ),
+            counted("periodic: the one named bound to the source's block for another fact too", &cases, |c| {
+                named(c).is_some_and(|w| of(c, w) == "Both") && !rejected(c)
+            }),
+            counted(
+                "task bullet: the first ill-formed task in runtime order named, a later one ill-formed too",
+                &cases,
+                |c| !rejected(c) && source(&of(c, "t")) && source(&of(c, "p")),
+            ),
+            counted(
+                "task bullet: a task declared earlier ill-formed too, after the one named in runtime order",
+                &cases,
+                |c| !rejected(c) && source(&of(c, "t")) && source(&of(c, "p")) && order(c)[0] == "p",
+            ),
+            counted("bound otherwise: a requester bound for `interrupt-source` at `false`, no route", &cases, |c| {
+                lowered(c) && (of(c, "own") == "False" || of(c, "e") == "False")
+            }),
+            counted("trigger: every, equal separations", &cases, |c| lowered(c) && of(c, "e") == "Source"),
+            counted("trigger: unknown, no source reaching it", &cases, |c| lowered(c) && of(c, "e") != "Source"),
+            exactly("task: deadline-from written", 96),
         ],
     );
 }
@@ -8870,36 +11370,209 @@ fn hardware_the_lowered_system_does_not_serve_naming_what_is_not_hardware() {
     );
     // Lowered: lowering `sys`, the 125 where `soc` names nothing, whatever `blk.q`, `host.q` and `lone`, which `sys`
     // does not serve, name; lowering `other`, the 25 where `blk.q` and `host.q` name nothing, whatever `soc` and `lone`
-    // name. Every other refused or unresolved.
+    // name. Every other refused or unresolved. Each count read from what the four namers write ([`unserved_model`]).
+    let model: Vec<UnservedModel> = cases.iter().map(unserved_model).collect();
+    let count = |class: &'static str, f: &dyn Fn(&UnservedModel) -> bool| {
+        exactly(class, model.iter().filter(|m| f(m)).count())
+    };
+    let pair = |m: &UnservedModel, platform: bool, by_needs: bool| {
+        m.naming.iter().any(|(namer, _, needs)| {
+            ["soc", "host.q"].contains(&namer.as_str()) == platform && *needs == by_needs
+        })
+    };
+    let operand = |m: &UnservedModel, namer: &str, item: &str| {
+        m.outcome == "operand" && m.operands.iter().any(|(n, o)| n == namer && o == item)
+    };
+    let unserved = |m: &UnservedModel, platform: bool, items: &[&str], by_needs: Option<bool>| {
+        m.outcome == "lowered"
+            && m.unserved.iter().any(|(namer, item, needs)| {
+                ["soc", "host.q"].contains(&namer.as_str()) == platform
+                    && items.contains(&item.as_str())
+                    && by_needs.is_none_or(|b| b == *needs)
+            })
+    };
     hold(
         "unserved hardware naming",
         &tally,
         (1_250, 150, 0, 232, 868),
         &[
-            "unserved: a block naming a service",
-            "unserved: a block naming a policy",
-            "unserved: a block's `uses` naming a system",
-            "unserved: a block's `needs` naming a system",
-            "unserved: a platform naming a service",
-            "unserved: a platform naming a policy",
-            "unserved: a platform's `uses` naming a system",
-            "unserved: a platform's `needs` naming a system",
-            "unserved: hardware naming the lowered system",
-            "unserved: hardware naming a service the lowered system serves",
-            "unserved: hardware no system's platform composes",
-            "refusal: hardware naming what is not hardware",
-            "operand: a platform's `uses` naming a policy",
-            "operand: a platform's `uses` naming a service",
-            "operand: hardware the system does not serve naming what is not hardware too, not named",
-            "operand: hardware served only through what served hardware names",
-            "refusal: a requester naming a system",
-            "naming: a platform's `uses` naming a system",
-            "naming: a platform's `needs` naming a system",
-            "naming: a block's `uses` naming a system",
-            "naming: a block's `needs` naming a system",
-            "naming: the lowered system itself named",
+            count("unserved: a block naming a service", &|m| unserved(m, false, &["alarm", "via.s"], None)),
+            count("unserved: a block naming a policy", &|m| unserved(m, false, &["pol.p"], None)),
+            count("unserved: a block's `uses` naming a system", &|m| {
+                unserved(m, false, &["sys", "other"], Some(false))
+            }),
+            count("unserved: a block's `needs` naming a system", &|m| {
+                unserved(m, false, &["sys", "other"], Some(true))
+            }),
+            count("unserved: a platform naming a service", &|m| unserved(m, true, &["alarm", "via.s"], None)),
+            count("unserved: a platform naming a policy", &|m| unserved(m, true, &["pol.p"], None)),
+            count("unserved: a platform's `uses` naming a system", &|m| {
+                unserved(m, true, &["sys", "other"], Some(false))
+            }),
+            count("unserved: a platform's `needs` naming a system", &|m| {
+                unserved(m, true, &["sys", "other"], Some(true))
+            }),
+            count("unserved: hardware naming the lowered system", &|m| {
+                m.outcome == "lowered" && m.unserved.iter().any(|(_, item, _)| *item == m.lowering)
+            }),
+            count("unserved: hardware naming a service the lowered system serves", &|m| {
+                m.outcome == "lowered" && m.lowering == "sys" && m.unserved.iter().any(|(_, item, _)| item == "alarm")
+            }),
+            count("unserved: hardware no system's platform composes", &|m| {
+                m.outcome == "lowered" && m.unserved.iter().any(|(namer, _, _)| namer == "lone")
+            }),
+            count("second system: requiring hardware the lowered system does not serve", &|m| {
+                m.outcome == "lowered" && m.unserved.iter().any(|(_, _, needs)| *needs)
+            }),
+            count("named: hardware a service or a policy the system does not serve names, no node", &|m| {
+                m.outcome == "lowered"
+            }),
+            count(
+                "outside: a block outside the hardware named by a service or a policy the system does not serve, no \
+                 refusal",
+                &|m| m.outcome == "lowered",
+            ),
+            count("multiplex: a channel with one user", &|m| m.outcome == "lowered" && m.lowering == "sys"),
+            count("refusal: hardware naming what is not hardware", &|m| m.outcome == "operand"),
+            count("operand: a platform's `uses` naming a policy", &|m| operand(m, "soc", "pol.p")),
+            count("operand: a platform's `uses` naming a service", &|m| operand(m, "soc", "via.s")),
+            count("operand: a platform's `needs` naming a policy", &|m| operand(m, "host.q", "pol.p")),
+            count("operand: a block's `needs` naming a policy", &|m| {
+                operand(m, "blk.q", "pol.p") || operand(m, "lone", "pol.p")
+            }),
+            count("operand: a block's `uses` naming a service", &|m| operand(m, "lone", "alarm")),
+            count("operand: a service only hardware names", &|m| operand(m, "soc", "via.s")),
+            count("operand: several, named in order", &|m| m.outcome == "operand" && m.operands.len() >= 2),
+            count(
+                "operand: hardware the system does not serve naming what is not hardware too, not named",
+                &|m| m.outcome == "operand" && !m.unserved.is_empty(),
+            ),
+            count("operand: hardware served only through what served hardware names", &|m| {
+                m.outcome == "operand" && m.operands.iter().any(|(namer, _)| namer == "lone")
+            }),
+            count("refusal: a requester naming a system", &|m| m.outcome == "naming"),
+            count("naming: a block or a platform naming a system", &|m| m.outcome == "naming"),
+            count("naming: before hardware naming what is not hardware", &|m| m.outcome == "naming"),
+            count("naming: a platform's `uses` naming a system", &|m| m.outcome == "naming" && pair(m, true, false)),
+            count("naming: a platform's `needs` naming a system", &|m| m.outcome == "naming" && pair(m, true, true)),
+            count("naming: a block's `uses` naming a system", &|m| m.outcome == "naming" && pair(m, false, false)),
+            count("naming: a block's `needs` naming a system", &|m| m.outcome == "naming" && pair(m, false, true)),
+            count("naming: the lowered system itself named", &|m| {
+                m.outcome == "naming" && m.naming.iter().any(|(_, system, _)| *system == m.lowering)
+            }),
+            count("naming: several names", &|m| m.outcome == "naming" && m.naming.len() >= 2),
+            count("naming: hardware served through a reached system's platform naming a system", &|m| {
+                m.outcome == "naming" && m.naming.iter().any(|(namer, _, _)| !m.served_directly.contains(namer))
+            }),
         ],
     );
+}
+
+/// What the unserved-hardware universe's construction gives one system: the namers `soc`, `host.q`, `blk.q` and
+/// `lone` each name what [`UNSERVED_NAMING`] or [`SOC_NAMES`] chose; the lowered system serves its own platform and
+/// what it composes, and, by what a served namer names, another system's — "what a system it names writes at its own
+/// level — its `platform` clause included — being served too" (§1) — and the service `via.s`, which names `lone`. So
+/// the lowering of `other` serving `alarm`, whose channel no block of its hardware offers, is unresolved; otherwise the
+/// served namers' pairs naming a system are the naming-system refusal's, else their pairs naming a service or a policy
+/// the hardware-naming refusal's, else the system lowers, every unserved namer's names counted apart.
+struct UnservedModel {
+    lowering: String,
+    outcome: &'static str,
+    /// The naming-system refusal's pairs, with whether by `needs`.
+    naming: Vec<(String, String, bool)>,
+    operands: Vec<(String, String)>,
+    /// What each namer the system does not serve names that is not hardware, with whether by `needs`.
+    unserved: Vec<(String, String, bool)>,
+    /// The namers the system serves by its own names and those of the services and hardware it serves, entering no
+    /// system it names.
+    served_directly: BTreeSet<String>,
+}
+
+fn unserved_model(case: &Case) -> UnservedModel {
+    let d = &case.description;
+    let names_of = |side: &Side, composes: &[&str]| -> Vec<(String, bool)> {
+        side.uses
+            .iter()
+            .filter(|n| !composes.contains(&n.as_str()))
+            .map(|n| (n.clone(), false))
+            .chain(side.needs.iter().map(|n| (n.clone(), true)))
+            .collect()
+    };
+    let namers: BTreeMap<&str, Vec<(String, bool)>> = BTreeMap::from([
+        ("soc", names_of(&d.platforms[0].side, &["timer.d", "dma.x"])),
+        ("host.q", names_of(&d.platforms[1].side, &["blk.q"])),
+        ("blk.q", names_of(&d.blocks[2].side, &[])),
+        ("lone", names_of(&d.blocks[3].side, &[])),
+    ]);
+    let lowering = d.system.clone();
+    let platform_of = |system: &str| -> Vec<&str> {
+        if system == "sys" {
+            vec!["soc"]
+        } else {
+            vec!["host.q", "blk.q"]
+        }
+    };
+    let serve = |through_systems: bool| -> (BTreeSet<String>, bool) {
+        let mut served: BTreeSet<String> = platform_of(&lowering)
+            .into_iter()
+            .map(str::to_string)
+            .collect();
+        let mut alarm = false;
+        loop {
+            let before = served.len();
+            for namer in served.clone() {
+                for (item, _) in &namers[namer.as_str()] {
+                    match item.as_str() {
+                        "sys" | "other" if through_systems && *item != lowering => {
+                            served.extend(platform_of(item).into_iter().map(str::to_string));
+                        }
+                        "via.s" => {
+                            served.insert("lone".to_string());
+                        }
+                        "alarm" => alarm = true,
+                        _ => {}
+                    }
+                }
+            }
+            if served.len() == before {
+                break;
+            }
+        }
+        (served, alarm)
+    };
+    let (served, alarm) = serve(true);
+    let (served_directly, _) = serve(false);
+    let mut out = UnservedModel {
+        lowering: lowering.clone(),
+        outcome: "lowered",
+        naming: Vec::new(),
+        operands: Vec::new(),
+        unserved: Vec::new(),
+        served_directly,
+    };
+    for (namer, items) in &namers {
+        for (item, needs) in items {
+            if !served.contains(*namer) {
+                out.unserved
+                    .push(((*namer).to_string(), item.clone(), *needs));
+            } else if ["sys", "other"].contains(&item.as_str()) {
+                out.naming
+                    .push(((*namer).to_string(), item.clone(), *needs));
+            } else {
+                out.operands.push(((*namer).to_string(), item.clone()));
+            }
+        }
+    }
+    out.outcome = if lowering == "other" && alarm {
+        "unresolved"
+    } else if !out.naming.is_empty() {
+        "naming"
+    } else if !out.operands.is_empty() {
+        "operand"
+    } else {
+        "lowered"
+    };
+    out
 }
 
 #[test]
@@ -8909,27 +11582,42 @@ fn sporadic_tasks_released_by_their_own_sources() {
     // separations, of 6.
     assert_eq!(cases.len(), 2 * 2 * 4 * 3 * 6 * 6);
     let tally = run("own sources", &cases);
+    // Every system lowered. Fixed by the construction: `t` bound itself in half; `u`, binding none, beside it there,
+    // released by the one handler it uses or by none; `t` binding none released by none, by one or by two sources as it
+    // uses handlers. Which source `t`'s own binding takes is the search's, read from the record: so are the classes of
+    // `t`'s own source and every separation class `t` may decide.
+    let bound = |c: &Case| c.label.contains("bound itself");
+    let uses = |c: &Case, task: usize| c.description.tasks[task].side.uses.len();
     hold(
         "own sources",
         &tally,
         (1_728, 1_728, 0, 0, 0),
         &[
-            "trigger: its own source",
-            "trigger: its own source, no other reaching it",
-            "trigger: its own source, beside another reaching it",
-            "trigger: its own source leaving it unknown, beside one that alone would release it every",
-            "trigger: its own source releasing it every, beside one that alone would leave it unknown",
-            "trigger: its own source, reached through a requester its route names too",
-            "trigger: binding none, beside a task bound to its own source",
-            "trigger: binding none, reaching the handler of another task's own source",
-            "trigger: every, equal separations",
-            "trigger: every, a longer separation",
-            "trigger: unknown, a shorter separation",
-            "trigger: unknown, no separation stated",
-            "trigger: unknown, the separation absent",
-            "trigger: unknown, no source reaching it",
-            "trigger: unknown, several sources",
-            "rank: two stated separations tied",
+            counted("trigger: its own source", &cases, bound),
+            counted("trigger: binding none, beside a task bound to its own source", &cases, bound),
+            counted("trigger: unknown, no source reaching it", &cases, |c| {
+                uses(c, 1) == 0 || (!bound(c) && uses(c, 0) == 0)
+            }),
+            counted("trigger: unknown, several sources", &cases, |c| !bound(c) && uses(c, 0) == 2),
+            counted("owed: a service or a policy in a job, its call cost and masked runs", &cases, |c| {
+                uses(c, 0) + uses(c, 1) > 0
+            }),
+            counted("owed: a block or a platform in a job, its call cost and masked runs", &cases, |c| {
+                bound(c) || uses(c, 0) + uses(c, 1) > 0
+            }),
+            exactly("task: deadline-from written", 1_728),
+            some("trigger: its own source, no other reaching it"),
+            some("trigger: its own source, beside another reaching it"),
+            some("trigger: its own source leaving it unknown, beside one that alone would release it every"),
+            some("trigger: its own source releasing it every, beside one that alone would leave it unknown"),
+            some("trigger: its own source, reached through a requester its route names too"),
+            some("trigger: binding none, reaching the handler of another task's own source"),
+            some("trigger: every, equal separations"),
+            some("trigger: every, a longer separation"),
+            some("trigger: unknown, a shorter separation"),
+            some("trigger: unknown, no separation stated"),
+            some("trigger: unknown, the separation absent"),
+            some("rank: two stated separations tied"),
         ],
     );
 }
@@ -8940,24 +11628,158 @@ fn a_binding_keeps_its_edge_across_composition() {
     // 2 namings; `P` composing `C` itself or through `B`; what each of 3 declarations requires of the other two, of 4.
     assert_eq!(cases.len(), 2 * 2 * 4usize.pow(3));
     let tally = run("across composition", &cases);
+    // Every system lowered. Each count read from who requires whose offer — each of the three the only provider of its
+    // own — and who composes whom: a binding from each requirement, an edge from its provider to it; the composite
+    // `P` of `B` and `C`, `B` of `C` where it is deep; the texts ordering each composite below its part or above it.
+    // [`Composition`] holds them.
+    let model: Vec<Composition> = cases.iter().map(Composition::of).collect();
+    let count = |class: &'static str, f: &dyn Fn(&Composition) -> bool| {
+        exactly(class, model.iter().filter(|m| f(m)).count())
+    };
     hold(
         "across composition",
         &tally,
         (256, 256, 0, 0, 0),
         &[
-            "initialisation: a composite bound to its part, its edge kept",
-            "initialisation: a part bound to its composite, its edge kept",
-            "initialisation: a composite and its part bound each to the other, one component",
-            "initialisation: an edge across composition ordering two steps unlike their texts",
-            "initialisation: an edge across composition at depth, through another part, kept",
-            "initialisation: a block composing a block, an edge across it kept",
-            "initialisation: a component of several members",
-            "hardware: a block bound for requirements of its own",
-            "hardware: a platform bound for requirements of its own",
-            "hardware: requiring, and bound to by a requester",
-            "hardware: requiring, and bound to by nothing",
+            count(
+                "hardware: a block bound for requirements of its own",
+                &|m| m.requires(1) || m.requires(2),
+            ),
+            count(
+                "hardware: a platform bound for requirements of its own",
+                &|m| m.requires(0),
+            ),
+            count("hardware: requiring, and bound to by a requester", &|m| {
+                (0..3).any(|x| m.requires(x) && m.required(x))
+            }),
+            count("hardware: requiring, and bound to by nothing", &|m| {
+                (0..3).any(|x| m.requires(x) && !m.required(x))
+            }),
+            count(
+                "initialisation: a composite bound to its part, its edge kept",
+                &|m| {
+                    m.composing()
+                        .iter()
+                        .any(|(composite, part)| m.edge(*part, *composite))
+                },
+            ),
+            count(
+                "initialisation: a part bound to its composite, its edge kept",
+                &|m| {
+                    m.composing()
+                        .iter()
+                        .any(|(composite, part)| m.edge(*composite, *part))
+                },
+            ),
+            count(
+                "initialisation: a block composing a block, an edge across it kept",
+                &|m| m.deep && (m.edge(1, 2) || m.edge(2, 1)),
+            ),
+            count(
+                "initialisation: an edge across composition at depth, through another part, kept",
+                &|m| m.deep && (m.edge(0, 2) || m.edge(2, 0)),
+            ),
+            count(
+                "initialisation: a composite and its part bound each to the other, one component",
+                &|m| {
+                    m.composing().iter().any(|(composite, part)| {
+                        m.edge(*part, *composite) && m.edge(*composite, *part)
+                    })
+                },
+            ),
+            count("initialisation: a component of several members", &|m| {
+                (0..3).any(|x| (0..3).any(|y| x != y && m.reaches(x, y) && m.reaches(y, x)))
+            }),
+            count(
+                "initialisation: an edge across composition ordering two steps unlike their texts",
+                &|m| {
+                    m.composing().iter().any(|(composite, part)| {
+                        [(*composite, *part), (*part, *composite)]
+                            .iter()
+                            .any(|(earlier, later)| {
+                                m.edge(*earlier, *later)
+                                    && !m.reaches(*later, *earlier)
+                                    && m.names[*earlier] > m.names[*later]
+                            })
+                    })
+                },
+            ),
+            count(
+                "initialisation: an edge to a block or a platform bound for its own requirements",
+                &|m| (0..3).any(|x| m.requires(x)),
+            ),
+            count(
+                "owed: a node in no job, neither its call cost nor masked runs",
+                &|m| (0..3).any(|x| m.requires(x)),
+            ),
+            exactly("task: deadline-from written", 256),
         ],
     );
+}
+
+/// What the composition universe's construction gives one system: the names of `P`, `B` and `C`, in that order; who
+/// requires whose offer, `edges[provider][requester]`, the provider's binding's edge before its requester (model §8
+/// rule 12); and whether `P` composes `C` through `B`.
+struct Composition {
+    names: [String; 3],
+    edges: [[bool; 3]; 3],
+    deep: bool,
+}
+
+impl Composition {
+    fn of(case: &Case) -> Self {
+        let d = &case.description;
+        let declarations = [&d.platforms[0], &d.blocks[0], &d.blocks[1]];
+        let offers = ["core-count", "transfer-engine", "debug-port"];
+        let mut edges = [[false; 3]; 3];
+        for (requester, declaration) in declarations.iter().enumerate() {
+            for (provider, offer) in offers.iter().enumerate() {
+                if declaration.side.needs.iter().any(|n| n == offer) {
+                    edges[provider][requester] = true;
+                }
+            }
+        }
+        Self {
+            names: declarations.map(|b| b.name.clone()),
+            edges,
+            deep: !d.blocks[0].side.uses.is_empty(),
+        }
+    }
+
+    fn edge(&self, earlier: usize, later: usize) -> bool {
+        self.edges[earlier][later]
+    }
+
+    fn requires(&self, who: usize) -> bool {
+        (0..3).any(|provider| self.edges[provider][who])
+    }
+
+    fn required(&self, who: usize) -> bool {
+        self.edges[who].iter().any(|e| *e)
+    }
+
+    fn reaches(&self, from: usize, to: usize) -> bool {
+        let mut seen = [false; 3];
+        let mut todo = vec![from];
+        while let Some(at) = todo.pop() {
+            for (next, edge) in self.edges[at].iter().enumerate() {
+                if *edge && !seen[next] {
+                    seen[next] = true;
+                    todo.push(next);
+                }
+            }
+        }
+        seen[to]
+    }
+
+    /// Each composite with each part it composes, at any depth.
+    fn composing(&self) -> Vec<(usize, usize)> {
+        if self.deep {
+            vec![(0, 1), (0, 2), (1, 2)]
+        } else {
+            vec![(0, 1), (0, 2)]
+        }
+    }
 }
 
 #[test]
@@ -8968,30 +11790,125 @@ fn every_requester_s_obliged_bound_named_past_the_arithmetic() {
     let tally = run("obliged bounds", &cases);
     // Lowered: the 81 where the system's own level requires no deadline and no bound lies past the arithmetic (3 choices
     // of each of the 4 others). Every other refused: naming each bound past the arithmetic, where one is; else the
-    // system's own level, receiving its instance's expiry (§1).
+    // system's own level, receiving its instance's expiry (§1). Each count read from what each requester writes.
+    let state = |c: &Case, who: usize| -> Option<&'static str> {
+        let d = &c.description;
+        let side = [
+            &d.own,
+            &d.services[0].side,
+            &d.services[1].side,
+            &d.platforms[0].side,
+            &d.blocks[1].side,
+        ][who];
+        side.needs
+            .iter()
+            .any(|n| n == "absolute-deadline")
+            .then(|| match side.at_most.first() {
+                None => "bare",
+                Some((_, bound)) if bound.seconds().is_some() => "within",
+                Some(_) => "past",
+            })
+    };
+    let past = |c: &Case| (0..5).filter(|w| state(c, *w) == Some("past")).count();
+    let lowered = |c: &Case| past(c) == 0 && state(c, 0).is_none();
+    let any = |c: &Case, who: &[usize], s: &str| who.iter().any(|w| state(c, *w) == Some(s));
+    let deadline = |c: &Case, who: &[usize]| who.iter().any(|w| state(c, *w).is_some());
     hold(
         "obliged bounds",
         &tally,
         (1_024, 81, 0, 0, 943),
         &[
-            "refusal: a duration past the arithmetic",
-            "past: an obliged bound",
-            "past: an obliged bound of the system's own level",
-            "past: an obliged bound of a service",
-            "past: an obliged bound of a policy",
-            "past: an obliged bound of a platform",
-            "past: an obliged bound of a block",
-            "past: several, named in order",
-            "receivers: an expiry",
-            "receivers: the system's own level alone",
-            "instance: an obliged fact with its bound",
-            "instance: an obliged fact bare",
-            "instance: a platform's obliged bound",
-            "instance: a block's obliged bound",
-            "instance: a policy's obliged bound",
-            "instance: a service's obliged bound",
-            "hardware: an expiry running its code",
-            "context: an expiry running its requester",
+            counted("refusal: a duration past the arithmetic", &cases, |c| {
+                past(c) > 0
+            }),
+            counted("past: an obliged bound", &cases, |c| past(c) > 0),
+            counted(
+                "past: an obliged bound of the system's own level",
+                &cases,
+                |c| state(c, 0) == Some("past"),
+            ),
+            counted("past: an obliged bound of a service", &cases, |c| {
+                state(c, 1) == Some("past")
+            }),
+            counted("past: an obliged bound of a policy", &cases, |c| {
+                state(c, 2) == Some("past")
+            }),
+            counted("past: an obliged bound of a platform", &cases, |c| {
+                state(c, 3) == Some("past")
+            }),
+            counted("past: an obliged bound of a block", &cases, |c| {
+                state(c, 4) == Some("past")
+            }),
+            counted("past: several, named in order", &cases, |c| past(c) >= 2),
+            counted("receivers: an expiry", &cases, |c| {
+                past(c) == 0 && state(c, 0).is_some()
+            }),
+            counted("receivers: one", &cases, |c| {
+                past(c) == 0 && state(c, 0).is_some()
+            }),
+            counted("receivers: the system's own level alone", &cases, |c| {
+                past(c) == 0 && state(c, 0).is_some()
+            }),
+            counted("instance: an obliged fact with its bound", &cases, |c| {
+                lowered(c) && any(c, &[1, 2, 3, 4], "within")
+            }),
+            counted("instance: an obliged fact bare", &cases, |c| {
+                lowered(c) && any(c, &[1, 2, 3, 4], "bare")
+            }),
+            counted("instance: a service's obliged bound", &cases, |c| {
+                lowered(c) && any(c, &[1], "within")
+            }),
+            counted("instance: a policy's obliged bound", &cases, |c| {
+                lowered(c) && any(c, &[2], "within")
+            }),
+            counted("instance: a platform's obliged bound", &cases, |c| {
+                lowered(c) && any(c, &[3], "within")
+            }),
+            counted("instance: a block's obliged bound", &cases, |c| {
+                lowered(c) && any(c, &[4], "within")
+            }),
+            counted(
+                "hardware: a block bound for requirements of its own",
+                &cases,
+                |c| lowered(c) && deadline(c, &[4]),
+            ),
+            counted(
+                "hardware: a platform bound for requirements of its own",
+                &cases,
+                |c| lowered(c) && deadline(c, &[3]),
+            ),
+            counted("hardware: an expiry running its code", &cases, |c| {
+                lowered(c) && deadline(c, &[3, 4])
+            }),
+            counted(
+                "hardware: requiring, and bound to by nothing",
+                &cases,
+                |c| lowered(c) && deadline(c, &[3, 4]),
+            ),
+            counted("context: an expiry running its requester", &cases, |c| {
+                lowered(c) && deadline(c, &[1, 2, 3, 4])
+            }),
+            counted("multiplex: a channel with one user", &cases, |c| {
+                lowered(c) && deadline(c, &[1, 2])
+            }),
+            counted("multiplex: its own route no user", &cases, |c| {
+                lowered(c) && deadline(c, &[1, 2, 3, 4])
+            }),
+            counted(
+                "owed: an instance in a job, its call cost and masked runs",
+                &cases,
+                |c| lowered(c) && deadline(c, &[1, 2]),
+            ),
+            counted(
+                "owed: a node in no job, neither its call cost nor masked runs",
+                &cases,
+                |c| lowered(c) && deadline(c, &[3, 4]),
+            ),
+            exactly(
+                "owed: a service or a policy in a job, its call cost and masked runs",
+                81,
+            ),
+            exactly("task: deadline-from written", 81),
         ],
     );
 }
@@ -9007,7 +11924,10 @@ fn a_named_edge_from_hardware_a_service_or_a_policy_names() {
     // Unresolved: the 1,200 where the service needs `m.blk`'s offer and no platform composes `m.blk` (2 namings, 25
     // choices of what the two name, 8 of the other three, 3 of who uses them), each `missing-fact`: a block only a
     // service or a policy names is no hardware, a requester bound to it is a conflict (model §8 rule 7), and nothing
-    // else offers `transfer-engine`. Every other lowered.
+    // else offers `transfer-engine`. Refused: the 672 where a served service or policy names `m.blk`, no platform
+    // composing it, and the service is not bound to it (2 namings, 8 choices of the other three, and 16 choices of what
+    // the two name where both are used, twice, or 10 where only the service is), `unsupported-profile`: "a block or a
+    // platform the system serves outside its hardware" (§1, round 20, R20-D3). Every other lowered.
     let bound_outside: BTreeSet<String> = cases
         .iter()
         .filter(|c| {
@@ -9033,38 +11953,263 @@ fn a_named_edge_from_hardware_a_service_or_a_policy_names() {
         "the search's answer: {:?}",
         tally.unresolved_systems
     );
+    // Each count read from the label's choices ([`NamedModel`]).
+    let model: Vec<NamedModel> = cases.iter().map(NamedModel::of).collect();
+    let count = |class: &'static str, f: &dyn Fn(&NamedModel) -> bool| {
+        exactly(class, model.iter().filter(|m| f(m)).count())
+    };
+    let edge_class = |m: &NamedModel, policy: bool, platform: bool, by_needs: bool| {
+        m.lowered()
+            && m.named_edges().iter().any(|e| {
+                e.policy == policy && (e.hardware == "m.soc") == platform && e.by_needs == by_needs
+            })
+    };
+    let bare = |m: &NamedModel, policy: bool, platform: bool| {
+        m.lowered()
+            && m.named_edges().iter().any(|e| {
+                e.policy == policy
+                    && (e.hardware == "m.soc") == platform
+                    && !m.requiring(e.hardware)
+                    && !m.provider(e.hardware)
+            })
+    };
     hold(
         "named hardware",
         &tally,
-        (4_800, 3_600, 0, 1_200, 0),
+        (4_800, 2_928, 0, 1_200, 672),
         &[
-            "initialisation: a named edge from a block a service names by `uses`",
-            "initialisation: a named edge from a block a service names by `needs`",
-            "initialisation: a named edge from a platform a service names by `uses`",
-            "initialisation: a named edge from a platform a service names by `needs`",
-            "initialisation: a named edge from a block a policy names by `uses`",
-            "initialisation: a named edge from a block a policy names by `needs`",
-            "initialisation: a named edge from a platform a policy names by `uses`",
-            "initialisation: a named edge from a platform a policy names by `needs`",
-            "initialisation: a named edge from hardware a provider alone",
-            "initialisation: a named edge from hardware bound for its own requirements alone",
-            "initialisation: a named edge from hardware a provider and bound for its own requirements",
-            "initialisation: a named edge from a block no hardware, served through its namer",
-            "initialisation: a named edge from hardware beside a binding's, one line",
-            "initialisation: a named edge from hardware, the one path between two steps, ordering them unlike their \
-             texts",
-            "initialisation: a named edge from hardware bound for nothing and bound to by nothing",
-            "initialisation: hardware a node, named by a service or a policy the system does not serve, no edge",
-            "named: a block a service names, bound for nothing, a node",
-            "named: a platform a policy names, bound for nothing, a node",
-            "named: hardware a service or a policy the system does not serve names, no node",
-            "initialisation: a composite bound to its part, its edge kept",
-            "owed: a service or a policy in a job, its call cost and masked runs",
-            "owed: a block or a platform in a job, its call cost and masked runs",
-            "owed: a node in no job, neither its call cost nor masked runs",
-            "served: a block a service names, no hardware, bound for requirements of its own",
+            count("initialisation: a named edge from a block a service names by `uses`", &|m| edge_class(m, false, false, false)),
+            count("initialisation: a named edge from a block a service names by `needs`", &|m| edge_class(m, false, false, true)),
+            count("initialisation: a named edge from a platform a service names by `uses`", &|m| edge_class(m, false, true, false)),
+            count("initialisation: a named edge from a platform a service names by `needs`", &|m| edge_class(m, false, true, true)),
+            count("initialisation: a named edge from a block a policy names by `uses`", &|m| edge_class(m, true, false, false)),
+            count("initialisation: a named edge from a block a policy names by `needs`", &|m| edge_class(m, true, false, true)),
+            count("initialisation: a named edge from a platform a policy names by `uses`", &|m| edge_class(m, true, true, false)),
+            count("initialisation: a named edge from a platform a policy names by `needs`", &|m| edge_class(m, true, true, true)),
+            count("initialisation: a named edge from hardware a provider alone", &|m| {
+                m.lowered() && m.named_edges().iter().any(|e| m.provider(e.hardware) && !m.requiring(e.hardware))
+            }),
+            count("initialisation: a named edge from hardware bound for its own requirements alone", &|m| {
+                m.lowered() && m.named_edges().iter().any(|e| !m.provider(e.hardware) && m.requiring(e.hardware))
+            }),
+            count("initialisation: a named edge from hardware a provider and bound for its own requirements", &|m| {
+                m.lowered() && m.named_edges().iter().any(|e| m.provider(e.hardware) && m.requiring(e.hardware))
+            }),
+            count("initialisation: a named edge from hardware bound for nothing and bound to by nothing", &|m| {
+                m.lowered() && m.named_edges().iter().any(|e| !m.provider(e.hardware) && !m.requiring(e.hardware))
+            }),
+            count("initialisation: a named edge from hardware beside a binding's, one line", &|m| {
+                m.lowered() && m.named_edges().iter().any(|e| m.binds(e.namer, e.hardware))
+            }),
+            count(
+                "initialisation: a named edge from hardware, the one path between two steps, ordering them unlike their \
+                 texts",
+                &|m| m.lowered() && m.below && m.named_edges().iter().any(|e| !m.binds(e.namer, e.hardware)),
+            ),
+            count(
+                "initialisation: hardware a node, named by a service or a policy the system does not serve, no edge",
+                &|m| m.lowered() && !m.policy_served() && m.policy_names.is_some_and(|(h, _)| m.node(h)),
+            ),
+            count("named: a block a service names, bound for nothing, a node", &|m| bare(m, false, false)),
+            count("named: a platform a service names, bound for nothing, a node", &|m| bare(m, false, true)),
+            count("named: a block a policy names, bound for nothing, a node", &|m| bare(m, true, false)),
+            count("named: a platform a policy names, bound for nothing, a node", &|m| bare(m, true, true)),
+            count("named: hardware a service or a policy the system does not serve names, no node", &|m| {
+                m.lowered() && !m.policy_served() && m.policy_names.is_some_and(|(h, _)| !m.node(h))
+            }),
+            count("hardware: a block bound for requirements of its own", &|m| m.lowered() && m.requiring("m.blk")),
+            count("hardware: a platform bound for requirements of its own", &|m| m.lowered() && m.requiring("m.soc")),
+            count("hardware: requiring, and bound to by a requester", &|m| {
+                m.lowered() && ["m.blk", "m.soc"].iter().any(|h| m.requiring(h) && m.provider(h))
+            }),
+            count("hardware: requiring, and bound to by nothing", &|m| {
+                m.lowered() && ["m.blk", "m.soc"].iter().any(|h| m.requiring(h) && !m.provider(h))
+            }),
+            count("initialisation: a composite bound to its part, its edge kept", &|m| m.lowered() && m.soc_requires),
+            count("initialisation: an edge to a block or a platform bound for its own requirements", &|m| {
+                m.lowered() && (m.requiring("m.blk") || m.requiring("m.soc"))
+            }),
+            count("second system: requiring hardware the lowered system does not serve", &|m| {
+                m.lowered() && m.blk_requires && !m.composed
+            }),
+            count("refusal: a block or a platform the system serves outside its hardware", &|m| m.outcome() == "outside"),
+            count("outside: a block no platform composes", &|m| m.outcome() == "outside"),
+            count("outside: named by a service", &|m| m.outcome() == "outside" && m.service_names.is_some_and(|(h, _)| h == "m.blk")),
+            count("outside: named by a policy", &|m| {
+                m.outcome() == "outside" && m.policy_served() && m.policy_names.is_some_and(|(h, _)| h == "m.blk")
+            }),
+            count("outside: named by `uses`", &|m| m.outcome() == "outside" && m.names_block_by(false)),
+            count("outside: named by `needs`", &|m| m.outcome() == "outside" && m.names_block_by(true)),
+            count("outside: its namer served by a task", &|m| m.outcome() == "outside" && m.users != NamersUsed::ByOwnLevel),
+            count("outside: its namer served by the system's own level alone", &|m| {
+                m.outcome() == "outside" && m.users == NamersUsed::ByOwnLevel
+            }),
+            count("outside: bound for requirements of its own", &|m| m.outcome() == "outside" && m.blk_requires),
+            count("outside: several, named in order", &|m| m.outcome() == "outside" && m.outside_pairs() == 2),
+            count("outside: one block or platform named by two", &|m| m.outcome() == "outside" && m.outside_pairs() == 2),
+            count(
+                "outside: beside hardware a served service or policy names, not named",
+                &|m| {
+                    m.outcome() == "outside"
+                        && (m.service_names.is_some_and(|(h, _)| h == "m.soc")
+                            || (m.policy_served() && m.policy_names.is_some_and(|(h, _)| h == "m.soc")))
+                },
+            ),
+            exactly("task: deadline-from written", 2_928),
+            some("named: a block hardware a served requester names composes, nothing calling nor binding it, no node"),
+            some("composition: a platform a task reaches through a binding"),
+            some("owed: a service or a policy in a job, its call cost and masked runs"),
+            some("owed: a block or a platform in a job, its call cost and masked runs"),
+            some("owed: a node in no job, neither its call cost nor masked runs"),
         ],
     );
+}
+
+/// What the named-hardware universe's construction gives one system ([`named_hardware`]): what the service and the
+/// policy name, each `(hardware, by needs)`; the five choices; who uses the two; and whether the namers' texts lie below
+/// the hardware's.
+struct NamedModel {
+    service_names: Option<(&'static str, bool)>,
+    policy_names: Option<(&'static str, bool)>,
+    blk_requires: bool,
+    s_binds: bool,
+    composed: bool,
+    soc_requires: bool,
+    p_binds: bool,
+    users: NamersUsed,
+    below: bool,
+}
+
+/// A named edge, from the hardware a service or a policy the system serves names to that namer.
+struct NamedEdge {
+    hardware: &'static str,
+    namer: &'static str,
+    policy: bool,
+    by_needs: bool,
+}
+
+impl NamedModel {
+    fn of(case: &Case) -> Self {
+        let d = &case.description;
+        let names = |side: &Side| -> Option<(&'static str, bool)> {
+            ["m.blk", "m.soc"].into_iter().find_map(|h| {
+                if side.uses.iter().any(|n| n == h) {
+                    Some((h, false))
+                } else if side.needs.iter().any(|n| n == h) {
+                    Some((h, true))
+                } else {
+                    None
+                }
+            })
+        };
+        let needs = |side: &Side, fact: &str| side.needs.iter().any(|n| n == fact);
+        let users = if !d.own.uses.is_empty() {
+            NamersUsed::ByOwnLevel
+        } else if d.tasks[0].side.uses.len() == 2 {
+            NamersUsed::ByTask
+        } else {
+            NamersUsed::PolicyByNothing
+        };
+        Self {
+            service_names: names(&d.services[0].side),
+            policy_names: names(&d.services[1].side),
+            blk_requires: needs(&d.blocks[1].side, "observable-output"),
+            s_binds: needs(&d.services[0].side, "transfer-engine"),
+            composed: d.platforms[0].side.uses.iter().any(|n| n == "m.blk"),
+            soc_requires: needs(&d.platforms[0].side, "observable-output"),
+            p_binds: needs(&d.services[1].side, "core-count"),
+            users,
+            below: d.services[0].name.starts_with("a."),
+        }
+    }
+
+    fn policy_served(&self) -> bool {
+        self.users != NamersUsed::PolicyByNothing
+    }
+
+    /// The service's and the served policy's names of `m.blk`, a block no platform composes, `m.soc` being the
+    /// system's: the outside-hardware refusal's pairs (§1).
+    fn outside_pairs(&self) -> usize {
+        let outside = |names: Option<(&str, bool)>| {
+            usize::from(!self.composed && names.is_some_and(|(h, _)| h == "m.blk"))
+        };
+        outside(self.service_names)
+            + if self.policy_served() {
+                outside(self.policy_names)
+            } else {
+                0
+            }
+    }
+
+    fn names_block_by(&self, by_needs: bool) -> bool {
+        let names = |n: Option<(&str, bool)>| n == Some(("m.blk", by_needs));
+        names(self.service_names) || (self.policy_served() && names(self.policy_names))
+    }
+
+    /// Unresolved where the service is bound to `m.blk` and no platform composes it (model §8 rule 7); refused where a
+    /// served namer names it so; lowered otherwise.
+    fn outcome(&self) -> &'static str {
+        if self.s_binds && !self.composed {
+            "unresolved"
+        } else if self.outside_pairs() > 0 {
+            "outside"
+        } else {
+            "lowered"
+        }
+    }
+
+    fn lowered(&self) -> bool {
+        self.outcome() == "lowered"
+    }
+
+    /// Whether `namer` is bound to `hardware`: the service to `m.blk` for `transfer-engine`, the served policy to
+    /// `m.soc` for `core-count`.
+    fn binds(&self, namer: &str, hardware: &str) -> bool {
+        match (namer, hardware) {
+            ("service", "m.blk") => self.s_binds,
+            ("policy", "m.soc") => self.p_binds && self.policy_served(),
+            _ => false,
+        }
+    }
+
+    fn provider(&self, hardware: &str) -> bool {
+        self.binds("service", hardware) || self.binds("policy", hardware)
+    }
+
+    fn requiring(&self, hardware: &str) -> bool {
+        match hardware {
+            "m.blk" => self.blk_requires && self.composed,
+            _ => self.soc_requires,
+        }
+    }
+
+    fn named_edges(&self) -> Vec<NamedEdge> {
+        let mut out = Vec::new();
+        for (namer, names, policy) in [
+            ("service", self.service_names, false),
+            (
+                "policy",
+                self.policy_names.filter(|_| self.policy_served()),
+                true,
+            ),
+        ] {
+            if let Some((hardware, by_needs)) = names {
+                out.push(NamedEdge {
+                    hardware,
+                    namer,
+                    policy,
+                    by_needs,
+                });
+            }
+        }
+        out
+    }
+
+    fn node(&self, hardware: &str) -> bool {
+        self.requiring(hardware)
+            || self.provider(hardware)
+            || self.named_edges().iter().any(|e| e.hardware == hardware)
+    }
 }
 
 #[test]
@@ -9074,28 +12219,120 @@ fn a_named_edge_from_hardware_whose_interrupt_runs_its_namer() {
     // level.
     assert_eq!(cases.len(), 2 * 6 * 5 * 2 * 2);
     let tally = run("named hardware in interrupts", &cases);
+    // Every system lowered. Each count read from what the one namer requires and names: an alarm at `m.tmr` itself, a
+    // deadline through an instance over it, `m.src`'s interrupt, as the construction writes them — so the named block a
+    // provider of the namer, directly or through the instance, or of nothing; `m.tmr`'s timer route running the namer
+    // where it programs it, `m.src`'s where it handles it; the namer taking a channel where it programs an alarm or a
+    // deadline, its own route no user of it, the source's route one beside the task where both reach it.
+    let namer = |c: &Case| c.description.services[0].clone();
+    let requires = |c: &Case, fact: &str| namer(c).side.needs.iter().any(|n| n == fact);
+    let named = |c: &Case| -> Option<(&'static str, bool)> {
+        let side = namer(c).side;
+        ["m.tmr", "m.src"].into_iter().find_map(|h| {
+            if side.uses.iter().any(|n| n == h) {
+                Some((h, false))
+            } else if side.needs.iter().any(|n| n == h) {
+                Some((h, true))
+            } else {
+                None
+            }
+        })
+    };
+    let alarm = |c: &Case| requires(c, "relative-delay");
+    let deadline = |c: &Case| requires(c, "absolute-deadline");
+    let source = |c: &Case| requires(c, INTERRUPT_FACT);
+    let by_task = |c: &Case| !c.description.tasks[0].side.uses.is_empty();
+    let policy = |c: &Case| namer(c).policy;
+    // The named hardware bound to by the namer itself, or through its instance; and bound for nothing at all.
+    let direct = |c: &Case| match named(c) {
+        Some(("m.tmr", _)) => alarm(c),
+        Some(_) => source(c),
+        None => false,
+    };
+    let provider =
+        |c: &Case| direct(c) || (named(c).is_some_and(|(h, _)| h == "m.tmr") && deadline(c));
+    let unbound = |c: &Case| named(c).is_some() && !provider(c);
+    // An unbound named block in the interrupt that runs its namer: the other device's route.
+    let in_interrupt = |c: &Case| {
+        unbound(c)
+            && match named(c) {
+                Some(("m.tmr", _)) => source(c),
+                _ => alarm(c) || deadline(c),
+            }
+    };
+    let edge = |c: &Case, is_policy: bool, by_needs: bool| {
+        policy(c) == is_policy && named(c).is_some_and(|(_, needs)| needs == by_needs)
+    };
+    let channel = |c: &Case| alarm(c) || deadline(c);
     hold(
         "named hardware in interrupts",
         &tally,
         (240, 240, 0, 0, 0),
         &[
-            "initialisation: a named edge from a block a service names by `uses`",
-            "initialisation: a named edge from a block a service names by `needs`",
-            "initialisation: a named edge from a block a policy names by `uses`",
-            "initialisation: a named edge from a block a policy names by `needs`",
-            "initialisation: a named edge from hardware a provider alone",
-            "initialisation: a named edge from hardware beside a binding's, one line",
-            "initialisation: a named edge from hardware an instance programs, beside the instance's path",
-            "initialisation: a named edge from hardware whose own interrupt runs its namer",
-            "initialisation: a named edge from hardware bound for nothing and bound to by nothing",
-            "named: hardware named and bound for nothing, in a job",
-            "named: hardware named and bound for nothing, in no job",
-            "context: an expiry running its requester",
-            "multiplex: multiplexed by a job and an interrupt",
-            "owed: a service or a policy in a job, its call cost and masked runs",
-            "owed: a block or a platform in a job, its call cost and masked runs",
-            "owed: an instance in a job, its call cost and masked runs",
-            "owed: a node in no job, neither its call cost nor masked runs",
+            counted("initialisation: a named edge from a block a service names by `uses`", &cases, |c| edge(c, false, false)),
+            counted("initialisation: a named edge from a block a service names by `needs`", &cases, |c| edge(c, false, true)),
+            counted("initialisation: a named edge from a block a policy names by `uses`", &cases, |c| edge(c, true, false)),
+            counted("initialisation: a named edge from a block a policy names by `needs`", &cases, |c| edge(c, true, true)),
+            counted("initialisation: a named edge from hardware a provider alone", &cases, provider),
+            counted("initialisation: a named edge from hardware beside a binding's, one line", &cases, direct),
+            counted(
+                "initialisation: a named edge from hardware an instance programs, beside the instance's path",
+                &cases,
+                |c| named(c).is_some_and(|(h, _)| h == "m.tmr") && deadline(c),
+            ),
+            counted("initialisation: a named edge from hardware whose own interrupt runs its namer", &cases, provider),
+            counted(
+                "initialisation: a named edge from hardware bound for nothing and bound to by nothing",
+                &cases,
+                unbound,
+            ),
+            counted(
+                "initialisation: a named edge from hardware, the one path between two steps, ordering them unlike their \
+                 texts",
+                &cases,
+                |c| namer(c).name == "a.x" && named(c).is_some() && !provider(c),
+            ),
+            counted("named: hardware named and bound for nothing, in a job", &cases, |c| unbound(c) && by_task(c)),
+            counted("named: hardware named and bound for nothing, in no job", &cases, |c| unbound(c) && !by_task(c)),
+            counted("named: hardware named and bound for nothing, in an interrupt that runs its namer", &cases, in_interrupt),
+            counted("named: a block a service names, bound for nothing, a node", &cases, |c| {
+                unbound(c) && !policy(c) && !source(c)
+            }),
+            counted("named: a block a policy names, bound for nothing, a node", &cases, |c| {
+                unbound(c) && policy(c) && !source(c)
+            }),
+            counted("named: a block a source's handler names, bound for nothing, a node", &cases, |c| {
+                unbound(c) && source(c)
+            }),
+            counted("named: hardware named by `needs`, bound for nothing, a node", &cases, |c| {
+                unbound(c) && named(c).is_some_and(|(_, needs)| needs)
+            }),
+            counted("named: hardware named by `uses`, bound for nothing, a node", &cases, |c| {
+                unbound(c) && named(c).is_some_and(|(_, needs)| !needs)
+            }),
+            counted(
+                "named: hardware named and bound for nothing, a provider only of requesters that do not name it",
+                &cases,
+                |c| named(c).is_some_and(|(h, _)| h == "m.tmr") && deadline(c),
+            ),
+            counted("context: a node in two interrupts", &cases, |c| channel(c) && source(c)),
+            counted("context: an expiry running its requester", &cases, deadline),
+            counted("instance: an obliged fact bare", &cases, deadline),
+            counted("multiplex: its own route no user", &cases, channel),
+            counted("multiplex: another route a user", &cases, |c| channel(c) && source(c)),
+            counted("multiplex: multiplexed", &cases, |c| channel(c) && source(c) && by_task(c)),
+            counted("multiplex: multiplexed by a job and an interrupt", &cases, |c| {
+                channel(c) && source(c) && by_task(c)
+            }),
+            counted("multiplex: a policy multiplexed", &cases, |c| channel(c) && source(c) && by_task(c) && policy(c)),
+            counted("multiplex: a channel with one user", &cases, |c| channel(c) && source(c) != by_task(c)),
+            counted("owed: a service or a policy in a job, its call cost and masked runs", &cases, by_task),
+            counted("owed: an instance in a job, its call cost and masked runs", &cases, |c| deadline(c) && by_task(c)),
+            counted("owed: a block or a platform in a job, its call cost and masked runs", &cases, |c| {
+                by_task(c) && (named(c).is_some() || !namer(c).side.needs.is_empty())
+            }),
+            counted("owed: a node in no job, neither its call cost nor masked runs", &cases, |c| !by_task(c)),
+            exactly("task: deadline-from written", 240),
         ],
     );
 }
@@ -9115,7 +12352,9 @@ fn hardware_a_served_requester_names_a_node_bound_or_not() {
     // Unresolved: the 32 where `w` is bound to `m.blk`, which no platform composes and neither `t` nor the system's own
     // level names (8 subsets of the three services, 2 clauses, 2 users), each `missing-fact`: a block only a service or
     // a policy names is no hardware, a requester bound to it is a conflict (model §8 rule 7), and nothing else offers
-    // `transfer-engine`. Every other lowered.
+    // `transfer-engine`. Refused: the 28 twins of those where some of the three services names `m.blk` and nothing is
+    // bound to it, `unsupported-profile`: "a block or a platform the system serves outside its hardware" (§1, round 20,
+    // R20-D3). Every other lowered.
     let outside: BTreeSet<String> = cases
         .iter()
         .filter(|c| {
@@ -9144,44 +12383,179 @@ fn hardware_a_served_requester_names_a_node_bound_or_not() {
         "the search's answer: {:?}",
         tally.unresolved_systems
     );
+    // Each count read from the label: what is named, by whom and by which clause, who uses the three services, and
+    // whether `w` binds it. A served namer — `t`, `a.s`, `a.p` or `a.h`, never the system's own level — makes the named
+    // hardware a node, bound or not; `m.blk` no platform composes is hardware only where `t` or the system's own level
+    // names it, and otherwise refused where a service names it, or unresolved where `w` binds it.
+    let target = |c: &Case| {
+        if c.label.starts_with("Platform ") {
+            "m.soc"
+        } else {
+            "m.blk"
+        }
+    };
+    let alone = |c: &Case| c.label.starts_with("Alone ");
+    let by = |c: &Case, namer: &str| {
+        c.label
+            .split(" named by [")
+            .nth(1)
+            .and_then(|r| r.split(']').next())
+            .is_some_and(|namers| namers.split(", ").any(|n| n == format!("{namer:?}")))
+    };
+    let by_needs = |c: &Case| c.label.contains("] by needs;");
+    let by_task = |c: &Case| c.label.contains("used by t;");
+    let bound = |c: &Case| c.label.ends_with("w bound to it");
+    let services = ["a.s", "a.p", "a.h"];
+    let by_service = |c: &Case| services.iter().any(|n| by(c, n));
+    let hardware = |c: &Case| !alone(c) || by(c, "t") || by(c, "sys");
+    let outcome = |c: &Case| {
+        if hardware(c) {
+            "lowered"
+        } else if bound(c) {
+            "unresolved"
+        } else if by_service(c) {
+            "outside"
+        } else {
+            "lowered"
+        }
+    };
+    let lowered = |c: &Case| outcome(c) == "lowered";
+    let called = |c: &Case| lowered(c) && (by(c, "t") || by_service(c));
+    let bare = |c: &Case| called(c) && !bound(c);
+    let named_as = |c: &Case, namer: &str| bare(c) && by(c, namer);
+    let in_job = |c: &Case| by(c, "t") || (by_task(c) && by_service(c));
+    let edge = |c: &Case, namers: &[&str], platform: bool, needs: bool| {
+        lowered(c)
+            && (target(c) == "m.soc") == platform
+            && by_needs(c) == needs
+            && namers.iter().any(|n| by(c, n))
+    };
+    let outside = |c: &Case| outcome(c) == "outside";
     hold(
         "unbound named hardware",
         &tally,
-        (768, 736, 0, 32, 0),
+        (768, 708, 0, 32, 28),
         &[
-            "named: a block a task names, bound for nothing, a node",
-            "named: a platform a task names, bound for nothing, a node",
-            "named: a block a service names, bound for nothing, a node",
-            "named: a platform a service names, bound for nothing, a node",
-            "named: a block a policy names, bound for nothing, a node",
-            "named: a platform a policy names, bound for nothing, a node",
-            "named: a block a source's handler names, bound for nothing, a node",
-            "named: a platform a source's handler names, bound for nothing, a node",
-            "named: hardware named by `uses`, bound for nothing, a node",
-            "named: hardware named by `needs`, bound for nothing, a node",
-            "named: a block no hardware, which a service or a policy names, bound for nothing, a node",
-            "named: hardware named and bound for nothing, in a job",
-            "named: hardware named and bound for nothing, in no job",
-            "named: hardware named and bound for nothing, in an interrupt that runs its namer",
-            "named: hardware named and bound for nothing, a provider only of requesters that do not name it",
-            "named: hardware the system's own level names, no node",
-            "named: a block hardware a served requester names composes, nothing calling nor binding it, no node",
-            "initialisation: a named edge from a block a service names by `uses`",
-            "initialisation: a named edge from a block a service names by `needs`",
-            "initialisation: a named edge from a platform a service names by `uses`",
-            "initialisation: a named edge from a platform a service names by `needs`",
-            "initialisation: a named edge from a block a policy names by `uses`",
-            "initialisation: a named edge from a block a policy names by `needs`",
-            "initialisation: a named edge from a platform a policy names by `uses`",
-            "initialisation: a named edge from a platform a policy names by `needs`",
-            "initialisation: a named edge from hardware bound for nothing and bound to by nothing",
-            "initialisation: a named edge from hardware a provider alone",
-            "initialisation: a named edge from a block no hardware, served through its namer",
-            "initialisation: a named edge from hardware, the one path between two steps, ordering them unlike their \
-             texts",
-            "owed: a block or a platform in a job, its call cost and masked runs",
-            "owed: a service or a policy in a job, its call cost and masked runs",
-            "owed: a node in no job, neither its call cost nor masked runs",
+            counted("named: a block a task names, bound for nothing, a node", &cases, |c| {
+                named_as(c, "t") && target(c) == "m.blk"
+            }),
+            counted("named: a platform a task names, bound for nothing, a node", &cases, |c| {
+                named_as(c, "t") && target(c) == "m.soc"
+            }),
+            counted("named: a block a service names, bound for nothing, a node", &cases, |c| {
+                named_as(c, "a.s") && target(c) == "m.blk"
+            }),
+            counted("named: a platform a service names, bound for nothing, a node", &cases, |c| {
+                named_as(c, "a.s") && target(c) == "m.soc"
+            }),
+            counted("named: a block a policy names, bound for nothing, a node", &cases, |c| {
+                named_as(c, "a.p") && target(c) == "m.blk"
+            }),
+            counted("named: a platform a policy names, bound for nothing, a node", &cases, |c| {
+                named_as(c, "a.p") && target(c) == "m.soc"
+            }),
+            counted("named: a block a source's handler names, bound for nothing, a node", &cases, |c| {
+                named_as(c, "a.h") && target(c) == "m.blk"
+            }),
+            counted("named: a platform a source's handler names, bound for nothing, a node", &cases, |c| {
+                named_as(c, "a.h") && target(c) == "m.soc"
+            }),
+            counted("named: hardware named by `uses`, bound for nothing, a node", &cases, |c| bare(c) && !by_needs(c)),
+            counted("named: hardware named by `needs`, bound for nothing, a node", &cases, |c| bare(c) && by_needs(c)),
+            counted("named: hardware named and bound for nothing, in a job", &cases, |c| bare(c) && in_job(c)),
+            counted("named: hardware named and bound for nothing, in no job", &cases, |c| bare(c) && !in_job(c)),
+            counted(
+                "named: hardware named and bound for nothing, in an interrupt that runs its namer",
+                &cases,
+                |c| bare(c) && by(c, "a.h"),
+            ),
+            counted(
+                "named: hardware named and bound for nothing, a provider only of requesters that do not name it",
+                &cases,
+                |c| called(c) && bound(c),
+            ),
+            counted("named: hardware the system's own level names, no node", &cases, |c| {
+                lowered(c) && by(c, "sys") && !called(c) && !bound(c)
+            }),
+            counted(
+                "named: a block hardware a served requester names composes, nothing calling nor binding it, no node",
+                &cases,
+                |c| called(c) && target(c) == "m.soc",
+            ),
+            counted("composition: a platform a task reaches through a binding", &cases, |c| {
+                called(c) && target(c) == "m.soc" && in_job(c)
+            }),
+            counted("composition: what a node in a job composes is in none", &cases, |c| {
+                called(c) && target(c) == "m.soc" && by(c, "t") && !by_task(c)
+            }),
+            counted("initialisation: a named edge from a block a service names by `uses`", &cases, |c| {
+                edge(c, &["a.s", "a.h"], false, false)
+            }),
+            counted("initialisation: a named edge from a block a service names by `needs`", &cases, |c| {
+                edge(c, &["a.s", "a.h"], false, true)
+            }),
+            counted("initialisation: a named edge from a platform a service names by `uses`", &cases, |c| {
+                edge(c, &["a.s", "a.h"], true, false)
+            }),
+            counted("initialisation: a named edge from a platform a service names by `needs`", &cases, |c| {
+                edge(c, &["a.s", "a.h"], true, true)
+            }),
+            counted("initialisation: a named edge from a block a policy names by `uses`", &cases, |c| {
+                edge(c, &["a.p"], false, false)
+            }),
+            counted("initialisation: a named edge from a block a policy names by `needs`", &cases, |c| {
+                edge(c, &["a.p"], false, true)
+            }),
+            counted("initialisation: a named edge from a platform a policy names by `uses`", &cases, |c| {
+                edge(c, &["a.p"], true, false)
+            }),
+            counted("initialisation: a named edge from a platform a policy names by `needs`", &cases, |c| {
+                edge(c, &["a.p"], true, true)
+            }),
+            counted(
+                "initialisation: a named edge from hardware bound for nothing and bound to by nothing",
+                &cases,
+                |c| lowered(c) && by_service(c) && !bound(c),
+            ),
+            counted("initialisation: a named edge from hardware a provider alone", &cases, |c| {
+                lowered(c) && by_service(c) && bound(c)
+            }),
+            counted(
+                "initialisation: a named edge from hardware, the one path between two steps, ordering them unlike their \
+                 texts",
+                &cases,
+                |c| lowered(c) && by_service(c),
+            ),
+            counted(
+                "hardware: a block a served service or policy names, which a task's name makes hardware",
+                &cases,
+                |c| by_service(c) && by(c, "t"),
+            ),
+            counted(
+                "hardware: a block a served service or policy names, which the system's own level's name makes hardware",
+                &cases,
+                |c| by_service(c) && by(c, "sys"),
+            ),
+            counted("refusal: a block or a platform the system serves outside its hardware", &cases, outside),
+            counted("outside: a block no platform composes", &cases, outside),
+            counted("outside: named by a service", &cases, |c| outside(c) && (by(c, "a.s") || by(c, "a.h"))),
+            counted("outside: named by a policy", &cases, |c| outside(c) && by(c, "a.p")),
+            counted("outside: named by `uses`", &cases, |c| outside(c) && !by_needs(c)),
+            counted("outside: named by `needs`", &cases, |c| outside(c) && by_needs(c)),
+            counted("outside: its namer served by a task", &cases, |c| outside(c) && by_task(c)),
+            counted("outside: its namer served by the system's own level alone", &cases, |c| outside(c) && !by_task(c)),
+            counted("outside: several, named in order", &cases, |c| {
+                outside(c) && services.iter().filter(|n| by(c, n)).count() >= 2
+            }),
+            counted("outside: one block or platform named by two", &cases, |c| {
+                outside(c) && services.iter().filter(|n| by(c, n)).count() >= 2
+            }),
+            counted("owed: a service or a policy in a job, its call cost and masked runs", &cases, |c| {
+                lowered(c) && by_task(c)
+            }),
+            exactly("task: deadline-from written", 708),
+            some("owed: a block or a platform in a job, its call cost and masked runs"),
+            some("owed: a node in no job, neither its call cost nor masked runs"),
         ],
     );
     // "placed when an unrelated binding makes it a node" (R18-D1): each system beside its twin, the one with `w` bound
@@ -9239,6 +12613,588 @@ fn hardware_a_served_requester_names_a_node_bound_or_not() {
 }
 
 #[test]
+fn the_bullet_over_tasks_taken_whole_in_runtime_order() {
+    let cases = task_bullet();
+    // What `t` and `u` each write, of 16; which is first; what else the system meets, of 4.
+    assert_eq!(cases.len(), 16 * 16 * 2 * 4);
+    let tally = run("task bullet", &cases);
+    // Rejected: the 480 where a task states no release or no deadline (60 of the 256 pairs, 2 orders, 4 others), the
+    // language's answer to §1's "none stated, which it refuses already": `missing-fact` for no release model,
+    // `invalid-description` for a deadline's cardinality. Lowered: the 8 where each task is well-formed or writes a zero
+    // deadline and nothing else applies (2 × 2 × 2). Every other refused.
+    // Which of its two verdicts the language gives a description with both is its own to choose.
+    let (mut release, mut deadline, mut both) = (0, 0, 0);
+    for case in &cases {
+        let omits = |what: &str| {
+            ["t", "u"]
+                .iter()
+                .any(|task| case.label.contains(&format!("{task}:no {what} ")))
+        };
+        match (omits("release"), omits("deadline")) {
+            (true, false) => release += 1,
+            (false, true) => deadline += 1,
+            (true, true) => both += 1,
+            (false, false) => {}
+        }
+    }
+    let given = |verdict: &str| tally.verdicts.get(verdict).map_or(0, |v| v.0);
+    let (missing, invalid) = (
+        given("rejected missing-fact"),
+        given("rejected invalid-description"),
+    );
+    assert!(
+        missing + invalid == release + deadline + both
+            && (release..=release + both).contains(&missing)
+            && (deadline..=deadline + both).contains(&invalid),
+        "the language's answer: {release} with no release, {deadline} with no deadline, {both} with both; {:?}",
+        tally.verdicts
+    );
+    // Each count read from a table of what each choice of [`BULLET_CLAUSES`] writes, derived by hand from the clauses
+    // it states: the class of the defect §1's bullet names first — its clauses read in the bullet's order, not a time
+    // before zero before a second release model — how many it has, whether a deadline's or a jitter's comes before its
+    // release's, and the units that are no time it writes. The bullet names the first task in runtime order with one.
+    type Row = (
+        &'static str,
+        Option<&'static str>,
+        usize,
+        bool,
+        &'static [&'static str],
+    );
+    const TABLE: [Row; 14] = [
+        ("well-formed", None, 0, false, &[]),
+        (
+            "period in Hz",
+            Some("task bullet: a period that is not a time"),
+            1,
+            false,
+            &["Hz"],
+        ),
+        (
+            "min-separation in KiB",
+            Some("task bullet: a minimum separation that is not a time"),
+            1,
+            false,
+            &["KiB"],
+        ),
+        (
+            "deadline in bit",
+            Some("task bullet: a deadline that is not a time"),
+            1,
+            false,
+            &["bit"],
+        ),
+        (
+            "jitter in tick",
+            Some("task bullet: a jitter that is not a time"),
+            1,
+            false,
+            &["tick"],
+        ),
+        (
+            "zero period",
+            Some("task bullet: a period of zero"),
+            1,
+            false,
+            &[],
+        ),
+        (
+            "zero min-separation",
+            Some("task bullet: a minimum separation of zero"),
+            1,
+            false,
+            &[],
+        ),
+        (
+            "periodic bound to its source",
+            Some("refusal: a periodic task bound to a source itself"),
+            1,
+            false,
+            &[],
+        ),
+        (
+            "zero period, deadline in GHz",
+            Some("task bullet: a deadline that is not a time"),
+            2,
+            true,
+            &["GHz"],
+        ),
+        (
+            "periodic bound to its source, jitter in MiB",
+            Some("task bullet: a jitter that is not a time"),
+            2,
+            true,
+            &["MiB"],
+        ),
+        (
+            "period in kHz, bound to its source",
+            Some("task bullet: a period that is not a time"),
+            2,
+            false,
+            &["kHz"],
+        ),
+        (
+            "zero min-separation, jitter in MHz",
+            Some("task bullet: a jitter that is not a time"),
+            2,
+            true,
+            &["MHz"],
+        ),
+        ("zero deadline", None, 0, false, &[]),
+        (
+            "deadline in Hz, jitter in byte",
+            Some("task bullet: a deadline that is not a time"),
+            2,
+            false,
+            &["Hz", "byte"],
+        ),
+    ];
+    let row = |c: &Case, task: &str| {
+        let word = c
+            .label
+            .split(&format!("{task}:"))
+            .nth(1)
+            .expect("a task")
+            .split(" u:")
+            .next()
+            .expect("a word");
+        let word = word.split(" first=").next().expect("a word");
+        TABLE.iter().find(|r| r.0 == word)
+    };
+    let rejected = |c: &Case| row(c, "t").is_none() || row(c, "u").is_none();
+    let order = |c: &Case| {
+        if c.label.contains("first=u") {
+            ["u", "t"]
+        } else {
+            ["t", "u"]
+        }
+    };
+    let named = |c: &Case| -> Option<(&str, &Row)> {
+        if rejected(c) {
+            return None;
+        }
+        order(c)
+            .into_iter()
+            .map(|t| (t, row(c, t).expect("a row")))
+            .find(|(_, r)| r.1.is_some())
+    };
+    let also = |c: &Case| c.label.rsplit("also:").next().expect("also").to_string();
+    let given = |c: &Case| -> &str {
+        if rejected(c) {
+            "rejected"
+        } else if named(c).is_some() {
+            "bullet"
+        } else {
+            match also(c).as_str() {
+                "names a system" => "naming",
+                "hardware names a service" => "operand",
+                "a bound past" => "past",
+                _ => "lowered",
+            }
+        }
+    };
+    let named_class = |c: &Case, class: &str| named(c).is_some_and(|(_, r)| r.1 == Some(class));
+    let unit = |c: &Case, u: &str| {
+        named(c).is_some()
+            && ["t", "u"]
+                .iter()
+                .any(|t| row(c, t).is_some_and(|r| r.4.contains(&u)))
+    };
+    let both = |c: &Case| {
+        !rejected(c)
+            && ["t", "u"]
+                .iter()
+                .all(|t| row(c, t).is_some_and(|r| r.1.is_some()))
+    };
+    let bullet_class = |class: &'static str| counted(class, &cases, move |c| named_class(c, class));
+    hold(
+        "task bullet",
+        &tally,
+        (2_048, 8, 480, 0, 1_560),
+        &[
+            bullet_class("refusal: a periodic task bound to a source itself"),
+            bullet_class("task bullet: a period that is not a time"),
+            bullet_class("task bullet: a minimum separation that is not a time"),
+            bullet_class("task bullet: a deadline that is not a time"),
+            bullet_class("task bullet: a jitter that is not a time"),
+            bullet_class("task bullet: a period of zero"),
+            bullet_class("task bullet: a minimum separation of zero"),
+            counted("task bullet: not a time, in `Hz`", &cases, |c| unit(c, "Hz")),
+            counted("task bullet: not a time, in `kHz`", &cases, |c| unit(c, "kHz")),
+            counted("task bullet: not a time, in `MHz`", &cases, |c| unit(c, "MHz")),
+            counted("task bullet: not a time, in `GHz`", &cases, |c| unit(c, "GHz")),
+            counted("task bullet: not a time, in `bit`", &cases, |c| unit(c, "bit")),
+            counted("task bullet: not a time, in `byte`", &cases, |c| unit(c, "byte")),
+            counted("task bullet: not a time, in `KiB`", &cases, |c| unit(c, "KiB")),
+            counted("task bullet: not a time, in `MiB`", &cases, |c| unit(c, "MiB")),
+            counted("task bullet: not a time, in `tick`", &cases, |c| unit(c, "tick")),
+            counted("task bullet: a task's first defect named, another of its clauses ill-formed too", &cases, |c| {
+                named(c).is_some_and(|(_, r)| r.2 >= 2)
+            }),
+            counted(
+                "task bullet: a deadline or a jitter not a time named before its release's zero or second release model",
+                &cases,
+                |c| named(c).is_some_and(|(_, r)| r.3),
+            ),
+            counted(
+                "task bullet: the first ill-formed task in runtime order named, a later one ill-formed too",
+                &cases,
+                both,
+            ),
+            counted(
+                "task bullet: a task declared earlier ill-formed too, after the one named in runtime order",
+                &cases,
+                |c| both(c) && order(c)[0] == "u",
+            ),
+            counted("task bullet: before a requester naming a system", &cases, |c| {
+                given(c) == "bullet" && also(c) == "names a system"
+            }),
+            counted("task bullet: before hardware naming what is not hardware", &cases, |c| {
+                given(c) == "bullet"
+                    && also(c) == "hardware names a service"
+                    && !named_class(c, "refusal: a periodic task bound to a source itself")
+            }),
+            counted("periodic: before hardware naming what is not hardware", &cases, |c| {
+                also(c) == "hardware names a service" && named_class(c, "refusal: a periodic task bound to a source itself")
+            }),
+            counted("refusal: a requester naming a system", &cases, |c| given(c) == "naming"),
+            counted("naming: the system's own level naming a system", &cases, |c| given(c) == "naming"),
+            counted("refusal: hardware naming what is not hardware", &cases, |c| given(c) == "operand"),
+            counted("operand: a platform's `uses` naming a service", &cases, |c| given(c) == "operand"),
+            counted("refusal: a duration past the arithmetic", &cases, |c| given(c) == "past"),
+            counted("past: an obliged bound of a service", &cases, |c| given(c) == "past"),
+            counted("task: a zero deadline", &cases, |c| {
+                given(c) == "lowered" && ["t", "u"].iter().any(|t| row(c, t).is_some_and(|r| r.0 == "zero deadline"))
+            }),
+            exactly("task: deadline-from written", 8),
+        ],
+    );
+}
+
+#[test]
+fn a_block_or_a_platform_served_outside_the_hardware_named_in_order() {
+    let cases = outside_hardware_universe();
+    // What `n`, `n.s` and `n!` each name, of 5, 3 and 3; who serves them, of 3; what makes a block hardware, of 4; what
+    // else `t` meets, of 7; and 4 systems with no task.
+    assert_eq!(cases.len(), 5 * 3 * 3 * 3 * 4 * 7 + 4);
+    let tally = run("outside hardware", &cases);
+    // Lowered: where every served namer names hardware alone and `t` meets no other refusal. With `t` meeting none, of
+    // the namings each served namer's choices that name hardware alone — `n`: nothing, and `x` or `x.y` where made
+    // hardware; `n.s`: nothing, and `x.y` where made hardware; `n!`: nothing, and `x!` where made hardware — times the
+    // choices of the namers not served: served by `t` and the system's own level, 1 + 2 + 4 + 2 = 9 over the four ways
+    // of making hardware; served by the system's own level and through `m`, `n!` free, 3 × (1 + 2 + 4 + 1) = 24; `n!`
+    // alone, `n` and `n.s` free, 15 × (1 + 1 + 1 + 2) = 75. With `x` naming `m`, the same where `x` is served by no name,
+    // or else the hardware-naming refusal: 7, 18 and 60. 108 + 85; every other refused.
+    let model: Vec<OutsideModel> = cases.iter().map(OutsideModel::of).collect();
+    let count = |class: &'static str, f: &dyn Fn(&OutsideModel) -> bool| {
+        exactly(class, model.iter().filter(|m| f(m)).count())
+    };
+    let refused = |m: &OutsideModel| m.outcome == "outside";
+    let before = |m: &OutsideModel, outcome: &str| m.outcome == outcome && !m.pairs.is_empty();
+    let blocks = ["x", "x.y", "x!"];
+    hold(
+        "outside hardware",
+        &tally,
+        (3_784, 193, 0, 0, 3_591),
+        &[
+            count("refusal: a block or a platform the system serves outside its hardware", &refused),
+            count("refusal: a system with no task", &|m| m.outcome == "no task"),
+            count("task bullet: a period of zero", &|m| m.outcome == "bullet"),
+            count("task bullet: before a block or a platform outside the hardware", &|m| before(m, "bullet")),
+            count("refusal: a requester naming a system", &|m| m.outcome == "naming"),
+            count("naming: a task naming a system", &|m| m.outcome == "naming"),
+            count("naming: before a block or a platform outside the hardware", &|m| before(m, "naming")),
+            count("no task: before a block or a platform outside the hardware", &|m| before(m, "no task")),
+            count("no task: before the system's own level receiving interrupt code", &|m| {
+                m.outcome == "no task" && m.also == "the system's own level programs an alarm"
+            }),
+            count("receivers: one", &|m| m.outcome == "receivers"),
+            count("receivers: before a block or a platform outside the hardware", &|m| before(m, "receivers")),
+            count("refusal: a deadline measured from another event", &|m| m.outcome == "deadline"),
+            count("deadline: before a block or a platform outside the hardware", &|m| before(m, "deadline")),
+            count("refusal: a duration past the arithmetic", &|m| m.outcome == "past"),
+            count("past: before a block or a platform outside the hardware", &|m| before(m, "past")),
+            count("refusal: hardware naming what is not hardware", &|m| m.outcome == "operand"),
+            count("operand: before a block or a platform outside the hardware", &|m| before(m, "operand")),
+            count("operand: a service only hardware names", &|m| m.outcome == "operand" && m.served != "OwnAndThrough"),
+            count("outside: named by a service", &|m| refused(m) && m.pairs.iter().any(|(n, _, _)| n != "n!")),
+            count("outside: named by a policy", &|m| refused(m) && m.pairs.iter().any(|(n, _, _)| n == "n!")),
+            count("outside: named by `uses`", &|m| refused(m) && m.pairs.iter().any(|(_, _, needs)| !needs)),
+            count("outside: named by `needs`", &|m| refused(m) && m.pairs.iter().any(|(_, _, needs)| *needs)),
+            count("outside: its namer served by a task", &|m| {
+                refused(m) && m.pairs.iter().any(|(n, _, _)| m.from_tasks.contains(n))
+            }),
+            count("outside: its namer served by the system's own level alone", &|m| {
+                refused(m) && m.pairs.iter().any(|(n, _, _)| !m.from_tasks.contains(n))
+            }),
+            count("outside: its namer served through another service or policy", &|m| {
+                refused(m) && m.served == "OwnAndThrough" && m.pairs.iter().any(|(n, _, _)| n == "n.s")
+            }),
+            count("outside: a block no platform composes", &|m| {
+                refused(m) && m.pairs.iter().any(|(_, b, _)| blocks.contains(&b.as_str()))
+            }),
+            count("outside: a block a platform outside the hardware composes", &|m| {
+                refused(m) && m.pairs.iter().any(|(_, b, _)| b == "q")
+            }),
+            count("outside: a platform another system uses", &|m| refused(m) && m.pairs.iter().any(|(_, b, _)| b == "p")),
+            count("outside: a platform no system uses", &|m| refused(m) && m.pairs.iter().any(|(_, b, _)| b == "p2")),
+            count("outside: several, named in order", &|m| refused(m) && m.pairs.len() >= 2),
+            count("outside: one namer naming two", &|m| refused(m) && m.pairs.windows(2).any(|w| w[0].0 == w[1].0)),
+            count("outside: one block or platform named by two", &|m| {
+                refused(m) && m.pairs.iter().any(|(n, b, _)| m.pairs.iter().any(|(o, c, _)| o != n && c == b))
+            }),
+            count("outside: the namers' order unlike the named ones'", &|m| {
+                refused(m) && m.pairs.windows(2).any(|w| w[0].1 > w[1].1)
+            }),
+            count(
+                "outside: a block served outside the hardware that no service or policy names, not named",
+                &|m| refused(m) && m.pairs.iter().any(|(_, b, _)| b == "p") && !m.pairs.iter().any(|(_, b, _)| b == "q"),
+            ),
+            count("outside: beside hardware a served service or policy names, not named", &|m| {
+                refused(m) && m.served_names_hardware
+            }),
+            count("outside: one namer's text a prefix of another's", &|m| {
+                let namers: BTreeSet<&str> = m.pairs.iter().map(|(n, _, _)| n.as_str()).collect();
+                refused(m) && namers.contains("n") && (namers.contains("n.s") || namers.contains("n!"))
+            }),
+            count("outside: one named block's or platform's text a prefix of another's", &|m| {
+                let named: BTreeSet<&str> = m.pairs.iter().map(|(_, b, _)| b.as_str()).collect();
+                refused(m)
+                    && ((named.contains("x") && (named.contains("x.y") || named.contains("x!")))
+                        || (named.contains("p") && named.contains("p2")))
+            }),
+            count("outside: a name continuing with a byte below `)`", &|m| {
+                refused(m) && m.pairs.iter().any(|(n, b, _)| n == "n!" || b == "x!")
+            }),
+            count(
+                "outside: a block outside the hardware named by a service or a policy the system does not serve, no \
+                 refusal",
+                &|m| m.outcome == "lowered" && m.unserved_name_outside,
+            ),
+            count(
+                "hardware: a block a served service or policy names, which a task's name makes hardware",
+                &|m| m.outcome == "lowered" && m.made == "t names x" && m.served_names("x"),
+            ),
+            count(
+                "hardware: a block a served service or policy names, which the system's own level's name makes hardware",
+                &|m| m.outcome == "lowered" && m.made == "sys needs x.y" && m.served_names("x.y"),
+            ),
+            count(
+                "hardware: a block a served service or policy names, which a block's or a platform's `needs` brings in",
+                &|m| m.outcome == "lowered" && m.made == "soc needs x!" && m.served_names("x!"),
+            ),
+            count("named: a block a service names, bound for nothing, a node", &|m| {
+                m.outcome == "lowered" && m.served_namings.iter().any(|(n, b)| n != "n!" && m.hardware.contains(b))
+            }),
+            count("named: a block a policy names, bound for nothing, a node", &|m| {
+                m.outcome == "lowered" && m.served_namings.iter().any(|(n, b)| n == "n!" && m.hardware.contains(b))
+            }),
+            some("outside: an order the message's words would give otherwise"),
+        ],
+    );
+}
+
+/// What the outside-hardware universe's construction gives one system ([`outside_hardware_universe`]): who serves the
+/// namers, what makes a block hardware, what else `t` meets, what each namer names — and so §1's refusal given, in its
+/// order: the bullet over tasks for a zero period; the naming-system refusal where `t` names `other`; the
+/// hardware-naming refusal where `x`, served, names `m`; then a jitter past the arithmetic; the system with
+/// no task; a deadline from another event; an alarm `t` programs; and then each served namer's pair with a block or a
+/// platform outside the hardware — `d` and whatever `t`'s, the system's own or `soc`'s `needs` names being the hardware
+/// (model §8 rule 7).
+struct OutsideModel {
+    served: &'static str,
+    made: &'static str,
+    also: &'static str,
+    outcome: &'static str,
+    /// The pairs, by the namer's text and then the named one's, each with whether by `needs`.
+    pairs: Vec<(String, String, bool)>,
+    /// What each served namer names.
+    served_namings: Vec<(String, String)>,
+    from_tasks: BTreeSet<String>,
+    hardware: BTreeSet<String>,
+    served_names_hardware: bool,
+    unserved_name_outside: bool,
+}
+
+impl OutsideModel {
+    fn of(case: &Case) -> Self {
+        let d = &case.description;
+        let label = &case.label;
+        let pick =
+            |options: &[&'static str]| *options.iter().find(|o| label.contains(*o)).unwrap_or(&"");
+        let no_task = d.tasks.is_empty();
+        let served = if no_task {
+            "NoTask"
+        } else {
+            pick(&["TaskAndOwn", "OwnAndThrough", "PolicyAlone"])
+        };
+        let made = pick(&["t names x", "sys needs x.y", "soc needs x!"]);
+        let also = if no_task {
+            if label.contains("programs an alarm") {
+                "the system's own level programs an alarm"
+            } else {
+                "nothing"
+            }
+        } else {
+            pick(&[
+                "also t's zero period",
+                "also t names other",
+                "also t programs an alarm",
+                "also t's deadline from another event",
+                "also t's jitter past the arithmetic",
+                "also x names m",
+            ])
+        };
+        let (namers, from_tasks): (Vec<&str>, Vec<&str>) = match served {
+            "TaskAndOwn" => (vec!["n", "n.s", "n!"], vec!["n", "n.s"]),
+            "OwnAndThrough" => (vec!["n", "n.s"], vec!["n.s"]),
+            "PolicyAlone" => (vec!["n!"], vec!["n!"]),
+            _ => (vec!["n"], vec![]),
+        };
+        let mut hardware: BTreeSet<String> = BTreeSet::from(["d".to_string()]);
+        match made {
+            "t names x" => hardware.insert("x".to_string()),
+            "sys needs x.y" => hardware.insert("x.y".to_string()),
+            "soc needs x!" => hardware.insert("x!".to_string()),
+            _ => false,
+        };
+        let namings = |namer: &str| -> Vec<(String, bool)> {
+            let side = &d
+                .services
+                .iter()
+                .find(|s| s.name == namer)
+                .expect("a namer")
+                .side;
+            side.uses
+                .iter()
+                .map(|n| (n.clone(), false))
+                .chain(side.needs.iter().map(|n| (n.clone(), true)))
+                .collect()
+        };
+        let mut pairs = Vec::new();
+        let mut served_namings = Vec::new();
+        for namer in &namers {
+            for (named, needs) in namings(namer) {
+                served_namings.push(((*namer).to_string(), named.clone()));
+                if !hardware.contains(&named) {
+                    pairs.push(((*namer).to_string(), named, needs));
+                }
+            }
+        }
+        pairs.sort();
+        let unserved_name_outside = ["n", "n.s", "n!"]
+            .iter()
+            .filter(|n| !namers.contains(n))
+            .any(|n| {
+                namings(n)
+                    .iter()
+                    .any(|(named, _)| !hardware.contains(named))
+            });
+        let x_served =
+            hardware.contains("x") || served_namings.iter().any(|(_, named)| named == "x");
+        let outcome = if also == "also t's zero period" {
+            "bullet"
+        } else if also == "also t names other" {
+            "naming"
+        } else if also == "also x names m" && x_served {
+            "operand"
+        } else if also == "also t's jitter past the arithmetic" {
+            "past"
+        } else if no_task {
+            "no task"
+        } else if also == "also t's deadline from another event" {
+            "deadline"
+        } else if also == "also t programs an alarm" {
+            "receivers"
+        } else if !pairs.is_empty() {
+            "outside"
+        } else {
+            "lowered"
+        };
+        Self {
+            served,
+            made,
+            also,
+            outcome,
+            served_names_hardware: served_namings
+                .iter()
+                .any(|(_, named)| hardware.contains(named)),
+            pairs,
+            served_namings,
+            from_tasks: from_tasks.into_iter().map(str::to_string).collect(),
+            hardware,
+            unserved_name_outside,
+        }
+    }
+
+    fn served_names(&self, block: &str) -> bool {
+        self.served_namings.iter().any(|(_, named)| named == block)
+    }
+}
+
+#[test]
+fn ranks_that_start_past_one_or_skip() {
+    let cases = ranks();
+    // Every three distinct spellings of 7, in every order; 4 kinds.
+    assert_eq!(cases.len(), 7 * 6 * 5 * 4);
+    let tally = run("ranks", &cases);
+    // Lowered: every periodic and every `a`-sporadic system (2 × 210). Refused: each deadline from activation and each
+    // set of alarms (2 × 210).
+    // Each count read from the three spellings and the kind: no three of the values consecutive; a rank spelled
+    // otherwise than in decimal wherever `+4`, `007`, `0x0A` or `1_000` is among them; past 32 bits wherever
+    // `9223372036854775807` is; the order by value against the spellings' texts' order; the deadline refusal naming
+    // the least rank's task, `a` declared first; the receivers in runtime order, unlike `a`, `b`, `c` but where the
+    // ranks rise with them.
+    let spellings = |c: &Case| -> Vec<&'static str> {
+        c.description
+            .tasks
+            .iter()
+            .map(|t| t.spelled_priority.expect("spelled"))
+            .collect()
+    };
+    let values = |c: &Case| -> Vec<u128> { spellings(c).into_iter().map(integer_value).collect() };
+    let kind = |c: &Case| c.label.splitn(4, ' ').nth(3).expect("a kind").to_string();
+    let lowered = |c: &Case| ["periodic", "a sporadic"].contains(&kind(c).as_str());
+    let rising = |c: &Case| values(c).windows(2).all(|w| w[0] < w[1]);
+    hold(
+        "ranks",
+        &tally,
+        (840, 420, 0, 0, 420),
+        &[
+            counted("rank: a rank past 1 first", &cases, |c| lowered(c) && !values(c).contains(&1)),
+            counted("rank: ranks not consecutive", &cases, lowered),
+            counted("rank: a rank spelled otherwise than its decimal `INT`", &cases, |c| {
+                lowered(c) && spellings(c).iter().any(|s| integer_value(s).to_string() != *s)
+            }),
+            counted("rank: a rank past 32 bits", &cases, |c| {
+                lowered(c) && values(c).iter().any(|v| *v > u128::from(u32::MAX))
+            }),
+            counted("rank: runtime order unlike the ranks' spellings' order", &cases, |c| {
+                let mut by_value: Vec<(u128, &str)> = values(c).into_iter().zip(spellings(c)).collect();
+                by_value.sort_unstable();
+                let mut by_text = by_value.clone();
+                by_text.sort_by_key(|(_, s)| *s);
+                lowered(c) && by_value != by_text
+            }),
+            counted("refusal: a deadline measured from another event", &cases, |c| kind(c) == "deadline from activation"),
+            counted(
+                "deadline: the first in runtime order named, an earlier declared one measured from another event too",
+                &cases,
+                |c| kind(c) == "deadline from activation" && values(c)[0] != *values(c).iter().min().expect("three"),
+            ),
+            counted("receivers: three", &cases, |c| kind(c) == "alarms"),
+            counted("receivers: an alarm programmed itself", &cases, |c| kind(c) == "alarms"),
+            counted("receivers: runtime order unlike the tasks' text order", &cases, |c| {
+                kind(c) == "alarms" && !rising(c)
+            }),
+            counted("trigger: every, a longer separation", &cases, |c| kind(c) == "a sporadic"),
+            counted("trigger: its own source", &cases, |c| kind(c) == "a sporadic"),
+            counted("trigger: its own source, no other reaching it", &cases, |c| kind(c) == "a sporadic"),
+            exactly("task: deadline-from written", 420),
+        ],
+    );
+}
+
+#[test]
 fn the_reading_s_arithmetic_is_exact() {
     // The reading's seconds, held to values derived by hand from §2.2's rule — "one reduced rational number of
     // seconds ... `N` and `D` lie within ... signed 128-bit integers" — so that a fault of the reading's arithmetic shows
@@ -9282,22 +13238,45 @@ fn the_message_readers_keep_the_order_a_message_gives() {
     // fault of a reader shows here, never as a verdict on the code: each returns what a message names in the order it
     // names it, which the checker then holds to §1's order — so a message sorted by its words, `y.b` before `y`, is
     // read as written and differs from the reading.
-    let declared: BTreeSet<String> = ["m", "m.s", "y", "y.b", "y!"]
+    let declared: BTreeSet<String> = ["m", "m.s", "y", "y.b", "y!", "(task sys t!)"]
         .iter()
         .map(|s| (*s).to_string())
         .collect();
     let pair = |namer: &str, named: &str| (namer.to_string(), named.to_string());
+    let pairs = [
+        pair("(task sys t!)", "y"),
+        pair("m.s", "y.b"),
+        pair("m.s", "y"),
+        pair("m.s", "y!"),
+    ];
+    // Read by what it names and in what order, whatever its words (round 20, R20-R7): a namer before each name, or
+    // once before several.
+    for message in [
+        "refused: `(task sys t!)` names the system `y`; `m.s` names `y.b`, `y` and `y!`: no system is used",
+        "`(task sys t!)` uses `y`, and `m.s` needs `y.b`, `y`, `y!`: a system is no thing to use",
+        "of `(task sys t!)`: `y`; of `m.s`: `y.b`; of `m.s`: `y`; of `m.s`: `y!`",
+    ] {
+        assert!(
+            names_pairs(&names_mentioned(message, &declared), &pairs),
+            "{message}"
+        );
+    }
+    // Misordered, short of a pair, a pair's two names the other way about, or naming another: each a finding.
+    for message in [
+        "`(task sys t!)` names `y`; `m.s` names `y`, `y.b` and `y!`",
+        "`(task sys t!)` names `y`; `m.s` names `y.b` and `y`",
+        "`y` is named by `(task sys t!)`; `m.s` names `y.b`, `y` and `y!`",
+        "`(task sys t!)` names `y`; `m.s` names `y.b`, `y` and `y!`; `m` names `y`",
+    ] {
+        assert!(
+            !names_pairs(&names_mentioned(message, &declared), &pairs),
+            "{message}"
+        );
+    }
+    // A word that is a name but not written as one is no name: `y` in prose.
     assert_eq!(
-        pairs_named_in(
-            "refused: `(task sys t!)` names the system `y`; `m.s` names `y.b`, `y` and `y!`: no system is used",
-            &declared
-        ),
-        [
-            pair("(task sys t!)", "y"),
-            pair("m.s", "y.b"),
-            pair("m.s", "y"),
-            pair("m.s", "y!")
-        ]
+        names_mentioned("y is `m`'s, and `(task sys t!)` too", &declared),
+        ["m", "(task sys t!)"]
     );
     let hardware: BTreeSet<String> = ["d", "d.x"].iter().map(|s| (*s).to_string()).collect();
     let expiry = "(adapter deadline-over-delay d (task sys t))";
@@ -9369,6 +13348,19 @@ fn the_message_readers_keep_the_order_a_message_gives() {
 fn the_reading_transcribes_the_shipped_vocabulary_and_catalog() {
     // The reading's constants are its transcription of `vocabulary.eadl` and `adapters.eadl`, held here to the shipped
     // vocabulary and catalog, so that a change to either fails here rather than in the reading's verdicts.
+    // Every unit the language accepts is read, a time or not a time (§1; round 20, R20-R7).
+    let time: Vec<&str> = eadl_model::quantity::UNITS
+        .iter()
+        .filter(|u| u.dimension == eadl_model::quantity::Dimension::Time)
+        .map(|u| u.name)
+        .collect();
+    assert_eq!(time, TIME_UNITS.map(|(unit, _)| unit));
+    let other: Vec<&str> = eadl_model::quantity::UNITS
+        .iter()
+        .filter(|u| u.dimension != eadl_model::quantity::Dimension::Time)
+        .map(|u| u.name)
+        .collect();
+    assert_eq!(other, OTHER_UNITS);
     let vocabulary = common::vocabulary();
     let consumed: BTreeSet<&str> = vocabulary
         .facts()
@@ -9394,6 +13386,7 @@ fn the_reading_transcribes_the_shipped_vocabulary_and_catalog() {
             .map(|o| o.fact.as_str())
             .collect();
         assert_eq!(obliged, kind.obliged, "{}", kind.name);
+        assert_eq!(shipped.beneath_names, kind.beneath, "{}", kind.name);
         let names = |owed: &[eadl_resolve::adapter::Owed]| -> Vec<String> {
             owed.iter().map(|o| o.name.clone()).collect()
         };
@@ -9583,12 +13576,70 @@ fn the_reading_gives_the_record_s_worked_texts() {
         own: uses(&["evt"]),
         ..Description::default()
     };
+    // Each worked text's `/2` record, as the record states it (round 20, R20-R7: the test had passed each plan as its own
+    // record): the heartbeat's "assignment the one line `(bind console.write observable-output console.uart)`"; the
+    // adapter's, which "binds `time.monotonic`'s four facts to `(adapter epoch-extender timer.short)` and the instance's
+    // five to `timer.short`" — the four its requirement writes, the five its kind's `beneath`
+    // (`docs/semantics/adapters/adapters.eadl`); and the source's, "the one line `(bind evt interrupt-source dev.e)`".
+    // Each is written in `/2`'s order, "the bindings sorted by requester, every name, then every task, then every
+    // instance, each by its text, then by fact" (`eadl_resolve::plan`), its digest elided as the worked texts elide it.
+    let record_of = |system: &str, binds: Vec<String>| -> String {
+        let mut record = format!(
+            "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system {system})\n(program \"…\")\n\
+             (adapters {})\n",
+            eadl_resolve::adapter::VERSION
+        );
+        for bind in binds {
+            record.push_str(&bind);
+            record.push('\n');
+        }
+        record
+    };
+    let instance = "(adapter epoch-extender timer.short)";
+    let monotonic = &extender.services[0].side;
+    let mut four: Vec<String> = monotonic
+        .needs
+        .iter()
+        .cloned()
+        .chain(
+            monotonic
+                .other
+                .iter()
+                .map(|clause| text_of(&items(&form(clause))[0])),
+        )
+        .collect();
+    four.sort();
+    assert_eq!(four.len(), 4, "`time.monotonic`'s four facts");
+    let mut five: Vec<&str> = kind_of(instance).beneath.to_vec();
+    five.sort_unstable();
+    let records = [
+        record_of(
+            "heartbeat",
+            vec!["(bind console.write observable-output console.uart)".to_string()],
+        ),
+        record_of(
+            "short-counter",
+            four.iter()
+                .map(|fact| format!("(bind time.monotonic {fact} {instance})"))
+                .chain(
+                    five.iter()
+                        .map(|fact| format!("(bind {instance} {fact} timer.short)")),
+                )
+                .collect(),
+        ),
+        record_of(
+            "sporadic",
+            vec!["(bind evt interrupt-source dev.e)".to_string()],
+        ),
+    ];
     let worked = worked_plans();
     assert_eq!(worked.len(), 3);
-    for (description, plan) in [heartbeat, extender, sporadic].iter().zip(&worked) {
-        // The record is the plan's own lines: its `bind` lines are the assignment the record names, and its identity's
-        // digests are elided.
-        let judged = judge_elided(description, plan, plan, true);
+    for ((description, plan), record) in [heartbeat, extender, sporadic]
+        .iter()
+        .zip(&worked)
+        .zip(&records)
+    {
+        let judged = judge_elided(description, "…", record, plan, true);
         let shown: Vec<String> = judged
             .disagreements
             .iter()
