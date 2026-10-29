@@ -916,6 +916,27 @@ absent is one, which rule 9 judges. R29-R3: taken.
 
 Round 28's answers: all held; R28-R6's "no other" corrected (R29-R4).
 
+## Round 30 — `2026-10-29`: acceptable, 5 remarks; the record accepted
+
+No defect: no description the code lowers otherwise than the record's rules give, no two sentences in contradiction,
+round 29's seven answers held. The code faithful section by section, every default R27-R3 and R29-R4 counted probed and
+unreachable; a sweep of every tracked description, 205 records the checker accepted. With round 29, two rounds by
+contexts that did not write the record found no defect: `M4.1.1` closes. Round 30's answers correct a citation and say
+what the relation and the code already hold, each held by a fixture or the mechanized checks; no rule moves.
+
+**Fence.** No breach of the sealed set. Six read-only calls ran with no export line and about five with `cd` before it,
+none with a heredoc.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R30-R1 | remark | §2.2's new sentence cites §1 for "`/1` is defined over the joint rules as `.2` amends them", which the record's opening says | Cites the opening |
+| R30-R2 | remark | a source offering its separation as a bound, `(at-least 20 ms)`, is written `unknown` and `(unstated …)`, the relation reading a bound as no value, which §2.5's "states none" does not say | §2.5: no value, none, bare or a bound, quoting the relation, `exactly` apart; the fixture with the code (`M4.1.4`) |
+| R30-R3 | remark | two fixture comments state rules the record no longer holds: `rank-tie`'s "breaks no tie", `level-on-route-bound-otherwise`'s "refuses it as written" | Reworded with the code (`M4.1.4`) |
+| R30-R4 | remark | six corpus outcomes holding an own cause move when `RTP-H24` lands, and `M4.1.2` names only the bounded checker's | `M4.1.2` names the six |
+| R30-R5 | remark | the bounded checker generates no qualified names; the five module trees alone hold them (R25-R8) | — still true; the trees are the corpus's |
+
+Round 29's answers: all held, R29-R2's citation loose (R30-R1).
+
 ## The corpus, round by round
 
 Moved whole from the record's §3 on `2026-10-29` (round 28's answer), under the decisions ceiling: the probe systems

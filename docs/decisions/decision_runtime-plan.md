@@ -2,9 +2,9 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-27`
-- **Status:** `active` — the design for leaf `M4.1`, under independent review (`M4.1.1`) before any code relies on it;
-  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 29 answered, round 29 finding no defect; from round 7 it is
-  reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
+- **Status:** `active` — the design for leaf `M4.1`, accepted `2026-10-29` (`M4.1.1`), rounds 29 and 30 finding no
+  defect; format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 30 answered; from round 7
+  it was reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
 - **Owner / source:** leaf `M4.1.1` (`docs/tasks/M4.md`); `ROADMAP.md` §4.2's component `archogen-plan`, §7.3, §7.5,
   §7.6, §10.1 step 5 and §10.3; model §8 rules 4, 5, 7, 8, 10, 12 and 15; the obligations `M3.3.8`, `M3.5`, `M3.5.5.7.3`
   and `M3.2.1` wrote into `M4.1`. Its review history is `docs/reviews/decision_runtime-plan-reviews.md`.
@@ -231,10 +231,10 @@ timer route and a source, and a block may be named `timer`:
        The scheduling checker reports or refuses such a task as `RTP-H4` maps its cause, never analysing it on an
        assumed release, which the analysis as built admits for a release on some arrivals only
        (`crates/rt-analysis/src/runtime.rs`), and the build refuses the plan (`RTP-H1`). `/1` is defined over the joint
-       rules as `.2` amends them (§1), so once `RTP-H24` lands no record the generator accepts binds a task's own source
-       the analysis does not admit: `(own-faster ITEM)`, `(own-absent ITEM)` and `(own-unstated ITEM)` stay in the
-       grammar, the forms the unamended rules let through, and their leaving is no new format, the lowering of each
-       accepted record unchanged (R29-R2).
+       rules as `.2` amends them (this record's opening), so once `RTP-H24` lands no record the generator accepts binds
+       a task's own source the analysis does not admit: `(own-faster ITEM)`, `(own-absent ITEM)` and `(own-unstated
+       ITEM)` stay in the grammar, the forms the unamended rules let through, and their leaving is no new format, the
+       lowering of each accepted record unchanged (R29-R2).
 
    **Durations** are exact. Each is one reduced rational number of seconds, `N s` or `N/D s`, with `D > 1` and `N` and
    `D` coprime, so that `1.5 ms`, `1.50 ms` and `1500 us` are one text. `N` and `D` lie within the engine's exact
@@ -303,18 +303,19 @@ timer route and a source, and a block may be named `timer`:
        is written on that route's line, with the instance that takes it. A shared instance's cost counts once;
      - an **external source**, `Interrupt::Source`: its minimum separation, the duration the provider states, zero
        included, which the analysis refuses (its condition 3) and `M1.45` has the language refuse; `absent` where it
-       declares the fact absent; or `unknown` where it states none, owed to the description. On the playground a stated
-       separation is held, not only assumed: the simulator injects no arrival sooner (`RTP-H9`), so its evidence is the
-       run's; a target's is `/2`'s to owe. Its service cost, its acknowledge point and the work it defers are the
-       variant's other inputs for a source, owed by the realization that serves it, with the code facts the composition
-       reads of that service: whether it runs application code, and that each arrival makes one request (the
-       composite-inputs record §1 and §2), as it reads every node's `runtime-discipline` (§2.10). Whether the source
-       reaches the processor through the controller, its `external`, is the simulator's (`RTP-H9`).
-
-     Each route has the level it is delivered at, the profile's caller level, and is declared **deliverable**, as the
-     composite-inputs record asks of "every declared source" (`crates/rt-analysis/src/compose.rs` reads it).
-   - **The order among routes** is the plan's to set (the composite-inputs record §1's `ahead(x)` among sources). Each
-     route gets a distinct **rank**, rank `1` taken first, so the order is strict by construction:
+       declares the fact absent; or `unknown` where it states no value — none, a bare offer, or a bound, since "A bound
+       an offer writes … is not a value — `exactly` apart" (`decision_substitutability-relation.md`) — owed to the
+       description, as §2.2's `(unstated ITEM)` and `(own-unstated ITEM)` are. On the playground a stated separation is
+       held, not only assumed: the simulator injects no arrival sooner (`RTP-H9`), so its evidence is the run's; a
+       target's is `/2`'s to owe. Its service cost, its acknowledge point and the work it defers are the variant's other
+       inputs for a source, owed by the realization that serves it, with the code facts the composition reads of that
+       service: whether it runs application code, and that each arrival makes one request (the composite-inputs record
+       §1 and §2), as it reads every node's `runtime-discipline` (§2.10). Whether the source reaches the processor
+       through the controller, its `external`, is the simulator's (`RTP-H9`).  Each route has the level it is delivered
+       at, the profile's caller level, and is declared **deliverable**, as the composite-inputs record asks of "every
+       declared source" (`crates/rt-analysis/src/compose.rs` reads it). - **The order among routes** is the plan's to
+       set (the composite-inputs record §1's `ahead(x)` among sources). Each route gets a distinct **rank**, rank `1`
+       taken first, so the order is strict by construction:
      - the sources with a stated separation, ascending by it, ties broken on their interrupt's text;
      - then the sources whose separation is `unknown` or `absent`, by their interrupt's text;
      - then the timer routes, by their interrupt's text.

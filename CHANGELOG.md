@@ -5,6 +5,16 @@ ledger: whenever it holds 40 entries, its oldest 20 are sealed, byte for byte, i
 `docs/history/changelog/`, listed with its digest in `docs/history/INDEX.md`
 (`docs/decisions/decision_history-ledgers.md`).
 
+## archogen — the runtime plan's design is accepted
+
+`ARCHOGEN-M4-1110` (leaf `M4.1.1`), `2026-10-29`.
+
+- The design of the runtime plan, what a checked assignment is lowered into before any code is generated, is accepted
+  (`docs/decisions/decision_runtime-plan.md`, format `archogen-runtime-plan/1` for the hosted playground). Thirty
+  rounds reviewed it, each by a context that did not write it, from the seventh with its executable form, the probe
+  corpus and a bounded exhaustive checker; the last two found no defect. What it hands on is quoted in the leaves that
+  build it, `M4.1.2`'s model rule amendments first.
+
 ## archogen — `main` is protected
 
 `ARCHOGEN-M2-1032` and `ARCHOGEN-M2-1034` (leaf `M2.7.6.6`), `ARCHOGEN-M2-1033` (leaf `M2.7.6.5`), `2026-10-28`.
