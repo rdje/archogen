@@ -1,5 +1,5 @@
 (eadl-version eadl/1)
-; A sporadic task bound itself to a source stating no separation: `(unknown (unstated …))` (§2.2; round 27,
+; A sporadic task bound itself to a source stating no separation: `(unknown (own-unstated …))` (§2.2; round 27,
 ; R2).
 (defblock dev.a
   (offers (interrupt-source true) (reachable-at-privilege machine)))

@@ -936,7 +936,11 @@ source, and its twin with that clause; a task naming a policy and a block that e
 binds to the one of two sources whose separation is stated; and a platform taking an expiry two tasks name. Round 27
 adds a sporadic task reaching a fast and a slow source's handlers, and its twin whose own `(needs interrupt-source)` the
 search binds to the fast one; a task bound itself to a source faster than it, to one declaring its separation absent,
-and to one stating none; and a task bound itself to a source's block and through an epoch extender to its counter.
+and to one stating none; and a task bound itself to a source's block and through an epoch extender to its counter. Round
+28 adds a sporadic task reaching one handler the search binds to the faster of two sources, and its twin with the task's
+own `(needs interrupt-source)`; the two again with that source declaring its separation absent; two tasks bound
+themselves to one source, as far apart as one and released less often than it by the other; and a task bound itself to a
+source block that programs an alarm of its own.
 
 ## Kept for `M4.1.7`
 

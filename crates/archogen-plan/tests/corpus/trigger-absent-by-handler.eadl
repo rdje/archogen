@@ -1,0 +1,17 @@
+(eadl-version eadl/1)
+; `trigger-faster-by-handler` with the handler's source declaring its separation absent: `(unknown (absent …))`,
+; `missing-fact` for the trigger, the source refused under condition 3 whatever releases the task (§2.2,
+; `RTP-H1`, `RTP-H4`; round 28, D2).
+(defblock dev.b
+  (offers (interrupt-source true) (min-arrival-separation 30 ms) (available-in-state run idle) (reachable-at-privilege machine)))
+(defblock dev.a
+  (offers (interrupt-source true) (available-in-state run sleep) (reachable-at-privilege machine))
+  (absent min-arrival-separation))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.b dev.a)))
+(defservice hb
+  (requires (needs interrupt-source) (available-in-state sleep)))
+(defsystem sv
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses hb))
+  (platform (uses soc)))

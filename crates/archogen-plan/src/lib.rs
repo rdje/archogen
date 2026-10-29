@@ -930,13 +930,16 @@ pub fn lower(
                 }
                 releasing => {
                     owe(&mut owed, &text, "trigger", "description");
-                    // Its cause, so that no consumer re-derives this rule to choose `RTP-H1`'s code (§2.2, R24-R1).
+                    // Its cause, so that no consumer re-derives this rule to choose `RTP-H1`'s code (§2.2, R24-R1): the
+                    // one source the task binds itself written apart from the one the routes leave, since the task's
+                    // own `(needs interrupt-source)` repairs the second and not the first (R28-D2).
+                    let own_ = if own.is_some() { "own-" } else { "" };
                     let cause = match releasing {
                         [] => "unreached".to_string(),
                         [route] => match route.separation {
-                            Ok(_) => format!("(faster {})", route.item()),
-                            Err("absent") => format!("(absent {})", route.item()),
-                            Err(_) => format!("(unstated {})", route.item()),
+                            Ok(_) => format!("({own_}faster {})", route.item()),
+                            Err("absent") => format!("({own_}absent {})", route.item()),
+                            Err(_) => format!("({own_}unstated {})", route.item()),
                         },
                         several => {
                             let mut items: Vec<String> = several.iter().map(|r| r.item()).collect();

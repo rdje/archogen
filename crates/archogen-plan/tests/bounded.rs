@@ -80,7 +80,14 @@
 //! source of every separation class, each system beside its twin named from the other task, the two plans told apart
 //! by their task lines alone, or by those and an owed trigger; a block, a platform, a service and a policy of one name,
 //! requiring nothing, a channel or a source, named alike by a task, a service, a policy or the system's own level, one
-//! plan but for that node's `(node …)` line; and one name carried three times beside another carried twice.
+//! plan but for that node's `(node …)` line; and one name carried three times beside another carried twice; and,
+//! after round 28 (R28-D2, R28-R4, R28-R7), two sporadic tasks, each binding a source itself, reaching it through its
+//! handler or neither, the first both as well, before that source stating every separation class and a second source
+//! the first task's other handler reaches, declared after it or before — so that each of §3's causes is reached, the
+//! task's own source's three, `own-faster`, `own-unstated` and `own-absent`, written apart from the three the routes
+//! leave — each system beside its twin reaching that source only through a handler, its cause the twin's written
+//! `own-`; two tasks bound themselves to one source, one as far apart as it and one released less often; and a task
+//! bound itself to a source while the handler it uses reaches another, beside its twin with that source alone.
 //!
 //! Each system is run as the engine runs it, as `common::lowered` does: the language's check, the search, the `/2`
 //! writer, and the lowering. **Every `archogen-assignment/2` record the search writes is judged by the configuration
@@ -99,7 +106,8 @@
 //! chose, never something predicted — and derives from them every line of the plan: §2.1's identity — the format, the
 //! profile `/1` lowers, the system, the digest of the program the language's check accepted, the record's sha256 and
 //! this engine's catalog — none copied from the record; §2.2's task lines, their index, rank, durations, deadline
-//! reference, trigger — an unknown one with its cause — and `(uses …)` item, every node the task names, hardware among
+//! reference, trigger — an unknown one with its cause, the source the task binds itself written apart from the one the
+//! routes leave — and `(uses …)` item, every node the task names, hardware among
 //! them; §2.3's `bind` lines, the record's copied, the one part of a plan copied, the assignment being the lowering's
 //! input; §2.4's instance lines, an obliged fact with its requester's bound or bare; the release timer's line, each
 //! route with its separation and rank, the enabled set and the interrupt model (§2.5); §2's `(node …)` lines, each node
@@ -119,7 +127,8 @@
 //! taken first, so no reading of a task by its text ever meets such a system, and a text two tasks share fails the
 //! reading rather than merging them (`side_of`). The reading is itself held to the record's
 //! three worked texts (§3), whole, lowered from the `/2` records the record states for them; its owed facts to §2.10's
-//! table and §3's `FACT` list, and its forms, node kinds and causes to §3's own lists; and its readers of a refusal's
+//! table and §3's `FACT` list, its forms, node kinds and causes to §3's own lists, and its causes of one source to
+//! §2.2's pairing of the routes' with the task's own; and its readers of a refusal's
 //! prose to messages written in words of their own, reworded and misordered.
 //!
 //! ⛔ **Independence.** The reading was written by contexts that never read `crates/archogen-plan/src/lib.rs` nor the
@@ -5537,6 +5546,257 @@ fn node_kinds() -> Vec<Case> {
     cases
 }
 
+/// How the sporadic task `t` of the own-causes universe comes to the source `dev.x`: it binds `interrupt-source`
+/// itself, it uses `dev.x`'s handler `evt.x`, both, or neither.
+const T_REACH: [&str; 4] = ["own", "handler", "both", "none"];
+
+/// How the sporadic task `u` of the own-causes universe comes to `dev.x`: it binds `interrupt-source` itself, it uses
+/// `evt.x`, or neither.
+const U_REACH: [&str; 3] = ["own", "handler", "none"];
+
+/// The second source of the own-causes universe, `dev.y`, whose handler `evt.y` the task `t` uses: none, or one stating
+/// each class of [`SEPARATIONS`], declared after `dev.x` or before it.
+const Y_SOURCES: [Option<(Separation, bool)>; 13] = [
+    None,
+    Some((SEPARATIONS[0], false)),
+    Some((SEPARATIONS[1], false)),
+    Some((SEPARATIONS[2], false)),
+    Some((SEPARATIONS[3], false)),
+    Some((SEPARATIONS[4], false)),
+    Some((SEPARATIONS[5], false)),
+    Some((SEPARATIONS[0], true)),
+    Some((SEPARATIONS[1], true)),
+    Some((SEPARATIONS[2], true)),
+    Some((SEPARATIONS[3], true)),
+    Some((SEPARATIONS[4], true)),
+    Some((SEPARATIONS[5], true)),
+];
+
+/// **The task's own source written apart** (§2.2, §3; round 28, R28-D2, R28-R4, R28-R7): the sporadic tasks `t`, at
+/// 20 ms, and `u`, at 40 ms, each coming to the source `dev.x` as [`T_REACH`] and [`U_REACH`] say, `dev.x` stating each
+/// class of [`SEPARATIONS`]; and `t` also using `evt.y`, the handler of a second source `dev.y`, as [`Y_SOURCES`] says.
+/// Each handler is held to its own source by the power states it requires, `(available-in-state …)`, which only that
+/// source offers (model §8 rule 13). A task can write no such qualifier — it says what it requires by `needs` and
+/// `uses` alone (`docs/semantics/kinds/os-rt.eadl`), and the language refuses one — so where `dev.y` is declared,
+/// which source a task's own `interrupt-source` takes is the search's, read from the record; with `dev.x` alone the
+/// construction fixes every binding. So: a task bound itself to a source, released by it alone, its cause
+/// `own-faster`, `own-unstated` or `own-absent`, beside its twin reaching that source only through `evt.x`, whose cause
+/// is `faster`, `unstated` or `absent`; two tasks bound themselves to `dev.x`, one as far apart as it and one released
+/// less often; and a task bound itself to a source while the handler it uses reaches another. Every cause §3 lists is
+/// reached here.
+fn own_causes() -> Vec<Case> {
+    let mut cases = Vec::new();
+    for y in Y_SOURCES {
+        for x in SEPARATIONS {
+            for u in U_REACH {
+                for t in T_REACH {
+                    cases.push(own_causes_case(x, t, u, y));
+                }
+            }
+        }
+    }
+    cases
+}
+
+/// One system of the own-causes universe, its label `dev.x:SEPARATION t:REACH u:REACH dev.y:SEPARATION|none
+/// first:dev.x|dev.y`.
+fn own_causes_case(x: Separation, t: &str, u: &str, y: Option<(Separation, bool)>) -> Case {
+    let mut blocks = vec![source_block("dev.x", x, "run idle")];
+    if let Some((y, y_first)) = y {
+        blocks.insert(usize::from(!y_first), source_block("dev.y", y, "run sleep"));
+    }
+    let handler = |name: &str, states: &str| {
+        let mut evt = service(name, Counter::None, true, Vec::new());
+        evt.side
+            .other
+            .push(format!("(available-in-state {states})"));
+        evt
+    };
+    let mut services = Vec::new();
+    if matches!(t, "handler" | "both") || u == "handler" {
+        services.push(handler("evt.x", "run idle"));
+    }
+    if y.is_some() {
+        services.push(handler("evt.y", "run sleep"));
+    }
+    let sporadic = |name: &str, ms: u64, priority: u32, reach: &str, also: Option<&str>| {
+        let mut side = Side::default();
+        if matches!(reach, "own" | "both") {
+            side.needs.push(INTERRUPT_FACT.to_string());
+        }
+        if matches!(reach, "handler" | "both") {
+            side.uses.push("evt.x".to_string());
+        }
+        side.uses.extend(also.map(str::to_string));
+        Task {
+            name: name.to_string(),
+            release: Release::MinSeparation(Dur::Ms(ms)),
+            priority,
+            side,
+            ..Task::default()
+        }
+    };
+    Case {
+        label: format!(
+            "dev.x:{x:?} t:{t} u:{u} dev.y:{} first:{}",
+            y.map_or_else(|| "none".to_string(), |(y, _)| format!("{y:?}")),
+            if y.is_some_and(|(_, y_first)| y_first) {
+                "dev.y"
+            } else {
+                "dev.x"
+            }
+        ),
+        description: Description {
+            blocks,
+            services,
+            tasks: vec![
+                sporadic("t", 20, 1, t, y.map(|_| "evt.y")),
+                sporadic("u", 40, 2, u, None),
+            ],
+            ..Description::default()
+        },
+    }
+}
+
+/// The source a plan's `bind` lines — the record's, copied as written (§2.3) — say `task` is bound to itself for
+/// `interrupt-source`, where it is.
+fn own_source_bound(plan: &str, task: &str) -> Option<String> {
+    let opening = format!("(bind (task sys {task}) {INTERRUPT_FACT} ");
+    plan.lines().find_map(|line| {
+        line.strip_prefix(&opening)
+            .and_then(|rest| rest.strip_suffix(')'))
+            .map(str::to_string)
+    })
+}
+
+/// The classes of the own-causes universe a system's construction fixes, from its label and, where `dev.y` is declared,
+/// the source each task binding `interrupt-source` itself is bound to, `t_source` and `u_source`, the search's choice
+/// read from the record (§2.2, §2.5): each task's trigger by the source it binds itself, else by the routes it
+/// reaches — `t` reaching `dev.x` through `evt.x` and `dev.y` through `evt.y`, `u` reaching `dev.x` through `evt.x` —
+/// against its own separation; its own source beside another it reaches, and its route naming a requester it reaches;
+/// a task binding none beside one bound itself, reaching that one's source or not; two tasks bound themselves to one
+/// source; several sources, by their texts unlike their declaration order; and two routes stating one separation tied.
+fn own_causes_classes(
+    label: &str,
+    t_source: Option<&str>,
+    u_source: Option<&str>,
+) -> BTreeSet<&'static str> {
+    let word = |key: &str| {
+        label
+            .split(' ')
+            .find_map(|w| w.strip_prefix(key))
+            .expect("a parameter")
+    };
+    let (x, t, u, y) = (word("dev.x:"), word("t:"), word("u:"), word("dev.y:"));
+    let y = (y != "none").then_some(y);
+    let separation = |source: &str| match source {
+        "dev.x" => x,
+        "dev.y" => y.expect("`dev.y` declared"),
+        other => panic!("no source `{other}` in the own-causes universe"),
+    };
+    let (t_own, u_own) = (matches!(t, "own" | "both"), u == "own");
+    // A plan whose `bind` lines lose a task's own binding, or invent one, is a finding the reading already reports,
+    // its `bind` lines against the record's: no class is counted for it, so the counts move with it.
+    if t_own != t_source.is_some() || u_own != u_source.is_some() {
+        return BTreeSet::new();
+    }
+    // What each task reaches through the handlers it uses.
+    let mut t_reaches: Vec<&str> = Vec::new();
+    if matches!(t, "handler" | "both") {
+        t_reaches.push("dev.x");
+    }
+    if y.is_some() {
+        t_reaches.push("dev.y");
+    }
+    let u_reaches: Vec<&str> = if u == "handler" {
+        vec!["dev.x"]
+    } else {
+        Vec::new()
+    };
+    let mut out = BTreeSet::new();
+    for (ms, own, reaches, other_own) in [
+        (20, t_source, &t_reaches, u_source),
+        (40, u_source, &u_reaches, t_source),
+    ] {
+        if let Some(own) = own {
+            let decided = separation_decides(separation(own), ms, true);
+            out.extend(["trigger: its own source", decided.1]);
+            let others: Vec<&&str> = reaches.iter().filter(|s| **s != own).collect();
+            out.insert(if others.is_empty() {
+                "trigger: its own source, no other reaching it"
+            } else {
+                "trigger: its own source, beside another reaching it"
+            });
+            if let [other] = others.as_slice() {
+                out.insert(match (decided.0, separation_decides(separation(other), ms, false).0) {
+                    ("unknown", "every") => {
+                        "trigger: its own source leaving it unknown, beside one that alone would release it every"
+                    }
+                    ("every", "unknown") => {
+                        "trigger: its own source releasing it every, beside one that alone would leave it unknown"
+                    }
+                    ("every", _) => {
+                        "trigger: its own source releasing it every, beside another that alone would release it every \
+                         from itself"
+                    }
+                    _ => "trigger: its own source leaving it unknown, beside one that alone would leave it unknown too",
+                });
+            }
+            // Its route names the handler the task uses: `evt.x` for `dev.x`, `evt.y` for `dev.y`.
+            if reaches.contains(&own) {
+                out.insert(
+                    "trigger: its own source, reached through a requester its route names too",
+                );
+            }
+        } else {
+            if let Some(other_own) = other_own {
+                out.insert("trigger: binding none, beside a task bound to its own source");
+                if reaches.contains(&other_own) {
+                    out.insert(
+                        "trigger: binding none, reaching the handler of another task's own source",
+                    );
+                }
+            }
+            out.insert(match reaches.as_slice() {
+                [] => "trigger: `(unknown unreached)`, no source reaching it",
+                [one] => separation_decides(separation(one), ms, false).1,
+                _ => "trigger: `(unknown (several ITEM …))`, several sources",
+            });
+            // `(source dev.x)` before `(source dev.y)` by their texts, where `dev.y` is declared first.
+            if reaches.len() > 1 && word("first:") == "dev.y" {
+                out.insert(
+                    "trigger: several sources, by their texts unlike their declaration order",
+                );
+            }
+        }
+    }
+    if let (Some(t_source), Some(u_source)) = (t_source, u_source) {
+        if t_source == u_source {
+            out.insert("trigger: two tasks bound themselves to one source");
+            // `t` as far apart as the source at 20 ms, `u` released less often.
+            if separation(t_source) == "Stated(20)" {
+                out.insert(
+                    "trigger: two tasks bound themselves to one source, one as far apart as it, one released less \
+                     often",
+                );
+            }
+        }
+    }
+    // A source's route, where a requester is bound to it: `evt.x`, `evt.y`, or a task bound itself.
+    let routed = |source: &str| {
+        t_source == Some(source)
+            || u_source == Some(source)
+            || t_reaches.contains(&source)
+            || u_reaches.contains(&source)
+    };
+    if let Some(y) = y {
+        if routed("dev.x") && routed("dev.y") && x.starts_with("Stated(") && x == y {
+            out.insert("rank: two stated separations tied");
+        }
+    }
+    out
+}
+
 // =====================================================================================================================
 // The reading: docs/decisions/decision_runtime-plan.md, §2 and §3, transcribed rule by rule
 // =====================================================================================================================
@@ -5728,10 +5988,38 @@ fn relies_on_source(description: &Description, bind: &Bind) -> bool {
 /// to the record's sentence by `the_reading_gives_the_record_s_worked_texts`.
 const NODE_KINDS: [&str; 5] = ["block", "platform", "instance", "service", "policy"];
 
-/// §3's causes of an unknown trigger (round 24, R24-R1): "`CAUSE` one of `unreached`, `(several ITEM …)`, `(unstated
-/// ITEM)`, `(absent ITEM)` or `(faster ITEM)`", each by its head, held to the record's sentence by
-/// `the_reading_gives_the_record_s_worked_texts`.
-const CAUSES: [&str; 5] = ["unreached", "several", "unstated", "absent", "faster"];
+/// §3's causes of an unknown trigger (round 24, R24-R1; round 28, R28-D2): "`CAUSE` one of `unreached`, `(several ITEM
+/// …)`, `(unstated ITEM)`, `(absent ITEM)`, `(faster ITEM)`, `(own-unstated ITEM)`, `(own-absent ITEM)` or `(own-faster
+/// ITEM)`", each by its head, held to the record's sentence by `the_reading_gives_the_record_s_worked_texts`: the last
+/// three the task's own source's, the three before them the one source the routes leave (§2.2).
+const CAUSES: [&str; 8] = [
+    "unreached",
+    "several",
+    "unstated",
+    "absent",
+    "faster",
+    "own-unstated",
+    "own-absent",
+    "own-faster",
+];
+
+/// The cause §2.2 writes for the one source that decides a task's trigger and leaves it unknown, by its head:
+/// `unstated` "where it states no separation", `absent` "where it declares it absent", `faster` "where it states one
+/// shorter than the task's", "each written `(own-unstated ITEM)`, `(own-absent ITEM)` or `(own-faster ITEM)` where that
+/// source is the one the task binds itself" (round 28, R28-D2).
+fn one_source_cause(cause: &str, own: bool) -> &'static str {
+    let written = match (cause, own) {
+        ("unstated", false) => "unstated",
+        ("absent", false) => "absent",
+        ("faster", false) => "faster",
+        ("unstated", true) => "own-unstated",
+        ("absent", true) => "own-absent",
+        ("faster", true) => "own-faster",
+        _ => panic!("`{cause}` is no cause of one source in §2.2"),
+    };
+    assert!(CAUSES.contains(&written), "a cause §3 lists, `{written}`");
+    written
+}
 
 /// Whether a task's trigger, as the reading writes it, is §3's `(unknown CAUSE)`, whatever its cause.
 fn unknown_trigger(trigger: &str) -> bool {
@@ -6767,10 +7055,13 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     // the cause written so that `RTP-H1` maps each to its code and no consumer re-derives this rule: `unreached` where
     // the task binds no source itself and no source's route reaches it; `(several ITEM …)`, each source by its text,
     // where several do; and for its one source `(unstated ITEM)` where it states no separation, `(absent ITEM)` where
-    // it declares it absent, `(faster ITEM)` where it states one shorter than the task's" — `ITEM` the source's
-    // interrupt, `(source NAME)` (§2, §3: "each `ITEM` a source"). "A timer route releases no task." So the routes a
-    // task reaches decide only where it binds no source itself: its own source decides alone, whatever else reaches it,
-    // and is the one source a cause names.
+    // it declares it absent, `(faster ITEM)` where it states one shorter than the task's, each written `(own-unstated
+    // ITEM)`, `(own-absent ITEM)` or `(own-faster ITEM)` where that source is the one the task binds itself, since the
+    // task's own `(needs interrupt-source)` repairs a source the routes leave and not one it binds itself" (round 28,
+    // R28-D2) — `ITEM` the source's interrupt, `(source NAME)` (§2, §3: "each `ITEM` a source"). "A timer route
+    // releases no task." So the routes a task reaches decide only where it binds no source itself: its own source
+    // decides alone, whatever else reaches it, and is the one source a cause names, its three causes apart from the
+    // routes' three.
     let mut released_by = BTreeMap::new();
     for task in &description.tasks {
         let trigger = match task.release {
@@ -6779,11 +7070,18 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                 let own = own
                     .seconds()
                     .expect("a separation past the arithmetic is refused before any plan (§1)");
-                // What the source `route` gives the task: its trigger, and the class of §2.2's rule it meets.
-                let decide = |route: &Route| -> (String, &'static str) {
-                    let unknown = |cause: &str| format!("(unknown ({cause} {}))", route.item);
-                    match separation_of(&route.provider) {
-                        Sep::Stated(time) if time >= own => (
+                // What the source `route` gives the task — the one the task binds itself where `bound_itself`, else the
+                // one the routes leave: its trigger, and the class of §2.2's rule it meets.
+                let decide = |route: &Route, bound_itself: bool| -> (String, &'static str) {
+                    let unknown = |cause: &'static str| {
+                        format!(
+                            "(unknown ({} {}))",
+                            one_source_cause(cause, bound_itself),
+                            route.item
+                        )
+                    };
+                    match (separation_of(&route.provider), bound_itself) {
+                        (Sep::Stated(time), _) if time >= own => (
                             format!("(source {} every)", route.provider),
                             if time == own {
                                 "trigger: every, equal separations"
@@ -6791,19 +7089,31 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                                 "trigger: every, a longer separation"
                             },
                         ),
-                        Sep::Stated(_) => (
+                        (Sep::Stated(_), false) => (
                             unknown("faster"),
                             "trigger: `(unknown (faster ITEM))`, a shorter separation",
                         ),
-                        Sep::Unstated => (
+                        (Sep::Unstated, false) => (
                             unknown("unstated"),
                             "trigger: `(unknown (unstated ITEM))`, no separation stated",
                         ),
-                        Sep::Absent => (
+                        (Sep::Absent, false) => (
                             unknown("absent"),
                             "trigger: `(unknown (absent ITEM))`, the separation absent",
                         ),
-                        Sep::Past => panic!("refused before any plan (§1)"),
+                        (Sep::Stated(_), true) => (
+                            unknown("faster"),
+                            "trigger: `(unknown (own-faster ITEM))`, its own source's separation shorter",
+                        ),
+                        (Sep::Unstated, true) => (
+                            unknown("unstated"),
+                            "trigger: `(unknown (own-unstated ITEM))`, its own source stating no separation",
+                        ),
+                        (Sep::Absent, true) => (
+                            unknown("absent"),
+                            "trigger: `(unknown (own-absent ITEM))`, its own source's separation absent",
+                        ),
+                        (Sep::Past, _) => panic!("refused before any plan (§1)"),
                     }
                 };
                 let mut reached = reach(&edges, &task_text(task));
@@ -6834,7 +7144,7 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                         .iter()
                         .filter(|r| r.provider != route.provider)
                         .collect();
-                    let decided = decide(route);
+                    let decided = decide(route, true);
                     if others.is_empty() {
                         classes.insert("trigger: its own source, no other reaching it");
                     } else {
@@ -6844,7 +7154,7 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                     // counts: the class had taken another source releasing it every too, its trigger's text naming
                     // that source, for one that would leave it unknown.)
                     if let [other] = others.as_slice() {
-                        let alone = decide(other).0;
+                        let alone = decide(other, false).0;
                         classes.insert(match (unknown_trigger(&decided.0), unknown_trigger(&alone)) {
                             (true, false) => {
                                 "trigger: its own source leaving it unknown, beside one that alone would release it \
@@ -6903,7 +7213,7 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                                 classes.insert("trigger: a source a block or a platform handles");
                             }
                             deciding = Some(*one);
-                            decide(one)
+                            decide(one, false)
                         }
                         [] => (
                             "(unknown unreached)".to_string(),
@@ -6947,6 +7257,39 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             }
         };
         released_by.insert(task_text(task), trigger);
+    }
+    // Two tasks bound themselves to one source (round 28, R28-R4): each released by it as its own separation decides
+    // against the source's, so one as far apart as the source is released on every arrival where one released less
+    // often is not, `(own-faster ITEM)`.
+    let mut own_binders: BTreeMap<&str, Vec<Ratio>> = BTreeMap::new();
+    for task in &description.tasks {
+        let Release::MinSeparation(apart) = task.release else {
+            continue;
+        };
+        if let Some(bind) = binds.iter().find(|b| {
+            b.requester == task_text(task)
+                && !is_instance(&b.provider)
+                && relies_on_source(description, b)
+        }) {
+            own_binders
+                .entry(bind.provider.as_str())
+                .or_default()
+                .push(apart.seconds().expect("within the arithmetic (§1)"));
+        }
+    }
+    for (provider, apart) in &own_binders {
+        if apart.len() < 2 {
+            continue;
+        }
+        classes.insert("trigger: two tasks bound themselves to one source");
+        if let Sep::Stated(time) = separation_of(provider) {
+            if apart.contains(&time) && apart.iter().any(|t| *t > time) {
+                classes.insert(
+                    "trigger: two tasks bound themselves to one source, one as far apart as it, one released less \
+                     often",
+                );
+            }
+        }
     }
 
     // §2.2 and §3: `(task INDEX (task SYSTEM NAME) (rank INT) RELEASE (deadline DUR) REFERENCE (jitter DUR) (overrun
@@ -10798,6 +11141,9 @@ fn releases_and_routes_of_every_separation_class() {
             fixed_count("trigger: `(unknown (faster ITEM))`, a shorter separation"),
             fixed_count("trigger: `(unknown (unstated ITEM))`, no separation stated"),
             fixed_count("trigger: `(unknown (absent ITEM))`, the separation absent"),
+            fixed_count("trigger: `(unknown (own-faster ITEM))`, its own source's separation shorter"),
+            fixed_count("trigger: `(unknown (own-unstated ITEM))`, its own source stating no separation"),
+            fixed_count("trigger: `(unknown (own-absent ITEM))`, its own source's separation absent"),
             fixed_count("trigger: `(unknown unreached)`, no source reaching it"),
             fixed_count("trigger: `(unknown (several ITEM …))`, several sources"),
             fixed_count("trigger: its own source"),
@@ -10830,6 +11176,48 @@ fn releases_and_routes_of_every_separation_class() {
             ),
         ],
     );
+}
+
+/// A sporadic task's trigger as a universe's construction fixes it, from a source's separation as a label writes it
+/// (`Stated(MS)`, `Unstated` or `Absent`) against the task's `own_ms`: whether every arrival releases it, and the class
+/// of §2.2's rule it meets — the source the task binds itself where `bound_itself`, whose causes are `own-faster`,
+/// `own-unstated` and `own-absent` (round 28, R28-D2), else the one the routes leave.
+fn separation_decides(
+    separation: &str,
+    own_ms: u64,
+    bound_itself: bool,
+) -> (&'static str, &'static str) {
+    let stated = separation
+        .strip_prefix("Stated(")
+        .map(|ms| ms.trim_end_matches(')').parse::<u64>().expect("ms"));
+    match (stated, bound_itself) {
+        (Some(ms), _) if ms == own_ms => ("every", "trigger: every, equal separations"),
+        (Some(ms), _) if ms > own_ms => ("every", "trigger: every, a longer separation"),
+        (Some(_), false) => (
+            "unknown",
+            "trigger: `(unknown (faster ITEM))`, a shorter separation",
+        ),
+        (None, false) if separation == "Unstated" => (
+            "unknown",
+            "trigger: `(unknown (unstated ITEM))`, no separation stated",
+        ),
+        (None, false) => (
+            "unknown",
+            "trigger: `(unknown (absent ITEM))`, the separation absent",
+        ),
+        (Some(_), true) => (
+            "unknown",
+            "trigger: `(unknown (own-faster ITEM))`, its own source's separation shorter",
+        ),
+        (None, true) if separation == "Unstated" => (
+            "unknown",
+            "trigger: `(unknown (own-unstated ITEM))`, its own source stating no separation",
+        ),
+        (None, true) => (
+            "unknown",
+            "trigger: `(unknown (own-absent ITEM))`, its own source's separation absent",
+        ),
+    }
 }
 
 /// The classes of the releases universe a system's construction fixes, from its label — `t=KIND u=KIND alarm=yes|no
@@ -10870,27 +11258,7 @@ fn release_classes(label: &str) -> BTreeSet<&'static str> {
         "t" => matches!(path, "DirectT" | "ServiceT" | "ChainT" | "ServiceTU"),
         _ => matches!(path, "DirectU" | "ServiceU" | "ServiceTU"),
     };
-    let decide = |separation: &str, own_ms: u64| -> (&'static str, &'static str) {
-        match separation
-            .strip_prefix("Stated(")
-            .map(|ms| ms.trim_end_matches(')').parse::<u64>().expect("ms"))
-        {
-            Some(ms) if ms == own_ms => ("every", "trigger: every, equal separations"),
-            Some(ms) if ms > own_ms => ("every", "trigger: every, a longer separation"),
-            Some(_) => (
-                "unknown",
-                "trigger: `(unknown (faster ITEM))`, a shorter separation",
-            ),
-            None if separation == "Unstated" => (
-                "unknown",
-                "trigger: `(unknown (unstated ITEM))`, no separation stated",
-            ),
-            None => (
-                "unknown",
-                "trigger: `(unknown (absent ITEM))`, the separation absent",
-            ),
-        }
-    };
+    let decide = separation_decides;
     for (task, kind, ms) in [("t", t, 20), ("u", u, 40)] {
         if kind != "sporadic" {
             continue;
@@ -10898,7 +11266,7 @@ fn release_classes(label: &str) -> BTreeSet<&'static str> {
         let reaching: Vec<&(&str, &str)> =
             sources.iter().filter(|(_, p)| reaches(task, p)).collect();
         if let Some((separation, _)) = sources.iter().find(|(_, p)| *p == own(task)) {
-            let decided = decide(separation, ms);
+            let decided = decide(separation, ms, true);
             out.insert("trigger: its own source");
             out.insert(decided.1);
             let others: Vec<&&(&str, &str)> =
@@ -10909,7 +11277,7 @@ fn release_classes(label: &str) -> BTreeSet<&'static str> {
                 "trigger: its own source, beside another reaching it"
             });
             if let [(other, _)] = others.as_slice() {
-                out.insert(match (decided.0, decide(other, ms).0) {
+                out.insert(match (decided.0, decide(other, ms, false).0) {
                     ("unknown", "every") => {
                         "trigger: its own source leaving it unknown, beside one that alone would release it every"
                     }
@@ -10930,7 +11298,7 @@ fn release_classes(label: &str) -> BTreeSet<&'static str> {
             }
             out.insert(match reaching.as_slice() {
                 [] => "trigger: `(unknown unreached)`, no source reaching it",
-                [(separation, _)] => decide(separation, ms).1,
+                [(separation, _)] => decide(separation, ms, false).1,
                 _ => "trigger: `(unknown (several ITEM …))`, several sources",
             });
         }
@@ -12898,6 +13266,9 @@ fn sporadic_tasks_released_by_their_own_sources() {
             some("trigger: `(unknown (faster ITEM))`, a shorter separation"),
             some("trigger: `(unknown (unstated ITEM))`, no separation stated"),
             some("trigger: `(unknown (absent ITEM))`, the separation absent"),
+            some("trigger: `(unknown (own-faster ITEM))`, its own source's separation shorter"),
+            some("trigger: `(unknown (own-unstated ITEM))`, its own source stating no separation"),
+            some("trigger: `(unknown (own-absent ITEM))`, its own source's separation absent"),
             some("rank: two stated separations tied"),
         ],
     );
@@ -15263,6 +15634,228 @@ fn each_node_kind_written_with_its_node() {
     assert_eq!(groups, 3 * 4 * 2);
 }
 
+/// Each task's trigger in a plan, `(released-by TRIGGER)`'s `TRIGGER`, by the task's name.
+fn triggers_of(plan: &str) -> BTreeMap<String, String> {
+    plan.lines()
+        .filter(|line| line.starts_with("(task "))
+        .map(|line| {
+            let name = line
+                .split(" (task ")
+                .nth(1)
+                .and_then(|rest| rest.split_once(')'))
+                .and_then(|(identity, _)| identity.split(' ').nth(1))
+                .expect("a task's identity");
+            let trigger = line
+                .split(" (released-by ")
+                .nth(1)
+                .and_then(|rest| rest.rsplit_once(" (uses"))
+                .expect("a trigger and a `uses` item")
+                .0;
+            (name.to_string(), trigger.to_string())
+        })
+        .collect()
+}
+
+#[test]
+fn the_task_s_own_source_written_apart_from_the_routes() {
+    let cases = own_causes();
+    // `dev.y` none, or of 6 separations, after `dev.x` or before it; `dev.x` of 6; `u`'s reach of 3; `t`'s of 4.
+    assert_eq!(
+        cases.len(),
+        Y_SOURCES.len() * SEPARATIONS.len() * U_REACH.len() * T_REACH.len()
+    );
+    let (tally, plans) = run_keeping("own causes", &cases, true);
+    // Every system lowered. Each class counted from the label and, where `dev.y` is declared, the source the record
+    // binds each task binding `interrupt-source` itself to ([`own_causes_classes`]): the assignment is input.
+    let fixed: Vec<BTreeSet<&str>> = cases
+        .iter()
+        .zip(&plans)
+        .map(|(case, plan)| {
+            plan.as_deref().map_or_else(BTreeSet::new, |plan| {
+                own_causes_classes(
+                    &case.label,
+                    own_source_bound(plan, "t").as_deref(),
+                    own_source_bound(plan, "u").as_deref(),
+                )
+            })
+        })
+        .collect();
+    let fixed_count =
+        |class: &'static str| exactly(class, fixed.iter().filter(|f| f.contains(class)).count());
+    hold(
+        "own causes",
+        &tally,
+        (936, 936, 0, 0, 0),
+        &[
+            fixed_count("trigger: every, equal separations"),
+            fixed_count("trigger: every, a longer separation"),
+            fixed_count("trigger: `(unknown unreached)`, no source reaching it"),
+            fixed_count("trigger: `(unknown (several ITEM …))`, several sources"),
+            fixed_count("trigger: several sources, by their texts unlike their declaration order"),
+            fixed_count("trigger: `(unknown (unstated ITEM))`, no separation stated"),
+            fixed_count("trigger: `(unknown (absent ITEM))`, the separation absent"),
+            fixed_count("trigger: `(unknown (faster ITEM))`, a shorter separation"),
+            fixed_count("trigger: `(unknown (own-unstated ITEM))`, its own source stating no separation"),
+            fixed_count("trigger: `(unknown (own-absent ITEM))`, its own source's separation absent"),
+            fixed_count("trigger: `(unknown (own-faster ITEM))`, its own source's separation shorter"),
+            fixed_count("trigger: its own source"),
+            fixed_count("trigger: its own source, no other reaching it"),
+            fixed_count("trigger: its own source, beside another reaching it"),
+            fixed_count(
+                "trigger: its own source leaving it unknown, beside one that alone would release it every",
+            ),
+            fixed_count(
+                "trigger: its own source releasing it every, beside one that alone would leave it unknown",
+            ),
+            fixed_count(
+                "trigger: its own source releasing it every, beside another that alone would release it every from \
+                 itself",
+            ),
+            fixed_count(
+                "trigger: its own source leaving it unknown, beside one that alone would leave it unknown too",
+            ),
+            fixed_count("trigger: its own source, reached through a requester its route names too"),
+            fixed_count("trigger: binding none, beside a task bound to its own source"),
+            fixed_count("trigger: binding none, reaching the handler of another task's own source"),
+            fixed_count("trigger: two tasks bound themselves to one source"),
+            fixed_count(
+                "trigger: two tasks bound themselves to one source, one as far apart as it, one released less often",
+            ),
+            fixed_count("rank: two stated separations tied"),
+            exactly("task: deadline-from written", 936),
+        ],
+    );
+    // Every cause §3 lists reached, by a class naming it.
+    for cause in CAUSES {
+        assert!(
+            tally.classes.iter().any(|(class, count)| *count > 0
+                && (class.contains(&format!("`(unknown ({cause} "))
+                    || class.contains(&format!("`(unknown {cause})`")))),
+            "own causes: no system's trigger is `(unknown …)` of the cause `{cause}`"
+        );
+    }
+    // With `dev.x` alone the construction fixes every binding: `t`, bound itself alone or reaching `evt.x` too, beside
+    // `u` bound itself, both to `dev.x` as far apart as `t` where it states 20 ms — two systems.
+    let alone = |label: &str| label.ends_with(" dev.y:none first:dev.x");
+    assert_eq!(
+        cases
+            .iter()
+            .zip(&fixed)
+            .filter(|(case, f)| {
+                alone(&case.label)
+                    && f.contains(
+                        "trigger: two tasks bound themselves to one source, one as far apart as it, one released less \
+                         often",
+                    )
+            })
+            .count(),
+        2
+    );
+    // Each system beside its twins (R28-D2, R28-R7), plans the reading has already held line by line. With `dev.x`
+    // alone: `t` bound itself beside its twin reaching `dev.x` only through `evt.x`, its trigger the twin's with each
+    // cause written `own-` — `(own-faster …)` where the twin's is `(faster …)` — and the same where every arrival
+    // releases it; and `t` bound itself and reaching `dev.x` through `evt.x` too beside its twin bound itself alone,
+    // one trigger. With `dev.y` declared, `t` bound itself: to `dev.x`, while the handler it uses reaches `dev.y`,
+    // beside its twin with `dev.x` alone, its own source deciding alone, one trigger; or to `dev.y`, whose handler it
+    // uses, beside its twin binding none, which that handler alone reaches, its trigger written apart as above. `u`'s
+    // trigger is its twin's wherever both bind the same source, or none.
+    let plan_of: BTreeMap<&str, &str> = cases
+        .iter()
+        .zip(&plans)
+        .map(|(case, plan)| {
+            (
+                case.label.as_str(),
+                plan.as_deref().expect("every system lowered"),
+            )
+        })
+        .collect();
+    let own_of = |trigger: &str| match trigger.strip_prefix("(unknown (") {
+        Some(cause) => format!("(unknown (own-{cause}"),
+        None => trigger.to_string(),
+    };
+    let same = |trigger: &str| trigger.to_string();
+    let mut unlike = Vec::new();
+    let mut twin = |label: &str, other: String, t_trigger: &dyn Fn(&str) -> String, what: &str| {
+        let (plan, theirs_plan) = (plan_of[label], plan_of[other.as_str()]);
+        let (mine, theirs) = (triggers_of(plan), triggers_of(theirs_plan));
+        let u_alike = own_source_bound(plan, "u") == own_source_bound(theirs_plan, "u");
+        if mine["t"] != t_trigger(&theirs["t"]) || (u_alike && mine["u"] != theirs["u"]) {
+            unlike.push(format!(
+                "== {label}, beside {other} ({what}): `t` {} and `u` {}, its twin's {} and {}",
+                mine["t"], mine["u"], theirs["t"], theirs["u"]
+            ));
+        }
+        (mine["t"].clone(), theirs["t"].clone())
+    };
+    let (mut by_handler, mut written_apart, mut faster, mut through_both) = (0, 0, 0, 0);
+    let (mut beside_another, mut by_its_handler) = (0, 0);
+    for case in &cases {
+        let label = case.label.as_str();
+        if alone(label) && label.contains(" t:own ") {
+            let (mine, theirs) = twin(
+                label,
+                label.replace(" t:own ", " t:handler "),
+                &own_of,
+                "reaching `dev.x` only through `evt.x`",
+            );
+            by_handler += 1;
+            written_apart += usize::from(mine != theirs);
+            faster += usize::from(theirs.starts_with("(unknown (faster "));
+        }
+        if alone(label) && label.contains(" t:both ") {
+            twin(
+                label,
+                label.replace(" t:both ", " t:own "),
+                &same,
+                "bound itself alone",
+            );
+            through_both += 1;
+        }
+        if !alone(label) && label.contains(" t:own ") {
+            match own_source_bound(plan_of[label], "t").as_deref() {
+                Some("dev.x") => {
+                    let (head, _) = label.split_once(" dev.y:").expect("`dev.y`");
+                    twin(
+                        label,
+                        format!("{head} dev.y:none first:dev.x"),
+                        &same,
+                        "`dev.x` alone",
+                    );
+                    beside_another += 1;
+                }
+                Some("dev.y") => {
+                    twin(
+                        label,
+                        label.replace(" t:own ", " t:none "),
+                        &own_of,
+                        "reaching `dev.y` only through `evt.y`",
+                    );
+                    by_its_handler += 1;
+                }
+                other => panic!("{label}: `t` bound itself to {other:?}"),
+            }
+        }
+    }
+    assert!(unlike.is_empty(), "{}", unlike.join("\n"));
+    // With `dev.x` alone, 6 separations × 3 of `u`: written apart where `dev.x` states none, declares it absent or
+    // states 10 ms, shorter than `t`'s 20 ms — the last `(own-faster …)` beside `(faster …)`. With `dev.y` declared,
+    // 12 × 6 × 3 systems of `t` bound itself, beside one twin or the other as the record binds it, some bound to
+    // `dev.x`.
+    assert_eq!(by_handler, 6 * 3);
+    assert_eq!(written_apart, 3 * 3);
+    assert_eq!(faster, 3);
+    assert_eq!(through_both, 6 * 3);
+    assert_eq!(beside_another + by_its_handler, 12 * 6 * 3);
+    assert!(
+        beside_another > 0,
+        "no task bound itself to a source while the handler it uses reaches another"
+    );
+    eprintln!(
+        "own causes: `t` bound itself beside `dev.y`: to `dev.x` in {beside_another} systems, to `dev.y` in \
+         {by_its_handler}"
+    );
+}
+
 #[test]
 fn the_reading_s_arithmetic_is_exact() {
     // The reading's seconds, held to values derived by hand from §2.2's rule — "one reduced rational number of
@@ -15626,7 +16219,7 @@ fn the_reading_gives_the_record_s_worked_texts() {
     }
     // The reading's forms, node kinds and causes, held to §3's text (round 24, R24-D2, R24-R1): the heads of its
     // template, in "The forms come in the order below"; "`NODEKIND` one of ..."; and "`CAUSE` one of ...", each cause
-    // by its head.
+    // by its head, the eight of round 28 (R28-D2) in §3's order.
     assert_eq!(template_heads(&record), FORMS, "§3's forms, in its order");
     assert_eq!(
         sentence_list(&record, "and `NODEKIND` one of", ".\n"),
@@ -15645,6 +16238,41 @@ fn the_reading_gives_the_record_s_worked_texts() {
         })
         .collect();
     assert_eq!(causes, CAUSES, "§3's causes");
+    // And §2.2's pairing of them (round 28, R28-D2): "for its one source `(unstated ITEM)` ..., `(absent ITEM)` ...,
+    // `(faster ITEM)` ..., each written `(own-unstated ITEM)`, `(own-absent ITEM)` or `(own-faster ITEM)` where that
+    // source is the one the task binds itself" — the routes' three, then the task's own source's, in one order.
+    let paired: Vec<String> = sentence_list(
+        &record,
+        "and for its one source",
+        "where that source is the",
+    )
+    .iter()
+    .map(|cause| {
+        cause
+            .trim_start_matches('(')
+            .split([' ', ')'])
+            .next()
+            .expect("a head")
+            .to_string()
+    })
+    .collect();
+    assert_eq!(
+        paired.len(),
+        6,
+        "§2.2's three causes of one source, each written apart for the task's own"
+    );
+    for (routes, own) in paired[..3].iter().zip(&paired[3..]) {
+        assert_eq!(
+            one_source_cause(routes, false),
+            routes,
+            "§2.2's cause of a source the routes leave"
+        );
+        assert_eq!(
+            one_source_cause(routes, true),
+            own,
+            "§2.2's cause of the source the task binds itself"
+        );
+    }
 
     // The reading held to the plans the record writes in full (§3), from their inputs transcribed here and their own
     // `bind` lines, for every kind of line it derives: a fault of the reading shows on the record's own text, never on
