@@ -1,5 +1,6 @@
 # docs/semantics/third-opinion.txt — per document, whether archogen's reader and LinkedSpec's SExprDocumentV1
 # recognizer agree on its forms (leaf M1.22). Written by scripts/third_opinion.sh --bless; checked by it.
+agree crates/archogen-plan/tests/corpus/absent-source-no-task.eadl
 agree crates/archogen-plan/tests/corpus/block-absolute-deadline.eadl
 agree crates/archogen-plan/tests/corpus/block-alarm-unbound.eadl
 agree crates/archogen-plan/tests/corpus/block-binds-itself.eadl
@@ -114,6 +115,7 @@ agree crates/archogen-plan/tests/corpus/service-uses-block-only.eadl
 agree crates/archogen-plan/tests/corpus/shapes.eadl
 agree crates/archogen-plan/tests/corpus/shared-across-contexts.eadl
 agree crates/archogen-plan/tests/corpus/shared-ext.eadl
+agree crates/archogen-plan/tests/corpus/shared-service-two-systems.eadl
 agree crates/archogen-plan/tests/corpus/slash-alarm.eadl
 agree crates/archogen-plan/tests/corpus/slash-control.eadl
 agree crates/archogen-plan/tests/corpus/slash-instance.eadl

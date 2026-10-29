@@ -1,0 +1,14 @@
+(eadl-version eadl/1)
+; One service, named by two systems' tasks, names a block of one system's hardware only: that system lowers, the
+; other is refused, outside its hardware (§1; round 21, R4; round 22, R2).
+(defblock uart.a (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock uart.b (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform pa (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses uart.a)))
+(defplatform pb (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses uart.b)))
+(defservice log (requires (needs observable-output) (uses uart.a)))
+(defsystem sa
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses log))
+  (platform (uses pa)))
+(defsystem sb
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses log))
+  (platform (uses pb)))

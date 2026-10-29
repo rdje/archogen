@@ -1,6 +1,7 @@
 # The frozen verdict of every description in this repository (leaf `PROGRAM.6.2`).
 # <exit code of `archogen check`> <its diagnostic codes, sorted, or -> <path>
 # Regenerated deliberately: ARCHOGEN_BLESS_VERDICTS=1 cargo test -p archogen-cli --test verdicts
+0 - crates/archogen-plan/tests/corpus/absent-source-no-task.eadl
 0 - crates/archogen-plan/tests/corpus/block-absolute-deadline.eadl
 0 - crates/archogen-plan/tests/corpus/block-alarm-unbound.eadl
 0 - crates/archogen-plan/tests/corpus/block-binds-itself.eadl
@@ -115,6 +116,7 @@
 0 - crates/archogen-plan/tests/corpus/shapes.eadl
 0 - crates/archogen-plan/tests/corpus/shared-across-contexts.eadl
 0 - crates/archogen-plan/tests/corpus/shared-ext.eadl
+0 - crates/archogen-plan/tests/corpus/shared-service-two-systems.eadl
 0 - crates/archogen-plan/tests/corpus/slash-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/slash-control.eadl
 0 - crates/archogen-plan/tests/corpus/slash-instance.eadl

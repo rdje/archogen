@@ -834,8 +834,9 @@ channel; named hardware running in a timer route's interrupt through an expiry; 
 block of a second instance, which round 20 found outside the system's hardware and refused. Round 20 adds two tasks
 naming a composite whose part takes a channel; a service naming a block on no platform, refused; a module tree whose
 root's handler names the system's own block across modules; and a sporadic task calling its source's device through a
-policy's name. A description the language's check refuses is no input (§1), and its probe is held at that check's
-verdict.
+policy's name. Round 21 adds one service two systems name, inside one's hardware and outside the other's; and a source
+declaring its separation absent that releases no task. A description the language's check refuses is no input (§1), and
+its probe is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with
