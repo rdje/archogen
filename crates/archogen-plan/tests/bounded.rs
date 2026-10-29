@@ -7694,7 +7694,7 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         if task.deadline_from.is_none() {
             owe(&task_text(task), "deadline-from", "description");
         }
-        // "each task whose trigger is `unknown`", of whatever cause (§2.10).
+        // "each task whose trigger is `(unknown CAUSE)`", of whatever cause (§2.10).
         if unknown_trigger(&released_by[&task_text(task)]) {
             owe(&task_text(task), "trigger", "description");
         }
