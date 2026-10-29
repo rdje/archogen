@@ -838,6 +838,28 @@ of "all tasks and interrupt routines that access a resource" for a job's calls.
 Round 25's answers: R25-D2 held, its mapping inheriting `several` (R26-D1); R25-R1 and R25-R2 partly (R26-D2); R25-R4
 held, one comment's quote loose (R26-R1); the rest held.
 
+## Round 27 — `2026-10-29`: not acceptable, 6 findings
+
+The code faithful on every section and probe, a sweep of every tracked description among them, 192 records the checker
+accepted; the one defect in hand-off text, round 26's repair claimed where the record's own rules deny it.
+
+**Fence.** No breach.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R27-D1 | defect | `RTP-H1` names the task's own `(needs interrupt-source)` as the repair of `unreached` and `(several …)`, yet the search binds it with no regard to the source's separation, and §2.2 then writes `(faster …)`, `unsupported-profile`; `eadl/1` gives a task no clause to bound the choice | The repair named with its condition; `RTP-H24` to `M4.1.2`, rule 8 refusing a task's own source the analysis's condition 5 does not admit, so the search, judging complete assignments in order, binds one at least as far apart or refuses; §2.2 and §4's `.2` say so; `RTP-H19` widened to the search's choice; requoted in `M4.2` and `M1.44` |
+| R27-R1 | remark | `RTP-H5` and `RTP-H13` read two ways: a job's calls into every node its task reaches, or only those its lines name | Direct: only the nodes its task line's `uses` lists and its own `bind` lines name, a node past them called through that node's code; requoted in `M4.12` and `M4.10` |
+| R27-R2 | remark | D1's pairs, a task bound to its own source beside an extender on one block, and a task's own source faster, absent or unstated, held by no fixture | Added (`M4.1.4`) |
+| R27-R3 | remark | three rules the code applies on paths no input reaches: a priority tie broken by name, a missing priority, a separation of another dimension | — |
+| R27-R4 | remark | `crates/eadl-resolve/src/joint.rs`'s comment on `Initialization::components` says "in two phases where it can", against rule 12's one phase | `M4.1.2`'s, reworded with the rule |
+| R27-R5 | remark | the bounded checker faithful where sampled, its sizes and classes as claimed | — |
+
+Better decisions, taken: the analysis's condition 5 held at the binding, where the search can still choose, as rule 9
+holds a level (R27-D1). Declined: each task's reach set written in the plan (R27-R1), since with calls direct the plan's
+`uses` and `bind` lines already say which job calls which node, and a call past them is `M4.1.6`'s span (R26-R2).
+
+Round 26's answers: R26-D1 partly (R27-D1); R26-D2 held, its wording two ways (R27-R1); the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
