@@ -727,6 +727,30 @@ commits inside that range, named no sealed path, and read no blob.
 
 Round 21's answers: R21-R4 partly (R22-D1); the rest held.
 
+## Round 23 — `2026-10-29`: not acceptable, 9 findings
+
+One defect, and a real one: a system declaring two tasks of one name passes the language's check, and the lowering,
+keying every task by its text, merges the two into a plan the record's rules do not give — the second task's `uses`
+the first's, one `context` line for two tasks, a `multiplex` the merged reach invents. Elsewhere the code faithful, the
+bounded totals reproduced, a sweep of every tracked description — 129 plans — every record accepted.
+
+**Fence.** No breach.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R23-D1 | defect | two tasks of one name merged into one plan, against reference §7 rule 6's "never merged and never resolved by order" and §2.2's "stable logical identity"; with only the second binding, a false "does not rebuild" | Refused `tool-failure` before the rebuild, naming the system and the name (§1), §2.2's text unique in its system, until `M1.50` (`RTP-H23`) has the language refuse it — landing with the code |
+| R23-R1 | remark | round 22's module tree with two instances on one route held by no fixture | Added (`M4.1.4`) |
+| R23-R2 | remark | rule 12's named clause has no "but to itself", and `Joint::check` counts a service naming itself its own user | Rule 12 says it; `.2` and `M4.1.2` give a name of itself no user and no edge; the case a fixture |
+| R23-R3 | remark | the outside-hardware message names one of `M1.49`'s two outcomes | Both, with the code (`M4.1.4`) |
+| R23-R4 | remark | the joint-rules test lowers a record the checker refuses, its name and message saying "accepted" | Its comment says so, the one way to reach that branch while the two roles agree (`M4.1.4`) |
+| R23-R5 | remark | `lib.rs`'s header omits the production half's take-or-check of the vocabulary and catalog | Added (`M4.1.4`) |
+| R23-R6 | remark | §2's node list ends "a service, or a policy" without "the system serves" | Said |
+| R23-R7 | remark | the checker's generator writes no duplicate name, no service naming itself and no `exactly` bound on an obliged fact | `M4.1.13` reopened |
+| R23-R8 | remark | a negative duration the language refuses | — |
+
+Round 22's answers: R22-D1 held but for the message (R23-R3); R22-R1 held, unbuilt as declared (R23-R5); R22-R5 still
+true (R23-R1); the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a

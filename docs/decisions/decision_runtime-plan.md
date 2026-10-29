@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-27`
 - **Status:** `active` — the design for leaf `M4.1`, under independent review (`M4.1.1`) before any code relies on it;
-  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 22 answered; from round 7 it is
+  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 23 answered; from round 7 it is
   reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
 - **Owner / source:** leaf `M4.1.1` (`docs/tasks/M4.md`); `ROADMAP.md` §4.2's component `archogen-plan`, §7.3, §7.5,
   §7.6, §10.1 step 5 and §10.3; model §8 rules 4, 5, 7, 8, 10, 12 and 15; the obligations `M3.3.8`, `M3.5`, `M3.5.5.7.3`
@@ -162,17 +162,17 @@ rebuilds, every binding) — names (a block, a platform or an adapter's instance
 that is bound for requirements of its own — a requester like any other (model §8 rule 1, `M4.1.14`), whose code an
 interrupt can run (§2.6) — a block or a platform of the system's hardware that a served task, service or policy names by
 `uses` or `needs`, whose code that name calls (`M4.1.18`) — one the system serves outside its hardware refused (§1) —, a
-service, or a policy: the three kinds of node `crates/eadl-resolve/src/joint.rs` gives, `Provider` (hardware and
-instances), `Service` and `Other`, the last a policy's, a description naming a system being refused (§1). Its tasks and
-its own level, requesters too, are never nodes; a block or a platform the system serves that is bound for nothing and
-that nothing calls is a node only as a provider an active binding names, since as a requester it runs no code the plan
-places; the plan derives the context of each task and each node (§2.6), the requesters whose code it places, as `M3.3.8`
-asks. A node's **text** is its name as the plan writes it, an instance's being its `(adapter …)` text, and texts are
-compared byte by byte. A requester **reaches** what it names by `uses` or `needs`, and what it is bound to as its
-provider, at any depth, as the joint rules take a requester's names (model §8 rule 7) — but for a block's or a
-platform's `uses` or `needs`, which names only hardware (§1) and is never a call — its `uses` composition (rule 1; rule
-5's "`uses` alone is composition"), its `needs` a block it brings into the system's hardware (rule 7): hardware reaches
-only what its own requirements are bound to.
+service the system serves, or a policy it serves: the three kinds of node `crates/eadl-resolve/src/joint.rs` gives,
+`Provider` (hardware and instances), `Service` and `Other`, the last a policy's, a description naming a system being
+refused (§1). Its tasks and its own level, requesters too, are never nodes; a block or a platform the system serves that
+is bound for nothing and that nothing calls is a node only as a provider an active binding names, since as a requester
+it runs no code the plan places; the plan derives the context of each task and each node (§2.6), the requesters whose
+code it places, as `M3.3.8` asks. A node's **text** is its name as the plan writes it, an instance's being its `(adapter
+…)` text, and texts are compared byte by byte. A requester **reaches** what it names by `uses` or `needs`, and what it
+is bound to as its provider, at any depth, as the joint rules take a requester's names (model §8 rule 7) — but for a
+block's or a platform's `uses` or `needs`, which names only hardware (§1) and is never a call — its `uses` composition
+(rule 1; rule 5's "`uses` alone is composition"), its `needs` a block it brings into the system's hardware (rule 7):
+hardware reaches only what its own requirements are bound to.
 
 An **interrupt** is named by its kind and its provider, never by the provider alone, since one provider can raise a
 timer route and a source, and a block may be named `timer`:
@@ -857,17 +857,19 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
   system's tasks that reach it as §2 reads reaching — through `uses`, `needs` and bindings at any depth, never through a
   block's or a platform's `uses` or `needs` — and the interrupts whose context holds it, but for its own timer route —
   at the provider whose channel it takes, or that the instance whose channel it takes programs — where nothing else that
-  route runs reaches it, never another system's; rule 7 still resolves system by system.
+  route runs reaches it, never another system's, nor the node itself by a name of itself; rule 7 still resolves system
+  by system.
   Rule 8's routes are one for each provider and kind, as `joint.rs` keys them, and its enabled set is §2.5's. Rule 12
   records this engine's answer, one phase, counts among its nodes a block or a platform the system serves that is bound
   for requirements of its own (done by `M4.1.15`) or that a served task, service or policy names (done by `M4.1.18`)
   (§2), keeps a binding's edge across composition (done by `M4.1.16`), and gives an edge from a block or a platform a
-  service or a policy names to that namer (done by `M4.1.17`). Rule 10's are below. The adapters record's §9, which
-  reads "each cost interrupt a source the analysis charges" today, is amended to read "each cost a cost on the route of
-  the provider it programs", and it states, for each cost, whether the interrupt runs the requester's code (§2.6). The
-  engine API's `crates/archogen-api/src/resolve.rs` and `docs/book/src/engine-api.md`, which read "a cost the scheduling
-  analysis charges as a source", read so too. The book follows, with a migration note for any verdict that moves. Rule
-  10's amendments keep the search, the checker and any later layout agreed over a description:
+  service or a policy names to that namer (done by `M4.1.17`), none from a node to itself by a name of itself. Rule 10's
+  are below. The adapters record's §9, which reads "each cost interrupt a source the analysis charges" today, is amended
+  to read "each cost a cost on the route of the provider it programs", and it states, for each cost, whether the
+  interrupt runs the requester's code (§2.6). The engine API's `crates/archogen-api/src/resolve.rs` and
+  `docs/book/src/engine-api.md`, which read "a cost the scheduling analysis charges as a source", read so too. The book
+  follows, with a migration note for any verdict that moves. Rule 10's amendments keep the search, the checker and any
+  later layout agreed over a description:
   - **placement memory with no size** is `missing-fact`, naming it, since nothing can be laid out in it;
   - **a hole of no size** whose base lies inside placement memory (`M3.5.5.7.3`'s obligation) is taken to reach the
     region's end. That is the conservative extent, the largest the region allows. If it leaves no free byte, the system
