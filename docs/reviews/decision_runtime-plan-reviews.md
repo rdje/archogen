@@ -786,6 +786,33 @@ lowering rule.
 
 Round 23's answers: all held; R23-D1's message reworded (R24-R2).
 
+## Round 25 — `2026-10-29`: not acceptable, 10 findings
+
+The code faithful on every probe, fixture, worked text and universe; a sweep of every tracked description — 137 plans,
+every record accepted. Both defects in hand-off text, round 24's forms reaching one consumer and not the others.
+
+**Fence.** No breach.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R25-D1 | defect | §2 says the simulator and the emitter read a node's kind from the plan, and `RTP-H9` and `RTP-H2` say nothing of it | `RTP-H9` models the plan's `block` and `platform` nodes, `RTP-H2` generates each node by its kind, neither reading the description; requoted in `M4.3` and `M4.2` |
+| R25-D2 | defect | `RTP-H4` maps no trigger cause, and §2.2's "the analysis refuses" is false of the analysis as built, which admits a release on some arrivals as an assumption | `RTP-H4` maps each cause as `RTP-H1` does, never analysing an assumed release; §2.2 says so; requoted in `M2.21.2` |
+| R25-R1 | remark | nothing obliges a job's code to call only the nodes its task reaches, on which contexts, call costs and users rest | `RTP-H13` checks it in the image, `RTP-H5` declares it; requoted |
+| R25-R2 | remark | no per-job call count for a node is owed beside `call-cost` | `RTP-H5` carries it; `M4.1.6` charges by it |
+| R25-R3 | remark | a bare `compose.rs` before its full path | Whole |
+| R25-R4 | remark | three quotes still say a bare `unknown` | `M1.44`'s here; the two comments with the code (`M4.1.4`) |
+| R25-R5 | remark | `lower`'s `# Errors` omits two tasks of one name | With the code (`M4.1.4`) |
+| R25-R6 | remark | §2.6's "releases the task only where its trigger names `X`" loose since causes name `X` too | "is `(source X every)`" |
+| R25-R7 | remark | §3's "a block and a service of one name" describes two descriptions | Said |
+| R25-R8 | remark | the checker faithful, its round-24 universes the sizes claimed; still no module tree | — |
+
+Better decisions, taken: one verdict per cause in every consumer, R21-D1's principle; a job's calls held to its stated
+reach, as OSEK's `GetResource` returns `E_OS_ACCESS` to a caller outside a resource's configured accessors (§13.4.3.1,
+read from the ledger's copy, its hash the same); a per-node call count beside `call-cost`.
+
+Round 24's answers: R24-D1 held, its purpose unobliged on a job's code (R25-R1); R24-D2 and R24-R1 partly (R25-D1,
+R25-D2); R24-R4 partly (R25-R3); the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
