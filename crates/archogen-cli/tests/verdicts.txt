@@ -93,6 +93,7 @@
 0 - crates/archogen-plan/tests/corpus/periodic-source.eadl
 0 - crates/archogen-plan/tests/corpus/placement.eadl
 0 - crates/archogen-plan/tests/corpus/platform-alarm-composed.eadl
+0 - crates/archogen-plan/tests/corpus/platform-expiry-named.eadl
 0 - crates/archogen-plan/tests/corpus/platform-expiry.eadl
 0 - crates/archogen-plan/tests/corpus/platform-source-composes.eadl
 0 - crates/archogen-plan/tests/corpus/platform-source-past.eadl
@@ -163,6 +164,11 @@
 0 - crates/archogen-plan/tests/corpus/tightest-bound.eadl
 0 - crates/archogen-plan/tests/corpus/transitive-users.eadl
 0 - crates/archogen-plan/tests/corpus/trigger-faster.eadl
+0 - crates/archogen-plan/tests/corpus/trigger-several-mixed.eadl
+0 - crates/archogen-plan/tests/corpus/trigger-several-own-binding.eadl
+0 - crates/archogen-plan/tests/corpus/trigger-several.eadl
+0 - crates/archogen-plan/tests/corpus/trigger-unreached-output.eadl
+0 - crates/archogen-plan/tests/corpus/trigger-unreached-own-binding.eadl
 0 - crates/archogen-plan/tests/corpus/trigger-unreached.eadl
 0 - crates/archogen-plan/tests/corpus/two-dod.eadl
 0 - crates/archogen-plan/tests/corpus/two-ill-formed.eadl

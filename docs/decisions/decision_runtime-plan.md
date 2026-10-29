@@ -865,8 +865,11 @@ declaring its separation absent that releases no task. Round 23 adds two tasks o
 itself; and a module tree with two instances on one route, a source and a service two jobs share. Round 24 adds two
 systems alike but for which task names a block; two alike but for which task reaches a faster source's block; one
 declaration written as a block in one description and as a service in its twin, each a node of its kind, since one
-description holding both is refused; and several names each declared more than once. A description the language's check
-refuses is no input (§1), and its probe is held at that check's verdict.
+description holding both is refused; and several names each declared more than once. Round 26 adds a sporadic task
+reaching two sources' handlers, and its twin with the task's own `(needs interrupt-source)`; a sporadic task reaching no
+source, and its twin with that clause; a task naming a policy and a block that each handle a source, which the search
+binds to the one of two sources whose separation is stated; and a platform taking an expiry two tasks name. A
+description the language's check refuses is no input (§1), and its probe is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with

@@ -332,7 +332,8 @@ fn of_two_refusals_the_one_section_1_writes_first_is_given() {
 fn a_cascade_reaches_two_sources_routes_and_its_release_is_unknown() {
     // Round 15 (R15-R6): `ctl`, a block raising a source of its own, is bound for its own `interrupt-source` to
     // `dev.e`, and `evt` handles `ctl`'s. The task reaches both sources' routes, so its trigger is
-    // `(unknown (several …))` (§2.2, "where several sources' routes do"), and `dev.e` runs in `ctl`'s interrupt too, `ctl` reaching it (§2.6).
+    // `(unknown (several …))` (§2.2, "each source by its text, where several do"), and `dev.e` runs in `ctl`'s
+    // interrupt too, `ctl` reaching it (§2.6).
     let description = "(eadl-version eadl/1)
 (defblock dev.e
   (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))

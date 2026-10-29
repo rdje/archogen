@@ -92,6 +92,7 @@ agree crates/archogen-plan/tests/corpus/periodic-bound-to-source-otherwise.eadl
 agree crates/archogen-plan/tests/corpus/periodic-source.eadl
 agree crates/archogen-plan/tests/corpus/placement.eadl
 agree crates/archogen-plan/tests/corpus/platform-alarm-composed.eadl
+agree crates/archogen-plan/tests/corpus/platform-expiry-named.eadl
 agree crates/archogen-plan/tests/corpus/platform-expiry.eadl
 agree crates/archogen-plan/tests/corpus/platform-source-composes.eadl
 agree crates/archogen-plan/tests/corpus/platform-source-past.eadl
@@ -162,6 +163,11 @@ agree crates/archogen-plan/tests/corpus/task-uses-block.eadl
 agree crates/archogen-plan/tests/corpus/tightest-bound.eadl
 agree crates/archogen-plan/tests/corpus/transitive-users.eadl
 agree crates/archogen-plan/tests/corpus/trigger-faster.eadl
+agree crates/archogen-plan/tests/corpus/trigger-several-mixed.eadl
+agree crates/archogen-plan/tests/corpus/trigger-several-own-binding.eadl
+agree crates/archogen-plan/tests/corpus/trigger-several.eadl
+agree crates/archogen-plan/tests/corpus/trigger-unreached-output.eadl
+agree crates/archogen-plan/tests/corpus/trigger-unreached-own-binding.eadl
 agree crates/archogen-plan/tests/corpus/trigger-unreached.eadl
 agree crates/archogen-plan/tests/corpus/two-dod.eadl
 agree crates/archogen-plan/tests/corpus/two-ill-formed.eadl
