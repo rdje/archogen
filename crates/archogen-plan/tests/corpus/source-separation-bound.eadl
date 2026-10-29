@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; A source offering its separation as a bound, `(at-least 20 ms)`, which the relation reads as no value: the separation
+; `unknown` and owed, the task's trigger `(unknown (unstated …))` (§2.2, §2.5; round 30, R2).
+(defblock src.e
+  (offers (interrupt-source true) (min-arrival-separation (at-least 20 ms)) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses src.e)))
+(defservice evt
+  (requires (needs interrupt-source)))
+(defsystem bs
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt))
+  (platform (uses soc)))

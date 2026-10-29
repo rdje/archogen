@@ -140,6 +140,8 @@ agree crates/archogen-plan/tests/corpus/slash-unreached.eadl
 agree crates/archogen-plan/tests/corpus/small-durations.eadl
 agree crates/archogen-plan/tests/corpus/source-hz.eadl
 agree crates/archogen-plan/tests/corpus/source-separation-bare.eadl
+agree crates/archogen-plan/tests/corpus/source-separation-bound.eadl
+agree crates/archogen-plan/tests/corpus/source-separation-exactly.eadl
 agree crates/archogen-plan/tests/corpus/source-separation-overflow.eadl
 agree crates/archogen-plan/tests/corpus/source-separation-past-arithmetic.eadl
 agree crates/archogen-plan/tests/corpus/sporadic-alarm-only.eadl

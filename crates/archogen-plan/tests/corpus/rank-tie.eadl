@@ -1,5 +1,5 @@
 (eadl-version eadl/1)
-; Two sources stating the same separation: §2.5 ranks "ascending by it" and breaks no tie.
+; Two sources stating the same separation: §2.5 ranks them "ascending by it, ties broken on their interrupt's text".
 (defblock dev.b
   (offers (interrupt-source true) (min-arrival-separation 20 ms) (available-in-state run) (reachable-at-privilege machine)))
 (defblock dev.a

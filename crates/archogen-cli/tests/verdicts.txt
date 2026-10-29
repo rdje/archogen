@@ -141,6 +141,8 @@
 0 - crates/archogen-plan/tests/corpus/small-durations.eadl
 0 - crates/archogen-plan/tests/corpus/source-hz.eadl
 0 - crates/archogen-plan/tests/corpus/source-separation-bare.eadl
+0 - crates/archogen-plan/tests/corpus/source-separation-bound.eadl
+0 - crates/archogen-plan/tests/corpus/source-separation-exactly.eadl
 0 - crates/archogen-plan/tests/corpus/source-separation-overflow.eadl
 0 - crates/archogen-plan/tests/corpus/source-separation-past-arithmetic.eadl
 0 - crates/archogen-plan/tests/corpus/sporadic-alarm-only.eadl
