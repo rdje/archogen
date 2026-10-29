@@ -969,7 +969,8 @@ and to one stating none; and a task bound itself to a source's block and through
 28 adds a sporadic task reaching one handler the search binds to the faster of two sources, and its twin with the task's
 own `(needs interrupt-source)`; the two again with that source declaring its separation absent; two tasks bound
 themselves to one source, as far apart as one and released less often than it by the other; and a task bound itself to a
-source block that programs an alarm of its own.
+source block that programs an alarm of its own. Round 29 adds a module tree whose aliases order two sources' qualified
+texts against their local names, a task reaching both handlers and one binding its own source across modules.
 
 ## Kept for `M4.1.7`
 

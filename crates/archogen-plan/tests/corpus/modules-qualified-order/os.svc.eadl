@@ -1,0 +1,6 @@
+(eadl-version eadl/1)
+(defmodule os.svc
+  (version 1 0)
+  (export h1 h2)
+  (defservice h1 (requires (needs interrupt-source) (available-in-state idle)))
+  (defservice h2 (requires (needs interrupt-source) (available-in-state sleep))))

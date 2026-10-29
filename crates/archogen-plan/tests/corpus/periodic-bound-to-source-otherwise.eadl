@@ -1,6 +1,6 @@
 (eadl-version eadl/1)
-; A periodic task bound to `dev.e`, an interrupt source, for a fact that is not `interrupt-source` (observable-output):
-; does §1's "a periodic task bound to an interrupt source itself" refuse it?
+; Round 15: A periodic task bound to `dev.e`, an interrupt source, for a fact that is not `interrupt-source`
+; (observable-output): does §1's "a periodic task bound to an interrupt source itself" refuse it?
 (defblock dev.e
   (offers (interrupt-source true) (min-arrival-separation 20 ms) (observable-output true) (reachable-at-privilege machine)))
 (defplatform soc.e

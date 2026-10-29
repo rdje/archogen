@@ -1,0 +1,6 @@
+(eadl-version eadl/1)
+(defmodule src.one
+  (version 1 0)
+  (export dev.a)
+  (defblock dev.a
+    (offers (interrupt-source true) (min-arrival-separation 5 ms) (available-in-state run idle) (reachable-at-privilege machine))))

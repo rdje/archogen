@@ -57,6 +57,10 @@ agree crates/archogen-plan/tests/corpus/modules-instances/os.svc.eadl
 agree crates/archogen-plan/tests/corpus/modules-named/app.main.eadl
 agree crates/archogen-plan/tests/corpus/modules-named/hw.dev.eadl
 agree crates/archogen-plan/tests/corpus/modules-named/os.log.eadl
+agree crates/archogen-plan/tests/corpus/modules-qualified-order/app.main.eadl
+agree crates/archogen-plan/tests/corpus/modules-qualified-order/os.svc.eadl
+agree crates/archogen-plan/tests/corpus/modules-qualified-order/src.one.eadl
+agree crates/archogen-plan/tests/corpus/modules-qualified-order/src.two.eadl
 agree crates/archogen-plan/tests/corpus/modules-root-names/app.main.eadl
 agree crates/archogen-plan/tests/corpus/modules-root-names/hw.dev.eadl
 agree crates/archogen-plan/tests/corpus/modules/app.main.eadl

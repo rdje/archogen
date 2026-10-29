@@ -58,6 +58,10 @@
 0 - crates/archogen-plan/tests/corpus/modules-named/app.main.eadl
 0 - crates/archogen-plan/tests/corpus/modules-named/hw.dev.eadl
 0 - crates/archogen-plan/tests/corpus/modules-named/os.log.eadl
+0 - crates/archogen-plan/tests/corpus/modules-qualified-order/app.main.eadl
+0 - crates/archogen-plan/tests/corpus/modules-qualified-order/os.svc.eadl
+0 - crates/archogen-plan/tests/corpus/modules-qualified-order/src.one.eadl
+0 - crates/archogen-plan/tests/corpus/modules-qualified-order/src.two.eadl
 0 - crates/archogen-plan/tests/corpus/modules-root-names/app.main.eadl
 0 - crates/archogen-plan/tests/corpus/modules-root-names/hw.dev.eadl
 0 - crates/archogen-plan/tests/corpus/modules/app.main.eadl
