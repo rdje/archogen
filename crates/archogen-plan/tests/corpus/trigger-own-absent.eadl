@@ -1,0 +1,16 @@
+(eadl-version eadl/1)
+; A sporadic task bound itself to a source declaring its separation absent: `(unknown (absent …))` (§2.2; round
+; 27, R2).
+(defblock dev.a
+  (offers (interrupt-source true) (reachable-at-privilege machine))
+  (absent min-arrival-separation))
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.a console.uart)))
+(defservice log
+  (requires (needs observable-output)))
+(defsystem su
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs interrupt-source) (uses log))
+  (platform (uses soc)))

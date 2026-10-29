@@ -871,7 +871,10 @@ declaration written as a block in one description and as a service in its twin, 
 description holding both is refused; and several names each declared more than once. Round 26 adds a sporadic task
 reaching two sources' handlers, and its twin with the task's own `(needs interrupt-source)`; a sporadic task reaching no
 source, and its twin with that clause; a task naming a policy and a block that each handle a source, which the search
-binds to the one of two sources whose separation is stated; and a platform taking an expiry two tasks name. A
+binds to the one of two sources whose separation is stated; and a platform taking an expiry two tasks name. Round 27
+adds a sporadic task reaching a fast and a slow source's handlers, and its twin whose own `(needs interrupt-source)` the
+search binds to the fast one; a task bound itself to a source faster than it, to one declaring its separation absent,
+and to one stating none; and a task bound itself to a source's block and through an epoch extender to its counter. A
 description the language's check refuses is no input (§1), and its probe is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan

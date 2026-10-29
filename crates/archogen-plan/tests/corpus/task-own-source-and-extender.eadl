@@ -1,0 +1,21 @@
+(eadl-version eadl/1)
+; A sporadic task bound itself to a source's block, and through an epoch extender to the same block's counter,
+; naming the block too: on a source route and a timer route at once (§2.2, §2.5, §2.6; round 27, R2).
+(defblock dev.x
+  (offers
+    (interrupt-source true)
+    (min-arrival-separation 20 ms)
+    (relative-delay true)
+    (counter-modulus 65536)
+    (tick-rate 10 MHz)
+    (wrap-behavior modular)
+    (observation-coherent true)
+    (channels 1 tick)
+    (reachable-at-privilege machine)))
+(defplatform soc.x
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.x)))
+(defsystem oe
+  (task s (min-separation 20 ms) (deadline 20 ms) (deadline-from release) (priority 1)
+    (needs interrupt-source counter-width tick-rate observation-coherent) (uses dev.x))
+  (platform (uses soc.x)))

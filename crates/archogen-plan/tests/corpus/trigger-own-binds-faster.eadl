@@ -1,0 +1,17 @@
+(eadl-version eadl/1)
+; `trigger-several-fast-slow` with the task's own `(needs interrupt-source)`: the search binds the faster source,
+; `(unknown (faster …))`, until `M4.1.2`'s rule 8 refuses it (§2.2, `RTP-H24`; round 27, D1).
+(defblock dev.a
+  (offers (interrupt-source true) (min-arrival-separation 5 ms) (reachable-at-privilege machine)))
+(defblock dev.b
+  (offers (interrupt-source true) (min-arrival-separation 30 ms) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.a dev.b)))
+(defservice ha
+  (requires (needs interrupt-source) (min-arrival-separation (at-least 25 ms))))
+(defservice hb
+  (requires (needs interrupt-source)))
+(defsystem sv
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs interrupt-source) (uses ha hb))
+  (platform (uses soc)))

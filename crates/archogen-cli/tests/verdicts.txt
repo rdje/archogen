@@ -157,6 +157,7 @@
 0 - crates/archogen-plan/tests/corpus/task-extender.eadl
 0 - crates/archogen-plan/tests/corpus/task-names-unbound-block.eadl
 0 - crates/archogen-plan/tests/corpus/task-on-route-bound-otherwise.eadl
+0 - crates/archogen-plan/tests/corpus/task-own-source-and-extender.eadl
 0 - crates/archogen-plan/tests/corpus/task-policy.eadl
 0 - crates/archogen-plan/tests/corpus/task-reaches-platform.eadl
 0 - crates/archogen-plan/tests/corpus/task-source.eadl
@@ -164,6 +165,11 @@
 0 - crates/archogen-plan/tests/corpus/tightest-bound.eadl
 0 - crates/archogen-plan/tests/corpus/transitive-users.eadl
 0 - crates/archogen-plan/tests/corpus/trigger-faster.eadl
+0 - crates/archogen-plan/tests/corpus/trigger-own-absent.eadl
+0 - crates/archogen-plan/tests/corpus/trigger-own-binds-faster.eadl
+0 - crates/archogen-plan/tests/corpus/trigger-own-faster.eadl
+0 - crates/archogen-plan/tests/corpus/trigger-own-unstated.eadl
+0 - crates/archogen-plan/tests/corpus/trigger-several-fast-slow.eadl
 0 - crates/archogen-plan/tests/corpus/trigger-several-mixed.eadl
 0 - crates/archogen-plan/tests/corpus/trigger-several-own-binding.eadl
 0 - crates/archogen-plan/tests/corpus/trigger-several.eadl
