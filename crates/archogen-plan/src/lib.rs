@@ -220,8 +220,10 @@ struct Timing {
 /// §1's refusals, in its order: a record that does not read; that names another program, system, catalog or profile;
 /// that does not rebuild, or that the generator's own joint rules refuse; a task's release or deadline the language's
 /// check should have refused — none stated, not a time, a zero release separation, a periodic task bound to an interrupt
-/// source itself; and what `/1` cannot lower — placement memory, a system with no task, a deadline measured from an
-/// event other than the release, an alarm or an expiry a task or the system's own level would receive. Then §2.4's: an
+/// source itself; a declaration or a task the system serves naming a system; a block or a platform the system serves
+/// naming what is not hardware; and what `/1` cannot lower — a duration past the exact arithmetic, placement memory, a
+/// system with no task, a deadline measured from an event other than the release, an alarm or an expiry a task or the
+/// system's own level would receive, a block or a platform the system serves outside its hardware. Then §2.4's: an
 /// obliged value that is not a duration.
 #[allow(clippy::too_many_lines)]
 pub fn lower(

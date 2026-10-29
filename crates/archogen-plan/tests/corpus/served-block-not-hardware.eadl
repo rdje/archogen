@@ -1,6 +1,6 @@
 (eadl-version eadl/1)
 ; A block a service names, served but not the system's hardware, bound for requirements of its own: a node (§2; round
-; 13, remark 2).
+; 13, remark 2) until round 20 (D3) refused it, a block the system serves outside its hardware (§1).
 (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
 (defblock blk
   (offers (core-count 1 tick) (reachable-at-privilege machine))
