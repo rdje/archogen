@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-27`
 - **Status:** `active` — the design for leaf `M4.1`, under independent review (`M4.1.1`) before any code relies on it;
-  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 27 answered; from round 7 it is
+  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 28 answered; from round 7 it is
   reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
 - **Owner / source:** leaf `M4.1.1` (`docs/tasks/M4.md`); `ROADMAP.md` §4.2's component `archogen-plan`, §7.3, §7.5,
   §7.6, §10.1 step 5 and §10.3; model §8 rules 4, 5, 7, 8, 10, 12 and 15; the obligations `M3.3.8`, `M3.5`, `M3.5.5.7.3`
@@ -211,24 +211,26 @@ timer route and a source, and a block may be named `timer`:
      - for a task with a minimum separation, the source it is bound to itself for `interrupt-source` met by `true`,
        where it is bound to one — "a source of interrupts a service can be released by" (the vocabulary) — and otherwise
        the external source whose route names the task or a requester it reaches (model §8 rule 8). The plan writes
-       `(source NAME every)` when the source's stated separation is at least the task's. The search binds a task's own
-       source with no regard to its separation until `M4.1.2`'s rule 8 refuses one the analysis's condition 5 does not
-       admit (`RTP-H24`), so the task's own `(needs interrupt-source)` releases it on every arrival only where the
-       source bound is at least as far apart as the task. Every arrival then releases the task, and the releases are as
-       far apart as the task states. The analysis asks "whether every arrival releases the task"
-       (`crates/rt-analysis/src/runtime.rs`). Read from the routes, the trigger is an inference, which the description
-       cannot state until `M1.44` gives it a clause (`RTP-H19`), so the build reports it (`RTP-H1`);
+       `(source NAME every)` when the source's stated separation is at least the task's. Every arrival then releases the
+       task, and the releases are as far apart as the task states. The analysis asks "whether every arrival releases the
+       task" (`crates/rt-analysis/src/runtime.rs`). The search binds a task's own source with no regard to its
+       separation until `M4.1.2`'s joint rules refuse one the analysis does not admit for it (`RTP-H24`), so the task's
+       own `(needs interrupt-source)` releases it on every arrival only where the source bound is at least as far apart
+       as the task. Read from the routes, the trigger is an inference, which the description cannot state until `M1.44`
+       gives it a clause (`RTP-H19`), so the build reports it (`RTP-H1`);
      - `(unknown CAUSE)` otherwise, the cause written so that `RTP-H1` maps each to its code and no consumer re-derives
        this rule: `unreached` where the task binds no source itself and no source's route reaches it; `(several ITEM
        …)`, each source by its text, where several do; and for its one source `(unstated ITEM)` where it states no
        separation, `(absent ITEM)` where it declares it absent, `(faster ITEM)` where it states one shorter than the
-       task's. In short: where the task binds no source itself and no source's route reaches it, or several do, where
-       the source states no separation or declares it absent, or where it states one shorter than the task's. A timer
-       route releases no task. In the last case the source can arrive faster than the task says it is released, and
-       nothing says which arrivals release it, so the trigger is owed to the description. The scheduling checker reports
-       or refuses such a task as `RTP-H4` maps its cause, never analysing it on an assumed release, which the analysis
-       as built admits for a release on some arrivals only (`crates/rt-analysis/src/runtime.rs`), and the build refuses
-       the plan (`RTP-H1`).
+       task's, each written `(own-unstated ITEM)`, `(own-absent ITEM)` or `(own-faster ITEM)` where that source is the
+       one the task binds itself, since the task's own `(needs interrupt-source)` repairs a source the routes leave and
+       not one it binds itself (`RTP-H1`; R28-D2). In short: where the task binds no source itself and no source's route
+       reaches it, or several do, where the source states no separation or declares it absent, or where it states one
+       shorter than the task's. A timer route releases no task. In the last case the source can arrive faster than the
+       task says it is released, and nothing says which arrivals release it, so the trigger is owed to the description.
+       The scheduling checker reports or refuses such a task as `RTP-H4` maps its cause, never analysing it on an
+       assumed release, which the analysis as built admits for a release on some arrivals only
+       (`crates/rt-analysis/src/runtime.rs`), and the build refuses the plan (`RTP-H1`).
 
    **Durations** are exact. Each is one reduced rational number of seconds, `N s` or `N/D s`, with `D > 1` and `N` and
    `D` coprime, so that `1.5 ms`, `1.50 ms` and `1500 us` are one text. `N` and `D` lie within the engine's exact
@@ -541,7 +543,8 @@ sign and no leading zero.
   description can write.
 - `POLICY` is written as the description writes it.
 - `TRIGGER` is `timer`, `(source NAME every)` or `(unknown CAUSE)`, `CAUSE` one of `unreached`, `(several ITEM
-  …)`, `(unstated ITEM)`, `(absent ITEM)` or `(faster ITEM)`, each `ITEM` a source.
+  …)`, `(unstated ITEM)`, `(absent ITEM)`, `(faster ITEM)`, `(own-unstated ITEM)`, `(own-absent ITEM)` or
+  `(own-faster ITEM)`, each `ITEM` a source.
 - `NODE` is a node's text, and `NODEKIND` one of `block`, `platform`, `instance`, `service` or `policy`.
 - `OBLIGED` is `(obliged FACT DUR)`, or `(obliged FACT)` for a fact offered bare.
 - A list with no members is written with its head alone: `(uses)`, `(releases)`, `(requesters)`, `(costs)`.
@@ -831,51 +834,10 @@ service by `needs`; a task naming a policy; a task bound to a device directly; t
 a sporadic task that also reaches an alarm; two sources of one separation; an extender over a provider raising both
 kinds; a service two systems use; and the refused: a task serving `deadline-over-delay` directly, a task and the
 system's level each programming an alarm themselves, a deadline measured from another event, and a periodic task bound
-to a source itself. Round 7 adds a task naming a block; a task reaching a channel through a service, and one through a
-policy; a frequency where a duration is due; a system with no task; a service bound to one provider for a source and,
-through an extender, for its counter; a release jitter and `skip-late-job`; every rank class in one system; two
-instances' costs on one route; the system's own level served by a shared extender; contexts spreading two services deep;
-placement memory; an expiry to the system's own level; and each of §1's refusals of a record. Round 8 adds a source's
-handler and a task sharing a channel, two handlers sharing one, and a policy taking one; the tightest obliged bound; a
-sporadic task reaching only an alarm; a zero release separation; a module tree; and records that bind an instance no
-requester is bound to, or another requester's exclusive instance, which do not rebuild. Round 9 adds services named with
-`/`; callers on a node's own route; a lone user; policies handling a source and taking an expiry; a platform raising a
-source; a zero deadline and a jitter past the period; co-applying refusals; a record the relation does not satisfy; and
-a plan with no node. Round 10 adds `uses` cycles through a node's own route, durations past the exact arithmetic, a zero
-source separation, and two ill-formed tasks. Round 11 adds blocks requiring an alarm and an output, several receivers of
-interrupt code, and systems named by `uses`. Round 12 adds blocks and platforms with requirements nothing binds to, an
-alarm, an expiry and a source handled by hardware, composition that is no call, a separation whose spellings overflow,
-several durations past the arithmetic at once, and a bare separation. Round 13 adds hardware naming a service by `uses`
-or `needs`, and a block by `needs`; a block bound to itself, and a deadline adapter over its own block; a block whose
-one requirement is its level's; a block only a service names (refused since round 20, outside the hardware), and a
-service only composed; and the naming order. Round 14 adds names one of which prefixes another, in both naming refusals;
-hardware on another system's platform naming a system; and a provider whose own requirement is bound to the node that
-takes its channel, calling it on that node's own route. Round 15 adds a task, the system's own level and a service that
-a timer route names, bound to its provider for a fact that takes no channel; a periodic task bound to a source for
-another fact; a cycle through an instance and its device; and a cascade of two sources' routes. Round 16 adds durations
-past the arithmetic at a platform, a policy and the system's own level; a service bound to a block offering
-`absolute-deadline` directly; a composite bound to its part, under two names; and a sporadic task bound to its own
-source beside another source's handler. Round 17 adds a service and a policy naming a block, under two names; a served
-block named by a renamed service (refused since round 20, outside the hardware); and a node shared between a job and a
-source's service. Round 18 adds a block a service, a source's handler and a task name while nothing binds it. Round 19
-adds such a block bound by another system's requester or once by an unrelated one; a named block taking a timer's
-channel; named hardware running in a timer route's interrupt through an expiry; and a module tree whose handler names a
-block of a second instance, which round 20 found outside the system's hardware and refused. Round 20 adds two tasks
-naming a composite whose part takes a channel; a service naming a block on no platform, refused; a module tree whose
-root's handler names the system's own block across modules; and a sporadic task calling its source's device through a
-policy's name. Round 21 adds one service two systems name, inside one's hardware and outside the other's; and a source
-declaring its separation absent that releases no task. Round 23 adds two tasks of one name, refused; a service naming
-itself; and a module tree with two instances on one route, a source and a service two jobs share. Round 24 adds two
-systems alike but for which task names a block; two alike but for which task reaches a faster source's block; one
-declaration written as a block in one description and as a service in its twin, each a node of its kind, since one
-description holding both is refused; and several names each declared more than once. Round 26 adds a sporadic task
-reaching two sources' handlers, and its twin with the task's own `(needs interrupt-source)`; a sporadic task reaching no
-source, and its twin with that clause; a task naming a policy and a block that each handle a source, which the search
-binds to the one of two sources whose separation is stated; and a platform taking an expiry two tasks name. Round 27
-adds a sporadic task reaching a fast and a slow source's handlers, and its twin whose own `(needs interrupt-source)` the
-search binds to the fast one; a task bound itself to a source faster than it, to one declaring its separation absent,
-and to one stating none; and a task bound itself to a source's block and through an epoch extender to its counter. A
-description the language's check refuses is no input (§1), and its probe is held at that check's verdict.
+to a source itself. Every later round's probes the lowering decides are fixtures too, each one's comment naming its
+round, listed round by round in the review history's "The corpus, round by round"
+(`docs/reviews/decision_runtime-plan-reviews.md`). A description the language's check refuses is no input (§1), and its
+probe is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with
@@ -897,9 +859,10 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
   block's or a platform's `uses` or `needs` — and the interrupts whose context holds it, but for its own timer route —
   at the provider whose channel it takes, or that the instance whose channel it takes programs — where nothing else that
   route runs reaches it, never another system's, nor the node itself by a name of itself; rule 7 still resolves system
-  by system. Rule 8's routes are one for each provider and kind, as `joint.rs` keys them, and its enabled set is §2.5's;
-  it refuses an assignment binding a sporadic task's own `interrupt-source` to a source the analysis's condition 5 does
-  not admit (`RTP-H24`). Rule 12 records this engine's answer, one phase, counts among its nodes a block or a platform
+  by system. Rule 8's routes are one for each provider and kind, as `joint.rs` keys them, and its enabled set is §2.5's,
+  a route staying an obligation, never a finding; beside rule 9's judgement of callers, the joint rules refuse an
+  assignment binding a sporadic task's own `interrupt-source` to a source the analysis does not admit for it, with the
+  codes `RTP-H24` names. Rule 12 records this engine's answer, one phase, counts among its nodes a block or a platform
   the system serves that is bound for requirements of its own (done by `M4.1.15`) or that a served task, service or
   policy names (done by `M4.1.18`) (§2), keeps a binding's edge across composition (done by `M4.1.16`), and gives an
   edge from a block or a platform a service or a policy names to that namer (done by `M4.1.17`), none from a node to
@@ -971,11 +934,11 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 <!-- machine-read: handoffs -->
 | Id | Leaf | Obligation |
 | --- | --- | --- |
-| `RTP-H1` | `M4.2` | The emitter moves `archogen build` onto the runtime plan for the hosted playground, its faces in step on the command line, the engine API and the [MCP](../book/src/ledger.md#mcp-specification) tool, the enabled set configured as the plan writes it and the routes' ranks realized as the order the simulated controller takes them in, each source trigger the plan infers reported, a plan holding a task released by `(unknown CAUSE)` refused naming the task and its cause (`missing-fact` for `unreached`, `(several ITEM …)` and `(unstated ITEM)`, each repaired by a clause the description adds — the task's own `(needs interrupt-source)` for the first two, where the source the search binds for it is at least as far apart as the task, which no clause of `eadl/1` can require and `RTP-H24` makes the joint rules require, and the source's separation for the third; otherwise `unsupported-profile` — `(faster ITEM)` and `(absent ITEM)`, whose stated facts let the source arrive more often than the task is released — since `eadl/1` cannot say which arrivals release it), each job an engine-owned empty body that the release trace alone observes until `M4.12`'s inputs give it code, the build saying it runs no application code, the scheduler built with `from_eadl_ranks` and its slot held to the plan's index, and S0's `whole-millisecond-periods` and the profile's "one execution context runs at a time" discharged. |
+| `RTP-H1` | `M4.2` | The emitter moves `archogen build` onto the runtime plan for the hosted playground, its faces in step on the command line, the engine API and the [MCP](../book/src/ledger.md#mcp-specification) tool, the enabled set configured as the plan writes it and the routes' ranks realized as the order the simulated controller takes them in, each source trigger the plan infers reported, a plan holding a task released by `(unknown CAUSE)` refused naming the task and its cause (`missing-fact` for every cause the routes leave — `unreached`, `(several ITEM …)`, `(faster ITEM)`, `(absent ITEM)` and `(unstated ITEM)` — each repaired by the task's own `(needs interrupt-source)` where the source the search binds for it is at least as far apart as the task, which `RTP-H24` makes the joint rules require, and `(unstated ITEM)` by stating its separation too; `missing-fact` for `(own-unstated ITEM)`, repaired by stating the separation of the source the task binds itself; and `unsupported-profile` for `(own-faster ITEM)` and `(own-absent ITEM)`, which the analysis refuses under its conditions 5 and 3 and `RTP-H24` makes the search refuse), each job an engine-owned empty body that the release trace alone observes until `M4.12`'s inputs give it code, the build saying it runs no application code, the scheduler built with `from_eadl_ranks` and its slot held to the plan's index, and S0's `whole-millisecond-periods` and the profile's "one execution context runs at a time" discharged. |
 | `RTP-H2` | `M4.2` | The generated code realizes the adapters' and the multiplexed nodes' obligations, initialises no component member by calling another's code, never waits on an interrupt in initialisation, and states each cost's terms, each multiplexed node's overhead, each bound an obliged fact offered bare leaves to it, the contexts each node's code supports, and each other value the runtime plan owes to the realization, each bound with `ROADMAP.md` §7.3's record of a bound, its evidence category among it; and no node's code calls another node's code but along the plan's reaching, never along a block's or a platform's composition; and each node's code is generated by the kind its `(node …)` line writes, never read from the description. |
 | `RTP-H3` | `M4.2` | The emitter accepts a runtime plan only by lowering it again from the same inputs and comparing bytes, and marks a plan whose acceptance was taken as text experimental. |
-| `RTP-H4` | `M2.21.2` | After `M4.1.4` has written the runtime plan's goldens, the scheduling checker reads the plan with a reader of its own held to them and maps it onto the analysis's inputs: each enabled interrupt given an identifier of its own kind, so that no two share one, and no source declared for a timer route, so that its interrupt is refused as unmodeled load; where an input the analysis needs is unknown, unstated or owed, the analysis reported inconclusive, naming it, never run on a default, and a source whose separation the plan writes `absent` refused `unsupported-profile` under the variant's condition 3, naming it, as a stated zero is; a task released by `(unknown CAUSE)` mapped as `RTP-H1` maps its cause — `unreached`, `(several ITEM …)` and `(unstated ITEM)` reported inconclusive, naming the task, its cause, the owed `trigger` and the clause `RTP-H1` names as its repair, and `(faster ITEM)` and `(absent ITEM)` refused `unsupported-profile`, naming the task and its cause — never analysed on an assumed release; each term `M4.1.6` designs, a timer route's charge and a multiplexed node's overhead among them, charged once it exists; a refusal under the plan's source order worded as one another order may admit, and an order searched with Audsley's algorithm over a bound counting each source ahead at its no-loss limit, one it finds confirmed with the composition and named as the repair. |
-| `RTP-H5` | `M4.12` | The application inputs have a format — each task's entry point; its execution bound, its OS calls with their counts, its calls into nodes — only into those its task line's `uses` lists and its own `bind` lines name, a node past them called through that node's code (§2), with the most one job makes into each — its masked runs and its stack bound, each with `ROADMAP.md` §7.3's record of a bound and its evidence category a fact of its own; its task facts, declarations that it masks only through the runtime API and that its own figures hold under any preemption and from any entry state, and the application's `leaves-interrupt-hardware-alone` — that `archogen-runtime-plan/2` carries. |
+| `RTP-H4` | `M2.21.2` | After `M4.1.4` has written the runtime plan's goldens, the scheduling checker reads the plan with a reader of its own held to them and maps it onto the analysis's inputs: each enabled interrupt given an identifier of its own kind, so that no two share one, and no source declared for a timer route, so that its interrupt is refused as unmodeled load; where an input the analysis needs is unknown, unstated or owed, the analysis reported inconclusive, naming it, never run on a default, and a source whose separation the plan writes `absent` refused `unsupported-profile` under the variant's condition 3, naming it, as a stated zero is; a task released by `(unknown CAUSE)` mapped as `RTP-H1` maps its cause — every cause but `(own-faster ITEM)` and `(own-absent ITEM)` reported inconclusive, naming the task, its cause, the owed `trigger` and the clause `RTP-H1` names as its repair, and those two refused `unsupported-profile`, naming the task and its cause, a source the plan writes `absent` refused under condition 3 as above whatever releases the task — never analysed on an assumed release; each term `M4.1.6` designs, a timer route's charge and a multiplexed node's overhead among them, charged once it exists; a refusal under the plan's source order worded as one another order may admit, and an order searched with Audsley's algorithm over a bound counting each source ahead at its no-loss limit, one it finds confirmed with the composition and named as the repair. |
+| `RTP-H5` | `M4.12` | The application inputs have a format — each task's entry point; its execution bound, its OS calls with their counts, its calls into nodes — only into those its task line's `uses` lists and its own `bind` lines name, a node past them called through the code of a node those lines name (§2), with the most one job makes into each — its masked runs and its stack bound, each with `ROADMAP.md` §7.3's record of a bound and its evidence category a fact of its own; its task facts, declarations that it masks only through the runtime API and that its own figures hold under any preemption and from any entry state, and the application's `leaves-interrupt-hardware-alone` — that `archogen-runtime-plan/2` carries. |
 | `RTP-H6` | `M4.10` | The catalog records state what the runtime plan owes them — supported contexts, an initialisation entry that never waits on an interrupt and names any other component member's code it calls, and each source's service cost — amending the catalog record's §12 and §14.4, and the image is checked: no initialisation step waits on an interrupt, and no component member's initialisation calls another member's code. |
 | `RTP-H7` | `M4.7` | The build's metadata carries the runtime plan's sha256 and its provenance, the whole lock data of `ROADMAP.md` §10.3 is written, `--locked` is honoured, and S0's `no-lock-data` is discharged. |
 | `RTP-H8` | `M4.4.1` | A system's devices are put in correspondence with a target's — which target device each system device is, by a rule the lowering of `archogen-runtime-plan/2` reads — before `M4.1.7` designs that format. |
@@ -989,12 +952,12 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 | `RTP-H16` | `M1.45` | The description check refuses, where the description states it, a quantity whose value in its dimension's base unit lies past the engine's exact arithmetic, `unsupported-profile`, any declaration's alike — a task clause's, a block's, a platform's, a service's, a policy's or a system's own level's — and a source's `min-arrival-separation` of zero, `invalid-description`. |
 | `RTP-H17` | `M1.46` | The description check refuses `invalid-description` a `uses` or `needs` naming a system, naming both. |
 | `RTP-H18` | `M1.47` | Model §8 rules 1 and 7 state that a block's or a platform's `uses` and `needs` name only hardware, and the description check refuses `invalid-description` an operand that is neither a block nor a platform, naming both. |
-| `RTP-H19` | `M1.44` | A description states a sporadic task's release source and whether every arrival releases the task, and the runtime plan reads that statement in place of the search's choice for the task's own `interrupt-source` and of its inference from the routes the task reaches. |
+| `RTP-H19` | `M1.44` | A description states a sporadic task's release source and whether every arrival releases the task, and the runtime plan reads that statement in place of the search's choice for the task's own `interrupt-source` and of its inference from the routes the task reaches, `RTP-H24`'s refusal applying only where it says every arrival does. |
 | `RTP-H20` | `M3.4` | The search reads a system's side whole, its own level's constraints with its tasks', as model §7 rule 4 and §8 rule 1 read it, and refuses `invalid-description` constraints on one fact that no value satisfies together across them, so that the configuration checker refuses no record the search writes for that reason and the runtime plan's bounded checker's class of such records empties. |
 | `RTP-H21` | `M3.4` | The search refuses a module tree's declaration whose name is a vocabulary fact, as it refuses a plain description's and as the configuration checker does (`SR-H4`), so that the configuration checker refuses no record the search writes for such a tree. |
 | `RTP-H22` | `M1.49` | Model §8 rule 7 decides whether a service's or a policy's `uses` or `needs` naming a block or a platform no `platform` clause, the system's own names or its tasks' bring in is a path into the system's hardware or, as rule 7 treats a binding to hardware outside a system, a conflict of each system that serves it, `infeasible-configuration` as that binding is, its repair to compose the hardware into the system's platform or to name hardware the platform composes, naming the namer, the hardware and the system; until then the runtime plan's lowering refuses a system serving a block or a platform outside its hardware `unsupported-profile`. |
 | `RTP-H23` | `M1.50` | The description check refuses `invalid-description` two tasks of one system carrying one name, naming both, as the reference's §7 rule 6 refuses two declarations of one name. |
-| `RTP-H24` | `M4.1.2` | Model §8 rule 8 refuses an assignment binding a sporadic task's own `interrupt-source` to a source the analysis's condition 5 does not admit — "a task released on every arrival of a source has T ≤ T_s" (`crates/rt-analysis/src/runtime.rs`) — a conflict where the source's `min-arrival-separation` is shorter than the task's `min-separation` or declared absent, an unknown where it is unstated, as rule 9 judges a level, in the model, the generator's joint rules and the checker's, so that the search, judging complete assignments in order, binds one at least as far apart where the description offers one and otherwise refuses naming the task and the source. |
+| `RTP-H24` | `M4.1.2` | The joint rules (model §8), beside rule 9's judgement of callers, refuse an assignment binding a sporadic task's own `interrupt-source` to a source the analysis does not admit for it — `unsupported-profile` where the source's `min-arrival-separation` is shorter than the task's `min-separation`, against condition 5's "a task released on every arrival of a source has T ≤ T_s" (`crates/rt-analysis/src/runtime.rs`), where it is declared absent, as `RTP-H4` refuses it under condition 3, and where the exact arithmetic cannot decide the comparison, as model §7 rule 4 holds; `missing-fact` where it is unstated — the route rule 8 reports staying an obligation, never a finding; in the model, the generator's joint rules and the checker's, so that the search, judging complete assignments in order, binds one at least as far apart where the description offers one and otherwise refuses naming the task and the source; the refusal applying where the task is released on every arrival, as every task is until `M1.44`'s clause lets a description say otherwise (`RTP-H19`). |
 
 `M4.12` is filed with this record, for the application inputs, and `M4.4.1` for the correspondence.
 

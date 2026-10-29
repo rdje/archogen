@@ -860,6 +860,84 @@ holds a level (R27-D1). Declined: each task's reach set written in the plan (R27
 
 Round 26's answers: R26-D1 partly (R27-D1); R26-D2 held, its wording two ways (R27-R1); the rest held.
 
+## Round 28 — `2026-10-29`: not acceptable, 9 findings
+
+The code faithful on every section and probe; a sweep of every tracked description, 198 records the checker accepted;
+both defects in the verdict codes of a source faster than its task, the fifth round on that mapping, settled here by
+one rule over every cause rather than another case.
+
+**Fence.** No breach: three calls ran `cd` before the export line, its paths the same absolute ones.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R28-D1 | defect | `RTP-H24` calls a faster or an absent own source a conflict, so `infeasible-configuration`, where the analysis it quotes refuses the same fact `unsupported-profile` and `RTP-H1` maps it so | `RTP-H24` names its codes: `unsupported-profile` for a shorter or an absent separation (conditions 5 and 3) and a comparison the exact arithmetic cannot decide (model §7 rule 4), `missing-fact` for an unstated one; requoted in `M4.1.2` |
+| R28-D2 | defect | a `(faster …)` the routes leave is refused with no repair, yet the task's own `(needs interrupt-source)` repairs it as it repairs `(several …)` (`p1`, `p2`), R26-D1 again | One rule: every cause the routes leave `missing-fact`, repaired by the task's own clause under `RTP-H1`'s condition; the task's own source written apart, `(own-faster …)`, `(own-absent …)`, `(own-unstated …)` (§2.2, §3), the first two `unsupported-profile`, the third `missing-fact`; an absent source still refused under condition 3 whatever releases the task (`RTP-H4`); requoted in `M4.2` and `M2.21.2`; the code and the bounded reading follow (`M4.1.4`, `M4.1.13`) |
+| R28-R1 | remark | `RTP-H24` builds "every arrival" into the rule, and nothing says it yields once `M1.44` lets a description say otherwise | `RTP-H24` applies where the task is released on every arrival; `RTP-H19` and `M1.44`'s goal say so |
+| R28-R2 | remark | rule 8's "A route is an obligation, never a finding" against a refusal placed in rule 8 | The refusal beside rule 9's judgement of callers, a route staying an obligation (§4's `.2`, `RTP-H24`, `M4.1.2`) |
+| R28-R3 | remark | `RTP-H5`'s "through that node's code" has no clear antecedent | "through the code of a node those lines name"; requoted in `M4.12` |
+| R28-R4 | remark | D2's pairs, two tasks bound themselves to one source, and a source device taking a channel its own task's job reaches, held by no fixture | Added (`M4.1.4`) |
+| R28-R5 | remark | a list operand in a task's `needs` the check accepts and the search refuses confirms `RTP-H1`'s "no clause of `eadl/1` can require" | — (R26-R3's) |
+| R28-R6 | remark | R27-R3's three unreachable rules, and no other | — |
+| R28-R7 | remark | the bounded checker cannot see D1 or D2, codes not plan lines | The cause written apart is a plan line it reads (`M4.1.13`) |
+
+Better decisions, taken: one verdict per cause in every consumer (R21-D1, R26-D1), the cause saying which source it
+names so that no consumer re-derives §2.2 (R24-R1); `ROADMAP.md` §5.5's split for `RTP-H24`'s codes, a release on some
+arrivals only being outside implemented semantics, as AUTOSAR's SWS_Os_00465 serves a faster source by enforcing its
+inter-arrival time; `RTP-H24` kept a joint rule the checker re-judges, never a selection preference.
+
+Round 27's answers: R27-D1 partly (R28-D1, R28-D2); R27-R1 held, its wording loose (R28-R3); the rest held.
+
+## The corpus, round by round
+
+Moved whole from the record's §3 on `2026-10-29` (round 28's answer), under the decisions ceiling: the probe systems
+each round from the seventh added to `crates/archogen-plan/tests/corpus/`, beside the first set §3 names. Each later
+round's are added here.
+
+Round 7 adds a task naming a block; a task reaching a channel through a service, and one through a policy; a frequency
+where a duration is due; a system with no task; a service bound to one provider for a source and, through an extender,
+for its counter; a release jitter and `skip-late-job`; every rank class in one system; two instances' costs on one
+route; the system's own level served by a shared extender; contexts spreading two services deep; placement memory; an
+expiry to the system's own level; and each of §1's refusals of a record. Round 8 adds a source's handler and a task
+sharing a channel, two handlers sharing one, and a policy taking one; the tightest obliged bound; a sporadic task
+reaching only an alarm; a zero release separation; a module tree; and records that bind an instance no requester is
+bound to, or another requester's exclusive instance, which do not rebuild. Round 9 adds services named with `/`; callers
+on a node's own route; a lone user; policies handling a source and taking an expiry; a platform raising a source; a zero
+deadline and a jitter past the period; co-applying refusals; a record the relation does not satisfy; and a plan with no
+node. Round 10 adds `uses` cycles through a node's own route, durations past the exact arithmetic, a zero source
+separation, and two ill-formed tasks. Round 11 adds blocks requiring an alarm and an output, several receivers of
+interrupt code, and systems named by `uses`. Round 12 adds blocks and platforms with requirements nothing binds to, an
+alarm, an expiry and a source handled by hardware, composition that is no call, a separation whose spellings overflow,
+several durations past the arithmetic at once, and a bare separation. Round 13 adds hardware naming a service by `uses`
+or `needs`, and a block by `needs`; a block bound to itself, and a deadline adapter over its own block; a block whose
+one requirement is its level's; a block only a service names (refused since round 20, outside the hardware), and a
+service only composed; and the naming order. Round 14 adds names one of which prefixes another, in both naming refusals;
+hardware on another system's platform naming a system; and a provider whose own requirement is bound to the node that
+takes its channel, calling it on that node's own route. Round 15 adds a task, the system's own level and a service that
+a timer route names, bound to its provider for a fact that takes no channel; a periodic task bound to a source for
+another fact; a cycle through an instance and its device; and a cascade of two sources' routes. Round 16 adds durations
+past the arithmetic at a platform, a policy and the system's own level; a service bound to a block offering
+`absolute-deadline` directly; a composite bound to its part, under two names; and a sporadic task bound to its own
+source beside another source's handler. Round 17 adds a service and a policy naming a block, under two names; a served
+block named by a renamed service (refused since round 20, outside the hardware); and a node shared between a job and a
+source's service. Round 18 adds a block a service, a source's handler and a task name while nothing binds it. Round 19
+adds such a block bound by another system's requester or once by an unrelated one; a named block taking a timer's
+channel; named hardware running in a timer route's interrupt through an expiry; and a module tree whose handler names a
+block of a second instance, which round 20 found outside the system's hardware and refused. Round 20 adds two tasks
+naming a composite whose part takes a channel; a service naming a block on no platform, refused; a module tree whose
+root's handler names the system's own block across modules; and a sporadic task calling its source's device through a
+policy's name. Round 21 adds one service two systems name, inside one's hardware and outside the other's; and a source
+declaring its separation absent that releases no task. Round 23 adds two tasks of one name, refused; a service naming
+itself; and a module tree with two instances on one route, a source and a service two jobs share. Round 24 adds two
+systems alike but for which task names a block; two alike but for which task reaches a faster source's block; one
+declaration written as a block in one description and as a service in its twin, each a node of its kind, since one
+description holding both is refused; and several names each declared more than once. Round 26 adds a sporadic task
+reaching two sources' handlers, and its twin with the task's own `(needs interrupt-source)`; a sporadic task reaching no
+source, and its twin with that clause; a task naming a policy and a block that each handle a source, which the search
+binds to the one of two sources whose separation is stated; and a platform taking an expiry two tasks name. Round 27
+adds a sporadic task reaching a fast and a slow source's handlers, and its twin whose own `(needs interrupt-source)` the
+search binds to the fast one; a task bound itself to a source faster than it, to one declaring its separation absent,
+and to one stating none; and a task bound itself to a source's block and through an epoch extender to its counter.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
