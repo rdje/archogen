@@ -1094,7 +1094,7 @@ pub struct Initialization {
     /// Each edge, earlier to later, with its reason, sorted.
     pub edges: Vec<(String, String, Because)>,
     /// Each strongly connected component of more than one node, its nodes by name: a unit the engine initialises
-    /// together, in two phases where it can.
+    /// together, in one phase, its members in their texts' order (model §8 rule 12; the runtime plan's §2.7).
     pub components: Vec<Vec<String>>,
 }
 

@@ -361,8 +361,9 @@ and 14, an adapter's instance among them (rule 15) — as its check (5), written
    (`M4.1.16`) — and from each node a service or a policy names by `uses` or `needs`, a block or a platform included
    (`M4.1.17`), to that namer but to itself — a block's or a platform's own names giving none; each carries its reason.
    Nothing is refused: initialisation runs masked, before every release, so a cycle establishes no infeasibility, and
-   each strongly connected component is reported as one unit the engine initialises together, in two phases where it can
-   — whether this profile's engine can is `M4.1`'s.
+   each strongly connected component is reported as one unit the engine initialises together. This engine initialises
+   each node in one phase, a component's members in their texts' order, all before any successor, so that no member's
+   initialisation calls another member's code (`docs/decisions/decision_runtime-plan.md` §2.7; `M4.1.2.1`).
 13. **One function, one provider** (`M3.3.6`; `SR-H14`). The vocabulary names the function each fact describes, the
    operations of one device that are only valid together (§7 rule 1). One requester's bindings for the facts of one
    function are to one provider: a service reading time reads one counter. Where an assignment binds them to several,

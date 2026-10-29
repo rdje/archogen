@@ -15,7 +15,7 @@
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M4` → frontier `M4.1`, at `M4.1.1`, the runtime plan's review: `/1` for the hosted playground, rounds answered
   in `docs/reviews/decision_runtime-plan-reviews.md`; `PROGRAM` → `PROGRAM.34`, the director's.
-- **Next action:** `M4.1.2.1` (rule 12's one phase), then `.2`–`.5`; then `M2.30`, `M2.31`, `M3.4`'s
+- **Next action:** `M4.1.2.2` (rule 8, the adapters' §9, the API's words), then `.3`–`.5`; then `M2.30`, `M2.31`, `M3.4`'s
   `RTP-H20`/`RTP-H21`, `M1.49`, `M1.50`. The runtime plan's design is accepted (`M4.1.1` done).
   `M4.4.1`, the device correspondence, before `M4.1.7`. `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).

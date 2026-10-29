@@ -316,7 +316,9 @@ included, before it; a block a platform composes is part of it, so composition a
 binding between them does, as any binding does — a board whose platform and timer each need the other's facts is one
 component — and the system's own level and its tasks, which start after everything is initialised, are no nodes. Nothing
 is refused: a log that timestamps through a clock that logs its wrap forms one **component**, which the engine
-initialises as one unit, since initialisation runs with interrupts masked, before any task is released.
+initialises as one unit, since initialisation runs with interrupts masked, before any task is released. It does so in
+one pass: the component's members one after another, in the order of their names, so none of them may call another's
+code while it initialises.
 
 **One counter, read whole.** A requester's facts of one function are met by one provider. With the width offered by
 one timer and the rate by another, neither offering both, the assignment is refused:
