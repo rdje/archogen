@@ -706,6 +706,27 @@ under the variant's condition 5, `M4.1.6`'s to weigh (its leaf names it).
 
 Round 20's answers: R20-R2 partly (R21-R3); R20-R4 partly (R21-D1); the rest held.
 
+## Round 22 — `2026-10-29`: not acceptable, 7 findings
+
+The code faithful on every fixture, the checker's 86,371 plans, a sweep of every tracked description the language
+accepts — 127 plans, every record the search wrote accepted by the configuration checker — and a module tree derived
+by hand. Both defects the record's text, a sentence behind its own hand-off and `.2` behind §2.5.
+
+**Fence.** One breach by scope: a `git log -3` over the corpus's path, not limited to `6d61f65..HEAD`. It printed three
+commits inside that range, named no sealed path, and read no blob.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R22-D1 | defect | §1 says `M1.49` decides between a path into the hardware and a language refusal, where `RTP-H22` and `M1.49` hold the per-system conflict | §1 says what `RTP-H22` says |
+| R22-D2 | defect | §4 `.2` leaves out the rule 8 amendment §2.5 hands `M4.1.2`, routes by provider and kind | Said |
+| R22-R1 | remark | the lowering takes the vocabulary and the catalog from its caller and writes `adapters/1` whatever catalog it lowered with | §1 lists them as inputs, this engine's shipped ones, pinned by the generator's sha256; the production half's entry takes or checks them (`M4.1.4`) |
+| R22-R2 | remark | round 21's P02 and P03 decided by the lowering and no fixtures | Added (`M4.1.4`) |
+| R22-R3 | remark | nothing obliges a node's code to call another's only along §2's reaching, on which contexts, multiplexing and the steps rest | Owed to the realization (`RTP-H2`, requoted in `M4.2`) and checked in the image (`RTP-H13`, in `M4.10`) |
+| R22-R4 | remark | `RTP-H22`'s conflict names no code | `infeasible-configuration`, as rule 7's binding to hardware outside a system, its repair said; requoted in `M1.49` |
+| R22-R5 | remark | the checker reads the record faithfully; it holds no module tree, which the corpus's three and a probe hold | — |
+
+Round 21's answers: R21-R4 partly (R22-D1); the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
