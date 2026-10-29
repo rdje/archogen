@@ -813,6 +813,31 @@ read from the ledger's copy, its hash the same); a per-node call count beside `c
 Round 24's answers: R24-D1 held, its purpose unobliged on a job's code (R25-R1); R24-D2 and R24-R1 partly (R25-D1,
 R25-D2); R24-R4 partly (R25-R3); the rest held.
 
+## Round 26 — `2026-10-29`: not acceptable, 8 findings
+
+The code faithful on everything run — a hand-derived probe of a task, its own source, a handler naming a block that
+takes a timer's channel, line for line — and both defects in hand-off text once more.
+
+**Fence.** No breach.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R26-D1 | defect | `RTP-H1` and `RTP-H4` give `(several …)` and `unreached` two codes, though one clause, the task's own `(needs interrupt-source)`, repairs both since R16-B1, against R7-R6's "`missing-fact` where the description leaves it out" | `(several …)` with `unreached` and `(unstated …)`: `missing-fact`, inconclusive for the analysis, the repair named; `(faster …)` and `(absent …)` stay `unsupported-profile`; requoted in `M4.2` and `M2.21.2`; `M1.44`'s issue corrected |
+| R26-D2 | defect | `RTP-H5` holds a job's calls to what its `uses` reaches, leaving out the nodes it is bound to itself, which §2 and §2.6 place in its job | Every node its task reaches, through its `uses` and its `bind` lines; requoted in `M4.12` |
+| R26-R1 | remark | a test comment quotes "where several sources' routes do"; §2.2 says "or several do" | With the code (`M4.1.4`) |
+| R26-R2 | remark | whether a node's call cost spans the nodes it calls is unstated, and a node a job reaches only through another owes a cost no count multiplies | `M4.1.6`'s, its leaf asking it |
+| R26-R3 | remark | not this record's: a list operand in a task's `needs` the check accepts and the search refuses | The relation record's list-operand rule, `M3.4.7`'s interim |
+| R26-R4 | remark | the language refuses every malformed task clause probed | — |
+| R26-R5 | remark | every hand-off quoted, every source claim true | — |
+| R26-R6 | remark | round 25's two scratch probes, and this round's repaired pairs, held by no fixture | Added (`M4.1.4`) |
+
+Better decisions, taken: `ROADMAP.md` §5.5's own split, `missing-fact` where "relevant contract information is
+unavailable" and `unsupported-profile` where the "requested behavior" lies "outside implemented semantics"; OSEK's count
+of "all tasks and interrupt routines that access a resource" for a job's calls.
+
+Round 25's answers: R25-D2 held, its mapping inheriting `several` (R26-D1); R25-R1 and R25-R2 partly (R26-D2); R25-R4
+held, one comment's quote loose (R26-R1); the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
