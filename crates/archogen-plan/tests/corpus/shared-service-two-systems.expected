@@ -10,6 +10,8 @@
 (timer simulator (releases (task sa t)))
 (enabled timer)
 (interrupt-model (nesting no) (masking all))
+(node log service)
+(node uart.a block)
 (context (task sa t) job)
 (context log job initialisation)
 (context uart.a job initialisation)

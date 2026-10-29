@@ -11,6 +11,8 @@
 (route 1 (source dev.e) (separation 1/50 s) (level machine) (deliverable yes) (requesters nic) (costs))
 (enabled timer (source dev.e))
 (interrupt-model (nesting no) (masking all))
+(node dev.e block)
+(node nic block)
 (context (task bn a) job)
 (context dev.e (interrupt (source dev.e)) initialisation)
 (context nic (interrupt (source dev.e)) initialisation)

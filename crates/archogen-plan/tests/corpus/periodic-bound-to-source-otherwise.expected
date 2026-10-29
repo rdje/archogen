@@ -10,6 +10,7 @@
 (timer simulator (releases (task pb p)))
 (enabled timer)
 (interrupt-model (nesting no) (masking all))
+(node dev.e block)
 (context (task pb p) job)
 (context dev.e job initialisation)
 (step 1 dev.e)

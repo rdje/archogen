@@ -11,6 +11,8 @@
 (route 1 (timer-route timer) (separation programmed) (level machine) (deliverable yes) (requesters alarm) (costs))
 (enabled timer (timer-route timer))
 (interrupt-model (nesting no) (masking all))
+(node alarm service)
+(node timer block)
 (context (task named p) job)
 (context alarm job (interrupt (timer-route timer)) initialisation)
 (context timer job (interrupt (timer-route timer)) initialisation)

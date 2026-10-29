@@ -176,7 +176,9 @@ code it places, as `M3.3.8` asks. A node's **text** is its name as the plan writ
 is bound to as its provider, at any depth, as the joint rules take a requester's names (model §8 rule 7) — but for a
 block's or a platform's `uses` or `needs`, which names only hardware (§1) and is never a call — its `uses` composition
 (rule 1; rule 5's "`uses` alone is composition"), its `needs` a block it brings into the system's hardware (rule 7):
-hardware reaches only what its own requirements are bound to.
+hardware reaches only what its own requirements are bound to. The plan writes each node with its kind — `block`,
+`platform`, `instance`, `service` or `policy` — so that the simulator and the emitter read from it which nodes are
+devices (`RTP-H9`, `RTP-H2`), never from the description (§3's `node` lines; R24-D2).
 
 An **interrupt** is named by its kind and its provider, never by the provider alone, since one provider can raise a
 timer route and a source, and a block may be named `timer`:
@@ -200,9 +202,10 @@ timer route and a source, and a block may be named `timer`:
    - its release jitter, written as zero where none is stated: "Absent means zero, which is a claim the analysis
      relies on" (`docs/semantics/kinds/os-rt.eadl`);
    - its overrun policy, `fault` where none is stated, the profile's default (the same kind);
-   - what it names by `uses` or `needs` that is a service or a policy, each once: a fact or a block it names is no
-     member, its `bind` line saying what it is bound to. §7.3's "resource use" is these and what the bindings give
-     them;
+   - every node it names by `uses` or `needs`, each once — a service, a policy, or a block or a platform of the system's
+     hardware, whose code the name calls (`M4.1.18`) — a fact it names being no member, its `bind` line saying what it
+     is bound to, so that the plan says which job calls which node (R24-D1). §7.3's "resource use" is these and what the
+     bindings give them;
    - **what releases it**:
      - `timer` for a periodic task;
      - for a task with a minimum separation, the source it is bound to itself for `interrupt-source` met by `true`,
@@ -212,7 +215,11 @@ timer route and a source, and a block may be named `timer`:
        task, and the releases are as far apart as the task states. The analysis asks "whether every arrival releases the
        task" (`crates/rt-analysis/src/runtime.rs`). Read from the routes, the trigger is an inference, which the
        description cannot state until `M1.44` gives it a clause (`RTP-H19`), so the build reports it (`RTP-H1`);
-     - `unknown` otherwise: where the task binds no source itself and no source's route reaches it, or several do, where
+     - `(unknown CAUSE)` otherwise, the cause written so that `RTP-H1` maps each to its code and no consumer re-derives
+       this rule: `unreached` where the task binds no source itself and no source's route reaches it; `(several ITEM
+       …)`, each source by its text, where several do; and for its one source `(unstated ITEM)` where it states no
+       separation, `(absent ITEM)` where it declares it absent, `(faster ITEM)` where it states one shorter than the
+       task's. In short: where the task binds no source itself and no source's route reaches it, or several do, where
        the source states no separation or declares it absent, or where it states one shorter than the task's. A timer
        route releases no task. In the last case the source can arrive faster than the task says it is released, and
        nothing says which arrivals release it, so the trigger is owed to the description. The analysis refuses a release
@@ -453,7 +460,7 @@ timer route and a source, and a block may be named `timer`:
     | each task | `entry-point`, `execution-bound`, `execution-category`, `figures-under-preemption`, `masked-category`, `masked-runs`, `masks-only-through-api`, `os-calls`, `os-calls-category`, `stack-bound`, `stack-category`, `task-facts` | `application` |
     | the system | `leaves-interrupt-hardware-alone` | `application` |
     | each task that writes no `deadline-from` | `deadline-from` | `description` |
-    | each task whose trigger is `unknown` | `trigger` | `description` |
+    | each task whose trigger is `(unknown CAUSE)` | `trigger` | `description` |
     | each source whose separation is `unknown` | `separation` | `description` |
     | each node | `contexts`, `no-wait`, `runtime-discipline` | `realization` |
     | each node whose context line holds `job` | `call-cost`, the time one call of its code takes in a job; `masked-runs`, its code's masked runs there | `realization` |
@@ -511,6 +518,7 @@ sign and no leading zero.
 (route INT ITEM (separation DUR|unknown|absent|programmed) (level LEVEL) (deliverable yes) (requesters REQ …) (costs (INSTANCE NAME) …))
 (enabled ITEM …)
 (interrupt-model (nesting no) (masking all))
+(node NODE NODEKIND)
 (context SUBJECT CONTEXT …)
 (depends NODE NODE (because REASON …))
 (step INT NODE …)
@@ -527,7 +535,9 @@ sign and no leading zero.
 - `REFERENCE` is `(deadline-from release)`, or `(deadline-from)` where the description writes none, a form no
   description can write.
 - `POLICY` is written as the description writes it.
-- `TRIGGER` is `timer`, `(source NAME every)` or `unknown`.
+- `TRIGGER` is `timer`, `(source NAME every)` or `(unknown CAUSE)`, `CAUSE` one of `unreached`, `(several ITEM
+  …)`, `(unstated ITEM)`, `(absent ITEM)` or `(faster ITEM)`, each `ITEM` a source.
+- `NODE` is a node's text, and `NODEKIND` one of `block`, `platform`, `instance`, `service` or `policy`.
 - `OBLIGED` is `(obliged FACT DUR)`, or `(obliged FACT)` for a fact offered bare.
 - A list with no members is written with its head alone: `(uses)`, `(releases)`, `(requesters)`, `(costs)`.
 - `LEVEL` is the profile's caller level.
@@ -553,6 +563,7 @@ sign and no leading zero.
 - `(bind …)`, one for each binding of the record;
 - `(instance …)`, one for each instance;
 - `(route …)`, one for each route;
+- `(node …)`, one for each node;
 - `(context …)`, one for each task and each node;
 - `(depends …)`, one for each ordered pair of nodes an edge joins (§2.7);
 - `(step …)`, one for each component of the initialisation graph;
@@ -569,6 +580,7 @@ sign and no leading zero.
 - `route` lines by rank, starting at `1`; on a route's line, `requesters` items and `costs` items each by their text;
 - `uses` items by name;
 - `enabled` items: `timer`, then the routes by rank;
+- `node` lines by their text;
 - `context` lines by subject's text; within a line, `job`, then each `(interrupt …)` by its text, then
   `initialisation`;
 - `depends` lines by the earlier node's text, then the later's; within a line, `(binding …)` reasons by fact, then
@@ -593,6 +605,8 @@ sign and no leading zero.
 (timer simulator (releases (task heartbeat beat) (task heartbeat chime)))
 (enabled timer)
 (interrupt-model (nesting no) (masking all))
+(node console.uart block)
+(node console.write service)
 (context (task heartbeat beat) job)
 (context (task heartbeat chime) job)
 (context console.uart job initialisation)
@@ -667,6 +681,9 @@ to exactly this text, but for its two digests:
 (route 1 (timer-route timer.short) (separation programmed) (level machine) (deliverable yes) (requesters time.monotonic) (costs ((adapter epoch-extender timer.short) wake)))
 (enabled timer (timer-route timer.short))
 (interrupt-model (nesting no) (masking all))
+(node (adapter epoch-extender timer.short) instance)
+(node time.monotonic service)
+(node timer.short block)
 (context (adapter epoch-extender timer.short) job (interrupt (timer-route timer.short)) initialisation)
 (context (task short-counter beat) job)
 (context time.monotonic job initialisation)
@@ -755,6 +772,8 @@ digests:
 (route 1 (source dev.e) (separation 1/50 s) (level machine) (deliverable yes) (requesters evt) (costs))
 (enabled timer (source dev.e))
 (interrupt-model (nesting no) (masking all))
+(node dev.e block)
+(node evt service)
 (context (task sporadic s) job)
 (context dev.e job (interrupt (source dev.e)) initialisation)
 (context evt job (interrupt (source dev.e)) initialisation)
@@ -841,7 +860,9 @@ naming a composite whose part takes a channel; a service naming a block on no pl
 root's handler names the system's own block across modules; and a sporadic task calling its source's device through a
 policy's name. Round 21 adds one service two systems name, inside one's hardware and outside the other's; and a source
 declaring its separation absent that releases no task. Round 23 adds two tasks of one name, refused; a service naming
-itself; and a module tree with two instances on one route, a source and a service two jobs share. A description the
+itself; and a module tree with two instances on one route, a source and a service two jobs share. Round 24 adds two
+systems alike but for which task names a block; two alike but for which task reaches a faster source's block; a block
+and a service of one name, each a node of its kind; and several names each declared more than once. A description the
 language's check refuses is no input (§1), and its probe is held at that check's verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
@@ -938,7 +959,7 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 <!-- machine-read: handoffs -->
 | Id | Leaf | Obligation |
 | --- | --- | --- |
-| `RTP-H1` | `M4.2` | The emitter moves `archogen build` onto the runtime plan for the hosted playground, its faces in step on the command line, the engine API and the [MCP](../book/src/ledger.md#mcp-specification) tool, the enabled set configured as the plan writes it and the routes' ranks realized as the order the simulated controller takes them in, each source trigger the plan infers reported, a plan holding a task released by `unknown` refused naming the task (`missing-fact` where no source's route reaches it or its one source states no separation, `unknown`; otherwise `unsupported-profile` — a separation its one source declares `absent` among them, an unbounded source no description repairs by stating a fact — since `eadl/1` cannot say which arrivals release it), each job an engine-owned empty body that the release trace alone observes until `M4.12`'s inputs give it code, the build saying it runs no application code, the scheduler built with `from_eadl_ranks` and its slot held to the plan's index, and S0's `whole-millisecond-periods` and the profile's "one execution context runs at a time" discharged. |
+| `RTP-H1` | `M4.2` | The emitter moves `archogen build` onto the runtime plan for the hosted playground, its faces in step on the command line, the engine API and the [MCP](../book/src/ledger.md#mcp-specification) tool, the enabled set configured as the plan writes it and the routes' ranks realized as the order the simulated controller takes them in, each source trigger the plan infers reported, a plan holding a task released by `(unknown CAUSE)` refused naming the task and its cause (`missing-fact` for `unreached` and `(unstated ITEM)`; otherwise `unsupported-profile` — `(absent ITEM)` among them, an unbounded source no description repairs by stating a fact — since `eadl/1` cannot say which arrivals release it), each job an engine-owned empty body that the release trace alone observes until `M4.12`'s inputs give it code, the build saying it runs no application code, the scheduler built with `from_eadl_ranks` and its slot held to the plan's index, and S0's `whole-millisecond-periods` and the profile's "one execution context runs at a time" discharged. |
 | `RTP-H2` | `M4.2` | The generated code realizes the adapters' and the multiplexed nodes' obligations, initialises no component member by calling another's code, never waits on an interrupt in initialisation, and states each cost's terms, each multiplexed node's overhead, each bound an obliged fact offered bare leaves to it, the contexts each node's code supports, and each other value the runtime plan owes to the realization, each bound with `ROADMAP.md` §7.3's record of a bound, its evidence category among it; and no node's code calls another node's code but along the plan's reaching, never along a block's or a platform's composition. |
 | `RTP-H3` | `M4.2` | The emitter accepts a runtime plan only by lowering it again from the same inputs and comparing bytes, and marks a plan whose acceptance was taken as text experimental. |
 | `RTP-H4` | `M2.21.2` | After `M4.1.4` has written the runtime plan's goldens, the scheduling checker reads the plan with a reader of its own held to them and maps it onto the analysis's inputs: each enabled interrupt given an identifier of its own kind, so that no two share one, and no source declared for a timer route, so that its interrupt is refused as unmodeled load; where an input the analysis needs is unknown, unstated or owed, the analysis reported inconclusive, naming it, never run on a default, and a source whose separation the plan writes `absent` refused `unsupported-profile` under the variant's condition 3, naming it, as a stated zero is; each term `M4.1.6` designs, a timer route's charge and a multiplexed node's overhead among them, charged once it exists; a refusal under the plan's source order worded as one another order may admit, and an order searched with Audsley's algorithm over a bound counting each source ahead at its no-loss limit, one it finds confirmed with the composition and named as the repair. |

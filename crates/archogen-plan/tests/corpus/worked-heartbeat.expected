@@ -11,6 +11,8 @@
 (timer simulator (releases (task heartbeat beat) (task heartbeat chime)))
 (enabled timer)
 (interrupt-model (nesting no) (masking all))
+(node console.uart block)
+(node console.write service)
 (context (task heartbeat beat) job)
 (context (task heartbeat chime) job)
 (context console.uart job initialisation)

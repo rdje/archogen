@@ -11,6 +11,8 @@
 (route 1 (source dev.e) (separation 0 s) (level machine) (deliverable yes) (requesters evt) (costs))
 (enabled timer (source dev.e))
 (interrupt-model (nesting no) (masking all))
+(node dev.e block)
+(node evt service)
 (context (task zs p) job)
 (context dev.e (interrupt (source dev.e)) initialisation)
 (context evt (interrupt (source dev.e)) initialisation)

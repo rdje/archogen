@@ -1,0 +1,14 @@
+(eadl-version eadl/1)
+; Three tasks named `a` and two named `b`: more than one task of each name, refused (§1; round 24, R2).
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defsystem d3
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (task a (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2))
+  (task a (period 30 ms) (deadline 30 ms) (deadline-from release) (priority 3))
+  (task b (period 40 ms) (deadline 40 ms) (deadline-from release) (priority 4))
+  (task b (period 50 ms) (deadline 50 ms) (deadline-from release) (priority 5))
+  (platform (uses host.p)))

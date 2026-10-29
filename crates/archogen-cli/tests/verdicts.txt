@@ -36,6 +36,7 @@
 0 - crates/archogen-plan/tests/corpus/dod-unbound.eadl
 12 unsupported-profile crates/archogen-plan/tests/corpus/dup-prio.eadl
 0 - crates/archogen-plan/tests/corpus/dup-task-name.eadl
+0 - crates/archogen-plan/tests/corpus/dup-task-three.eadl
 10 read-number-overflow crates/archogen-plan/tests/corpus/duration-past-arithmetic-large.eadl
 0 - crates/archogen-plan/tests/corpus/duration-past-arithmetic.eadl
 0 - crates/archogen-plan/tests/corpus/equal-separation.eadl
@@ -76,6 +77,8 @@
 0 - crates/archogen-plan/tests/corpus/needs-svc.eadl
 0 - crates/archogen-plan/tests/corpus/no-node.eadl
 0 - crates/archogen-plan/tests/corpus/no-task.eadl
+0 - crates/archogen-plan/tests/corpus/node-kind-block.eadl
+0 - crates/archogen-plan/tests/corpus/node-kind-service.eadl
 0 - crates/archogen-plan/tests/corpus/nosep-source.eadl
 0 - crates/archogen-plan/tests/corpus/one-user-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/other-hardware-names-system.eadl
@@ -147,6 +150,8 @@
 0 - crates/archogen-plan/tests/corpus/system-uses-system.eadl
 0 - crates/archogen-plan/tests/corpus/task-alarm.eadl
 0 - crates/archogen-plan/tests/corpus/task-calls-source-device.eadl
+0 - crates/archogen-plan/tests/corpus/task-calls-t.eadl
+0 - crates/archogen-plan/tests/corpus/task-calls-u.eadl
 0 - crates/archogen-plan/tests/corpus/task-direct.eadl
 0 - crates/archogen-plan/tests/corpus/task-extender.eadl
 0 - crates/archogen-plan/tests/corpus/task-names-unbound-block.eadl
@@ -157,6 +162,8 @@
 0 - crates/archogen-plan/tests/corpus/task-uses-block.eadl
 0 - crates/archogen-plan/tests/corpus/tightest-bound.eadl
 0 - crates/archogen-plan/tests/corpus/transitive-users.eadl
+0 - crates/archogen-plan/tests/corpus/trigger-faster.eadl
+0 - crates/archogen-plan/tests/corpus/trigger-unreached.eadl
 0 - crates/archogen-plan/tests/corpus/two-dod.eadl
 0 - crates/archogen-plan/tests/corpus/two-ill-formed.eadl
 0 - crates/archogen-plan/tests/corpus/two-instances.eadl

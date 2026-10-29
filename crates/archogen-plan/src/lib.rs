@@ -305,12 +305,15 @@ pub fn lower(
         }
     }
     if !twice.is_empty() {
-        let named: Vec<String> = twice.iter().map(|n| format!("`{n}`")).collect();
+        let named: Vec<String> = twice
+            .iter()
+            .map(|n| format!("more than one task named `{n}`"))
+            .collect();
         return Err(refuse(
             "tool-failure",
             format!(
-                "the system `{system}` declares two tasks named {}: a name is declared once, never merged and never resolved by order, and the description check accepted it, which `M1.50` makes it refuse",
-                named.join(", ")
+                "the system `{system}` declares {}: a name is declared once, never merged and never resolved by order, and the description check accepted it, which `M1.50` makes it refuse",
+                named.join("; ")
             ),
         ));
     }
@@ -667,12 +670,6 @@ pub fn lower(
     let nodes: BTreeSet<String> = init.nodes.iter().map(|(n, _)| n.clone()).collect();
     let requester = |name: &str| rebuilt.requesters.iter().find(|r| r.name == name);
     let is_task = |name: &str| requester(name).is_some_and(|r| r.kind == Kind::Task);
-    let service_or_policy = |name: &str| {
-        declarations.iter().any(|d| {
-            matches!(d.head(), Some("defservice" | "defpolicy"))
-                && d.items().get(1).and_then(Form::as_symbol) == Some(name)
-        })
-    };
 
     // §2: reaching — what a requester names by `uses` or `needs`, and what it is bound to as its provider, at any depth.
     let hardware = |name: &str| {
@@ -887,13 +884,14 @@ pub fn lower(
                     .map(str::to_string)
             })
             .unwrap_or_else(|| "fault".to_string());
-        // What it names by `uses` or `needs` that is a service or a policy, each once (§2.2).
+        // Every node it names by `uses` or `needs`, each once: a service, a policy, or a block or a platform of the
+        // system's hardware, whose code the name calls (§2.2, R24-D1).
         let uses: BTreeSet<String> = requester(&internal)
             .map(|r| {
                 r.uses
                     .iter()
                     .chain(&r.needs)
-                    .filter(|n| service_or_policy(n))
+                    .filter(|n| nodes.contains(n.as_str()))
                     .cloned()
                     .collect()
             })
@@ -929,9 +927,23 @@ pub fn lower(
                 [route] if route.separation.is_ok_and(|s| s >= timing.release) => {
                     format!("(source {} every)", route.provider)
                 }
-                _ => {
+                releasing => {
                     owe(&mut owed, &text, "trigger", "description");
-                    "unknown".to_string()
+                    // Its cause, so that no consumer re-derives this rule to choose `RTP-H1`'s code (§2.2, R24-R1).
+                    let cause = match releasing {
+                        [] => "unreached".to_string(),
+                        [route] => match route.separation {
+                            Ok(_) => format!("(faster {})", route.item()),
+                            Err("absent") => format!("(absent {})", route.item()),
+                            Err(_) => format!("(unstated {})", route.item()),
+                        },
+                        several => {
+                            let mut items: Vec<String> = several.iter().map(|r| r.item()).collect();
+                            items.sort();
+                            format!("(several {})", items.join(" "))
+                        }
+                    };
+                    format!("(unknown {cause})")
                 }
             }
         };
@@ -1320,6 +1332,28 @@ pub fn lower(
     lines.extend(route_lines);
     lines.push(list("enabled", &enabled));
     lines.push("(interrupt-model (nesting no) (masking all))".to_string());
+    // Each node with its kind, by its text (§3, R24-D2): the simulator and the emitter read which nodes are devices here.
+    let kind_of = |n: &str| -> &'static str {
+        if names.instances.contains_key(n) {
+            return "instance";
+        }
+        match declarations
+            .iter()
+            .find(|d| d.items().get(1).and_then(Form::as_symbol) == Some(n))
+            .and_then(Form::head)
+        {
+            Some("defblock") => "block",
+            Some("defplatform") => "platform",
+            Some("defservice") => "service",
+            _ => "policy",
+        }
+    };
+    let mut node_lines: Vec<String> = nodes
+        .iter()
+        .map(|n| format!("(node {} {})", names.text(n), kind_of(n)))
+        .collect();
+    node_lines.sort();
+    lines.extend(node_lines);
     lines.extend(context_lines);
     lines.extend(depends_lines);
     lines.extend(step_lines);

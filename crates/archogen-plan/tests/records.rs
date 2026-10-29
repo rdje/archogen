@@ -355,7 +355,7 @@ fn a_cascade_reaches_two_sources_routes_and_its_release_is_unknown() {
     )
     .expect("lowered");
     for line in [
-        "(task 0 (task cs s) (rank 1) (min-separation 1/100 s) (deadline 1/100 s) (deadline-from release) (jitter 0 s) (overrun fault) (released-by unknown) (uses evt))\n",
+        "(task 0 (task cs s) (rank 1) (min-separation 1/100 s) (deadline 1/100 s) (deadline-from release) (jitter 0 s) (overrun fault) (released-by (unknown (several (source ctl) (source dev.e)))) (uses evt))\n",
         "(route 1 (source ctl) (separation 1/50 s) (level machine) (deliverable yes) (requesters evt) (costs))\n",
         "(route 2 (source dev.e) (separation 1/50 s) (level machine) (deliverable yes) (requesters ctl) (costs))\n",
         "(context dev.e job (interrupt (source ctl)) (interrupt (source dev.e)) initialisation)\n",

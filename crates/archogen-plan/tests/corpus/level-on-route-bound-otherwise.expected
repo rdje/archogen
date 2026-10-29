@@ -20,6 +20,8 @@
 (route 1 (timer-route timer.short) (separation programmed) (level machine) (deliverable yes) (requesters lx) (costs ((adapter epoch-extender timer.short) wake)))
 (enabled timer (timer-route timer.short))
 (interrupt-model (nesting no) (masking all))
+(node (adapter epoch-extender timer.short) instance)
+(node timer.short block)
 (context (adapter epoch-extender timer.short) (interrupt (timer-route timer.short)) initialisation)
 (context (task lx s) job)
 (context timer.short (interrupt (timer-route timer.short)) initialisation)

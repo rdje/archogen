@@ -12,6 +12,8 @@
 (route 1 (timer-route rtc) (separation programmed) (level machine) (deliverable yes) (requesters dl) (costs))
 (enabled timer (timer-route rtc))
 (interrupt-model (nesting no) (masking all))
+(node dl service)
+(node rtc block)
 (context (task bd a) job)
 (context (task bd b) job)
 (context dl job (interrupt (timer-route rtc)) initialisation)

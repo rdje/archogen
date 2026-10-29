@@ -11,6 +11,8 @@
 (route 1 (source dev.a) (separation absent) (level machine) (deliverable yes) (requesters h) (costs))
 (enabled timer (source dev.a))
 (interrupt-model (nesting no) (masking all))
+(node dev.a block)
+(node h service)
 (context (task ab p) job)
 (context dev.a job (interrupt (source dev.a)) initialisation)
 (context h job (interrupt (source dev.a)) initialisation)

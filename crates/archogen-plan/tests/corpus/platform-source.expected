@@ -11,6 +11,8 @@
 (route 1 (source soc.e) (separation 1/50 s) (level machine) (deliverable yes) (requesters evt) (costs))
 (enabled timer (source soc.e))
 (interrupt-model (nesting no) (masking all))
+(node evt service)
+(node soc.e platform)
 (context (task ps s) job)
 (context evt job (interrupt (source soc.e)) initialisation)
 (context soc.e job (interrupt (source soc.e)) initialisation)

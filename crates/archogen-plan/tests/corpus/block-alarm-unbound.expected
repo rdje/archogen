@@ -11,6 +11,8 @@
 (route 1 (timer-route timer.d) (separation programmed) (level machine) (deliverable yes) (requesters dma.x) (costs))
 (enabled timer (timer-route timer.d))
 (interrupt-model (nesting no) (masking all))
+(node dma.x block)
+(node timer.d block)
 (context (task bu a) job)
 (context dma.x (interrupt (timer-route timer.d)) initialisation)
 (context timer.d (interrupt (timer-route timer.d)) initialisation)

@@ -11,6 +11,8 @@
 (route 1 (timer-route timer.d) (separation programmed) (level machine) (deliverable yes) (requesters sl/a) (costs))
 (enabled timer (timer-route timer.d))
 (interrupt-model (nesting no) (masking all))
+(node sl/a service)
+(node timer.d block)
 (context (task sl a) job)
 (context sl/a job (interrupt (timer-route timer.d)) initialisation)
 (context timer.d job (interrupt (timer-route timer.d)) initialisation)

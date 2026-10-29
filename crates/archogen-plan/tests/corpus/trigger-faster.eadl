@@ -1,0 +1,14 @@
+(eadl-version eadl/1)
+; A sporadic task reaching a faster source's block: `(unknown (faster ITEM))` (§2.2; round 24, D1, R1).
+(defblock dev.e
+  (offers (interrupt-source true) (min-arrival-separation 5 ms) (reachable-at-privilege machine)))
+(defblock blk
+  (offers (transfer-engine true) (reachable-at-privilege machine))
+  (requires (needs interrupt-source)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.e blk)))
+(defsystem trig
+  (task t (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses blk))
+  (task u (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses blk))
+  (platform (uses soc)))

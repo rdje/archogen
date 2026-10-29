@@ -35,6 +35,7 @@ agree crates/archogen-plan/tests/corpus/dod-task.eadl
 agree crates/archogen-plan/tests/corpus/dod-unbound.eadl
 agree crates/archogen-plan/tests/corpus/dup-prio.eadl
 agree crates/archogen-plan/tests/corpus/dup-task-name.eadl
+agree crates/archogen-plan/tests/corpus/dup-task-three.eadl
 archogen-stricter crates/archogen-plan/tests/corpus/duration-past-arithmetic-large.eadl
 agree crates/archogen-plan/tests/corpus/duration-past-arithmetic.eadl
 agree crates/archogen-plan/tests/corpus/equal-separation.eadl
@@ -75,6 +76,8 @@ agree crates/archogen-plan/tests/corpus/naming-system-prefix.eadl
 agree crates/archogen-plan/tests/corpus/needs-svc.eadl
 agree crates/archogen-plan/tests/corpus/no-node.eadl
 agree crates/archogen-plan/tests/corpus/no-task.eadl
+agree crates/archogen-plan/tests/corpus/node-kind-block.eadl
+agree crates/archogen-plan/tests/corpus/node-kind-service.eadl
 agree crates/archogen-plan/tests/corpus/nosep-source.eadl
 agree crates/archogen-plan/tests/corpus/one-user-alarm.eadl
 agree crates/archogen-plan/tests/corpus/other-hardware-names-system.eadl
@@ -146,6 +149,8 @@ agree crates/archogen-plan/tests/corpus/system-uses-system-alarm.eadl
 agree crates/archogen-plan/tests/corpus/system-uses-system.eadl
 agree crates/archogen-plan/tests/corpus/task-alarm.eadl
 agree crates/archogen-plan/tests/corpus/task-calls-source-device.eadl
+agree crates/archogen-plan/tests/corpus/task-calls-t.eadl
+agree crates/archogen-plan/tests/corpus/task-calls-u.eadl
 agree crates/archogen-plan/tests/corpus/task-direct.eadl
 agree crates/archogen-plan/tests/corpus/task-extender.eadl
 agree crates/archogen-plan/tests/corpus/task-names-unbound-block.eadl
@@ -156,6 +161,8 @@ agree crates/archogen-plan/tests/corpus/task-source.eadl
 agree crates/archogen-plan/tests/corpus/task-uses-block.eadl
 agree crates/archogen-plan/tests/corpus/tightest-bound.eadl
 agree crates/archogen-plan/tests/corpus/transitive-users.eadl
+agree crates/archogen-plan/tests/corpus/trigger-faster.eadl
+agree crates/archogen-plan/tests/corpus/trigger-unreached.eadl
 agree crates/archogen-plan/tests/corpus/two-dod.eadl
 agree crates/archogen-plan/tests/corpus/two-ill-formed.eadl
 agree crates/archogen-plan/tests/corpus/two-instances.eadl

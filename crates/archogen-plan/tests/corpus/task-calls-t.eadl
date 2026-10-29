@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+; Task `t` names block `blk`, a call: `t`'s `uses` lists it (§2.2; round 24, D1).
+(defblock blk
+  (offers (transfer-engine true) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses blk)))
+(defsystem call
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses blk))
+  (task u (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2))
+  (platform (uses soc)))

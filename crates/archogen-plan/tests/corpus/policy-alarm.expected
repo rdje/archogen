@@ -12,6 +12,8 @@
 (route 1 (timer-route timer.d) (separation programmed) (level machine) (deliverable yes) (requesters watchdog) (costs))
 (enabled timer (timer-route timer.d))
 (interrupt-model (nesting no) (masking all))
+(node timer.d block)
+(node watchdog policy)
 (context (task pa a) job)
 (context (task pa b) job)
 (context timer.d job (interrupt (timer-route timer.d)) initialisation)

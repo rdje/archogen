@@ -1,0 +1,2 @@
+== system d3
+refused tool-failure: the system `d3` declares more than one task named `a`; more than one task named `b`: a name is declared once, never merged and never resolved by order, and the description check accepted it, which `M1.50` makes it refuse

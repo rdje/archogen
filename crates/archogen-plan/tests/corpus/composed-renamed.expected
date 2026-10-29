@@ -11,6 +11,8 @@
 (route 1 (timer-route a.timer) (separation programmed) (level machine) (deliverable yes) (requesters soc) (costs))
 (enabled timer (timer-route a.timer))
 (interrupt-model (nesting no) (masking all))
+(node a.timer block)
+(node soc platform)
 (context (task pc a) job)
 (context a.timer (interrupt (timer-route a.timer)) initialisation)
 (context soc (interrupt (timer-route a.timer)) initialisation)

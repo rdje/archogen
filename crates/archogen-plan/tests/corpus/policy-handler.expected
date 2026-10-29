@@ -11,6 +11,8 @@
 (route 1 (source dev.e) (separation 1/50 s) (level machine) (deliverable yes) (requesters evtp) (costs))
 (enabled timer (source dev.e))
 (interrupt-model (nesting no) (masking all))
+(node dev.e block)
+(node evtp policy)
 (context (task ph s) job)
 (context dev.e job (interrupt (source dev.e)) initialisation)
 (context evtp job (interrupt (source dev.e)) initialisation)

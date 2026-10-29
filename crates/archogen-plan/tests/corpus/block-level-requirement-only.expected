@@ -10,6 +10,8 @@
 (timer simulator (releases (task wb p)))
 (enabled timer)
 (interrupt-model (nesting no) (masking all))
+(node console.uart block)
+(node log service)
 (context (task wb p) job)
 (context console.uart job initialisation)
 (context log job initialisation)
