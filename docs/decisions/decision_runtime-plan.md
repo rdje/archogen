@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-27`
 - **Status:** `active` — the design for leaf `M4.1`, under independent review (`M4.1.1`) before any code relies on it;
-  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 23 answered; from round 7 it is
+  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 24 answered; from round 7 it is
   reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
 - **Owner / source:** leaf `M4.1.1` (`docs/tasks/M4.md`); `ROADMAP.md` §4.2's component `archogen-plan`, §7.3, §7.5,
   §7.6, §10.1 step 5 and §10.3; model §8 rules 4, 5, 7, 8, 10, 12 and 15; the obligations `M3.3.8`, `M3.5`, `M3.5.5.7.3`
@@ -238,8 +238,8 @@ timer route and a source, and a block may be named `timer`:
    - its masked runs, `CS_{i,r,e}^app` and `n_{r,e,p}`, and the evidence category of their bounds and counts, as the
      composition reads one for each run's bound (`compose.rs`);
    - its task facts;
-   - the application's two declarations for it that are no task fact (`decision_catalog-records-variant-inputs.md`'s
-     task-facts row, `M2.27`): that it masks only through the runtime API, and that its own figures hold under any
+   - the application's two declarations for it that are no task fact
+     (`docs/specs/catalog/decision_catalog-records-variant-inputs.md`'s task-facts row, `M2.27`): that it masks only through the runtime API, and that its own figures hold under any
      preemption and from any entry state, condition 8's half;
    - its code's stack bound, and that bound's evidence category, kept apart from the bound as `stack-allocation.eadl`
      asks. The allocation itself is `/2`'s.
@@ -438,12 +438,13 @@ timer route and a source, and a block may be named `timer`:
    "The ceiling priority shall be set at least to the highest priority of all tasks and interrupt routines that access a
    resource or any of the resources linked to this resource" (§8.6, "OSEK Priority Ceiling Protocol with extensions for
    interrupt levels"). The exception for a node's own timer route is this record's reading, which OSEK, counting every
-   accessor, does not make: that route delivers to the node and calls it from no other code. A channel taken on a
-   consumed fact makes a timer route, so a multiplexed node's system is one the analysis refuses until `M4.1.6`. The
-   heartbeat's `console.write`, used by both tasks, takes no channel and owes no `multiplex`. The lowering derives the
-   obligation by this rule. `Joint::check` reports its own today: a service taking a channel whose users, the tasks and
-   services naming it by `uses` over every system of the description, number two or more; `M4.1.2` makes rule 4's users,
-   and so `Joint::check`, count as this rule does, system by system as rule 7 resolves.
+   accessor, does not make: that route completes the node's own channel, the alarm the node programmed delivered back to
+   it, where a source's route a handler serves brings it another's arrival, which the rule counts (R8-D1). A channel
+   taken on a consumed fact makes a timer route, so a multiplexed node's system is one the analysis refuses until
+   `M4.1.6`. The heartbeat's `console.write`, used by both tasks, takes no channel and owes no `multiplex`. The lowering
+   derives the obligation by this rule. `Joint::check` reports its own today: a service taking a channel whose users,
+   the tasks and services naming it by `uses` over every system of the description, number two or more; `M4.1.2` makes
+   rule 4's users, and so `Joint::check`, count as this rule does, system by system as rule 7 resolves.
 
 10. **Owed facts**, in one list, each a subject, a fact and its owner. Exactly these are written:
 

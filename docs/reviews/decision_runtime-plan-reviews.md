@@ -760,6 +760,32 @@ input, so its issue names the case; round 23's probe of a later task alone bindi
 ran two searches over `lib.rs` whose output it discarded whole (`head
 -0`, `grep -v`): no line of the lowering's code was read.
 
+## Round 24 — `2026-10-29`: not acceptable, 8 findings
+
+The code and the checker both faithful; both defects in the plan's format, each shown by two descriptions whose plans
+are byte for byte equal but for their digests while the record's own hand-offs need them told apart. Every test green,
+the bounded totals true, a sweep of every tracked description — 131 plans, every record accepted — and all twenty-three
+hand-offs quoted byte for byte.
+
+**Fence.** No breach.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R24-D1 | defect | a task's `(uses …)` drops the blocks and platforms it names, which `M4.1.18` makes calls: the plan cannot say which job pays a named block's call cost, nor which code `RTP-H1` gives an `unknown` trigger | `uses` lists every node a task names, the hardware among them; §7.3's resource use with it — landing with the code |
+| R24-D2 | defect | no form says what kind a node is, though the simulator models "each device the plan names" and the emitter generates a driver or a service | `(node NODE NODEKIND)`, one for each node, its kind `block`, `platform`, `instance`, `service` or `policy` — with the code |
+| R24-R1 | remark | `unknown` carries no cause, so the emitter would re-derive §2's reaching to choose `RTP-H1`'s code | `(released-by (unknown CAUSE))`, `RTP-H1` mapping each cause to its code, requoted in `M4.2` — with the code |
+| R24-R2 | remark | the duplicate-name message reads "two tasks named `a`, `b`" for three `a` and two `b` | "more than one task named …", each name — with the code |
+| R24-R3 | remark | the own timer route's reason fits a handler's source route too, which the rule counts | Its reason the node's own channel completed, against another's arrival (§2.9) |
+| R24-R4 | remark | a bare path in §2.2 | Whole |
+| R24-R5 | remark | the checker faithful; it transcribes §2.2 and §3, so D1 and D2 with them | `M4.1.13` reopened with the code |
+| R24-R6 | remark | the language refuses every malformed clause probed | — |
+
+Better decisions, taken: each task's accessed nodes and each node's kind, as OIL 2.5 writes a task's and an ISR's
+"list of resources accessed" and types its objects; and the trigger's cause written, so that no consumer re-derives a
+lowering rule.
+
+Round 23's answers: all held; R23-D1's message reworded (R24-R2).
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a
