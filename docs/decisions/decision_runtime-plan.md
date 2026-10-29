@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-10-27`
 - **Status:** `active` — the design for leaf `M4.1`, under independent review (`M4.1.1`) before any code relies on it;
-  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 20 answered; from round 7 it is
+  format `/1` narrowed to the hosted playground on `2026-10-28` (round 3), rounds 4 to 21 answered; from round 7 it is
   reviewed with its executable form and its probe corpus (`decision_executable-design-reviews.md`)
 - **Owner / source:** leaf `M4.1.1` (`docs/tasks/M4.md`); `ROADMAP.md` §4.2's component `archogen-plan`, §7.3, §7.5,
   §7.6, §10.1 step 5 and §10.3; model §8 rules 4, 5, 7, 8, 10, 12 and 15; the obligations `M3.3.8`, `M3.5`, `M3.5.5.7.3`
@@ -812,23 +812,24 @@ interrupt code, and systems named by `uses`. Round 12 adds blocks and platforms 
 alarm, an expiry and a source handled by hardware, composition that is no call, a separation whose spellings overflow,
 several durations past the arithmetic at once, and a bare separation. Round 13 adds hardware naming a service by `uses`
 or `needs`, and a block by `needs`; a block bound to itself, and a deadline adapter over its own block; a block whose
-one requirement is its level's; a block only a service names, and a service only composed; and the naming order. Round
-14 adds names one of which prefixes another, in both naming refusals; hardware on another system's platform naming a
-system; and a provider whose own requirement is bound to the node that takes its channel, calling it on that node's own
-route. Round 15 adds a task, the system's own level and a service that a timer route names, bound to its provider for a
-fact that takes no channel; a periodic task bound to a source for another fact; a cycle through an instance and its
-device; and a cascade of two sources' routes. Round 16 adds durations past the arithmetic at a platform, a policy and
-the system's own level; a service bound to a block offering `absolute-deadline` directly; a composite bound to its part,
-under two names; and a sporadic task bound to its own source beside another source's handler. Round 17 adds a service
-and a policy naming a block, under two names; a served block named by a renamed service; and a node shared between a job
-and a source's service. Round 18 adds a block a service, a source's handler and a task name while nothing binds it.
-Round 19 adds such a block bound by another system's requester or once by an unrelated one; a named block taking a
-timer's channel; named hardware running in a timer route's interrupt through an expiry; and a module tree whose handler
-names a block of a second instance, which round 20 found outside the system's hardware and refused. Round 20 adds two
-tasks naming a composite whose part takes a channel; a service naming a block on no platform, refused; a module tree
-whose root's handler names the system's own block across modules; and a sporadic task calling its source's device
-through a policy's name. A description the language's check refuses is no input (§1), and its probe is held at that
-check's verdict.
+one requirement is its level's; a block only a service names (refused since round 20, outside the hardware), and a
+service only composed; and the naming order. Round 14 adds names one of which prefixes another, in both naming refusals;
+hardware on another system's platform naming a system; and a provider whose own requirement is bound to the node that
+takes its channel, calling it on that node's own route. Round 15 adds a task, the system's own level and a service that
+a timer route names, bound to its provider for a fact that takes no channel; a periodic task bound to a source for
+another fact; a cycle through an instance and its device; and a cascade of two sources' routes. Round 16 adds durations
+past the arithmetic at a platform, a policy and the system's own level; a service bound to a block offering
+`absolute-deadline` directly; a composite bound to its part, under two names; and a sporadic task bound to its own
+source beside another source's handler. Round 17 adds a service and a policy naming a block, under two names; a served
+block named by a renamed service (refused since round 20, outside the hardware); and a node shared between a job and a
+source's service. Round 18 adds a block a service, a source's handler and a task name while nothing binds it. Round 19
+adds such a block bound by another system's requester or once by an unrelated one; a named block taking a timer's
+channel; named hardware running in a timer route's interrupt through an expiry; and a module tree whose handler names a
+block of a second instance, which round 20 found outside the system's hardware and refused. Round 20 adds two tasks
+naming a composite whose part takes a channel; a service naming a block on no platform, refused; a module tree whose
+root's handler names the system's own block across modules; and a sporadic task calling its source's device through a
+policy's name. A description the language's check refuses is no input (§1), and its probe is held at that check's
+verdict.
 
 The plan's identity is the sha256 of its text. It has one writer and one reader in `crates/archogen-plan`, and a plan
 the reader accepts writes back the same bytes, as `archogen-result/1`'s rule asks. The scheduling checker reads it with
@@ -925,7 +926,7 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 | `RTP-H1` | `M4.2` | The emitter moves `archogen build` onto the runtime plan for the hosted playground, its faces in step on the command line, the engine API and the [MCP](../book/src/ledger.md#mcp-specification) tool, the enabled set configured as the plan writes it and the routes' ranks realized as the order the simulated controller takes them in, each source trigger the plan infers reported, a plan holding a task released by `unknown` refused naming the task (`missing-fact` where no source's route reaches it or its one source states no separation, `unknown`; otherwise `unsupported-profile` — a separation its one source declares `absent` among them, an unbounded source no description repairs by stating a fact — since `eadl/1` cannot say which arrivals release it), each job an engine-owned empty body that the release trace alone observes until `M4.12`'s inputs give it code, the build saying it runs no application code, the scheduler built with `from_eadl_ranks` and its slot held to the plan's index, and S0's `whole-millisecond-periods` and the profile's "one execution context runs at a time" discharged. |
 | `RTP-H2` | `M4.2` | The generated code realizes the adapters' and the multiplexed nodes' obligations, initialises no component member by calling another's code, never waits on an interrupt in initialisation, and states each cost's terms, each multiplexed node's overhead, each bound an obliged fact offered bare leaves to it, the contexts each node's code supports, and each other value the runtime plan owes to the realization, each bound with `ROADMAP.md` §7.3's record of a bound, its evidence category among it. |
 | `RTP-H3` | `M4.2` | The emitter accepts a runtime plan only by lowering it again from the same inputs and comparing bytes, and marks a plan whose acceptance was taken as text experimental. |
-| `RTP-H4` | `M2.21.2` | After `M4.1.4` has written the runtime plan's goldens, the scheduling checker reads the plan with a reader of its own held to them and maps it onto the analysis's inputs: each enabled interrupt given an identifier of its own kind, so that no two share one, and no source declared for a timer route, so that its interrupt is refused as unmodeled load; where an input the analysis needs is unknown, absent, unstated or owed, the analysis reported inconclusive, naming it, never run on a default; each term `M4.1.6` designs, a timer route's charge and a multiplexed node's overhead among them, charged once it exists; a refusal under the plan's source order worded as one another order may admit, and an order searched with Audsley's algorithm over a bound counting each source ahead at its no-loss limit, one it finds confirmed with the composition and named as the repair. |
+| `RTP-H4` | `M2.21.2` | After `M4.1.4` has written the runtime plan's goldens, the scheduling checker reads the plan with a reader of its own held to them and maps it onto the analysis's inputs: each enabled interrupt given an identifier of its own kind, so that no two share one, and no source declared for a timer route, so that its interrupt is refused as unmodeled load; where an input the analysis needs is unknown, unstated or owed, the analysis reported inconclusive, naming it, never run on a default, and a source whose separation the plan writes `absent` refused `unsupported-profile` under the variant's condition 3, naming it, as a stated zero is; each term `M4.1.6` designs, a timer route's charge and a multiplexed node's overhead among them, charged once it exists; a refusal under the plan's source order worded as one another order may admit, and an order searched with Audsley's algorithm over a bound counting each source ahead at its no-loss limit, one it finds confirmed with the composition and named as the repair. |
 | `RTP-H5` | `M4.12` | The application inputs have a format — each task's entry point; its execution bound, its OS calls with their counts, its masked runs and its stack bound, each with `ROADMAP.md` §7.3's record of a bound and its evidence category a fact of its own; its task facts, declarations that it masks only through the runtime API and that its own figures hold under any preemption and from any entry state, and the application's `leaves-interrupt-hardware-alone` — that `archogen-runtime-plan/2` carries. |
 | `RTP-H6` | `M4.10` | The catalog records state what the runtime plan owes them — supported contexts, an initialisation entry that never waits on an interrupt and names any other component member's code it calls, and each source's service cost — amending the catalog record's §12 and §14.4, and the image is checked: no initialisation step waits on an interrupt, and no component member's initialisation calls another member's code. |
 | `RTP-H7` | `M4.7` | The build's metadata carries the runtime plan's sha256 and its provenance, the whole lock data of `ROADMAP.md` §10.3 is written, `--locked` is honoured, and S0's `no-lock-data` is discharged. |
@@ -943,7 +944,7 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 | `RTP-H19` | `M1.44` | A description states a sporadic task's release source and whether every arrival releases the task, and the runtime plan reads that statement in place of its inference from the routes the task reaches. |
 | `RTP-H20` | `M3.4` | The search reads a system's side whole, its own level's constraints with its tasks', as model §7 rule 4 and §8 rule 1 read it, and refuses `invalid-description` constraints on one fact that no value satisfies together across them, so that the configuration checker refuses no record the search writes for that reason and the runtime plan's bounded checker's class of such records empties. |
 | `RTP-H21` | `M3.4` | The search refuses a module tree's declaration whose name is a vocabulary fact, as it refuses a plain description's and as the configuration checker does (`SR-H4`), so that the configuration checker refuses no record the search writes for such a tree. |
-| `RTP-H22` | `M1.49` | Model §8 rule 7 decides whether a service's or a policy's `uses` or `needs` naming a block or a platform no `platform` clause, the system's own names or its tasks' bring in is a path into the system's hardware, or the language refuses such a name `invalid-description`, naming both; until then the runtime plan's lowering refuses a system serving a block or a platform outside its hardware `unsupported-profile`. |
+| `RTP-H22` | `M1.49` | Model §8 rule 7 decides whether a service's or a policy's `uses` or `needs` naming a block or a platform no `platform` clause, the system's own names or its tasks' bring in is a path into the system's hardware or, as rule 7 treats a binding to hardware outside a system, a conflict of each system that serves it, naming the namer, the hardware and the system; until then the runtime plan's lowering refuses a system serving a block or a platform outside its hardware `unsupported-profile`. |
 
 `M4.12` is filed with this record, for the application inputs, and `M4.4.1` for the correspondence.
 

@@ -682,6 +682,30 @@ reading take it, by its conditions. Its builder ran some forty shell calls witho
 heredocs that edited its test and reads of its own output among them; they may have written temporary files off the
 repository's volume (`docs/decisions/decision_scratch-on-the-repository-volume.md`). No sealed text was involved.
 
+## Round 21 — `2026-10-29`: not acceptable, 7 findings
+
+One defect, a hand-off weaker than the rule it hands off, and the code faithful everywhere: every fixture re-derived,
+three new probes, and the checker's 128,778 systems. Every test green, the bounded totals reproduced, all twenty-two
+hand-offs quoted byte for byte.
+
+**Fence.** No breach. The reviewer found a hazard in the round's own method: copying a probe's `target/` resets its
+files' times, so cargo reuses the old build; it rebuilt from scratch, and the briefs now copy a probe's sources alone.
+
+| ID | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R21-D1 | defect | `RTP-H4` reports a source's `absent` separation inconclusive, where `RTP-H1`, model §2 ("Absent is a definite answer, not a gap") and the variant's condition 3 (`T_s > 0`) refuse it | Refused `unsupported-profile` under condition 3, as a stated zero is; `RTP-H4` requoted in `M2.21.2` |
+| R21-R1 | remark | two fixtures' comments, and §3, still describe as nodes the blocks round 20 refuses | §3 says so; the comments with the code (`M4.1.4`) |
+| R21-R2 | remark | `lower`'s `# Errors` names too few refusals | With the code (`M4.1.4`) |
+| R21-R3 | remark | the book credits the own-route exception to OSEK | The record's reading, said |
+| R21-R4 | remark | `RTP-H22`'s whole-description refusal loses a system the same name leaves inside its hardware | `RTP-H22` names the per-system conflict rule 7 gives a binding, requoted in `M1.49` |
+| R21-R5 | remark | the result record's intake, the provenance and the plan's reader unbuilt | As declared |
+| R21-R6 | remark | copying a probe's `target/` reuses a stale build | The briefs copy a probe's sources alone |
+
+Better decisions: R21-D1's fix and the per-system rule (R21-R4), taken; a timer route charged as a declared source
+under the variant's condition 5, `M4.1.6`'s to weigh (its leaf names it).
+
+Round 20's answers: R20-R2 partly (R21-R3); R20-R4 partly (R21-D1); the rest held.
+
 ## Kept for `M4.1.7`
 
 The questions the narrowing moved to format `/2`, with the fix each reviewer proposed, so that none lives only in a

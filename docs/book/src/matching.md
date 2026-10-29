@@ -503,9 +503,10 @@ reading of the record written by a context that never read the lowering's code. 
 takes a channel — a service, a policy, or hardware with requirements of its own; an instance aside — more widely than
 the check above: the system's tasks that reach it, directly or through services, policies and bindings, and the
 interrupts whose context holds it, but for its own timer route — at the provider whose channel it takes, or that the
-instance whose channel it takes programs — where nothing else that route runs reaches it, as [OSEK](ledger.md#osek-os)
-counts a shared resource's users by the tasks and interrupt routines that access it (§8.6). The joint rules count the
-tasks and services naming a service by `uses` until `M4.1.2` amends rule 4 to match.
+instance whose channel it takes programs — where nothing else that route runs reaches it. [OSEK](ledger.md#osek-os)
+counts a shared resource's users by the tasks and interrupt routines that access it (§8.6); the exception for a node's
+own route is the record's reading, which OSEK's count does not make. The joint rules count the tasks and services naming
+a service by `uses` until `M4.1.2` amends rule 4 to match.
 
 An adapter's instance is judged by the joint rules as one provider (model §8 rules 14 and 15, `M3.2.3.1`): its offers
 computed from the device it programs — a value its kind writes, a fact passed through as the relation reads it at the
