@@ -213,11 +213,11 @@ timer route and a source, and a block may be named `timer`:
        the external source whose route names the task or a requester it reaches (model §8 rule 8). The plan writes
        `(source NAME every)` when the source's stated separation is at least the task's. Every arrival then releases the
        task, and the releases are as far apart as the task states. The analysis asks "whether every arrival releases the
-       task" (`crates/rt-analysis/src/runtime.rs`). The search binds a task's own source with no regard to its
-       separation until `M4.1.2`'s joint rules refuse one the analysis does not admit for it (`RTP-H24`), so the task's
-       own `(needs interrupt-source)` releases it on every arrival only where the source bound is at least as far apart
-       as the task. Read from the routes, the trigger is an inference, which the description cannot state until `M1.44`
-       gives it a clause (`RTP-H19`), so the build reports it (`RTP-H1`);
+       task" (`crates/rt-analysis/src/runtime.rs`). The search binds a task's own source only where the analysis admits
+       it, model §8 rule 16 refusing a faster, an unbounded or an unstated one (`RTP-H24`, `M4.1.2.3`), so the task's
+       own `(needs interrupt-source)` releases it on every arrival wherever the search binds it. Read from the routes,
+       the trigger is an inference, which the description cannot state until `M1.44` gives it a clause (`RTP-H19`), so
+       the build reports it (`RTP-H1`);
      - `(unknown CAUSE)` otherwise, the cause written so that `RTP-H1` maps each to its code and no consumer re-derives
        this rule: `unreached` where the task binds no source itself and no source's route reaches it; `(several ITEM
        …)`, each source by its text, where several do; and for its one source `(unstated ITEM)` where it states no
@@ -231,10 +231,10 @@ timer route and a source, and a block may be named `timer`:
        The scheduling checker reports or refuses such a task as `RTP-H4` maps its cause, never analysing it on an
        assumed release, which the analysis as built admits for a release on some arrivals only
        (`crates/rt-analysis/src/runtime.rs`), and the build refuses the plan (`RTP-H1`). `/1` is defined over the joint
-       rules as `.2` amends them (this record's opening), so once `RTP-H24` lands no record the generator accepts binds
-       a task's own source the analysis does not admit: `(own-faster ITEM)`, `(own-absent ITEM)` and `(own-unstated
-       ITEM)` stay in the grammar, the forms the unamended rules let through, and their leaving is no new format, the
-       lowering of each accepted record unchanged (R29-R2).
+       rules as `.2` amends them (this record's opening), so since `RTP-H24` landed (`M4.1.2.3`, model §8 rule 16) no
+       record the generator accepts binds a task's own source the analysis does not admit: `(own-faster ITEM)`,
+       `(own-absent ITEM)` and `(own-unstated ITEM)` stay in the grammar, the forms the unamended rules let through, and
+       their leaving is no new format, the lowering of each accepted record unchanged (R29-R2).
 
    **Durations** are exact. Each is one reduced rational number of seconds, `N s` or `N/D s`, with `D > 1` and `N` and
    `D` coprime, so that `1.5 ms`, `1.50 ms` and `1500 us` are one text. `N` and `D` lie within the engine's exact

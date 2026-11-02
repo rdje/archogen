@@ -1,8 +1,8 @@
 //! Check (5), the joint rules, as `M3.5.5.8`'s fenced context writes it from `docs/semantics/model.md` §8 alone: the
-//! rules that refuse an assignment — rules 1 to 5, 7, 9, 10, 13 and 14 — judged over one system's assignment after
-//! checks (1) to (4) accepted each binding alone; an engine adapter's instance judged by them as rule 15 and
-//! `docs/specs/adapters/decision_engine-adapters.md` §4 say, from the checker's own table ([`crate::adapters`]) under
-//! `M3.2.5`'s fence.
+//! rules that refuse an assignment — rules 1 to 5, 7, 9, 10, 13 and 14, and rule 16 (`M4.1.2.3`, by a fenced context
+//! too) — judged over one system's assignment after checks (1) to (4) accepted each binding alone; an engine adapter's
+//! instance judged by them as rule 15 and `docs/specs/adapters/decision_engine-adapters.md` §4 say, from the checker's
+//! own table ([`crate::adapters`]) under `M3.2.5`'s fence.
 //!
 //! ⭐ **Everything the rules need is read here, from the description**: who requires (rule 1), the declarations a
 //! system's closure reaches and its hardware (rule 7), which providers compose which (rule 5), every region a provider
@@ -67,6 +67,17 @@
 //! - Rule 15, rule 9: an instance is a caller at its kind's level whatever the profile gives, so its device is judged
 //!   at that level even where no level is given the system's callers; a caller bound to an instance reads that level
 //!   as the instance's `reachable-at-privilege`.
+//! - Rule 16: a task "bound itself to a source for `interrupt-source` at `true`" is a task of the plan's system with a
+//!   binding of `interrupt-source` whose requirement is met by `true`, as rule 2 reads "met by the value `true`" — for a
+//!   task, whose kind admits `needs` and `uses` but no `requires`, `(needs interrupt-source)` alone. A sporadic task is
+//!   one writing a `min-separation`, read as a time; one that does not read is check (2)'s.
+//! - Rule 16: the comparison is the relation's judgement of `(min-arrival-separation (at-least T))` at the source, `T`
+//!   the task's `min-separation`: a value in every spelling written, `(exactly v)` among them, decides it by the first
+//!   spelling whose comparison the exact arithmetic decides (§7 rules 2, 3); a source whose spellings of it cannot be
+//!   compared with each other is a comparison the arithmetic cannot decide.
+//! - Rule 16: its conflicts and unknowns are the assignment's — another binding of the task may hold — as rule 9's
+//!   providers are, so a plan holding one is [`PLAN_JOINT`] under `tool-failure`, its message naming the code the rule
+//!   gives it, `unsupported-profile` or `missing-fact`. The route rule 8 reports is no finding of this checker's.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
@@ -83,7 +94,7 @@ use crate::model::judge::{judge, outcome, Outcome, Verdict as Judged};
 use crate::model::provider::{self, Provider};
 use crate::model::requirement::{read_side, NotJudged, Requirement};
 use crate::model::value::Value;
-use crate::model::vocab::{self, Domain, Function};
+use crate::model::vocab::{self, Direction, Domain, Function};
 
 /// The qualifier rule 9 judges against the level, and rule 13 never repeats.
 const PRIVILEGE: &str = "reachable-at-privilege";
@@ -96,6 +107,15 @@ const DEADLINE: &str = "absolute-deadline";
 
 /// The function rule 14 reads a time base from.
 const COUNTER: &str = "counter";
+
+/// The fact a task binds itself to the source releasing it through (rule 16).
+const SOURCE: &str = "interrupt-source";
+
+/// What a source states of how far apart its arrivals are (rule 16).
+const ARRIVALS: &str = "min-arrival-separation";
+
+/// The clause a sporadic task states its own minimum separation in (§4 rule 1).
+const SEPARATION: &str = "min-separation";
 
 /// Check (5) of `assignment`, which checks (1)–(4) accepted, over the elaborated `program`, `sources` its files, under
 /// `profile`; `name` and `text` the record's, for the spans of its clauses.
@@ -148,6 +168,7 @@ pub(crate) fn check(
     judgement.channels();
     judgement.ownership();
     judgement.privilege(profile.id, level);
+    judgement.sources();
     judgement.placement();
     judgement.functions();
     judgement.qualifiers();
@@ -480,9 +501,10 @@ fn function_of(fact: &str) -> Option<Function> {
     vocab::entry(fact).and_then(|e| e.function)
 }
 
-/// Whether a requirement on the consumed fact `fact` is met by the value `true` — `(needs f)`, `(f true)` or the group
-/// whose head it is — and so takes a channel (rule 2). `(f false)` takes none.
-fn takes_channel(requirements: &[Requirement], fact: &str) -> bool {
+/// Whether a requirement on `fact` is met by the value `true` — `(needs f)`, `(f true)` or the group whose head it is:
+/// on a consumed fact, a binding taking a channel (rule 2); on `interrupt-source`, a task bound itself to the source
+/// releasing it (rule 16). `(f false)` is neither.
+fn at_true(requirements: &[Requirement], fact: &str) -> bool {
     requirements.iter().any(|r| match r {
         Requirement::Presence(f) | Requirement::Group { fact: f, .. } => f == fact,
         Requirement::Constraint {
@@ -1178,7 +1200,7 @@ impl<'a, 'p> Judgement<'a, 'p> {
             if !vocab::entry(fact).is_some_and(|e| e.consumed) {
                 continue;
             }
-            if takes_channel(&self.requirements(requester), fact) {
+            if at_true(&self.requirements(requester), fact) {
                 taking
                     .entry(provider.canonical())
                     .or_insert_with(|| (provider.clone(), BTreeMap::new()))
@@ -1475,6 +1497,131 @@ impl<'a, 'p> Judgement<'a, 'p> {
                 );
             }
         }
+    }
+
+    /// Rule 16, judged beside rule 9's callers: a sporadic task of the system bound itself to a source for
+    /// `interrupt-source` at `true` is released on every arrival of it, so the source's stated `min-arrival-separation`
+    /// is at least the task's own `min-separation` — the relation's judgement of `(min-arrival-separation (at-least
+    /// T))` at the source, `T` the task's. A shorter one, one declared absent, or a comparison past the exact arithmetic
+    /// is a conflict, `unsupported-profile`; none, bare or a bound — no value — an unknown, `missing-fact`. A task a
+    /// source reaches through a handler is bound itself to none, and this rule says nothing of it.
+    fn sources(&mut self) {
+        let assignment = self.assignment;
+        for ((requester, fact), provider) in &assignment.bindings {
+            let Requester::Task { system, .. } = requester else {
+                continue;
+            };
+            if fact != SOURCE
+                || *system != assignment.system
+                || !at_true(&self.requirements(requester), SOURCE)
+            {
+                continue;
+            }
+            let Some((separation, clause)) = self.min_separation(requester) else {
+                continue;
+            };
+            let Some(read) = self.provider(provider) else {
+                continue;
+            };
+            let verdict = judge(
+                &read,
+                &Requirement::Constraint {
+                    fact: ARRIVALS.to_owned(),
+                    direction: Direction::AtLeast,
+                    value: Value::Quantity(separation),
+                },
+            );
+            // The value the source states, in the spelling written first, for the message.
+            let stated = match outcome(&read, ARRIVALS) {
+                Ok(Outcome::Valued(values)) => match values.first() {
+                    Some(Value::Quantity(q)) => format!(" of `{q}`"),
+                    _ => String::new(),
+                },
+                _ => String::new(),
+            };
+            let (conflict, why) = match verdict {
+                Judged::Satisfied | Judged::Statement => continue,
+                Judged::Refused => (
+                    true,
+                    format!(
+                        "states a `{ARRIVALS}`{stated}, shorter than the task's `{SEPARATION}` of `{separation}`, and \
+                         the analysis admits a task released on every arrival of a source only where T ≤ T_s, its \
+                         condition 5"
+                    ),
+                ),
+                Judged::Absent => (
+                    true,
+                    format!(
+                        "declares `{ARRIVALS}` absent — an unbounded source, which the analysis refuses under its \
+                         condition 3"
+                    ),
+                ),
+                Judged::Unsupported => (
+                    true,
+                    format!(
+                        "states a `{ARRIVALS}`{stated} whose comparison with the task's `{SEPARATION}` of \
+                         `{separation}` is past the exact arithmetic (§7 rule 2)"
+                    ),
+                ),
+                Judged::Unknown => (
+                    false,
+                    format!(
+                        "offers `{ARRIVALS}` without a value — bare, or only a bound, which the relation reads as no \
+                         value"
+                    ),
+                ),
+                Judged::Undescribed => (false, format!("states no `{ARRIVALS}`")),
+            };
+            let who = requester.canonical();
+            let source = provider.canonical();
+            let primary = self.bound(requester, SOURCE);
+            let secondary = [
+                self.requires(requester, SOURCE),
+                Some(self.at(clause, &format!("`{who}` states its `{SEPARATION}` here"))),
+                self.declared_bound(provider),
+            ]
+            .into_iter()
+            .flatten()
+            .collect();
+            let released = format!(
+                "`{who}` is bound itself to `{source}` for `{SOURCE}`, so every arrival of `{source}` releases it"
+            );
+            if conflict {
+                self.conflict(
+                    format!("{released}, and `{source}` {why}: a conflict, `unsupported-profile` (rule 16)"),
+                    primary,
+                    secondary,
+                    "resolve again: bind the task's `interrupt-source` to a source whose `min-arrival-separation` is \
+                     at least its `min-separation`, which the search does where the description offers one",
+                );
+            } else {
+                self.conflict(
+                    format!(
+                        "{released}, and `{source}` {why}, so whether its arrivals are at least the task's \
+                         `{SEPARATION}` of `{separation}` apart is unknown: `missing-fact`, which blocks the assignment \
+                         (rule 16)"
+                    ),
+                    primary,
+                    secondary,
+                    "state the source's `min-arrival-separation`, at least the task's `min-separation`, or resolve \
+                     again binding the task to a source that states one",
+                );
+            }
+        }
+    }
+
+    /// The `min-separation` a task writes, read as a time, and where: `None` for a task writing none — a periodic one —
+    /// or one that does not read, which check (2) refuses.
+    fn min_separation(&self, task: &Requester) -> Option<(Quantity, Span)> {
+        let (form, _) = self.world.side(task)?;
+        let clause = form
+            .items()
+            .iter()
+            .find(|clause| clause.head() == Some(SEPARATION))?;
+        let items = clause.items();
+        let separation = Quantity::read(items.get(1), items.get(2), clause.span()).ok()?;
+        (items.len() == 3 && separation.unit.dimension == Dimension::Time)
+            .then_some((separation, clause.span()))
     }
 
     /// Rule 10: the plan places the image in placement memory of the system's hardware, where it has any; and where

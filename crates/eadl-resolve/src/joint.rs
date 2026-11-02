@@ -34,6 +34,7 @@
 //! serves them, so it is the multiplexer, and an [`Obligation::Multiplex`] reports that it owes them the semantics and
 //! a bounded overhead.
 
+use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use eadl_front::{Diagnostic, Form, Label, Span};
@@ -44,7 +45,7 @@ use crate::offer::{Provider, State};
 use crate::relation::{judge, Verdict};
 use crate::requirement::side_name_lists;
 use crate::requirement::{self, Requirement};
-use crate::value::Value;
+use crate::value::{order, Value};
 use crate::vocabulary::{Domain, Function, Usage, Vocabulary};
 
 /// Who a requester is (the design's requester).
@@ -76,6 +77,8 @@ pub struct Requester {
     pub uses: Vec<String>,
     /// The declarations its `needs` lists name — a service another service needs, not a vocabulary fact.
     pub needs: Vec<String>,
+    /// A task's `min-separation`, where it writes one as a duration; no other requester's (model §8 rule 16).
+    pub separation: Option<Quantity>,
 }
 
 /// Every requester `decl` writes: a system's own level and each of its tasks apart, any other declaration whole.
@@ -152,7 +155,24 @@ fn requester(
             .flat_map(|list| list.items()[1..].iter().filter_map(Form::as_symbol))
             .map(str::to_string)
             .collect(),
+        separation: if kind == Kind::Task {
+            separation(form)
+        } else {
+            None
+        },
     })
+}
+
+/// A task's `(min-separation N UNIT)`, as a duration: one the language's check refuses reads as none.
+fn separation(task: &Form) -> Option<Quantity> {
+    let clause = task
+        .items()
+        .iter()
+        .find(|item| item.head() == Some("min-separation"))?;
+    let items = clause.items();
+    Quantity::read(items.get(1), items.get(2), clause.span())
+        .ok()
+        .filter(|q| q.unit.dimension == Dimension::Time)
 }
 
 /// The names `form`'s `uses` lists hold, at the positions the relation reads a side's.
@@ -481,6 +501,21 @@ pub enum Finding {
         /// Declared absent — reachable from no level — rather than undescribed or offered bare.
         absent: bool,
     },
+    /// A sporadic task bound itself for `interrupt-source` to a source the analysis does not admit for it: every arrival
+    /// releases it, so the source's stated `min-arrival-separation` must be at least the task's own `min-separation`
+    /// (model §8 rule 16; `RTP-H24`).
+    OwnSource {
+        /// The task.
+        requester: String,
+        /// Where it requires `interrupt-source`.
+        span: Span,
+        /// The source.
+        provider: String,
+        /// Where the source is declared.
+        declared: Span,
+        /// Why the analysis does not admit it.
+        why: Unadmitted,
+    },
     /// Two claims on the same bytes in a system's memory map: a region that is neither placement memory nor reserved —
     /// a device's registers — overlapping placement memory, or two placement regions overlapping (leaf `M3.3.5.1`).
     MapContradiction {
@@ -586,6 +621,24 @@ pub enum Finding {
     },
 }
 
+/// Why the analysis does not admit a task's own source (model §8 rule 16).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Unadmitted {
+    /// Its separation shorter than the task's, against the analysis's condition 5: `unsupported-profile`.
+    Faster {
+        /// The task's `min-separation`.
+        task: Quantity,
+        /// The source's `min-arrival-separation`.
+        source: Quantity,
+    },
+    /// Its separation declared absent, an unbounded source the analysis refuses (its condition 3): `unsupported-profile`.
+    Absent,
+    /// The comparison past the exact arithmetic (§7 rule 2): `unsupported-profile`.
+    PastArithmetic,
+    /// No value stated — none, bare, or a bound, which the relation reads as no value: `missing-fact`.
+    Unstated,
+}
+
 impl Finding {
     /// Its code (`ROADMAP.md` §5.5).
     #[must_use]
@@ -604,6 +657,11 @@ impl Finding {
             | Self::LevelUnstated { absent: false, .. } => "missing-fact",
             Self::MapContradiction { .. } | Self::MemoryAllHoles { .. } => "invalid-description",
             Self::LevelUnsupported { .. } => "unsupported-profile",
+            Self::OwnSource {
+                why: Unadmitted::Unstated,
+                ..
+            } => "missing-fact",
+            Self::OwnSource { .. } => "unsupported-profile",
             Self::ChannelsContradicted { .. } | Self::RegionMalformed { .. } => {
                 "invalid-description"
             }
@@ -864,6 +922,52 @@ impl Finding {
                 format!("describe `{provider}`'s `{REACHABLE_AT_PRIVILEGE}` with the levels it is reachable from"),
             )
             .with_secondary(Label::new(*declared, "declared here")),
+            Self::OwnSource {
+                requester,
+                span,
+                provider,
+                declared,
+                why,
+            } => {
+                let released = format!(
+                    "`{requester}` is bound itself to `{provider}` for `{INTERRUPT_SOURCE}`, so every arrival of \
+                     `{provider}` releases it"
+                );
+                Diagnostic::error(
+                    self.code(),
+                    match why {
+                        Unadmitted::Faster { task, source } => format!(
+                            "{released}, and `{provider}`'s `{MIN_ARRIVAL_SEPARATION}` {source} is shorter than its \
+                             `min-separation` {task}: the analysis admits a task released on every arrival of a \
+                             source only where T ≤ T_s (its condition 5)"
+                        ),
+                        Unadmitted::Absent => format!(
+                            "{released}, and `{provider}` declares its `{MIN_ARRIVAL_SEPARATION}` absent, a source \
+                             with no bound, which the analysis refuses (its condition 3)"
+                        ),
+                        Unadmitted::PastArithmetic => format!(
+                            "{released}, and comparing `{provider}`'s `{MIN_ARRIVAL_SEPARATION}` with its \
+                             `min-separation` lies past the exact arithmetic"
+                        ),
+                        Unadmitted::Unstated => format!(
+                            "{released}, and `{provider}` states no value for its `{MIN_ARRIVAL_SEPARATION}`, which \
+                             the analysis needs to admit the task"
+                        ),
+                    },
+                    Label::new(*span, "required here"),
+                    match why {
+                        Unadmitted::Unstated => format!(
+                            "state `{provider}`'s `{MIN_ARRIVAL_SEPARATION}` as a value, at least the task's \
+                             `min-separation`"
+                        ),
+                        _ => format!(
+                            "bind the task's `{INTERRUPT_SOURCE}` to a source whose `{MIN_ARRIVAL_SEPARATION}` is at \
+                             least its `min-separation`"
+                        ),
+                    },
+                )
+                .with_secondary(Label::new(*declared, "declared here"))
+            }
             Self::FunctionSplit {
                 requester,
                 function,
@@ -1149,6 +1253,8 @@ pub struct Joint<'v> {
     qualified: BTreeMap<String, Vec<Requirement>>,
     /// Each engine adapter's instance the rules may meet, by name, with the provider it programs (`M3.2.3.1`).
     instances: BTreeMap<String, String>,
+    /// Each sporadic task's `min-separation`, by its name (rule 16).
+    separations: BTreeMap<String, Quantity>,
 }
 
 impl<'v> Joint<'v> {
@@ -1270,6 +1376,10 @@ impl<'v> Joint<'v> {
                 })
                 .collect(),
             instances: BTreeMap::new(),
+            separations: requesters
+                .iter()
+                .filter_map(|r| r.separation.map(|q| (r.name.clone(), q)))
+                .collect(),
         })
     }
 
@@ -1383,6 +1493,7 @@ impl<'v> Joint<'v> {
                     }
                 }
             }
+            self.own_sources(system, assignment, &mut report);
             if let Some(region) = &system.placement {
                 self.placed(system, region, &mut report);
             }
@@ -1815,6 +1926,56 @@ impl<'v> Joint<'v> {
                     declared: held.span,
                     system: system.name.clone(),
                 });
+            }
+        }
+    }
+
+    /// Model §8 rule 16 (`RTP-H24`): a sporadic task the system serves, bound itself for `interrupt-source` at `true`,
+    /// is released on every arrival of that source, which the analysis admits only where the source's stated
+    /// `min-arrival-separation` is at least the task's `min-separation` — its condition 5, "a task released on every
+    /// arrival of a source has T ≤ T_s". A shorter separation, one declared absent, or a comparison past the exact
+    /// arithmetic is a conflict; a source stating no value, an unknown. The route stays rule 8's obligation.
+    fn own_sources(&self, system: &System, assignment: &[Binding], report: &mut Report) {
+        for b in assignment.iter().filter(|b| {
+            b.requirement.fact() == INTERRUPT_SOURCE
+                && met_by_true(&b.requirement)
+                && system.serves(&b.requester)
+        }) {
+            let Some(&task) = self.separations.get(&b.requester) else {
+                continue;
+            };
+            let Some(held) = self.held.get(&b.provider) else {
+                continue;
+            };
+            let why = match &held.separation {
+                Some(State::Valued(values)) => match values.first() {
+                    Some(Value::Quantity(source)) => match order(*source, task) {
+                        Ok(Ordering::Less) => Some(Unadmitted::Faster {
+                            task,
+                            source: *source,
+                        }),
+                        Ok(_) => None,
+                        Err(_) => Some(Unadmitted::PastArithmetic),
+                    },
+                    _ => Some(Unadmitted::Unstated),
+                },
+                Some(State::Absent) => Some(Unadmitted::Absent),
+                Some(State::Overflow) => Some(Unadmitted::PastArithmetic),
+                Some(State::Unvalued) | None => Some(Unadmitted::Unstated),
+            };
+            if let Some(why) = why {
+                let finding = Finding::OwnSource {
+                    requester: b.requester.clone(),
+                    span: b.requirement.span(),
+                    provider: b.provider.clone(),
+                    declared: held.span,
+                    why,
+                };
+                if finding.code() == "missing-fact" {
+                    report.unknowns.push(finding);
+                } else {
+                    report.conflicts.push(finding);
+                }
             }
         }
     }

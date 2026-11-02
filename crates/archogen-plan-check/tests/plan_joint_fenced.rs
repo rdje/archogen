@@ -3,7 +3,8 @@
 //! accept it — a plan they refuse is no case of check (5) — then through [`joint_fenced`]; the few corruptions check
 //! (3) refuses first are run apart, to hold check (5)'s own reading of them. An engine adapter's instance is judged by
 //! the rules as model §8 rule 15 and `docs/specs/adapters/decision_engine-adapters.md` §4 say, and one time base by rule
-//! 14, each from the record and the model alone.
+//! 14, each from the record and the model alone; a task released by its own source by rule 16, written from its text
+//! alone by the fenced context of `M4.1.2.3`.
 
 use std::collections::BTreeMap;
 
@@ -1770,4 +1771,314 @@ fn rule_15_a_plan_naming_a_kind_the_checker_s_table_does_not_hold_is_refused() {
         messages(&findings).contains("does not hold"),
         "{findings:#?}"
     );
+}
+
+// ------------------------------------------------------------------------------------------------------------------
+// Rule 16: a task released by its own source.
+
+/// A source's clauses: it offers `interrupt-source` and the profile's level, and what `separation` writes inside its
+/// `offers` — an offer of `min-arrival-separation`, or nothing.
+fn offering(separation: &str) -> String {
+    format!("(offers (interrupt-source true) (reachable-at-privilege machine) {separation})")
+}
+
+/// A source declaring its separation absent: an unbounded one.
+const UNBOUNDED: &str =
+    "(offers (interrupt-source true) (reachable-at-privilege machine)) (absent min-arrival-separation)";
+
+/// The sporadic task `rx`, released at least 20 ms apart, bound itself to a source by `(needs interrupt-source)`.
+const RX: &str =
+    "(task rx (min-separation 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) \
+     (needs interrupt-source))";
+
+/// Two sources of interrupts on the system's platform, `uart.rx` and `gpio.irq`, their clauses `uart` and `gpio`;
+/// `services` declared beside them, and `tasks` the system's.
+fn sourced(uart: &str, gpio: &str, services: &str, tasks: &str) -> Description {
+    describe(&format!(
+        "
+      (defblock uart.rx {uart})
+      (defblock gpio.irq {gpio})
+      (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses uart.rx gpio.irq)))
+      {services}
+      (defsystem s
+        {tasks}
+        (platform (uses soc)))"
+    ))
+}
+
+/// `rx` beside the source `uart.rx`, whose clauses are `uart`, and a `gpio.irq` stating 20 ms.
+fn rx_beside(uart: &str) -> Description {
+    sourced(uart, &offering("(min-arrival-separation 20 ms)"), "", RX)
+}
+
+/// `requester`'s own binding of `interrupt-source` to `source`.
+fn own(requester: Requester, source: &'static str) -> [Bind; 1] {
+    [(requester, "interrupt-source", source)]
+}
+
+/// The one finding of a plan rule 16 refuses, binding `rx` to `uart.rx`: at that binding in the record, naming the
+/// task and the source, with where the task requires the fact, where it states its separation and where the source
+/// is declared.
+fn rx_refused(d: &Description) -> Finding {
+    let rx = task("s", "rx");
+    let plan = d.plan(None, &own(rx.clone(), "uart.rx"));
+    let findings = refusal(d.joint(&plan), 16, true);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let finding = findings[0].clone();
+    assert!(
+        finding.message.contains("`(task s rx)`") && finding.message.contains("`uart.rx`"),
+        "{finding:#?}"
+    );
+    assert_eq!(finding.primary.source, RECORD);
+    assert_eq!(
+        finding.primary.line,
+        line_of(&plan, &rx, "interrupt-source")
+    );
+    assert_eq!(finding.secondary.len(), 3, "{finding:#?}");
+    assert!(
+        finding.secondary.iter().all(|l| l.source == SOURCE),
+        "{finding:#?}"
+    );
+    finding
+}
+
+/// A conflict of rule 16's: `unsupported-profile`, never an unknown.
+fn conflict(finding: &Finding, why: &str) {
+    assert!(
+        finding.message.contains(why)
+            && finding
+                .message
+                .contains("a conflict, `unsupported-profile` (rule 16)")
+            && !finding.message.contains("missing-fact"),
+        "{why}: {finding:#?}"
+    );
+}
+
+/// An unknown of rule 16's: `missing-fact`, blocking the assignment.
+fn unknown(finding: &Finding, why: &str) {
+    assert!(
+        finding.message.contains(why)
+            && finding
+                .message
+                .contains("`missing-fact`, which blocks the assignment (rule 16)")
+            && finding.message.contains("`min-separation` of `20 ms`")
+            && !finding.message.contains("unsupported-profile"),
+        "{why}: {finding:#?}"
+    );
+}
+
+#[test]
+fn rule_16_a_task_s_own_source_as_far_apart_as_the_task_or_further_holds() {
+    for separation in [
+        "(min-arrival-separation 20 ms)",
+        "(min-arrival-separation 50 ms)",
+        "(min-arrival-separation 1 s)",
+    ] {
+        let d = rx_beside(&offering(separation));
+        assert_eq!(
+            d.bound(&own(task("s", "rx"), "uart.rx")),
+            Ok(()),
+            "{separation}"
+        );
+    }
+}
+
+#[test]
+fn rule_16_a_task_s_own_source_shorter_than_the_task_is_a_conflict_under_condition_5() {
+    let d = rx_beside(&offering("(min-arrival-separation 5 ms)"));
+    conflict(
+        &rx_refused(&d),
+        "states a `min-arrival-separation` of `5 ms`, shorter than the task's `min-separation` of `20 ms`, and the \
+         analysis admits a task released on every arrival of a source only where T ≤ T_s, its condition 5",
+    );
+}
+
+#[test]
+fn rule_16_a_task_s_own_source_declaring_its_separation_absent_is_a_conflict_under_condition_3() {
+    let d = rx_beside(UNBOUNDED);
+    conflict(
+        &rx_refused(&d),
+        "declares `min-arrival-separation` absent — an unbounded source, which the analysis refuses under its \
+         condition 3",
+    );
+}
+
+#[test]
+fn rule_16_a_comparison_past_the_exact_arithmetic_is_a_conflict() {
+    // 10^-31 ns is 10^-40 s: read exactly in its own unit, past the arithmetic in the base unit the task's `20 ms`
+    // compares in — though plainly shorter, nothing decides it (§7 rule 2).
+    let d = rx_beside(&offering(
+        "(min-arrival-separation 0.0000000000000000000000000000001 ns)",
+    ));
+    conflict(
+        &rx_refused(&d),
+        "states a `min-arrival-separation` of `0.0000000000000000000000000000001 ns` whose comparison with the \
+         task's `min-separation` of `20 ms` is past the exact arithmetic (§7 rule 2)",
+    );
+    // The same 10^-40 s in two spellings whose own comparison overflows: a separation past the arithmetic at the
+    // source (§7 rule 3), which no comparison with the task's decides either.
+    let d = rx_beside(&offering(
+        "(min-arrival-separation 0.0000000000000000000000000000001 ns) \
+         (min-arrival-separation 0.0000000000000000000000000000000001 us)",
+    ));
+    conflict(
+        &rx_refused(&d),
+        "states a `min-arrival-separation` whose comparison with the task's `min-separation` of `20 ms` is past the \
+         exact arithmetic (§7 rule 2)",
+    );
+}
+
+#[test]
+fn rule_16_a_task_s_own_source_stating_no_value_is_an_unknown() {
+    for (separation, why) in [
+        ("", "states no `min-arrival-separation`"),
+        (
+            "min-arrival-separation",
+            "offers `min-arrival-separation` without a value — bare",
+        ),
+        (
+            "(min-arrival-separation)",
+            "offers `min-arrival-separation` without a value — bare",
+        ),
+    ] {
+        let d = rx_beside(&offering(separation));
+        unknown(&rx_refused(&d), why);
+    }
+}
+
+#[test]
+fn rule_16_reads_exactly_as_a_value_and_a_bound_as_none() {
+    // `(exactly v)` is the value `v`: as far apart as the task holds, shorter is the conflict.
+    let d = rx_beside(&offering("(min-arrival-separation (exactly 20 ms))"));
+    assert_eq!(d.bound(&own(task("s", "rx"), "uart.rx")), Ok(()));
+    let d = rx_beside(&offering("(min-arrival-separation (exactly 5 ms))"));
+    conflict(&rx_refused(&d), "of `5 ms`, shorter than");
+    // A bound is no value, however far apart it writes: the unknown.
+    for bound in [
+        "(min-arrival-separation (at-least 20 ms))",
+        "(min-arrival-separation (at-least 50 ms))",
+    ] {
+        let d = rx_beside(&offering(bound));
+        unknown(
+            &rx_refused(&d),
+            "without a value — bare, or only a bound, which the relation reads as no value",
+        );
+    }
+}
+
+#[test]
+fn rule_16_compares_a_separation_written_in_another_unit_exactly() {
+    for separation in [
+        "(min-arrival-separation 20000 us)",
+        "(min-arrival-separation 20000000 ns)",
+        "(min-arrival-separation 0.02 s)",
+        "(min-arrival-separation 20001 us)",
+    ] {
+        let d = rx_beside(&offering(separation));
+        assert_eq!(
+            d.bound(&own(task("s", "rx"), "uart.rx")),
+            Ok(()),
+            "{separation}"
+        );
+    }
+    let d = rx_beside(&offering("(min-arrival-separation 19999 us)"));
+    conflict(
+        &rx_refused(&d),
+        "of `19999 us`, shorter than the task's `min-separation` of `20 ms`",
+    );
+}
+
+#[test]
+fn rule_16_leaves_a_periodic_task_bound_to_a_source_untouched() {
+    for uart in [
+        offering("(min-arrival-separation 5 ms)"),
+        UNBOUNDED.to_owned(),
+        offering(""),
+        offering("(min-arrival-separation (at-least 50 ms))"),
+    ] {
+        let d = sourced(
+            &uart,
+            &offering(""),
+            "",
+            "(task beat (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) \
+             (needs interrupt-source))",
+        );
+        assert_eq!(
+            d.bound(&own(task("s", "beat"), "uart.rx")),
+            Ok(()),
+            "{uart}"
+        );
+    }
+}
+
+#[test]
+fn rule_16_leaves_a_task_a_source_reaches_through_a_handler_untouched() {
+    // The handler binds the source, never the task: only a task's own binding is the rule's.
+    for uart in [
+        offering("(min-arrival-separation 5 ms)"),
+        UNBOUNDED.to_owned(),
+        offering(""),
+    ] {
+        let d = sourced(
+            &uart,
+            &offering(""),
+            "(defservice rx.handler (requires (needs interrupt-source)))",
+            "(task rx (min-separation 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) \
+             (uses rx.handler))",
+        );
+        assert_eq!(
+            d.bound(&own(named("rx.handler"), "uart.rx")),
+            Ok(()),
+            "{uart}"
+        );
+    }
+}
+
+#[test]
+fn rule_16_judges_each_task_bound_to_one_source_on_its_own() {
+    // `uart.rx`, 20 ms apart, is as far apart as `rx` and nearer than `burst`, 50 ms apart.
+    let d = sourced(
+        &offering("(min-arrival-separation 20 ms)"),
+        &offering(""),
+        "",
+        &format!(
+            "{RX}
+        (task burst (min-separation 50 ms) (deadline 50 ms) (deadline-from release) (priority 2) \
+             (needs interrupt-source))"
+        ),
+    );
+    let burst = task("s", "burst");
+    let plan = d.plan(
+        None,
+        &[
+            (task("s", "rx"), "interrupt-source", "uart.rx"),
+            (burst.clone(), "interrupt-source", "uart.rx"),
+        ],
+    );
+    let findings = refusal(d.joint(&plan), 16, true);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let message = &findings[0].message;
+    assert!(
+        message.contains("`(task s burst)`")
+            && !message.contains("`(task s rx)`")
+            && message.contains("of `20 ms`, shorter than the task's `min-separation` of `50 ms`"),
+        "{message}"
+    );
+    assert_eq!(
+        findings[0].primary.line,
+        line_of(&plan, &burst, "interrupt-source")
+    );
+}
+
+#[test]
+fn rule_16_judges_the_binding_so_a_source_far_enough_apart_holds_where_a_faster_one_is_refused() {
+    // The description offers both: the plan binding `gpio.irq`, 20 ms apart, is the one the search writes.
+    let d = sourced(
+        &offering("(min-arrival-separation 5 ms)"),
+        &offering("(min-arrival-separation 20 ms)"),
+        "",
+        RX,
+    );
+    assert_eq!(d.bound(&own(task("s", "rx"), "gpio.irq")), Ok(()));
+    conflict(&rx_refused(&d), "of `5 ms`, shorter than");
 }

@@ -1,6 +1,6 @@
 (eadl-version eadl/1)
-; A sporadic task bound itself to a source declaring its separation absent: `(unknown (own-absent …))` (§2.2; round
-; 27, R2).
+; A sporadic task bound itself to a source declaring its separation absent: model §8 rule 16 refuses it
+; `unsupported-profile`, an unbounded source, and no other is offered (round 27, R2; `M4.1.2.3`).
 (defblock dev.a
   (offers (interrupt-source true) (reachable-at-privilege machine))
   (absent min-arrival-separation))

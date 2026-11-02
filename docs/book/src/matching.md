@@ -320,6 +320,12 @@ initialises as one unit, since initialisation runs with interrupts masked, befor
 one pass: the component's members one after another, in the order of their names, so none of them may call another's
 code while it initialises.
 
+**A task its own source releases.** A sporadic task that needs `interrupt-source` itself is released by every arrival
+of the source it is bound to, so that source must not fire more often than the task's `min-separation` allows. Where
+the description offers a source at least as far apart, the search binds that one; where it offers only faster ones,
+or ones declaring their separation absent, the description is `unsupported-profile`, since this profile cannot release
+a task on some arrivals only; and where the source states no separation, a bound among them, `missing-fact`.
+
 **One counter, read whole.** A requester's facts of one function are met by one provider. With the width offered by
 one timer and the rate by another, neither offering both, the assignment is refused:
 
@@ -458,8 +464,9 @@ a binding takes a channel (rule 2), the channel count and its codes (rule 3), th
 region ownership and its codes (rule 5), and that one assignment's findings decide nothing about the description until
 the search has tried every assignment (rule 6); then one system's assignment, its hardware and connectivity (rule 7),
 the route obligations (rule 8), privilege over a system's callers, given its level (rule 9), placement, once per
-system (rule 10), ordering, unsupported under this profile (rule 11), the initialization graph (rule 12), and one
-function at one provider, with the qualifiers (rule 13).
+system (rule 10), ordering, unsupported under this profile (rule 11), the initialization graph (rule 12), one
+function at one provider, with the qualifiers (rule 13), one time base (rule 14), an adapter's instance judged as one
+provider (rule 15), and a sporadic task's own source slow enough to release it on every arrival (rule 16).
 
 ### The search's rules
 

@@ -1,7 +1,8 @@
 (eadl-version eadl/1)
 ; A module tree whose aliases order the sources' qualified texts against their local names: `z.dev.a` (5 ms) and
-; `a.dev.b` (30 ms), each with its handler in a third module. `s` reaches both handlers, `(several …)` by qualified text;
-; `t` binds its own source; the ranks by separation, ties none (round 29, R6).
+; `a.dev.b` (30 ms), each with its handler in a third module. `s` reaches both handlers, `(several …)` by qualified
+; text; `t` binds its own source, the slower, model §8 rule 16 refusing the faster; the ranks by separation, ties none
+; (round 29, R6; `M4.1.2.3`).
 (defmodule app.main
   (version 1 0)
   (import src.one (as z) (version (at-least 1 0)))

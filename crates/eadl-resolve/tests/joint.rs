@@ -10,7 +10,7 @@ use eadl_front::{read, Form, SourceMap};
 use eadl_model::check::shipped_registry;
 use eadl_resolve::joint::{
     requesters, Because, Binding, Finding, Initialization, Interrupt, Joint, Kind, Node,
-    Obligation, Report, Requester, System,
+    Obligation, Report, Requester, System, Unadmitted,
 };
 use eadl_resolve::offer::{self, Provider, State};
 use eadl_resolve::relation::{judge, Verdict};
@@ -294,6 +294,21 @@ fn named(f: &Finding) -> String {
             "{} level {} {requester} -> {provider}",
             f.code(),
             if *absent { "absent" } else { "unstated" }
+        ),
+        Finding::OwnSource {
+            requester,
+            provider,
+            why,
+            ..
+        } => format!(
+            "{} own source {} {requester} -> {provider}",
+            f.code(),
+            match why {
+                Unadmitted::Faster { task, source } => format!("faster {source} < {task}"),
+                Unadmitted::Absent => "absent".to_string(),
+                Unadmitted::PastArithmetic => "past arithmetic".to_string(),
+                Unadmitted::Unstated => "unstated".to_string(),
+            }
         ),
         Finding::FunctionSplit {
             requester,
@@ -2080,4 +2095,149 @@ fn rule_13_s_diagnostics_say_what_the_book_quotes() {
     for f in report.conflicts.iter().chain(&report.unknowns) {
         assert_eq!(f.diagnostic().code, f.code());
     }
+}
+
+/// Every distinct report of `text`'s assignments, sorted: what rule 16 says of each binding a task's own
+/// `interrupt-source` may take.
+fn distinct(text: &str, v: &Vocabulary) -> Vec<(Vec<String>, Vec<String>)> {
+    let mut seen: Vec<_> = every(text, v).iter().map(report_of).collect();
+    seen.sort();
+    seen.dedup();
+    seen
+}
+
+/// A sporadic task of 10 ms bound itself for `interrupt-source`, beside the sources `sources` declares and a console
+/// its service writes to.
+fn own_source(sources: &str) -> String {
+    format!(
+        "{sources}
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.a dev.b console.uart)))
+(defservice log (requires (needs observable-output)))
+(defsystem s
+  (task t (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs interrupt-source) (uses log))
+  (platform (uses soc)))"
+    )
+}
+
+fn source(name: &str, separation: &str) -> String {
+    format!("(defblock {name} (offers (interrupt-source true) {separation} (reachable-at-privilege machine)))")
+}
+
+#[test]
+fn a_task_s_own_source_faster_than_it_is_refused_where_a_slower_one_would_be_admitted() {
+    // Model §8 rule 16 (`RTP-H24`): every arrival releases a task bound itself for `interrupt-source`, so the
+    // analysis's condition 5 asks the source's separation be at least the task's. Of two sources, the binding to the
+    // faster is refused `unsupported-profile` and the one to the slower admitted, so the search binds the slower.
+    let v = vocabulary();
+    let text = own_source(&format!(
+        "{}\n{}",
+        source("dev.a", "(min-arrival-separation 5 ms)"),
+        source("dev.b", "(min-arrival-separation 30 ms)")
+    ));
+    assert_eq!(
+        distinct(&text, &v),
+        [
+            (vec![], vec![]),
+            (
+                vec![
+                    "unsupported-profile own source faster 5 ms < 10 ms (task s t) -> dev.a"
+                        .to_string()
+                ],
+                vec![]
+            ),
+        ]
+    );
+}
+
+#[test]
+fn a_task_s_own_source_is_admitted_from_its_own_separation_up_in_any_unit() {
+    let v = vocabulary();
+    for (a, b) in [
+        (
+            "(min-arrival-separation 10 ms)",
+            "(min-arrival-separation 10000 us)",
+        ),
+        (
+            "(min-arrival-separation (exactly 10 ms))",
+            "(min-arrival-separation 1 s)",
+        ),
+    ] {
+        let text = own_source(&format!("{}\n{}", source("dev.a", a), source("dev.b", b)));
+        assert_eq!(distinct(&text, &v), [(vec![], vec![])], "{a} {b}");
+    }
+}
+
+#[test]
+fn a_task_s_own_source_unbounded_or_unstated_is_refused_with_its_code() {
+    // Declared absent: an unbounded source, `unsupported-profile` (the analysis's condition 3). No value — none, a bare
+    // offer, or a bound, which the relation reads as none — an unknown, `missing-fact`.
+    let v = vocabulary();
+    let slow = source("dev.b", "(min-arrival-separation 30 ms)");
+    let case = |a: &str| distinct(&own_source(&format!("{}\n{slow}", source("dev.a", a))), &v);
+    let absent =
+        "(defblock dev.a (offers (interrupt-source true) (reachable-at-privilege machine)) \
+                  (absent min-arrival-separation))";
+    assert_eq!(
+        distinct(&own_source(&format!("{absent}\n{slow}")), &v)
+            .last()
+            .cloned(),
+        Some((
+            vec!["unsupported-profile own source absent (task s t) -> dev.a".to_string()],
+            vec![]
+        ))
+    );
+    let unstated = (
+        vec![],
+        vec!["missing-fact own source unstated (task s t) -> dev.a".to_string()],
+    );
+    for a in [
+        "",
+        "(min-arrival-separation)",
+        "(min-arrival-separation (at-least 20 ms))",
+    ] {
+        assert_eq!(case(a), [(vec![], vec![]), unstated.clone()], "{a}");
+    }
+}
+
+#[test]
+fn a_task_s_own_source_past_the_exact_arithmetic_is_unsupported() {
+    // §7 rule 2: a comparison whose arithmetic overflows decides nothing.
+    let v = vocabulary();
+    let text = own_source(&format!(
+        "{}\n{}",
+        source(
+            "dev.a",
+            "(min-arrival-separation 0.00000000000000000000000000000000000001 ns)"
+        ),
+        source("dev.b", "(min-arrival-separation 30 ms)")
+    ));
+    assert_eq!(
+        distinct(&text, &v).last().cloned(),
+        Some((
+            vec!["unsupported-profile own source past arithmetic (task s t) -> dev.a".to_string()],
+            vec![]
+        ))
+    );
+}
+
+#[test]
+fn rule_16_judges_a_task_s_own_binding_alone() {
+    // A task a faster source reaches through its handler is no binding of the task's own: the runtime plan writes its
+    // trigger `(unknown (faster …))`, owed to the description, and no joint rule refuses the assignment. A periodic task
+    // has no `min-separation` for the rule to compare.
+    let v = vocabulary();
+    let through_handler = "(defblock dev.a (offers (interrupt-source true) (min-arrival-separation 5 ms) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.a)))
+(defservice h (requires (needs interrupt-source)))
+(defsystem s
+  (task t (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses h))
+  (platform (uses soc)))";
+    assert_eq!(distinct(through_handler, &v), [(vec![], vec![])]);
+    let periodic = "(defblock dev.a (offers (interrupt-source true) (min-arrival-separation 5 ms) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.a)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs interrupt-source))
+  (platform (uses soc)))";
+    assert_eq!(distinct(periodic, &v), [(vec![], vec![])]);
 }

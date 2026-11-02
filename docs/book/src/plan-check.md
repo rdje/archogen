@@ -29,8 +29,9 @@ one.
 > declared block or platform; (4) each binding is satisfied by the model's judgement — the reference model of
 > `docs/semantics/model.md` §7, never the generator's code; (5) the bindings hold together by §8's joint rules, today
 > rule 7's hardware, rules 2–4's channels, rule 5's ownership, rule 10's placement, rule 9's privilege at the
-> profile's level, rule 13's one provider per function and qualifiers, and rule 14's one time base — an engine
-> adapter's instance judged among the providers (rule 15). A corrupted plan is `tool-failure`. The
+> profile's level, rule 13's one provider per function and qualifiers, rule 14's one time base, and rule 16's sporadic
+> task released by its own source, which must be at least as far apart as the task — an engine adapter's instance
+> judged among the providers (rule 15). A corrupted plan is `tool-failure`. The
 > library is `crates/archogen-plan-check`; the executable `archogen-plan-check` runs it on files, and serves it to an
 > agent as the [MCP](ledger.md#mcp-specification) tool `plan-check`, which takes the texts.
 
@@ -228,7 +229,7 @@ Each check reports under a code of its own. The codes are stated, with what fire
 | `plan-description` | 2 | the checker's own rules refuse a description the language's passes accept |
 | `plan-binding` | 3 | a need left unbound, a binding of no need or of a requester the system does not serve, a provider not declared |
 | `plan-unsatisfied` | 4 | a binding the reference model does not satisfy |
-| `plan-joint` | 5 | the bindings do not hold together: a provider outside the system's hardware, more needs taking a channel than a provider has or two where its channels are unknown, two bound parts owning one address, the image placed nowhere or outside placement memory, a caller's provider not reachable at the profile's level, one requester's function split across providers, or a qualifier unmet where its requester relies |
+| `plan-joint` | 5 | the bindings do not hold together: a provider outside the system's hardware, more needs taking a channel than a provider has or two where its channels are unknown, two bound parts owning one address, the image placed nowhere or outside placement memory, a caller's provider not reachable at the profile's level, one requester's function split across providers, a qualifier unmet where its requester relies, or a sporadic task bound itself to a source faster than it, unbounded, or stating no separation (rule 16) |
 
 Each finding names the requester and the fact, and points at the requirement in the description, the binding's line in
 the record, or both — for check 4, also at what the provider states. The language's own diagnostics keep their codes.

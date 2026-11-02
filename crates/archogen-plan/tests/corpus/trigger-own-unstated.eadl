@@ -1,6 +1,6 @@
 (eadl-version eadl/1)
-; A sporadic task bound itself to a source stating no separation: `(unknown (own-unstated …))` (§2.2; round 27,
-; R2).
+; A sporadic task bound itself to a source stating no separation: model §8 rule 16 leaves it `missing-fact`, the
+; source's separation owed (round 27, R2; `M4.1.2.3`).
 (defblock dev.a
   (offers (interrupt-source true) (reachable-at-privilege machine)))
 (defblock console.uart

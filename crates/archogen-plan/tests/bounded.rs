@@ -83,11 +83,25 @@
 //! plan but for that node's `(node …)` line; and one name carried three times beside another carried twice; and,
 //! after round 28 (R28-D2, R28-R4, R28-R7), two sporadic tasks, each binding a source itself, reaching it through its
 //! handler or neither, the first both as well, before that source stating every separation class and a second source
-//! the first task's other handler reaches, declared after it or before — so that each of §3's causes is reached, the
+//! the first task's other handler reaches, declared after it or before — so that each of §3's causes was reached, the
 //! task's own source's three, `own-faster`, `own-unstated` and `own-absent`, written apart from the three the routes
 //! leave — each system beside its twin reaching that source only through a handler, its cause the twin's written
 //! `own-`; two tasks bound themselves to one source, one as far apart as it and one released less often; and a task
-//! bound itself to a source while the handler it uses reaches another, beside its twin with that source alone.
+//! bound itself to a source while the handler it uses reaches another, beside its twin with that source alone; and,
+//! after model §8 rule 16 landed (`M4.1.2.3`; `RTP-H24`, R29-R2, R30-R4), every universe read again and the releases,
+//! own-sources and own-causes ones held anew, beside one universe of its own, a task's own source at the arithmetic's
+//! edge, compared past 128 bits or stating a separation past the arithmetic. A sporadic task bound itself to a source
+//! the analysis does not admit — shorter than the task's own separation, declared absent, past the exact arithmetic, or
+//! stating none — is bound by the search to one it admits where the description offers one, and otherwise refused,
+//! `unsupported-profile` or `missing-fact` as the rule and model §8 rule 6 give it, the reading deriving which from the
+//! description and holding the search's verdict to it; and for each such system every record binding such a task to a
+//! source the rule does not admit — the record the unamended rules gave, the search's over the description with every
+//! source admitted and its `bind` lines over this description's program, with each such task bound in turn to each
+//! source the description offers it — is judged by the configuration checker and lowered, each refusing it, the
+//! checker under its check (5) naming rule 16, the lowering under §1's bullet of the generator's joint rules, both
+//! naming each such task with its source and one code, the lowering its conflicts before its unknowns. So the task's
+//! own source's three causes reach no plan, each stated unreachable with that reason (§2.2: "no record the generator
+//! accepts binds a task's own source the analysis does not admit"), and the five the routes leave are still reached.
 //!
 //! Each system is run as the engine runs it, as `common::lowered` does: the language's check, the search, the `/2`
 //! writer, and the lowering. **Every `archogen-assignment/2` record the search writes is judged by the configuration
@@ -98,7 +112,10 @@
 //! task's text two tasks of one name carry, which the checker reads as the first's, emptied when `M1.50` has the
 //! language refuse such a system. On each the lowering is still held to the reading while it does not read the
 //! checker's result record, its third input; once it does, §1 refuses each of those systems `tool-failure`, "naming
-//! both verdicts", before anything is lowered (R16-R2). Each plan is held to an **independent reading** of
+//! both verdicts", before anything is lowered (R16-R2). **The records binding a task's own source rule 16 does not
+//! admit**, which no search writes, are a class of their own (`RULE_16_RECORD`), neither a finding nor one of
+//! `CHECKER_HELD`: each is judged by the configuration checker and lowered, and each refused by both, the codes
+//! agreeing. Each plan is held to an **independent reading** of
 //! `docs/decisions/decision_runtime-plan.md`, written below as plain, unoptimised Rust from the record's text alone,
 //! each rule citing the section it transcribes.
 //!
@@ -122,14 +139,16 @@
 //! of its own, never by a substring — in §1's order, each kind by its texts compared byte by byte, "never by its
 //! message's words"; the pairs of the refusals naming pairs read from the names a message writes as code, in their
 //! order, whatever words join them; to the clause it names, and no other, where §1 names one; to what each receiver
-//! would receive, in §1's order — its alarms, then its expiries; and, of two tasks of one name, to the system and then
-//! each name, by the name's own text. A task is found by its text, which two tasks of one name share: that refusal is
-//! taken first, so no reading of a task by its text ever meets such a system, and a text two tasks share fails the
-//! reading rather than merging them (`side_of`). The reading is itself held to the record's
-//! three worked texts (§3), whole, lowered from the `/2` records the record states for them; its owed facts to §2.10's
-//! table and §3's `FACT` list, its forms, node kinds and causes to §3's own lists, and its causes of one source to
-//! §2.2's pairing of the routes' with the task's own; and its readers of a refusal's
-//! prose to messages written in words of their own, reworded and misordered.
+//! would receive, in §1's order — its alarms, then its expiries; of two tasks of one name, to the system and then each
+//! name, by the name's own text; and, of the generator's joint rules refusing a record under model §8 rule 16, to each
+//! finding, a task, its source and a code, the conflicts before the unknowns. A task is found by its text, which two
+//! tasks of one name share: that refusal is taken first, so no reading of a task by its text ever meets such a system,
+//! and a text two tasks share fails the reading rather than merging them (`side_of`). The reading is itself held to the
+//! record's three worked texts (§3), whole, lowered from the `/2` records the record states for them; its owed facts to
+//! §2.10's table and §3's `FACT` list, its forms, node kinds and causes to §3's own lists, and its causes of one source
+//! to §2.2's pairing of the routes' with the task's own, the own three to §2.2's statement that no accepted record
+//! reaches them; and its readers of a refusal's prose to messages written in words of their own, reworded and
+//! misordered.
 //!
 //! ⛔ **Independence.** The reading was written by contexts that never read `crates/archogen-plan/src/lib.rs` nor the
 //! corpus's outcomes. A disagreement is a finding, never something to make disappear: decide from the record's text
@@ -152,7 +171,7 @@ use archogen_digest::Digest;
 use archogen_plan::{lower, Refusal};
 use archogen_plan_check::check::plan_file;
 use eadl_front::module::DirectoryModules;
-use eadl_front::{Form, SourceMap};
+use eadl_front::{Form, Program, SourceMap};
 use eadl_model::profile::RT_STATIC_UP_V1;
 use eadl_resolve::adapter::Offered;
 use eadl_resolve::plan;
@@ -1174,8 +1193,12 @@ const SEPARATIONS: [Separation; 6] = [
 /// or through two, or reaching none — a task bound to one itself released by it alone, whatever other source it
 /// reaches (round 16, R16-B1); an alarm `t` uses, or none. The first source, `dev.z`, is declared first and the
 /// second, `dev.a`, is met only by a service requiring `(available-in-state run sleep)`, which it alone offers, so the
-/// two are distinct and their texts' order is not their declaration order. (Names written by `needs` are the adapters
-/// universe's; here every declaration is named by `uses`.)
+/// two are distinct and their texts' order is not their declaration order. A task binding `interrupt-source` itself
+/// may take either, each offering it: since model §8 rule 16 landed (`M4.1.2.3`), a sporadic one takes `dev.a` where
+/// `dev.z` is not as far apart as it and `dev.a` is, and the search refuses the system where neither is; every record
+/// binding it to one that is not is judged instead, the unamended rules', binding `dev.z`, among them
+/// ([`RULE_16_RECORD`]). (Names written by `needs` are the
+/// adapters universe's; here every declaration is named by `uses`.)
 fn releases_and_routes() -> Vec<Case> {
     let mut cases = Vec::new();
     for alarm in [false, true] {
@@ -3680,7 +3703,9 @@ const HANDLERS_USED: [&[&str]; 4] = [&[], &["evt.a"], &["evt.z"], &["evt.a", "ev
 /// binding takes is the search's, read from the record. So a task's own source decides alone: beside another source's
 /// route it reaches, whether that one alone would release it every or leave it unknown; beside its own source's
 /// handler, that route naming a requester it reaches too; and a task binding none, beside it, is released by the routes
-/// it reaches.
+/// it reaches. Since model §8 rule 16 landed (`M4.1.2.3`), `t` bound itself takes a source stating at least its 20 ms,
+/// and the search refuses the system where neither does, every record binding it to one that does not judged instead
+/// ([`RULE_16_RECORD`]).
 fn own_sources() -> Vec<Case> {
     let mut cases = Vec::new();
     for a_first in [false, true] {
@@ -5579,11 +5604,15 @@ const Y_SOURCES: [Option<(Separation, bool)>; 13] = [
 /// source offers (model §8 rule 13). A task can write no such qualifier — it says what it requires by `needs` and
 /// `uses` alone (`docs/semantics/kinds/os-rt.eadl`), and the language refuses one — so where `dev.y` is declared,
 /// which source a task's own `interrupt-source` takes is the search's, read from the record; with `dev.x` alone the
-/// construction fixes every binding. So: a task bound itself to a source, released by it alone, its cause
-/// `own-faster`, `own-unstated` or `own-absent`, beside its twin reaching that source only through `evt.x`, whose cause
-/// is `faster`, `unstated` or `absent`; two tasks bound themselves to `dev.x`, one as far apart as it and one released
-/// less often; and a task bound itself to a source while the handler it uses reaches another. Every cause §3 lists is
-/// reached here.
+/// construction fixes every binding. So: a task bound itself to a source, released by it alone, beside its twin
+/// reaching that source only through `evt.x`, whose cause is `faster`, `unstated` or `absent` where the source leaves
+/// the twin unknown; two tasks bound themselves to `dev.x`, one as far apart as it and one released less often; and a
+/// task bound itself to a source while the handler it uses reaches another. Since model §8 rule 16 landed (`M4.1.2.3`,
+/// R29-R2), a task bound itself to a source the analysis does not admit is bound to another that it admits, or the
+/// search refuses the system, so the own causes, `own-faster`, `own-unstated` and `own-absent`, reach no plan: every
+/// record binding a task to a source the rule does not admit — the unamended rules' among them, the one that reached an
+/// own cause before — is judged instead, refused by the checker and the lowering ([`RULE_16_RECORD`]). Every cause the
+/// routes leave is reached here, and every own cause's record refused.
 fn own_causes() -> Vec<Case> {
     let mut cases = Vec::new();
     for y in Y_SOURCES {
@@ -5729,9 +5758,7 @@ fn own_causes_classes(
             });
             if let [other] = others.as_slice() {
                 out.insert(match (decided.0, separation_decides(separation(other), ms, false).0) {
-                    ("unknown", "every") => {
-                        "trigger: its own source leaving it unknown, beside one that alone would release it every"
-                    }
+                    ("unknown", "every") => OWN_UNKNOWN_BESIDE_EVERY,
                     ("every", "unknown") => {
                         "trigger: its own source releasing it every, beside one that alone would leave it unknown"
                     }
@@ -5739,7 +5766,7 @@ fn own_causes_classes(
                         "trigger: its own source releasing it every, beside another that alone would release it every \
                          from itself"
                     }
-                    _ => "trigger: its own source leaving it unknown, beside one that alone would leave it unknown too",
+                    _ => OWN_UNKNOWN_BESIDE_UNKNOWN,
                 });
             }
             // Its route names the handler the task uses: `evt.x` for `dev.x`, `evt.y` for `dev.y`.
@@ -5775,10 +5802,7 @@ fn own_causes_classes(
             out.insert("trigger: two tasks bound themselves to one source");
             // `t` as far apart as the source at 20 ms, `u` released less often.
             if separation(t_source) == "Stated(20)" {
-                out.insert(
-                    "trigger: two tasks bound themselves to one source, one as far apart as it, one released less \
-                     often",
-                );
+                out.insert(OWN_ONE_RELEASED_LESS_OFTEN);
             }
         }
     }
@@ -5795,6 +5819,50 @@ fn own_causes_classes(
         }
     }
     out
+}
+
+/// The minimum separations of the sporadic task of the arithmetic's-edge universe: 20 ms, [`WIDE`] and
+/// [`WIDE_LONGER`], each within the arithmetic, the last two compared with each other past 128 bits.
+const EDGE_TASKS: [Dur; 3] = [Dur::Ms(20), Dur::Spelled(WIDE), Dur::Spelled(WIDE_LONGER)];
+
+/// The separations its source states: 20 ms, [`WIDE`], [`WIDE_LONGER`], and [`PAST`], past the arithmetic.
+const EDGE_SOURCES: [Separation; 4] = [
+    Separation::Stated(20),
+    Separation::Spelled(&[WIDE]),
+    Separation::Spelled(&[WIDE_LONGER]),
+    Separation::Spelled(&[PAST]),
+];
+
+/// **A task's own source at the arithmetic's edge** (model §8 rule 16, `M4.1.2.3`; `RTP-H24`: "where the exact
+/// arithmetic cannot decide the comparison, as model §7 rule 2 holds"): the sporadic task `t`, bound itself for
+/// `interrupt-source`, its minimum separation each of [`EDGE_TASKS`], the source `dev.x` stating each of
+/// [`EDGE_SOURCES`]. So rule 16 admits a source as far apart as the task or farther, compared exactly where the two
+/// times' cross-multiplication lies past 128 bits, refuses one shorter, so compared too, and refuses one past the
+/// arithmetic, which no comparison decides — each refused system's record, the unamended rules' and its one record
+/// binding `t`, judged by the checker and lowered. (A task's own separation past the arithmetic is no input here: no source is admitted for it, so no
+/// search writes the record the unamended rules gave it.)
+fn own_source_at_the_edge() -> Vec<Case> {
+    let mut cases = Vec::new();
+    for task in EDGE_TASKS {
+        for source in EDGE_SOURCES {
+            cases.push(Case {
+                label: format!("t:{} dev.x:{source:?}", task.spelling()),
+                description: Description {
+                    blocks: vec![source_block("dev.x", source, "")],
+                    tasks: vec![Task {
+                        release: Release::MinSeparation(task),
+                        side: Side {
+                            needs: names(&[INTERRUPT_FACT]),
+                            ..Side::default()
+                        },
+                        ..Task::default()
+                    }],
+                    ..Description::default()
+                },
+            });
+        }
+    }
+    cases
 }
 
 // =====================================================================================================================
@@ -6002,6 +6070,41 @@ const CAUSES: [&str; 8] = [
     "own-absent",
     "own-faster",
 ];
+
+/// The class of a plan whose task's own source states a separation shorter than the task's, `(own-faster ITEM)` —
+/// a branch of §2.2 no plan reaches: "since `RTP-H24` landed (`M4.1.2.3`, model §8 rule 16) no record the generator
+/// accepts binds a task's own source the analysis does not admit: `(own-faster ITEM)`, `(own-absent ITEM)` and
+/// `(own-unstated ITEM)` stay in the grammar, the forms the unamended rules let through" (§2.2, R29-R2). The record that
+/// would reach it is refused before anything is lowered, and held as such ([`RULE_16_RECORD`], [`RULE_16_SHORTER`]).
+const OWN_FASTER: &str =
+    "unreachable: `(unknown (own-faster ITEM))`, its own source's separation shorter, model §8 rule 16 refusing \
+     such a record (§2.2)";
+/// [`OWN_FASTER`]'s twin for a task's own source stating no separation, `(own-unstated ITEM)` ([`RULE_16_UNSTATED`]).
+const OWN_UNSTATED: &str =
+    "unreachable: `(unknown (own-unstated ITEM))`, its own source stating no separation, model §8 rule 16 refusing \
+     such a record (§2.2)";
+/// [`OWN_FASTER`]'s twin for a task's own source declaring its separation absent, `(own-absent ITEM)`
+/// ([`RULE_16_ABSENT`]).
+const OWN_ABSENT: &str =
+    "unreachable: `(unknown (own-absent ITEM))`, its own source's separation absent, model §8 rule 16 refusing such \
+     a record (§2.2)";
+/// The own causes' classes, in §3's order of their causes: `own-unstated`, `own-absent`, `own-faster`.
+const OWN_CAUSES_UNREACHABLE: [&str; 3] = [OWN_UNSTATED, OWN_ABSENT, OWN_FASTER];
+/// A task's own source leaving it unknown — one of the own causes — beside another source whose route alone would
+/// release it every: unreachable as they are.
+const OWN_UNKNOWN_BESIDE_EVERY: &str =
+    "unreachable: its own source leaving it unknown, beside one that alone would release it every, model §8 rule 16 \
+     refusing such a record";
+/// A task's own source leaving it unknown beside another that alone would leave it unknown too: unreachable as the
+/// own causes are.
+const OWN_UNKNOWN_BESIDE_UNKNOWN: &str =
+    "unreachable: its own source leaving it unknown, beside one that alone would leave it unknown too, model §8 rule \
+     16 refusing such a record";
+/// Two tasks bound themselves to one source, one as far apart as it and one released less often, whose own source is
+/// shorter than its separation, `(own-faster ITEM)`: unreachable as the own causes are.
+const OWN_ONE_RELEASED_LESS_OFTEN: &str =
+    "unreachable: two tasks bound themselves to one source, one as far apart as it, one released less often, model \
+     §8 rule 16 refusing such a record";
 
 /// The cause §2.2 writes for the one source that decides a task's trigger and leaves it unknown, by its head:
 /// `unstated` "where it states no separation", `absent` "where it declares it absent", `faster` "where it states one
@@ -7061,7 +7164,10 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     // R28-D2) — `ITEM` the source's interrupt, `(source NAME)` (§2, §3: "each `ITEM` a source"). "A timer route
     // releases no task." So the routes a task reaches decide only where it binds no source itself: its own source
     // decides alone, whatever else reaches it, and is the one source a cause names, its three causes apart from the
-    // routes' three.
+    // routes' three. Since model §8 rule 16 landed (`M4.1.2.3`, R29-R2), "no record the generator accepts binds a
+    // task's own source the analysis does not admit", so the own three are branches no plan reaches, each stated
+    // unreachable with that reason ([`OWN_CAUSES_UNREACHABLE`]), the record that would reach one refused before it is
+    // lowered ([`RULE_16_RECORD`]).
     let mut released_by = BTreeMap::new();
     for task in &description.tasks {
         let trigger = match task.release {
@@ -7101,18 +7207,9 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                             unknown("absent"),
                             "trigger: `(unknown (absent ITEM))`, the separation absent",
                         ),
-                        (Sep::Stated(_), true) => (
-                            unknown("faster"),
-                            "trigger: `(unknown (own-faster ITEM))`, its own source's separation shorter",
-                        ),
-                        (Sep::Unstated, true) => (
-                            unknown("unstated"),
-                            "trigger: `(unknown (own-unstated ITEM))`, its own source stating no separation",
-                        ),
-                        (Sep::Absent, true) => (
-                            unknown("absent"),
-                            "trigger: `(unknown (own-absent ITEM))`, its own source's separation absent",
-                        ),
+                        (Sep::Stated(_), true) => (unknown("faster"), OWN_FASTER),
+                        (Sep::Unstated, true) => (unknown("unstated"), OWN_UNSTATED),
+                        (Sep::Absent, true) => (unknown("absent"), OWN_ABSENT),
                         (Sep::Past, _) => panic!("refused before any plan (§1)"),
                     }
                 };
@@ -7156,10 +7253,7 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                     if let [other] = others.as_slice() {
                         let alone = decide(other, false).0;
                         classes.insert(match (unknown_trigger(&decided.0), unknown_trigger(&alone)) {
-                            (true, false) => {
-                                "trigger: its own source leaving it unknown, beside one that alone would release it \
-                                 every"
-                            }
+                            (true, false) => OWN_UNKNOWN_BESIDE_EVERY,
                             (false, true) => {
                                 "trigger: its own source releasing it every, beside one that alone would leave it \
                                  unknown"
@@ -7168,10 +7262,7 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                                 "trigger: its own source releasing it every, beside another that alone would release \
                                  it every from itself"
                             }
-                            (true, true) => {
-                                "trigger: its own source leaving it unknown, beside one that alone would leave it \
-                                 unknown too"
-                            }
+                            (true, true) => OWN_UNKNOWN_BESIDE_UNKNOWN,
                         });
                     }
                     if route
@@ -7260,7 +7351,7 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     }
     // Two tasks bound themselves to one source (round 28, R28-R4): each released by it as its own separation decides
     // against the source's, so one as far apart as the source is released on every arrival where one released less
-    // often is not, `(own-faster ITEM)`.
+    // often is not, `(own-faster ITEM)` — which model §8 rule 16 refuses, so no plan reaches it (R29-R2).
     let mut own_binders: BTreeMap<&str, Vec<Ratio>> = BTreeMap::new();
     for task in &description.tasks {
         let Release::MinSeparation(apart) = task.release else {
@@ -7284,10 +7375,7 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         classes.insert("trigger: two tasks bound themselves to one source");
         if let Sep::Stated(time) = separation_of(provider) {
             if apart.contains(&time) && apart.iter().any(|t| *t > time) {
-                classes.insert(
-                    "trigger: two tasks bound themselves to one source, one as far apart as it, one released less \
-                     often",
-                );
+                classes.insert(OWN_ONE_RELEASED_LESS_OFTEN);
             }
         }
     }
@@ -8107,6 +8195,651 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
 }
 
 // =====================================================================================================================
+// Model §8 rule 16: a task released by its own source
+// =====================================================================================================================
+
+/// What model §8 rule 16 finds of one sporadic task bound itself to a source the analysis does not admit (`M4.1.2.3`;
+/// `RTP-H24`): "A sporadic task bound itself to a source for `interrupt-source` at `true` is released on every arrival
+/// of that source (the runtime plan's §2.2), so the analysis admits it only where the source's stated
+/// `min-arrival-separation` is at least the task's own `min-separation` ... Judged beside rule 9's judgement of callers,
+/// of each served task bound so: a separation shorter than the task's, one declared absent — an unbounded source, which
+/// the analysis refuses under its condition 3 — or a comparison the exact arithmetic cannot decide (§7 rule 2) is a
+/// conflict, `unsupported-profile`; a source stating no value for it — none, bare, or a bound, which the relation reads
+/// as no value — an unknown, `missing-fact`."
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+struct Unadmitted {
+    /// The task, `(task SYSTEM NAME)`.
+    task: String,
+    /// The source's block or platform.
+    source: String,
+    /// `unsupported-profile`, a conflict, or `missing-fact`, an unknown.
+    code: &'static str,
+    /// What the source states against the task: `shorter`, `absent` or `undecidable`, each a conflict, or `unstated`,
+    /// an unknown.
+    cause: &'static str,
+}
+
+/// What rule 16 says of the sporadic `task` released on every arrival of the source `block`: `None` where the analysis
+/// admits it, "the source's stated `min-arrival-separation` ... at least the task's own `min-separation`", and
+/// otherwise the code and the cause. Two times are compared exactly, as §2.2 compares them for the trigger; a
+/// separation past the arithmetic, the source's or the task's, is "a comparison the exact arithmetic cannot decide".
+fn rule_16_judges(task: &Task, block: &Block) -> Option<(&'static str, &'static str)> {
+    let Release::MinSeparation(apart) = task.release else {
+        return None;
+    };
+    let separation = block
+        .separation
+        .unwrap_or_else(|| {
+            panic!(
+                "`{}` offers `interrupt-source`, stating nothing the reading reads of its separation",
+                block.name
+            )
+        })
+        .read();
+    let own = match apart.time() {
+        Time::Seconds(own) => Some(own),
+        Time::Past => None,
+        Time::Other(unit) => panic!(
+            "no universe binds a task's own source with its minimum separation in `{unit}`, which §1 refuses"
+        ),
+    };
+    match (separation, own) {
+        (Sep::Unstated, _) => Some(("missing-fact", "unstated")),
+        (Sep::Absent, _) => Some(("unsupported-profile", "absent")),
+        (Sep::Past, _) | (_, None) => Some(("unsupported-profile", "undecidable")),
+        (Sep::Stated(time), Some(own)) if time >= own => None,
+        (Sep::Stated(_), Some(_)) => Some(("unsupported-profile", "shorter")),
+    }
+}
+
+/// Whether no two of the lowered system's tasks carry one name: §1 refuses two tasks of one name before anything reads
+/// a task by its text, so rule 16 is read only of a system whose tasks' names are distinct.
+fn names_distinct(description: &Description) -> bool {
+    let names: BTreeSet<&str> = description.tasks.iter().map(|t| t.name.as_str()).collect();
+    names.len() == description.tasks.len()
+}
+
+/// The sporadic tasks of the lowered system requiring `interrupt-source` themselves — a task writes it by `needs` alone
+/// (`docs/semantics/kinds/os-rt.eadl`) — each with every source it may be bound to: each block or platform of the
+/// system's hardware (model §8 rule 7) offering `(interrupt-source true)`, reachable at the profile's level (rule 9).
+fn own_source_candidates(description: &Description) -> Vec<(&Task, Vec<Block>)> {
+    let hardware = system_hardware(description);
+    let sources: Vec<Block> = description
+        .hardware()
+        .into_iter()
+        .filter(|b| {
+            hardware.contains(&b.name)
+                && b.offers.iter().any(|o| o == "(interrupt-source true)")
+                && b.offers
+                    .iter()
+                    .any(|o| o == "(reachable-at-privilege machine)")
+        })
+        .collect();
+    description
+        .tasks
+        .iter()
+        .filter(|t| {
+            matches!(t.release, Release::MinSeparation(_))
+                && t.side.needs.iter().any(|f| f == INTERRUPT_FACT)
+        })
+        .map(|t| (t, sources.clone()))
+        .collect()
+}
+
+/// Rule 16's verdict on the search where it leaves no assignment: "Since the search tries every assignment (rule 6), a
+/// task whose description offers a source at least as far apart is bound to it, and one whose description offers none
+/// is refused, naming the task and the source". Rule 6: "When no assignment holds, the description takes the highest
+/// code, by precedence, of one assignment's findings: the first blocked by unknowns alone, `missing-fact`, or, where
+/// every assignment has a conflict, the first's conflicts ... — each finding its own code where it names one, as ...
+/// rule 16 name[s] `unsupported-profile`". The tasks' own sources are chosen apart, no rule joining them, so some
+/// assignment is blocked by unknowns alone where each such task may take a source admitted or stating no separation —
+/// `missing-fact` — and every assignment has a conflict where some task's every source is one — `unsupported-profile`,
+/// rule 16's own code.
+fn rule_16_search(description: &Description) -> Option<&'static str> {
+    let mut refused = None;
+    for (task, sources) in own_source_candidates(description) {
+        let judged: Vec<Option<(&str, &str)>> =
+            sources.iter().map(|s| rule_16_judges(task, s)).collect();
+        if judged.is_empty() || judged.iter().any(Option::is_none) {
+            continue;
+        }
+        if judged
+            .iter()
+            .flatten()
+            .all(|(code, _)| *code == "unsupported-profile")
+        {
+            return Some("unsupported-profile");
+        }
+        refused = Some("missing-fact");
+    }
+    refused
+}
+
+/// The search's verdict for a code, as [`flow`] writes it.
+fn verdict_written(code: &str) -> &'static str {
+    match code {
+        "unsupported-profile" => "UnsupportedProfile",
+        "missing-fact" => "MissingFact",
+        other => panic!("rule 16 gives no `{other}`"),
+    }
+}
+
+/// Whether some sporadic task binding its own source may be bound to one the analysis does not admit: the systems
+/// whose record the unamended rules gave can differ from the search's.
+fn rule_16_may_refuse(description: &Description) -> bool {
+    own_source_candidates(description)
+        .iter()
+        .any(|(task, sources)| sources.iter().any(|s| rule_16_judges(task, s).is_some()))
+}
+
+/// Rule 16's findings on a record's bindings, "of each served task bound so": each sporadic task bound itself, for
+/// `interrupt-source` met by `true` (model §8 rule 2), to a source the analysis does not admit — the conflicts first,
+/// then the unknowns, as §1 names the generator's findings, each group by the task's text.
+fn unadmitted(description: &Description, binds: &[Bind]) -> Vec<Unadmitted> {
+    let system = description.system.as_str();
+    let hardware: BTreeMap<String, Block> = description
+        .hardware()
+        .into_iter()
+        .map(|b| (b.name.clone(), b))
+        .collect();
+    let mut out = Vec::new();
+    for task in &description.tasks {
+        let text = format!("(task {system} {})", task.name);
+        for bind in binds.iter().filter(|b| {
+            b.requester == text && !is_instance(&b.provider) && relies_on_source(description, b)
+        }) {
+            if let Some((code, cause)) = rule_16_judges(task, &hardware[&bind.provider]) {
+                out.push(Unadmitted {
+                    task: text.clone(),
+                    source: bind.provider.clone(),
+                    code,
+                    cause,
+                });
+            }
+        }
+    }
+    out.sort_by_key(|u| (u.code != "unsupported-profile", u.task.clone()));
+    out
+}
+
+/// A separation no task of these universes is released more often than, a thousand seconds: the one
+/// [`admitting_twin`] gives every source.
+const ADMITTING_MS: u64 = 1_000_000;
+
+/// `description` with every source stating [`ADMITTING_MS`] — a separation rule 16 admits for every task bound to it —
+/// and nothing else changed: the description whose search gives the record the unamended rules gave this one. Model §8
+/// reads a source's `min-arrival-separation` in rule 16 alone — rule 8 reports it on the route, "an obligation, never a
+/// finding" — and no requester of these universes constrains it (asserted), so the search over the twin, which rule 16
+/// never refuses, is the search without rule 16 over the description, and its `bind` lines are the unamended rules'.
+fn admitting_twin(description: &Description) -> Description {
+    let mut sides: Vec<Side> = vec![description.own.clone()];
+    sides.extend(description.tasks.iter().map(|t| t.side.clone()));
+    sides.extend(description.services.iter().map(|s| s.side.clone()));
+    sides.extend(description.hardware().into_iter().map(|b| b.side));
+    assert!(
+        sides.iter().all(|side| {
+            !side.needs.iter().any(|f| f == "min-arrival-separation")
+                && !side
+                    .at_most
+                    .iter()
+                    .chain(&side.exactly)
+                    .any(|(f, _)| f == "min-arrival-separation")
+                && !side
+                    .other
+                    .iter()
+                    .any(|clause| clause.contains("min-arrival-separation"))
+        }),
+        "a requester constrains `min-arrival-separation`: the twin's search is not the unamended one"
+    );
+    let admitting = Dur::Ms(ADMITTING_MS)
+        .seconds()
+        .expect("within the arithmetic");
+    for task in &description.tasks {
+        if let Release::MinSeparation(apart) = task.release {
+            if let Time::Seconds(own) = apart.time() {
+                assert!(
+                    own <= admitting,
+                    "`{}` is released less often than {ADMITTING_MS} ms",
+                    task.name
+                );
+            }
+        }
+    }
+    fn admit(block: &mut Block) {
+        if block.separation.is_none() {
+            return;
+        }
+        block.separation = Some(Separation::Stated(ADMITTING_MS));
+        block
+            .offers
+            .retain(|offer| !offer.starts_with("(min-arrival-separation "));
+        let at = block
+            .offers
+            .iter()
+            .position(|offer| offer == "(interrupt-source true)")
+            .map_or(block.offers.len(), |at| at + 1);
+        block
+            .offers
+            .insert(at, format!("(min-arrival-separation {ADMITTING_MS} ms)"));
+        block.absent.retain(|fact| fact != "min-arrival-separation");
+    }
+    let mut twin = description.clone();
+    twin.blocks.iter_mut().for_each(admit);
+    twin.platforms.iter_mut().for_each(admit);
+    twin
+}
+
+/// The class of the systems for which a record binding a sporadic task to a source the analysis does not admit is
+/// judged — every assignment of the tasks' own sources, each taking one its description offers, over the record the
+/// unamended rules gave ([`rule_16_records`]), but the search's: "the forms the unamended rules let through" (§2.2,
+/// R29-R2), which every input reaching one of [`OWN_CAUSES_UNREACHABLE`] had before rule 16 landed. Rule 16 refuses
+/// each "in the model, the generator's joint rules and the checker's" (`RTP-H24`): the configuration checker, under its
+/// check (5), `plan-joint` — "a sporadic task bound itself to a source faster than it, unbounded, or stating no
+/// separation (rule 16)" — a record whose bindings do not hold together, which "is `tool-failure`"
+/// (`docs/book/src/plan-check.md`); and the lowering, under §1's "the generator's own joint rules, run over the record
+/// the checker accepted, find a conflict, an unknown or a map finding: `tool-failure`, naming both verdicts, the
+/// checker's acceptance and each of the generator's findings — its conflicts, then its unknowns". Each names each such
+/// task with its source and the code rule 16 gives, the two agreeing. Neither a finding nor one of [`CHECKER_HELD`]:
+/// no search writes these records, and both roles refuse each, as they must.
+///
+/// ⚠️ The lowering does not read the checker's result record yet (R16-R6), so it is held to the bullet of the
+/// generator's joint rules; once it does, §1's earlier "its status is not `ok`: `tool-failure`, naming both verdicts"
+/// refuses each record first, under the same code.
+const RULE_16_RECORD: &str =
+    "rule 16: a record binding a task's own source the analysis does not admit, refused by the configuration checker \
+     and by the lowering's joint rules, the codes agreeing";
+/// Of [`RULE_16_RECORD`]: the record the unamended rules gave — the search's over [`admitting_twin`], its `bind` lines
+/// over this description's program — binding one, the record that reached an own cause before rule 16 landed.
+const RULE_16_UNAMENDED: &str =
+    "rule 16: among them the record the unamended rules gave, the search's with every source admitted";
+/// Of [`RULE_16_RECORD`]: a task's own source stating a separation shorter than the task's, a conflict — the input of
+/// [`OWN_FASTER`].
+const RULE_16_SHORTER: &str =
+    "rule 16: such a record, a task's own source stating a separation shorter than the task's, `unsupported-profile`";
+/// Of [`RULE_16_RECORD`]: a task's own source declaring its separation absent, a conflict — the input of
+/// [`OWN_ABSENT`].
+const RULE_16_ABSENT: &str =
+    "rule 16: such a record, a task's own source declaring its separation absent, `unsupported-profile`";
+/// Of [`RULE_16_RECORD`]: a task's own source stating no separation, an unknown — the input of [`OWN_UNSTATED`].
+const RULE_16_UNSTATED: &str =
+    "rule 16: such a record, a task's own source stating no separation, `missing-fact`";
+/// Of [`RULE_16_RECORD`]: a task's own source's separation past the exact arithmetic, "a comparison the exact
+/// arithmetic cannot decide", a conflict.
+const RULE_16_UNDECIDABLE: &str =
+    "rule 16: such a record, a task's own source's separation past the exact arithmetic, `unsupported-profile`";
+/// Of [`RULE_16_RECORD`]: two tasks refused, one by a conflict and one by an unknown, §1 naming the conflict first.
+const RULE_16_CONFLICT_BEFORE_UNKNOWN: &str =
+    "rule 16: such a record, two tasks refused, the conflict named before the unknown";
+/// Of [`RULE_16_RECORD`]: two tasks bound themselves to one source, the one it admits beside the one released less
+/// often, refused alone — among its inputs, [`OWN_ONE_RELEASED_LESS_OFTEN`]'s.
+const RULE_16_ONE_OF_TWO: &str =
+    "rule 16: such a record, two tasks bound themselves to one source, one admitted, the one released less often \
+     alone refused";
+/// A system of [`RULE_16_UNAMENDED`] the search resolves, binding the task to another source the analysis admits.
+const RULE_16_REBOUND: &str =
+    "rule 16: the search binds the task to a source the analysis admits, the unamended rules to one it does not";
+/// The search refusing a system rule 16 leaves no assignment, `unsupported-profile`: a task's every source a conflict.
+const RULE_16_SEARCH_CONFLICT: &str =
+    "rule 16: the search refuses, `unsupported-profile`, a task's every source a conflict";
+/// The search refusing a system rule 16 leaves no assignment, `missing-fact`: some assignment blocked by unknowns alone.
+const RULE_16_SEARCH_UNKNOWN: &str =
+    "rule 16: the search refuses, `missing-fact`, a task's every source a conflict or stating no separation";
+
+/// The codes of the status vocabulary a finding of the joint rules carries (model §8 rule 6).
+const JOINT_CODES: [&str; 4] = [
+    "infeasible-configuration",
+    "invalid-description",
+    "missing-fact",
+    "unsupported-profile",
+];
+
+/// What one finding of rule 16 in a message names, read by its names alone, never its words (round 20, R20-R7): each
+/// `(task SYSTEM NAME)` form ([`subjects_named`]), each block or platform the description declares written as code
+/// ([`names_mentioned`]), and each code of [`JOINT_CODES`] written as a word of its own — one of each, the task, the
+/// source and the code, or `Err` saying what else the clause names. A clause naming none of them is `Ok(None)`.
+fn rule_16_named(
+    clause: &str,
+    description: &Description,
+) -> Result<Option<(String, String, String)>, String> {
+    let tasks: Vec<String> = subjects_named(clause, &description.system)
+        .into_iter()
+        .filter(|subject| subject.starts_with("(task "))
+        .collect();
+    let hardware: BTreeSet<String> = description.hardware().into_iter().map(|b| b.name).collect();
+    let mut sources: Vec<String> = Vec::new();
+    for name in names_mentioned(clause, &hardware) {
+        if !sources.contains(&name) {
+            sources.push(name);
+        }
+    }
+    let codes: Vec<&str> = words_outside_instances(clause)
+        .iter()
+        .map(|word| word.trim_end_matches([':', '.', ',']))
+        .filter_map(|word| JOINT_CODES.iter().find(|code| **code == word).copied())
+        .collect();
+    match (tasks.as_slice(), sources.as_slice(), codes.as_slice()) {
+        ([], [], []) => Ok(None),
+        ([task], [source], [code]) => Ok(Some((task.clone(), source.clone(), (*code).to_string()))),
+        _ => Err(format!(
+            "a finding names the tasks {tasks:?}, the sources {sources:?} and the codes {codes:?}, not one of each: \
+             {clause:?}"
+        )),
+    }
+}
+
+/// Where a message does not name the generator's findings of rule 16 as §1 orders them: clause by clause, each naming a
+/// task, its source and a code ([`rule_16_named`]) — "its conflicts, then its unknowns ..., each group in the order the
+/// joint rules give it", an order the record leaves to the joint rules within a group, so each group is held whole,
+/// and the groups in that order.
+fn joint_disagrees(
+    message: &str,
+    description: &Description,
+    findings: &[Unadmitted],
+) -> Option<String> {
+    let mut wrong = Vec::new();
+    let mut named = Vec::new();
+    for clause in message.split(';') {
+        match rule_16_named(clause, description) {
+            Ok(Some(finding)) => named.push(finding),
+            Ok(None) => {}
+            Err(why) => wrong.push(why),
+        }
+    }
+    let group = |findings: &[(String, String, String)], code: &str| {
+        let mut group: Vec<(String, String, String)> =
+            findings.iter().filter(|f| f.2 == code).cloned().collect();
+        group.sort();
+        group
+    };
+    let wanted: Vec<(String, String, String)> = findings
+        .iter()
+        .map(|u| (u.task.clone(), u.source.clone(), u.code.to_string()))
+        .collect();
+    let conflicts_first = named
+        .windows(2)
+        .all(|w| !(w[0].2 == "missing-fact" && w[1].2 == "unsupported-profile"));
+    if !conflicts_first
+        || named.len() != wanted.len()
+        || JOINT_CODES
+            .iter()
+            .any(|code| group(&named, code) != group(&wanted, code))
+    {
+        wrong.push(format!(
+            "it names {named:?}, each a task, its source and a code, where the generator's joint rules give \
+             {wanted:?}, its conflicts, then its unknowns"
+        ));
+    }
+    (!wrong.is_empty()).then(|| wrong.join("; "))
+}
+
+/// Where the configuration checker's refusal of a record is not rule 16's of `expected`: its status `tool-failure`,
+/// "A corrupted plan is `tool-failure`" (`docs/book/src/plan-check.md`); each finding of its check (5), `plan-joint`,
+/// saying "(rule 16)", and naming one task, its source and one code; and the findings those of `expected`, each once,
+/// whatever their order — the checker's order no record fixes.
+fn rule_16_checker_disagrees(
+    refused: &Checked,
+    description: &Description,
+    expected: &[Unadmitted],
+) -> Option<String> {
+    let mut wrong = Vec::new();
+    if refused.status != "tool-failure" {
+        wrong.push(format!(
+            "its status is `{}`, not `tool-failure`",
+            refused.status
+        ));
+    }
+    let mut named = Vec::new();
+    for (code, message) in &refused.findings {
+        if code != "plan-joint" || !message.contains("(rule 16)") {
+            wrong.push(format!(
+                "a finding `{code}` not of its check (5) under rule 16: {message}"
+            ));
+            continue;
+        }
+        match rule_16_named(message, description) {
+            Ok(Some(finding)) => named.push(finding),
+            Ok(None) => wrong.push(format!("a finding naming no task: {message}")),
+            Err(why) => wrong.push(why),
+        }
+    }
+    named.sort();
+    let mut wanted: Vec<(String, String, String)> = expected
+        .iter()
+        .map(|u| (u.task.clone(), u.source.clone(), u.code.to_string()))
+        .collect();
+    wanted.sort();
+    if named != wanted {
+        wrong.push(format!(
+            "it names {named:?}, each a task, its source and a code, where rule 16 gives {wanted:?}"
+        ));
+    }
+    (!wrong.is_empty()).then(|| wrong.join("; "))
+}
+
+/// The search over the twin `text` ([`admitting_twin`]): its record and its `(program …)` line, or the search's
+/// verdict. A universe's systems that differ only in their sources' separations share one twin, so each twin is
+/// searched once, whichever worker meets it first.
+fn twin_searched(text: &str, system: &str) -> Result<(String, String), String> {
+    type Searched = BTreeMap<(String, String), Result<(String, String), String>>;
+    static SEARCHED: std::sync::OnceLock<std::sync::Mutex<Searched>> = std::sync::OnceLock::new();
+    let cache = SEARCHED.get_or_init(Default::default);
+    let key = (text.to_string(), system.to_string());
+    if let Some(searched) = cache.lock().expect("the twins").get(&key) {
+        return searched.clone();
+    }
+    let program = common::checked(text).expect("the language accepts the twin");
+    let searched = searched_record(&program, system).map(|record| {
+        (
+            record,
+            format!("(program \"{}\")", plan::program_digest(&program)),
+        )
+    });
+    cache
+        .lock()
+        .expect("the twins")
+        .insert(key, searched.clone());
+    searched
+}
+
+/// What the reading finds of the records binding a task's own source the analysis does not admit, for one system
+/// ([`RULE_16_RECORD`]).
+#[derive(Default)]
+struct Rule16Records {
+    /// The record the unamended rules gave, where it binds one, over the description's program.
+    unamended: Option<String>,
+    /// The records judged by the configuration checker and lowered.
+    judged: usize,
+    /// Of them, those both refuse as rule 16 says.
+    refused: usize,
+    classes: BTreeSet<&'static str>,
+    findings: Vec<String>,
+}
+
+/// Every record binding a task's own source the analysis does not admit that `case`'s system can be given, but
+/// `searched`, the search's record (none where the search refused): the record the unamended rules gave — the search's
+/// over [`admitting_twin`], its `bind` lines over this description's program — with each sporadic task binding
+/// `interrupt-source` itself bound in turn to each source of [`own_source_candidates`], every assignment of them, the
+/// `/2` record's other lines unchanged. Each binding one rule 16 refuses is judged by the configuration checker and
+/// lowered, each held to rule 16's findings on it. `None` where no task's own source may be one the analysis does not
+/// admit.
+fn rule_16_records(universe: &str, case: &Case, searched: Option<&str>) -> Option<Rule16Records> {
+    let description = &case.description;
+    if !names_distinct(description) || !rule_16_may_refuse(description) {
+        return None;
+    }
+    let text = description.text();
+    let mut out = Rule16Records::default();
+    let reproducer = |record: &str, what: &str| {
+        format!(
+            "== {universe}: {}\n-- the description\n{text}-- a record binding a task's own source, the unamended \
+             rules' with each such task bound in turn to each source\n{record}{what}",
+            case.label
+        )
+    };
+    let (twin_record, twin_line) = match twin_searched(
+        &admitting_twin(description).text(),
+        &description.system,
+    ) {
+        Ok(searched) => searched,
+        Err(verdict) => {
+            out.findings.push(reproducer(
+                    "",
+                    &format!(
+                        "-- the search over the description with every source stating {ADMITTING_MS} ms resolves \
+                         no record: {verdict}\n"
+                    ),
+                ));
+            return Some(out);
+        }
+    };
+    let program = common::checked(&text).expect("the language accepts the description");
+    assert_eq!(
+        twin_record.matches(&twin_line).count(),
+        1,
+        "one program line"
+    );
+    let unamended = twin_record.replace(
+        &twin_line,
+        &format!("(program \"{}\")", plan::program_digest(&program)),
+    );
+    // Every assignment of the tasks' own sources, each the record's line `(bind TASK interrupt-source SOURCE)` with
+    // another source, the `/2` record's order unchanged: its lines are its bindings', one for each requirement.
+    let system = description.system.as_str();
+    let mut records = vec![unamended.clone()];
+    for (task, sources) in own_source_candidates(description) {
+        let opening_text = format!("(bind (task {system} {}) {INTERRUPT_FACT} ", task.name);
+        let opening = opening_text.as_str();
+        records = records
+            .iter()
+            .flat_map(|record| {
+                assert_eq!(
+                    record.lines().filter(|l| l.starts_with(opening)).count(),
+                    1,
+                    "the unamended rules bind `{}`'s own source",
+                    task.name
+                );
+                sources.iter().map(move |source| {
+                    record
+                        .lines()
+                        .map(|line| {
+                            if line.starts_with(opening) {
+                                format!("{opening}{})\n", source.name)
+                            } else {
+                                format!("{line}\n")
+                            }
+                        })
+                        .collect::<String>()
+                })
+            })
+            .collect();
+    }
+    assert!(
+        records.contains(&unamended),
+        "the unamended rules' record among every assignment"
+    );
+    let searched_binds = searched.map(binds_of);
+    for record in records {
+        let binds = binds_of(&record);
+        let refused = unadmitted(description, &binds);
+        if refused.is_empty() || searched_binds.as_ref() == Some(&binds) {
+            continue;
+        }
+        out.judged += 1;
+        let mut agreeing = true;
+        match judged_by_the_checker(&text, &record) {
+            None => {
+                agreeing = false;
+                out.findings.push(reproducer(
+                    &record,
+                    &format!(
+                        "-- the configuration checker accepts it, where model §8 rule 16 refuses {refused:?} (its \
+                         check (5))\n"
+                    ),
+                ));
+            }
+            Some(checked) => {
+                if let Some(wrong) = rule_16_checker_disagrees(&checked, description, &refused) {
+                    agreeing = false;
+                    out.findings.push(reproducer(
+                        &record,
+                        &format!(
+                            "-- the configuration checker refuses it: {checked}\n-- {wrong}\n"
+                        ),
+                    ));
+                }
+            }
+        }
+        let due = refusal_the_record_gives(description, &binds)
+            .expect("§1's bullet of the generator's joint rules, rule 16 refusing the record");
+        match lower(&program, &record, &common::vocabulary(), &common::catalog()) {
+            Ok(plan) => {
+                agreeing = false;
+                out.findings.push(reproducer(
+                    &record,
+                    &format!(
+                        "-- the code writes\n{}-- the record refuses it: `{}`, naming {} (§1)\n",
+                        plan.text(),
+                        due.code,
+                        due.summary()
+                    ),
+                ));
+            }
+            Err(refusal) => {
+                if let Some(wrong) = refusal_disagrees(&due, &refusal, description) {
+                    agreeing = false;
+                    out.findings.push(reproducer(
+                        &record,
+                        &format!(
+                            "-- the code writes\nrefused {refusal}\n-- {wrong} (§1: `{}`, naming {})\n",
+                            due.code,
+                            due.summary()
+                        ),
+                    ));
+                }
+            }
+        }
+        if !agreeing {
+            continue;
+        }
+        out.refused += 1;
+        out.classes.insert(RULE_16_RECORD);
+        for u in &refused {
+            out.classes.insert(match u.cause {
+                "shorter" => RULE_16_SHORTER,
+                "absent" => RULE_16_ABSENT,
+                "unstated" => RULE_16_UNSTATED,
+                _ => RULE_16_UNDECIDABLE,
+            });
+        }
+        if refused.iter().any(|u| u.code == "unsupported-profile")
+            && refused.iter().any(|u| u.code == "missing-fact")
+        {
+            out.classes.insert(RULE_16_CONFLICT_BEFORE_UNKNOWN);
+        }
+        // Two tasks bound themselves to one source, one of them admitted.
+        if refused.iter().any(|u| {
+            binds.iter().any(|b| {
+                b.provider == u.source
+                    && b.requester != u.task
+                    && b.requester.starts_with(&format!("(task {system} "))
+                    && relies_on_source(description, b)
+                    && !refused.iter().any(|r| r.task == b.requester)
+            })
+        }) {
+            out.classes.insert(RULE_16_ONE_OF_TWO);
+        }
+        if record == unamended {
+            out.classes.insert(RULE_16_UNAMENDED);
+            out.unamended = Some(record);
+            if searched.is_some() {
+                out.classes.insert(RULE_16_REBOUND);
+            }
+        }
+    }
+    Some(out)
+}
+
+// =====================================================================================================================
 // Reading a plan's lines
 // =====================================================================================================================
 
@@ -8491,6 +9224,24 @@ fn flow(text: &str, system: &str) -> Flow {
         Ok(program) => program,
         Err(verdict) => return Flow::Rejected(verdict.to_string()),
     };
+    let record = match searched_record(&program, system) {
+        Ok(record) => record,
+        Err(verdict) => return Flow::Unresolved(verdict),
+    };
+    let checker = judged_by_the_checker(text, &record);
+    let lowered =
+        lower(&program, &record, &common::vocabulary(), &common::catalog()).map(|plan| plan.text());
+    Flow::Resolved {
+        record,
+        program: plan::program_digest(&program),
+        checker,
+        lowered,
+    }
+}
+
+/// `program`'s `system` searched as the engine searches it, at the profile's caller level with the shipped catalog, and
+/// its `/2` record written: the record, or the search's verdict.
+fn searched_record(program: &Program, system: &str) -> Result<String, String> {
     let vocabulary = common::vocabulary();
     let catalog = common::catalog();
     let declarations = &program.root().declarations;
@@ -8515,14 +9266,19 @@ fn flow(text: &str, system: &str) -> Flow {
         Limits::DEFAULT,
     ) {
         Search::Resolved(resolution) => resolution,
-        Search::Refused { verdict, .. } => return Flow::Unresolved(format!("{verdict:?}")),
-        Search::Inconclusive { .. } => return Flow::Unresolved("inconclusive".to_string()),
+        Search::Refused { verdict, .. } => return Err(format!("{verdict:?}")),
+        Search::Inconclusive { .. } => return Err("inconclusive".to_string()),
     };
-    let record = plan::write(
+    Ok(plan::write(
         &resolution,
         RT_STATIC_UP_V1.id,
-        &plan::program_digest(&program),
-    );
+        &plan::program_digest(program),
+    ))
+}
+
+/// The configuration checker's verdict on `record` over the description `text`, as
+/// `crates/eadl-resolve/tests/plan.rs`'s `resolved_and_judged` judges one: its refusal, or `None` where it accepts.
+fn judged_by_the_checker(text: &str, record: &str) -> Option<Checked> {
     let mut sources = SourceMap::new();
     let id = sources
         .add("description.eadl", text.to_owned())
@@ -8533,23 +9289,16 @@ fn flow(text: &str, system: &str) -> Flow {
         &DirectoryModules::new(common::root()),
         &RT_STATIC_UP_V1,
         "plan.json",
-        &record,
+        record,
     );
-    let checker = verdict.err().map(|refused| Checked {
+    verdict.err().map(|refused| Checked {
         status: refused.status.slug().to_string(),
         findings: refused
             .findings
             .iter()
             .map(|f| (f.code.to_string(), f.message.to_string()))
             .collect(),
-    });
-    let lowered = lower(&program, &record, &vocabulary, &catalog).map(|plan| plan.text());
-    Flow::Resolved {
-        record,
-        program: plan::program_digest(&program),
-        checker,
-        lowered,
-    }
+    })
 }
 
 /// What a refusal §1 gives names.
@@ -8587,6 +9336,11 @@ enum Names {
     /// naming one, with what it names — "each named, by the namer's text and then the block's or the platform's"
     /// (round 20, R20-D3).
     Outside(Vec<(String, String)>),
+    /// The generator's joint rules refusing the record: "naming both verdicts, the checker's acceptance and each of the
+    /// generator's findings — its conflicts, then its unknowns, then the map's refusals and the map's unknowns, each
+    /// group in the order the joint rules give it" — of model §8 rule 16, each task bound itself to a source the
+    /// analysis does not admit, with that source and the code rule 16 gives ([`unadmitted`]'s order).
+    Joint(Vec<Unadmitted>),
 }
 
 /// One receiver of interrupt code (§1): a task's `(task SYSTEM NAME)`, or the system's name for its own level, with
@@ -8632,6 +9386,11 @@ impl Due {
                 .collect::<Vec<_>>()
                 .join(", "),
             Names::NoTask => "the system's lack of a task".to_string(),
+            Names::Joint(findings) => findings
+                .iter()
+                .map(|u| format!("{} bound to {}, `{}`", u.task, u.source, u.code))
+                .collect::<Vec<_>>()
+                .join(", then "),
             Names::Durations(items) => items.join(", "),
             Names::Receivers(receivers) => receivers
                 .iter()
@@ -9082,6 +9841,19 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
     // First: every bullet below reads a task by its text, which two tasks of one name share.
     if let Some(due) = two_tasks_of_one_name(description, binds) {
         return Some(due);
+    }
+    // Then, after the rebuild's, which every record of these universes passes: "the generator's own joint rules, run
+    // over the record the checker accepted, find a conflict, an unknown or a map finding: `tool-failure`, naming both
+    // verdicts" — of model §8 rule 16 (`M4.1.2.3`), "in the model, the generator's joint rules and the checker's", a
+    // task bound itself to a source the analysis does not admit. No record the search writes reaches it; the records
+    // [`rule_16_records`] builds do ([`RULE_16_RECORD`]).
+    let joint = unadmitted(description, binds);
+    if !joint.is_empty() {
+        return Some(Due {
+            code: "tool-failure",
+            names: Names::Joint(joint),
+            classes: BTreeSet::from(["refusal: the generator's joint rules, model §8 rule 16"]),
+        });
     }
     let system = description.system.as_str();
     let outside = outside_hardware(description);
@@ -10351,6 +11123,11 @@ fn refusal_disagrees(due: &Due, refusal: &Refusal, description: &Description) ->
                 wrong.push(format!("it names {named:?}, of a system with no task"));
             }
         }
+        Names::Joint(findings) => {
+            if let Some(unlike) = joint_disagrees(&refusal.message, description, findings) {
+                wrong.push(unlike);
+            }
+        }
         Names::Durations(items) => {
             let named = durations_named(&refusal.message);
             if named != *items {
@@ -10555,9 +11332,30 @@ struct Outcome {
     findings: Vec<String>,
     /// The plan the code writes, where it writes one and the universe keeps them.
     plan: Option<String>,
+    /// The records binding a task's own source the analysis does not admit judged by the configuration checker and
+    /// lowered ([`RULE_16_RECORD`]), and those both refuse as rule 16 says.
+    rule_16: (usize, usize),
+    /// The record the unamended rules gave, where it binds one and the universe keeps it.
+    unamended: Option<String>,
 }
 
+/// How one system fared: the search's record judged and lowered, and, where a task's own source may be one model §8
+/// rule 16 does not admit, every record binding one judged and lowered too ([`rule_16_records`]).
 fn outcome(universe: &str, case: &Case, keep: bool) -> Outcome {
+    let (mut out, searched) = outcome_of_the_search(universe, case, keep);
+    if let Some(records) = rule_16_records(universe, case, searched.as_deref()) {
+        out.rule_16 = (records.judged, records.refused);
+        out.classes.extend(records.classes);
+        out.findings.extend(records.findings);
+        if keep {
+            out.unamended = records.unamended;
+        }
+    }
+    out
+}
+
+/// How one system fared as the engine runs it, with the record the search wrote, where it wrote one.
+fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, Option<String>) {
     let text = case.description.text();
     let mut out = Outcome {
         class: "lowered",
@@ -10568,17 +11366,39 @@ fn outcome(universe: &str, case: &Case, keep: bool) -> Outcome {
         classes: BTreeSet::new(),
         findings: Vec::new(),
         plan: None,
+        rule_16: (0, 0),
+        unamended: None,
     };
+    // Model §8 rule 16 and rule 6: where no source a sporadic task bound itself may take is admitted, the search refuses
+    // the system with the code they give, "naming the task and the source"; otherwise it binds one admitted.
+    let rule_16 = names_distinct(&case.description)
+        .then(|| rule_16_search(&case.description))
+        .flatten();
     let (record, program, checker, lowered) = match flow(&text, &case.description.system) {
         Flow::Rejected(verdict) => {
             out.class = "rejected";
             out.verdict = verdict;
-            return out;
+            return (out, None);
         }
         Flow::Unresolved(verdict) => {
             out.class = "unresolved";
+            if let Some(code) = rule_16 {
+                if verdict == verdict_written(code) {
+                    out.classes.insert(if code == "unsupported-profile" {
+                        RULE_16_SEARCH_CONFLICT
+                    } else {
+                        RULE_16_SEARCH_UNKNOWN
+                    });
+                } else {
+                    out.findings.push(format!(
+                        "== {universe}: {}\n-- the description\n{text}-- the search refuses it `{verdict}`, where model \
+                         §8 rules 16 and 6 give `{code}`: no source a sporadic task bound itself may take is admitted\n",
+                        case.label
+                    ));
+                }
+            }
             out.verdict = verdict;
-            return out;
+            return (out, None);
         }
         Flow::Resolved {
             record,
@@ -10594,6 +11414,15 @@ fn outcome(universe: &str, case: &Case, keep: bool) -> Outcome {
             case.label
         )
     };
+    if let Some(code) = rule_16 {
+        out.findings.push(reproducer(
+            "",
+            &format!(
+                "-- the search resolves it, where model §8 rules 16 and 6 refuse it `{code}`: no source a sporadic \
+                 task bound itself may take is admitted\n"
+            ),
+        ));
+    }
     // The checker's verdict, against what the reading derives of it: every record accepted, but where the system's side
     // read whole contradicts itself, which the checker refuses with the one finding of that one shape
     // ([`CHECKER_REFUSES`], [`the_one_contradiction`]), and where it reads a binding of a text two tasks carry as the
@@ -10654,7 +11483,7 @@ fn outcome(universe: &str, case: &Case, keep: bool) -> Outcome {
                 if let Some(class) = held {
                     out.classes.insert(class);
                 }
-                return out;
+                return (out, Some(record));
             }
             let judged = judge(&case.description, &program, &record, &plan);
             out.agreed = judged.agreed;
@@ -10712,7 +11541,7 @@ fn outcome(universe: &str, case: &Case, keep: bool) -> Outcome {
     if let Some(class) = held {
         out.classes.insert(class);
     }
-    out
+    (out, Some(record))
 }
 
 /// What a universe gave.
@@ -10735,6 +11564,9 @@ struct Tally {
     verdicts: BTreeMap<String, (usize, String)>,
     /// Each system the search resolved no plan for: its label, with the search's verdict.
     unresolved_systems: BTreeMap<String, String>,
+    /// The records binding a task's own source the analysis does not admit judged by the configuration checker and
+    /// lowered ([`RULE_16_RECORD`]), and those both refuse as rule 16 says.
+    rule_16: (usize, usize),
     findings: Vec<String>,
     elapsed: std::time::Duration,
 }
@@ -10747,6 +11579,23 @@ fn run(universe: &str, cases: &[Case]) -> Tally {
 /// [`run`], with the plan the code writes for each case, where it writes one and `keep`: kept only where a test holds
 /// plans against each other, so that the large universes hold none in memory.
 fn run_keeping(universe: &str, cases: &[Case], keep: bool) -> (Tally, Vec<Option<String>>) {
+    let (tally, kept) = run_kept(universe, cases, keep);
+    (tally, kept.into_iter().map(|k| k.plan).collect())
+}
+
+/// What a universe keeps of one system, where a test holds systems against each other.
+#[derive(Debug, Default)]
+struct Kept {
+    /// The plan the code writes, where it writes one.
+    plan: Option<String>,
+    /// The record the unamended rules gave, where it binds a task's own source the analysis does not admit
+    /// ([`RULE_16_UNAMENDED`]).
+    unamended: Option<String>,
+}
+
+/// [`run_keeping`], with the record the unamended rules gave each case, where it binds a task's own source the analysis
+/// does not admit.
+fn run_kept(universe: &str, cases: &[Case], keep: bool) -> (Tally, Vec<Kept>) {
     let start = std::time::Instant::now();
     let threads = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
     let mut outcomes: Vec<(usize, Outcome)> = std::thread::scope(|scope| {
@@ -10774,9 +11623,14 @@ fn run_keeping(universe: &str, cases: &[Case], keep: bool) -> (Tally, Vec<Option
         elapsed: start.elapsed(),
         ..Tally::default()
     };
-    let mut plans = Vec::with_capacity(cases.len());
+    let mut kept = Vec::with_capacity(cases.len());
     for (i, outcome) in outcomes {
-        plans.push(outcome.plan);
+        kept.push(Kept {
+            plan: outcome.plan,
+            unamended: outcome.unamended,
+        });
+        tally.rule_16.0 += outcome.rule_16.0;
+        tally.rule_16.1 += outcome.rule_16.1;
         match outcome.class {
             "lowered" => tally.lowered += 1,
             "rejected" => tally.rejected += 1,
@@ -10809,7 +11663,7 @@ fn run_keeping(universe: &str, cases: &[Case], keep: bool) -> (Tally, Vec<Option
         }
         tally.findings.extend(outcome.findings);
     }
-    (tally, plans)
+    (tally, kept)
 }
 
 /// How many systems of a universe a class of the record's rules is held to reach (round 20, R20-R7: "classes are held by
@@ -10862,7 +11716,8 @@ fn hold(
     );
     eprintln!(
         "{universe}, in {:.1?}: {} generated, {} lowered, {} rejected, {} unresolved, {} refused; {} records judged by \
-         the configuration checker\n  agreed: {:?}\n  classes: {:?}\n  not lowered: {:?}",
+         the configuration checker, and {} binding a task's own source rule 16 refuses, judged and lowered\n  agreed: \
+         {:?}\n  classes: {:?}\n  not lowered: {:?}",
         tally.elapsed,
         got.0,
         got.1,
@@ -10870,6 +11725,7 @@ fn hold(
         got.3,
         got.4,
         tally.judged,
+        tally.rule_16.0,
         tally.agreed,
         tally.classes,
         tally.verdicts
@@ -10887,6 +11743,15 @@ fn hold(
             "{universe}: {} records judged by the configuration checker, of {} the search resolved\n",
             tally.judged,
             tally.lowered + tally.refused
+        ));
+    }
+    // Every record binding a task's own source the analysis does not admit, judged and lowered, refused by both as
+    // rule 16 says ([`RULE_16_RECORD`]).
+    if tally.rule_16.0 != tally.rule_16.1 {
+        problems.push_str(&format!(
+            "{universe}: {} records binding a task's own source rule 16 refuses judged, {} of them refused by the \
+             checker and the lowering as the rule says\n",
+            tally.rule_16.0, tally.rule_16.1
         ));
     }
     // Every record the checker refuses is of one class of [`CHECKER_HELD`], each held only where a universe names it.
@@ -11121,37 +11986,50 @@ fn releases_and_routes_of_every_separation_class() {
     assert_eq!(cases.len(), 2 * 2 * (per(5, 3) + 2 * per(8, 5)));
     let tally = run("releases and routes", &cases);
     // The classes each system's construction fixes, read from its label: each source's separation and path, each
-    // task's kind ([`release_classes`]).
+    // task's kind ([`release_classes`]), model §8 rule 16 deciding which source a task bound itself takes, or that the
+    // search refuses the system.
     let fixed: Vec<BTreeSet<&str>> = cases.iter().map(|c| release_classes(&c.label)).collect();
-    let fixed_count =
-        |class: &'static str| exactly(class, fixed.iter().filter(|f| f.contains(class)).count());
+    let count = |class: &'static str| fixed.iter().filter(|f| f.contains(class)).count();
+    let fixed_count = |class: &'static str| exactly(class, count(class));
+    // Refused by the search where rule 16 leaves a task bound itself no source (588 systems: 308 `unsupported-profile`,
+    // 280 `missing-fact`), by the lowering where a periodic task is bound to a source itself (1,716), and every other
+    // system lowered.
+    let unresolved = count(RULE_16_SEARCH_CONFLICT) + count(RULE_16_SEARCH_UNKNOWN);
+    let refused = count("refusal: a periodic task bound to a source itself");
+    assert_eq!(
+        (unresolved, refused),
+        (588, 1_716),
+        "the systems the construction refuses"
+    );
     hold(
         "releases and routes",
         &tally,
-        (14_184, 12_468, 0, 0, 1_716),
+        (14_184, 14_184 - 588 - 1_716, 0, 588, 1_716),
         &[
             fixed_count("refusal: a periodic task bound to a source itself"),
             exactly("refusal: a periodic task bound to a source itself", 1_716),
-            exactly("task: deadline-from written", 12_468),
-            exactly("task: jitter zero where none is stated", 12_468),
-            exactly("task: overrun fault where none is stated", 12_468),
+            exactly("task: deadline-from written", 11_880),
+            exactly("task: jitter zero where none is stated", 11_880),
+            exactly("task: overrun fault where none is stated", 11_880),
+            fixed_count(RULE_16_SEARCH_CONFLICT),
+            fixed_count(RULE_16_SEARCH_UNKNOWN),
+            fixed_count(RULE_16_RECORD),
+            fixed_count(RULE_16_UNAMENDED),
+            fixed_count(RULE_16_SHORTER),
+            fixed_count(RULE_16_ABSENT),
+            fixed_count(RULE_16_UNSTATED),
+            fixed_count(RULE_16_REBOUND),
             fixed_count("initialisation: a named edge"),
             fixed_count("trigger: every, equal separations"),
             fixed_count("trigger: every, a longer separation"),
             fixed_count("trigger: `(unknown (faster ITEM))`, a shorter separation"),
             fixed_count("trigger: `(unknown (unstated ITEM))`, no separation stated"),
             fixed_count("trigger: `(unknown (absent ITEM))`, the separation absent"),
-            fixed_count("trigger: `(unknown (own-faster ITEM))`, its own source's separation shorter"),
-            fixed_count("trigger: `(unknown (own-unstated ITEM))`, its own source stating no separation"),
-            fixed_count("trigger: `(unknown (own-absent ITEM))`, its own source's separation absent"),
             fixed_count("trigger: `(unknown unreached)`, no source reaching it"),
             fixed_count("trigger: `(unknown (several ITEM …))`, several sources"),
             fixed_count("trigger: its own source"),
             fixed_count("trigger: its own source, no other reaching it"),
             fixed_count("trigger: its own source, beside another reaching it"),
-            fixed_count(
-                "trigger: its own source leaving it unknown, beside one that alone would release it every",
-            ),
             fixed_count(
                 "trigger: its own source releasing it every, beside one that alone would leave it unknown",
             ),
@@ -11159,20 +12037,16 @@ fn releases_and_routes_of_every_separation_class() {
                 "trigger: its own source releasing it every, beside another that alone would release it every from \
                  itself",
             ),
-            fixed_count(
-                "trigger: its own source leaving it unknown, beside one that alone would leave it unknown too",
-            ),
+            fixed_count("trigger: its own source, reached through a requester its route names too"),
             fixed_count("trigger: binding none, beside a task bound to its own source"),
+            fixed_count("trigger: binding none, reaching the handler of another task's own source"),
             fixed_count("rank: two stated separations tied"),
             fixed_count("rank: every class in one system"),
             // Round 24 (R24-R1): `(several ITEM …)`, "each source by its text" — `(source dev.a)` before `(source
             // dev.z)`, the order unlike the blocks' declaration, `dev.z` first, wherever several reach a task.
             exactly(
                 "trigger: several sources, by their texts unlike their declaration order",
-                fixed
-                    .iter()
-                    .filter(|f| f.contains("trigger: `(unknown (several ITEM …))`, several sources"))
-                    .count(),
+                count("trigger: `(unknown (several ITEM …))`, several sources"),
             ),
         ],
     );
@@ -11181,7 +12055,8 @@ fn releases_and_routes_of_every_separation_class() {
 /// A sporadic task's trigger as a universe's construction fixes it, from a source's separation as a label writes it
 /// (`Stated(MS)`, `Unstated` or `Absent`) against the task's `own_ms`: whether every arrival releases it, and the class
 /// of §2.2's rule it meets — the source the task binds itself where `bound_itself`, whose causes are `own-faster`,
-/// `own-unstated` and `own-absent` (round 28, R28-D2), else the one the routes leave.
+/// `own-unstated` and `own-absent` (round 28, R28-D2), each unreachable since model §8 rule 16 landed (R29-R2), else
+/// the one the routes leave.
 fn separation_decides(
     separation: &str,
     own_ms: u64,
@@ -11205,27 +12080,41 @@ fn separation_decides(
             "unknown",
             "trigger: `(unknown (absent ITEM))`, the separation absent",
         ),
-        (Some(_), true) => (
-            "unknown",
-            "trigger: `(unknown (own-faster ITEM))`, its own source's separation shorter",
-        ),
-        (None, true) if separation == "Unstated" => (
-            "unknown",
-            "trigger: `(unknown (own-unstated ITEM))`, its own source stating no separation",
-        ),
-        (None, true) => (
-            "unknown",
-            "trigger: `(unknown (own-absent ITEM))`, its own source's separation absent",
-        ),
+        (Some(_), true) => ("unknown", OWN_FASTER),
+        (None, true) if separation == "Unstated" => ("unknown", OWN_UNSTATED),
+        (None, true) => ("unknown", OWN_ABSENT),
+    }
+}
+
+/// Whether model §8 rule 16 admits a task of `own_ms` released on every arrival of a source of `separation`, as a label
+/// writes it: a stated separation at least the task's.
+fn admits(separation: &str, own_ms: u64) -> bool {
+    separation_decides(separation, own_ms, false).0 == "every"
+}
+
+/// The class of [`RULE_16_RECORD`] a source of `separation`, as a label writes it, gives a task it does not admit.
+fn rule_16_cause(separation: &str) -> &'static str {
+    match separation {
+        "Unstated" => RULE_16_UNSTATED,
+        "Absent" => RULE_16_ABSENT,
+        _ => RULE_16_SHORTER,
     }
 }
 
 /// The classes of the releases universe a system's construction fixes, from its label — `t=KIND u=KIND alarm=yes|no
 /// sources=dev.X:SEPARATION:PATH …` — as the universe builds it: a periodic task bound to a source itself refused
-/// (§1); otherwise each sporadic task's trigger by the source it binds itself, else by the one source whose path
-/// reaches it — its own path, a service it uses, or a service a service it uses names — each separation against its
-/// own, `t`'s 20 ms and `u`'s 40 ms (§2.2); two sources stating one separation tied, and every rank class with the
-/// alarm (§2.5); and a named edge for each service naming another, `h.X` naming `evt.X`.
+/// (§1); a sporadic task binding `interrupt-source` itself — its path `DirectT` or `DirectU`, on the first source — bound
+/// by the search to the first source declared that model §8 rule 16 admits for it, each source offering
+/// `interrupt-source`: the first, `dev.z`, where it admits it, as the universe held before rule 16 landed, and else the
+/// second, `dev.a`, the rule's choice; and where it admits neither, the search refusing the system, `missing-fact` where
+/// one states no separation, else `unsupported-profile` (rules 16 and 6). Each record binding it to a source rule 16
+/// does not admit is refused by the checker and the lowering ([`RULE_16_RECORD`]), the unamended rules' among them
+/// wherever it does not admit `dev.z`, which those rules bound. Otherwise
+/// each sporadic task's trigger by the source it binds itself, else by the sources whose routes reach it — through a
+/// service it uses, or a service a service it uses names — each separation against its own, `t`'s 20 ms and `u`'s 40
+/// ms (§2.2); a source's route where something is bound to it, a task bound itself, the system's own level or its
+/// handler; two routed sources stating one separation tied, and every rank class with the alarm (§2.5); and a named
+/// edge for each service naming another, `h.X` naming `evt.X`.
 fn release_classes(label: &str) -> BTreeSet<&'static str> {
     let word = |key: &str| {
         label
@@ -11234,13 +12123,14 @@ fn release_classes(label: &str) -> BTreeSet<&'static str> {
             .expect("a parameter")
     };
     let (t, u, alarm) = (word("t="), word("u="), word("alarm=") == "yes");
-    let sources: Vec<(&str, &str)> = label
+    // Each source, in declaration order: its block, its separation and its path.
+    let sources: Vec<(&str, &str, &str)> = label
         .split(' ')
         .filter(|w| w.starts_with("dev.") || w.starts_with("sources=dev."))
         .map(|w| {
             let mut parts = w.trim_start_matches("sources=").split(':');
-            let _block = parts.next();
             (
+                parts.next().expect("a block"),
                 parts.next().expect("a separation"),
                 parts.next().expect("a path"),
             )
@@ -11248,39 +12138,79 @@ fn release_classes(label: &str) -> BTreeSet<&'static str> {
         .collect();
     let mut out = BTreeSet::new();
     let own = |task: &str| if task == "t" { "DirectT" } else { "DirectU" };
-    if (t == "periodic" && sources.iter().any(|(_, p)| *p == own("t")))
-        || (u == "periodic" && sources.iter().any(|(_, p)| *p == own("u")))
+    if (t == "periodic" && sources.iter().any(|(_, _, p)| *p == own("t")))
+        || (u == "periodic" && sources.iter().any(|(_, _, p)| *p == own("u")))
     {
         out.insert("refusal: a periodic task bound to a source itself");
         return out;
     }
-    let reaches = |task: &str, path: &str| match task {
-        "t" => matches!(path, "DirectT" | "ServiceT" | "ChainT" | "ServiceTU"),
-        _ => matches!(path, "DirectU" | "ServiceU" | "ServiceTU"),
+    // Model §8 rule 16: the source each sporadic task binding `interrupt-source` itself is bound to.
+    let mut own_source: BTreeMap<&str, &str> = BTreeMap::new();
+    for (task, kind, ms) in [("t", t, 20), ("u", u, 40)] {
+        let Some(&(first, separation, _)) = sources.iter().find(|(_, _, p)| *p == own(task)) else {
+            continue;
+        };
+        if kind != "sporadic" {
+            continue;
+        }
+        // Each record binding it to a source rule 16 does not admit, the unamended rules' binding `dev.z`.
+        for (_, other, _) in &sources {
+            if !admits(other, ms) {
+                out.extend([RULE_16_RECORD, rule_16_cause(other)]);
+            }
+        }
+        if !admits(separation, ms) {
+            out.insert(RULE_16_UNAMENDED);
+        }
+        match sources.iter().find(|(_, s, _)| admits(s, ms)) {
+            Some(&(name, _, _)) => {
+                own_source.insert(task, name);
+                if name != first {
+                    out.insert(RULE_16_REBOUND);
+                }
+            }
+            None => {
+                out.insert(if sources.iter().any(|(_, s, _)| *s == "Unstated") {
+                    RULE_16_SEARCH_UNKNOWN
+                } else {
+                    RULE_16_SEARCH_CONFLICT
+                });
+                return out;
+            }
+        }
+    }
+    // A source reaches a task through its handler `evt.X`, which the task uses, or uses through `h.X`.
+    let through_handler = |task: &str, path: &str| match task {
+        "t" => matches!(path, "ServiceT" | "ChainT" | "ServiceTU"),
+        _ => matches!(path, "ServiceU" | "ServiceTU"),
     };
-    let decide = separation_decides;
     for (task, kind, ms) in [("t", t, 20), ("u", u, 40)] {
         if kind != "sporadic" {
             continue;
         }
-        let reaching: Vec<&(&str, &str)> =
-            sources.iter().filter(|(_, p)| reaches(task, p)).collect();
-        if let Some((separation, _)) = sources.iter().find(|(_, p)| *p == own(task)) {
-            let decided = decide(separation, ms, true);
-            out.insert("trigger: its own source");
-            out.insert(decided.1);
-            let others: Vec<&&(&str, &str)> =
-                reaching.iter().filter(|(_, p)| *p != own(task)).collect();
+        let reaching: Vec<&(&str, &str, &str)> = sources
+            .iter()
+            .filter(|(name, _, path)| {
+                own_source.get(task) == Some(name) || through_handler(task, path)
+            })
+            .collect();
+        if let Some(&mine) = own_source.get(task) {
+            let (_, separation, path) = sources
+                .iter()
+                .find(|(n, _, _)| *n == mine)
+                .expect("a source");
+            let decided = separation_decides(separation, ms, true);
+            out.extend(["trigger: its own source", decided.1]);
+            let others: Vec<&&(&str, &str, &str)> =
+                reaching.iter().filter(|(n, _, _)| *n != mine).collect();
             out.insert(if others.is_empty() {
                 "trigger: its own source, no other reaching it"
             } else {
                 "trigger: its own source, beside another reaching it"
             });
-            if let [(other, _)] = others.as_slice() {
-                out.insert(match (decided.0, decide(other, ms, false).0) {
-                    ("unknown", "every") => {
-                        "trigger: its own source leaving it unknown, beside one that alone would release it every"
-                    }
+            if let [(_, other, _)] = others.as_slice() {
+                out.insert(match (decided.0, separation_decides(other, ms, false).0) {
+                    ("unknown", "every") => OWN_UNKNOWN_BESIDE_EVERY,
                     ("every", "unknown") => {
                         "trigger: its own source releasing it every, beside one that alone would leave it unknown"
                     }
@@ -11288,33 +12218,53 @@ fn release_classes(label: &str) -> BTreeSet<&'static str> {
                         "trigger: its own source releasing it every, beside another that alone would release it every \
                          from itself"
                     }
-                    _ => "trigger: its own source leaving it unknown, beside one that alone would leave it unknown too",
+                    _ => OWN_UNKNOWN_BESIDE_UNKNOWN,
                 });
+            }
+            // Its own source's route names the handler the task uses: `dev.a`, taken in place of `dev.z`.
+            if through_handler(task, path) {
+                out.insert(
+                    "trigger: its own source, reached through a requester its route names too",
+                );
             }
         } else {
             let other = if task == "t" { "u" } else { "t" };
-            if sources.iter().any(|(_, p)| *p == own(other)) {
+            if let Some(other_own) = own_source.get(other) {
                 out.insert("trigger: binding none, beside a task bound to its own source");
+                if reaching.iter().any(|(n, _, _)| n == other_own) {
+                    out.insert(
+                        "trigger: binding none, reaching the handler of another task's own source",
+                    );
+                }
             }
             out.insert(match reaching.as_slice() {
                 [] => "trigger: `(unknown unreached)`, no source reaching it",
-                [(separation, _)] => decide(separation, ms, false).1,
+                [(_, separation, _)] => separation_decides(separation, ms, false).1,
                 _ => "trigger: `(unknown (several ITEM …))`, several sources",
             });
         }
     }
-    let stated: Vec<&str> = sources
+    // A source's route, where something is bound to it for `interrupt-source`: a task bound itself, or, on every other
+    // path, the system's own level or its handler.
+    let routed: Vec<&str> = sources
         .iter()
-        .map(|(separation, _)| *separation)
+        .filter(|(name, _, path)| {
+            own_source.values().any(|s| s == name) || !matches!(*path, "DirectT" | "DirectU")
+        })
+        .map(|(_, separation, _)| *separation)
+        .collect();
+    let stated: Vec<&str> = routed
+        .iter()
+        .copied()
         .filter(|separation| separation.starts_with("Stated("))
         .collect();
     if stated.len() == 2 && stated[0] == stated[1] {
         out.insert("rank: two stated separations tied");
     }
-    if alarm && !stated.is_empty() && stated.len() < sources.len() {
+    if alarm && !stated.is_empty() && stated.len() < routed.len() {
         out.insert("rank: every class in one system");
     }
-    if sources.iter().any(|(_, p)| *p == "ChainT") {
+    if sources.iter().any(|(_, _, p)| *p == "ChainT") {
         out.insert("initialisation: a named edge");
     }
     out
@@ -13231,33 +14181,77 @@ fn sporadic_tasks_released_by_their_own_sources() {
     // separations, of 6.
     assert_eq!(cases.len(), 2 * 2 * 4 * 3 * 6 * 6);
     let tally = run("own sources", &cases);
-    // Every system lowered. Fixed by the construction: `t` bound itself in half; `u`, binding none, beside it there,
-    // released by the one handler it uses or by none; `t` binding none released by none, by one or by two sources as it
-    // uses handlers. Which source `t`'s own binding takes is the search's, read from the record: so are the classes of
-    // `t`'s own source and every separation class `t` may decide.
+    // Fixed by the construction: `t` bound itself in half, model §8 rule 16 binding it to a source that states at least
+    // its 20 ms, either one, and the search refusing it where neither does (rules 16 and 6) — `missing-fact` where one
+    // states none, else `unsupported-profile`: of the 36 pairs of separations, the 9 of `10 ms`, none and absent, 5 with
+    // one stating none, each pair in 24 systems; a record binding `t` to each source rule 16 does not admit refused by
+    // the checker and the lowering, by that source's separation; `u`, binding none, beside `t` there, released by the
+    // one handler it uses or by none; `t` binding none released by none, by one or by two sources as it uses handlers.
+    // Which source `t`'s own binding takes, where both are admitted, is the search's, read from the record, as is the
+    // one the unamended rules took: so are the classes of `t`'s own source, of the record those rules gave and of every
+    // separation class `t` may decide.
     let bound = |c: &Case| c.label.contains("bound itself");
     let uses = |c: &Case, task: usize| c.description.tasks[task].side.uses.len();
+    let separations = |c: &Case| {
+        let of = |key: &str| {
+            c.label
+                .split(' ')
+                .find_map(|w| w.strip_prefix(key))
+                .expect("a separation")
+                .to_string()
+        };
+        [of("dev.z:"), of("dev.a:")]
+    };
+    let refused = |c: &Case| bound(c) && !separations(c).iter().any(|s| admits(s, 20));
+    let lowered = |c: &Case| !refused(c);
+    let unknown = |c: &Case| refused(c) && separations(c).iter().any(|s| s == "Unstated");
+    assert_eq!(
+        (
+            cases.iter().filter(|c| refused(c)).count(),
+            cases.iter().filter(|c| unknown(c)).count()
+        ),
+        (9 * 24, 5 * 24)
+    );
     hold(
         "own sources",
         &tally,
-        (1_728, 1_728, 0, 0, 0),
+        (1_728, 1_728 - 216, 0, 216, 0),
         &[
-            counted("trigger: its own source", &cases, bound),
-            counted("trigger: binding none, beside a task bound to its own source", &cases, bound),
+            counted(RULE_16_SEARCH_CONFLICT, &cases, |c| refused(c) && !unknown(c)),
+            counted(RULE_16_SEARCH_UNKNOWN, &cases, unknown),
+            counted("trigger: its own source", &cases, |c| bound(c) && lowered(c)),
+            counted(
+                "trigger: binding none, beside a task bound to its own source",
+                &cases,
+                |c| bound(c) && lowered(c),
+            ),
             counted("trigger: `(unknown unreached)`, no source reaching it", &cases, |c| {
-                uses(c, 1) == 0 || (!bound(c) && uses(c, 0) == 0)
+                lowered(c) && (uses(c, 1) == 0 || (!bound(c) && uses(c, 0) == 0))
             }),
             counted("trigger: `(unknown (several ITEM …))`, several sources", &cases, |c| !bound(c) && uses(c, 0) == 2),
             counted("owed: a service or a policy in a job, its call cost and masked runs", &cases, |c| {
-                uses(c, 0) + uses(c, 1) > 0
+                lowered(c) && uses(c, 0) + uses(c, 1) > 0
             }),
             counted("owed: a block or a platform in a job, its call cost and masked runs", &cases, |c| {
-                bound(c) || uses(c, 0) + uses(c, 1) > 0
+                lowered(c) && (bound(c) || uses(c, 0) + uses(c, 1) > 0)
             }),
-            exactly("task: deadline-from written", 1_728),
+            exactly("task: deadline-from written", 1_728 - 216),
+            counted(RULE_16_RECORD, &cases, |c| {
+                bound(c) && separations(c).iter().any(|s| !admits(s, 20))
+            }),
+            counted(RULE_16_SHORTER, &cases, |c| {
+                bound(c) && separations(c).iter().any(|s| s == "Stated(10)")
+            }),
+            counted(RULE_16_ABSENT, &cases, |c| {
+                bound(c) && separations(c).iter().any(|s| s == "Absent")
+            }),
+            counted(RULE_16_UNSTATED, &cases, |c| {
+                bound(c) && separations(c).iter().any(|s| s == "Unstated")
+            }),
+            some(RULE_16_UNAMENDED),
+            some(RULE_16_REBOUND),
             some("trigger: its own source, no other reaching it"),
             some("trigger: its own source, beside another reaching it"),
-            some("trigger: its own source leaving it unknown, beside one that alone would release it every"),
             some("trigger: its own source releasing it every, beside one that alone would leave it unknown"),
             some("trigger: its own source, reached through a requester its route names too"),
             some("trigger: binding none, reaching the handler of another task's own source"),
@@ -13266,9 +14260,6 @@ fn sporadic_tasks_released_by_their_own_sources() {
             some("trigger: `(unknown (faster ITEM))`, a shorter separation"),
             some("trigger: `(unknown (unstated ITEM))`, no separation stated"),
             some("trigger: `(unknown (absent ITEM))`, the separation absent"),
-            some("trigger: `(unknown (own-faster ITEM))`, its own source's separation shorter"),
-            some("trigger: `(unknown (own-unstated ITEM))`, its own source stating no separation"),
-            some("trigger: `(unknown (own-absent ITEM))`, its own source's separation absent"),
             some("rank: two stated separations tied"),
         ],
     );
@@ -15664,29 +16655,54 @@ fn the_task_s_own_source_written_apart_from_the_routes() {
         cases.len(),
         Y_SOURCES.len() * SEPARATIONS.len() * U_REACH.len() * T_REACH.len()
     );
-    let (tally, plans) = run_keeping("own causes", &cases, true);
-    // Every system lowered. Each class counted from the label and, where `dev.y` is declared, the source the record
-    // binds each task binding `interrupt-source` itself to ([`own_causes_classes`]): the assignment is input.
+    let (tally, kept) = run_kept("own causes", &cases, true);
+    // Each class counted from the label and the records: where the search writes a plan, the source it binds each task
+    // binding `interrupt-source` itself to ([`own_causes_classes`]); and, where the unamended rules gave a record of
+    // their own, the source that record binds each to ([`own_causes_rule_16`]): the assignment is input.
     let fixed: Vec<BTreeSet<&str>> = cases
         .iter()
-        .zip(&plans)
-        .map(|(case, plan)| {
-            plan.as_deref().map_or_else(BTreeSet::new, |plan| {
+        .zip(&kept)
+        .map(|(case, kept)| {
+            let mut fixed = kept.plan.as_deref().map_or_else(BTreeSet::new, |plan| {
                 own_causes_classes(
                     &case.label,
                     own_source_bound(plan, "t").as_deref(),
                     own_source_bound(plan, "u").as_deref(),
                 )
-            })
+            });
+            fixed.extend(own_causes_rule_16(
+                &case.label,
+                kept.plan.is_some(),
+                kept.unamended
+                    .as_deref()
+                    .map(|record| (own_source_bound(record, "t"), own_source_bound(record, "u"))),
+            ));
+            fixed
         })
         .collect();
-    let fixed_count =
-        |class: &'static str| exactly(class, fixed.iter().filter(|f| f.contains(class)).count());
+    let count = |class: &'static str| fixed.iter().filter(|f| f.contains(class)).count();
+    let fixed_count = |class: &'static str| exactly(class, count(class));
+    // Refused by the search where model §8 rule 16 leaves a task bound itself no source (rules 16 and 6): with `dev.x`
+    // alone, 28 of its 72 systems; with `dev.y` declared, of the 36 pairs of separations in each order, the 9 where
+    // neither admits `t`'s 20 ms, 8 of their 12 choices of `t` and `u`, and the 7 where one admits `t` and neither `u`'s
+    // 40 ms, the 4 where `u` binds itself — 200.
+    let unresolved = count(RULE_16_SEARCH_CONFLICT) + count(RULE_16_SEARCH_UNKNOWN);
+    assert_eq!(unresolved, 28 + 2 * (9 * 8 + 7 * 4));
     hold(
         "own causes",
         &tally,
-        (936, 936, 0, 0, 0),
+        (936, 936 - 228, 0, 228, 0),
         &[
+            fixed_count(RULE_16_SEARCH_CONFLICT),
+            fixed_count(RULE_16_SEARCH_UNKNOWN),
+            fixed_count(RULE_16_RECORD),
+            fixed_count(RULE_16_UNAMENDED),
+            fixed_count(RULE_16_SHORTER),
+            fixed_count(RULE_16_ABSENT),
+            fixed_count(RULE_16_UNSTATED),
+            fixed_count(RULE_16_CONFLICT_BEFORE_UNKNOWN),
+            fixed_count(RULE_16_ONE_OF_TWO),
+            fixed_count(RULE_16_REBOUND),
             fixed_count("trigger: every, equal separations"),
             fixed_count("trigger: every, a longer separation"),
             fixed_count("trigger: `(unknown unreached)`, no source reaching it"),
@@ -15695,15 +16711,9 @@ fn the_task_s_own_source_written_apart_from_the_routes() {
             fixed_count("trigger: `(unknown (unstated ITEM))`, no separation stated"),
             fixed_count("trigger: `(unknown (absent ITEM))`, the separation absent"),
             fixed_count("trigger: `(unknown (faster ITEM))`, a shorter separation"),
-            fixed_count("trigger: `(unknown (own-unstated ITEM))`, its own source stating no separation"),
-            fixed_count("trigger: `(unknown (own-absent ITEM))`, its own source's separation absent"),
-            fixed_count("trigger: `(unknown (own-faster ITEM))`, its own source's separation shorter"),
             fixed_count("trigger: its own source"),
             fixed_count("trigger: its own source, no other reaching it"),
             fixed_count("trigger: its own source, beside another reaching it"),
-            fixed_count(
-                "trigger: its own source leaving it unknown, beside one that alone would release it every",
-            ),
             fixed_count(
                 "trigger: its own source releasing it every, beside one that alone would leave it unknown",
             ),
@@ -15711,31 +16721,55 @@ fn the_task_s_own_source_written_apart_from_the_routes() {
                 "trigger: its own source releasing it every, beside another that alone would release it every from \
                  itself",
             ),
-            fixed_count(
-                "trigger: its own source leaving it unknown, beside one that alone would leave it unknown too",
-            ),
             fixed_count("trigger: its own source, reached through a requester its route names too"),
             fixed_count("trigger: binding none, beside a task bound to its own source"),
             fixed_count("trigger: binding none, reaching the handler of another task's own source"),
             fixed_count("trigger: two tasks bound themselves to one source"),
-            fixed_count(
-                "trigger: two tasks bound themselves to one source, one as far apart as it, one released less often",
-            ),
             fixed_count("rank: two stated separations tied"),
-            exactly("task: deadline-from written", 936),
+            exactly("task: deadline-from written", 936 - 228),
         ],
     );
-    // Every cause §3 lists reached, by a class naming it.
-    for cause in CAUSES {
-        assert!(
-            tally.classes.iter().any(|(class, count)| *count > 0
+    // The five causes the routes leave reached, each by a class naming it; the task's own source's three stated
+    // unreachable — §2.2: "no record the generator accepts binds a task's own source the analysis does not admit" — no
+    // system reaching one, which `hold` fails in every universe, and the record that gave each before rule 16 landed
+    // refused by the checker and the lowering instead (R29-R2).
+    let reached = |cause: &str| {
+        tally.classes.iter().any(|(class, count)| {
+            *count > 0
                 && (class.contains(&format!("`(unknown ({cause} "))
-                    || class.contains(&format!("`(unknown {cause})`")))),
+                    || class.contains(&format!("`(unknown {cause})`")))
+        })
+    };
+    for cause in &CAUSES[..5] {
+        assert!(
+            reached(cause),
             "own causes: no system's trigger is `(unknown …)` of the cause `{cause}`"
         );
     }
+    for (cause, (unreachable, refused)) in
+        CAUSES[5..].iter().zip(OWN_CAUSES_UNREACHABLE.iter().zip([
+            RULE_16_UNSTATED,
+            RULE_16_ABSENT,
+            RULE_16_SHORTER,
+        ]))
+    {
+        assert!(
+            unreachable.starts_with("unreachable: ")
+                && unreachable.contains(&format!("`(unknown ({cause} ITEM))`")),
+            "`{cause}` stated unreachable by its class: {unreachable}"
+        );
+        assert!(
+            !reached(cause),
+            "own causes: a plan's trigger is `(unknown ({cause} …))`"
+        );
+        assert!(
+            tally.classes.get(refused).copied().unwrap_or(0) > 0,
+            "own causes: no record the unamended rules gave of `{cause}`'s input refused: {refused}"
+        );
+    }
     // With `dev.x` alone the construction fixes every binding: `t`, bound itself alone or reaching `evt.x` too, beside
-    // `u` bound itself, both to `dev.x` as far apart as `t` where it states 20 ms — two systems.
+    // `u` bound itself, both to `dev.x` stating 20 ms — two systems: the search refuses each, `u` released less often
+    // than `dev.x` arrives (`unsupported-profile`), and the record the unamended rules gave names `u` alone.
     let alone = |label: &str| label.ends_with(" dev.y:none first:dev.x");
     assert_eq!(
         cases
@@ -15743,92 +16777,110 @@ fn the_task_s_own_source_written_apart_from_the_routes() {
             .zip(&fixed)
             .filter(|(case, f)| {
                 alone(&case.label)
-                    && f.contains(
-                        "trigger: two tasks bound themselves to one source, one as far apart as it, one released less \
-                         often",
-                    )
+                    && f.contains(RULE_16_ONE_OF_TWO)
+                    && f.contains(RULE_16_SEARCH_CONFLICT)
             })
             .count(),
         2
     );
-    // Each system beside its twins (R28-D2, R28-R7), plans the reading has already held line by line. With `dev.x`
-    // alone: `t` bound itself beside its twin reaching `dev.x` only through `evt.x`, its trigger the twin's with each
-    // cause written `own-` — `(own-faster …)` where the twin's is `(faster …)` — and the same where every arrival
-    // releases it; and `t` bound itself and reaching `dev.x` through `evt.x` too beside its twin bound itself alone,
-    // one trigger. With `dev.y` declared, `t` bound itself: to `dev.x`, while the handler it uses reaches `dev.y`,
-    // beside its twin with `dev.x` alone, its own source deciding alone, one trigger; or to `dev.y`, whose handler it
-    // uses, beside its twin binding none, which that handler alone reaches, its trigger written apart as above. `u`'s
-    // trigger is its twin's wherever both bind the same source, or none.
-    let plan_of: BTreeMap<&str, &str> = cases
+    // Each system beside its twins (R28-D2, R28-R7), plans the reading has already held line by line, read again since
+    // rule 16 landed. With `dev.x` alone: `t` bound itself beside its twin reaching `dev.x` only through `evt.x` — one
+    // trigger where both are lowered, every arrival releasing it; and where the twin's trigger is the routes'
+    // `(unknown (CAUSE …))`, the system bound itself refused by the search, the cause's code — `faster` and `absent`
+    // `unsupported-profile`, `unstated` `missing-fact`: the task's own `(needs interrupt-source)` "repairs a source the
+    // routes leave and not one it binds itself" (§2.2), and rule 16 now refuses that one. And `t` bound itself and
+    // reaching `dev.x` through `evt.x` too beside its twin bound itself alone, one trigger. With `dev.y` declared, `t`
+    // bound itself: to `dev.x`, while the handler it uses reaches `dev.y`, beside its twin with `dev.x` alone where that
+    // twin is lowered, its own source deciding alone, one trigger; or to `dev.y`, whose handler it uses, beside its twin
+    // binding none, which that handler alone reaches, one trigger. `u`'s trigger is its twin's wherever both bind the
+    // same source, or none.
+    let plan_of: BTreeMap<&str, Option<&str>> = cases
         .iter()
-        .zip(&plans)
-        .map(|(case, plan)| {
-            (
-                case.label.as_str(),
-                plan.as_deref().expect("every system lowered"),
-            )
-        })
+        .zip(&kept)
+        .map(|(case, kept)| (case.label.as_str(), kept.plan.as_deref()))
         .collect();
-    let own_of = |trigger: &str| match trigger.strip_prefix("(unknown (") {
-        Some(cause) => format!("(unknown (own-{cause}"),
-        None => trigger.to_string(),
-    };
-    let same = |trigger: &str| trigger.to_string();
     let mut unlike = Vec::new();
-    let mut twin = |label: &str, other: String, t_trigger: &dyn Fn(&str) -> String, what: &str| {
-        let (plan, theirs_plan) = (plan_of[label], plan_of[other.as_str()]);
+    let mut twin = |label: &str, other: String, what: &str| -> bool {
+        let (Some(plan), Some(theirs_plan)) = (plan_of[label], plan_of[other.as_str()]) else {
+            return false;
+        };
         let (mine, theirs) = (triggers_of(plan), triggers_of(theirs_plan));
         let u_alike = own_source_bound(plan, "u") == own_source_bound(theirs_plan, "u");
-        if mine["t"] != t_trigger(&theirs["t"]) || (u_alike && mine["u"] != theirs["u"]) {
+        if mine["t"] != theirs["t"] || (u_alike && mine["u"] != theirs["u"]) {
             unlike.push(format!(
                 "== {label}, beside {other} ({what}): `t` {} and `u` {}, its twin's {} and {}",
                 mine["t"], mine["u"], theirs["t"], theirs["u"]
             ));
         }
-        (mine["t"].clone(), theirs["t"].clone())
+        true
     };
-    let (mut by_handler, mut written_apart, mut faster, mut through_both) = (0, 0, 0, 0);
-    let (mut beside_another, mut by_its_handler) = (0, 0);
+    let mut refusals_unlike = Vec::new();
+    let (mut by_handler, mut through_both) = (0, 0);
+    let (mut refused_by_rule_16, mut faster) = (0, 0);
+    let (mut beside_another, mut by_its_handler, mut twin_refused) = (0, 0, 0);
     for case in &cases {
         let label = case.label.as_str();
         if alone(label) && label.contains(" t:own ") {
-            let (mine, theirs) = twin(
+            let other = label.replace(" t:own ", " t:handler ");
+            if twin(
                 label,
-                label.replace(" t:own ", " t:handler "),
-                &own_of,
+                other.clone(),
                 "reaching `dev.x` only through `evt.x`",
-            );
-            by_handler += 1;
-            written_apart += usize::from(mine != theirs);
-            faster += usize::from(theirs.starts_with("(unknown (faster "));
+            ) {
+                by_handler += 1;
+            } else if let (None, Some(theirs)) = (plan_of[label], plan_of[other.as_str()]) {
+                // `(released-by TRIGGER)`'s text, its closing parenthesis read with it.
+                let routes_leave = &triggers_of(theirs)["t"];
+                let code = match routes_leave.strip_suffix(')').unwrap_or(routes_leave) {
+                    "(unknown (faster (source dev.x)))" => "UnsupportedProfile",
+                    "(unknown (absent (source dev.x)))" => "UnsupportedProfile",
+                    "(unknown (unstated (source dev.x)))" => "MissingFact",
+                    other => panic!("{label}: refused, its twin's `t` released by {other}"),
+                };
+                if tally.unresolved_systems.get(label).map(String::as_str) != Some(code) {
+                    refusals_unlike.push(format!(
+                        "== {label}: the search gives {:?}, its twin's `t` {routes_leave}, rule 16 `{code}`",
+                        tally.unresolved_systems.get(label)
+                    ));
+                }
+                refused_by_rule_16 += 1;
+                faster += usize::from(routes_leave.starts_with("(unknown (faster "));
+            }
         }
         if alone(label) && label.contains(" t:both ") {
-            twin(
-                label,
-                label.replace(" t:both ", " t:own "),
-                &same,
-                "bound itself alone",
+            let other = label.replace(" t:both ", " t:own ");
+            assert_eq!(
+                plan_of[label].is_some(),
+                plan_of[other.as_str()].is_some(),
+                "{label}: lowered as its twin bound itself alone is"
             );
-            through_both += 1;
+            through_both += usize::from(twin(label, other, "bound itself alone"));
         }
         if !alone(label) && label.contains(" t:own ") {
-            match own_source_bound(plan_of[label], "t").as_deref() {
+            let Some(plan) = plan_of[label] else {
+                continue;
+            };
+            match own_source_bound(plan, "t").as_deref() {
                 Some("dev.x") => {
                     let (head, _) = label.split_once(" dev.y:").expect("`dev.y`");
-                    twin(
+                    if twin(
                         label,
                         format!("{head} dev.y:none first:dev.x"),
-                        &same,
                         "`dev.x` alone",
-                    );
-                    beside_another += 1;
+                    ) {
+                        beside_another += 1;
+                    } else {
+                        twin_refused += 1;
+                    }
                 }
                 Some("dev.y") => {
-                    twin(
-                        label,
-                        label.replace(" t:own ", " t:none "),
-                        &own_of,
-                        "reaching `dev.y` only through `evt.y`",
+                    assert!(
+                        twin(
+                            label,
+                            label.replace(" t:own ", " t:none "),
+                            "reaching `dev.y` only through `evt.y`"
+                        ),
+                        "{label}: its twin binding none lowered"
                     );
                     by_its_handler += 1;
                 }
@@ -15836,23 +16888,176 @@ fn the_task_s_own_source_written_apart_from_the_routes() {
             }
         }
     }
+    unlike.extend(refusals_unlike);
     assert!(unlike.is_empty(), "{}", unlike.join("\n"));
-    // With `dev.x` alone, 6 separations × 3 of `u`: written apart where `dev.x` states none, declares it absent or
-    // states 10 ms, shorter than `t`'s 20 ms — the last `(own-faster …)` beside `(faster …)`. With `dev.y` declared,
-    // 12 × 6 × 3 systems of `t` bound itself, beside one twin or the other as the record binds it, some bound to
-    // `dev.x`.
-    assert_eq!(by_handler, 6 * 3);
-    assert_eq!(written_apart, 3 * 3);
-    assert_eq!(faster, 3);
-    assert_eq!(through_both, 6 * 3);
-    assert_eq!(beside_another + by_its_handler, 12 * 6 * 3);
+    // With `dev.x` alone, of its 6 separations × 3 of `u`: lowered beside the twin where `dev.x` admits `t` — 20 ms with
+    // `u` binding none itself, 40 and 80 ms with any `u`, 8 systems; refused where it states 10 ms, none or declares it
+    // absent, `u` binding none itself, 6, the 2 of 10 ms `(faster …)` in the twin. With `dev.y` declared, the systems of
+    // `t` bound itself the search lowers — of the 36 pairs of separations in each order, the 20 where one admits `u`'s
+    // 40 ms, every `u`, and the 7 where one admits `t` and none `u`, `u` binding none itself — beside one twin or the
+    // other as the record binds it, some to `dev.x`, the twin with `dev.x` alone refused where `u` binds itself and
+    // `dev.x` does not admit it.
+    assert_eq!(by_handler, 2 + 3 + 3);
+    assert_eq!(through_both, 2 + 3 + 3);
+    assert_eq!(refused_by_rule_16, 3 * 2);
+    assert_eq!(faster, 2);
+    assert_eq!(
+        beside_another + by_its_handler + twin_refused,
+        2 * (20 * 3 + 7 * 2)
+    );
     assert!(
-        beside_another > 0,
-        "no task bound itself to a source while the handler it uses reaches another"
+        beside_another > 0 && by_its_handler > 0,
+        "no task bound itself to a source while the handler it uses reaches another, or to that source"
     );
     eprintln!(
-        "own causes: `t` bound itself beside `dev.y`: to `dev.x` in {beside_another} systems, to `dev.y` in \
-         {by_its_handler}"
+        "own causes: `t` bound itself beside `dev.y`: to `dev.x` in {} systems ({twin_refused} beside a twin the search \
+         refuses), to `dev.y` in {by_its_handler}",
+        beside_another + twin_refused
+    );
+}
+
+/// The classes of model §8 rule 16 the own-causes universe's construction fixes, from its label, whether the search
+/// wrote a plan, and, where the record the unamended rules gave binds a task's own source the rule does not admit, the
+/// source it binds each task binding `interrupt-source` itself to — `t` at 20 ms and `u` at 40 ms, each may take `dev.x`
+/// and, where it is declared, `dev.y`: the search refusing the system where a task binding itself has no source stating
+/// at least its own separation, `unsupported-profile` where some such task's every source is a conflict, else
+/// `missing-fact` (rules 16 and 6); and the records binding each such task to each source, every assignment of them:
+/// each source the rule does not admit for a task, by its separation; the conflict before the unknown where one task
+/// may take a source refused as a conflict and the other one stating none; two tasks bound to one source, one admitted;
+/// and the unamended rules' record among them.
+fn own_causes_rule_16(
+    label: &str,
+    lowered: bool,
+    unamended: Option<(Option<String>, Option<String>)>,
+) -> BTreeSet<&'static str> {
+    let word = |key: &str| {
+        label
+            .split(' ')
+            .find_map(|w| w.strip_prefix(key))
+            .expect("a parameter")
+    };
+    let (x, t, u, y) = (word("dev.x:"), word("t:"), word("u:"), word("dev.y:"));
+    let y = (y != "none").then_some(y);
+    let candidates: Vec<&str> = std::iter::once(x).chain(y).collect();
+    let binding: Vec<u64> = [(matches!(t, "own" | "both"), 20), (u == "own", 40)]
+        .iter()
+        .filter(|(bound_itself, _)| *bound_itself)
+        .map(|(_, ms)| *ms)
+        .collect();
+    let mut out = BTreeSet::new();
+    let mut refused = None;
+    for &ms in &binding {
+        if candidates.iter().any(|s| admits(s, ms)) {
+            continue;
+        }
+        if candidates.iter().all(|s| *s != "Unstated") {
+            refused = Some(RULE_16_SEARCH_CONFLICT);
+        } else {
+            refused.get_or_insert(RULE_16_SEARCH_UNKNOWN);
+        }
+    }
+    out.extend(refused);
+    for &ms in &binding {
+        for separation in &candidates {
+            if !admits(separation, ms) {
+                out.extend([RULE_16_RECORD, rule_16_cause(separation)]);
+            }
+        }
+    }
+    if let [first, second] = binding.as_slice() {
+        let conflict = |ms: u64| {
+            candidates
+                .iter()
+                .any(|s| !admits(s, ms) && *s != "Unstated")
+        };
+        if candidates.contains(&"Unstated") && (conflict(*first) || conflict(*second)) {
+            out.insert(RULE_16_CONFLICT_BEFORE_UNKNOWN);
+        }
+        if candidates
+            .iter()
+            .any(|s| admits(s, *first) != admits(s, *second))
+        {
+            out.insert(RULE_16_ONE_OF_TWO);
+        }
+    }
+    if let Some((t_source, u_source)) = unamended {
+        let separation = |source: &str| match source {
+            "dev.x" => x,
+            "dev.y" => y.expect("`dev.y` declared"),
+            other => panic!("no source `{other}` in the own-causes universe"),
+        };
+        assert!(
+            [(&t_source, 20), (&u_source, 40)]
+                .iter()
+                .any(|(source, ms)| source
+                    .as_deref()
+                    .is_some_and(|s| !admits(separation(s), *ms))),
+            "{label}: the unamended rules' record kept, binding a source rule 16 does not admit"
+        );
+        out.insert(RULE_16_UNAMENDED);
+        if lowered {
+            out.insert(RULE_16_REBOUND);
+        }
+    }
+    out
+}
+
+#[test]
+fn a_task_s_own_source_at_the_arithmetic_s_edge() {
+    let cases = own_source_at_the_edge();
+    // Each of 3 separations of `t`, each of 4 of `dev.x`, by `t`'s first.
+    assert_eq!(cases.len(), EDGE_TASKS.len() * EDGE_SOURCES.len());
+    let tally = run("own source at the edge", &cases);
+    // Derived by hand from the times, `dev.x`'s against `t`'s (model §8 rule 16): for 20 ms, only 20 ms is as far apart;
+    // for `WIDE`, 20 ms, `WIDE` itself and `WIDE_LONGER`; for `WIDE_LONGER`, 20 ms and itself, `WIDE` shorter; and
+    // `PAST` for none, a comparison the exact arithmetic cannot decide. `WIDE` and `WIDE_LONGER` are compared past 128
+    // bits wherever they meet.
+    const ADMITTED: [[bool; 4]; 3] = [
+        [true, false, false, false],
+        [true, true, true, false],
+        [true, false, true, false],
+    ];
+    let at = |c: &Case| {
+        let i = cases
+            .iter()
+            .position(|d| d.label == c.label)
+            .expect("a case");
+        (i / EDGE_SOURCES.len(), i % EDGE_SOURCES.len())
+    };
+    let admitted = |c: &Case| {
+        let (t, x) = at(c);
+        ADMITTED[t][x]
+    };
+    let refused = |c: &Case| !admitted(c);
+    hold(
+        "own source at the edge",
+        &tally,
+        (12, 6, 0, 6, 0),
+        &[
+            counted(RULE_16_SEARCH_CONFLICT, &cases, refused),
+            counted(RULE_16_RECORD, &cases, refused),
+            counted(RULE_16_UNAMENDED, &cases, refused),
+            counted(RULE_16_UNDECIDABLE, &cases, |c| at(c).1 == 3),
+            counted(RULE_16_SHORTER, &cases, |c| refused(c) && at(c).1 != 3),
+            counted("trigger: its own source", &cases, admitted),
+            counted(
+                "trigger: its own source, no other reaching it",
+                &cases,
+                admitted,
+            ),
+            counted("trigger: every, equal separations", &cases, |c| {
+                admitted(c) && at(c).0 == at(c).1
+            }),
+            counted("trigger: every, a longer separation", &cases, |c| {
+                admitted(c) && at(c).0 != at(c).1
+            }),
+            counted(
+                "exact: a source's and a task's separations compared past 128 bits",
+                &cases,
+                |c| admitted(c) && at(c).0 > 0 && at(c).1 > 0,
+            ),
+            exactly("task: deadline-from written", 6),
+        ],
     );
 }
 
@@ -15969,6 +17174,76 @@ fn the_message_readers_keep_the_order_a_message_gives() {
             "{message}"
         );
     }
+    // Model §8 rule 16's findings (`M4.1.2.3`), as the configuration checker names one and as §1 has the lowering name
+    // the generator's: each clause a task, its source and a code, whatever its words; the conflicts before the unknowns,
+    // each group whole in any order; a clause naming two tasks, or a source but no code, says not which is refused.
+    let description = Description {
+        blocks: vec![
+            source_block("d", Separation::Unstated, ""),
+            source_block("d.x", Separation::Stated(10), ""),
+        ],
+        tasks: ["t", "t!", "u"]
+            .iter()
+            .map(|name| Task {
+                name: (*name).to_string(),
+                release: Release::MinSeparation(Dur::Ms(20)),
+                side: Side {
+                    needs: names(&[INTERRUPT_FACT]),
+                    ..Side::default()
+                },
+                ..Task::default()
+            })
+            .collect(),
+        ..Description::default()
+    };
+    let finding = |task: &str, source: &str, code: &'static str| Unadmitted {
+        task: format!("(task sys {task})"),
+        source: source.to_string(),
+        code,
+        cause: if code == "missing-fact" {
+            "unstated"
+        } else {
+            "shorter"
+        },
+    };
+    let findings = [
+        finding("t", "d.x", "unsupported-profile"),
+        finding("t!", "d.x", "unsupported-profile"),
+        finding("u", "d", "missing-fact"),
+    ];
+    for message in [
+        "refused (unsupported-profile: `(task sys t)` arrives too often from `d.x`; unsupported-profile: \
+         `(task sys t!)` from `d.x` too; missing-fact: `d` says nothing of `(task sys u)`'s arrivals)",
+        "`(task sys t!)` and `d.x`, `unsupported-profile`; `d.x` with `(task sys t)`, `unsupported-profile`; then \
+         `missing-fact` of `(task sys u)` at `d`",
+    ] {
+        assert_eq!(joint_disagrees(message, &description, &findings), None, "{message}");
+    }
+    for message in [
+        "missing-fact: `(task sys u)` at `d`; unsupported-profile: `(task sys t)` at `d.x`; unsupported-profile: \
+         `(task sys t!)` at `d.x`",
+        "unsupported-profile: `(task sys t)` at `d.x`; missing-fact: `(task sys u)` at `d`",
+        "unsupported-profile: `(task sys t)` and `(task sys t!)` at `d.x`; missing-fact: `(task sys u)` at `d`",
+        "unsupported-profile: `(task sys t)` at `d.x`; unsupported-profile: `(task sys t!)` at `d`; missing-fact: \
+         `(task sys u)` at `d`",
+        "unsupported-profile: `(task sys t)` at `d.x`; `(task sys t!)` at `d.x`; missing-fact: `(task sys u)` at `d`",
+    ] {
+        assert!(
+            joint_disagrees(message, &description, &findings).is_some(),
+            "{message}"
+        );
+    }
+    assert_eq!(
+        rule_16_named(
+            "`(task sys t!)` is bound to `d.x`, whose arrivals are closer: a conflict, `unsupported-profile` (rule 16)",
+            &description
+        ),
+        Ok(Some((
+            "(task sys t!)".to_string(),
+            "d.x".to_string(),
+            "unsupported-profile".to_string()
+        )))
+    );
     let hardware: BTreeSet<String> = ["d", "d.x"].iter().map(|s| (*s).to_string()).collect();
     let expiry = "(adapter deadline-over-delay d (task sys t))";
     assert_eq!(
@@ -16273,6 +17548,33 @@ fn the_reading_gives_the_record_s_worked_texts() {
             "§2.2's cause of the source the task binds itself"
         );
     }
+    // And §2.2's statement that no accepted record reaches the own three (R29-R2): "no record the generator accepts binds
+    // a task's own source the analysis does not admit: `(own-faster ITEM)`, `(own-absent ITEM)` and `(own-unstated
+    // ITEM)` stay in the grammar" — the three the reading states unreachable, each by its class, and no other.
+    let stated: BTreeSet<String> = sentence_list(
+        &record,
+        "binds a task's own source the analysis does not admit:",
+        "stay in the grammar",
+    )
+    .into_iter()
+    .collect();
+    let unreachable: BTreeSet<String> = CAUSES
+        .iter()
+        .filter(|cause| {
+            OWN_CAUSES_UNREACHABLE
+                .iter()
+                .any(|class| class.contains(&format!("`(unknown ({cause} ITEM))`")))
+        })
+        .map(|cause| format!("({cause} ITEM)"))
+        .collect();
+    assert_eq!(
+        (stated.len(), &stated),
+        (3, &unreachable),
+        "§2.2's causes no accepted record reaches, the reading's unreachable ones"
+    );
+    assert!(OWN_CAUSES_UNREACHABLE
+        .iter()
+        .all(|class| class.starts_with("unreachable: ")));
 
     // The reading held to the plans the record writes in full (§3), from their inputs transcribed here and their own
     // `bind` lines, for every kind of line it derives: a fault of the reading shows on the record's own text, never on

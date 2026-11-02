@@ -202,9 +202,9 @@ the one code that names more than one rule today says so.
 | `priority-below-one` | a task's priority is below 1 (§4 rule 5) | write a rank of 1 or more: 1 is the highest priority, and a larger number is a lower one | `check (defsystem s (task t (period 10 ms) (deadline 10 ms) (priority 0)))` |
 | `invalid-description` | a description contradicts itself: a fact one declaration both offers and declares absent, itself or through what it composes (§2 rule 1), or a task with two release models (§4 rule 1); or the substitutability relation refuses what it writes, each refusal naming its cause (§7 rule 6); or a provider offers a consumed function with no channel, or a region that names no byte range (§8 rules 3 and 5), or a system's memory map makes two claims on one byte or reserves all its placement memory (§8 rule 10) | remove one of the two declarations; only the author knows which was meant | `check (defblock b (offers counter-width) (absent counter-width))` |
 | `infeasible-configuration` | a required fact is declared absent (§2 rule 2); or an assignment gives a provider more requesters than channels, or two bound providers overlapping bytes, or a requester bound to a block or platform outside its system's hardware (§8 rules 3, 5 and 7), or a caller bound to a provider not reachable at its system's level, or declared reachable from none (§8 rule 9), or a placement given outside placement memory (§8 rule 10), once no assignment avoids it | correct the requirement or the platform | `check (defblock timer.counter (offers counter-width) (absent low-power-timer)) (defservice time.lowpower (requires (needs low-power-timer))) (defsystem s (requires (uses time.lowpower)))` |
-| `missing-fact` | something the system requires is described nowhere: a required fact (§2 rule 3), a task's release model (§4 rule 1), or the platform a refinement names (§3 rule 4); or what §8 cannot judge an assignment without — a provider's `channels`, a region's size, a bound provider's level (§8 rules 3, 5, 9 and 10) | declare the fact offered or absent on the platform; give a task a `period` or a `min-separation`; for a refinement, import the module that declares the target, or correct its name | `check (defservice time.monotonic (requires (needs wrap-behavior))) (defsystem s (requires (uses time.monotonic)))` |
+| `missing-fact` | something the system requires is described nowhere: a required fact (§2 rule 3), a task's release model (§4 rule 1), or the platform a refinement names (§3 rule 4); or what §8 cannot judge an assignment without — a provider's `channels`, a region's size, a bound provider's level, the separation of a source a sporadic task binds itself (§8 rules 3, 5, 9, 10 and 16) | declare the fact offered or absent on the platform; give a task a `period` or a `min-separation`; for a refinement, import the module that declares the target, or correct its name | `check (defservice time.monotonic (requires (needs wrap-behavior))) (defsystem s (requires (uses time.monotonic)))` |
 | `refinement-violated` | a concrete platform breaks an obligation of the abstract one it refines, or of a platform up its chain (§3 rules 1–3) | honour the obligation the diagnostic names: offer the guarantee, give the bounded value, or drop what the abstract declares absent | `check (defplatform soc.abstract (offers counter-width) (absent debug-port)) (defplatform soc.concrete (refines soc.abstract) (offers counter-width debug-port))` |
-| `unsupported-profile` | the description asks for something the active profile does not admit (§4 rules 2–4 and 6); or the substitutability relation meets a constraint on a fact no rule decides, or a comparison past the exact arithmetic (§7 rule 6), a region's range among them (§8 rule 5); or a caller stating a level its system does not run its callers at (§8 rule 9) | request a profile that supports it, or change the description to fit this one; nothing is silently weakened | `check (defsystem s (task a (period 10 ms) (deadline 10 ms) (priority 1)) (task b (period 10 ms) (deadline 10 ms) (priority 1)))` |
+| `unsupported-profile` | the description asks for something the active profile does not admit (§4 rules 2–4 and 6); or the substitutability relation meets a constraint on a fact no rule decides, or a comparison past the exact arithmetic (§7 rule 6), a region's range among them (§8 rule 5); or a caller stating a level its system does not run its callers at (§8 rule 9); or a sporadic task bound itself to a source faster than it, unbounded, or past the exact arithmetic to compare (§8 rule 16) | request a profile that supports it, or change the description to fit this one; nothing is silently weakened | `check (defsystem s (task a (period 10 ms) (deadline 10 ms) (priority 1)) (task b (period 10 ms) (deadline 10 ms) (priority 1)))` |
 | `tool-failure` | the toolchain could not proceed (§4 rule 7) | this is a failure of the toolchain, not a verdict about the description; report it | `none: only a shipped kind module over 4 GiB reaches it, and the kind modules are embedded in the toolchain (shipped_registry in crates/eadl-model/src/check.rs)` |
 | `boundary-implementation-in-description` | a construct is implementation, which eADL does not contain (§5) | move it to the layer the diagnostic names; the description states what, not how | `check (defsystem app.rt (task sensor (period 10 ms) (deadline 10 ms) (wcet 850 us)))` |
 
@@ -263,8 +263,8 @@ the relation satisfies it at, and these rules judge the bindings together (`crat
 design is `M3.3`'s in `docs/tasks/M3.md`, and connectivity's and routes' `M3.3.3`'s, each reviewed once by a context that
 did not write it, as are privilege's, placement's, the initialization graph's and the functions', `M3.3.4`'s to
 `M3.3.7`'s. `archogen check` does not call them yet: `M3.4` searches for an assignment and wires both in. The
-configuration checker judges a plan's bindings again by those that refuse an assignment — rules 1 to 5, 7, 9, 10, 13
-and 14, an adapter's instance among them (rule 15) — as its check (5), written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.5.5`).
+configuration checker judges a plan's bindings again by those that refuse an assignment — rules 1 to 5, 7, 9, 10, 13,
+14 and 16, an adapter's instance among them (rule 15) — as its check (5), written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.5.5`).
 
 1. **Requesters.** A requester is a task, for what the task itself writes; a service; or any other declaration, for
    what it writes at its own level outside its tasks. Two tasks of one system are two requesters, though §7 reads them
@@ -295,11 +295,13 @@ and 14, an adapter's instance among them (rule 15) — as its check (5), written
    bytes is `invalid-description`; one past the exact arithmetic `unsupported-profile`. A provider nothing is bound to
    owns nothing: an unused device costs nothing (`ROADMAP.md` §5.3) but the bytes it occupies in memory, which rule 10
    charges.
-6. **One assignment, then the search.** A conflict refuses the assignment it is found in, and an unknown blocks it.
-   The description is `infeasible-configuration` when every assignment has a conflict, and `missing-fact` when some
-   assignment is blocked by unknowns alone — `M3.4`'s search to conclude, never a single assignment's. Each finding
-   names the provider, the requesters with where they require the fact, and the count or the two ranges, with a
-   repair: another provider, a sharing realization, or the fact described.
+6. **One assignment, then the search.** A conflict refuses the assignment it is found in, and an unknown blocks it. When
+   no assignment holds, the description takes the highest code, by precedence, of one assignment's findings: the first
+   blocked by unknowns alone, `missing-fact`, or, where every assignment has a conflict, the first's conflicts,
+   `infeasible-configuration` — each finding its own code where it names one, as rule 9's stated level, rule 13's
+   comparisons past the exact arithmetic and rule 16 name `unsupported-profile` — `M3.4`'s search to conclude, never a
+   single assignment's. Each finding names the provider, the requesters with where they require the fact, and the count
+   or the two ranges, with a repair: another provider, a sharing realization, or the fact described.
 7. **One system's assignment, and its hardware** (`M3.3.3`). An assignment is one system's: a description of several
    systems is resolved system by system, so channels count and ownership compares within one. A system's **hardware** is
    the blocks and platforms its `platform` clause, its own `uses` and `needs` or its tasks' name, and every block or
@@ -401,3 +403,15 @@ and 14, an adapter's instance among them (rule 15) — as its check (5), written
    (rules 2 and 3). Rules 1–14 are amended to that effect, an instance's level judged whether or not a system level is
    given; the search binds one only where no assignment of the hardware alone
    holds (`M3.2.3.2`).
+16. **A task released by its own source** (`M4.1.2.3`; `RTP-H24`, `docs/decisions/decision_runtime-plan.md`). A sporadic
+   task bound itself to a source for `interrupt-source` at `true` is released on every arrival of that source (the
+   runtime plan's §2.2), so the analysis admits it only where the source's stated `min-arrival-separation` is at least
+   the task's own `min-separation`: its condition 5, "a task released on every arrival of a source has T ≤ T_s"
+   (`crates/rt-analysis/src/runtime.rs`). Judged beside rule 9's judgement of callers, of each served task bound so: a
+   separation shorter than the task's, one declared absent — an unbounded source, which the analysis refuses under its
+   condition 3 — or a comparison the exact arithmetic cannot decide (§7 rule 2) is a conflict, `unsupported-profile`; a
+   source stating no value for it — none, bare, or a bound, which the relation reads as no value — an unknown,
+   `missing-fact`. The route rule 8 reports stays an obligation, never a finding. Since the search tries every
+   assignment (rule 6), a task whose description offers a source at least as far apart is bound to it, and one whose
+   description offers none is refused, naming the task and the source. The rule holds where every arrival releases the
+   task, as it does for every task until `M1.44` lets a description say otherwise.

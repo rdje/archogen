@@ -1,6 +1,6 @@
 (eadl-version eadl/1)
-; A sporadic task reaching no source, bound itself to the system's one source, faster than the task:
-; `(unknown (own-faster …))` (§2.2, `RTP-H24`; round 27, D1).
+; A sporadic task reaching no source, bound itself to the system's one source, faster than the task: model §8 rule 16
+; refuses it `unsupported-profile`, no slower source offered (`RTP-H24`; round 27, D1; `M4.1.2.3`).
 (defblock dev.a
   (offers (interrupt-source true) (min-arrival-separation 5 ms) (reachable-at-privilege machine)))
 (defblock console.uart
