@@ -530,81 +530,13 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.70.md`](../task-history/PROGRAM/PROGRAM.70.md); commit `ARCHOGEN-PROGRAM-0524`
 
 - ID: `PROGRAM.71`
-  Status: `done` — filed `2026-10-10` by `PROGRAM.69`'s review round 7, its P1
-  Goal: the history's index is append-only in order as well as in presence, as its record says ("Rows are only ever
-  appended").
-  Reproduce / issue: `scripts/check_task_history.sh`'s leg 3 compares each committed index's rows with the current
-  index's as sets, so a row inserted above committed rows passes; measured by the round's own runner, `exp/e2`, untracked
-  and so not durable → *"OK"*, and a
-  mutation of `add_rows` that puts new rows first passes every arm. Present at `fea69ad`, before `PROGRAM.69`.
-  Direction: leg 3 also requires each committed index's rows to stand, in their order, as a prefix of the current
-  table's — or the record and the gate's line say "present and unchanged" rather than "append-only"; an arm either way.
-  Built: the first direction, so the record's "Rows are only ever appended" and the gate's "append-only" stay true:
-    leg 3 keeps each table's rows as a list, and refuses a committed table whose rows, all present and unchanged, no
-    longer stand first and in their order — a row inserted above them or moved — beside its refusal of a row gone or
-    changed; an arm moving a committed row above another.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: leg 3 compared rows as sets, so their order was not judged; WHERE, `git show b3266f25:scripts/check_task_history.sh`, `current = {t: set(r) for t, r in index.items()}`.
-    - [x] FIX — leg 3's `in_order`, lists for sets; the arm.
-    - [x] ADDRESSED — the arm before the fix: `bash scripts/check_task_history.sh --self-test`: `170 pass / 1 fail (171 arms)`, the moved row `expected exit 1, got 0`; after it: `171 pass / 0 fail (171 arms)`; the leaf's mutant, `add_rows` putting new rows first, `161 pass / 11 fail (172 arms)`, where it passed every arm before.
-    - [x] NO REGRESSION — `bash scripts/check_task_history.sh`: OK over the real history, every committed table a prefix in order; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 256 s.
-    - [x] LOCKSTEP — the gate and its arm; the record and the gate's line, already saying "append-only", now held to it.
-  Commit: `ARCHOGEN-PROGRAM-0971 (leaf PROGRAM.71)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.71.md`](../task-history/PROGRAM/PROGRAM.71.md); commit `ARCHOGEN-PROGRAM-0971`
 
 - ID: `PROGRAM.72`
-  Status: `done` — filed `2026-10-10` by `PROGRAM.69`'s review round 8, its P1; done `2026-10-28`
-  Goal: a tree file in a sub-folder of `docs/tasks/` is judged as any tree file is, or is no tree file.
-  Reproduce / issue: `scripts/check_task_history.sh`'s leg 6, its foreign-name and named-twice checks read
-  `docs/tasks/*.md` alone, while `TASK-ACCEPTANCE` takes an owning leaf from any staged `docs/tasks/**/*.md`
-  (`scripts/check_task_acceptance.sh`); the round's probe, its own untracked runner and so not durable: a live
-  `M1.12.1.9` in `docs/tasks/m1/M1.md` passes the gate, at `docs/tasks/M1x.md` refused. Present at `fea69ad`.
-  Direction: the gate walks `docs/tasks/` whole, `TEMPLATE.md` excepted — or `TASK-ACCEPTANCE` takes owners from
-  `docs/tasks/*.md` alone; an arm either way.
-  Built: the second way, the gate's: a tree file is `docs/tasks/<TREE>.md`, so `TASK-HISTORY`'s leg 6 refuses a
-    Markdown file in any sub-folder of `docs/tasks/`, which none of its legs would judge. `TASK-ACCEPTANCE` is held for
-    the scaffold (`.doctrine/scaffold_held.txt`) and stays as it is; the only sub-folder today, `artifacts/`, holds
-    scripts.
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE / ISSUE** — `HEAD`'s gate with a live `M1.12.1.9` planted in `docs/tasks/m1/M1.md`: `old rc=0`.
-  - [x] **ROOT CAUSE (WHY + WHERE)** — leg 6 read the folder's own entries alone:
-    `git show HEAD:scripts/check_task_history.sh | grep -c 'for name in sorted(os.listdir(TASKS))'` → `1`.
-  - [x] **FIX** — a walk of `docs/tasks/`'s sub-folders in leg 6, its header and two arms; the book's Annex B.
-  - [x] **ADDRESSED (verified)** — the patched gate on the same plant: `TASK-HISTORY: docs/tasks/m1/M1.md is a tree
-    file in a sub-folder of docs/tasks/`, `1 breach(es)`; `bash scripts/check_task_history.sh` → `exit 0` on the real
-    tree; `bash scripts/check_task_history.sh --self-test` → `174 pass / 0 fail (174 arms)`.
-  - [x] **NO REGRESSION** — no Rust source changed; `bash scripts/run_self_tests.sh` →
-    `exit 0`, `self-tests: OK — 58 self-test(s) passed`; `bash scripts/check_doctrines.sh` → `exit 0`.
-  - [x] **LOCKSTEP** — the gate's header, the book's `annex-repository.md`, this leaf and the Commit Log.
-  Commit: `ARCHOGEN-PROGRAM-1040 (leaf PROGRAM.72)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.72.md`](../task-history/PROGRAM/PROGRAM.72.md); commit `ARCHOGEN-PROGRAM-1040`
 
 - ID: `PROGRAM.73`
-  Status: `done` — filed `2026-10-10` by `PROGRAM.69`'s review round 9, its P1; done `2026-10-28`
-  Goal: the history gate names every failure it meets as a breach, never a traceback.
-  Reproduce / issue: `scripts/check_task_history.sh`'s top level catches `Unreadable` and `OSError` alone, so any other
-  exception in the gate's own run ends in a traceback, exit 1 — git printing bytes that are not UTF-8 for
-  `rev-parse --is-shallow-repository`, a `UnicodeDecodeError` at `shallow.decode()`; the round's probe, a fake `git` on
-  the path, its own untracked runner and so not durable; the self-test's arm for a seal stopped that way (R9-2) expects
-  the traceback today. Present at `fea69ad`.
-  Direction: the top level names any exception as a breach, and that arm expects the named breach; an arm for the gate.
-  Built: the gate's top level and the census each catch any other exception and name it, `the gate stopped on TYPE:
-    message`, exit 1; a seal stopped so has already rolled back and said so. The seal's arm for git output that is not
-    UTF-8 now requires the named breach and no traceback, and a new arm requires the same of a plain run.
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE / ISSUE** — `HEAD`'s gate with a fake `git` printing `\377` for `--is-shallow-repository`, a plain run:
-    `old rc=1`, `grep -c '^Traceback'` → `1`, ending `UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff`.
-  - [x] **ROOT CAUSE (WHY + WHERE)** — the top level caught two exception types alone:
-    `git show HEAD:scripts/check_task_history.sh | grep -c 'except (Unreadable, OSError) as e:'` → `2`, and nothing after them.
-  - [x] **FIX** — `except Exception` beside each, naming the type and message; the seal arm's condition and comment;
-    the plain-run arm.
-  - [x] **ADDRESSED (verified)** — the patched gate under the same fake `git`: `new rc=1`, `grep -c '^Traceback'` → `0`,
-    `TASK-HISTORY: the gate stopped on UnicodeDecodeError: …`; `bash scripts/check_task_history.sh` → `exit 0` on the
-    real tree; `bash scripts/check_task_history.sh --self-test` → `172 pass / 0 fail (172 arms)`.
-  - [x] **NO REGRESSION** — no Rust source changed; `bash scripts/run_self_tests.sh` →
-    `exit 0`, `self-tests: OK — 58 self-test(s) passed`; `bash scripts/check_doctrines.sh` → `exit 0`.
-  - [x] **LOCKSTEP** — the gate's comments, this leaf and the Commit Log; no book page describes the traceback.
-  Commit: `ARCHOGEN-PROGRAM-1039 (leaf PROGRAM.73)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.73.md`](../task-history/PROGRAM/PROGRAM.73.md); commit `ARCHOGEN-PROGRAM-1039`
 
 - ID: `PROGRAM.74`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.74.md`](../task-history/PROGRAM/PROGRAM.74.md); commit `ARCHOGEN-PROGRAM-0526`
@@ -749,413 +681,76 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.108.md`](../task-history/PROGRAM/PROGRAM.108.md); commit `ARCHOGEN-PROGRAM-0908`
 
 - ID: `PROGRAM.109`
-  Status: `done` — fifteenth daily artifact cleanup; the record's last run `2026-10-22T15:54:45+00:00`, over 24 h old
-    at the director's prompt (`2026-10-24`)
-  Goal: remove only idle, regenerable compiler caches — the main and the wasm debug incremental directories, the
-    owned native-sweep cache being absent — after a physical and native inventory, a successful handoff census and an
-    identity recheck; retain every dependency store, final product, cited evidence directory and Git workspace; prove
-    each removed directory gone, every other entry under `target/` identity-equal or accounted, the tracked inputs
-    restored, the focused tier and `scripts/wasm_build.sh` regenerating; overwrite `docs/ARTIFACT_CLEANUP.md` and add
-    the run's section to the repository annex. The commit also seals what closed at `HEAD`: `PROGRAM.100`–`.102` and
-    `.104`–`.108`.
-    [Full evidence and adapters](../book/src/annex-repository.md#daily-artifact-cleanup-on-2026-10-24).
-  Built otherwise in one part: the wasm debug cache, empty on earlier runs, held 462 files after `M3.5.2`'s builds, so
-    it was admitted beside the main one, the same kind of regenerable compiler cache, its regeneration proven by the
-    documented `scripts/wasm_build.sh`; and the audit, which assumed every surveyed location present, now requires the
-    one absent, the native-sweep cache, to be empty.
-  Acceptance:
-  - [x] ROOT CAUSE: `python3 -I -B target/artifact-cleanup/2026-10-24/census.py`, exit code 0: five locations, physical
-    and native find/stat inventories agree; no link, nested Git boundary or cross-volume entry; the handoff census
-    `handoff: OK` before the inventory and again immediately before the deletion. No `.log` file in any location; the
-    `.bin` files are the caches' own.
-  - [x] ADDRESSED: `python3 -I -B target/artifact-cleanup/2026-10-24/audit.py`, exit code 0: only 29847 idle cache
-    files / 4245385971 logical bytes removed, 2232 bin, no logs; both directories gone by Python and native stat;
-    850169 of 850172 other `target/` entries identical, the three directory rows the strict comparison refused
-    accounted (two parents, the census's scratch); 120995 evidence digests agree; 4 of 4 falsifying arms refused.
-  - [x] NO REGRESSION: `bash scripts/trust_adequacy.sh --check-inputs`: `restored 1277 regular inputs`; production
-    source unchanged; `bash scripts/check_task_history.sh --seal PROGRAM`: `sealed 8 subtree(s), 8 leaves`, the
-    reconstruction byte for byte; `bash scripts/wasm_build.sh`: exit code 0, the wasm cache regenerated; `make focused` on this staged tree: exit code 0, `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 260 s — cargo's fingerprints held every crate fresh, so nothing recompiled and the main cache, its directory recreated empty, refills on the next change; the wasm build recompiled and refilled its own.
-  Verification: `target/artifact-cleanup/2026-10-24/`; the external policies of §14, §17 and §18 re-read at the prompt,
-    each body still hashing as adopted (`README_POLICY.md`'s lines 29–187 `77a1e934…`, the adoption guide
-    `8f77fa39…`, `pgen`'s claim verification, 285 lines and 18166 bytes, verbatim in the adopted file), so nothing to
-    apply.
-  Commit: `ARCHOGEN-PROGRAM-0928 (leaf PROGRAM.109)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.109.md`](../task-history/PROGRAM/PROGRAM.109.md); commit `ARCHOGEN-PROGRAM-0928`
 
 - ID: `PROGRAM.110`
-  Status: `done` — the director's verification doctrine 22 (`2026-10-26`) recorded: small checks per slice, full
-    verification after the feature set
-  Built: `docs/decisions/decision_small-checks-per-slice.md`, the doctrine word for word and what it means here — the
-    changed crate's tests and clippy and, for a slice changing what a root compiles, the trust inventory; the hooks and
-    `make focused` kept as commit integrity; the full xtask suite, the proofs and their pins, workspace clippy and CI
-    deferred — indexed; `M3.5.9`, `M3.5`'s deferred verification, filed pending after its feature leaves.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: the doctrine existed only in the session; WHERE, `git grep -n "doctrine 22" -- docs`: no line before this commit.
-    - [x] FIX — the record, its index row, `M3.5.9`.
-    - [x] ADDRESSED — `bash scripts/check_doctrines.sh`: green, the record indexed and inside the folder's ceiling.
-    - [x] NO REGRESSION — a records-only change; no code changed.
-    - [x] LOCKSTEP — the decisions index and the tree.
-  Verification: the doctrines.
-  Commit: `ARCHOGEN-PROGRAM-0952 (leaf PROGRAM.110)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.110.md`](../task-history/PROGRAM/PROGRAM.110.md); commit `ARCHOGEN-PROGRAM-0952`
 
 - ID: `PROGRAM.111`
-  Status: `done` — sixteenth daily artifact cleanup; the record's last run `2026-10-23T22:20:24+00:00`, over 24 h old
-  Goal: remove only idle, regenerable incremental compiler caches, after the handoff census; keep every dependency
-    store, product, evidence directory and Git workspace; a light run under doctrine 22
-    (`docs/decisions/decision_small-checks-per-slice.md`) — no identity audit of what stayed.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: the cleanup record was over 24 hours old; WHERE, `docs/ARTIFACT_CLEANUP.md` at `3c848944`, its entry `2026-10-23T22:20:24+00:00`.
-    - [x] FIX — `python3 -I -B target/artifact-cleanup/2026-10-26/cleanup.py --delete`: `target/debug/incremental`, `target/wasm32-unknown-unknown/debug/incremental`, `target/m352101/measure-target/debug/incremental`, `target/m352111/blocks-target/debug/incremental` removed, no link in any.
-    - [x] ADDRESSED — `total files 8854 bytes 1586169011`, 495 bin, 0 log, each directory `gone: true` (`target/artifact-cleanup/2026-10-26/removed.json`); `bash scripts/handoff_census.sh`: `handoff: OK` before.
-    - [x] NO REGRESSION — caches alone, regenerated by the next build: the main by `make focused`, the wasm by `scripts/wasm_build.sh`; no tracked file but the record.
-    - [x] LOCKSTEP — the record and the tree.
-  Verification: the census, the removal report.
-  Commit: `ARCHOGEN-PROGRAM-0953 (leaf PROGRAM.111)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.111.md`](../task-history/PROGRAM/PROGRAM.111.md); commit `ARCHOGEN-PROGRAM-0953`
 
 - ID: `PROGRAM.112`
-  Status: `done` — doctrine 22's record corrected: what `make focused` runs is not deferred
-  Built: `docs/decisions/decision_small-checks-per-slice.md`'s deferred bullet split in two — what `make focused` runs,
-    its tier `cargo fmt --all -- --check`, workspace clippy and `cargo test --all`, stays at every commit, a pin a slice
-    moves re-pinned by that slice; what it does not run — the integration tier and CI, the sweeps themselves, the
-    oracle, audits — deferred to `M3.5.9`; its index row likewise.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: the record listed the whole xtask suite, the sweep's pinned premises and workspace clippy as deferred, and `make focused`, mandatory at every commit, runs all three; WHERE, `git show d8153b33:docs/decisions/decision_small-checks-per-slice.md`, its *Deferred* bullet, against `xtask/src/main.rs`'s `focused` tier, `steps: &[FMT, CLIPPY, TESTS]` — found when `M3.5.4.5`'s focused run refused the lockfile pin the record had deferred.
-    - [x] FIX — the record's two bullets and its index row.
-    - [x] ADDRESSED — `bash scripts/check_doctrines.sh` through the hooks: the record indexed and within the folder's ceiling.
-    - [x] NO REGRESSION — a records-only change; no code changed.
-    - [x] LOCKSTEP — the record, its index and the tree.
-  Verification: the doctrines.
-  Commit: `ARCHOGEN-PROGRAM-0959 (leaf PROGRAM.112)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.112.md`](../task-history/PROGRAM/PROGRAM.112.md); commit `ARCHOGEN-PROGRAM-0959`
 
 - ID: `PROGRAM.113`
-  Status: `done` — filed `2026-10-26` from the CI run on `d5123578`
-  Goal: `scripts/check_task_history.sh`'s self-test arm "a SIGALRM just after the tree's rename" holds on every run of
-    the Linux runner, or the reason it cannot is stated and the arm says so.
-  Reproduce / issue: the `doctrines` workflow's run `40323084588`, attempt 1, on `ubuntu-latest`: the arm `rc 142, not
-    142, or the seal not finished and proven`, the seal's output empty — the process ended by the signal before the
-    seal printed, as though `SIGALRM` were not held; the same run's `SIGQUIT`, `SIGUSR1` and `SIGUSR2` arms passed, and
-    attempt 2 of the same commit passed whole; the arm passed on this host (`aarch64-apple-darwin`) and in the base's
-    last green run. Intermittent, so one run diagnoses nothing.
-  Direction: tools first — a Linux reproduction (a container or the runner) running the arm in a loop under load,
-    recording the process's threads and signal masks (`/proc/self/status`'s `SigBlk`) at the rename; then the mask, the
-    arm or the record fixed by what it shows. Not patched blind.
-  Since (`2026-10-26`): the runs on `e089751f` (`40326236217`) and `a809a826` (`40327569374`) failed four and five of
-    the signal arms after the tree's rename — `HUP`, `QUIT`, `USR1`, `USR2`, `ALRM`, never `INT` or `TERM` — each with
-    its expected exit code, so the failures are steady on the runner, not one run's. The self-test runner keeps only
-    `^SELF-TEST` lines, so the arms' evidence never reached the log: the arm's failure line now carries it — whether the
-    seal said it sealed, whether `Q.1.md` exists, the seal's last words and the gate's verdict in the proof — as the
-    tool the next run reads (`ARCHOGEN-PROGRAM-0976`).
-  Closed (`2026-10-26`): `.1` put the arms' evidence on the line the runner keeps, `.2` traced the seal, which showed
-    it sound and the arms' own check at fault, `.3` read every output through a here-string; the runs on `34b6abeb` —
-    `doctrines` `40337545873`, `rust` `40337545686`, `trust-gate` `40337546070` — each `success`.
-  Verification: the three runs on `34b6abeb`, green.
-  Commit: `ARCHOGEN-PROGRAM-0978 (leaf PROGRAM.113.3)`, its last child's
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.113.md`](../task-history/PROGRAM/PROGRAM.113.md); commit `ARCHOGEN-PROGRAM-0978`
 
 - ID: `PROGRAM.113.1`
-  Status: `done` — the signal arms' failure line carries the seal's evidence, the one line the runner keeps
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: the self-test runner keeps a failing gate's `^SELF-TEST` lines alone, and the arm printed its evidence on the lines after, so the runner's log said only that the arms failed; WHERE, `git show a809a826:scripts/run_self_tests.sh`, its line 110, `grep -E '^SELF-TEST|self-test' | head -8`.
-    - [x] FIX — the arm's failure line names whether the seal said it sealed, whether `Q.1.md` exists, the seal's last words and the gate's verdict in the proof.
-    - [x] ADDRESSED — the `SIGALRM` arm forced to fail, its wanted code set to `1` and restored after: its line read `sealed line yes, Q.1.md yes; output: …; gate: task-history: OK …`; `bash scripts/check_task_history.sh --self-test`: `171 pass / 0 fail (171 arms)`.
-    - [x] NO REGRESSION — `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 337 s; the gate's behaviour unchanged, the arm's message alone longer.
-    - [x] LOCKSTEP — the arm and `PROGRAM.113`'s record.
-  Commit: `ARCHOGEN-PROGRAM-0976 (leaf PROGRAM.113.1)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.113.md`](../task-history/PROGRAM/PROGRAM.113.md); commit `ARCHOGEN-PROGRAM-0976`
 
 - ID: `PROGRAM.113.2`
-  Status: `done` — the signal arms trace the seal: the signal sent, each mask change, each outcome printed
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: `.1`'s evidence from the run on `d7fa9c69` — `sealed line no, Q.1.md yes`, the gate's proof OK — fits both a line printed and lost and a process ended before it printed, and one run cannot tell them apart; WHERE, `git show d7fa9c69:scripts/check_task_history.sh`, the arm's failure line, no order of events.
-    - [x] FIX — the test hook writes, unbuffered and in order, to a trace file the arm names: `fire N` as the signal is sent, `mask HOW COUNT` at each mask change, `print …` before each `task-history:` outcome; the arm's failure line quotes the trace and the output's first lines.
-    - [x] ADDRESSED — the `SIGALRM` arm forced to fail, its wanted code `1` and restored after: `trace: mask 1 23|fire 14|print task-history: docs/tasks/Q.md — sealed 1 subtree|mask 3 0|`, the designed order on this host; `bash scripts/check_task_history.sh --self-test`: `171 pass / 0 fail (171 arms)`.
-    - [x] NO REGRESSION — test-only code, the gate's own unchanged; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 308 s.
-    - [x] LOCKSTEP — the hook, the arm and `PROGRAM.113`'s record.
-  Commit: `ARCHOGEN-PROGRAM-0977 (leaf PROGRAM.113.2)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.113.md`](../task-history/PROGRAM/PROGRAM.113.md); commit `ARCHOGEN-PROGRAM-0977`
 
 - ID: `PROGRAM.113.3`
-  Status: `done` — the arms read their output without a pipe, so `pipefail` cannot turn a match into a failure
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: `.2`'s trace on the runner, run `40333831327` on `80719f25`, read `mask 0 54|fire 1|print task-history: docs/tasks/Q.md — sealed 1 subtree|mask 2 0|`, the output's first line the seal's own — the seal held the signal, said its outcome and was proven; the arm failed in its own check, `printf '%s' "$out" | grep -qE '^task-history: … sealed '` under `set -o pipefail`: GNU grep's `-q` exits at its first match while `printf` is still writing an output the size of the gate's Python, which bash's notice of a signalled job repeats (`git show d7fa9c69:scripts/check_task_history.sh` holds 55174 bytes of it, the base `8cdac117` 35958), so `printf` meets a closed pipe and the pipeline fails though `grep` matched — on Linux's pipe, never on this host's larger one or BSD grep, which reads to the end.
-    - [x] FIX — every `printf '%s' "$out" | grep -q…` in the script, fifty on forty-five lines, made `grep -q… <<< "$out"`: no pipeline, so no `pipefail`.
-    - [x] ADDRESSED — the mechanism alone, GNU grep under `pipefail` on a matching first line: through the pipe `20/20 pass` at 70 kB and `0/20 pass` at 300 kB; through the here-string `20/20 pass` at 1 MB; the arms with each signalled run's output padded by 300 kB, under GNU grep, before the fix `bash scripts/check_task_history.sh --self-test`: `159 pass / 12 fail (171 arms)`, after it `171 pass / 0 fail (171 arms)`; unpadded, with this host's grep and with GNU grep, `171 pass / 0 fail (171 arms)`.
-    - [x] NO REGRESSION — `bash scripts/check_task_history.sh`: OK; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 358 s.
-    - [x] LOCKSTEP — the script; `PROGRAM.114` filed for the idiom elsewhere.
-  Commit: `ARCHOGEN-PROGRAM-0978 (leaf PROGRAM.113.3)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.113.md`](../task-history/PROGRAM/PROGRAM.113.md); commit `ARCHOGEN-PROGRAM-0978`
 
 - ID: `PROGRAM.114`
-  Status: `done` — filed `2026-10-26` by `PROGRAM.113.3`
-  Goal: no gate script reads a captured output through `printf … | grep -q` under `pipefail`, where an output larger
-    than a pipe turns a match into a failure on Linux.
-  Reproduce / issue: the census of `scripts/*.sh` running under `pipefail` finds the idiom 78 times outside
-    `check_task_history.sh`, most in self-test arms — `check_frozen_evaluation.sh` 7, `check_task_acceptance.sh` 6,
-    `check_feedback_register.sh` 5, and more; each latent, failing only once its output outgrows a pipe, as
-    `PROGRAM.113.3` measured.
-  Direction: each made a here-string, and a doctrine leg refusing the idiom in a `pipefail` script, its RED arm the
-    pipe the padded experiment broke.
-  Built: every such read in this repository's `pipefail` scripts made a here-string — seventy-six, in forty files,
-    one by hand where its patterns come from a process substitution — and `PIPE-READS`, `scripts/check_pipe_reads.sh`,
-    refusing the form in any tracked shell script that sets `pipefail`, a comment not code, registered in
-    `scripts/check_doctrines.project.sh`, described in the book's Annex B. The scaffold's eleven sites —
-    `check_task_acceptance.sh` six, `check_lesson_promotion.sh` two, `check_routing_evidence.sh` two,
-    `check_no_background_jobs.sh` one — are reported, not refused, as `SCRATCH-LOCALITY` reports its own; the change
-    they need, for whoever owns the scaffold, never sent there by an archogen agent: each `printf '%s' "$x" | grep -q…`
-    or `echo "$x" | grep -q…` made `grep -q… <<< "$x"`. `DOCTRINE_ENFORCEMENT.md` is at its ceiling — twenty-six bytes
-    free — so its row waits on that table's compaction, `PROGRAM.115`.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: the idiom `PROGRAM.113.3` measured failing a matched check on Linux stood in other gates' self-tests, latent until an output outgrows a pipe; WHERE, `git show 34b6abeb:scripts/check_frozen_evaluation.sh` and the census's forty-four files.
-    - [x] FIX — the reads converted; the gate, its registration and the book.
-    - [x] ADDRESSED — `bash scripts/check_pipe_reads.sh`: `pipe-reads: OK (74 pipefail script(s) scanned; 11 site(s) in scaffold-owned files reported, …)`; `bash scripts/check_pipe_reads.sh --self-test`: `pipe-reads self-test: 8 pass / 0 fail (8 arms)`; one owned site put back refused, `scripts/check_decision_index.sh:69`; every touched gate's self-test under GNU grep passing, `scripts/run_self_tests.sh`'s two real-tree arms again after the index and the ceiling were answered.
-    - [x] NO REGRESSION — `bash scripts/check_doctrines.sh`: every doctrine but `TASK-ACCEPTANCE`, which this leaf answers; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 268 s.
-    - [x] LOCKSTEP — the scripts, the gate's registration, the book; the enforcement table's row `PROGRAM.115`'s.
-  Commit: `ARCHOGEN-PROGRAM-0980 (leaf PROGRAM.114)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.114.md`](../task-history/PROGRAM/PROGRAM.114.md); commit `ARCHOGEN-PROGRAM-0980`
 
 - ID: `PROGRAM.115`
-  Status: `done` — filed `2026-10-26` by `PROGRAM.114`
-  Goal: `DOCTRINE_ENFORCEMENT.md` compacted under its ceiling with room for `PIPE-READS`'s row, or its ceiling raised
-    by a decision record.
-  Reproduce / issue: `bash scripts/check_readme_routes.sh` with the row added: `DOCTRINE_ENFORCEMENT.md: 37469 bytes,
-    over its ceiling of 36864`; without it the table holds 36838, twenty-six bytes free. The table is scaffold-owned,
-    so a compaction is the scaffold's change too, written down for its owner.
-  Corrected by `PROGRAM.116` (`2026-10-26`): the table is archogen's — on the updater's NEUTRAL list, but changed here,
-    and the director's ruling of `2026-09-30` (findings §10) holds only what archogen never changed — so a compaction is
-    this repository's alone, nothing owed upstream; `PROGRAM.116`'s row edit left it at 36836 bytes.
-  Done `2026-10-28`. `M2.7.6.5` (`ARCHOGEN-M2-1033`) took five clauses of history out of other rows to fit
-    `CODE-OWNERS`'s; this leaf shortens `BOOK-ANCHORS`' row to its rule, the rationale it repeated kept in
-    `scripts/check_book_anchors.sh`'s header, and adds `PIPE-READS`'s row after `NO-SUBPROCESS`'s, the registry's place.
-  Verification: `bash scripts/check_readme_routes.sh` → `exit 0`, nothing on `DOCTRINE_ENFORCEMENT.md`, at 36851 of
-    its 36864 bytes; `bash scripts/check_table_arity.sh` → `exit 0`. Thirteen bytes stay free, so the next row comes
-    with its own compaction or a ceiling the director rules.
-  Commit: `ARCHOGEN-PROGRAM-1036 (leaf PROGRAM.115)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.115.md`](../task-history/PROGRAM/PROGRAM.115.md); commit `ARCHOGEN-PROGRAM-1036`
 
 - ID: `PROGRAM.116`
-  Status: `done` — P2, filed and fixed `2026-10-26`: what is held for the scaffold read from the director's ruling, not
-    from the updater's NEUTRAL array
-  Reproduce / issue: the ruling of `2026-09-30` (findings §10, sealed in
-    `docs/decision-history/decision_findings-for-director-review/10.md`): "only [template] inherited script you haven't
-    modified. Those you modified are yours now" — seventeen files measured, `check_task_acceptance.sh` named archogen's.
-    `SCRATCH-LOCALITY` (`PROGRAM.29`, `2026-09-29`, a day before it) takes every file on `scripts/update_scaffold.sh`'s
-    NEUTRAL array as the scaffold's and was never brought to it; `PIPE-READS` (`PROGRAM.114`, this session) copied that
-    rule. So `check_task_acceptance.sh`'s two off-volume `mktemp` calls and six pipe reads under `pipefail` — the form
-    `PROGRAM.113` found failing on CI — were reported for upstream instead of fixed. Found while reading the ruling for
-    `M3.5.1.4`'s `DOCTRINE_ENFORCEMENT.md` edit; `PROGRAM.115`'s premise, that table scaffold-owned, falls with it.
-  Built: `.doctrine/scaffold_held.txt`, the ruling's held files with its citation — sixteen, `.githooks/pre-commit`
-    having left the hold when `M2.7.4.4` (`e2b034dc`, `2026-10-03`) changed it — read by both gates in place of the
-    NEUTRAL array, each gaining an arm: a NEUTRAL file archogen changed is refused. `check_task_acceptance.sh`'s eight
-    sites fixed: its scratch under `target/doctrine_scratch/`, its self-test's reads through here-strings. The scratch
-    record, `DOCTRINE_ENFORCEMENT.md`'s `SCRATCH-LOCALITY` row (two bytes shorter), `.doctrine/README.md`, `TOOLBOX.md`
-    and the book's repository annex and ledger say so; `PROGRAM.115` corrected. Upstream is owed five pipe reads and
-    two scratch sites, all in held files; `PROGRAM.114`'s list of eleven stands for those five.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: both gates read the updater's NEUTRAL array as the scaffold's files, which the ruling of `2026-09-30` narrowed to those archogen never changed; WHERE, `git show 99d32dd1:scripts/check_scratch_locality.sh`, `scaffold_owned()` reading `NEUTRAL=(`.
-    - [x] FIX — the held list; both gates read it; `check_task_acceptance.sh`'s eight sites; the records and the book.
-    - [x] ADDRESSED — `bash scripts/check_scratch_locality.sh --self-test`: `scratch-locality self-test: 17 pass / 0 fail (17 arms)`; `bash scripts/check_pipe_reads.sh --self-test`: `pipe-reads self-test: 9 pass / 0 fail (9 arms)`; `bash scripts/check_task_acceptance.sh --self-test`: `task-acceptance self-test: 10 pass / 0 fail`; `bash scripts/check_pipe_reads.sh`: `pipe-reads: OK (74 pipefail script(s) scanned; 5 site(s) in scaffold-owned files reported, …)`. Falsified: before the fix `SCRATCH-LOCALITY` refused `check_task_acceptance.sh:374` under the held list, and a pipe read put back at `check_task_acceptance.sh:306` is refused by `PIPE-READS`.
-    - [x] NO REGRESSION — `bash -n` of the three scripts `exit 0`; `bash scripts/check_readme_routes.sh`: `readme-routes: OK (25 destination(s) governed)`; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 258 s.
-    - [x] LOCKSTEP — the gates, the list, the records, `DOCTRINE_ENFORCEMENT.md`, the book.
-  Commit: `ARCHOGEN-PROGRAM-0989 (leaf PROGRAM.116)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.116.md`](../task-history/PROGRAM/PROGRAM.116.md); commit `ARCHOGEN-PROGRAM-0989`
 
 - ID: `PROGRAM.117`
-  Status: `done` — filed `2026-10-27` on the director's ruling of that day; closed `2026-10-28` with `.3`, its three
-    children done
-  Goal: the record folders' ceilings bound what is read, not the corpus, so their growth never stops work.
-  Ruling (`2026-10-27`, the director, reopening the one-time raise of `decision_decisions-folder-ceiling.md`): "I do
-    not understand why there are even ceilings on those directories ... What's the best solution, to you, to handle
-    nicely, elegantly those ceiling. I agree their size shall not blow up, shall somehow be contained but this shall
-    not hinder progress. Propose a sota, production-grade solution."
-  Reproduce / issue: `docs/specs/`' total was raised by `PROGRAM.56`, `.79`, `.102` and `.108`, four times in
-    eighteen days; at `220eb078`, `git ls-tree -r -l HEAD -- docs/decisions docs/specs`: 392564 of 393216 and 649155
-    of 655360. No reader's context loads a whole folder, so a total bounds no read; the per-file caps do.
-  Children: `.1` the ceilings, the check and the record; `.2` the move tool the lifecycle needs; `.3` the index that
-    still binds as one file.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.117.md`](../task-history/PROGRAM/PROGRAM.117.md); commit not recorded
 
 - ID: `PROGRAM.117.1`
-  Status: `done` — `2026-10-27`
-  Goal: `README-ROUTES` reads a directory row's Files cell `fan-out N` — no directory it governs lists more than N
-    entries, its tracked files (archive stubs aside) and sub-folders — and its Total bytes cell `guard N`, a runaway
-    guard, with a `--report` of each folder's totals and growth; `docs/decisions/`, `docs/specs/` and `docs/reviews/`
-    take both, under a new decision record that supersedes the three ceiling records; the policy, the inventory and
-    the book follow.
-  Built: the check's two cells (`fanned`, `guarded`) and its `--report` (`scripts/check_readme_routes.sh`); a guard
-    refuses a total over it, three quarters of it unless the cell names an open leaf asking for a ruling or a tracked
-    decision record that kept it, and a commit growing the folder in the index over `HEAD` past a sixty-fourth of it
-    unless `README_ROUTES_GROWTH_LEAF` names a leaf open at `HEAD` or new in the index; every ceiling a whole number,
-    compared fail-closed; `### Ceilings a decision fixes` compares a cell with its maximum by kind, a debt or a
-    doctrine refused, a directory's maximum binding the rows beneath it through the nearest fixed ancestor; `docs/decisions/decision_ceilings-bound-reads.md`, quoting the
-    ruling and the `nygard-adr` ledger entry; the three ceiling records marked superseded; the three rows at
-    `fan-out 64` and `guard 16777216`.
-  Review (`2026-10-27`, rounds by independent contexts): round 1 on the first draft, five defects and ten remarks;
-    round 2 on the answers, two defects and thirteen remarks; round 3, three defects and four remarks; round 4, two
-    defects and six remarks; round 5, no defect and three remarks, closing the review; all answered here.
-    - D1, a number past 64 bits or with a leading zero failing a comparison open: `whole()`, every comparison
-      `[ a -le b ] || note`; arms for each.
-    - D2, a decision-fixed cell turned into a debt or a doctrine escaping its maximum: refused; arms.
-    - D3, the notice at three quarters printed nowhere, `scripts/check_doctrines.sh` being held and silent on a pass:
-      a refusal unless an open leaf asks for a ruling.
-    - D4, the record's index split refused by `DECISION-INDEX`: the record states the single index binds; `.3` filed.
-    - D5, "only a mistake reaches the guard", false by the record's own numbers, and a 6.3 MB dump passing: reworded,
-      and the per-commit step added, sized against the largest honest growth since `6d61f65`, 38818 bytes
-      (`efedf6d6`).
-    - Remarks taken: the numbers (26 times, fifteen days, "no reader's context"); `docs/reviews/`' stubs and flat
-      layout stated; `docs/specs/` has no index of its own; `knowledge-map/subsystems.md` for a new sub-folder;
-      superseded records stay in place, `.2`'s goal narrowed; the inventory's widest-listing label; the two stale
-      script comments; the self-test gaps.
-    - Round 2, defect 1, the step measuring the disk while the commit holds the index — growth staged and deleted
-      from the disk passed: `index_bytes()`, the index's blob sizes against `HEAD`'s; an arm.
-    - Round 2, defect 2, a partition's row lifting a fan-out a decision fixes for its parent: a maximum fixed for a
-      directory bounds every registered row beneath it unless the table fixes that row's own; three arms.
-    - Round 2's remarks taken: `README_ROUTES_GROWTH_LEAF` open at `HEAD` or new; an empty ruling clause refused;
-      `guard N, ruled by <record>` for a ruling that keeps a guard; the report's date the three-quarter refusal; the
-      step's honest limits in the record and the book; the documented batch of 186617 bytes (`PROGRAM.43`); 131072
-      for a review history; the index figures from `220eb078`; one reason for a malformed number under a maximum;
-      the inventory and the failing-first figures re-measured on the final tree.
-    - Round 3, defect 1, a `ruled by` clause satisfied by any pathspec — `.`, `*`, `README.md`: a decision record
-      under `docs/decisions/` or `docs/specs/`, by its literal path; arms for each.
-    - Round 3, defect 2, a leaf "new in the commit" read from the disk: `leaf_status_in`, at `HEAD` or in the index;
-      an arm with a leaf on the disk alone.
-    - Round 3, defect 3, a directory's fixed maximum reaching file rows and doctrine cells beneath it that could never
-      comply: only directory rows, through the nearest fixed ancestor; arms for a file row and a nested partition
-      (narrowed by round 4: a file row is bound in the per-file columns, and a doctrine cell beneath is refused).
-    - Round 3's remarks taken: the book's and the report arm's dates the three-quarter refusal, pinned; `index_bytes`
-      refusing an object it cannot size; the header rewrapped, `control`'s unused locals gone; this text. Its
-      remark on path quoting in the on-disk measures predates this change, filed as `PROGRAM.118`.
-    - Round 4, defect 1, file rows freed in every column, so a file row lifted a decided per-file maximum (a row for
-      a file of `docs/task-history/` above `decision_task-history-line-ceiling.md`'s 3072): a file row is skipped in
-      Files and Total bytes alone; three arms.
-    - Round 4, defect 2, the header and `within_fixed`'s message stating round 2's rule: both rewritten.
-    - Round 4's remarks taken: a row beneath a fixed column takes its kind, stated and pinned by an arm; an index or
-      the template is no ruling; arms reaching the literal-path test (`docs/decisions/../../README.md`, a record on
-      the disk alone) and the `unreadable` refusal; the table's rows matched with or without backticks.
-    - Round 5's remarks taken: `within_fixed`'s messages read in order; an arm for a file row's doctrine cell under a
-      fixed per-file column; a ruling clause names a record whose type is `decision`, the template and a reference
-      note refused, and the header states what the check cannot tell.
-    - Fence: the round-1 reviewer ran `git log -G'655360|589824|524288|458752|393216' -- README_POLICY.md`, which searched that
-      file's diffs in commits older than `6d61f65` and printed commit subjects alone, and disclosed it. No path under
-      `docs/evaluation/` was searched and no case text was printed, so no case was read and nothing joins the
-      evaluation's *Exposures*; a brief's fence now names `log -G` and `log -S` with `-p`.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: `README_POLICY.md` bounded the record folders' totals, which no read loads, so the product's growth met a wall raised four times in eighteen days; WHERE, `git show 220eb078:README_POLICY.md`, the rows of `docs/decisions/`, `docs/specs/` and `docs/reviews/` and their maxima; at `220eb078`, `git ls-tree -r -l HEAD -- docs/specs`: 649155 of 655360.
-    - [x] FIX — the check's cells, step and report; the policy's rows, note and maxima; the record; the three records superseded; the inventory, the enforcement table, `TOOLBOX.md`, the book's repository annex and glossary, the ledger, `docs/figures.md`; the review's answers above.
-    - [x] ADDRESSED — `bash scripts/check_readme_routes.sh --self-test`: `readme-routes self-test: 113 pass / 0 fail (113 arms)`; `bash scripts/check_readme_routes.sh`: `readme-routes: OK (25 destination(s) governed)`. Failing first, this staged tree under `220eb078`'s policy: `docs/decisions/: 407037 bytes in total, over its ceiling of 393216`; under the new rows before the record existed: six breaches, `fixed by docs/decisions/decision_ceilings-bound-reads.md, which does not exist`.
-    - [x] NO REGRESSION — `bash -n scripts/check_readme_routes.sh` exit 0; `bash scripts/check_doctrines.sh` passes; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 300 s
-    - [x] LOCKSTEP — the check, the policy, the record, the inventory, the enforcement table, the toolbox, the book, the snapshots, two script headers; `eadl-1-a-plan-names-engine-adapters.md` flipped to `applied`, `M3.2.5`'s note.
-  Commit: `ARCHOGEN-PROGRAM-1020 (leaf PROGRAM.117.1)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.117.md`](../task-history/PROGRAM/PROGRAM.117.md); commit `ARCHOGEN-PROGRAM-1020`
 
 - ID: `PROGRAM.117.2`
-  Status: `done` — `2026-10-27`
-  Goal: one scripted, verified step moves records — an accepted design from `docs/decisions/` to
-    `docs/specs/<subject>/`, or a subject's records into a sub-folder of their own — their relative links rewritten,
-    every path-form citation in a live file repointed, sealed history and scaffold-held files left and reported, the
-    index rows updated, a new sub-folder linked from `knowledge-map/subsystems.md`; a batch past a folder's step,
-    262144 bytes, names its leaf in `README_ROUTES_GROWTH_LEAF`; a superseded record stays in place
-    (`decision_ceilings-bound-reads.md`).
-  Built: `scripts/move_record.sh [--dry-run] <record> <destination>`. It refuses a record that is not a tracked `.md`
-    under the two folders, an index or the template, a destination outside them or existing, and — for a move —
-    unstaged changes. It `git mv`s the record, rewrites its own relative links, and repoints every written-out path
-    and every relative markdown link that resolved to it in a live file. It leaves and lists a `<revision>:<path>`,
-    the four archives, `CHANGELOG.md` and `DEV_NOTES.md`, `annex-trust-proofs.md`'s verbatim proofs and the held
-    files; it never lists or opens `docs/evaluation/`. It stages the move only when no live file names the old path,
-    runs `DECISION-INDEX`, and names a new folder for the knowledge map and a rewritten Rust source or trust root for
-    `cargo xtask trust-inventory`. `TOOLBOX.md`'s README-routes row, the record and the book's repository annex say so.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: a record's move was a census by reading, its citations found and judged by hand (`PROGRAM.43`, `.56`, `.102`); WHERE, `PROGRAM.102`'s move, `git show --stat --format= efedf6d6`: `20 files changed, 94 insertions(+), 39 deletions(-)`, each edit chosen by reading, its FIX "every path-form citation repointed … bare names left … sealed history untouched".
-    - [x] FIX — `scripts/move_record.sh`; `TOOLBOX.md`; the record's lifecycle and how-to; the book's repository annex.
-    - [x] ADDRESSED — `bash scripts/move_record.sh --self-test`: `move-record self-test: 24 pass / 0 fail (24 arms)`, the sealed fixture unreadable throughout. On this tree, `bash scripts/move_record.sh --dry-run docs/decisions/decision_engine-api.md docs/specs/api/`: `move-record: planned, nothing changed (--dry-run)`, 12 citations and 2 links rewritten, 9 left as verbatim proofs — `git grep -c docs/decisions/decision_engine-api.md` counts 21 = 12 + 9.
-    - [x] NO REGRESSION — `bash -n scripts/move_record.sh` exit 0; `bash scripts/check_doctrines.sh` passes; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 318 s
-    - [x] LOCKSTEP — the tool, `TOOLBOX.md`, the record, the book, the snapshots.
-  Commit: `ARCHOGEN-PROGRAM-1022 (leaf PROGRAM.117.2)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.117.md`](../task-history/PROGRAM/PROGRAM.117.md); commit `ARCHOGEN-PROGRAM-1022`
 
 - ID: `PROGRAM.117.3`
-  Status: `done` — filed `2026-10-27` by `PROGRAM.117.1`'s review (D4); done `2026-10-28`
-  Goal: an index never binds the folder it lists: `DECISION-INDEX` accepts a record linked from its sub-folder's own
-    `INDEX.md` when the parent index links that index, and the specifications are indexed — two records of
-    `docs/specs/trust/` are in no index, a third only in the reviews' index.
-  Reproduce / issue: `scripts/check_decision_index.sh` requires every record under `docs/decisions/` to be linked from
-    `docs/decisions/INDEX.md` itself; at `220eb078`, 18185 of its 98304 bytes, about 140 a day since `d00c3dee`
-    (`2026-10-12`, 16118), so about a year and a half before it binds.
-  Built: `DECISION-INDEX` walks the root index and every `INDEX.md` under `docs/decisions/` or `docs/specs/` that an
-    index it already reached links, each link resolved against its own index's folder; a record is found by that path,
-    and an index nothing reaches is refused, since what it lists would be listed nowhere. An index outside the two
-    folders, the reviews', is never read as one. Its population is both folders, so the specifications are held too;
-    the three it then found are indexed in `docs/decisions/INDEX.md`.
-
-  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
-  - [x] **REPRODUCE / ISSUE** — the widened gate on the tree before the rows: `bash scripts/check_decision_index.sh` →
-    `exit 1`, `3 breach(es)`, naming `docs/specs/trust/compiler-provenance-contract.md`,
-    `docs/specs/trust/decision_trust-role-programs.md` and `docs/specs/trust/flag-normalization-domain.md`.
-  - [x] **ROOT CAUSE (WHY + WHERE)** — the gate read one folder and one index, every record's path taken relative to it
-    and compared with the root index's links alone:
-    `git show HEAD:scripts/check_decision_index.sh | grep -c 'DIR = "docs/decisions"'` → `1`.
-  - [x] **FIX** — the walk over sub-indexes and the two folders in `scripts/check_decision_index.sh`, its header,
-    seven new arms; the three rows; the registry's text, `DOCTRINE_ENFORCEMENT.md`'s row, the ceilings record's owed
-    clause marked discharged, and the book's Annex B.
-  - [x] **ADDRESSED (verified)** — `bash scripts/check_decision_index.sh` → `exit 0`, `decision-index: OK (40
-    record(s), 0 in partitions none, and 16 specification(s), each linked by its path from 1 index(es); every link
-    resolves)`; `bash scripts/check_decision_index.sh --self-test` → `12 pass / 0 fail (12 arms)`.
-  - [x] **NO REGRESSION** — no Rust source changed; `bash scripts/run_self_tests.sh` →
-    `exit 0`, `self-tests: OK — 58 self-test(s) passed`; `bash scripts/check_doctrines.sh` → `exit 0`.
-  - [x] **LOCKSTEP** — the registry, the enforcement table, `docs/decisions/decision_ceilings-bound-reads.md`, the
-    book's `annex-repository.md`, this leaf and the Commit Log.
-  Commit: `ARCHOGEN-PROGRAM-1037 (leaf PROGRAM.117.3)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.117.md`](../task-history/PROGRAM/PROGRAM.117.md); commit `ARCHOGEN-PROGRAM-1037`
 
 - ID: `PROGRAM.118`
-  Status: `done` — P3, filed `2026-10-27` by `PROGRAM.117.1`'s third review round, fixed the same day
-  Goal: `README-ROUTES`' on-disk measures read every tracked path whole: a NUL-separated `git ls-files -z`, never its
-    quoted output or a word-split list.
-  Reproduce / issue: `git ls-files` quotes a path holding a tab, a quote or a non-ASCII byte, so `wc` fails on it and
-    the file drops out of its row's measures; `longest $own` splits a path holding a space, so awk cannot open it and
-    the row's longest line reads 0. The guard's total inherits it; the step, measured from the index, does not.
-  Built: the directory branch and `--report` read `git ls-files -z` into an array; `longest` takes the row's files as
-    a quoted array; a tracked path holding a newline is refused, named by `%q`; the blob-size sums' book filter takes
-    the leading quote `git` writes before an unusual name.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: the loops read `git ls-files`' quoted, newline-separated output and passed the row's files to awk word-split; WHERE, `git grep -n "longest \$own" HEAD -- scripts/check_readme_routes.sh`: the unquoted call, measured by the round's reviewer as awk's "can't open file docs/tasks/a".
-    - [x] FIX — the NUL-separated reads, the quoted array, the newline refusal, the quote-tolerant filters.
-    - [x] ADDRESSED — `bash scripts/check_readme_routes.sh --self-test`: `readme-routes self-test: 116 pass / 0 fail (116 arms)`, three new: a name with a space measured (`250 bytes on its longest line, over its ceiling of 200`), one past ASCII (`2100 bytes in its largest file`), one with a newline refused.
-    - [x] NO REGRESSION — `bash -n scripts/check_readme_routes.sh` exit 0; `bash scripts/check_readme_routes.sh`: `readme-routes: OK (25 destination(s) governed)`; `bash scripts/check_doctrines.sh` passes; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 376 s
-    - [x] LOCKSTEP — the check alone; its header's honest limits unchanged, the defect being no limit but a fault.
-  Commit: `ARCHOGEN-PROGRAM-1028 (leaf PROGRAM.118)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.118.md`](../task-history/PROGRAM/PROGRAM.118.md); commit `ARCHOGEN-PROGRAM-1028`
 
 - ID: `PROGRAM.119`
-  Status: `done` — seventeenth daily artifact cleanup; the record's last run `2026-10-26T08:56:05+00:00`, over 24 h
-    old at `2026-10-27T10:29Z`
-  Goal: remove only idle, regenerable incremental compiler caches, after the handoff census; keep every dependency
-    store, product, evidence directory and Git workspace; a light run under doctrine 22
-    (`docs/decisions/decision_small-checks-per-slice.md`) — no identity audit of what stayed.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: the cleanup record was over 24 hours old; WHERE, `docs/ARTIFACT_CLEANUP.md` at `bce7fc94`, its entry `2026-10-26T08:56:05+00:00`.
-    - [x] FIX — `python3 -I -B target/artifact-cleanup/2026-10-27/cleanup.py --delete`: `target/debug/incremental` and `target/wasm32-unknown-unknown/debug/incremental` removed, no link in either.
-    - [x] ADDRESSED — `total files 52855 bytes 5496697254`, 3589 bin, 0 log, each directory `gone: true` (`target/artifact-cleanup/2026-10-27/removed.json`); `bash scripts/handoff_census.sh`: `handoff: OK` before.
-    - [x] NO REGRESSION — caches alone, regenerated by the next build: the main by `make focused`, the wasm by `scripts/wasm_build.sh`; no tracked file but the record.
-    - [x] LOCKSTEP — the record and the tree.
-  Verification: the census, the removal report.
-  Commit: `ARCHOGEN-PROGRAM-1021 (leaf PROGRAM.119)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.119.md`](../task-history/PROGRAM/PROGRAM.119.md); commit `ARCHOGEN-PROGRAM-1021`
 
 - ID: `PROGRAM.120`
-  Status: `done` — eighteenth daily artifact cleanup; the record's last run `2026-10-27T10:30:55+00:00`, over 24 h
-    old at `2026-10-28T10:36Z`
-  Goal: remove only idle, regenerable incremental compiler caches, after the handoff census; keep every dependency
-    store, product, evidence directory and Git workspace; a light run under doctrine 22
-    (`docs/decisions/decision_small-checks-per-slice.md`) — no identity audit of what stayed.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: the cleanup record was over 24 hours old; WHERE, `docs/ARTIFACT_CLEANUP.md` at `393796ad`, its entry `2026-10-27T10:30:55+00:00`.
-    - [x] FIX — `python3 -I -B target/artifact-cleanup/2026-10-28/cleanup.py --delete`: `target/debug/incremental` and `target/wasm32-unknown-unknown/debug/incremental` removed, no link in either.
-    - [x] ADDRESSED — `total files 15647 bytes 1926076171`, 1068 bin, 0 log, each directory `gone: true` (`target/artifact-cleanup/2026-10-28/removed.json`); `bash scripts/handoff_census.sh`: `handoff: OK` before.
-    - [x] NO REGRESSION — caches alone, regenerated by the next build: the main by `make focused`, the wasm by `scripts/wasm_build.sh`; no tracked file but the record.
-    - [x] LOCKSTEP — the record and the tree.
-  Verification: the census, the removal report.
-  Commit: `ARCHOGEN-PROGRAM-1068 (leaf PROGRAM.120)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.120.md`](../task-history/PROGRAM/PROGRAM.120.md); commit `ARCHOGEN-PROGRAM-1068`
 
 - ID: `PROGRAM.121`
-  Status: `done` — nineteenth daily artifact cleanup; the record's last run `2026-10-28T10:37:12+00:00`, over 24 h
-    old at `2026-10-29T11:11Z`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.121.md`](../task-history/PROGRAM/PROGRAM.121.md); commit `ARCHOGEN-PROGRAM-1107`
+
+- ID: `PROGRAM.122`
+  Status: `done` — twentieth daily artifact cleanup; the record's last run `2026-10-29T11:11:25+00:00`, over 24 h
+    old at `2026-11-02T07:35Z`
   Goal: remove only idle, regenerable incremental compiler caches, after the handoff census; keep every dependency
     store, product, evidence directory and Git workspace; a light run under doctrine 22
     (`docs/decisions/decision_small-checks-per-slice.md`) — no identity audit of what stayed.
   Acceptance:
-    - [x] ROOT CAUSE — WHY: the cleanup record was over 24 hours old; WHERE, `docs/ARTIFACT_CLEANUP.md` at `6270ba21`, its entry `2026-10-28T10:37:12+00:00`.
-    - [x] FIX — `python3 -I -B target/artifact-cleanup/2026-10-29/cleanup.py --delete`: `target/debug/incremental` removed, no link in it; `target/wasm32-unknown-unknown/debug/incremental` absent, skipped.
-    - [x] ADDRESSED — `total files 11835 bytes 1722517361`, 813 bin, 0 log, `gone: true` (`target/artifact-cleanup/2026-10-29/removed.json`); `bash scripts/handoff_census.sh`: `handoff: OK` before, twice.
+    - [x] ROOT CAUSE — WHY: the cleanup record was over 24 hours old; WHERE, `docs/ARTIFACT_CLEANUP.md` at `8854be7e`, its entry `2026-10-29T11:11:25+00:00`.
+    - [x] FIX — `python3 -I -B target/artifact-cleanup/2026-11-02/cleanup.py --delete`: `target/debug/incremental` removed, no link in it; `target/wasm32-unknown-unknown/debug/incremental` absent, skipped; `target/release` and `target/debug/deps` hold no top-level `.bin` or `.log` file, `find -maxdepth 1` → `0` each.
+    - [x] ADDRESSED — `total files 13286 bytes 1934882863`, 912 bin, 0 log, `gone: true` (`target/artifact-cleanup/2026-11-02/removed.json`); `bash scripts/handoff_census.sh`: `handoff: OK` before, twice.
     - [x] NO REGRESSION — a cache alone, regenerated by the next build, `make focused`'s; no tracked file but the record, the leaf and the resume pointer's due time.
-    - [x] LOCKSTEP — the record, `MEMORY.md` and the tree.
+    - [x] LOCKSTEP — the record, `MEMORY.md` and the tree. The pre-commit gate refused `docs/tasks/` at 819799 bytes, over its 819200; `bash scripts/check_task_history.sh --seal PROGRAM` at `8854be7e` sealed 16 subtrees, 22 leaves and 22 log rows, `the reconstruction is byte for byte`. Its warning, `PROGRAM.117` closed with no Commit field, is the body's own record: it closed with `.3`, `ARCHOGEN-PROGRAM-1037` (`0237169c`), as its Status says; a sealed body is immutable, so nothing moves.
   Verification: the census, the removal report.
-  Commit: `ARCHOGEN-PROGRAM-1107 (leaf PROGRAM.121)`
+  Commit: `ARCHOGEN-PROGRAM-1116 (leaf PROGRAM.122)`
 
 ## Roadmap coverage map
 
@@ -1360,28 +955,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0450 (leaf PROGRAM)` | **`PROGRAM.55` and `PROGRAM.56` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 324 bytes over its 819 200-byte ceiling with `M3.1.1`'s step 27 |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0460 (leaf PROGRAM)` | **`PROGRAM.57`, `PROGRAM.58` and `PROGRAM.59` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` would have grown 1 331 bytes over its 819 200-byte ceiling with `M3.1.2`'s decomposition |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0489 (leaf PROGRAM)` | **`PROGRAM.10` and `.61`–`.65` sealed**, 13 closed leaves into `docs/task-history/PROGRAM/`, when `README-ROUTES` refused `docs/tasks/` at 820 957 bytes over its 819 200; `docs/tasks/` 817 470 → 752 861 bytes, measured from `HEAD` and the tree |
-| `PROGRAM.109` | `ARCHOGEN-PROGRAM-0928 (leaf PROGRAM.109)` | **the fifteenth daily artifact cleanup**: only the idle main and wasm debug incremental caches removed, 29847 files / 4245385971 logical bytes; every other entry under `target/` identical or accounted; `PROGRAM.100`–`.102` and `.104`–`.108` sealed |
-| `PROGRAM.110` | `ARCHOGEN-PROGRAM-0952 (leaf PROGRAM.110)` | **the verification doctrine 22 recorded**: small checks per slice, full verification after the feature set, deferred to `M3.5.9` for `M3.5` |
-| `PROGRAM.111` | `ARCHOGEN-PROGRAM-0953 (leaf PROGRAM.111)` | **the sixteenth daily artifact cleanup**: only idle incremental caches removed, 8854 files / 1586169011 bytes, a light run under doctrine 22 |
-| `PROGRAM.112` | `ARCHOGEN-PROGRAM-0959 (leaf PROGRAM.112)` | **doctrine 22's record corrected**: what `make focused` runs — workspace clippy, `cargo test --all`, the sweep's premises — stays at every commit, a pin a slice moves re-pinned by it; the rest deferred to `M3.5.9` |
-| `PROGRAM.71` | `ARCHOGEN-PROGRAM-0971 (leaf PROGRAM.71)` | **the task-history index append-only in order**: leg 3 refuses committed rows that no longer stand first and in their order; an arm; `PROGRAM.72` next |
-| `PROGRAM.113` | `ARCHOGEN-PROGRAM-0974 (leaf PROGRAM.113)` | **filed**: the task-history self-test's `SIGALRM` arm failed once on the Linux runner and passed on re-run; to be reproduced on Linux before any change |
-| `PROGRAM.113.1` | `ARCHOGEN-PROGRAM-0976 (leaf PROGRAM.113.1)` | **the diagnostic**: the signal arms' failure line carries the seal's evidence, the runner's log keeping only that line; the failures now steady on CI |
-| `PROGRAM.113.2` | `ARCHOGEN-PROGRAM-0977 (leaf PROGRAM.113.2)` | **the trace**: the signal arms record the signal sent, each mask change and each outcome printed, in order, for the runner to show where Linux departs |
-| `PROGRAM.113.3` | `ARCHOGEN-PROGRAM-0978 (leaf PROGRAM.113.3)` | **the cause and its fix**: GNU grep's `-q` closing the pipe under `pipefail` while `printf` still writes a large output; every such read in the script a here-string; `PROGRAM.114` filed for the 78 elsewhere |
-| `PROGRAM.113` | `ARCHOGEN-PROGRAM-0979 (leaf PROGRAM.113)` | **closed, CI green**: the arms' own check at fault, not the seal; the three runs on `34b6abeb` each `success` |
-| `PROGRAM.114` | `ARCHOGEN-PROGRAM-0980 (leaf PROGRAM.114)` | **`PIPE-READS`**: every pipe read under `pipefail` a here-string, the gate refusing the form, the scaffold's sites reported and their change written down; `PROGRAM.115` filed |
-| `PROGRAM.116` | `ARCHOGEN-PROGRAM-0989 (leaf PROGRAM.116)` | **what is held for the scaffold, from the ruling**: `.doctrine/scaffold_held.txt`, sixteen files, read by `SCRATCH-LOCALITY` and `PIPE-READS`; `check_task_acceptance.sh`'s eight sites fixed; `PROGRAM.115`'s premise corrected |
-| `PROGRAM.117.1` | `ARCHOGEN-PROGRAM-1020 (leaf PROGRAM.117.1)` | **record folders bound by reads, not totals** (the director's ruling of `2026-10-27`): `fan-out 64` and a 16 MiB `guard` with its three-quarter ruling and per-commit step for `docs/decisions/`, `docs/specs/`, `docs/reviews/`; `--report`; three ceiling records superseded; `.3` filed |
-| `PROGRAM.119` | `ARCHOGEN-PROGRAM-1021 (leaf PROGRAM.119)` | **seventeenth daily artifact cleanup**: the main and wasm debug incremental caches, 52855 files / 5496697254 bytes, removed after `handoff: OK` |
-| `PROGRAM.120` | `ARCHOGEN-PROGRAM-1068 (leaf PROGRAM.120)` | **eighteenth daily artifact cleanup**: the main and wasm debug incremental caches, 15647 files / 1926076171 bytes, removed after `handoff: OK` |
-| `PROGRAM.121` | `ARCHOGEN-PROGRAM-1107 (leaf PROGRAM.121)` | **nineteenth daily artifact cleanup**: the main debug incremental cache, 11835 files / 1722517361 bytes, removed after `handoff: OK`; the wasm one absent |
-| `PROGRAM.117.2` | `ARCHOGEN-PROGRAM-1022 (leaf PROGRAM.117.2)` | **the record mover**: `scripts/move_record.sh`, a dry run and a verified, staged move; live citations repointed, the past left and listed |
-| `PROGRAM.118` | `ARCHOGEN-PROGRAM-1028 (leaf PROGRAM.118)` | **`README-ROUTES` reads every path whole**: NUL-separated listings, the row's files quoted, a newline in a name refused |
-| `PROGRAM.115` | `ARCHOGEN-PROGRAM-1036 (leaf PROGRAM.115)` | **the enforcement table holds `PIPE-READS`**: `BOOK-ANCHORS`' row shortened to its rule, its rationale kept in its script's header; thirteen bytes free |
-| `PROGRAM.117.3` | `ARCHOGEN-PROGRAM-1037 (leaf PROGRAM.117.3)` | **an index never binds the folders it lists**: `DECISION-INDEX` reads a sub-folder's own index and holds `docs/specs/` too; the three unindexed specifications indexed |
-| `PROGRAM.73` | `ARCHOGEN-PROGRAM-1039 (leaf PROGRAM.73)` | **the history gate names every failure**: any other exception a breach, `the gate stopped on TYPE`, never a traceback; the seal's arm and a plain-run arm require it |
-| `PROGRAM.72` | `ARCHOGEN-PROGRAM-1040 (leaf PROGRAM.72)` | **no tree file in a sub-folder**: `TASK-HISTORY`'s leg 6 refuses a Markdown file under a sub-folder of `docs/tasks/`, which no leg would judge |
+| `PROGRAM.122` | `ARCHOGEN-PROGRAM-1116 (leaf PROGRAM.122)` | **twentieth daily artifact cleanup**: the main debug incremental cache, 13286 files / 1934882863 bytes, removed after `handoff: OK`; 16 closed subtrees, 22 leaves, sealed when `docs/tasks/` passed its ceiling |
 
 ## Changelog
 
