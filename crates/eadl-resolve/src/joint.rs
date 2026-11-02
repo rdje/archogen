@@ -30,12 +30,15 @@
 //! `M3.4`'s search to conclude. What a provider writes that cannot mean anything — a consumed function offered with no
 //! channel, a region with no base — is refused when the providers are read, whether or not anything binds them.
 //!
-//! A service several users reach — tasks or services that use it — is one requester of what it binds: its realization
-//! serves them, so it is the multiplexer, and an [`Obligation::Multiplex`] reports that it owes them the semantics and
-//! a bounded overhead.
+//! A node several users reach is one requester of the channel it takes (model §8 rule 4): its users are the jobs of the
+//! system's tasks that reach it and the interrupts whose routines run it, which [`Joint::contexts`] derives, so its
+//! realization is the multiplexer, and an [`Obligation::Multiplex`] reports that it owes them the semantics and a bounded
+//! overhead.
 
+use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
+use std::rc::Rc;
 
 use eadl_front::{Diagnostic, Form, Label, Span};
 use eadl_model::{Dimension, Quantity};
@@ -1120,15 +1123,15 @@ fn listed(requesters: &[(String, Span)]) -> String {
 /// What a realization owes because of an assignment.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Obligation {
-    /// A service several requesters reach takes a channel: its realization serves them all through it, so it owes
-    /// them the shared semantics and a bounded overhead (`ROADMAP.md` §5.4).
+    /// A node with two or more users takes a channel (model §8 rule 4): its realization serves them all through it,
+    /// so it owes them the shared semantics and a bounded overhead (`ROADMAP.md` §5.4).
     Multiplex {
-        /// The service.
-        service: String,
-        /// The requesters that use it.
-        users: Vec<String>,
-        /// The provider whose channel it takes.
-        provider: String,
+        /// The node: a service, a policy, or a block or a platform bound for requirements of its own.
+        node: String,
+        /// Its users, two or more: the system's tasks that reach it, then the routines whose interrupts run it.
+        users: Vec<Caller>,
+        /// Each provider whose channel it takes, by name.
+        providers: Vec<String>,
     },
     /// A provider the assignment relies on for an interrupt: the path from it to the system's core, with its latency,
     /// is the catalog's to state and the plan's to enable (leaf `M3.3.3`; `decision_runtime-analysis-variant.md`'s
@@ -1216,6 +1219,73 @@ pub enum Interrupt {
     Timer,
 }
 
+/// One route's interrupt routine, by its provider and kind (model §8 rule 8): what an [`Obligation::Route`] names.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Routine {
+    /// The route's provider.
+    pub provider: String,
+    /// Whether the route is a timer route; a source otherwise.
+    pub timer: bool,
+}
+
+/// Who can call a node at run time (model §8 rule 4).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Caller {
+    /// The jobs of a task of the system that reaches the node, by the task's name.
+    Task(String),
+    /// The routine of a route of the system whose interrupt runs the node.
+    Routine(Routine),
+}
+
+/// A context a task's or a node's code runs in (model §8 rule 4; `docs/decisions/decision_runtime-plan.md` §2.6).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Context {
+    /// A job: a task's own, and every node a task reaches.
+    Job,
+    /// The routine of a route's interrupt, for everything that interrupt runs.
+    Routine(Routine),
+    /// Initialisation, every node's.
+    Initialisation,
+}
+
+/// The contexts one system's assignment runs its code in (model §8 rule 4; `docs/decisions/decision_runtime-plan.md`
+/// §2.6), derived for the multiplexer and for `M4.1`'s plan, refusing nothing.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Contexts {
+    /// Each task and each node, by name, with every context its code runs in.
+    pub of: BTreeMap<String, BTreeSet<Context>>,
+    /// Each route's routine, with what its interrupt runs: the code rule 4 names and every node that code reaches.
+    pub runs: BTreeMap<Routine, BTreeSet<String>>,
+}
+
+/// What a requester reaches over one assignment (model §8 rule 4): its direct names gathered once, and each closure
+/// computed once, since the search judges every assignment it tries.
+struct Reach<'a> {
+    direct: BTreeMap<&'a str, BTreeSet<&'a str>>,
+    closures: RefCell<BTreeMap<&'a str, Rc<BTreeSet<&'a str>>>>,
+}
+
+impl<'a> Reach<'a> {
+    /// Everything `from` reaches, at any depth; itself only where a path returns to it.
+    fn of(&self, from: &'a str) -> Rc<BTreeSet<&'a str>> {
+        if let Some(known) = self.closures.borrow().get(from) {
+            return Rc::clone(known);
+        }
+        let mut seen = BTreeSet::new();
+        let mut todo = vec![from];
+        while let Some(at) = todo.pop() {
+            for next in self.direct.get(at).into_iter().flatten() {
+                if seen.insert(*next) {
+                    todo.push(next);
+                }
+            }
+        }
+        let seen = Rc::new(seen);
+        self.closures.borrow_mut().insert(from, Rc::clone(&seen));
+        seen
+    }
+}
+
 /// What one assignment breaks, what it leaves unknown, and what it obliges.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Report {
@@ -1244,7 +1314,6 @@ pub struct Joint<'v> {
     /// The levels each requester states it calls from, and where.
     stated: BTreeMap<String, (BTreeSet<String>, Span)>,
     requesters: BTreeMap<String, Kind>,
-    users: BTreeMap<String, BTreeSet<String>>,
     /// The declarations each requester names by `uses` or `needs`.
     names: BTreeMap<String, BTreeSet<String>>,
     /// Each provider as read, which rule 13 judges requirements at.
@@ -1253,13 +1322,15 @@ pub struct Joint<'v> {
     qualified: BTreeMap<String, Vec<Requirement>>,
     /// Each engine adapter's instance the rules may meet, by name, with the provider it programs (`M3.2.3.1`).
     instances: BTreeMap<String, String>,
+    /// The instances whose kind's cost runs their requester's code (rule 4, the adapters record §9).
+    delivering: BTreeSet<String>,
     /// Each sporadic task's `min-separation`, by its name (rule 16).
     separations: BTreeMap<String, Quantity>,
 }
 
 impl<'v> Joint<'v> {
-    /// Read what the rules need of each provider — its channels, its regions, the providers it composes — and who
-    /// uses whom among the requesters.
+    /// Read what the rules need of each provider — its channels, its regions, the providers it composes — and what each
+    /// requester names.
     ///
     /// # Errors
     ///
@@ -1309,17 +1380,6 @@ impl<'v> Joint<'v> {
         if !findings.is_empty() {
             return Err(findings);
         }
-        // A service's users are what calls it at run time — tasks and other services. A system's own `uses` says what
-        // the system includes, not who calls it, so it is no second user beside the task that does.
-        let mut users: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-        for r in requesters.iter().filter(|r| r.kind != Kind::Other) {
-            for used in &r.uses {
-                users
-                    .entry(used.clone())
-                    .or_default()
-                    .insert(r.name.clone());
-            }
-        }
         let stated = requesters
             .iter()
             .filter_map(|r| {
@@ -1365,7 +1425,6 @@ impl<'v> Joint<'v> {
                 .iter()
                 .map(|r| (r.name.clone(), r.kind))
                 .collect(),
-            users,
             names: requesters
                 .iter()
                 .map(|r| {
@@ -1376,6 +1435,7 @@ impl<'v> Joint<'v> {
                 })
                 .collect(),
             instances: BTreeMap::new(),
+            delivering: BTreeSet::new(),
             separations: requesters
                 .iter()
                 .filter_map(|r| r.separation.map(|q| (r.name.clone(), q)))
@@ -1422,6 +1482,9 @@ impl<'v> Joint<'v> {
                 .insert(name.clone(), instance.provider.clone());
             self.requesters.insert(name.clone(), Kind::Adapter);
             self.names.insert(name.clone(), BTreeSet::new());
+            if instance.delivers {
+                self.delivering.insert(name.clone());
+            }
             self.instances.insert(name, instance.over.clone());
         }
         self
@@ -1460,7 +1523,8 @@ impl<'v> Joint<'v> {
         self
     }
 
-    /// Judge one complete assignment.
+    /// Judge one complete assignment. Its routes are reported whatever else the rules find (rule 8); its multiplexers
+    /// (rule 4) only where it holds, since only an assignment that holds is realized.
     #[must_use]
     pub fn check(&self, assignment: &[Binding]) -> Report {
         let mut report = Report::default();
@@ -1496,6 +1560,11 @@ impl<'v> Joint<'v> {
             self.own_sources(system, assignment, &mut report);
             if let Some(region) = &system.placement {
                 self.placed(system, region, &mut report);
+            }
+            // Only a realization discharges a multiplexer, and an assignment the rules refuse is realized by none; the
+            // search judges every assignment it tries and keeps the obligations of the one that holds.
+            if report.holds() {
+                self.multiplexing(system, assignment, &mut report);
             }
         }
         report
@@ -1685,6 +1754,50 @@ impl<'v> Joint<'v> {
     #[must_use]
     pub fn initialization(&self, system: &System, assignment: &[Binding]) -> Initialization {
         let system = &self.serving(system, assignment);
+        let active = active(system, assignment);
+        let nodes = self.nodes(system, assignment, &active);
+        let mut edges: BTreeSet<(String, String, Because)> = BTreeSet::new();
+        for b in assignment
+            .iter()
+            .filter(|b| active.contains(b.requester.as_str()))
+        {
+            let (from, to) = (b.provider.as_str(), b.requester.as_str());
+            if nodes.contains_key(to) && from != to {
+                edges.insert((
+                    from.to_string(),
+                    to.to_string(),
+                    Because::Binding(b.requirement.fact().to_string()),
+                ));
+            }
+        }
+        for (user, named) in &self.names {
+            if !nodes.contains_key(user) || self.is_hardware(user) {
+                continue;
+            }
+            for used in named
+                .iter()
+                .filter(|n| *n != user && nodes.contains_key(*n))
+            {
+                edges.insert((used.clone(), user.clone(), Because::Named));
+            }
+        }
+        let components = components(&nodes, &edges);
+        Initialization {
+            nodes: nodes.into_iter().collect(),
+            edges: edges.into_iter().collect(),
+            components,
+        }
+    }
+
+    /// Rule 12's nodes of `system`, as [`Joint::serving`] reads it, each with what it is: the providers `active`'s
+    /// bindings name, the requesters the system serves but its own level, its tasks and hardware bound for nothing, and
+    /// the hardware a served task, service or policy names.
+    fn nodes(
+        &self,
+        system: &System,
+        assignment: &[Binding],
+        active: &BTreeSet<&str>,
+    ) -> BTreeMap<String, Node> {
         let kind = |name: &str| self.requesters.get(name).copied();
         // Hardware is a node as a requester only where it is bound for requirements of its own (leaf `M4.1.15`).
         let bound_for_its_own = |name: &str| assignment.iter().any(|b| b.requester == name);
@@ -1694,24 +1807,6 @@ impl<'v> Joint<'v> {
                 && system.serves(name)
                 && (!self.is_hardware(name) || bound_for_its_own(name))
         };
-        // Requesters whose bindings count: those the system serves, then each provider bound for one, at any depth.
-        let mut active: BTreeSet<&str> = assignment
-            .iter()
-            .map(|b| b.requester.as_str())
-            .filter(|r| system.serves(r))
-            .collect();
-        loop {
-            let reached: Vec<&str> = assignment
-                .iter()
-                .filter(|b| active.contains(b.requester.as_str()))
-                .map(|b| b.provider.as_str())
-                .filter(|p| !active.contains(p))
-                .collect();
-            if reached.is_empty() {
-                break;
-            }
-            active.extend(reached);
-        }
         let mut nodes: BTreeMap<String, Node> = BTreeMap::new();
         for b in assignment
             .iter()
@@ -1745,36 +1840,208 @@ impl<'v> Joint<'v> {
                 }
             }
         }
-        let mut edges: BTreeSet<(String, String, Because)> = BTreeSet::new();
-        for b in assignment
+        nodes
+    }
+
+    /// What `from` reaches over `assignment` (model §8 rule 4): what it names by `uses` or `needs` and the provider each
+    /// of its bindings names, at any depth — but a block's or a platform's own names, which name only hardware and are
+    /// never a call (rules 1 and 7). It holds `from` itself only where a path returns to it.
+    #[must_use]
+    pub fn reaches(&self, from: &str, assignment: &[Binding]) -> BTreeSet<String> {
+        self.reach(assignment)
+            .of(from)
             .iter()
-            .filter(|b| active.contains(b.requester.as_str()))
+            .map(|n| (*n).to_string())
+            .collect()
+    }
+
+    /// Reaching over `assignment`, each requester's direct names gathered once.
+    fn reach<'a>(&'a self, assignment: &'a [Binding]) -> Reach<'a> {
+        let mut direct: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
+        for (requester, named) in self.names.iter().filter(|(r, _)| !self.is_hardware(r)) {
+            direct
+                .entry(requester.as_str())
+                .or_default()
+                .extend(named.iter().map(String::as_str));
+        }
+        for b in assignment {
+            direct
+                .entry(b.requester.as_str())
+                .or_default()
+                .insert(b.provider.as_str());
+        }
+        Reach {
+            direct,
+            closures: RefCell::default(),
+        }
+    }
+
+    /// The tasks of `system`, by name.
+    fn tasks<'a>(&'a self, system: &'a System) -> impl Iterator<Item = &'a str> + 'a {
+        self.requesters
+            .iter()
+            .filter(move |(name, kind)| {
+                **kind == Kind::Task && task_of(name).is_some_and(|(s, _)| s == system.name)
+            })
+            .map(|(name, _)| name.as_str())
+    }
+
+    /// Model §8 rule 4's contexts of one system's assignment (`docs/decisions/decision_runtime-plan.md` §2.6): a job for
+    /// each task and every node a task reaches; each route's routine for what its interrupt runs; initialisation for
+    /// every node.
+    #[must_use]
+    pub fn contexts(&self, system: &System, assignment: &[Binding]) -> Contexts {
+        let system = &self.serving(system, assignment);
+        let nodes = self.nodes(system, assignment, &active(system, assignment));
+        self.contexts_of(system, assignment, &nodes, &self.reach(assignment))
+    }
+
+    /// [`Joint::contexts`] over `system` as [`Joint::serving`] reads it, given its nodes and its reaching.
+    fn contexts_of<'a>(
+        &'a self,
+        system: &'a System,
+        assignment: &'a [Binding],
+        nodes: &BTreeMap<String, Node>,
+        reach: &Reach<'a>,
+    ) -> Contexts {
+        let mut of: BTreeMap<String, BTreeSet<Context>> = BTreeMap::new();
+        let mut put = |name: &str, context: Context| {
+            of.entry(name.to_string()).or_default().insert(context);
+        };
+        for task in self.tasks(system) {
+            put(task, Context::Job);
+            for n in reach.of(task).iter().filter(|n| nodes.contains_key(**n)) {
+                put(n, Context::Job);
+            }
+        }
+        let mut by_requester: BTreeMap<&str, Vec<&Binding>> = BTreeMap::new();
+        for b in assignment {
+            by_requester
+                .entry(b.requester.as_str())
+                .or_default()
+                .push(b);
+        }
+        let bound_to = |requester: &str, provider: &str, fact_ok: &dyn Fn(&Requirement) -> bool| {
+            by_requester.get(requester).is_some_and(|bound| {
+                bound
+                    .iter()
+                    .any(|b| b.provider == provider && fact_ok(&b.requirement))
+            })
+        };
+        let channel = |q: &Requirement| takes_a_channel(q, self.vocabulary).is_some();
+        let source = |q: &Requirement| q.fact() == INTERRUPT_SOURCE && met_by_true(q);
+        let mut runs: BTreeMap<Routine, BTreeSet<String>> = BTreeMap::new();
+        for ((x, is_source), requesters) in self.route_map(system, assignment) {
+            let timer = !is_source;
+            let fact_ok: &dyn Fn(&Requirement) -> bool = if timer { &channel } else { &source };
+            // The code the interrupt runs of its own: its provider's, and each node the route names bound to it itself.
+            let mut own: BTreeSet<&str> = BTreeSet::new();
+            if nodes.contains_key(x) {
+                own.insert(x);
+            }
+            for r in &requesters {
+                if nodes.contains_key(*r) && bound_to(r, x, fact_ok) {
+                    own.insert(r);
+                }
+            }
+            // A timer route's: each instance the system serves programming an alarm at `x`, which takes its cost there,
+            // and the requesters such an instance delivers to, where its kind's cost runs their code.
+            if timer {
+                for (instance, _) in self.instances.iter().filter(|(name, over)| {
+                    *over == x && system.serves(name) && bound_to(name, x, &channel)
+                }) {
+                    own.insert(instance);
+                    if self.delivering.contains(instance) {
+                        for r in &requesters {
+                            if nodes.contains_key(*r) && bound_to(r, instance, &|_| true) {
+                                own.insert(r);
+                            }
+                        }
+                    }
+                }
+            }
+            let mut all = own.clone();
+            for n in &own {
+                all.extend(reach.of(n).iter().filter(|m| nodes.contains_key(**m)));
+            }
+            let routine = Routine {
+                provider: x.to_string(),
+                timer,
+            };
+            for n in &all {
+                put(n, Context::Routine(routine.clone()));
+            }
+            runs.insert(routine, all.into_iter().map(str::to_string).collect());
+        }
+        for n in nodes.keys() {
+            put(n, Context::Initialisation);
+        }
+        Contexts { of, runs }
+    }
+
+    /// Model §8 rule 4: a node bound for a requirement that takes a channel, an instance aside, with two or more users —
+    /// the system's tasks that reach it, and the routines whose interrupts run it, its own timer route's only where
+    /// another node that route runs reaches it — is the multiplexer of the channels it takes, an obligation.
+    fn multiplexing(&self, system: &System, assignment: &[Binding], report: &mut Report) {
+        let taking: Vec<&Binding> = assignment
+            .iter()
+            .filter(|b| {
+                !self.instances.contains_key(&b.requester)
+                    && takes_a_channel(&b.requirement, self.vocabulary).is_some()
+            })
+            .collect();
+        if taking.is_empty() {
+            return; // nothing takes a channel, so nothing multiplexes one
+        }
+        let nodes = self.nodes(system, assignment, &active(system, assignment));
+        // Each node taking a channel: the providers whose channels it takes, and the providers of its own timer routes,
+        // where those are, or where the instance it binds programs.
+        let mut takers: BTreeMap<&str, (BTreeSet<&str>, BTreeSet<&str>)> = BTreeMap::new();
+        for b in taking
+            .into_iter()
+            .filter(|b| nodes.contains_key(&b.requester))
         {
-            let (from, to) = (b.provider.as_str(), b.requester.as_str());
-            if nodes.contains_key(to) && from != to {
-                edges.insert((
-                    from.to_string(),
-                    to.to_string(),
-                    Because::Binding(b.requirement.fact().to_string()),
-                ));
-            }
+            let (providers, own) = takers.entry(b.requester.as_str()).or_default();
+            providers.insert(b.provider.as_str());
+            own.insert(self.device(&b.provider));
         }
-        for (user, named) in &self.names {
-            if !nodes.contains_key(user) || self.is_hardware(user) {
-                continue;
-            }
-            for used in named
+        if takers.is_empty() {
+            return;
+        }
+        let reach = self.reach(assignment);
+        let contexts = self.contexts_of(system, assignment, &nodes, &reach);
+        let tasks: Vec<(&str, Rc<BTreeSet<&str>>)> = self
+            .tasks(system)
+            .map(|task| (task, reach.of(task)))
+            .collect();
+        for (node, (providers, own)) in takers {
+            let mut users: Vec<Caller> = tasks
                 .iter()
-                .filter(|n| *n != user && nodes.contains_key(*n))
-            {
-                edges.insert((used.clone(), user.clone(), Because::Named));
+                .filter(|(_, reached)| reached.contains(node))
+                .map(|(task, _)| Caller::Task((*task).to_string()))
+                .collect();
+            for context in contexts.of.get(node).into_iter().flatten() {
+                let Context::Routine(routine) = context else {
+                    continue;
+                };
+                // Its own timer route's code delivering to it is no caller; another node's code there calling it is.
+                let own_route = routine.timer && own.contains(routine.provider.as_str());
+                let called_there = || {
+                    contexts.runs.get(routine).is_some_and(|runs| {
+                        runs.iter().any(|m| m != node && reach.of(m).contains(node))
+                    })
+                };
+                if !own_route || called_there() {
+                    users.push(Caller::Routine(routine.clone()));
+                }
             }
-        }
-        let components = components(&nodes, &edges);
-        Initialization {
-            nodes: nodes.into_iter().collect(),
-            edges: edges.into_iter().collect(),
-            components,
+            if users.len() >= 2 {
+                report.obligations.push(Obligation::Multiplex {
+                    node: node.to_string(),
+                    users,
+                    providers: providers.into_iter().map(str::to_string).collect(),
+                });
+            }
         }
     }
 
@@ -1982,6 +2249,31 @@ impl<'v> Joint<'v> {
 
     /// One route obligation per provider the system's requesters rely on for an interrupt, and per kind.
     fn routes(&self, system: &System, assignment: &[Binding], report: &mut Report) {
+        for ((provider, is_source), requesters) in self.route_map(system, assignment) {
+            let interrupt = if is_source {
+                Interrupt::Source {
+                    separation: self.held.get(provider).and_then(|h| h.separation.clone()),
+                }
+            } else {
+                Interrupt::Timer
+            };
+            report.obligations.push(Obligation::Route {
+                system: system.name.clone(),
+                provider: provider.to_string(),
+                interrupt,
+                requesters: requesters.into_iter().map(str::to_string).collect(),
+                level: system.level.clone(),
+            });
+        }
+    }
+
+    /// Rule 8's routes of `system`, one for each provider and kind, keyed `(provider, is_source)`, each with the
+    /// requesters relying on it.
+    fn route_map<'a>(
+        &self,
+        system: &System,
+        assignment: &'a [Binding],
+    ) -> BTreeMap<(&'a str, bool), BTreeSet<&'a str>> {
         let mut routes: BTreeMap<(&str, bool), BTreeSet<&str>> = BTreeMap::new();
         for b in assignment
             .iter()
@@ -1998,22 +2290,7 @@ impl<'v> Joint<'v> {
                 }
             }
         }
-        for ((provider, is_source), requesters) in routes {
-            let interrupt = if is_source {
-                Interrupt::Source {
-                    separation: self.held.get(provider).and_then(|h| h.separation.clone()),
-                }
-            } else {
-                Interrupt::Timer
-            };
-            report.obligations.push(Obligation::Route {
-                system: system.name.clone(),
-                provider: provider.to_string(),
-                interrupt,
-                requesters: requesters.into_iter().map(str::to_string).collect(),
-                level: system.level.clone(),
-            });
-        }
+        routes
     }
 
     /// Who relies on a binding of `requester`'s for an interrupt: itself, or, for an instance, the requesters the system
@@ -2106,16 +2383,6 @@ impl<'v> Joint<'v> {
                 .iter()
                 .map(|(name, span)| ((*name).to_string(), *span))
                 .collect();
-            for (name, _) in &requesters {
-                let users = self.users.get(name).filter(|u| u.len() > 1);
-                if let (Some(Kind::Service), Some(users)) = (self.requesters.get(name), users) {
-                    report.obligations.push(Obligation::Multiplex {
-                        service: name.clone(),
-                        users: users.iter().cloned().collect(),
-                        provider: provider.to_string(),
-                    });
-                }
-            }
             if requesters.len() < 2 {
                 continue; // one requester needs no count: offering the function at all serves one
             }
@@ -2192,6 +2459,27 @@ impl<'v> Joint<'v> {
 
 /// The strongly connected components of more than one node, each by name, in the order of their least names (Tarjan's
 /// algorithm, visiting nodes and successors by name, so the result is one for one graph).
+/// Rule 12's requesters whose bindings count: those `system` serves, then each provider bound for one, at any depth.
+fn active<'a>(system: &System, assignment: &'a [Binding]) -> BTreeSet<&'a str> {
+    let mut active: BTreeSet<&str> = assignment
+        .iter()
+        .map(|b| b.requester.as_str())
+        .filter(|r| system.serves(r))
+        .collect();
+    loop {
+        let reached: Vec<&str> = assignment
+            .iter()
+            .filter(|b| active.contains(b.requester.as_str()))
+            .map(|b| b.provider.as_str())
+            .filter(|p| !active.contains(p))
+            .collect();
+        if reached.is_empty() {
+            return active;
+        }
+        active.extend(reached);
+    }
+}
+
 fn components(
     nodes: &BTreeMap<String, Node>,
     edges: &BTreeSet<(String, String, Because)>,

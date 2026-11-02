@@ -9,8 +9,8 @@
 use eadl_front::{read, Form, SourceMap};
 use eadl_model::check::shipped_registry;
 use eadl_resolve::joint::{
-    requesters, Because, Binding, Finding, Initialization, Interrupt, Joint, Kind, Node,
-    Obligation, Report, Requester, System, Unadmitted,
+    requesters, Because, Binding, Caller, Finding, Initialization, Interrupt, Joint, Kind, Node,
+    Obligation, Report, Requester, Routine, System, Unadmitted,
 };
 use eadl_resolve::offer::{self, Provider, State};
 use eadl_resolve::relation::{judge, Verdict};
@@ -538,17 +538,163 @@ fn a_service_two_tasks_use_is_one_requester_and_owes_the_multiplexing() {
     let reports = every(text, &v);
     assert_eq!(reports.len(), 1);
     assert!(reports[0].holds());
+    // Its own timer route at `timer.compare` is no user: that route's own code delivering to it calls nothing (rule 4).
     assert_eq!(
         reports[0].obligations,
         [
-            Obligation::Multiplex {
-                service: "time.deadline".to_string(),
-                users: vec!["(task s a)".to_string(), "(task s b)".to_string()],
-                provider: "timer.compare".to_string(),
-            },
             timer_route("s", "timer.compare", &["time.deadline"]),
+            Obligation::Multiplex {
+                node: "time.deadline".to_string(),
+                users: vec![
+                    Caller::Task("(task s a)".to_string()),
+                    Caller::Task("(task s b)".to_string())
+                ],
+                providers: vec!["timer.compare".to_string()],
+            },
         ]
     );
+}
+
+/// Rule 4's multiplexers of `system`'s assignments of `text`, each holding and all agreeing: each node with its users.
+fn multiplexers(text: &str, system: &str, v: &Vocabulary) -> Vec<(String, Vec<Caller>)> {
+    let read = Read::of(text, v);
+    let system = read
+        .systems()
+        .into_iter()
+        .find(|s| s.name == system)
+        .expect("the system is declared");
+    let joint = read.joint(v).expect("reads").for_system(system.clone());
+    let found: Vec<Vec<(String, Vec<Caller>)>> = read
+        .assignments_of(v, |r| system.serves(r))
+        .iter()
+        .map(|a| {
+            let report = joint.check(a);
+            assert!(report.holds(), "{:?}", report_of(&report));
+            report
+                .obligations
+                .into_iter()
+                .filter_map(|o| match o {
+                    Obligation::Multiplex { node, users, .. } => Some((node, users)),
+                    _ => None,
+                })
+                .collect()
+        })
+        .collect();
+    let [first, rest @ ..] = found.as_slice() else {
+        panic!("no assignment");
+    };
+    assert!(rest.iter().all(|other| other == first), "{found:?}");
+    first.clone()
+}
+
+/// A task's jobs, as rule 4 names a user.
+fn task(name: &str) -> Caller {
+    Caller::Task(name.to_string())
+}
+
+/// A route's routine, as rule 4 names a user.
+fn routine(provider: &str, timer: bool) -> Caller {
+    Caller::Routine(Routine {
+        provider: provider.to_string(),
+        timer,
+    })
+}
+
+#[test]
+fn rule_4_a_source_s_routine_that_runs_a_node_is_one_of_its_users() {
+    // Leaf `M4.1.2.4`: `evt` handles `dev.e`'s source and uses `alarm`, so that interrupt runs `alarm`'s code beside the
+    // jobs of `p`; the system's own `uses` of `evt` is no user, and `alarm`'s own timer route calls nothing back.
+    let v = vocabulary();
+    let text = "(defblock dev.e (offers (interrupt-source true) (min-arrival-separation 20 ms)))
+(defblock timer.d (offers (relative-delay true) (channels 1 tick)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses dev.e timer.d)))
+(defservice alarm (requires (needs relative-delay)))
+(defservice evt (requires (needs interrupt-source) (uses alarm)))
+(defsystem it
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (requires (uses evt))
+  (platform (uses soc)))";
+    assert_eq!(
+        multiplexers(text, "it", &v),
+        [(
+            "alarm".to_string(),
+            vec![task("(task it p)"), routine("dev.e", false)]
+        )]
+    );
+    // Without the task, the interrupt is its one user.
+    let alone = text.replace(" (uses alarm))\n  (requires", ")\n  (requires");
+    assert_ne!(alone, text);
+    assert_eq!(multiplexers(&alone, "it", &v), []);
+}
+
+#[test]
+fn rule_4_its_own_timer_route_is_a_user_only_where_another_node_there_calls_it() {
+    // `a` and `b` both take `timer.d`'s channels, so its route runs both, and `a` calls `b` there: that route is a user
+    // of `b`, though it is `b`'s own, and `t`'s jobs are the other. `a`, which no task reaches, has none.
+    let v = vocabulary();
+    let text = "(defblock timer.d (offers (relative-delay true) (channels 2 tick)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses timer.d)))
+(defservice b (requires (needs relative-delay)))
+(defservice a (requires (needs relative-delay) (uses b)))
+(defsystem sh
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses b))
+  (requires (uses a))
+  (platform (uses soc)))";
+    assert_eq!(
+        multiplexers(text, "sh", &v),
+        [(
+            "b".to_string(),
+            vec![task("(task sh t)"), routine("timer.d", true)]
+        )]
+    );
+    // Where `a` does not call `b`, `b`'s own route only delivers to it: one user, no multiplexer.
+    let apart = text.replace(" (uses b)))\n(defsystem", "))\n(defsystem");
+    assert_ne!(apart, text);
+    assert_eq!(multiplexers(&apart, "sh", &v), []);
+}
+
+#[test]
+fn rule_4_a_node_naming_itself_is_not_its_own_user() {
+    // Counting the services that name a service by `uses`, `alarm` was its own second user beside `t`.
+    let v = vocabulary();
+    let text = "(defblock timer.d (offers (relative-delay true) (channels 1 tick)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses timer.d)))
+(defservice alarm (requires (needs relative-delay) (uses alarm)))
+(defsystem selfuse
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm) (needs alarm))
+  (platform (uses soc)))";
+    assert_eq!(multiplexers(text, "selfuse", &v), []);
+}
+
+#[test]
+fn rule_4_counts_one_system_s_tasks_never_another_s() {
+    // Two systems share the description's `alarm`: each system is resolved alone (rule 7), so another's task is no
+    // user, and only two tasks of one system make it a multiplexer.
+    let v = vocabulary();
+    let text = "(defblock timer.d (offers (relative-delay true) (channels 1 tick)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses timer.d)))
+(defservice alarm (requires (needs relative-delay)))
+(defsystem one
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (platform (uses soc)))
+(defsystem two
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (platform (uses soc)))";
+    assert_eq!(multiplexers(text, "one", &v), []);
+    assert_eq!(multiplexers(text, "two", &v), []);
+    let both = text.replace(
+        "(uses alarm))\n  (platform (uses soc)))\n(defsystem two",
+        "(uses alarm))\n  (task u (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses alarm))\n  (platform (uses soc)))\n(defsystem two",
+    );
+    assert_ne!(both, text);
+    assert_eq!(
+        multiplexers(&both, "one", &v),
+        [(
+            "alarm".to_string(),
+            vec![task("(task one t)"), task("(task one u)")]
+        )]
+    );
+    assert_eq!(multiplexers(&both, "two", &v), []);
 }
 
 #[test]

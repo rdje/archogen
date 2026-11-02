@@ -117,6 +117,14 @@ pub struct Kind {
 }
 
 impl Kind {
+    /// Whether one of its costs' interrupts runs the code of the requester an instance serves ([`runs_requester_code`]).
+    #[must_use]
+    pub fn delivers(&self) -> bool {
+        self.costs
+            .iter()
+            .any(|cost| runs_requester_code(&cost.name))
+    }
+
     /// Whether it is exclusive: its offers include `channels`, so each instance serves one requester (record §1.4).
     #[must_use]
     pub fn exclusive(&self) -> bool {
@@ -202,6 +210,7 @@ impl Kind {
                 facts,
             },
             beneath: self.beneath_names.clone(),
+            delivers: self.delivers(),
         }
     }
 }
@@ -268,6 +277,14 @@ fn tightest(fact: &str, requirements: &[Requirement], vocabulary: &Vocabulary) -
     best.cloned()
 }
 
+/// Whether a cost's interrupt runs the code of the requester its instance serves (record §9; the runtime plan's §2.6):
+/// `expiry`, a delivery to its requester, does; `wake`, an epoch advance no requester observes but by reading, runs the
+/// instance's alone. Model §8 rule 4 counts an interrupt among a node's users by it.
+#[must_use]
+pub fn runs_requester_code(cost: &str) -> bool {
+    cost == "expiry"
+}
+
 /// One instance of a kind: its kind, the provider it programs, the requester an exclusive kind's serves, and what it
 /// offers, as a provider named by [`instance_name`].
 #[derive(Debug, Clone, PartialEq)]
@@ -282,6 +299,8 @@ pub struct Instance {
     pub provider: Provider,
     /// Every fact its kind's `beneath` names, in written order: each one of its own bindings to `over` (record §5).
     pub beneath: Vec<String>,
+    /// Whether one of its kind's costs runs its requester's code ([`runs_requester_code`]; [`Kind::delivers`]).
+    pub delivers: bool,
 }
 
 /// Why the catalog, or an entry of it, is refused (record §1.6).

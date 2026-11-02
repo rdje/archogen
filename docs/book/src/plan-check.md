@@ -90,8 +90,10 @@ a requester binding what its kind needs beneath to the device it programs
    that refines another keeps that platform's promises, not its parts. Second, does every timer have enough
    **channels**? A need that programs a timer — a delay, a deadline — takes one of its channels, while a need that only
    reads it takes none. A timer with two channels serves two such needs, not three; a service several tasks share
-   counts once, since it programs the timer for all of them; and where a timer does not say how many channels it has,
-   two needs on it cannot be known to fit. Third, does any address belong to two parts at once? Two parts the plan uses
+   counts once, since it programs the timer for all of them, and so does a part that programs it for needs of its own,
+   however many tasks use that part; that one channel serves several users is an obligation the plan reports for the
+   runtime to meet, never a reason the checker refuses (model §8 rule 4); and where a timer does not say how many
+   channels it has, two needs on it cannot be known to fit. Third, does any address belong to two parts at once? Two parts the plan uses
    whose registers share an address would fight over it — unless one is built from the other, in which case they are
    one part; only blocks and platforms build, so a part reached through a service is still a part of its own. Memory
    for the program belongs to no part, and a part the plan does not use claims nothing. Fourth, does

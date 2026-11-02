@@ -263,8 +263,9 @@ the relation satisfies it at, and these rules judge the bindings together (`crat
 design is `M3.3`'s in `docs/tasks/M3.md`, and connectivity's and routes' `M3.3.3`'s, each reviewed once by a context that
 did not write it, as are privilege's, placement's, the initialization graph's and the functions', `M3.3.4`'s to
 `M3.3.7`'s. `archogen check` does not call them yet: `M3.4` searches for an assignment and wires both in. The
-configuration checker judges a plan's bindings again by those that refuse an assignment — rules 1 to 5, 7, 9, 10, 13,
-14 and 16, an adapter's instance among them (rule 15) — as its check (5), written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.5.5`).
+configuration checker judges a plan's bindings again by those that refuse an assignment — rules 1 to 3, 5, 7, 9, 10,
+13, 14 and 16, with rule 4's node counted once by rule 3, an adapter's instance among them (rule 15) — as its check (5),
+written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.5.5`).
 
 1. **Requesters.** A requester is a task, for what the task itself writes; a service; or any other declaration, for
    what it writes at its own level outside its tasks. Two tasks of one system are two requesters, though §7 reads them
@@ -278,11 +279,32 @@ configuration checker judges a plan's bindings again by those that refuse an ass
    count. Two or more where `channels` is undescribed, or offered without a value, is `missing-fact`. A provider that
    offers a consumed function `true` and declares `channels` absent, or `0`, is `invalid-description`, refused when it
    is read, whether or not anything binds it.
-4. **A service several users reach is one requester.** Its users are the tasks and services that use it; a system's
-   own `uses` says what the system includes, and is no second user. Such a service's realization serves them through
-   the channel it takes, so it is the multiplexer: the assignment reports that it owes them the shared semantics and a
-   bounded overhead (`ROADMAP.md` §5.4), for the realization and the analysis to discharge. A multiplexing adapter is
-   likewise a provider with more channels and itself one requester of the channel beneath it.
+4. **A node several users reach is one requester** (`M4.1.2.4`; `docs/decisions/decision_runtime-plan.md` §2.9). A
+   node of one system's initialization graph (rule 12) bound for a requirement that takes a channel (rule 2) — a
+   service, a policy, or a block or a platform bound for requirements of its own; an adapter's instance aside, whose
+   kind's obligations say how it shares — counts once at the provider whose channel it takes, however many reach it
+   (rule 3). Its **users** are the jobs and the interrupt routines of its system that can call it:
+   - each task of the system that **reaches** it. A requester reaches what it names by `uses` or `needs` and the
+     provider each of its bindings names, at any depth — but for a block's or a platform's own `uses` or `needs`, which
+     name only hardware (rules 1 and 7) and are never a call;
+   - each route of the system (rule 8) whose interrupt **runs** it. The interrupt of a source or a timer route at
+     provider `X` runs the code of `X`, where `X` is a node; of each requester the route names that is a node bound to
+     `X` itself — for `interrupt-source` met by `true` where the route is a source, by a binding that takes a channel
+     where it is a timer route; where it is a timer route, of each instance the system serves bound to `X` by a binding
+     that takes a channel, and of each requester the route names that is a node bound to such an instance, where the
+     instance's kind's cost runs its requester's code — `expiry`, a delivery to its requester, does, and `wake`, an
+     epoch advance no requester observes but by reading, does not (`docs/specs/adapters/decision_engine-adapters.md`
+     §9); and of every node these reach;
+   - but not its own timer route — a timer route at the provider whose channel it takes, or at the provider the instance
+     whose channel it takes programs — unless another node that route runs reaches it: that route's own code delivering
+     to it is no caller, another node's code there calling it is.
+
+   The system's own level is no user: its `uses` says what the system includes. Another system's tasks and routes are
+   that system's (rule 7), and a node naming itself is not its own user. A node with two or more users is the
+   **multiplexer**: its realization serves them through the channel it takes, and the assignment reports that it owes
+   them the shared semantics and a bounded overhead (`ROADMAP.md` §5.4), for the realization and the analysis to
+   discharge — an obligation, never a finding. A multiplexing adapter is likewise a provider with more channels and
+   itself one requester of the channel beneath it.
 5. **Ownership** (F09). A provider owns each `(region NAME (base B) (size S))` it offers: the bytes `[B, B+S)`, `B` a
    non-negative address and `S` a positive whole number of bytes. Its other sub-forms are `(executable true)` or `false`
    and `(reserved true)` or `false`; each sub-form at most once, and any other, a second one or another value is

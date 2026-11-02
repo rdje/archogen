@@ -196,7 +196,11 @@ all serves one; with no `channels` written it is `missing-fact`, never a quiet y
 or another declaration's own level — a block's or a platform's included, whose `requires` is bound like any other while
 its `uses` stays composition (`M4.1.14`) — so two tasks that each write `(needs absolute-deadline)` are two requesters. A
 service two tasks *use* is one requester: its realization serves both through one channel, so it is the multiplexer,
-and the check reports that it owes them the shared semantics and a bounded overhead.
+and the check reports that it owes them the shared semantics and a bounded overhead. Its users are the code that can
+call it at run time (model §8 rule 4, `M4.1.2.4`): the jobs of each of the system's tasks that reaches it, and each
+interrupt whose routine runs it — a source's handler that uses it, say. The system's own `uses` is none, nor a task of
+another system, nor the service naming itself; and its own timer route, which only delivers its alarm back to it, is
+none unless another part that route runs calls it there.
 
 **Two providers owning the same hardware** (case F09). The platform offers a relative delay by programming its
 comparator directly, and an absolute deadline through firmware that programs the same comparator:
@@ -460,7 +464,7 @@ the relation (`model.md` §7 rule 6).
 ### Joint rules
 
 `docs/semantics/model.md` §8 is normative over `crates/eadl-resolve/src/joint.rs`: who a requester is (rule 1), when
-a binding takes a channel (rule 2), the channel count and its codes (rule 3), the service that multiplexes (rule 4),
+a binding takes a channel (rule 2), the channel count and its codes (rule 3), the node that multiplexes (rule 4),
 region ownership and its codes (rule 5), and that one assignment's findings decide nothing about the description until
 the search has tried every assignment (rule 6); then one system's assignment, its hardware and connectivity (rule 7),
 the route obligations (rule 8), privilege over a system's callers, given its level (rule 9), placement, once per
@@ -509,13 +513,14 @@ the record; a finding is a defect when it carries a reproducer. A bounded exhaus
 `crates/archogen-plan/tests/bounded.rs` (`M4.1.13`), generates universes of small systems — some hundred thousand — has
 the configuration checker judge every record the search writes for them, and holds every plan and every refusal to a
 reading of the record written by a context that never read the lowering's code. The plan counts the users of a node that
-takes a channel — a service, a policy, or hardware with requirements of its own; an instance aside — more widely than
-the check above: the system's tasks that reach it, directly or through services, policies and bindings, and the
+takes a channel — a service, a policy, or hardware with requirements of its own; an instance aside — as the joint rules
+do (model §8 rule 4): the system's tasks that reach it, directly or through services, policies and bindings, and the
 interrupts whose context holds it, but for its own timer route — at the provider whose channel it takes, or that the
 instance whose channel it takes programs — where nothing else that route runs reaches it. [OSEK](ledger.md#osek-os)
 counts a shared resource's users by the tasks and interrupt routines that access it (§8.6); the exception for a node's
-own route is the record's reading, which OSEK's count does not make. The joint rules count the tasks and services naming
-a service by `uses` until `M4.1.2` amends rule 4 to match.
+own route is the record's reading, which OSEK's count does not make. The lowering reads each node's contexts and its
+multiplexer from the joint rules (`Joint::contexts`, `M4.1.2.4`), which counted the tasks and services naming a service
+by `uses`, over every system of a description, until then.
 
 An adapter's instance is judged by the joint rules as one provider (model §8 rules 14 and 15, `M3.2.3.1`): its offers
 computed from the device it programs — a value its kind writes, a fact passed through as the relation reads it at the

@@ -363,10 +363,10 @@ fn rules_1_and_7_a_binding_check_three_refuses_first_is_refused_by_check_five_s_
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-// Rules 2 to 4: consumed facts, channels, and a service several users reach.
+// Rules 2 to 4: consumed facts, channels, and a node several users reach.
 
 /// A counter offering both consumed functions with `channels` as `pool` writes it, a lazy one whose `relative-delay`
-/// is `false`, the services that use them, and the system `system`.
+/// is `false`, the services that use them — `time.wake` needing the deadline bare — and the system `system`.
 fn timers(pool: &str, system: &str) -> Description {
     describe(&format!(
         "
@@ -377,6 +377,7 @@ fn timers(pool: &str, system: &str) -> Description {
       (defservice time.sleep (requires (needs relative-delay)))
       (defservice time.alarm (requires (relative-delay true)))
       (defservice time.deadline (requires (absolute-deadline (supported-horizon (at-least 10 s)))))
+      (defservice time.wake (requires (needs absolute-deadline)))
       (defservice time.both (requires (needs relative-delay) (absolute-deadline true)))
       (defservice time.never (requires (relative-delay false)))
       (defservice time.none (requires (relative-delay (exactly false))))
@@ -517,6 +518,81 @@ fn rule_4_a_service_several_users_reach_is_one_requester() {
         message.contains("`(task s c)` through `relative-delay`")
             && message.contains("offers 1 `channels`"),
         "{message}"
+    );
+}
+
+/// Two tasks of the system using `time.wake`, its own level using nothing; each also needing the deadline itself where
+/// `own` writes `(needs absolute-deadline)`.
+fn wakers(own: &str) -> String {
+    format!(
+        "(defsystem s
+        (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses time.wake) {own})
+        (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses time.wake) {own})
+        (platform (uses soc)))"
+    )
+}
+
+#[test]
+fn rule_4_a_node_two_tasks_use_counts_once_at_its_provider_and_its_multiplexer_is_no_finding() {
+    // `time.wake` takes a channel through `(needs absolute-deadline)`. Its users are the two tasks — the system's own
+    // level is none — so it is the multiplexer, an obligation for the realization to discharge, never a finding; and
+    // it counts once at the counter however many reach it, rule 3's count.
+    let d = timers("(channels 1 tick)", &wakers(""));
+    assert_eq!(
+        d.bound(&[(named("time.wake"), "absolute-deadline", "timer.delay")]),
+        Ok(())
+    );
+}
+
+#[test]
+fn rule_4_a_user_bound_itself_at_the_node_s_provider_is_a_requester_of_its_own() {
+    // Each task needing the deadline itself too, bound to the counter: the node counts once and each task once more,
+    // no user again through the node — three requesters, rule 3's.
+    let own = wakers("(needs absolute-deadline)");
+    let binds = [
+        (named("time.wake"), "absolute-deadline", "timer.delay"),
+        (task("s", "a"), "absolute-deadline", "timer.delay"),
+        (task("s", "b"), "absolute-deadline", "timer.delay"),
+    ];
+    assert_eq!(timers("(channels 3 tick)", &own).bound(&binds), Ok(()));
+    for (pool, offered) in [
+        ("(channels 1 tick)", "offers 1 `channels`"),
+        ("(channels 2 tick)", "offers 2 `channels`"),
+    ] {
+        let d = timers(pool, &own);
+        let findings = refusal(d.joint(&d.plan(None, &binds)), 3, true);
+        assert_eq!(findings.len(), 1, "{pool}: {findings:#?}");
+        let message = &findings[0].message;
+        for named in [
+            "`timer.delay` gives 3 requesters a channel",
+            "`time.wake` through `absolute-deadline`",
+            "`(task s a)` through `absolute-deadline`",
+            "`(task s b)` through `absolute-deadline`",
+            offered,
+        ] {
+            assert!(message.contains(named), "{named}: {message}");
+        }
+    }
+}
+
+#[test]
+fn rule_4_a_block_bound_for_a_requirement_of_its_own_counts_once_however_many_tasks_reach_it() {
+    // `watchdog` is a node by its own `(needs absolute-deadline)`, and both tasks reach it through `uses`, a call: one
+    // requester of the counter's one channel.
+    let d = describe(
+        "
+      (defblock timer.delay (offers (absolute-deadline true) (supported-horizon 3600 s) (channels 1 tick)
+        (reachable-at-privilege machine)))
+      (defblock watchdog (offers (reachable-at-privilege machine)) (requires (needs absolute-deadline)))
+      (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.delay)))
+      (defsystem s
+        (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses watchdog))
+        (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses watchdog))
+        (platform (uses soc)))",
+    );
+    assert_eq!(
+        d.bound(&[(named("watchdog"), "absolute-deadline", "timer.delay")]),
+        Ok(())
     );
 }
 

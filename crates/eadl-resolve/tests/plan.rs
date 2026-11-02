@@ -113,6 +113,7 @@ fn the_writer_writes_the_format_s_golden() {
                 facts: std::collections::BTreeMap::new(),
             },
             beneath: catalog.kind(kind).expect("a kind").beneath_names.clone(),
+            delivers: catalog.kind(kind).expect("a kind").delivers(),
         }
     };
     let extender = instance("epoch-extender", None);

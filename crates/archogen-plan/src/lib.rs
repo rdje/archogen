@@ -28,7 +28,9 @@ use eadl_model::profile::RT_STATIC_UP_V1;
 use eadl_model::quantity::{Dimension, Quantity};
 use eadl_model::rational::Rational;
 use eadl_resolve::adapter::{self, Catalog, Instance, Offered};
-use eadl_resolve::joint::{self, Because, Binding, Interrupt, Kind, Node, Obligation};
+use eadl_resolve::joint::{
+    self, Because, Binding, Context, Interrupt, Kind, Node, Obligation, Routine,
+};
 use eadl_resolve::offer::State;
 use eadl_resolve::plan as assignment;
 use eadl_resolve::requirement::Requirement;
@@ -180,20 +182,19 @@ struct Route {
 }
 
 impl Route {
-    /// Its interrupt's text (§2): `(timer-route NAME)` or `(source NAME)`.
+    /// Its interrupt's text (§2).
     fn item(&self) -> String {
-        if self.timer {
-            format!("(timer-route {})", self.provider)
-        } else {
-            format!("(source {})", self.provider)
-        }
+        interrupt_text(&self.provider, self.timer)
     }
 }
 
-/// Whether a cost's interrupt runs its requester's code (§2.6): `expiry`, a delivery to its requester, does; `wake`, an
-/// epoch advance, runs the instance's alone. The adapters record states neither, so `M4.1.2` has it state them.
-fn runs_requester_code(cost: &str) -> bool {
-    cost == "expiry"
+/// An interrupt as the plan writes it (§2): `(timer-route NAME)` or `(source NAME)`.
+fn interrupt_text(provider: &str, timer: bool) -> String {
+    if timer {
+        format!("(timer-route {provider})")
+    } else {
+        format!("(source {provider})")
+    }
 }
 
 /// One task of the system, as its `defsystem` writes it (§2.2).
@@ -672,38 +673,9 @@ pub fn lower(
     let requester = |name: &str| rebuilt.requesters.iter().find(|r| r.name == name);
     let is_task = |name: &str| requester(name).is_some_and(|r| r.kind == Kind::Task);
 
-    // §2: reaching — what a requester names by `uses` or `needs`, and what it is bound to as its provider, at any depth.
-    let hardware = |name: &str| {
-        declarations.iter().any(|d| {
-            matches!(d.head(), Some("defblock" | "defplatform"))
-                && d.items().get(1).and_then(Form::as_symbol) == Some(name)
-        })
-    };
-    let mut direct: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    for r in rebuilt.requesters.iter().filter(|r| !hardware(&r.name)) {
-        direct
-            .entry(r.name.clone())
-            .or_default()
-            .extend(r.uses.iter().chain(&r.needs).cloned());
-    }
-    for b in &rebuilt.bindings {
-        direct
-            .entry(b.requester.clone())
-            .or_default()
-            .insert(b.provider.clone());
-    }
-    let reach = |from: &str| -> BTreeSet<String> {
-        let mut seen = BTreeSet::new();
-        let mut todo = vec![from.to_string()];
-        while let Some(at) = todo.pop() {
-            for next in direct.get(&at).into_iter().flatten() {
-                if seen.insert(next.clone()) {
-                    todo.push(next.clone());
-                }
-            }
-        }
-        seen
-    };
+    // §2: reaching — what a requester names by `uses` or `needs`, and what it is bound to as its provider, at any depth,
+    // as the joint rules read it (model §8 rule 4).
+    let reach = |from: &str| rebuilt.joint.reaches(from, &rebuilt.bindings);
 
     // §2.5: the routes, as `Joint::check` reports them, one for each provider and kind.
     let routes: Vec<Route> = report
@@ -773,13 +745,7 @@ pub fn lower(
             }
         }
     }
-    for instance in &rebuilt.instances {
-        let runs = catalog
-            .kind(&instance.kind)
-            .is_some_and(|k| k.costs.iter().any(|c| runs_requester_code(&c.name)));
-        if !runs {
-            continue;
-        }
+    for instance in rebuilt.instances.iter().filter(|i| i.delivers) {
         // Its requesters: the one an exclusive instance serves, and each bound to it, a shared instance's included.
         let served = instance.serves.iter().chain(
             rebuilt
@@ -1112,73 +1078,22 @@ pub fn lower(
         .chain(ranked.iter().map(|r| r.item()))
         .collect();
 
-    // §2.6: the execution contexts, and what each interrupt runs of its own (§2.9 reads it).
-    let mut contexts: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    let mut runs_of: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    for task in &tasks {
-        let internal = joint::task_name(&system, &task.name);
-        contexts
-            .entry(internal.clone())
-            .or_default()
-            .insert("job".to_string());
-        for n in reach(&internal).into_iter().filter(|n| nodes.contains(n)) {
-            contexts.entry(n).or_default().insert("job".to_string());
-        }
-    }
-    for route in &routes {
-        let item = format!("(interrupt {})", route.item());
-        let x = route.provider.as_str();
-        let mut runs: BTreeSet<String> = BTreeSet::new();
-        if nodes.contains(x) {
-            runs.insert(x.to_string());
-        }
-        for r in &route.requesters {
-            // The interrupt fact where the route is a source, a consumed fact where it is a timer route (§2.6).
-            let fact_ok = |q: &Requirement| {
-                if route.timer {
-                    takes_a_channel(q, vocabulary)
-                } else {
-                    q.fact() == INTERRUPT_SOURCE && met_by_true(q)
+    // §2.6: the execution contexts, as the joint rules derive them (model §8 rule 4).
+    let derived = rebuilt.joint.contexts(&rebuilt.system, &rebuilt.bindings);
+    let contexts: BTreeMap<String, BTreeSet<String>> = derived
+        .of
+        .iter()
+        .map(|(subject, set)| {
+            let words = set.iter().map(|context| match context {
+                Context::Job => "job".to_string(),
+                Context::Routine(Routine { provider, timer }) => {
+                    format!("(interrupt {})", interrupt_text(provider, *timer))
                 }
-            };
-            if nodes.contains(r) && bound_directly(r, x, &fact_ok) {
-                runs.insert(r.clone());
-            }
-        }
-        if route.timer {
-            for instance in instance_over(x) {
-                runs.insert(instance.provider.name.clone());
-                let delivers = catalog
-                    .kind(&instance.kind)
-                    .is_some_and(|k| k.costs.iter().any(|c| runs_requester_code(&c.name)));
-                if delivers {
-                    for r in &route.requesters {
-                        let through = rebuilt
-                            .bindings
-                            .iter()
-                            .any(|b| b.requester == *r && b.provider == instance.provider.name);
-                        if nodes.contains(r) && through {
-                            runs.insert(r.clone());
-                        }
-                    }
-                }
-            }
-        }
-        let mut all = runs.clone();
-        for n in &runs {
-            all.extend(reach(n).into_iter().filter(|m| nodes.contains(m)));
-        }
-        for n in &all {
-            contexts.entry(n.clone()).or_default().insert(item.clone());
-        }
-        runs_of.insert(item, all);
-    }
-    for n in &nodes {
-        contexts
-            .entry(n.clone())
-            .or_default()
-            .insert("initialisation".to_string());
-    }
+                Context::Initialisation => "initialisation".to_string(),
+            });
+            (subject.clone(), words.collect())
+        })
+        .collect();
     let mut context_lines: Vec<String> = contexts
         .iter()
         .map(|(subject, set)| {
@@ -1240,53 +1155,15 @@ pub fn lower(
     // A node that takes a channel — a service, a policy, or hardware with requirements of its own; an instance aside —
     // is multiplexed where it has two or more users: each of the system's tasks that reaches it, and each interrupt
     // whose context line holds it, but for its own timer route — at the provider whose channel it takes, or that the
-    // instance whose channel it takes programs — where nothing else that route runs reaches it (§2.9).
-    let reached: Vec<BTreeSet<String>> = tasks
+    // instance whose channel it takes programs — where nothing else that route runs reaches it (§2.9). The joint rules
+    // report it so (model §8 rule 4), and the record holds, so they did.
+    let multiplexed: BTreeSet<&str> = report
+        .obligations
         .iter()
-        .map(|task| reach(&joint::task_name(&system, &task.name)))
-        .collect();
-    let channels: Vec<&Binding> = rebuilt
-        .bindings
-        .iter()
-        .filter(|b| {
-            nodes.contains(&b.requester)
-                && !names.instances.contains_key(b.requester.as_str())
-                && takes_a_channel(&b.requirement, vocabulary)
+        .filter_map(|o| match o {
+            Obligation::Multiplex { node, .. } => Some(node.as_str()),
+            _ => None,
         })
-        .collect();
-    let users = |node: &str| {
-        // Its own channels' timer routes: at the provider it binds, or the one its instance programs.
-        let own: BTreeSet<String> = channels
-            .iter()
-            .filter(|b| b.requester == node)
-            .map(|b| {
-                let x = names
-                    .instances
-                    .get(b.provider.as_str())
-                    .map_or(b.provider.as_str(), |i| i.over.as_str());
-                format!("(interrupt (timer-route {x}))")
-            })
-            .collect();
-        // Its own route counts only where something else that route runs reaches it — the provider serving that route
-        // among them, where its own requirements reach the node: that route's own code delivering to the node is no
-        // caller, but another node's code there calling it is (§2.9).
-        let called_there = |item: &str| {
-            runs_of
-                .get(item)
-                .is_some_and(|runs| runs.iter().any(|m| m != node && reach(m).contains(node)))
-        };
-        let jobs = reached.iter().filter(|r| r.contains(node)).count();
-        let interrupts = contexts.get(node).map_or(0, |c| {
-            c.iter()
-                .filter(|i| i.starts_with("(interrupt ") && (!own.contains(*i) || called_there(i)))
-                .count()
-        });
-        jobs + interrupts
-    };
-    let multiplexed: BTreeSet<&str> = channels
-        .iter()
-        .map(|b| b.requester.as_str())
-        .filter(|node| users(node) >= 2)
         .collect();
     for service in multiplexed {
         let text = names.text(service);

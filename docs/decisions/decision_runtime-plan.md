@@ -460,9 +460,9 @@ timer route and a source, and a block may be named `timer`:
    it, where a source's route a handler serves brings it another's arrival, which the rule counts (R8-D1). A channel
    taken on a consumed fact makes a timer route, so a multiplexed node's system is one the analysis refuses until
    `M4.1.6`. The heartbeat's `console.write`, used by both tasks, takes no channel and owes no `multiplex`. The lowering
-   derives the obligation by this rule. `Joint::check` reports its own today: a service taking a channel whose users,
-   the tasks and services naming it by `uses` over every system of the description, number two or more; `M4.1.2` makes
-   rule 4's users, and so `Joint::check`, count as this rule does, system by system as rule 7 resolves.
+   derives the obligation by this rule, as the joint rules give it: model §8 rule 4 states these users, and
+   `Joint::check` reports each multiplexed node with them, system by system as rule 7 resolves (`M4.1.2.4`), where it
+   counted the tasks and services naming a service by `uses`, over every system of the description, before.
 
 10. **Owed facts**, in one list, each a subject, a fact and its owner. Exactly these are written:
 

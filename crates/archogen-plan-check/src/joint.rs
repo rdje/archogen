@@ -1,8 +1,9 @@
 //! Check (5), the joint rules, as `M3.5.5.8`'s fenced context writes it from `docs/semantics/model.md` §8 alone: the
-//! rules that refuse an assignment — rules 1 to 5, 7, 9, 10, 13 and 14, and rule 16 (`M4.1.2.3`, by a fenced context
-//! too) — judged over one system's assignment after checks (1) to (4) accepted each binding alone; an engine adapter's
-//! instance judged by them as rule 15 and `docs/specs/adapters/decision_engine-adapters.md` §4 say, from the checker's
-//! own table ([`crate::adapters`]) under `M3.2.5`'s fence.
+//! rules that refuse an assignment — rules 1 to 3, 5, 7, 9, 10, 13 and 14, with rule 4's node counted once by rule 3,
+//! and rule 16 (`M4.1.2.3`, by a fenced context too) — judged over one system's assignment after checks (1) to (4)
+//! accepted each binding alone; an engine adapter's instance judged by them as rule 15 and
+//! `docs/specs/adapters/decision_engine-adapters.md` §4 say, from the checker's own table ([`crate::adapters`]) under
+//! `M3.2.5`'s fence.
 //!
 //! ⭐ **Everything the rules need is read here, from the description**: who requires (rule 1), the declarations a
 //! system's closure reaches and its hardware (rule 7), which providers compose which (rule 5), every region a provider
@@ -42,6 +43,12 @@
 //!   `invalid-description`, refused when it is read — check (2)'s, first. Check (5) meets one only when called past
 //!   check (2), and there counts what it offers: `channels` absent or `0` holds no channel for two requesters taking
 //!   one, a conflict.
+//! - Rule 4: a node bound for a requirement that takes a channel — a service, a policy, or a block or platform bound
+//!   for requirements of its own — is the requester of that binding, counted once at its provider by rule 3's count
+//!   by requester, however many users reach it; a user bound itself there is a requester of its own (rule 3), never
+//!   one counted through the node. Its users and its multiplexer are an obligation, never a finding of this
+//!   checker's, as rule 8's route is: rule 4 adds no refusal to rule 3's, which the preamble's "rule 4's node counted
+//!   once by rule 3" says. An instance shares as its kind says, rule 15's reading below.
 //! - Rule 10: "the other's bytes lie at or above its base … as rule 5 reads it" takes rule 5's base byte, which a
 //!   region without `size` owns: another's bytes at the base overlap it — a reserved range's base inside placement
 //!   memory is a hole there, its extent past that byte not judged — and the unknown is bytes above the base, none at
@@ -1190,8 +1197,9 @@ impl<'a, 'p> Judgement<'a, 'p> {
         None
     }
 
-    /// Rules 2 to 4: the requesters taking channels at one provider number at most its `channels` — an instance among
-    /// them, through its binding beneath, and an exclusive instance offering its one.
+    /// Rules 2 to 4: the requesters taking channels at one provider number at most its `channels` — each counted by its
+    /// own bindings, so a node once however many users reach it; an instance among them, through its binding beneath,
+    /// and an exclusive instance offering its one.
     fn channels(&mut self) {
         let assignment = self.assignment;
         let mut taking: BTreeMap<String, (Bound, BTreeMap<Requester, Vec<String>>)> =
