@@ -64,9 +64,9 @@ A quantity is written as a number followed by a unit, such as `10 ms` or `48 MHz
 1. **A bare number is not a quantity.** Nothing would say what it measures, so it could be compared with
    nothing: `quantity-missing-unit`.
 2. **The units are an explicit table, not SI prefixes applied freely** (`UNITS`). Time is `s`, `ms`, `us`
-   and `ns`; frequency is `Hz`, `kHz`, `MHz` and `GHz`; information is `bit` and `byte`. A table that
-   accepted any prefix would accept `Ps` and `mHz` too, and a typo that parses is worse than one that
-   does not: `quantity-unknown-unit`.
+   and `ns`; frequency is `Hz`, `kHz`, `MHz` and `GHz`; information is `bit`, `byte`, `KiB` and `MiB`; a count is
+   `tick`. A table that accepted any prefix would accept `Ps` and `mHz` too, and a typo that parses is worse than
+   one that does not: `quantity-unknown-unit`.
 3. **A frequency is strictly positive** (§6.2). Every conversion from ticks to time divides by it:
    `quantity-non-positive-frequency`.
 4. **A duration is never negative.** An interval's direction belongs in the clause that uses it, not in
@@ -315,7 +315,8 @@ written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.
    without `size` owns at least its base byte; where another bound provider owns bytes above its base, whether they
    overlap is `missing-fact`. A region without a base — the bare symbol `region` among them, which names no byte range
    (`M4.1.19`) — with two, or with a size that is not a positive whole number of bytes is `invalid-description`, bound
-   or not, composed or not; one past the exact arithmetic `unsupported-profile`. A provider nothing is bound to owns
+   or not, composed or not; one past the exact arithmetic, a decimal too precise to hold exactly (§1 rule 5) among them,
+   which no one can say is whole (`M4.1.20`), `unsupported-profile`. A provider nothing is bound to owns
    nothing: an unused device costs nothing (`ROADMAP.md` §5.3) but the bytes it occupies in memory, which rule 10
    charges.
 6. **One assignment, then the search.** A conflict refuses the assignment it is found in, and an unknown blocks it. When

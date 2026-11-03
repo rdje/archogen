@@ -673,8 +673,14 @@ fn read_region(provider: &str, item: &Form) -> Result<Region, Unread> {
 
 /// A region's size in bytes: a quantity of information, positive and whole in bytes.
 fn bytes(number: &Form, unit: &Form, within: Span) -> Result<i128, Unread> {
-    let quantity = Quantity::read(Some(number), Some(unit), within)
-        .map_err(|d| Unread::Invalid(format!("its size: {}", d.message)))?;
+    let quantity = Quantity::read(Some(number), Some(unit), within).map_err(|d| {
+        let why = format!("its size: {}", d.message);
+        if d.code == "quantity-overflow" {
+            Unread::Unsupported(why)
+        } else {
+            Unread::Invalid(why)
+        }
+    })?;
     if quantity.unit.dimension != Dimension::Information {
         return Err(Unread::Invalid(
             "a region's size is an amount of information, in bytes".to_owned(),

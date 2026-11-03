@@ -303,6 +303,35 @@ fn the_search_and_the_checker_refuse_a_bare_region_alike() {
     }
 }
 
+/// Model §8 rule 5 (`M4.1.20`), a size past the exact arithmetic: both readings refuse `unsupported-profile` a decimal too
+/// precise to hold exactly, and `invalid-description` a size that is no whole number of bytes or names no unit.
+#[test]
+fn the_search_and_the_checker_refuse_a_size_past_the_arithmetic_alike() {
+    let v = vocabulary();
+    for (size, expected) in [
+        (
+            "0.000000000000000000000000000000000000001 byte",
+            "unsupported-profile",
+        ),
+        ("9223372036854775807 GiB", "invalid-description"),
+        ("9223372036854775807 MiB", "ok"),
+        ("0 byte", "invalid-description"),
+        ("4 bit", "invalid-description"),
+        ("4 ms", "invalid-description"),
+        ("4 KiB", "ok"),
+    ] {
+        let text = format!(
+            "(defmodule app.case\n  (version 1 0)\n\
+             (defblock b (offers (core-count 1 tick) (region r (base 0x1000) (size {size}))))\n\
+             (defplatform soc (offers (core-count 1 tick)) (requires (uses b)))\n\
+             (defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1)) (platform (uses soc))))"
+        );
+        let (by_search, said, by_checker, written) = both_readings(&text, &v);
+        assert_eq!(by_search, expected, "{size}: {said:#?}");
+        assert_eq!(by_checker, expected, "{size}: {written:#?}");
+    }
+}
+
 /// Model §8 rule 10 (`M4.1.2.5`), held to both its readings over a bounded universe of memory maps: every base against
 /// a 4 KiB `ram` and a second bank above it, every size, a device's registers or a reserved range, a hole beside it,
 /// `ram` itself sized or not. The search's verdict and the configuration checker's description check are the same on

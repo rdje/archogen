@@ -1264,6 +1264,38 @@ fn rule_10_memory_surely_reserved_in_every_byte_is_check_two_s_and_no_unknown_of
     assert_eq!(past_check_two(&d, Status::InvalidDescription), Ok(()));
 }
 
+/// Placement memory beside a device's region of the size `size`.
+fn sized(size: &str) -> Description {
+    memory(&format!(
+        "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+         (region regs (base 0x1000_0000) (size {size}))"
+    ))
+}
+
+#[test]
+fn rule_5_a_size_past_the_exact_arithmetic_is_unsupported_profile_with_check_five_called_alone() {
+    // Rule 5: "one past the exact arithmetic `unsupported-profile`". A decimal of 39 fractional digits is too precise to
+    // hold exactly (§1 rule 5): check (2) refuses it first under that status, and check (5) alone must say the same.
+    let d = sized("0.000000000000000000000000000000000000001 byte");
+    let message = refused_description(
+        past_check_two(&d, Status::UnsupportedProfile),
+        Status::UnsupportedProfile,
+        5,
+    );
+    assert!(
+        message.contains("a region `soc` offers does not read whole"),
+        "{message}"
+    );
+    // A size that does not read for any other cause stays `invalid-description` in both: `GiB` is no unit.
+    let d = sized("9223372036854775807 GiB");
+    let message = refused_description(
+        past_check_two(&d, Status::InvalidDescription),
+        Status::InvalidDescription,
+        5,
+    );
+    assert!(message.contains("`GiB` is not a known unit"), "{message}");
+}
+
 // ------------------------------------------------------------------------------------------------------------------
 // Rule 13: one function, one provider, and the qualifiers.
 

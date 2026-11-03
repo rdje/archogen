@@ -767,6 +767,17 @@ mdBook that is the director's window into the project.
   Verification: the census, the removal report.
   Commit: `ARCHOGEN-PROGRAM-1118 (leaf PROGRAM.123)`
 
+- ID: `PROGRAM.124`
+  Status: `pending` — P1, filed `2026-11-03` by `M4.1.19`'s commit, which the gate refused for `docs/tasks/M3.md` at 3008
+    lines, over its 3000, with nothing closed to seal; `M3.md` stands at 2999, and `M3.4`'s next leaves need the room.
+  Reproduce / issue: `bash scripts/check_task_history.sh --seal M3` → `nothing to seal`, while `M3.md`'s Verification Log
+    holds 64 rows whose leaf cell names one sealed leaf with a note, `` `M3.1.1` (step 1) ``: the seal's pattern, `LOGS`,
+    takes a cell that is the leaf alone, so those rows stay live (`M2` holds 24 such, `PROGRAM` 45). The director ruled
+    `2026-10-20` that the ceiling is met by sealing, not by relocating text.
+  Goal: a note after the leaf is no second leaf, so the seal takes such a row, in the script, its arms and
+    `docs/decisions/decision_task-log-row-sealing.md`; `M3`'s, `M2`'s and `PROGRAM`'s rows sealed, and `M4`'s closed
+    subtrees with them.
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -833,8 +844,9 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 2 | `PROGRAM.124` | `pending` | a log row's note no bar to its seal: `M3.md` stands at its line ceiling, and `M3.4`'s leaves need the room |
 
-The PROGRAM.34 row waits on the director's yes. The one other open leaf, `PROGRAM.78`, is blocked until the
+The PROGRAM.34 row waits on the director's yes. The other open leaf, `PROGRAM.78`, is blocked until the
 features are complete, by the ruling against mutation testing. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 

@@ -890,6 +890,11 @@ fn a_region_that_names_no_byte_range_is_refused() {
             "invalid-description p: region `r`'s size is a positive whole number of bytes",
         ),
         (
+            // `M4.1.20`: a size that does not read says why, rather than what a size is.
+            "(region r (base 0x10) (size 4 GiB))",
+            "invalid-description p: region `r`'s size does not read: `GiB` is not a known unit",
+        ),
+        (
             "(region (base 0x10))",
             "invalid-description p: a region is named first",
         ),

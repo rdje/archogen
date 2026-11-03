@@ -2788,8 +2788,10 @@ fn size_in_bytes(clause: &Form, name: &str) -> Result<i128, Option<String>> {
         ))
     };
     let items = clause.items();
-    let quantity =
-        Quantity::read(items.get(1), items.get(2), clause.span()).map_err(|_| wrong())?;
+    let quantity = Quantity::read(items.get(1), items.get(2), clause.span()).map_err(|d| {
+        (d.code != "quantity-overflow")
+            .then(|| format!("region `{name}`'s size does not read: {}", d.message))
+    })?;
     if quantity.unit.dimension != Dimension::Information || items.len() != 3 {
         return Err(wrong());
     }
