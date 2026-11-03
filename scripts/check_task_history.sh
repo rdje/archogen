@@ -102,8 +102,10 @@ WORK_UNIT = re.compile(r"ARCHOGEN-[A-Z0-9-]*[A-Z0-9]-[0-9]{4}(?![0-9])")
 ROW_RE = re.compile(r"^\| `([^`]+)` \| (\d+) \| (\d+) \| (\d+) \| `([0-9a-f]{64})` \| `(\d{4}-\d{2}-\d{2})` \|$")
 ROWS_RE = re.compile(r"^\| `(rows-\d{4})` \| (\d+) \| (\d+) \| (\d+) \| `([0-9a-f]{64})` \| `(\d{4}-\d{2}-\d{2})` \|$")
 # The two logs a tree keeps, each with the regex of the cell that names its leaf: the Commit Log's first cell, the
-# Verification Log's second (PROGRAM.95, docs/decisions/decision_task-log-row-sealing.md).
-LOGS = (("## Verification Log", re.compile(r"^\| `[^`]*` \| `([^`]+)` \|")), ("## Commit Log", re.compile(r"^\| `([^`]+)` \|")))
+# Verification Log's second (PROGRAM.95, docs/decisions/decision_task-log-row-sealing.md). A note in parentheses after
+# the leaf, `(step 3)` or `(closed)`, is no second leaf (PROGRAM.124); a second name in the cell still keeps the row live.
+LOGS = (("## Verification Log", re.compile(r"^\| `[^`]*` \| `([^`]+)`(?: \([^)|`]*\))? \|")),
+        ("## Commit Log", re.compile(r"^\| `([^`]+)`(?: \([^)|`]*\))? \|")))
 ROW_BYTES = int(os.environ.get("TASK_HISTORY_ROW_BYTES", "131072"))  # a log-row file's budget, under README-ROUTES' 163 840
 ROW_LINES = 1500                                                        # and its 1 800 lines
 fails = []
@@ -2281,6 +2283,8 @@ HOOK
 | `2026-10-03` | `L.1.1` | the child's check, with a `code span` | pass |
 | `2026-10-04` | `L.2.1` | the closed leaf's check | pass |
 | `2026-10-05` | `L.1` and `L.1.1` | a row naming two leaves, which stays | pass |
+| `2026-10-06` | `L.1` (step 2) | a note after the leaf, which goes | pass |
+| `2026-10-07` | `L.1` (with `L.2`) | a note naming a second leaf, which stays | pass |
 
 ## Commit Log
 
@@ -2297,8 +2301,9 @@ HOOK
 MD
   commit
   arm "the census counts no log row before a leaf is sealed" 0 "census: HEAD — 0 byte(s) of log rows naming sealed leaves" --census HEAD
-  arm "the seal moves the log rows of the leaves it seals and of none other" 0 "sealed 2 subtree(s), 3 leaves: L.1 L.2.1; 6 log row(s) in rows-0001.md;" --seal L
+  arm "the seal moves the log rows of the leaves it seals and of none other" 0 "sealed 2 subtree(s), 3 leaves: L.1 L.2.1; 7 log row(s) in rows-0001.md;" --seal L
   grep -q '^| `2026-10-02` | `L.2` | the open subtree' "$work/docs/tasks/L.md" && grep -q '^| `2026-10-05` | `L.1` and `L.1.1` |' "$work/docs/tasks/L.md" &&
+    grep -q '^| `2026-10-07` | `L.1` (with `L.2`) |' "$work/docs/tasks/L.md" && ! grep -q 'a note after the leaf' "$work/docs/tasks/L.md" &&
     grep -q '^| `L.2` | `pending` | open |$' "$work/docs/tasks/L.md" && ! grep -q 'the child'"'"'s check' "$work/docs/tasks/L.md" && ! grep -q '^| `L.1.1` |' "$work/docs/tasks/L.md" ||
     { arms=$((arms + 1)); echo "SELF-TEST: the row seal moved a live row, or left a sealed leaf's row in the tree" >&2; }
   python3 - "$work" <<'PY' || { arms=$((arms + 1)); echo "SELF-TEST: the log-row file is not the form the seal writes" >&2; }
@@ -2308,6 +2313,7 @@ want = ("## Verification Log\n\n| Date | Leaf | Checks | Result |\n| --- | --- |
         "| `2026-10-01` | `L.1` | the subtree's check | pass |\n"
         "| `2026-10-03` | `L.1.1` | the child's check, with a `code span` | pass |\n"
         "| `2026-10-04` | `L.2.1` | the closed leaf's check | pass |\n"
+        "| `2026-10-06` | `L.1` (step 2) | a note after the leaf, which goes | pass |\n"
         "\n## Commit Log\n\n| Leaf | Commit subject or reference | Notes |\n| --- | --- | --- |\n"
         "| `L.1` | `ARCHOGEN-L-0001 (leaf L.1)` | closed |\n"
         "| `L.1.1` | `ARCHOGEN-L-0002 (leaf L.1.1)` | closed |\n"
@@ -2315,15 +2321,15 @@ want = ("## Verification Log\n\n| Date | Leaf | Checks | Result |\n| --- | --- |
 sys.exit(0 if open(w + "/docs/task-history/L/rows-0001.md", encoding="utf-8").read() == want else 1)
 PY
   arm "the sealed tree and its log-row file pass the gate" 0 "1 log-row file(s)"
-  grep -q '^## `L` log rows$' "$work/docs/task-history/INDEX.md" && grep -q '^| `rows-0001` | 6 | 15 | ' "$work/docs/task-history/INDEX.md" ||
+  grep -q '^## `L` log rows$' "$work/docs/task-history/INDEX.md" && grep -q '^| `rows-0001` | 7 | 16 | ' "$work/docs/task-history/INDEX.md" ||
     { arms=$((arms + 1)); echo "SELF-TEST: the index has no log-row table for L, or its row is not the file's" >&2; }
   arm "sealing again moves nothing" 0 "nothing to seal" --seal L
   commit
   printf 'x' >> "$work/docs/task-history/L/rows-0001.md"
   arm "a byte added to a log-row file is refused" 1 "a log-row file changed"
   restore
-  sub docs/task-history/INDEX.md '^(\| `rows-0001` \| )6( \|)' '\g<1>7\2'
-  arm "a log-row file's row count unlike its row's is refused" 1 "holds 6 rows, and its row says 7"
+  sub docs/task-history/INDEX.md '^(\| `rows-0001` \| )7( \|)' '\g<1>8\2'
+  arm "a log-row file's row count unlike its row's is refused" 1 "holds 7 rows, and its row says 8"
   restore
   sub docs/task-history/INDEX.md '^\| `rows-0001` \|.*\n' ''
   arm "a log-row file with no row is refused" 1 "rows-0001.md is in no row of"
