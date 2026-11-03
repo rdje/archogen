@@ -15,11 +15,12 @@
 //! wrote that the rules refuse is a corrupted plan, never a valid system (`ROADMAP.md` §5.5) — so it is [`PLAN_JOINT`]
 //! under `tool-failure`, its message naming its rule. What §8 makes the description's own status whatever the
 //! assignment — a caller stating levels that do not hold the profile's (rule 9, judged first), a region that does not
-//! read (rule 5), a region against placement memory whose overlap no size decides (rule 10), a side or a provider the
-//! relation does not read — is [`PLAN_DESCRIPTION`] under that status, and refuses before any finding of the plan's.
-//! Rule 5's unread region and rule 10's unknown are check (2)'s first, description-wide ([`crate::providers`]), so
-//! [`check::plan`] never reaches check (5) with one; check (5) judges them again, over the system's hardware, so its
-//! own verdict holds where it is called alone.
+//! read (rule 5), rule 10's unknowns (placement memory with no size, a region against it whose overlap no size decides,
+//! holes of no size that leave it no free byte), a side or a provider the relation does not read — is
+//! [`PLAN_DESCRIPTION`] under that status, and refuses before any finding of the plan's. Rule 5's unread region and rule
+//! 10's unknowns are check (2)'s first, description-wide ([`crate::providers`]), so [`check::plan`] never reaches check
+//! (5) with one; check (5) judges them again, over the system's hardware, so its own verdict holds where it is called
+//! alone. Rule 10's `invalid-description`s, overlaps and memory reserved in every byte, are check (2)'s alone.
 //!
 //! ⛔ **The level is the profile's, never the record's**: `Profile::caller_level`, so a corrupted level cannot pass.
 //!
@@ -49,10 +50,6 @@
 //!   one counted through the node. Its users and its multiplexer are an obligation, never a finding of this
 //!   checker's, as rule 8's route is: rule 4 adds no refusal to rule 3's, which the preamble's "rule 4's node counted
 //!   once by rule 3" says. An instance shares as its kind says, rule 15's reading below.
-//! - Rule 10: "the other's bytes lie at or above its base … as rule 5 reads it" takes rule 5's base byte, which a
-//!   region without `size` owns: another's bytes at the base overlap it — a reserved range's base inside placement
-//!   memory is a hole there, its extent past that byte not judged — and the unknown is bytes above the base, none at
-//!   it.
 //! - Rules 5 and 10: `size` is a quantity of information — a number and a unit — whole and positive in bytes; a bare
 //!   number is no size.
 //! - Rule 9: "levels that do not hold the system's" is a stated set without the level; a set holding it and others
@@ -102,6 +99,7 @@ use crate::model::provider::{self, Provider};
 use crate::model::requirement::{read_side, NotJudged, Requirement};
 use crate::model::value::Value;
 use crate::model::vocab::{self, Direction, Domain, Function};
+use crate::providers::fills;
 
 /// The qualifier rule 9 judges against the level, and rule 13 never repeats.
 const PRIVILEGE: &str = "reachable-at-privilege";
@@ -1632,9 +1630,8 @@ impl<'a, 'p> Judgement<'a, 'p> {
             .then_some((separation, clause.span()))
     }
 
-    /// Rule 10: the plan places the image in placement memory of the system's hardware, where it has any; and where
-    /// placement memory, or a region against it — a device's registers, placement memory or a reserved range, whose
-    /// extent is the hole the plan avoids — has no size, whether they overlap is the description's unknown.
+    /// Rule 10: the plan places the image in placement memory of the system's hardware, where it has any; and the
+    /// description's unknowns over those regions.
     fn placement(&mut self) {
         let hardware: Vec<String> = self.hardware.iter().cloned().collect();
         let regions: Vec<Region> = hardware.iter().flat_map(|h| self.regions(h)).collect();
@@ -1699,21 +1696,29 @@ impl<'a, 'p> Judgement<'a, 'p> {
             }
             None => {}
         }
-        for (i, a) in regions.iter().enumerate() {
-            for b in &regions[i + 1..] {
-                if !(a.placement() || b.placement()) || overlap(a, b) != Overlap::Unknown {
-                    continue;
-                }
-                let (open, other) = if a.end.is_none() { (a, b) } else { (b, a) };
+        self.placement_unknowns(&regions, &system);
+    }
+
+    /// Rule 10's unknowns, the description's whatever the assignment: placement memory with no size, nothing to lay out
+    /// in; a device's registers or a reserved range, whose extent is the hole the plan avoids, with no size and its base
+    /// below placement memory, where only that size says whether they overlap; and holes of no size, each taken to reach
+    /// the memory's end, that leave it no free byte while the bytes surely reserved do not fill it.
+    fn placement_unknowns(&mut self, regions: &[Region], system: &str) {
+        let holes: Vec<&Region> = regions.iter().filter(|r| r.reserved).collect();
+        for p in regions.iter().filter(|r| r.placement()) {
+            for open in regions
+                .iter()
+                .filter(|r| !r.placement() && r.end.is_none() && r.base < p.base)
+            {
                 let primary = self.at(open.span, "a region with no size");
-                let secondary = vec![self.at(other.span, "bytes above its base")];
+                let secondary = vec![self.at(p.span, "placement memory above its base")];
                 self.refuse_description(
                     Status::MissingFact,
                     format!(
-                        "whether {} and {} overlap is unknown: `{}` has no size, and the other's bytes lie above its \
+                        "whether {} and {} overlap is unknown: `{}` has no size, and the memory's bytes lie above its \
                          base, in the hardware of `{system}` (rule 10)",
-                        a.describe(),
-                        b.describe(),
+                        p.describe(),
+                        open.describe(),
                         open.name
                     ),
                     primary,
@@ -1721,6 +1726,51 @@ impl<'a, 'p> Judgement<'a, 'p> {
                     "give the region its `(size S)`",
                 );
             }
+            let Some(end) = p.end else {
+                let primary = self.at(p.span, "placement memory with no size");
+                self.refuse_description(
+                    Status::MissingFact,
+                    format!(
+                        "`{}`'s placement memory `{}` has no size: nothing can be laid out in it, in the hardware of \
+                         `{system}` (rule 10)",
+                        p.provider, p.name
+                    ),
+                    primary,
+                    Vec::new(),
+                    "give the memory its `(size S)`",
+                );
+                continue;
+            };
+            let open: Vec<&Region> = holes
+                .iter()
+                .copied()
+                .filter(|r| r.end.is_none() && (p.base..end).contains(&r.base))
+                .collect();
+            let Some(first) = open.first() else { continue };
+            let surely = || holes.iter().map(|r| r.known());
+            let taken = surely().chain(open.iter().map(|r| (r.base, end)));
+            if fills(surely(), p.base, end) || !fills(taken, p.base, end) {
+                continue;
+            }
+            let primary = self.at(first.span, "a hole of no size");
+            let mut secondary: Vec<Label> = open[1..]
+                .iter()
+                .map(|r| self.at(r.span, "a hole of no size"))
+                .collect();
+            secondary.push(self.at(p.span, "the placement memory"));
+            let named: Vec<String> = open.iter().map(|r| r.describe()).collect();
+            self.refuse_description(
+                Status::MissingFact,
+                format!(
+                    "{} has no free byte with its holes of no size, {}, taken to reach its end, and the bytes surely \
+                     reserved do not fill it, in the hardware of `{system}` (rule 10)",
+                    p.describe(),
+                    named.join(", ")
+                ),
+                primary,
+                secondary,
+                "give each hole of no size its `(size S)`",
+            );
         }
     }
 

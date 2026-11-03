@@ -364,13 +364,21 @@ written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.
    and each placement region is reported with its holes as a **placement obligation**, for `M4.1` to lay out around and
    `M4.4` (F20) to verify. A region neither executable nor reserved — a device's registers — overlapping placement
    memory, or two placement regions overlapping, are two claims on the same bytes, and placement memory reserved in
-   every byte leaves nothing to place in: each `invalid-description`, bound or not, composed or not. Where placement
-   memory, or a region against it — a device's registers, placement memory, or a reserved range, whose extent is the
-   hole the plan avoids — has no size and the other's bytes lie at or above its base, whether they overlap is
-   `missing-fact`, as rule 5 reads it. A plan records a placement exactly where the system has placement memory: one
-   recording none there places the image nowhere, and one naming what is not placement memory of the system's hardware,
-   each a conflict of that assignment. A system with no placement memory is said nothing of — the hosted playground
-   provides memory — and a system's regions against a target's own map are `M4.4`'s.
+   every byte leaves nothing to place in: each `invalid-description`, bound or not, composed or not, a byte surely
+   reserved being a sized hole's or the base of one with no size. Placement memory with no size is `missing-fact`,
+   naming it: nothing can be laid out in it, and it has no end to judge its holes against. Where a device's registers
+   or a reserved range, whose extent is the hole the plan avoids, has no size and a base below placement memory, whether
+   they overlap is `missing-fact`, as rule 5 reads it. A reserved range with no size whose base lies inside placement
+   memory with a size is surely a hole, taken to reach that region's end: the conservative extent, the largest the region
+   allows, which the search, the checker and the layout read alike. That extent is the region's alone: below a second
+   placement region the range is still the unknown against it, and rule 5, between bound providers, still reads it as
+   owning its base byte. Where a placement region's holes, those with a size at their size and those with none so taken,
+   leave it no free byte and the bytes surely reserved do not fill it, the system is `missing-fact`, naming each hole of
+   no size in it and asking for its size (`M3.5.5.7.3`, `M4.1.2.5`); free bytes in another placement region do not
+   answer it, as they do not answer memory reserved in every byte. A plan records a placement exactly where the system
+   has placement memory: one recording none there places the image nowhere, and one naming what is not placement memory
+   of the system's hardware, each a conflict of that assignment. A system with no placement memory is said nothing of —
+   the hosted playground provides memory — and a system's regions against a target's own map are `M4.4`'s.
 11. **Ordering** (`M3.3.5.2`; `SR-H13`). A required ordering — `(ordering (before …) (after …))` — is `unsupported-profile`
    under `rt-static-up-v1`: `ordering` has no entry in `/1`, and a constraint on an undeclared fact is that (§7, record
    §1.1). Its entry and domain wait for the profile that admits `dma`, whose exclusion names ordering among its

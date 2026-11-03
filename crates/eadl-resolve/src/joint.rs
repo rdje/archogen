@@ -18,7 +18,8 @@
 //!   it to the core, with its latency, is the catalog's to state and the plan's to enable.
 //! - **Placement** (leaf `M3.3.5.1`). A system's memory map, once: placement memory — executable, unreserved regions —
 //!   holds no device's registers and no second placement region, and the reserved ranges in it are holes the plan avoids,
-//!   reported with it as an [`Obligation::Placement`]; a placement the plan is given is placement memory of the system.
+//!   reported with it as an [`Obligation::Placement`], one with no size reaching the region's end; a placement the plan
+//!   is given is placement memory of the system.
 //! - **Privilege** (leaf `M3.3.4.1`). Given the level a plan binds the system's callers to, a caller states no other
 //!   level, and every provider bound for a caller is reachable at that level and says so (`SR-H11`, `SR-H12`).
 //! - **Functions** (leaf `M3.3.6.2`, `SR-H14`). One requester's bindings for the facts of one function — the
@@ -545,6 +546,22 @@ pub enum Finding {
         /// The provider whose region lies at or above its base.
         against: String,
     },
+    /// Placement memory with no size: nothing can be laid out in it.
+    MemoryUnsized {
+        /// The system.
+        system: String,
+        /// The placement region and its provider.
+        memory: (String, Region),
+    },
+    /// A hole of no size in placement memory the holes, each taken to reach the region's end, leave no free byte of.
+    HoleUnsized {
+        /// The system.
+        system: String,
+        /// The placement region and its provider.
+        memory: (String, Region),
+        /// The reserved range with no size and its provider.
+        hole: (String, Region),
+    },
     /// A placement given to the plan that is not placement memory of the system's hardware.
     PlacementIllegal {
         /// The system.
@@ -657,6 +674,8 @@ impl Finding {
             Self::ChannelsUnknown { .. }
             | Self::RegionUnsized { .. }
             | Self::PlacementUnsized { .. }
+            | Self::MemoryUnsized { .. }
+            | Self::HoleUnsized { .. }
             | Self::LevelUnstated { absent: false, .. } => "missing-fact",
             Self::MapContradiction { .. } | Self::MemoryAllHoles { .. } => "invalid-description",
             Self::LevelUnsupported { .. } => "unsupported-profile",
@@ -861,6 +880,30 @@ impl Finding {
                 Label::new(sizeless.1.span, "no size"),
                 "write the region's `(size …)`",
             ),
+            Self::MemoryUnsized { system, memory } => Diagnostic::error(
+                "missing-fact",
+                format!(
+                    "`{}`'s placement memory `{}` has no size, so nothing can be laid out in it in `{system}`",
+                    memory.0, memory.1.name
+                ),
+                Label::new(memory.1.span, "no size"),
+                "write the region's `(size …)`",
+            ),
+            Self::HoleUnsized {
+                system,
+                memory,
+                hole,
+            } => Diagnostic::error(
+                "missing-fact",
+                format!(
+                    "`{}`'s reserved range `{}` has no size, and with each such range taken to reach the end of `{}`'s \
+                     placement memory `{}`, `{system}` has no free byte to place in",
+                    hole.0, hole.1.name, memory.0, memory.1.name
+                ),
+                Label::new(hole.1.span, "no size"),
+                "write the reserved range's `(size …)`",
+            )
+            .with_secondary(Label::new(memory.1.span, "placement memory")),
             Self::PlacementIllegal {
                 system,
                 span,
@@ -1157,7 +1200,7 @@ pub enum Obligation {
         provider: String,
         /// The placement region.
         region: String,
-        /// Each hole in it: its provider and its region.
+        /// Each hole in it: its provider and its region, one with no size reaching the region's end.
         holes: Vec<(String, String)>,
     },
 }
@@ -2054,6 +2097,12 @@ impl<'v> Joint<'v> {
             if !memory.is_memory() {
                 continue;
             }
+            if memory.bytes.is_none() {
+                map.unknowns.push(Finding::MemoryUnsized {
+                    system: system.name.clone(),
+                    memory: ((*owner).to_string(), (*memory).clone()),
+                });
+            }
             let mut holes = Vec::new();
             for (j, (other_owner, other)) in regions.iter().enumerate() {
                 if i == j {
@@ -2073,29 +2122,38 @@ impl<'v> Joint<'v> {
                     }
                     continue;
                 }
-                for (unsized_owner, sizeless, against, at_or_above) in [
-                    (owner, memory, other_owner, o0 >= m0),
-                    (other_owner, other, owner, m0 >= o0),
-                ] {
-                    if sizeless.bytes.is_none() && at_or_above {
-                        let finding = Finding::PlacementUnsized {
-                            system: system.name.clone(),
-                            sizeless: ((*unsized_owner).to_string(), (*sizeless).clone()),
-                            against: (*against).to_string(),
-                        };
-                        if !map.unknowns.contains(&finding) {
-                            map.unknowns.push(finding);
-                        }
+                // Memory with no size is said once, above, for itself: what lies below its base is what stays unknown.
+                if other.bytes.is_none() && !other.is_memory() && m0 >= o0 {
+                    let finding = Finding::PlacementUnsized {
+                        system: system.name.clone(),
+                        sizeless: ((*other_owner).to_string(), (*other).clone()),
+                        against: (*owner).to_string(),
+                    };
+                    if !map.unknowns.contains(&finding) {
+                        map.unknowns.push(finding);
                     }
                 }
             }
             if let Some(size) = memory.bytes {
-                let covered = covered_bytes(memory.base, size, &holes);
-                if covered == size {
+                // First the bytes surely reserved, which no size repairs; only then each hole to the region's end.
+                let end = memory.base + size;
+                let surely = holes.iter().map(|(_, r)| r.known());
+                let taken = holes
+                    .iter()
+                    .map(|(_, r)| (r.base, r.bytes.map_or(end, |b| r.base + b)));
+                if covered_bytes(memory.base, size, surely) == size {
                     map.refused.push(Finding::MemoryAllHoles {
                         system: system.name.clone(),
                         memory: ((*owner).to_string(), (*memory).clone()),
                     });
+                } else if covered_bytes(memory.base, size, taken) == size {
+                    for (hole_owner, hole) in holes.iter().filter(|(_, r)| r.bytes.is_none()) {
+                        map.unknowns.push(Finding::HoleUnsized {
+                            system: system.name.clone(),
+                            memory: ((*owner).to_string(), (*memory).clone()),
+                            hole: (hole_owner.clone(), hole.clone()),
+                        });
+                    }
                 }
             }
             map.obligations.push(Obligation::Placement {
@@ -2551,14 +2609,10 @@ fn components(
     walk.found
 }
 
-/// How many of the `size` bytes from `base` the holes cover, each counted once.
-fn covered_bytes(base: i128, size: i128, holes: &[(String, Region)]) -> i128 {
+/// How many of the `size` bytes from `base` the holes' spans cover, each counted once.
+fn covered_bytes(base: i128, size: i128, holes: impl Iterator<Item = (i128, i128)>) -> i128 {
     let mut spans: Vec<(i128, i128)> = holes
-        .iter()
-        .map(|(_, r)| {
-            let (lo, hi) = r.known();
-            (lo.max(base), hi.min(base + size))
-        })
+        .map(|(lo, hi)| (lo.max(base), hi.min(base + size)))
         .filter(|(lo, hi)| lo < hi)
         .collect();
     spans.sort_unstable();

@@ -875,7 +875,8 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
   states, for each cost, whether the interrupt runs the requester's code (§2.6). The engine API's
   `crates/archogen-api/src/resolve.rs` and `docs/book/src/engine-api.md`, which read "a cost the scheduling analysis
   charges as a source", read so too. The book follows, with a migration note for any verdict that moves. Rule 10's
-  amendments keep the search, the checker and any later layout agreed over a description:
+  amendments (done by `M4.1.2.5`, in the rule, the generator's joint rules and the checker's) keep the search, the
+  checker and any later layout agreed over a description:
   - **placement memory with no size** is `missing-fact`, naming it, since nothing can be laid out in it;
   - **a hole of no size** whose base lies inside placement memory (`M3.5.5.7.3`'s obligation) is taken to reach the
     region's end. That is the conservative extent, the largest the region allows. If it leaves no free byte, the system

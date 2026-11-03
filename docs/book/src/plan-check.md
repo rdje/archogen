@@ -68,9 +68,10 @@ a requester binding what its kind needs beneath to the device it programs
 2. **The description is checked again.** The checker runs the language's own checks over the description, with the
    language definition compiled into the checker, and adds a few rules about providers that only a planner meets: a
    timer offering a channel-taking function while declaring no channel, a memory region that does not read, memory
-   for the program overlapped by a device, or a region with no size where its size alone would say whether it meets
-   that memory — a reserved range among them, since the plan must know the extent of what it avoids. A description
-   the toolchain refuses never has a plan accepted.
+   for the program overlapped by a device, memory for the program with no size, a region with no size starting below
+   that memory, where its size alone would say whether it meets it, or holes of no size that leave that memory no free
+   byte once each is taken to reach its end — the conservative reading, since the plan must know the extent of what it
+   avoids. A description the toolchain refuses never has a plan accepted.
 3. **Every need is bound, once, to a real provider.** The checker works out, from the description alone, who asks
    for something: the system, each of its tasks, and every service or part they use. It finds each need where the
    description writes it. Then every need on a function of a device must have exactly one binding, every binding

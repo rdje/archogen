@@ -277,6 +277,26 @@ fn named(f: &Finding) -> String {
             sizeless.0,
             sizeless.1.name
         ),
+        Finding::MemoryUnsized { system, memory } => {
+            format!(
+                "{} size of memory {} {} in {system}",
+                f.code(),
+                memory.0,
+                memory.1.name
+            )
+        }
+        Finding::HoleUnsized {
+            system,
+            memory,
+            hole,
+        } => format!(
+            "{} size of hole {} {} closing {} {} in {system}",
+            f.code(),
+            hole.0,
+            hole.1.name,
+            memory.0,
+            memory.1.name
+        ),
         Finding::PlacementIllegal {
             system,
             region,
@@ -1559,7 +1579,8 @@ fn a_region_both_executable_and_reserved_is_no_placement_memory() {
 
 #[test]
 fn a_size_the_map_needs_is_unknown_either_way() {
-    // Review D4: rule 5 mirrored — memory unsized below a device, and a device unsized below memory.
+    // Review D4: rule 5 mirrored for a device unsized below memory; memory with no size said once, for itself
+    // (`M4.1.2.5`).
     let v = vocabulary();
     let sizeless_ram = memory_map(&format!("{DEV_OUTSIDE}\n{FW_HOLE}")).replace(
         "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))",
@@ -1567,16 +1588,181 @@ fn a_size_the_map_needs_is_unknown_either_way() {
     );
     assert_eq!(
         map_of(&sizeless_ram, &v).1,
-        [
-            "missing-fact size of soc ram against dev in s",
-            "missing-fact size of soc ram against fw in s"
-        ]
+        ["missing-fact size of memory soc ram in s"]
     );
     let sizeless_dev =
         "(defblock dev (offers (observable-output true) (region dev.regs (base 0x7FFF_F000))))";
     assert_eq!(
         map_of(&memory_map(&format!("{sizeless_dev}\n{FW_HOLE}")), &v).1,
         ["missing-fact size of dev dev.regs against soc in s"]
+    );
+}
+
+/// A platform whose `ram` is `0x1000` bytes at `0x8000_0000`, and a block `fw` offering `regions`.
+fn small_map(regions: &str) -> String {
+    format!(
+        "(defblock fw (offers (core-count 1 tick) {regions}))
+(defplatform soc (offers (core-count 1 tick) (region ram (base 0x8000_0000) (size 4 KiB) (executable true)))
+  (requires (uses fw)))
+{}",
+        one_task_system("", "\n  (platform (uses soc))")
+    )
+}
+
+#[test]
+fn placement_memory_with_no_size_is_a_missing_fact_with_nothing_above_it() {
+    // `M4.1.2.5`: nothing can be laid out in it, whatever else the map holds, and until now nothing said so here.
+    let v = vocabulary();
+    let text = "(defplatform soc (offers (core-count 1 tick) (region ram (base 0x8000_0000) (executable true))))\n"
+        .to_string()
+        + &one_task_system("", "\n  (platform (uses soc))");
+    let (refused, unknowns, _) = map_of(&text, &v);
+    assert!(refused.is_empty(), "{refused:?}");
+    assert_eq!(unknowns, ["missing-fact size of memory soc ram in s"]);
+    // A device on its base byte is still two claims on one byte, which no size repairs, and the memory still has no size.
+    let on_base = "(defblock dev (offers (observable-output true) (region dev.regs (base 0x8000_0000) (size 4 KiB))))
+(defplatform soc (offers (core-count 1 tick) (region ram (base 0x8000_0000) (executable true))) (requires (uses dev)))\n"
+        .to_string()
+        + &one_task_system("", "\n  (platform (uses soc))");
+    let (refused, unknowns, _) = map_of(&on_base, &v);
+    assert_eq!(
+        refused,
+        ["invalid-description map s: dev dev.regs in soc ram"]
+    );
+    assert_eq!(unknowns, ["missing-fact size of memory soc ram in s"]);
+}
+
+#[test]
+fn a_hole_of_no_size_reaches_the_region_s_end_and_is_named_only_where_that_closes_it() {
+    // `M4.1.2.5`, `M3.5.5.7.3`'s obligation. Bytes are left below it, so the description holds and the hole is reported.
+    let v = vocabulary();
+    let (refused, unknowns, obligations) = map_of(
+        &small_map("(region low (base 0x8000_0800) (reserved true))"),
+        &v,
+    );
+    assert!(
+        refused.is_empty() && unknowns.is_empty(),
+        "{refused:?} {unknowns:?}"
+    );
+    assert_eq!(obligations, [placement("ram", &[("fw", "low")])]);
+
+    // At the region's base, it leaves nothing: the size is the fact the system lacks.
+    assert_eq!(
+        map_of(
+            &small_map("(region at (base 0x8000_0000) (reserved true))"),
+            &v
+        )
+        .1,
+        ["missing-fact size of hole fw at closing soc ram in s"]
+    );
+
+    // A sized hole fills what lies below it: the same closing, and only the one with no size is named.
+    assert_eq!(
+        map_of(
+            &small_map(
+                "(region lo (base 0x8000_0000) (size 2 KiB) (reserved true)) (region up (base 0x8000_0800) (reserved true))"
+            ),
+            &v
+        ),
+        (
+            vec![],
+            vec!["missing-fact size of hole fw up closing soc ram in s".to_string()],
+            vec![placement("ram", &[("fw", "lo"), ("fw", "up")])]
+        )
+    );
+
+    // Two of no size closing it are both named, so that one pass repairs the description.
+    assert_eq!(
+        map_of(
+            &small_map(
+                "(region a (base 0x8000_0000) (reserved true)) (region b (base 0x8000_0800) (reserved true))"
+            ),
+            &v
+        )
+        .1,
+        [
+            "missing-fact size of hole fw a closing soc ram in s",
+            "missing-fact size of hole fw b closing soc ram in s"
+        ]
+    );
+}
+
+#[test]
+fn bytes_surely_reserved_are_a_contradiction_no_size_repairs() {
+    // `M4.1.2.5`: the base byte of a hole of no size is surely reserved, so this region is full whatever its size says.
+    let v = vocabulary();
+    let (refused, unknowns, _) = map_of(
+        &small_map(
+            "(region lo (base 0x8000_0000) (size 4095 byte) (reserved true)) (region last (base 0x8000_0FFF) (reserved true))"
+        ),
+        &v,
+    );
+    assert_eq!(refused, ["invalid-description all holes s: soc ram"]);
+    assert!(unknowns.is_empty(), "{unknowns:?}");
+    // One byte shorter, a free byte lies below the hole of no size, so the map holds.
+    let (refused, unknowns, _) = map_of(
+        &small_map(
+            "(region lo (base 0x8000_0000) (size 4094 byte) (reserved true)) (region last (base 0x8000_0FFF) (reserved true))"
+        ),
+        &v,
+    );
+    assert!(
+        refused.is_empty() && unknowns.is_empty(),
+        "{refused:?} {unknowns:?}"
+    );
+}
+
+#[test]
+fn a_reserved_range_of_no_size_outside_placement_memory_stays_rule_5_s() {
+    // `M4.1.2.5` narrows nothing here: below the memory its size decides whether it is a hole; above it, none.
+    let v = vocabulary();
+    let (refused, unknowns, _) = map_of(
+        &small_map("(region below (base 0x7FFF_F000) (reserved true))"),
+        &v,
+    );
+    assert!(refused.is_empty(), "{refused:?}");
+    assert_eq!(unknowns, ["missing-fact size of fw below against soc in s"]);
+    // A device's registers with no size are no hole: inside the memory their base byte is already a second claim.
+    let (refused, unknowns, _) = map_of(&small_map("(region regs (base 0x8000_0800))"), &v);
+    assert_eq!(refused, ["invalid-description map s: fw regs in soc ram"]);
+    assert!(unknowns.is_empty(), "{unknowns:?}");
+    assert_eq!(
+        map_of(
+            &small_map("(region above (base 0x8000_1000) (reserved true))"),
+            &v
+        ),
+        (vec![], vec![], vec![placement("ram", &[])])
+    );
+}
+
+#[test]
+fn a_hole_s_extent_is_its_region_s_alone_and_free_bytes_elsewhere_answer_nothing() {
+    // `M4.1.2.5`. A second bank above: taken to the first bank's end, the hole's size is still unknown against the second.
+    let v = vocabulary();
+    let bank = "(region bank (base 0x8000_2000) (size 4 KiB) (executable true))";
+    assert_eq!(
+        map_of(
+            &small_map(&format!(
+                "(region low (base 0x8000_0800) (reserved true)) {bank}"
+            )),
+            &v
+        )
+        .1,
+        ["missing-fact size of fw low against fw in s"]
+    );
+    // A hole closing the lower bank, with free bytes in the upper: judged of the region, as all holes is.
+    assert_eq!(
+        map_of(
+            &small_map(&format!(
+                "(region at (base 0x8000_0000) (reserved true)) {bank}"
+            )),
+            &v
+        )
+        .1,
+        [
+            "missing-fact size of fw at against fw in s",
+            "missing-fact size of hole fw at closing soc ram in s",
+        ]
     );
 }
 

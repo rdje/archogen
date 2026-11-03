@@ -302,12 +302,40 @@ obligation — `ram`, with the hole `fw.range` — which the plan lays the image
 device's registers inside `ram`, or a second placement region overlapping it, are two claims on the same bytes,
 `invalid-description`: *`dev`'s region `dev.regs` lies in `soc`'s placement memory `ram`*, with the repair *mark the
 range `(reserved true)`, or move it out of the memory*. A region that is both executable and reserved is no placement
-memory, and a region's sub-forms are written once each, a flag `true` or `false`. Where a region states no size and
-its size alone would decide whether it meets placement memory — a device's registers, a second placement region, or a
-reserved range, whose extent is the hole the plan must avoid — the description is `missing-fact`. The plan chooses the
-region the image goes in — leaving none chosen where there is placement memory, or choosing anything else, is refused
-— and lays out the offsets later (`M4.1`). The hosted
-playground offers no such region and needs none: its host provides memory.
+memory, and a region's sub-forms are written once each, a flag `true` or `false`. The plan chooses the region the image
+goes in — leaving none chosen where there is placement memory, or choosing anything else, is refused — and lays out the
+offsets later (`M4.1`). The hosted playground offers no such region and needs none: its host provides memory.
+
+**A region with no size** (model §8 rule 10, `M4.1.2.5`). A region may leave out its `(size …)`, and then only its base
+byte is known. What that means depends on what it is:
+
+| The region with no size | Where it starts | What is concluded |
+| --- | --- | --- |
+| placement memory | anywhere | `missing-fact`, naming it: nothing can be laid out in it |
+| a device's registers | below placement memory | `missing-fact`: only its size says whether it runs into the memory |
+| a device's registers | inside placement memory | `invalid-description`: its base byte is already a second claim |
+| a reserved range | below placement memory | `missing-fact`: only its size says whether it is a hole |
+| a reserved range | inside placement memory | a hole for certain, taken to reach the region's end |
+| a device's registers or a reserved range | above placement memory | nothing: a region grows upward, so it cannot reach down |
+
+The hole is the case worth an example. It is certainly there, so the engine does not ask about it at once. It assumes
+the largest extent the region allows, the end of the region, and carries on with whatever is left below it:
+
+```text
+(defblock fw (offers (region fw.range (base 0x8000_0800) (reserved true))))
+(defplatform soc (offers (region ram (base 0x8000_0000) (size 4 KiB) (executable true))) (requires (uses fw)))
+```
+
+The first 2 KiB of `ram` stay free, so this holds, and `fw.range` is reported as a hole of `ram`. Move its base down to
+`0x8000_0000` and nothing is left: the description is `missing-fact`, *`fw`'s reserved range `fw.range` has no size, and
+with each such range taken to reach the end of `soc`'s placement memory `ram`, `s` has no free byte to place in*, with
+the repair *write the reserved range's `(size …)`*. Every hole of no size in that region is named at once, so that one
+pass repairs the description.
+
+A size cannot repair everything. A sized range's bytes and the base byte of a range with no size are reserved whatever
+any size says, so where those alone fill the region it is `invalid-description`, as for any memory reserved in every
+byte, and no hole is named. The search, the configuration checker and, later, the layout (`M4.1.7`) all read a hole of
+no size this same way.
 
 A required **ordering** between two effects — `(ordering (before (write device.control)) (after (write
 memory.buffer)))` — is `unsupported-profile` under this profile: ordering matters where devices move data without the

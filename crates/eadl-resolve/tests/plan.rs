@@ -9,7 +9,8 @@ use std::process::Command;
 
 use archogen_plan_check::assignment::{self, Assignment};
 use archogen_plan_check::check::{self, plan_file};
-use eadl_front::module::DirectoryModules;
+use archogen_plan_check::providers::refusals;
+use eadl_front::module::{elaborate, DirectoryModules, MemoryModules};
 use eadl_front::{Form, Program, SourceMap};
 use eadl_model::check::shipped_registry;
 use eadl_model::profile::RT_STATIC_UP_V1;
@@ -226,6 +227,125 @@ fn a_resolved_example_s_plan_is_read_back_and_accepted_by_the_checker() {
         &text,
     );
     assert_eq!(verdict, Ok(()), "{text}");
+}
+
+/// The regions of a small memory map, and the description holding them: `ram` of 4 KiB, or of no size, beside the
+/// regions the block `fw` offers.
+fn small_map(ram_size: &str, regions: &[String]) -> String {
+    format!(
+        "(defmodule app.case\n  (version 1 0)\n\
+         (defblock fw (offers (core-count 1 tick) {}))\n\
+         (defplatform soc (offers (core-count 1 tick) (region ram (base 0x8000_0000) {ram_size} (executable true))) \
+         (requires (uses fw)))\n\
+         (defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1)) (platform (uses soc))))",
+        regions.join(" ")
+    )
+}
+
+/// Model §8 rule 10 (`M4.1.2.5`), held to both its readings over a bounded universe of memory maps: every base against
+/// a 4 KiB `ram` and a second bank above it, every size, a device's registers or a reserved range, a hole beside it,
+/// `ram` itself sized or not. The search's verdict and the configuration checker's description check are the same on
+/// each, and name the same regions of no size. The checker is the reading a fenced context wrote from the rule alone.
+#[test]
+fn the_search_and_the_checker_read_every_small_memory_map_alike() {
+    let v = vocabulary();
+    let bases = [
+        "0x7FFF_F000",
+        "0x8000_0000",
+        "0x8000_0800",
+        "0x8000_0FFF",
+        "0x8000_1000",
+        "0x8000_2000",
+    ];
+    let sizes = ["", "(size 1 byte)", "(size 2 KiB)", "(size 4 KiB)"];
+    let forms = |name: &str, flags: &[&str]| -> Vec<(String, bool)> {
+        let mut forms = vec![(String::new(), false)];
+        for base in bases {
+            for size in sizes {
+                for flag in flags {
+                    forms.push((
+                        format!("(region {name} (base {base}) {size} {flag})"),
+                        size.is_empty(),
+                    ));
+                }
+            }
+        }
+        forms
+    };
+    let first = forms("a", &["", "(reserved true)"]);
+    let second = forms("b", &["(reserved true)"]);
+    let bank = "(region bank (base 0x8000_2000) (size 4 KiB) (executable true))";
+    let (mut judged, mut outcomes) = (0_u32, std::collections::BTreeMap::new());
+    for ram_size in ["(size 4 KiB)", ""] {
+        for bank in ["", bank] {
+            for (a, a_open) in &first {
+                for (b, b_open) in &second {
+                    let text = small_map(ram_size, &[a.clone(), b.clone(), bank.to_string()]);
+                    let modules = MemoryModules::new().with("app.case", &text);
+                    let mut sources = SourceMap::new();
+                    let (program, diagnostics) = elaborate(&mut sources, &modules, "app.case");
+                    assert!(!diagnostics.has_errors(), "{text}");
+                    let declarations = &program.root().declarations;
+                    let system = declarations
+                        .iter()
+                        .find(|f| f.head() == Some("defsystem"))
+                        .expect("a system");
+                    let (by_search, said) = match search(
+                        declarations,
+                        system,
+                        RT_STATIC_UP_V1.caller_level,
+                        &v,
+                        &Policy::default(),
+                        Limits::DEFAULT,
+                    ) {
+                        Search::Resolved(_) => ("ok", Vec::new()),
+                        Search::Refused {
+                            verdict,
+                            diagnostics,
+                        } => (
+                            verdict.slug(),
+                            diagnostics.iter().map(|d| d.message.clone()).collect(),
+                        ),
+                        Search::Inconclusive { .. } => panic!("{text}: inconclusive"),
+                    };
+                    let (by_checker, written) = match refusals(&sources, &program) {
+                        Ok(()) => ("ok", Vec::new()),
+                        Err(verdict) => (
+                            verdict.status.slug(),
+                            verdict.findings.into_iter().map(|f| f.message).collect(),
+                        ),
+                    };
+                    assert_eq!(by_search, by_checker, "{text}\n{said:#?}\n{written:#?}");
+                    // Each region of no size one reading names, the other names.
+                    let open = [
+                        ("`a`", *a_open),
+                        ("`b`", *b_open),
+                        ("`ram`", ram_size.is_empty()),
+                    ];
+                    let names = |messages: &[String]| -> Vec<&str> {
+                        open.iter()
+                            .filter(|(name, open)| {
+                                *open && messages.iter().any(|m| m.contains(name))
+                            })
+                            .map(|(name, _)| *name)
+                            .collect()
+                    };
+                    assert_eq!(
+                        names(&said),
+                        names(&written),
+                        "{text}\n{said:#?}\n{written:#?}"
+                    );
+                    judged += 1;
+                    *outcomes.entry(by_search).or_insert(0_u32) += 1;
+                }
+            }
+        }
+    }
+    // Every outcome the rule has is reached, so that the agreement is not over one verdict.
+    assert_eq!(judged, 4 * 49 * 25);
+    for outcome in ["ok", "missing-fact", "invalid-description"] {
+        assert!(outcomes.contains_key(outcome), "{outcomes:?}");
+    }
 }
 
 /// Whether the language's check accepts the description at `path`, as the engine API checks it: a module file

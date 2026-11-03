@@ -1044,6 +1044,29 @@ fn rule_10_a_placement_that_is_not_placement_memory_of_the_hardware_is_refused()
     );
 }
 
+/// Check (5)'s verdict on a plan placing the image in `soc`'s `ram`, reached directly through `joint`: check (2) refuses
+/// the description first, description-wide, under `first`, and checks (1), (3) and (4) accept the plan.
+fn past_check_two(d: &Description, first: Status) -> Result<(), Verdict> {
+    let plan = d.plan(Some(("soc", "ram")), &write());
+    let text = plan.to_canonical();
+    assert!(record(&d.program, &RT_STATIC_UP_V1, RECORD, &text).is_ok());
+    let refused = description(&d.sources, &d.program, &RT_STATIC_UP_V1)
+        .expect_err("check (2) refuses it first");
+    assert_eq!(refused.status, first, "{refused:#?}");
+    assert_eq!(
+        bindings(&d.sources, &d.program, RECORD, &text, &plan),
+        Ok(())
+    );
+    joint(
+        &d.sources,
+        &d.program,
+        &RT_STATIC_UP_V1,
+        RECORD,
+        &text,
+        &plan,
+    )
+}
+
 #[test]
 fn rule_10_a_claim_without_size_below_placement_memory_is_the_description_s_missing_fact() {
     // Check (2) refuses it first, description-wide; check (5) judges it again over the system's hardware.
@@ -1051,21 +1074,8 @@ fn rule_10_a_claim_without_size_below_placement_memory_is_the_description_s_miss
         "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
          (region regs (base 0x1000_0000))",
     );
-    let plan = d.plan(Some(("soc", "ram")), &write());
-    let text = plan.to_canonical();
-    assert!(record(&d.program, &RT_STATIC_UP_V1, RECORD, &text).is_ok());
-    let first = description(&d.sources, &d.program, &RT_STATIC_UP_V1)
-        .expect_err("check (2) refuses it first");
-    assert_eq!(first.status, Status::MissingFact);
     let message = refused_description(
-        joint(
-            &d.sources,
-            &d.program,
-            &RT_STATIC_UP_V1,
-            RECORD,
-            &text,
-            &plan,
-        ),
+        past_check_two(&d, Status::MissingFact),
         Status::MissingFact,
         10,
     );
@@ -1079,64 +1089,56 @@ fn rule_10_a_claim_without_size_below_placement_memory_is_the_description_s_miss
 fn rule_10_a_reserved_range_against_placement_memory_with_no_size_is_the_description_s_missing_fact(
 ) {
     // Rule 10 names a reserved range, whose extent is the hole the plan avoids, among the regions against placement
-    // memory: where it or the memory has no size and the other's bytes lie above its base, whether they overlap is
-    // `missing-fact`. Check (2) refuses each case first, description-wide, so check (5) is reached directly through
-    // `joint`, with a plan checks (1), (3) and (4) accept.
-    for (regions, open) in [
+    // memory: where it has no size and the memory's bytes lie above its base, whether they overlap is `missing-fact`.
+    for (regions, open, against) in [
         // A reserved range with no size below placement memory: whether it reaches into it is unknown.
         (
             "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
              (region boot (base 0x7fff_0000) (reserved true))",
             "`boot` has no size",
+            "`ram`",
         ),
         // So for an executable one: reserved, it is no placement memory, and a reserved range.
         (
             "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
              (region rom (base 0x2000_0000) (executable true) (reserved true))",
             "`rom` has no size",
+            "`ram`",
         ),
-        // Placement memory with no size below a reserved range: whether it reaches the range is unknown.
+        // A hole in one placement region, below another: taken to the first's end, it is unknown against the second.
         (
-            "(region ram (base 0x8000_0000) (executable true))
-             (region fw (base 0x9000_0000) (size 1 MiB) (reserved true))",
-            "`ram` has no size",
+            "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+             (region more (base 0x9000_0000) (size 1 MiB) (executable true))
+             (region fw (base 0x8001_0000) (reserved true))",
+            "`fw` has no size",
+            "`more`",
         ),
     ] {
         let d = memory(regions);
-        let plan = d.plan(Some(("soc", "ram")), &write());
-        let text = plan.to_canonical();
-        assert!(record(&d.program, &RT_STATIC_UP_V1, RECORD, &text).is_ok());
-        let first = description(&d.sources, &d.program, &RT_STATIC_UP_V1)
-            .expect_err("check (2) refuses it first");
-        assert_eq!(first.status, Status::MissingFact, "{first:#?}");
-        assert_eq!(
-            bindings(&d.sources, &d.program, RECORD, &text, &plan),
-            Ok(())
-        );
         let message = refused_description(
-            joint(
-                &d.sources,
-                &d.program,
-                &RT_STATIC_UP_V1,
-                RECORD,
-                &text,
-                &plan,
-            ),
+            past_check_two(&d, Status::MissingFact),
             Status::MissingFact,
             10,
         );
+        assert_eq!(message.lines().count(), 1, "{regions}: {message}");
         assert!(
-            message.contains(open) && message.contains("`ram`") && message.contains("is unknown"),
+            message.contains(open) && message.contains(against) && message.contains("is unknown"),
             "{regions}: {message}"
         );
     }
-    // Decided with no size, as rule 5 reads it: a reserved range above placement memory's last byte overlaps none of
-    // it, and one whose base lies inside it owns that byte, a hole there. Checks (1) to (4) accept, and check (5) too.
+    // Decided with no size: a reserved range above placement memory's last byte overlaps none of it, and one whose base
+    // lies inside it is a hole, taken to reach its end, that leaves free bytes below. Checks (1) to (4) accept, and check
+    // (5) too.
     for regions in [
         "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
          (region top (base 0x9000_0000) (reserved true))",
         "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
          (region fw (base 0x8001_0000) (reserved true))",
+        "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+         (region fw (base 0x87ff_ffff) (reserved true))",
+        "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+         (region lo (base 0x8000_0000) (size 2 MiB) (reserved true))
+         (region hi (base 0x8030_0000) (reserved true))",
     ] {
         let d = memory(regions);
         assert_eq!(
@@ -1145,6 +1147,121 @@ fn rule_10_a_reserved_range_against_placement_memory_with_no_size_is_the_descrip
             "{regions}"
         );
     }
+}
+
+#[test]
+fn rule_10_placement_memory_with_no_size_is_the_description_s_missing_fact_naming_it() {
+    for (case, regions) in [
+        (
+            "nothing against it",
+            "(region ram (base 0x8000_0000) (executable true))",
+        ),
+        (
+            "a reserved range above it",
+            "(region ram (base 0x8000_0000) (executable true))
+             (region fw (base 0x9000_0000) (size 1 MiB) (reserved true))",
+        ),
+        (
+            "a device's registers above it",
+            "(region ram (base 0x8000_0000) (executable true))
+             (region regs (base 0x9000_0000) (size 4 KiB))",
+        ),
+        (
+            "a reserved range with no size at its base",
+            "(region ram (base 0x8000_0000) (executable true))
+             (region fw (base 0x8000_0000) (reserved true))",
+        ),
+    ] {
+        let d = memory(regions);
+        let message = refused_description(
+            past_check_two(&d, Status::MissingFact),
+            Status::MissingFact,
+            10,
+        );
+        assert_eq!(
+            message,
+            "`soc`'s placement memory `ram` has no size: nothing can be laid out in it, in the hardware of `s` \
+             (rule 10)",
+            "{case}"
+        );
+    }
+    // A region with no size below it is unknown against it besides: its bytes, at least its base, lie above that base.
+    let d = memory(
+        "(region ram (base 0x8000_0000) (executable true))
+         (region regs (base 0x1000_0000))",
+    );
+    let message = refused_description(
+        past_check_two(&d, Status::MissingFact),
+        Status::MissingFact,
+        10,
+    );
+    assert!(
+        message.contains("`regs` has no size") && message.contains("`ram` has no size:"),
+        "{message}"
+    );
+}
+
+#[test]
+fn rule_10_holes_of_no_size_leaving_no_free_byte_are_the_description_s_missing_fact() {
+    const RAM: &str = "`soc`'s region `ram` [0x80000000, 0x88000000)";
+    for (case, regions, named, labels) in [
+        (
+            "at the memory's base",
+            "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+             (region fw (base 0x8000_0000) (reserved true))",
+            "`soc`'s region `fw` [0x80000000, …) with no size",
+            1,
+        ),
+        (
+            "a sized hole up to its base",
+            "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+             (region lo (base 0x8000_0000) (size 2 MiB) (reserved true))
+             (region hi (base 0x8020_0000) (reserved true))",
+            "`soc`'s region `hi` [0x80200000, …) with no size",
+            1,
+        ),
+        (
+            "two of them, each named, the higher adding no byte",
+            "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+             (region lo (base 0x8000_0000) (reserved true))
+             (region hi (base 0x8020_0000) (reserved true))",
+            "`soc`'s region `lo` [0x80000000, …) with no size, `soc`'s region `hi` [0x80200000, …) with no size",
+            2,
+        ),
+    ] {
+        let d = memory(regions);
+        let verdict = past_check_two(&d, Status::MissingFact).expect_err(case);
+        assert_eq!(verdict.status, Status::MissingFact, "{case}");
+        assert_eq!(verdict.findings.len(), 1, "{case}: {verdict:#?}");
+        let finding = &verdict.findings[0];
+        assert_eq!(finding.code, PLAN_DESCRIPTION, "{case}");
+        assert_eq!(
+            finding.message,
+            format!(
+                "{RAM} has no free byte with its holes of no size, {named}, taken to reach its end, and the bytes \
+                 surely reserved do not fill it, in the hardware of `s` (rule 10)"
+            ),
+            "{case}"
+        );
+        assert_eq!(finding.repair, "give each hole of no size its `(size S)`", "{case}");
+        assert_eq!(finding.primary.source, SOURCE, "{case}");
+        // Each hole of no size has its place, and so has the memory they leave nothing of.
+        assert_eq!(finding.secondary.len(), labels, "{case}: {finding:#?}");
+        assert!(
+            finding.secondary.iter().all(|l| l.source == SOURCE),
+            "{case}: {finding:#?}"
+        );
+    }
+}
+
+#[test]
+fn rule_10_memory_surely_reserved_in_every_byte_is_check_two_s_and_no_unknown_of_check_five() {
+    // The base of a hole of no size is a byte surely reserved, so these bytes fill the region: no size is asked for.
+    let d = memory(
+        "(region ram (base 0x8000_0000) (size 1 byte) (executable true))
+         (region fw (base 0x8000_0000) (reserved true))",
+    );
+    assert_eq!(past_check_two(&d, Status::InvalidDescription), Ok(()));
 }
 
 // ------------------------------------------------------------------------------------------------------------------

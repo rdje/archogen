@@ -2,9 +2,12 @@
 //! from the generator's reading of it: rule 3, a provider offering a consumed function `true` while it declares
 //! `channels` absent or `0`; rule 5, a region a provider offers that is not read whole — a base, a positive whole
 //! number of bytes, each flag once; rule 10, over each system's hardware (rule 7), placement memory overlapped by a
-//! device's registers or by another placement region, or reserved in every byte. Each is `invalid-description`, an
-//! overlap a region without a size leaves undecided `missing-fact`, a size past the exact arithmetic
-//! `unsupported-profile` — description-wide, bound or not, composed or not, the code [`PLAN_DESCRIPTION`].
+//! device's registers or by another placement region, or reserved in every byte, a byte surely reserved being a sized
+//! hole's or the base of one with no size. Each is `invalid-description`, a size past the exact arithmetic
+//! `unsupported-profile`. Rule 10's `missing-fact` is placement memory with no size; a device's registers or a reserved
+//! range with no size whose base lies below placement memory, where only that size says whether they overlap; and holes
+//! of no size, each taken to reach the memory's end, that leave it no free byte while the bytes surely reserved do not
+//! fill it. All of them description-wide, bound or not, composed or not, the code [`PLAN_DESCRIPTION`].
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -45,10 +48,16 @@ impl Region {
     fn known_end(&self) -> i128 {
         self.base + self.size.unwrap_or(1)
     }
+
+    /// Whether the bytes it is known to own meet those `other` is known to own.
+    fn meets(&self, other: &Self) -> bool {
+        self.base < other.known_end() && other.base < self.known_end()
+    }
 }
 
-/// Whether two regions' bytes meet: surely, surely not, or undecided where one states no size and the other's bytes
-/// lie at or above its base (rule 5).
+/// Whether a region against placement memory overlaps it: surely, surely not, or undecided where the region states no
+/// size and the memory's bytes lie above its base. A base inside the memory decides it, rule 5's base byte being one of
+/// the memory's, so undecided is a base below the memory (rule 10, as rule 5 reads it).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Overlap {
     Yes,
@@ -56,18 +65,32 @@ enum Overlap {
     Undecided,
 }
 
-fn overlap(a: &Region, b: &Region) -> Overlap {
-    if a.base < b.known_end() && b.base < a.known_end() {
-        return Overlap::Yes;
-    }
-    let above = |sizeless: &Region, other: &Region| {
-        sizeless.size.is_none() && other.known_end() > sizeless.base
-    };
-    if above(a, b) || above(b, a) {
+fn overlap(memory: &Region, region: &Region) -> Overlap {
+    if memory.meets(region) {
+        Overlap::Yes
+    } else if region.size.is_none() && region.base < memory.base {
         Overlap::Undecided
     } else {
         Overlap::No
     }
+}
+
+/// Whether `ranges`, each `[from, to)`, leave no byte of `[start, end)` uncovered.
+pub(crate) fn fills(
+    ranges: impl IntoIterator<Item = (i128, i128)>,
+    start: i128,
+    end: i128,
+) -> bool {
+    let mut ranges: Vec<(i128, i128)> = ranges.into_iter().collect();
+    ranges.sort_unstable();
+    let mut covered = start;
+    for (from, to) in ranges {
+        if from > covered {
+            break;
+        }
+        covered = covered.max(to);
+    }
+    covered >= end
 }
 
 /// One refusal, before it is a finding.
@@ -305,8 +328,9 @@ fn bytes(number: &Form, unit: &Form, within: Span) -> Result<i128, (Status, Stri
     Ok(bits.numerator() / 8)
 }
 
-/// Rule 10 over one system's hardware's regions: placement memory overlapped by a device's registers or by another
-/// placement region, or reserved in every byte; each pair said once across systems.
+/// Rule 10 over one system's hardware's regions: placement memory with no size, overlapped by a device's registers or
+/// by another placement region, against a region whose overlap no size decides, or left nothing by its holes; each
+/// refusal said once across systems.
 fn placement(
     system: &str,
     owned: &[&Region],
@@ -324,6 +348,17 @@ fn placement(
         }
     };
     let placements: Vec<&Region> = owned.iter().copied().filter(|r| r.placement()).collect();
+    for p in placements.iter().filter(|p| p.size.is_none()) {
+        say(
+            Status::MissingFact,
+            format!(
+                "`{}`'s placement memory `{}` has no size: nothing can be laid out in it (rule 10)",
+                p.provider, p.name
+            ),
+            p.span,
+            "state the memory's `(size …)`",
+        );
+    }
     for p in &placements {
         for other in owned.iter().copied().filter(|r| r.device()) {
             match overlap(p, other) {
@@ -339,12 +374,12 @@ fn placement(
                 Overlap::Undecided => say(
                     Status::MissingFact,
                     format!(
-                        "whether `{}`'s region `{}` lies in `{}`'s placement memory `{}` is undecided: a region states \
-                         no size (rule 10, as rule 5 reads it)",
+                        "whether `{}`'s region `{}` lies in `{}`'s placement memory `{}` is undecided: it states no size \
+                         and the memory's bytes lie above its base (rule 10, as rule 5 reads it)",
                         other.provider, other.name, p.provider, p.name
                     ),
                     other.span,
-                    "state each region's `(size …)`",
+                    "state the region's `(size …)`",
                 ),
                 Overlap::No => {}
             }
@@ -358,18 +393,18 @@ fn placement(
                 say(
                     Status::MissingFact,
                     format!(
-                        "whether `{}`'s reserved range `{}` is a hole in `{}`'s placement memory `{}` is undecided: a \
-                         region states no size (rule 10, as rule 5 reads it)",
+                        "whether `{}`'s reserved range `{}` is a hole in `{}`'s placement memory `{}` is undecided: it \
+                         states no size and the memory's bytes lie above its base (rule 10, as rule 5 reads it)",
                         hole.provider, hole.name, p.provider, p.name
                     ),
                     hole.span,
-                    "state each region's `(size …)`",
+                    "state the range's `(size …)`",
                 );
             }
         }
     }
     for (i, a) in placements.iter().enumerate() {
-        for b in &placements[i + 1..] {
+        for b in placements[i + 1..].iter().filter(|b| a.meets(b)) {
             let (first, second) = if (a.provider.as_str(), a.name.as_str())
                 <= (b.provider.as_str(), b.name.as_str())
             {
@@ -377,50 +412,25 @@ fn placement(
             } else {
                 (b, a)
             };
-            match overlap(first, second) {
-                Overlap::Yes => say(
-                    Status::InvalidDescription,
-                    format!(
-                        "`{}`'s placement memory `{}` and `{}`'s `{}` overlap, two claims on the same bytes (rule 10)",
-                        first.provider, first.name, second.provider, second.name
-                    ),
-                    second.span,
-                    "move one placement region off the other, or mark the shared range `(reserved true)`",
+            say(
+                Status::InvalidDescription,
+                format!(
+                    "`{}`'s placement memory `{}` and `{}`'s `{}` overlap, two claims on the same bytes (rule 10)",
+                    first.provider, first.name, second.provider, second.name
                 ),
-                Overlap::Undecided => say(
-                    Status::MissingFact,
-                    format!(
-                        "whether `{}`'s placement memory `{}` and `{}`'s `{}` overlap is undecided: a region states no \
-                         size (rule 10, as rule 5 reads it)",
-                        first.provider, first.name, second.provider, second.name
-                    ),
-                    second.span,
-                    "state each region's `(size …)`",
-                ),
-                Overlap::No => {}
-            }
+                second.span,
+                "move one placement region off the other, or mark the shared range `(reserved true)`",
+            );
         }
     }
+    // What the holes leave of a region with a size. The bytes surely reserved are what each hole is known to own; the
+    // conservative extent takes each hole of no size whose base lies inside to the region's end.
+    let holes: Vec<&Region> = owned.iter().copied().filter(|r| r.reserved).collect();
     for p in &placements {
         let Some(size) = p.size else { continue };
-        let mut holes: Vec<(i128, i128)> = owned
-            .iter()
-            .filter(|r| r.reserved)
-            .filter_map(|r| {
-                r.size
-                    .map(|s| (r.base.max(p.base), (r.base + s).min(p.base + size)))
-            })
-            .filter(|(start, end)| start < end)
-            .collect();
-        holes.sort_unstable();
-        let mut covered = p.base;
-        for (start, end) in holes {
-            if start > covered {
-                break;
-            }
-            covered = covered.max(end);
-        }
-        if covered >= p.base + size {
+        let (start, end) = (p.base, p.base + size);
+        let surely = || holes.iter().map(|r| (r.base, r.known_end()));
+        if fills(surely(), start, end) {
             say(
                 Status::InvalidDescription,
                 format!(
@@ -430,6 +440,35 @@ fn placement(
                 ),
                 p.span,
                 "leave some of the memory unreserved, or offer placement memory elsewhere",
+            );
+            continue;
+        }
+        let open: Vec<&Region> = holes
+            .iter()
+            .copied()
+            .filter(|r| r.size.is_none() && (start..end).contains(&r.base))
+            .collect();
+        let Some(first) = open.first() else { continue };
+        if fills(
+            surely().chain(open.iter().map(|r| (r.base, end))),
+            start,
+            end,
+        ) {
+            let named: Vec<String> = open
+                .iter()
+                .map(|r| format!("`{}`'s `{}`", r.provider, r.name))
+                .collect();
+            say(
+                Status::MissingFact,
+                format!(
+                    "`{}`'s placement memory `{}` has no free byte for `{system}` with its holes of no size, {}, taken \
+                     to reach its end, and the bytes surely reserved do not fill it (rule 10)",
+                    p.provider,
+                    p.name,
+                    named.join(", ")
+                ),
+                first.span,
+                "state the `(size …)` of each hole of no size",
             );
         }
     }
