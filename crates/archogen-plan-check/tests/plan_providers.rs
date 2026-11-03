@@ -127,6 +127,128 @@ fn rule_5_a_region_not_read_whole_is_invalid() {
     );
 }
 
+/// Rule 5's finding on the bare symbol `region` that `provider` offers.
+fn bare_region(provider: &str) -> String {
+    format!(
+        "`{provider}` offers a region not read whole: the bare `region` names no byte range (rule 5)"
+    )
+}
+
+#[test]
+fn rule_5_a_bare_region_in_a_composed_block_is_invalid() {
+    let composed = system(RAM, FAR, "(core-count 1 tick) region");
+    let verdict = judged(&composed).unwrap_err();
+    assert_eq!(verdict.status, Status::InvalidDescription, "{verdict:?}");
+    // It owns no byte, so rule 10 has nothing of it to judge: this one finding, at its place, and no other.
+    assert_eq!(verdict.findings.len(), 1, "{verdict:?}");
+    assert_eq!(verdict.findings[0].message, bare_region("b"));
+    assert_eq!(verdict.findings[0].primary.line, LINE_B);
+    assert!(
+        verdict.findings[0]
+            .repair
+            .starts_with("write `(region NAME (base B) (size S))`"),
+        "{verdict:?}"
+    );
+    // Check (2) whole, past the language's passes that accept it: a plan never reaches check (5) with one.
+    let (sources, program) = program(&composed);
+    let verdict = description(&sources, &program, &RT_STATIC_UP_V1).unwrap_err();
+    assert_eq!(verdict.status, Status::InvalidDescription, "{verdict:?}");
+    assert!(
+        verdict
+            .findings
+            .iter()
+            .any(|f| f.code == PLAN_DESCRIPTION && f.message == bare_region("b")),
+        "{verdict:?}"
+    );
+    // The regions beside it are still read and judged, and it outranks rule 10's `missing-fact`.
+    let (status, messages) = refused(&system(
+        RAM,
+        "(region dev (base 0x8000_1000) (size 4 KiB))",
+        "region",
+    ));
+    assert_eq!(status, Status::InvalidDescription, "{messages:?}");
+    assert_eq!(
+        messages,
+        [
+            bare_region("b"),
+            "`a`'s region `dev` lies in `soc`'s placement memory `ram`, two claims on the same bytes (rule 10)"
+                .to_owned()
+        ]
+    );
+    let (status, messages) = refused(&system(
+        "(region ram (base 0x8000_0000) (executable true))",
+        FAR,
+        "region",
+    ));
+    assert_eq!(status, Status::InvalidDescription, "{messages:?}");
+    assert_eq!(
+        messages,
+        [
+            bare_region("b"),
+            "`soc`'s placement memory `ram` has no size: nothing can be laid out in it (rule 10)"
+                .to_owned()
+        ]
+    );
+}
+
+#[test]
+fn rule_5_a_bare_region_no_system_s_hardware_holds_is_invalid() {
+    for (case, declarations, provider, line) in [
+        // The symbol on a line of its own: the finding points at the offer, not at the block.
+        (
+            "a block, in a description with no system",
+            "(defblock b\n  (offers (core-count 1 tick)\n    region))\n".to_owned(),
+            "b",
+            5,
+        ),
+        (
+            "a block beside a system that does not compose it",
+            format!(
+                "{}(defblock stray (offers region))\n",
+                system(RAM, FAR, FAR)
+            ),
+            "stray",
+            7,
+        ),
+        (
+            "a platform, in a description with no system",
+            "(defplatform p (offers region))\n".to_owned(),
+            "p",
+            3,
+        ),
+    ] {
+        let verdict = judged(&declarations).unwrap_err();
+        assert_eq!(verdict.status, Status::InvalidDescription, "{case}");
+        assert_eq!(verdict.findings.len(), 1, "{case}: {verdict:?}");
+        assert_eq!(verdict.findings[0].message, bare_region(provider), "{case}");
+        assert_eq!(verdict.findings[0].primary.line, line, "{case}");
+    }
+}
+
+#[test]
+fn rule_5_only_an_offer_of_the_symbol_itself_is_a_bare_region() {
+    // The list with nothing in it is the same nothing, refused as every list that names nothing is.
+    let (status, messages) = refused("(defblock t (offers (region)))\n");
+    assert_eq!(status, Status::InvalidDescription, "{messages:?}");
+    assert_eq!(
+        messages,
+        ["`t` offers a region not read whole: it names nothing (rule 5)"]
+    );
+    for (case, declaration) in [
+        (
+            "declared absent, it is no offer",
+            "(defblock t (absent region))\n",
+        ),
+        ("another fact's name", "(defblock t (offers regions))\n"),
+        (
+            "a region with no size reads, owning its base byte",
+            "(defblock t (offers (region r (base 0x1000))))\n",
+        ),
+    ] {
+        assert_eq!(judged(declaration), Ok(()), "{case}");
+    }
+}
+
 #[test]
 fn rule_10_placement_memory_is_judged_over_the_system_s_hardware() {
     let ram = "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))";

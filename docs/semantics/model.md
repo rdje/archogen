@@ -313,9 +313,10 @@ written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.
    bytes overlap are a conflict, unless one composes the other: names it through `uses`, at any depth through blocks and
    platforms, whose `uses` alone is composition (rule 1); a service's `uses` is a binding and composes nothing. A region
    without `size` owns at least its base byte; where another bound provider owns bytes above its base, whether they
-   overlap is `missing-fact`. A region without a base, with two, or with a size that is not a positive whole number of
-   bytes is `invalid-description`; one past the exact arithmetic `unsupported-profile`. A provider nothing is bound to
-   owns nothing: an unused device costs nothing (`ROADMAP.md` §5.3) but the bytes it occupies in memory, which rule 10
+   overlap is `missing-fact`. A region without a base — the bare symbol `region` among them, which names no byte range
+   (`M4.1.19`) — with two, or with a size that is not a positive whole number of bytes is `invalid-description`, bound
+   or not, composed or not; one past the exact arithmetic `unsupported-profile`. A provider nothing is bound to owns
+   nothing: an unused device costs nothing (`ROADMAP.md` §5.3) but the bytes it occupies in memory, which rule 10
    charges.
 6. **One assignment, then the search.** A conflict refuses the assignment it is found in, and an unknown blocks it. When
    no assignment holds, the description takes the highest code, by precedence, of one assignment's findings: the first

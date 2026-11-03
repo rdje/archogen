@@ -2690,7 +2690,8 @@ fn regions(provider: &Provider, decl: &Form, findings: &mut Vec<Finding>) -> Vec
     let mut out = Vec::new();
     let offers = decl.items().iter().filter(|c| c.head() == Some("offers"));
     for item in offers.flat_map(|c| c.items()[1..].iter()) {
-        if item.head() != Some("region") {
+        // A bare `region` is an offer of one that names no byte range, which `region` refuses (model §8 rule 5).
+        if item.head() != Some("region") && item.as_symbol() != Some("region") {
             continue;
         }
         match region(item) {

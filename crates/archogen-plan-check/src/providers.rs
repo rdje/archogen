@@ -1,13 +1,14 @@
 //! Check (2)'s provider-level refusals (leaf `M3.5.4.6`), written from `docs/semantics/model.md` §8 alone and never
 //! from the generator's reading of it: rule 3, a provider offering a consumed function `true` while it declares
 //! `channels` absent or `0`; rule 5, a region a provider offers that is not read whole — a base, a positive whole
-//! number of bytes, each flag once; rule 10, over each system's hardware (rule 7), placement memory overlapped by a
-//! device's registers or by another placement region, or reserved in every byte, a byte surely reserved being a sized
-//! hole's or the base of one with no size. Each is `invalid-description`, a size past the exact arithmetic
-//! `unsupported-profile`. Rule 10's `missing-fact` is placement memory with no size; a device's registers or a reserved
-//! range with no size whose base lies below placement memory, where only that size says whether they overlap; and holes
-//! of no size, each taken to reach the memory's end, that leave it no free byte while the bytes surely reserved do not
-//! fill it. All of them description-wide, bound or not, composed or not, the code [`PLAN_DESCRIPTION`].
+//! number of bytes, each flag once — the bare symbol `region` among them; rule 10, over each system's hardware
+//! (rule 7), placement memory overlapped by a device's registers or by another placement region, or reserved in every
+//! byte, a byte surely reserved being a sized hole's or the base of one with no size. Each is `invalid-description`, a
+//! size past the exact arithmetic `unsupported-profile`. Rule 10's `missing-fact` is placement memory with no size; a
+//! device's registers or a reserved range with no size whose base lies below placement memory, where only that size
+//! says whether they overlap; and holes of no size, each taken to reach the memory's end, that leave it no free byte
+//! while the bytes surely reserved do not fill it. All of them description-wide, bound or not, composed or not, the
+//! code [`PLAN_DESCRIPTION`].
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -206,10 +207,13 @@ fn channels(provider: &str, form: &Form, refused: &mut Vec<Refused>) {
     }
 }
 
-/// Rule 5: every region a provider offers, those read whole returned; every other refused.
+/// Rule 5: every region a provider offers, those read whole returned; every other refused, the bare symbol `region`
+/// among them: it has no base, a region "that names no byte range" (§6's `invalid-description`).
 fn read_regions(provider: &str, form: &Form, refused: &mut Vec<Refused>) -> Vec<Region> {
     let mut out = Vec::new();
-    for offer in clauses(form, "offers").filter(|offer| offer.head() == Some("region")) {
+    let offers = clauses(form, "offers")
+        .filter(|offer| offer.head() == Some("region") || offer.as_symbol() == Some("region"));
+    for offer in offers {
         let mut refuse = |status, why: String| {
             refused.push(Refused {
                 status,
@@ -220,7 +224,12 @@ fn read_regions(provider: &str, form: &Form, refused: &mut Vec<Refused>) -> Vec<
             });
         };
         let Some(name) = offer.items().get(1).and_then(Form::as_symbol) else {
-            refuse(Status::InvalidDescription, "it names nothing".to_owned());
+            let why = if offer.as_symbol().is_some() {
+                "the bare `region` names no byte range"
+            } else {
+                "it names nothing"
+            };
+            refuse(Status::InvalidDescription, why.to_owned());
             continue;
         };
         let (mut base, mut size, mut executable, mut reserved) = (None, None, None, None);

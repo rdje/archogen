@@ -302,7 +302,9 @@ obligation — `ram`, with the hole `fw.range` — which the plan lays the image
 device's registers inside `ram`, or a second placement region overlapping it, are two claims on the same bytes,
 `invalid-description`: *`dev`'s region `dev.regs` lies in `soc`'s placement memory `ram`*, with the repair *mark the
 range `(reserved true)`, or move it out of the memory*. A region that is both executable and reserved is no placement
-memory, and a region's sub-forms are written once each, a flag `true` or `false`. The plan chooses the region the image
+memory, and a region's sub-forms are written once each, a flag `true` or `false`. A bare `region` in an `offers`, with
+no name and no bytes, says nothing of where anything is, so it is `invalid-description` wherever it is written, whether
+or not anything uses the block. The plan chooses the region the image
 goes in — leaving none chosen where there is placement memory, or choosing anything else, is refused — and lays out the
 offsets later (`M4.1`). The hosted playground offers no such region and needs none: its host provides memory.
 

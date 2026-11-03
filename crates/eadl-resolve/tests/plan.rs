@@ -242,6 +242,67 @@ fn small_map(ram_size: &str, regions: &[String]) -> String {
     )
 }
 
+/// What the search and the configuration checker's description check conclude of a module `app.case` holding `text`:
+/// each one's status and what it said.
+fn both_readings(
+    text: &str,
+    v: &Vocabulary,
+) -> (&'static str, Vec<String>, &'static str, Vec<String>) {
+    let modules = MemoryModules::new().with("app.case", text);
+    let mut sources = SourceMap::new();
+    let (program, diagnostics) = elaborate(&mut sources, &modules, "app.case");
+    assert!(!diagnostics.has_errors(), "{text}");
+    let declarations = &program.root().declarations;
+    let system = declarations
+        .iter()
+        .find(|f| f.head() == Some("defsystem"))
+        .expect("a system");
+    let (by_search, said) = match search(
+        declarations,
+        system,
+        RT_STATIC_UP_V1.caller_level,
+        v,
+        &Policy::default(),
+        Limits::DEFAULT,
+    ) {
+        Search::Resolved(_) => ("ok", Vec::new()),
+        Search::Refused {
+            verdict,
+            diagnostics,
+        } => (
+            verdict.slug(),
+            diagnostics.iter().map(|d| d.message.clone()).collect(),
+        ),
+        Search::Inconclusive { .. } => panic!("{text}: inconclusive"),
+    };
+    let (by_checker, written) = match refusals(&sources, &program) {
+        Ok(()) => ("ok", Vec::new()),
+        Err(verdict) => (
+            verdict.status.slug(),
+            verdict.findings.into_iter().map(|f| f.message).collect(),
+        ),
+    };
+    (by_search, said, by_checker, written)
+}
+
+/// Model §8 rule 5 (`M4.1.19`), a bare `region`: both readings refuse it alike, in a block the system composes and in one
+/// no system's hardware holds, as they refuse any region that does not read.
+#[test]
+fn the_search_and_the_checker_refuse_a_bare_region_alike() {
+    let v = vocabulary();
+    for (case, composed) in [("composed", "(requires (uses b))"), ("in no hardware", "")] {
+        let text = format!(
+            "(defmodule app.case\n  (version 1 0)\n\
+             (defblock b (offers (core-count 1 tick) region))\n\
+             (defplatform soc (offers (core-count 1 tick)) {composed})\n\
+             (defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1)) (platform (uses soc))))"
+        );
+        let (by_search, said, by_checker, written) = both_readings(&text, &v);
+        assert_eq!(by_search, "invalid-description", "{case}: {said:#?}");
+        assert_eq!(by_checker, "invalid-description", "{case}: {written:#?}");
+    }
+}
+
 /// Model §8 rule 10 (`M4.1.2.5`), held to both its readings over a bounded universe of memory maps: every base against
 /// a 4 KiB `ram` and a second bank above it, every size, a device's registers or a reserved range, a hole beside it,
 /// `ram` itself sized or not. The search's verdict and the configuration checker's description check are the same on
@@ -281,40 +342,7 @@ fn the_search_and_the_checker_read_every_small_memory_map_alike() {
             for (a, a_open) in &first {
                 for (b, b_open) in &second {
                     let text = small_map(ram_size, &[a.clone(), b.clone(), bank.to_string()]);
-                    let modules = MemoryModules::new().with("app.case", &text);
-                    let mut sources = SourceMap::new();
-                    let (program, diagnostics) = elaborate(&mut sources, &modules, "app.case");
-                    assert!(!diagnostics.has_errors(), "{text}");
-                    let declarations = &program.root().declarations;
-                    let system = declarations
-                        .iter()
-                        .find(|f| f.head() == Some("defsystem"))
-                        .expect("a system");
-                    let (by_search, said) = match search(
-                        declarations,
-                        system,
-                        RT_STATIC_UP_V1.caller_level,
-                        &v,
-                        &Policy::default(),
-                        Limits::DEFAULT,
-                    ) {
-                        Search::Resolved(_) => ("ok", Vec::new()),
-                        Search::Refused {
-                            verdict,
-                            diagnostics,
-                        } => (
-                            verdict.slug(),
-                            diagnostics.iter().map(|d| d.message.clone()).collect(),
-                        ),
-                        Search::Inconclusive { .. } => panic!("{text}: inconclusive"),
-                    };
-                    let (by_checker, written) = match refusals(&sources, &program) {
-                        Ok(()) => ("ok", Vec::new()),
-                        Err(verdict) => (
-                            verdict.status.slug(),
-                            verdict.findings.into_iter().map(|f| f.message).collect(),
-                        ),
-                    };
+                    let (by_search, said, by_checker, written) = both_readings(&text, &v);
                     assert_eq!(by_search, by_checker, "{text}\n{said:#?}\n{written:#?}");
                     // Each region of no size one reading names, the other names.
                     let open = [

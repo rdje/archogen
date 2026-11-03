@@ -1810,6 +1810,19 @@ fn a_region_s_sub_forms_follow_one_grammar() {
 }
 
 #[test]
+fn a_bare_region_is_an_offer_that_names_no_byte_range() {
+    // `M4.1.19`: read as what it says, not skipped as no region at all.
+    let v = vocabulary();
+    let found = Read::of("(defblock b (offers (core-count 1 tick) region))", &v)
+        .joint(&v)
+        .expect_err("refused");
+    assert_eq!(
+        found.iter().map(named).collect::<Vec<_>>(),
+        ["invalid-description b: a region is named first"]
+    );
+}
+
+#[test]
 fn a_placement_given_to_the_plan_is_placement_memory_of_the_system() {
     // Review R9: M3 chooses the region, `M4.1` the offsets.
     let v = vocabulary();
