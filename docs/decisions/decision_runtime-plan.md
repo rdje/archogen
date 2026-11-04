@@ -78,10 +78,6 @@ several things orders them as it states, each by its text compared byte by byte 
   (`M3.5.1`'s contract);
 - its profile is not `rt-static-up-v1`, the one whose rules `/1` lowers: `unsupported-profile`, naming the profile.
   It comes before the rules run, since they run at its caller level;
-- the system declares two tasks of one name: every rule keyed by a requester's name, the joint rules and §2's reaching
-  among them, would read the two as one, against the reference's §7 rule 6, a name declared once, "never merged and
-  never resolved by order": `tool-failure`, naming the system and each such name by its text, the check having accepted
-  it; `M1.50` makes the language refuse it, `invalid-description` (`RTP-H23`);
 - the record does not rebuild over the program and the catalog (`eadl_resolve::plan::rebuild`): `tool-failure`,
   naming the rebuild's verdict, the checker having accepted bindings the generator cannot rebuild;
 - the generator's own joint rules, run over the record the checker accepted, find a conflict, an unknown or a map
@@ -188,7 +184,7 @@ timer route and a source, and a block may be named `timer`:
    - its **runtime index**, `|hp(i)|`, the number of tasks of smaller rank, and its **rank**. The emitter still
      builds the scheduler with `rt_core::Scheduler::from_eadl_ranks`, "the only supported way to lower a description
      onto a scheduler", and a test holds the plan's index equal to the scheduler's slot (`RTP-H1`);
-   - its stable logical identity, `(task SYSTEM TASK)`, `TASK` unique in its system (§1);
+   - its stable logical identity, `(task SYSTEM TASK)`, `TASK` unique in its system (the reference's §7 rule 6, `RTP-H23`);
    - its period, or its minimum separation;
    - its relative deadline, measured from its release. A task whose description writes `(deadline-from release)` has
      that written; one that writes none has the reference owed to the description, since §7.3 makes it part of the

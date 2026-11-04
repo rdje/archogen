@@ -13,7 +13,9 @@ use std::path::{Path, PathBuf};
 
 use eadl_front::{read, Form, SourceMap};
 use eadl_model::check::shipped_registry;
-use eadl_model::kind::{duplicate_names, read_kind, validate, Cardinality, NameRule, Registry};
+use eadl_model::kind::{
+    duplicate_names, duplicate_task_names, read_kind, validate, Cardinality, NameRule, Registry,
+};
 
 /// The two kind modules the toolchain ships.
 const KIND_MODULES: &[&str] = &[
@@ -1135,6 +1137,34 @@ fn description(text: &str) -> (Vec<Form>, SourceMap) {
         diagnostics.render(&sources)
     );
     (document.forms, sources)
+}
+
+#[test]
+fn rule_6_two_tasks_of_one_system_carrying_one_name_are_refused_with_both_sites() {
+    // `M1.50`: every rule keying a requester by its name would read the two as one.
+    let (forms, sources) = description(
+        "(defsystem s\n  (task a (period 10 ms))\n  (task b (period 10 ms))\n  (task a (period 20 ms)))\n",
+    );
+    let errors = duplicate_task_names(&declarations(&forms));
+    assert_eq!(errors.len(), 1, "one repeat, one refusal");
+    assert_eq!(errors[0].code, "schema-duplicate-name");
+    let rendered = errors[0].render(&sources);
+    assert!(
+        rendered.contains("--> t.eadl:4:9") && rendered.contains("--> t.eadl:2:9"),
+        "both sites are named:\n{rendered}"
+    );
+
+    // A third carrier is a second refusal, against the first.
+    let (forms, _) = description(
+        "(defsystem s (task a (period 10 ms)) (task a (period 20 ms)) (task a (period 30 ms)))\n",
+    );
+    assert_eq!(duplicate_task_names(&declarations(&forms)).len(), 2);
+
+    // A task is named within its system, so two systems' tasks may share one.
+    let (forms, _) = description(
+        "(defsystem s (task a (period 10 ms)))\n(defsystem t (task a (period 10 ms)))\n",
+    );
+    assert!(duplicate_task_names(&declarations(&forms)).is_empty());
 }
 
 #[test]

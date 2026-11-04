@@ -97,6 +97,10 @@ error[schema-duplicate-name]: `timer.counter` is declared twice
 archogen: invalid-description: 1 diagnostic(s) in docs/semantics/cases/invalid-duplicate-name.eadl
 ```
 
+Two tasks of one system are refused the same way (`M1.50`), since every rule that knows a task by its name would read
+the two as one: *task `a` is declared twice in one system*, with both sites named and the repair *rename one*. Two
+systems' tasks may share a name, because a task is named within its system.
+
 The `profile` and `workload` passes are two halves of one contract and it is worth keeping them
 apart. `profile` consults the capabilities `rt-static-up-v1` **refuses** — `general-ipc`,
 `runtime-heap`, `dma`. `workload` consults the task model it **admits** — unique priorities,

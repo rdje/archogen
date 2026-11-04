@@ -758,6 +758,41 @@ pub fn duplicate_names(registry: &Registry, forms: &[&Form]) -> Vec<Diagnostic> 
     errors
 }
 
+/// §7 rule 6 within one system (`M1.50`): two of its tasks carrying one name are refused with both sites named, never
+/// merged, since every rule keyed by a requester's name would read the two as one. Two systems' tasks may share one.
+#[must_use]
+pub fn duplicate_task_names(forms: &[&Form]) -> Vec<Diagnostic> {
+    let mut errors = Vec::new();
+    for system in forms.iter().filter(|form| form.head() == Some("defsystem")) {
+        let mut first: BTreeMap<&str, &Form> = BTreeMap::new();
+        for name_form in system
+            .items()
+            .iter()
+            .filter(|item| item.head() == Some("task"))
+            .filter_map(|task| task.items().get(1))
+        {
+            let Some(name) = name_form.as_symbol() else {
+                continue;
+            };
+            let Some(earlier) = first.get(name) else {
+                first.insert(name, name_form);
+                continue;
+            };
+            errors.push(
+                Diagnostic::error(
+                    "schema-duplicate-name",
+                    format!("task `{name}` is declared twice in one system"),
+                    Label::new(name_form.span(), "declared again here"),
+                    "rename one — a name means one task of a system (§7 rule 6); every rule that keys a \
+                     requester by its name would read the two as one",
+                )
+                .with_secondary(Label::new(earlier.span(), "first declared here")),
+            );
+        }
+    }
+    errors
+}
+
 fn check_values(clause: &Form, types: &[ValueType], errors: &mut Vec<Diagnostic>) {
     let values: Vec<&Form> = clause.items().iter().skip(1).collect();
     // ⭐ The width, not the length: [`ValueType::Quantity`] consumes a number *and* a unit, so a clause

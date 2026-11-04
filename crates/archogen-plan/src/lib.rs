@@ -295,30 +295,6 @@ pub fn lower(
             ),
         ));
     }
-    // §1: two tasks of one name, which every rule keyed by a requester's name reads as one, refused before the rebuild,
-    // each such name by its text (R23-D1).
-    let mut seen: BTreeSet<&str> = BTreeSet::new();
-    let mut twice: BTreeSet<&str> = BTreeSet::new();
-    for task in decl.items().iter().filter(|i| i.head() == Some("task")) {
-        if let Some(name) = task.items().get(1).and_then(Form::as_symbol) {
-            if !seen.insert(name) {
-                twice.insert(name);
-            }
-        }
-    }
-    if !twice.is_empty() {
-        let named: Vec<String> = twice
-            .iter()
-            .map(|n| format!("more than one task named `{n}`"))
-            .collect();
-        return Err(refuse(
-            "tool-failure",
-            format!(
-                "the system `{system}` declares {}: a name is declared once, never merged and never resolved by order, and the description check accepted it, which `M1.50` makes it refuse",
-                named.join("; ")
-            ),
-        ));
-    }
     let rebuilt = assignment::rebuild(
         &record,
         declarations,

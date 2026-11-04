@@ -68,10 +68,10 @@
 //! in every way the language reads an integer; and two timer routes, an expiry's and a wake's costs on one route, a
 //! source and a timer route at one provider, and a component holding an instance, each a class of its own; and, after
 //! round 23 (R23-D1, R23-R2, R23-R7), a system declaring two tasks of one name — one name carried twice or three times,
-//! two names one of which prefixes the other, a name continuing with `!` so that its tasks' texts order otherwise than
-//! the names, the first name in runtime order not the least by text, a later task of a name alone using a service or
-//! programming an alarm — refused in its place in §1's first list, naming the system and each name by its text, before
-//! every later refusal §1 can give, beside its twin with every name distinct; a service and a policy naming themselves
+//! two names one of which prefixes the other, a name continuing with `!`, a later task of a name alone using a service
+//! or programming an alarm — which since `M1.50` (`RTP-H23`) the language rejects, `invalid-description`, whatever else
+//! it writes, before the search and every refusal of §1, beside its twin with every name distinct, lowered or refused
+//! by what else it writes alone; a service and a policy naming themselves
 //! by `uses` or by `needs`, taking a channel or not, the service handling a source or not, named by a task, by two, by
 //! the system's own level alone or by nothing else, each plan held line by line to its twin's, which names itself not
 //! at all; and an obliged fact's bound written `exactly` — alone, beside a looser and an equal `at-most`, one value in
@@ -82,7 +82,8 @@
 //! source of every separation class, each system beside its twin named from the other task, the two plans told apart
 //! by their task lines alone, or by those and an owed trigger; a block, a platform, a service and a policy of one name,
 //! requiring nothing, a channel or a source, named alike by a task, a service, a policy or the system's own level, one
-//! plan but for that node's `(node …)` line; and one name carried three times beside another carried twice; and,
+//! plan but for that node's `(node …)` line; and one name carried three times beside another carried twice, rejected
+//! like the rest of its universe; and,
 //! after round 28 (R28-D2, R28-R4, R28-R7), two sporadic tasks, each binding a source itself, reaching it through its
 //! handler or neither, the first both as well, before that source stating every separation class and a second source
 //! the first task's other handler reaches, declared after it or before — so that each of §3's causes was reached, the
@@ -108,12 +109,10 @@
 //! Each system is run as the engine runs it, as `common::lowered` does: the language's check, the search, the `/2`
 //! writer, and the lowering. **Every `archogen-assignment/2` record the search writes is judged by the configuration
 //! checker**, `archogen_plan_check::check::plan_file`, as `crates/eadl-resolve/tests/plan.rs` judges one, and a record
-//! it refuses is a finding naming that record — but for the class the reading derives and holds by count
-//! (`CHECKER_HELD`), each record of it refused with the one finding of the one shape it carries: after round 23, a
-//! binding of a task's text two tasks of one name carry, which the checker reads as the first's, emptied when `M1.50`
-//! has the language refuse such a system. On it the lowering is still held to the reading while it does not read the
-//! checker's result record, its third input; once it does, §1 refuses each of those systems `tool-failure`, "naming
-//! both verdicts", before anything is lowered (R16-R2). **A system's side that contradicts itself, read whole**, is the
+//! it refuses is a finding naming that record. **Two tasks of one system carrying one name** are the language's to
+//! reject, `invalid-description` (`LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME`; reference §7 rule 6; `M1.50`, `RTP-H23`):
+//! such a description is no input (§1), so no search, record or lowering reads it, and another verdict, or the language
+//! accepting one, would be a finding. **A system's side that contradicts itself, read whole**, is the
 //! search's to refuse, `invalid-description` (`SEARCH_READS_THE_SIDE_WHOLE`; model §7 rule 4, §8 rule 1; `RTP-H20`): no
 //! record of it reaches the checker, and a record the search wrote for one would be a finding. **A service or a policy
 //! the system serves naming a block or a platform outside its hardware** is the search's to refuse too,
@@ -121,7 +120,7 @@
 //! model §8 rule 7; `M1.49`, `RTP-H22`): `Joint::map`'s refusal stops the search, no record of it reaches the checker
 //! or the lowering, and a record written for one, or another verdict, would be a finding. **The records binding a
 //! task's own source rule 16 does not admit**, which no search writes, are a class of their own (`RULE_16_RECORD`),
-//! neither a finding nor one of `CHECKER_HELD`: each is judged by the configuration checker and lowered, and each
+//! no finding: each is judged by the configuration checker and lowered, and each
 //! refused by both, the codes agreeing. Each plan is held to an **independent reading** of
 //! `docs/decisions/decision_runtime-plan.md`, written below as plain, unoptimised Rust from the record's text alone,
 //! each rule citing the section it transcribes.
@@ -146,11 +145,11 @@
 //! of its own, never by a substring — in §1's order, each kind by its texts compared byte by byte, "never by its
 //! message's words"; the pairs of the refusals naming pairs read from the names a message writes as code, in their
 //! order, whatever words join them; to the clause it names, and no other, where §1 names one; to what each receiver
-//! would receive, in §1's order — its alarms, then its expiries; of two tasks of one name, to the system and then each
-//! name, by the name's own text; and, of the generator's joint rules refusing a record under model §8 rule 16, to each
-//! finding, a task, its source and a code, the conflicts before the unknowns. A task is found by its text, which two
-//! tasks of one name share: that refusal is taken first, so no reading of a task by its text ever meets such a system,
-//! and a text two tasks share fails the reading rather than merging them (`side_of`). The reading is itself held to the
+//! would receive, in §1's order — its alarms, then its expiries; and, of the generator's joint rules refusing a record
+//! under model §8 rule 16, to each finding, a task, its source and a code, the conflicts before the unknowns. A task is
+//! found by its text, unique in its system since the language rejects two tasks of one name, so no reading of a task by
+//! its text ever meets such a system, and a text two tasks share fails the reading rather than merging them
+//! (`side_of`). The reading is itself held to the
 //! record's three worked texts (§3), whole, lowered from the `/2` records the record states for them; its owed facts to
 //! §2.10's table and §3's `FACT` list, its forms, node kinds and causes to §3's own lists, and its causes of one source
 //! to §2.2's pairing of the routes' with the task's own, the own three to §2.2's statement that no accepted record
@@ -5029,10 +5028,12 @@ fn one_service_two_systems() -> Vec<Case> {
 }
 
 /// The tasks' names of the one-name universe, in declared order, each task ranked by its place: two tasks of one name;
-/// three; `t` and `t!` each carried twice, whose tasks' texts order `(task sys t!)` before `(task sys t)`, the names
-/// the other way; `t.x` and `t` each carried twice, `t.x` first in runtime order and last by text; and, after round 24
-/// (R24-R2: "the duplicate-name message reads "two tasks named `a`, `b`" for three `a` and two `b`"), `t` carried three
-/// times and `u` twice, interleaved — each beside its twin, the same tasks with every name distinct.
+/// three; `t` and `t!` each carried twice; `t.x` and `t` each carried twice; and, after round 24 (R24-R2), `t` carried
+/// three times and `u` twice, interleaved — each beside its twin, the same tasks with every name distinct. These are
+/// the shapes §1's refusal was held over while the lowering gave it, for its message's order; the language's refusal
+/// has no such order to hold, and they stay as what it must take alike, whatever the number of tasks or of names, with
+/// each twin, `t` beside `t!` or `t.x` beside `t` among them, accepted: one name prefixing another is no name declared
+/// twice.
 const ONE_NAME: [[&[&str]; 2]; 5] = [
     [&["t", "t"], &["t", "u"]],
     [&["t", "t", "t"], &["t", "u", "v"]],
@@ -5046,13 +5047,13 @@ const ONE_NAME: [[&[&str]; 2]; 5] = [
 /// binding"; or both.
 const ONE_NAME_BINDERS: [&str; 4] = ["none", "first", "second", "both"];
 
-/// What else a system of the one-name universe writes, each a refusal §1 places after the one of two tasks of one name,
-/// in §1's order: nothing; its last task's period zero (the bullet over tasks); its last task naming the system itself
-/// (the naming-system bullet); its platform naming `s` (hardware naming what is not hardware); its last task's jitter
-/// past the arithmetic; its last task's deadline from activation; its first task, the next carrying its name, or both,
-/// programming an alarm itself (a receiver of interrupt code), the record's binding then written of a text two tasks
-/// carry. And, no refusal of §1's since `M1.49` but the search's, before the lowering reads any: its last task using
-/// `w`, which names `out.b`, a block no platform composes (model §8 rule 7).
+/// What else a system of the one-name universe writes, each a refusal that comes after the language's check accepts a
+/// description, in §1's order: nothing; its last task's period zero (the bullet over tasks); its last task naming the
+/// system itself (the naming-system bullet); its platform naming `s` (hardware naming what is not hardware); its last
+/// task's jitter past the arithmetic; its last task's deadline from activation; its first task, the next carrying its
+/// name, or both, programming an alarm itself (a receiver of interrupt code). And, no refusal of §1's since `M1.49` but
+/// the search's, before the lowering reads any: its last task using `w`, which names `out.b`, a block no platform
+/// composes (model §8 rule 7).
 const ONE_NAME_LATER: [&str; 10] = [
     "none",
     "zero",
@@ -5066,13 +5067,13 @@ const ONE_NAME_LATER: [&str; 10] = [
     "outside",
 ];
 
-/// **A system declaring two tasks of one name** (§1, §2.2; round 23, R23-D1, R23-R7: "two tasks of one name merged into
-/// one plan, against reference §7 rule 6's "never merged and never resolved by order" and §2.2's "stable logical
-/// identity""): each name pattern of [`ONE_NAME`] and its twin, the tasks named by each of [`ONE_NAME_BINDERS`] using a
-/// service, beside each of [`ONE_NAME_LATER`]. So the refusal is held in its place in §1's order — before each later
-/// refusal, one of the same code among them — naming the system and each name by its text, and each twin lowered or
-/// refused by the later refusal alone; and a system a served service leaves naming a block outside its hardware, twin
-/// or not, is the search's to refuse, no record of it reaching §1.
+/// **A system declaring two tasks of one name** (reference §7 rule 6, §2.2; round 23, R23-D1, R23-R7: "two tasks of one
+/// name merged into one plan, against reference §7 rule 6's "never merged and never resolved by order" and §2.2's
+/// "stable logical identity""): each name pattern of [`ONE_NAME`] and its twin, the tasks named by each of
+/// [`ONE_NAME_BINDERS`] using a service, beside each of [`ONE_NAME_LATER`]. So the language's refusal
+/// ([`LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME`]; `M1.50`, `RTP-H23`) is held on every such system, whatever else it
+/// writes, each twin the language accepts lowered or refused by the later refusal alone, and a twin a served service
+/// leaves naming a block outside its hardware the search's to refuse, no record of it reaching §1.
 fn one_name_two_tasks() -> Vec<Case> {
     let mut cases = Vec::new();
     for [carried, twin] in ONE_NAME {
@@ -6086,12 +6087,11 @@ fn kind_of(instance: &str) -> &'static AdapterKind {
 /// What `requester` writes at its own level: a task's `(task SYSTEM NAME)` side, the system's own level's by the system's
 /// name, a service's, a policy's, a block's or a platform's.
 ///
-/// ⛔ A task is found by its text, `(task SYSTEM NAME)`, which two tasks of one name share: read so, they would be one
-/// requester, the first's side standing for both — the merge round 23 found in the lowering (R23-D1). §1 refuses such a
-/// system first among every refusal these universes reach, before anything reads a task by its text
-/// ([`refusal_the_record_gives`] takes it before any other bullet; [`outcome`] reads no plan of a system a refusal is
-/// due on, and no [`keyed_classes`] of this one); and so that no reading can merge two tasks unnoticed, a text two
-/// tasks share fails here.
+/// ⛔ A task is found by its text, `(task SYSTEM NAME)`, which two tasks of one name would share: read so, they would be
+/// one requester, the first's side standing for both — the merge round 23 found in the lowering (R23-D1). The language
+/// rejects such a system ([`LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME`]) and [`outcome_of_the_search`] goes no further
+/// with one, so nothing reads a task of it by its text; and so that no reading can merge two tasks unnoticed, a text
+/// two tasks share fails here.
 fn side_of(description: &Description, requester: &str) -> Option<Side> {
     if requester == description.system {
         return Some(description.own.clone());
@@ -6103,8 +6103,8 @@ fn side_of(description: &Description, requester: &str) -> Option<Side> {
     let task = tasks.next();
     assert!(
         tasks.next().is_none(),
-        "two tasks read as one by their text `{requester}`: §1 refuses two tasks of one name before anything reads a \
-         task by its text"
+        "two tasks read as one by their text `{requester}`: the language rejects two tasks of one name before anything \
+         reads a task by its text"
     );
     task.map(|t| t.side.clone())
         .or_else(|| {
@@ -6469,16 +6469,12 @@ struct Reading {
 /// the reading derives.
 fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     let system = description.system.as_str();
-    // §1: "the system declares two tasks of one name ... `tool-failure`", before anything is lowered; §2.2's identity
-    // is "`(task SYSTEM TASK)`, `TASK` unique in its system". Every rule below keys a task by that text, so a reading
-    // of such a system would merge its tasks as round 23 found the lowering did (R23-D1).
+    // §2.2's identity is "`(task SYSTEM TASK)`, `TASK` unique in its system", which the language holds (reference §7
+    // rule 6; `M1.50`). Every rule below keys a task by that text, so a reading of a system breaking it would merge its
+    // tasks as round 23 found the lowering did (R23-D1).
     assert!(
-        description
-            .tasks
-            .iter()
-            .enumerate()
-            .all(|(i, t)| description.tasks[..i].iter().all(|u| u.name != t.name)),
-        "two tasks of one name: §1 refuses the system before any plan"
+        names_distinct(description),
+        "two tasks of one name: the language rejects the system before any plan"
     );
     let task_text = |task: &Task| format!("(task {system} {})", task.name);
     let hardware: BTreeMap<String, Block> = description
@@ -8367,11 +8363,17 @@ fn rule_16_judges(task: &Task, block: &Block) -> Option<(&'static str, &'static 
     }
 }
 
-/// Whether no two of the lowered system's tasks carry one name: §1 refuses two tasks of one name before anything reads
-/// a task by its text, so rule 16 is read only of a system whose tasks' names are distinct.
+/// Whether no two tasks of any one system the description declares carry one name, as the language holds of what it
+/// accepts (reference §7 rule 6, under which "two systems' tasks may share a name";
+/// [`LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME`]): every rule reads a task by its text, rule 16 among them, so each is
+/// read only of a description where none do.
 fn names_distinct(description: &Description) -> bool {
-    let names: BTreeSet<&str> = description.tasks.iter().map(|t| t.name.as_str()).collect();
-    names.len() == description.tasks.len()
+    std::iter::once(&description.tasks)
+        .chain(description.others.iter().map(|system| &system.tasks))
+        .all(|tasks| {
+            let names: BTreeSet<&str> = tasks.iter().map(|t| t.name.as_str()).collect();
+            names.len() == tasks.len()
+        })
 }
 
 /// The sporadic tasks of the lowered system requiring `interrupt-source` themselves — a task writes it by `needs` alone
@@ -8554,8 +8556,8 @@ fn admitting_twin(description: &Description) -> Description {
 /// (`docs/book/src/plan-check.md`); and the lowering, under §1's "the generator's own joint rules, run over the record
 /// the checker accepted, find a conflict, an unknown or a map finding: `tool-failure`, naming both verdicts, the
 /// checker's acceptance and each of the generator's findings — its conflicts, then its unknowns". Each names each such
-/// task with its source and the code rule 16 gives, the two agreeing. Neither a finding nor one of [`CHECKER_HELD`]:
-/// no search writes these records, and both roles refuse each, as they must.
+/// task with its source and the code rule 16 gives, the two agreeing. No finding: no search writes these records, and
+/// both roles refuse each, as they must.
 ///
 /// ⚠️ The lowering does not read the checker's result record yet (R16-R6), so it is held to the bullet of the
 /// generator's joint rules; once it does, §1's earlier "its status is not `ok`: `tool-failure`, naming both verdicts"
@@ -9418,10 +9420,6 @@ fn judged_by_the_checker(text: &str, record: &str) -> Option<Checked> {
 
 /// What a refusal §1 gives names.
 enum Names {
-    /// "the system declares two tasks of one name": "naming the system and each such name by its text" — the system,
-    /// then each name two or more of its tasks carry, by its text compared byte by byte, as "a refusal naming several
-    /// things orders them as it states, each by its text" (round 23, R23-D1).
-    Duplicates(Vec<String>),
     /// One task, `(task SYSTEM NAME)`: "a bullet over tasks is taken task by task in runtime order", and the first
     /// task it applies to is the one given; with the clause, where §1 names one — "naming the task and the clause —
     /// for the last, its `period`" (round 14, R14-R5).
@@ -9484,10 +9482,6 @@ impl Due {
     /// What it names, for a reproducer.
     fn summary(&self) -> String {
         match &self.names {
-            Names::Duplicates(names) => format!(
-                "the system and the names {}, each carried by two tasks or more",
-                names.join(", ")
-            ),
             Names::Task { task, clause } => {
                 clause.map_or_else(|| task.clone(), |clause| format!("{task} {clause}"))
             }
@@ -9897,174 +9891,13 @@ fn outside_classes(
     classes
 }
 
-/// §1, the first list (round 23, R23-D1): "the system declares two tasks of one name: every rule keyed by a requester's
-/// name, the joint rules and §2's reaching among them, would read the two as one, against the reference's §7 rule 6, a
-/// name declared once, "never merged and never resolved by order": `tool-failure`, naming the system and each such
-/// name by its text, the check having accepted it". It comes after the profile's bullet and before the rebuild's, so
-/// before every other refusal these universes reach. It reads the description, and the record's bindings by their exact
-/// text alone: a binding of `(task SYSTEM NAME)` is one of a text every task of that name carries, never of one task
-/// picked by order. Its classes name each later refusal of §1 that would apply too, each read from what the description
-/// writes — a task's clause, a name, a requirement — never through [`side_of`], which fails on a text two tasks share.
-fn two_tasks_of_one_name(description: &Description, binds: &[Bind]) -> Option<Due> {
-    let system = description.system.as_str();
-    let mut carried: BTreeMap<&str, usize> = BTreeMap::new();
-    for task in &description.tasks {
-        *carried.entry(task.name.as_str()).or_default() += 1;
-    }
-    // A map iterates by its keys, each compared byte by byte: "each such name by its text".
-    let names: Vec<String> = carried
-        .iter()
-        .filter(|(_, tasks)| **tasks >= 2)
-        .map(|(name, _)| (*name).to_string())
-        .collect();
-    if names.is_empty() {
-        return None;
-    }
-    let mut classes = BTreeSet::from(["refusal: two tasks of one name"]);
-    classes.insert(if names.len() >= 2 {
-        "duplicate: two names, named in order"
-    } else {
-        "duplicate: one name"
-    });
-    if carried.values().any(|tasks| *tasks >= 3) {
-        classes.insert("duplicate: one name carried by three tasks");
-        if names.len() >= 2 {
-            // Round 24 (R24-R2): each name named once, whatever number of tasks carries it.
-            classes
-                .insert("duplicate: one name carried by three tasks beside another carried by two");
-        }
-    }
-    if prefixed(&names) {
-        classes.insert("duplicate: one name's text a prefix of another's");
-    }
-    // Each name by its own text, never by its tasks' `(task SYSTEM NAME)`, whose closing `)` sorts after `!`.
-    if worded_otherwise(&names, |name| format!("(task {system} {name})")) {
-        classes.insert("duplicate: the names' order unlike their tasks' texts' order");
-    }
-    if worded_otherwise(&names, |name| format!("`{name}`")) {
-        classes.insert("duplicate: an order the message's words would give otherwise");
-    }
-    let mut by_rank: Vec<&Task> = description.tasks.iter().collect();
-    by_rank.sort_by_key(|t| t.rank());
-    let mut in_runtime: Vec<String> = Vec::new();
-    for task in by_rank {
-        if names.contains(&task.name) && !in_runtime.contains(&task.name) {
-            in_runtime.push(task.name.clone());
-        }
-    }
-    if in_runtime != names {
-        classes.insert("duplicate: the names' order unlike their tasks' runtime order");
-    }
-    // Two tasks of one name are two requesters (model §8 rule 1), which the lowering had merged: "the second task's
-    // `uses` the first's" (round 23's finding).
-    let declared_services: BTreeSet<&str> = description
-        .services
-        .iter()
-        .map(|s| s.name.as_str())
-        .collect();
-    let services = |task: &Task| -> BTreeSet<String> {
-        task.side
-            .uses
-            .iter()
-            .chain(&task.side.needs)
-            .filter(|n| declared_services.contains(n.as_str()))
-            .cloned()
-            .collect()
-    };
-    for (i, task) in description.tasks.iter().enumerate() {
-        let earlier: Vec<&Task> = description.tasks[..i]
-            .iter()
-            .filter(|t| t.name == task.name)
-            .collect();
-        if !earlier.is_empty()
-            && earlier
-                .iter()
-                .all(|e| !services(task).is_subset(&services(e)))
-        {
-            classes.insert(
-                "duplicate: a later task of a name naming a service no earlier one of it names",
-            );
-        }
-    }
-    if binds.iter().any(|b| {
-        names
-            .iter()
-            .any(|name| b.requester == format!("(task {system} {name})"))
-    }) {
-        classes.insert("duplicate: a binding of a text two tasks carry");
-    }
-    // The later refusals that would apply too, in §1's order.
-    let ill_formed = |t: &Task| {
-        t.release.duration().time() == Time::Seconds(Ratio::ZERO)
-            || [Some(t.release.duration()), Some(t.deadline()), t.jitter]
-                .into_iter()
-                .flatten()
-                .any(|d| matches!(d.time(), Time::Other(_)))
-    };
-    if description.tasks.iter().any(ill_formed) {
-        classes.insert("duplicate: before the bullet over tasks");
-    }
-    let systems: BTreeSet<String> = description.systems().into_iter().map(|s| s.name).collect();
-    let names_a_system = |side: &Side| {
-        side.uses
-            .iter()
-            .chain(&side.needs)
-            .any(|n| systems.contains(n))
-    };
-    let served = served_services(description);
-    if description.tasks.iter().any(|t| names_a_system(&t.side))
-        || names_a_system(&description.own)
-        || description
-            .services
-            .iter()
-            .any(|s| served.contains(&s.name) && names_a_system(&s.side))
-    {
-        classes.insert("duplicate: before a requester naming a system");
-    }
-    if !hardware_naming_other_kinds(description).is_empty() {
-        classes.insert("duplicate: before hardware naming what is not hardware");
-    }
-    if description.tasks.iter().any(|t| {
-        [Some(t.release.duration()), Some(t.deadline()), t.jitter]
-            .into_iter()
-            .flatten()
-            .any(|d| d.time() == Time::Past)
-    }) {
-        classes.insert("duplicate: before a duration past the arithmetic");
-    }
-    if description
-        .tasks
-        .iter()
-        .any(|t| t.deadline_from.is_some_and(|e| e != "release"))
-    {
-        classes.insert("duplicate: before a deadline from another event");
-    }
-    if description
-        .tasks
-        .iter()
-        .map(|t| &t.side)
-        .chain(std::iter::once(&description.own))
-        .any(|side| side.needs.iter().any(|n| CONSUMED.contains(&n.as_str())))
-    {
-        classes.insert("duplicate: before a receiver of interrupt code");
-    }
-    Some(Due {
-        code: "tool-failure",
-        names: Names::Duplicates(names),
-        classes,
-    })
-}
-
 /// §1, the refusals these universes can reach, the first that applies, from the description and the record's own
 /// `bind` lines: "They are taken in the order written, this list and then the next, ... and the first that applies is
 /// the one given; a bullet over tasks is taken task by task in runtime order, each task's clauses in the order the
 /// bullet writes them".
-/// - Of the first list, in its order: "the system declares two tasks of one name: ... `tool-failure`, naming the system
-///   and each such name by its text, the check having accepted it" (round 23, R23-D1), after the profile's bullet and
-///   before the rebuild's, so before every bullet below, none of which can then read two tasks as one; its bullet over
-///   tasks, "a period, minimum separation, deadline or jitter that is not a time; a period or minimum separation of
-///   zero ...; or a periodic task bound itself for `interrupt-source`, its requirement met by `true` as model §8 rule 2
-///   reads one, which states a second release model": `tool-failure`,
+/// - Of the first list, in its order: its bullet over tasks, "a period, minimum separation, deadline or jitter that is
+///   not a time; a period or minimum separation of zero ...; or a periodic task bound itself for `interrupt-source`,
+///   its requirement met by `true` as model §8 rule 2 reads one, which states a second release model": `tool-failure`,
 ///   "naming the task and the clause"; then "a declaration or a task the system serves naming a system by `uses` or `needs`":
 ///   `tool-failure`, "naming each such name, by the namer's text and then the system's"; then "a block or a platform the
 ///   system serves naming, by `uses` or `needs`, a declaration that is neither a block nor a platform": `tool-failure`,
@@ -10085,13 +9918,11 @@ fn two_tasks_of_one_name(description: &Description, binds: &[Bind]) -> Option<Du
 /// No other bullet applies here: no system has placement memory, and the two refusals after the last, of a record's
 /// supported contexts and its initialisation's calls, wait for a record that can be a provider (`M3.7`, `RTP-H10`). A
 /// system a served service or policy leaves naming hardware outside, which round 20 had §1 refuse, is model §8 rule 7's
-/// conflict since `M1.49`: the search writes no record of it ([`outside_hardware`]), so nothing here reads one.
+/// conflict since `M1.49`: the search writes no record of it ([`outside_hardware`]), so nothing here reads one. Nor of
+/// two tasks of one name, which round 23 had §1 refuse: since `M1.50` the language rejects them
+/// ([`LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME`]).
 fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option<Due> {
-    // First: every bullet below reads a task by its text, which two tasks of one name share.
-    if let Some(due) = two_tasks_of_one_name(description, binds) {
-        return Some(due);
-    }
-    // Then, after the rebuild's, which every record of these universes passes: "the generator's own joint rules, run
+    // First, after the rebuild's, which every record of these universes passes: "the generator's own joint rules, run
     // over the record the checker accepted, find a conflict, an unknown or a map finding: `tool-failure`, naming both
     // verdicts" — of model §8 rule 16 (`M4.1.2.3`), "in the model, the generator's joint rules and the checker's", a
     // task bound itself to a source the analysis does not admit. No record the search writes reaches it; the records
@@ -11135,27 +10966,6 @@ fn received_named(
     Ok(out)
 }
 
-/// Where a refusal's message does not name, of two tasks of one name, "the system and each such name by its text" (§1):
-/// the system, then each name, in that order, each written as code, as the record writes a name, and nothing else of
-/// `declared` — a task's `(task SYSTEM NAME)` text names a task, not the name two tasks carry.
-fn system_then_names(
-    message: &str,
-    declared: &BTreeSet<String>,
-    system: &str,
-    names: &[String],
-) -> Option<String> {
-    let mut written = declared.clone();
-    written.insert(system.to_string());
-    written.extend(names.iter().cloned());
-    let named = names_mentioned(message, &written);
-    let expected: Vec<String> = std::iter::once(system.to_string())
-        .chain(names.iter().cloned())
-        .collect();
-    (named != expected).then(|| {
-        format!("it names {named:?}, in that order, the record {expected:?}: the system, then each name by its text")
-    })
-}
-
 /// Where the lowering's `refusal` is not the one `due`: its code, and what it names. Of a refusal naming a task, the
 /// task, and the clause where §1 names one. Of the interrupt-code refusal, the subjects it names in their order, and
 /// what it says each would receive, in §1's order — its alarms, then its expiries, each kind by its texts: §1 fixes the
@@ -11188,11 +10998,6 @@ fn refusal_disagrees(due: &Due, refusal: &Refusal, description: &Description) ->
         ));
     }
     match &due.names {
-        Names::Duplicates(names) => {
-            if let Some(unlike) = system_then_names(&refusal.message, &declared, system, names) {
-                wrong.push(unlike);
-            }
-        }
         Names::Task { task, clause } => {
             let named = subjects_named(&refusal.message, system);
             if named != [task.clone()] {
@@ -11307,70 +11112,16 @@ const SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE: &str =
     "the search refuses, `infeasible-configuration`, a service or a policy the system serves naming a block or a \
      platform outside its hardware";
 
-/// The class of the systems whose record the configuration checker refuses because it reads a binding of a task's text,
-/// `(task SYSTEM NAME)`, which two tasks carry, as one of the first declared: held by name and count rather than as a
-/// finding — the record states no verdict of the checker's on such a record, and hands only the language's refusal on
-/// (`RTP-H23`). §1 refuses the system: "the system declares two tasks of one name: every rule keyed by a requester's
-/// name ... would read the two as one, against the reference's §7 rule 6, a name declared once, "never merged and never
-/// resolved by order"". The checker resolves the text by order: a later task of the name bound for a fact the first
-/// requires nothing of is refused `tool-failure`, "the plan binds `FACT` for the task `NAME` of `SYSTEM`, which
-/// requires nothing of it", where the first so bound is accepted — round 23's finding in the lowering's rebuild
-/// (R23-D1: "with only the second binding, a false "does not rebuild""), in the checker. When `M1.50` has the language
-/// refuse two tasks of one name, these systems move to rejected and the class empties.
-///
-/// ⚠️ **Until then, these systems' outcomes are the lowering's without its third input** (round 16, R16-R2). The
-/// lowering takes "the configuration checker's result record, `archogen-result/1`, for that assignment and that
-/// program" (§1, its third input), whose intake is unbuilt (R16-R6: `M4.1.4`'s production half), so the harness lowers
-/// the record alone and the lowering is held to the reading on these systems, plan or refusal. Once the lowering reads
-/// the result record, §1's "its status is not `ok`: `tool-failure`, naming both verdicts", which comes before the
-/// bullet of two tasks of one name, refuses them, and this checker reads the result record with them.
-const CHECKER_READS_THE_FIRST: &str =
-    "checker refuses: a binding of a text two tasks carry, read as the first's (M1.50); `tool-failure` naming both \
-     verdicts once the lowering reads the checker's result (§1)";
-
-/// The classes of records the configuration checker refuses that a universe holds by count.
-const CHECKER_HELD: [&str; 1] = [CHECKER_READS_THE_FIRST];
-
-/// A binding the reading expects the checker to read as the first task's of its name: of `(task SYSTEM NAME)`, a name
-/// two tasks carry, for a fact the first task declared with it requires nothing of — its name and the fact.
-fn read_as_the_first(description: &Description, binds: &[Bind]) -> Option<(String, String)> {
-    let system = description.system.as_str();
-    binds.iter().find_map(|bind| {
-        let mut carrying = description
-            .tasks
-            .iter()
-            .filter(|t| bind.requester == format!("(task {system} {})", t.name));
-        let first = carrying.next()?;
-        carrying.next()?;
-        let requires = first.side.needs.contains(&bind.fact)
-            || first
-                .side
-                .at_most
-                .iter()
-                .chain(&first.side.exactly)
-                .any(|(f, _)| *f == bind.fact)
-            || first.side.other.iter().any(|clause| {
-                items(&form(clause)).first().map(text_of).as_deref() == Some(bind.fact.as_str())
-            });
-        (!requires).then(|| (first.name.clone(), bind.fact.clone()))
-    })
-}
-
-/// Whether the configuration checker's refusal is the one [`CHECKER_READS_THE_FIRST`] holds, and nothing beside it:
-/// the status `tool-failure`, one finding, `plan-binding`, saying the plan binds `fact` for the task `name`, "which
-/// requires nothing of it", as measured here (round 23).
-fn the_first_of_a_name(refused: &Checked, system: &str, name: &str, fact: &str) -> bool {
-    match refused.findings.as_slice() {
-        [(code, message)] => {
-            refused.status == "tool-failure"
-                && code == "plan-binding"
-                && message.contains(&format!(
-                    "the plan binds `{fact}` for the task `{name}` of `{system}`, which requires nothing of it"
-                ))
-        }
-        _ => false,
-    }
-}
+/// The systems declaring two tasks of one name, which the language rejects, `invalid-description` (reference §7 rule 6:
+/// "Two tasks of one system are refused alike, since every rule keying a requester by its name would read them as one";
+/// `M1.50`, `RTP-H23`). A description the language's check refuses is no input (§1), so no search, record or lowering
+/// reads one. The reading derives the class from the description alone ([`names_distinct`]), and a system it names is
+/// of it only where the language gives that verdict: another verdict is a finding, and so is the language accepting
+/// one, which nothing goes on to read. Round 23 had §1 refuse such a system; the bullet went with `M1.50`, and with it
+/// the class of records the configuration checker refused for reading a binding of the text two such tasks carry as
+/// the first's.
+const LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME: &str =
+    "the language rejects, `invalid-description`, two tasks of one system carrying one name";
 
 /// The fact on which the lowered system's side, read whole — its own level's clauses and its tasks' (model §8 rule 1;
 /// §7 rule 4) — requires both `true` and `false`, a requirement `(needs f)` or `(f true)` beside `(f false)`.
@@ -11407,8 +11158,6 @@ struct Outcome {
     verdict: String,
     /// Whether the configuration checker judged its record: every system the search resolves.
     judged: bool,
-    /// Whether the configuration checker refused its record.
-    checker_refused: bool,
     /// The kinds of line a plan agrees with the reading on.
     agreed: Vec<&'static str>,
     /// The classes of the record's rules the system exercises.
@@ -11446,7 +11195,6 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
         class: "lowered",
         verdict: String::new(),
         judged: false,
-        checker_refused: false,
         agreed: Vec::new(),
         classes: BTreeSet::new(),
         findings: Vec::new(),
@@ -11472,10 +11220,40 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
     // Model §8 rule 7: a served service or policy naming hardware outside the system's is "judged once for the system
     // whatever the assignment" ([`SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE`]).
     let outside = outside_hardware(&case.description);
+    // Reference §7 rule 6: two tasks of one name are the language's to reject, whatever else the description writes
+    // ([`LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME`]).
+    let one_name = !names_distinct(&case.description);
+    let two_tasks = || {
+        format!(
+            "reference §7 rule 6 rejects it `invalid-description`: two tasks of `{}` carry one name",
+            case.description.system
+        )
+    };
     let (record, program, checker, lowered) = match flow(&text, &case.description.system) {
         Flow::Rejected(verdict) => {
             out.class = "rejected";
+            if one_name {
+                if verdict == "invalid-description" {
+                    out.classes.insert(LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME);
+                } else {
+                    out.findings.push(format!(
+                        "== {universe}: {}\n-- the description\n{text}-- the language rejects it `{verdict}`, where \
+                         {}\n",
+                        case.label,
+                        two_tasks()
+                    ));
+                }
+            }
             out.verdict = verdict;
+            return (out, None);
+        }
+        // Nothing below reads such a system: every rule finds a task by its text ([`side_of`]).
+        Flow::Unresolved(_) | Flow::Resolved { .. } if one_name => {
+            out.findings.push(format!(
+                "== {universe}: {}\n-- the description\n{text}-- the language accepts it, where {}\n",
+                case.label,
+                two_tasks()
+            ));
             return (out, None);
         }
         Flow::Unresolved(verdict) => {
@@ -11564,29 +11342,15 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
             ),
         ));
     }
-    // The checker's verdict, against what the reading derives of it: every record accepted, but where it reads a
-    // binding of a text two tasks carry as the first's ([`CHECKER_READS_THE_FIRST`], [`the_first_of_a_name`]).
-    out.checker_refused = checker.is_some();
-    let first = read_as_the_first(&case.description, &binds_of(&record));
-    let held = match &checker {
-        Some(refused)
-            if first.as_ref().is_some_and(|(name, fact)| {
-                the_first_of_a_name(refused, &case.description.system, name, fact)
-            }) =>
-        {
-            Some(CHECKER_READS_THE_FIRST)
-        }
-        Some(refused) => {
-            out.findings.push(reproducer(
-                "",
-                &format!(
-                    "-- the configuration checker refuses the record the search wrote: {refused}\n"
-                ),
-            ));
-            None
-        }
-        None => None,
-    };
+    // The checker's verdict: every record the search writes accepted, a refusal a finding naming it.
+    if let Some(refused) = &checker {
+        out.findings.push(reproducer(
+            "",
+            &format!(
+                "-- the configuration checker refuses the record the search wrote: {refused}\n"
+            ),
+        ));
+    }
     let due = refusal_the_record_gives(&case.description, &binds_of(&record));
     match lowered {
         Ok(plan) => {
@@ -11602,9 +11366,6 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
                         due.summary()
                     ),
                 ));
-                if let Some(class) = held {
-                    out.classes.insert(class);
-                }
                 return (out, Some(record));
             }
             let judged = judge(&case.description, &program, &record, &plan);
@@ -11636,14 +11397,9 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
             };
             match (wrong, due) {
                 (None, Some(due)) => {
-                    // `keyed_classes` reads each requirement through `side_of`, which finds a task by its text: a
-                    // system declaring two tasks of one name has the refusal's classes alone (§1, round 23).
-                    let one_name_one_task = !matches!(due.names, Names::Duplicates(_));
                     out.classes = due.classes;
-                    if one_name_one_task {
-                        out.classes
-                            .extend(keyed_classes(&case.description, &binds_of(&record)));
-                    }
+                    out.classes
+                        .extend(keyed_classes(&case.description, &binds_of(&record)));
                 }
                 (Some(wrong), due) => out.findings.push(reproducer(
                     &format!("-- the code writes\nrefused {refusal}\n"),
@@ -11660,9 +11416,6 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
             }
         }
     }
-    if let Some(class) = held {
-        out.classes.insert(class);
-    }
     (out, Some(record))
 }
 
@@ -11676,8 +11429,6 @@ struct Tally {
     refused: usize,
     /// The systems whose record the configuration checker judged.
     judged: usize,
-    /// The systems whose record the configuration checker refused.
-    checker_refused: usize,
     /// For each kind of line, the lowered systems whose plan agrees with the reading on it.
     agreed: BTreeMap<&'static str, usize>,
     /// For each class of the record's rules, the systems exercising it.
@@ -11761,9 +11512,6 @@ fn run_kept(universe: &str, cases: &[Case], keep: bool) -> (Tally, Vec<Kept>) {
         }
         if outcome.judged {
             tally.judged += 1;
-        }
-        if outcome.checker_refused {
-            tally.checker_refused += 1;
         }
         if outcome.class == "unresolved" {
             tally
@@ -11876,26 +11624,6 @@ fn hold(
             tally.rule_16.0, tally.rule_16.1
         ));
     }
-    // Every record the checker refuses is of one class of [`CHECKER_HELD`], each held only where a universe names it.
-    let held: usize = CHECKER_HELD
-        .iter()
-        .map(|class| tally.classes.get(class).copied().unwrap_or(0))
-        .sum();
-    if tally.checker_refused != held {
-        problems.push_str(&format!(
-            "{universe}: the configuration checker refuses {} records, {held} of them held as one of {CHECKER_HELD:?}\n",
-            tally.checker_refused
-        ));
-    }
-    for class in CHECKER_HELD {
-        let refused = tally.classes.get(class).copied().unwrap_or(0);
-        if refused > 0 && !exercised.iter().any(|(held, _)| *held == class) {
-            problems.push_str(&format!(
-                "{universe}: {refused} records the configuration checker refuses, `{class}`, which this universe does \
-                 not hold\n"
-            ));
-        }
-    }
     let missed: Vec<String> = exercised
         .iter()
         .filter_map(|(class, reach)| {
@@ -11944,7 +11672,8 @@ fn hold(
 /// the system whatever the assignment" and so before any assignment's finding, `conflicts` of them; and `MissingFact`
 /// for each other of `cases` that `missing_fact`, a predicate over its construction, says no assignment can satisfy,
 /// `missing` of them: a requester bound to hardware outside the system is an assignment's conflict, and nothing else
-/// offering the fact, the search concludes `missing-fact` (rules 6 and 7).
+/// offering the fact, the search concludes `missing-fact` (rules 6 and 7). A system the language rejects for two tasks
+/// of one name is no search's, whatever else it writes ([`LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME`]).
 fn hold_unresolved(
     universe: &str,
     tally: &Tally,
@@ -11955,6 +11684,7 @@ fn hold_unresolved(
     let (mut infeasible, mut unknown) = (0, 0);
     let read: BTreeMap<String, String> = cases
         .iter()
+        .filter(|c| names_distinct(&c.description))
         .filter_map(|c| {
             let verdict = if !outside_hardware(&c.description).is_empty() {
                 infeasible += 1;
@@ -13903,7 +13633,6 @@ fn bound_to_a_timer_route_s_provider_by_a_binding_taking_no_channel() {
         tally.unresolved_systems, refused_by_search,
         "the search resolves no plan where the system's side, read whole, contradicts itself"
     );
-    assert_eq!(tally.checker_refused, 0);
     let resolved = |c: &Case| !rejected(c) && !contradicted(c);
     let receivers = |c: &Case| {
         ["t", "u", "own"]
@@ -14068,7 +13797,6 @@ fn a_periodic_task_bound_to_a_source_s_block_for_another_fact() {
         tally.unresolved_systems, refused_by_search,
         "the search resolves no plan where the system's side, read whole, contradicts itself"
     );
-    assert_eq!(tally.checker_refused, 0);
     let resolved = |c: &Case| !rejected(c) && !contradicted(c);
     // Lowered: the 96 where neither `t` nor `p` requires the interrupt, 4 choices of them, 4 of the system's own level,
     // 3 of `e`, 2 orders. Refused: the 12 choices of them where one does, 3 of the system's own level, all but `false`,
@@ -16094,34 +15822,27 @@ fn ranks_that_start_past_one_or_skip() {
     );
 }
 
+/// Re-purposed by `M1.50` (`RTP-H23`). This held §1's refusal of two tasks of one name in its place before every later
+/// refusal, naming the system and each name by its text (round 23, R23-D1; round 24, R24-R2). The bullet has left §1
+/// for the language, whose check comes before the search and §1 alike: no order among refusals is left to hold and no
+/// message of the lowering's to read, so the classes of both went with it. What stays is the language's verdict on
+/// every such system, whatever else it writes, beside its twin, which it accepts and which fares by what else it writes
+/// alone.
 #[test]
-fn two_tasks_of_one_name_refused_before_every_later_refusal() {
+fn two_tasks_of_one_name_rejected_by_the_language_whatever_else_they_write() {
     let cases = one_name_two_tasks();
     // 5 name patterns, each with its twin; 4 binders; what else it writes, of 10: 8 later refusals, none, and a name
     // outside the hardware.
     assert_eq!(cases.len(), ONE_NAME.len() * 2 * 4 * 10);
     let tally = run("one name, two tasks", &cases);
-    // Unresolved `infeasible-configuration`, model §8 rule 7's conflict, every system writing `w`, which names `out.b`,
-    // outside the hardware, twin or not (5 × 2 × 4): the search's refusal, so no record reaches §1, whose first refusal
-    // would be two tasks of one name, nor the configuration checker. Every other resolved. Refused: every system
-    // declaring two tasks of one name (5 × 4 × 9), whatever else it writes, and every twin writing a later refusal (5 ×
-    // 4 × 8). Lowered: each twin writing none (5 × 4). 40 + 180 + 160 + 20 = 400. Every record accepted by the
-    // configuration checker, but where a later task of a name alone programs an alarm (5 × 4): the checker reads the
-    // binding as the first task's ([`CHECKER_READS_THE_FIRST`]). Each count read from the tasks' names, the binder and
-    // the later refusal its description writes.
-    let carried_twice = |c: &Case| -> Vec<String> {
-        let tasks = &c.description.tasks;
-        let mut out: Vec<String> = tasks
-            .iter()
-            .enumerate()
-            .filter(|(i, t)| tasks[..*i].iter().any(|u| u.name == t.name))
-            .map(|(_, t)| t.name.clone())
-            .collect();
-        out.sort();
-        out.dedup();
-        out
-    };
-    let one_name = |c: &Case| !carried_twice(c).is_empty();
+    // Rejected: every system declaring two tasks of one name (5 × 4 × 10), `invalid-description`, whatever else it
+    // writes, so no search, record, configuration checker or lowering reads one. Of the twins, the other 5 × 4 × 10,
+    // none rejected, so that a system's names alone are what the language refuses: unresolved
+    // `infeasible-configuration`, model §8 rule 7's conflict, each writing `w`, which names `out.b`, outside the
+    // hardware (5 × 4), so no record of it reaches §1 or the configuration checker; refused, each writing a later
+    // refusal (5 × 4 × 8); lowered, each writing none (5 × 4). 200 + 20 + 160 + 20 = 400. Each count read from the
+    // label's `one-name` or `distinct`, the binder and the later refusal its description writes.
+    let one_name = |c: &Case| c.label.starts_with("one-name ");
     let word = |c: &Case, key: &str| -> String {
         c.label
             .split(' ')
@@ -16131,112 +15852,27 @@ fn two_tasks_of_one_name_refused_before_every_later_refusal() {
     };
     let later = |c: &Case| word(c, "later:");
     let binder = |c: &Case| word(c, "binder:");
-    let outside = |c: &Case| later(c) == "outside";
-    let refused = |c: &Case| one_name(c) && !outside(c);
-    let before = |l: &'static str| move |c: &Case| one_name(c) && later(c) == l;
     let alone = |l: &'static str| move |c: &Case| !one_name(c) && later(c) == l;
-    // The most tasks one name is carried by.
-    let most = |c: &Case| {
-        c.description
-            .tasks
-            .iter()
-            .map(|t| {
-                c.description
-                    .tasks
-                    .iter()
-                    .filter(|u| u.name == t.name)
-                    .count()
-            })
-            .max()
-            .unwrap_or(0)
-    };
-    // `t` a prefix of `t!` and of `t.x`, by hand; `t` and `u` neither.
-    let prefixing = |c: &Case| carried_twice(c) == ["t", "t!"] || carried_twice(c) == ["t", "t.x"];
-    hold_unresolved("one name, two tasks", &tally, &cases, (40, 0), |_| false);
+    assert_eq!(
+        tally
+            .verdicts
+            .get("rejected invalid-description")
+            .map(|v| v.0),
+        Some(200),
+        "the language refuses two tasks of one system carrying one name: {:?}",
+        tally.verdicts
+    );
+    hold_unresolved("one name, two tasks", &tally, &cases, (20, 0), |_| false);
     hold(
         "one name, two tasks",
         &tally,
-        (400, 20, 0, 40, 340),
+        (400, 20, 200, 20, 160),
         &[
-            counted(SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE, &cases, outside),
-            counted("refusal: two tasks of one name", &cases, refused),
-            counted(CHECKER_READS_THE_FIRST, &cases, before("alarm2")),
-            counted("duplicate: one name", &cases, |c| {
-                refused(c) && carried_twice(c).len() == 1
-            }),
-            counted("duplicate: two names, named in order", &cases, |c| {
-                refused(c) && carried_twice(c).len() == 2
-            }),
-            counted("duplicate: one name carried by three tasks", &cases, |c| {
-                refused(c) && most(c) >= 3
-            }),
+            counted(LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME, &cases, one_name),
             counted(
-                "duplicate: one name carried by three tasks beside another carried by two",
+                SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE,
                 &cases,
-                |c| refused(c) && most(c) >= 3 && carried_twice(c).len() >= 2,
-            ),
-            counted(
-                "duplicate: one name's text a prefix of another's",
-                &cases,
-                |c| refused(c) && prefixing(c),
-            ),
-            // `t` before `t!`, and `(task sys t!)` before `(task sys t)`: `!` lies below `)`.
-            // "`t!`" and "`t.x`" each sort before "`t`": a backquote lies above `!` and `.`; "`t`" before "`u`".
-            counted(
-                "duplicate: an order the message's words would give otherwise",
-                &cases,
-                |c| refused(c) && prefixing(c),
-            ),
-            counted(
-                "duplicate: the names' order unlike their tasks' texts' order",
-                &cases,
-                |c| refused(c) && carried_twice(c) == ["t", "t!"],
-            ),
-            // `t.x` ranked first, `t` before it by text.
-            counted(
-                "duplicate: the names' order unlike their tasks' runtime order",
-                &cases,
-                |c| refused(c) && carried_twice(c) == ["t", "t.x"],
-            ),
-            counted(
-                "duplicate: a later task of a name naming a service no earlier one of it names",
-                &cases,
-                |c| refused(c) && binder(c) == "second",
-            ),
-            counted(
-                "duplicate: a binding of a text two tasks carry",
-                &cases,
-                |c| one_name(c) && ["alarm", "alarm2", "alarms"].contains(&later(c).as_str()),
-            ),
-            counted(
-                "duplicate: before the bullet over tasks",
-                &cases,
-                before("zero"),
-            ),
-            counted(
-                "duplicate: before a requester naming a system",
-                &cases,
-                before("system"),
-            ),
-            counted(
-                "duplicate: before hardware naming what is not hardware",
-                &cases,
-                before("operand"),
-            ),
-            counted(
-                "duplicate: before a duration past the arithmetic",
-                &cases,
-                before("past"),
-            ),
-            counted(
-                "duplicate: before a deadline from another event",
-                &cases,
-                before("activation"),
-            ),
-            counted(
-                "duplicate: before a receiver of interrupt code",
-                &cases,
-                |c| before("alarm")(c) || before("alarm2")(c) || before("alarms")(c),
+                alone("outside"),
             ),
             // The twins, each refused by its later refusal alone.
             counted("task bullet: a period of zero", &cases, alone("zero")),
@@ -17388,35 +17024,6 @@ fn the_message_readers_keep_the_order_a_message_gives() {
         names_mentioned("y is `m`'s, and `(task sys t!)` too", &declared),
         ["m", "(task sys t!)"]
     );
-    // Two tasks of one name (round 23): the system, then each name, read as written — a name by its own text, a task's
-    // `(task SYSTEM NAME)` text another thing.
-    let tasks_declared: BTreeSet<String> = ["sys", "(task sys t)", "(task sys t!)"]
-        .iter()
-        .map(|s| (*s).to_string())
-        .collect();
-    let carried = [String::from("t"), String::from("t!")];
-    for message in [
-        "the system `sys` carries `t` twice, and `t!`: a name is declared once (`M1.50`)",
-        "in `sys`: `t` and `t!`, each the name of several tasks",
-    ] {
-        assert_eq!(
-            system_then_names(message, &tasks_declared, "sys", &carried),
-            None,
-            "{message}"
-        );
-    }
-    // The names by their tasks' texts, misordered, the system last, or a name left out: each a finding.
-    for message in [
-        "`sys`: `(task sys t!)` and `(task sys t)`",
-        "`sys`: `t!` and `t`",
-        "`t` and `t!` twice each, in `sys`",
-        "the system `sys` carries `t` twice",
-    ] {
-        assert!(
-            system_then_names(message, &tasks_declared, "sys", &carried).is_some(),
-            "{message}"
-        );
-    }
     // Model §8 rule 16's findings (`M4.1.2.3`), as the configuration checker names one and as §1 has the lowering name
     // the generator's: each clause a task, its source and a code, whatever its words; the conflicts before the unknowns,
     // each group whole in any order; a clause naming two tasks, or a source but no code, says not which is refused.

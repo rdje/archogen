@@ -35,8 +35,8 @@
 0 - crates/archogen-plan/tests/corpus/dod-task.eadl
 0 - crates/archogen-plan/tests/corpus/dod-unbound.eadl
 12 unsupported-profile crates/archogen-plan/tests/corpus/dup-prio.eadl
-0 - crates/archogen-plan/tests/corpus/dup-task-name.eadl
-0 - crates/archogen-plan/tests/corpus/dup-task-three.eadl
+10 schema-duplicate-name crates/archogen-plan/tests/corpus/dup-task-name.eadl
+10 schema-duplicate-name crates/archogen-plan/tests/corpus/dup-task-three.eadl
 10 read-number-overflow crates/archogen-plan/tests/corpus/duration-past-arithmetic-large.eadl
 0 - crates/archogen-plan/tests/corpus/duration-past-arithmetic.eadl
 0 - crates/archogen-plan/tests/corpus/equal-separation.eadl

@@ -438,7 +438,7 @@ cheapest diagnostic to write is the most expensive to receive.
 | `schema-bad-name-rule` | `name` is neither `required` nor `forbidden` | write `(name required)` when the declaration is written `(<head> <name> …)` | `kinds (defkind defthing (doc "a thing") (name sometimes))` |
 | `schema-missing-clause-head` | a `clause` does not name the clause it declares | write `(clause <name> (cardinality …) (holds …))` | `kinds (defkind defthing (doc "a thing") (name required) (clause (cardinality one) (holds forms)))` |
 | `schema-duplicate-clause` | one clause is declared twice in a kind | declare each once, and use `(cardinality any)` to allow repetition in a description | `kinds (defkind defthing (doc "a thing") (name required) (clause c (cardinality one) (holds forms)) (clause c (cardinality one) (holds forms)))` |
-| `schema-duplicate-name` | two declarations carry one name — in a module tree, after §6 rule 9 has named them (§7 rule 6) | rename one: a name means one declaration, and the diagnostic names both sites | `check (defblock b (offers (p 1 bit))) (defblock b (offers (p 1 bit)))` |
+| `schema-duplicate-name` | two declarations carry one name — in a module tree, after §6 rule 9 has named them — or two tasks of one system do (§7 rule 6) | rename one: a name means one declaration, and the diagnostic names both sites | `check (defblock b (offers (p 1 bit))) (defblock b (offers (p 1 bit)))` |
 | `schema-unknown-clause-field` | a clause declaration holds a field that is not `cardinality` or `holds` | a clause declaration holds those two | `kinds (defkind defthing (doc "a thing") (name required) (clause c (cardinality one) (holds forms) (colour red)))` |
 | `schema-bad-cardinality` | `cardinality` is not one of `one`, `at-most-one`, `one-or-more`, `any` | use one of those spellings; the diagnostic lists them | `kinds (defkind defthing (doc "a thing") (name required) (clause c (cardinality lots) (holds forms)))` |
 | `schema-bad-holds` | `holds` is not `forms`, `values <type>…` or `kind <name>` | write `(holds kind task)` to have each occurrence validated as a declaration of that kind | `kinds (defkind defthing (doc "a thing") (name required) (clause c (cardinality one) (holds everything)))` |
@@ -657,7 +657,9 @@ and registered; `docs/semantics/kinds/core.eadl` declares the surface kinds and
    description the author meant, which is what §5.3 of `ROADMAP.md` forbids for facts. The rule is over
    the declarations the pipeline checks, so it covers a module tree after §6 rule 9 has named them — where
    a module that declares `inner.x` and imports a module as `inner` that declares `x` has made one name of
-   two. `crates/eadl-model/src/kind.rs`'s `duplicate_names` enforces it.
+   two. Two tasks of one system are refused alike, since every rule keying a requester by its name would read them as
+   one, while two systems' tasks may share a name. `crates/eadl-model/src/kind.rs`'s `duplicate_names` and
+   `duplicate_task_names` enforce it.
 
 ## 8. The language version a description states
 

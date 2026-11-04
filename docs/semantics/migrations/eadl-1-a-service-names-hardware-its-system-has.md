@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-11-04
 - leaf: M1.49 (`docs/tasks/M1.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/reference.md#diagnostics
 - invalidates: a description a system of which serves a service or a policy naming a block or platform outside that system's hardware; none tracked is refused for it but the runtime plan's own corpus
 

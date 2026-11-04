@@ -1,5 +1,6 @@
 (eadl-version eadl/1)
-; Three tasks named `a` and two named `b`: more than one task of each name, refused (§1; round 24, R2).
+; Three tasks named `a` and two named `b`: more than one task of each name, refused by the language (reference §7
+; rule 6; `M1.50`; round 24, R2).
 (defblock console.uart
   (offers (observable-output true) (reachable-at-privilege machine)))
 (defplatform host.p

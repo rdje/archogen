@@ -42,7 +42,7 @@ use eadl_front::{
 };
 
 use crate::boundary;
-use crate::kind::{duplicate_names, read_kind, validate, Registry};
+use crate::kind::{duplicate_names, duplicate_task_names, read_kind, validate, Registry};
 use crate::presence::{FactMap, NAME_CLAUSES};
 use crate::profile::{self, Profile};
 use crate::refinement::{self, Facets};
@@ -364,6 +364,7 @@ fn passes(
     }
     // §7 rule 6: a name is declared once — across declarations, so after the per-declaration frame.
     schema_errors.extend(duplicate_names(registry, &declared));
+    schema_errors.extend(duplicate_task_names(&declared));
     push(&mut findings, Verdict::InvalidDescription, schema_errors);
 
     // ── profile admission ────────────────────────────────────────────────────────────────────
