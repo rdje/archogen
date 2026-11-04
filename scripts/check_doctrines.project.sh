@@ -26,7 +26,7 @@ PROJECT_DOCTRINES=(
   "BOOK-ANCHORS|every book chapter, and every normative document under docs/semantics/, that describes behavior cites a repository path — and every path either of them cites exists|scripts/check_book_anchors.sh"
   "FEEDBACK-SELF-CONTAINED|every reported bug's directory stands alone — complete, closed, portable, and in its vendor register|scripts/check_feedback_self_contained.sh"
   "LANGUAGE-FREEZE|no construct of eadl/1 moved without a migration note — the baseline agrees with the working tree, and amending it is an explicit act|scripts/check_language_freeze.sh"
-  "BOOK-COVERAGE|every workspace member is named in a book chapter that also cites a path inside it — the mirror of BOOK-ANCHORS|scripts/check_book_coverage.sh"
+  "BOOK-COVERAGE|every workspace member is named in a book chapter that also cites a path inside it — the mirror of BOOK-ANCHORS — and has a row in the knowledge map|scripts/check_book_coverage.sh"
   "REPOSITORY-BOUNDARY|every other repository is read-only — each vendored checkout this repository pins is at its pin, with no local commit, no modified file and no created file|scripts/check_repository_boundary.sh"
   "SCRATCH-LOCALITY|nothing this repository owns puts scratch off its volume — every temporary file or directory is made under target/, and no script names the system temporary directory|scripts/check_scratch_locality.sh"
   "SOURCE-LEDGER|every external source the repository pins has a ledger entry carrying the pinned version, and every chapter or decision naming a ledgered source cites its entry|scripts/check_source_ledger.sh"

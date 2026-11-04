@@ -766,15 +766,22 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1122 (leaf PROGRAM.124)`
 
 - ID: `PROGRAM.125`
-  Status: `pending` — P3, filed `2026-11-04` by `M4.2.2`, which found the map had no row for its crate: eleven crates still
-    have none in `knowledge-map/subsystems.md`, whose head says a crate's row appears when the crate does, and nothing
-    asks for one.
-  Goal: a row for each, and a check in the doctrine gate that refuses a crate with no row.
-  Acceptance: `archogen-api`, `archogen-catalog`, `archogen-digest`, `archogen-install`, `archogen-json`, `archogen-outcome`,
-    `archogen-plan-check`, `archogen-plan-check-wasm`, `archogen-transport`, `archogen-wasm` and `eadl-resolve` each have a
-    row saying what the crate is for; a crate added without one is refused, its arm in the gate's fixtures.
-  Verification: `pending`
-  Commit: `pending`
+  Status: `done` — P3, filed `2026-11-04` by `M4.2.2`, which found the map had no row for its crate, and closed the same day:
+    eleven crates had none in `knowledge-map/subsystems.md`, whose head says a crate's row appears when the crate does, and
+    nothing asked for one.
+  Built: a row saying what each is for: `archogen-api`, `archogen-catalog`, `archogen-digest`, `archogen-install`,
+    `archogen-json`, `archogen-outcome`, `archogen-plan-check`, `archogen-plan-check-wasm`, `archogen-transport`,
+    `archogen-wasm` and `eadl-resolve`. `BOOK-COVERAGE`, whose population is already the workspace's, also refuses a member
+    with no row: it must begin a line, so a mention in another row's prose or a longer crate's name is none.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `git grep -c '^- .crates/eadl-resolve/' 64c39016 -- knowledge-map/subsystems.md` → no match, exit 1: the search, the engine's largest crate, had no row, and neither had ten others.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -c 'subsystems' 64c39016 -- scripts/check_book_coverage.sh` → no match, exit 1, and `KNOWLEDGE-MAP` holds the map to its sources alone: nothing compared those sources with the workspace.
+  - [x] **FIX** — `scripts/check_book_coverage.sh` and its arms; the rows in `knowledge-map/subsystems.md` and the map regenerated; the doctrine's lines in `scripts/check_doctrines.project.sh`, `DOCTRINE_ENFORCEMENT.md` and `TOOLBOX.md`; `docs/book/src/annex-repository.md`.
+  - [x] **ADDRESSED (verified)** — before the rows, `bash scripts/check_book_coverage.sh` → `BOOK-COVERAGE: 11 of 23 workspace member(s) with no row`, exit 1; after them `book-coverage: OK (23 workspace member(s), …)`, exit 0; `bash scripts/check_book_coverage.sh --self-test` → `book-coverage self-test: 12 pass / 0 fail (12 arms)`.
+  - [x] **NO REGRESSION** — `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree; no Rust source changed.
+  - [x] **LOCKSTEP** — the book's annex, the doctrine's register, the map, this leaf and the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1135 (leaf PROGRAM.125)`
 
 ## Roadmap coverage map
 
@@ -842,7 +849,6 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
-| 2 | `PROGRAM.125` | `pending` | eleven crates with no row in the knowledge map, and nothing that asks for one; cheap, and next after `M4.2.2` |
 
 The PROGRAM.34 row waits on the director's yes. The other open leaf, `PROGRAM.78`, is blocked until the
 features are complete, by the ruling against mutation testing. Every closed
@@ -928,6 +934,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0460 (leaf PROGRAM)` | **`PROGRAM.57`, `PROGRAM.58` and `PROGRAM.59` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` would have grown 1 331 bytes over its 819 200-byte ceiling with `M3.1.2`'s decomposition |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0489 (leaf PROGRAM)` | **`PROGRAM.10` and `.61`–`.65` sealed**, 13 closed leaves into `docs/task-history/PROGRAM/`, when `README-ROUTES` refused `docs/tasks/` at 820 957 bytes over its 819 200; `docs/tasks/` 817 470 → 752 861 bytes, measured from `HEAD` and the tree |
 | `PROGRAM.124` | `ARCHOGEN-PROGRAM-1122 (leaf PROGRAM.124)` | **a log row's note no bar to its seal**: `LOGS`, its arm, the record; 219 log rows and 31 leaves sealed across `M4`, `M2`, `M3` and `PROGRAM`, `docs/tasks/` 785285 → 614992 bytes |
+| `PROGRAM.125` | `ARCHOGEN-PROGRAM-1135 (leaf PROGRAM.125)` | **every crate a row in the map**: eleven rows, and `BOOK-COVERAGE`'s second leg with four arms |
 
 ## Changelog
 
@@ -974,3 +981,5 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-10-11`: `PROGRAM.80` done — failed or missing actual OS census reads now refuse; the project handoff command is the guarded wrapper, the held native file unchanged.
 
 - `2026-10-18`: `PROGRAM.87` restores complete headed logs without changing prior record text; native history/rendering and original input restoration verified.
+
+- `2026-11-04`: `PROGRAM.125` filed by `M4.2.2` and done: every workspace member a row in the knowledge map, and a gate that asks for one.

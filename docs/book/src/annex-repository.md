@@ -18,6 +18,8 @@ book never shows you. The crates are read from `Cargo.toml` rather than listed, 
 it is added. A name alone does not count: a list of crate names would pass a name-only rule and tell you
 nothing about where anything lives. When it was written, the scheduling checker — the `rt-analysis` crate —
 was in no chapter at all; [What the scheduling checker establishes](analysis.md) now says which file holds what.
+The same check asks that every crate has a row in `knowledge-map/subsystems.md`, the input to the map a fresh
+working session starts from.
 
 ```console
 $ bash scripts/check_book_coverage.sh
