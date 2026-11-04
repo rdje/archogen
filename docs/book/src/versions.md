@@ -232,6 +232,17 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Pinned by | the exact traces of `crates/sim-playground/tests/harness.rs` |
 | Keeps | one system, run twice, writes one trace |
 
+## `build-provenance-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | what a generated system says it was lowered from, and what each of its table entries came from: `provenance.json`, beside the plan's text |
+| Version | `archogen-build-provenance/1` |
+| Declared at | `const:crates/archogen-emit/src/lib.rs:PROVENANCE_FORMAT` |
+| Changes when | a member is added, removed or reinterpreted |
+| Pinned by | `crates/archogen-emit/tests/emit.rs`, which reads it from both ends: the generated line holds the entry, and the source line the task |
+| Keeps | a generated table entry can be followed back to the plan's line and the description's form |
+
 ## `wasm-request-format`
 
 | Field | Value |

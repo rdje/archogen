@@ -765,6 +765,17 @@ mdBook that is the director's window into the project.
   - [x] **LOCKSTEP** — the record, the sealing guide, this leaf and the Commit Log; `MEMORY.md`.
   Commit: `ARCHOGEN-PROGRAM-1122 (leaf PROGRAM.124)`
 
+- ID: `PROGRAM.125`
+  Status: `pending` — P3, filed `2026-11-04` by `M4.2.2`, which found the map had no row for its crate: eleven crates still
+    have none in `knowledge-map/subsystems.md`, whose head says a crate's row appears when the crate does, and nothing
+    asks for one.
+  Goal: a row for each, and a check in the doctrine gate that refuses a crate with no row.
+  Acceptance: `archogen-api`, `archogen-catalog`, `archogen-digest`, `archogen-install`, `archogen-json`, `archogen-outcome`,
+    `archogen-plan-check`, `archogen-plan-check-wasm`, `archogen-transport`, `archogen-wasm` and `eadl-resolve` each have a
+    row saying what the crate is for; a crate added without one is refused, its arm in the gate's fixtures.
+  Verification: `pending`
+  Commit: `pending`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -831,6 +842,7 @@ roadmap item X live?".
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
 | 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 2 | `PROGRAM.125` | `pending` | eleven crates with no row in the knowledge map, and nothing that asks for one; cheap, and next after `M4.2.2` |
 
 The PROGRAM.34 row waits on the director's yes. The other open leaf, `PROGRAM.78`, is blocked until the
 features are complete, by the ruling against mutation testing. Every closed

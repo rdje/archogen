@@ -42,6 +42,21 @@ name = "archogen-digest"
 version = "0.1.0"
 
 [[package]]
+name = "archogen-emit"
+version = "0.1.0"
+dependencies = [
+ "archogen-digest",
+ "archogen-json",
+ "archogen-outcome",
+ "archogen-plan",
+ "archogen-plan-check",
+ "eadl-front",
+ "eadl-model",
+ "eadl-resolve",
+ "sim-playground",
+]
+
+[[package]]
 name = "archogen-evidence"
 version = "0.1.0"
 dependencies = [

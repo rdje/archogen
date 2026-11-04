@@ -1,0 +1,711 @@
+//! The emitter (`ROADMAP.md` §4.2 `archogen-emit`, §10.1 step 6; `docs/decisions/decision_hosted-build.md`): a checked runtime
+//! plan turned into the files of a generated system, for the hosted playground. It does no I/O: it returns the files, and
+//! the command writes them.
+//!
+//! ⭐ **Behavior is copied and never generated.** What it specializes is data, the tables of `src/main.rs`. What runs is
+//! `crates/rt-core` and `crates/sim-playground`, byte for byte, which the engine compiles and tests; a test holds each copy to
+//! its source, so "reviewed" and "shipped" cannot part (`ROADMAP.md` §1.1: "copied or linked components").
+//!
+//! ⭐ **A plan is accepted only by lowering it again** from the same inputs and comparing bytes (`RTP-H3`), so a plan that
+//! reached here by any route is the plan the checked inputs make, or nothing is generated.
+//!
+//! Each job's body is empty until `M4.12`'s inputs give it code, and the trace's header says so (`RTP-H1`).
+
+#![forbid(unsafe_code)]
+
+use archogen_digest::Digest;
+use archogen_plan::contents::{Contents, Item, Release, Separation, Trigger};
+use archogen_plan::{lower_checked, Acceptance, Generator, Lowered, Refusal};
+use eadl_front::{Form, Program, SourceMap};
+use eadl_model::check::resolved_declarations;
+use eadl_model::kind::Registry;
+
+/// The format of `provenance.json`.
+pub const PROVENANCE_FORMAT: &str = "archogen-build-provenance/1";
+
+/// The engine's sources every generated system holds, by the path each takes there, byte for byte.
+const COPIES: [(&str, &str); 4] = [
+    (
+        "rt-core/src/lib.rs",
+        include_str!("../../rt-core/src/lib.rs"),
+    ),
+    (
+        "rt-core/src/scheduler.rs",
+        include_str!("../../rt-core/src/scheduler.rs"),
+    ),
+    (
+        "rt-core/src/fault.rs",
+        include_str!("../../rt-core/src/fault.rs"),
+    ),
+    (
+        "sim-playground/src/lib.rs",
+        include_str!("../../sim-playground/src/lib.rs"),
+    ),
+];
+
+/// The engine's sources a generated system copies, each by the path it takes there and its bytes.
+#[must_use]
+pub const fn copies() -> &'static [(&'static str, &'static str)] {
+    &COPIES
+}
+
+/// What a build is made from: the inputs the plan is lowered from, and the plan.
+#[derive(Clone, Copy)]
+pub struct Inputs<'a> {
+    /// The elaborated program the language's check accepted.
+    pub program: &'a Program,
+    /// The sources its spans point into.
+    pub sources: &'a SourceMap,
+    /// The assignment record, as the text written.
+    pub assignment: &'a str,
+    /// The configuration checker's result record for it, as the text written.
+    pub result: &'a str,
+    /// The runtime plan's text.
+    pub plan: &'a str,
+    /// The language definition.
+    pub kinds: &'a Registry,
+    /// How the checker's acceptance was obtained.
+    pub acceptance: Acceptance,
+}
+
+/// One generated file.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct File {
+    /// Its path, relative to the output directory.
+    pub path: String,
+    /// Its contents.
+    pub contents: String,
+}
+
+/// What was generated.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Emitted {
+    /// The generated package's name.
+    pub package: String,
+    /// Every file, in the order they are written.
+    pub files: Vec<File>,
+    /// The tasks' count, for the command to report.
+    pub tasks: usize,
+    /// Each task a source releases, by the plan's inference: the task's name and the source's (`RTP-H1`).
+    pub source_triggers: Vec<(String, String)>,
+    /// One second in the run's ticks.
+    pub ticks_per_second: u64,
+    /// One past the last instant the run reaches, in ticks.
+    pub horizon: u64,
+    /// Whether the plan's acceptance was taken as text, so the build is experimental.
+    pub experimental: bool,
+}
+
+fn refuse(code: &'static str, message: impl Into<String>) -> Refusal {
+    Refusal {
+        code,
+        message: message.into(),
+    }
+}
+
+/// A task released by `(unknown CAUSE)` refused, naming the task and its cause, with its repair (`RTP-H1`).
+fn unknown_trigger(task: &str, cause: &str) -> Refusal {
+    let own = cause.starts_with("(own-");
+    let (code, repair) = if cause.starts_with("(own-faster") || cause.starts_with("(own-absent") {
+        (
+            "unsupported-profile",
+            "the analysis does not admit that source for this task: bind one at least as far apart as the task",
+        )
+    } else if own {
+        (
+            "missing-fact",
+            "state a `min-arrival-separation` at least the task's for its own source",
+        )
+    } else {
+        (
+            "missing-fact",
+            "write the task's own `(needs interrupt-source)`, so the search binds it a source at least as far apart",
+        )
+    };
+    refuse(
+        code,
+        format!("the plan cannot say what releases task `{task}`, `{cause}`: {repair}"),
+    )
+}
+
+const fn gcd(mut a: u64, mut b: u64) -> u64 {
+    while b != 0 {
+        (a, b) = (b, a % b);
+    }
+    a
+}
+
+/// `a` and `b`'s least common multiple, where it fits.
+fn lcm(a: u64, b: u64) -> Option<u64> {
+    (a / gcd(a, b).max(1)).checked_mul(b)
+}
+
+/// The plan's durations in ticks: every duration's denominator divides the tick (the record's §2).
+struct Ticks {
+    per_second: u64,
+}
+
+impl Ticks {
+    fn of(&self, what: &str, seconds: eadl_model::rational::Rational) -> Result<u64, Refusal> {
+        let denominator = u64::try_from(seconds.denominator()).ok();
+        let numerator = u64::try_from(seconds.numerator()).ok();
+        let ticks = match (numerator, denominator) {
+            (Some(numerator), Some(denominator)) => {
+                numerator.checked_mul(self.per_second / denominator.max(1))
+            }
+            _ => None,
+        };
+        ticks.ok_or_else(|| past_ticks(what))
+    }
+}
+
+fn past_ticks(what: &str) -> Refusal {
+    refuse(
+        "unsupported-profile",
+        format!(
+            "{what} does not fit this build's integer ticks, and a build never rounds a duration"
+        ),
+    )
+}
+
+/// The tick: the least common multiple of every duration's denominator (the record's §2).
+fn tick(contents: &Contents) -> Result<Ticks, Refusal> {
+    let mut per_second = 1_u64;
+    let mut take = |what: &str, seconds: eadl_model::rational::Rational| {
+        let denominator = u64::try_from(seconds.denominator()).map_err(|_| past_ticks(what))?;
+        per_second = lcm(per_second, denominator).ok_or_else(|| past_ticks(what))?;
+        Ok::<(), Refusal>(())
+    };
+    for task in &contents.tasks {
+        let what = format!("a duration of task `{}`", task.name);
+        let (Release::Period(release) | Release::MinSeparation(release)) = task.release;
+        take(&what, release)?;
+        take(&what, task.deadline)?;
+        take(&what, task.jitter)?;
+    }
+    for route in &contents.routes {
+        if let Separation::Of(separation) = route.separation {
+            take("a route's separation", separation)?;
+        }
+    }
+    Ok(Ticks { per_second })
+}
+
+/// A Rust string literal.
+fn literal(text: &str) -> String {
+    format!("{text:?}")
+}
+
+/// A Cargo package name for a system's name: total and deterministic, and a label, never its identity.
+fn package_name(system: &str) -> String {
+    let mut body = String::with_capacity(system.len());
+    for ch in system.chars() {
+        if ch.is_ascii_alphanumeric() {
+            body.push(ch.to_ascii_lowercase());
+        } else if !body.ends_with('-') {
+            body.push('-');
+        }
+    }
+    format!("system-{}", body.trim_matches('-'))
+}
+
+/// The manifest of the system's own package, the root of its workspace, so it builds wherever it is written.
+fn root_manifest(package: &str) -> String {
+    format!(
+        "# GENERATED by archogen from a runtime plan. Do not edit: an edit makes the output stop corresponding to any plan.\n\
+         [package]\n\
+         name = \"{package}\"\n\
+         version = \"0.0.0\"\n\
+         edition = \"2021\"\n\
+         publish = false\n\n\
+         [workspace]\n\
+         members = [\"rt-core\", \"sim-playground\"]\n\n\
+         [dependencies]\n\
+         rt-core = {{ path = \"rt-core\" }}\n\
+         sim-playground = {{ path = \"sim-playground\" }}\n"
+    )
+}
+
+/// The manifest of a copied crate: the copy's own, where the engine's reads the engine's workspace.
+fn copied_manifest(name: &str, dependencies: &str) -> String {
+    format!(
+        "# GENERATED by archogen: the manifest of a copy of the engine's own crate. Do not edit.\n\
+         [package]\n\
+         name = \"{name}\"\n\
+         version = \"0.0.0\"\n\
+         edition = \"2021\"\n\
+         publish = false\n\n\
+         [dependencies]\n\
+         {dependencies}"
+    )
+}
+
+/// What the trace's header says the run did not exercise, and what it is (the record's §3).
+fn header(
+    contents: &Contents,
+    ticks: &Ticks,
+    horizon: u64,
+    plan: &Digest,
+    experimental: bool,
+) -> Vec<String> {
+    let mut lines = vec![
+        sim_format().to_owned(),
+        format!("system {}", contents.system),
+        format!("plan sha256:{}", plan.hex()),
+        format!(
+            "scenario one hyperperiod, {horizon} ticks of 1/{} s; each source at its stated separation, from time zero",
+            ticks.per_second
+        ),
+    ];
+    for route in &contents.routes {
+        match (&route.item, route.separation) {
+            (Item::Source(name), Separation::Unknown | Separation::Absent) => {
+                lines.push(format!(
+                    "source {name} states no separation, so it does not arrive"
+                ));
+            }
+            (Item::TimerRoute(name), _) => {
+                lines.push(format!(
+                    "timer route {name} is programmed by code no job holds yet, so it does not arrive"
+                ));
+            }
+            _ => {}
+        }
+    }
+    lines.push(
+        "no job runs application code: each body is empty, so only the releases are informative"
+            .to_owned(),
+    );
+    if !contents.complete {
+        lines.push(
+            "the plan is not complete: what it owes is unmet, and this run establishes no property"
+                .to_owned(),
+        );
+    }
+    if experimental {
+        lines.push(
+            "experimental: the checker's acceptance was taken as text, not checked by this build"
+                .to_owned(),
+        );
+    }
+    lines
+}
+
+/// The trace format this emitter's generated `main` writes.
+const fn sim_format() -> &'static str {
+    "archogen-playground-trace/1"
+}
+
+/// One line of a generated table, with where it came from.
+struct Entry {
+    table: String,
+    line: usize,
+    plan_line: String,
+    source: Option<(String, u32, u32)>,
+}
+
+/// Every task form of `system` in the program, by its name, with its span's place: what provenance reads.
+fn task_places(inputs: &Inputs<'_>, system: &str) -> Vec<(String, String, u32, u32)> {
+    let flattened;
+    let declarations: &[Form] = if inputs.program.instances.len() == 1 {
+        &inputs.program.root().declarations
+    } else {
+        flattened = resolved_declarations(inputs.program).0;
+        &flattened
+    };
+    declarations
+        .iter()
+        .filter(|d| d.head() == Some("defsystem"))
+        .filter(|d| d.items().get(1).and_then(Form::as_symbol) == Some(system))
+        .flat_map(|d| d.items().iter().filter(|i| i.head() == Some("task")))
+        .filter_map(|task| {
+            let name = task.items().get(1).and_then(Form::as_symbol)?.to_owned();
+            let source = inputs.sources.get(task.span().source)?;
+            let position = source.position(task.span().start);
+            Some((name, source.name.clone(), position.line, position.column))
+        })
+        .collect()
+}
+
+/// `src/main.rs`, and each table entry's provenance.
+#[allow(clippy::too_many_lines)]
+fn main_rs(
+    inputs: &Inputs<'_>,
+    contents: &Contents,
+    ticks: &Ticks,
+    horizon: u64,
+    plan: &Digest,
+    experimental: bool,
+) -> Result<(String, Vec<Entry>), Refusal> {
+    let places = task_places(inputs, &contents.system);
+    let sources: Vec<(&str, Option<u64>)> = {
+        let mut routes: Vec<_> = contents.routes.iter().collect();
+        routes.sort_by_key(|route| route.rank);
+        let mut out = Vec::new();
+        for route in routes {
+            if let Item::Source(name) = &route.item {
+                let separation = match route.separation {
+                    Separation::Of(separation) if separation.is_positive() => {
+                        Some(ticks.of(&format!("source `{name}`'s separation"), separation)?)
+                    }
+                    _ => None,
+                };
+                out.push((name.as_str(), separation));
+            }
+        }
+        out
+    };
+    let plan_lines: Vec<&str> = inputs.plan.lines().collect();
+    let mut lines: Vec<String> = vec![
+        "//! GENERATED by archogen from a runtime plan. Do not edit: an edit makes the output stop corresponding to any plan.".to_owned(),
+        "//!".to_owned(),
+        "//! The tables below are the plan's, and all that is specialized: what runs is `rt-core` and `sim-playground`, copies of".to_owned(),
+        "//! the engine's own crates. This system runs no application code, and carries no timing or assurance claim.".to_owned(),
+        String::new(),
+        "use std::process::ExitCode;".to_owned(),
+        String::new(),
+        "use rt_core::OverrunPolicy;".to_owned(),
+        "use sim_playground::{run, Ended, Observer, Source, Stamped, System, Task, Trigger};".to_owned(),
+        String::new(),
+    ];
+    let mut entries = Vec::new();
+    lines.push(format!(
+        "const TASKS: [Task<'static>; {}] = [",
+        contents.tasks.len()
+    ));
+    for task in &contents.tasks {
+        let policy = match task.overrun.as_str() {
+            "fault" => "OverrunPolicy::Fault",
+            "skip-late-job" => "OverrunPolicy::SkipLateJob",
+            other => {
+                return Err(refuse(
+                    "unsupported-profile",
+                    format!("task `{}` writes the overrun policy `{other}`, which this build has no realization of", task.name),
+                ))
+            }
+        };
+        let trigger = match &task.released_by {
+            Trigger::Timer => {
+                let Release::Period(period) = task.release else {
+                    return Err(refuse(
+                        "tool-failure",
+                        format!(
+                            "task `{}` is released by the timer with no period",
+                            task.name
+                        ),
+                    ));
+                };
+                format!(
+                    "Trigger::Timer({})",
+                    ticks.of(&format!("task `{}`'s period", task.name), period)?
+                )
+            }
+            Trigger::Source(name) => {
+                let place = sources
+                    .iter()
+                    .position(|(source, _)| source == name)
+                    .ok_or_else(|| {
+                        refuse(
+                            "tool-failure",
+                            format!(
+                                "task `{}` is released by `{name}`, which the plan routes nowhere",
+                                task.name
+                            ),
+                        )
+                    })?;
+                format!("Trigger::Source({place})")
+            }
+            Trigger::Unknown(cause) => return Err(unknown_trigger(&task.name, cause)),
+        };
+        let rank = i64::try_from(task.rank).map_err(|_| {
+            refuse(
+                "unsupported-profile",
+                format!("task `{}`'s rank does not fit the runtime", task.name),
+            )
+        })?;
+        lines.push(format!(
+            "    Task {{ name: {}, rank: {rank}, policy: {policy}, trigger: {trigger}, body: &[] }},",
+            literal(&task.name)
+        ));
+        let plan_line = plan_lines
+            .iter()
+            .find(|line| line.starts_with(&format!("(task {} ", task.index)))
+            .map_or_else(String::new, |line| (*line).to_owned());
+        let source = places
+            .iter()
+            .find(|(name, ..)| *name == task.name)
+            .map(|(_, file, line, column)| (file.clone(), *line, *column));
+        entries.push(Entry {
+            table: format!("TASKS[{}]", task.index),
+            line: lines.len(),
+            plan_line,
+            source,
+        });
+    }
+    lines.push("];".to_owned());
+    lines.push(String::new());
+    lines.push(format!(
+        "const SOURCES: [Source<'static>; {}] = [",
+        sources.len()
+    ));
+    for (name, separation) in &sources {
+        lines.push(format!(
+            "    Source {{ name: {}, separation: {separation:?} }},",
+            literal(name)
+        ));
+    }
+    lines.push("];".to_owned());
+    lines.push(String::new());
+    lines.push(format!(
+        "const INITIALISATION: [&[&str]; {}] = [",
+        contents.steps.len()
+    ));
+    for step in &contents.steps {
+        let nodes: Vec<String> = step.iter().map(|node| literal(node)).collect();
+        lines.push(format!("    &[{}],", nodes.join(", ")));
+    }
+    lines.push("];".to_owned());
+    lines.push(String::new());
+    let header = header(contents, ticks, horizon, plan, experimental);
+    lines.push(format!("const HEADER: [&str; {}] = [", header.len()));
+    for line in &header {
+        lines.push(format!("    {},", literal(line)));
+    }
+    lines.push("];".to_owned());
+    lines.push(String::new());
+    lines.push("const SYSTEM: System<'static> = System {".to_owned());
+    lines.push(format!("    name: {},", literal(&contents.system)));
+    lines.push(format!("    ticks_per_second: {},", ticks.per_second));
+    lines.push(format!("    horizon: {horizon},"));
+    lines.push("    tasks: &TASKS,".to_owned());
+    lines.push("    sources: &SOURCES,".to_owned());
+    lines.push("    initialisation: &INITIALISATION,".to_owned());
+    lines.push("};".to_owned());
+    lines.push(String::new());
+    lines.extend(
+        [
+            "struct Print;",
+            "",
+            "impl Observer for Print {",
+            "    fn observe(&mut self, event: Stamped<'_>) {",
+            "        println!(\"{event}\");",
+            "    }",
+            "}",
+            "",
+            "fn main() -> ExitCode {",
+            "    for line in HEADER {",
+            "        println!(\"; {line}\");",
+            "    }",
+        ]
+        .map(str::to_owned),
+    );
+    lines.push(format!(
+        "    match run::<{}>(&SYSTEM, &mut Print) {{",
+        contents.tasks.len()
+    ));
+    lines.extend(
+        [
+            "        Ended::Horizon => ExitCode::SUCCESS,",
+            "        Ended::Halted => ExitCode::from(1),",
+            "        Ended::NotBooted => {",
+            "            eprintln!(\"the generated tables are not the runtime's: a defect of the engine, so report it\");",
+            "            ExitCode::from(70)",
+            "        }",
+            "    }",
+            "}",
+        ]
+        .map(str::to_owned),
+    );
+    let mut text = lines.join("\n");
+    text.push('\n');
+    Ok((text, entries))
+}
+
+/// `provenance.json`: what the plan was lowered from, and what each table entry came from (the record's §1; §10.1).
+fn provenance(lowered: &Lowered, contents: &Contents, entries: &[Entry]) -> String {
+    let quote = |text: &str| {
+        let mut out = String::new();
+        archogen_json::write_string(&mut out, text);
+        out
+    };
+    let mut out = String::from("{\n");
+    out.push_str(&format!("  \"format\": {},\n", quote(PROVENANCE_FORMAT)));
+    out.push_str(&format!("  \"system\": {},\n", quote(&contents.system)));
+    out.push_str(&format!(
+        "  \"plan\": {},\n",
+        quote(&format!("sha256:{}", lowered.plan.sha256().hex()))
+    ));
+    let origin = &lowered.provenance;
+    out.push_str(&format!(
+        "  \"generator\": {{ \"version\": {}, \"sha256\": {} }},\n",
+        quote(&origin.generator.version),
+        quote(&format!("sha256:{}", origin.generator.sha256.hex()))
+    ));
+    out.push_str(&format!(
+        "  \"result\": {},\n  \"checker\": {},\n",
+        quote(&format!("sha256:{}", origin.result.hex())),
+        quote(&format!("sha256:{}", origin.checker.hex()))
+    ));
+    let (acceptance, experimental) = match origin.acceptance {
+        Acceptance::CheckedByFront => ("checked-by-front", false),
+        Acceptance::TakenAsText => ("taken-as-text", true),
+    };
+    out.push_str(&format!(
+        "  \"acceptance\": {},\n  \"experimental\": {experimental},\n  \"entries\": [\n",
+        quote(acceptance)
+    ));
+    for (place, entry) in entries.iter().enumerate() {
+        let source = entry.source.as_ref().map_or_else(
+            || "null".to_owned(),
+            |(file, line, column)| {
+                format!(
+                    "{{ \"file\": {}, \"line\": {line}, \"column\": {column} }}",
+                    quote(file)
+                )
+            },
+        );
+        out.push_str(&format!(
+            "    {{ \"table\": {}, \"generated\": {{ \"file\": \"src/main.rs\", \"line\": {} }}, \"plan\": {}, \"source\": {source} }}{}\n",
+            quote(&entry.table),
+            entry.line,
+            quote(&entry.plan_line),
+            if place + 1 == entries.len() { "" } else { "," }
+        ));
+    }
+    out.push_str("  ]\n}\n");
+    out
+}
+
+/// The files of the system `inputs` describe.
+///
+/// # Errors
+///
+/// The lowering's refusals; `tool-failure` where `inputs.plan` is not what its inputs lower to (`RTP-H3`); a task the plan
+/// cannot say what releases, as `RTP-H1` gives each cause; a duration past this build's integer ticks.
+pub fn emit(inputs: &Inputs<'_>, generator: Generator) -> Result<Emitted, Refusal> {
+    let lowered = lower_checked(
+        inputs.program,
+        inputs.assignment,
+        inputs.result,
+        inputs.kinds,
+        generator,
+        inputs.acceptance,
+    )?;
+    if lowered.plan.text() != inputs.plan {
+        return Err(refuse(
+            "tool-failure",
+            "the runtime plan given is not what its inputs lower to: resolve and lower it again",
+        ));
+    }
+    let contents = lowered.plan.contents();
+    let ticks = tick(contents)?;
+    let mut horizon = 1_u64;
+    let mut hyper = |what: &str, value: u64| -> Result<(), Refusal> {
+        horizon = lcm(horizon, value).ok_or_else(|| past_ticks(what))?;
+        Ok(())
+    };
+    for task in &contents.tasks {
+        let what = format!("task `{}`'s release", task.name);
+        let (Release::Period(release) | Release::MinSeparation(release)) = task.release;
+        hyper(&what, ticks.of(&what, release)?)?;
+    }
+    for route in &contents.routes {
+        if let Separation::Of(separation) = route.separation {
+            if separation.is_positive() {
+                hyper(
+                    "a route's separation",
+                    ticks.of("a route's separation", separation)?,
+                )?;
+            }
+        }
+    }
+    let experimental = inputs.acceptance == Acceptance::TakenAsText;
+    let (main, entries) = main_rs(
+        inputs,
+        contents,
+        &ticks,
+        horizon,
+        &lowered.plan.sha256(),
+        experimental,
+    )?;
+    let package = package_name(&contents.system);
+    let mut files = vec![
+        File {
+            path: "Cargo.toml".to_owned(),
+            contents: root_manifest(&package),
+        },
+        File {
+            path: "src/main.rs".to_owned(),
+            contents: main,
+        },
+        File {
+            path: "rt-core/Cargo.toml".to_owned(),
+            contents: copied_manifest("rt-core", ""),
+        },
+        File {
+            path: "sim-playground/Cargo.toml".to_owned(),
+            contents: copied_manifest("sim-playground", "rt-core = { path = \"../rt-core\" }\n"),
+        },
+    ];
+    files.extend(COPIES.iter().map(|(path, contents)| File {
+        path: (*path).to_owned(),
+        contents: (*contents).to_owned(),
+    }));
+    files.push(File {
+        path: "plan.txt".to_owned(),
+        contents: inputs.plan.to_owned(),
+    });
+    files.push(File {
+        path: "provenance.json".to_owned(),
+        contents: provenance(&lowered, contents, &entries),
+    });
+    let source_triggers = contents
+        .tasks
+        .iter()
+        .filter_map(|task| match &task.released_by {
+            Trigger::Source(source) => Some((task.name.clone(), source.clone())),
+            _ => None,
+        })
+        .collect();
+    Ok(Emitted {
+        package,
+        files,
+        tasks: contents.tasks.len(),
+        source_triggers,
+        ticks_per_second: ticks.per_second,
+        horizon,
+        experimental,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::unknown_trigger;
+
+    #[test]
+    fn a_task_s_own_cause_has_its_own_code_and_repair() {
+        // The search refuses these first (`RTP-H24`), so no plan the search writes holds one: `RTP-H1` gives them all the same.
+        for (cause, code, repair) in [
+            (
+                "(own-unstated (source s))",
+                "missing-fact",
+                "state a `min-arrival-separation`",
+            ),
+            (
+                "(own-faster (source s))",
+                "unsupported-profile",
+                "at least as far apart",
+            ),
+            (
+                "(own-absent (source s))",
+                "unsupported-profile",
+                "at least as far apart",
+            ),
+        ] {
+            let refusal = unknown_trigger("t", cause);
+            assert_eq!(refusal.code, code, "{cause}");
+            assert!(refusal.message.contains(cause), "{}", refusal.message);
+            assert!(refusal.message.contains(repair), "{}", refusal.message);
+        }
+    }
+}

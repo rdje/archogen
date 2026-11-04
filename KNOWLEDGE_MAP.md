@@ -78,6 +78,17 @@ justifies the split — the rows below appear as that happens.
   sequences with coverage floors; ⭐ the five places they disagree are all questions the contract
   does not decide, asserted on both sides as ratchets and recorded in
   `docs/decisions/decision_runtime-contract-gaps.md`.
+- `crates/archogen-plan/` — the lowering (§4.2, §10.1 step 5): a checked assignment into
+  `archogen-runtime-plan/1`, the one canonical text the generator is told. `lower_checked` refuses
+  all but what the configuration checker accepted for those same inputs; `src/contents.rs` reads a
+  plan back and refuses anything its writer would not write; `tests/goldens/` freezes three plans,
+  each held to its digest with no bless.
+- `crates/sim-playground/` — the hosted playground's deterministic event harness (§6.3) over
+  `rt-core`, with no I/O: a system as data, a job's body as steps, an observer for each event, one
+  order for one instant, the trace `archogen-playground-trace/1`. Copied into each generated system.
+- `crates/archogen-emit/` — the emitter (§4.2, §10.1 step 6): a checked plan into the files of a
+  package, with no I/O. ⛔ A plan is accepted only by lowering it again and comparing bytes. What it
+  specializes is data; behavior is `rt-core` and `sim-playground` copied, each held to its source.
 - `xtask/src/trust.rs` — the F30 inventory and its role/package/source judgments. Its private
   `trust_compiler.rs` controller and embedded `trust_compiler_observer.rs` collect actual compiler
   arguments independently of diagnostics. `docs/specs/trust/compiler-provenance-contract.md` and

@@ -1,0 +1,27 @@
+# The emitter (ROADMAP.md §4.2 `archogen-emit`, §10.1 step 6; leaf M4.2.2): a runtime plan, accepted only by lowering it again,
+# turned into the files of a generated system, as docs/decisions/decision_hosted-build.md §1, §2 and §4 write it. It does no
+# I/O. Generator code: nothing of a checker's links it.
+[package]
+name = "archogen-emit"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "The emitter: a checked runtime plan turned into the files of a generated system, for the hosted playground."
+
+[lints]
+workspace = true
+
+[dependencies]
+archogen-digest = { path = "../archogen-digest" }
+archogen-json = { path = "../archogen-json" }
+archogen-plan = { path = "../archogen-plan" }
+eadl-front = { path = "../eadl-front" }
+eadl-model = { path = "../eadl-model" }
+
+[dev-dependencies]
+# The configuration checker writes each test's result record, as it does a real build's.
+archogen-outcome = { path = "../archogen-outcome" }
+archogen-plan-check = { path = "../archogen-plan-check" }
+eadl-resolve = { path = "../eadl-resolve" }
+# Holds the format name the generated tables print to the simulator's own.
+sim-playground = { path = "../sim-playground" }
