@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-11-04
 - leaf: M1.50 (`docs/tasks/M1.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/reference.md#diagnostics
 - invalidates: a description one system of which declares two tasks of one name; two tracked ones, the runtime plan's own corpus's `dup-task-name.eadl` and `dup-task-three.eadl`
 

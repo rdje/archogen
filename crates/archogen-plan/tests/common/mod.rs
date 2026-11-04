@@ -14,6 +14,7 @@ use archogen_plan_check::check::plan_file;
 use eadl_front::module::DirectoryModules;
 use eadl_front::{Form, Program, SourceMap};
 use eadl_model::check::{check, check_program, resolved_declarations, shipped_registry};
+use eadl_model::kind::Registry;
 use eadl_model::profile::RT_STATIC_UP_V1;
 use eadl_resolve::adapter::Catalog;
 use eadl_resolve::plan;
@@ -63,6 +64,11 @@ pub fn catalog() -> Catalog {
         Catalog::shipped(&mut SourceMap::new(), &vocabulary()).expect("the shipped catalog reads")
     })
     .clone()
+}
+
+/// The language definition, which the production entry reads the shipped vocabulary against.
+pub fn registry() -> Registry {
+    shipped_registry(&mut SourceMap::new(), &kinds()).expect("the kinds load")
 }
 
 /// `text`, a plain description, as the language's check judges it under the profile (`archogen check`): the program

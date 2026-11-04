@@ -533,7 +533,13 @@ a requirement to a provider the relation does not find meeting it (`M4.1.12`) do
 the same bytes and its rebuilt bindings give the joint rules the search's own obligations.
 
 The runtime plan is lowered from that record by `crates/archogen-plan/src/lib.rs` (`M4.1.4`), built ahead of its
-design's acceptance as the design's executable form (`docs/decisions/decision_executable-design-reviews.md`). Each rule
+design's acceptance as the design's executable form (`docs/decisions/decision_executable-design-reviews.md`). A plan is
+lowered only on the configuration checker's acceptance: the production entry, `lower_checked`, takes the checker's result
+record as well as the assignment, and refuses a result that does not read, that another program wrote, that judged a
+build, another assignment, another program or another profile, or that refused what the generator accepted. It reads the
+vocabulary and the adapter catalog as this engine's, so no caller can hand it others, and returns beside the plan where
+it came from: the generator, the result record's digest, the checker's digest, and whether the command line ran the
+checker or the result was handed over as text, which only an experimental build may use. Each rule
 cites its section of `docs/decisions/decision_runtime-plan.md`; the record's worked texts are held equal to what the
 code writes by `crates/archogen-plan/tests/worked.rs`; and every probe system of the design's review that the lowering
 decides is a fixture beside the outcome the lowering gives it, in `crates/archogen-plan/tests/corpus/`, a description

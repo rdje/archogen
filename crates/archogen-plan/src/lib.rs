@@ -13,17 +13,22 @@
 //! It lowers the record the configuration checker accepted, read back by the generator's own reader
 //! (`eadl_resolve::plan::read`, `rebuild`; leaf `M4.1.3`), never the search's memory. It does no I/O.
 //!
-//! Not built here yet, `M4.1.4`'s production half: the result record's intake and its refusals (§1's checks of
-//! `archogen-result/1`), the provenance, the plan's own reader and its round trip, the goldens with their fixed result
-//! records, and an entry that takes or checks the vocabulary and the adapter catalog as this engine's itself (§1's
-//! fourth input).
+//! [`lower_checked`] is the production entry: it takes the checker's result record, refuses what §1 refuses of it, reads
+//! the vocabulary and the adapter catalog as this engine's itself (§1's fourth input), and returns the provenance beside
+//! the plan. [`lower`] is the executable form's, for what holds the record's rules against a record no checker judged;
+//! nothing but a test may call it, since a plan it lowers has no acceptance behind it.
+//!
+//! Not built here yet, `M4.1.4`'s production half: the plan's own reader and its round trip, the goldens with their
+//! fixed result records.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use archogen_digest::Digest;
+use archogen_outcome::record::{Judged, Record as ResultRecord};
 
-use eadl_front::{Form, Program};
+use eadl_front::{Form, Program, SourceMap};
 use eadl_model::check::resolved_declarations;
+use eadl_model::kind::Registry;
 use eadl_model::profile::RT_STATIC_UP_V1;
 use eadl_model::quantity::{Dimension, Quantity};
 use eadl_model::rational::Rational;
@@ -39,6 +44,12 @@ use eadl_resolve::vocabulary::{Usage, Vocabulary};
 
 /// The format's identifier (§3).
 pub const FORMAT: &str = "archogen-runtime-plan/1";
+
+/// The executable a result record must name as its producer (§1).
+const CHECKER: &str = "archogen-plan-check";
+
+/// The most bytes a result record may hold, as the command line reads one (`crates/archogen-cli/src/consume.rs`).
+const RESULT_LIMIT: usize = 1 << 20;
 
 /// The interrupt fact (model §8 rule 8).
 const INTERRUPT_SOURCE: &str = "interrupt-source";
@@ -213,9 +224,156 @@ struct Timing {
     jitter: Rational,
 }
 
-/// `record`, an `archogen-assignment/2` record the configuration checker accepted, lowered into
-/// `archogen-runtime-plan/1` over `program`, the elaborated program the language's check accepted, whose declarations
-/// and digest the lowering takes from it (§1, §2, §3).
+/// How the checker's acceptance reached the lowering, which cannot see it itself: neither whether the result came from an
+/// installed, verified checker, nor its exit code (§1, "Provenance"; `M3.5.1`'s contract).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Acceptance {
+    /// The command line ran the checker, having verified it, and read its result.
+    CheckedByFront,
+    /// The result was handed over as text, which `TI-H14` makes experimental: a plan so taken is built only marked so.
+    TakenAsText,
+}
+
+/// The program lowering the record, which this crate cannot read for itself, since it does no I/O (§1, "Provenance").
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Generator {
+    /// The engine's version.
+    pub version: String,
+    /// The sha256 of the executable that ran (`TI-H14`).
+    pub sha256: Digest,
+}
+
+/// What a plan was lowered from, the build's metadata and never part of the plan's text (§1, §3; `RTP-H7`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Provenance {
+    /// The program that lowered it.
+    pub generator: Generator,
+    /// The sha256 of the result record, as the text it was given.
+    pub result: Digest,
+    /// The sha256 of the checker program that record names.
+    pub checker: Digest,
+    /// How the acceptance was obtained.
+    pub acceptance: Acceptance,
+}
+
+/// A plan, with what it was lowered from.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Lowered {
+    /// The plan.
+    pub plan: Plan,
+    /// Its provenance.
+    pub provenance: Provenance,
+}
+
+/// §1's refusals of the result record, each in the order written there: it does not read, or is not a configuration
+/// checker's judgement of a plan, `tool-failure`; it judged another assignment, program or profile, `stale-input`; or it
+/// refused what the generator accepted, `tool-failure`, naming both verdicts.
+fn take_result(
+    text: &str,
+    assignment_text: &str,
+    assignment: &assignment::Record,
+    digest: &str,
+) -> Result<ResultRecord, Refusal> {
+    let result = ResultRecord::read(text.as_bytes(), RESULT_LIMIT).map_err(|why| {
+        refuse(
+            "tool-failure",
+            format!("the result record does not read: {why}"),
+        )
+    })?;
+    if result.producer().name != CHECKER {
+        return Err(refuse(
+            "tool-failure",
+            format!(
+                "the result record's producer is `{}`, and a plan is judged by `{CHECKER}`",
+                result.producer().name
+            ),
+        ));
+    }
+    let Judged::Plan(judged) = result.subject().judged else {
+        return Err(refuse(
+            "tool-failure",
+            "the result record judged a build, not a plan",
+        ));
+    };
+    if judged != Digest::of(assignment_text.as_bytes()) {
+        return Err(refuse(
+            "stale-input",
+            "the result record judged another assignment: resolve again",
+        ));
+    }
+    if result.subject().program.hex() != digest {
+        return Err(refuse(
+            "stale-input",
+            "the result record judged another program: resolve again",
+        ));
+    }
+    if result.profile() != assignment.profile {
+        return Err(refuse(
+            "stale-input",
+            format!(
+                "the result record judged under `{}`, and the assignment was resolved under `{}`: resolve again",
+                result.profile(),
+                assignment.profile
+            ),
+        ));
+    }
+    if !result.accepts() {
+        return Err(refuse(
+            "tool-failure",
+            format!(
+                "the generator accepted this assignment and the configuration checker refused it, `{}`: the two \
+                 roles disagree",
+                result.status().slug()
+            ),
+        ));
+    }
+    Ok(result)
+}
+
+/// `assignment`, an `archogen-assignment/2` record, lowered into `archogen-runtime-plan/1` over `program`, the elaborated
+/// program the language's check accepted, on `result`, the configuration checker's `archogen-result/1` for them (§1's
+/// four inputs). `kinds` is the language definition, which the shipped vocabulary is read against: the vocabulary and the
+/// adapter catalog are this engine's, compiled in, so no caller can hand it another.
+///
+/// # Errors
+///
+/// §1's refusals, in its order, the result record's among them after the assignment's (see [`lower`] for the rest); the
+/// shipped vocabulary or catalog not reading is `tool-failure`.
+pub fn lower_checked(
+    program: &Program,
+    assignment: &str,
+    result: &str,
+    kinds: &Registry,
+    generator: Generator,
+    acceptance: Acceptance,
+) -> Result<Lowered, Refusal> {
+    let shipped = |what: &str| refuse("tool-failure", format!("the shipped {what} does not read"));
+    let mut sources = SourceMap::new();
+    let vocabulary = Vocabulary::shipped(&mut sources, kinds).map_err(|_| shipped("vocabulary"))?;
+    let catalog =
+        Catalog::shipped(&mut sources, &vocabulary).map_err(|_| shipped("adapter catalog"))?;
+    let (plan, accepted) = lowered(program, assignment, Some(result), &vocabulary, &catalog)?;
+    let accepted = accepted.ok_or_else(|| {
+        refuse(
+            "tool-failure",
+            "the lowering lost the result record it was given",
+        )
+    })?;
+    Ok(Lowered {
+        plan,
+        provenance: Provenance {
+            generator,
+            result: Digest::of(result.as_bytes()),
+            checker: accepted.producer().sha256,
+            acceptance,
+        },
+    })
+}
+
+/// `record`, an `archogen-assignment/2` record, lowered into `archogen-runtime-plan/1` over `program`, the elaborated
+/// program the language's check accepted, whose declarations and digest the lowering takes from it (§1, §2, §3): the
+/// executable form's entry, with no result record behind it, which a test holds the rules with. [`lower_checked`] is the
+/// production entry.
 ///
 /// # Errors
 ///
@@ -228,13 +386,24 @@ struct Timing {
 /// system with no task, a deadline measured from an event other than the release, an alarm or an expiry a task or the
 /// system's own level would receive. Then §2.4's: an obliged value that is not a duration. A block or a platform a
 /// service or a policy names outside the system's hardware is the joint rules' to refuse (model §8 rule 7, `M1.49`).
-#[allow(clippy::too_many_lines)]
 pub fn lower(
     program: &Program,
     record: &str,
     vocabulary: &Vocabulary,
     catalog: &Catalog,
 ) -> Result<Plan, Refusal> {
+    lowered(program, record, None, vocabulary, catalog).map(|(plan, _)| plan)
+}
+
+/// The lowering, with the result record taken where §1 writes its refusals, when there is one.
+#[allow(clippy::too_many_lines)]
+fn lowered(
+    program: &Program,
+    record: &str,
+    result: Option<&str>,
+    vocabulary: &Vocabulary,
+    catalog: &Catalog,
+) -> Result<(Plan, Option<ResultRecord>), Refusal> {
     // §1, input 1: the declarations and the digest are the program's own, never its caller's; a module tree is read as
     // the language checks it, its names qualified.
     let flattened;
@@ -286,6 +455,9 @@ pub fn lower(
             ),
         ));
     }
+    let accepted = result
+        .map(|text| take_result(text, record_text, &record, &digest))
+        .transpose()?;
     if record.profile != RT_STATIC_UP_V1.id {
         return Err(refuse(
             "unsupported-profile",
@@ -1182,7 +1354,7 @@ pub fn lower(
     lines.extend(obligation_lines);
     lines.extend(owed);
     lines.push("(complete no)".to_string());
-    Ok(Plan { lines })
+    Ok((Plan { lines }, accepted))
 }
 
 /// The assignment record's sha256, its identity in the plan (§2.1).
