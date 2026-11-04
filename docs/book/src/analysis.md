@@ -272,6 +272,16 @@ overflow, a step budget — the set gets the verdict the record gives that stop,
 holding. Hand-derived fixtures check every rule, and sixteen deliberate breakages, one rule removed each, are all
 caught. The caller supplies the application's own figures and never a kernel or platform one.
 
+One of those facts only the application can state, because no reviewer of the kernel ever sees its code:
+`leaves-interrupt-hardware-alone`. It says that the application's code stays off the interrupt hardware, and also off
+the runtime's own data and code, so that it changes the kernel's state only through the calls it is allowed to make
+(`M2.30`). That second half matters as much as the first. A task that raised the kernel's mask depth by writing to it
+inside a section would find that its `unmask` no longer turned interrupts back on. It could run masked past the end it
+declared, and the delays the analysis had added up could be too short, with no figure or fault showing it. So the fact
+gates every composite: unless it is declared `yes`, no task of the set is reported as holding. Every catalog record
+with code in the claim's closure states its counterpart through `runtime-discipline`, naming in that fact's basis what
+it writes of the runtime's data and in which role, as generated code is to from `M4`.
+
 ⚠️ **It still cannot be cited for a real system.** Its inputs, the costs and the platform facts, come from the
 catalog, whose design is decided (see [the catalog chapter](catalog.md)) and whose records do not exist yet
 (`M2.7.4.5`; the path that reads them, `M2.7.5`). F17's runtime half, a running system refusing what it cannot bound,

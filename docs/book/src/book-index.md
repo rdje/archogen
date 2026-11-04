@@ -324,11 +324,11 @@ a change that leaves it stale, so it is never edited by hand.
 - Failed mutation baseline evidence — [Verifying the toolchain](verification.md#failed-mutation-baseline-evidence)
 - **fan-out** — [definition](glossary.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - **fault** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Checking a
-  plan](plan-check.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [Checks that must not share
-  a mistake: the trust gate](trust.md), [The runtime: decisions, not actions](runtime.md), [Verifying the
-  toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
-  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust
-  proof records](annex-trust-proofs.md)
+  plan](plan-check.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes
+  from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
+  decisions, not actions](runtime.md), [Verifying the toolchain](verification.md), [What this project relies on from
+  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the
+  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Faults in detail — [Annex A: The runtime's rules in detail](annex-runtime.md#faults-in-detail)
 - Figure registration for literal fences — [Annex C: Trust proof
   records](annex-trust-proofs.md#figure-registration-for-literal-fences)

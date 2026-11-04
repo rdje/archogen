@@ -263,8 +263,9 @@ timer route and a source, and a block may be named `timer`:
      asks. The allocation itself is `/2`'s.
 
    `leaves-interrupt-hardware-alone` is owed once, for the system: it covers the application's tasks and its
-   initialisation (the composite-inputs record §2); any further fact of the application's the composition is found
-   to need is owed so too (`RTP-H12`). The application inputs' format is `RTP-H5`'s.
+   initialisation (the composite-inputs record §2), the runtime's own data and code among what it leaves alone (`M2.30`); any
+   further fact of the application's the composition is found to need is owed so too (`RTP-H12`). The application
+   inputs' format is `RTP-H5`'s.
    `archogen-runtime-plan/1` has no line for a supplied application fact, so `/1` is never complete. Until those
    inputs exist, a `/1` build runs each job as an engine-owned empty body that the release trace alone observes, as
    S0's executable does, and says so (`RTP-H1`).
