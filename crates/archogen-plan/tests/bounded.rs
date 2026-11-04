@@ -9346,8 +9346,8 @@ fn flow(text: &str, system: &str) -> Flow {
         Err(verdict) => return Flow::Unresolved(verdict),
     };
     let checker = judged_by_the_checker(text, &record);
-    let lowered =
-        lower(&program, &record, &common::vocabulary(), &common::catalog()).map(|plan| plan.text());
+    let lowered = lower(&program, &record, &common::vocabulary(), &common::catalog())
+        .map(|plan| plan.text().to_owned());
     Flow::Resolved {
         record,
         program: plan::program_digest(&program),

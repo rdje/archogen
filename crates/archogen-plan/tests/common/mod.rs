@@ -90,7 +90,7 @@ pub fn checked(text: &str) -> Result<Program, &'static str> {
 pub fn lowered_record(text: &str, record: &str) -> Result<String, Refusal> {
     let program = checked(text).expect("the language's check accepts the description");
     let record = record.replace("PROGRAM", &plan::program_digest(&program));
-    lower(&program, &record, &vocabulary(), &catalog()).map(|plan| plan.text())
+    lower(&program, &record, &vocabulary(), &catalog()).map(|plan| plan.text().to_owned())
 }
 
 /// A hand-written record judged by the configuration checker, as the lowering takes only a record it accepted (the
@@ -122,7 +122,7 @@ pub fn judged_record(text: &str, record: &str) -> Result<String, Refusal> {
             findings.join("; ")
         );
     }
-    lower(&program, &record, &vocabulary(), &catalog()).map(|plan| plan.text())
+    lower(&program, &record, &vocabulary(), &catalog()).map(|plan| plan.text().to_owned())
 }
 
 /// What lowering one system of a description gave: the plan's text, or the search's or the lowering's refusal.
@@ -209,7 +209,7 @@ fn lowered_program(program: &Program, system: Option<&str>) -> Lowered {
         &plan::program_digest(program),
     );
     match lower(program, &record, &vocabulary, &catalog) {
-        Ok(plan) => Lowered::Plan(plan.text()),
+        Ok(plan) => Lowered::Plan(plan.text().to_owned()),
         Err(refusal) => Lowered::Refused(refusal),
     }
 }

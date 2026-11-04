@@ -18,8 +18,7 @@
 //! the plan. [`lower`] is the executable form's, for what holds the record's rules against a record no checker judged;
 //! nothing but a test may call it, since a plan it lowers has no acceptance behind it.
 //!
-//! Not built here yet, `M4.1.4`'s production half: the plan's own reader and its round trip, the goldens with their
-//! fixed result records.
+//! Not built here yet, `M4.1.4`'s production half: the goldens with their fixed result records.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -41,6 +40,8 @@ use eadl_resolve::plan as assignment;
 use eadl_resolve::requirement::Requirement;
 use eadl_resolve::value::Value;
 use eadl_resolve::vocabulary::{Usage, Vocabulary};
+
+pub mod contents;
 
 /// The format's identifier (§3).
 pub const FORMAT: &str = "archogen-runtime-plan/1";
@@ -76,22 +77,42 @@ fn refuse(code: &'static str, message: impl Into<String>) -> Refusal {
     }
 }
 
-/// A runtime plan, as its canonical text's lines (§3).
+/// A runtime plan: its canonical text, the one thing it is, and what that text holds, read back from it (§3).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
-    lines: Vec<String>,
+    text: String,
+    contents: contents::Contents,
 }
 
 impl Plan {
+    /// `text`, a plan's canonical text, read.
+    ///
+    /// # Errors
+    ///
+    /// Why it is not one: the line that does not read, is not written as §3 writes it, or stands out of §3's order.
+    pub fn read(text: &str) -> Result<Self, String> {
+        Ok(Self {
+            contents: contents::read(text)?,
+            text: text.to_owned(),
+        })
+    }
+
     /// The plan's canonical text: each line one form, ending with a newline, the last included (§3).
     #[must_use]
-    pub fn text(&self) -> String {
-        let mut out = String::new();
-        for line in &self.lines {
-            out.push_str(line);
-            out.push('\n');
-        }
-        out
+    pub fn text(&self) -> &str {
+        &self.text
+    }
+
+    /// What it holds.
+    #[must_use]
+    pub const fn contents(&self) -> &contents::Contents {
+        &self.contents
+    }
+
+    /// The sha256 of its canonical text, the plan's identity in the build's metadata (§3, `RTP-H7`).
+    #[must_use]
+    pub fn sha256(&self) -> Digest {
+        Digest::of(self.text.as_bytes())
     }
 }
 
@@ -1354,7 +1375,16 @@ fn lowered(
     lines.extend(obligation_lines);
     lines.extend(owed);
     lines.push("(complete no)".to_string());
-    Ok((Plan { lines }, accepted))
+    let mut text = lines.join("\n");
+    text.push('\n');
+    // Every plan written goes through its own reader, so the writer and the reader of §3 cannot part.
+    let plan = Plan::read(&text).map_err(|why| {
+        refuse(
+            "tool-failure",
+            format!("the lowering wrote a plan its own reader refuses: {why}"),
+        )
+    })?;
+    Ok((plan, accepted))
 }
 
 /// The assignment record's sha256, its identity in the plan (§2.1).

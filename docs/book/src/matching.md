@@ -539,7 +539,10 @@ record as well as the assignment, and refuses a result that does not read, that 
 build, another assignment, another program or another profile, or that refused what the generator accepted. It reads the
 vocabulary and the adapter catalog as this engine's, so no caller can hand it others, and returns beside the plan where
 it came from: the generator, the result record's digest, the checker's digest, and whether the command line ran the
-checker or the result was handed over as text, which only an experimental build may use. Each rule
+checker or the result was handed over as text, which only an experimental build may use. A plan is its canonical text,
+one spelling, whose sha256 is its identity (`crates/archogen-plan/src/contents.rs`): what a consumer reads of it, each task's
+timing and trigger, each route's interrupt and separation, each node's contexts, is read back from that text, by a reader
+that refuses anything the writer would not write, and every plan the lowering writes goes through that reader. Each rule
 cites its section of `docs/decisions/decision_runtime-plan.md`; the record's worked texts are held equal to what the
 code writes by `crates/archogen-plan/tests/worked.rs`; and every probe system of the design's review that the lowering
 decides is a fixture beside the outcome the lowering gives it, in `crates/archogen-plan/tests/corpus/`, a description
