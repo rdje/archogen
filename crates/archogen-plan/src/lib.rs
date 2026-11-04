@@ -17,8 +17,6 @@
 //! the vocabulary and the adapter catalog as this engine's itself (§1's fourth input), and returns the provenance beside
 //! the plan. [`lower`] is the executable form's, for what holds the record's rules against a record no checker judged;
 //! nothing but a test may call it, since a plan it lowers has no acceptance behind it.
-//!
-//! Not built here yet, `M4.1.4`'s production half: the goldens with their fixed result records.
 
 use std::collections::{BTreeMap, BTreeSet};
 

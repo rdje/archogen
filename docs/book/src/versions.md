@@ -193,10 +193,10 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Field | Value |
 | --- | --- |
 | Surface | the runtime plan a checked assignment is lowered into, for a system run on the hosted playground: its tasks and what releases each, its bindings and adapter instances, its interrupts ranked, each part's execution contexts, its initialisation graph and steps, and what it owes (`docs/decisions/decision_runtime-plan.md`, `M4.1`) |
-| Version | `archogen-runtime-plan/1`, under review (`M4.1.1`): built ahead of the record's acceptance as its executable form |
+| Version | `archogen-runtime-plan/1`, its design accepted `2026-10-29` (`M4.1.1`), for the hosted playground; a target's layout is `/2`'s (`M4.1.7`) |
 | Declared at | `const:crates/archogen-plan/src/lib.rs:FORMAT` |
 | Changes when | any rule of the record's §2 changes — an order, the topological choice — or what §2 reads, the joint rules, the vocabulary or the adapter catalog, moves a plan for the same inputs |
-| Pinned by | the record's three worked texts, compared with what the code writes by `crates/archogen-plan/tests/worked.rs`, and the review's probe systems with their outcomes, `crates/archogen-plan/tests/corpus.rs`; the frozen goldens come with `M4.1.4`'s production half |
+| Pinned by | three goldens, lowered by the production entry from frozen inputs and a fixed result record, each held to its sha256 and never rewritten (`crates/archogen-plan/tests/goldens.rs`); the record's three worked texts, compared with what the code writes by `crates/archogen-plan/tests/worked.rs`, and the review's probe systems with their outcomes, `crates/archogen-plan/tests/corpus.rs`; the frozen goldens come with `M4.1.4`'s production half |
 | Keeps | a plan labelled `archogen-runtime-plan/1` has one text for one record and one description |
 
 ## `adapter-catalog`
