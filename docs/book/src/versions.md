@@ -221,6 +221,17 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Pinned by | its shape — every key path and the kind of value at it — frozen in `crates/archogen-install/tests/goldens/archogen-install-1.golden` and compared by `crates/archogen-install/tests/manifest.rs`, never rewritten; the same test reads every manifest back as itself |
 | Keeps | a manifest labelled `archogen-install/1` has one text, and names the same programs to every reader of `/1` |
 
+## `playground-trace-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | the trace a system prints on the hosted playground: one line an event, its time exact, in the one order `docs/decisions/decision_hosted-build.md` §3 fixes for an instant |
+| Version | `archogen-playground-trace/1` |
+| Declared at | `const:crates/sim-playground/src/lib.rs:TRACE_FORMAT` |
+| Changes when | an event's words change, an event is added or removed, or the order of one instant moves |
+| Pinned by | the exact traces of `crates/sim-playground/tests/harness.rs` |
+| Keeps | one system, run twice, writes one trace |
+
 ## `wasm-request-format`
 
 | Field | Value |

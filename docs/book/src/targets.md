@@ -34,6 +34,33 @@ comes to believe it has hardware evidence.
 | `riscv-virt-up` | independent execution of real target binaries — startup, interrupt paths, MMIO contracts | it is a virtual platform, not a board and not a cycle-accurate timing reference |
 | `board-first` | the same profile on a named physical processor and device revision | only what its documented configuration and measurement procedure support |
 
+**The hosted playground is a simulator, not an emulator** (`crates/sim-playground`, `M4.3.1`). No target code runs on it. It is
+a small program that executes the runtime's real scheduling logic, `crates/rt-core`, against modeled time, and writes down
+every event as it happens: an interrupt becoming pending, its service, each release, each job starting, being preempted,
+resuming and completing. It has one rule for what happens first when several things fall on one instant, so one system has
+one trace, and two runs can be compared byte for byte:
+
+```text
+0 s pending timer
+0 s entry timer
+0 s release beat
+0 s release chime
+0 s timer-programmed 1
+0 s exit timer
+0 s start beat
+0 s complete beat
+0 s start chime
+0 s complete chime
+1/100 s pending timer
+```
+
+Time is exact: `1/100 s` is 10 ms, with no rounding anywhere. In order: an interrupt that has arrived is taken as soon as the
+hardware is unmasked, the routes in the plan's order and then the release timer, none nesting another; then the scheduler
+decides; then the running job goes on. While a job holds interrupts masked, an arrival stays pending, and its service runs at
+the unmask. A job's body is data, a list of *run this long*, *mask*, *unmask*. Until an application's own inputs exist, a
+generated system's bodies are empty, so its jobs start and complete at one instant, and only the releases are informative;
+the simulator's own tests run longer bodies, so preemption, masking and overrun are held today.
+
 ## The precise rules
 
 ### The emulator is pinned

@@ -544,8 +544,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Outside path dependencies refused — [Annex C: Trust proof
   records](annex-trust-proofs.md#outside-path-dependencies-refused)
 - **overrun** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Describing a
-  workload](workload.md), [The runtime: decisions, not actions](runtime.md), [Annex A: The runtime's rules in
-  detail](annex-runtime.md)
+  workload](workload.md), [The runtime: decisions, not actions](runtime.md), [Where generated systems run](targets.md),
+  [Annex A: The runtime's rules in detail](annex-runtime.md)
 - Own-package completion assessment — [Annex C: Trust proof
   records](annex-trust-proofs.md#own-package-completion-assessment)
 
@@ -570,6 +570,7 @@ a change that leaves it stale, so it is never edited by hand.
   costs](versions.md#plan-check-wasm-request-format)
 - Planning the operator measurements — [Generated-sources test
   adequacy](trust-adequacy.md#planning-the-operator-measurements)
+- playground-trace-format — [What is versioned, and what changing it costs](versions.md#playground-trace-format)
 - **PLIC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **PMP** — [definition](glossary.md), [Where generated systems run](targets.md), [What this project relies on from
   outside](ledger.md)
