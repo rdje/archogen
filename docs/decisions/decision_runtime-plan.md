@@ -86,11 +86,12 @@ several things orders them as it states, each by its text compared byte by byte 
   give it — the two roles disagreeing;
 - a task's release or deadline the description check should have refused: none stated, which it refuses already
   (`missing-fact` for no release model, a deadline's cardinality one); a period, minimum separation, deadline or jitter
-  that is not a time; a period or minimum separation of zero, which no run can release (`RTP-H9`); or a periodic task
+  that is not a time, and a period or minimum separation of zero, which no run can release (`RTP-H9`), which `M1.42` made
+  the language refuse (`RTP-H14`), `invalid-description`, so an accepted description holds neither; or a periodic task
   bound itself for `interrupt-source`, its requirement met by `true` as model §8 rule 2 reads one, which states a second
   release model, the source "a source of interrupts a service can be released by" (the vocabulary): `tool-failure`,
-  naming the task and the clause — for the last, its `period` — the check having accepted an ill-formed description.
-  `M1.42` and `M1.43` make the language refuse the last three (`RTP-H14`, `RTP-H15`), `invalid-description`;
+  naming the task and its `period`, the check having accepted an ill-formed description. `M1.43` makes the language refuse
+  that too (`RTP-H15`), `invalid-description`;
 - a declaration or a task the system serves naming a system by `uses` or `needs`, what a system it names writes at its
   own level — its `platform` clause included — being served too (model §8 rules 1 and 7): a system is no thing to use —
   its own `uses` says what it includes (model §8 rule 4) — and its own level would become a node §2 does not give:

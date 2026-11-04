@@ -169,6 +169,9 @@ it (`crates/eadl-model/src/check.rs`, `crates/eadl-model/src/workload.rs`).
    one this runtime cannot perform, so it is refused rather than mapped onto one of the two:
    `unsupported-profile`. Another profile could perform more.
 7. **A failure of the toolchain is never a verdict about the description** (§5.5): `tool-failure`.
+8. **A task's `period`, `min-separation`, `deadline` and `jitter` are times, and its `period` or `min-separation` is above
+   zero.** A quantity of another dimension describes nothing a run or an analysis can read, and no run can release a task with
+   nothing between its releases. Both are the language's rule, and both `invalid-description`, naming the clause.
 
 ## 5. A description contains no implementation
 

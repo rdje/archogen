@@ -1,2 +1,2 @@
 == system hz
-refused tool-failure: `(task hz a)` writes `(period 100 Hz)`, which is not a time: the description check accepted an ill-formed description, which `M1.42` makes it refuse
+rejected invalid-description

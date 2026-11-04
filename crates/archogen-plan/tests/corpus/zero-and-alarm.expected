@@ -1,2 +1,2 @@
 == system za
-refused tool-failure: `(task za b)` writes `(period 0 ms)`, a release separation of zero, which no run can release: the description check accepted an ill-formed description, which `M1.42` makes it refuse
+rejected invalid-description

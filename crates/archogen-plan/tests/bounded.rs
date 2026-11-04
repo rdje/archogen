@@ -61,10 +61,12 @@
 //! `infeasible-configuration`, beside a task's, the system's own and a platform's `needs` making such a block hardware,
 //! a namer the system does not serve, every refusal of §1 it leaves unreached, a system that declares no task, and one
 //! service two systems serve, the name inside one's hardware and outside the other's;
-//! §1's bullet over tasks whole — a period, a minimum separation, a deadline and a jitter that is not a time, in every
-//! unit the language accepts that is no time, a period or a minimum separation of zero, a periodic task bound to its
-//! source, and two at once — taken task by task in runtime order, each task's clauses in the order the bullet writes
-//! them, and a task stating no release or no deadline left to the language; ranks that start past 1 and skip, spelled
+//! a task's period, minimum separation, deadline and jitter that is not a time, in every unit the language accepts that
+//! is no time, and a period or a minimum separation of zero, alone and two at once, which round 20 had §1's bullet over
+//! tasks refuse and which, since `M1.42` (`RTP-H14`), the language rejects, `invalid-description`, whatever else the
+//! system writes, before the search and every refusal of §1; beside them a zero deadline, which it accepts, a task
+//! stating no release or no deadline left to the language, and what the bullet keeps, a periodic task bound to its
+//! source, taken task by task in runtime order; ranks that start past 1 and skip, spelled
 //! in every way the language reads an integer; and two timer routes, an expiry's and a wake's costs on one route, a
 //! source and a timer route at one provider, and a component holding an instance, each a class of its own; and, after
 //! round 23 (R23-D1, R23-R2, R23-R7), a system declaring two tasks of one name — one name carried twice or three times,
@@ -112,7 +114,9 @@
 //! it refuses is a finding naming that record. **Two tasks of one system carrying one name** are the language's to
 //! reject, `invalid-description` (`LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME`; reference §7 rule 6; `M1.50`, `RTP-H23`):
 //! such a description is no input (§1), so no search, record or lowering reads it, and another verdict, or the language
-//! accepting one, would be a finding. **A system's side that contradicts itself, read whole**, is the
+//! accepting one, would be a finding. **A task's duration that is not a time, and a release of zero**, are the
+//! language's to reject alike (`LANGUAGE_REJECTS_A_TASK_S_DURATION`; model §4 rule 8; `M1.42`, `RTP-H14`). **A system's
+//! side that contradicts itself, read whole**, is the
 //! search's to refuse, `invalid-description` (`SEARCH_READS_THE_SIDE_WHOLE`; model §7 rule 4, §8 rule 1; `RTP-H20`): no
 //! record of it reaches the checker, and a record the search wrote for one would be a finding. **A service or a policy
 //! the system serves naming a block or a platform outside its hardware** is the search's to refuse too,
@@ -227,14 +231,14 @@ impl Dur {
     }
 
     /// Its seconds (§2.2), or `None` where they lie past the engine's exact arithmetic. A quantity that is not a time
-    /// is refused before any plan (§1's bullet over tasks), so it is read nowhere this is.
+    /// is rejected by the language before any plan (model §4 rule 8), so it is read nowhere this is.
     fn seconds(self) -> Option<Ratio> {
         match self.time() {
             Time::Seconds(time) => Some(time),
             Time::Past => None,
             Time::Other(unit) => {
                 panic!(
-                    "`{}` is in `{unit}`, not a time, which §1 refuses before any plan",
+                    "`{}` is in `{unit}`, not a time, which the language rejects before any plan",
                     self.spelling()
                 )
             }
@@ -248,34 +252,34 @@ const TIME_UNITS: [(&str, u32); 4] = [("s", 0), ("ms", 3), ("us", 6), ("ns", 9)]
 
 /// Every other unit the language accepts, none of them a time: model §1 rule 2's frequencies, `Hz`, `kHz`, `MHz` and
 /// `GHz`, and information, `bit` and `byte`, and the language's table's `KiB`, `MiB` and `tick` beside them
-/// (`eadl_model::quantity::UNITS`, held to these by `the_reading_transcribes_the_shipped_vocabulary_and_catalog`). §1
-/// refuses a task's "period, minimum separation, deadline or jitter that is not a time", so the reading refuses each of
-/// these and panics on none of them (round 20, R20-R7).
+/// (`eadl_model::quantity::UNITS`, held to these by `the_reading_transcribes_the_shipped_vocabulary_and_catalog`).
+/// Model §4 rule 8 has a task's `period`, `min-separation`, `deadline` and `jitter` be times (`M1.42`, `RTP-H14`), so
+/// the reading derives the language's refusal of each of these and panics on none of them (round 20, R20-R7).
 const OTHER_UNITS: [&str; 9] = [
     "Hz", "kHz", "MHz", "GHz", "bit", "byte", "KiB", "MiB", "tick",
 ];
 
-/// The class of reading each of [`OTHER_UNITS`] as not a time, in its order.
+/// The class of the language rejecting a task's duration in each of [`OTHER_UNITS`], in its order.
 const NOT_A_TIME_IN: [&str; 9] = [
-    "task bullet: not a time, in `Hz`",
-    "task bullet: not a time, in `kHz`",
-    "task bullet: not a time, in `MHz`",
-    "task bullet: not a time, in `GHz`",
-    "task bullet: not a time, in `bit`",
-    "task bullet: not a time, in `byte`",
-    "task bullet: not a time, in `KiB`",
-    "task bullet: not a time, in `MiB`",
-    "task bullet: not a time, in `tick`",
+    "language: not a time, in `Hz`",
+    "language: not a time, in `kHz`",
+    "language: not a time, in `MHz`",
+    "language: not a time, in `GHz`",
+    "language: not a time, in `bit`",
+    "language: not a time, in `byte`",
+    "language: not a time, in `KiB`",
+    "language: not a time, in `MiB`",
+    "language: not a time, in `tick`",
 ];
 
-/// A quantity read as a duration (§2.2, §1).
+/// A quantity read as a duration (§2.2; model §4 rule 8).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Time {
     /// A time, its reduced seconds within the arithmetic.
     Seconds(Ratio),
     /// A time whose seconds lie past the arithmetic.
     Past,
-    /// A quantity of another dimension, in this unit: "not a time" (§1).
+    /// A quantity of another dimension, in this unit, which model §4 rule 8 refuses of a task's durations.
     Other(&'static str),
 }
 
@@ -4436,12 +4440,13 @@ struct Clauses {
     omitted: Option<&'static str>,
 }
 
-/// The clauses a task of the task-bullet universe writes: well-formed; each clause of §1's bullet over tasks alone — a
-/// period, a minimum separation, a deadline and a jitter that is not a time, a period and a minimum separation of
-/// zero, a periodic task bound itself to a source; two at once, where the bullet's order and the clauses' order part
-/// and where they agree; a zero deadline, which no bullet refuses; and neither release nor deadline stated, which the
-/// language refuses ("none stated, which it refuses already"). Every unit the language accepts that is no time is
-/// written in some clause: `Hz`, `kHz`, `MHz`, `GHz`, `bit`, `byte`, `KiB`, `MiB` and `tick`.
+/// The clauses a task of the task-bullet universe writes, what §1's bullet over tasks held until `M1.42`: well-formed;
+/// each clause model §4 rule 8 refuses alone — a period, a minimum separation, a deadline and a jitter that is not a
+/// time, a period and a minimum separation of zero; a periodic task bound itself to a source, which the bullet still
+/// holds (`M1.43`); two at once, a clause rule 8 refuses beside another or beside that binding; a zero deadline, which
+/// rule 8 does not refuse, being a time; and neither release nor deadline stated, which the language refuses ("none
+/// stated, which it refuses already"). Every unit the language accepts that is no time is written in some clause: `Hz`,
+/// `kHz`, `MHz`, `GHz`, `bit`, `byte`, `KiB`, `MiB` and `tick`.
 const BULLET_CLAUSES: [Clauses; 16] = {
     const WELL: Clauses = Clauses {
         word: "well-formed",
@@ -4549,13 +4554,15 @@ const BULLET_ALSO: [&str; 4] = [
     "a bound past",
 ];
 
-/// **§1's bullet over tasks, whole** (§1; round 20, R20-R7: "§1's bullet over tasks is read only for its
-/// periodic-source clause, and a unit past `s`, `ms`, `us` and `ns` panics"): tasks `t` and `u`, either first in
-/// runtime order, each writing one choice of [`BULLET_CLAUSES`], over the source `dev.s`, which a task bound to a
-/// source binds; and one choice of [`BULLET_ALSO`]. So the bullet is taken "task by task in runtime order, each task's
-/// clauses in the order the bullet writes them", named "the task and the clause", before the first list's later bullets
-/// and the second list; a unit the language accepts is read as no time and never panics; and a task stating no release
-/// or no deadline is the language's to refuse.
+/// **A task's durations, and what §1's bullet over tasks keeps** (model §4 rule 8; `M1.42`, `RTP-H14`; round 20,
+/// R20-R7: "§1's bullet over tasks is read only for its periodic-source clause, and a unit past `s`, `ms`, `us` and
+/// `ns` panics"): tasks `t` and `u`, either first in runtime order, each writing one choice of [`BULLET_CLAUSES`], over
+/// the source `dev.s`, which a task bound to a source binds; and one choice of [`BULLET_ALSO`]. So the language rejects
+/// every duration rule 8 refuses, in either task and either order, whatever else the system writes, before the search
+/// and every refusal of §1; a unit the language accepts is read as no time and never panics; a task stating no release
+/// or no deadline is the language's to refuse; and what the bullet keeps, a periodic task bound to its source, is taken
+/// "task by task in runtime order", named "the task and its `period`", before the first list's later bullets and the
+/// second list.
 fn task_bullet() -> Vec<Case> {
     let mut cases = Vec::new();
     for t_clauses in BULLET_CLAUSES {
@@ -4679,12 +4686,14 @@ enum OutsideServed {
 /// uses; the services `n` and `n.s` and the policy `n!`, naming one choice of [`N_NAMING`], [`NS_NAMING`] and
 /// [`NBANG_NAMING`], served as one choice of [`OutsideServed`]; `x`, `x.y` or `x!` made hardware by another name —
 /// none, `t`'s, the system's own level's `needs`, or `soc`'s `needs` — "beside hardware a task names, which rule 7
-/// makes hardware"; and `t` meeting another refusal of §1 or not: none, a zero period, `t` naming the system `other`,
-/// an alarm it programs itself, a deadline from another event, a jitter past the arithmetic, or `x` naming the service
-/// `m`. Beside them, a system declaring no task whose own level uses `n` naming `x` or nothing, programming an alarm or
-/// not. So a served name outside the hardware is the search's conflict whatever else `t` meets, no record reaching the
-/// checker or §1; a block a task names, the system's own names or its hardware's `needs` bring in is lowered, a node,
-/// as `M4.1.18` makes it; and where no served name lies outside, each other refusal of §1 is given as it is alone.
+/// makes hardware"; and `t` meeting another refusal or not: a zero period, which the language rejects (model §4 rule 8;
+/// `M1.42`), or, of §1, none, `t` naming the system `other`, an alarm it programs itself, a deadline from another
+/// event, a jitter past the arithmetic, or `x` naming the service `m`. Beside them, a system declaring no task whose
+/// own level uses `n` naming `x` or nothing, programming an alarm or not. So the language's refusal comes before all of
+/// it, whatever is served and named; a served name outside the hardware is the search's conflict whatever else of §1
+/// `t` meets, no record reaching the checker or §1; a block a task names, the system's own names or its hardware's
+/// `needs` bring in is lowered, a node, as `M4.1.18` makes it; and where no served name lies outside, each other
+/// refusal of §1 is given as it is alone.
 fn outside_hardware_universe() -> Vec<Case> {
     const HARDWARE_BY: [&str; 4] = ["nothing", "t names x", "sys needs x.y", "soc needs x!"];
     const ALSO: [&str; 7] = [
@@ -5047,8 +5056,9 @@ const ONE_NAME: [[&[&str]; 2]; 5] = [
 /// binding"; or both.
 const ONE_NAME_BINDERS: [&str; 4] = ["none", "first", "second", "both"];
 
-/// What else a system of the one-name universe writes, each a refusal that comes after the language's check accepts a
-/// description, in §1's order: nothing; its last task's period zero (the bullet over tasks); its last task naming the
+/// What else a system of the one-name universe writes: nothing; its last task's period zero, which since `M1.42` the
+/// language rejects as it does two tasks of one name (model §4 rule 8); and, each a refusal that comes after the
+/// language's check accepts a description, in §1's order: its last task naming the
 /// system itself (the naming-system bullet); its platform naming `s` (hardware naming what is not hardware); its last
 /// task's jitter past the arithmetic; its last task's deadline from activation; its first task, the next carrying its
 /// name, or both, programming an alarm itself (a receiver of interrupt code). And, no refusal of §1's since `M1.49` but
@@ -5072,8 +5082,9 @@ const ONE_NAME_LATER: [&str; 10] = [
 /// "stable logical identity""): each name pattern of [`ONE_NAME`] and its twin, the tasks named by each of
 /// [`ONE_NAME_BINDERS`] using a service, beside each of [`ONE_NAME_LATER`]. So the language's refusal
 /// ([`LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME`]; `M1.50`, `RTP-H23`) is held on every such system, whatever else it
-/// writes, each twin the language accepts lowered or refused by the later refusal alone, and a twin a served service
-/// leaves naming a block outside its hardware the search's to refuse, no record of it reaching §1.
+/// writes, each twin the language accepts lowered or refused by the later refusal alone, a twin writing a period of
+/// zero the language's to reject too (model §4 rule 8; `M1.42`), and a twin a served service leaves naming a block
+/// outside its hardware the search's to refuse, no record of it reaching §1.
 fn one_name_two_tasks() -> Vec<Case> {
     let mut cases = Vec::new();
     for [carried, twin] in ONE_NAME {
@@ -7588,7 +7599,7 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             classes.insert("exact: a task's duration at the arithmetic's edge");
         }
         if deadline == Ratio::ZERO {
-            // §1 refuses "a period or minimum separation of zero", no deadline of zero.
+            // Model §4 rule 8 refuses a `period` or `min-separation` of zero, no deadline of zero.
             classes.insert("task: a zero deadline");
         }
         // §3: "`INT` is a decimal integer with no sign and no leading zero", whatever the description's spelling.
@@ -8351,7 +8362,7 @@ fn rule_16_judges(task: &Task, block: &Block) -> Option<(&'static str, &'static 
         Time::Seconds(own) => Some(own),
         Time::Past => None,
         Time::Other(unit) => panic!(
-            "no universe binds a task's own source with its minimum separation in `{unit}`, which §1 refuses"
+            "no universe binds a task's own source with its minimum separation in `{unit}`, which the language rejects"
         ),
     };
     match (separation, own) {
@@ -8781,7 +8792,7 @@ struct Rule16Records {
 /// admit.
 fn rule_16_records(universe: &str, case: &Case, searched: Option<&str>) -> Option<Rule16Records> {
     let description = &case.description;
-    if !names_distinct(description) || !rule_16_may_refuse(description) {
+    if language_rejects(description) || !rule_16_may_refuse(description) {
         return None;
     }
     let text = description.text();
@@ -9421,8 +9432,8 @@ fn judged_by_the_checker(text: &str, record: &str) -> Option<Checked> {
 /// What a refusal §1 gives names.
 enum Names {
     /// One task, `(task SYSTEM NAME)`: "a bullet over tasks is taken task by task in runtime order", and the first
-    /// task it applies to is the one given; with the clause, where §1 names one — "naming the task and the clause —
-    /// for the last, its `period`" (round 14, R14-R5).
+    /// task it applies to is the one given; with the clause, where §1 names one — "naming the task and its `period`"
+    /// (round 14, R14-R5).
     Task {
         task: String,
         clause: Option<&'static str>,
@@ -9893,12 +9904,11 @@ fn outside_classes(
 
 /// §1, the refusals these universes can reach, the first that applies, from the description and the record's own
 /// `bind` lines: "They are taken in the order written, this list and then the next, ... and the first that applies is
-/// the one given; a bullet over tasks is taken task by task in runtime order, each task's clauses in the order the
-/// bullet writes them".
-/// - Of the first list, in its order: its bullet over tasks, "a period, minimum separation, deadline or jitter that is
-///   not a time; a period or minimum separation of zero ...; or a periodic task bound itself for `interrupt-source`,
-///   its requirement met by `true` as model §8 rule 2 reads one, which states a second release model": `tool-failure`,
-///   "naming the task and the clause"; then "a declaration or a task the system serves naming a system by `uses` or `needs`":
+/// the one given; a bullet over tasks is taken task by task in runtime order".
+/// - Of the first list, in its order: what its bullet over tasks keeps, "a periodic task bound itself for
+///   `interrupt-source`, its requirement met by `true` as model §8 rule 2 reads one, which states a second release
+///   model": `tool-failure`, "naming the task and its `period`"; then "a declaration or a task the system serves naming
+///   a system by `uses` or `needs`":
 ///   `tool-failure`, "naming each such name, by the namer's text and then the system's"; then "a block or a platform the
 ///   system serves naming, by `uses` or `needs`, a declaration that is neither a block nor a platform": `tool-failure`,
 ///   "naming each, by the block's or platform's text and then the operand's" — "This refusal and the one above take
@@ -9920,7 +9930,9 @@ fn outside_classes(
 /// system a served service or policy leaves naming hardware outside, which round 20 had §1 refuse, is model §8 rule 7's
 /// conflict since `M1.49`: the search writes no record of it ([`outside_hardware`]), so nothing here reads one. Nor of
 /// two tasks of one name, which round 23 had §1 refuse: since `M1.50` the language rejects them
-/// ([`LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME`]).
+/// ([`LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME`]). Nor of a task's duration that is not a time or a release of zero,
+/// which round 20 had the bullet over tasks refuse: since `M1.42` the language rejects them
+/// ([`LANGUAGE_REJECTS_A_TASK_S_DURATION`]).
 fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option<Due> {
     // First, after the rebuild's, which every record of these universes passes: "the generator's own joint rules, run
     // over the record the checker accepted, find a conflict, an unknown or a map finding: `tool-failure`, naming both
@@ -9951,92 +9963,36 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
                     .any(|h| h.name == b.provider && h.separation.is_some())
         })
     };
-    // §1's bullet over tasks, the first list's: "a period, minimum separation, deadline or jitter that is not a time; a
-    // period or minimum separation of zero, which no run can release (`RTP-H9`); or a periodic task bound itself for
+    // §1's bullet over tasks, the first list's, what the language leaves of it: "a periodic task bound itself for
     // `interrupt-source`, its requirement met by `true` as model §8 rule 2 reads one, which states a second release
-    // model ...: `tool-failure`, naming the task and the clause — for the last, its `period`", "taken task by task in
-    // runtime order, each task's clauses in the order the bullet writes them". The bullet writes them so: `period`,
-    // `min-separation`, `deadline` and `jitter` not a time; then `period` and `min-separation` of zero; then `period`,
-    // the second release model. So a task's defects are read in that order, the first named (round 20, R20-R7: the
-    // reading had read this bullet for its last clause alone). Its first clause, "none stated, which it refuses already
-    // (`missing-fact` for no release model, a deadline's cardinality one)", is the language's: a task stating neither is
-    // rejected, as the task-bullet universe holds.
-    let defects = |task: &Task| -> Vec<(&'static str, &'static str)> {
-        let mut out = Vec::new();
-        for (clause, duration) in [
-            (task.release.clause(), Some(task.release.duration())),
-            ("deadline", Some(task.deadline())),
-            ("jitter", task.jitter),
-        ] {
-            if matches!(duration.map(Dur::time), Some(Time::Other(_))) {
-                out.push((clause, "not a time"));
-            }
-        }
-        if task.release.duration().time() == Time::Seconds(Ratio::ZERO) {
-            out.push((task.release.clause(), "zero"));
-        }
-        if matches!(task.release, Release::Period(_))
+    // model ...: `tool-failure`, naming the task and its `period`", "taken task by task in runtime order" (`M1.43` is
+    // to move it to the language, `RTP-H15`). Its clauses that are not a time and its
+    // releases of zero, which round 20 read here (R20-R7), are the language's since `M1.42` (`RTP-H14`): no description
+    // writing one reaches this ([`LANGUAGE_REJECTS_A_TASK_S_DURATION`]), so a task has one defect at most, and no order
+    // among its clauses is left to read. Its first clause, "none stated, which it refuses already (`missing-fact` for
+    // no release model, a deadline's cardinality one)", is the language's too: a task stating neither is rejected, as
+    // the task-bullet universe holds.
+    let second_release_model = |task: &Task| {
+        matches!(task.release, Release::Period(_))
             && binds
                 .iter()
                 .any(|b| b.requester == task_text(task) && relies_on_source(description, b))
-        {
-            out.push(("period", "a second release model"));
-        }
-        out
     };
     for (index, task) in by_index.iter().enumerate() {
-        let found = defects(task);
-        let Some(&(clause, defect)) = found.first() else {
+        if !second_release_model(task) {
             continue;
-        };
-        let mut classes = BTreeSet::from([match (clause, defect) {
-            (_, "a second release model") => "refusal: a periodic task bound to a source itself",
-            ("period", "not a time") => "task bullet: a period that is not a time",
-            ("min-separation", "not a time") => {
-                "task bullet: a minimum separation that is not a time"
-            }
-            ("deadline", _) => "task bullet: a deadline that is not a time",
-            ("jitter", _) => "task bullet: a jitter that is not a time",
-            ("period", _) => "task bullet: a period of zero",
-            _ => "task bullet: a minimum separation of zero",
-        }]);
-        // Every unit the language accepts that is no time, read as not a time wherever a task writes it.
-        for duration in description.tasks.iter().flat_map(|t| {
-            [Some(t.release.duration()), Some(t.deadline()), t.jitter]
-                .into_iter()
-                .flatten()
-        }) {
-            if let Time::Other(unit) = duration.time() {
-                classes.insert(
-                    NOT_A_TIME_IN[OTHER_UNITS.iter().position(|u| *u == unit).expect("a unit")],
-                );
-            }
         }
-        if found.len() >= 2 {
-            classes.insert(
-                "task bullet: a task's first defect named, another of its clauses ill-formed too",
-            );
-            // Where the bullet's order and its clauses' order part: a deadline or a jitter not a time, written first,
-            // named before the release's zero or the second release model, which the task's `period` or
-            // `min-separation` clause states.
-            if matches!(clause, "deadline" | "jitter")
-                && found[1..]
-                    .iter()
-                    .any(|(c, d)| matches!(*c, "period" | "min-separation") && *d != "not a time")
-            {
-                classes.insert(
-                    "task bullet: a deadline or a jitter not a time named before its release's zero or second release \
-                     model",
-                );
-            }
-        }
-        if by_index[index + 1..].iter().any(|t| !defects(t).is_empty()) {
+        let mut classes = BTreeSet::from(["refusal: a periodic task bound to a source itself"]);
+        if by_index[index + 1..]
+            .iter()
+            .any(|t| second_release_model(t))
+        {
             classes.insert("task bullet: the first ill-formed task in runtime order named, a later one ill-formed too");
         }
         let declared_at = |t: &Task| description.tasks.iter().position(|d| std::ptr::eq(d, t));
         if by_index[index + 1..]
             .iter()
-            .any(|t| declared_at(t) < declared_at(task) && !defects(t).is_empty())
+            .any(|t| declared_at(t) < declared_at(task) && second_release_model(t))
         {
             classes.insert(
                 "task bullet: a task declared earlier ill-formed too, after the one named in runtime order",
@@ -10046,33 +10002,26 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
             classes.insert("task bullet: before a requester naming a system");
         }
         if !hardware_naming_other_kinds(description).is_empty() {
-            classes.insert(if defect == "a second release model" {
-                "periodic: before hardware naming what is not hardware"
-            } else {
-                "task bullet: before hardware naming what is not hardware"
-            });
+            classes.insert("periodic: before hardware naming what is not hardware");
         }
-        if defect == "a second release model" {
-            if by_index[..index]
-                .iter()
-                .any(|t| matches!(t.release, Release::Period(_)) && bound_otherwise(t))
-            {
-                classes.insert(
-                    "periodic: one bound to the source's block otherwise first in runtime order, the one bound for \
-                     `interrupt-source` named",
-                );
-            }
-            if bound_otherwise(task) {
-                classes.insert(
-                    "periodic: the one named bound to the source's block for another fact too",
-                );
-            }
+        if by_index[..index]
+            .iter()
+            .any(|t| matches!(t.release, Release::Period(_)) && bound_otherwise(t))
+        {
+            classes.insert(
+                "periodic: one bound to the source's block otherwise first in runtime order, the one bound for \
+                 `interrupt-source` named",
+            );
+        }
+        if bound_otherwise(task) {
+            classes
+                .insert("periodic: the one named bound to the source's block for another fact too");
         }
         return Some(Due {
             code: "tool-failure",
             names: Names::Task {
                 task: task_text(task),
-                clause: Some(clause),
+                clause: Some("period"),
             },
             classes,
         });
@@ -11003,7 +10952,7 @@ fn refusal_disagrees(due: &Due, refusal: &Refusal, description: &Description) ->
             if named != [task.clone()] {
                 wrong.push(format!("it names {named:?}, the record [{task:?}]"));
             }
-            // "naming the task and the clause": that clause, and no other of the task's.
+            // "naming the task and its `period`": that clause, and no other of the task's.
             if let Some(clause) = clause {
                 let clauses: Vec<&str> = ["period", "min-separation", "deadline", "jitter"]
                     .into_iter()
@@ -11123,6 +11072,65 @@ const SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE: &str =
 const LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME: &str =
     "the language rejects, `invalid-description`, two tasks of one system carrying one name";
 
+/// The systems a task of whose description writes a `period`, `min-separation`, `deadline` or `jitter` that is not a
+/// time, or a `period` or `min-separation` of zero, which the language rejects, `invalid-description` (model §4 rule 8:
+/// "Both are the language's rule, and both `invalid-description`, naming the clause"; `M1.42`, `RTP-H14`). A
+/// description the language's check refuses is no input (§1), so no search, record or lowering reads one, whatever else
+/// it writes: `invalid-description` is the first thing to fix of anything else the language finds, a `missing-fact`
+/// beside it among them (`eadl_model::check`: "The **verdict** is the highest-precedence one"; `Verdict::precedence`).
+/// The reading derives the class from the description alone ([`durations_the_language_rejects`]), and a system it names
+/// is of it only where the language gives that verdict: another verdict is a finding, and so is the language accepting
+/// one. Round 20 had §1's bullet over tasks refuse such a system; those clauses of the bullet went with `M1.42`, and
+/// with them the classes of its order and its message.
+const LANGUAGE_REJECTS_A_TASK_S_DURATION: &str =
+    "the language rejects, `invalid-description`, a task's duration that is not a time or a release of zero";
+
+/// What model §4 rule 8 refuses of what the tasks of every system the description declares write, each as its class:
+/// "A task's `period`, `min-separation`, `deadline` and `jitter` are times, and its `period` or `min-separation` is
+/// above zero". A deadline or a jitter of zero is a time, which the rule leaves alone. Empty where it refuses nothing.
+fn durations_the_language_rejects(description: &Description) -> BTreeSet<&'static str> {
+    let mut classes = BTreeSet::new();
+    let others = description.others.iter().flat_map(|system| &system.tasks);
+    for task in description.tasks.iter().chain(others) {
+        let release = (task.omitted != Some("period")).then(|| task.release.duration());
+        let deadline = (task.omitted != Some("deadline")).then(|| task.deadline());
+        let (not_a_time, zero) = match task.release {
+            Release::Period(_) => (
+                "language: a period that is not a time",
+                "language: a period of zero",
+            ),
+            Release::MinSeparation(_) => (
+                "language: a minimum separation that is not a time",
+                "language: a minimum separation of zero",
+            ),
+        };
+        for (written, class) in [
+            (release, not_a_time),
+            (deadline, "language: a deadline that is not a time"),
+            (task.jitter, "language: a jitter that is not a time"),
+        ] {
+            if let Some(Time::Other(unit)) = written.map(Dur::time) {
+                classes.insert(class);
+                classes.insert(
+                    NOT_A_TIME_IN[OTHER_UNITS.iter().position(|u| *u == unit).expect("a unit")],
+                );
+            }
+        }
+        if release.map(Dur::time) == Some(Time::Seconds(Ratio::ZERO)) {
+            classes.insert(zero);
+        }
+    }
+    classes
+}
+
+/// Whether the language rejects the description by a rule these universes hold it to, whatever else it writes: two
+/// tasks of one name ([`LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME`]) or a task's duration
+/// ([`LANGUAGE_REJECTS_A_TASK_S_DURATION`]). Such a description is no input, so no rule after the language's check is
+/// read of it.
+fn language_rejects(description: &Description) -> bool {
+    !names_distinct(description) || !durations_the_language_rejects(description).is_empty()
+}
+
 /// The fact on which the lowered system's side, read whole — its own level's clauses and its tasks' (model §8 rule 1;
 /// §7 rule 4) — requires both `true` and `false`, a requirement `(needs f)` or `(f true)` beside `(f false)`.
 fn fact_the_side_contradicts(description: &Description) -> Option<String> {
@@ -11204,7 +11212,7 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
     };
     // Model §8 rule 16 and rule 6: where no source a sporadic task bound itself may take is admitted, the search refuses
     // the system with the code they give, "naming the task and the source"; otherwise it binds one admitted.
-    let rule_16 = names_distinct(&case.description)
+    let rule_16 = (!language_rejects(&case.description))
         .then(|| rule_16_search(&case.description))
         .flatten();
     // Model §7 rule 4 and §8 rule 1: a system's side that contradicts itself, read whole, is `invalid-description`
@@ -11229,31 +11237,54 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
             case.description.system
         )
     };
+    // Model §4 rule 8: a task's durations are the language's to reject, whatever else the description writes
+    // ([`LANGUAGE_REJECTS_A_TASK_S_DURATION`]).
+    let durations = durations_the_language_rejects(&case.description);
+    let refused_durations =
+        || format!("model §4 rule 8 rejects it `invalid-description`: {durations:?}");
     let (record, program, checker, lowered) = match flow(&text, &case.description.system) {
         Flow::Rejected(verdict) => {
             out.class = "rejected";
+            let rejects_it = |why: String| {
+                format!(
+                    "== {universe}: {}\n-- the description\n{text}-- the language rejects it `{verdict}`, where \
+                     {why}\n",
+                    case.label
+                )
+            };
             if one_name {
                 if verdict == "invalid-description" {
                     out.classes.insert(LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME);
                 } else {
-                    out.findings.push(format!(
-                        "== {universe}: {}\n-- the description\n{text}-- the language rejects it `{verdict}`, where \
-                         {}\n",
-                        case.label,
-                        two_tasks()
-                    ));
+                    out.findings.push(rejects_it(two_tasks()));
+                }
+            }
+            if !durations.is_empty() {
+                if verdict == "invalid-description" {
+                    out.classes.insert(LANGUAGE_REJECTS_A_TASK_S_DURATION);
+                    out.classes.extend(&durations);
+                } else {
+                    out.findings.push(rejects_it(refused_durations()));
                 }
             }
             out.verdict = verdict;
             return (out, None);
         }
-        // Nothing below reads such a system: every rule finds a task by its text ([`side_of`]).
-        Flow::Unresolved(_) | Flow::Resolved { .. } if one_name => {
-            out.findings.push(format!(
-                "== {universe}: {}\n-- the description\n{text}-- the language accepts it, where {}\n",
-                case.label,
-                two_tasks()
-            ));
+        // Nothing below reads such a system: every rule finds a task by its text ([`side_of`]), and reads a duration as
+        // a time ([`Dur::seconds`]).
+        Flow::Unresolved(_) | Flow::Resolved { .. } if language_rejects(&case.description) => {
+            let accepts_it = |why: String| {
+                format!(
+                    "== {universe}: {}\n-- the description\n{text}-- the language accepts it, where {why}\n",
+                    case.label
+                )
+            };
+            if one_name {
+                out.findings.push(accepts_it(two_tasks()));
+            }
+            if !durations.is_empty() {
+                out.findings.push(accepts_it(refused_durations()));
+            }
             return (out, None);
         }
         Flow::Unresolved(verdict) => {
@@ -11673,7 +11704,7 @@ fn hold(
 /// for each other of `cases` that `missing_fact`, a predicate over its construction, says no assignment can satisfy,
 /// `missing` of them: a requester bound to hardware outside the system is an assignment's conflict, and nothing else
 /// offering the fact, the search concludes `missing-fact` (rules 6 and 7). A system the language rejects for two tasks
-/// of one name is no search's, whatever else it writes ([`LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME`]).
+/// of one name or for a task's duration is no search's, whatever else it writes ([`language_rejects`]).
 fn hold_unresolved(
     universe: &str,
     tally: &Tally,
@@ -11684,7 +11715,7 @@ fn hold_unresolved(
     let (mut infeasible, mut unknown) = (0, 0);
     let read: BTreeMap<String, String> = cases
         .iter()
-        .filter(|c| names_distinct(&c.description))
+        .filter(|c| !language_rejects(&c.description))
         .filter_map(|c| {
             let verdict = if !outside_hardware(&c.description).is_empty() {
                 infeasible += 1;
@@ -15150,139 +15181,119 @@ fn hardware_a_served_requester_names_a_node_bound_or_not() {
     assert_eq!(compared, 3 * 30 * 2 * 2 - 28);
 }
 
+/// Re-purposed by `M1.42` (`RTP-H14`), and renamed from `the_bullet_over_tasks_taken_whole_in_runtime_order`. This held
+/// §1's bullet over tasks whole, taken task by task in runtime order and each task's clauses in the order the bullet
+/// writes them, naming the task and the clause (round 20, R20-R7). A task's duration that is not a time and a release
+/// of zero have left the bullet for the language (model §4 rule 8), whose check comes before the search and §1 alike:
+/// no order among them is left to hold and no message of the lowering's to read, so the classes of both went with them.
+/// What stays is the language's verdict on every such system, whatever else it writes, each clause and each unit held
+/// to the systems writing it, over the same 2,048 combinations; beside them a zero deadline, which the rule leaves
+/// alone, a task stating no release or no deadline, the language's by other rules, and what the bullet keeps, a
+/// periodic task bound to its source (`M1.43`, not yet moved), taken in runtime order before §1's later refusals, which
+/// what the language accepts reaches by what else it writes alone.
 #[test]
-fn the_bullet_over_tasks_taken_whole_in_runtime_order() {
+fn a_task_s_duration_rejected_by_the_language_whatever_else_it_writes() {
     let cases = task_bullet();
     // What `t` and `u` each write, of 16; which is first; what else the system meets, of 4.
     assert_eq!(cases.len(), 16 * 16 * 2 * 4);
     let tally = run("task bullet", &cases);
-    // Rejected: the 480 where a task states no release or no deadline (60 of the 256 pairs, 2 orders, 4 others), the
-    // language's answer to §1's "none stated, which it refuses already": `missing-fact` for no release model,
-    // `invalid-description` for a deadline's cardinality. Lowered: the 8 where each task is well-formed or writes a zero
-    // deadline and nothing else applies (2 × 2 × 2). Every other refused.
-    // Which of its two verdicts the language gives a description with both is its own to choose.
-    let (mut release, mut deadline, mut both) = (0, 0, 0);
-    for case in &cases {
-        let omits = |what: &str| {
-            ["t", "u"]
-                .iter()
-                .any(|task| case.label.contains(&format!("{task}:no {what} ")))
-        };
-        match (omits("release"), omits("deadline")) {
-            (true, false) => release += 1,
-            (false, true) => deadline += 1,
-            (true, true) => both += 1,
-            (false, false) => {}
-        }
-    }
-    let given = |verdict: &str| tally.verdicts.get(verdict).map_or(0, |v| v.0);
-    let (missing, invalid) = (
-        given("rejected missing-fact"),
-        given("rejected invalid-description"),
-    );
-    assert!(
-        missing + invalid == release + deadline + both
-            && (release..=release + both).contains(&missing)
-            && (deadline..=deadline + both).contains(&invalid),
-        "the language's answer: {release} with no release, {deadline} with no deadline, {both} with both; {:?}",
+    // Of the 16 choices of [`BULLET_CLAUSES`], the 11 of `TABLE` below write what model §4 rule 8 refuses. Of the other
+    // 5, the language accepts 3: `well-formed`, `zero deadline`, a time the rule leaves alone, and `periodic bound to
+    // its source`, the bullet's until `M1.43`. It rejects 2 by other rules: `no release`, `missing-fact`, and `no
+    // deadline`, `invalid-description`, a deadline's cardinality. Each of the 256 pairs is 2 orders × 4 others = 8
+    // systems:
+    // - Rejected by rule 8: a pair writing one of the 11 at least, 256 - 5 × 5 = 231 of them, 1,848 systems, whatever
+    //   else the pair writes and whatever else the system meets. `invalid-description` above any `missing-fact` beside
+    //   it (`eadl_model::check`: "The **verdict** is the highest-precedence one"; `Verdict::precedence`).
+    // - Rejected by the others: of the 5 × 5 = 25 pairs left, all but the 3 × 3 = 9 the language accepts, 16 of them,
+    //   128 systems. `invalid-description` for the 5 × 5 - 4 × 4 = 9 with `no deadline`, 72 systems; `missing-fact` for
+    //   the other 7, each with `no release`, 56 systems. So 1,848 + 128 = 1,976 rejected: 1,920 and 56.
+    // - Refused by what the bullet keeps: of the 9 pairs accepted, the 9 - 2 × 2 = 5 with `periodic bound to its
+    //   source`, whatever else the system meets, 40 systems.
+    // - Of the 2 × 2 = 4 pairs left, each of `well-formed` or `zero deadline`, 2 orders: 8 systems for each other,
+    //   lowered where it meets nothing, otherwise refused by the one refusal of §1 it meets alone, 24 systems. So 8
+    //   lowered, 1,976 rejected, none unresolved, 40 + 24 = 64 refused: 2,048.
+    let verdict = |verdict: &str| tally.verdicts.get(verdict).map_or(0, |v| v.0);
+    assert_eq!(
+        (
+            verdict("rejected invalid-description"),
+            verdict("rejected missing-fact")
+        ),
+        ((231 + 9) * 2 * 4, 7 * 2 * 4),
+        "the language's answer: {:?}",
         tally.verdicts
     );
-    // Each count read from a table of what each choice of [`BULLET_CLAUSES`] writes, derived by hand from the clauses
-    // it states: the class of the defect §1's bullet names first — its clauses read in the bullet's order, not a time
-    // before zero before a second release model — how many it has, whether a deadline's or a jitter's comes before its
-    // release's, and the units that are no time it writes. The bullet names the first task in runtime order with one.
+    // What each of the 11 writes that rule 8 refuses, derived by hand from the clauses `BULLET_CLAUSES` states it with:
+    // its clauses, and the units that are no time it writes them in. A class `n` of these rows write is reached by the
+    // systems of the pairs writing one of them at least, (256 - (16 - n) × (16 - n)) × 8: of `n` = 1 for a minimum
+    // separation not a time and for each unit but `Hz`, 248; of `n` = 2 for a period not a time, a period of zero, a
+    // minimum separation of zero and `Hz`, 480; of `n` = 3 for a deadline not a time, 696; of `n` = 4 for a jitter not
+    // a time, 896. Rejected whichever task writes it, whichever comes first and whatever else the pair writes, so no
+    // order among them is read.
     type Row = (
         &'static str,
-        Option<&'static str>,
-        usize,
-        bool,
+        &'static [&'static str],
         &'static [&'static str],
     );
-    const TABLE: [Row; 14] = [
-        ("well-formed", None, 0, false, &[]),
+    const TABLE: [Row; 11] = [
         (
             "period in Hz",
-            Some("task bullet: a period that is not a time"),
-            1,
-            false,
+            &["language: a period that is not a time"],
             &["Hz"],
         ),
         (
             "min-separation in KiB",
-            Some("task bullet: a minimum separation that is not a time"),
-            1,
-            false,
+            &["language: a minimum separation that is not a time"],
             &["KiB"],
         ),
         (
             "deadline in bit",
-            Some("task bullet: a deadline that is not a time"),
-            1,
-            false,
+            &["language: a deadline that is not a time"],
             &["bit"],
         ),
         (
             "jitter in tick",
-            Some("task bullet: a jitter that is not a time"),
-            1,
-            false,
+            &["language: a jitter that is not a time"],
             &["tick"],
         ),
-        (
-            "zero period",
-            Some("task bullet: a period of zero"),
-            1,
-            false,
-            &[],
-        ),
+        ("zero period", &["language: a period of zero"], &[]),
         (
             "zero min-separation",
-            Some("task bullet: a minimum separation of zero"),
-            1,
-            false,
-            &[],
-        ),
-        (
-            "periodic bound to its source",
-            Some("refusal: a periodic task bound to a source itself"),
-            1,
-            false,
+            &["language: a minimum separation of zero"],
             &[],
         ),
         (
             "zero period, deadline in GHz",
-            Some("task bullet: a deadline that is not a time"),
-            2,
-            true,
+            &[
+                "language: a deadline that is not a time",
+                "language: a period of zero",
+            ],
             &["GHz"],
         ),
         (
             "periodic bound to its source, jitter in MiB",
-            Some("task bullet: a jitter that is not a time"),
-            2,
-            true,
+            &["language: a jitter that is not a time"],
             &["MiB"],
         ),
         (
             "period in kHz, bound to its source",
-            Some("task bullet: a period that is not a time"),
-            2,
-            false,
+            &["language: a period that is not a time"],
             &["kHz"],
         ),
         (
             "zero min-separation, jitter in MHz",
-            Some("task bullet: a jitter that is not a time"),
-            2,
-            true,
+            &[
+                "language: a jitter that is not a time",
+                "language: a minimum separation of zero",
+            ],
             &["MHz"],
         ),
-        ("zero deadline", None, 0, false, &[]),
         (
             "deadline in Hz, jitter in byte",
-            Some("task bullet: a deadline that is not a time"),
-            2,
-            false,
+            &[
+                "language: a deadline that is not a time",
+                "language: a jitter that is not a time",
+            ],
             &["Hz", "byte"],
         ),
     ];
@@ -15298,112 +15309,65 @@ fn the_bullet_over_tasks_taken_whole_in_runtime_order() {
         let word = word.split(" first=").next().expect("a word");
         TABLE.iter().find(|r| r.0 == word)
     };
-    let rejected = |c: &Case| row(c, "t").is_none() || row(c, "u").is_none();
-    let order = |c: &Case| {
-        if c.label.contains("first=u") {
-            ["u", "t"]
-        } else {
-            ["t", "u"]
-        }
+    let writes = |c: &Case, read: &dyn Fn(&Row) -> bool| {
+        ["t", "u"].iter().any(|t| row(c, t).is_some_and(read))
     };
-    let named = |c: &Case| -> Option<(&str, &Row)> {
-        if rejected(c) {
-            return None;
-        }
-        order(c)
-            .into_iter()
-            .map(|t| (t, row(c, t).expect("a row")))
-            .find(|(_, r)| r.1.is_some())
+    let clause = |class: &'static str| {
+        counted(class, &cases, move |c| {
+            writes(c, &|r: &Row| r.1.contains(&class))
+        })
     };
-    let also = |c: &Case| c.label.rsplit("also:").next().expect("also").to_string();
-    let given = |c: &Case| -> &str {
-        if rejected(c) {
-            "rejected"
-        } else if named(c).is_some() {
-            "bullet"
-        } else {
-            match also(c).as_str() {
-                "names a system" => "naming",
-                "hardware names a service" => "operand",
-                "a bound past" => "past",
-                _ => "lowered",
-            }
-        }
+    let unit = |class: &'static str, unit: &'static str| {
+        counted(class, &cases, move |c| {
+            writes(c, &|r: &Row| r.2.contains(&unit))
+        })
     };
-    let named_class = |c: &Case, class: &str| named(c).is_some_and(|(_, r)| r.1 == Some(class));
-    let unit = |c: &Case, u: &str| {
-        named(c).is_some()
-            && ["t", "u"]
-                .iter()
-                .any(|t| row(c, t).is_some_and(|r| r.4.contains(&u)))
-    };
-    let both = |c: &Case| {
-        !rejected(c)
-            && ["t", "u"]
-                .iter()
-                .all(|t| row(c, t).is_some_and(|r| r.1.is_some()))
-    };
-    let bullet_class = |class: &'static str| counted(class, &cases, move |c| named_class(c, class));
     hold(
         "task bullet",
         &tally,
-        (2_048, 8, 480, 0, 1_560),
+        (2_048, 8, 1_976, 0, 64),
         &[
-            bullet_class("refusal: a periodic task bound to a source itself"),
-            bullet_class("task bullet: a period that is not a time"),
-            bullet_class("task bullet: a minimum separation that is not a time"),
-            bullet_class("task bullet: a deadline that is not a time"),
-            bullet_class("task bullet: a jitter that is not a time"),
-            bullet_class("task bullet: a period of zero"),
-            bullet_class("task bullet: a minimum separation of zero"),
-            counted("task bullet: not a time, in `Hz`", &cases, |c| unit(c, "Hz")),
-            counted("task bullet: not a time, in `kHz`", &cases, |c| unit(c, "kHz")),
-            counted("task bullet: not a time, in `MHz`", &cases, |c| unit(c, "MHz")),
-            counted("task bullet: not a time, in `GHz`", &cases, |c| unit(c, "GHz")),
-            counted("task bullet: not a time, in `bit`", &cases, |c| unit(c, "bit")),
-            counted("task bullet: not a time, in `byte`", &cases, |c| unit(c, "byte")),
-            counted("task bullet: not a time, in `KiB`", &cases, |c| unit(c, "KiB")),
-            counted("task bullet: not a time, in `MiB`", &cases, |c| unit(c, "MiB")),
-            counted("task bullet: not a time, in `tick`", &cases, |c| unit(c, "tick")),
-            counted("task bullet: a task's first defect named, another of its clauses ill-formed too", &cases, |c| {
-                named(c).is_some_and(|(_, r)| r.2 >= 2)
-            }),
-            counted(
-                "task bullet: a deadline or a jitter not a time named before its release's zero or second release model",
-                &cases,
-                |c| named(c).is_some_and(|(_, r)| r.3),
-            ),
-            counted(
+            exactly(LANGUAGE_REJECTS_A_TASK_S_DURATION, 231 * 2 * 4),
+            clause("language: a period that is not a time"),
+            clause("language: a minimum separation that is not a time"),
+            clause("language: a deadline that is not a time"),
+            clause("language: a jitter that is not a time"),
+            clause("language: a period of zero"),
+            clause("language: a minimum separation of zero"),
+            unit("language: not a time, in `Hz`", "Hz"),
+            unit("language: not a time, in `kHz`", "kHz"),
+            unit("language: not a time, in `MHz`", "MHz"),
+            unit("language: not a time, in `GHz`", "GHz"),
+            unit("language: not a time, in `bit`", "bit"),
+            unit("language: not a time, in `byte`", "byte"),
+            unit("language: not a time, in `KiB`", "KiB"),
+            unit("language: not a time, in `MiB`", "MiB"),
+            unit("language: not a time, in `tick`", "tick"),
+            // What the bullet keeps: 5 pairs, 2 orders, 4 others. Both tasks bound to the source is one pair, so the
+            // first in runtime order named, and, where `u` is first, the task declared earlier after it. Beside a
+            // system named or hardware naming a service, one other each.
+            exactly("refusal: a periodic task bound to a source itself", 5 * 2 * 4),
+            exactly(
                 "task bullet: the first ill-formed task in runtime order named, a later one ill-formed too",
-                &cases,
-                both,
+                2 * 4,
             ),
-            counted(
+            exactly(
                 "task bullet: a task declared earlier ill-formed too, after the one named in runtime order",
-                &cases,
-                |c| both(c) && order(c)[0] == "u",
+                4,
             ),
-            counted("task bullet: before a requester naming a system", &cases, |c| {
-                given(c) == "bullet" && also(c) == "names a system"
-            }),
-            counted("task bullet: before hardware naming what is not hardware", &cases, |c| {
-                given(c) == "bullet"
-                    && also(c) == "hardware names a service"
-                    && !named_class(c, "refusal: a periodic task bound to a source itself")
-            }),
-            counted("periodic: before hardware naming what is not hardware", &cases, |c| {
-                also(c) == "hardware names a service" && named_class(c, "refusal: a periodic task bound to a source itself")
-            }),
-            counted("refusal: a requester naming a system", &cases, |c| given(c) == "naming"),
-            counted("naming: the system's own level naming a system", &cases, |c| given(c) == "naming"),
-            counted("refusal: hardware naming what is not hardware", &cases, |c| given(c) == "operand"),
-            counted("operand: a platform's `uses` naming a service", &cases, |c| given(c) == "operand"),
-            counted("refusal: a duration past the arithmetic", &cases, |c| given(c) == "past"),
-            counted("past: an obliged bound of a service", &cases, |c| given(c) == "past"),
-            counted("task: a zero deadline", &cases, |c| {
-                given(c) == "lowered" && ["t", "u"].iter().any(|t| row(c, t).is_some_and(|r| r.0 == "zero deadline"))
-            }),
-            exactly("task: deadline-from written", 8),
+            exactly("task bullet: before a requester naming a system", 5 * 2),
+            exactly("periodic: before hardware naming what is not hardware", 5 * 2),
+            // What else the system meets, alone: the 4 pairs of `well-formed` and `zero deadline`, 2 orders, one other
+            // each.
+            exactly("refusal: a requester naming a system", 4 * 2),
+            exactly("naming: the system's own level naming a system", 4 * 2),
+            exactly("refusal: hardware naming what is not hardware", 4 * 2),
+            exactly("operand: a platform's `uses` naming a service", 4 * 2),
+            exactly("refusal: a duration past the arithmetic", 4 * 2),
+            exactly("past: an obliged bound of a service", 4 * 2),
+            // Lowered: the 3 of those pairs writing a `zero deadline`, 2 orders, meeting nothing else.
+            exactly("task: a zero deadline", 3 * 2),
+            exactly("task: deadline-from written", 4 * 2),
         ],
     );
 }
@@ -15415,21 +15379,23 @@ fn a_block_or_a_platform_served_outside_the_hardware_a_conflict_whatever_else_is
     // else `t` meets, of 7; and 4 systems with no task.
     assert_eq!(cases.len(), 5 * 3 * 3 * 3 * 4 * 7 + 4);
     let tally = run("outside hardware", &cases);
-    // Lowered: where every served namer names hardware alone and `t` meets no other refusal. With `t` meeting none, of
+    // Rejected `invalid-description`: the 45 namings × 3 × 4 = 540 choices beside `t`'s zero period (model §4 rule 8;
+    // `M1.42`), whatever is served and named, the language's check before the search and §1 alike. Lowered: where every
+    // served namer names hardware alone and `t` meets no other refusal. With `t` meeting none, of
     // the namings each served namer's choices that name hardware alone — `n`: nothing, and `x` or `x.y` where made
     // hardware; `n.s`: nothing, and `x.y` where made hardware; `n!`: nothing, and `x!` where made hardware — times the
     // choices of the namers not served: served by `t` and the system's own level, 1 + 2 + 4 + 2 = 9 over the four ways
     // of making hardware; served by the system's own level and through `m`, `n!` free, 3 × (1 + 2 + 4 + 1) = 24; `n!`
     // alone, `n` and `n.s` free, 15 × (1 + 1 + 1 + 2) = 75. With `x` naming `m`, the same where `x` is served by no
     // name, or else the hardware-naming refusal: 7, 18 and 60. 108 + 85 = 193. Those 108 choices with no served name
-    // outside are the same whatever else `t` meets. Refused: with each of the 5 it meets by a bullet of §1 (the zero
-    // period, `other`, the jitter, the deadline, the alarm), 5 × 108 = 540; with `x` naming `m`, the 108 - 85 = 23
-    // where `x` is hardware; and the 2 systems with no task whose `n` names nothing. 540 + 23 + 2 = 565. Unresolved
-    // `infeasible-configuration`, model §8 rule 7's conflict, each other: beside each of the 7 things `t` meets lie 45
-    // namings × 3 × 4 = 540 choices, 432 of them past those 108, whatever `t` meets, no bullet of §1 reached (7 × 432 =
-    // 3,024); and the 2 systems with no task whose `n` names `x`. 193 + 565 + 3,026 = 3,784. None is `missing-fact`:
-    // `d` offers the one fact anything here requires.
-    hold_unresolved("outside hardware", &tally, &cases, (3_026, 0), |_| false);
+    // outside are the same whatever else `t` meets. Refused: with each of the 4 it meets by a bullet of §1 (`other`,
+    // the jitter, the deadline, the alarm), 4 × 108 = 432; with `x` naming `m`, the 108 - 85 = 23 where `x` is
+    // hardware; and the 2 systems with no task whose `n` names nothing. 432 + 23 + 2 = 457. Unresolved
+    // `infeasible-configuration`, model §8 rule 7's conflict, each other: beside each of the 6 things `t` meets the
+    // language accepts lie 540 choices, 432 of them past those 108, whatever `t` meets, no bullet of §1 reached (6 ×
+    // 432 = 2,592); and the 2 systems with no task whose `n` names `x`. 193 + 540 + 2,594 + 457 = 3,784. None is
+    // `missing-fact`: `d` offers the one fact anything here requires.
+    hold_unresolved("outside hardware", &tally, &cases, (2_594, 0), |_| false);
     let model: Vec<OutsideModel> = cases.iter().map(OutsideModel::of).collect();
     let count = |class: &'static str, f: &dyn Fn(&OutsideModel) -> bool| {
         exactly(class, model.iter().filter(|m| f(m)).count())
@@ -15439,11 +15405,12 @@ fn a_block_or_a_platform_served_outside_the_hardware_a_conflict_whatever_else_is
     hold(
         "outside hardware",
         &tally,
-        (3_784, 193, 0, 3_026, 565),
+        (3_784, 193, 540, 2_594, 457),
         &[
+            count(LANGUAGE_REJECTS_A_TASK_S_DURATION, &|m| m.outcome == "rejected"),
+            count("language: a period of zero", &|m| m.outcome == "rejected"),
             count(SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE, &conflict),
             count("refusal: a system with no task", &|m| m.outcome == "no task"),
-            count("task bullet: a period of zero", &|m| m.outcome == "bullet"),
             count("refusal: a requester naming a system", &|m| m.outcome == "naming"),
             count("naming: a task naming a system", &|m| m.outcome == "naming"),
             count("no task: before the system's own level receiving interrupt code", &|m| {
@@ -15511,12 +15478,13 @@ fn a_block_or_a_platform_served_outside_the_hardware_a_conflict_whatever_else_is
 }
 
 /// What the outside-hardware universe's construction gives one system ([`outside_hardware_universe`]): who serves the
-/// namers, what makes a block hardware, what else `t` meets, what each namer names — and so what it comes to: model §8
-/// rule 7's conflict where a served namer names a block or a platform outside the hardware, `d` and whatever `t`'s, the
-/// system's own or `soc`'s `needs` names being the hardware, the search's before any refusal of §1; otherwise §1's
-/// refusal given, in its order: the bullet over tasks for a zero period; the naming-system refusal where `t` names
-/// `other`; the hardware-naming refusal where `x`, served, names `m`; then a jitter past the arithmetic; the system
-/// with no task; a deadline from another event; and an alarm `t` programs.
+/// namers, what makes a block hardware, what else `t` meets, what each namer names — and so what it comes to: the
+/// language's rejection of a zero period, whatever else it writes, its check before the search (model §4 rule 8;
+/// `M1.42`); model §8 rule 7's conflict where a served namer names a block or a platform outside the hardware, `d` and
+/// whatever `t`'s, the system's own or `soc`'s `needs` names being the hardware, the search's before any refusal of §1;
+/// otherwise §1's refusal given, in its order: the naming-system refusal where `t` names `other`; the hardware-naming
+/// refusal where `x`, served, names `m`; then a jitter past the arithmetic; the system with no task; a deadline from
+/// another event; and an alarm `t` programs.
 struct OutsideModel {
     served: &'static str,
     made: &'static str,
@@ -15607,10 +15575,10 @@ impl OutsideModel {
             });
         let x_served =
             hardware.contains("x") || served_namings.iter().any(|(_, named)| named == "x");
-        let outcome = if !pairs.is_empty() {
+        let outcome = if also == "also t's zero period" {
+            "rejected"
+        } else if !pairs.is_empty() {
             "outside"
-        } else if also == "also t's zero period" {
-            "bullet"
         } else if also == "also t names other" {
             "naming"
         } else if also == "also x names m" && x_served {
@@ -15827,21 +15795,23 @@ fn ranks_that_start_past_one_or_skip() {
 /// for the language, whose check comes before the search and §1 alike: no order among refusals is left to hold and no
 /// message of the lowering's to read, so the classes of both went with it. What stays is the language's verdict on
 /// every such system, whatever else it writes, beside its twin, which it accepts and which fares by what else it writes
-/// alone.
+/// alone. `M1.42` (`RTP-H14`) moved one of those later refusals, a period of zero, to the language as well, so a twin
+/// writing it is rejected too, by that rule alone.
 #[test]
 fn two_tasks_of_one_name_rejected_by_the_language_whatever_else_they_write() {
     let cases = one_name_two_tasks();
-    // 5 name patterns, each with its twin; 4 binders; what else it writes, of 10: 8 later refusals, none, and a name
-    // outside the hardware.
+    // 5 name patterns, each with its twin; 4 binders; what else it writes, of 10: a period of zero, the language's; 7
+    // later refusals of §1; none; and a name outside the hardware.
     assert_eq!(cases.len(), ONE_NAME.len() * 2 * 4 * 10);
     let tally = run("one name, two tasks", &cases);
-    // Rejected: every system declaring two tasks of one name (5 × 4 × 10), `invalid-description`, whatever else it
-    // writes, so no search, record, configuration checker or lowering reads one. Of the twins, the other 5 × 4 × 10,
-    // none rejected, so that a system's names alone are what the language refuses: unresolved
-    // `infeasible-configuration`, model §8 rule 7's conflict, each writing `w`, which names `out.b`, outside the
-    // hardware (5 × 4), so no record of it reaches §1 or the configuration checker; refused, each writing a later
-    // refusal (5 × 4 × 8); lowered, each writing none (5 × 4). 200 + 20 + 160 + 20 = 400. Each count read from the
-    // label's `one-name` or `distinct`, the binder and the later refusal its description writes.
+    // Rejected, `invalid-description`, so no search, record, configuration checker or lowering reads one: every system
+    // declaring two tasks of one name (5 × 4 × 10), whatever else it writes, and each twin writing a period of zero (5
+    // × 4; model §4 rule 8). 200 + 20 = 220. Of the twins' other 5 × 4 × 9, none rejected, so that a system's names
+    // alone are what the language refuses of them: unresolved `infeasible-configuration`, model §8 rule 7's conflict,
+    // each writing `w`, which names `out.b`, outside the hardware (5 × 4), so no record of it reaches §1 or the
+    // configuration checker; refused, each writing a later refusal of §1 (5 × 4 × 7); lowered, each writing none (5 ×
+    // 4). 220 + 20 + 140 + 20 = 400. Each count read from the label's `one-name` or `distinct`, the binder and the
+    // later refusal its description writes.
     let one_name = |c: &Case| c.label.starts_with("one-name ");
     let word = |c: &Case, key: &str| -> String {
         c.label
@@ -15858,24 +15828,29 @@ fn two_tasks_of_one_name_rejected_by_the_language_whatever_else_they_write() {
             .verdicts
             .get("rejected invalid-description")
             .map(|v| v.0),
-        Some(200),
-        "the language refuses two tasks of one system carrying one name: {:?}",
+        Some(220),
+        "the language refuses two tasks of one system carrying one name, and a period of zero: {:?}",
         tally.verdicts
     );
     hold_unresolved("one name, two tasks", &tally, &cases, (20, 0), |_| false);
     hold(
         "one name, two tasks",
         &tally,
-        (400, 20, 200, 20, 160),
+        (400, 20, 220, 20, 140),
         &[
             counted(LANGUAGE_REJECTS_TWO_TASKS_OF_ONE_NAME, &cases, one_name),
+            // A period of zero, in both of each pair of systems (5 × 2 × 4 = 40): the 20 declaring two tasks of one
+            // name are rejected by both rules, the 20 twins by this one alone.
+            counted(LANGUAGE_REJECTS_A_TASK_S_DURATION, &cases, |c| {
+                later(c) == "zero"
+            }),
+            counted("language: a period of zero", &cases, |c| later(c) == "zero"),
             counted(
                 SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE,
                 &cases,
                 alone("outside"),
             ),
             // The twins, each refused by its later refusal alone.
-            counted("task bullet: a period of zero", &cases, alone("zero")),
             counted(
                 "refusal: a requester naming a system",
                 &cases,
@@ -17164,7 +17139,7 @@ fn the_message_readers_keep_the_order_a_message_gives() {
 fn the_reading_transcribes_the_shipped_vocabulary_and_catalog() {
     // The reading's constants are its transcription of `vocabulary.eadl` and `adapters.eadl`, held here to the shipped
     // vocabulary and catalog, so that a change to either fails here rather than in the reading's verdicts.
-    // Every unit the language accepts is read, a time or not a time (§1; round 20, R20-R7).
+    // Every unit the language accepts is read, a time or not a time (model §4 rule 8; round 20, R20-R7).
     let time: Vec<&str> = eadl_model::quantity::UNITS
         .iter()
         .filter(|u| u.dimension == eadl_model::quantity::Dimension::Time)

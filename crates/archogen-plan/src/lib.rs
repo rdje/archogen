@@ -399,8 +399,7 @@ pub fn lower_checked(
 /// §1's refusals, in its order: a record that does not read; that names another program, system, catalog or profile;
 /// a system declaring two tasks of one name; a record that does not rebuild, or that the generator's own joint rules
 /// refuse; a task's release or deadline the language's
-/// check should have refused — none stated, not a time, a zero release separation, a periodic task bound to an interrupt
-/// source itself; a declaration or a task the system serves naming a system; a block or a platform the system serves
+/// check should have refused — none stated, a periodic task bound to an interrupt source itself; a declaration or a task the system serves naming a system; a block or a platform the system serves
 /// naming what is not hardware; and what `/1` cannot lower — a duration past the exact arithmetic, placement memory, a
 /// system with no task, a deadline measured from an event other than the release, an alarm or an expiry a task or the
 /// system's own level would receive. Then §2.4's: an obliged value that is not a duration. A block or a platform a
@@ -548,8 +547,9 @@ fn lowered(
         })
         .collect();
     tasks.sort_by(|a, b| a.rank.cmp(&b.rank).then(a.name.cmp(&b.name)));
-    // §1: a task's release or deadline the description check should have refused — none stated, not a time, a release
-    // separation of zero, or a periodic task bound to an interrupt source itself, a second release model.
+    // §1: a task's release or deadline the description check should have refused — none stated, or a periodic task bound
+    // to an interrupt source itself, a second release model. One that is no time, or a release separation of zero, the
+    // language refuses (`M1.42`, model §4 rule 8), so an accepted description holds neither.
     let ill_formed = |task: &Task<'_>, what: String, leaf: &str| {
         refuse(
             "tool-failure",
@@ -579,12 +579,17 @@ fn lowered(
             ));
         };
         let jitter = clause(task.form, "jitter");
-        let mut time = |c: &Form| match seconds(c) {
+        let mut time = |c: &Form| {
+            match seconds(c) {
             Seconds::Of(s) => Ok(Some(s)),
-            Seconds::NotTime => Err(ill_formed(
-                task,
-                format!("writes `{}`, which is not a time", c.to_canonical()),
-                "M1.42",
+            Seconds::NotTime => Err(refuse(
+                "tool-failure",
+                format!(
+                    "`(task {system} {})` writes `{}`, which is not a time, and the language's check refuses that: \
+                     report it, the two disagree",
+                    task.name,
+                    c.to_canonical()
+                ),
             )),
             Seconds::PastArithmetic => {
                 past.push(format!(
@@ -594,6 +599,7 @@ fn lowered(
                 ));
                 Ok(None)
             }
+        }
         };
         let release_seconds = time(&release)?;
         let deadline_seconds = time(&deadline)?;
@@ -608,16 +614,6 @@ fn lowered(
             deadline: deadline_seconds.unwrap_or(Rational::ZERO),
             jitter: jitter_seconds.unwrap_or(Rational::ZERO),
         };
-        if release_seconds == Some(Rational::ZERO) {
-            return Err(ill_formed(
-                task,
-                format!(
-                    "writes `{}`, a release separation of zero, which no run can release",
-                    release.to_canonical()
-                ),
-                "M1.42",
-            ));
-        }
         let internal = joint::task_name(&system, &task.name);
         if timing.periodic
             && rebuilt.bindings.iter().any(|b| {

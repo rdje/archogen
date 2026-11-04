@@ -23,6 +23,8 @@
 //! | Rule | Verdict when broken | Why that verdict |
 //! |---|---|---|
 //! | a release model is declared | `missing-fact` | §5.3 — the arrival model is a relevant fact, and it is simply undescribed |
+//! | a task's `period`, `min-separation`, `deadline` and `jitter` are times | `invalid-description` | §5.5: `(period 100 Hz)` says nothing a run or an analysis can read |
+//! | a `period` or `min-separation` above zero | `invalid-description` | no run can release a task with nothing between its releases, and the analysis's condition 3 refuses it |
 //! | not both `period` and `min-separation` | `invalid-description` | §5.5 — two release models is contradictory, not merely unsupported |
 //! | a priority is a rank, 1 or more | `priority-below-one`, an `invalid-description` | the language's, not the profile's: a value below 1 names no rank (leaf `M2.13`) |
 //! | priorities are unique | `unsupported-profile` | the profile admits one task per priority; another profile could admit more |
@@ -48,7 +50,7 @@ use std::collections::BTreeMap;
 
 use eadl_front::{Diagnostic, Form, Label, Span};
 
-use crate::quantity::Quantity;
+use crate::quantity::{Dimension, Quantity};
 
 /// One task, as the workload rules see it.
 struct Task<'a> {
@@ -58,6 +60,7 @@ struct Task<'a> {
     period: Option<&'a Form>,
     min_separation: Option<&'a Form>,
     deadline: Option<&'a Form>,
+    jitter: Option<&'a Form>,
     priority: Option<(i64, Span)>,
     /// `(on-overrun <symbol>)`, when declared and a symbol; the schema refuses any other value.
     on_overrun: Option<(&'a str, Span)>,
@@ -79,6 +82,7 @@ pub fn check(forms: &[Form]) -> Vec<Diagnostic> {
         let tasks = collect(system);
         for task in &tasks {
             release_model(task, &mut diagnostics);
+            durations(task, &mut diagnostics);
             constrained_deadline(task, &mut diagnostics);
             rank(task, &mut diagnostics);
             overrun_policy(task, &mut diagnostics);
@@ -99,6 +103,7 @@ fn collect(system: &Form) -> Vec<Task<'_>> {
             period: clause(task, "period"),
             min_separation: clause(task, "min-separation"),
             deadline: clause(task, "deadline"),
+            jitter: clause(task, "jitter"),
             priority: match clause(task, "priority").and_then(|c| c.items().get(1)) {
                 Some(Form::Integer { value, span }) => Some((*value, *span)),
                 _ => None,
@@ -137,6 +142,48 @@ fn release_model(task: &Task<'_>, out: &mut Vec<Diagnostic>) {
             .with_secondary(Label::new(period.span(), "a period is declared here")),
         ),
         _ => {}
+    }
+}
+
+/// A task's durations are times, and what separates its releases is more than none (leaf `M1.42`; the runtime plan's
+/// `RTP-H14`). A quantity of another dimension is a description of nothing here: `(deadline 10 kHz)` beside `(period 10 ms)`
+/// could be compared with nothing, and was accepted. One the schema refused for its own reasons reads as no quantity, and
+/// stays the schema's to report.
+fn durations(task: &Task<'_>, out: &mut Vec<Diagnostic>) {
+    for (name, clause, releases) in [
+        ("period", task.period, true),
+        ("min-separation", task.min_separation, true),
+        ("deadline", task.deadline, false),
+        ("jitter", task.jitter, false),
+    ] {
+        let Some(clause) = clause else {
+            continue;
+        };
+        let Ok(value) = quantity(clause) else {
+            continue;
+        };
+        if value.unit.dimension != Dimension::Time {
+            out.push(Diagnostic::error(
+                "invalid-description",
+                format!(
+                    "task `{}`'s `{name}` is {value}, a quantity of {}, which is not a time",
+                    task.name,
+                    value.unit.dimension.slug()
+                ),
+                Label::new(clause.span(), "not a time"),
+                format!("write `{name}` as a time, such as `({name} 10 ms)`"),
+            ));
+        } else if releases && !value.value.is_positive() {
+            out.push(Diagnostic::error(
+                "invalid-description",
+                format!(
+                    "task `{}`'s `{name}` is {value}, and no run can release a task with nothing between its releases",
+                    task.name
+                ),
+                Label::new(clause.span(), "no time between releases"),
+                format!("write a `{name}` above zero"),
+            ));
+        }
     }
 }
 
@@ -297,6 +344,55 @@ mod tests {
     #[test]
     fn an_admitted_task_set_produces_nothing() {
         assert!(diagnose(&system(OK_A, OK_B)).is_empty());
+    }
+
+    #[test]
+    fn a_duration_that_is_not_a_time_is_refused_naming_its_clause() {
+        for (clauses, says) in [
+            ("(period 100 Hz) (priority 2)", "`period` is 100 Hz"),
+            (
+                "(min-separation 50 Hz) (priority 2)",
+                "`min-separation` is 50 Hz",
+            ),
+            (
+                "(period 10 ms) (deadline 10 kHz) (priority 2)",
+                "`deadline` is 10 kHz",
+            ),
+            (
+                "(period 10 ms) (jitter 4 KiB) (priority 2)",
+                "`jitter` is 4 KiB",
+            ),
+            ("(period 2 tick) (priority 2)", "`period` is 2 tick"),
+        ] {
+            let found = diagnose(&system(OK_A, clauses));
+            assert_eq!(found.len(), 1, "{clauses}: {found:?}");
+            assert!(found[0].starts_with("invalid-description: "), "{found:?}");
+            assert!(found[0].contains(says), "{found:?}");
+            assert!(found[0].contains("which is not a time"), "{found:?}");
+        }
+    }
+
+    #[test]
+    fn nothing_between_releases_is_refused_and_a_zero_deadline_or_jitter_is_not() {
+        for (clauses, says) in [
+            ("(period 0 ms) (priority 2)", "`period` is 0 ms"),
+            (
+                "(min-separation 0 s) (priority 2)",
+                "`min-separation` is 0 s",
+            ),
+        ] {
+            let found = diagnose(&system(OK_A, clauses));
+            assert_eq!(found.len(), 1, "{clauses}: {found:?}");
+            assert!(found[0].starts_with("invalid-description: "), "{found:?}");
+            assert!(found[0].contains(says), "{found:?}");
+        }
+        // Each a time, and either a claim the analysis may yet refuse, or none: not this rule's.
+        for clauses in [
+            "(period 10 ms) (jitter 0 s) (priority 2)",
+            "(period 10 ms) (deadline 0 s) (priority 2)",
+        ] {
+            assert!(diagnose(&system(OK_A, clauses)).is_empty(), "{clauses}");
+        }
     }
 
     #[test]
