@@ -51,3 +51,20 @@ arithmetic of the run's bound held. Of round 1, H1-2 was not closed; H1-3 and H1
 
 Said, and left as it stands: `.DS_Store` deeper than the top still refuses, naming it; durability across a power loss is not claimed,
 there being no sync call. The two renames say nothing of that.
+
+**Round 3** — `2026-11-04`: not acceptable, 9 findings, and its one defect needs another program working in the same directory in a
+window of milliseconds. Its reader re-derived the tick, the horizon, and every release and arrival count of the 117 plans that build, from
+each `plan.txt`, against what each run printed, and found none wrong. Eleven of round 2's twelve answers held, H2-2 but for a link or a pipe.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R3-1 | defect | `Built::remove` held a file to less than `Built::edited`: a link was followed or removed, a pipe hung the command after the package was placed, and a listed directory swapped for a link lost byte-identical copies outside the build | Each path held as `edited` holds it, a regular file reached through real directories, and what went aside held to being a directory; a test for each route. The window left is stated: `std` has no directory-relative open |
+| R3-2 | gap | a rename silently replaces an empty directory that came during the window, at `DIR` and at `DIR.replaced` | Held again just before each, refusing if something came. The instant left is stated: `std` has no rename that refuses to replace |
+| R3-3 | gap | the stage took a private `--out`'s mode only at the end, and a kept stage never did | It takes the mode when it is made |
+| R3-4 | gap | a test named for H2-3 no longer held it: its comment false since H2-7, nothing beside an unknown cause over the bound | It runs that very system, refused for its cost alone and for its cause with `chime` |
+| R3-5 | gap | tests holding less than their names: no listed file edited meanwhile, `.DS_Store` in no test, no other checker's digest, `states no separation` untested, six of twelve files | Each added, the twelve read from the build itself |
+| R3-6 | wording | the chapter's "a build deletes nothing" against the empty directory it takes; "exactly" omitting the parents it made; the stage taking what is dropped in it; empty directories unnamed; "whole or absent" against an empty `--out`; a hint wrong on one route | Said; empty directories named; the hint withheld there |
+| R3-7 | wording | "unchanged … is `stale-input`" held only if the edit still reads, in the same format, and "nothing else there" overlooked the carried names | Said: a provenance that no longer reads, or names another format, is `usage`, being no build this engine reads |
+| R3-8 | wording | leftovers from before H2-8 in the chapter and record: "the plan's durations", "a duration past 64 bits", "each naming the task" | Reworded to what the run repeats and to what each refusal names |
+| R3-9 | gap | older than this review: a description that is a link read its modules from two places, the front's beside the link and the checker's beside its target, so a build said "report it", falsely | `consume.rs` keeps the description's own name under its canonical directory, so both read through the link; a test |
+

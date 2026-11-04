@@ -195,9 +195,11 @@ fn place_record(dir: &Path) -> Result<PathBuf, Refusal> {
     Ok(record)
 }
 
-/// `file` as an absolute, canonical path, which the checker reads as the front does whatever its own directory.
+/// `file` as an absolute path, which the checker reads as the front does whatever its own directory: its directory
+/// canonical, and its own name kept. A description that is a link is read through that link, so its imports are found beside
+/// it, where the front found them, and not beside what it points at.
 fn absolute(file: &Path, what: &str) -> Result<PathBuf, Refusal> {
-    std::fs::canonicalize(file).map_err(|error| {
+    let unnamed = |error: std::io::Error| {
         failure(
             format!(
                 "cannot name {what}, {}, absolutely: {error}",
@@ -205,7 +207,18 @@ fn absolute(file: &Path, what: &str) -> Result<PathBuf, Refusal> {
             ),
             "check that it exists and can be read".to_owned(),
         )
-    })
+    };
+    std::fs::metadata(file).map_err(unnamed)?;
+    let Some(name) = file.file_name() else {
+        return std::fs::canonicalize(file).map_err(unnamed);
+    };
+    let parent = file
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    std::fs::canonicalize(parent)
+        .map(|parent| parent.join(name))
+        .map_err(unnamed)
 }
 
 /// The record at `file`, which the checker that exited with `code` wrote, and its text.

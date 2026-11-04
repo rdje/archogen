@@ -328,14 +328,21 @@ fn a_source_arrives_at_its_stated_separation_and_releases_its_task_at_each_arriv
 fn a_source_that_does_not_arrive_is_said_not_to() {
     // Whatever keeps it silent, the trace names it: a run never claims what it did not exercise (`RTP-H9`). The lib's unit
     // test holds a route the plan does not enable, which no plan the lowering writes has.
-    let name = "zero-source-separation";
-    let emitted = build_of(&fixture(name)).emitted().expect("emitted");
-    let trace = run(&emitted, name);
-    assert!(
-        trace.contains("states a separation of zero, so it does not arrive"),
-        "{trace}"
-    );
-    assert!(!trace.contains(" pending source "), "{trace}");
+    for (name, says) in [
+        (
+            "zero-source-separation",
+            "states a separation of zero, so it does not arrive",
+        ),
+        (
+            "absent-source-no-task",
+            "states no separation, so it does not arrive",
+        ),
+    ] {
+        let emitted = build_of(&fixture(name)).emitted().expect("emitted");
+        let trace = run(&emitted, name);
+        assert!(trace.contains(says), "{name}: {trace}");
+        assert!(!trace.contains(" pending source "), "{name}: {trace}");
+    }
 }
 
 #[test]
@@ -402,11 +409,19 @@ fn a_run_of_exactly_what_the_playground_takes_is_built() {
 }
 
 #[test]
-fn a_task_nothing_can_release_is_said_whatever_its_separation_would_cost() {
-    // Its cost would be refused too, and the cause and its repair are what the author needs.
-    let text = periodic(&[("a", "1 ms")]).replace(
+fn a_task_nothing_can_release_is_said_before_what_its_run_would_cost() {
+    // The rest of this system is a run past the bound, and refused as one when alone. The cause and its repair are what the
+    // author needs first: the run's cost means nothing until it can run.
+    let over = periodic(&[("a", "1 ms"), ("b", "1048576 ms")]);
+    let refusal = build_of(&over).emitted().expect_err("refused");
+    assert!(
+        refusal.message.contains("releases and arrivals"),
+        "{}",
+        refusal.message
+    );
+    let text = over.replace(
         "  (requires (uses console.write))",
-        "  (task chime (min-separation 2097152 ms) (deadline 2097152 ms) (priority 2) (uses console.write))\n  (requires (uses console.write))",
+        "  (task chime (min-separation 3 ms) (deadline 3 ms) (priority 3) (uses console.write))\n  (requires (uses console.write))",
     );
     let refusal = build_of(&text).emitted().expect_err("refused");
     assert_eq!(refusal.code, "missing-fact", "{}", refusal.message);

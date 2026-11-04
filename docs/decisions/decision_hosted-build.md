@@ -36,7 +36,8 @@ so that a later command reads what it read: `archogen explain` of a build, by §
 that description, and holds the search's plan equal to the one the build holds and to what its checker's record accepted, or says
 `stale-input`. `provenance.json` lists every other file with its digest, and each table entry with its generated line and its
 line in the plan, and for a task its form in the description, and holds its own digest over its text. A digest catches an edit
-and a stale file, never a forger: whoever can write the directory can rewrite the list.
+and a stale file, never a forger: whoever can write the directory can rewrite the list. A provenance that no longer reads, or names
+another format, is no build this engine reads, so it is `usage` and not `stale-input`.
 
 Behavior is copied and never generated: what `src/main.rs` adds is data. So the code that runs is code the engine compiles
 and tests, as `ROADMAP.md` §1.1 admits ("copied or linked components") and as S0 did, and a test holds each copy byte for
@@ -95,10 +96,11 @@ never ends. So a plan whose one hyperperiod holds more than `2^20` timer release
 
 `crates/archogen-emit` does no I/O: it turns its inputs into a list of files. It takes the program, the assignment, the
 result record and the plan's text, and **accepts the plan only by lowering it again from those inputs and comparing bytes**
-(`RTP-H3`). What it then refuses, each naming the task:
-- `(released-by (unknown CAUSE))`, first of all, since what a run would cost means nothing until it can run: `missing-fact` or
-  `unsupported-profile`, as `RTP-H1` gives each cause;
-- a duration or a hyperperiod past `u64` ticks (§2), and a run past its bound (§3): `unsupported-profile`.
+(`RTP-H3`). What it then refuses:
+- `(released-by (unknown CAUSE))`, first of all, since what a run would cost means nothing until it can run, naming the task:
+  `missing-fact` or `unsupported-profile`, as `RTP-H1` gives each cause;
+- what the run repeats, or a hyperperiod of it, past `u64` ticks (§2), naming that, and a run past its bound (§3), naming its count:
+  `unsupported-profile`.
 
 A plan whose acceptance was taken as text is built marked experimental, in `provenance.json` and in the trace's header. No
 front reaches that today, since the only build is the command line's, which runs the checker (§5); the rule stands for the
@@ -116,14 +118,15 @@ needs of the engine API is only what the search already holds: the elaborated pr
 (`Resolution::elaborated`).
 
 **The package lands whole, and a build deletes nothing it did not write.** The command builds it in `DIR.building`, beside `DIR`,
-and moves it into place by two renames once every file is written, so `DIR` is at every moment a whole package or absent. If the
-second rename fails, the first is undone, or the refusal names where what stood there now is. A refused build leaves `DIR` as it
-found it: a refusal of the description creates nothing, and an earlier build stays. What it removes is exactly:
-- the stage this very run made, which it makes by a call that fails if anything stands there;
-- of an earlier build, each file its `provenance.json` lists, one by one and only if still as written, and the provenance itself
-  on the same terms, then each directory that held them where that leaves it empty;
-- an empty directory at `DIR`, whose mode the new package takes, as it takes an earlier build's. A mount point fails safe, at the
-  first rename.
+and moves it into place by two renames once every file is written, so what a build places at `DIR` is at every moment a whole package
+or absent. If the second rename fails, the first is undone, or the refusal names where what stood there now is. A refused build leaves
+`DIR` as it found it: a refusal of the description creates nothing, and an earlier build stays. What it removes is exactly:
+- the stage this very run made, which it makes by a call that fails if anything stands there, with anything put in it while it runs,
+  and on a refusal the parents it made to reach it, if they stayed empty;
+- of an earlier build, each file its `provenance.json` lists, one by one and only if still the regular file it wrote, reached through
+  real directories, and the provenance itself on the same terms, then each directory that held them where that leaves it empty;
+- an empty directory at `DIR`, the one thing it removes that it did not write, whose mode the new package takes, as it takes an
+  earlier build's, and the stage from the moment it is made. A mount point fails safe, at the first rename.
 
 Before any of that, an earlier build must be exactly a build's: every listed file unchanged, its provenance whole, and nothing else
 in it, an empty directory or a link included. What `target`, `Cargo.lock` and `.DS_Store` name at its top, which building a package
@@ -136,6 +139,10 @@ computed, two programs disagree about one input, so `DIR.building` stays, holdin
 refuses the next build until someone has looked. What could not go from an earlier build, or appeared while the build ran, stays at
 `DIR.replaced` with the new package already in place, and the command names it. No sync call is made, so none of this claims
 anything across a power loss.
+
+⚠️ **What it does not hold against.** `std` has no rename that refuses to replace and no directory-relative open, so each path is held
+again just before it is used, and not at the moment itself. Another program working in the same directory in that instant could have an
+empty directory it made replaced, or redirect the removal of a file whose bytes match what was written.
 
 ### 6. What S0 keeps, and when it goes
 
@@ -168,6 +175,7 @@ capability unsupported. Then the S0 crate was deleted (`M4.2.4`), and the retire
 | --- | --- | --- | --- |
 | 1 | 15 | 10 (H1-1 to H1-10), beside 4 gaps and 1 of wording | `2026-11-04`, not acceptable — answered: a build deletes nothing it did not write, by a list of what it wrote and a stage only this run makes; two renames; every disagreement keeps its record; `explain` holds a build to its digests and a request that misses is `usage`; a zero separation named; a run bounded |
 | 2 | 12 | 4 (H2-1 to H2-4), beside 7 gaps and 1 of wording | `2026-11-04`, not acceptable — answered: removal by the list, what cargo leaves carried, an empty directory no build's; the unknown cause first; provenance's own digest; `explain` asks what `build` asks; the tick and the hyperperiod of what the run repeats |
+| 3 | 9 | 1 (R3-1), beside 5 gaps and 3 of wording | `2026-11-04`, not acceptable — answered: removal holds each path as the judgement does; a stage private from the first; what comes meanwhile refused; a linked description's imports found where the front finds them; what `std` cannot hold, stated |
 
 The rounds, each finding and its answer, are in
 [`docs/reviews/decision_hosted-build-reviews.md`](../reviews/decision_hosted-build-reviews.md).

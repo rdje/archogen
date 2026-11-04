@@ -139,10 +139,12 @@ pub fn run(
                 Status::ToolFailure.slug(),
                 place.dir.display()
             );
-            let _ = writeln!(
-                err,
-                "  hint: give `--out` a directory whose parent can be written"
-            );
+            if !why.contains("could not be put back") {
+                let _ = writeln!(
+                    err,
+                    "  hint: give `--out` a directory whose parent can be written"
+                );
+            }
             return Status::ToolFailure;
         }
     }
@@ -157,6 +159,10 @@ pub fn run(
 /// held them where that leaves them empty. So whatever appears meanwhile, or is edited, stays, and the command says so. What
 /// [`crate::built::CARRIED`] names is moved to the new package. Anything else is refused and left alone, a stage some other run
 /// left among it: a run that stopped, or the report of a disagreement, which is not this run's to delete.
+///
+/// ⚠️ **What this does not hold against.** `std` has no rename that refuses to replace, and no directory-relative open, so each
+/// path is held again just before it is used and not at the moment itself. Another program, working in the same directory in that
+/// instant, could have an empty directory it made replaced, or redirect the removal of a file whose bytes match.
 struct Place {
     dir: PathBuf,
     stage: PathBuf,
@@ -281,14 +287,19 @@ impl Place {
         }
     }
 
-    /// The stage made, by this run alone: a stage that appears meanwhile is another run's.
+    /// The stage made, by this run alone: a stage that appears meanwhile is another run's. It takes the mode of what it will
+    /// replace from the first, since it holds what a private directory would keep private.
     fn open(&self) -> Result<(), Failed> {
         let opened = self
             .stage
             .parent()
             .filter(|parent| !parent.as_os_str().is_empty())
             .map_or(Ok(()), std::fs::create_dir_all)
-            .and_then(|()| std::fs::create_dir(&self.stage));
+            .and_then(|()| std::fs::create_dir(&self.stage))
+            .and_then(|()| match &self.occupied {
+                Some((mode, _)) => std::fs::set_permissions(&self.stage, mode.clone()),
+                None => Ok(()),
+            });
         opened.map_err(|error| {
             Failed::Tool(format!(
                 "cannot make the directory {}: {error}",
@@ -309,13 +320,19 @@ impl Place {
     /// restored if the second fails, or named if it cannot be. Then what it replaced goes as [`Place`] says, and what is
     /// left there, if anything, is the answer: the new package stands either way.
     fn land(&self) -> Result<Option<String>, String> {
-        let Some((mode, earlier)) = &self.occupied else {
+        // Held again, the checker having run since: a rename would silently replace an empty directory that came meanwhile.
+        let appeared = |at: &Path| format!("{} appeared while the build ran", at.display());
+        let Some((_, earlier)) = &self.occupied else {
+            if std::fs::symlink_metadata(&self.dir).is_ok() {
+                return Err(appeared(&self.dir));
+            }
             return std::fs::rename(&self.stage, &self.dir)
                 .map(|()| None)
                 .map_err(|error| error.to_string());
         };
-        // A directory of yours keeps the mode you gave it, a private one staying private.
-        std::fs::set_permissions(&self.stage, mode.clone()).map_err(|error| error.to_string())?;
+        if std::fs::symlink_metadata(&self.replaced).is_ok() {
+            return Err(appeared(&self.replaced));
+        }
         std::fs::rename(&self.dir, &self.replaced).map_err(|error| error.to_string())?;
         if let Err(error) = std::fs::rename(&self.stage, &self.dir) {
             return Err(match std::fs::rename(&self.replaced, &self.dir) {
@@ -325,6 +342,13 @@ impl Place {
                     self.replaced.display()
                 ),
             });
+        }
+        // What went aside may have been swapped for a link since it was judged: then nothing behind it is this build's.
+        if !std::fs::symlink_metadata(&self.replaced).is_ok_and(|meta| meta.is_dir()) {
+            return Ok(Some(format!(
+                "{} is no longer a directory",
+                self.replaced.display()
+            )));
         }
         for name in CARRIED {
             let from = self.replaced.join(name);
@@ -338,22 +362,27 @@ impl Place {
         if std::fs::remove_dir(&self.replaced).is_ok() {
             return Ok(None);
         }
+        let named = |at: &Path| {
+            at.strip_prefix(&self.replaced)
+                .unwrap_or(at)
+                .display()
+                .to_string()
+        };
         let mut remains: Vec<String> = Vec::new();
         let mut pending = vec![self.replaced.clone()];
         while let Some(next) = pending.pop() {
+            let mut empty = true;
             for entry in std::fs::read_dir(&next).into_iter().flatten().flatten() {
+                empty = false;
                 let found = entry.path();
                 if entry.file_type().is_ok_and(|kind| kind.is_dir()) {
                     pending.push(found);
                 } else {
-                    remains.push(
-                        found
-                            .strip_prefix(&self.replaced)
-                            .unwrap_or(&found)
-                            .display()
-                            .to_string(),
-                    );
+                    remains.push(named(&found));
                 }
+            }
+            if empty {
+                remains.push(format!("{}/", named(&next)));
             }
         }
         remains.sort();
@@ -365,8 +394,6 @@ impl Place {
             .join(", ");
         Ok(Some(if remains.len() > 5 {
             format!("{shown} and {} more", remains.len() - 5)
-        } else if shown.is_empty() {
-            "directories".to_owned()
         } else {
             shown
         }))

@@ -188,7 +188,7 @@ fn lcm(a: u64, b: u64) -> Option<u64> {
     (a / gcd(a, b).max(1)).checked_mul(b)
 }
 
-/// The plan's durations in ticks: every duration's denominator divides the tick (the record's §2).
+/// What the run repeats, in ticks: each one's denominator divides the tick (the record's §2).
 struct Ticks {
     per_second: u64,
 }

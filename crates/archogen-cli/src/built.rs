@@ -205,21 +205,50 @@ impl Built {
         None
     }
 
-    /// Everything this build wrote taken out of `dir`, each file only if it is still as it was written, then each directory
-    /// that held them and is empty now. Nothing else goes: what stays is for its owner to look at.
+    /// Everything this build wrote taken out of `dir`, each file only if it is still the regular file it wrote, reached
+    /// through real directories, then each directory that held them and is empty now. Nothing else goes: what stays is for
+    /// its owner to look at.
+    ///
+    /// ⚠️ Each path is held at the moment it is used, which is as far as `std` goes: another program swapping a directory for
+    /// a link between that moment and the removal could still redirect one file, and only one whose bytes match.
     pub fn remove(&self, dir: &Path) {
+        // A directory on the way that is no longer a real one is not this build's.
+        let reached = |name: &str| {
+            let mut at = dir.to_path_buf();
+            for part in Path::new(name)
+                .parent()
+                .into_iter()
+                .flat_map(Path::components)
+            {
+                at.push(part);
+                if !std::fs::symlink_metadata(&at).is_ok_and(|meta| meta.is_dir()) {
+                    return false;
+                }
+            }
+            true
+        };
+        let regular =
+            |file: &Path| std::fs::symlink_metadata(file).is_ok_and(|meta| meta.is_file());
         for (name, digest) in &self.files {
             let file = dir.join(name);
-            if std::fs::read(&file).is_ok_and(|bytes| Digest::of(&bytes) == *digest) {
+            if reached(name)
+                && regular(&file)
+                && std::fs::read(&file).is_ok_and(|bytes| Digest::of(&bytes) == *digest)
+            {
                 let _ = std::fs::remove_file(&file);
             }
         }
         let provenance = dir.join(PROVENANCE_FILE);
-        if std::fs::read_to_string(&provenance).is_ok_and(|text| provenance_is_whole(&text)) {
+        if regular(&provenance)
+            && std::fs::read_to_string(&provenance).is_ok_and(|text| provenance_is_whole(&text))
+        {
             let _ = std::fs::remove_file(&provenance);
         }
         for name in self.holding() {
-            let _ = std::fs::remove_dir(dir.join(name));
+            let held = dir.join(&name);
+            if std::fs::symlink_metadata(&held).is_ok_and(|meta| meta.is_dir()) {
+                let _ = std::fs::remove_dir(held);
+            }
         }
     }
 }

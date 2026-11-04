@@ -719,6 +719,202 @@ fn what_appears_while_a_build_runs_stays_and_is_said() {
     );
 }
 
+/// The checker, with `change` done to the place while it runs.
+struct Changing {
+    change: fn(&Path),
+    dir: PathBuf,
+}
+
+impl Launch for Changing {
+    fn launch(
+        &self,
+        program: &str,
+        args: &[String],
+        out: &mut dyn Write,
+        err: &mut dyn Write,
+    ) -> Result<Launched, Unlaunched> {
+        (self.change)(&self.dir);
+        Checker.launch(program, args, out, err)
+    }
+}
+
+#[test]
+fn a_listed_file_changed_while_a_build_runs_stays_and_is_said() {
+    let root = scratch("edited-meanwhile");
+    let description = example(HEARTBEAT);
+    let again = |dir: &Path, change: fn(&Path)| {
+        let (status, _, err) = build(&description, dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        let (status, _, err) = invoke(
+            &["build", &description, "--out", &dir.display().to_string()],
+            &Changing {
+                change,
+                dir: dir.to_path_buf(),
+            },
+        );
+        assert_eq!(status, Status::Ok, "{err}");
+        err
+    };
+    // Edited: it is not what was written.
+    let dir = root.join("edited");
+    let err = again(&dir, |dir| {
+        fs::write(dir.join("plan.txt"), "mine").expect("written")
+    });
+    assert_eq!(
+        fs::read_to_string(beside(&dir, ".replaced").join("plan.txt")).expect("kept"),
+        "mine"
+    );
+    assert!(err.contains("plan.txt"), "{err}");
+    // An empty directory of mine: it is named too.
+    let dir = root.join("empty");
+    let err = again(&dir, |dir| {
+        fs::create_dir_all(dir.join("photos")).expect("a directory")
+    });
+    assert!(beside(&dir, ".replaced").join("photos").is_dir());
+    assert!(err.contains("photos/"), "{err}");
+    #[cfg(unix)]
+    {
+        // A pipe in place of a listed file is not read, and a link is not followed or removed.
+        let dir = root.join("pipe");
+        let err = again(&dir, |dir| {
+            let file = dir.join("plan.txt");
+            fs::remove_file(&file).expect("removed");
+            let made = Command::new("mkfifo")
+                .arg(&file)
+                .status()
+                .expect("mkfifo runs");
+            assert!(made.success());
+        });
+        assert!(err.contains("plan.txt"), "{err}");
+        let dir = root.join("link");
+        let err = again(&dir, |dir| {
+            let file = dir.join("plan.txt");
+            fs::remove_file(&file).expect("removed");
+            std::os::unix::fs::symlink("elsewhere", &file).expect("a link");
+        });
+        assert!(err.contains("plan.txt"), "{err}");
+        // A directory swapped for a link to a copy holding byte-identical files, and one of mine: nothing behind it goes.
+        let dir = root.join("swapped");
+        let keep = root.join("keep");
+        let (status, _, err) = build(&description, &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        fs::create_dir_all(&keep).expect("a directory");
+        for name in ["lib.rs", "scheduler.rs", "fault.rs"] {
+            fs::copy(dir.join("rt-core/src").join(name), keep.join(name)).expect("copied");
+        }
+        let swapping = |dir: &Path| {
+            let src = dir.join("rt-core/src");
+            fs::remove_dir_all(&src).expect("removed");
+            let keep = dir.parent().expect("a parent").join("keep");
+            std::os::unix::fs::symlink(keep, &src).expect("a link");
+        };
+        let (status, _, err) = invoke(
+            &["build", &description, "--out", &dir.display().to_string()],
+            &Changing {
+                change: swapping,
+                dir: dir.clone(),
+            },
+        );
+        assert_eq!(status, Status::Ok, "{err}");
+        assert_eq!(
+            fs::read_dir(&keep).expect("a directory").count(),
+            3,
+            "{err}"
+        );
+        // What came at a name beside the place while it ran is refused rather than replaced.
+        let dir = root.join("appeared");
+        let (status, _, err) = build(&description, &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        let appearing = |dir: &Path| {
+            let mut name = dir.as_os_str().to_owned();
+            name.push(".replaced");
+            fs::create_dir_all(PathBuf::from(name)).expect("a directory");
+        };
+        let (status, _, err) = invoke(
+            &["build", &description, "--out", &dir.display().to_string()],
+            &Changing {
+                change: appearing,
+                dir: dir.clone(),
+            },
+        );
+        assert_eq!(status, Status::ToolFailure, "{err}");
+        assert!(err.contains("appeared while the build ran"), "{err}");
+        assert!(beside(&dir, ".replaced").is_dir());
+        assert!(dir.join("Cargo.toml").is_file(), "the earlier build stays");
+    }
+}
+
+#[test]
+fn what_looking_at_a_package_leaves_is_carried() {
+    let dir = scratch("ds-store").join("out");
+    let description = example(HEARTBEAT);
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    fs::write(dir.join(".DS_Store"), "the desktop's").expect("written");
+    let (status, _, err) = explain(&dir.display().to_string());
+    assert_eq!(status, Status::Ok, "{err}");
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    assert_eq!(
+        fs::read_to_string(dir.join(".DS_Store")).expect("carried"),
+        "the desktop's"
+    );
+    // Deeper down it is a file no build wrote, and named.
+    fs::write(dir.join("rt-core/.DS_Store"), "the desktop's").expect("written");
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(
+        err.contains("`rt-core/.DS_Store` is no file a build wrote"),
+        "{err}"
+    );
+}
+
+#[test]
+#[cfg(unix)]
+fn a_private_directory_s_stage_is_private_from_the_first() {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = scratch("private").join("out");
+    fs::create_dir_all(&dir).expect("a directory");
+    fs::set_permissions(&dir, fs::Permissions::from_mode(0o700)).expect("private");
+    let (status, _, err) = invoke(
+        &[
+            "build",
+            &example(HEARTBEAT),
+            "--out",
+            &dir.display().to_string(),
+        ],
+        &Answering {
+            status: Status::ToolFailure,
+            code: Status::ToolFailure.code(),
+        },
+    );
+    assert_eq!(status, Status::ToolFailure, "{err}");
+    let kept = fs::metadata(beside(&dir, ".building"))
+        .expect("kept")
+        .permissions()
+        .mode();
+    assert_eq!(kept & 0o777, 0o700);
+}
+
+#[test]
+#[cfg(unix)]
+fn a_description_that_is_a_link_finds_its_imports_where_the_front_does() {
+    // The checker once read them beside what the link points at, and said two programs disagreed about one input.
+    let root = scratch("linked-description");
+    let (here, there) = (root.join("here"), root.join("there"));
+    fs::create_dir_all(&here).expect("a directory");
+    fs::create_dir_all(&there).expect("a directory");
+    let tree = repo_root().join("crates/archogen-plan/tests/corpus/modules");
+    fs::copy(tree.join("app.main.eadl"), there.join("app.main.eadl")).expect("copied");
+    for name in ["hw.dev.eadl", "os.svc.eadl"] {
+        fs::copy(tree.join(name), here.join(name)).expect("copied");
+    }
+    let link = here.join("app.main.eadl");
+    std::os::unix::fs::symlink(there.join("app.main.eadl"), &link).expect("a link");
+    let (status, _, err) = build(&link.display().to_string(), &root.join("out"));
+    assert_eq!(status, Status::Ok, "{err}");
+}
+
 #[test]
 fn an_out_that_goes_back_through_a_name_is_refused() {
     let root = scratch("through");
@@ -1201,18 +1397,20 @@ fn stale(target: &str) -> String {
 
 #[test]
 fn a_file_of_a_build_edited_since_is_stale_whichever_file_it_is() {
-    for name in [
-        "src/main.rs",
-        "plan.txt",
-        "assignment.eadl",
-        "plan-check.json",
-        "description/system.eadl",
-        "rt-core/src/scheduler.rs",
-    ] {
+    let names: Vec<String> = {
+        let dir = scratch("edited-list").join("out");
+        let (status, _, err) = build(&example(HEARTBEAT), &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        let mut written = snapshot(&dir);
+        written.remove("provenance.json");
+        written.into_keys().collect()
+    };
+    assert_eq!(names.len(), 12);
+    for name in names {
         let dir = scratch("edited").join("out");
         let (status, _, err) = build(&example(HEARTBEAT), &dir);
         assert_eq!(status, Status::Ok, "{err}");
-        let file = dir.join(name);
+        let file = dir.join(&name);
         let text = fs::read_to_string(&file).expect("the file");
         fs::write(&file, format!("{text} ")).expect("written");
         let err = stale(&dir.display().to_string());
@@ -1284,7 +1482,11 @@ fn a_record_that_does_not_accept_this_plan_from_this_checker_is_stale() {
         (dir, record)
     };
     type Edit = fn(&Record, &mut Producer, &mut Subject) -> (Status, Vec<Finding>);
-    let cases: [(&str, Edit); 4] = [
+    let cases: [(&str, Edit); 5] = [
+        ("another-checker", |_, producer, _| {
+            producer.sha256 = Digest::of(b"another checker");
+            (Status::Ok, Vec::new())
+        }),
         ("another-plan", |_, _, subject| {
             subject.judged = Judged::Plan(Digest::of(b"another plan"));
             (Status::Ok, Vec::new())

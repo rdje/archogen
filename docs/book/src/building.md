@@ -79,8 +79,8 @@ $ cargo run --quiet --manifest-path build/heartbeat/Cargo.toml
 Reading it from the top: the lines beginning `;` say what the trace is, which plan it ran and what it did not exercise. The
 parts start in the plan's order, with the serial port before the service that writes to it. Then the timer fires, `beat` and
 `chime` are released in rank order, and each job starts and completes at one instant, because its body is empty. Times are exact
-fractions of a second, so `1/50 s` is 20 ms and no rounding can creep in. The tick is derived from the plan's durations: this
-plan's are 10 ms and 30 ms, so it is 1/100 s.
+fractions of a second, so `1/50 s` is 20 ms and no rounding can creep in. The tick is derived from what the run repeats: here
+periods of 10 ms and 30 ms, so it is 1/100 s.
 
 ## What is in the package
 
@@ -123,7 +123,8 @@ There is one frontend, so `build` can never accept what `check` refuses.
 **What the emitter refuses.** A task the plan cannot say what releases, naming the task and the cause, is `missing-fact`,
 repaired by the task's own `(needs interrupt-source)`, or `unsupported-profile` where the analysis cannot admit the source. That
 comes first, since what a run would cost means nothing until it can run. A
-duration or a hyperperiod past 64 bits of ticks is `unsupported-profile`, rather than approximated, and so is a run of more than
+period or a separation the run repeats, or a hyperperiod of them, past 64 bits of ticks is `unsupported-profile`, rather than
+approximated, and so is a run of more than
 `2^20` releases and arrivals, which nobody could read: periods of `1 ms` and `2305843009213693951 ms` both fit, and that run would
 never end. A plan that is not what its inputs lower to is `tool-failure`: `crates/archogen-emit` accepts a plan only by lowering it
 again from the same inputs and comparing bytes.
@@ -140,13 +141,15 @@ data to compare against until `M4.7`. Accepting the flag would hand someone who 
 that claimed to be reproducible. Refusing costs a user one re-run; accepting costs them a belief. It exits `20`, `unimplemented`.
 
 **Where the package lands.** The command builds it in `DIR.building`, beside `DIR`, and moves it into place by two renames once
-every file is written. So `DIR` is at every moment a whole package or absent, and a refused build leaves it as it found it: a
-refusal of the description creates nothing, and an earlier build stays.
+every file is written. So what a build places at `DIR` is at every moment a whole package or absent, and a refused build leaves it
+as it found it: a refusal of the description creates nothing, and an earlier build stays.
 
-⛔ **A build deletes nothing it did not write.** It removes the stage this very run made, and of an earlier build each file
-`provenance.json` lists, one by one and only if still as written, then the directories that held them where that leaves them empty.
-An earlier build must be exactly a build's before any of that: a directory holding anything more, an empty one included, a generated
-file you edited, a link named by `--out`, and anything standing at `DIR.building` or `DIR.replaced` are all refused, and left alone.
+⛔ **A build deletes nothing it did not write**, but for an empty directory named by `--out`, which it takes, keeping the mode. It
+removes the stage this very run made, with anything put in it while it runs, and of an earlier build each file `provenance.json`
+lists, one by one and only if still the regular file it wrote, then the directories that held them where that leaves them empty.
+An earlier build must be exactly a build's before any of that: a directory holding anything more, an empty directory within it
+included, a generated file you edited, a link named by `--out`, and anything standing at `DIR.building` or `DIR.replaced` are all
+refused, and left alone.
 Your changes belong in the description, not in the output. What building and looking at a package leave at its top, `target`,
 `Cargo.lock` and `.DS_Store`, is neither judged nor deleted: it moves to the new package, so a rebuild keeps cargo's work.
 
@@ -154,7 +157,8 @@ Two things it leaves behind on purpose. Where the checker refuses the search's p
 `DIR.building` keeps the assignment and the record, for the report that disagreement deserves, and the next build refuses until
 someone has looked at it. And what could not go from an earlier build, or appeared while the build ran, stays at `DIR.replaced`, with
 the new package already in place and the command naming what stayed. A directory of yours keeps its mode. No sync call is made, so
-none of this claims anything across a power loss.
+none of this claims anything across a power loss. ⚠️ Nor does any of it hold against another program working in the same directory at
+the same instant: the standard library has no rename that refuses to replace, so each path is held again just before it is used.
 
 **Nothing in it depends on where it was built.** A provenance entry names a source relative to the description, so the same
 description in two directories, built into two others, gives the same bytes. A test compares them, for one file and for a module
@@ -185,11 +189,11 @@ build/heartbeat: the search's plan for system `heartbeat` is the one this build 
 ```
 
 It holds the build to what `archogen build` holds an earlier one to first: every listed file and the provenance itself unchanged, and
-nothing else there. A build that fails that, whose description no longer gives its plan, or whose record does not accept that plan
-from the checker it names is `stale-input`, and the command prints
+nothing else there but what building and looking at a package leave. A build that fails that, whose description no longer gives its
+plan, or whose record does not accept that plan from the checker it names is `stale-input`, and the command prints
 no account of a plan it did not write: the search can only speak for its own. ⚠️ A digest catches an edit and a stale file, never a
-forger: whoever can write the directory can rewrite the list too. A request that misses, a requirement nobody writes, is `usage`, as
-of any description.
+forger: whoever can write the directory can rewrite the list too. A provenance that no longer reads, or names another format, is
+`usage`, being no build this engine reads, and so is a request that misses, a requirement nobody writes, as of any description.
 
 **The two programs together.** `crates/archogen-cli/tests/common/mod.rs` runs the checker's own judgement in the test's process,
 so a test sees a real plan past the real rules. `scripts/resolve_installed.sh`, in the `integration` tier, runs the real
