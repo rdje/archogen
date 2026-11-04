@@ -247,7 +247,7 @@ fn a_zero_duration_is_legal_but_a_negative_one_is_not() {
 // description holding one is refused". Three consumers of [`Quantity::read`] discarded what it found —
 // `crates/eadl-model/src/workload.rs`'s `.map_err(|_| ())` and two `.ok()`s in
 // `crates/eadl-model/src/refinement.rs` — and the only consumer that propagated was
-// `crates/archogen-s0/src/interpret.rs`, the prototype `S0-RETIREMENT` exists to delete. So
+// the S0 prototype's interpreter, since deleted (leaf `M4.2.4`). So
 // `archogen check` printed `accepted against profile rt-static-up-v1` for `(period 10 parsec)` while
 // `archogen build` refused the same bytes, and **no leg in this file could see the difference** because
 // none of them ran the pipeline. F03 was green at the type and unenforced at the surface.

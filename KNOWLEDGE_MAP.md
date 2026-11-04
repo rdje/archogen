@@ -37,19 +37,6 @@ workspace member with none.
   outcome vocabulary and the stable exit-code contract; `src/cli.rs` is the dependency-free
   parser and help renderer. `src/check_cmd.rs` and `src/build_cmd.rs` are thin translations onto
   the crates that do the work.
-- `crates/archogen-s0/` — ⛔ **the temporary S0 realization, reached by no command since `M4.2.3.1`
-  and deleted by `M4.2.4`** (§12 S0: "no hidden special-case generator is grandfathered into the release"). It is
-  deliberately not named `archogen-plan`/`archogen-emit`, the §4.2 names `M4` builds under.
-  `interpret.rs` turns a checked description into a `Plan` and refuses in two families — inputs
-  that describe no buildable system, and requests the engine cannot realize, the second naming
-  the missing capability and its leaf per §5.4. `runtime/rt.rs` and `runtime/service.rs` are the
-  engine-owned Rust every generated crate contains: compiled and tested here, copied there
-  verbatim, with a test asserting the two are identical. `emit.rs` writes a manifest, one
-  specialized table, and that copy — it generates no behavior. `provenance.rs` writes
-  `provenance.json`, the §10.1 mapping from each generated declaration to its source span and the
-  engine rule that produced it; every record is resolved from **both** ends by
-  `crates/archogen-cli/tests/s0_provenance.rs`, because a record pointing at the wrong line is
-  worse than none.
 - `crates/rt-analysis/` — §7.4's idealized zero-overhead response-time analysis (F18).
   `model.rs` makes the eight applicability conditions a **constructor precondition**, so the
   analysis cannot return a number for a system the model does not describe; `response.rs` is the
@@ -153,7 +140,7 @@ workspace member with none.
 - `examples/` — the three M0 use cases as real descriptions, checked by
   `crates/eadl-model/tests/examples.rs`: they validate, and none carries an execution bound, an
   entry point or an allocation.
-- `examples/s0-heartbeat/` + `crates/archogen-cli/tests/s0_oracle.rs` — the F28 corpus and its
+- `examples/s0-heartbeat/` + `crates/archogen-cli/tests/functional_fixtures.rs` — the F28 corpus and its
   oracle. Three descriptions (base, one period changed, one sporadic) and the observations they
   must produce, frozen in `expected/` before any emitter existed. The oracle re-derives each
   expectation from its description through its own implementation of the five-rule observation
@@ -179,9 +166,7 @@ workspace member with none.
   today and each names the leaf that closes it — which is the runner's most useful output.
 - `scripts/check_doctrines.sh` — the doctrine enforcer (git hook + CI). `make gate`.
   Project doctrines live in `scripts/check_doctrines.project.sh`: `check_frozen_evaluation.sh`
-  keeps the reuse measurement sealed and unseen, `check_s0_retirement.sh` keeps the S0
-  prototype from quietly becoming permanent — every `S0-ASSUMPTION:` marker listed with an owning
-  leaf, and no new consumers of the crate — `check_feedback_self_contained.sh` keeps an upstream
+  keeps the reuse measurement sealed and unseen, `check_feedback_self_contained.sh` keeps an upstream
   bug report readable inside someone else's project, and `check_book_anchors.sh` keeps prose about
   the code resolvable over **two populations**, the mdBook's chapters and the normative documents under
   `docs/semantics/`: every behavior document cites a repository path, and every cited path exists. An

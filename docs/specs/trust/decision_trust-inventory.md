@@ -46,7 +46,7 @@ in its acceptance (§5). The tool measures and compares; it never classifies, an
 
 | Role | Root | Reaches |
 | --- | --- | --- |
-| generator | the `archogen` executable (`crates/archogen-cli`), which `archogen build` runs: it checks a description through `archogen-api` and hands it to `archogen-s0` (`crates/archogen-cli/src/build_cmd.rs`) | `archogen-cli`, `archogen-api`, `archogen-s0`, `archogen-wasm`, `eadl-front`, `eadl-model`, and through `archogen-api` the kind modules `docs/semantics/kinds/core.eadl` and `os-rt.eadl` |
+| generator | the `archogen` executable (`crates/archogen-cli`), which `archogen build` runs: it asks `archogen-api` for a description's plan, runs the configuration checker over it, and lowers and emits it with `archogen-plan` and `archogen-emit` (`crates/archogen-cli/src/build_cmd.rs`) | `archogen-cli`, `archogen-api`, `archogen-plan`, `archogen-emit`, `archogen-wasm`, `eadl-front`, `eadl-model`, and through `archogen-api` the kind modules `docs/semantics/kinds/core.eadl` and `os-rt.eadl` |
 | configuration checker | none yet — `archogen-check` is `M3.5`'s | — |
 | scheduling checker | `rt-analysis`, a library no executable runs yet | `rt-analysis`, `archogen-evidence` |
 | reference model | `rt-reference` | `rt-reference` |
@@ -73,7 +73,7 @@ today — and replaced by the first executable that runs it; and a reference mod
 validates are rooted at their libraries, since what runs them is a test harness, which §4 makes an item the pair
 shares (R2 B7), named in the pair's form. Each root's form also names its **role packages**: the packages holding
 the role's own logic, its root package always, reviewed with the form — today the generator's `archogen-cli`,
-`archogen-api` and `archogen-s0`, the scheduling checker's `rt-analysis`, the reference model's `rt-reference` and the
+`archogen-api`, `archogen-plan` and `archogen-emit`, the scheduling checker's `rt-analysis`, the reference model's `rt-reference` and the
 implementation's `rt-core`; the language's reader and model, `eadl-front` and `eadl-model`, are no role's, so a
 checker that compiles them shares them, reported as case 1 (R7 remark j). **A program that would run two roles is
 refused** (`trust-shared-program`): a root whose build compiles a role package of another role — a library root too,

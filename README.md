@@ -50,9 +50,7 @@ target facts   ───┘        │              │                    │  
 
 Responsibility names (crates appear when a consumer needs them): `eadl-front`,
 `eadl-model`, `eadl-resolve`, `archogen-plan`, `archogen-emit`, `archogen-check`, `rt-analysis`,
-`rt-core`, `arch-*`, `device-*`, `sim-*`, `xtask`. `archogen-s0` sits outside that list on
-purpose: it is the temporary S0 prototype, with an expiry enforced by a doctrine check
-([`decision_s0-retirement.md`](docs/decisions/decision_s0-retirement.md)).
+`rt-core`, `arch-*`, `device-*`, `sim-*`, `xtask`.
 
 ## Where things live
 

@@ -1285,7 +1285,7 @@ fn workspace_codes() -> BTreeMap<String, Vec<String>> {
 /// is what reaches `missing-fact` and the other model-layer codes, which share no prefix. Before `M1.26.1`
 /// the book's model-layer diagnostics were checked for existence only, because no normative document
 /// stated them; `docs/semantics/model.md` now does, and arms `m4` and `m5` pin both halves of the scoping.
-/// ⚠️ What stays ungoverned is stated there: the S0 prototype's `analysis-inconclusive`, deliberately
+/// ⚠️ What stays ungoverned is stated there: the search's `analysis-inconclusive`, deliberately
 /// undeclared.
 fn book_code_violations(documents: &[(&str, &str)], chapters: &[(String, String)]) -> Vec<String> {
     let mut out = Vec::new();
@@ -2180,8 +2180,8 @@ fn arm_11b_the_census_sees_a_code_declared_as_a_constant_of_a_governed_prefix_on
 #[test]
 fn arm_12_a_rotted_citation_is_reported() {
     let mutated = REFERENCE.replace(
-        "`crates/archogen-s0/src/provenance.rs`",
-        "`crates/archogen-s0/src/provenence.rs`",
+        "`crates/archogen-json/src/lib.rs`",
+        "`crates/archogen-json/src/libb.rs`",
     );
     assert_ne!(
         mutated, REFERENCE,
@@ -2190,7 +2190,7 @@ fn arm_12_a_rotted_citation_is_reported() {
     assert_reported(
         &citation_violations(&mutated),
         1,
-        &["provenence.rs", "does not exist"],
+        &["libb.rs", "does not exist"],
     );
 }
 
@@ -2733,13 +2733,13 @@ fn every_repository_path_the_model_document_cites_resolves() {
 }
 
 #[test]
-fn the_s0_prototype_is_not_declared_and_the_document_says_why() {
-    // A prototype with an expiry is not a normative surface; declaring it would freeze what
-    // `S0-RETIREMENT` exists to delete. The exclusion is written down, not merely absent.
+fn the_emitter_is_not_declared_and_the_document_says_why() {
+    // What the hosted build cannot yet express is no rule of the language; declaring it would freeze a surface that grows
+    // with each target. The exclusion is written down, not merely absent.
     assert!(!declared_sources(MODEL)
         .iter()
-        .any(|(_, source)| source.contains("archogen-s0")));
-    assert!(MODEL.contains("`crates/archogen-s0/src/interpret.rs` is deliberately not declared"));
+        .any(|(_, source)| source.contains("archogen-emit")));
+    assert!(MODEL.contains("`crates/archogen-emit/src/lib.rs` is deliberately not declared"));
     assert!(MODEL.contains("`analysis-inconclusive`"));
 }
 

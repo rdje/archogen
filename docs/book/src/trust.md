@@ -42,11 +42,11 @@ target, the **role packages** holding its role's own logic, and any fixed data i
   (role generator)
   (package "crates/archogen-cli")
   (target bin archogen)
-  (role-packages "crates/archogen-cli" "crates/archogen-api" "crates/archogen-s0"))
+  (role-packages "crates/archogen-cli" "crates/archogen-api" "crates/archogen-emit"))
 ```
 
 The root's own package always belongs to its role packages, even if the clause omits it. With
-`(package "crates/archogen-cli")` and `(role-packages "crates/archogen-s0")`, both packages belong to the root's set;
+`(package "crates/archogen-cli")` and `(role-packages "crates/archogen-emit")`, both packages belong to the root's set;
 without a role-packages clause, its set still contains `crates/archogen-cli`. Every declared member is retained.
 
 `defroot`, `defharness`, `defderivation`, `defprogram` and `defrole` place a symbol or string name immediately after the

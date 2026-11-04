@@ -182,7 +182,7 @@ impl Form {
                         // cannot carry. Emitting it raw put a control byte inside the text §12 M4
                         // hashes and compares, and inside a document whose canonical form is one
                         // form per line — a terminal re-reads it as "return to column zero", so the
-                        // rest of the line overwrote the beginning. `archogen-s0`'s provenance
+                        // rest of the line overwrote the beginning. The S0 prototype's provenance
                         // quoting already escaped it; the normative printer did not (finding F-D,
                         // leaf `M1.12.1`).
                         '\r' => out.push_str("\\r"),

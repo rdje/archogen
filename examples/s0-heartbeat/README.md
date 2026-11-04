@@ -60,7 +60,7 @@ The changed case moves `chime` to a 20 ms period. `H` becomes `lcm(10, 20) = 20 
 
 ## What the oracle asserts, and why it is independent
 
-The oracle is [`crates/archogen-cli/tests/s0_oracle.rs`](../../crates/archogen-cli/tests/s0_oracle.rs).
+The oracle is [`crates/archogen-cli/tests/functional_fixtures.rs`](../../crates/archogen-cli/tests/functional_fixtures.rs).
 It re-derives each expected observation from its description, using its own implementation of
 the five rules above, and compares the result to the frozen bytes. So an edit to a fixture that
 forgets its expected file fails, and an edit to an expected file that does not follow from any
@@ -84,13 +84,13 @@ dangerous kind of green.
 ⛔ **The three cases above share a blind spot, and it was measured rather than guessed.** Their
 periods are 10 and 30, then 10 and 20. In both, one period divides the other — the task sets are
 **harmonic** — so the hyperperiod equals the longest period. A realization that returned `max`
-instead of `lcm` therefore passes every one of them, end to end. Replacing `lcm` with `max` in
-`crates/archogen-s0` left all twelve oracle tests green.
+instead of `lcm` therefore passes every one of them, end to end. Replacing `lcm` with `max` in the
+S0 realization, since deleted, left all twelve oracle tests green.
 
 Two things close it:
 
-- a unit test in `crates/archogen-s0/src/interpret.rs` on a non-harmonic set, where
-  `lcm(10, 15) = 30` and the longest period is `15`; and
+- a hand-computed derivation in the oracle on a non-harmonic set, where `lcm(10, 15) = 30` and the
+  longest period is `15`; and
 - [`system-non-harmonic.eadl`](system-non-harmonic.eadl), which runs the whole path on
   `beat` at 10 ms against `chime` at 15 ms.
 

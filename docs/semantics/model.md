@@ -48,13 +48,11 @@ The census over this declaration runs in both directions, in `crates/eadl-front/
 these sources can emit and §6 does not state is a rule nobody has written down. A code §6 states and no
 declared source emits is a rotted row. Both fail the build, as they do for the reference.
 
-⚠️ **`crates/archogen-s0/src/interpret.rs` is deliberately not declared.** It is the S0 prototype, and it
-carries an expiry that `S0-RETIREMENT` enforces (`docs/decisions/decision_s0-retirement.md`). Declaring it
-normative would freeze a surface built to be deleted. The consequence is stated rather than left:
-`analysis-inconclusive`, which only the prototype emits today, is stated by no normative document. S0's
-own uses of `invalid-description` and `unsupported-profile` state S0's limits, such as "the S0 realization
-needs whole-millisecond periods", not the rules below. The book's rendering of any of them is checked
-for existence (the code is one a production source emits), not for meaning.
+⚠️ **`crates/archogen-emit/src/lib.rs` is deliberately not declared.** Its refusals state what the hosted build
+cannot yet express (`docs/decisions/decision_hosted-build.md`), not the rules below, so declaring it normative would
+freeze a surface that grows with each target. The consequence is stated rather than left:
+`analysis-inconclusive`, which the search answers when its budget ends, is stated by no normative document. The
+book's rendering of any of them is checked for existence (the code is one a production source emits), not for meaning.
 
 ## 1. Quantities carry a unit, and the unit is one of a small set
 

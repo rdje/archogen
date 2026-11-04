@@ -11,8 +11,8 @@
 ## The fact / decision
 
 `archogen build` goes from a description to a package that compiles and runs on the hosted playground, through the
-checked runtime plan, with no hand edit and nothing fetched. It replaces the S0 path (`crates/archogen-s0`), which stays
-until its retained fixtures run through this one.
+checked runtime plan, with no hand edit and nothing fetched. It replaced the S0 path, deleted once its retained fixtures ran
+through this one.
 
 ### 1. The generated package
 
@@ -133,8 +133,7 @@ in place, and the command says the old one waits at `DIR.replaced`.
 S0's frozen expected observations are functional fixtures of the system's behavior, and §12 M4 asks that they run through the
 supported path. So a test holds each one's releases equal to the new trace's. The one fixture S0 refused, a task with a
 minimum separation and no source, stays refused, as `missing-fact` now that the plan can say why, where S0 could only call the
-capability unsupported. Then `crates/archogen-s0` is deleted, and each assumption the retirement record lists is discharged or
-moved by its leaf.
+capability unsupported. Then the S0 crate was deleted (`M4.2.4`), and the retirement record says what became of each assumption.
 
 ## Why
 

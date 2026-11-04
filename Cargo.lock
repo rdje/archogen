@@ -123,14 +123,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "archogen-s0"
-version = "0.1.0"
-dependencies = [
- "eadl-front",
- "eadl-model",
-]
-
-[[package]]
 name = "archogen-transport"
 version = "0.1.0"
 dependencies = [

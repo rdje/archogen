@@ -11,26 +11,29 @@
 # dependency — so each verdict carries over by construction, re-measured in the campaign at completion
 # (docs/decisions/decision_mutation-testing-after-completion.md).
 
+# S0's realization was deleted (leaf `M4.2.4`, `2026-11-04`): the two entries on its hyperperiod and the one on its provenance
+# follow what replaced them, the emitter's, nothing re-run; re-measured in the campaign at completion
+# (docs/decisions/decision_mutation-testing-after-completion.md).
 mutation lcm-to-max
-file crates/archogen-s0/src/interpret.rs
-test -p archogen-cli --test s0_oracle
+file crates/archogen-emit/src/lib.rs
+test -p archogen-cli --test functional_fixtures
 expect killed
 why S0.4's blind spot: the hyperperiod as the longest period. F28's non-harmonic case (10 and 15 ms) must see it.
 from
-        (a / gcd(a, b)).checked_mul(b)
+    (a / gcd(a, b).max(1)).checked_mul(b)
 to
-        Some(a.max(b))
+    Some(a.max(b))
 end
 
 mutation lcm-to-max-against-the-harmonic-corpus
-file crates/archogen-s0/src/interpret.rs
-test -p archogen-cli --test s0_oracle -- --skip non_harmonic
+file crates/archogen-emit/src/lib.rs
+test -p archogen-cli --test functional_fixtures -- --skip non_harmonic
 expect survives
 why The blind spot itself, kept as a reproduction: F28's harmonic fixtures (10/30, 10/20 ms) cannot tell lcm from max, which is why the non-harmonic case exists.
 from
-        (a / gcd(a, b)).checked_mul(b)
+    (a / gcd(a, b).max(1)).checked_mul(b)
 to
-        Some(a.max(b))
+    Some(a.max(b))
 end
 
 mutation saturating-comparison
@@ -145,15 +148,15 @@ to
 end
 
 mutation provenance-gains-a-key-under-the-same-identifier
-file crates/archogen-s0/src/provenance.rs
+file crates/archogen-emit/src/lib.rs
 test -p archogen-cli --test format_golden
 expect killed
-why PROGRAM.6.3: a key added to the provenance without moving `archogen-provenance/1` would reach every consumer of /1 unannounced.
+why PROGRAM.6.3: a key added to the provenance without moving its identifier would reach every consumer of it unannounced.
 from
-        out.push_str("  \"experimental\": true,\n");
+    out.push_str(&format!("  \"system\": {},\n", quote(&contents.system)));
 to
-        out.push_str("  \"experimental\": true,\n");
-        out.push_str("  \"extra\": true,\n");
+    out.push_str(&format!("  \"system\": {},\n", quote(&contents.system)));
+    out.push_str("  \"extra\": true,\n");
 end
 
 mutation cost-contract-reworded-under-the-same-identifier

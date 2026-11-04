@@ -5,7 +5,7 @@
 //! `crates/archogen-cli/tests/s0_chapter.rs` records four times — so each block the chapter marks with
 //! `<!-- verbatim: <path> -->` must equal that file with its comment lines (`;`) and blank lines removed, and each
 //! marked `<!-- excerpt: <path> -->` must show only that file's lines, in order, besides an elision, a line starting `…`. The output
-//! file is itself what F28 compares the running program with (`s0_oracle.rs`), so the chapter's output is the
+//! file is itself what F28 compares the running program with (`functional_fixtures.rs`), so the chapter's output is the
 //! program's.
 
 use std::path::{Path, PathBuf};

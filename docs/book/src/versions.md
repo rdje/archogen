@@ -78,28 +78,6 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Pinned by | `crates/archogen-plan-check/tests/mcp.rs`, which holds it equal to the package manifest's version (`M3.5.1.6.4`) |
 | Keeps | a client reads which checker answered; what it judges and writes is pinned by `result-format` and `assignment-format`, not by this number |
 
-## `catalog-s0`
-
-| Field | Value |
-| --- | --- |
-| Surface | the one catalog entry so far: S0's fixed realization, `s0.hosted-playground.periodic`, a stub until the catalogs of `M6` |
-| Version | `0.1.0` |
-| Declared at | `const:crates/archogen-s0/src/provenance.rs:REALIZATION_VERSION` |
-| Changes when | the observation contract changes, since each frozen expectation in `examples/s0-heartbeat/expected/` holds for one contract |
-| Pinned by | nothing since `M4.2.3.1`, when no command reached it; `M4.2.4` retires it, and the frozen observations now judge the supported path, in `crates/archogen-cli/tests/functional_fixtures.rs` |
-| Keeps | the same description built by this entry gives the same observation |
-
-## `provenance-format`
-
-| Field | Value |
-| --- | --- |
-| Surface | the provenance a build writes beside what it generated |
-| Version | `archogen-provenance/1` |
-| Declared at | `const:crates/archogen-s0/src/provenance.rs:FORMAT` |
-| Changes when | a field is added, removed or reinterpreted. A consumer that does not recognize the identifier must refuse rather than guess |
-| Pinned by | its shape, frozen in `crates/archogen-cli/tests/goldens/archogen-provenance-1.golden` and compared by nothing since `M4.2.3.1`, when no command wrote it any longer; `M4.2.4` retires it |
-| Keeps | an artifact labelled `archogen-provenance/1` means the same to every reader of `/1` |
-
 ## `catalog-rules`
 
 | Field | Value |

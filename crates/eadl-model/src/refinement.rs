@@ -201,8 +201,7 @@ impl Facets {
     /// ⭐ **Returns the diagnostics it found beside the facets, and every caller has to destructure
     /// both.** This signature is the fix, not a detail of it: it used to return `Self` and swallow what
     /// [`Quantity::read`] refused, so `archogen check` accepted a description whose tick rate was zero and
-    /// the only consumer left that surfaced the refusal was the S0 prototype `S0-RETIREMENT` exists to
-    /// delete. A caller that wants only the facets has to write `.0`, and that `.` is where the next
+    /// the only consumer left that surfaced the refusal was the S0 prototype, since deleted. A caller that wants only the facets has to write `.0`, and that `.` is where the next
     /// reader asks what the other half was.
     #[must_use]
     pub fn of(form: &Form) -> (Self, Vec<Diagnostic>) {

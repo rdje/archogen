@@ -356,7 +356,7 @@ Canonical form **guarantees**:
    to hash and to put in a report whatever a string value holds. ⭐ The guarantee is enforced **in the
    printer** and not at the door, because `Form::Str` is constructible outside the frontend — `lib.rs`
    re-exports it and `Span::new` is public — so a value that never passed a reader still has to print
-   safely. `crates/archogen-s0/src/provenance.rs` shares the *property*, not the escape set: it writes
+   safely. `crates/archogen-json/src/lib.rs` shares the *property*, not the escape set: it writes
    **JSON**, where the short forms are `\b` and `\f` and a code point is `\u00XX`, so its output is
    deliberately not eADL text and is not held to this rule.
 4. **A decimal keeps its scale.** `1.5` and `1.50` print differently, per §1 rule 2.

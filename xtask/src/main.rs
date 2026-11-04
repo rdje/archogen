@@ -1488,8 +1488,7 @@ mod tests {
     fn every_named_leaf_is_declared_by_a_task_tree() {
         // ⭐ The leg that makes routing real rather than decorative. A step naming `PROGRAM.9`
         // when no tree declares it sends a reader to a dead end, and the shape test above cannot
-        // see the difference — `M9.9` has exactly the same shape as `M4.8`. This is the same
-        // check `scripts/check_s0_retirement.sh` applies to the retirement record.
+        // see the difference — `M9.9` has exactly the same shape as `M4.8`.
         let trees = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()
             .expect("xtask/ sits at the repository root")

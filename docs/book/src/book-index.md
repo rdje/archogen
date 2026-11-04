@@ -113,7 +113,6 @@ a change that leaves it stale, so it is never edited by hand.
 - Catalog dependency-reader cleanup — [Annex C: Trust proof
   records](annex-trust-proofs.md#catalog-dependency-reader-cleanup)
 - catalog-rules — [What is versioned, and what changing it costs](versions.md#catalog-rules)
-- catalog-s0 — [What is versioned, and what changing it costs](versions.md#catalog-s0)
 - **check-passing convention** — [definition](glossary.md), [Where the engine's knowledge comes from: the
   catalog](catalog.md)
 - Checking restored inputs — [Annex B: The checks that keep the repository
@@ -622,7 +621,6 @@ a change that leaves it stale, so it is never edited by hand.
   adequacy](trust-adequacy.md), [The runtime plan: what the generated system is told](runtime-plan.md), [Building a
   system](building.md), [The S0 early generation path](s0.md), [What is versioned, and what changing it
   costs](versions.md), [Annex C: Trust proof records](annex-trust-proofs.md)
-- provenance-format — [What is versioned, and what changing it costs](versions.md#provenance-format)
 - **provider** — [definition](glossary.md), [Introduction](introduction.md), [The boundary: functionality versus
   implementation](boundary.md), [Presence, absence, and relevance](presence.md), [Matching an offer to a
   requirement](matching.md), [Checking a plan](plan-check.md), [The S0 early generation path](s0.md), [The archogen
@@ -895,6 +893,7 @@ a change that leaves it stale, so it is never edited by hand.
 - What a task carries — [Describing a workload](workload.md#what-a-task-carries)
 - What a task does not carry — [Describing a workload](workload.md#what-a-task-does-not-carry)
 - What an instance is — [The engine API](engine-api.md#what-an-instance-is)
+- What became of it — [The S0 early generation path](s0.md#what-became-of-it)
 - What binds, and what does not — [Checking a plan](plan-check.md#what-binds-and-what-does-not)
 - What CI does with an incomplete tier — [Verifying the toolchain](verification.md#what-ci-does-with-an-incomplete-tier)
 - What comes after presence: matching — [Presence, absence, and
@@ -924,7 +923,7 @@ a change that leaves it stale, so it is never edited by hand.
 - What keeps a value, and what keeps a guarantee —
   [Refinement](refinement.md#what-keeps-a-value-and-what-keeps-a-guarantee)
 - What one request may cost — [The engine API](engine-api.md#what-one-request-may-cost)
-- What S0 owes the supported path — [The S0 early generation path](s0.md#what-s0-owes-the-supported-path)
+- What S0 owed the supported path — [The S0 early generation path](s0.md#what-s0-owed-the-supported-path)
 - What that looks like today — [Verifying the toolchain](verification.md#what-that-looks-like-today)
 - What the boundary rules out — [The boundary: functionality versus
   implementation](boundary.md#what-the-boundary-rules-out)
